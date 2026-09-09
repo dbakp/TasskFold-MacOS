@@ -108,7 +108,7 @@ struct TaskfoldCommands: Commands {
             Divider()
         }
         CommandGroup(replacing: .help) {
-            Button("Taskfold Help") { NSWorkspace.shared.open(URL(string: "https://github.com/dbakp/taskfold-ios")!) }
+            Button("Taskfold Help") { NSWorkspace.shared.open(URL(string: "https://github.com/dbakp/TaskFold-iOS")!) }
         }
     }
     private var completeTitle: String {

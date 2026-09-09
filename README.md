@@ -1,12 +1,12 @@
 # Taskfold for macOS
 
-A native SwiftUI Mac app for Taskfold, built to feel like a first-class Mac citizen rather than a scaled-up phone app. It shares its data layer with [dbakp/taskfold-ios](https://github.com/dbakp/taskfold-ios): the `Core` sources (`Models.swift`, `Store.swift`, `Backend.swift`) and `Backend.plist` are referenced from that checkout, not copied, so backend access, the durable sync queue, undo history, recurrence, day placement, and quick entry stay identical across platforms.
+A native SwiftUI Mac app for Taskfold, built to feel like a first-class Mac citizen rather than a scaled-up phone app. It shares its data layer with [dbakp/TaskFold-iOS](https://github.com/dbakp/TaskFold-iOS): the `Core` sources (`Models.swift`, `Store.swift`, `Backend.swift`) and `Backend.plist` are referenced from that checkout, not copied, so backend access, the durable sync queue, undo history, recurrence, day placement, and quick entry stay identical across platforms.
 
 ## Layout
 
 ```
 TaskFold-Mac/
-├── taskfold-ios/      # git clone https://github.com/dbakp/taskfold-ios (source of truth for Core)
+├── taskfold-ios/      # git clone https://github.com/dbakp/TaskFold-iOS taskfold-ios (source of truth for Core)
 ├── taskfold/          # git clone https://github.com/dbakp/taskfold (web app, layout reference)
 └── taskfold-mac/      # this repository
 ```
