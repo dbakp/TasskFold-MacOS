@@ -71,7 +71,6 @@ struct RootView: View {
                     window.center(); window.makeKeyAndOrderFront(nil)
                     window.layoutIfNeeded(); window.displayIfNeeded()
                     try? await Task.sleep(for: .seconds(1.5))
-                    try? Data("occlusion visible=\(window.occlusionState.contains(.visible)) key=\(window.isKeyWindow) frame=\(window.frame)".utf8).write(to: FileManager.default.temporaryDirectory.appending(path: "trace-capture.txt"))
                     // Report capture without screen-recording permission: cache-display the window, then repaint every
                     // visual-effect region (whose backdrop cannot be rendered offscreen) with a solid background and its
                     // own subviews. Sandboxed, so the PNG lands in the container's temporary directory.

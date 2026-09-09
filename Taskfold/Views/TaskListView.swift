@@ -102,7 +102,11 @@ struct TaskListView: View {
         .sheet(isPresented: $sectionsEditor) { SectionsEditor(projectID: projectID) }
         .sheet(isPresented: $bulkDatePicker) { DatePickSheet(date: $bulkDate, count: workspace.selection.count) { workspace.reschedule(workspace.selection, to: Dates.day(bulkDate), label: bulkDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())) } }
         .onChange(of: workspace.quickAddFocusRequest) { _, _ in quickAddFocused = true }
-        .onChange(of: filtered.map(\.id)) { _, ids in workspace.selection = workspace.selection.intersection(ids) }
+        .onChange(of: filtered.map(\.id)) { _, ids in
+            // Assign only when something actually left the list; re-setting selection during a table update is reentrant.
+            let kept = workspace.selection.intersection(ids)
+            if kept != workspace.selection { Task { @MainActor in workspace.selection = kept } }
+        }
         .onAppear { if ProcessInfo.processInfo.arguments.contains("--uitesting") == false && filtered.isEmpty { quickAddFocused = true } }
     }
 
