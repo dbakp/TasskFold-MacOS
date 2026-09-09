@@ -1,0 +1,6 @@
+DerivedData/
+build/
+xcuserdata/
+*.xcuserstate
+.DS_Store
+Screenshots/*.tmp.png
