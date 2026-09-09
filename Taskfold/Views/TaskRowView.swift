@@ -32,6 +32,8 @@ struct TaskRowView: View {
                     .foregroundStyle(checked ? .secondary : .primary)
                     .strikethrough(checked, color: .secondary)
                     .lineLimit(2)
+                    .accessibilityLabel(accessibilitySummary)
+                    .accessibilityIdentifier("title-\(task.id)")
                 if !task.string("description").isEmpty { Text(task.string("description")).font(.callout).foregroundStyle(.secondary).lineLimit(1) }
                 if showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
                     HStack(spacing: 10) {
@@ -48,13 +50,13 @@ struct TaskRowView: View {
                             }
                         }
                         ForEach(task["labels"].list.map(\.text).filter { !$0.isEmpty }, id: \.self) { name in
-                            Text(store.record("labels", id: name)?.name ?? name).padding(.horizontal, 6).padding(.vertical, 1)
+                            Text(store.record("labels", id: name)?.name ?? name).lineLimit(1).fixedSize().padding(.horizontal, 6).padding(.vertical, 1)
                                 .background(Color.secondary.opacity(0.12), in: .capsule)
                         }
                         if !task["subtasks"].list.isEmpty { Label("\(task["subtasks"].list.filter { $0.object["completed"]?.flag == true }.count)/\(task["subtasks"].list.count)", systemImage: "checklist") }
                         if !task["comments"].list.isEmpty { Label("\(task["comments"].list.count)", systemImage: "text.bubble") }
                         if !task["attachments"].list.isEmpty { Image(systemName: "paperclip") }
-                    }.font(.caption).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
+                    }.font(.caption).foregroundStyle(.secondary).labelStyle(.titleAndIcon).lineLimit(1)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -67,8 +69,7 @@ struct TaskRowView: View {
         .contentShape(.rect)
         .onHover { hovering = $0 }
         .animation(Motion.quick, value: checked)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilitySummary)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("task-\(task.id)")
     }
     private var accessibilitySummary: String {

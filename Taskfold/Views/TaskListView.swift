@@ -60,6 +60,8 @@ struct TaskListView: View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
             QuickAddBar(text: $quickAdd, focused: $quickAddFocused, prompt: quickAddPrompt) { submitQuickAdd() }
+                .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
+                .background(.bar)
             List(selection: $workspace.selection) {
                 if !store.online || store.notice != nil { statusRow }
                 if store.syncing && store.tasks.isEmpty && store.lastSync == nil && !store.localMode { SkeletonRows().padding(.vertical, 12).selectionDisabled().listRowSeparator(.hidden).transition(.skeletonReveal) }
@@ -73,35 +75,34 @@ struct TaskListView: View {
                     ForEach(Array(groups.enumerated()), id: \.offset) { _, group in
                         if !group.1.isEmpty || !group.0.isEmpty {
                             Section {
-                                ForEach(group.1) { task in row(task) }
+                                ForEach(group.1) { task in row(task).tag(task.id) }
                             } header: { if !group.0.isEmpty { Text(group.0) } }
                         }
                     }
                 }
             }
             .listStyle(.inset)
-            .scrollContentBackground(.visible)
+            .scrollContentBackground(.hidden)
+            .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
             .contextMenu(forSelectionType: String.self) { ids in contextMenu(ids) } primaryAction: { ids in
                 if let id = ids.first, ids.count == 1 { workspace.open(id) }
             }
-            .onKeyPress(.space) { guard !workspace.selection.isEmpty else { return .ignored }; workspace.toggle(workspace.selection); return .handled }
-            .onKeyPress(.return) { guard let id = workspace.selection.first, workspace.selection.count == 1 else { return .ignored }; workspace.open(id); return .handled }
-            .onKeyPress(.escape) { guard !workspace.selection.isEmpty else { return .ignored }; workspace.selection = []; return .handled }
             .onDeleteCommand { workspace.delete(workspace.selection) }
             .animation(layout, value: filtered.map(\.id))
         }
+        .background(Color(nsColor: .textBackgroundColor))
         .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation).transition(reduceMotion ? .opacity : .toast) } }
         .animation(Transitions.Ease.smoothOut, value: workspace.confirmation)
         .navigationTitle(title)
         .navigationSubtitle(subtitle)
         .animation(Transitions.Ease.smoothOut, value: subtitle)
-        .searchable(text: $workspace.search, isPresented: $workspace.searchPresented, placement: .toolbar, prompt: "Search \(title.lowercased())")
         .toolbar { toolbar }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
         .sheet(item: $collaborationProject) { CollaboratorsView(project: $0) }
         .sheet(isPresented: $sectionsEditor) { SectionsEditor(projectID: projectID) }
         .sheet(isPresented: $bulkDatePicker) { DatePickSheet(date: $bulkDate, count: workspace.selection.count) { workspace.reschedule(workspace.selection, to: Dates.day(bulkDate), label: bulkDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())) } }
         .onChange(of: workspace.quickAddFocusRequest) { _, _ in quickAddFocused = true }
+        .onChange(of: workspace.selection) { _, selection in if !selection.isEmpty && quickAdd.isEmpty { quickAddFocused = false } }
         .onChange(of: filtered.map(\.id)) { _, ids in
             // Assign only when something actually left the list; re-setting selection during a table update is reentrant.
             let kept = workspace.selection.intersection(ids)
@@ -154,7 +155,7 @@ struct TaskListView: View {
     }
     private func overdueSection(_ tasks: [Record]) -> some View {
         Section(isExpanded: Binding(get: { !overdueCollapsed }, set: { open in withAnimation(layout) { if scope == .today { overdueCollapsedToday = !open } else { overdueCollapsedUpcoming = !open } } })) {
-            ForEach(tasks) { task in row(task).modifier(DayDragRow(task: task, day: task.string("due_date"), orderProvider: { order })) }
+            ForEach(tasks) { task in row(task).modifier(DayDragRow(task: task, day: task.string("due_date"), orderProvider: { order })).tag(task.id) }
         } header: {
             HStack(spacing: 8) {
                 Text("Overdue")
@@ -176,7 +177,7 @@ struct TaskListView: View {
         let detail = date?.formatted(.dateTime.month(.abbreviated).day()) ?? ""
         let open = tasks.filter { !$0.completed && !workspace.completing.contains($0.id) }.count
         return Section {
-            ForEach(tasks) { task in row(task).modifier(DayDragRow(task: task, day: day, orderProvider: { order })) }
+            ForEach(tasks) { task in row(task).modifier(DayDragRow(task: task, day: day, orderProvider: { order })).tag(task.id) }
             DayEndRow(day: day, isEmpty: tasks.isEmpty).selectionDisabled().listRowSeparator(.hidden)
         } header: {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -190,10 +191,9 @@ struct TaskListView: View {
             .modifier(DayHeaderDrop(day: day))
         }
     }
+    /// The selection tag must sit on the outermost row view, after any drag wrapper, or clicks cannot select.
     private func row(_ task: Record) -> some View {
-        TaskRowView(task: task, compactDate: dated)
-            .tag(task.id)
-            .listRowSeparator(.hidden)
+        TaskRowView(task: task, compactDate: dated).listRowSeparator(.hidden)
     }
 
     // MARK: Menus
@@ -255,6 +255,9 @@ struct TaskListView: View {
     }
 }
 
+/// Content reads best in a bounded column centered in the window, the way Todoist lays out its lists.
+enum ReadingColumn { static let width: CGFloat = 860 }
+
 /// The entry field above the list. Quick-entry grammar is parsed by the shared `QuickEntry` type.
 struct QuickAddBar: View {
     @Binding var text: String
@@ -282,7 +285,6 @@ struct QuickAddBar: View {
             .animation(Motion.quick, value: text.isEmpty)
             Divider()
         }
-        .background(.bar)
     }
     private var suggestions: some View {
         HStack(spacing: 6) {

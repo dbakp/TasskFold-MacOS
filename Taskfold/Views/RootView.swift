@@ -57,6 +57,7 @@ struct RootView: View {
         // Debug options use --key=value so AppKit never mistakes a bare value for a document to open.
         func option(_ key: String) -> String? { arguments.first { $0.hasPrefix("--\(key)=") }.map { String($0.dropFirst(key.count + 3)) } }
         if let value = option("section") { workspace.section = SidebarItem(key: value) }
+        if arguments.contains("--preview") { Task { try? await Task.sleep(for: .milliseconds(400)); NSApp.windows.first { $0.isVisible }?.setContentSize(NSSize(width: 1380, height: 840)) } }
         if let value = option("calendar-mode"), let mode = CalendarMode(rawValue: value) { workspace.calendarMode = mode }
         if let value = option("appearance") { NSApp.appearance = NSAppearance(named: value == "dark" ? .darkAqua : .aqua) }
         if let title = option("select-title") {
@@ -66,9 +67,8 @@ struct RootView: View {
             Task {
                 try? await Task.sleep(for: .seconds(3))
                 if let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }) {
-                    NSApp.activate(ignoringOtherApps: true)
                     window.setContentSize(NSSize(width: 1280, height: 800))
-                    window.center(); window.makeKeyAndOrderFront(nil)
+                    window.center(); window.orderBack(nil)
                     window.layoutIfNeeded(); window.displayIfNeeded()
                     try? await Task.sleep(for: .seconds(1.5))
                     // Report capture without screen-recording permission: cache-display the window, then repaint every
@@ -150,10 +150,11 @@ struct WorkspaceView: View {
             }
             .inspector(isPresented: $workspace.inspectorShown) {
                 TaskInspector()
-                    .inspectorColumnWidth(min: 280, ideal: 330, max: 460)
+                    .inspectorColumnWidth(min: 270, ideal: 310, max: 460)
             }
         }
         .navigationSplitViewStyle(.balanced)
+        .modifier(KeyRouter())
         .accessibilityIdentifier("nativeWorkspace")
     }
 }
@@ -164,16 +165,31 @@ enum DebugCapture {
     /// its own subviews, because material backdrops cannot be rendered offscreen.
     @MainActor static func image(of root: NSView) -> NSImage {
         let image = NSImage(size: root.bounds.size)
-        guard let rep = root.bitmapImageRepForCachingDisplay(in: root.bounds) else { return image }
-        root.cacheDisplay(in: root.bounds, to: rep)
-        if let context = NSGraphicsContext(bitmapImageRep: rep) {
-            NSGraphicsContext.saveGraphicsState()
-            NSGraphicsContext.current = context
-            for effect in topEffects(under: root) { paint(effect, root: root) }
-            NSGraphicsContext.restoreGraphicsState()
-        }
+        guard let layer = root.layer else { return image }
+        // Material backdrop layers sample what is behind the window, which does not exist offscreen and renders as
+        // noise; hide them and render the Core Animation tree, which includes vibrant content that view caching skips.
+        for effect in allEffects(under: root) { effect.material = .windowBackground; effect.state = .inactive; effect.blendingMode = .withinWindow }
+        hideBackdrops(layer)
+        root.layoutSubtreeIfNeeded(); root.displayIfNeeded()
+        let scale = root.window?.backingScaleFactor ?? 2
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(root.bounds.width * scale), pixelsHigh: Int(root.bounds.height * scale), bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0),
+              let context = NSGraphicsContext(bitmapImageRep: rep) else { return image }
+        rep.size = root.bounds.size
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        context.cgContext.scaleBy(x: scale, y: scale)
+        NSColor.windowBackgroundColor.setFill(); root.bounds.fill()
+        layer.render(in: context.cgContext)
+        NSGraphicsContext.restoreGraphicsState()
         image.addRepresentation(rep)
         return image
+    }
+    private static func allEffects(under view: NSView) -> [NSVisualEffectView] {
+        view.subviews.flatMap { (($0 as? NSVisualEffectView).map { [$0] } ?? []) + allEffects(under: $0) }
+    }
+    private static func hideBackdrops(_ layer: CALayer) {
+        if String(describing: type(of: layer)).contains("Backdrop") { layer.isHidden = true }
+        layer.sublayers?.forEach(hideBackdrops)
     }
     /// Rect of `view` in the (unflipped) bitmap coordinate space of `root`.
     private static func rect(of view: NSView, in root: NSView) -> NSRect {

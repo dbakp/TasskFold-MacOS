@@ -61,6 +61,7 @@ struct SidebarView: View {
             } header: { Text("Labels") }
         }
         .listStyle(.sidebar)
+        .searchable(text: $workspace.search, isPresented: $workspace.searchPresented, placement: .sidebar, prompt: "Search tasks")
         .safeAreaInset(edge: .bottom) { SyncFooter() }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
         .sheet(item: $labelEditor) { NamedEditor(table: "labels", record: $0) }

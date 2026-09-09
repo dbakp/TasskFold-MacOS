@@ -79,11 +79,12 @@ struct TaskInspectorForm: View {
     var body: some View {
         Form {
             Section {
-                TextField("What needs doing?", text: text("title"), axis: .vertical)
+                TextField("Title", text: text("title"), prompt: Text("What needs doing?"), axis: .vertical)
+                    .labelsHidden().multilineTextAlignment(.leading)
                     .font(.title3.weight(.semibold)).textFieldStyle(.plain).lineLimit(1...4)
                     .focused($titleFocused).onSubmit { saveNow() }
                     .accessibilityIdentifier("taskTitle")
-                TextField("Notes", text: text("description"), axis: .vertical).textFieldStyle(.plain).lineLimit(2...10).foregroundStyle(.secondary)
+                TextField("Notes", text: text("description"), prompt: Text("Notes"), axis: .vertical).labelsHidden().multilineTextAlignment(.leading).textFieldStyle(.plain).lineLimit(2...10).foregroundStyle(.secondary)
                 HStack {
                     Button(draft.completed ? "Reopen" : "Complete", systemImage: draft.completed ? "arrow.uturn.backward.circle" : "checkmark.circle") { if let current { workspace.complete(current) } }
                         .controlSize(.small)
@@ -138,12 +139,12 @@ struct TaskInspectorForm: View {
                         Button { var list = draft["subtasks"].list; var item = value.object; item["completed"] = .bool(!(item["completed"]?.flag ?? false)); list[index] = .object(item); draft["subtasks"] = .array(list) } label: {
                             Image(systemName: value.object["completed"]?.flag == true ? "checkmark.circle.fill" : "circle").foregroundStyle(value.object["completed"]?.flag == true ? Color.accentColor : .secondary)
                         }.buttonStyle(.borderless).accessibilityLabel("Toggle subtask")
-                        TextField("Subtask", text: Binding(get: { draft["subtasks"].list[index].object["title"]?.text ?? "" }, set: { title in var list = draft["subtasks"].list; var item = list[index].object; item["title"] = .string(title); list[index] = .object(item); draft["subtasks"] = .array(list) }))
-                            .textFieldStyle(.plain)
+                        TextField("Subtask", text: Binding(get: { draft["subtasks"].list[index].object["title"]?.text ?? "" }, set: { title in var list = draft["subtasks"].list; var item = list[index].object; item["title"] = .string(title); list[index] = .object(item); draft["subtasks"] = .array(list) }), prompt: Text("Subtask"))
+                            .labelsHidden().textFieldStyle(.plain)
                         Button { var list = draft["subtasks"].list; list.remove(at: index); draft["subtasks"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove subtask")
                     }
                 }
-                HStack { TextField("Add a subtask", text: $subtask).textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).disabled(subtask.trimmingCharacters(in: .whitespaces).isEmpty) }
+                HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).disabled(subtask.trimmingCharacters(in: .whitespaces).isEmpty) }
             }
             Section("Attachments") {
                 ForEach(Array(draft["attachments"].list.enumerated()), id: \.offset) { index, value in
@@ -168,7 +169,7 @@ struct TaskInspectorForm: View {
                         if case .object(let attachment) = row["attachment"] { Button("Open attachment") { openAttachment(Record(attachment)) }.buttonStyle(.link) }
                     }
                 }
-                TextField("Write a comment", text: $comment, axis: .vertical).textFieldStyle(.plain).lineLimit(1...5)
+                TextField("Comment", text: $comment, prompt: Text("Write a comment"), axis: .vertical).labelsHidden().textFieldStyle(.plain).lineLimit(1...5)
                 Button("Add Comment", systemImage: "text.bubble") {
                     var list = draft["comments"].list
                     list.append(.object(["id": .string(UUID().uuidString.lowercased()), "text": .string(comment.trimmingCharacters(in: .whitespacesAndNewlines)), "createdAt": .string(Dates.timestamp()), "authorId": .string(store.userID), "authorName": .string(store.profile.string("display_name").isEmpty ? (store.localMode ? "You" : store.email) : store.profile.string("display_name"))]))

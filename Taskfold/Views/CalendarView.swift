@@ -71,7 +71,9 @@ struct CalendarView: View {
 
     var body: some View {
         @Bindable var workspace = workspace
-        HSplitView {
+        GeometryReader { proxy in
+        let showsPanel = proxy.size.width >= 1000
+        HStack(spacing: 0) {
             VStack(spacing: 0) {
                 header
                 Divider()
@@ -88,10 +90,17 @@ struct CalendarView: View {
                 .animation(layout, value: mode)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(minWidth: 480, maxWidth: .infinity, maxHeight: .infinity)
+            .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity)
             .layoutPriority(1)
-            dayPanel
-                .frame(minWidth: 260, idealWidth: 320, maxWidth: 420, maxHeight: .infinity)
+            if showsPanel {
+                Divider()
+                dayPanel
+                    .frame(width: min(300, max(240, proxy.size.width * 0.3)))
+                    .frame(maxHeight: .infinity)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .animation(Motion.respecting(reduceMotion, Motion.layout), value: showsPanel)
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .navigationTitle("Calendar")
@@ -126,12 +135,14 @@ struct CalendarView: View {
         }
     }
 
+    /// The period title lives in the toolbar subtitle; the header holds only the centred mode switcher.
     private var header: some View {
         HStack {
+            Spacer(minLength: 0)
             SlidingTabs(options: CalendarMode.allCases, selection: mode, title: { $0.title }) { workspace.calendarMode = $0 }
+                .fixedSize()
                 .accessibilityLabel("Calendar view")
-            Spacer()
-            Text(periodTitle).font(.title3.weight(.semibold)).id(periodTitle).transition(.textSwap)
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
     }
@@ -141,11 +152,15 @@ struct CalendarView: View {
 
     // MARK: Day columns (3 / 5 / week)
 
+    /// Columns take an equal share of whatever width is available, so the pane never forces the window wider.
     private func dayColumns(_ days: [Date]) -> some View {
-        HStack(alignment: .top, spacing: 0) {
-            ForEach(days, id: \.self) { day in
-                dayColumn(day)
-                if day != days.last { Divider() }
+        GeometryReader { proxy in
+            let width = max(0, (proxy.size.width - CGFloat(days.count - 1)) / CGFloat(days.count))
+            HStack(alignment: .top, spacing: 0) {
+                ForEach(days, id: \.self) { day in
+                    dayColumn(day).frame(width: width)
+                    if day != days.last { Divider() }
+                }
             }
         }
     }
@@ -156,7 +171,7 @@ struct CalendarView: View {
         return VStack(alignment: .leading, spacing: 8) {
             Button { select(day) } label: {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(day.formatted(.dateTime.weekday(.abbreviated)).uppercased()).font(.caption.weight(.semibold)).tracking(0.6).foregroundStyle(isToday ? Color.accentColor : .secondary)
+                    Text(day.formatted(.dateTime.weekday(.abbreviated)).uppercased()).font(.caption.weight(.semibold)).tracking(0.6).lineLimit(1).fixedSize().foregroundStyle(isToday ? Color.accentColor : .secondary)
                     Text(day.formatted(.dateTime.day())).font(.system(.title2, design: .rounded).weight(.semibold)).monospacedDigit()
                         .foregroundStyle(isSelected ? Color.white : isToday ? Color.accentColor : .primary)
                         .frame(width: 30, height: 30)
@@ -194,13 +209,14 @@ struct CalendarView: View {
                 .buttonStyle(GlyphStyle()).pointerStyle(.link)
                 .accessibilityLabel(task.completed ? "Reopen \(task.title)" : "Complete \(task.title)")
             VStack(alignment: .leading, spacing: 2) {
-                Text(task.title).font(.callout).lineLimit(2).foregroundStyle(task.completed ? .secondary : .primary).strikethrough(task.completed)
+                Text(task.title).font(.callout).lineLimit(2).truncationMode(.tail).foregroundStyle(task.completed ? .secondary : .primary).strikethrough(task.completed)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: 6) {
-                    if !task.string("due_time").isEmpty { Text(TaskRowView.timeText(task.string("due_time"))) }
+                    if !task.string("due_time").isEmpty { Text(TaskRowView.timeText(task.string("due_time"))).fixedSize() }
                     if let project = store.record("projects", id: task.string("project_id")) {
                         HStack(spacing: 4) { Circle().fill(Color.project(project.string("color"))).frame(width: 6, height: 6); Text(project.name).lineLimit(1) }
                     }
-                }.font(.caption).foregroundStyle(.secondary)
+                }.font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 0)
         }
@@ -232,22 +248,28 @@ struct CalendarView: View {
         let cells = days(from: first, count: 42)
         let symbols = calendar.shortStandaloneWeekdaySymbols
         let firstWeekday = calendar.firstWeekday - 1
-        return VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                ForEach(0..<7, id: \.self) { i in Text(symbols[(firstWeekday + i) % 7].uppercased()).font(.caption.weight(.semibold)).tracking(0.5).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.vertical, 6) }
-            }
-            Divider()
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 0) {
-                ForEach(cells, id: \.self) { day in
-                    monthCell(day, inMonth: calendar.isDate(day, equalTo: month, toGranularity: .month))
-                        .frame(maxWidth: .infinity, minHeight: 88, maxHeight: .infinity, alignment: .topLeading)
-                        .overlay(alignment: .trailing) { Divider() }
-                        .overlay(alignment: .bottom) { Divider() }
+        return GeometryReader { proxy in
+            let rowHeight = max(76, floor((proxy.size.height - 28) / 6))
+            let visible = max(1, Int((rowHeight - 36) / 18))
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    ForEach(0..<7, id: \.self) { i in Text(symbols[(firstWeekday + i) % 7].uppercased()).font(.caption.weight(.semibold)).tracking(0.5).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.vertical, 6) }
+                }
+                Divider()
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 0) {
+                    ForEach(cells, id: \.self) { day in
+                        monthCell(day, inMonth: calendar.isDate(day, equalTo: month, toGranularity: .month), visible: visible)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: rowHeight, alignment: .top)
+                            .clipped()
+                            .overlay(alignment: .trailing) { Divider() }
+                            .overlay(alignment: .bottom) { Divider() }
+                    }
                 }
             }
         }
     }
-    private func monthCell(_ day: Date, inMonth: Bool) -> some View {
+    private func monthCell(_ day: Date, inMonth: Bool, visible: Int) -> some View {
         let isSelected = calendar.isDate(day, inSameDayAs: selected)
         let isToday = calendar.isDate(day, inSameDayAs: today)
         let items = tasks(on: day).filter { !$0.completed }
@@ -257,13 +279,13 @@ struct CalendarView: View {
                     .foregroundStyle(dayNumberColor(selected: isSelected, today: isToday, inMonth: inMonth))
                     .frame(width: 24, height: 24)
                     .background { if isSelected { Circle().fill(Color.accentColor) } }
-                ForEach(items.prefix(3)) { task in
+                ForEach(items.prefix(items.count > visible ? max(1, visible - 1) : visible)) { task in
                     HStack(spacing: 4) {
                         Circle().fill(projectColor(task)).frame(width: 5, height: 5)
                         Text(task.title).font(.caption).lineLimit(1).foregroundStyle(inMonth ? .primary : .tertiary)
                     }
                 }
-                if items.count > 3 { Text("+\(items.count - 3) more").font(.caption2).foregroundStyle(.secondary) }
+                if items.count > visible { Text("+\(items.count - max(1, visible - 1)) more").font(.caption2.weight(.medium)).foregroundStyle(.secondary).contentTransition(.numericText()) }
             }
             .padding(6)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -292,7 +314,7 @@ struct CalendarView: View {
         ScrollView {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 4), spacing: 14) {
                 ForEach(0..<12, id: \.self) { offset in miniMonth(calendar.date(byAdding: .month, value: offset, to: year)!) }
-            }.padding(16)
+            }.padding(16).frame(maxWidth: 1080).frame(maxWidth: .infinity)
         }
     }
     private func miniMonth(_ month: Date) -> some View {
@@ -358,9 +380,11 @@ struct CalendarView: View {
             }
             List(selection: $workspace.selection) {
                 ForEach(items) { task in
-                    TaskRowView(task: task, compactDate: true).tag(task.id).listRowSeparator(.hidden)
+                    TaskRowView(task: task, compactDate: true).listRowSeparator(.hidden)
                         .modifier(DayDragRow(task: task, day: Dates.day(selected), orderProvider: { [(day: Dates.day(selected), ids: items.map(\.id))] }))
+                        .tag(task.id)
                 }
+
                 DayEndRow(day: Dates.day(selected), isEmpty: items.isEmpty).selectionDisabled().listRowSeparator(.hidden)
             }
             .listStyle(.inset)
@@ -372,8 +396,6 @@ struct CalendarView: View {
                     Button("Delete", role: .destructive) { workspace.delete(ids) }
                 }
             } primaryAction: { ids in if let id = ids.first, ids.count == 1 { workspace.open(id) } }
-            .onKeyPress(.space) { guard !workspace.selection.isEmpty else { return .ignored }; workspace.toggle(workspace.selection); return .handled }
-            .onKeyPress(.return) { guard let id = workspace.selection.first, workspace.selection.count == 1 else { return .ignored }; workspace.open(id); return .handled }
             .onDeleteCommand { workspace.delete(workspace.selection) }
             .animation(layout, value: items.map(\.id))
         }

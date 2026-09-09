@@ -14,7 +14,9 @@ func taskItemProvider(for tasks: [Record]) -> NSItemProvider {
     return provider
 }
 
-/// Makes a list row draggable and a slot-aware drop target within a day.
+/// Makes a list row a table-integrated drag source. `itemProvider` goes through the table's own dragging, so a
+/// plain click still selects the row and dragging a selected row drags the whole selection with the system's
+/// row snapshot as the drag image. Row drops are handled by the day's `onMove` / `onInsert`.
 struct DayDragRow: ViewModifier {
     @Environment(Workspace.self) private var workspace
     @Environment(Store.self) private var store
@@ -24,21 +26,24 @@ struct DayDragRow: ViewModifier {
     func body(content: Content) -> some View {
         let drag = workspace.drag
         content
-            .overlay(alignment: .top) { if drag.indicatorBefore(task.id, day: day) { InsertionIndicator().offset(y: -4) } }
-            .opacity(drag.ids.contains(task.id) ? 0.4 : 1)
+            .overlay(alignment: .top) { if drag.indicatorBefore(task.id, day: day) { InsertionIndicator().offset(y: -5) } }
+            .opacity(drag.ids.contains(task.id) ? 0.45 : 1)
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { drag.rowHeights[task.id] = $0 }
-            .onDrag {
-                let ids = workspace.selection.contains(task.id) ? Array(workspace.selection).sorted { a, b in
-                    let order = orderProvider().flatMap(\.ids); return (order.firstIndex(of: a) ?? 0) < (order.firstIndex(of: b) ?? 0) } : [task.id]
+            .onDrop(of: [.taskfoldTask], delegate: RowDropDelegate(workspace: workspace, id: task.id, day: day))
+            .itemProvider {
+                let order = orderProvider().flatMap(\.ids)
+                let ids = (workspace.selection.contains(task.id) ? Array(workspace.selection) : [task.id])
+                    .sorted { (order.firstIndex(of: $0) ?? 0) < (order.firstIndex(of: $1) ?? 0) }
                 let tasks = ids.compactMap { store.record("tasks", id: $0) }.filter { !$0.completed }
+                guard !tasks.isEmpty else { return nil }
                 drag.begin(tasks.map(\.id), order: orderProvider())
                 return taskItemProvider(for: tasks)
-            } preview: { DragPreview(tasks: workspace.selection.contains(task.id) ? workspace.selectedTasks : [task]) }
-            .onDrop(of: [.taskfoldTask], delegate: RowDropDelegate(workspace: workspace, id: task.id, day: day))
+            }
     }
 }
 
-/// Resolves the pointer position over a row to "before this task" or "before its successor".
+/// Resolves the pointer position over a row to "before this task" or "before its successor", drawing the
+/// insertion indicator as the pointer moves and landing the drop with the iOS DayPlacement semantics.
 struct RowDropDelegate: DropDelegate {
     let workspace: Workspace
     let id: String
@@ -50,7 +55,12 @@ struct RowDropDelegate: DropDelegate {
         let drag = workspace.drag
         if drag.target?.day == day, drag.target?.before == id || drag.target?.before == drag.successor(of: id, in: day) { drag.propose(nil) }
     }
-    func performDrop(info: DropInfo) -> Bool { finishDrop(workspace) }
+    func performDrop(info: DropInfo) -> Bool {
+        let drag = workspace.drag
+        defer { drag.end() }
+        guard let slot = drag.target, !drag.isNoop(slot) else { return false }
+        return workspace.move(drag.ids, to: slot)
+    }
     private func update(_ info: DropInfo) {
         let drag = workspace.drag
         guard !drag.ids.contains(id) else { return }
@@ -60,14 +70,43 @@ struct RowDropDelegate: DropDelegate {
     }
 }
 
+/// Reorders within a day from a table `onMove`, preserving the iOS DayPlacement semantics.
+@MainActor struct DayDropHandling {
+    let workspace: Workspace
+    let day: String
+    let tasks: [Record]
+    func move(from source: IndexSet, to destination: Int) {
+        var ids = tasks.map(\.id)
+        let moved = source.map { ids[$0] }
+        ids.move(fromOffsets: source, toOffset: destination)
+        guard let last = ids.lastIndex(where: { moved.contains($0) }) else { return }
+        let before = ids.indices.contains(last + 1) ? ids[last + 1] : nil
+        workspace.move(moved, to: DragSlot(day: day, before: before))
+        workspace.drag.end()
+    }
+    func insert(at index: Int, providers: [NSItemProvider]) {
+        let before = tasks.indices.contains(index) ? tasks[index].id : nil
+        let ids = workspace.drag.ids
+        if !ids.isEmpty {
+            workspace.move(ids, to: DragSlot(day: day, before: before)); workspace.drag.end(); return
+        }
+        for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.taskfoldTask.identifier) {
+            provider.loadDataRepresentation(forTypeIdentifier: UTType.taskfoldTask.identifier) { data, _ in
+                guard let data, let ids = try? JSONDecoder().decode([String].self, from: data) else { return }
+                Task { @MainActor in workspace.move(ids, to: DragSlot(day: day, before: before)) }
+            }
+        }
+    }
+}
+
 /// The tail of a day: an inviting drop zone when the day is empty, otherwise a slim landing strip.
 struct DayEndRow: View {
     @Environment(Workspace.self) private var workspace
     let day: String
     let isEmpty: Bool
+    @State private var targeted = false
     var body: some View {
         let drag = workspace.drag
-        let targeted = drag.indicatorAtEnd(of: day)
         Group {
             if isEmpty {
                 HStack {
@@ -75,6 +114,7 @@ struct DayEndRow: View {
                     Text(targeted ? "Release to schedule" : drag.active ? "Drop here" : "Nothing planned")
                         .font(.callout.weight(targeted ? .semibold : .regular))
                         .foregroundStyle(targeted ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.tertiary))
+                        .contentTransition(.interpolate)
                     Spacer()
                 }
                 .frame(minHeight: 40)
@@ -83,41 +123,40 @@ struct DayEndRow: View {
                         .fill(targeted ? Color.accentColor.opacity(0.08) : Color.clear)
                         .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: drag.active ? [5, 4] : [])).foregroundStyle(targeted ? Color.accentColor.opacity(0.7) : Color(nsColor: .separatorColor).opacity(drag.active ? 1 : 0.6)))
                 }
+                .scaleEffect(targeted ? 1.01 : 1)
             } else {
-                Color.clear.frame(height: 8).overlay(alignment: .top) { if targeted { InsertionIndicator() } }
+                Color.clear.frame(height: 10)
+                    .overlay(alignment: .top) { if targeted { InsertionIndicator() } }
             }
         }
         .animation(Motion.quick, value: targeted)
         .animation(Motion.quick, value: drag.active)
         .accessibilityIdentifier("day-end-\(day)")
         .accessibilityLabel(isEmpty ? "No tasks planned" : "End of day")
-        .onDrop(of: [.taskfoldTask], delegate: EndDropDelegate(workspace: workspace, day: day))
+        .onDrop(of: [.taskfoldTask], isTargeted: $targeted) { _ in
+            let ids = workspace.drag.ids
+            defer { workspace.drag.end() }
+            guard !ids.isEmpty else { return false }
+            Feedback.tick()
+            return workspace.move(ids, to: DragSlot(day: day, before: nil))
+        }
     }
-}
-
-struct EndDropDelegate: DropDelegate {
-    let workspace: Workspace
-    let day: String
-    func validateDrop(info: DropInfo) -> Bool { info.hasItemsConforming(to: [.taskfoldTask]) && workspace.drag.active }
-    func dropEntered(info: DropInfo) { workspace.drag.propose(DragSlot(day: day, before: nil)) }
-    func dropUpdated(info: DropInfo) -> DropProposal? { workspace.drag.propose(DragSlot(day: day, before: nil)); return DropProposal(operation: .move) }
-    func dropExited(info: DropInfo) { if workspace.drag.target == DragSlot(day: day, before: nil) { workspace.drag.propose(nil) } }
-    func performDrop(info: DropInfo) -> Bool { finishDrop(workspace) }
 }
 
 /// Day section headers accept drops as "end of this day" so an entire day is a target, not only its rows.
 struct DayHeaderDrop: ViewModifier {
     @Environment(Workspace.self) private var workspace
     let day: String
+    @State private var targeted = false
     func body(content: Content) -> some View {
-        content.onDrop(of: [.taskfoldTask], delegate: EndDropDelegate(workspace: workspace, day: day))
+        content
+            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Color.accentColor.opacity(targeted ? 0.12 : 0)).padding(-4))
+            .animation(Motion.quick, value: targeted)
+            .onDrop(of: [.taskfoldTask], isTargeted: $targeted) { _ in
+                let ids = workspace.drag.ids
+                defer { workspace.drag.end() }
+                guard !ids.isEmpty else { return false }
+                return workspace.move(ids, to: DragSlot(day: day, before: nil))
+            }
     }
-}
-
-@MainActor
-private func finishDrop(_ workspace: Workspace) -> Bool {
-    let drag = workspace.drag
-    defer { drag.end() }
-    guard let slot = drag.target, !drag.isNoop(slot) else { return false }
-    return workspace.move(drag.ids, to: slot)
 }

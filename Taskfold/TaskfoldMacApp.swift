@@ -23,7 +23,7 @@ struct TaskfoldMacApp: App {
                 .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
                 .frame(minWidth: 820, minHeight: 520)
         }
-        .defaultSize(width: 1220, height: 780)
+        .defaultSize(width: 1380, height: 840)
         .windowToolbarStyle(.unified)
         .commands { TaskfoldCommands(workspace: workspace, store: store) }
 
