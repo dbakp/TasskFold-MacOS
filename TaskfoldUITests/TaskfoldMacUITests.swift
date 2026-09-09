@@ -40,6 +40,38 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertGreaterThan(app.staticTexts["title-drag-fixture-2"].frame.minY, app.staticTexts["title-drag-fixture-3"].frame.minY)
     }
 
+    @MainActor func testNavigationPreservesDraftAndSelection() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
+        let row = app.staticTexts["title-drag-fixture-1"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.descendants(matching: .any)["taskTitle"].exists)
+        row.click()
+        XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].waitForExistence(timeout: 5))
+        let input = app.textFields["quickAdd"]
+        input.click(); input.typeText("Unfinished today draft")
+        app.typeKey("2", modifierFlags: .command)
+        XCTAssertEqual(input.value as? String, "")
+        input.click(); input.typeText("Unfinished inbox draft")
+        app.typeKey("1", modifierFlags: .command)
+        XCTAssertEqual(input.value as? String, "Unfinished today draft")
+        XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].waitForExistence(timeout: 5))
+        app.typeKey("2", modifierFlags: .command)
+        XCTAssertEqual(input.value as? String, "Unfinished inbox draft")
+    }
+
+    @MainActor func testInlineDateChangeAndUndo() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
+        let row = app.staticTexts["title-drag-fixture-1"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        app.menuButtons["actions-drag-fixture-1"].click()
+        app.menuItems["Change Date…"].click()
+        XCTAssertTrue(app.buttons["Tomorrow"].waitForExistence(timeout: 5))
+        app.buttons["Tomorrow"].click()
+        XCTAssertTrue(waitForDisappearance(row, timeout: 5))
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+    }
+
     /// Renders the report screenshots into the runner's temporary directory (printed in the log) when
     /// TEST_RUNNER_TASKFOLD_SCREENSHOTS=1 is passed to xcodebuild.
     @MainActor func testCaptureScreenshots() throws {

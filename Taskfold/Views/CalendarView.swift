@@ -3,12 +3,17 @@ import SwiftUI
 /// Calendar for a wide window: the period on the left (day columns for 3/5/week, a grid for month, twelve heat
 /// months for year) and the selected day's tasks alongside. Tasks open in the inspector; days accept drops.
 struct CalendarView: View {
+    var showsDayPanel = false
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var page = 0
-    @State private var quickAdd = ""
+    private var quickAdd: String {
+        get { workspace.quickAdd }
+        nonmutating set { workspace.quickAdd = newValue }
+    }
     @FocusState private var quickAddFocused: Bool
+    @FocusState private var calendarFocused: Bool
     @Namespace private var dayNamespace
 
     private var calendar: Calendar { Calendar.current }
@@ -72,7 +77,6 @@ struct CalendarView: View {
     var body: some View {
         @Bindable var workspace = workspace
         GeometryReader { proxy in
-        let showsPanel = proxy.size.width >= 1000
         HStack(spacing: 0) {
             VStack(spacing: 0) {
                 header
@@ -92,15 +96,14 @@ struct CalendarView: View {
             }
             .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity)
             .layoutPriority(1)
-            if showsPanel {
+            if showsDayPanel {
                 Divider()
                 dayPanel
                     .frame(width: min(300, max(240, proxy.size.width * 0.3)))
                     .frame(maxHeight: .infinity)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .transition(.identity)
             }
         }
-        .animation(Motion.respecting(reduceMotion, Motion.layout), value: showsPanel)
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .navigationTitle("Calendar")
@@ -116,7 +119,15 @@ struct CalendarView: View {
                 Button { workspace.inspectorShown.toggle() } label: { Label("Inspector", systemImage: "sidebar.trailing") }.help("Show or hide the inspector (⌥⌘I)")
             }
         }
-        .onAppear { page = page(containing: selected, mode: mode) }
+        .focusable()
+        .focusEffectDisabled()
+        .focused($calendarFocused)
+        .onAppear {
+            page = page(containing: selected, mode: mode)
+            // Move focus into the destination, just like task lists do. Leaving
+            // it in the sidebar keeps Calendar's active accent selection lit.
+            calendarFocused = true
+        }
         .onChange(of: workspace.calendarMode) { _, _ in withAnimation(layout) { page = page(containing: selected, mode: mode) } }
         .onChange(of: workspace.quickAddFocusRequest) { _, _ in quickAddFocused = true }
         .onKeyPress(.leftArrow) { shift(-1); return .handled }
@@ -375,7 +386,7 @@ struct CalendarView: View {
             .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 8)
             .animation(Transitions.Ease.smoothOut, value: count)
             .animation(Transitions.Ease.smoothOut, value: selected)
-            QuickAddBar(text: $quickAdd, focused: $quickAddFocused, prompt: "Add a task for this day") {
+            QuickAddBar(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), focused: $quickAddFocused, prompt: "Add a task for this day") {
                 if let id = workspace.add(quickAdd, date: selected) { quickAdd = ""; workspace.selection = [id] }
             }
             List(selection: $workspace.selection) {

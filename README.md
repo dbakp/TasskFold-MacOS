@@ -65,3 +65,17 @@ Debug-only launch arguments: `--preview` (illustrative tasks), `--uitesting` and
 | Calendar week | Calendar month, dark | Calendar year |
 | --- | --- | --- |
 | ![Week](Screenshots/calendar-week-light.png) | ![Month](Screenshots/calendar-month-dark.png) | ![Year](Screenshots/calendar-year-light.png) |
+
+## macOS polish work
+
+The implementation sequence and acceptance checks live in [the polish plan](docs/PREMIUM_MAC_PLAN.md).
+
+You can point Xcode at a separate clean iOS checkout without modifying your existing iOS work:
+
+```sh
+xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Release \
+  -derivedDataPath /tmp/taskfold-mac-build \
+  TASKFOLD_IOS_ROOT=/absolute/path/to/TaskFold-iOS -allowProvisioningUpdates build
+```
+
+The default shared-source location remains `../taskfold-ios`.

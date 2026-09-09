@@ -16,6 +16,7 @@ struct RootView: View {
         }
         .animation(Motion.respecting(reduceMotion, Motion.layout), value: store.signedIn)
         .onAppear { workspace.reduceMotion = reduceMotion; workspace.undoManager = undoManager; seed() }
+        .onChange(of: store.signedIn) { _, signedIn in if !signedIn { workspace.clearNavigationMemory() } }
         .onChange(of: reduceMotion) { _, value in workspace.reduceMotion = value }
         .onChange(of: undoManager) { _, value in workspace.undoManager = value }
         .alert("Something needs attention", isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) { Button("OK") { store.error = nil } } message: { Text(store.error ?? "") }
@@ -140,20 +141,29 @@ struct WorkspaceView: View {
     @State private var columns = NavigationSplitViewVisibility.all
     var body: some View {
         @Bindable var workspace = workspace
-        NavigationSplitView(columnVisibility: $columns) {
-            SidebarView()
-                .navigationSplitViewColumnWidth(min: 200, ideal: 230, max: 320)
-        } detail: {
-            Group {
-                if workspace.section == .calendar { CalendarView() }
-                else { TaskListView(scope: workspace.scope).id(workspace.section) }
+        GeometryReader { window in
+            NavigationSplitView(columnVisibility: $columns) {
+                SidebarView()
+                    .navigationSplitViewColumnWidth(min: 200, ideal: 230, max: 320)
+            } detail: {
+                Group {
+                    if workspace.section == .calendar {
+                        // Use the window budget, including space for the expanded sidebar, so
+                        // toggling it cannot trigger a second calendar layout mid-transition.
+                        CalendarView(showsDayPanel: window.size.width >= (workspace.inspectorVisible ? 1550 : 1240))
+                    }
+                    else { TaskListView(scope: workspace.scope).id(workspace.section) }
+                }
+                .inspector(isPresented: Binding(get: { workspace.inspectorVisible }, set: { shown in
+                    // Automatic hiding for an empty selection is not a user preference change.
+                    if !workspace.selection.isEmpty { workspace.inspectorShown = shown }
+                })) {
+                    TaskInspector()
+                        .inspectorColumnWidth(min: 270, ideal: 310, max: 460)
+                }
             }
-            .inspector(isPresented: $workspace.inspectorShown) {
-                TaskInspector()
-                    .inspectorColumnWidth(min: 270, ideal: 310, max: 460)
-            }
+            .navigationSplitViewStyle(.prominentDetail)
         }
-        .navigationSplitViewStyle(.balanced)
         .modifier(KeyRouter())
         .accessibilityIdentifier("nativeWorkspace")
     }

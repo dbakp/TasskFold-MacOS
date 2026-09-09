@@ -68,11 +68,23 @@ final class Workspace {
     var section: SidebarItem {
         didSet {
             UserDefaults.standard.set(section.key, forKey: "macSection")
-            if section != oldValue { selection = []; search = "" }
+            guard section != oldValue else { return }
+            navigationMemory[oldValue] = NavigationMemory(selection: selection, search: search, draft: quickAdd)
+            let remembered = navigationMemory[section] ?? NavigationMemory()
+            selection = remembered.selection.filter { store.record("tasks", id: $0) != nil }
+            search = remembered.search
+            quickAdd = remembered.draft
         }
     }
     var selection = Set<String>()
     var search = ""
+    var quickAdd = ""
+    private struct NavigationMemory {
+        var selection = Set<String>()
+        var search = ""
+        var draft = ""
+    }
+    private var navigationMemory: [SidebarItem: NavigationMemory] = [:]
     var searchPresented = false
     var inspectorShown: Bool { didSet { UserDefaults.standard.set(inspectorShown, forKey: "inspectorShown") } }
     /// Bumping these asks the matching text field to take focus.
@@ -98,6 +110,15 @@ final class Workspace {
         if case .project(let id) = section, store.record("projects", id: id) == nil { section = .today }
         if case .label(let id) = section, store.record("labels", id: id) == nil { section = .today }
     }
+
+    func clearNavigationMemory() {
+        navigationMemory.removeAll()
+        selection = []
+        search = ""
+        quickAdd = ""
+    }
+
+    var inspectorVisible: Bool { inspectorShown && !selection.isEmpty }
 
     var layout: Animation? { Motion.respecting(reduceMotion, Motion.layout) }
     var primaryTask: Record? { selection.count == 1 ? selection.first.flatMap { store.record("tasks", id: $0) } : nil }

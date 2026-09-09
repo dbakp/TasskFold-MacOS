@@ -7,6 +7,7 @@ struct TaskRowView: View {
     let task: Record
     var compactDate = false
     @State private var hovering = false
+    @State private var choosingDate = false
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
     private var overdue: Bool { if let due = task.due { return due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
     private var dueToday: Bool { task.string("due_date") == Dates.day(Date()) }
@@ -40,14 +41,23 @@ struct TaskRowView: View {
                         if showsDate, let due = task.due {
                             let time = task.string("due_time")
                             let text = compactDate && !overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))
-                            Label(text, systemImage: task["is_recurring"].flag ? "repeat" : overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
-                                .foregroundStyle(overdue ? Color.red : dueToday ? Color.accentColor : Color.secondary)
+                            Button { choosingDate = true } label: {
+                                Label(text, systemImage: task["is_recurring"].flag ? "repeat" : overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
+                                    .foregroundStyle(overdue ? Color.red : dueToday ? Color.accentColor : Color.secondary)
+                            }
+                            .buttonStyle(.borderless)
+                            .help("Change date")
+                            .accessibilityIdentifier("date-\(task.id)")
                         }
                         if let project = store.record("projects", id: task.string("project_id")) {
-                            HStack(spacing: 5) {
-                                Circle().fill(Color.project(project.string("color"))).frame(width: 7, height: 7)
-                                Text(project.name).lineLimit(1)
+                            Menu { projectOptions } label: {
+                                HStack(spacing: 5) {
+                                    Circle().fill(Color.project(project.string("color"))).frame(width: 7, height: 7)
+                                    Text(project.name).lineLimit(1)
+                                }
                             }
+                            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+                            .help("Move to project")
                         }
                         ForEach(task["labels"].list.map(\.text).filter { !$0.isEmpty }, id: \.self) { name in
                             Text(store.record("labels", id: name)?.name ?? name).lineLimit(1).fixedSize().padding(.horizontal, 6).padding(.vertical, 1)
@@ -60,17 +70,45 @@ struct TaskRowView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            if task.priority < 4 && !checked {
-                Image(systemName: "flag.fill").font(.caption2).foregroundStyle(Color.priority(task.priority)).opacity(0.85)
-                    .accessibilityLabel("Priority \(task.priority)")
+            Menu { priorityOptions } label: {
+                Image(systemName: task.priority < 4 ? "flag.fill" : "flag")
+                    .foregroundStyle(task.priority < 4 ? Color.priority(task.priority) : Color.secondary)
             }
+            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+            .opacity(task.priority < 4 || hovering ? 1 : 0.45)
+            .help("Change priority")
+            .accessibilityLabel("Priority for \(task.title)")
+            .accessibilityIdentifier("priority-\(task.id)")
+            Menu {
+                Button("Change Date…", systemImage: "calendar") { choosingDate = true }
+                Menu("Move to Project") { projectOptions }
+                Menu("Priority") { priorityOptions }
+                Divider()
+                Button("Edit Details…") { workspace.open(task.id) }
+            } label: { Image(systemName: "ellipsis") }
+            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+            .opacity(hovering ? 1 : 0.45)
+            .help("Task actions")
+            .accessibilityIdentifier("actions-\(task.id)")
         }
         .padding(.vertical, 5)
         .contentShape(.rect)
         .onHover { hovering = $0 }
-        .animation(Motion.quick, value: checked)
+        .popover(isPresented: $choosingDate) { TaskDatePopover(task: task) }
+        .animation(workspace.layout, value: checked)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("task-\(task.id)")
+    }
+    @ViewBuilder private var projectOptions: some View {
+        Button("Inbox") { workspace.move([task.id], toProject: "") }
+        ForEach(store.projects) { project in
+            Button(project.name) { workspace.move([task.id], toProject: project.id) }
+        }
+    }
+    @ViewBuilder private var priorityOptions: some View {
+        ForEach(1...4, id: \.self) { priority in
+            Button(priority == 4 ? "None" : "Priority \(priority)") { workspace.setPriority([task.id], priority) }
+        }
     }
     private var accessibilitySummary: String {
         var parts = [task.title]
@@ -115,5 +153,39 @@ struct InsertionIndicator: View {
         .frame(height: 7)
         .transition(.opacity)
         .accessibilityHidden(true)
+    }
+}
+
+/// Date edits commit once, through the same undo path as keyboard and inspector actions.
+struct TaskDatePopover: View {
+    @Environment(Workspace.self) private var workspace
+    @Environment(\.dismiss) private var dismiss
+    let task: Record
+    @State private var date: Date
+    init(task: Record) { self.task = task; _date = State(initialValue: task.due ?? Date()) }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Schedule task").font(.headline)
+            HStack {
+                Button("Today") { apply(Date()) }
+                Button("Tomorrow") { apply(Calendar.current.date(byAdding: .day, value: 1, to: Date())!) }
+                Button("Next Week") { apply(Workspace.next(weekday: 2)) }
+            }.controlSize(.small)
+            DatePicker("Date", selection: $date, displayedComponents: .date)
+                .datePickerStyle(.graphical).labelsHidden()
+            HStack {
+                Button("Remove Date") {
+                    dismiss()
+                    workspace.reschedule([task.id], to: nil, label: "")
+                }.disabled(task.due == nil)
+                Spacer()
+                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Apply") { apply(date) }.keyboardShortcut(.defaultAction)
+            }
+        }.padding(16).frame(width: 330)
+    }
+    private func apply(_ date: Date) {
+        dismiss()
+        workspace.reschedule([task.id], to: Dates.day(date), label: date.formatted(date: .abbreviated, time: .omitted))
     }
 }

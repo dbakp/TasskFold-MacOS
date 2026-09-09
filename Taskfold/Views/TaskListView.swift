@@ -14,7 +14,10 @@ struct TaskListView: View {
     @AppStorage("defaultView") private var defaultView = "today"
     @AppStorage("overdueCollapsedToday") private var overdueCollapsedToday = false
     @AppStorage("overdueCollapsedUpcoming") private var overdueCollapsedUpcoming = false
-    @State private var quickAdd = ""
+    private var quickAdd: String {
+        get { workspace.quickAdd }
+        nonmutating set { workspace.quickAdd = newValue }
+    }
     @State private var bulkDatePicker = false
     @State private var bulkDate = Date()
     @State private var projectEditor: Record?
@@ -59,10 +62,13 @@ struct TaskListView: View {
     var body: some View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
-            QuickAddBar(text: $quickAdd, focused: $quickAddFocused, prompt: quickAddPrompt) { submitQuickAdd() }
+            QuickAddBar(text: $workspace.quickAdd, focused: $quickAddFocused, prompt: quickAddPrompt) { submitQuickAdd() }
                 .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
                 .background(.bar)
-            List(selection: $workspace.selection) {
+            List(selection: Binding(get: { workspace.section.scope == scope ? workspace.selection : [] }, set: { selection in
+                guard workspace.section.scope == scope else { return }
+                workspace.selection = selection
+            })) {
                 if !store.online || store.notice != nil { statusRow }
                 if store.syncing && store.tasks.isEmpty && store.lastSync == nil && !store.localMode { SkeletonRows().padding(.vertical, 12).selectionDisabled().listRowSeparator(.hidden).transition(.skeletonReveal) }
                 if filtered.isEmpty && !dated { emptyState }
@@ -105,10 +111,17 @@ struct TaskListView: View {
         .onChange(of: workspace.selection) { _, selection in if !selection.isEmpty && quickAdd.isEmpty { quickAddFocused = false } }
         .onChange(of: filtered.map(\.id)) { _, ids in
             // Assign only when something actually left the list; re-setting selection during a table update is reentrant.
+            guard workspace.section.scope == scope else { return }
             let kept = workspace.selection.intersection(ids)
-            if kept != workspace.selection { Task { @MainActor in workspace.selection = kept } }
+            if kept != workspace.selection {
+                Task { @MainActor in
+                    // A departed list must not clear the destination's restored selection.
+                    guard workspace.section.scope == scope else { return }
+                    workspace.selection.formIntersection(ids)
+                }
+            }
         }
-        .onAppear { if ProcessInfo.processInfo.arguments.contains("--uitesting") == false && filtered.isEmpty { quickAddFocused = true } }
+        .onAppear { if ProcessInfo.processInfo.arguments.contains("--uitesting") == false && filtered.isEmpty && workspace.selection.isEmpty { quickAddFocused = true } }
     }
 
     private var subtitle: String {
