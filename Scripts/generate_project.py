@@ -20,7 +20,10 @@ app_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "Taskfold").rglob
 app_sources += [f"{IOS}/Core/Models.swift", f"{IOS}/Core/Store.swift", f"{IOS}/Core/Backend.swift", f"{IOS}/Core/Intents.swift"]
 app_resources = ["Taskfold/Assets.xcassets", f"{IOS}/Backend.plist", f"{IOS}/TaskfoldIcon.icon"]
 test_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldUITests").rglob("*.swift"))
-other_files = ["Taskfold/Info.plist", "Taskfold/Taskfold.entitlements"]
+widget_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldWidgets").rglob("*.swift"))
+# Set TASKFOLD_WIDGETS=0 to leave the widget extension out (for example while App Groups cannot be provisioned).
+WIDGETS = os.environ.get("TASKFOLD_WIDGETS", "1") != "0" and widget_sources
+other_files = ["Taskfold/Info.plist", "Taskfold/Taskfold.entitlements"] + (["TaskfoldWidgets/Info.plist", "TaskfoldWidgets/TaskfoldWidgets.entitlements"] if WIDGETS else [])
 
 def file_type(path):
     if path.endswith(".swift"): return "sourcecode.swift"
@@ -44,26 +47,32 @@ def add_build(path):
     lines.append(f"{bid} = {{ isa = PBXBuildFile; fileRef = {refs[path]}; }};")
     return bid
 
-for p in app_sources + app_resources + test_sources + other_files: add_ref(p)
+for p in app_sources + app_resources + test_sources + other_files + (widget_sources if WIDGETS else []): add_ref(p)
 app_source_builds = [add_build(p) for p in app_sources]
 app_resource_builds = [add_build(p) for p in app_resources]
 test_source_builds = [add_build(p) for p in test_sources]
+widget_source_builds = [add_build(p) for p in widget_sources] if WIDGETS else []
 
-app_product = uid("product:app"); test_product = uid("product:tests")
+app_product = uid("product:app"); test_product = uid("product:tests"); widget_product = uid("product:widgets")
 lines.append(f'{app_product} = {{ isa = PBXFileReference; explicitFileType = wrapper.application; path = Taskfold.app; sourceTree = BUILT_PRODUCTS_DIR; }};')
 lines.append(f'{test_product} = {{ isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = TaskfoldUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; }};')
+if WIDGETS:
+    lines.append(f'{widget_product} = {{ isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; path = TaskfoldWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; }};')
+    embed_widget = uid("build:embed:widgets")
+    lines.append(f'{embed_widget} = {{ isa = PBXBuildFile; fileRef = {widget_product}; settings = {{ ATTRIBUTES = (RemoveHeadersOnCopy,); }}; }};')
 
 def group(name, children, gid=None):
     gid = gid or uid("group:" + name)
     lines.append(f'{gid} = {{ isa = PBXGroup; children = ({",".join(children)},); name = "{name}"; sourceTree = "<group>"; }};')
     return gid
 
-products = group("Products", [app_product, test_product])
+products = group("Products", [app_product, test_product] + ([widget_product] if WIDGETS else []))
+widgets_group = group("TaskfoldWidgets", [refs[p] for p in widget_sources] + [refs["TaskfoldWidgets/Info.plist"], refs["TaskfoldWidgets/TaskfoldWidgets.entitlements"]]) if WIDGETS else None
 shared_core = group("Shared Core (taskfold-ios)", [refs[p] for p in app_sources if p.startswith("$(")] + [refs[f"{IOS}/Backend.plist"], refs[f"{IOS}/TaskfoldIcon.icon"]])
 views = group("Views", [refs[p] for p in app_sources if p.startswith("Taskfold/Views/")])
-app_group = group("Taskfold", [refs[p] for p in app_sources if p.startswith("Taskfold/") and not p.startswith("Taskfold/Views/")] + [views, refs["Taskfold/Assets.xcassets"]] + [refs[p] for p in other_files])
+app_group = group("Taskfold", [refs[p] for p in app_sources if p.startswith("Taskfold/") and not p.startswith("Taskfold/Views/")] + [views, refs["Taskfold/Assets.xcassets"]] + [refs[p] for p in other_files if p.startswith("Taskfold/")])
 tests_group = group("TaskfoldUITests", [refs[p] for p in test_sources])
-main_group = group("Root", [app_group, shared_core, tests_group, products], uid("group:main"))
+main_group = group("Root", [app_group, shared_core, tests_group] + ([widgets_group] if WIDGETS else []) + [products], uid("group:main"))
 
 app_sources_phase = uid("phase:app:sources"); app_res_phase = uid("phase:app:resources"); app_fw_phase = uid("phase:app:frameworks")
 test_sources_phase = uid("phase:test:sources")
@@ -71,6 +80,12 @@ lines.append(f'{app_sources_phase} = {{ isa = PBXSourcesBuildPhase; buildActionM
 lines.append(f'{app_res_phase} = {{ isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(app_resource_builds)},); runOnlyForDeploymentPostprocessing = 0; }};')
 lines.append(f'{app_fw_phase} = {{ isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
 lines.append(f'{test_sources_phase} = {{ isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(test_source_builds)},); runOnlyForDeploymentPostprocessing = 0; }};')
+widget_sources_phase = uid("phase:widgets:sources"); widget_fw_phase = uid("phase:widgets:frameworks"); embed_phase = uid("phase:app:embed")
+if WIDGETS:
+    lines.append(f'{widget_sources_phase} = {{ isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(widget_source_builds)},); runOnlyForDeploymentPostprocessing = 0; }};')
+    lines.append(f'{widget_fw_phase} = {{ isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
+    # Embed Foundation Extensions: dstSubfolderSpec 13 is the PlugIns folder of the app bundle.
+    lines.append(f'{embed_phase} = {{ isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = ({embed_widget},); name = "Embed Foundation Extensions"; runOnlyForDeploymentPostprocessing = 0; }};')
 
 common = f'SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 15.0; TASKFOLD_IOS_ROOT = {IOS_DEFAULT}; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; DEVELOPMENT_TEAM = {TEAM}; CODE_SIGN_STYLE = Automatic; ENABLE_USER_SCRIPT_SANDBOXING = YES; COMBINE_HIDPI_IMAGES = YES; DEAD_CODE_STRIPPING = YES;'
 app_common = ('PRODUCT_NAME = Taskfold; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Taskfold/Info.plist; '
@@ -78,6 +93,9 @@ app_common = ('PRODUCT_NAME = Taskfold; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.ta
               'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 1.0.0; SWIFT_EMIT_LOC_STRINGS = YES; '
               'ENABLE_PREVIEWS = YES; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks"; ')
 test_common = 'PRODUCT_NAME = TaskfoldUITests; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.uitests; GENERATE_INFOPLIST_FILE = YES; TEST_TARGET_NAME = Taskfold; '
+widget_common = ('PRODUCT_NAME = TaskfoldWidgets; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.widgets; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = TaskfoldWidgets/Info.plist; '
+                 'CODE_SIGN_ENTITLEMENTS = TaskfoldWidgets/TaskfoldWidgets.entitlements; ENABLE_HARDENED_RUNTIME = YES; SKIP_INSTALL = YES; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 1.0.0; '
+                 'LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"; ')
 
 def config(name, settings):
     cid = uid("config:" + name)
@@ -92,14 +110,21 @@ project_configs = config_list("project", [config("project:Debug", common + ' SWI
                                          config("project:Release", common + ' SWIFT_OPTIMIZATION_LEVEL = "-O"; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";')])
 app_configs = config_list("app", [config("app:Debug", app_common), config("app:Release", app_common)])
 test_configs = config_list("test", [config("test:Debug", test_common), config("test:Release", test_common)])
+widget_configs = config_list("widgets", [config("widgets:Debug", widget_common), config("widgets:Release", widget_common)]) if WIDGETS else None
 
-app_target = uid("target:app"); test_target = uid("target:test"); project_id = uid("project")
-proxy = uid("proxy"); dependency = uid("dependency")
+app_target = uid("target:app"); test_target = uid("target:test"); widget_target = uid("target:widgets"); project_id = uid("project")
+proxy = uid("proxy"); dependency = uid("dependency"); widget_proxy = uid("proxy:widgets"); widget_dependency = uid("dependency:widgets")
 lines.append(f'{proxy} = {{ isa = PBXContainerItemProxy; containerPortal = {project_id}; proxyType = 1; remoteGlobalIDString = {app_target}; remoteInfo = Taskfold; }};')
 lines.append(f'{dependency} = {{ isa = PBXTargetDependency; target = {app_target}; targetProxy = {proxy}; }};')
-lines.append(f'{app_target} = {{ isa = PBXNativeTarget; buildConfigurationList = {app_configs}; buildPhases = ({app_sources_phase},{app_fw_phase},{app_res_phase},); buildRules = (); dependencies = (); name = Taskfold; productName = Taskfold; productReference = {app_product}; productType = "com.apple.product-type.application"; }};')
+if WIDGETS:
+    lines.append(f'{widget_proxy} = {{ isa = PBXContainerItemProxy; containerPortal = {project_id}; proxyType = 1; remoteGlobalIDString = {widget_target}; remoteInfo = TaskfoldWidgets; }};')
+    lines.append(f'{widget_dependency} = {{ isa = PBXTargetDependency; target = {widget_target}; targetProxy = {widget_proxy}; }};')
+    lines.append(f'{widget_target} = {{ isa = PBXNativeTarget; buildConfigurationList = {widget_configs}; buildPhases = ({widget_sources_phase},{widget_fw_phase},); buildRules = (); dependencies = (); name = TaskfoldWidgets; productName = TaskfoldWidgets; productReference = {widget_product}; productType = "com.apple.product-type.app-extension"; }};')
+app_phases = f"{app_sources_phase},{app_fw_phase},{app_res_phase}," + (f"{embed_phase}," if WIDGETS else "")
+app_dependencies = f"{widget_dependency}," if WIDGETS else ""
+lines.append(f'{app_target} = {{ isa = PBXNativeTarget; buildConfigurationList = {app_configs}; buildPhases = ({app_phases}); buildRules = (); dependencies = ({app_dependencies}); name = Taskfold; productName = Taskfold; productReference = {app_product}; productType = "com.apple.product-type.application"; }};')
 lines.append(f'{test_target} = {{ isa = PBXNativeTarget; buildConfigurationList = {test_configs}; buildPhases = ({test_sources_phase},); buildRules = (); dependencies = ({dependency},); name = TaskfoldUITests; productName = TaskfoldUITests; productReference = {test_product}; productType = "com.apple.product-type.bundle.ui-testing"; }};')
-lines.append(f'{project_id} = {{ isa = PBXProject; attributes = {{ BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 2600; TargetAttributes = {{ {app_target} = {{ DevelopmentTeam = {TEAM}; }}; {test_target} = {{ DevelopmentTeam = {TEAM}; TestTargetID = {app_target}; }}; }}; }}; buildConfigurationList = {project_configs}; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en,Base,); mainGroup = {main_group}; productRefGroup = {products}; projectDirPath = ""; projectRoot = ""; targets = ({app_target},{test_target},); }};')
+lines.append(f'{project_id} = {{ isa = PBXProject; attributes = {{ BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 2600; TargetAttributes = {{ {app_target} = {{ DevelopmentTeam = {TEAM}; }}; {test_target} = {{ DevelopmentTeam = {TEAM}; TestTargetID = {app_target}; }}; {widget_target} = {{ DevelopmentTeam = {TEAM}; }}; }}; }}; buildConfigurationList = {project_configs}; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en,Base,); mainGroup = {main_group}; productRefGroup = {products}; projectDirPath = ""; projectRoot = ""; targets = ({app_target},{test_target},{(widget_target + ",") if WIDGETS else ""}); }};')
 lines.append(f"}}; rootObject = {project_id}; }}")
 
 out = ROOT / "Taskfold.xcodeproj" / "project.pbxproj"

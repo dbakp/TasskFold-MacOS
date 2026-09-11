@@ -102,3 +102,24 @@ xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Release \
 - Task-list and Calendar quick-add fields start hidden. The toolbar plus, ⌘N, or New Task command reveals entry. Escape hides it without discarding the draft; successful submission clears and hides it. Returning to a destination keeps entry hidden until reopened.
 - Verified four UI regressions: scoped completed filters, finder focus/project navigation, per-destination draft restoration, and explicit quick entry with filtering. The new test initially queried a task's accessibility label instead of its value; the corrected query passed.
 - Release build and strict signature verification passed. Installed `/Applications/Taskfold.app` and visually checked the content-corner controls and plus/Escape behavior without changing real tasks.
+
+## Parity pass — 11 September 2026
+
+Shared iOS checkout: `d7a8bec` (`TASKFOLD_IOS_ROOT`, default `../taskfold-ios`). Seven milestones, each committed and pushed:
+
+1. Band ordering and constrained drops, group reordering, Priority sort removed.
+2. Quick-entry chips in the quick-add bar (lists, Calendar) and the inspector title.
+3. Links by page title with hover previews, context menu, inspector Links section, selection-safe clicks.
+4. Account security actions and actionable reminders.
+5. Plan Your Day and Review This Week.
+6. Accent colours, date-line subtitle, recent searches.
+7. Shortcuts intents and the Today widget extension (App Group on both targets).
+
+Verification notes:
+
+- New UI tests: `testDropStaysInsidePriorityBand`, `testDeclinedChipKeepsWordsInTitle`, `testLinkClickDoesNotSelectRow`, `testPlanSheetCompletesTask`. Results for the full run are recorded below.
+- Fixture launches register `ApplePersistenceIgnoreState`: force-quit runs left window-restoration state that restored an app with no windows, which made every fixture test fail before the fix.
+- Table-backed lists claim clicks before forwarding them, so link clicks are intercepted by a local event monitor ahead of the table (`Views/Links.swift`). Arrow keys reach `onMoveCommand`, not `onKeyPress`, in the planning sheet.
+- The planning sheet snapshots its queue when it opens; recomputing it from the live store skipped a card after a completion.
+- Shared Core compiled unchanged. `canImport(ActivityKit)` is true on macOS, so a no-op `LiveActivityManager` stub in the Mac target satisfies the persist hook.
+- Live account actions (email/password change, reset, delete), Shortcuts phrases in Siri, and widget rendering in Notification Center need a signed-in account and a manual check; the bundle carries `Metadata.appintents`, the embedded `.appex`, and the App Group entitlement, and code signing verifies.

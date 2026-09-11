@@ -103,6 +103,8 @@ final class Workspace {
         }
     }
     var settingsTab = SettingsTab.general
+    /// Debug preview only: shows the signed-in account actions without a session, for screenshots.
+    var previewsAccount = false
     var signInRequested = false
     @ObservationIgnored private weak var finderReturnResponder: NSResponder?
     @ObservationIgnored private var finderReturnSelection: NSRange?

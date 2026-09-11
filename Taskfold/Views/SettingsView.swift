@@ -95,13 +95,15 @@ struct AccountSettings: View {
                     Button("Save Profile", action: saveProfile)
                 }
             }
-            if store.signedIn && !store.localMode {
-                Section("Security") {
+            if (store.signedIn && !store.localMode) || workspace.previewsAccount {
+                Section {
                     Button("Change Email…") { changingEmail = true }.accessibilityIdentifier("changeEmail")
                     Button("Change Password…") { changingPassword = true }.accessibilityIdentifier("changePassword")
                     Button(sendingReset ? "Sending…" : "Send Password Reset Email") { sendReset() }.disabled(sendingReset).accessibilityIdentifier("sendPasswordReset")
                     if let resetMessage { Text(resetMessage).font(.caption).foregroundStyle(.secondary).textSelection(.enabled) }
                     Button("Delete Account…", role: .destructive) { deletingAccount = true }.accessibilityIdentifier("deleteAccount")
+                } header: { Text("Security") } footer: {
+                    if workspace.previewsAccount { Text("Preview: these actions need a signed-in account.").font(.caption).foregroundStyle(.secondary) }
                 }
             }
             Section("Data") {

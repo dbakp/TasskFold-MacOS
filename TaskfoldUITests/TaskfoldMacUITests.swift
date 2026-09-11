@@ -348,6 +348,7 @@ final class TaskfoldMacUITests: XCTestCase {
             ("calendar-week-light", ["--preview", "--section=calendar", "--calendar-mode=week", "--appearance=light", "--select-title=Review the onboarding flow"]),
             ("calendar-month-dark", ["--preview", "--section=calendar", "--calendar-mode=month", "--appearance=dark"]),
             ("calendar-year-light", ["--preview", "--section=calendar", "--calendar-mode=year", "--appearance=light"]),
+            ("today-sky-accent", ["--preview", "--section=today", "--appearance=light", "--accent=sky", "--select-title=Make time for the big idea"]),
         ]
         for (name, arguments) in shots {
             let app = XCUIApplication(); app.launchArguments = arguments; app.launch()
@@ -357,6 +358,21 @@ final class TaskfoldMacUITests: XCTestCase {
             try png.write(to: URL(fileURLWithPath: directory).appending(path: "\(name).png"))
             app.terminate()
         }
+        // Quick-add with chips: type a sentence the parser understands, capture before submitting.
+        let chips = XCUIApplication(); chips.launchArguments = ["--preview", "--section=today", "--appearance=light"]; chips.launch()
+        XCTAssertTrue(chips.windows.firstMatch.waitForExistence(timeout: 10)); sleep(1)
+        chips.typeKey("n", modifierFlags: .command)
+        XCTAssertTrue(chips.textFields["quickAdd"].waitForExistence(timeout: 5))
+        chips.typeText("Call the studio tomorrow at 14.30 p2 #calls")
+        sleep(1)
+        try chips.windows.firstMatch.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: directory).appending(path: "quick-add-chips.png"))
+        chips.terminate()
+        // Settings ▸ Account with the security actions previewed.
+        let settings = XCUIApplication(); settings.launchArguments = ["--preview", "--preview-account", "--appearance=light", "--open-settings=account"]; settings.launch()
+        XCTAssertTrue(settings.windows["Account"].waitForExistence(timeout: 10) || settings.windows.count > 1); sleep(2)
+        let window = settings.windows.allElementsBoundByIndex.first { $0.descendants(matching: .any)["changeEmail"].exists } ?? settings.windows.firstMatch
+        try window.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: directory).appending(path: "settings-account.png"))
+        settings.terminate()
     }
 
     /// NSTableView accessibility can return estimated/stale row frames after rebuilding.

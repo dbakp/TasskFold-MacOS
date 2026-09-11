@@ -1,5 +1,32 @@
 # Feature parity and remaining work
 
+## Parity pass — 11 September 2026
+
+Compared against `dbakp/taskfold-ios` at `d7a8bec` (shared Core adopted, not re-implemented). Everything below is in the Mac app unless marked.
+
+| iOS capability | Mac status | Notes |
+| --- | --- | --- |
+| Priority-band ordering (`DayPlacement.arranged`) | Done | Today, each Upcoming day, Inbox, projects and sections, labels, calendar day panel. "Priority" sort removed; Due Date and Title remain. |
+| Band-constrained drops (`DayPlacement.constrained`) | Done | The insertion indicator is drawn at the constrained slot; "Stays with P2" hint with one trackpad tick when the pointer is over another band. |
+| Manual reordering in non-day lists | Done | Device-local keys `group:<projectID>:<sectionID|none>` and `scope:<preferenceKey>`, one undoable commit per move. Dropping into a section adopts it. |
+| Quick-entry tokens as chips (`QuickEntry.tokens`, `disabled:`) | Done | Quick-add bar (lists and Calendar) and the inspector title. ✕ declines a group; Tab, Space, Delete, Escape work on chips. |
+| Links by page title (`NSDataDetector`, `LPMetadataProvider`) | Done | Rows and notes render links in the accent colour; hover preview (`LPLinkView`); Open / Copy Link / Share; inspector Links section. A link click never selects the row. Opens in the default browser (iOS uses an in-app Safari sheet). |
+| Account: change email / password, reset email, delete account | Done | Settings ▸ Account ▸ Security, sheets surface server errors verbatim. Needs a live account to exercise; unverified against Supabase here. |
+| Actionable reminders (`ReminderCategory`) | Done | Registered at launch; Complete, Remind me in 1 hour, Move to tomorrow handled in the notification delegate. |
+| Plan Your Day / Review This Week | Done | One card at a time with T, M, D, Space, → shortcuts; ⌥⌘P / ⌥⌘W; toolbar buttons in Today and Upcoming. |
+| Eight accent colours (`Color.accents`, `accent` key) | Done | Settings ▸ General; the scene tint and every accent-coloured element follow the choice. |
+| Tagline copy removed | Done | Today shows a date line and a count. |
+| Recent searches | Done | Suggested in the global search field (shared `recentSearches` key). |
+| Siri / Shortcuts intents (`Intents.swift`) | Done | Shared file compiled into the Mac target; Add Task, What's Due Today, Complete Task appear in Shortcuts via `Metadata.appintents`. |
+| Today widget (App Group snapshot) | Done | `TaskfoldWidgets.appex` embedded, small / medium / large. `group.com.dbakp.taskfold` provisioned on the personal team without issue on this Mac. |
+| Live Activity / Control Center button / Lock Screen families | Not applicable | iOS-only surfaces. A no-op `LiveActivityManager` satisfies the shared persist hook on macOS. |
+| Swipe actions, mobile pill mode switcher, iPad sidebar | Not applicable | Mac uses keyboard, context menus, and the split view. |
+| `Store.startLocal` "Getting started" seed | Done | Shared; Mac wording comes from the Core's `os(macOS)` branch. |
+
+Verification: see the 11 September parity entry in `PREMIUM_MAC_PLAN.md`.
+
+## Original audit — 10 September 2026
+
 Audit date: 10 September 2026. Compared the Mac implementation with the original web app (`dbakp/taskfold`, commit `17c12da4399c2d253259c565fa2ff18f973a31b5`) and shared iOS app (`dbakp/TaskFold-iOS`, commit `9419eb230c7cd91bce0a213206ae84c2dc5deb70`).
 
 ## Restored access in this update
