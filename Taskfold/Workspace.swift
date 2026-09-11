@@ -315,8 +315,8 @@ final class Workspace {
     }
     /// Creates a task from quick-entry text. Returns the new task's id.
     @discardableResult
-    func add(_ input: String, project: String = "", date: Date?) -> String? {
-        let parsed = QuickEntry(input)
+    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = []) -> String? {
+        let parsed = QuickEntry(input, disabled: declined)
         guard !parsed.title.isEmpty else { return nil }
         var task = Record.task(user: store.userID, project: project, date: date)
         task["title"] = .string(parsed.title)

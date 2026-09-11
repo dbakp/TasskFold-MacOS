@@ -25,6 +25,7 @@ struct TaskListView: View {
     @State private var collaborationProject: Record?
     @State private var sectionsEditor = false
     @State private var quickAddVisible = false
+    @State private var declinedGroups = Set<String>()
     @FocusState private var filterFocused: Bool
     @FocusState private var quickAddFocused: Bool
 
@@ -112,7 +113,7 @@ struct TaskListView: View {
             .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
             if quickAddVisible {
-                QuickAddBar(text: $workspace.quickAdd, focused: $quickAddFocused, prompt: quickAddPrompt) { submitQuickAdd() }
+                QuickAddBar(text: $workspace.quickAdd, declined: $declinedGroups, focused: $quickAddFocused, prompt: quickAddPrompt) { submitQuickAdd() }
                     .onAppear { quickAddFocused = true }
                     .onExitCommand { quickAddVisible = false; quickAddFocused = false }
                     .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
@@ -203,7 +204,8 @@ struct TaskListView: View {
     private func submitQuickAdd() {
         let date: Date? = scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil
         let labelName: String? = { if case .label(let id) = scope { return store.record("labels", id: id)?.name }; return nil }()
-        guard let id = workspace.add(quickAdd, project: projectID, date: date) else { return }
+        guard let id = workspace.add(quickAdd, project: projectID, date: date, declined: declinedGroups) else { return }
+        declinedGroups = []
         if let labelName, var task = store.record("tasks", id: id), !task["labels"].list.contains(.string(labelName)) {
             task["labels"] = .array(task["labels"].list + [.string(labelName)]); store.save("tasks", task)
         }
@@ -343,10 +345,12 @@ enum ReadingColumn { static let width: CGFloat = 860 }
 /// The entry field above the list. Quick-entry grammar is parsed by the shared `QuickEntry` type.
 struct QuickAddBar: View {
     @Binding var text: String
+    /// Suggestion groups the user declined with a chip's ✕; the words stay in the title.
+    @Binding var declined: Set<String>
     var focused: FocusState<Bool>.Binding
     let prompt: String
     let submit: () -> Void
-    private var parsed: QuickEntry { QuickEntry(text) }
+    private var parsed: QuickEntry { QuickEntry(text, disabled: declined) }
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
@@ -358,29 +362,25 @@ struct QuickAddBar: View {
                     .onSubmit(submit)
                     .accessibilityIdentifier("quickAdd")
                 if !text.isEmpty {
-                    if parsed.hasSuggestions { suggestions }
+                    if !parsed.tokens.isEmpty {
+                        ScrollView(.horizontal) {
+                            QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: { focused.wrappedValue = true })
+                                .padding(.vertical, 2)
+                        }
+                        .scrollIndicators(.hidden).scrollClipDisabled()
+                        .frame(maxWidth: 360)
+                        .fixedSize(horizontal: true, vertical: false)
+                    }
                     Button("Add", action: submit).keyboardShortcut(.defaultAction).controlSize(.small).buttonStyle(.borderedProminent)
                         .disabled(parsed.title.isEmpty)
                 }
             }
             .padding(.horizontal, 14).padding(.vertical, 9)
+            .frame(minHeight: 40)
             .animation(Motion.quick, value: text.isEmpty)
+            .onChange(of: text) { _, value in if value.isEmpty { declined = [] } }
             Divider()
         }
-    }
-    private var suggestions: some View {
-        HStack(spacing: 6) {
-            if let date = parsed.updates["due_date"]?.text, let day = Dates.parse(date) { chip(day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()), "calendar") }
-            if let time = parsed.updates["due_time"]?.text { chip(TaskRowView.timeText(time), "clock") }
-            if let priority = parsed.updates["priority"]?.integer { chip("P\(priority)", "flag") }
-            if parsed.updates["is_recurring"]?.flag == true { chip("Repeats", "repeat") }
-            ForEach(parsed.updates["labels"]?.list.map(\.text) ?? [], id: \.self) { label in chip(label, "tag") }
-        }
-        .font(.caption).foregroundStyle(.secondary)
-        .transition(.opacity)
-    }
-    private func chip(_ text: String, _ symbol: String) -> some View {
-        Label(text, systemImage: symbol).padding(.horizontal, 7).padding(.vertical, 3).background(Color.secondary.opacity(0.1), in: .capsule)
     }
 }
 

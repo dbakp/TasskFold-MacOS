@@ -13,6 +13,7 @@ struct CalendarView: View {
         nonmutating set { workspace.quickAdd = newValue }
     }
     @State private var quickAddVisible = false
+    @State private var declinedGroups = Set<String>()
     @FocusState private var quickAddFocused: Bool
     @FocusState private var calendarFocused: Bool
     @Namespace private var dayNamespace
@@ -391,8 +392,8 @@ struct CalendarView: View {
             .animation(Transitions.Ease.smoothOut, value: count)
             .animation(Transitions.Ease.smoothOut, value: selected)
             if quickAddVisible {
-            QuickAddBar(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), focused: $quickAddFocused, prompt: "Add a task for this day") {
-                if let id = workspace.add(quickAdd, date: selected) { quickAdd = ""; quickAddVisible = false; quickAddFocused = false; workspace.selection = [id] }
+            QuickAddBar(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), declined: $declinedGroups, focused: $quickAddFocused, prompt: "Add a task for this day") {
+                if let id = workspace.add(quickAdd, date: selected, declined: declinedGroups) { quickAdd = ""; declinedGroups = []; quickAddVisible = false; quickAddFocused = false; workspace.selection = [id] }
             }
             .onAppear { quickAddFocused = true }
             .onExitCommand { quickAddVisible = false; quickAddFocused = false }

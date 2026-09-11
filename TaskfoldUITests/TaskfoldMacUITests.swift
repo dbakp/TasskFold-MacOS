@@ -85,6 +85,25 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertGreaterThan(delta.frame.minY, gamma.frame.minY, "Undo restores the previous order in one step")
     }
 
+    /// Declining the date chip keeps "tomorrow" in the title while the priority chip still applies.
+    @MainActor func testDeclinedChipKeepsWordsInTitle() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
+        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]
+        XCTAssertTrue(input.waitForExistence(timeout: 5))
+        app.typeText("Call Sam tomorrow p1")
+        XCTAssertTrue(app.buttons["decline-due_date"].waitForExistence(timeout: 5), "Date and priority chips appear while typing")
+        XCTAssertTrue(app.buttons["decline-priority"].exists)
+        app.buttons["decline-due_date"].click()
+        XCTAssertTrue(waitForDisappearance(app.buttons["decline-due_date"], timeout: 3))
+        XCTAssertTrue(app.buttons["decline-priority"].waitForExistence(timeout: 3), "Declining one group leaves the others")
+        app.typeKey(.return, modifierFlags: [])
+        let created = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH %@", "Call Sam tomorrow")).firstMatch
+        XCTAssertTrue(created.waitForExistence(timeout: 5), "The declined words stay in the title")
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "value CONTAINS %@", "p1")).firstMatch.exists, "The accepted priority left the title")
+    }
+
     @MainActor func testNavigationPreservesDraftAndSelection() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
         let row = app.staticTexts["title-drag-fixture-1"]

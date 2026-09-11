@@ -71,7 +71,14 @@ struct TaskInspectorForm: View {
     @State private var preview: URL?
     @State private var confirmDelete = false
     @State private var saveTask: Task<Void, Never>?
+    @State private var declined = Set<String>()
     @FocusState private var titleFocused: Bool
+    /// Parsing runs while the title differs from the saved one; Return (or leaving the field) applies it.
+    private var suggestions: QuickEntry? {
+        guard draft.title != original.title else { return nil }
+        let parsed = QuickEntry(draft.title, disabled: declined)
+        return parsed.tokens.isEmpty ? nil : parsed
+    }
 
     private var current: Record? { store.record("tasks", id: taskID) }
     private func text(_ key: String) -> Binding<String> {
@@ -83,8 +90,18 @@ struct TaskInspectorForm: View {
                 TextField("Title", text: text("title"), prompt: Text("What needs doing?"), axis: .vertical)
                     .labelsHidden().multilineTextAlignment(.leading)
                     .font(.title3.weight(.semibold)).textFieldStyle(.plain).lineLimit(1...4)
-                    .focused($titleFocused).onSubmit { saveNow() }
+                    .focused($titleFocused).onSubmit { applySuggestions(); saveNow() }
+                    .onChange(of: titleFocused) { _, focused in if !focused { applySuggestions() } }
                     .accessibilityIdentifier("taskTitle")
+                if let suggestions {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ScrollView(.horizontal) {
+                            QuickEntryChips(tokens: suggestions.tokens, decline: { token in _ = declined.insert(token.group) }, returnFocus: { titleFocused = true }).padding(.vertical, 2)
+                        }.scrollIndicators(.hidden).scrollClipDisabled()
+                        Text("Return applies these · ✕ keeps the words in the title").font(.caption2).foregroundStyle(.tertiary)
+                    }
+                    .transition(.opacity)
+                }
                 TextField("Notes", text: text("description"), prompt: Text("Notes"), axis: .vertical).labelsHidden().multilineTextAlignment(.leading).textFieldStyle(.plain).lineLimit(2...10).foregroundStyle(.secondary)
                 HStack {
                     Button(draft.completed ? "Reopen" : "Complete", systemImage: draft.completed ? "arrow.uturn.backward.circle" : "checkmark.circle") { if let current { workspace.complete(current) } }
@@ -233,6 +250,18 @@ struct TaskInspectorForm: View {
         Button(title) { draft["due_date"] = .string(Dates.day(date)) }.buttonStyle(.bordered)
     }
     private func load() { if let current { draft = current; original = current } }
+    /// Moves accepted quick-entry pieces out of the title into their fields, like the iOS editor's save.
+    private func applySuggestions() {
+        guard let parsed = suggestions, parsed.hasSuggestions else { return }
+        withAnimation(workspace.layout) {
+            draft["title"] = .string(parsed.title)
+            for (key, value) in parsed.updates { draft[key] = value }
+        }
+        for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text }) {
+            _ = store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": value, "color": .string("#e31e4b")]))
+        }
+        declined = []
+    }
     private func scheduleSave() {
         saveTask?.cancel()
         saveTask = Task { try? await Task.sleep(for: .milliseconds(600)); guard !Task.isCancelled else { return }; saveNow() }
