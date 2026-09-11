@@ -16,6 +16,7 @@ struct RootView: View {
         }
         .animation(Motion.respecting(reduceMotion, Motion.layout), value: store.signedIn)
         .onAppear { workspace.reduceMotion = reduceMotion; workspace.undoManager = undoManager; seed() }
+        .onChange(of: store.userID) { _, _ in workspace.clearNavigationMemory(); workspace.section = .today }
         .onChange(of: store.signedIn) { _, signedIn in if !signedIn { workspace.clearNavigationMemory() } }
         .onChange(of: reduceMotion) { _, value in workspace.reduceMotion = value }
         .onChange(of: undoManager) { _, value in workspace.undoManager = value }
@@ -97,6 +98,28 @@ struct RootView: View {
                 try? store.persist()
             }
         }
+        if arguments.contains("--navigation-fixture") {
+            store.startLocal(); store.snapshot = Snapshot()
+            for scope in ["today", "inbox", "all", "completed"] {
+                UserDefaults.standard.set(false, forKey: "mac.view.\(scope).showCompleted")
+                UserDefaults.standard.set(0, forKey: "mac.view.\(scope).priorityFilter")
+                UserDefaults.standard.set("title", forKey: "mac.view.\(scope).sortBy")
+            }
+            store.snapshot.tables["projects"] = [Record(["id": .string("nav-project"), "name": .string("Navigation Studio"), "user_id": .string(store.userID)])]
+            store.snapshot.tables["tasks"] = (0..<160).map { index in
+                var task = Record.task(user: store.userID, date: Date())
+                task["id"] = .string("nav-\(index)")
+                task["title"] = .string(String(format: "Navigation task %03d", index))
+                task["priority"] = .number(index % 2 == 0 ? 1 : 4)
+                return task
+            }
+            var archived = Record.task(user: store.userID, project: "nav-project", date: Date())
+            archived["id"] = .string("nav-archived")
+            archived["title"] = .string("Archived navigation target")
+            archived["completed"] = .bool(true)
+            store.snapshot.tables["tasks", default: []].append(archived)
+            try? store.persist()
+        }
         if arguments.contains("--preview") {
             store.startLocal(); store.snapshot = Snapshot()
             let focus = Record(["id": .string("preview-project"), "name": .string("A little more focus"), "user_id": .string("preview"), "color": .string("#e31e4b"), "order_index": .number(0)])
@@ -152,18 +175,22 @@ struct WorkspaceView: View {
                         // toggling it cannot trigger a second calendar layout mid-transition.
                         CalendarView(showsDayPanel: window.size.width >= (workspace.inspectorVisible ? 1550 : 1240))
                     }
-                    else { TaskListView(scope: workspace.scope).id(workspace.section) }
+                    else { TaskListView(scope: workspace.scope) }
                 }
+                .id(workspace.section)
                 .inspector(isPresented: Binding(get: { workspace.inspectorVisible }, set: { shown in
                     // Automatic hiding for an empty selection is not a user preference change.
-                    if !workspace.selection.isEmpty { workspace.inspectorShown = shown }
+                    if !workspace.actionSelection.isEmpty { workspace.inspectorShown = shown }
                 })) {
                     TaskInspector()
                         .inspectorColumnWidth(min: 270, ideal: 310, max: 460)
                 }
             }
             .navigationSplitViewStyle(.prominentDetail)
+            .navigationTitle(workspace.navigationTitle)
+            .navigationSubtitle(workspace.navigationSubtitle)
         }
+        .sheet(isPresented: $workspace.finderPresented, onDismiss: { workspace.finishFinderDismissal() }) { FinderView() }
         .modifier(KeyRouter())
         .accessibilityIdentifier("nativeWorkspace")
     }

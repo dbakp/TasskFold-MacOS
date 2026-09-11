@@ -16,18 +16,19 @@ struct KeyRouter: ViewModifier {
             .onDisappear { if let monitor { NSEvent.removeMonitor(monitor) }; monitor = nil }
     }
     @MainActor private func handle(_ event: NSEvent) -> Bool {
-        guard let window = event.window, window.isKeyWindow, !(window.firstResponder is NSTextView),
+        guard !workspace.finderPresented, let window = event.window, window.isKeyWindow,
+              window == NSApp.mainWindow, window.attachedSheet == nil, !(window.firstResponder is NSTextView),
               event.modifierFlags.intersection([.command, .option, .control]).isEmpty else { return false }
         switch event.keyCode {
         case 49: // Space
-            guard !workspace.selection.isEmpty else { return false }
-            workspace.toggle(workspace.selection); return true
+            guard !workspace.actionSelection.isEmpty else { return false }
+            workspace.toggle(workspace.actionSelection); return true
         case 36, 76: // Return, Enter
-            guard workspace.selection.count == 1, let id = workspace.selection.first else { return false }
+            guard workspace.actionSelection.count == 1, let id = workspace.actionSelection.first else { return false }
             workspace.open(id); return true
         case 53: // Escape
-            guard !workspace.selection.isEmpty else { return false }
-            workspace.selection = []; return true
+            guard !workspace.actionSelection.isEmpty else { return false }
+            workspace.finderTaskID = nil; workspace.selection = []; return true
         default: return false
         }
     }

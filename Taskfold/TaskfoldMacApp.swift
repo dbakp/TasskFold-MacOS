@@ -58,6 +58,7 @@ final class NotificationRoute {
 
 /// Menu bar commands mirror every keyboard shortcut in the window so they are discoverable and scriptable.
 struct TaskfoldCommands: Commands {
+    @Environment(\.openSettings) private var openSettings
     let workspace: Workspace
     let store: Store
     var body: some Commands {
@@ -67,33 +68,44 @@ struct TaskfoldCommands: Commands {
         }
         CommandGroup(after: .pasteboard) {
             Divider()
-            Button("Search Tasks") { workspace.searchPresented = true }.keyboardShortcut("f", modifiers: .command)
+            Button("Search Everywhere…") { workspace.finderPresented = true }.keyboardShortcut("f", modifiers: .command)
+            Button("Find Commands…") { workspace.finderPresented = true }.keyboardShortcut("k", modifiers: .command)
+            Button("Filter Current List") { workspace.searchPresented = true }.keyboardShortcut("f", modifiers: [.command, .shift])
+                .disabled(workspace.section == .calendar)
+        }
+        CommandMenu("Account") {
+            Button("Manage Account…") { workspace.settingsTab = .account; openSettings() }
+            if store.localMode || !store.signedIn {
+                Button("Sign In…") { workspace.settingsTab = .account; workspace.signInRequested = true; openSettings() }
+            }
+            Button("Import from Todoist…") { workspace.settingsTab = .imports; openSettings() }
+            Button("Invitations…") { workspace.settingsTab = .invitations; openSettings() }
         }
         CommandMenu("Task") {
             // Space and Return are handled by the focused list itself so typing in text fields is never intercepted.
-            Button(completeTitle) { workspace.toggle(workspace.selection) }.keyboardShortcut("k", modifiers: [.command, .shift]).disabled(workspace.selection.isEmpty)
-            Button("Edit Task") { if let id = workspace.selection.first, workspace.selection.count == 1 { workspace.open(id) } }.keyboardShortcut("e", modifiers: .command).disabled(workspace.selection.count != 1)
+            Button(completeTitle) { workspace.toggle(workspace.actionSelection) }.keyboardShortcut("k", modifiers: [.command, .shift]).disabled(workspace.actionSelection.isEmpty)
+            Button("Edit Task") { if let id = workspace.actionSelection.first, workspace.actionSelection.count == 1 { workspace.open(id) } }.keyboardShortcut("e", modifiers: .command).disabled(workspace.actionSelection.count != 1)
             Divider()
             Menu("Reschedule") {
-                Button("Today") { workspace.reschedule(workspace.selection, to: Dates.day(Date()), label: "today") }.keyboardShortcut("t", modifiers: [.command, .option])
-                Button("Tomorrow") { workspace.reschedule(workspace.selection, to: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!), label: "tomorrow") }.keyboardShortcut("t", modifiers: [.command, .option, .shift])
-                Button("This Weekend") { workspace.reschedule(workspace.selection, to: Dates.day(Workspace.next(weekday: 7)), label: "the weekend") }
-                Button("Next Week") { workspace.reschedule(workspace.selection, to: Dates.day(Workspace.next(weekday: 2)), label: "next week") }
+                Button("Today") { workspace.reschedule(workspace.actionSelection, to: Dates.day(Date()), label: "today") }.keyboardShortcut("t", modifiers: [.command, .option])
+                Button("Tomorrow") { workspace.reschedule(workspace.actionSelection, to: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!), label: "tomorrow") }.keyboardShortcut("t", modifiers: [.command, .option, .shift])
+                Button("This Weekend") { workspace.reschedule(workspace.actionSelection, to: Dates.day(Workspace.next(weekday: 7)), label: "the weekend") }
+                Button("Next Week") { workspace.reschedule(workspace.actionSelection, to: Dates.day(Workspace.next(weekday: 2)), label: "next week") }
                 Divider()
-                Button("Remove Date") { workspace.reschedule(workspace.selection, to: nil, label: "") }
-            }.disabled(workspace.selection.isEmpty)
+                Button("Remove Date") { workspace.reschedule(workspace.actionSelection, to: nil, label: "") }
+            }.disabled(workspace.actionSelection.isEmpty)
             Menu("Move to Project") {
-                Button("Inbox") { workspace.move(workspace.selection, toProject: "") }
-                ForEach(store.projects) { project in Button(project.name) { workspace.move(workspace.selection, toProject: project.id) } }
-            }.disabled(workspace.selection.isEmpty)
+                Button("Inbox") { workspace.move(workspace.actionSelection, toProject: "") }
+                ForEach(store.projects) { project in Button(project.name) { workspace.move(workspace.actionSelection, toProject: project.id) } }
+            }.disabled(workspace.actionSelection.isEmpty)
             Menu("Priority") {
                 ForEach(1...4, id: \.self) { n in
-                    Button(n == 4 ? "None" : "Priority \(n)") { workspace.setPriority(workspace.selection, n) }.keyboardShortcut(KeyEquivalent(Character("\(n)")), modifiers: [.command, .option])
+                    Button(n == 4 ? "None" : "Priority \(n)") { workspace.setPriority(workspace.actionSelection, n) }.keyboardShortcut(KeyEquivalent(Character("\(n)")), modifiers: [.command, .option])
                 }
-            }.disabled(workspace.selection.isEmpty)
-            Button("Duplicate") { workspace.duplicate(workspace.selection) }.keyboardShortcut("d", modifiers: .command).disabled(workspace.selection.isEmpty)
+            }.disabled(workspace.actionSelection.isEmpty)
+            Button("Duplicate") { workspace.duplicate(workspace.actionSelection) }.keyboardShortcut("d", modifiers: .command).disabled(workspace.actionSelection.isEmpty)
             Divider()
-            Button("Delete") { workspace.delete(workspace.selection) }.keyboardShortcut(.delete, modifiers: .command).disabled(workspace.selection.isEmpty)
+            Button("Delete") { workspace.delete(workspace.actionSelection) }.keyboardShortcut(.delete, modifiers: .command).disabled(workspace.actionSelection.isEmpty)
         }
         CommandGroup(before: .sidebar) {
             Button("Today") { workspace.section = .today }.keyboardShortcut("1", modifiers: .command)

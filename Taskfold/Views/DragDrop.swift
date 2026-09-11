@@ -27,7 +27,6 @@ struct DayDragRow: ViewModifier {
         let drag = workspace.drag
         content
             .overlay(alignment: .top) { if drag.indicatorBefore(task.id, day: day) { InsertionIndicator().offset(y: -5) } }
-            .opacity(drag.ids.contains(task.id) ? 0.45 : 1)
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { drag.rowHeights[task.id] = $0 }
             .onDrop(of: [.taskfoldTask], delegate: RowDropDelegate(workspace: workspace, id: task.id, day: day))
             .itemProvider {

@@ -59,7 +59,7 @@ struct AuthView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear { focus = .email }
-        .accessibilityIdentifier("nativeAuthentication")
+        .accessibilityElement(children: .contain)
     }
     private var canSubmit: Bool { email.contains("@") && (signup ? password.count >= 6 : !password.isEmpty) }
     private func authenticate() {

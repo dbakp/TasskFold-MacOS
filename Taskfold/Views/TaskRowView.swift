@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 /// One task in the content list: check control, title, metadata, and a hover-revealed action.
 struct TaskRowView: View {
@@ -8,6 +9,9 @@ struct TaskRowView: View {
     var compactDate = false
     @State private var hovering = false
     @State private var choosingDate = false
+    @Environment(\.controlActiveState) private var controlActiveState
+    private var selectedForeground: Color { controlActiveState == .inactive ? Color(nsColor: .labelColor) : .white }
+    private var isSelected: Bool { workspace.selection.contains(task.id) }
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
     private var overdue: Bool { if let due = task.due { return due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
     private var dueToday: Bool { task.string("due_date") == Dates.day(Date()) }
@@ -19,7 +23,7 @@ struct TaskRowView: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Button { workspace.complete(task) } label: {
-                CheckMark(checked: checked, color: Color.priority(task.priority), emphasized: task.priority < 4)
+                CheckMark(checked: checked, color: isSelected ? selectedForeground : Color.priority(task.priority), emphasized: isSelected || task.priority < 4)
                     .padding(3)
             }
             .buttonStyle(GlyphStyle())
@@ -30,12 +34,12 @@ struct TaskRowView: View {
             .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
             VStack(alignment: .leading, spacing: 3) {
                 Text(task.title.isEmpty ? "Untitled task" : task.title)
-                    .foregroundStyle(checked ? .secondary : .primary)
+                    .foregroundStyle(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary)
                     .strikethrough(checked, color: .secondary)
                     .lineLimit(2)
                     .accessibilityLabel(accessibilitySummary)
                     .accessibilityIdentifier("title-\(task.id)")
-                if !task.string("description").isEmpty { Text(task.string("description")).font(.callout).foregroundStyle(.secondary).lineLimit(1) }
+                if !task.string("description").isEmpty { Text(task.string("description")).font(.callout).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).lineLimit(1) }
                 if showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
                     HStack(spacing: 10) {
                         if showsDate, let due = task.due {
@@ -43,7 +47,7 @@ struct TaskRowView: View {
                             let text = compactDate && !overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))
                             Button { choosingDate = true } label: {
                                 Label(text, systemImage: task["is_recurring"].flag ? "repeat" : overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
-                                    .foregroundStyle(overdue ? Color.red : dueToday ? Color.accentColor : Color.secondary)
+                                    .foregroundStyle(isSelected ? selectedForeground : overdue ? Color.red : dueToday ? Color.accentColor : Color.secondary)
                             }
                             .buttonStyle(.borderless)
                             .help("Change date")
@@ -57,6 +61,7 @@ struct TaskRowView: View {
                                 }
                             }
                             .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+                            .tint(isSelected ? selectedForeground : nil)
                             .help("Move to project")
                         }
                         ForEach(task["labels"].list.map(\.text).filter { !$0.isEmpty }, id: \.self) { name in
@@ -66,16 +71,17 @@ struct TaskRowView: View {
                         if !task["subtasks"].list.isEmpty { Label("\(task["subtasks"].list.filter { $0.object["completed"]?.flag == true }.count)/\(task["subtasks"].list.count)", systemImage: "checklist") }
                         if !task["comments"].list.isEmpty { Label("\(task["comments"].list.count)", systemImage: "text.bubble") }
                         if !task["attachments"].list.isEmpty { Image(systemName: "paperclip") }
-                    }.font(.caption).foregroundStyle(.secondary).labelStyle(.titleAndIcon).lineLimit(1)
+                    }.font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).labelStyle(.titleAndIcon).lineLimit(1)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Menu { priorityOptions } label: {
                 Image(systemName: task.priority < 4 ? "flag.fill" : "flag")
-                    .foregroundStyle(task.priority < 4 ? Color.priority(task.priority) : Color.secondary)
+                    .foregroundStyle(isSelected ? selectedForeground : task.priority < 4 ? Color.priority(task.priority) : Color.secondary)
             }
             .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-            .opacity(task.priority < 4 || hovering ? 1 : 0.45)
+            .tint(isSelected ? selectedForeground : Color.priority(task.priority))
+            .opacity(isSelected || task.priority < 4 || hovering ? 1 : 0.65)
             .help("Change priority")
             .accessibilityLabel("Priority for \(task.title)")
             .accessibilityIdentifier("priority-\(task.id)")
@@ -85,12 +91,14 @@ struct TaskRowView: View {
                 Menu("Priority") { priorityOptions }
                 Divider()
                 Button("Edit Details…") { workspace.open(task.id) }
-            } label: { Image(systemName: "ellipsis") }
+            } label: { Image(systemName: "ellipsis").fontWeight(.semibold).foregroundStyle(isSelected ? selectedForeground : Color.secondary) }
             .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-            .opacity(hovering ? 1 : 0.45)
+            .tint(isSelected ? selectedForeground : .secondary)
+            .opacity(isSelected || hovering ? 1 : 0.65)
             .help("Task actions")
             .accessibilityIdentifier("actions-\(task.id)")
         }
+        .tint(nil)
         .padding(.vertical, 5)
         .contentShape(.rect)
         .onHover { hovering = $0 }

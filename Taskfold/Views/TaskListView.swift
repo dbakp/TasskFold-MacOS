@@ -8,9 +8,9 @@ struct TaskListView: View {
     @Environment(Workspace.self) private var workspace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let scope: TaskScope
-    @AppStorage("showCompleted") private var showCompleted = false
-    @AppStorage("priorityFilter") private var priorityFilter = 0
-    @AppStorage("sortBy") private var sortBy = "manual"
+    @AppStorage private var showCompleted: Bool
+    @AppStorage private var priorityFilter: Int
+    @AppStorage private var sortBy: String
     @AppStorage("defaultView") private var defaultView = "today"
     @AppStorage("overdueCollapsedToday") private var overdueCollapsedToday = false
     @AppStorage("overdueCollapsedUpcoming") private var overdueCollapsedUpcoming = false
@@ -18,12 +18,21 @@ struct TaskListView: View {
         get { workspace.quickAdd }
         nonmutating set { workspace.quickAdd = newValue }
     }
+    @State private var nativeList = ListNativeHandle()
     @State private var bulkDatePicker = false
     @State private var bulkDate = Date()
     @State private var projectEditor: Record?
     @State private var collaborationProject: Record?
     @State private var sectionsEditor = false
     @FocusState private var quickAddFocused: Bool
+
+    init(scope: TaskScope) {
+        self.scope = scope
+        let prefix = "mac.view.\(scope.preferenceKey)."
+        _showCompleted = AppStorage(wrappedValue: false, prefix + "showCompleted")
+        _priorityFilter = AppStorage(wrappedValue: 0, prefix + "priorityFilter")
+        _sortBy = AppStorage(wrappedValue: "manual", prefix + "sortBy")
+    }
 
     private var dated: Bool { scope == .today || scope == .upcoming }
     private var projectID: String { if case .project(let id) = scope { return id }; return "" }
@@ -56,6 +65,10 @@ struct TaskListView: View {
         }
         return [("", filtered)]
     }
+    private var displayedTaskIDs: [String] {
+        if dated { return dayGroups.filter { $0.0 != "Overdue" || !overdueCollapsed }.flatMap { $0.1.map(\.id) } }
+        return groups.flatMap { $0.1.map(\.id) }
+    }
     private var order: [(day: String, ids: [String])] { dayGroups.filter { $0.0 != "Overdue" }.map { (day: $0.0, ids: $0.1.map(\.id)) } }
     private var remaining: Int { filtered.filter { !$0.completed && !workspace.completing.contains($0.id) }.count }
 
@@ -87,6 +100,8 @@ struct TaskListView: View {
                     }
                 }
             }
+            .background(ListScrollMemory(key: scope.preferenceKey, workspace: workspace, taskIDs: displayedTaskIDs, handle: nativeList))
+            .accessibilityIdentifier("taskList")
             .listStyle(.inset)
             .scrollContentBackground(.hidden)
             .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
@@ -99,10 +114,10 @@ struct TaskListView: View {
         .background(Color(nsColor: .textBackgroundColor))
         .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation).transition(reduceMotion ? .opacity : .toast) } }
         .animation(Transitions.Ease.smoothOut, value: workspace.confirmation)
-        .navigationTitle(title)
-        .navigationSubtitle(subtitle)
+        .onAppear { if workspace.section.scope == scope { workspace.navigationSubtitle = subtitle } }
+        .onChange(of: subtitle) { _, value in if workspace.section.scope == scope { workspace.navigationSubtitle = value } }
         .animation(Transitions.Ease.smoothOut, value: subtitle)
-        .toolbar { toolbar }
+        .toolbar { if workspace.section.scope == scope { toolbar } }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
         .sheet(item: $collaborationProject) { CollaboratorsView(project: $0) }
         .sheet(isPresented: $sectionsEditor) { SectionsEditor(projectID: projectID) }
@@ -206,7 +221,7 @@ struct TaskListView: View {
     }
     /// The selection tag must sit on the outermost row view, after any drag wrapper, or clicks cannot select.
     private func row(_ task: Record) -> some View {
-        TaskRowView(task: task, compactDate: dated).listRowSeparator(.hidden)
+        TaskRowView(task: task, compactDate: dated).background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
     }
 
     // MARK: Menus

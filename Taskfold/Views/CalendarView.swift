@@ -106,17 +106,18 @@ struct CalendarView: View {
         }
         }
         .background(Color(nsColor: .windowBackgroundColor))
-        .navigationTitle("Calendar")
-        .navigationSubtitle(periodTitle)
+        .onChange(of: periodTitle) { _, value in if workspace.section == .calendar { workspace.navigationSubtitle = value } }
         .toolbar {
-            ToolbarItemGroup(placement: .navigation) {
-                Button { shift(-1) } label: { Label("Previous", systemImage: "chevron.left") }.help("Previous period (←)")
-                Button { shift(1) } label: { Label("Next", systemImage: "chevron.right") }.help("Next period (→)")
-                Button("Today") { jump(to: today) }.disabled(calendar.isDate(selected, inSameDayAs: today) && page == 0).help("Jump to today (⌘T)").keyboardShortcut("t", modifiers: .command)
-            }
-            ToolbarItemGroup(placement: .primaryAction) {
-                Button { quickAddFocused = true } label: { Label("New Task", systemImage: "plus") }.help("Add a task on the selected day (⌘N)")
-                Button { workspace.inspectorShown.toggle() } label: { Label("Inspector", systemImage: "sidebar.trailing") }.help("Show or hide the inspector (⌥⌘I)")
+            if workspace.section == .calendar {
+                ToolbarItemGroup(placement: .navigation) {
+                    Button { shift(-1) } label: { Label("Previous", systemImage: "chevron.left") }.help("Previous period (←)")
+                    Button { shift(1) } label: { Label("Next", systemImage: "chevron.right") }.help("Next period (→)")
+                    Button("Today") { jump(to: today) }.disabled(calendar.isDate(selected, inSameDayAs: today) && page == 0).help("Jump to today (⌘T)").keyboardShortcut("t", modifiers: .command)
+                }
+                ToolbarItemGroup(placement: .primaryAction) {
+                    Button { quickAddFocused = true } label: { Label("New Task", systemImage: "plus") }.help("Add a task on the selected day (⌘N)")
+                    Button { workspace.inspectorShown.toggle() } label: { Label("Inspector", systemImage: "sidebar.trailing") }.help("Show or hide the inspector (⌥⌘I)")
+                }
             }
         }
         .focusable()
@@ -124,6 +125,7 @@ struct CalendarView: View {
         .focused($calendarFocused)
         .onAppear {
             page = page(containing: selected, mode: mode)
+            if workspace.section == .calendar { workspace.navigationSubtitle = periodTitle }
             // Move focus into the destination, just like task lists do. Leaving
             // it in the sidebar keeps Calendar's active accent selection lit.
             calendarFocused = true

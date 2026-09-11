@@ -66,6 +66,7 @@ struct TaskInspectorForm: View {
     @State private var original = Record()
     @State private var subtask = ""
     @State private var comment = ""
+    @State private var pastedImageName: String?
     @State private var importing = false
     @State private var preview: URL?
     @State private var confirmDelete = false
@@ -166,14 +167,37 @@ struct TaskInspectorForm: View {
                             Button { var list = draft["comments"].list; list.remove(at: index); draft["comments"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Delete comment")
                         }
                         if !row.string("text").isEmpty { Text(.init(row.string("text"))).textSelection(.enabled) }
-                        if case .object(let attachment) = row["attachment"] { Button("Open attachment") { openAttachment(Record(attachment)) }.buttonStyle(.link) }
+                        if case .object(let attachment) = row["attachment"] {
+                            Button { openAttachment(Record(attachment)) } label: { CommentAttachmentPreview(attachment: Record(attachment)) }
+                                .buttonStyle(.plain).help("Open attachment").accessibilityIdentifier("commentImageAttachment")
+                        }
                     }
                 }
-                TextField("Comment", text: $comment, prompt: Text("Write a comment"), axis: .vertical).labelsHidden().textFieldStyle(.plain).lineLimit(1...5)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Write a comment").font(.caption).foregroundStyle(.secondary)
+                    CommentEditor(text: $comment, pasteImage: { data in
+                        do {
+                            let name = "Pasted image \(UUID().uuidString.prefix(8)).png"
+                            guard data.count <= 5 * 1024 * 1024 else { throw AppFailure(message: "Choose an image smaller than 5 MB.") }
+                            guard NSImage(data: data) != nil else { throw AppFailure(message: "This clipboard image could not be read.") }
+                            let attachment = Record(["id": .string(UUID().uuidString.lowercased()), "name": .string(name), "size": .number(Double(data.count)), "type": .string("image/png"), "url": .string("data:image/png;base64," + data.base64EncodedString()), "uploadedAt": .string(Dates.timestamp())])
+                            appendComment(attachment: attachment)
+                            saveTask?.cancel()
+                            saveNow()
+                            if draft == original { pastedImageName = name }
+                        } catch { store.error = error.localizedDescription }
+                    }, pasteError: { store.error = $0 })
+                    .frame(height: 80)
+                    .background(Color(nsColor: .textBackgroundColor), in: .rect(cornerRadius: 6))
+                    if let pastedImageName {
+                        Label("Attached \(pastedImageName)", systemImage: "checkmark.circle")
+                            .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("pastedImageConfirmation")
+                    }
+                    Text("Paste an image with ⌘V to attach it immediately.").font(.caption).foregroundStyle(.secondary)
+                }
                 Button("Add Comment", systemImage: "text.bubble") {
-                    var list = draft["comments"].list
-                    list.append(.object(["id": .string(UUID().uuidString.lowercased()), "text": .string(comment.trimmingCharacters(in: .whitespacesAndNewlines)), "createdAt": .string(Dates.timestamp()), "authorId": .string(store.userID), "authorName": .string(store.profile.string("display_name").isEmpty ? (store.localMode ? "You" : store.email) : store.profile.string("display_name"))]))
-                    draft["comments"] = .array(list); comment = ""
+                    appendComment(text: comment.trimmingCharacters(in: .whitespacesAndNewlines))
+                    comment = ""
                 }.disabled(comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             Section {
@@ -233,6 +257,13 @@ struct TaskInspectorForm: View {
         let title = subtask.trimmingCharacters(in: .whitespacesAndNewlines); guard !title.isEmpty else { return }
         var list = draft["subtasks"].list; list.append(.object(["id": .string(UUID().uuidString.lowercased()), "title": .string(title), "completed": .bool(false)])); draft["subtasks"] = .array(list); subtask = ""
     }
+    private func appendComment(text: String = "", attachment: Record? = nil) {
+        var fields: [String: JSON] = ["id": .string(UUID().uuidString.lowercased()), "text": .string(text), "createdAt": .string(Dates.timestamp()), "authorId": .string(store.userID), "authorName": .string(store.profile.string("display_name").isEmpty ? (store.localMode ? "You" : store.email) : store.profile.string("display_name"))]
+        if let attachment { fields["attachment"] = .object(attachment.fields) }
+        var comments = draft["comments"].list
+        comments.append(.object(fields))
+        draft["comments"] = .array(comments)
+    }
     private func attach(_ data: Data, name: String, type: String) throws {
         guard data.count <= 5 * 1024 * 1024 else { throw AppFailure(message: "Choose a file smaller than 5 MB.") }
         var list = draft["attachments"].list
@@ -286,6 +317,26 @@ struct RecurrenceEditor: View {
             }
         } label: {
             LabeledContent("Repeat", value: task["is_recurring"].flag ? (pattern.string("type").isEmpty ? "Custom" : pattern.string("type").capitalized) : "Never")
+        }
+    }
+}
+
+struct CommentAttachmentPreview: View {
+    let attachment: Record
+    @State private var image: NSImage?
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let image {
+                Image(nsImage: image).resizable().scaledToFit().frame(maxHeight: 160)
+                    .clipShape(.rect(cornerRadius: 6))
+            }
+            Label(attachment.name, systemImage: "paperclip").font(.caption).foregroundStyle(.secondary)
+        }
+        .task(id: attachment.string("url")) {
+            image = nil
+            let value = attachment.string("url")
+            if value.hasPrefix("data:image/"), let comma = value.firstIndex(of: ","),
+               let data = Data(base64Encoded: String(value[value.index(after: comma)...])) { image = NSImage(data: data) }
         }
     }
 }

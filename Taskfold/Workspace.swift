@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import UniformTypeIdentifiers
 
 /// One entry in the sidebar. Task sections map onto the shared `TaskScope`; Calendar is its own surface.
@@ -69,6 +70,11 @@ final class Workspace {
         didSet {
             UserDefaults.standard.set(section.key, forKey: "macSection")
             guard section != oldValue else { return }
+            finderTaskID = nil
+            navigationSubtitle = ""
+            recentDestinations.removeAll { $0 == section }
+            recentDestinations.insert(section, at: 0)
+            recentDestinations = Array(recentDestinations.prefix(6))
             navigationMemory[oldValue] = NavigationMemory(selection: selection, search: search, draft: quickAdd)
             let remembered = navigationMemory[section] ?? NavigationMemory()
             selection = remembered.selection.filter { store.record("tasks", id: $0) != nil }
@@ -76,7 +82,9 @@ final class Workspace {
             quickAdd = remembered.draft
         }
     }
-    var selection = Set<String>()
+    var selection = Set<String>() {
+        didSet { if selection != oldValue && !selection.isEmpty { finderTaskID = nil } }
+    }
     var search = ""
     var quickAdd = ""
     private struct NavigationMemory {
@@ -85,6 +93,36 @@ final class Workspace {
         var draft = ""
     }
     private var navigationMemory: [SidebarItem: NavigationMemory] = [:]
+    var navigationSubtitle = ""
+    var navigationTitle: String {
+        switch section {
+        case .calendar: return "Calendar"
+        case .project(let id): return store.record("projects", id: id)?.name ?? "Project"
+        case .label(let id): return store.record("labels", id: id)?.name ?? "Label"
+        default: return scope.title
+        }
+    }
+    var settingsTab = SettingsTab.general
+    var signInRequested = false
+    @ObservationIgnored private weak var finderReturnResponder: NSResponder?
+    @ObservationIgnored private var finderReturnSelection: NSRange?
+    @ObservationIgnored private weak var finderReturnWindow: NSWindow?
+    private var finderOpenedTask = false
+    var finderPresented = false {
+        didSet {
+            if finderPresented && !oldValue {
+                finderReturnWindow = NSApp.keyWindow
+                let responder = NSApp.keyWindow?.firstResponder
+                finderReturnResponder = (responder as? NSTextView)?.delegate as? NSView ?? responder
+                finderReturnSelection = (responder as? NSTextView)?.selectedRange()
+                finderOpenedTask = false
+            }
+        }
+    }
+    var pendingFinderCommand: String?
+    var finderTaskID: String?
+    var recentDestinations: [SidebarItem] = []
+    @ObservationIgnored var scrollBookmarks: [String: ListScrollBookmark] = [:]
     var searchPresented = false
     var inspectorShown: Bool { didSet { UserDefaults.standard.set(inspectorShown, forKey: "inspectorShown") } }
     /// Bumping these asks the matching text field to take focus.
@@ -113,16 +151,54 @@ final class Workspace {
 
     func clearNavigationMemory() {
         navigationMemory.removeAll()
+        scrollBookmarks.removeAll()
+        recentDestinations.removeAll()
+        finderTaskID = nil
+        finderPresented = false
+        pendingFinderCommand = nil
         selection = []
         search = ""
         quickAdd = ""
     }
 
-    var inspectorVisible: Bool { inspectorShown && !selection.isEmpty }
+    var inspectorVisible: Bool { inspectorShown && (!selection.isEmpty || finderTaskID.flatMap { store.record("tasks", id: $0) } != nil) }
+    var actionSelection: Set<String> {
+        if let id = finderTaskID, store.record("tasks", id: id) != nil { return [id] }
+        return selection
+    }
+    func finishFinderDismissal() {
+        if let command = pendingFinderCommand {
+            pendingFinderCommand = nil
+            switch command {
+            case "new": quickAddFocusRequest += 1
+            case "project": newProjectRequest += 1
+            default: searchPresented = true
+            }
+        } else if finderOpenedTask {
+            titleFocusRequest += 1
+        } else if let window = finderReturnWindow, let responder = finderReturnResponder {
+            window.makeFirstResponder(responder)
+            if let range = finderReturnSelection, let editor = window.firstResponder as? NSTextView, NSMaxRange(range) <= (editor.string as NSString).length {
+                editor.setSelectedRange(range)
+            }
+        }
+        finderReturnResponder = nil
+        finderReturnWindow = nil
+        finderOpenedTask = false
+    }
+    func openFromFinder(_ id: String) {
+        guard store.record("tasks", id: id) != nil else { return }
+        selection = []
+        finderTaskID = id
+        finderOpenedTask = true
+        inspectorShown = true
+        finderPresented = false
+        titleFocusRequest += 1
+    }
 
     var layout: Animation? { Motion.respecting(reduceMotion, Motion.layout) }
-    var primaryTask: Record? { selection.count == 1 ? selection.first.flatMap { store.record("tasks", id: $0) } : nil }
-    var selectedTasks: [Record] { selection.compactMap { store.record("tasks", id: $0) } }
+    var primaryTask: Record? { actionSelection.count == 1 ? actionSelection.first.flatMap { store.record("tasks", id: $0) } : nil }
+    var selectedTasks: [Record] { actionSelection.compactMap { store.record("tasks", id: $0) } }
     var scope: TaskScope { section.scope ?? .today }
 
     // MARK: Undo bridging
@@ -162,6 +238,7 @@ final class Workspace {
     // MARK: Task actions
 
     func open(_ id: String) {
+        finderTaskID = nil
         selection = [id]
         inspectorShown = true
         titleFocusRequest += 1
@@ -200,6 +277,7 @@ final class Workspace {
         let title = existing.count == 1 ? store.record("tasks", id: existing.first!)?.title ?? "" : ""
         run(existing.count == 1 ? "Delete Task" : "Delete Tasks") { withAnimation(layout) { store.removeAll(Array(existing)) } }
         selection.subtract(existing)
+        if let id = finderTaskID, existing.contains(id) { finderTaskID = nil }
         confirm(existing.count == 1 ? "Deleted “\(title)”" : "Deleted \(existing.count) tasks")
     }
     func reschedule(_ ids: Set<String>, to day: String?, label: String) {
@@ -293,8 +371,23 @@ final class DragCoordinator {
     @ObservationIgnored var rowHeights: [String: CGFloat] = [:]
     @ObservationIgnored var order: [(day: String, ids: [String])] = []
     var active: Bool { !ids.isEmpty }
-    func begin(_ ids: [String], order: [(day: String, ids: [String])]) { self.ids = ids; self.order = order; target = nil }
-    func end() { ids = []; target = nil }
+    @ObservationIgnored private var endMonitor: Any?
+    func begin(_ ids: [String], order: [(day: String, ids: [String])]) {
+        self.ids = ids; self.order = order; target = nil
+        guard endMonitor == nil else { return }
+        // Provider preparation can happen on a plain click. Clear it after AppKit
+        // handles mouse-up (and its drop delegate), never by polling button state.
+        endMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseUp, .keyDown]) { [weak self] event in
+            if event.type == .leftMouseUp || event.keyCode == 53 {
+                DispatchQueue.main.async { self?.end() }
+            }
+            return event
+        }
+    }
+    func end() {
+        if let endMonitor { NSEvent.removeMonitor(endMonitor) }
+        endMonitor = nil; ids = []; target = nil
+    }
     func successor(of id: String, in day: String) -> String? {
         guard let list = order.first(where: { $0.day == day })?.ids, let index = list.firstIndex(of: id) else { return nil }
         var next = index + 1
@@ -323,3 +416,5 @@ enum CalendarMode: String, CaseIterable, Identifiable {
     }
     var days: Int? { switch self { case .threeDay: return 3; case .fiveDay: return 5; case .week: return 7; default: return nil } }
 }
+
+enum SettingsTab: String { case general, account, imports, invitations }

@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 struct SidebarView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
+    @FocusState private var filterFocused: Bool
     @State private var projectEditor: Record?
     @State private var labelEditor: Record?
     @State private var projectsExpanded = true
@@ -12,6 +13,31 @@ struct SidebarView: View {
     private var open: [Record] { store.tasks.filter { !$0.completed } }
     var body: some View {
         @Bindable var workspace = workspace
+        VStack(spacing: 0) {
+            Button { workspace.finderPresented = true } label: {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                    Text("Search Everywhere")
+                    Spacer()
+                    Text("⌘F").font(.caption).foregroundStyle(.tertiary)
+                }.padding(.horizontal, 12).padding(.vertical, 8).contentShape(.rect)
+            }
+            .buttonStyle(.plain).foregroundStyle(.secondary)
+            .accessibilityIdentifier("openFinder")
+            HStack(spacing: 6) {
+                Image(systemName: "line.3.horizontal.decrease").foregroundStyle(.secondary)
+                TextField("Filter current list", text: $workspace.search)
+                    .textFieldStyle(.plain).focused($filterFocused)
+                    .accessibilityIdentifier("listFilter")
+                if !workspace.search.isEmpty {
+                    Button { workspace.search = "" } label: { Image(systemName: "xmark.circle.fill") }
+                        .buttonStyle(.plain).foregroundStyle(.secondary).help("Clear filter")
+                }
+            }.padding(8).background(.quaternary, in: .rect(cornerRadius: 7)).padding(.horizontal, 10)
+            .disabled(workspace.section == .calendar)
+            .onChange(of: workspace.searchPresented) { _, requested in
+                if requested { filterFocused = true; workspace.searchPresented = false }
+            }
         List(selection: Binding(get: { Optional(workspace.section) }, set: { if let value = $0 { workspace.section = value } })) {
             Section {
                 item(.today, "Today", count: open.filter { !$0.string("due_date").isEmpty && $0.string("due_date") <= today }.count, dropDay: today)
@@ -61,12 +87,12 @@ struct SidebarView: View {
             } header: { Text("Labels") }
         }
         .listStyle(.sidebar)
-        .searchable(text: $workspace.search, isPresented: $workspace.searchPresented, placement: .sidebar, prompt: "Search tasks")
-        .safeAreaInset(edge: .bottom) { SyncFooter() }
+        .safeAreaInset(edge: .bottom) { VStack(spacing: 0) { AccountMenu(); SyncFooter() } }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
         .sheet(item: $labelEditor) { NamedEditor(table: "labels", record: $0) }
         .onChange(of: workspace.newProjectRequest) { _, _ in newProject() }
         .toolbar { ToolbarItem(placement: .navigation) { EmptyView() } }
+        }
     }
     private func newProject() {
         projectEditor = Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": .string(""), "color": .string("#e31e4b"), "order_index": .number(Double(store.projects.count))])
