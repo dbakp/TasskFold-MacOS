@@ -133,6 +133,8 @@ final class Workspace {
     var newProjectRequest = 0
     /// Presents the planning sheet for a day or a week.
     var planning: PlanKind?
+    /// Presents the welcome tour.
+    var onboarding = false
     var confirmation: Confirmation?
     var reduceMotion = false
     /// Tasks the user just checked. They stay visible for a beat so the check animation reads, then leave.

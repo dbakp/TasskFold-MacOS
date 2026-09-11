@@ -23,6 +23,7 @@ struct SettingsView: View {
 
 struct GeneralSettings: View {
     @Environment(Store.self) private var store
+    @Environment(Workspace.self) private var workspace
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("defaultView") private var defaultView = "today"
     @AppStorage("remindersEnabled") private var reminders = false
@@ -55,6 +56,10 @@ struct GeneralSettings: View {
             Toggle("Task reminders", isOn: Binding(get: { reminders }, set: { enabled in if enabled { Task { await store.enableNotifications() } } else { store.disableNotifications() } }))
             Text("Due tasks notify at their chosen time, or 8:00 AM if no time is set. macOS schedules the nearest 60 reminders; Taskfold refreshes them while open.").font(.caption).foregroundStyle(.secondary)
             Button("Open Notification Settings…") { if let url = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension") { NSWorkspace.shared.open(url) } }
+            Section {
+                Button("Show Welcome Tour…") { workspace.onboarding = true; NSApp.windows.first { $0.identifier?.rawValue.contains("Taskfold") == true || $0.title == workspace.navigationTitle }?.makeKeyAndOrderFront(nil) }
+                    .disabled(!store.signedIn)
+            }
         }
         .formStyle(.grouped)
     }

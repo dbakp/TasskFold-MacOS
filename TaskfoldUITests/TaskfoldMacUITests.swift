@@ -141,6 +141,19 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["title-drag-fixture-1"].exists, "Skipped tasks are untouched")
     }
 
+    /// The welcome tour pages with Continue and →, and Escape dismisses it for good.
+    @MainActor func testOnboardingPagesAndDismisses() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture", "--onboarding"]; app.launch()
+        let next = app.buttons["onboardingContinue"]
+        XCTAssertTrue(next.waitForExistence(timeout: 10), "The tour appears on request")
+        next.click()
+        app.typeKey(.rightArrow, modifierFlags: [])
+        XCTAssertTrue(app.staticTexts["Order that stays put"].waitForExistence(timeout: 5), "Continue and → advance pages")
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(waitForDisappearance(next, timeout: 5), "Escape dismisses the tour")
+        XCTAssertTrue(app.staticTexts["title-drag-fixture-1"].exists, "The list is usable afterwards")
+    }
+
     @MainActor func testNavigationPreservesDraftAndSelection() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
         let row = app.staticTexts["title-drag-fixture-1"]
@@ -357,6 +370,16 @@ final class TaskfoldMacUITests: XCTestCase {
             let png = app.windows.firstMatch.screenshot().pngRepresentation
             try png.write(to: URL(fileURLWithPath: directory).appending(path: "\(name).png"))
             app.terminate()
+        }
+        // Welcome tour pages.
+        for page in 0..<5 {
+            let tour = XCUIApplication(); tour.launchArguments = ["--preview", "--onboarding", "--appearance=light"]; tour.launch()
+            XCTAssertTrue(tour.buttons["skipOnboarding"].waitForExistence(timeout: 10))
+            for _ in 0..<page { tour.buttons["onboardingContinue"].click() }
+            sleep(page == 1 ? 4 : 2)
+            let sheet = tour.sheets.firstMatch.exists ? tour.sheets.firstMatch : tour.windows.firstMatch
+            try sheet.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: directory).appending(path: "onboarding-\(page + 1).png"))
+            tour.terminate()
         }
         // Quick-add with chips: type a sentence the parser understands, capture before submitting.
         let chips = XCUIApplication(); chips.launchArguments = ["--preview", "--section=today", "--appearance=light"]; chips.launch()

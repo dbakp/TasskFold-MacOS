@@ -222,6 +222,15 @@ struct WorkspaceView: View {
         }
         .sheet(isPresented: $workspace.finderPresented, onDismiss: { workspace.finishFinderDismissal() }) { FinderView() }
         .sheet(item: $workspace.planning) { kind in PlanDayView(kind: kind, queue: workspace.planQueue(kind)) }
+        .sheet(isPresented: $workspace.onboarding) { OnboardingView() }
+        .onAppear {
+            // First launch shows the tour once; fixtures opt in with --onboarding so tests stay deterministic.
+            let arguments = ProcessInfo.processInfo.arguments
+            let fixture = arguments.contains("--uitesting") || arguments.contains("--preview")
+            if arguments.contains("--onboarding") || (!fixture && !UserDefaults.standard.bool(forKey: "onboardingSeen")) {
+                Task { try? await Task.sleep(for: .milliseconds(600)); workspace.onboarding = true }
+            }
+        }
         .modifier(KeyRouter())
         .accessibilityIdentifier("nativeWorkspace")
     }
