@@ -47,10 +47,17 @@ struct TaskListView: View {
         default: return scope.title
         }
     }
+    /// "priority" was a sort option before bands became the default order; treat a stored value as default.
+    private var manualOrder: Bool { sortBy == "manual" || sortBy == "priority" }
     private var filtered: [Record] {
-        store.matching(TaskQuery(scope: scope, text: workspace.search, includeCompleted: showCompleted, priority: priorityFilter, sort: sortBy, labelName: title))
+        store.matching(TaskQuery(scope: scope, text: workspace.search, includeCompleted: showCompleted, priority: priorityFilter, sort: manualOrder ? "manual" : sortBy, labelName: title))
     }
-    private func ordered(_ tasks: [Record], day: String) -> [Record] { sortBy == "manual" ? workspace.ordered(tasks, day: day) : tasks }
+    private func ordered(_ tasks: [Record], day: String) -> [Record] { manualOrder ? workspace.arranged(tasks, key: day) : tasks }
+    /// Non-dated lists rank inside device-local groups: one per project section, one per scope.
+    private func groupKey(section: String?) -> String {
+        if !projectID.isEmpty { return Workspace.Placement.group(project: projectID, section: section ?? "") }
+        return Workspace.Placement.scope(scope)
+    }
     private var dayGroups: [(String, [Record])] {
         let today = Dates.day(Date())
         let overdue = filtered.filter { !$0.completed && $0.string("due_date") < today }
@@ -60,18 +67,27 @@ struct TaskListView: View {
         for offset in 0..<14 { if let date = Calendar.current.date(byAdding: .day, value: offset, to: Date()) { days.insert(Dates.day(date)) } }
         return [("Overdue", overdue)] + days.sorted().map { day in (day, ordered(future.filter { $0.string("due_date") == day }, day: day)) }
     }
-    private var groups: [(String, [Record])] {
+    private struct Group { var title: String; var key: String; var tasks: [Record] }
+    private var groups: [Group] {
         if !projectID.isEmpty {
             let sections = store.rows("sections").filter { $0.string("project_id") == projectID }.sorted { $0["order_index"].integer < $1["order_index"].integer }
-            return [("Tasks", filtered.filter { $0.string("section_id").isEmpty })] + sections.map { section in (section.name, filtered.filter { $0.string("section_id") == section.id }) }
+            let loose = Group(title: "Tasks", key: groupKey(section: nil), tasks: ordered(filtered.filter { $0.string("section_id").isEmpty }, day: groupKey(section: nil)))
+            return [loose] + sections.map { section in
+                let key = groupKey(section: section.id)
+                return Group(title: section.name, key: key, tasks: ordered(filtered.filter { $0.string("section_id") == section.id }, day: key))
+            }
         }
-        return [("", filtered)]
+        let key = groupKey(section: nil)
+        return [Group(title: "", key: key, tasks: ordered(filtered, day: key))]
     }
     private var displayedTaskIDs: [String] {
         if dated { return dayGroups.filter { $0.0 != "Overdue" || !overdueCollapsed }.flatMap { $0.1.map(\.id) } }
-        return groups.flatMap { $0.1.map(\.id) }
+        return groups.flatMap { $0.tasks.map(\.id) }
     }
-    private var order: [(day: String, ids: [String])] { dayGroups.filter { $0.0 != "Overdue" }.map { (day: $0.0, ids: $0.1.map(\.id)) } }
+    private var order: [(day: String, ids: [String])] {
+        if dated { return dayGroups.filter { $0.0 != "Overdue" }.map { (day: $0.0, ids: $0.1.map(\.id)) } }
+        return groups.map { (day: $0.key, ids: $0.tasks.map(\.id)) }
+    }
     private var remaining: Int { filtered.filter { !$0.completed && !workspace.completing.contains($0.id) }.count }
 
     var body: some View {
@@ -115,11 +131,14 @@ struct TaskListView: View {
                         else { daySection(group.0, group.1) }
                     }
                 } else {
-                    ForEach(Array(groups.enumerated()), id: \.offset) { _, group in
-                        if !group.1.isEmpty || !group.0.isEmpty {
+                    ForEach(groups, id: \.key) { group in
+                        if !group.tasks.isEmpty || !group.title.isEmpty {
                             Section {
-                                ForEach(group.1) { task in row(task).tag(task.id) }
-                            } header: { if !group.0.isEmpty { Text(group.0) } }
+                                ForEach(group.tasks) { task in row(task).modifier(DayDragRow(task: task, day: group.key, orderProvider: { order })).tag(task.id) }
+                                if scope != .completed && manualOrder && (!group.tasks.isEmpty || !projectID.isEmpty) {
+                                    DayEndRow(day: group.key, isEmpty: group.tasks.isEmpty, emptyText: "No tasks", releaseText: "Release to move here").selectionDisabled().listRowSeparator(.hidden)
+                                }
+                            } header: { if !group.title.isEmpty { Text(group.title) } }
                         }
                     }
                 }
@@ -294,7 +313,7 @@ struct TaskListView: View {
                 Button(defaultView == scope.preferenceKey ? "Default View ✓" : "Make Default View", systemImage: "house") { defaultView = scope.preferenceKey }
                 Toggle("Show Completed", isOn: $showCompleted)
                 Picker("Priority", selection: $priorityFilter) { Text("All Priorities").tag(0); ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
-                Picker("Sort", selection: $sortBy) { Text("Default Order").tag("manual"); Text("Priority").tag("priority"); Text("Due Date").tag("date"); Text("Title").tag("title") }
+                Picker("Sort", selection: Binding(get: { manualOrder ? "manual" : sortBy }, set: { sortBy = $0 })) { Text("Default Order").tag("manual"); Text("Due Date").tag("date"); Text("Title").tag("title") }
                 if !projectID.isEmpty {
                     Divider()
                     Button("Edit Project…", systemImage: "pencil") { projectEditor = store.record("projects", id: projectID) }

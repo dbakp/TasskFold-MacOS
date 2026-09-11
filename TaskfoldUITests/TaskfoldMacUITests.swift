@@ -68,6 +68,23 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertGreaterThan(app.staticTexts["title-drag-fixture-2"].frame.minY, app.staticTexts["title-drag-fixture-3"].frame.minY)
     }
 
+    /// A P3 task dragged above the P1 band lands at the top of its own band, not where the pointer was.
+    @MainActor func testDropStaysInsidePriorityBand() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--priority-fixture"]; app.launch()
+        let alpha = app.staticTexts["title-band-0"], beta = app.staticTexts["title-band-1"]
+        let gamma = app.staticTexts["title-band-2"], delta = app.staticTexts["title-band-3"]
+        XCTAssertTrue(delta.waitForExistence(timeout: 10))
+        XCTAssertLessThan(beta.frame.minY, gamma.frame.minY, "Bands order P1 before P3")
+        // Aim delta above the whole P1 band.
+        delta.press(forDuration: 0.4, thenDragTo: alpha)
+        sleep(1)
+        XCTAssertGreaterThan(delta.frame.minY, beta.frame.minY, "The drop must stay below the P1 band")
+        XCTAssertLessThan(delta.frame.minY, gamma.frame.minY, "Aimed above the band, the task lands at the top of its band")
+        app.typeKey("z", modifierFlags: .command)
+        sleep(1)
+        XCTAssertGreaterThan(delta.frame.minY, gamma.frame.minY, "Undo restores the previous order in one step")
+    }
+
     @MainActor func testNavigationPreservesDraftAndSelection() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
         let row = app.staticTexts["title-drag-fixture-1"]

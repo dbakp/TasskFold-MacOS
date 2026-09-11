@@ -329,28 +329,68 @@ final class Workspace {
         return created ? task.id : nil
     }
 
-    // MARK: Day placement
+    // MARK: Placement
 
-    func ordered(_ tasks: [Record], day: String) -> [Record] {
-        DayPlacement.ordered(tasks, ids: store.record(DayPlacement.table, id: day)?["ids"].list.map(\.text) ?? [])
+    /// Device-local placement keys. Days use the calendar day (shared with iOS); other lists use a group key.
+    enum Placement {
+        static func group(project: String, section: String) -> String { "group:\(project):\(section.isEmpty ? "none" : section)" }
+        static func scope(_ scope: TaskScope) -> String { "scope:" + scope.preferenceKey }
+        static func isDay(_ key: String) -> Bool { Dates.parse(key) != nil }
     }
-    /// Moves tasks into a day at a slot, preserving the iOS DayPlacement semantics (one undoable change).
+    private func placementIDs(_ key: String, in snapshot: Snapshot? = nil) -> [String] {
+        let rows = snapshot?.tables[DayPlacement.table] ?? store.rows(DayPlacement.table)
+        return rows.first { $0.id == key }?["ids"].list.map(\.text) ?? []
+    }
+    /// The app's default order for any list: priority bands first, the user's manual order inside each band.
+    func arranged(_ tasks: [Record], key: String) -> [Record] { DayPlacement.arranged(tasks, ids: placementIDs(key)) }
+    func ordered(_ tasks: [Record], day: String) -> [Record] { arranged(tasks, key: day) }
+
+    /// Moves tasks into a list at a slot. Days change the due date through the shared DayPlacement rules;
+    /// group keys only re-rank (and adopt the section when the key names one). Every drop stays inside the
+    /// task's priority band, and the whole move is one undoable commit.
     @discardableResult
     func move(_ ids: [String], to slot: DragSlot) -> Bool {
         let tasks = ids.compactMap { store.record("tasks", id: $0) }.filter { !$0.completed && $0.id != slot.before }
         guard !tasks.isEmpty else { return false }
         var changes: [Mutation] = []
         var snapshot = store.snapshot
+        let isDay = Placement.isDay(slot.day)
         for task in tasks {
             let current = Record(snapshot.tables["tasks"]?.first(where: { $0.id == task.id })?.fields ?? task.fields)
-            let destination = DayPlacement.ordered(snapshot.tables["tasks"]?.filter { $0.string("due_date") == slot.day } ?? [], ids: snapshot.tables[DayPlacement.table]?.first(where: { $0.id == slot.day })?["ids"].list.map(\.text) ?? [])
-            let step = DayPlacement.changes(task: current, day: slot.day, orderedIDs: destination.map(\.id), before: slot.before)
+            let members: [Record]
+            if isDay { members = snapshot.tables["tasks"]?.filter { $0.string("due_date") == slot.day && !$0.completed } ?? [] }
+            else {
+                let visible = drag.order.first { $0.day == slot.day }?.ids ?? []
+                let known = Set(visible)
+                let all = visible + placementIDs(slot.day, in: snapshot).filter { !known.contains($0) }
+                members = all.compactMap { id in snapshot.tables["tasks"]?.first { $0.id == id } }
+            }
+            let destination = DayPlacement.arranged(members, ids: placementIDs(slot.day, in: snapshot))
+            let before = DayPlacement.constrained(before: slot.before, priority: current.priority, in: destination.filter { $0.id != current.id })
+            let step: [Mutation]
+            if isDay {
+                step = DayPlacement.changes(task: current, day: slot.day, orderedIDs: destination.map(\.id), before: before)
+            } else {
+                var order = destination.map(\.id).filter { $0 != current.id }
+                order.insert(current.id, at: before.flatMap { order.firstIndex(of: $0) } ?? order.count)
+                var fields: [String: JSON] = [:]
+                if slot.day.hasPrefix("group:") {
+                    let parts = slot.day.split(separator: ":").map(String.init)
+                    if parts.count == 3 {
+                        if current.string("project_id") != parts[1] { fields["project_id"] = .string(parts[1]) }
+                        let section = parts[2] == "none" ? "" : parts[2]
+                        if current.string("section_id") != section { fields["section_id"] = section.isEmpty ? .null : .string(section) }
+                    }
+                }
+                step = (fields.isEmpty ? [] : [Mutation(table: "tasks", recordID: current.id, method: "PATCH", fields: fields)])
+                    + [Mutation(table: DayPlacement.table, recordID: slot.day, method: "PATCH", fields: ["id": .string(slot.day), "ids": .array(order.map(JSON.string))])]
+            }
             for change in step { snapshot.apply(change) }
             changes += step
         }
         guard !changes.isEmpty else { return false }
         var moved = false
-        run("Move Task") { withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { moved = store.commit(changes) } }
+        run(isDay ? "Move Task" : "Reorder Tasks") { withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { moved = store.commit(changes) } }
         if moved { Feedback.drop() }
         return moved
     }
@@ -368,12 +408,17 @@ final class Workspace {
 final class DragCoordinator {
     var ids: [String] = []
     var target: DragSlot?
+    /// Shown beside the indicator when the pointer is over another priority band and the drop snapped back.
+    var bandHint: String?
     @ObservationIgnored var rowHeights: [String: CGFloat] = [:]
     @ObservationIgnored var order: [(day: String, ids: [String])] = []
+    @ObservationIgnored var priorities: [String: Int] = [:]
     var active: Bool { !ids.isEmpty }
+    /// The band the dragged task belongs to (the first task's, for a mixed multi-drag).
+    var priority: Int { ids.first.flatMap { priorities[$0] } ?? 4 }
     @ObservationIgnored private var endMonitor: Any?
-    func begin(_ ids: [String], order: [(day: String, ids: [String])]) {
-        self.ids = ids; self.order = order; target = nil
+    func begin(_ ids: [String], order: [(day: String, ids: [String])], priorities: [String: Int] = [:]) {
+        self.ids = ids; self.order = order; self.priorities = priorities; target = nil; bandHint = nil
         guard endMonitor == nil else { return }
         // Provider preparation can happen on a plain click. Clear it after AppKit
         // handles mouse-up (and its drop delegate), never by polling button state.
@@ -386,7 +431,23 @@ final class DragCoordinator {
     }
     func end() {
         if let endMonitor { NSEvent.removeMonitor(endMonitor) }
-        endMonitor = nil; ids = []; target = nil
+        endMonitor = nil; ids = []; target = nil; bandHint = nil
+    }
+    /// The destination list as lightweight records (id + priority) so band rules can run without the store.
+    func members(of key: String) -> [Record] {
+        (order.first { $0.day == key }?.ids ?? []).map { Record(["id": .string($0), "priority": .number(Double(priorities[$0] ?? 4))]) }
+    }
+    /// Snaps a raw slot into the dragged task's band and remembers whether it moved, so the indicator shows
+    /// where the task will really land and the hint explains why.
+    func constrain(_ slot: DragSlot) -> (slot: DragSlot, hint: String?) {
+        let list = members(of: slot.day).filter { !ids.contains($0.id) }
+        let before = DayPlacement.constrained(before: slot.before, priority: priority, in: list)
+        let moved = before != slot.before
+        return (DragSlot(day: slot.day, before: before), moved ? "Stays with P\(priority)" : nil)
+    }
+    func propose(raw slot: DragSlot) {
+        let result = constrain(slot)
+        propose(result.slot, hint: result.hint)
     }
     func successor(of id: String, in day: String) -> String? {
         guard let list = order.first(where: { $0.day == day })?.ids, let index = list.firstIndex(of: id) else { return nil }
@@ -394,10 +455,13 @@ final class DragCoordinator {
         while list.indices.contains(next), ids.contains(list[next]) { next += 1 }
         return list.indices.contains(next) ? list[next] : nil
     }
-    func propose(_ slot: DragSlot?) {
-        guard slot != target else { return }
-        withAnimation(Motion.quick) { target = slot }
-        if slot != nil { Feedback.tick() }
+    func propose(_ slot: DragSlot?, hint: String? = nil) {
+        let slotChanged = slot != target
+        let hintAppeared = hint != nil && bandHint == nil
+        guard slotChanged || hint != bandHint else { return }
+        withAnimation(Motion.quick) { target = slot; bandHint = slot == nil ? nil : hint }
+        // One tick per new slot, and one when the band hint first appears, never on every pointer move.
+        if (slotChanged && slot != nil) || hintAppeared { Feedback.tick() }
     }
     func indicatorBefore(_ id: String, day: String) -> Bool { target == DragSlot(day: day, before: id) }
     func indicatorAtEnd(of day: String) -> Bool { target == DragSlot(day: day, before: nil) }

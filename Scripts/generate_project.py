@@ -7,14 +7,17 @@ same Models, Store, and Backend sources. Run from the taskfold-mac directory aft
 import hashlib, os, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-IOS = "../taskfold-ios/Taskfold"
+# Shared sources resolve through the TASKFOLD_IOS_ROOT build setting (default: the sibling checkout), so a
+# clean iOS checkout can be substituted on the xcodebuild command line without touching the project.
+IOS = "$(TASKFOLD_IOS_ROOT)/Taskfold"
+IOS_DEFAULT = '"$(PROJECT_DIR)/../taskfold-ios"'
 TEAM = "3UZ4C73FM2"
 
 def uid(name):
     return hashlib.md5(name.encode()).hexdigest()[:24].upper()
 
 app_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "Taskfold").rglob("*.swift"))
-app_sources += [f"{IOS}/Core/Models.swift", f"{IOS}/Core/Store.swift", f"{IOS}/Core/Backend.swift"]
+app_sources += [f"{IOS}/Core/Models.swift", f"{IOS}/Core/Store.swift", f"{IOS}/Core/Backend.swift", f"{IOS}/Core/Intents.swift"]
 app_resources = ["Taskfold/Assets.xcassets", f"{IOS}/Backend.plist", f"{IOS}/TaskfoldIcon.icon"]
 test_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldUITests").rglob("*.swift"))
 other_files = ["Taskfold/Info.plist", "Taskfold/Taskfold.entitlements"]
@@ -33,7 +36,7 @@ def add_ref(path):
     rid = uid("ref:" + path)
     refs[path] = rid
     name = os.path.basename(path)
-    extra = f' name = "{name}";' if path.startswith("..") else ""
+    extra = f' name = "{name}";' if path.startswith("$(") else ""
     lines.append(f'{rid} = {{ isa = PBXFileReference; lastKnownFileType = {file_type(path)};{extra} path = "{path}"; sourceTree = "<group>"; }};')
     return rid
 def add_build(path):
@@ -56,7 +59,7 @@ def group(name, children, gid=None):
     return gid
 
 products = group("Products", [app_product, test_product])
-shared_core = group("Shared Core (taskfold-ios)", [refs[p] for p in app_sources if p.startswith("..")] + [refs[f"{IOS}/Backend.plist"], refs[f"{IOS}/TaskfoldIcon.icon"]])
+shared_core = group("Shared Core (taskfold-ios)", [refs[p] for p in app_sources if p.startswith("$(")] + [refs[f"{IOS}/Backend.plist"], refs[f"{IOS}/TaskfoldIcon.icon"]])
 views = group("Views", [refs[p] for p in app_sources if p.startswith("Taskfold/Views/")])
 app_group = group("Taskfold", [refs[p] for p in app_sources if p.startswith("Taskfold/") and not p.startswith("Taskfold/Views/")] + [views, refs["Taskfold/Assets.xcassets"]] + [refs[p] for p in other_files])
 tests_group = group("TaskfoldUITests", [refs[p] for p in test_sources])
@@ -69,7 +72,7 @@ lines.append(f'{app_res_phase} = {{ isa = PBXResourcesBuildPhase; buildActionMas
 lines.append(f'{app_fw_phase} = {{ isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
 lines.append(f'{test_sources_phase} = {{ isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(test_source_builds)},); runOnlyForDeploymentPostprocessing = 0; }};')
 
-common = f'SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 15.0; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; DEVELOPMENT_TEAM = {TEAM}; CODE_SIGN_STYLE = Automatic; ENABLE_USER_SCRIPT_SANDBOXING = YES; COMBINE_HIDPI_IMAGES = YES; DEAD_CODE_STRIPPING = YES;'
+common = f'SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 15.0; TASKFOLD_IOS_ROOT = {IOS_DEFAULT}; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; DEVELOPMENT_TEAM = {TEAM}; CODE_SIGN_STYLE = Automatic; ENABLE_USER_SCRIPT_SANDBOXING = YES; COMBINE_HIDPI_IMAGES = YES; DEAD_CODE_STRIPPING = YES;'
 app_common = ('PRODUCT_NAME = Taskfold; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Taskfold/Info.plist; '
               'CODE_SIGN_ENTITLEMENTS = Taskfold/Taskfold.entitlements; ENABLE_HARDENED_RUNTIME = YES; ASSETCATALOG_COMPILER_APPICON_NAME = TaskfoldIcon; '
               'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 1.0.0; SWIFT_EMIT_LOC_STRINGS = YES; '

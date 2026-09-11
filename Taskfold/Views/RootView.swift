@@ -98,6 +98,16 @@ struct RootView: View {
                 try? store.persist()
             }
         }
+        if arguments.contains("--priority-fixture") {
+            store.startLocal(); store.snapshot = Snapshot()
+            UserDefaults.standard.set("manual", forKey: "mac.view.today.sortBy")
+            store.snapshot.tables["tasks"] = [("P1 alpha", 1), ("P1 beta", 1), ("P3 gamma", 3), ("P3 delta", 3)].enumerated().map { index, sample in
+                var task = Record.task(user: store.userID, date: Date())
+                task["id"] = .string("band-\(index)"); task["title"] = .string(sample.0); task["priority"] = .number(Double(sample.1))
+                return task
+            }
+            try? store.persist()
+        }
         if arguments.contains("--navigation-fixture") {
             store.startLocal(); store.snapshot = Snapshot()
             for scope in ["today", "inbox", "all", "completed"] {

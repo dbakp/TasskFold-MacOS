@@ -9,7 +9,16 @@ struct TaskfoldMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
-        let store = Store()
+        #if DEBUG
+        // Fixture launches are force-quit by the test runner, which leaves window-restoration state that can
+        // restore "no windows" on the next launch. Ignore it for fixtures so every test starts with a window.
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("--uitesting") || arguments.contains("--preview") || ProcessInfo.processInfo.environment["TASKFOLD_TRACE"] == "1" {
+            UserDefaults.standard.register(defaults: ["ApplePersistenceIgnoreState": true])
+        }
+        #endif
+        // One store per process: App Intents and notification actions act on the same data the window shows.
+        let store = Store.shared
         _store = State(initialValue: store)
         _workspace = State(initialValue: Workspace(store: store))
     }
@@ -37,6 +46,14 @@ struct TaskfoldMacApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = self
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["TASKFOLD_TRACE"] == "1" {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                let text = NSApp.windows.map { "\($0.className) visible=\($0.isVisible) \($0.frame)" }.joined(separator: "\n")
+                try? Data("windows: \(NSApp.windows.count)\n\(text)".utf8).write(to: FileManager.default.temporaryDirectory.appending(path: "trace-windows.txt"))
+            }
+        }
+        #endif
     }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag { sender.windows.first?.makeKeyAndOrderFront(nil) }

@@ -151,16 +151,32 @@ struct DragPreview: View {
     }
 }
 
-/// The 2 pt insertion line that shows where a dragged task will land.
+/// The 2 pt insertion line that shows where a dragged task will land. When the pointer is over another
+/// priority band the line stays in the task's own band and a small hint says so.
 struct InsertionIndicator: View {
+    var hint: String? = nil
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        HStack(spacing: 0) {
-            Circle().fill(Color.accentColor).frame(width: 7, height: 7)
-            Rectangle().fill(Color.accentColor).frame(height: 2)
+        HStack(spacing: 6) {
+            HStack(spacing: 0) {
+                Circle().fill(Color.accentColor).frame(width: 7, height: 7)
+                Rectangle().fill(Color.accentColor).frame(height: 2)
+            }
+            if let hint {
+                Text(hint).font(.caption2.weight(.semibold)).foregroundStyle(Color.accentColor)
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(Color(nsColor: .controlBackgroundColor), in: .capsule)
+                    .overlay(Capsule().strokeBorder(Color.accentColor.opacity(0.35), lineWidth: 1))
+                    .fixedSize()
+                    .transition(reduceMotion ? .opacity : .badgePop)
+                    .accessibilityIdentifier("bandHint")
+            }
         }
         .frame(height: 7)
+        .animation(Transitions.Ease.smoothOut(Transitions.Duration.quick), value: hint)
         .transition(.opacity)
-        .accessibilityHidden(true)
+        .accessibilityHidden(hint == nil)
+        .accessibilityLabel(hint ?? "")
     }
 }
 

@@ -242,7 +242,7 @@ struct CalendarView: View {
         .onTapGesture { select(day); workspace.selection = [task.id] }
         .onTapGesture(count: 2) { workspace.open(task.id) }
         .onDrag {
-            workspace.drag.begin([task.id], order: [])
+            workspace.drag.begin([task.id], order: [], priorities: [task.id: task.priority])
             return taskItemProvider(for: [task])
         } preview: { DragPreview(tasks: [task]) }
         .contextMenu {

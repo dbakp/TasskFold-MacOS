@@ -26,16 +26,18 @@ struct DayDragRow: ViewModifier {
     func body(content: Content) -> some View {
         let drag = workspace.drag
         content
-            .overlay(alignment: .top) { if drag.indicatorBefore(task.id, day: day) { InsertionIndicator().offset(y: -5) } }
+            .overlay(alignment: .top) { if drag.indicatorBefore(task.id, day: day) { InsertionIndicator(hint: drag.bandHint).offset(y: -5) } }
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { drag.rowHeights[task.id] = $0 }
             .onDrop(of: [.taskfoldTask], delegate: RowDropDelegate(workspace: workspace, id: task.id, day: day))
             .itemProvider {
-                let order = orderProvider().flatMap(\.ids)
+                let groups = orderProvider()
+                let order = groups.flatMap(\.ids)
                 let ids = (workspace.selection.contains(task.id) ? Array(workspace.selection) : [task.id])
                     .sorted { (order.firstIndex(of: $0) ?? 0) < (order.firstIndex(of: $1) ?? 0) }
                 let tasks = ids.compactMap { store.record("tasks", id: $0) }.filter { !$0.completed }
                 guard !tasks.isEmpty else { return nil }
-                drag.begin(tasks.map(\.id), order: orderProvider())
+                let priorities = Dictionary(uniqueKeysWithValues: store.tasks.map { ($0.id, $0.priority) })
+                drag.begin(tasks.map(\.id), order: groups, priorities: priorities)
                 return taskItemProvider(for: tasks)
             }
     }
@@ -65,7 +67,8 @@ struct RowDropDelegate: DropDelegate {
         guard !drag.ids.contains(id) else { return }
         let height = drag.rowHeights[id] ?? 44
         let before = info.location.y < height / 2 ? id : drag.successor(of: id, in: day)
-        drag.propose(DragSlot(day: day, before: before))
+        // The indicator shows where the task will actually land: the slot snapped into its priority band.
+        drag.propose(raw: DragSlot(day: day, before: before))
     }
 }
 
@@ -103,6 +106,8 @@ struct DayEndRow: View {
     @Environment(Workspace.self) private var workspace
     let day: String
     let isEmpty: Bool
+    var emptyText = "Nothing planned"
+    var releaseText = "Release to schedule"
     @State private var targeted = false
     var body: some View {
         let drag = workspace.drag
@@ -110,7 +115,7 @@ struct DayEndRow: View {
             if isEmpty {
                 HStack {
                     Spacer()
-                    Text(targeted ? "Release to schedule" : drag.active ? "Drop here" : "Nothing planned")
+                    Text(targeted ? releaseText : drag.active ? "Drop here" : emptyText)
                         .font(.callout.weight(targeted ? .semibold : .regular))
                         .foregroundStyle(targeted ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.tertiary))
                         .contentTransition(.interpolate)
@@ -125,20 +130,32 @@ struct DayEndRow: View {
                 .scaleEffect(targeted ? 1.01 : 1)
             } else {
                 Color.clear.frame(height: 10)
-                    .overlay(alignment: .top) { if targeted { InsertionIndicator() } }
+                    .overlay(alignment: .top) { if drag.indicatorAtEnd(of: day) { InsertionIndicator(hint: drag.bandHint) } }
             }
         }
         .animation(Motion.quick, value: targeted)
         .animation(Motion.quick, value: drag.active)
         .accessibilityIdentifier("day-end-\(day)")
-        .accessibilityLabel(isEmpty ? "No tasks planned" : "End of day")
-        .onDrop(of: [.taskfoldTask], isTargeted: $targeted) { _ in
-            let ids = workspace.drag.ids
-            defer { workspace.drag.end() }
-            guard !ids.isEmpty else { return false }
-            Feedback.tick()
-            return workspace.move(ids, to: DragSlot(day: day, before: nil))
-        }
+        .accessibilityLabel(isEmpty ? emptyText : "End of list")
+        .onDrop(of: [.taskfoldTask], delegate: EndDropDelegate(workspace: workspace, day: day, targeted: $targeted))
+    }
+}
+
+/// The end of a list is "after the last task", which the band rules may pull up to the end of the task's band.
+struct EndDropDelegate: DropDelegate {
+    let workspace: Workspace
+    let day: String
+    @Binding var targeted: Bool
+    func validateDrop(info: DropInfo) -> Bool { info.hasItemsConforming(to: [.taskfoldTask]) && workspace.drag.active }
+    func dropEntered(info: DropInfo) { targeted = true; workspace.drag.propose(raw: DragSlot(day: day, before: nil)) }
+    func dropUpdated(info: DropInfo) -> DropProposal? { workspace.drag.propose(raw: DragSlot(day: day, before: nil)); return DropProposal(operation: .move) }
+    func dropExited(info: DropInfo) { targeted = false; if workspace.drag.target?.day == day { workspace.drag.propose(nil) } }
+    func performDrop(info: DropInfo) -> Bool {
+        targeted = false
+        let drag = workspace.drag
+        defer { drag.end() }
+        guard let slot = drag.target, !drag.isNoop(slot) else { return false }
+        return workspace.move(drag.ids, to: slot)
     }
 }
 
@@ -155,7 +172,7 @@ struct DayHeaderDrop: ViewModifier {
                 let ids = workspace.drag.ids
                 defer { workspace.drag.end() }
                 guard !ids.isEmpty else { return false }
-                return workspace.move(ids, to: DragSlot(day: day, before: nil))
+                return workspace.move(ids, to: workspace.drag.constrain(DragSlot(day: day, before: nil)).slot)
             }
     }
 }
