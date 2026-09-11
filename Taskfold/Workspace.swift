@@ -77,7 +77,7 @@ final class Workspace {
             recentDestinations = Array(recentDestinations.prefix(6))
             navigationMemory[oldValue] = NavigationMemory(selection: selection, search: search, draft: quickAdd)
             let remembered = navigationMemory[section] ?? NavigationMemory()
-            selection = remembered.selection.filter { store.record("tasks", id: $0) != nil }
+            selection = remembered.selection.filter { taskRecord($0) != nil }
             search = remembered.search
             quickAdd = remembered.draft
         }
@@ -85,6 +85,7 @@ final class Workspace {
     var selection = Set<String>() {
         didSet { if selection != oldValue && !selection.isEmpty { finderTaskID = nil } }
     }
+    var expandedTasks = Set<String>()
     var search = ""
     var quickAdd = ""
     private struct NavigationMemory {
@@ -156,6 +157,7 @@ final class Workspace {
     }
 
     func clearNavigationMemory() {
+        expandedTasks.removeAll()
         navigationMemory.removeAll()
         scrollBookmarks.removeAll()
         recentDestinations.removeAll()
@@ -167,9 +169,9 @@ final class Workspace {
         quickAdd = ""
     }
 
-    var inspectorVisible: Bool { inspectorShown && (!selection.isEmpty || finderTaskID.flatMap { store.record("tasks", id: $0) } != nil) }
+    var inspectorVisible: Bool { inspectorShown && (!selection.isEmpty || finderTaskID.flatMap { taskRecord($0) } != nil) }
     var actionSelection: Set<String> {
-        if let id = finderTaskID, store.record("tasks", id: id) != nil { return [id] }
+        if let id = finderTaskID, taskRecord(id) != nil { return [id] }
         return selection
     }
     func finishFinderDismissal() {
@@ -193,7 +195,7 @@ final class Workspace {
         finderOpenedTask = false
     }
     func openFromFinder(_ id: String) {
-        guard store.record("tasks", id: id) != nil else { return }
+        guard taskRecord(id) != nil else { return }
         selection = []
         finderTaskID = id
         finderOpenedTask = true
@@ -203,8 +205,8 @@ final class Workspace {
     }
 
     var layout: Animation? { Motion.respecting(reduceMotion, Motion.layout) }
-    var primaryTask: Record? { actionSelection.count == 1 ? actionSelection.first.flatMap { store.record("tasks", id: $0) } : nil }
-    var selectedTasks: [Record] { actionSelection.compactMap { store.record("tasks", id: $0) } }
+    var primaryTask: Record? { actionSelection.count == 1 ? actionSelection.first.flatMap { taskRecord($0) } : nil }
+    var selectedTasks: [Record] { actionSelection.compactMap { taskRecord($0) } }
     var scope: TaskScope { section.scope ?? .today }
 
     // MARK: Undo bridging
@@ -252,6 +254,14 @@ final class Workspace {
 
     /// Completing keeps the row for a moment so the check animation reads, then lets the list settle.
     func complete(_ task: Record) {
+        if Self.subtaskPath(task.id) != nil {
+            var changed = task
+            changed["completed"] = .bool(!task.completed)
+            changed["completed_at"] = task.completed ? .null : .string(Dates.timestamp())
+            _ = save("tasks", changed, name: task.completed ? "Reopen Subtask" : "Complete Subtask")
+            if !task.completed { Feedback.complete() }
+            return
+        }
         if task.completed || completing.contains(task.id) {
             completing.remove(task.id)
             run(task.completed ? "Reopen Task" : "Complete Task") { withAnimation(layout) { store.toggle(task) } }
@@ -263,12 +273,18 @@ final class Workspace {
         confirm("Completed “\(task.title)”")
         Task {
             try? await Task.sleep(for: .milliseconds(reduceMotion ? 200 : 420))
-            guard completing.contains(task.id), let current = store.record("tasks", id: task.id), !current.completed else { completing.remove(task.id); return }
+            guard completing.contains(task.id), let current = taskRecord(task.id), !current.completed else { completing.remove(task.id); return }
             run("Complete Task") { withAnimation(layout) { store.toggle(current); completing.remove(task.id) } }
         }
     }
     func toggle(_ ids: Set<String>) {
-        let tasks = ids.compactMap { store.record("tasks", id: $0) }
+        if ids.contains(where: { Self.subtaskPath($0) != nil }) {
+            let tasks = ids.compactMap { taskRecord($0) }
+            let complete = tasks.contains { !$0.completed }
+            updateTasks(ids, fields: ["completed": .bool(complete), "completed_at": complete ? .string(Dates.timestamp()) : .null], name: complete ? "Complete Tasks" : "Reopen Tasks")
+            return
+        }
+        let tasks = ids.compactMap { taskRecord($0) }
         guard !tasks.isEmpty else { return }
         if tasks.count == 1 { complete(tasks[0]); return }
         let open = tasks.filter { !$0.completed }
@@ -278,7 +294,20 @@ final class Workspace {
         confirm(open.isEmpty ? "Reopened \(items.count) tasks" : "Completed \(items.count) tasks")
     }
     func delete(_ ids: Set<String>) {
-        let existing = ids.filter { store.record("tasks", id: $0) != nil }
+        let nested = ids.filter { Self.subtaskPath($0) != nil }
+        if !nested.isEmpty {
+            var roots: [String: Record] = [:]
+            for id in nested.sorted(by: { taskDepth($0) > taskDepth($1) }) {
+                guard let path = Self.subtaskPath(id), !ids.contains(path[0]), let root = roots[path[0]] ?? store.record("tasks", id: path[0]), let updated = Self.replacing(root, path: Array(path.dropFirst()), value: nil) else { continue }
+                roots[root.id] = updated
+            }
+            let changes = roots.values.map { Mutation(table: "tasks", recordID: $0.id, method: "PATCH", fields: ["subtasks": $0["subtasks"]]) }
+            run("Delete Subtasks") { _ = store.commit(changes) }
+            selection.subtract(nested)
+            delete(ids.subtracting(nested))
+            return
+        }
+        let existing = ids.filter { taskRecord($0) != nil }
         guard !existing.isEmpty else { return }
         let title = existing.count == 1 ? store.record("tasks", id: existing.first!)?.title ?? "" : ""
         run(existing.count == 1 ? "Delete Task" : "Delete Tasks") { withAnimation(layout) { store.removeAll(Array(existing)) } }
@@ -289,22 +318,22 @@ final class Workspace {
     func reschedule(_ ids: Set<String>, to day: String?, label: String) {
         var fields: [String: JSON] = ["due_date": day.map(JSON.string) ?? .null]
         if day == nil { fields["due_time"] = .null }
-        run("Reschedule") { withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { store.update(Array(ids), fields: fields) } }
+        withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { updateTasks(ids, fields: fields, name: "Reschedule") }
         Feedback.drop()
         confirm(day == nil ? "Removed dates" : ids.count == 1 ? "Moved to \(label)" : "Moved \(ids.count) tasks to \(label)")
     }
     func move(_ ids: Set<String>, toProject project: String) {
-        run("Move to Project") { withAnimation(layout) { store.update(Array(ids), fields: ["project_id": project.isEmpty ? .null : .string(project), "section_id": .null]) } }
+        withAnimation(layout) { updateTasks(ids, fields: ["project_id": project.isEmpty ? .null : .string(project), "section_id": .null], name: "Move to Project") }
         Feedback.drop()
         confirm("Moved to \(project.isEmpty ? "Inbox" : store.record("projects", id: project)?.name ?? "project")")
     }
     func setPriority(_ ids: Set<String>, _ value: Int) {
-        run("Set Priority") { withAnimation(layout) { store.update(Array(ids), fields: ["priority": .number(Double(value))]) } }
+        withAnimation(layout) { updateTasks(ids, fields: ["priority": .number(Double(value))], name: "Set Priority") }
         confirm(value == 4 ? "Priority cleared" : "Priority \(value) set")
     }
     func duplicate(_ ids: Set<String>) {
-        let changes = ids.compactMap { store.record("tasks", id: $0) }.map { task -> Mutation in
-            var copy = task; copy["id"] = .string(UUID().uuidString.lowercased()); copy["completed"] = .bool(false); copy["completed_at"] = .null; copy["created_at"] = .string(Dates.timestamp())
+        let changes = ids.compactMap { taskRecord($0) }.map { task -> Mutation in
+            var copy = task; copy["user_id"] = .string(store.userID); copy["id"] = .string(UUID().uuidString.lowercased()); copy["completed"] = .bool(false); copy["completed_at"] = .null; copy["created_at"] = .string(Dates.timestamp())
             return Mutation(table: "tasks", recordID: copy.id, method: "POST", fields: copy.fields)
         }
         guard !changes.isEmpty else { return }
@@ -316,6 +345,11 @@ final class Workspace {
     @discardableResult
     func save(_ table: String, _ record: Record, name: String) -> Bool {
         var saved = false
+        if table == "tasks", let path = Self.subtaskPath(record.id) {
+            guard let root = store.record("tasks", id: path[0]), let updated = Self.replacing(root, path: Array(path.dropFirst()), value: record) else { return false }
+            run(name) { saved = store.save("tasks", updated) }
+            return saved
+        }
         run(name) { saved = store.save(table, record) }
         return saved
     }
@@ -356,7 +390,7 @@ final class Workspace {
     /// task's priority band, and the whole move is one undoable commit.
     @discardableResult
     func move(_ ids: [String], to slot: DragSlot) -> Bool {
-        let tasks = ids.compactMap { store.record("tasks", id: $0) }.filter { !$0.completed && $0.id != slot.before }
+        let tasks = ids.compactMap { taskRecord($0) }.filter { !$0.completed && $0.id != slot.before }
         guard !tasks.isEmpty else { return false }
         var changes: [Mutation] = []
         var snapshot = store.snapshot
@@ -490,3 +524,68 @@ enum CalendarMode: String, CaseIterable, Identifiable {
 }
 
 enum SettingsTab: String { case general, account, imports, invitations }
+
+extension Workspace {
+    /// Paths identify embedded subtasks without creating duplicate backend task records.
+    static func subtaskPath(_ id: String) -> [String]? {
+        guard id.hasPrefix("subtask:"), let data = Data(base64Encoded: String(id.dropFirst(8))),
+              let path = try? JSONDecoder().decode([String].self, from: data), (2...3).contains(path.count) else { return nil }
+        return path
+    }
+    static func childKey(_ value: JSON, index: Int) -> String { value.object["id"]?.text.isEmpty == false ? value.object["id"]!.text : "@\(index)" }
+    func childID(parent: String, value: JSON, index: Int) -> String {
+        let path = (Self.subtaskPath(parent) ?? [parent]) + [Self.childKey(value, index: index)]
+        return "subtask:" + (try! JSONEncoder().encode(path)).base64EncodedString()
+    }
+    func taskDepth(_ id: String) -> Int { (Self.subtaskPath(id)?.count ?? 1) - 1 }
+    func taskRecord(_ id: String) -> Record? {
+        guard let path = Self.subtaskPath(id) else { return store.record("tasks", id: id) }
+        guard var item = store.record("tasks", id: path[0]) else { return nil }
+        for key in path.dropFirst() {
+            guard let pair = item["subtasks"].list.enumerated().first(where: { Self.childKey($0.element, index: $0.offset) == key }) else { return nil }
+            item = Record(pair.element.object)
+        }
+        item["id"] = .string(id)
+        return item
+    }
+    func visibleTasks(_ roots: [Record]) -> [Record] {
+        roots.flatMap { task -> [Record] in
+            guard taskDepth(task.id) < 2, expandedTasks.contains(task.id) else { return [task] }
+            let children = task["subtasks"].list.enumerated().map { index, value -> Record in
+                var child = Record(value.object); child["id"] = .string(childID(parent: task.id, value: value, index: index)); return child
+            }
+            return [task] + visibleTasks(children)
+        }
+    }
+    static func replacing(_ root: Record, path: [String], value: Record?) -> Record? {
+        guard let key = path.first else { return value }
+        var list = root["subtasks"].list
+        guard let index = list.enumerated().first(where: { childKey($0.element, index: $0.offset) == key })?.offset else { return nil }
+        if path.count == 1 {
+            if var value {
+                value.fields["id"] = list[index].object["id"]
+                list[index] = .object(value.fields)
+            } else { list.remove(at: index) }
+        } else {
+            guard let changed = replacing(Record(list[index].object), path: Array(path.dropFirst()), value: value) else { return nil }
+            list[index] = .object(changed.fields)
+        }
+        var result = root; result["subtasks"] = .array(list); return result
+    }
+    func updateTasks(_ ids: Set<String>, fields: [String: JSON], name: String) {
+        var roots: [String: Record] = [:]
+        for id in ids.sorted(by: { taskDepth($0) < taskDepth($1) }) {
+            guard var task = taskRecord(id) else { continue }
+            for (key, value) in fields { task[key] = value }
+            if let path = Self.subtaskPath(id), let root = roots[path[0]] ?? store.record("tasks", id: path[0]) {
+                roots[path[0]] = Self.replacing(root, path: Array(path.dropFirst()), value: task)
+            } else { roots[id] = task }
+        }
+        let changes = roots.values.compactMap { record -> Mutation? in
+            guard let original = store.record("tasks", id: record.id) else { return nil }
+            let changed = record.fields.filter { original.fields[$0.key] != $0.value }
+            return changed.isEmpty ? nil : Mutation(table: "tasks", recordID: record.id, method: "PATCH", fields: changed)
+        }
+        run(name) { _ = store.commit(changes) }
+    }
+}

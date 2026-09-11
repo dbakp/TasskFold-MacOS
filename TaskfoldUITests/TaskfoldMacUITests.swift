@@ -4,6 +4,80 @@ import AppKit
 final class TaskfoldMacUITests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
 
+    @MainActor func testExpandableSubtasksEditCompleteAndPersist() throws {
+        func nestedID(_ path: [String]) throws -> String { "subtask:" + (try JSONEncoder().encode(path)).base64EncodedString() }
+        let childID = try nestedID(["hierarchy-root", "child-one"])
+        let grandchildID = try nestedID(["hierarchy-root", "child-one", "grandchild-one"])
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--hierarchy-fixture"]; app.launch()
+        let root = app.staticTexts["title-hierarchy-root"], child = app.staticTexts["title-" + childID], grandchild = app.staticTexts["title-" + grandchildID]
+        XCTAssertTrue(root.waitForExistence(timeout: 10))
+        XCTAssertFalse(child.exists)
+        app.buttons["expand-hierarchy-root"].click()
+        XCTAssertTrue(child.waitForExistence(timeout: 5))
+        app.buttons["expand-" + childID].click()
+        XCTAssertTrue(grandchild.waitForExistence(timeout: 5))
+        XCTAssertGreaterThan(child.frame.minX, root.frame.minX)
+        XCTAssertGreaterThan(grandchild.frame.minX, child.frame.minX)
+        grandchild.click()
+        let title = app.descendants(matching: .any)["taskTitle"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        XCTAssertEqual(title.value as? String, "Review checklist")
+        XCTAssertFalse(app.textFields["addSubtask"].exists, "Sub-subtasks cannot have another level")
+        title.click(); app.typeKey("a", modifierFlags: .command); app.typeText("Review final checklist"); app.typeKey(.return, modifierFlags: [])
+        app.buttons["complete-" + grandchildID].click()
+        XCTAssertTrue(app.buttons["reopen-" + grandchildID].waitForExistence(timeout: 5))
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(app.buttons["complete-" + grandchildID].waitForExistence(timeout: 5))
+        child.click(); app.typeKey(" ", modifierFlags: [])
+        XCTAssertTrue(app.buttons["reopen-" + childID].waitForExistence(timeout: 5), "Space completes the selected subtask")
+        XCTAssertTrue(app.buttons["complete-hierarchy-root"].exists, "The parent stays independent")
+        app.buttons["expand-hierarchy-root"].click()
+        XCTAssertTrue(waitForDisappearance(child, timeout: 5))
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        XCTAssertTrue(root.waitForExistence(timeout: 10))
+        app.buttons["expand-hierarchy-root"].click(); app.buttons["expand-" + childID].click()
+        XCTAssertTrue(app.buttons["reopen-" + childID].waitForExistence(timeout: 5))
+        grandchild.click()
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        XCTAssertEqual(title.value as? String, "Review final checklist")
+        let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        screenshot.name = "Expanded subtasks and inspector"; screenshot.lifetime = .keepAlways; add(screenshot)
+    }
+
+    @MainActor func testDraggingParentKeepsExpandedChildrenTogether() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--hierarchy-fixture"]; app.launch()
+        let root = app.staticTexts["title-hierarchy-root"], other = app.staticTexts["title-hierarchy-other"]
+        XCTAssertTrue(root.waitForExistence(timeout: 10))
+        app.buttons["expand-hierarchy-root"].click()
+        let childID = "subtask:" + (try JSONEncoder().encode(["hierarchy-root", "child-one"])).base64EncodedString()
+        let child = app.staticTexts["title-" + childID]
+        XCTAssertTrue(child.waitForExistence(timeout: 5))
+        other.press(forDuration: 0.4, thenDragTo: root)
+        sleep(1)
+        XCTAssertLessThan(other.frame.minY, root.frame.minY)
+        XCTAssertGreaterThan(child.frame.minY, root.frame.minY)
+        app.typeKey("z", modifierFlags: .command)
+        sleep(1)
+        XCTAssertLessThan(root.frame.minY, other.frame.minY)
+        XCTAssertGreaterThan(other.frame.minY, child.frame.minY)
+    }
+
+    @MainActor func testCreateSubSubtaskAndEnforceDepthLimit() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--hierarchy-fixture"]; app.launch()
+        let childID = "subtask:" + (try JSONEncoder().encode(["hierarchy-root", "child-two"])).base64EncodedString()
+        XCTAssertTrue(app.buttons["expand-hierarchy-root"].waitForExistence(timeout: 10))
+        app.buttons["expand-hierarchy-root"].click()
+        app.staticTexts["title-" + childID].click()
+        let input = app.textFields["addSubtask"]
+        XCTAssertTrue(input.waitForExistence(timeout: 5))
+        input.click(); input.typeText("Write release email"); app.typeKey(.return, modifierFlags: [])
+        let created = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH %@", "Write release email")).firstMatch
+        XCTAssertTrue(created.waitForExistence(timeout: 5))
+        created.click()
+        XCTAssertFalse(input.exists)
+        XCTAssertEqual(app.descendants(matching: .any)["taskTitle"].value as? String, "Write release email")
+    }
+
     @MainActor func testTaskEntryIsExplicitAndFilterLivesAboveTasks() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
         let filter = app.textFields["listFilter"]

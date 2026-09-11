@@ -25,6 +25,7 @@ struct DayDragRow: ViewModifier {
     let orderProvider: () -> [(day: String, ids: [String])]
     func body(content: Content) -> some View {
         let drag = workspace.drag
+        if Workspace.subtaskPath(task.id) != nil { content } else {
         content
             .overlay(alignment: .top) { if drag.indicatorBefore(task.id, day: day) { InsertionIndicator(hint: drag.bandHint).offset(y: -5) } }
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { drag.rowHeights[task.id] = $0 }
@@ -40,6 +41,7 @@ struct DayDragRow: ViewModifier {
                 drag.begin(tasks.map(\.id), order: groups, priorities: priorities)
                 return taskItemProvider(for: tasks)
             }
+        }
     }
 }
 
@@ -79,16 +81,20 @@ struct RowDropDelegate: DropDelegate {
     let tasks: [Record]
     func move(from source: IndexSet, to destination: Int) {
         defer { workspace.drag.end() }
-        var ids = tasks.map(\.id)
-        let moved = source.map { ids[$0] }
+        let visible = workspace.visibleTasks(tasks)
+        var ids = visible.map(\.id)
+        let moved = source.compactMap { visible.indices.contains($0) ? visible[$0].id : nil }.filter { Workspace.subtaskPath($0) == nil }
+        guard !moved.isEmpty else { return }
         ids.move(fromOffsets: source, toOffset: destination)
-        guard let last = ids.lastIndex(where: { moved.contains($0) }) else { return }
-        let before = ids.indices.contains(last + 1) ? ids[last + 1] : nil
+        let roots = ids.filter { Workspace.subtaskPath($0) == nil }
+        guard let last = roots.lastIndex(where: { moved.contains($0) }) else { return }
+        let before = roots.indices.contains(last + 1) ? roots[last + 1] : nil
         workspace.move(moved, to: DragSlot(day: day, before: before))
         workspace.drag.end()
     }
     func insert(at index: Int, providers: [NSItemProvider]) {
-        let before = tasks.indices.contains(index) ? tasks[index].id : nil
+        let visible = workspace.visibleTasks(tasks)
+        let before = visible.indices.contains(index) ? (Workspace.subtaskPath(visible[index].id)?.first ?? visible[index].id) : nil
         let ids = workspace.drag.ids
         if !ids.isEmpty {
             workspace.move(ids, to: DragSlot(day: day, before: before)); workspace.drag.end(); return

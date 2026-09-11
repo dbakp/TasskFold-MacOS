@@ -398,7 +398,7 @@ struct CalendarView: View {
             .animation(Transitions.Ease.smoothOut, value: count)
             .animation(Transitions.Ease.smoothOut, value: selected)
             List(selection: $workspace.selection) {
-                ForEach(items) { task in
+                ForEach(workspace.visibleTasks(items)) { task in
                     TaskRowView(task: task, compactDate: true).listRowSeparator(.hidden)
                         .modifier(DayDragRow(task: task, day: Dates.day(selected), orderProvider: { [(day: Dates.day(selected), ids: items.map(\.id))] }))
                         .tag(task.id)

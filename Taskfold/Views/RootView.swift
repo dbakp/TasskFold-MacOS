@@ -118,6 +118,21 @@ struct RootView: View {
                 try? store.persist()
             }
         }
+        if arguments.contains("--hierarchy-fixture") {
+            store.startLocal(); store.snapshot = Snapshot()
+            var root = Record.task(user: store.userID, date: Date())
+            root["id"] = .string("hierarchy-root"); root["title"] = .string("Launch project")
+            root["subtasks"] = .array([
+                .object(["id": .string("child-one"), "title": .string("Prepare release"), "completed": .bool(false), "subtasks": .array([
+                    .object(["id": .string("grandchild-one"), "title": .string("Review checklist"), "completed": .bool(false)])
+                ])]),
+                .object(["id": .string("child-two"), "title": .string("Send announcement"), "completed": .bool(false)])
+            ])
+            var other = Record.task(user: store.userID, date: Date())
+            other["id"] = .string("hierarchy-other"); other["title"] = .string("Another task")
+            store.snapshot.tables["tasks"] = [root, other]
+            try? store.persist()
+        }
         if arguments.contains("--link-fixture") {
             store.startLocal(); store.snapshot = Snapshot()
             var linked = Record.task(user: store.userID, date: Date())

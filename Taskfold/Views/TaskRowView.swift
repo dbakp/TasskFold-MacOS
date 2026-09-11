@@ -22,6 +22,21 @@ struct TaskRowView: View {
     }
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
+            if workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(workspace.taskDepth(task.id)) * 24 - 10, height: 1).accessibilityHidden(true) }
+            if workspace.taskDepth(task.id) < 2 && !task["subtasks"].list.isEmpty {
+                Button {
+                    if !workspace.expandedTasks.insert(task.id).inserted { workspace.expandedTasks.remove(task.id) }
+                } label: {
+                    Image(systemName: workspace.expandedTasks.contains(task.id) ? "chevron.down" : "chevron.right")
+                        .font(.caption.weight(.semibold)).frame(width: 16, height: 22)
+                }
+                .buttonStyle(.borderless)
+                .foregroundStyle(isSelected ? selectedForeground : .secondary)
+                .accessibilityLabel("Subtasks of \(task.title)")
+                .accessibilityValue(workspace.expandedTasks.contains(task.id) ? "Expanded" : "Collapsed")
+                .accessibilityIdentifier("expand-" + task.id)
+            } else { Color.clear.frame(width: 16, height: 1) }
+
             Button { workspace.complete(task) } label: {
                 CheckMark(checked: checked, color: isSelected ? selectedForeground : Color.priority(task.priority), emphasized: isSelected || task.priority < 4)
                     .padding(3)

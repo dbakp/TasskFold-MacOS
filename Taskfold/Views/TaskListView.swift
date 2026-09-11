@@ -88,8 +88,8 @@ struct TaskListView: View {
         return [Group(title: "", key: key, tasks: ordered(regularTasks, day: key))]
     }
     private var displayedTaskIDs: [String] {
-        if dated { return dayGroups.filter { $0.0 != "Overdue" || !overdueCollapsed }.flatMap { $0.1.map(\.id) } }
-        return (overdueCollapsed ? [] : overdueTasks.map(\.id)) + groups.flatMap { $0.tasks.map(\.id) }
+        if dated { return dayGroups.filter { $0.0 != "Overdue" || !overdueCollapsed }.flatMap { workspace.visibleTasks($0.1).map(\.id) } }
+        return (overdueCollapsed ? [] : workspace.visibleTasks(overdueTasks).map(\.id)) + groups.flatMap { workspace.visibleTasks($0.tasks).map(\.id) }
     }
     private var order: [(day: String, ids: [String])] {
         if dated { return dayGroups.map { (day: $0.0 == "Overdue" ? overdueKey : $0.0, ids: $0.1.map(\.id)) } }
@@ -135,7 +135,7 @@ struct TaskListView: View {
                     ForEach(groups, id: \.key) { group in
                         if scope != .completed || !group.tasks.isEmpty || !group.title.isEmpty {
                             Section {
-                                ForEach(group.tasks) { task in row(task).modifier(DayDragRow(task: task, day: group.key, orderProvider: { order })).tag(task.id) }
+                                ForEach(workspace.visibleTasks(group.tasks)) { task in row(task).modifier(DayDragRow(task: task, day: group.key, orderProvider: { order })).tag(task.id) }
                                     .onMove { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).move(from: $0, to: $1) }
                                     .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).insert(at: $0, providers: $1) }
                                 if scope != .completed && manualOrder  {
@@ -176,7 +176,7 @@ struct TaskListView: View {
             if requested && workspace.section.scope == scope { filterFocused = true; workspace.searchPresented = false }
         }
         .onDisappear { quickAddVisible = false }
-        .onChange(of: filtered.map(\.id)) { _, ids in
+        .onChange(of: displayedTaskIDs) { _, ids in
             // Assign only when something actually left the list; re-setting selection during a table update is reentrant.
             guard workspace.section.scope == scope else { return }
             let kept = workspace.selection.intersection(ids)
@@ -241,7 +241,7 @@ struct TaskListView: View {
     private func overdueSection(_ tasks: [Record]) -> some View {
         Section {
             if !overdueCollapsed {
-                ForEach(tasks) { task in row(task).modifier(DayDragRow(task: task, day: overdueKey, orderProvider: { order })).tag(task.id) }
+                ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: overdueKey, orderProvider: { order })).tag(task.id) }
                     .onMove { DayDropHandling(workspace: workspace, day: overdueKey, tasks: tasks).move(from: $0, to: $1) }
                     .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: overdueKey, tasks: tasks).insert(at: $0, providers: $1) }
             }
@@ -269,7 +269,7 @@ struct TaskListView: View {
         let detail = date?.formatted(.dateTime.month(.abbreviated).day()) ?? ""
         let open = tasks.filter { !$0.completed && !workspace.completing.contains($0.id) }.count
         return Section {
-            ForEach(tasks) { task in row(task).modifier(DayDragRow(task: task, day: day, orderProvider: { order })).tag(task.id) }
+            ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: day, orderProvider: { order })).tag(task.id) }
                 .onMove { DayDropHandling(workspace: workspace, day: day, tasks: tasks).move(from: $0, to: $1) }
                 .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: day, tasks: tasks).insert(at: $0, providers: $1) }
             DayEndRow(day: day, isEmpty: tasks.isEmpty).selectionDisabled().listRowSeparator(.hidden)
@@ -294,7 +294,7 @@ struct TaskListView: View {
 
     @ViewBuilder private func contextMenu(_ ids: Set<String>) -> some View {
         let targets = ids.isEmpty ? workspace.selection : ids
-        let tasks = targets.compactMap { store.record("tasks", id: $0) }
+        let tasks = targets.compactMap { workspace.taskRecord($0) }
         if tasks.isEmpty {
             Button("New Task") { revealQuickAdd() }
         } else {

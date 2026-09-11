@@ -80,7 +80,7 @@ struct TaskInspectorForm: View {
         return parsed.tokens.isEmpty ? nil : parsed
     }
 
-    private var current: Record? { store.record("tasks", id: taskID) }
+    private var current: Record? { workspace.taskRecord(taskID) }
     private func text(_ key: String) -> Binding<String> {
         Binding(get: { draft.string(key) }, set: { draft[key] = $0.isEmpty && ["project_id", "section_id", "due_time"].contains(key) ? .null : .string($0) })
     }
@@ -174,6 +174,7 @@ struct TaskInspectorForm: View {
                     })) { Label(label.name, systemImage: "tag.fill").foregroundStyle(Color.project(label.string("color"))) }
                 }
             }
+            if workspace.taskDepth(taskID) < 2 {
             Section("Subtasks") {
                 ForEach(Array(draft["subtasks"].list.enumerated()), id: \.offset) { index, value in
                     HStack {
@@ -182,10 +183,17 @@ struct TaskInspectorForm: View {
                         }.buttonStyle(.borderless).accessibilityLabel("Toggle subtask")
                         TextField("Subtask", text: Binding(get: { draft["subtasks"].list[index].object["title"]?.text ?? "" }, set: { title in var list = draft["subtasks"].list; var item = list[index].object; item["title"] = .string(title); list[index] = .object(item); draft["subtasks"] = .array(list) }), prompt: Text("Subtask"))
                             .labelsHidden().textFieldStyle(.plain)
+                        Button {
+                            saveNow()
+                            workspace.expandedTasks.insert(taskID)
+                            workspace.open(workspace.childID(parent: taskID, value: value, index: index))
+                        } label: { Image(systemName: "sidebar.trailing") }
+                            .buttonStyle(.borderless).accessibilityLabel("Open subtask details")
                         Button { var list = draft["subtasks"].list; list.remove(at: index); draft["subtasks"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove subtask")
                     }
                 }
-                HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).disabled(subtask.trimmingCharacters(in: .whitespaces).isEmpty) }
+                HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).accessibilityIdentifier("addSubtask").labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).disabled(subtask.trimmingCharacters(in: .whitespaces).isEmpty) }
+            }
             }
             Section("Attachments") {
                 ForEach(Array(draft["attachments"].list.enumerated()), id: \.offset) { index, value in
@@ -306,8 +314,9 @@ struct TaskInspectorForm: View {
         }
     }
     private func addSubtask() {
+        guard workspace.taskDepth(taskID) < 2 else { return }
         let title = subtask.trimmingCharacters(in: .whitespacesAndNewlines); guard !title.isEmpty else { return }
-        var list = draft["subtasks"].list; list.append(.object(["id": .string(UUID().uuidString.lowercased()), "title": .string(title), "completed": .bool(false)])); draft["subtasks"] = .array(list); subtask = ""
+        var list = draft["subtasks"].list; list.append(.object(["id": .string(UUID().uuidString.lowercased()), "title": .string(title), "completed": .bool(false)])); draft["subtasks"] = .array(list); subtask = ""; saveNow(); workspace.expandedTasks.insert(taskID)
     }
     private func appendComment(text: String = "", attachment: Record? = nil) {
         var fields: [String: JSON] = ["id": .string(UUID().uuidString.lowercased()), "text": .string(text), "createdAt": .string(Dates.timestamp()), "authorId": .string(store.userID), "authorName": .string(store.profile.string("display_name").isEmpty ? (store.localMode ? "You" : store.email) : store.profile.string("display_name"))]

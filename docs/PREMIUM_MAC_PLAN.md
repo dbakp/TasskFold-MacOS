@@ -148,3 +148,14 @@ Verification notes:
 - Five targeted UI tests passed: capture open/dismiss/save, day-to-day drag, priority-band behavior, Inbox order with persistence and multi-view collapse, and overdue reorder/reschedule. Final Release build and strict signature verification passed; installed `/Applications/Taskfold.app` and visually verified Calendar and capture without modifying real tasks.
 - Additional modal compatibility checks passed for per-destination draft/selection restoration and finder/project navigation. These tests dismiss capture before navigating, then reopen its preserved draft.
 - Parsed-chip rejection also passed in the modal. Its initial run could not activate the test app while another installed instance was open; the isolated retry passed. Eight relevant UI tests passed across the targeted runs.
+
+## Expandable subtasks — 11 September 2026
+
+- Added chevrons and indented rows for task → subtask → sub-subtask in task lists and the Calendar day panel. Expansion is remembered during the session; existing deeper data is preserved without offering deeper nesting.
+- Nested rows use normal native list selection and the existing inspector. Checkbox/Space completion, reopening, inline metadata actions, edits, and undo save through the parent task's embedded JSON rather than creating duplicate backend task records.
+- Subtask creation in the inspector opens the parent's disclosure. Sub-subtasks cannot create another level. Completing a child does not complete its parent or siblings, and completed children remain visible inside an expanded parent.
+- Native drag index mapping accounts for expanded descendants, keeping the parent subtree together. Child rows cannot be reparented by dragging, so dragging cannot create deeper nesting.
+- Fixed a native hit-testing issue by keeping indentation inside the accessible row's layout rather than wrapping its accessibility container in padding.
+- UI checks passed for nested creation/depth limits, grandchild editing and persistence, completion/undo, and existing day-to-day dragging. Additional regression results and installation are recorded below.
+- Six targeted UI checks passed across the final runs: hierarchy edit/completion/undo/persistence, nested creation with depth limit, expanded-parent drag/undo, day-to-day drag, Inbox reorder/overdue collapse, and inline date/undo. Visually verified the expanded tree with a selected grandchild in its inspector.
+- Release build and strict code-signature verification passed. Installed and launched `/Applications/Taskfold.app`; its binary matches the verified release. Previous app bundle retained at `/tmp/Taskfold-before-subtasks.app`. No real tasks were created or changed for verification.
