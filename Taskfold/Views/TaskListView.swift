@@ -24,6 +24,8 @@ struct TaskListView: View {
     @State private var projectEditor: Record?
     @State private var collaborationProject: Record?
     @State private var sectionsEditor = false
+    @State private var quickAddVisible = false
+    @FocusState private var filterFocused: Bool
     @FocusState private var quickAddFocused: Bool
 
     init(scope: TaskScope) {
@@ -75,9 +77,31 @@ struct TaskListView: View {
     var body: some View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
-            QuickAddBar(text: $workspace.quickAdd, focused: $quickAddFocused, prompt: quickAddPrompt) { submitQuickAdd() }
-                .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
-                .background(.bar)
+            HStack(spacing: 10) {
+                Spacer(minLength: 0)
+                HStack(spacing: 6) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                    TextField("Filter current list", text: $workspace.search)
+                        .textFieldStyle(.plain).focused($filterFocused)
+                        .accessibilityIdentifier("listFilter")
+                    if !workspace.search.isEmpty {
+                        Button { workspace.search = "" } label: { Image(systemName: "xmark.circle.fill") }
+                            .buttonStyle(.plain).foregroundStyle(.secondary).help("Clear filter")
+                    }
+                }
+                .padding(7).frame(maxWidth: 220)
+                .background(.quaternary, in: .rect(cornerRadius: 7))
+                viewOptions
+            }
+            .padding(.horizontal, 16).padding(.vertical, 8)
+            .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
+            if quickAddVisible {
+                QuickAddBar(text: $workspace.quickAdd, focused: $quickAddFocused, prompt: quickAddPrompt) { submitQuickAdd() }
+                    .onAppear { quickAddFocused = true }
+                    .onExitCommand { quickAddVisible = false; quickAddFocused = false }
+                    .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
+                    .background(.bar)
+            }
             List(selection: Binding(get: { workspace.section.scope == scope ? workspace.selection : [] }, set: { selection in
                 guard workspace.section.scope == scope else { return }
                 workspace.selection = selection
@@ -122,7 +146,11 @@ struct TaskListView: View {
         .sheet(item: $collaborationProject) { CollaboratorsView(project: $0) }
         .sheet(isPresented: $sectionsEditor) { SectionsEditor(projectID: projectID) }
         .sheet(isPresented: $bulkDatePicker) { DatePickSheet(date: $bulkDate, count: workspace.selection.count) { workspace.reschedule(workspace.selection, to: Dates.day(bulkDate), label: bulkDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())) } }
-        .onChange(of: workspace.quickAddFocusRequest) { _, _ in quickAddFocused = true }
+        .onChange(of: workspace.quickAddFocusRequest) { _, _ in if workspace.section.scope == scope { revealQuickAdd() } }
+        .onChange(of: workspace.searchPresented) { _, requested in
+            if requested && workspace.section.scope == scope { filterFocused = true; workspace.searchPresented = false }
+        }
+        .onDisappear { quickAddVisible = false }
         .onChange(of: workspace.selection) { _, selection in if !selection.isEmpty && quickAdd.isEmpty { quickAddFocused = false } }
         .onChange(of: filtered.map(\.id)) { _, ids in
             // Assign only when something actually left the list; re-setting selection during a table update is reentrant.
@@ -136,7 +164,6 @@ struct TaskListView: View {
                 }
             }
         }
-        .onAppear { if ProcessInfo.processInfo.arguments.contains("--uitesting") == false && filtered.isEmpty && workspace.selection.isEmpty { quickAddFocused = true } }
     }
 
     private var subtitle: String {
@@ -152,6 +179,8 @@ struct TaskListView: View {
         default: return "Add a task to \(title)"
         }
     }
+    private func revealQuickAdd() { quickAddVisible = true; quickAddFocused = true }
+
     private func submitQuickAdd() {
         let date: Date? = scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil
         let labelName: String? = { if case .label(let id) = scope { return store.record("labels", id: id)?.name }; return nil }()
@@ -160,6 +189,8 @@ struct TaskListView: View {
             task["labels"] = .array(task["labels"].list + [.string(labelName)]); store.save("tasks", task)
         }
         quickAdd = ""
+        quickAddVisible = false
+        quickAddFocused = false
         workspace.selection = [id]
     }
 
@@ -230,7 +261,7 @@ struct TaskListView: View {
         let targets = ids.isEmpty ? workspace.selection : ids
         let tasks = targets.compactMap { store.record("tasks", id: $0) }
         if tasks.isEmpty {
-            Button("New Task") { quickAddFocused = true }
+            Button("New Task") { revealQuickAdd() }
         } else {
             if tasks.count == 1, let task = tasks.first { Button("Edit “\(task.title)”") { workspace.open(task.id) } }
             Button(tasks.allSatisfy(\.completed) ? "Reopen" : "Complete") { workspace.toggle(targets) }
@@ -258,10 +289,7 @@ struct TaskListView: View {
         }
     }
 
-    @ToolbarContentBuilder private var toolbar: some ToolbarContent {
-        ToolbarItemGroup(placement: .primaryAction) {
-            Button { quickAddFocused = true } label: { Label("New Task", systemImage: "plus") }
-                .help("New Task (⌘N)").accessibilityIdentifier("addTask")
+    private var viewOptions: some View {
             Menu {
                 Button(defaultView == scope.preferenceKey ? "Default View ✓" : "Make Default View", systemImage: "house") { defaultView = scope.preferenceKey }
                 Toggle("Show Completed", isOn: $showCompleted)
@@ -275,6 +303,13 @@ struct TaskListView: View {
                 }
             } label: { Label("View Options", systemImage: "line.3.horizontal.decrease.circle") }
                 .help("View options").accessibilityLabel("Task options")
+    }
+
+    @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .primaryAction) {
+            Button { revealQuickAdd() } label: { Label("New Task", systemImage: "plus") }
+                .help("New Task (⌘N)").accessibilityIdentifier("addTask")
+
         }
         ToolbarItem(placement: .primaryAction) {
             Button { workspace.inspectorShown.toggle() } label: { Label("Inspector", systemImage: "sidebar.trailing") }

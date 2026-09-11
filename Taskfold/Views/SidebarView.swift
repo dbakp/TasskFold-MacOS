@@ -4,7 +4,6 @@ import UniformTypeIdentifiers
 struct SidebarView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
-    @FocusState private var filterFocused: Bool
     @State private var projectEditor: Record?
     @State private var labelEditor: Record?
     @State private var projectsExpanded = true
@@ -24,20 +23,6 @@ struct SidebarView: View {
             }
             .buttonStyle(.plain).foregroundStyle(.secondary)
             .accessibilityIdentifier("openFinder")
-            HStack(spacing: 6) {
-                Image(systemName: "line.3.horizontal.decrease").foregroundStyle(.secondary)
-                TextField("Filter current list", text: $workspace.search)
-                    .textFieldStyle(.plain).focused($filterFocused)
-                    .accessibilityIdentifier("listFilter")
-                if !workspace.search.isEmpty {
-                    Button { workspace.search = "" } label: { Image(systemName: "xmark.circle.fill") }
-                        .buttonStyle(.plain).foregroundStyle(.secondary).help("Clear filter")
-                }
-            }.padding(8).background(.quaternary, in: .rect(cornerRadius: 7)).padding(.horizontal, 10)
-            .disabled(workspace.section == .calendar)
-            .onChange(of: workspace.searchPresented) { _, requested in
-                if requested { filterFocused = true; workspace.searchPresented = false }
-            }
         List(selection: Binding(get: { Optional(workspace.section) }, set: { if let value = $0 { workspace.section = value } })) {
             Section {
                 item(.today, "Today", count: open.filter { !$0.string("due_date").isEmpty && $0.string("due_date") <= today }.count, dropDay: today)

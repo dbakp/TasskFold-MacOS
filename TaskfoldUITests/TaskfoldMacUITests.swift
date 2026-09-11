@@ -4,6 +4,30 @@ import AppKit
 final class TaskfoldMacUITests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
 
+    @MainActor func testTaskEntryIsExplicitAndFilterLivesAboveTasks() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
+        let filter = app.textFields["listFilter"]
+        XCTAssertTrue(filter.waitForExistence(timeout: 10))
+        let sidebar = app.outlines["Sidebar"]
+        XCTAssertFalse(sidebar.textFields["listFilter"].exists)
+        XCTAssertFalse(app.textFields["quickAdd"].exists)
+        app.buttons["addTask"].click()
+        let input = app.textFields["quickAdd"]
+        XCTAssertTrue(input.waitForExistence(timeout: 5))
+        app.typeText("Explicit entry task")
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(waitForDisappearance(input, timeout: 5))
+        app.buttons["addTask"].click()
+        XCTAssertEqual(input.value as? String, "Explicit entry task")
+        app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(waitForDisappearance(input, timeout: 5))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@ OR value BEGINSWITH %@", "Explicit entry task", "Explicit entry task")).firstMatch.waitForExistence(timeout: 5))
+        app.typeKey("f", modifierFlags: [.command, .shift])
+        app.typeText("Today first")
+        XCTAssertEqual(filter.value as? String, "Today first")
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@ OR value BEGINSWITH %@", "Explicit entry task", "Explicit entry task")).firstMatch.exists)
+    }
+
     /// Selecting a row and pressing Space completes it; ⌘Z brings it back through the system undo manager.
     @MainActor func testKeyboardCompletionAndUndo() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
@@ -51,15 +75,19 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertFalse(app.descendants(matching: .any)["taskTitle"].exists)
         row.click()
         XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].waitForExistence(timeout: 5))
+        app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]
         input.click(); input.typeText("Unfinished today draft")
         app.typeKey("2", modifierFlags: .command)
+        app.typeKey("n", modifierFlags: .command)
         XCTAssertEqual(input.value as? String, "")
         input.click(); input.typeText("Unfinished inbox draft")
         app.typeKey("1", modifierFlags: .command)
+        app.typeKey("n", modifierFlags: .command)
         XCTAssertEqual(input.value as? String, "Unfinished today draft")
         XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].waitForExistence(timeout: 5))
         app.typeKey("2", modifierFlags: .command)
+        app.typeKey("n", modifierFlags: .command)
         XCTAssertEqual(input.value as? String, "Unfinished inbox draft")
     }
 
@@ -78,7 +106,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testFinderOpensCompletedTaskWithoutChangingListFilter() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--navigation-fixture"]; app.launch()
-        XCTAssertTrue(app.textFields["quickAdd"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
         app.typeKey("f", modifierFlags: [.command, .shift])
         app.typeText("Navigation task 003")
         app.typeKey("f", modifierFlags: .command)
@@ -95,6 +123,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testFinderCancelRestoresDraftFocusAndProjectNavigation() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--navigation-fixture"]; app.launch()
+        app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]
         XCTAssertTrue(input.waitForExistence(timeout: 10)); input.click(); input.typeText("Draft")
         app.typeKey("f", modifierFlags: .command)
@@ -108,6 +137,9 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(finder.waitForExistence(timeout: 5)); finder.typeText("Navigation Studio")
         app.typeKey(.return, modifierFlags: [])
         XCTAssertTrue(waitForDisappearance(finder, timeout: 5))
+        XCTAssertFalse(input.exists)
+        app.typeKey("n", modifierFlags: .command)
+        XCTAssertTrue(input.waitForExistence(timeout: 5))
         XCTAssertEqual(input.placeholderValue, "Add a task to Navigation Studio")
     }
 
@@ -145,7 +177,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testFinderKeyboardSelectionAndCommand() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--navigation-fixture"]; app.launch()
-        XCTAssertTrue(app.textFields["quickAdd"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
         app.typeKey("f", modifierFlags: .command)
         let finder = app.textFields["finderSearch"]
         XCTAssertTrue(finder.waitForExistence(timeout: 5)); finder.typeText("Navigation task 00")
@@ -163,7 +195,7 @@ final class TaskfoldMacUITests: XCTestCase {
 
     @MainActor func testCompletedFilterBelongsToItsDestination() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--navigation-fixture"]; app.launch()
-        XCTAssertTrue(app.textFields["quickAdd"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
         app.typeKey("5", modifierFlags: .command)
         let archived = app.staticTexts["title-nav-archived"]
         XCTAssertFalse(archived.exists)

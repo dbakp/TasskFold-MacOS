@@ -12,6 +12,7 @@ struct CalendarView: View {
         get { workspace.quickAdd }
         nonmutating set { workspace.quickAdd = newValue }
     }
+    @State private var quickAddVisible = false
     @FocusState private var quickAddFocused: Bool
     @FocusState private var calendarFocused: Bool
     @Namespace private var dayNamespace
@@ -115,7 +116,7 @@ struct CalendarView: View {
                     Button("Today") { jump(to: today) }.disabled(calendar.isDate(selected, inSameDayAs: today) && page == 0).help("Jump to today (⌘T)").keyboardShortcut("t", modifiers: .command)
                 }
                 ToolbarItemGroup(placement: .primaryAction) {
-                    Button { quickAddFocused = true } label: { Label("New Task", systemImage: "plus") }.help("Add a task on the selected day (⌘N)")
+                    Button { quickAddVisible = true; quickAddFocused = true } label: { Label("New Task", systemImage: "plus") }.help("Add a task on the selected day (⌘N)")
                     Button { workspace.inspectorShown.toggle() } label: { Label("Inspector", systemImage: "sidebar.trailing") }.help("Show or hide the inspector (⌥⌘I)")
                 }
             }
@@ -131,7 +132,8 @@ struct CalendarView: View {
             calendarFocused = true
         }
         .onChange(of: workspace.calendarMode) { _, _ in withAnimation(layout) { page = page(containing: selected, mode: mode) } }
-        .onChange(of: workspace.quickAddFocusRequest) { _, _ in quickAddFocused = true }
+        .onChange(of: workspace.quickAddFocusRequest) { _, _ in if workspace.section == .calendar { quickAddVisible = true; quickAddFocused = true } }
+        .onDisappear { quickAddVisible = false }
         .onKeyPress(.leftArrow) { shift(-1); return .handled }
         .onKeyPress(.rightArrow) { shift(1); return .handled }
         .onChange(of: page) { _, new in
@@ -388,8 +390,12 @@ struct CalendarView: View {
             .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 8)
             .animation(Transitions.Ease.smoothOut, value: count)
             .animation(Transitions.Ease.smoothOut, value: selected)
+            if quickAddVisible {
             QuickAddBar(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), focused: $quickAddFocused, prompt: "Add a task for this day") {
-                if let id = workspace.add(quickAdd, date: selected) { quickAdd = ""; workspace.selection = [id] }
+                if let id = workspace.add(quickAdd, date: selected) { quickAdd = ""; quickAddVisible = false; quickAddFocused = false; workspace.selection = [id] }
+            }
+            .onAppear { quickAddFocused = true }
+            .onExitCommand { quickAddVisible = false; quickAddFocused = false }
             }
             List(selection: $workspace.selection) {
                 ForEach(items) { task in
