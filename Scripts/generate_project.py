@@ -23,7 +23,7 @@ test_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldUITests
 widget_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldWidgets").rglob("*.swift"))
 # Set TASKFOLD_WIDGETS=0 to leave the widget extension out (for example while App Groups cannot be provisioned).
 WIDGETS = os.environ.get("TASKFOLD_WIDGETS", "1") != "0" and widget_sources
-other_files = ["Taskfold/Info.plist", "Taskfold/Taskfold.entitlements"] + (["TaskfoldWidgets/Info.plist", "TaskfoldWidgets/TaskfoldWidgets.entitlements"] if WIDGETS else [])
+other_files = ["Taskfold/Info.plist", "Taskfold/Taskfold.entitlements", "Taskfold/Taskfold-Distribution.entitlements"] + (["TaskfoldWidgets/Info.plist", "TaskfoldWidgets/TaskfoldWidgets.entitlements"] if WIDGETS else [])
 
 def file_type(path):
     if path.endswith(".swift"): return "sourcecode.swift"

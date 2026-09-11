@@ -18,7 +18,7 @@ Compared against `dbakp/taskfold-ios` at `d7a8bec` (shared Core adopted, not re-
 | Tagline copy removed | Done | Today shows a date line and a count. |
 | Recent searches | Done | Suggested in the global search field (shared `recentSearches` key). |
 | Siri / Shortcuts intents (`Intents.swift`) | Done | Shared file compiled into the Mac target; Add Task, What's Due Today, Complete Task appear in Shortcuts via `Metadata.appintents`. |
-| Today widget (App Group snapshot) | Done | `TaskfoldWidgets.appex` embedded, small / medium / large. `group.com.dbakp.taskfold` provisioned on the personal team without issue on this Mac. |
+| Today widget (App Group snapshot) | Development builds only | `TaskfoldWidgets.appex` (small / medium / large) needs the App Group entitlement, which needs a team provisioning profile. Profiles from the free team last seven days and bind the app to registered Macs, so the shipped DMG is an ad hoc distribution build without the widget. A paid developer account (Developer ID + notarization) would restore it. |
 | Live Activity / Control Center button / Lock Screen families | Not applicable | iOS-only surfaces. A no-op `LiveActivityManager` satisfies the shared persist hook on macOS. |
 | Swipe actions, mobile pill mode switcher, iPad sidebar | Not applicable | Mac uses keyboard, context menus, and the split view. |
 | `Store.startLocal` "Getting started" seed | Done | Shared; Mac wording comes from the Core's `os(macOS)` branch. |

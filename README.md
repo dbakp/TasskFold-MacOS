@@ -26,11 +26,13 @@ Sign in with email/password or Google (`ASWebAuthenticationSession` with PKCE, c
 
 ## Install
 
-`Scripts/make_dmg.sh` builds a Release app and produces `dist/Taskfold-<version>.dmg`: a compressed, signed disk image with the app and an Applications shortcut. Drag Taskfold onto Applications. The app is signed with the team's Apple Development identity, not a Developer ID, so on another Mac the first launch needs right-click ▸ Open; notarization needs a paid developer account. Pass `TASKFOLD_IOS_ROOT` to build against a clean iOS checkout.
+`Scripts/make_dmg.sh` produces `dist/Taskfold-<version>.dmg`: a compressed disk image with the app, an Applications shortcut, and a short "How to install" note. By default it makes a **distribution build**: signed ad hoc with no provisioning profile, so it never expires and runs on any Mac. Because it is not notarized (that needs a paid Apple Developer account), the first launch is blocked with "could not verify"; open System Settings ▸ Privacy & Security and click **Open Anyway** once. Distribution builds carry only the sandbox, network, and user-selected-file entitlements and leave out the Today widget extension, which needs a team-provisioned App Group.
+
+`Scripts/make_dmg.sh --development` makes the team-signed build with the widget instead. It runs only on Macs registered to the team and stops launching when its seven-day provisioning profile expires, so it is for local use.
 
 ### Releases
 
-The current build is published as a GitHub release with the DMG attached: [github.com/dbakp/TasskFold-MacOS/releases/latest](https://github.com/dbakp/TasskFold-MacOS/releases/latest). `Scripts/publish_release.sh` rebuilds the image and creates the release for the app's version, or replaces the asset when that version's release already exists; bump `MARKETING_VERSION` in `Scripts/generate_project.py` for a new version.
+The current build is published as a GitHub release with the DMG attached: [github.com/dbakp/TasskFold-MacOS/releases/latest](https://github.com/dbakp/TasskFold-MacOS/releases/latest). `Scripts/publish_release.sh` rebuilds the distribution image and creates the release for the app's version, or replaces the asset when that version's release already exists; bump `MARKETING_VERSION` in `Scripts/generate_project.py` for a new version.
 
 ## Welcome tour
 

@@ -5,20 +5,26 @@
 #   Scripts/publish_release.sh --latest   # also (re)point the rolling "latest" release at this build
 set -euo pipefail
 cd "$(dirname "$0")/.."
-Scripts/make_dmg.sh
+Scripts/make_dmg.sh "${DMG_MODE:-}"
 DMG="$(ls -t dist/Taskfold-*.dmg | head -1)"
 VERSION="$(basename "$DMG" .dmg | sed 's/^Taskfold-//')"
 TAG="v$VERSION"
 REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
 NOTES="Taskfold for macOS $VERSION.
 
-Download \`$(basename "$DMG")\`, open it, and drag Taskfold onto Applications. The app is signed with an Apple Development identity and not notarized, so the first launch needs right-click ▸ Open.
+**Install**
+1. Download \`$(basename "$DMG")\`, open it, and drag Taskfold onto Applications.
+2. Open Taskfold. macOS reports that it could not verify the app.
+3. Open System Settings ▸ Privacy & Security, scroll to Security, click **Open Anyway**, and confirm. This happens once.
+
+The app is signed but not notarized, which needs a paid Apple Developer account; this build carries no provisioning profile, so it does not expire and runs on any Mac. The Today widget is only part of team-signed development builds.
 
 Requires macOS 15 or later."
 if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
   echo "▸ Replacing asset on existing release $TAG"
   gh release upload "$TAG" "$DMG" --repo "$REPO" --clobber
   gh release edit "$TAG" --repo "$REPO" --notes "$NOTES" --latest
+  git tag -f "$TAG" && git push -f origin "$TAG"
 else
   echo "▸ Creating release $TAG"
   git tag -f "$TAG" && git push -f origin "$TAG"
