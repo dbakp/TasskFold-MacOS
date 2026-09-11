@@ -53,6 +53,11 @@ struct AccountSettings: View {
     @State private var uploading = false
     @State private var exporting = false
     @State private var exportDocument: JSONExport?
+    @State private var changingEmail = false
+    @State private var changingPassword = false
+    @State private var deletingAccount = false
+    @State private var resetMessage: String?
+    @State private var sendingReset = false
     var body: some View {
         Form {
             Section("Account") {
@@ -71,6 +76,15 @@ struct AccountSettings: View {
                     }
                     TextField("Display name", text: $displayName).onSubmit(saveProfile)
                     Button("Save Profile", action: saveProfile)
+                }
+            }
+            if store.signedIn && !store.localMode {
+                Section("Security") {
+                    Button("Change Email…") { changingEmail = true }.accessibilityIdentifier("changeEmail")
+                    Button("Change Password…") { changingPassword = true }.accessibilityIdentifier("changePassword")
+                    Button(sendingReset ? "Sending…" : "Send Password Reset Email") { sendReset() }.disabled(sendingReset).accessibilityIdentifier("sendPasswordReset")
+                    if let resetMessage { Text(resetMessage).font(.caption).foregroundStyle(.secondary).textSelection(.enabled) }
+                    Button("Delete Account…", role: .destructive) { deletingAccount = true }.accessibilityIdentifier("deleteAccount")
                 }
             }
             Section("Data") {
@@ -99,6 +113,9 @@ struct AccountSettings: View {
         .onChange(of: workspace.signInRequested) { _, _ in consumeSignInRequest() }
         .onChange(of: store.localMode) { _, local in if !local && store.signedIn { showLogin = false } }
         .onChange(of: store.signedIn) { _, signedIn in if signedIn && !store.localMode { showLogin = false } }
+        .sheet(isPresented: $changingEmail) { ChangeEmailSheet() }
+        .sheet(isPresented: $changingPassword) { ChangePasswordSheet() }
+        .sheet(isPresented: $deletingAccount) { DeleteAccountSheet() }
         .sheet(isPresented: $showLogin) {
             VStack(spacing: 0) {
                 HStack { Spacer(); Button("Close") { showLogin = false }.keyboardShortcut(.cancelAction) }.padding(12)
@@ -130,6 +147,14 @@ struct AccountSettings: View {
         .confirmationDialog(store.localMode ? "Leave this workspace?" : "Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
             Button(store.localMode ? "Leave" : "Sign Out", role: .destructive) { store.signOut() }
         } message: { Text("Saved tasks and pending changes stay on this Mac for your next sign-in.") }
+    }
+    private func sendReset() {
+        sendingReset = true; resetMessage = nil
+        Task {
+            defer { sendingReset = false }
+            do { try await store.backend.sendPasswordReset(email: store.email); resetMessage = "A reset link was sent to \(store.email)." }
+            catch { resetMessage = error.localizedDescription }
+        }
     }
     private func consumeSignInRequest() {
         guard workspace.signInRequested else { return }

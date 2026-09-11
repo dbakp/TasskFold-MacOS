@@ -46,6 +46,7 @@ struct TaskfoldMacApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = self
+        ReminderCategory.register()
         #if DEBUG
         if ProcessInfo.processInfo.environment["TASKFOLD_TRACE"] == "1" {
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
@@ -60,8 +61,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         return true
     }
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions { [.banner, .sound] }
+    /// Reminder actions mirror iOS: complete, snooze an hour, or move to tomorrow, straight from the banner.
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        if let id = response.notification.request.content.userInfo["taskID"] as? String {
+        guard let id = response.notification.request.content.userInfo["taskID"] as? String else { return }
+        switch response.actionIdentifier {
+        case ReminderCategory.complete:
+            await MainActor.run { if let task = Store.shared.record("tasks", id: id), !task.completed { Store.shared.toggle(task) } }
+        case ReminderCategory.snoozeHour:
+            await ReminderCategory.snooze(response.notification.request.content, taskID: id, by: 3600)
+        case ReminderCategory.tomorrow:
+            await MainActor.run {
+                if let task = Store.shared.record("tasks", id: id), let due = task.due, let next = Calendar.current.date(byAdding: .day, value: 1, to: max(due, Calendar.current.startOfDay(for: Date()))) {
+                    Store.shared.update([id], fields: ["due_date": .string(Dates.day(next))])
+                }
+            }
+        default:
             await MainActor.run { NotificationRoute.shared.taskID = id }
         }
     }
