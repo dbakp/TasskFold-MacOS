@@ -120,6 +120,27 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].waitForExistence(timeout: 5), "Plain rows still select on click")
     }
 
+    /// Plan Your Day walks overdue and today's tasks; Space completes the current card and the list reflects it.
+    @MainActor func testPlanSheetCompletesTask() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
+        let overdue = app.staticTexts["title-drag-fixture-0"]
+        XCTAssertTrue(overdue.waitForExistence(timeout: 10))
+        app.typeKey("p", modifierFlags: [.command, .option])
+        let card = app.staticTexts["planCardTitle"]
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        XCTAssertEqual(card.value as? String, "Overdue sample")
+        app.typeKey(" ", modifierFlags: [])
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "value == %@", "Today first")).firstMatch.waitForExistence(timeout: 5), "Space completes the card and advances; card now: \(card.value.debugDescription); focused: \(app.descendants(matching: .any).matching(NSPredicate(format: "hasKeyboardFocus == 1")).allElementsBoundByIndex.map { $0.identifier + "/" + $0.elementType.rawValue.description })")
+        app.typeKey(.rightArrow, modifierFlags: [])
+        sleep(1)
+        let afterFirstSkip = card.value as? String
+        app.typeKey(.rightArrow, modifierFlags: [])
+        XCTAssertTrue(app.descendants(matching: .any)["finishPlan"].waitForExistence(timeout: 5), "Skipping the rest reaches the summary; after first skip: \(afterFirstSkip ?? "nil"), now: \(card.exists ? (card.value as? String ?? "") : "no card")\n" + app.debugDescription.components(separatedBy: "\n").filter { $0.contains("Start the Day") || $0.contains("finishPlan") || $0.contains("planned") }.joined(separator: "\n"))
+        app.descendants(matching: .any)["finishPlan"].click()
+        XCTAssertTrue(waitForDisappearance(overdue, timeout: 5), "The completed task left Today")
+        XCTAssertTrue(app.staticTexts["title-drag-fixture-1"].exists, "Skipped tasks are untouched")
+    }
+
     @MainActor func testNavigationPreservesDraftAndSelection() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
         let row = app.staticTexts["title-drag-fixture-1"]

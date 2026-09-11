@@ -147,6 +147,9 @@ struct TaskfoldCommands: Commands {
             Divider()
             Button(workspace.inspectorShown ? "Hide Inspector" : "Show Inspector") { workspace.inspectorShown.toggle() }.keyboardShortcut("i", modifiers: [.command, .option])
             Divider()
+            Button("Plan Your Day…") { workspace.planning = .day }.keyboardShortcut("p", modifiers: [.command, .option]).disabled(!store.signedIn)
+            Button("Review This Week…") { workspace.planning = .week }.keyboardShortcut("w", modifiers: [.command, .option]).disabled(!store.signedIn)
+            Divider()
             Button("Sync Now") { Task { await store.sync() } }.keyboardShortcut("r", modifiers: .command).disabled(store.localMode || !store.signedIn)
             Divider()
         }

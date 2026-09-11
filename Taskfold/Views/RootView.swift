@@ -210,6 +210,7 @@ struct WorkspaceView: View {
             .navigationSubtitle(workspace.navigationSubtitle)
         }
         .sheet(isPresented: $workspace.finderPresented, onDismiss: { workspace.finishFinderDismissal() }) { FinderView() }
+        .sheet(item: $workspace.planning) { kind in PlanDayView(kind: kind, queue: workspace.planQueue(kind)) }
         .modifier(KeyRouter())
         .accessibilityIdentifier("nativeWorkspace")
     }

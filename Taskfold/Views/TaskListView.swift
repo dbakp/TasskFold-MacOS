@@ -328,6 +328,12 @@ struct TaskListView: View {
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
+            if scope == .today || scope == .upcoming {
+                Button { workspace.planning = scope == .today ? .day : .week } label: { Label(scope == .today ? "Plan Your Day" : "Review This Week", systemImage: "sparkles") }
+                    .help(scope == .today ? "Triage overdue and today's tasks one at a time (⌥⌘P)" : "Review the next seven days one task at a time (⌥⌘W)")
+                    .disabled(workspace.planQueue(scope == .today ? .day : .week).isEmpty)
+                    .accessibilityIdentifier("planButton")
+            }
             Button { revealQuickAdd() } label: { Label("New Task", systemImage: "plus") }
                 .help("New Task (⌘N)").accessibilityIdentifier("addTask")
 
