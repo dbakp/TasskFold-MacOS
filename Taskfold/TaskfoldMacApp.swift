@@ -6,7 +6,10 @@ struct TaskfoldMacApp: App {
     @State private var store: Store
     @State private var workspace: Workspace
     @AppStorage("appearance") private var appearance = "system"
+    /// Read here so a new accent re-renders the scene; `Color.taskfold` resolves it everywhere else.
+    @AppStorage("accent") private var accent = "rose"
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+    private var tint: Color { Color.accents.first { $0.key == accent }?.color ?? Color.accents[0].color }
 
     init() {
         #if DEBUG
@@ -28,7 +31,7 @@ struct TaskfoldMacApp: App {
             RootView()
                 .environment(store)
                 .environment(workspace)
-                .tint(.taskfold)
+                .tint(tint)
                 .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
                 .frame(minWidth: 820, minHeight: 520)
         }
@@ -37,7 +40,7 @@ struct TaskfoldMacApp: App {
         .commands { TaskfoldCommands(workspace: workspace, store: store) }
 
         Settings {
-            SettingsView().environment(store).environment(workspace).tint(.taskfold)
+            SettingsView().environment(store).environment(workspace).tint(tint)
                 .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
         }
     }

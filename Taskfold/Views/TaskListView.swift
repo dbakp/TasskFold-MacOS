@@ -186,10 +186,12 @@ struct TaskListView: View {
         }
     }
 
+    /// A date line and a count; no tagline copy.
     private var subtitle: String {
         if scope == .completed { return "\(filtered.count) completed" }
-        if scope == .today { return remaining == 0 ? "Nothing left for today" : remaining == 1 ? "1 task to focus on" : "\(remaining) tasks to focus on" }
-        return remaining == 1 ? "1 task" : "\(remaining) tasks"
+        let count = remaining == 1 ? "1 task" : "\(remaining) tasks"
+        if scope == .today { return Date().formatted(.dateTime.weekday(.wide).day().month(.wide)) + " · " + count }
+        return count
     }
     private var quickAddPrompt: String {
         switch scope {
@@ -261,7 +263,7 @@ struct TaskListView: View {
             DayEndRow(day: day, isEmpty: tasks.isEmpty).selectionDisabled().listRowSeparator(.hidden)
         } header: {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(name).foregroundStyle(day == today ? Color.accentColor : .primary)
+                Text(name).foregroundStyle(day == today ? Color.taskfold : .primary)
                 if !(scope == .today && day == today) { Text(detail).font(.subheadline).foregroundStyle(.secondary) }
                 Spacer()
                 if open > 0 { Text("\(open)").font(.caption).monospacedDigit().foregroundStyle(.tertiary).contentTransition(.numericText()) }
@@ -360,7 +362,7 @@ struct QuickAddBar: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
-                Image(systemName: "plus.circle.fill").foregroundStyle(text.isEmpty ? AnyShapeStyle(.tertiary) : AnyShapeStyle(Color.accentColor)).font(.title3)
+                Image(systemName: "plus.circle.fill").foregroundStyle(text.isEmpty ? AnyShapeStyle(.tertiary) : AnyShapeStyle(Color.taskfold)).font(.title3)
                     .animation(Motion.quick, value: text.isEmpty)
                 TextField(prompt, text: $text)
                     .textFieldStyle(.plain)
@@ -396,7 +398,7 @@ struct ConfirmationBar: View {
     let confirmation: Confirmation
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.accentColor).id(confirmation.id).transition(.iconSwap)
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.taskfold).id(confirmation.id).transition(.iconSwap)
             Text(confirmation.message).lineLimit(1).id(confirmation.id).transition(.textSwap)
             Spacer()
             if confirmation.undoable {

@@ -116,8 +116,8 @@ struct TaskDropTarget<Content: View>: View {
     var body: some View {
         content
             .padding(.horizontal, 6).padding(.vertical, 2)
-            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Color.accentColor.opacity(targeted ? 0.16 : 0)))
-            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Color.accentColor.opacity(targeted ? 0.8 : 0), lineWidth: 1.5))
+            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Color.taskfold.opacity(targeted ? 0.16 : 0)))
+            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Color.taskfold.opacity(targeted ? 0.8 : 0), lineWidth: 1.5))
             .padding(.horizontal, -6).padding(.vertical, -2)
             .animation(Motion.quick, value: targeted)
             .onDrop(of: [.taskfoldTask], isTargeted: $targeted) { providers in

@@ -8,9 +8,19 @@ struct FinderView: View {
     @State private var query = ""
     @State private var selection: String?
     @FocusState private var searchFocused: Bool
+    /// The last few searches, shared with iOS through the "recentSearches" key.
+    @AppStorage("recentSearches") private var recentSearchesData = Data()
+    private var recentSearches: [String] { (try? JSONDecoder().decode([String].self, from: recentSearchesData)) ?? [] }
+    private func remember(_ term: String) {
+        let trimmed = term.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        var list = recentSearches.filter { $0.caseInsensitiveCompare(trimmed) != .orderedSame }
+        list.insert(trimmed, at: 0)
+        recentSearchesData = (try? JSONEncoder().encode(Array(list.prefix(6)))) ?? Data()
+    }
 
     private struct Result: Identifiable {
-        enum Target { case task(String), destination(SidebarItem), command(String) }
+        enum Target { case task(String), destination(SidebarItem), command(String), search(String) }
         let id: String
         let title: String
         let detail: String
@@ -32,9 +42,10 @@ struct FinderView: View {
             Result(id: "command-filter", title: "Filter Current List", detail: "Command · ⇧⌘F", symbol: "line.3.horizontal.decrease", target: .command("filter"))
         ].filter { $0.id != "command-filter" || workspace.section != .calendar }
         if terms.isEmpty {
+            let searches = recentSearches.map { Result(id: "search-\($0)", title: $0, detail: "Recent search", symbol: "clock.arrow.circlepath", target: .search($0)) }
             let recent = workspace.recentDestinations.compactMap { item in destinations.first { $0.id == "destination-\(item.key)" } }
             let ids = Set(recent.map(\.id))
-            return recent.map { Result(id: $0.id, title: $0.title, detail: "Recent", symbol: $0.symbol, target: $0.target) }
+            return searches + recent.map { Result(id: $0.id, title: $0.title, detail: "Recent", symbol: $0.symbol, target: $0.target) }
                 + destinations.filter { !ids.contains($0.id) }.prefix(12) + commands
         }
         let navigation = destinations.filter { matches($0.title + " " + $0.detail) }
@@ -99,7 +110,7 @@ struct FinderView: View {
             }
             Divider()
             HStack {
-                Text(terms.isEmpty ? "Recent destinations and commands" : "Searches all tasks, including completed · up to 80 task matches")
+                Text(terms.isEmpty ? (recentSearches.isEmpty ? "Recent destinations and commands" : "Recent searches, destinations, and commands") : "Searches all tasks, including completed · up to 80 task matches")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Button("Open") { activateSelection(entries) }.keyboardShortcut(.defaultAction).disabled(selection == nil)
@@ -122,8 +133,9 @@ struct FinderView: View {
     }
     private func activate(_ result: Result) {
         switch result.target {
-        case .task(let id): workspace.openFromFinder(id)
-        case .destination(let item): workspace.section = item; dismiss()
+        case .search(let term): query = term
+        case .task(let id): remember(query); workspace.openFromFinder(id)
+        case .destination(let item): remember(query); workspace.section = item; dismiss()
         case .command(let command):
             workspace.pendingFinderCommand = command
             dismiss()

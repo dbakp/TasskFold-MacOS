@@ -178,7 +178,7 @@ struct TaskInspectorForm: View {
                 ForEach(Array(draft["subtasks"].list.enumerated()), id: \.offset) { index, value in
                     HStack {
                         Button { var list = draft["subtasks"].list; var item = value.object; item["completed"] = .bool(!(item["completed"]?.flag ?? false)); list[index] = .object(item); draft["subtasks"] = .array(list) } label: {
-                            Image(systemName: value.object["completed"]?.flag == true ? "checkmark.circle.fill" : "circle").foregroundStyle(value.object["completed"]?.flag == true ? Color.accentColor : .secondary)
+                            Image(systemName: value.object["completed"]?.flag == true ? "checkmark.circle.fill" : "circle").foregroundStyle(value.object["completed"]?.flag == true ? Color.taskfold : .secondary)
                         }.buttonStyle(.borderless).accessibilityLabel("Toggle subtask")
                         TextField("Subtask", text: Binding(get: { draft["subtasks"].list[index].object["title"]?.text ?? "" }, set: { title in var list = draft["subtasks"].list; var item = list[index].object; item["title"] = .string(title); list[index] = .object(item); draft["subtasks"] = .array(list) }), prompt: Text("Subtask"))
                             .labelsHidden().textFieldStyle(.plain)

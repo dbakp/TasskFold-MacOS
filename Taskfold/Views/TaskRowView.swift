@@ -64,7 +64,7 @@ struct TaskRowView: View {
                             let text = compactDate && !overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))
                             Button { choosingDate = true } label: {
                                 Label(text, systemImage: task["is_recurring"].flag ? "repeat" : overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
-                                    .foregroundStyle(isSelected ? selectedForeground : overdue ? Color.red : dueToday ? Color.accentColor : Color.secondary)
+                                    .foregroundStyle(isSelected ? selectedForeground : overdue ? Color.red : dueToday ? Color.taskfold : Color.secondary)
                             }
                             .buttonStyle(.borderless)
                             .help("Change date")
@@ -159,7 +159,7 @@ struct DragPreview: View {
             Text(tasks.first?.title ?? "").lineLimit(1)
             if tasks.count > 1 {
                 Text("\(tasks.count)").font(.caption.weight(.semibold)).monospacedDigit().foregroundStyle(.white)
-                    .padding(.horizontal, 7).padding(.vertical, 2).background(Color.accentColor, in: .capsule)
+                    .padding(.horizontal, 7).padding(.vertical, 2).background(Color.taskfold, in: .capsule)
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
@@ -176,14 +176,14 @@ struct InsertionIndicator: View {
     var body: some View {
         HStack(spacing: 6) {
             HStack(spacing: 0) {
-                Circle().fill(Color.accentColor).frame(width: 7, height: 7)
-                Rectangle().fill(Color.accentColor).frame(height: 2)
+                Circle().fill(Color.taskfold).frame(width: 7, height: 7)
+                Rectangle().fill(Color.taskfold).frame(height: 2)
             }
             if let hint {
-                Text(hint).font(.caption2.weight(.semibold)).foregroundStyle(Color.accentColor)
+                Text(hint).font(.caption2.weight(.semibold)).foregroundStyle(Color.taskfold)
                     .padding(.horizontal, 7).padding(.vertical, 2)
                     .background(Color(nsColor: .controlBackgroundColor), in: .capsule)
-                    .overlay(Capsule().strokeBorder(Color.accentColor.opacity(0.35), lineWidth: 1))
+                    .overlay(Capsule().strokeBorder(Color.taskfold.opacity(0.35), lineWidth: 1))
                     .fixedSize()
                     .transition(reduceMotion ? .opacity : .badgePop)
                     .accessibilityIdentifier("bandHint")

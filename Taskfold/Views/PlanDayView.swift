@@ -79,7 +79,7 @@ struct PlanDayView: View {
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.primary.opacity(0.08))
-                    Capsule().fill(Color.accentColor).frame(width: proxy.size.width * CGFloat(min(index, queue.count)) / CGFloat(max(1, queue.count)))
+                    Capsule().fill(Color.taskfold).frame(width: proxy.size.width * CGFloat(min(index, queue.count)) / CGFloat(max(1, queue.count)))
                         .animation(Transitions.Ease.smoothOut(Transitions.Duration.fast), value: index)
                 }
             }
@@ -174,7 +174,7 @@ struct PlanDayView: View {
     private var summary: some View {
         let counts = Dictionary(grouping: handled.values, by: { $0 }).mapValues(\.count)
         return VStack(spacing: 14) {
-            Image(systemName: "sparkles").font(.system(size: 40, weight: .medium)).symbolRenderingMode(.hierarchical).foregroundStyle(Color.accentColor)
+            Image(systemName: "sparkles").font(.system(size: 40, weight: .medium)).symbolRenderingMode(.hierarchical).foregroundStyle(Color.taskfold)
             Text(kind == .day ? "Your day is planned" : "Your week is reviewed").font(.title3.weight(.semibold))
             if counts.isEmpty { Text("Nothing needed a decision.").font(.callout).foregroundStyle(.secondary) }
             else { Text(counts.sorted { $0.key < $1.key }.map { "\($0.value) \($0.key.lowercased())" }.joined(separator: " · ")).font(.callout).foregroundStyle(.secondary) }

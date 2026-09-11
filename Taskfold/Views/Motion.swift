@@ -86,7 +86,18 @@ struct HoverHighlight: ViewModifier {
 }
 
 extension Color {
-    static let taskfold = Color(red: 0.88, green: 0.12, blue: 0.30)
+    /// The accent chosen in Settings ▸ General (the "accent" key shared with iOS). Read live so a change repaints.
+    static var taskfold: Color { accents.first { $0.key == UserDefaults.standard.string(forKey: "accent") }?.color ?? accents[0].color }
+    static let accents: [(key: String, name: String, color: Color)] = [
+        ("rose", "Rose", Color(red: 0.88, green: 0.12, blue: 0.30)),
+        ("coral", "Coral", Color(red: 0.96, green: 0.36, blue: 0.30)),
+        ("amber", "Amber", Color(red: 0.95, green: 0.60, blue: 0.10)),
+        ("moss", "Moss", Color(red: 0.24, green: 0.62, blue: 0.40)),
+        ("teal", "Teal", Color(red: 0.10, green: 0.60, blue: 0.62)),
+        ("sky", "Sky", Color(red: 0.16, green: 0.50, blue: 0.92)),
+        ("indigo", "Indigo", Color(red: 0.36, green: 0.36, blue: 0.86)),
+        ("plum", "Plum", Color(red: 0.62, green: 0.30, blue: 0.72)),
+    ]
     static func priority(_ value: Int) -> Color { [1: .red, 2: .orange, 3: .blue, 4: .secondary][value] ?? .secondary }
     static func project(_ value: String) -> Color {
         let names: [String: Color] = ["red": .red, "orange": .orange, "yellow": .yellow, "green": .green, "blue": .blue, "purple": .purple, "pink": .pink, "gray": .gray, "teal": .teal, "berry_red": .taskfold, "charcoal": .gray]

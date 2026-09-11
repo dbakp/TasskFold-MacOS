@@ -26,6 +26,7 @@ struct GeneralSettings: View {
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("defaultView") private var defaultView = "today"
     @AppStorage("remindersEnabled") private var reminders = false
+    @AppStorage("accent") private var accent = "rose"
     var body: some View {
         Form {
             Picker("Start view", selection: $defaultView) {
@@ -35,6 +36,22 @@ struct GeneralSettings: View {
                 if !store.labels.isEmpty { Divider(); ForEach(store.labels) { Text($0.name).tag(TaskScope.label($0.id).preferenceKey) } }
             }
             Picker("Appearance", selection: $appearance) { Text("System").tag("system"); Text("Light").tag("light"); Text("Dark").tag("dark") }.pickerStyle(.segmented)
+            LabeledContent("Accent") {
+                HStack(spacing: 10) {
+                    ForEach(Color.accents, id: \.key) { option in
+                        Button { withAnimation(Transitions.Ease.smoothOut(Transitions.Duration.quick)) { accent = option.key } } label: {
+                            Circle().fill(option.color).frame(width: 22, height: 22)
+                                .overlay { if accent == option.key { Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundStyle(.white) } }
+                                .overlay(Circle().strokeBorder(Color.primary.opacity(accent == option.key ? 0.25 : 0), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain).pointerStyle(.link)
+                        .help(option.name)
+                        .accessibilityLabel(option.name)
+                        .accessibilityAddTraits(accent == option.key ? .isSelected : [])
+                        .accessibilityIdentifier("accent-\(option.key)")
+                    }
+                }
+            }
             Toggle("Task reminders", isOn: Binding(get: { reminders }, set: { enabled in if enabled { Task { await store.enableNotifications() } } else { store.disableNotifications() } }))
             Text("Due tasks notify at their chosen time, or 8:00 AM if no time is set. macOS schedules the nearest 60 reminders; Taskfold refreshes them while open.").font(.caption).foregroundStyle(.secondary)
             Button("Open Notification Settings…") { if let url = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension") { NSWorkspace.shared.open(url) } }

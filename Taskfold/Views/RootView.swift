@@ -59,6 +59,7 @@ struct RootView: View {
         // Debug options use --key=value so AppKit never mistakes a bare value for a document to open.
         func option(_ key: String) -> String? { arguments.first { $0.hasPrefix("--\(key)=") }.map { String($0.dropFirst(key.count + 3)) } }
         if let value = option("section") { workspace.section = SidebarItem(key: value) }
+        if let value = option("accent") { UserDefaults.standard.set(value, forKey: "accent") }
         if arguments.contains("--preview") { Task { try? await Task.sleep(for: .milliseconds(400)); NSApp.windows.first { $0.isVisible }?.setContentSize(NSSize(width: 1380, height: 840)) } }
         if let value = option("calendar-mode"), let mode = CalendarMode(rawValue: value) { workspace.calendarMode = mode }
         if let value = option("appearance") { NSApp.appearance = NSAppearance(named: value == "dark" ? .darkAqua : .aqua) }

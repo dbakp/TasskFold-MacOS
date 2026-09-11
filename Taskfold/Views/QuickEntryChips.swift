@@ -37,7 +37,7 @@ struct QuickEntryChips: View {
             Text(token.label).font(.caption.weight(.semibold)).lineLimit(1).fixedSize()
             Button { decline(token) } label: {
                 Image(systemName: "xmark").font(.system(size: 8, weight: .bold)).frame(width: 14, height: 14)
-                    .background(Color.accentColor.opacity(0.14), in: .circle)
+                    .background(Color.taskfold.opacity(0.14), in: .circle)
             }
             .buttonStyle(.plain)
             .pointerStyle(.link)
@@ -46,9 +46,9 @@ struct QuickEntryChips: View {
             .accessibilityIdentifier("decline-\(token.group)")
         }
         .padding(.leading, 8).padding(.trailing, 4).padding(.vertical, compact ? 2 : 3)
-        .foregroundStyle(Color.accentColor)
-        .background(Color.accentColor.opacity(0.12), in: .capsule)
-        .overlay(Capsule().strokeBorder(Color.accentColor.opacity(focused ? 0.9 : 0), lineWidth: 1.5))
+        .foregroundStyle(Color.taskfold)
+        .background(Color.taskfold.opacity(0.12), in: .capsule)
+        .overlay(Capsule().strokeBorder(Color.taskfold.opacity(focused ? 0.9 : 0), lineWidth: 1.5))
         .focusable(true)
         .focused($focusedChip, equals: token.id)
         .focusEffectDisabled()

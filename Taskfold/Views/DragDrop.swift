@@ -117,15 +117,15 @@ struct DayEndRow: View {
                     Spacer()
                     Text(targeted ? releaseText : drag.active ? "Drop here" : emptyText)
                         .font(.callout.weight(targeted ? .semibold : .regular))
-                        .foregroundStyle(targeted ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.tertiary))
+                        .foregroundStyle(targeted ? AnyShapeStyle(Color.taskfold) : AnyShapeStyle(.tertiary))
                         .contentTransition(.interpolate)
                     Spacer()
                 }
                 .frame(minHeight: 40)
                 .background {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(targeted ? Color.accentColor.opacity(0.08) : Color.clear)
-                        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: drag.active ? [5, 4] : [])).foregroundStyle(targeted ? Color.accentColor.opacity(0.7) : Color(nsColor: .separatorColor).opacity(drag.active ? 1 : 0.6)))
+                        .fill(targeted ? Color.taskfold.opacity(0.08) : Color.clear)
+                        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: drag.active ? [5, 4] : [])).foregroundStyle(targeted ? Color.taskfold.opacity(0.7) : Color(nsColor: .separatorColor).opacity(drag.active ? 1 : 0.6)))
                 }
                 .scaleEffect(targeted ? 1.01 : 1)
             } else {
@@ -166,7 +166,7 @@ struct DayHeaderDrop: ViewModifier {
     @State private var targeted = false
     func body(content: Content) -> some View {
         content
-            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Color.accentColor.opacity(targeted ? 0.12 : 0)).padding(-4))
+            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Color.taskfold.opacity(targeted ? 0.12 : 0)).padding(-4))
             .animation(Motion.quick, value: targeted)
             .onDrop(of: [.taskfoldTask], isTargeted: $targeted) { _ in
                 let ids = workspace.drag.ids

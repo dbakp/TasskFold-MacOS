@@ -187,11 +187,11 @@ struct CalendarView: View {
         return VStack(alignment: .leading, spacing: 8) {
             Button { select(day) } label: {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(day.formatted(.dateTime.weekday(.abbreviated)).uppercased()).font(.caption.weight(.semibold)).tracking(0.6).lineLimit(1).fixedSize().foregroundStyle(isToday ? Color.accentColor : .secondary)
+                    Text(day.formatted(.dateTime.weekday(.abbreviated)).uppercased()).font(.caption.weight(.semibold)).tracking(0.6).lineLimit(1).fixedSize().foregroundStyle(isToday ? Color.taskfold : .secondary)
                     Text(day.formatted(.dateTime.day())).font(.system(.title2, design: .rounded).weight(.semibold)).monospacedDigit()
-                        .foregroundStyle(isSelected ? Color.white : isToday ? Color.accentColor : .primary)
+                        .foregroundStyle(isSelected ? Color.white : isToday ? Color.taskfold : .primary)
                         .frame(width: 30, height: 30)
-                        .background { if isSelected { Circle().fill(Color.accentColor).matchedGeometryEffect(id: "selectedDay", in: dayNamespace) } }
+                        .background { if isSelected { Circle().fill(Color.taskfold).matchedGeometryEffect(id: "selectedDay", in: dayNamespace) } }
                     Spacer()
                     let count = open(on: day)
                     if count > 0 { Text("\(count)").font(.caption).monospacedDigit().foregroundStyle(.tertiary) }
@@ -214,7 +214,7 @@ struct CalendarView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(isSelected ? Color.accentColor.opacity(0.05) : isToday ? Color.primary.opacity(0.02) : Color.clear)
+        .background(isSelected ? Color.taskfold.opacity(0.05) : isToday ? Color.primary.opacity(0.02) : Color.clear)
         .modifier(CalendarDayDrop(day: day))
         .accessibilityIdentifier("calendar-day-\(Dates.day(day))")
     }
@@ -238,7 +238,7 @@ struct CalendarView: View {
         }
         .padding(8)
         .modifier(CardSurface(radius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.accentColor, lineWidth: selectedTask ? 1.5 : 0))
+        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.taskfold, lineWidth: selectedTask ? 1.5 : 0))
         .contentShape(.rect)
         .onTapGesture { select(day); workspace.selection = [task.id] }
         .onTapGesture(count: 2) { workspace.open(task.id) }
@@ -294,7 +294,7 @@ struct CalendarView: View {
                 Text(day.formatted(.dateTime.day())).font(.callout.weight(isSelected || isToday ? .semibold : .regular)).monospacedDigit()
                     .foregroundStyle(dayNumberColor(selected: isSelected, today: isToday, inMonth: inMonth))
                     .frame(width: 24, height: 24)
-                    .background { if isSelected { Circle().fill(Color.accentColor) } }
+                    .background { if isSelected { Circle().fill(Color.taskfold) } }
                 ForEach(items.prefix(items.count > visible ? max(1, visible - 1) : visible)) { task in
                     HStack(spacing: 4) {
                         Circle().fill(projectColor(task)).frame(width: 5, height: 5)
@@ -305,7 +305,7 @@ struct CalendarView: View {
             }
             .padding(6)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(isSelected ? Color.accentColor.opacity(0.06) : Color.clear)
+            .background(isSelected ? Color.taskfold.opacity(0.06) : Color.clear)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
@@ -317,7 +317,7 @@ struct CalendarView: View {
 
     private func dayNumberColor(selected: Bool, today: Bool, inMonth: Bool) -> AnyShapeStyle {
         if selected { return AnyShapeStyle(Color.white) }
-        if today { return AnyShapeStyle(Color.accentColor) }
+        if today { return AnyShapeStyle(Color.taskfold) }
         return inMonth ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary)
     }
     private func projectColor(_ task: Record) -> Color {
@@ -346,7 +346,7 @@ struct CalendarView: View {
         } label: {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text(month.formatted(.dateTime.month(.wide))).font(.callout.weight(.semibold)).foregroundStyle(isCurrent ? Color.accentColor : .primary)
+                    Text(month.formatted(.dateTime.month(.wide))).font(.callout.weight(.semibold)).foregroundStyle(isCurrent ? Color.taskfold : .primary)
                     Spacer()
                     if total > 0 { Text("\(total)").font(.caption).monospacedDigit().foregroundStyle(.secondary) }
                 }
@@ -355,10 +355,10 @@ struct CalendarView: View {
                         let inMonth = calendar.isDate(day, equalTo: month, toGranularity: .month)
                         let count = inMonth ? open(on: day) : 0
                         RoundedRectangle(cornerRadius: 2, style: .continuous)
-                            .fill(count == 0 ? Color.primary.opacity(0.07) : Color.accentColor.opacity(min(1, 0.35 + Double(count) * 0.2)))
+                            .fill(count == 0 ? Color.primary.opacity(0.07) : Color.taskfold.opacity(min(1, 0.35 + Double(count) * 0.2)))
                             .aspectRatio(1, contentMode: .fit)
                             .opacity(inMonth ? 1 : 0)
-                            .overlay { if calendar.isDate(day, inSameDayAs: today) { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.accentColor, lineWidth: 1) } }
+                            .overlay { if calendar.isDate(day, inSameDayAs: today) { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.taskfold, lineWidth: 1) } }
                     }
                 }
             }
@@ -432,8 +432,8 @@ struct CalendarDayDrop: ViewModifier {
     @State private var targeted = false
     func body(content: Content) -> some View {
         content
-            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Color.accentColor.opacity(targeted ? 0.9 : 0), lineWidth: 2).padding(2))
-            .background(Color.accentColor.opacity(targeted ? 0.08 : 0))
+            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Color.taskfold.opacity(targeted ? 0.9 : 0), lineWidth: 2).padding(2))
+            .background(Color.taskfold.opacity(targeted ? 0.08 : 0))
             .animation(Motion.quick, value: targeted)
             .onDrop(of: [.taskfoldTask], isTargeted: $targeted) { _ in
                 let ids = workspace.drag.ids
