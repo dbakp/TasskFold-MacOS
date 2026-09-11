@@ -110,6 +110,29 @@ struct TaskInspectorForm: View {
                     if draft.completed, let at = ISO8601DateFormatter().date(from: draft.string("completed_at")) { Text("Completed \(at.formatted(.relative(presentation: .named)))").font(.caption).foregroundStyle(.secondary) }
                 }
             }
+            let links = Linkify.urls(in: draft.title + "\n" + draft.string("description"))
+            if !links.isEmpty {
+                Section("Links") {
+                    ForEach(links, id: \.absoluteString) { url in
+                        Button { LinkOpener.open(url, workspace: workspace) } label: {
+                            Label {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(LinkTitles.shared.title(for: url) ?? Linkify.shortLabel(url)).lineLimit(1)
+                                    Text(Linkify.host(url)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                }
+                            } icon: { Image(systemName: "safari") }
+                        }
+                        .buttonStyle(.plain).pointerStyle(.link)
+                        .help(url.absoluteString)
+                        .contextMenu {
+                            Button("Open Link", systemImage: "arrow.up.right.square") { LinkOpener.open(url, workspace: workspace) }
+                            Button("Copy Link", systemImage: "doc.on.doc") { LinkOpener.copy(url); workspace.confirm("Copied link", undoable: false) }
+                            ShareLink(item: url) { Label("Share…", systemImage: "square.and.arrow.up") }
+                        }
+                        .accessibilityIdentifier("inspectorLink")
+                    }
+                }
+            }
             Section("Plan") {
                 Toggle("Due date", isOn: Binding(get: { draft.due != nil }, set: { draft["due_date"] = $0 ? .string(Dates.day(Date())) : .null; if !$0 { draft["due_time"] = .null } }))
                 if draft.due != nil {

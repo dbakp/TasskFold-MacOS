@@ -98,6 +98,15 @@ struct RootView: View {
                 try? store.persist()
             }
         }
+        if arguments.contains("--link-fixture") {
+            store.startLocal(); store.snapshot = Snapshot()
+            var linked = Record.task(user: store.userID, date: Date())
+            linked["id"] = .string("link-0"); linked["title"] = .string("Read https://example.com/guides/focus before Friday")
+            var plain = Record.task(user: store.userID, date: Date())
+            plain["id"] = .string("link-1"); plain["title"] = .string("A plain task")
+            store.snapshot.tables["tasks"] = [linked, plain]
+            try? store.persist()
+        }
         if arguments.contains("--priority-fixture") {
             store.startLocal(); store.snapshot = Snapshot()
             UserDefaults.standard.set("manual", forKey: "mac.view.today.sortBy")

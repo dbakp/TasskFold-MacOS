@@ -104,6 +104,22 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "value CONTAINS %@", "p1")).firstMatch.exists, "The accepted priority left the title")
     }
 
+    /// Clicking a link opens it (recorded in fixture mode) and leaves the row selection untouched.
+    @MainActor func testLinkClickDoesNotSelectRow() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--link-fixture"]; app.launch()
+        let linked = app.staticTexts["title-link-0"]
+        XCTAssertTrue(linked.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.descendants(matching: .any)["taskTitle"].exists)
+        // "Read example.com › focus before Friday": the link starts after "Read ", so click a third of the way in.
+        linked.coordinate(withNormalizedOffset: CGVector(dx: 0.33, dy: 0.5)).click()
+        let opened = app.staticTexts.matching(NSPredicate(format: "value CONTAINS %@", "Would open")).firstMatch
+        XCTAssertTrue(opened.waitForExistence(timeout: 5), "The click opened the link\n" + app.debugDescription.components(separatedBy: "\n").filter { $0.contains("title-link") || $0.contains("Would open") || $0.contains("taskTitle") }.joined(separator: "\n"))
+        sleep(1)
+        XCTAssertFalse(app.descendants(matching: .any)["taskTitle"].exists, "A link click must not select the row: \(opened.value.debugDescription)")
+        app.staticTexts["title-link-1"].click()
+        XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].waitForExistence(timeout: 5), "Plain rows still select on click")
+    }
+
     @MainActor func testNavigationPreservesDraftAndSelection() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
         let row = app.staticTexts["title-drag-fixture-1"]

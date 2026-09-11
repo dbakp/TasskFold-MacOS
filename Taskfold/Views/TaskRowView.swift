@@ -33,13 +33,30 @@ struct TaskRowView: View {
             .accessibilityIdentifier((checked ? "reopen-" : "complete-") + task.id)
             .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
             VStack(alignment: .leading, spacing: 3) {
-                Text(task.title.isEmpty ? "Untitled task" : task.title)
-                    .foregroundStyle(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary)
-                    .strikethrough(checked, color: .secondary)
-                    .lineLimit(2)
-                    .accessibilityLabel(accessibilitySummary)
-                    .accessibilityIdentifier("title-\(task.id)")
-                if !task.string("description").isEmpty { Text(task.string("description")).font(.callout).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).lineLimit(1) }
+                if Linkify.links(in: task.title).isEmpty {
+                    Text(task.title.isEmpty ? "Untitled task" : task.title)
+                        .foregroundStyle(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary)
+                        .strikethrough(checked, color: .secondary)
+                        .lineLimit(2)
+                        .accessibilityLabel(accessibilitySummary)
+                        .accessibilityIdentifier("title-\(task.id)")
+                } else {
+                    LinkText(text: task.title, font: .preferredFont(forTextStyle: .body),
+                             color: NSColor(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary),
+                             linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold),
+                             strikethrough: checked, lineLimit: 2,
+                             accessibilityIdentifier: "title-\(task.id)", accessibilityLabel: accessibilitySummary)
+                }
+                if !task.string("description").isEmpty {
+                    if Linkify.links(in: task.string("description")).isEmpty {
+                        Text(task.string("description")).font(.callout).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).lineLimit(1)
+                    } else {
+                        LinkText(text: task.string("description"), font: .preferredFont(forTextStyle: .callout),
+                                 color: NSColor(isSelected ? selectedForeground.opacity(0.9) : Color.secondary),
+                                 linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold), lineLimit: 1,
+                                 accessibilityIdentifier: "notes-\(task.id)")
+                    }
+                }
                 if showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
                     HStack(spacing: 10) {
                         if showsDate, let due = task.due {
