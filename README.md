@@ -74,6 +74,10 @@ Debug-only launch arguments: `--preview` (illustrative tasks), `--uitesting` wit
 | --- | --- | --- |
 | ![Week](Screenshots/calendar-week-light.png) | ![Month](Screenshots/calendar-month-dark.png) | ![Year](Screenshots/calendar-year-light.png) |
 
+| Quick-add with chips | Settings ▸ Account | Sky accent |
+| --- | --- | --- |
+| ![Chips](Screenshots/quick-add-chips.png) | ![Account](Screenshots/settings-account.png) | ![Accent](Screenshots/today-sky-accent.png) |
+
 ## macOS polish work
 
 The implementation sequence and acceptance checks live in [the polish plan](docs/PREMIUM_MAC_PLAN.md). The comparison with the original app and remaining account/feature work live in [the parity plan](docs/FEATURE_PARITY.md).

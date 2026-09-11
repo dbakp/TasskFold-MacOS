@@ -368,8 +368,12 @@ final class TaskfoldMacUITests: XCTestCase {
         try chips.windows.firstMatch.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: directory).appending(path: "quick-add-chips.png"))
         chips.terminate()
         // Settings ▸ Account with the security actions previewed.
-        let settings = XCUIApplication(); settings.launchArguments = ["--preview", "--preview-account", "--appearance=light", "--open-settings=account"]; settings.launch()
-        XCTAssertTrue(settings.windows["Account"].waitForExistence(timeout: 10) || settings.windows.count > 1); sleep(2)
+        let settings = XCUIApplication(); settings.launchArguments = ["--preview", "--preview-account", "--appearance=light"]; settings.launch()
+        XCTAssertTrue(settings.windows.firstMatch.waitForExistence(timeout: 10)); sleep(1)
+        settings.menuButtons["accountMenu"].click()
+        settings.menuItems["Account…"].click()
+        let changeEmail = settings.descendants(matching: .any)["changeEmail"]
+        XCTAssertTrue(changeEmail.waitForExistence(timeout: 10), "The Account tab should open in the Settings window"); sleep(1)
         let window = settings.windows.allElementsBoundByIndex.first { $0.descendants(matching: .any)["changeEmail"].exists } ?? settings.windows.firstMatch
         try window.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: directory).appending(path: "settings-account.png"))
         settings.terminate()

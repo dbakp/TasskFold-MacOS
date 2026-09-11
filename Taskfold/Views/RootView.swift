@@ -59,7 +59,9 @@ struct RootView: View {
         // Debug options use --key=value so AppKit never mistakes a bare value for a document to open.
         func option(_ key: String) -> String? { arguments.first { $0.hasPrefix("--\(key)=") }.map { String($0.dropFirst(key.count + 3)) } }
         if let value = option("section") { workspace.section = SidebarItem(key: value) }
+        // Preview launches state the accent explicitly so one capture cannot tint the next.
         if let value = option("accent") { UserDefaults.standard.set(value, forKey: "accent") }
+        else if arguments.contains("--preview") { UserDefaults.standard.set("rose", forKey: "accent") }
         if arguments.contains("--preview-account") { workspace.previewsAccount = true }
         if let tab = option("open-settings").flatMap(SettingsTab.init(rawValue:)) {
             workspace.settingsTab = tab
