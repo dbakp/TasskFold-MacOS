@@ -28,6 +28,58 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@ OR value BEGINSWITH %@", "Explicit entry task", "Explicit entry task")).firstMatch.exists)
     }
 
+    @MainActor func testInboxReorderAndOverdueCollapse() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture", "--extra-overdue"]; app.launch()
+        let overdue = app.staticTexts["title-drag-fixture-0"]
+        XCTAssertTrue(overdue.waitForExistence(timeout: 10))
+        for key in ["1", "2", "3", "5"] {
+            app.typeKey(key, modifierFlags: .command)
+            let toggle = app.buttons["overdueToggle"]
+            XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+            toggle.click()
+            XCTAssertTrue(waitForDisappearance(overdue, timeout: 5))
+            toggle.click()
+            XCTAssertTrue(overdue.waitForExistence(timeout: 5))
+        }
+        app.typeKey("2", modifierFlags: .command)
+        let first = app.staticTexts["title-drag-fixture-1"], last = app.staticTexts["title-drag-fixture-2"]
+        XCTAssertTrue(last.waitForExistence(timeout: 5))
+        last.press(forDuration: 0.4, thenDragTo: first)
+        sleep(1)
+        XCTAssertLessThan(last.frame.minY, first.frame.minY)
+        let snapshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        snapshot.name = "Inbox after drop"; snapshot.lifetime = .keepAlways; add(snapshot)
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        app.typeKey("2", modifierFlags: .command)
+        XCTAssertTrue(last.waitForExistence(timeout: 10))
+        XCTAssertLessThan(last.frame.minY, first.frame.minY)
+    }
+
+    @MainActor func testOverdueReorderAndReschedule() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture", "--extra-overdue"]; app.launch()
+        let first = app.staticTexts["title-drag-fixture-0"], second = app.staticTexts["title-overdue-extra"]
+        XCTAssertTrue(second.waitForExistence(timeout: 10))
+        // Reordering this section must not change either task's due date.
+        let source = first.frame.minY > second.frame.minY ? first : second
+        let target = first.frame.minY > second.frame.minY ? second : first
+        source.press(forDuration: 0.4, thenDragTo: target)
+        sleep(1)
+        XCTAssertLessThan(source.frame.minY, target.frame.minY)
+        app.buttons["overdueToggle"].click()
+        XCTAssertTrue(waitForDisappearance(second, timeout: 5))
+        app.buttons["overdueToggle"].click()
+        app.typeKey("3", modifierFlags: .command)
+        let tomorrow = app.staticTexts["title-drag-fixture-3"]
+        XCTAssertTrue(tomorrow.waitForExistence(timeout: 5))
+        second.press(forDuration: 0.4, thenDragTo: tomorrow)
+        sleep(1)
+        XCTAssertGreaterThan(second.frame.minY, first.frame.minY)
+        let snapshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        snapshot.name = "Upcoming after overdue drop"; snapshot.lifetime = .keepAlways; add(snapshot)
+        app.typeKey("1", modifierFlags: .command)
+        XCTAssertTrue(waitForDisappearance(second, timeout: 5))
+    }
+
     /// Selecting a row and pressing Space completes it; ⌘Z brings it back through the system undo manager.
     @MainActor func testKeyboardCompletionAndUndo() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
@@ -164,14 +216,16 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]
         input.click(); input.typeText("Unfinished today draft")
+        app.typeKey(.escape, modifierFlags: [])
         app.typeKey("2", modifierFlags: .command)
         app.typeKey("n", modifierFlags: .command)
         XCTAssertEqual(input.value as? String, "")
         input.click(); input.typeText("Unfinished inbox draft")
+        app.typeKey(.escape, modifierFlags: [])
         app.typeKey("1", modifierFlags: .command)
         app.typeKey("n", modifierFlags: .command)
         XCTAssertEqual(input.value as? String, "Unfinished today draft")
-        XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].waitForExistence(timeout: 5))
+        app.typeKey(.escape, modifierFlags: [])
         app.typeKey("2", modifierFlags: .command)
         app.typeKey("n", modifierFlags: .command)
         XCTAssertEqual(input.value as? String, "Unfinished inbox draft")
@@ -212,12 +266,17 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]
         XCTAssertTrue(input.waitForExistence(timeout: 10)); input.click(); input.typeText("Draft")
+        app.typeKey(.escape, modifierFlags: [])
         app.typeKey("f", modifierFlags: .command)
         XCTAssertTrue(app.textFields["finderSearch"].waitForExistence(timeout: 5))
         app.typeKey(.escape, modifierFlags: [])
         XCTAssertTrue(waitForDisappearance(app.textFields["finderSearch"], timeout: 5))
+        app.typeKey("n", modifierFlags: .command)
+        XCTAssertTrue(input.waitForExistence(timeout: 5))
+        input.click(); app.typeKey(.rightArrow, modifierFlags: [])
         app.typeText(" continued")
         XCTAssertEqual(input.value as? String, "Draft continued")
+        app.typeKey(.escape, modifierFlags: [])
         app.typeKey("f", modifierFlags: .command)
         let finder = app.textFields["finderSearch"]
         XCTAssertTrue(finder.waitForExistence(timeout: 5)); finder.typeText("Navigation Studio")

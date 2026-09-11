@@ -452,6 +452,7 @@ final class DragCoordinator {
         return (DragSlot(day: slot.day, before: before), moved ? "Stays with P\(priority)" : nil)
     }
     func propose(raw slot: DragSlot) {
+        guard active else { return }
         let result = constrain(slot)
         propose(result.slot, hint: result.hint)
     }
@@ -462,6 +463,7 @@ final class DragCoordinator {
         return list.indices.contains(next) ? list[next] : nil
     }
     func propose(_ slot: DragSlot?, hint: String? = nil) {
+        guard active || slot == nil else { return }
         let slotChanged = slot != target
         let hintAppeared = hint != nil && bandHint == nil
         guard slotChanged || hint != bandHint else { return }
@@ -469,8 +471,8 @@ final class DragCoordinator {
         // One tick per new slot, and one when the band hint first appears, never on every pointer move.
         if (slotChanged && slot != nil) || hintAppeared { Feedback.tick() }
     }
-    func indicatorBefore(_ id: String, day: String) -> Bool { target == DragSlot(day: day, before: id) }
-    func indicatorAtEnd(of day: String) -> Bool { target == DragSlot(day: day, before: nil) }
+    func indicatorBefore(_ id: String, day: String) -> Bool { active && target == DragSlot(day: day, before: id) }
+    func indicatorAtEnd(of day: String) -> Bool { active && target == DragSlot(day: day, before: nil) }
     /// Landing exactly where the task already sits is not a move.
     func isNoop(_ slot: DragSlot) -> Bool {
         guard ids.count == 1, let id = ids.first, let day = order.first(where: { $0.ids.contains(id) })?.day, day == slot.day else { return false }

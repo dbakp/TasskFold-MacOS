@@ -12,8 +12,7 @@ struct TaskListView: View {
     @AppStorage private var priorityFilter: Int
     @AppStorage private var sortBy: String
     @AppStorage("defaultView") private var defaultView = "today"
-    @AppStorage("overdueCollapsedToday") private var overdueCollapsedToday = false
-    @AppStorage("overdueCollapsedUpcoming") private var overdueCollapsedUpcoming = false
+    @AppStorage private var overdueCollapsed: Bool
     private var quickAdd: String {
         get { workspace.quickAdd }
         nonmutating set { workspace.quickAdd = newValue }
@@ -27,7 +26,6 @@ struct TaskListView: View {
     @State private var quickAddVisible = false
     @State private var declinedGroups = Set<String>()
     @FocusState private var filterFocused: Bool
-    @FocusState private var quickAddFocused: Bool
 
     init(scope: TaskScope) {
         self.scope = scope
@@ -35,11 +33,19 @@ struct TaskListView: View {
         _showCompleted = AppStorage(wrappedValue: false, prefix + "showCompleted")
         _priorityFilter = AppStorage(wrappedValue: 0, prefix + "priorityFilter")
         _sortBy = AppStorage(wrappedValue: "manual", prefix + "sortBy")
+        _overdueCollapsed = AppStorage(wrappedValue: false, prefix + "overdueCollapsed")
     }
 
     private var dated: Bool { scope == .today || scope == .upcoming }
     private var projectID: String { if case .project(let id) = scope { return id }; return "" }
-    private var overdueCollapsed: Bool { scope == .today ? overdueCollapsedToday : overdueCollapsedUpcoming }
+    private var overdueKey: String { "overdue:" + scope.preferenceKey }
+    private var overdueTasks: [Record] {
+        ordered(filtered.filter { !$0.completed && !$0.string("due_date").isEmpty && $0.string("due_date") < Dates.day(Date()) }, day: overdueKey)
+    }
+    private var regularTasks: [Record] {
+        let overdueIDs = Set(overdueTasks.map(\.id))
+        return filtered.filter { !overdueIDs.contains($0.id) }
+    }
     private var layout: Animation? { Motion.respecting(reduceMotion, Motion.layout) }
     private var title: String {
         switch scope {
@@ -61,7 +67,7 @@ struct TaskListView: View {
     }
     private var dayGroups: [(String, [Record])] {
         let today = Dates.day(Date())
-        let overdue = filtered.filter { !$0.completed && $0.string("due_date") < today }
+        let overdue = overdueTasks
         if scope == .today { return [("Overdue", overdue), (today, ordered(filtered.filter { $0.string("due_date") == today }, day: today))] }
         let future = filtered.filter { $0.string("due_date") >= today }
         var days = Set(future.map { $0.string("due_date") })
@@ -72,22 +78,22 @@ struct TaskListView: View {
     private var groups: [Group] {
         if !projectID.isEmpty {
             let sections = store.rows("sections").filter { $0.string("project_id") == projectID }.sorted { $0["order_index"].integer < $1["order_index"].integer }
-            let loose = Group(title: "Tasks", key: groupKey(section: nil), tasks: ordered(filtered.filter { $0.string("section_id").isEmpty }, day: groupKey(section: nil)))
+            let loose = Group(title: "Tasks", key: groupKey(section: nil), tasks: ordered(regularTasks.filter { $0.string("section_id").isEmpty }, day: groupKey(section: nil)))
             return [loose] + sections.map { section in
                 let key = groupKey(section: section.id)
-                return Group(title: section.name, key: key, tasks: ordered(filtered.filter { $0.string("section_id") == section.id }, day: key))
+                return Group(title: section.name, key: key, tasks: ordered(regularTasks.filter { $0.string("section_id") == section.id }, day: key))
             }
         }
         let key = groupKey(section: nil)
-        return [Group(title: "", key: key, tasks: ordered(filtered, day: key))]
+        return [Group(title: "", key: key, tasks: ordered(regularTasks, day: key))]
     }
     private var displayedTaskIDs: [String] {
         if dated { return dayGroups.filter { $0.0 != "Overdue" || !overdueCollapsed }.flatMap { $0.1.map(\.id) } }
-        return groups.flatMap { $0.tasks.map(\.id) }
+        return (overdueCollapsed ? [] : overdueTasks.map(\.id)) + groups.flatMap { $0.tasks.map(\.id) }
     }
     private var order: [(day: String, ids: [String])] {
-        if dated { return dayGroups.filter { $0.0 != "Overdue" }.map { (day: $0.0, ids: $0.1.map(\.id)) } }
-        return groups.map { (day: $0.key, ids: $0.tasks.map(\.id)) }
+        if dated { return dayGroups.map { (day: $0.0 == "Overdue" ? overdueKey : $0.0, ids: $0.1.map(\.id)) } }
+        return [(day: overdueKey, ids: overdueTasks.map(\.id))] + groups.map { (day: $0.key, ids: $0.tasks.map(\.id)) }
     }
     private var remaining: Int { filtered.filter { !$0.completed && !workspace.completing.contains($0.id) }.count }
 
@@ -112,13 +118,6 @@ struct TaskListView: View {
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
-            if quickAddVisible {
-                QuickAddBar(text: $workspace.quickAdd, declined: $declinedGroups, focused: $quickAddFocused, prompt: quickAddPrompt) { submitQuickAdd() }
-                    .onAppear { quickAddFocused = true }
-                    .onExitCommand { quickAddVisible = false; quickAddFocused = false }
-                    .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
-                    .background(.bar)
-            }
             List(selection: Binding(get: { workspace.section.scope == scope ? workspace.selection : [] }, set: { selection in
                 guard workspace.section.scope == scope else { return }
                 workspace.selection = selection
@@ -132,11 +131,14 @@ struct TaskListView: View {
                         else { daySection(group.0, group.1) }
                     }
                 } else {
+                    if !overdueTasks.isEmpty { overdueSection(overdueTasks) }
                     ForEach(groups, id: \.key) { group in
-                        if !group.tasks.isEmpty || !group.title.isEmpty {
+                        if scope != .completed || !group.tasks.isEmpty || !group.title.isEmpty {
                             Section {
                                 ForEach(group.tasks) { task in row(task).modifier(DayDragRow(task: task, day: group.key, orderProvider: { order })).tag(task.id) }
-                                if scope != .completed && manualOrder && (!group.tasks.isEmpty || !projectID.isEmpty) {
+                                    .onMove { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).move(from: $0, to: $1) }
+                                    .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).insert(at: $0, providers: $1) }
+                                if scope != .completed && manualOrder  {
                                     DayEndRow(day: group.key, isEmpty: group.tasks.isEmpty, emptyText: "No tasks", releaseText: "Release to move here").selectionDisabled().listRowSeparator(.hidden)
                                 }
                             } header: { if !group.title.isEmpty { Text(group.title) } }
@@ -162,6 +164,9 @@ struct TaskListView: View {
         .onChange(of: subtitle) { _, value in if workspace.section.scope == scope { workspace.navigationSubtitle = value } }
         .animation(Transitions.Ease.smoothOut, value: subtitle)
         .toolbar { if workspace.section.scope == scope { toolbar } }
+        .sheet(isPresented: $quickAddVisible) {
+            TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, destination: title, prompt: quickAddPrompt, submit: submitQuickAdd)
+        }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
         .sheet(item: $collaborationProject) { CollaboratorsView(project: $0) }
         .sheet(isPresented: $sectionsEditor) { SectionsEditor(projectID: projectID) }
@@ -171,7 +176,6 @@ struct TaskListView: View {
             if requested && workspace.section.scope == scope { filterFocused = true; workspace.searchPresented = false }
         }
         .onDisappear { quickAddVisible = false }
-        .onChange(of: workspace.selection) { _, selection in if !selection.isEmpty && quickAdd.isEmpty { quickAddFocused = false } }
         .onChange(of: filtered.map(\.id)) { _, ids in
             // Assign only when something actually left the list; re-setting selection during a table update is reentrant.
             guard workspace.section.scope == scope else { return }
@@ -201,7 +205,7 @@ struct TaskListView: View {
         default: return "Add a task to \(title)"
         }
     }
-    private func revealQuickAdd() { quickAddVisible = true; quickAddFocused = true }
+    private func revealQuickAdd() { quickAddVisible = true }
 
     private func submitQuickAdd() {
         let date: Date? = scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil
@@ -213,7 +217,6 @@ struct TaskListView: View {
         }
         quickAdd = ""
         quickAddVisible = false
-        quickAddFocused = false
         workspace.selection = [id]
     }
 
@@ -236,15 +239,22 @@ struct TaskListView: View {
         .selectionDisabled().listRowSeparator(.hidden).frame(minHeight: 260)
     }
     private func overdueSection(_ tasks: [Record]) -> some View {
-        Section(isExpanded: Binding(get: { !overdueCollapsed }, set: { open in withAnimation(layout) { if scope == .today { overdueCollapsedToday = !open } else { overdueCollapsedUpcoming = !open } } })) {
-            ForEach(tasks) { task in row(task).modifier(DayDragRow(task: task, day: task.string("due_date"), orderProvider: { order })).tag(task.id) }
+        Section {
+            if !overdueCollapsed {
+                ForEach(tasks) { task in row(task).modifier(DayDragRow(task: task, day: overdueKey, orderProvider: { order })).tag(task.id) }
+                    .onMove { DayDropHandling(workspace: workspace, day: overdueKey, tasks: tasks).move(from: $0, to: $1) }
+                    .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: overdueKey, tasks: tasks).insert(at: $0, providers: $1) }
+            }
         } header: {
+            Button { withAnimation(layout) { overdueCollapsed.toggle() } } label: {
             HStack(spacing: 8) {
+                Image(systemName: overdueCollapsed ? "chevron.right" : "chevron.down").font(.caption.weight(.semibold))
                 Text("Overdue")
                 Text("\(tasks.count)").font(.caption.weight(.semibold)).monospacedDigit().padding(.horizontal, 6).padding(.vertical, 1)
                     .background(Color.red.opacity(0.14), in: .capsule).foregroundStyle(.red).contentTransition(.numericText())
                     .transition(reduceMotion ? .opacity : .badgePop)
             }
+            }.buttonStyle(.plain)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Overdue, \(tasks.count) tasks")
             .accessibilityValue(overdueCollapsed ? "Collapsed" : "Expanded")
@@ -260,6 +270,8 @@ struct TaskListView: View {
         let open = tasks.filter { !$0.completed && !workspace.completing.contains($0.id) }.count
         return Section {
             ForEach(tasks) { task in row(task).modifier(DayDragRow(task: task, day: day, orderProvider: { order })).tag(task.id) }
+                .onMove { DayDropHandling(workspace: workspace, day: day, tasks: tasks).move(from: $0, to: $1) }
+                .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: day, tasks: tasks).insert(at: $0, providers: $1) }
             DayEndRow(day: day, isEmpty: tasks.isEmpty).selectionDisabled().listRowSeparator(.hidden)
         } header: {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -350,45 +362,48 @@ struct TaskListView: View {
 /// Content reads best in a bounded column centered in the window, the way Todoist lays out its lists.
 enum ReadingColumn { static let width: CGFloat = 860 }
 
-/// The entry field above the list. Quick-entry grammar is parsed by the shared `QuickEntry` type.
-struct QuickAddBar: View {
+/// A focused, native sheet keeps capture prominent without moving the task list.
+struct TaskCapturePanel: View {
+    @Environment(\.dismiss) private var dismiss
     @Binding var text: String
-    /// Suggestion groups the user declined with a chip's ✕; the words stay in the title.
     @Binding var declined: Set<String>
-    var focused: FocusState<Bool>.Binding
+    let destination: String
     let prompt: String
     let submit: () -> Void
+    @FocusState private var focused: Bool
     private var parsed: QuickEntry { QuickEntry(text, disabled: declined) }
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
-                Image(systemName: "plus.circle.fill").foregroundStyle(text.isEmpty ? AnyShapeStyle(.tertiary) : AnyShapeStyle(Color.taskfold)).font(.title3)
-                    .animation(Motion.quick, value: text.isEmpty)
-                TextField(prompt, text: $text)
-                    .textFieldStyle(.plain)
-                    .focused(focused)
-                    .onSubmit(submit)
-                    .accessibilityIdentifier("quickAdd")
-                if !text.isEmpty {
-                    if !parsed.tokens.isEmpty {
-                        ScrollView(.horizontal) {
-                            QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: { focused.wrappedValue = true })
-                                .padding(.vertical, 2)
-                        }
-                        .scrollIndicators(.hidden).scrollClipDisabled()
-                        .frame(maxWidth: 360)
-                        .fixedSize(horizontal: true, vertical: false)
-                    }
-                    Button("Add", action: submit).keyboardShortcut(.defaultAction).controlSize(.small).buttonStyle(.borderedProminent)
-                        .disabled(parsed.title.isEmpty)
+        VStack(alignment: .leading, spacing: 20) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("New Task").font(.title2.weight(.semibold))
+                    Label(destination, systemImage: "tray").font(.callout).foregroundStyle(.secondary)
                 }
+                Spacer()
+                Button { dismiss() } label: { Image(systemName: "xmark").font(.body.weight(.medium)) }
+                    .buttonStyle(.plain).help("Close (Esc)").accessibilityLabel("Close task entry")
             }
-            .padding(.horizontal, 14).padding(.vertical, 9)
-            .frame(minHeight: 40)
-            .animation(Motion.quick, value: text.isEmpty)
-            .onChange(of: text) { _, value in if value.isEmpty { declined = [] } }
-            Divider()
+            TextField(prompt, text: $text, axis: .vertical)
+                .font(.title3).lineLimit(2...4).textFieldStyle(.plain)
+                .focused($focused).accessibilityIdentifier("quickAdd")
+                .padding(16)
+                .background(Color(nsColor: .textBackgroundColor), in: .rect(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.taskfold.opacity(focused ? 0.6 : 0.2), lineWidth: 1))
+                .onSubmit(submit)
+            if !parsed.tokens.isEmpty {
+                QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: { focused = true })
+            }
+            HStack {
+                Text("Try “Call Sam tomorrow at 4pm p1”").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button("Add Task", action: submit).buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction).disabled(parsed.title.isEmpty)
+            }
         }
+        .padding(24).frame(width: 540)
+        .onAppear { focused = true }
+        .onExitCommand { dismiss() }
+        .onChange(of: text) { _, value in if value.isEmpty { declined = [] } }
     }
 }
 

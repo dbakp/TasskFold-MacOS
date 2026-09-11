@@ -14,7 +14,6 @@ struct CalendarView: View {
     }
     @State private var quickAddVisible = false
     @State private var declinedGroups = Set<String>()
-    @FocusState private var quickAddFocused: Bool
     @FocusState private var calendarFocused: Bool
     @Namespace private var dayNamespace
 
@@ -117,7 +116,7 @@ struct CalendarView: View {
                     Button("Today") { jump(to: today) }.disabled(calendar.isDate(selected, inSameDayAs: today) && page == 0).help("Jump to today (⌘T)").keyboardShortcut("t", modifiers: .command)
                 }
                 ToolbarItemGroup(placement: .primaryAction) {
-                    Button { quickAddVisible = true; quickAddFocused = true } label: { Label("New Task", systemImage: "plus") }.help("Add a task on the selected day (⌘N)")
+                    Button { quickAddVisible = true } label: { Label("New Task", systemImage: "plus") }.help("Add a task on the selected day (⌘N)")
                     Button { workspace.inspectorShown.toggle() } label: { Label("Inspector", systemImage: "sidebar.trailing") }.help("Show or hide the inspector (⌥⌘I)")
                 }
             }
@@ -133,7 +132,14 @@ struct CalendarView: View {
             calendarFocused = true
         }
         .onChange(of: workspace.calendarMode) { _, _ in withAnimation(layout) { page = page(containing: selected, mode: mode) } }
-        .onChange(of: workspace.quickAddFocusRequest) { _, _ in if workspace.section == .calendar { quickAddVisible = true; quickAddFocused = true } }
+        .sheet(isPresented: $quickAddVisible) {
+            TaskCapturePanel(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), declined: $declinedGroups, destination: selected.formatted(date: .abbreviated, time: .omitted), prompt: "What needs to get done?") {
+                if let id = workspace.add(quickAdd, date: selected, declined: declinedGroups) {
+                    quickAdd = ""; declinedGroups = []; quickAddVisible = false; workspace.selection = [id]
+                }
+            }
+        }
+        .onChange(of: workspace.quickAddFocusRequest) { _, _ in if workspace.section == .calendar { quickAddVisible = true } }
         .onDisappear { quickAddVisible = false }
         .onKeyPress(.leftArrow) { shift(-1); return .handled }
         .onKeyPress(.rightArrow) { shift(1); return .handled }
@@ -278,8 +284,8 @@ struct CalendarView: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: rowHeight, alignment: .top)
                             .clipped()
-                            .overlay(alignment: .trailing) { Divider() }
-                            .overlay(alignment: .bottom) { Divider() }
+                            .overlay(alignment: .trailing) { Rectangle().fill(Color(nsColor: .separatorColor)).frame(width: 0.5) }
+                            .overlay(alignment: .bottom) { Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 0.5) }
                     }
                 }
             }
@@ -391,13 +397,6 @@ struct CalendarView: View {
             .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 8)
             .animation(Transitions.Ease.smoothOut, value: count)
             .animation(Transitions.Ease.smoothOut, value: selected)
-            if quickAddVisible {
-            QuickAddBar(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), declined: $declinedGroups, focused: $quickAddFocused, prompt: "Add a task for this day") {
-                if let id = workspace.add(quickAdd, date: selected, declined: declinedGroups) { quickAdd = ""; declinedGroups = []; quickAddVisible = false; quickAddFocused = false; workspace.selection = [id] }
-            }
-            .onAppear { quickAddFocused = true }
-            .onExitCommand { quickAddVisible = false; quickAddFocused = false }
-            }
             List(selection: $workspace.selection) {
                 ForEach(items) { task in
                     TaskRowView(task: task, compactDate: true).listRowSeparator(.hidden)

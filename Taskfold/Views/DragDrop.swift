@@ -78,6 +78,7 @@ struct RowDropDelegate: DropDelegate {
     let day: String
     let tasks: [Record]
     func move(from source: IndexSet, to destination: Int) {
+        defer { workspace.drag.end() }
         var ids = tasks.map(\.id)
         let moved = source.map { ids[$0] }
         ids.move(fromOffsets: source, toOffset: destination)
@@ -133,6 +134,7 @@ struct DayEndRow: View {
                     .overlay(alignment: .top) { if drag.indicatorAtEnd(of: day) { InsertionIndicator(hint: drag.bandHint) } }
             }
         }
+        .onChange(of: drag.active) { _, active in if !active { targeted = false } }
         .animation(Motion.quick, value: targeted)
         .animation(Motion.quick, value: drag.active)
         .accessibilityIdentifier("day-end-\(day)")
@@ -167,8 +169,10 @@ struct DayHeaderDrop: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Color.taskfold.opacity(targeted ? 0.12 : 0)).padding(-4))
+            .onChange(of: workspace.drag.active) { _, active in if !active { targeted = false } }
             .animation(Motion.quick, value: targeted)
             .onDrop(of: [.taskfoldTask], isTargeted: $targeted) { _ in
+                targeted = false
                 let ids = workspace.drag.ids
                 defer { workspace.drag.end() }
                 guard !ids.isEmpty else { return false }

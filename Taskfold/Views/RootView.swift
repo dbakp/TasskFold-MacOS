@@ -100,11 +100,20 @@ struct RootView: View {
             workspace.inspectorShown = true
             if arguments.contains("--day-drag-fixture") {
                 store.snapshot = Snapshot()
+                for scope in ["today", "inbox", "upcoming", "all"] {
+                    UserDefaults.standard.set(false, forKey: "mac.view.\(scope).overdueCollapsed")
+                    UserDefaults.standard.set("manual", forKey: "mac.view.\(scope).sortBy")
+                }
                 store.snapshot.tables["tasks"] = [(-1, "Overdue sample"), (0, "Today first"), (0, "Today last"), (1, "Tomorrow sample")].enumerated().map { index, sample in
                     var task = Record.task(user: store.userID, date: Calendar.current.date(byAdding: .day, value: sample.0, to: Date())!)
                     task["id"] = .string("drag-fixture-\(index)")
                     task["title"] = .string(sample.1)
                     return task
+                }
+                if arguments.contains("--extra-overdue") {
+                    var task = Record.task(user: store.userID, date: Calendar.current.date(byAdding: .day, value: -2, to: Date())!)
+                    task["id"] = .string("overdue-extra"); task["title"] = .string("Second overdue")
+                    store.snapshot.tables["tasks", default: []].append(task)
                 }
                 try? store.persist()
             }

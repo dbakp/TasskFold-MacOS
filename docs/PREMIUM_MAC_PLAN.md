@@ -136,3 +136,15 @@ Verification notes:
 - The first v1.0.0 image was a team-signed development build: its embedded profile listed one device and expired in seven days, so another Mac reported "can't be opened". Replaced it with a distribution build: ad hoc signature (`CODE_SIGN_IDENTITY=-`), no profile, `Taskfold-Distribution.entitlements` (sandbox, network, user-selected files), no base entitlements injected, widget extension omitted (`TASKFOLD_WIDGETS=0` during the build; the checked-in project is regenerated afterwards).
 - Verified: `Signature=adhoc`, no `embedded.provisionprofile`, no `PlugIns`, the app launches locally, and the image verifies. First launch on other Macs needs Privacy & Security ▸ Open Anyway; the release notes and the in-image "How to install" say so.
 - `--development` keeps the team-signed variant for local use.
+
+## Calendar, drag-and-drop, and capture follow-up — 11 September 2026
+
+- Started from a fresh clone at `b760615`, preserving the newer release, widget, onboarding, accent, and priority-band work. Built against a separate clean iOS clone at `d7a8bec3f686679095092bcd03839e06866a8186`.
+- Replaced the month grid's ambiguous trailing Divider with explicit vertical/horizontal cell borders. Verified the installed Calendar has no mid-cell horizontal lines.
+- Connected native List move/insert handlers in day, Inbox/scope, project-section, and overdue groups. Added overdue groups to drag ordering, with separate placement keys so reordering does not change due dates. Dropping onto a date still reschedules.
+- Prevented late drag callbacks from restoring an ended drag's indicator and reset header/end targets on drag completion. Screenshots taken immediately after Inbox and Upcoming drops show no remaining indicator.
+- Overdue groups have explicit disclosure buttons and per-destination collapse preferences in task views, including Inbox, projects, labels, and All Tasks. Empty Inbox lists retain a drop target.
+- Replaced inline capture with a native modal panel for task lists and Calendar: prominent focused input, destination, parsing chips, close action, and Add Task button. Escape preserves the draft; successful submission clears it. Removed the unused inline entry component.
+- Five targeted UI tests passed: capture open/dismiss/save, day-to-day drag, priority-band behavior, Inbox order with persistence and multi-view collapse, and overdue reorder/reschedule. Final Release build and strict signature verification passed; installed `/Applications/Taskfold.app` and visually verified Calendar and capture without modifying real tasks.
+- Additional modal compatibility checks passed for per-destination draft/selection restoration and finder/project navigation. These tests dismiss capture before navigating, then reopen its preserved draft.
+- Parsed-chip rejection also passed in the modal. Its initial run could not activate the test app while another installed instance was open; the isolated retry passed. Eight relevant UI tests passed across the targeted runs.
