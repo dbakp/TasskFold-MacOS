@@ -28,6 +28,10 @@ Sign in with email/password or Google (`ASWebAuthenticationSession` with PKCE, c
 
 `Scripts/make_dmg.sh` builds a Release app and produces `dist/Taskfold-<version>.dmg`: a compressed, signed disk image with the app and an Applications shortcut. Drag Taskfold onto Applications. The app is signed with the team's Apple Development identity, not a Developer ID, so on another Mac the first launch needs right-click ▸ Open; notarization needs a paid developer account. Pass `TASKFOLD_IOS_ROOT` to build against a clean iOS checkout.
 
+### Releases
+
+The current build is published as a GitHub release with the DMG attached: [github.com/dbakp/TasskFold-MacOS/releases/latest](https://github.com/dbakp/TasskFold-MacOS/releases/latest). `Scripts/publish_release.sh` rebuilds the image and creates the release for the app's version, or replaces the asset when that version's release already exists; bump `MARKETING_VERSION` in `Scripts/generate_project.py` for a new version.
+
 ## Welcome tour
 
 A five-page tour opens on first launch and can be skipped at any point (Skip, Escape). It is built from the app's own components: the real quick-entry chips appear as a sentence is typed, a task drifts across priority bands and snaps back with the "Stays with P3" hint, the Plan Your Day card shows the keyboard shortcuts, and the last page picks the accent and offers sign-in. ← → and Return move between pages. Help ▸ Welcome Tour and Settings ▸ General ▸ Show Welcome Tour bring it back.
