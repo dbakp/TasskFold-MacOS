@@ -48,6 +48,7 @@ struct RootView: View {
         .onOpenURL { url in
             if url.scheme == "taskfold" && url.host == "task", store.record("tasks", id: url.lastPathComponent) != nil { workspace.open(url.lastPathComponent) }
         }
+        .task(id: "members-\(store.userID)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { await workspace.loadProjectMembers() }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in Task { await store.reschedule() } }
     }
 
@@ -131,6 +132,35 @@ struct RootView: View {
             var other = Record.task(user: store.userID, date: Date())
             other["id"] = .string("hierarchy-other"); other["title"] = .string("Another task")
             store.snapshot.tables["tasks"] = [root, other]
+            try? store.persist()
+        }
+        if arguments.contains("--assignment-fixture") {
+            store.startLocal(); store.snapshot = Snapshot()
+            let project = Record(["id": .string("shared-fixture"), "user_id": .string(store.userID), "name": .string("Product launch")])
+            var root = Record.task(user: store.userID, project: project.id, date: Date())
+            root["id"] = .string("assignment-root"); root["title"] = .string("Coordinate launch"); root["assigned_to"] = .string("morgan")
+            root["subtasks"] = .array([.object(["id": .string("assigned-child"), "title": .string("Prepare launch notes"), "completed": .bool(false), "assigned_to": .string(store.userID), "subtasks": .array([
+                .object(["id": .string("assigned-grand"), "title": .string("Check final wording"), "completed": .bool(false)])
+            ])])])
+            var own = Record.task(user: store.userID, date: Date())
+            own["id"] = .string("assignment-personal"); own["title"] = .string("Review my priorities"); own["assigned_to"] = .string(store.userID)
+            store.snapshot.tables["projects"] = [project]; store.snapshot.tables["tasks"] = [root, own]
+            workspace.projectMembers[project.id] = [Record(["user_id": .string(store.userID), "display_name": .string("Me")]), Record(["user_id": .string("morgan"), "display_name": .string("Morgan")])]
+            workspace.section = .today
+            try? store.persist()
+        }
+        if arguments.contains("--conflict-fixture") {
+            store.startLocal(); store.snapshot = Snapshot()
+            var local = Record.task(user: store.userID, date: Date())
+            local["id"] = .string("conflict-task"); local["title"] = .string("Review launch copy")
+            let before: JSON = .array([.object(["id": .string("a"), "text": .string("Original comment")])])
+            local["comments"] = .array([.object(["id": .string("a"), "text": .string("My revised comment")])])
+            var remote = local
+            remote["comments"] = .array([.object(["id": .string("a"), "text": .string("Shared revised comment")]), .object(["id": .string("b"), "text": .string("Independent teammate comment")])])
+            let change = Mutation(table: "tasks", recordID: local.id, method: "PATCH", fields: ["comments": local["comments"]], baseline: ["comments": before])
+            store.snapshot.tables["tasks"] = [local]; store.snapshot.pending = [change]
+            store.syncConflict = SyncConflict(mutation: change, remote: remote)
+            workspace.section = .today
             try? store.persist()
         }
         if arguments.contains("--link-fixture") {
@@ -229,7 +259,7 @@ struct WorkspaceView: View {
                         // toggling it cannot trigger a second calendar layout mid-transition.
                         CalendarView(showsDayPanel: window.size.width >= (workspace.inspectorVisible ? 1550 : 1240))
                     }
-                    else { TaskListView(scope: workspace.scope) }
+                    else { TaskListView(scope: workspace.scope, preferenceKey: workspace.section.key) }
                 }
                 .id(workspace.section)
                 .inspector(isPresented: Binding(get: { workspace.inspectorVisible }, set: { shown in

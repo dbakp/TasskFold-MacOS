@@ -23,7 +23,7 @@ struct TaskRowView: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             if workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(workspace.taskDepth(task.id)) * 24 - 10, height: 1).accessibilityHidden(true) }
-            if workspace.taskDepth(task.id) < 2 && !task["subtasks"].list.isEmpty {
+            if workspace.section != .assigned && workspace.taskDepth(task.id) < 2 && !task["subtasks"].list.isEmpty {
                 Button {
                     if !workspace.expandedTasks.insert(task.id).inserted { workspace.expandedTasks.remove(task.id) }
                 } label: {
@@ -72,6 +72,9 @@ struct TaskRowView: View {
                                  accessibilityIdentifier: "notes-\(task.id)")
                     }
                 }
+                if workspace.section == .assigned, let parent = workspace.parentTitle(task.id) {
+                    Text(parent).font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).lineLimit(1)
+                }
                 if showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
                     HStack(spacing: 10) {
                         if showsDate, let due = task.due {
@@ -107,6 +110,9 @@ struct TaskRowView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            if !task.string("assigned_to").isEmpty {
+                AssigneeMenu(task: task, selected: isSelected) { workspace.assign(task.id, to: $0) }
+            }
             Menu { priorityOptions } label: {
                 Image(systemName: task.priority < 4 ? "flag.fill" : "flag")
                     .foregroundStyle(isSelected ? selectedForeground : task.priority < 4 ? Color.priority(task.priority) : Color.secondary)

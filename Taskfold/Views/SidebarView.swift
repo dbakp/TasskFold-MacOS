@@ -32,6 +32,7 @@ struct SidebarView: View {
             }
             Section("Browse") {
                 item(.all, "All Tasks", count: open.count)
+                item(.assigned, "Assigned to Me", count: workspace.assignedTasks.filter { !$0.completed }.count)
                 item(.completed, "Completed", count: nil)
             }
             Section(isExpanded: $projectsExpanded) {
@@ -133,6 +134,7 @@ struct TaskDropTarget<Content: View>: View {
 /// The sync line at the foot of the sidebar: online state, pending changes, and a retry when sync pauses.
 struct SyncFooter: View {
     @Environment(Store.self) private var store
+    @State private var reviewing = false
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Divider()
@@ -145,7 +147,8 @@ struct SyncFooter: View {
                     else { Text(status).lineLimit(1).id(status).transition(.textSwap) }
                 }
                 Spacer(minLength: 0)
-                if store.notice != nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link).font(.caption) }
+                if store.syncConflict != nil { Button("Review") { reviewing = true }.buttonStyle(.link).font(.caption).accessibilityIdentifier("reviewSyncConflict") }
+                else if store.notice != nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link).font(.caption) }
             }
             .font(.caption).foregroundStyle(.secondary)
             .padding(.horizontal, 14).padding(.vertical, 8)
@@ -154,6 +157,7 @@ struct SyncFooter: View {
             .help(store.notice ?? (store.localMode ? "Tasks are stored only on this Mac." : "Changes sync to your Taskfold account."))
         }
         .background(.bar)
+        .sheet(isPresented: $reviewing) { if let conflict = store.syncConflict { ConflictReview(conflict: conflict) } }
     }
     private var symbol: String { store.localMode ? "internaldrive" : !store.online ? "wifi.slash" : store.syncing ? "arrow.triangle.2.circlepath" : store.notice != nil ? "exclamationmark.icloud" : "checkmark.icloud" }
     private var status: String { store.localMode ? "Saved on this Mac" : !store.online ? "Offline · saved on this Mac" : store.syncing ? "Syncing…" : store.pendingCount > 0 ? "\(store.pendingCount) changes waiting" : store.lastSync.map { "Synced \($0.formatted(date: .omitted, time: .shortened))" } ?? "Up to date" }

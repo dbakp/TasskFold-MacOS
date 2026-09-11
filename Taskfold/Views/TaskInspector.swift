@@ -151,10 +151,13 @@ struct TaskInspectorForm: View {
                 Picker("Priority", selection: Binding(get: { draft.priority }, set: { draft["priority"] = .number(Double($0)) })) {
                     ForEach(1...4, id: \.self) { n in Label(n == 4 ? "None" : "Priority \(n)", systemImage: "flag.fill").foregroundStyle(Color.priority(n)).tag(n) }
                 }
+                LabeledContent("Assigned to") {
+                    AssigneeMenu(task: draft, contextID: taskID, showsName: true) { draft["assigned_to"] = $0.isEmpty ? .null : .string($0) }
+                }
                 Picker("Project", selection: text("project_id")) {
                     Text("Inbox").tag("")
                     ForEach(store.projects) { Text($0.name).tag($0.id) }
-                }.onChange(of: draft.string("project_id")) { old, new in if old != new { draft["section_id"] = .null } }
+                }.onChange(of: draft.string("project_id")) { old, new in if old != new && new != original.string("project_id") { draft = Workspace.clearingAssignments(draft); draft["section_id"] = .null } }
                 if !draft.string("project_id").isEmpty {
                     Picker("Section", selection: text("section_id")) {
                         Text("No section").tag("")
@@ -271,8 +274,12 @@ struct TaskInspectorForm: View {
             // Untouched fields follow sync; the user's in-progress edits win.
             guard let value else { return }
             var merged = value
-            for (key, field) in draft.fields where original.fields[key] != field { merged[key] = field }
-            original = value
+            var nextOriginal = value
+            for (key, field) in draft.fields where original.fields[key] != field {
+                merged[key] = field
+                nextOriginal[key] = original[key]
+            }
+            original = nextOriginal
             if merged != draft { draft = merged }
         }
         .onDisappear { saveTask?.cancel(); saveNow() }
@@ -305,7 +312,7 @@ struct TaskInspectorForm: View {
         if merged.title.isEmpty { merged["title"] = original["title"] }
         if merged["is_recurring"].flag && merged.due == nil { merged["due_date"] = .string(Dates.day(Date())) }
         guard merged != current else { original = merged; draft = merged; return }
-        if workspace.save("tasks", merged, name: "Edit Task") {
+        if workspace.save("tasks", merged, name: "Edit Task", baseline: original) {
             original = merged; draft = merged
             if merged.due != nil && !UserDefaults.standard.bool(forKey: "remindersAsked") {
                 UserDefaults.standard.set(true, forKey: "remindersAsked")

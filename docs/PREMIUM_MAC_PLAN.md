@@ -159,3 +159,24 @@ Verification notes:
 - UI checks passed for nested creation/depth limits, grandchild editing and persistence, completion/undo, and existing day-to-day dragging. Additional regression results and installation are recorded below.
 - Six targeted UI checks passed across the final runs: hierarchy edit/completion/undo/persistence, nested creation with depth limit, expanded-parent drag/undo, day-to-day drag, Inbox reorder/overdue collapse, and inline date/undo. Visually verified the expanded tree with a selected grandchild in its inspector.
 - Release build and strict code-signature verification passed. Installed and launched `/Applications/Taskfold.app`; its binary matches the verified release. Previous app bundle retained at `/tmp/Taskfold-before-subtasks.app`. No real tasks were created or changed for verification.
+
+## Collaboration foundation — 11 September 2026
+
+- [x] Verify shared access with isolated owner, member, outsider, and newly registered account identities.
+- [x] Fix native project insertion, invitation acceptance, case-normalized recipient linking, ownership protection, and access after leaving.
+- [x] Add task and nested-task assignments, member lookup, row reassignment, and Assigned to Me with parent context.
+- [x] Persist per-field edit baselines; merge independent comments and nested edits atomically; present same-field conflicts for review.
+- [x] Preserve teammates' independent comments when resolving conflicts or undoing local changes.
+- [x] Clear obsolete assignments on project moves and membership removal.
+- [x] Build, verify, install, and push this milestone.
+
+Verification:
+
+- Database fixtures passed inside rolled-back transactions. Covered pending/accepted access, outsiders, ownership, invalid assignees, concurrent stale edits, retry idempotence, nested edits, revocation, project moves, and signup invitation linking. No real task data was changed and no emails were sent.
+- Shared Core: 35 tests, one optional live-account test skipped, zero failures. Added checks for RPC baseline transport and conflict propagation, older queue decoding, nested merge resolution, and undo preserving a remote comment.
+- Mac UI: assignments through both nested levels, relaunch persistence, completion/undo, and conflict resolution passed. Clipboard image paste, expandable hierarchy editing, and day-to-day drag regressions passed.
+- The assignment test caught an inspector project-change observer that cleared assignments on initial load. It now acts only on user changes, and the corrected persistence test passed.
+- Release build and strict deep signature verification passed. Installed `/Applications/Taskfold.app`, verified its binary matches the release output, and checked Assigned to Me in the installed application. Previous app retained at `/tmp/Taskfold-before-collaboration.app`.
+- Shared Core revision: `1c5290f614c5c594731ba2815eb52850de59fe64`, committed and pushed to TaskFold-iOS. Unrelated sibling iOS work was untouched.
+
+The new merge transport is enabled on macOS. Existing web/iOS clients and old queued mutations still need adoption; do not claim cross-client conflict safety until that rollout is complete. Email delivery and two interactive signed-in sessions remain an integration follow-up. Permissions, mentions, activity notifications, recovery, and advisor follow-ups are prioritized in [COLLABORATION.md](COLLABORATION.md).

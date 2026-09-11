@@ -4,6 +4,55 @@ import AppKit
 final class TaskfoldMacUITests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
 
+    @MainActor func testAssignmentsIncludeNestedTasksAndPersist() throws {
+        func nestedID(_ path: [String]) throws -> String { "subtask:" + (try JSONEncoder().encode(path)).base64EncodedString() }
+        let child = try nestedID(["assignment-root", "assigned-child"])
+        let grand = try nestedID(["assignment-root", "assigned-child", "assigned-grand"])
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--assignment-fixture"]; app.launch()
+        XCTAssertTrue(app.staticTexts["title-assignment-root"].waitForExistence(timeout: 10))
+        app.staticTexts["Assigned to Me"].firstMatch.click()
+        XCTAssertTrue(app.staticTexts["title-" + child].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["title-assignment-personal"].exists)
+        XCTAssertFalse(app.staticTexts["title-assignment-root"].exists)
+        app.staticTexts["title-" + child].click()
+        XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.descendants(matching: .any)["taskTitle"].value as? String, "Prepare launch notes")
+        app.staticTexts["Today"].firstMatch.click()
+        app.buttons["expand-assignment-root"].click(); app.buttons["expand-" + child].click()
+        app.staticTexts["title-" + grand].click()
+        let assignee = app.menuButtons["taskAssignee"]
+        XCTAssertTrue(assignee.waitForExistence(timeout: 5)); assignee.click(); app.menuItems["Me"].click()
+        // Changing selection flushes the inspector's debounced save.
+        app.staticTexts["title-assignment-root"].click()
+        app.staticTexts["Assigned to Me"].firstMatch.click()
+        XCTAssertTrue(app.staticTexts["title-" + grand].waitForExistence(timeout: 5))
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        XCTAssertTrue(app.staticTexts["Assigned to Me"].firstMatch.waitForExistence(timeout: 10))
+        app.staticTexts["Assigned to Me"].firstMatch.click()
+        XCTAssertTrue(app.staticTexts["title-" + grand].waitForExistence(timeout: 10))
+        app.buttons["complete-" + grand].click()
+        XCTAssertTrue(waitForDisappearance(app.staticTexts["title-" + grand], timeout: 5))
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(app.staticTexts["title-" + grand].waitForExistence(timeout: 5))
+        let screenshot = XCTAttachment(screenshot: app.screenshot()); screenshot.name = "Assigned tasks with nested work"; screenshot.lifetime = .keepAlways; add(screenshot)
+    }
+
+    @MainActor func testConflictResolutionKeepsIndependentComment() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--conflict-fixture"]; app.launch()
+        XCTAssertTrue(app.links["reviewSyncConflict"].waitForExistence(timeout: 10))
+        app.links["reviewSyncConflict"].click()
+        XCTAssertTrue(app.buttons["keepMyEdit"].waitForExistence(timeout: 5))
+        app.buttons["keepMyEdit"].click()
+        XCTAssertTrue(waitForDisappearance(app.links["reviewSyncConflict"], timeout: 5))
+        app.staticTexts["title-conflict-task"].click()
+        XCTAssertTrue(app.staticTexts["My revised comment"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Independent teammate comment"].exists)
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        XCTAssertTrue(app.staticTexts["title-conflict-task"].waitForExistence(timeout: 10))
+        app.staticTexts["title-conflict-task"].click()
+        XCTAssertTrue(app.staticTexts["Independent teammate comment"].waitForExistence(timeout: 5))
+    }
+
     @MainActor func testExpandableSubtasksEditCompleteAndPersist() throws {
         func nestedID(_ path: [String]) throws -> String { "subtask:" + (try JSONEncoder().encode(path)).base64EncodedString() }
         let childID = try nestedID(["hierarchy-root", "child-one"])

@@ -4,22 +4,23 @@ import UniformTypeIdentifiers
 
 /// One entry in the sidebar. Task sections map onto the shared `TaskScope`; Calendar is its own surface.
 enum SidebarItem: Hashable {
-    case today, inbox, upcoming, calendar, all, completed, project(String), label(String)
+    case today, inbox, upcoming, calendar, all, completed, assigned, project(String), label(String)
     var scope: TaskScope? {
         switch self {
         case .today: return .today
         case .inbox: return .inbox
         case .upcoming: return .upcoming
-        case .all: return .all
+        case .all, .assigned: return .all
         case .completed: return .completed
         case .project(let id): return .project(id)
         case .label(let id): return .label(id)
         case .calendar: return nil
         }
     }
-    var key: String { scope?.preferenceKey ?? "calendar" }
+    var key: String { self == .assigned ? "assigned" : scope?.preferenceKey ?? "calendar" }
     init(key: String) {
         if key == "calendar" { self = .calendar; return }
+        if key == "assigned" { self = .assigned; return }
         switch TaskScope(preferenceKey: key) ?? .today {
         case .today: self = .today
         case .inbox: self = .inbox
@@ -37,6 +38,7 @@ enum SidebarItem: Hashable {
         case .upcoming: return "calendar.day.timeline.left"
         case .calendar: return "calendar"
         case .all: return "tray.full"
+        case .assigned: return "person.crop.circle.badge.checkmark"
         case .completed: return "checkmark.circle"
         case .project: return "folder.fill"
         case .label: return "tag.fill"
@@ -86,6 +88,8 @@ final class Workspace {
         didSet { if selection != oldValue && !selection.isEmpty { finderTaskID = nil } }
     }
     var expandedTasks = Set<String>()
+    var projectMembers: [String: [Record]] = [:]
+    var memberLoadError: String?
     var search = ""
     var quickAdd = ""
     private struct NavigationMemory {
@@ -98,6 +102,7 @@ final class Workspace {
     var navigationTitle: String {
         switch section {
         case .calendar: return "Calendar"
+        case .assigned: return "Assigned to Me"
         case .project(let id): return store.record("projects", id: id)?.name ?? "Project"
         case .label(let id): return store.record("labels", id: id)?.name ?? "Label"
         default: return scope.title
@@ -158,6 +163,8 @@ final class Workspace {
 
     func clearNavigationMemory() {
         expandedTasks.removeAll()
+        projectMembers.removeAll()
+        memberLoadError = nil
         navigationMemory.removeAll()
         scrollBookmarks.removeAll()
         recentDestinations.removeAll()
@@ -343,14 +350,15 @@ final class Workspace {
     }
     /// Saves a record through the store and mirrors the change into the undo manager.
     @discardableResult
-    func save(_ table: String, _ record: Record, name: String) -> Bool {
+    func save(_ table: String, _ record: Record, name: String, baseline: Record? = nil) -> Bool {
         var saved = false
         if table == "tasks", let path = Self.subtaskPath(record.id) {
             guard let root = store.record("tasks", id: path[0]), let updated = Self.replacing(root, path: Array(path.dropFirst()), value: record) else { return false }
-            run(name) { saved = store.save("tasks", updated) }
+            let rootBaseline = baseline.flatMap { Self.replacing(root, path: Array(path.dropFirst()), value: $0) }
+            run(name) { saved = store.save("tasks", updated, baseline: rootBaseline) }
             return saved
         }
-        run(name) { saved = store.save(table, record) }
+        run(name) { saved = store.save(table, record, baseline: baseline) }
         return saved
     }
     /// Creates a task from quick-entry text. Returns the new task's id.
@@ -360,6 +368,7 @@ final class Workspace {
         guard !parsed.title.isEmpty else { return nil }
         var task = Record.task(user: store.userID, project: project, date: date)
         task["title"] = .string(parsed.title)
+        if section == .assigned { task["assigned_to"] = .string(store.userID) }
         for (key, value) in parsed.updates { task[key] = value }
         for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text }) {
             _ = store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": value, "color": .string("#e31e4b")]))
@@ -549,7 +558,8 @@ extension Workspace {
         return item
     }
     func visibleTasks(_ roots: [Record]) -> [Record] {
-        roots.flatMap { task -> [Record] in
+        if section == .assigned { return roots }
+        return roots.flatMap { task -> [Record] in
             guard taskDepth(task.id) < 2, expandedTasks.contains(task.id) else { return [task] }
             let children = task["subtasks"].list.enumerated().map { index, value -> Record in
                 var child = Record(value.object); child["id"] = .string(childID(parent: task.id, value: value, index: index)); return child
@@ -576,6 +586,7 @@ extension Workspace {
         var roots: [String: Record] = [:]
         for id in ids.sorted(by: { taskDepth($0) < taskDepth($1) }) {
             guard var task = taskRecord(id) else { continue }
+            if let project = fields["project_id"], project != task["project_id"] { task = Self.clearingAssignments(task) }
             for (key, value) in fields { task[key] = value }
             if let path = Self.subtaskPath(id), let root = roots[path[0]] ?? store.record("tasks", id: path[0]) {
                 roots[path[0]] = Self.replacing(root, path: Array(path.dropFirst()), value: task)

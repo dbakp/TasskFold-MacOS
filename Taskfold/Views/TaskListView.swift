@@ -8,6 +8,7 @@ struct TaskListView: View {
     @Environment(Workspace.self) private var workspace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let scope: TaskScope
+    let preferenceKey: String
     @AppStorage private var showCompleted: Bool
     @AppStorage private var priorityFilter: Int
     @AppStorage private var sortBy: String
@@ -27,9 +28,10 @@ struct TaskListView: View {
     @State private var declinedGroups = Set<String>()
     @FocusState private var filterFocused: Bool
 
-    init(scope: TaskScope) {
+    init(scope: TaskScope, preferenceKey: String? = nil) {
         self.scope = scope
-        let prefix = "mac.view.\(scope.preferenceKey)."
+        self.preferenceKey = preferenceKey ?? scope.preferenceKey
+        let prefix = "mac.view.\(preferenceKey ?? scope.preferenceKey)."
         _showCompleted = AppStorage(wrappedValue: false, prefix + "showCompleted")
         _priorityFilter = AppStorage(wrappedValue: 0, prefix + "priorityFilter")
         _sortBy = AppStorage(wrappedValue: "manual", prefix + "sortBy")
@@ -38,7 +40,7 @@ struct TaskListView: View {
 
     private var dated: Bool { scope == .today || scope == .upcoming }
     private var projectID: String { if case .project(let id) = scope { return id }; return "" }
-    private var overdueKey: String { "overdue:" + scope.preferenceKey }
+    private var overdueKey: String { "overdue:" + preferenceKey }
     private var overdueTasks: [Record] {
         ordered(filtered.filter { !$0.completed && !$0.string("due_date").isEmpty && $0.string("due_date") < Dates.day(Date()) }, day: overdueKey)
     }
@@ -57,7 +59,13 @@ struct TaskListView: View {
     /// "priority" was a sort option before bands became the default order; treat a stored value as default.
     private var manualOrder: Bool { sortBy == "manual" || sortBy == "priority" }
     private var filtered: [Record] {
-        store.matching(TaskQuery(scope: scope, text: workspace.search, includeCompleted: showCompleted, priority: priorityFilter, sort: manualOrder ? "manual" : sortBy, labelName: title))
+        if workspace.section == .assigned {
+            return workspace.assignedTasks.filter {
+                (showCompleted || !$0.completed) && (priorityFilter == 0 || $0.priority == priorityFilter) &&
+                (workspace.search.isEmpty || ($0.title + " " + $0.string("description")).localizedStandardContains(workspace.search))
+            }
+        }
+        return store.matching(TaskQuery(scope: scope, text: workspace.search, includeCompleted: showCompleted, priority: priorityFilter, sort: manualOrder ? "manual" : sortBy, labelName: title))
     }
     private func ordered(_ tasks: [Record], day: String) -> [Record] { manualOrder ? workspace.arranged(tasks, key: day) : tasks }
     /// Non-dated lists rank inside device-local groups: one per project section, one per scope.
@@ -146,7 +154,7 @@ struct TaskListView: View {
                     }
                 }
             }
-            .background(ListScrollMemory(key: scope.preferenceKey, workspace: workspace, taskIDs: displayedTaskIDs, handle: nativeList))
+            .background(ListScrollMemory(key: preferenceKey, workspace: workspace, taskIDs: displayedTaskIDs, handle: nativeList))
             .accessibilityIdentifier("taskList")
             .listStyle(.inset)
             .scrollContentBackground(.hidden)
@@ -326,7 +334,7 @@ struct TaskListView: View {
 
     private var viewOptions: some View {
             Menu {
-                Button(defaultView == scope.preferenceKey ? "Default View ✓" : "Make Default View", systemImage: "house") { defaultView = scope.preferenceKey }
+                Button(defaultView == preferenceKey ? "Default View ✓" : "Make Default View", systemImage: "house") { defaultView = preferenceKey }
                 Toggle("Show Completed", isOn: $showCompleted)
                 Picker("Priority", selection: $priorityFilter) { Text("All Priorities").tag(0); ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
                 Picker("Sort", selection: Binding(get: { manualOrder ? "manual" : sortBy }, set: { sortBy = $0 })) { Text("Default Order").tag("manual"); Text("Due Date").tag("date"); Text("Title").tag("title") }

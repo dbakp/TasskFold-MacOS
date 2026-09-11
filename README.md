@@ -106,3 +106,18 @@ xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Release \
 ```
 
 The default shared-source location remains `../taskfold-ios`.
+
+## Collaboration
+
+The Mac now supports task/subtask assignments, Assigned to Me, and reviewable concurrent edits. See [the collaboration implementation and next steps](docs/COLLABORATION.md).
+
+This version requires the shared Core revision recorded in `SharedCoreRevision` (or a compatible newer revision). Use a clean dependency checkout so you do not disturb iOS work:
+
+```sh
+git clone https://github.com/dbakp/TaskFold-iOS.git build/shared-ios
+git -C build/shared-ios checkout "$(cat SharedCoreRevision)"
+xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Release \
+  TASKFOLD_IOS_ROOT="$PWD/build/shared-ios" -allowProvisioningUpdates build
+```
+
+The configured TaskFold backend already has the collaboration migrations. A different backend must apply `supabase/migrations` on top of the original TaskFold schema before using this release.
