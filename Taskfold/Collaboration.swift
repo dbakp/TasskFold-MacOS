@@ -35,36 +35,26 @@ extension Workspace {
     }
     func assignmentMembers(_ task: Record, contextID: String? = nil) -> [Record] {
         let project = assignmentProject(task, contextID: contextID)
-        if project.isEmpty { return [Record(["user_id": .string(store.userID), "display_name": .string("Me")])] }
-        var members = projectMembers[project] ?? []
+        if project.isEmpty { return [store.accountIdentity] }
+        let accepted = Set(store.rows("project_collaborators").filter { $0.string("project_id") == project && $0.string("status") == "accepted" }.map { $0.string("user_id").lowercased() } + [store.record("projects", id: project)?.string("user_id").lowercased() ?? ""])
+        var members = (projectMembers[project] ?? []).filter { store.localMode || accepted.contains($0.string("user_id").lowercased()) }
         // Everyone viewing the project can assign themselves even while the directory loads.
         if !members.contains(where: { $0.string("user_id").lowercased() == store.userID.lowercased() }) {
-            members.insert(Record(["user_id": .string(store.userID), "display_name": .string("Me")]), at: 0)
+            members.insert(store.accountIdentity, at: 0)
         }
-        return members
+        return members.map { $0.string("user_id").lowercased() == store.userID.lowercased() ? store.accountIdentity : $0 }
     }
     func assigneeName(_ task: Record, contextID: String? = nil) -> String {
         let id = task.string("assigned_to")
         if id.isEmpty { return "Unassigned" }
-        if id.lowercased() == store.userID.lowercased() { return "Me" }
-        return assignmentMembers(task, contextID: contextID).first { $0.string("user_id").lowercased() == id.lowercased() }?.string("display_name") ?? "Member unavailable"
+        if id.lowercased() == store.userID.lowercased() { return store.accountName }
+        return assignmentMembers(task, contextID: contextID).first { $0.string("user_id").lowercased() == id.lowercased() }?.string("display_name") ?? "Project member"
     }
     func assign(_ id: String, to user: String) {
         updateTasks([id], fields: ["assigned_to": user.isEmpty ? .null : .string(user)], name: user.isEmpty ? "Remove Assignment" : "Assign Task")
     }
-    func loadProjectMembers() async {
-        guard store.signedIn, !store.localMode else { return }
-        let account = store.userID
-        var members: [String: [Record]] = [:]
-        do {
-            for project in store.projects {
-                let data = try await store.backend.request("/rest/v1/rpc/taskfold_project_members", method: "POST", body: ["_project_id": .string(project.id)])
-                guard !Task.isCancelled, store.userID == account else { return }
-                members[project.id] = try JSONDecoder().decode([Record].self, from: data)
-            }
-            projectMembers = members; memberLoadError = nil
-        } catch { if store.userID == account { memberLoadError = "Couldn’t load project members. Connect and sync to try again." } }
-    }
+    func loadProjectMembers() async { await refreshMemberDirectory() }
+
 }
 
 struct AssigneeMenu: View {
@@ -75,35 +65,50 @@ struct AssigneeMenu: View {
     var showsName = false
     var select: (String) -> Void
     private var name: String { workspace.assigneeName(task, contextID: contextID) }
-    var body: some View {
-        Menu {
-            Button("Unassigned") { select("") }
-            Divider()
-            ForEach(Array(workspace.assignmentMembers(task, contextID: contextID).enumerated()), id: \.offset) { _, member in
-                let id = member.string("user_id")
-                Button {
-                    select(id)
-                } label: {
-                    if id == task.string("assigned_to") { Label(member.string("display_name"), systemImage: "checkmark") }
-                    else { Text(member.string("display_name")) }
-                }
-            }
-            if let error = workspace.memberLoadError {
-                Divider()
-                Text(error)
-                Button("Reload Members") { Task { await workspace.loadProjectMembers() } }
-            }
-        } label: {
-            HStack(spacing: 5) {
-                Image(systemName: task.string("assigned_to").isEmpty ? "person.crop.circle.badge.plus" : "person.crop.circle.fill")
-                if showsName { Text(name).lineLimit(1) }
-            }.foregroundStyle(selected ? Color.white : .secondary)
-        }
-        .menuStyle(.borderlessButton).fixedSize()
-        .help("Assigned to \(name)")
-        .accessibilityLabel("Assigned to \(name)")
-        .accessibilityIdentifier(showsName ? "taskAssignee" : "assignee-" + task.id)
+    private var identity: Record {
+        if task.string("assigned_to").lowercased() == workspace.store.userID.lowercased() { return workspace.store.accountIdentity }
+        return workspace.assignmentMembers(task, contextID: contextID).first { $0.string("user_id") == task.string("assigned_to") } ?? Record(["display_name": .string(name)])
     }
+    @State private var choosing = false
+    var body: some View {
+        Button { choosing.toggle() } label: {
+            HStack(spacing: 5) {
+                if task.string("assigned_to").isEmpty { Image(systemName: "person.crop.circle.badge.plus") }
+                else { PersonAvatar(person: identity, size: showsName ? 22 : 20) }
+                if showsName { Text(name).lineLimit(1) }
+                Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
+            }.foregroundStyle(selected ? Color.onAccent : .secondary)
+        }
+        .buttonStyle(.borderless).fixedSize()
+        .help("Assigned to \(name)").accessibilityLabel("Assigned to \(name)")
+        .accessibilityIdentifier(showsName ? "taskAssignee" : "assignee-" + task.id)
+        .popover(isPresented: $choosing) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Assign task").font(.headline)
+                Button("Unassigned") { select(""); choosing = false }
+                Divider()
+                ScrollView {
+                    VStack(spacing: 3) {
+                        ForEach(Array(workspace.assignmentMembers(task, contextID: contextID).enumerated()), id: \.offset) { _, member in
+                            let id = member.string("user_id")
+                            Button { select(id); choosing = false } label: {
+                                HStack(spacing: 10) {
+                                    PersonAvatar(person: member, size: 30)
+                                    Text(member.string("display_name").isEmpty ? "Project member" : member.string("display_name")).foregroundStyle(.primary)
+                                    Spacer()
+                                    if id == task.string("assigned_to") { Image(systemName: "checkmark") }
+                                }.padding(6).contentShape(.rect)
+                            }.buttonStyle(.plain).accessibilityIdentifier("assign-member-" + id)
+                        }
+                    }
+                }.frame(maxHeight: 240)
+                if let error = workspace.memberLoadError { Text(error).font(.caption).foregroundStyle(.secondary) }
+                Button("Refresh Members") { Task { await workspace.refreshMemberDirectory(force: [workspace.assignmentProject(task, contextID: contextID)]) } }
+                    .disabled(workspace.store.localMode)
+            }.padding(16).frame(width: 270)
+        }
+    }
+
 }
 
 struct ConflictReview: View {

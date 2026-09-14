@@ -180,3 +180,23 @@ Verification:
 - Shared Core revision: `1c5290f614c5c594731ba2815eb52850de59fe64`, committed and pushed to TaskFold-iOS. Unrelated sibling iOS work was untouched.
 
 The new merge transport is enabled on macOS. Existing web/iOS clients and old queued mutations still need adoption; do not claim cross-client conflict safety until that rollout is complete. Email delivery and two interactive signed-in sessions remain an integration follow-up. Permissions, mentions, activity notifications, recovery, and advisor follow-ups are prioritized in [COLLABORATION.md](COLLABORATION.md).
+
+## Current parity milestone — 14 September 2026 (in progress)
+
+- Implemented resolved account/member names and photos, persistent isolated identity caches, incremental refresh and retry/offline presentation.
+- Added Appearance settings with Roomy/Compact, native custom color selection/save, bounded saved accents, and contrast-aware filled controls.
+- Added shared persistent project-section collapse state and an optional native board with section-aware capture, moves, assignment, completion/undo and keyboard selection. Kept list default and grouped contextual view options.
+- Added persistent invitation-link routing through sign-in; preserved existing invitation management.
+- Pinned clean iOS Core `9960d97`; release scripts enforce the exact revision and reject local dependency changes. Prepared 1.1.0/build 2 consistently for app/widget generation.
+
+Evidence so far:
+
+- Shared Core: 42 tests, one optional live test skipped, zero failures.
+- Rollback backend checks: existing collaboration coverage plus Google fallback/custom identity precedence passed. No migration redeployed and no emails sent.
+- Debug compilation passed. Added targeted UI tests for density measurements/persistence, accent-page retention, collapse/board creation/moves, invitation intent, real remote avatar rendering/cache relaunch, and Upcoming viewport behavior; updated assignee/filter selectors while retaining assignment/conflict tests.
+- UI execution is currently blocked **before tests start**: XCTest requests local authentication to enable UI Automation and times out. Restarting testmanagerd did not resolve the authentication requirement. The distribution-style fixture launch also waits for Keychain authentication; the Computer Use tool explicitly refuses access to SecurityAgent.
+- A separate team-signed fixture launch stalled in the shared widget snapshot file write. Do not treat the unresponsive fixture as evidence about list/board performance.
+
+Still required before publishing: complete local authentication, run targeted/regression UI checks, review actual screenshots in light/dark and narrow/wide windows with both densities, verify live photo decoding and cached relaunch, exercise native overdue/date drops and project completion/last-row/undo/navigation viewport behavior, then install/launch the verified distributable and publish the new immutable GitHub release. No changes were made to sticky dates or confirmation-bar layout without demonstrated runtime evidence. Do not claim this milestone complete from compilation alone.
+
+Packaging evidence: the final 1.1.0/build 2 distribution build succeeded, strict app signature and `hdiutil verify` passed, and the bundle has no provisioning profile or widget extension. `dist/Taskfold-1.1.0.dmg` is a **candidate**, not a published/installed verified release. Build outputs now live under `~/Library/Caches/TaskfoldBuild` because the synced Documents folder attached Finder metadata that caused signing to fail. Publishing also checks a fingerprint of the build inputs, preventing a stale DMG from being tagged with newer sources. Script syntax checks, wrong-Core-revision rejection, and the Mac UI test build passed. UI execution and screenshots remain pending the authentication steps above.

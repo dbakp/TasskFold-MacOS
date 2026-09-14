@@ -90,6 +90,8 @@ final class Workspace {
     var expandedTasks = Set<String>()
     var projectMembers: [String: [Record]] = [:]
     var memberLoadError: String?
+    var rosterCache = MemberCache()
+    var rosterAccount = ""
     var search = ""
     var quickAdd = ""
     private struct NavigationMemory {
@@ -164,6 +166,8 @@ final class Workspace {
     func clearNavigationMemory() {
         expandedTasks.removeAll()
         projectMembers.removeAll()
+        rosterAccount = ""
+        rosterCache = MemberCache()
         memberLoadError = nil
         navigationMemory.removeAll()
         scrollBookmarks.removeAll()
@@ -363,11 +367,12 @@ final class Workspace {
     }
     /// Creates a task from quick-entry text. Returns the new task's id.
     @discardableResult
-    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = []) -> String? {
+    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "") -> String? {
         let parsed = QuickEntry(input, disabled: declined)
         guard !parsed.title.isEmpty else { return nil }
         var task = Record.task(user: store.userID, project: project, date: date)
         task["title"] = .string(parsed.title)
+        if !sectionID.isEmpty { task["section_id"] = .string(sectionID) }
         if section == .assigned { task["assigned_to"] = .string(store.userID) }
         for (key, value) in parsed.updates { task[key] = value }
         for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text }) {
@@ -532,7 +537,7 @@ enum CalendarMode: String, CaseIterable, Identifiable {
     var days: Int? { switch self { case .threeDay: return 3; case .fiveDay: return 5; case .week: return 7; default: return nil } }
 }
 
-enum SettingsTab: String { case general, account, imports, invitations }
+enum SettingsTab: String { case general, appearance, account, imports, invitations }
 
 extension Workspace {
     /// Paths identify embedded subtasks without creating duplicate backend task records.

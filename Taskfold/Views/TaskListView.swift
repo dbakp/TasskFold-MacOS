@@ -18,6 +18,9 @@ struct TaskListView: View {
         get { workspace.quickAdd }
         nonmutating set { workspace.quickAdd = newValue }
     }
+    @AppStorage("mac.collapsedProjectSections") private var collapsedSections = ""
+    @AppStorage private var projectLayout: String
+    @State private var captureSection = ""
     @State private var nativeList = ListNativeHandle()
     @State private var bulkDatePicker = false
     @State private var bulkDate = Date()
@@ -32,6 +35,7 @@ struct TaskListView: View {
         self.scope = scope
         self.preferenceKey = preferenceKey ?? scope.preferenceKey
         let prefix = "mac.view.\(preferenceKey ?? scope.preferenceKey)."
+        _projectLayout = AppStorage(wrappedValue: "list", prefix + "layout")
         _showCompleted = AppStorage(wrappedValue: false, prefix + "showCompleted")
         _priorityFilter = AppStorage(wrappedValue: 0, prefix + "priorityFilter")
         _sortBy = AppStorage(wrappedValue: "manual", prefix + "sortBy")
@@ -95,9 +99,25 @@ struct TaskListView: View {
         let key = groupKey(section: nil)
         return [Group(title: "", key: key, tasks: ordered(regularTasks, day: key))]
     }
+    private func collapsed(_ key: String) -> Bool { collapsedSections.split(separator: "\n").contains(Substring(key)) }
+    private func collapseBinding(_ key: String) -> Binding<Bool> {
+        Binding(get: { collapsed(key) }, set: { value in
+            var keys = Set(collapsedSections.split(separator: "\n").map(String.init))
+            if value { keys.insert(key) } else { keys.remove(key) }
+            collapsedSections = keys.sorted().joined(separator: "\n")
+        })
+    }
+    private var boardColumns: [ProjectColumn] {
+        groups.map { group in
+            let section = group.key.split(separator: ":").last.map(String.init) ?? "none"
+            return ProjectColumn(id: group.key, sectionID: section == "none" ? "" : section, title: group.title.isEmpty ? "Tasks" : group.title,
+                                 tasks: ordered(filtered.filter { $0.string("section_id") == (section == "none" ? "" : section) }, day: group.key))
+        }
+    }
     private var displayedTaskIDs: [String] {
+        if !projectID.isEmpty && projectLayout == "board" { return boardColumns.filter { !collapsed($0.id) }.flatMap { workspace.visibleTasks($0.tasks).map(\.id) } }
         if dated { return dayGroups.filter { $0.0 != "Overdue" || !overdueCollapsed }.flatMap { workspace.visibleTasks($0.1).map(\.id) } }
-        return (overdueCollapsed ? [] : workspace.visibleTasks(overdueTasks).map(\.id)) + groups.flatMap { workspace.visibleTasks($0.tasks).map(\.id) }
+        return (overdueCollapsed ? [] : workspace.visibleTasks(overdueTasks).map(\.id)) + groups.filter { !collapsed($0.key) }.flatMap { workspace.visibleTasks($0.tasks).map(\.id) }
     }
     private var order: [(day: String, ids: [String])] {
         if dated { return dayGroups.map { (day: $0.0 == "Overdue" ? overdueKey : $0.0, ids: $0.1.map(\.id)) } }
@@ -126,6 +146,9 @@ struct TaskListView: View {
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
+            if !projectID.isEmpty && projectLayout == "board" {
+                ProjectBoard(columns: boardColumns) { section in captureSection = section; quickAddVisible = true }
+            } else {
             List(selection: Binding(get: { workspace.section.scope == scope ? workspace.selection : [] }, set: { selection in
                 guard workspace.section.scope == scope else { return }
                 workspace.selection = selection
@@ -143,13 +166,22 @@ struct TaskListView: View {
                     ForEach(groups, id: \.key) { group in
                         if scope != .completed || !group.tasks.isEmpty || !group.title.isEmpty {
                             Section {
+                                if projectID.isEmpty || !collapsed(group.key) {
                                 ForEach(workspace.visibleTasks(group.tasks)) { task in row(task).modifier(DayDragRow(task: task, day: group.key, orderProvider: { order })).tag(task.id) }
                                     .onMove { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).move(from: $0, to: $1) }
                                     .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).insert(at: $0, providers: $1) }
                                 if scope != .completed && manualOrder  {
                                     DayEndRow(day: group.key, isEmpty: group.tasks.isEmpty, emptyText: "No tasks", releaseText: "Release to move here").selectionDisabled().listRowSeparator(.hidden)
                                 }
-                            } header: { if !group.title.isEmpty { Text(group.title) } }
+                                }
+                            } header: {
+                                if !projectID.isEmpty {
+                                    ProjectSectionHeader(key: group.key, title: group.title, count: group.tasks.count, collapsed: collapseBinding(group.key)) {
+                                        captureSection = group.key.split(separator: ":").last.map(String.init).flatMap { $0 == "none" ? nil : $0 } ?? ""
+                                        quickAddVisible = true
+                                    }
+                                } else if !group.title.isEmpty { Text(group.title) }
+                            }
                         }
                     }
                 }
@@ -164,6 +196,7 @@ struct TaskListView: View {
             }
             .onDeleteCommand { workspace.delete(workspace.selection) }
             .animation(layout, value: filtered.map(\.id))
+            }
         }
         .background(Color(nsColor: .textBackgroundColor))
         .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation).transition(reduceMotion ? .opacity : .toast) } }
@@ -213,12 +246,12 @@ struct TaskListView: View {
         default: return "Add a task to \(title)"
         }
     }
-    private func revealQuickAdd() { quickAddVisible = true }
+    private func revealQuickAdd() { captureSection = ""; quickAddVisible = true }
 
     private func submitQuickAdd() {
         let date: Date? = scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil
         let labelName: String? = { if case .label(let id) = scope { return store.record("labels", id: id)?.name }; return nil }()
-        guard let id = workspace.add(quickAdd, project: projectID, date: date, declined: declinedGroups) else { return }
+        guard let id = workspace.add(quickAdd, project: projectID, date: date, declined: declinedGroups, sectionID: captureSection) else { return }
         declinedGroups = []
         if let labelName, var task = store.record("tasks", id: id), !task["labels"].list.contains(.string(labelName)) {
             task["labels"] = .array(task["labels"].list + [.string(labelName)]); store.save("tasks", task)
@@ -335,10 +368,13 @@ struct TaskListView: View {
     private var viewOptions: some View {
             Menu {
                 Button(defaultView == preferenceKey ? "Default View ✓" : "Make Default View", systemImage: "house") { defaultView = preferenceKey }
+                Menu("Filter") {
                 Toggle("Show Completed", isOn: $showCompleted)
                 Picker("Priority", selection: $priorityFilter) { Text("All Priorities").tag(0); ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
+                }
                 Picker("Sort", selection: Binding(get: { manualOrder ? "manual" : sortBy }, set: { sortBy = $0 })) { Text("Default Order").tag("manual"); Text("Due Date").tag("date"); Text("Title").tag("title") }
                 if !projectID.isEmpty {
+                    Picker("Layout", selection: $projectLayout) { Text("List").tag("list"); Text("Board").tag("board") }
                     Divider()
                     Button("Edit Project…", systemImage: "pencil") { projectEditor = store.record("projects", id: projectID) }
                     Button("Sections…", systemImage: "rectangle.split.3x1") { sectionsEditor = true }

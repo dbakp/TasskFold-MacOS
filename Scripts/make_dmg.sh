@@ -11,9 +11,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 MODE="distribution"; [ "${1:-}" = "--development" ] && MODE="development"
-BUILD="${TASKFOLD_DMG_BUILD:-build/dmg-$MODE}"
+BUILD="${TASKFOLD_DMG_BUILD:-$HOME/Library/Caches/TaskfoldBuild/dmg-$MODE}"
 DIST="dist"
-IOS_ROOT="${TASKFOLD_IOS_ROOT:-$(pwd)/../taskfold-ios}"
+IOS_ROOT="$(Scripts/prepare_shared_core.sh)"
+INPUTS="$(python3 Scripts/release_inputs.py)"
 
 restore_project() { python3 Scripts/generate_project.py >/dev/null; }
 if [ "$MODE" = "distribution" ]; then
@@ -67,4 +68,6 @@ if [ "$MODE" = "distribution" ]; then codesign --sign - "$DMG"; else
 fi
 hdiutil verify "$DMG" -quiet && echo "▸ Verified"
 rm -rf "$(dirname "$STAGE")"
+[ "$INPUTS" = "$(python3 Scripts/release_inputs.py)" ] || { echo "Sources changed during the build; rebuild before publishing."; exit 1; }
+printf '%s\n' "$INPUTS" > "$DMG.inputs"
 echo "✓ $DMG ($MODE, version $VERSION, build $BUILD_NUMBER, $(du -h "$DMG" | cut -f1))"

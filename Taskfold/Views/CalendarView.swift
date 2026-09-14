@@ -3,6 +3,7 @@ import SwiftUI
 /// Calendar for a wide window: the period on the left (day columns for 3/5/week, a grid for month, twelve heat
 /// months for year) and the selected day's tasks alongside. Tasks open in the inspector; days accept drops.
 struct CalendarView: View {
+    @AppStorage("mac.taskDensity") private var density = "roomy"
     var showsDayPanel = false
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
@@ -195,7 +196,7 @@ struct CalendarView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(day.formatted(.dateTime.weekday(.abbreviated)).uppercased()).font(.caption.weight(.semibold)).tracking(0.6).lineLimit(1).fixedSize().foregroundStyle(isToday ? Color.taskfold : .secondary)
                     Text(day.formatted(.dateTime.day())).font(.system(.title2, design: .rounded).weight(.semibold)).monospacedDigit()
-                        .foregroundStyle(isSelected ? Color.white : isToday ? Color.taskfold : .primary)
+                        .foregroundStyle(isSelected ? Color.onAccent : isToday ? Color.taskfold : .primary)
                         .frame(width: 30, height: 30)
                         .background { if isSelected { Circle().fill(Color.taskfold).matchedGeometryEffect(id: "selectedDay", in: dayNamespace) } }
                     Spacer()
@@ -242,7 +243,7 @@ struct CalendarView: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(8)
+        .padding(.horizontal, 8).padding(.vertical, density == "compact" ? 5 : 8)
         .modifier(CardSurface(radius: 8))
         .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.taskfold, lineWidth: selectedTask ? 1.5 : 0))
         .contentShape(.rect)
@@ -322,7 +323,7 @@ struct CalendarView: View {
     }
 
     private func dayNumberColor(selected: Bool, today: Bool, inMonth: Bool) -> AnyShapeStyle {
-        if selected { return AnyShapeStyle(Color.white) }
+        if selected { return AnyShapeStyle(Color.onAccent) }
         if today { return AnyShapeStyle(Color.taskfold) }
         return inMonth ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary)
     }

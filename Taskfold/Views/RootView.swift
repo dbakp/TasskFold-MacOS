@@ -8,6 +8,8 @@ struct RootView: View {
     @Environment(\.undoManager) private var undoManager
     @Environment(\.scenePhase) private var phase
     @State private var seeded = false
+    @Environment(\.openSettings) private var openSettings
+    @AppStorage("mac.pendingInvitations") private var pendingInvitations = false
     var body: some View {
         @Bindable var store = store
         Group {
@@ -45,7 +47,20 @@ struct RootView: View {
             workspace.open(id)
             NotificationRoute.shared.taskID = nil
         }
+        .task(id: "invitation-route-\(pendingInvitations)-\(store.signedIn)-\(store.localMode)") {
+            guard pendingInvitations else { return }
+            workspace.settingsTab = .invitations
+            openSettings()
+            if store.signedIn && !store.localMode {
+                await store.sync()
+                await workspace.refreshMemberDirectory(force: Set(store.projects.map(\.id)))
+                pendingInvitations = false
+            }
+        }
         .onOpenURL { url in
+            if url.scheme == "taskfold", url.host == "invitations" {
+                pendingInvitations = true; workspace.settingsTab = .invitations; openSettings()
+            }
             if url.scheme == "taskfold" && url.host == "task", store.record("tasks", id: url.lastPathComponent) != nil { workspace.open(url.lastPathComponent) }
         }
         .task(id: "members-\(store.userID)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { await workspace.loadProjectMembers() }
@@ -96,6 +111,7 @@ struct RootView: View {
             }
         }
         if arguments.contains("--uitesting") {
+            if !arguments.contains("--invitation-link-fixture") && !arguments.contains("--keep-invitation-route") { pendingInvitations = false }
             store.startLocal()
             workspace.section = .today
             workspace.inspectorShown = true
@@ -149,6 +165,30 @@ struct RootView: View {
             workspace.section = .today
             try? store.persist()
         }
+        if arguments.contains("--parity-fixture") {
+            store.startLocal(); store.snapshot = Snapshot()
+            UserDefaults.standard.set("roomy", forKey: "mac.taskDensity")
+            UserDefaults.standard.set("", forKey: "mac.collapsedProjectSections")
+            UserDefaults.standard.set("list", forKey: "mac.view.project:parity-project.layout")
+            UserDefaults.standard.set("manual", forKey: "mac.view.project:parity-project.sortBy")
+            UserDefaults.standard.set(false, forKey: "mac.view.project:parity-project.showCompleted")
+            let project = Record(["id": .string("parity-project"), "user_id": .string(store.userID), "name": .string("Release workshop")])
+            store.snapshot.tables["projects"] = [project]
+            store.snapshot.tables["sections"] = [Record(["id": .string("planning"), "project_id": .string(project.id), "name": .string("Planning")]), Record(["id": .string("ready"), "project_id": .string(project.id), "name": .string("Ready")])]
+            store.snapshot.tables["tasks"] = (0..<45).map { i in
+                var task = Record.task(user: store.userID, project: project.id)
+                task["id"] = .string("parity-\(i)"); task["title"] = .string(i == 0 ? "Review the release with the whole team" : "Workshop task \(i)")
+                task["section_id"] = .string("planning")
+                if i == 0 { task["description"] = .string("Keep the title aligned while notes grow below it."); task["assigned_to"] = .string("morgan") }
+                return task
+            }
+            workspace.rosterAccount = store.userID
+            workspace.projectMembers[project.id] = [Record(["user_id": .string(store.userID), "display_name": .string("Local Workspace")]), Record(["user_id": .string("morgan"), "display_name": .string("Morgan Lee"), "avatar_url": .string("https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon&s=64")])]
+            workspace.persistMemberCache()
+            workspace.section = .project(project.id)
+            try? store.persist()
+        }
+        if arguments.contains("--invitation-link-fixture") { pendingInvitations = true }
         if arguments.contains("--conflict-fixture") {
             store.startLocal(); store.snapshot = Snapshot()
             var local = Record.task(user: store.userID, date: Date())
@@ -161,6 +201,16 @@ struct RootView: View {
             store.snapshot.tables["tasks"] = [local]; store.snapshot.pending = [change]
             store.syncConflict = SyncConflict(mutation: change, remote: remote)
             workspace.section = .today
+            try? store.persist()
+        }
+        if arguments.contains("--sticky-fixture") {
+            store.startLocal(); store.snapshot = Snapshot()
+            store.snapshot.tables["tasks"] = (0..<100).map { index in
+                let offset = index < 60 ? 0 : 1
+                var task = Record.task(user: store.userID, date: Calendar.current.date(byAdding: .day, value: offset, to: Date()))
+                task["id"] = .string("sticky-\(index)"); task["title"] = .string(String(format: "Date scrolling task %03d", index)); return task
+            }
+            workspace.section = .upcoming
             try? store.persist()
         }
         if arguments.contains("--link-fixture") {

@@ -1,33 +1,22 @@
 #!/bin/zsh
-# Builds the DMG and publishes (or replaces) the GitHub release for the app's version.
-#
-#   Scripts/publish_release.sh            # release v<CFBundleShortVersionString>, asset replaced if it exists
-#   Scripts/publish_release.sh --latest   # also (re)point the rolling "latest" release at this build
+# Publish a new immutable version after its app/DMG have been verified.
+# Usage: Scripts/publish_release.sh <release-notes-file>
 set -euo pipefail
 cd "$(dirname "$0")/.."
-Scripts/make_dmg.sh "${DMG_MODE:-}"
-DMG="$(ls -t dist/Taskfold-*.dmg | head -1)"
-VERSION="$(basename "$DMG" .dmg | sed 's/^Taskfold-//')"
-TAG="v$VERSION"
-REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
-NOTES="Taskfold for macOS $VERSION.
-
-**Install**
-1. Download \`$(basename "$DMG")\`, open it, and drag Taskfold onto Applications.
-2. Open Taskfold. macOS reports that it could not verify the app.
-3. Open System Settings ▸ Privacy & Security, scroll to Security, click **Open Anyway**, and confirm. This happens once.
-
-The app is signed but not notarized, which needs a paid Apple Developer account; this build carries no provisioning profile, so it does not expire and runs on any Mac. The Today widget is only part of team-signed development builds.
-
-Requires macOS 15 or later."
-if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
-  echo "▸ Replacing asset on existing release $TAG"
-  gh release upload "$TAG" "$DMG" --repo "$REPO" --clobber
-  gh release edit "$TAG" --repo "$REPO" --notes "$NOTES" --latest
-  git tag -f "$TAG" && git push -f origin "$TAG"
-else
-  echo "▸ Creating release $TAG"
-  git tag -f "$TAG" && git push -f origin "$TAG"
-  gh release create "$TAG" "$DMG" --repo "$REPO" --title "Taskfold for macOS $VERSION" --notes "$NOTES" --latest
+notes="${1:?Supply a reviewed release-notes file}"
+[ -z "$(git status --porcelain)" ] || { echo "Commit the verified sources before publishing."; exit 1; }
+Scripts/prepare_shared_core.sh >/dev/null
+app="${TASKFOLD_DMG_BUILD:-$HOME/Library/Caches/TaskfoldBuild/dmg-distribution}/Build/Products/Release/Taskfold.app"
+version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")"
+dmg="dist/Taskfold-$version.dmg"
+[ "$(cat "$dmg.inputs")" = "$(python3 Scripts/release_inputs.py)" ] || { echo "Release inputs changed; rebuild the DMG."; exit 1; }
+codesign --verify --deep --strict "$app"
+hdiutil verify "$dmg" -quiet
+# A previous version must never be silently retagged or replaced.
+tag="v$version"
+if git rev-parse "$tag" >/dev/null 2>&1 || gh release view "$tag" >/dev/null 2>&1; then
+  echo "$tag already exists; bump the version for a new release."; exit 1
 fi
-gh release view "$TAG" --repo "$REPO" --json url,assets -q '.url, (.assets[] | .name + " " + (.size|tostring) + " bytes")'
+git tag "$tag"
+git push origin "$tag"
+gh release create "$tag" "$dmg" --verify-tag --title "Taskfold for macOS $version" --notes-file "$notes" --latest

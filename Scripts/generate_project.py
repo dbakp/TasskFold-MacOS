@@ -10,7 +10,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 # Shared sources resolve through the TASKFOLD_IOS_ROOT build setting (default: the sibling checkout), so a
 # clean iOS checkout can be substituted on the xcodebuild command line without touching the project.
 IOS = "$(TASKFOLD_IOS_ROOT)/Taskfold"
-IOS_DEFAULT = '"$(PROJECT_DIR)/../taskfold-ios"'
+IOS_DEFAULT = '"$(PROJECT_DIR)/build/shared-ios"'
 TEAM = "3UZ4C73FM2"
 
 def uid(name):
@@ -90,11 +90,11 @@ if WIDGETS:
 common = f'SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 15.0; TASKFOLD_IOS_ROOT = {IOS_DEFAULT}; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; DEVELOPMENT_TEAM = {TEAM}; CODE_SIGN_STYLE = Automatic; ENABLE_USER_SCRIPT_SANDBOXING = YES; COMBINE_HIDPI_IMAGES = YES; DEAD_CODE_STRIPPING = YES;'
 app_common = ('PRODUCT_NAME = Taskfold; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Taskfold/Info.plist; '
               'CODE_SIGN_ENTITLEMENTS = Taskfold/Taskfold.entitlements; ENABLE_HARDENED_RUNTIME = YES; ASSETCATALOG_COMPILER_APPICON_NAME = TaskfoldIcon; '
-              'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 1.0.0; SWIFT_EMIT_LOC_STRINGS = YES; '
+              'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CURRENT_PROJECT_VERSION = 2; MARKETING_VERSION = 1.1.0; SWIFT_EMIT_LOC_STRINGS = YES; '
               'ENABLE_PREVIEWS = YES; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks"; ')
 test_common = 'PRODUCT_NAME = TaskfoldUITests; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.uitests; GENERATE_INFOPLIST_FILE = YES; TEST_TARGET_NAME = Taskfold; '
 widget_common = ('PRODUCT_NAME = TaskfoldWidgets; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.widgets; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = TaskfoldWidgets/Info.plist; '
-                 'CODE_SIGN_ENTITLEMENTS = TaskfoldWidgets/TaskfoldWidgets.entitlements; ENABLE_HARDENED_RUNTIME = YES; SKIP_INSTALL = YES; CURRENT_PROJECT_VERSION = 1; MARKETING_VERSION = 1.0.0; '
+                 'CODE_SIGN_ENTITLEMENTS = TaskfoldWidgets/TaskfoldWidgets.entitlements; ENABLE_HARDENED_RUNTIME = YES; SKIP_INSTALL = YES; CURRENT_PROJECT_VERSION = 2; MARKETING_VERSION = 1.1.0; '
                  'LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"; ')
 
 def config(name, settings):

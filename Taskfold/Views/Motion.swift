@@ -86,8 +86,20 @@ struct HoverHighlight: ViewModifier {
 }
 
 extension Color {
-    /// The accent chosen in Settings ▸ General (the "accent" key shared with iOS). Read live so a change repaints.
-    static var taskfold: Color { accents.first { $0.key == UserDefaults.standard.string(forKey: "accent") }?.color ?? accents[0].color }
+    /// The accent chosen in Settings ▸ Appearance (a local preference using iOS-compatible values). Read live so a change repaints.
+    static var taskfold: Color { accentValue(UserDefaults.standard.string(forKey: "accent") ?? "rose") }
+    static func accentValue(_ value: String) -> Color {
+        let hex = value.replacingOccurrences(of: "custom:", with: "").replacingOccurrences(of: "#", with: "")
+        if hex.count == 6, let n = UInt64(hex, radix: 16) { return Color(red: Double((n >> 16) & 255)/255, green: Double((n >> 8) & 255)/255, blue: Double(n & 255)/255) }
+        return accents.first { $0.key == value }?.color ?? accents[0].color
+    }
+    static var onAccent: Color { contrastingForeground(on: taskfold) }
+    static func contrastingForeground(on background: Color) -> Color {
+        guard let c = NSColor(background).usingColorSpace(.sRGB) else { return .white }
+        func linear(_ x: CGFloat) -> Double { let x = Double(x); return x <= 0.04045 ? x / 12.92 : pow((x + 0.055) / 1.055, 2.4) }
+        let luminance = 0.2126 * linear(c.redComponent) + 0.7152 * linear(c.greenComponent) + 0.0722 * linear(c.blueComponent)
+        return luminance > 0.179 ? .black : .white
+    }
     static let accents: [(key: String, name: String, color: Color)] = [
         ("rose", "Rose", Color(red: 0.88, green: 0.12, blue: 0.30)),
         ("coral", "Coral", Color(red: 0.96, green: 0.36, blue: 0.30)),
@@ -127,7 +139,7 @@ struct CheckMark: View {
                 .animation(Transitions.Ease.smoothOut(Transitions.Duration.quick), value: checked)
             DrawnCheck()
                 .trim(from: 0, to: checked ? 1 : 0)
-                .stroke(.white, style: StrokeStyle(lineWidth: max(1.6, size * 0.11), lineCap: .round, lineJoin: .round))
+                .stroke(Color.contrastingForeground(on: emphasized ? color : .taskfold), style: StrokeStyle(lineWidth: max(1.6, size * 0.11), lineCap: .round, lineJoin: .round))
                 .rotationEffect(.degrees(checked || reduceMotion ? 0 : 80))
                 .blur(radius: checked || reduceMotion ? 0 : Transitions.Blur.large * 0.4)
                 .opacity(checked ? 1 : 0)

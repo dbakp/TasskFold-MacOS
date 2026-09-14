@@ -9,7 +9,7 @@ struct TaskfoldMacApp: App {
     /// Read here so a new accent re-renders the scene; `Color.taskfold` resolves it everywhere else.
     @AppStorage("accent") private var accent = "rose"
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
-    private var tint: Color { Color.accents.first { $0.key == accent }?.color ?? Color.accents[0].color }
+    private var tint: Color { Color.accentValue(accent) }
 
     init() {
         #if DEBUG
