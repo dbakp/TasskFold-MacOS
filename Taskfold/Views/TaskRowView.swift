@@ -5,12 +5,13 @@ import AppKit
 struct TaskRowView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
+    @AppStorage("mac.taskDensity") private var density = "roomy"
     let task: Record
     var compactDate = false
     @State private var hovering = false
     @State private var choosingDate = false
     @Environment(\.controlActiveState) private var controlActiveState
-    private var selectedForeground: Color { controlActiveState == .inactive ? Color(nsColor: .labelColor) : .white }
+    private var selectedForeground: Color { controlActiveState == .inactive ? Color(nsColor: .labelColor) : Color(nsColor: .alternateSelectedControlTextColor) }
     private var isSelected: Bool { workspace.selection.contains(task.id) }
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
     private var overdue: Bool { if let due = task.due { return due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
@@ -136,8 +137,7 @@ struct TaskRowView: View {
             .help("Task actions")
             .accessibilityIdentifier("actions-\(task.id)")
         }
-        .tint(nil)
-        .padding(.vertical, 5)
+        .padding(.vertical, density == "compact" ? 2 : 5)
         .contentShape(.rect)
         .onHover { hovering = $0 }
         .popover(isPresented: $choosingDate) { TaskDatePopover(task: task) }
@@ -179,7 +179,7 @@ struct DragPreview: View {
             CheckMark(checked: false, color: Color.priority(tasks.first?.priority ?? 4), emphasized: (tasks.first?.priority ?? 4) < 4)
             Text(tasks.first?.title ?? "").lineLimit(1)
             if tasks.count > 1 {
-                Text("\(tasks.count)").font(.caption.weight(.semibold)).monospacedDigit().foregroundStyle(.white)
+                Text("\(tasks.count)").font(.caption.weight(.semibold)).monospacedDigit().foregroundStyle(Color.onAccent)
                     .padding(.horizontal, 7).padding(.vertical, 2).background(Color.taskfold, in: .capsule)
             }
         }

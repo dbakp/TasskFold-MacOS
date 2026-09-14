@@ -9,7 +9,7 @@ struct TaskfoldMacApp: App {
     /// Read here so a new accent re-renders the scene; `Color.taskfold` resolves it everywhere else.
     @AppStorage("accent") private var accent = "rose"
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
-    private var tint: Color { Color.accents.first { $0.key == accent }?.color ?? Color.accents[0].color }
+    private var tint: Color { Color.adaptiveAccent(accent) }
 
     init() {
         #if DEBUG
@@ -107,6 +107,14 @@ struct TaskfoldCommands: Commands {
             Button("Filter Current List") { workspace.searchPresented = true }.keyboardShortcut("f", modifiers: [.command, .shift])
                 .disabled(workspace.section == .calendar)
         }
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--uitesting") {
+            CommandMenu("Fixture") {
+                Button("Report Native Layout") { DebugDiagnostics.report(workspace) }
+                    .keyboardShortcut("d", modifiers: [.command, .option, .control])
+            }
+        }
+        #endif
         CommandMenu("Account") {
             Button("Manage Account…") { workspace.settingsTab = .account; openSettings() }
             if store.localMode || !store.signedIn {

@@ -148,7 +148,7 @@ struct PlanDayView: View {
             Text(key).font(.caption2.weight(.medium)).monospaced().opacity(0.7)
         }
         .frame(maxWidth: .infinity, minHeight: 68)
-        .foregroundStyle(prominent ? Color.white : tint)
+        .foregroundStyle(prominent ? Color.contrastingForeground(on: tint) : tint)
         .background(prominent ? AnyShapeStyle(tint) : AnyShapeStyle(tint.opacity(0.12)), in: .rect(cornerRadius: 12, style: .continuous))
         .contentShape(.rect)
     }

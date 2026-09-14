@@ -57,3 +57,19 @@ The web PWA installation flow and browser push-subscription controls are platfor
 6. **Continue the premium Mac plan:** global capture, progressive inspector disclosure, focus/motion/accessibility checks, and performance profiling with larger datasets are tracked in `PREMIUM_MAC_PLAN.md`.
 
 Password reset, changing account email/password, and account deletion were not found in the reviewed original web settings/auth screens. Treat them as new account features to design, rather than functionality removed by the Mac polish work.
+
+## Current parity release — 14 September 2026 (1.1.0)
+
+Shared dependency is now pinned to iOS `9960d97` (1.3.0/build 18) in an isolated `build/shared-ios` checkout. Release scripts enforce the full revision and a clean dependency; the user's iOS checkout is unchanged.
+
+Implemented in source:
+
+- Resolved custom/Google account identity, circular account/member photos, accepted-member directory enrichment including owners, and account/project-scoped persistent identity caches. Directory refresh is incremental, independently tolerates project failures, and exposes retry/stale status. Cached identities do not grant permissions. Photos use an account-scoped disk cache with daily refresh and offline fallback.
+- Settings → Appearance: Roomy (default) and Compact task layouts, eight presets, a native color picker and explicit save, and a horizontally scrolling collection of at most 24 custom accents. All preferences remain local. Calendar cards and common task rows use the density setting; contrast-aware foregrounds cover filled selections/checkmarks.
+- Project sections share persistent collapse state between list and optional board layouts. Board columns provide section creation/drop targets, assignment, completion/undo, native selection and keyboard commands, and section moves using existing priority rules. Nested expansion is independent; child rows do not offer reparenting.
+- View options group filters and expose a contextual project Layout menu. List remains the default.
+- `taskfold://invitations` opens Invitations and persists the destination through sign-in, then refreshes invitations and the affected member directory.
+
+The current deployed iOS member-profile migration `20260914091713_project_member_profiles.sql` was reused and was **not** overwritten by the older Mac migrations. The older `v1.0.0` GitHub release does not contain main's collaboration milestone. Version 1.1.0/build 2 packages this parity work together with that collaboration milestone.
+
+Manual fixture checks now cover real photo rendering/cache relaunch, native density dimensions, light/dark custom-accent contrast, board creation/move/undo/collapse and selected-column visibility, invitation route persistence, and Upcoming sticky dates/completion/undo/navigation position. See PREMIUM_MAC_PLAN for exact evidence and remaining cases. Local authorization is complete. Sixteen distinct targeted UI tests passed across focused runs, including native drag/undo and the updated board/viewport checks. The distribution app is installed and its launch was verified. Live authentication/photo-upload/email delivery/two-client integration remain outside the exercised flows.

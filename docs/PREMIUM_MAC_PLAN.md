@@ -180,3 +180,39 @@ Verification:
 - Shared Core revision: `1c5290f614c5c594731ba2815eb52850de59fe64`, committed and pushed to TaskFold-iOS. Unrelated sibling iOS work was untouched.
 
 The new merge transport is enabled on macOS. Existing web/iOS clients and old queued mutations still need adoption; do not claim cross-client conflict safety until that rollout is complete. Email delivery and two interactive signed-in sessions remain an integration follow-up. Permissions, mentions, activity notifications, recovery, and advisor follow-ups are prioritized in [COLLABORATION.md](COLLABORATION.md).
+
+## Current parity milestone — 14 September 2026 (verified for 1.1.0)
+
+- Implemented resolved account/member names and photos, persistent isolated identity caches, incremental refresh and retry/offline presentation.
+- Added Appearance settings with Roomy/Compact, native custom color selection/save, bounded saved accents, and contrast-aware filled controls.
+- Added shared persistent project-section collapse state and an optional native board with section-aware capture, moves, assignment, completion/undo and keyboard selection. Kept list default and grouped contextual view options.
+- Added persistent invitation-link routing through sign-in; preserved existing invitation management.
+- Pinned clean iOS Core `9960d97`; release scripts enforce the exact revision and reject local dependency changes. Prepared 1.1.0/build 2 consistently for app/widget generation.
+
+Evidence so far:
+
+- Shared Core: 42 tests, one optional live test skipped, zero failures.
+- Rollback backend checks: existing collaboration coverage plus Google fallback/custom identity precedence passed. No migration redeployed and no emails sent.
+- Debug compilation passed. Added targeted UI tests for density measurements/persistence, accent-page retention, collapse/board creation/moves, invitation intent, real remote avatar rendering/cache relaunch, and Upcoming viewport behavior; updated assignee/filter selectors while retaining assignment/conflict tests.
+- Local UI Automation and Keychain authorization were completed. XCTest now executes normally, and the installed distribution app opened successfully. Earlier authentication timeouts were environment failures before test execution.
+- `Scripts/test_mac.sh` builds Debug fixtures with distribution-style entitlements and no widget. This avoids the shared App Group snapshot stall in the widget-enabled fixture. Final test-target compilation passed.
+
+Manual runtime evidence on isolated `--uitesting` fixtures:
+
+- Real HTTPS image decoding/rendering passed, with Morgan Lee's photo and known name retained after relaunch. The assignee button reports “Photo loaded” and opens the accepted-member picker. Parent account/button accessibility identifiers remain stable after image loading.
+- Actual native project row rectangles measured 57 → 51 points for Roomy → Compact; rows with notes measured 75 → 69. Both modes, wide/narrow windows, and light/dark screenshots were reviewed.
+- Native Colors panel opened through the explicit Choose… button. RGB hex `FFD95A` saved and selected without leaving Appearance. This exposed faint accent text and incorrect selected-row foregrounds: accent shades now adapt locally for contrast, while native table selections use AppKit's selected text color. Light/dark bright-accent screenshots passed. System/Rose/Roomy were restored after checks.
+- Board section-aware creation, move to Planning, undo back to Ready, completion/undo, and collapse/layout persistence passed manually. A selected column was obscured when the inspector resized the board; responding to actual viewport width changes now keeps it visible, verified in a narrow window.
+- Upcoming's active Today header remained pinned while scrolling, then Tomorrow replaced it. Completion/undo preserved Task 019 at visible Y=20; switching Calendar → Upcoming preserved Task 062 at Y=25. Empty dates and a narrow window were reviewed. These checks did not justify changes to the existing sticky-date or scroll-memory implementation.
+- Invitation fixture opened the signed-out Invitations destination, and the pending destination survived relaunch. Actual sign-in/email delivery and two-client interaction were not exercised.
+- Native XCTest press-and-drag passed for day-to-day rescheduling, Inbox order/persistence, overdue reorder/reschedule with one-step undo/redo, parent/child movement, and priority-band placement. Immediate post-drop screenshots show no remaining indicators.
+
+Final automated UI evidence: **16 distinct targeted tests passed** across focused runs. Coverage includes appearance/native row density and persistence, real remote photos/cache relaunch, invitation intent, project collapse/board creation/move/last-row completion/undo, project completion/navigation viewport, Upcoming viewport, assignment through both nested levels, conflict resolution, clipboard image attachment, expandable hierarchy, native drag/priority rules, and deletion/navigation bookmarks.
+
+Test corrections were verified through reruns: native macOS title values may be truncated, so created tasks are resolved by stable identifiers; board tests use horizontal scrolling and confirm the plus button is hittable before clicking; viewport checks measure a fully visible task above the completed row rather than a following row that should move upward or one clipped by a pinned header. No speculative changes were made to sticky dates, scroll memory, or confirmation-bar layout. Temporary navigation tracing was removed.
+
+Final passing result bundles are in `/tmp/taskfold-parity-native-tests/Logs/Test/`: `18-27-42` (drag), `18-29-19` (appearance/invitation/photo), `18-33-43` (eight collaboration/hierarchy/viewport regressions), `18-40-14` (overdue undo/redo), `18-44-16` (Upcoming), and `18-48-23` (board). Mixed earlier bundles contain the superseded test failures as well as passing cases; no single all-tests-green run is claimed. Final focused logs: `/tmp/taskfold-parity-focused-tests.log` and `/tmp/taskfold-board-native-scroll.log`.
+
+Remaining integration limitations: live Google/email sign-in and custom upload/removal UI, invitation email delivery, and two independently signed-in interactive clients were not exercised. Backend transactions and real image loading were checked separately. Native table/sidebar selection follows macOS's selection styling, while app-owned accent controls use the local chosen accent. No widget/notarization claim is made for distribution.
+
+Packaging: the latest 1.1.0/build 2 distribution was rebuilt with the runtime fixes. Strict app signature and `hdiutil verify` passed, with no provisioning profile/widget extension. DMG SHA-256: `8bb25d1f6a69e33b58df2e485195edb626348c2407cff7641074d3137b1394b4`. Installed this candidate at `/Applications/Taskfold.app`, retaining the prior app at `/tmp/Taskfold-before-parity-1.1.0.app`. The installed distribution process opened its Today window successfully after local Keychain authorization. Output lives under `~/Library/Caches/TaskfoldBuild`; publishing checks a fingerprint of build inputs to reject stale packages. The verified package is ready for the immutable 1.1.0 release.

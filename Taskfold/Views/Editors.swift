@@ -94,6 +94,7 @@ struct SectionsEditor: View {
 }
 
 struct CollaboratorsView: View {
+    @Environment(Workspace.self) private var workspace
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     let project: Record
@@ -101,6 +102,25 @@ struct CollaboratorsView: View {
     @State private var email = ""
     @State private var busy = false
     @State private var message: String?
+    private var roster: [Record] {
+        var rows = collaborators
+        var identities = (workspace.projectMembers[project.id] ?? []).map {
+            $0.string("user_id") == store.userID ? store.accountIdentity : $0
+        }
+        if !identities.contains(where: { $0.string("user_id") == store.userID }),
+           owner || collaborators.contains(where: { $0.string("user_id") == store.userID && $0.string("status") == "accepted" }) {
+            identities.append(store.accountIdentity)
+        }
+        for index in rows.indices where rows[index].string("status") == "accepted" {
+            if let identity = identities.first(where: { $0.string("user_id") == rows[index].string("user_id") }) {
+                for key in ["display_name", "avatar_url"] where !identity.string(key).isEmpty { rows[index][key] = identity[key] }
+            }
+        }
+        if !rows.contains(where: { $0.string("user_id") == project.string("user_id") }), let identity = identities.first(where: { $0.string("user_id") == project.string("user_id") }) {
+            var owner = identity; owner["id"] = .string("owner:" + project.id); owner["role"] = .string("owner"); owner["status"] = .string("accepted"); rows.insert(owner, at: 0)
+        }
+        return rows
+    }
     private var owner: Bool { project.string("user_id") == store.userID }
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -111,8 +131,9 @@ struct CollaboratorsView: View {
                     Button("Send Invitation") { Task { await invite() } }.disabled(busy || !email.contains("@"))
                 }
             }
-            List(collaborators) { person in
+            List(roster) { person in
                 HStack {
+                    PersonAvatar(person: person, size: 30)
                     VStack(alignment: .leading) {
                         Text(person.string("display_name").isEmpty ? person.string("invited_email") : person.string("display_name"))
                         Text(person.string("status").capitalized + " · " + person.string("role")).font(.caption).foregroundStyle(.secondary)
@@ -143,6 +164,8 @@ struct CollaboratorsView: View {
         do {
             let data = try await store.backend.request("/rest/v1/rpc/get_project_collaborators_safe", method: "POST", body: ["_project_id": .string(project.id)])
             collaborators = try JSONDecoder().decode([Record].self, from: data)
+            await store.sync()
+            await workspace.refreshMemberDirectory(force: [project.id])
         } catch { message = error.localizedDescription }
     }
     private func invite() async {
@@ -166,6 +189,7 @@ struct CollaboratorsView: View {
 }
 
 struct InvitationsView: View {
+    @Environment(Workspace.self) private var workspace
     @Environment(Store.self) private var store
     @State private var busy = false
     private var invitations: [Record] { store.rows("project_collaborators").filter { $0.string("status") == "pending" && ($0.string("user_id") == store.userID || $0.string("invited_email").lowercased() == store.email.lowercased()) } }
@@ -183,7 +207,7 @@ struct InvitationsView: View {
                     }.disabled(busy).padding(.vertical, 4)
                 }
             }
-        }
+        }.task { await store.sync() }
     }
     private func respond(_ invitation: Record, status: String) {
         busy = true
@@ -194,6 +218,7 @@ struct InvitationsView: View {
                 if status == "accepted" { body["accepted_at"] = .string(Dates.timestamp()) }
                 _ = try await store.backend.request("/rest/v1/project_collaborators?id=eq.\(invitation.id)", method: "PATCH", body: body)
                 await store.sync()
+                await workspace.refreshMemberDirectory(force: [invitation.string("project_id")])
             } catch { store.error = error.localizedDescription }
         }
     }

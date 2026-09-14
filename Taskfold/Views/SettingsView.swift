@@ -10,6 +10,7 @@ struct SettingsView: View {
         @Bindable var workspace = workspace
         TabView(selection: $workspace.settingsTab) {
             GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }.tag(SettingsTab.general)
+            AppearanceSettings().tabItem { Label("Appearance", systemImage: "paintpalette") }.tag(SettingsTab.appearance)
             AccountSettings().tabItem { Label("Account", systemImage: "person.crop.circle") }.tag(SettingsTab.account)
             ImportSettings().tabItem { Label("Import", systemImage: "square.and.arrow.down") }.tag(SettingsTab.imports)
             AccountToolsSettings().tabItem { Label("Invitations", systemImage: "person.2") }.tag(SettingsTab.invitations)
@@ -35,23 +36,6 @@ struct GeneralSettings: View {
                 Text("Calendar").tag("calendar")
                 if !store.projects.isEmpty { Divider(); ForEach(store.projects) { Text($0.name).tag(TaskScope.project($0.id).preferenceKey) } }
                 if !store.labels.isEmpty { Divider(); ForEach(store.labels) { Text($0.name).tag(TaskScope.label($0.id).preferenceKey) } }
-            }
-            Picker("Appearance", selection: $appearance) { Text("System").tag("system"); Text("Light").tag("light"); Text("Dark").tag("dark") }.pickerStyle(.segmented)
-            LabeledContent("Accent") {
-                HStack(spacing: 10) {
-                    ForEach(Color.accents, id: \.key) { option in
-                        Button { withAnimation(Transitions.Ease.smoothOut(Transitions.Duration.quick)) { accent = option.key } } label: {
-                            Circle().fill(option.color).frame(width: 22, height: 22)
-                                .overlay { if accent == option.key { Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)).foregroundStyle(.white) } }
-                                .overlay(Circle().strokeBorder(Color.primary.opacity(accent == option.key ? 0.25 : 0), lineWidth: 1))
-                        }
-                        .buttonStyle(.plain).pointerStyle(.link)
-                        .help(option.name)
-                        .accessibilityLabel(option.name)
-                        .accessibilityAddTraits(accent == option.key ? .isSelected : [])
-                        .accessibilityIdentifier("accent-\(option.key)")
-                    }
-                }
             }
             Toggle("Task reminders", isOn: Binding(get: { reminders }, set: { enabled in if enabled { Task { await store.enableNotifications() } } else { store.disableNotifications() } }))
             Text("Due tasks notify at their chosen time, or 8:00 AM if no time is set. macOS schedules the nearest 60 reminders; Taskfold refreshes them while open.").font(.caption).foregroundStyle(.secondary)
@@ -91,8 +75,7 @@ struct AccountSettings: View {
                 }
                 if store.signedIn && !store.localMode {
                     HStack(spacing: 14) {
-                        AsyncImage(url: URL(string: store.profile.string("avatar_url"))) { image in image.resizable().scaledToFill() } placeholder: { Image(systemName: "person.crop.circle.fill").resizable().foregroundStyle(.secondary) }
-                            .frame(width: 48, height: 48).clipShape(.circle)
+                        PersonAvatar(person: store.accountIdentity, size: 48)
                         Button(uploading ? "Uploading…" : "Change Photo…") { importingAvatar = true }.disabled(uploading)
                         if !store.profile.string("avatar_url").isEmpty { Button("Remove Photo") { var profile = store.profile; profile["avatar_url"] = .null; store.save("profiles", profile) } }
                     }
@@ -133,7 +116,7 @@ struct AccountSettings: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear { displayName = store.profile.string("display_name"); consumeSignInRequest() }
+        .onAppear { displayName = store.accountName; consumeSignInRequest() }
         .onChange(of: workspace.signInRequested) { _, _ in consumeSignInRequest() }
         .onChange(of: store.localMode) { _, local in if !local && store.signedIn { showLogin = false } }
         .onChange(of: store.signedIn) { _, signedIn in if signedIn && !store.localMode { showLogin = false } }
@@ -244,11 +227,13 @@ struct AccountMenu: View {
             Divider()
             Button("Settings…", systemImage: "gearshape") { show(.general) }
         } label: {
-            Label(store.localMode ? "Local Workspace" : store.profile.string("display_name").isEmpty ? "My Account" : store.profile.string("display_name"), systemImage: "person.crop.circle")
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 8) {
+                PersonAvatar(person: store.accountIdentity, size: 26).accessibilityHidden(true)
+                Text(store.accountName).lineLimit(1)
+            }.frame(maxWidth: .infinity, alignment: .leading)
         }
         .menuStyle(.borderlessButton).padding(.horizontal, 14).padding(.vertical, 10)
-        .accessibilityIdentifier("accountMenu")
+        .accessibilityIdentifier("accountMenu").accessibilityLabel(store.accountName + ", Account")
     }
     private func show(_ tab: SettingsTab) { workspace.settingsTab = tab; openSettings() }
 }

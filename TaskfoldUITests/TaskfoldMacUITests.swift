@@ -4,6 +4,139 @@ import AppKit
 final class TaskfoldMacUITests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
 
+    @MainActor func testAppearanceDensityAndCustomAccentStayInSettings() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
+        let first = app.descendants(matching: .any)["task-parity-1"]
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        let roomy = first.frame.height
+        app.typeKey(",", modifierFlags: .command)
+        app.buttons["Appearance"].click()
+        XCTAssertTrue(app.buttons["Save Custom Accent"].waitForExistence(timeout: 5))
+        app.radioButtons["Compact"].click()
+        app.buttons["customAccentPicker"].click()
+        let colors = app.windows["Colors"]
+        XCTAssertTrue(colors.waitForExistence(timeout: 5))
+        colors.buttons["Color Sliders"].click()
+        colors.popUpButtons.firstMatch.click(); app.menuItems["RGB Sliders"].click()
+        let hex = colors.textFields["hex"]
+        XCTAssertTrue(hex.waitForExistence(timeout: 5)); hex.click()
+        app.typeKey("a", modifierFlags: .command); app.typeText("FFD95A"); app.typeKey(.return, modifierFlags: [])
+        app.typeKey("w", modifierFlags: .command)
+        app.buttons["saveCustomAccent"].click()
+        XCTAssertTrue(app.buttons["accent-custom:FFD95A"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["saveCustomAccent"].exists, "Accent changes must preserve this page")
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Appearance and saved custom accent"; shot.lifetime = .keepAlways; self.add(shot)
+        app.typeKey("w", modifierFlags: .command)
+        XCTAssertTrue(first.waitForExistence(timeout: 5))
+        XCTAssertLessThan(first.frame.height, roomy - 3, "Compact must reduce the actual native row height")
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        app.staticTexts["Release workshop"].firstMatch.click()
+        XCTAssertTrue(first.waitForExistence(timeout: 5))
+        XCTAssertLessThan(first.frame.height, roomy - 3)
+    }
+
+    @MainActor func testProjectCollapseBoardCreationAndMove() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
+        let collapse = app.buttons["section-collapse-group:parity-project:planning"]
+        XCTAssertTrue(collapse.waitForExistence(timeout: 10)); collapse.click()
+        XCTAssertFalse(app.staticTexts["title-parity-0"].exists)
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        app.staticTexts["Release workshop"].firstMatch.click()
+        XCTAssertTrue(collapse.waitForExistence(timeout: 5)); XCTAssertEqual(collapse.value as? String, "Collapsed")
+        collapse.click()
+        app.menuButtons["Task options"].click(); app.menuItems["Layout"].hover(); app.menuItems["Board"].click()
+        XCTAssertTrue(app.scrollViews["projectBoard"].waitForExistence(timeout: 5))
+        let add = app.buttons["board-add-ready"]
+        for _ in 0..<3 {
+            if add.isHittable { break }
+            app.scrollViews["projectBoard"].scroll(byDeltaX: -450, deltaY: 0)
+        }
+        XCTAssertTrue(add.isHittable, "Ready creation control must be visible before clicking"); add.click()
+        let capture = app.textFields["quickAdd"]
+        XCTAssertTrue(capture.waitForExistence(timeout: 5)); capture.click()
+        app.typeText("Prepare final handoff"); app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(app.scrollViews["projectBoard"].waitForExistence(timeout: 5), app.debugDescription)
+        let complete = app.buttons["Complete Prepare final handoff"]
+        XCTAssertTrue(complete.waitForExistence(timeout: 5))
+        let createdID = String(complete.identifier.dropFirst("complete-".count))
+        let added = app.staticTexts["title-" + createdID]
+        XCTAssertTrue(added.waitForExistence(timeout: 5)); added.rightClick()
+        app.menuItems["Move to Section"].hover(); app.menuItems["Planning"].click()
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(added.waitForExistence(timeout: 5))
+        // Ready contains only this task: completion removes the last row, and one undo restores it.
+        added.rightClick(); app.menuItems["Complete / Reopen"].click()
+        XCTAssertTrue(waitForDisappearance(added, timeout: 5))
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(added.waitForExistence(timeout: 5))
+        XCTAssertTrue(added.isHittable, "The restored column must remain visible")
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Project board with sections"; shot.lifetime = .keepAlways; self.add(shot)
+    }
+
+    @MainActor func testInvitationLinkSurvivesSignedOutDestination() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--invitation-link-fixture"]; app.launch()
+        XCTAssertTrue(app.staticTexts["Project invitations"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Sign In…"].exists || app.buttons["Sign In"].exists)
+        app.terminate(); app.launchArguments = ["--uitesting", "--keep-invitation-route"]; app.launch()
+        XCTAssertTrue(app.staticTexts["Project invitations"].waitForExistence(timeout: 10))
+    }
+
+    @MainActor func testMemberPhotoLoadsAndNamesSurviveRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
+        let person = app.buttons["assignee-parity-0"]
+        XCTAssertTrue(person.waitForExistence(timeout: 10)); XCTAssertTrue(person.label.contains("Morgan Lee"))
+        let photo = person
+        let loaded = NSPredicate(format: "value == %@", "Photo loaded")
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: loaded, object: photo)], timeout: 25), .completed, "A real remote image must decode and render")
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Live remote image"; shot.lifetime = .keepAlways; self.add(shot)
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        app.staticTexts["Release workshop"].firstMatch.click()
+        XCTAssertTrue(person.waitForExistence(timeout: 5)); XCTAssertTrue(person.label.contains("Morgan Lee"))
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: loaded, object: photo)], timeout: 5), .completed)
+    }
+
+    @MainActor func testUpcomingStickyDatesAndCompletionViewport() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--sticky-fixture"]; app.launch()
+        let list = app.outlines["taskList"]
+        XCTAssertTrue(list.waitForExistence(timeout: 10))
+        list.scroll(byDeltaX: 0, deltaY: -400)
+        let before = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); before.name = "Upcoming pinned active date"; before.lifetime = .keepAlways; self.add(before)
+        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "complete-sticky-"))
+        let visible = rows.allElementsBoundByIndex.prefix(30).filter(\.isHittable)
+        let target = app.buttons[try XCTUnwrap(visible.dropFirst(3).first).identifier]
+        // Measure above the removed row: following rows correctly move up when a task disappears.
+        let anchor = app.buttons[try XCTUnwrap(visible.dropFirst().first).identifier]
+        let y = anchor.frame.minY
+        target.click()
+        XCTAssertTrue(anchor.waitForExistence(timeout: 5))
+        XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Completion must not reset the viewport")
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(target.waitForExistence(timeout: 5))
+        let after = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); after.name = "Upcoming after completion and undo"; after.lifetime = .keepAlways; self.add(after)
+    }
+
+    @MainActor func testProjectCompletionAndNavigationKeepViewport() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
+        let list = app.outlines["taskList"]
+        XCTAssertTrue(list.waitForExistence(timeout: 10))
+        list.scroll(byDeltaX: 0, deltaY: -600)
+        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "complete-parity-"))
+            .allElementsBoundByIndex.prefix(30).filter(\.isHittable)
+        let anchor = app.buttons[try XCTUnwrap(rows.first).identifier]
+        let target = app.buttons[try XCTUnwrap(rows.dropFirst(3).first).identifier]
+        let y = anchor.frame.minY
+        target.click()
+        XCTAssertTrue(waitForDisappearance(target, timeout: 5))
+        XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Completion below the anchor must preserve its position")
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(target.waitForExistence(timeout: 5))
+        XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Undo must preserve the anchor")
+        app.typeKey("4", modifierFlags: .command)
+        app.staticTexts["Release workshop"].firstMatch.click()
+        XCTAssertTrue(anchor.waitForExistence(timeout: 5))
+        XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Returning to the project must restore the viewport")
+    }
+
     @MainActor func testAssignmentsIncludeNestedTasksAndPersist() throws {
         func nestedID(_ path: [String]) throws -> String { "subtask:" + (try JSONEncoder().encode(path)).base64EncodedString() }
         let child = try nestedID(["assignment-root", "assigned-child"])
@@ -20,8 +153,8 @@ final class TaskfoldMacUITests: XCTestCase {
         app.staticTexts["Today"].firstMatch.click()
         app.buttons["expand-assignment-root"].click(); app.buttons["expand-" + child].click()
         app.staticTexts["title-" + grand].click()
-        let assignee = app.menuButtons["taskAssignee"]
-        XCTAssertTrue(assignee.waitForExistence(timeout: 5)); assignee.click(); app.menuItems["Me"].click()
+        let assignee = app.buttons["taskAssignee"]
+        XCTAssertTrue(assignee.waitForExistence(timeout: 5)); assignee.click(); app.buttons["assign-member-ui-testing"].click()
         // Changing selection flushes the inspector's debounced save.
         app.staticTexts["title-assignment-root"].click()
         app.staticTexts["Assigned to Me"].firstMatch.click()
@@ -199,6 +332,12 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertGreaterThan(second.frame.minY, first.frame.minY)
         let snapshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
         snapshot.name = "Upcoming after overdue drop"; snapshot.lifetime = .keepAlways; add(snapshot)
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(second.waitForExistence(timeout: 5))
+        XCTAssertLessThan(second.frame.minY, app.staticTexts["title-drag-fixture-1"].frame.minY, "One undo restores the overdue date")
+        app.typeKey("z", modifierFlags: [.command, .shift])
+        XCTAssertTrue(second.waitForExistence(timeout: 5))
+        XCTAssertGreaterThan(second.frame.minY, first.frame.minY, "Redo restores the scheduled destination")
         app.typeKey("1", modifierFlags: .command)
         XCTAssertTrue(waitForDisappearance(second, timeout: 5))
     }
@@ -467,7 +606,7 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("5", modifierFlags: .command)
         let archived = app.staticTexts["title-nav-archived"]
         XCTAssertFalse(archived.exists)
-        app.menuButtons["Task options"].click(); app.menuItems["Show Completed"].click()
+        app.menuButtons["Task options"].click(); app.menuItems["Filter"].hover(); app.menuItems["Show Completed"].click()
         XCTAssertTrue(archived.waitForExistence(timeout: 5))
         app.typeKey("1", modifierFlags: .command)
         XCTAssertFalse(archived.exists, "Today should retain its own completed filter")

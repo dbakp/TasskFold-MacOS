@@ -111,13 +111,14 @@ The default shared-source location remains `../taskfold-ios`.
 
 The Mac now supports task/subtask assignments, Assigned to Me, and reviewable concurrent edits. See [the collaboration implementation and next steps](docs/COLLABORATION.md).
 
-This version requires the shared Core revision recorded in `SharedCoreRevision` (or a compatible newer revision). Use a clean dependency checkout so you do not disturb iOS work:
+This version requires the shared Core revision recorded in `SharedCoreRevision` (exactly; release packaging rejects mismatches or a dirty dependency). Use a clean dependency checkout so you do not disturb iOS work:
 
 ```sh
-git clone https://github.com/dbakp/TaskFold-iOS.git build/shared-ios
-git -C build/shared-ios checkout "$(cat SharedCoreRevision)"
+Scripts/prepare_shared_core.sh
 xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Release \
   TASKFOLD_IOS_ROOT="$PWD/build/shared-ios" -allowProvisioningUpdates build
 ```
 
-The configured TaskFold backend already has the collaboration migrations. A different backend must apply `supabase/migrations` on top of the original TaskFold schema before using this release.
+The configured backend already has the collaboration migrations and the newer iOS member-profile migration `20260914091713_project_member_profiles.sql`. Do not replay the older Mac directory migration over that deployed definition. A new backend needs the current iOS schema/profile migration and the collaboration prerequisites.
+
+Release products build in `~/Library/Caches/TaskfoldBuild` (outside synced Documents folders); the DMG lands in `dist/`. `Scripts/publish_release.sh <notes-file>` requires committed sources and verifies the DMG source fingerprint, then creates a new immutable version tag and GitHub release. Never publish until runtime verification is complete.
