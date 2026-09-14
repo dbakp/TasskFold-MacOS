@@ -228,7 +228,7 @@ struct AccountMenu: View {
             Button("Settings…", systemImage: "gearshape") { show(.general) }
         } label: {
             HStack(spacing: 8) {
-                PersonAvatar(person: store.accountIdentity, size: 26)
+                PersonAvatar(person: store.accountIdentity, size: 26).accessibilityHidden(true)
                 Text(store.accountName).lineLimit(1)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }

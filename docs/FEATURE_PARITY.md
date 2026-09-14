@@ -72,4 +72,4 @@ Implemented in source:
 
 The current deployed iOS member-profile migration `20260914091713_project_member_profiles.sql` was reused and was **not** overwritten by the older Mac migrations. The older `v1.0.0` GitHub release does not contain main's collaboration milestone. Version 1.1.0/build 2 is prepared, but is not yet a verified published release.
 
-See the latest PREMIUM_MAC_PLAN entry for completed checks and the macOS authentication blockers. Sticky dates, viewport behavior, real rendered photos, and density dimensions must not be marked verified from a successful build.
+Manual fixture checks now cover real photo rendering/cache relaunch, native density dimensions, light/dark custom-accent contrast, board creation/move/undo/collapse and selected-column visibility, invitation route persistence, and Upcoming sticky dates/completion/undo/navigation position. See PREMIUM_MAC_PLAN for exact evidence and remaining cases. XCTest execution and native drag regression verification remain blocked by local UI Automation authentication.

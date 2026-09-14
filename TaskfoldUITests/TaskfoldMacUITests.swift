@@ -10,12 +10,21 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(first.waitForExistence(timeout: 10))
         let roomy = first.frame.height
         app.typeKey(",", modifierFlags: .command)
-        app.radioButtons["Appearance"].click()
+        app.buttons["Appearance"].click()
         XCTAssertTrue(app.buttons["Save Custom Accent"].waitForExistence(timeout: 5))
         app.radioButtons["Compact"].click()
+        app.buttons["customAccentPicker"].click()
+        let colors = app.windows["Colors"]
+        XCTAssertTrue(colors.waitForExistence(timeout: 5))
+        colors.buttons["Color Sliders"].click()
+        colors.popUpButtons.firstMatch.click(); app.menuItems["RGB Sliders"].click()
+        let hex = colors.textFields["hex"]
+        XCTAssertTrue(hex.waitForExistence(timeout: 5)); hex.click()
+        app.typeKey("a", modifierFlags: .command); app.typeText("FFD95A"); app.typeKey(.return, modifierFlags: [])
+        app.typeKey("w", modifierFlags: .command)
         app.buttons["saveCustomAccent"].click()
+        XCTAssertTrue(app.buttons["accent-custom:FFD95A"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["saveCustomAccent"].exists, "Accent changes must preserve this page")
-        let settings = app.windows.containing(.button, identifier: "saveCustomAccent").firstMatch
         let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Appearance and saved custom accent"; shot.lifetime = .keepAlways; self.add(shot)
         app.typeKey("w", modifierFlags: .command)
         XCTAssertTrue(first.waitForExistence(timeout: 5))
@@ -61,8 +70,8 @@ final class TaskfoldMacUITests: XCTestCase {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
         let person = app.buttons["assignee-parity-0"]
         XCTAssertTrue(person.waitForExistence(timeout: 10)); XCTAssertTrue(person.label.contains("Morgan Lee"))
-        let photo = app.descendants(matching: .any)["avatar-morgan"].firstMatch
-        let loaded = NSPredicate(format: "value == %@", "Loaded")
+        let photo = person
+        let loaded = NSPredicate(format: "value == %@", "Photo loaded")
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: loaded, object: photo)], timeout: 25), .completed, "A real remote image must decode and render")
         let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Live remote image"; shot.lifetime = .keepAlways; self.add(shot)
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()

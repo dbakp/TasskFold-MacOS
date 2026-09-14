@@ -206,7 +206,7 @@ struct TaskListView: View {
         .animation(Transitions.Ease.smoothOut, value: subtitle)
         .toolbar { if workspace.section.scope == scope { toolbar } }
         .sheet(isPresented: $quickAddVisible) {
-            TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, destination: title, prompt: quickAddPrompt, submit: submitQuickAdd)
+            TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt, submit: submitQuickAdd)
         }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
         .sheet(item: $collaborationProject) { CollaboratorsView(project: $0) }

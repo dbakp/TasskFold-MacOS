@@ -12,15 +12,34 @@ struct ProjectBoard: View {
     let columns: [ProjectColumn]
     let add: (String) -> Void
     private var order: [(day: String, ids: [String])] { columns.map { ($0.id, $0.tasks.map(\.id)) } }
+    private var selectedColumn: String? {
+        guard workspace.selection.count == 1, let selected = workspace.selection.first else { return nil }
+        let root = Workspace.subtaskPath(selected)?.first ?? selected
+        return columns.first { $0.tasks.contains(where: { $0.id == root }) }?.id
+    }
     var body: some View {
+        ScrollViewReader { proxy in
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 16) {
                 ForEach(columns) { column in
                     BoardColumn(column: column, order: order, add: { add(column.sectionID) })
-                        .frame(width: 320)
+                        .frame(width: 320).id(column.id)
                 }
             }.padding(.horizontal, 20).padding(.bottom, 12)
         }.accessibilityIdentifier("projectBoard")
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { _ in
+            reveal(selectedColumn, using: proxy)
+        }
+        .onChange(of: selectedColumn) { _, column in reveal(column, using: proxy) }
+        .onChange(of: workspace.inspectorVisible) { _, _ in reveal(selectedColumn, using: proxy) }
+        }
+    }
+    private func reveal(_ column: String?, using proxy: ScrollViewProxy) {
+        guard let column else { return }
+        Task { @MainActor in
+            await Task.yield()
+            proxy.scrollTo(column, anchor: .trailing)
+        }
     }
 }
 

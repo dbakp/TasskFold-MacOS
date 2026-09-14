@@ -98,6 +98,7 @@ struct PersonAvatar: View {
     @Environment(Store.self) private var store
     let person: Record
     var size: CGFloat = 24
+    var didLoad: ((Bool) -> Void)? = nil
     @State private var photo: NSImage?
     private var url: URL? { ProfileAvatar.url(person.string("avatar_url")) }
     private var name: String { person.string("display_name") }
@@ -113,13 +114,12 @@ struct PersonAvatar: View {
             }
         }.frame(width: size, height: size).clipShape(.circle)
         .accessibilityElement(children: .ignore)
-        .accessibilityIdentifier("avatar-" + person.string("user_id"))
         .accessibilityLabel(name.isEmpty ? "Profile photo" : "Photo of \(name)")
         .accessibilityValue(photo == nil ? "Placeholder" : "Loaded")
         .task(id: store.userID + (url?.absoluteString ?? "")) {
-            photo = nil
+            photo = nil; didLoad?(false)
             guard let url, let data = await AvatarImages.shared.data(url: url, account: store.userID), !Task.isCancelled else { return }
-            photo = NSImage(data: data)
+            photo = NSImage(data: data); didLoad?(photo != nil)
         }
     }
 }

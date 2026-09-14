@@ -87,18 +87,42 @@ struct HoverHighlight: ViewModifier {
 
 extension Color {
     /// The accent chosen in Settings ▸ Appearance (a local preference using iOS-compatible values). Read live so a change repaints.
-    static var taskfold: Color { accentValue(UserDefaults.standard.string(forKey: "accent") ?? "rose") }
+    static var taskfold: Color { adaptiveAccent(UserDefaults.standard.string(forKey: "accent") ?? "rose") }
     static func accentValue(_ value: String) -> Color {
         let hex = value.replacingOccurrences(of: "custom:", with: "").replacingOccurrences(of: "#", with: "")
         if hex.count == 6, let n = UInt64(hex, radix: 16) { return Color(red: Double((n >> 16) & 255)/255, green: Double((n >> 8) & 255)/255, blue: Double(n & 255)/255) }
         return accents.first { $0.key == value }?.color ?? accents[0].color
     }
+    /// Preserve the saved hue while making accent text/controls readable on native surfaces.
+    static func adaptiveAccent(_ value: String) -> Color {
+        let base = NSColor(accentValue(value)).usingColorSpace(.sRGB) ?? .systemPink
+        let components = [base.redComponent, base.greenComponent, base.blueComponent]
+        return Color(nsColor: NSColor(name: nil) { appearance in
+            let dark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            let background = dark ? CGFloat(0.20) : CGFloat(0.92)
+            let backgroundLuminance = luminance([background, background, background])
+            var rgb = components
+            for step in 0...100 {
+                let amount = CGFloat(step) / 100
+                rgb = components.map { dark ? $0 + (1 - $0) * amount : $0 * (1 - amount) }
+                let light = luminance(rgb)
+                if (max(light, backgroundLuminance) + 0.05) / (min(light, backgroundLuminance) + 0.05) >= 4.5 { break }
+            }
+            return NSColor(srgbRed: rgb[0], green: rgb[1], blue: rgb[2], alpha: 1)
+        })
+    }
+    private static func luminance(_ rgb: [CGFloat]) -> Double {
+        func linear(_ x: CGFloat) -> Double { let x = Double(x); return x <= 0.04045 ? x / 12.92 : pow((x + 0.055) / 1.055, 2.4) }
+        return 0.2126 * linear(rgb[0]) + 0.7152 * linear(rgb[1]) + 0.0722 * linear(rgb[2])
+    }
     static var onAccent: Color { contrastingForeground(on: taskfold) }
     static func contrastingForeground(on background: Color) -> Color {
-        guard let c = NSColor(background).usingColorSpace(.sRGB) else { return .white }
-        func linear(_ x: CGFloat) -> Double { let x = Double(x); return x <= 0.04045 ? x / 12.92 : pow((x + 0.055) / 1.055, 2.4) }
-        let luminance = 0.2126 * linear(c.redComponent) + 0.7152 * linear(c.greenComponent) + 0.0722 * linear(c.blueComponent)
-        return luminance > 0.179 ? .black : .white
+        let native = NSColor(background)
+        return Color(nsColor: NSColor(name: nil) { appearance in
+            var resolved = NSColor.black
+            appearance.performAsCurrentDrawingAppearance { resolved = native.usingColorSpace(.sRGB) ?? .black }
+            return luminance([resolved.redComponent, resolved.greenComponent, resolved.blueComponent]) > 0.179 ? .black : .white
+        })
     }
     static let accents: [(key: String, name: String, color: Color)] = [
         ("rose", "Rose", Color(red: 0.88, green: 0.12, blue: 0.30)),

@@ -11,7 +11,7 @@ struct TaskRowView: View {
     @State private var hovering = false
     @State private var choosingDate = false
     @Environment(\.controlActiveState) private var controlActiveState
-    private var selectedForeground: Color { controlActiveState == .inactive ? Color(nsColor: .labelColor) : .onAccent }
+    private var selectedForeground: Color { controlActiveState == .inactive ? Color(nsColor: .labelColor) : Color(nsColor: .alternateSelectedControlTextColor) }
     private var isSelected: Bool { workspace.selection.contains(task.id) }
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
     private var overdue: Bool { if let due = task.due { return due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
@@ -137,7 +137,6 @@ struct TaskRowView: View {
             .help("Task actions")
             .accessibilityIdentifier("actions-\(task.id)")
         }
-        .tint(nil)
         .padding(.vertical, density == "compact" ? 2 : 5)
         .contentShape(.rect)
         .onHover { hovering = $0 }

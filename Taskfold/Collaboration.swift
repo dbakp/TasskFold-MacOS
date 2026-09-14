@@ -58,6 +58,7 @@ extension Workspace {
 }
 
 struct AssigneeMenu: View {
+    @Environment(\.controlActiveState) private var controlActiveState
     @Environment(Workspace.self) private var workspace
     let task: Record
     var contextID: String? = nil
@@ -70,16 +71,19 @@ struct AssigneeMenu: View {
         return workspace.assignmentMembers(task, contextID: contextID).first { $0.string("user_id") == task.string("assigned_to") } ?? Record(["display_name": .string(name)])
     }
     @State private var choosing = false
+    @State private var photoLoaded = false
     var body: some View {
         Button { choosing.toggle() } label: {
             HStack(spacing: 5) {
                 if task.string("assigned_to").isEmpty { Image(systemName: "person.crop.circle.badge.plus") }
-                else { PersonAvatar(person: identity, size: showsName ? 22 : 20) }
+                else { PersonAvatar(person: identity, size: showsName ? 22 : 20, didLoad: { photoLoaded = $0 }).accessibilityHidden(true) }
                 if showsName { Text(name).lineLimit(1) }
                 Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
-            }.foregroundStyle(selected ? Color.onAccent : .secondary)
+            }.foregroundStyle(selected ? Color(nsColor: controlActiveState == .inactive ? .labelColor : .alternateSelectedControlTextColor) : .secondary)
         }
         .buttonStyle(.borderless).fixedSize()
+        .accessibilityElement(children: .ignore).accessibilityAddTraits(.isButton)
+        .accessibilityValue(task.string("assigned_to").isEmpty ? "" : photoLoaded ? "Photo loaded" : "Photo placeholder")
         .help("Assigned to \(name)").accessibilityLabel("Assigned to \(name)")
         .accessibilityIdentifier(showsName ? "taskAssignee" : "assignee-" + task.id)
         .popover(isPresented: $choosing) {
@@ -93,7 +97,7 @@ struct AssigneeMenu: View {
                             let id = member.string("user_id")
                             Button { select(id); choosing = false } label: {
                                 HStack(spacing: 10) {
-                                    PersonAvatar(person: member, size: 30)
+                                    PersonAvatar(person: member, size: 30).accessibilityHidden(true)
                                     Text(member.string("display_name").isEmpty ? "Project member" : member.string("display_name")).foregroundStyle(.primary)
                                     Spacer()
                                     if id == task.string("assigned_to") { Image(systemName: "checkmark") }
