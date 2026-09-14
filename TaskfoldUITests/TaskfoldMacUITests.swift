@@ -47,14 +47,29 @@ final class TaskfoldMacUITests: XCTestCase {
         app.menuButtons["Task options"].click(); app.menuItems["Layout"].hover(); app.menuItems["Board"].click()
         XCTAssertTrue(app.scrollViews["projectBoard"].waitForExistence(timeout: 5))
         let add = app.buttons["board-add-ready"]
-        if !add.isHittable { app.scrollViews["projectBoard"].swipeLeft() }
-        XCTAssertTrue(add.waitForExistence(timeout: 5)); add.click()
+        for _ in 0..<3 {
+            if add.isHittable { break }
+            app.scrollViews["projectBoard"].scroll(byDeltaX: -450, deltaY: 0)
+        }
+        XCTAssertTrue(add.isHittable, "Ready creation control must be visible before clicking"); add.click()
+        let capture = app.textFields["quickAdd"]
+        XCTAssertTrue(capture.waitForExistence(timeout: 5)); capture.click()
         app.typeText("Prepare final handoff"); app.typeKey(.return, modifierFlags: [])
-        let added = app.staticTexts.matching(NSPredicate(format: "value == %@", "Prepare final handoff")).firstMatch
+        XCTAssertTrue(app.scrollViews["projectBoard"].waitForExistence(timeout: 5), app.debugDescription)
+        let complete = app.buttons["Complete Prepare final handoff"]
+        XCTAssertTrue(complete.waitForExistence(timeout: 5))
+        let createdID = String(complete.identifier.dropFirst("complete-".count))
+        let added = app.staticTexts["title-" + createdID]
         XCTAssertTrue(added.waitForExistence(timeout: 5)); added.rightClick()
         app.menuItems["Move to Section"].hover(); app.menuItems["Planning"].click()
         app.typeKey("z", modifierFlags: .command)
         XCTAssertTrue(added.waitForExistence(timeout: 5))
+        // Ready contains only this task: completion removes the last row, and one undo restores it.
+        added.rightClick(); app.menuItems["Complete / Reopen"].click()
+        XCTAssertTrue(waitForDisappearance(added, timeout: 5))
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(added.waitForExistence(timeout: 5))
+        XCTAssertTrue(added.isHittable, "The restored column must remain visible")
         let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Project board with sections"; shot.lifetime = .keepAlways; self.add(shot)
     }
 
@@ -87,16 +102,39 @@ final class TaskfoldMacUITests: XCTestCase {
         list.scroll(byDeltaX: 0, deltaY: -400)
         let before = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); before.name = "Upcoming pinned active date"; before.lifetime = .keepAlways; self.add(before)
         let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "complete-sticky-"))
-        let visible = rows.allElementsBoundByIndex.filter(\.isHittable)
-        let target = try XCTUnwrap(visible.dropFirst(3).first)
-        let anchor = try XCTUnwrap(visible.dropFirst(5).first)
+        let visible = rows.allElementsBoundByIndex.prefix(30).filter(\.isHittable)
+        let target = app.buttons[try XCTUnwrap(visible.dropFirst(3).first).identifier]
+        // Measure above the removed row: following rows correctly move up when a task disappears.
+        let anchor = app.buttons[try XCTUnwrap(visible.dropFirst().first).identifier]
         let y = anchor.frame.minY
         target.click()
         XCTAssertTrue(anchor.waitForExistence(timeout: 5))
-        XCTAssertLessThan(abs(anchor.frame.minY - y), 65, "Completion must not reset the viewport")
+        XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Completion must not reset the viewport")
         app.typeKey("z", modifierFlags: .command)
         XCTAssertTrue(target.waitForExistence(timeout: 5))
         let after = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); after.name = "Upcoming after completion and undo"; after.lifetime = .keepAlways; self.add(after)
+    }
+
+    @MainActor func testProjectCompletionAndNavigationKeepViewport() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
+        let list = app.outlines["taskList"]
+        XCTAssertTrue(list.waitForExistence(timeout: 10))
+        list.scroll(byDeltaX: 0, deltaY: -600)
+        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "complete-parity-"))
+            .allElementsBoundByIndex.prefix(30).filter(\.isHittable)
+        let anchor = app.buttons[try XCTUnwrap(rows.first).identifier]
+        let target = app.buttons[try XCTUnwrap(rows.dropFirst(3).first).identifier]
+        let y = anchor.frame.minY
+        target.click()
+        XCTAssertTrue(waitForDisappearance(target, timeout: 5))
+        XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Completion below the anchor must preserve its position")
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(target.waitForExistence(timeout: 5))
+        XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Undo must preserve the anchor")
+        app.typeKey("4", modifierFlags: .command)
+        app.staticTexts["Release workshop"].firstMatch.click()
+        XCTAssertTrue(anchor.waitForExistence(timeout: 5))
+        XCTAssertLessThan(abs(anchor.frame.minY - y), 3, "Returning to the project must restore the viewport")
     }
 
     @MainActor func testAssignmentsIncludeNestedTasksAndPersist() throws {
@@ -294,6 +332,12 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertGreaterThan(second.frame.minY, first.frame.minY)
         let snapshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
         snapshot.name = "Upcoming after overdue drop"; snapshot.lifetime = .keepAlways; add(snapshot)
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(second.waitForExistence(timeout: 5))
+        XCTAssertLessThan(second.frame.minY, app.staticTexts["title-drag-fixture-1"].frame.minY, "One undo restores the overdue date")
+        app.typeKey("z", modifierFlags: [.command, .shift])
+        XCTAssertTrue(second.waitForExistence(timeout: 5))
+        XCTAssertGreaterThan(second.frame.minY, first.frame.minY, "Redo restores the scheduled destination")
         app.typeKey("1", modifierFlags: .command)
         XCTAssertTrue(waitForDisappearance(second, timeout: 5))
     }

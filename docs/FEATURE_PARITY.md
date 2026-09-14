@@ -58,7 +58,7 @@ The web PWA installation flow and browser push-subscription controls are platfor
 
 Password reset, changing account email/password, and account deletion were not found in the reviewed original web settings/auth screens. Treat them as new account features to design, rather than functionality removed by the Mac polish work.
 
-## Current parity work — 14 September 2026 (runtime verification pending)
+## Current parity release — 14 September 2026 (1.1.0)
 
 Shared dependency is now pinned to iOS `9960d97` (1.3.0/build 18) in an isolated `build/shared-ios` checkout. Release scripts enforce the full revision and a clean dependency; the user's iOS checkout is unchanged.
 
@@ -70,6 +70,6 @@ Implemented in source:
 - View options group filters and expose a contextual project Layout menu. List remains the default.
 - `taskfold://invitations` opens Invitations and persists the destination through sign-in, then refreshes invitations and the affected member directory.
 
-The current deployed iOS member-profile migration `20260914091713_project_member_profiles.sql` was reused and was **not** overwritten by the older Mac migrations. The older `v1.0.0` GitHub release does not contain main's collaboration milestone. Version 1.1.0/build 2 is prepared, but is not yet a verified published release.
+The current deployed iOS member-profile migration `20260914091713_project_member_profiles.sql` was reused and was **not** overwritten by the older Mac migrations. The older `v1.0.0` GitHub release does not contain main's collaboration milestone. Version 1.1.0/build 2 packages this parity work together with that collaboration milestone.
 
-Manual fixture checks now cover real photo rendering/cache relaunch, native density dimensions, light/dark custom-accent contrast, board creation/move/undo/collapse and selected-column visibility, invitation route persistence, and Upcoming sticky dates/completion/undo/navigation position. See PREMIUM_MAC_PLAN for exact evidence and remaining cases. XCTest execution and native drag regression verification remain blocked by local UI Automation authentication.
+Manual fixture checks now cover real photo rendering/cache relaunch, native density dimensions, light/dark custom-accent contrast, board creation/move/undo/collapse and selected-column visibility, invitation route persistence, and Upcoming sticky dates/completion/undo/navigation position. See PREMIUM_MAC_PLAN for exact evidence and remaining cases. Local authorization is complete. Sixteen distinct targeted UI tests passed across focused runs, including native drag/undo and the updated board/viewport checks. The distribution app is installed and its launch was verified. Live authentication/photo-upload/email delivery/two-client integration remain outside the exercised flows.
