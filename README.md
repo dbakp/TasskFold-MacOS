@@ -34,7 +34,7 @@ Sign in with email/password or Google (`ASWebAuthenticationSession` with PKCE, c
 
 ### Releases
 
-The current build is published as a GitHub release with the DMG attached: [github.com/dbakp/TasskFold-MacOS/releases/latest](https://github.com/dbakp/TasskFold-MacOS/releases/latest). Build and verify a candidate with `Scripts/make_dmg.sh`, then use `Scripts/publish_release.sh <notes-file>` to publish a new immutable version. Publishing requires committed sources and a matching build-input fingerprint. It refuses to replace an existing version; bump `MARKETING_VERSION` in `Scripts/generate_project.py` for a new release.
+Published distributions are available as GitHub releases with the DMG attached: [github.com/dbakp/TasskFold-MacOS/releases/latest](https://github.com/dbakp/TasskFold-MacOS/releases/latest). Development source includes unreleased P0 work tracked in [the implementation status](docs/P0_IMPLEMENTATION.md). Build and verify a candidate with `Scripts/make_dmg.sh`, then use `Scripts/publish_release.sh <notes-file>` to publish a new immutable version. Publishing requires committed sources and a matching build-input fingerprint. It refuses to replace an existing version; bump `MARKETING_VERSION` in `Scripts/generate_project.py` for a new release.
 
 ## Welcome tour
 
