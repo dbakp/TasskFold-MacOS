@@ -26,7 +26,7 @@ Sign in with email/password or Google (`ASWebAuthenticationSession` with PKCE, c
 
 ## Install
 
-`Scripts/make_dmg.sh` produces `dist/Taskfold-<version>.dmg`: a compressed disk image with the app, an Applications shortcut, and a short "How to install" note. By default it makes a **distribution build**: signed ad hoc with no provisioning profile, so it never expires and runs on any Mac. Because it is not notarized (that needs a paid Apple Developer account), the first launch is blocked with "could not verify"; open System Settings ▸ Privacy & Security and click **Open Anyway** once. Distribution builds carry only the sandbox, network, and user-selected-file entitlements and leave out the Today widget extension, which needs a team-provisioned App Group.
+`Scripts/make_dmg.sh` produces `dist/Taskfold-<version>.dmg`: a compressed disk image with the app, an Applications shortcut, and a short "How to install" note. By default it makes a **distribution build**: signed ad hoc with no provisioning profile, so it never expires and runs on any Mac. Because it is not notarized (that needs a paid Apple Developer account), the first launch is blocked with "could not verify"; open System Settings ▸ Privacy & Security and click **Open Anyway** once. Distribution builds carry only the sandbox, network, and user-selected-file entitlements and leave out the widget extension, which needs a team-provisioned App Group.
 
 `Scripts/make_dmg.sh --development` makes the team-signed build with the widget instead. It runs only on Macs registered to the team and stops launching when its seven-day provisioning profile expires, so it is for local use.
 
@@ -122,3 +122,9 @@ xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Release \
 The configured backend already has the collaboration migrations and the newer iOS member-profile migration `20260914091713_project_member_profiles.sql`. Do not replay the older Mac directory migration over that deployed definition. A new backend needs the current iOS schema/profile migration and the collaboration prerequisites.
 
 Release products build in `~/Library/Caches/TaskfoldBuild` (outside synced Documents folders); the DMG lands in `dist/`. `Scripts/publish_release.sh <notes-file>` requires committed sources and verifies the DMG source fingerprint, then creates a new immutable version tag and GitHub release. Never publish until runtime verification is complete.
+
+## Productive widgets and feature roadmap
+
+The provisioned widget extension now includes Today, Focus, Week ahead and Quick capture. Today opens individual tasks and exposes +; Focus explains one selected next action; Week ahead shows seven actual task counts and opens Upcoming. Soft surfaces adapt to light/dark appearance. The ad hoc distribution DMG still excludes widgets.
+
+See [the detailed Todoist feature plan](docs/TODOIST_PORT_PLAN.md) for the source audit, import API compatibility risk, phased backlog, estimates, data migrations and acceptance criteria. [Widget preview](docs/widget-previews/catalog.png). Run `python3 Scripts/render_widget_previews.py` to render the SwiftUI fixture views in light, dark and empty states. Rendering does not prove installed WidgetKit-host behavior.

@@ -73,3 +73,9 @@ Implemented in source:
 The current deployed iOS member-profile migration `20260914091713_project_member_profiles.sql` was reused and was **not** overwritten by the older Mac migrations. The older `v1.0.0` GitHub release does not contain main's collaboration milestone. Version 1.1.0/build 2 packages this parity work together with that collaboration milestone.
 
 Manual fixture checks now cover real photo rendering/cache relaunch, native density dimensions, light/dark custom-accent contrast, board creation/move/undo/collapse and selected-column visibility, invitation route persistence, and Upcoming sticky dates/completion/undo/navigation position. See PREMIUM_MAC_PLAN for exact evidence and remaining cases. Local authorization is complete. Sixteen distinct targeted UI tests passed across focused runs, including native drag/undo and the updated board/viewport checks. The distribution app is installed and its launch was verified. Live authentication/photo-upload/email delivery/two-client integration remain outside the exercised flows.
+
+## Widgets and Todoist audit — 5 October 2026
+
+Today was redesigned and joined by Focus, Week ahead and Quick capture. Mac deep links now handle Today, Upcoming and capture; task links retain existing behavior. The shared Core dependency is pinned to the new iOS widget revision and the clean build checkout was updated. Widgets remain available only in App Group-capable development builds; the distribution DMG is unchanged.
+
+See `TODOIST_PORT_PLAN.md` for Todoist gaps and the detailed implementation sequence. Final app/extension compilation, 46 Swift tests (one optional live test skipped), and light/dark/empty SwiftUI fixture renders passed. Installed-widget host behavior and production signing were not exercised.

@@ -58,6 +58,9 @@ struct RootView: View {
             }
         }
         .onOpenURL { url in
+            if url.scheme == "taskfold" && url.host == "today" { workspace.section = .today }
+            if url.scheme == "taskfold" && url.host == "upcoming" { workspace.section = .upcoming }
+            if url.scheme == "taskfold" && url.host == "add" { workspace.section = .inbox; workspace.quickAddFocusRequest += 1 }
             if url.scheme == "taskfold", url.host == "invitations" {
                 pendingInvitations = true; workspace.settingsTab = .invitations; openSettings()
             }
