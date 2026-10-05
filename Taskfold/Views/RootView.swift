@@ -139,6 +139,11 @@ struct RootView: View {
                 try? store.persist()
             }
         }
+        if arguments.contains("--uitesting") && arguments.contains("--quick-entry-fixture") {
+            store.startLocal(); store.snapshot = Snapshot.quickEntryFixture(user: store.userID); workspace.section = .inbox
+            workspace.projectMembers["qe-work"] = store.rows("project_members:qe-work")
+            try? store.persist()
+        }
         if arguments.contains("--uitesting") && arguments.contains("--planner-fixture") {
             store.startLocal(); store.snapshot = Snapshot(); workspace.section = .calendar; workspace.calendarMode = .day
             workspace.calendarDay = Calendar.current.startOfDay(for: Date())

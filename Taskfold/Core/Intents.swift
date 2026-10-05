@@ -41,10 +41,15 @@ struct AddTaskIntent: AppIntent {
     @MainActor func perform() async throws -> some IntentResult & ProvidesDialog {
         let store = Store.shared
         guard store.signedIn else { return .result(dialog: "Open Taskfold and sign in first.") }
-        let parsed = QuickEntry(text)
-        var task = Record.task(user: store.userID)
-        task["title"] = .string(parsed.title.isEmpty ? text : parsed.title)
-        for (key, value) in parsed.updates { task[key] = value }
+        let initial = QuickEntry(text, context: store.quickEntryContext())
+        if let project = initial.updates["project_id"], text.contains("+") { _ = try? await store.refreshProjectMembers(project.text) }
+        let parsed = QuickEntry(text, context: store.quickEntryContext())
+        if let warning = parsed.warnings.first { return .result(dialog: "\(warning)") }
+        let task = parsed.applying(to: Record.task(user: store.userID))
+        guard !task.title.isEmpty else { return .result(dialog: "Include a task name as well as its details.") }
+        for label in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == label.text }) {
+            guard store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": label, "color": .string("#e31e4b")])) else { return .result(dialog: "Taskfold could not save that label.") }
+        }
         guard !task.title.trimmingCharacters(in: .whitespaces).isEmpty, store.save("tasks", task) else { return .result(dialog: "Taskfold could not add that task.") }
         let when = task.due.map { " for " + $0.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()) } ?? ""
         return .result(dialog: "Added “\(task.title)”\(when).")

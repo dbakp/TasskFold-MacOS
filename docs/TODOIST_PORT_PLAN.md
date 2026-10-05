@@ -1,8 +1,10 @@
 # Taskfold widget and Todoist feature plan
 
-Reviewed 5 October 2026. This plan compares the current Taskfold source with Todoist's public documentation and turns the gaps into an ordered implementation backlog. Fix the outdated Todoist importer first; then deliver saved filters and favorites, followed by separate deadlines and task durations. Those foundations also enable more useful widgets. Estimates below are planning assumptions for one engineer delivering across Swift, Kotlin, web, and backend; they are not delivery commitments.
+Baseline reviewed 5 October 2026. This plan compares the Taskfold source at that audit with Todoist's public documentation and turns the gaps into an ordered implementation backlog. Fix the outdated Todoist importer first; then deliver saved filters and favorites, followed by separate deadlines and task durations. Those foundations also enable more useful widgets. Estimates below are planning assumptions for one engineer delivering across Swift, Kotlin, web, and backend; they are not delivery commitments.
 
 The iOS checkout was brought forward to current upstream before final validation, preserving its assignment/profile work and the removal of Live Activities. The source audit covers `taskfold-ios-refresh`, `TasskFold-MacOS-refresh`, `Taskfold-Android`, and `taskfold-web-reference`. The older sibling checkouts were left untouched. “Present” means found in source, not proven in a live production account. Backend deployment state and private external integrations were not audited. Reimplement the useful public behavior in Taskfold's own design; no competitor source code or assets are needed.
+
+Implementation evidence and remaining requirements are kept current in [P0_IMPLEMENTATION.md](P0_IMPLEMENTATION.md). The capability table below records the starting gaps; it is not a statement that implemented milestones are still absent. Native repositories now own their sources and release inputs separately.
 
 ## Widget direction
 
@@ -180,7 +182,7 @@ Acceptance: share input never silently becomes an unwanted task; revoked API key
 
 ## Migration and release rules
 
-Add nullable fields and tables before publishing clients; then dual-read/dual-write where a migration needs it, backfill explicitly, and remove old representations only after supported clients have migrated. Include new fields in Mac conflict baselines/RPC validation, native queues, web codecs, exports, import and widget snapshots. Update the Mac's pinned shared iOS revision with each shared Core release using a clean dependency checkout.
+Add nullable fields and tables before publishing clients; then dual-read/dual-write where a migration needs it, backfill explicitly, and remove old representations only after supported clients have migrated. Include new fields in Mac conflict baselines/RPC validation, native queues, web codecs, exports, import and widget snapshots. Each native repository owns its source and release inputs. Implement and verify relevant contract changes in both repositories independently, then commit and push each; neither app builds from the other checkout. See `REPOSITORY_OWNERSHIP.md`.
 
 Every exposed new table needs server-side authorization, not just a hidden UI. Saved views/favorites/preferences belong to the account; shared task data uses actual project membership. Check grants separately from row policies; use security-invoker views when exposing aggregates. Validate owner/member/nonmember/removed-member cases with rolled-back fixtures. [Supabase RLS documentation](https://supabase.com/docs/guides/database/postgres/row-level-security)
 

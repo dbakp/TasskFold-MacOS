@@ -190,26 +190,29 @@ struct QuickEntry {
         var label: String
         var id: String { group + ":" + text }
     }
-    static let groups = ["priority", "labels", "due_time", "recurrence", "due_date", "deadline_date", "duration_minutes"]
+    static let groups = ["priority", "labels", "due_time", "recurrence", "due_date", "deadline_date", "duration_minutes", "project_id", "section_id", "assigned_to"]
     var title: String
     var updates: [String: JSON] = [:]
     var tokens: [Token] = []
+    var warnings: [String] = []
+    private var knownLabels: [Record] = []
     var hasSuggestions: Bool { !updates.isEmpty }
     /// Parses `input`. Groups in `disabled` are left untouched in the title and produce no updates,
     /// so a user can decline a single suggestion (for example keep "tomorrow" as part of the name).
-    init(_ input: String, now: Date = Date(), calendar: Calendar = .current, disabled: Set<String> = []) {
-        title = input
-        var literals: [(String, String)] = []
+    init(_ input: String, now: Date = Date(), calendar: Calendar = .current, disabled: Set<String> = [], context: QuickEntryContext = QuickEntryContext()) {
+        let references = QuickEntryReferences(input, context: context, disabled: disabled)
+        title = references.title; updates = references.updates; tokens = references.tokens; warnings = references.warnings; knownLabels = context.labels
+        var literals = references.literals
         func protect(_ pattern: String, removeEscape: Bool = false) {
             guard let regex = try? NSRegularExpression(pattern: pattern) else { return }
             while let found = regex.firstMatch(in: title, range: NSRange(title.startIndex..., in: title)), let range = Range(found.range, in: title) {
                 let original = String(title[range])
-                let marker = "\u{E000}" + String(repeating: "x", count: literals.count + 1) + "\u{E001}"
+                let marker = "\u{E000}" + UUID().uuidString + "\u{E001}"
                 literals.append((marker, removeEscape ? String(original.dropFirst()) : original))
                 title.replaceSubrange(range, with: marker)
             }
         }
-        protect(#"\\(?:\{[^}]+\}|[^\s]+)"#, removeEscape: true)
+        protect(#"\\(?:[#/@%+](?:"[^"\n]*"|[^\s]+)|\{[^}]+\}|[^\s]+)"#, removeEscape: true)
         protect(#""[^"\n]*""#)
         func match(_ pattern: String) -> [String]? {
             guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
@@ -240,11 +243,6 @@ struct QuickEntry {
             if (1...10080).contains(minutes) { updates["duration_minutes"] = .number(Double(minutes)); take("duration_minutes", m[0], "\(minutes) min") }
         }
         if enabled("priority"), let m = match(#"\b(?:p|priority\s*)([1-4])\b"#) { updates["priority"] = .number(Double(m[1]) ?? 4); take("priority", m[0], "P" + m[1]) }
-        if enabled("labels") {
-            var labels: [JSON] = []
-            while let m = match(#"#([\p{L}\p{N}_-]+)"#) { labels.append(.string(m[1])); take("labels", m[0], m[0]) }
-            if !labels.isEmpty { updates["labels"] = .array(labels) }
-        }
         if enabled("due_time"), let m = match(#"\b(?:at\s+)?(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)\b|\bat\s+(\d{1,2})(?:[:.](\d{2}))?\b|\b(\d{1,2})[:.](\d{2})\b"#) {
             let hourText = [m[1], m[4], m[6]].first { !$0.isEmpty } ?? ""
             let minuteText = [m[2], m[5], m[7]].first { !$0.isEmpty } ?? ""
@@ -290,9 +288,166 @@ struct QuickEntry {
         }
         if updates["due_time"] != nil && updates["due_date"] == nil { updates["due_date"] = .string(Dates.day(now)) }
         // Drop a dangling "at" left behind when only the time was declined or accepted.
-        title = title.replacingOccurrences(of: #"\s+at\s*$"#, with: "", options: .regularExpression)
+        if updates["due_time"] != nil { title = title.replacingOccurrences(of: #"\s+at\s*$"#, with: "", options: .regularExpression) }
         for (marker, original) in literals { title = title.replacingOccurrences(of: marker, with: original) }
         title = title.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+
+    /// Accepted references are applied together. Moving projects clears incompatible destinations
+    /// and assignments, while additional labels preserve the task's existing labels.
+    func applying(to task: Record) -> Record {
+        var result = task
+        if let project = updates["project_id"], project != task["project_id"] {
+            result["section_id"] = .null; result["assigned_to"] = .null
+            if !result["subtasks"].list.isEmpty { result["subtasks"] = TaskAssignment.clearChildren(result["subtasks"]) }
+        }
+        result["title"] = .string(title.trimmingCharacters(in: .whitespacesAndNewlines))
+        for (key, value) in updates where key != "labels" { result[key] = value }
+        if let labels = updates["labels"] {
+            let additions = labels.list.map { value in knownLabels.first { $0.name == value.text }.map { JSON.string($0.id) } ?? value }
+            result["labels"] = .array(TaskLabels.normalized(task["labels"].list + additions, labels: knownLabels))
+        }
+        return result
+    }
+}
+
+#if DEBUG
+extension Snapshot {
+    static func quickEntryFixture(user: String) -> Snapshot {
+        var snapshot = Snapshot()
+        snapshot.tables["projects"] = [("qe-work", "Client Work"), ("qe-home", "Home")].map { Record(["id": .string($0.0), "name": .string($0.1), "user_id": .string(user)]) }
+        snapshot.tables["sections"] = [("qe-next", "qe-work"), ("qe-home-next", "qe-home")].map { Record(["id": .string($0.0), "name": .string("Next steps"), "project_id": .string($0.1), "user_id": .string(user)]) }
+        snapshot.tables["labels"] = [("qe-home-label", "Home"), ("qe-client-label", "Client notes")].map { Record(["id": .string($0.0), "name": .string($0.1), "user_id": .string(user)]) }
+        snapshot.tables["project_collaborators"] = [Record(["id": .string("qe-member"), "project_id": .string("qe-work"), "user_id": .string("alex"), "status": .string("accepted"), "display_name": .string("Alex Morgan")])]
+        snapshot.tables["project_members:qe-work"] = [Record(["user_id": .string(user), "display_name": .string("Morgan Lee"), "status": .string("accepted")]), Record(["user_id": .string("alex"), "display_name": .string("Alex Morgan"), "status": .string("accepted")])]
+        snapshot.tables["tasks"] = []
+        return snapshot
+    }
+}
+#endif
+
+enum TaskLabels {
+    /// Existing IDs and unknown legacy values survive. Only unambiguous known names become IDs.
+    static func normalized(_ values: [JSON], labels: [Record]) -> [JSON] {
+        var result: [JSON] = []
+        for value in values {
+            var resolved = value
+            if case .string(let name) = value, !labels.contains(where: { $0.id == name }) {
+                let matches = labels.filter { $0.name == name }
+                if matches.count == 1 { resolved = .string(matches[0].id) }
+            }
+            if !result.contains(resolved) { result.append(resolved) }
+        }
+        return result
+    }
+}
+
+struct QuickEntryContext {
+    var projects: [Record] = []
+    var sections: [Record] = []
+    var labels: [Record] = []
+    /// Members are already permission-filtered by the platform's directory. IDs identify users.
+    var members: [String: [Record]] = [:]
+    var currentProject = ""
+    var currentUser = ""
+    static func key(_ name: String) -> String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines).folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+    }
+}
+
+private struct QuickEntryReferences {
+    var title: String
+    var updates: [String: JSON] = [:]
+    var tokens: [QuickEntry.Token] = []
+    var warnings: [String] = []
+    var literals: [(String, String)] = []
+    private struct Reference {
+        var raw: String, symbol: String, qualifier: String, name: String, marker: String
+    }
+    init(_ input: String, context: QuickEntryContext, disabled: Set<String>) {
+        title = input
+        // The first two alternatives skip escaped pieces and ordinary quoted literals. URLs,
+        // email addresses, arithmetic and file paths are not reference-token boundaries.
+        let pattern = #"\\(?:[#/@%+](?:"[^"\n]*"|[^\s]+)|\{[^}]+\}|[^\s]+)|"[^"\n]*"|(?<!\S)([#/@%+])(?:(project|label|section|person):)?(?:"([^"\n]+)"|([\p{L}\p{N}_@.-]+))(?![\p{L}\p{N}_@./-])"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return }
+        let matches = regex.matches(in: input, range: NSRange(input.startIndex..., in: input))
+        var references: [Reference] = []
+        for match in matches.reversed() {
+            func value(_ index: Int) -> String { Range(match.range(at: index), in: input).map { String(input[$0]) } ?? "" }
+            guard !value(1).isEmpty, let range = Range(match.range, in: title) else { continue }
+            let marker = "\u{E002}" + UUID().uuidString + "\u{E003}"
+            references.insert(Reference(raw: value(0), symbol: value(1), qualifier: value(2).lowercased(), name: value(3).isEmpty ? value(4) : value(3), marker: marker), at: 0)
+            title.replaceSubrange(range, with: marker)
+        }
+        func named(_ records: [Record], _ name: String) -> [Record] { records.filter { QuickEntryContext.key($0.name) == QuickEntryContext.key(name) } }
+        func projects(_ reference: Reference) -> [Record] { named(context.projects.filter { !$0["is_archived"].flag }, reference.name) }
+        var replacements: [String: String] = [:]
+        func keep(_ reference: Reference, warning: String? = nil) {
+            literals.append((reference.marker, reference.raw))
+            if let warning, !warnings.contains(warning) { warnings.append(warning) }
+        }
+        func take(_ reference: Reference, group: String, label: String) {
+            replacements[reference.marker] = ""
+            let token = QuickEntry.Token(group: group, text: reference.raw, label: label)
+            if !tokens.contains(where: { $0.id == token.id }) { tokens.append(token) }
+        }
+        let projectRefs = references.filter { $0.symbol == "#" && ($0.qualifier == "project" || ($0.qualifier.isEmpty && !projects($0).isEmpty)) }
+        var effectiveProject = context.currentProject
+        var blockedProject = false
+        let targetIDs = Set(projectRefs.flatMap { projects($0).map(\.id) })
+        for reference in projectRefs {
+            let candidates = projects(reference)
+            if disabled.contains("project_id") { keep(reference); blockedProject = blockedProject || candidates.contains { $0.id != context.currentProject }; continue }
+            let labelCollision = reference.qualifier.isEmpty && !named(context.labels, reference.name).isEmpty
+            guard candidates.count == 1, targetIDs.count == 1, !labelCollision else {
+                blockedProject = true
+                let message = labelCollision ? "“\(reference.name)” is a project and a label. Use #project:\"\(reference.name)\" or @\"\(reference.name)\"." : candidates.isEmpty ? "Project “\(reference.name)” is unavailable. Its text stays in the title." : "Choose one project in the Project menu. Its text stays in the title."
+                keep(reference, warning: message); continue
+            }
+            effectiveProject = candidates[0].id
+            updates["project_id"] = .string(effectiveProject)
+            take(reference, group: "project_id", label: candidates[0].name)
+        }
+        let remaining = references.filter { reference in !projectRefs.contains(where: { $0.marker == reference.marker }) }
+        let sectionRefs = remaining.filter { $0.symbol == "/" && ($0.qualifier.isEmpty || $0.qualifier == "section") }
+        let sectionTargets = Set(sectionRefs.flatMap { named(context.sections.filter { $0.string("project_id") == effectiveProject }, $0.name).map(\.id) })
+        for reference in sectionRefs {
+            if disabled.contains("section_id") || blockedProject { keep(reference); continue }
+            let candidates = named(context.sections.filter { $0.string("project_id") == effectiveProject }, reference.name)
+            guard !effectiveProject.isEmpty, candidates.count == 1, sectionTargets.count == 1 else { keep(reference, warning: "Choose a section in the selected project. “\(reference.raw)” stays in the title."); continue }
+            updates["section_id"] = .string(candidates[0].id)
+            take(reference, group: "section_id", label: candidates[0].name)
+        }
+        let personRefs = remaining.filter { $0.symbol == "+" && ($0.qualifier.isEmpty || $0.qualifier == "person") }
+        func people(_ reference: Reference) -> [Record] {
+            let members = (context.members[effectiveProject] ?? []).filter { !["pending", "declined", "revoked"].contains($0.string("status")) }
+            let exact = members.filter { member in
+                let key = QuickEntryContext.key(reference.name)
+                return (key == "me" && member.id == context.currentUser) || [member.string("display_name"), member.string("email"), member.string("invited_email")].contains { !$0.isEmpty && QuickEntryContext.key($0) == key }
+            }
+            if !exact.isEmpty { return exact }
+            return members.filter { QuickEntryContext.key($0.string("display_name").split(separator: " ").first.map(String.init) ?? "") == QuickEntryContext.key(reference.name) }
+        }
+        let personTargets = Set(personRefs.flatMap { people($0).map(\.id) })
+        for reference in personRefs {
+            if disabled.contains("assigned_to") || blockedProject { keep(reference); continue }
+            let candidates = people(reference)
+            guard !effectiveProject.isEmpty, candidates.count == 1, personTargets.count == 1 else { keep(reference, warning: "Choose one current project member in Assign to. “\(reference.raw)” stays in the title."); continue }
+            updates["assigned_to"] = .string(candidates[0].id)
+            take(reference, group: "assigned_to", label: candidates[0].string("display_name"))
+        }
+        for reference in remaining where !sectionRefs.contains(where: { $0.marker == reference.marker }) && !personRefs.contains(where: { $0.marker == reference.marker }) {
+            guard reference.symbol == "@" || reference.symbol == "%" || (reference.symbol == "#" && (reference.qualifier.isEmpty || reference.qualifier == "label")) else { keep(reference); continue }
+            if disabled.contains("labels") { keep(reference); continue }
+            let candidates = named(context.labels, reference.name)
+            guard candidates.count <= 1, !(candidates.isEmpty && context.labels.contains(where: { $0.id == reference.name })) else { keep(reference, warning: "Choose the label in Labels. “\(reference.raw)” stays in the title."); continue }
+            let name = candidates.first?.name ?? reference.name
+            var labels = updates["labels"]?.list ?? []
+            if !labels.contains(.string(name)) { labels.append(.string(name)) }
+            updates["labels"] = .array(labels)
+            take(reference, group: "labels", label: name)
+        }
+        for (marker, replacement) in replacements { title = title.replacingOccurrences(of: marker, with: replacement) }
     }
 }
 

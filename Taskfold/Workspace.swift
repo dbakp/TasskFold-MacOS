@@ -370,24 +370,34 @@ final class Workspace {
         run(name) { saved = store.save(table, record, baseline: baseline) }
         return saved
     }
+    func quickEntryContext(project: String = "") -> QuickEntryContext {
+        var context = store.quickEntryContext(project: project)
+        context.members = Dictionary(uniqueKeysWithValues: store.projects.map { project in
+            let task = Record(["project_id": .string(project.id)])
+            return (project.id, assignmentMembers(task).map { person in
+                var member = person; member["id"] = .string(person.string("user_id").isEmpty ? person.id : person.string("user_id")); return member
+            })
+        })
+        return context
+    }
     /// Creates a task from quick-entry text. Returns the new task's id.
     @discardableResult
     func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "") -> String? {
-        let parsed = QuickEntry(input, disabled: declined)
-        guard !parsed.title.isEmpty else { return nil }
         var task = Record.task(user: store.userID, project: project, date: date)
         for (field, value) in store.captureDefaults(scope) { task[field] = value }
         if let date { task["due_date"] = .string(Dates.day(date)) }
-        task["title"] = .string(parsed.title)
         if !sectionID.isEmpty { task["section_id"] = .string(sectionID) }
         if section == .assigned { task["assigned_to"] = .string(store.userID) }
-        for (key, value) in parsed.updates { task[key] = value }
+        let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")))
+        guard !parsed.title.isEmpty else { return nil }
+        task = parsed.applying(to: task)
         for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text }) {
             _ = store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": value, "color": .string("#e31e4b")]))
         }
         var created = false
         run("Add Task") { withAnimation(layout) { created = store.save("tasks", task) } }
         if created, case .saved = scope, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }) { confirmation = Confirmation(message: "Added · outside this filter", undoable: true) }
+        else if created, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }), let project = store.record("projects", id: task.string("project_id")) { confirmation = Confirmation(message: "Added to " + project.name, undoable: true) }
         return created ? task.id : nil
     }
 

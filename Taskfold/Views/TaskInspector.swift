@@ -76,8 +76,10 @@ struct TaskInspectorForm: View {
     /// Parsing runs while the title differs from the saved one; Return (or leaving the field) applies it.
     private var suggestions: QuickEntry? {
         guard draft.title != original.title else { return nil }
-        let parsed = QuickEntry(draft.title, disabled: declined)
-        return parsed.tokens.isEmpty ? nil : parsed
+        let nested = Workspace.subtaskPath(taskID) != nil
+        let parsed = QuickEntry(draft.title, disabled: nested ? declined.union(["project_id", "section_id"]) : declined,
+            context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)))
+        return parsed.tokens.isEmpty && parsed.warnings.isEmpty ? nil : parsed
     }
 
     private var current: Record? { workspace.taskRecord(taskID) }
@@ -98,7 +100,8 @@ struct TaskInspectorForm: View {
                         ScrollView(.horizontal) {
                             QuickEntryChips(tokens: suggestions.tokens, decline: { token in _ = declined.insert(token.group) }, returnFocus: { titleFocused = true }).padding(.vertical, 2)
                         }.scrollIndicators(.hidden).scrollClipDisabled()
-                        Text("Return applies these · ✕ keeps the words in the title").font(.caption2).foregroundStyle(.tertiary)
+                        if !suggestions.tokens.isEmpty { Text("Return applies these · ✕ keeps the words in the title").font(.caption2).foregroundStyle(.tertiary) }
+                        ForEach(suggestions.warnings, id: \.self) { warning in Text(warning).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickEntryWarning") }
                     }
                     .transition(.opacity)
                 }
@@ -193,8 +196,8 @@ struct TaskInspectorForm: View {
             Section("Labels") {
                 if store.labels.isEmpty { Text("Create labels from the sidebar.").foregroundStyle(.secondary) }
                 ForEach(store.labels) { label in
-                    Toggle(isOn: Binding(get: { draft["labels"].list.contains(.string(label.id)) || draft["labels"].list.contains(.string(label.name)) }, set: { enabled in
-                        var labels = draft["labels"].list.filter { $0 != .string(label.id) && $0 != .string(label.name) }; if enabled { labels.append(.string(label.name)) }; draft["labels"] = .array(labels)
+                    Toggle(isOn: Binding(get: { TaskLabels.normalized(draft["labels"].list, labels: store.labels).contains(.string(label.id)) }, set: { enabled in
+                        var labels = TaskLabels.normalized(draft["labels"].list, labels: store.labels).filter { $0 != .string(label.id) }; if enabled { labels.append(.string(label.id)) }; draft["labels"] = .array(labels)
                     })) { Label(label.name, systemImage: "tag.fill").foregroundStyle(Color.project(label.string("color"))) }
                 }
             }
@@ -313,8 +316,7 @@ struct TaskInspectorForm: View {
     private func applySuggestions() {
         guard let parsed = suggestions, parsed.hasSuggestions else { return }
         withAnimation(workspace.layout) {
-            draft["title"] = .string(parsed.title)
-            for (key, value) in parsed.updates { draft[key] = value }
+            draft = parsed.applying(to: draft)
         }
         for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text }) {
             _ = store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": value, "color": .string("#e31e4b")]))

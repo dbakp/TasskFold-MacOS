@@ -208,7 +208,8 @@ struct TaskListView: View {
         .animation(Transitions.Ease.smoothOut, value: subtitle)
         .toolbar { if workspace.section.scope == scope { toolbar } }
         .sheet(isPresented: $quickAddVisible) {
-            TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt, submit: submitQuickAdd)
+            TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt,
+                context: workspace.quickEntryContext(project: projectID.isEmpty ? store.captureDefaults(scope)["project_id"]?.text ?? "" : projectID), submit: submitQuickAdd)
         }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
         .sheet(item: $filterEditor) { SavedViewEditor(record: $0) }
@@ -420,15 +421,21 @@ struct TaskCapturePanel: View {
     @Binding var declined: Set<String>
     let destination: String
     let prompt: String
+    let context: QuickEntryContext
     let submit: () -> Void
     @FocusState private var focused: Bool
-    private var parsed: QuickEntry { QuickEntry(text, disabled: declined) }
+    private var parsed: QuickEntry { QuickEntry(text, disabled: declined, context: context) }
+    private var effectiveDestination: String {
+        guard let projectID = parsed.updates["project_id"]?.text, let project = context.projects.first(where: { $0.id == projectID }) else { return destination }
+        let section = (parsed.updates["section_id"]?.text).flatMap { id in context.sections.first { $0.id == id }?.name }
+        return project.name + (section.map { " · " + $0 } ?? "")
+    }
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("New Task").font(.title2.weight(.semibold))
-                    Label(destination, systemImage: "tray").font(.callout).foregroundStyle(.secondary)
+                    Label(effectiveDestination, systemImage: "tray").font(.callout).foregroundStyle(.secondary)
                 }
                 Spacer()
                 Button { dismiss() } label: { Image(systemName: "xmark").font(.body.weight(.medium)) }
@@ -442,8 +449,11 @@ struct TaskCapturePanel: View {
                 .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.taskfold.opacity(focused ? 0.6 : 0.2), lineWidth: 1))
                 .onSubmit(submit)
             if !parsed.tokens.isEmpty {
-                QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: { focused = true })
+                ScrollView(.horizontal) {
+                    QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: { focused = true })
+                }.scrollIndicators(.hidden)
             }
+            ForEach(parsed.warnings, id: \.self) { warning in Text(warning).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickEntryWarning") }
             HStack {
                 Text("Try “Call Sam tomorrow at 4pm p1”").font(.caption).foregroundStyle(.secondary)
                 Spacer()

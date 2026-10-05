@@ -2,6 +2,20 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testQuickEntryProjectSectionAndAssignment() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch()
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click()
+        let title = "Client proposal " + String(UUID().uuidString.prefix(6))
+        input.typeText(title + #" #"Client Work" /"Next steps" +Alex @"Client notes""#)
+        XCTAssertTrue(app.buttons["decline-project_id"].waitForExistence(timeout: 5))
+        app.buttons["Add Task"].click()
+        app.buttons["Client Work"].firstMatch.click()
+        XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Next steps"].exists)
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=project:qe-work"]; app.launch()
+        XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 5))
+    }
     override func setUp() { continueAfterFailure = false }
 
 

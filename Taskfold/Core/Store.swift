@@ -109,6 +109,11 @@ final class Store {
     }
     var projects: [Record] { rows("projects").sorted { $0["order_index"].integer < $1["order_index"].integer } }
     var labels: [Record] { rows("labels").sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
+    func quickEntryContext(project: String = "") -> QuickEntryContext {
+        QuickEntryContext(projects: projects, sections: rows("sections"), labels: labels,
+            members: Dictionary(uniqueKeysWithValues: projects.map { ($0.id, projectMembers($0.id)) }),
+            currentProject: project, currentUser: userID)
+    }
     var profile: Record { rows("profiles").first(where: { $0.string("user_id") == userID }) ?? Record() }
     private(set) var googleAvatarURL: URL?
     private var avatarMetadataLoaded = false
@@ -255,6 +260,7 @@ final class Store {
             var change = change
             if change.table == "tasks", change.method != "DELETE" {
                 change.fields = TaskPlanning.fields(change.fields, existing: record("tasks", id: change.recordID))
+                if case .array(let values)? = change.fields["labels"] { change.fields["labels"] = .array(TaskLabels.normalized(values, labels: labels)) }
             }
             if change.table == DayPlacement.table, change.method != "DELETE" {
                 change.method = "POST" // Stable composite upsert also handles pre-sync legacy rows.
@@ -281,8 +287,12 @@ final class Store {
         guard !changed.isEmpty else { return true }
         var changes = [Mutation(table: table, recordID: record.id, method: existing == nil ? "POST" : "PATCH", fields: changed, baseline: baseline.map { old in Dictionary(uniqueKeysWithValues: changed.keys.map { ($0, old[$0]) }) })]
         if table == "labels", let existing, existing.name != record.name {
-            for task in tasks where task["labels"].list.contains(.string(existing.name)) {
-                changes.append(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["labels": .array(task["labels"].list.map { $0 == .string(existing.name) ? .string(record.name) : $0 })]))
+            for task in tasks {
+                let values = TaskLabels.normalized(task["labels"].list, labels: labels)
+                // Bind legacy names before the rename; IDs belonging to another label survive.
+                if values != task["labels"].list && values.contains(.string(existing.id)) {
+                    changes.append(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["labels": .array(values)]))
+                }
             }
         }
         return commit(changes)
@@ -291,8 +301,11 @@ final class Store {
         var changes: [Mutation] = []
         if table == "saved_views", record("favorites", id: "view:" + id) != nil { changes.append(Mutation(table: "favorites", recordID: "view:" + id, method: "DELETE", fields: [:])) }
         if table == "labels", let label = record("labels", id: id) {
-            for task in tasks where task["labels"].list.contains(.string(id)) || task["labels"].list.contains(.string(label.name)) {
-                changes.append(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["labels": .array(task["labels"].list.filter { $0 != .string(id) && $0 != .string(label.name) })]))
+            for task in tasks {
+                let values = TaskLabels.normalized(task["labels"].list, labels: labels)
+                if values.contains(.string(label.id)) {
+                    changes.append(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["labels": .array(values.filter { $0 != .string(id) })]))
+                }
             }
         }
         if table == "projects" {
