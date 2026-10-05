@@ -39,6 +39,15 @@ do $$ declare invalid jsonb; begin
   update public.saved_views set user_id='f01dcafe-2000-4000-8000-000000000002' where id='f01dcafe-2000-4000-8000-000000000010'; raise exception 'Ownership transfer accepted';
  exception when others then if sqlerrm <> 'Organization ownership cannot be changed' then raise; end if; end;
 end $$;
+-- Working hours are one versioned document, with the existing account-owner RLS.
+insert into public.view_preferences(id,working_hours) values('planner','{"version":1,"start":540,"end":1020,"days":[2,3,4,5,6]}');
+do $$ declare doc jsonb; begin
+ foreach doc in array array['{}'::jsonb,'null'::jsonb,'{"version":1,"start":540,"end":500,"days":[]}'::jsonb,'{"version":1,"start":540.5,"end":1020,"days":[]}'::jsonb,'{"version":"1","start":540,"end":1020,"days":[]}'::jsonb,'{"version":1,"start":540,"end":1020,"days":[8]}'::jsonb,'{"version":1,"start":540,"end":1020,"days":["2"]}'::jsonb] loop
+  begin
+   update public.view_preferences set working_hours=doc where id='planner'; raise exception 'Invalid working hours accepted: %',doc;
+  exception when check_violation then null; end;
+ end loop;
+end $$;
 select set_config('request.jwt.claim.sub','f01dcafe-2000-4000-8000-000000000002',true);
 do $$ begin
  if exists(select 1 from public.projects where id='f01dcafe-2000-4000-8000-000000000020') then raise exception 'Project ownership visibility leaked'; end if;

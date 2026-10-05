@@ -26,7 +26,7 @@ struct CalendarView: View {
 
     private var byDay: [String: [Record]] {
         var map: [String: [Record]] = [:]
-        for task in store.tasks where !task.string("due_date").isEmpty { map[String(task.string("due_date").prefix(10)), default: []].append(task) }
+        for task in store.tasks { let day = TaskPlanner.plannedDay(task); if !day.isEmpty { map[day, default: []].append(task) } }
         return map
     }
     private func tasks(on day: Date) -> [Record] {
@@ -42,7 +42,7 @@ struct CalendarView: View {
 
     private func start(of page: Int, mode: CalendarMode) -> Date {
         switch mode {
-        case .threeDay, .fiveDay: return calendar.date(byAdding: .day, value: page * (mode.days ?? 1), to: today)!
+        case .day, .threeDay, .fiveDay: return calendar.date(byAdding: .day, value: page * (mode.days ?? 1), to: today)!
         case .week: return calendar.date(byAdding: .day, value: page * 7, to: startOfWeek(today))!
         case .month: return calendar.date(byAdding: .month, value: page, to: startOfMonth(today))!
         case .year: return calendar.date(byAdding: .year, value: page, to: startOfYear(today))!
@@ -50,7 +50,7 @@ struct CalendarView: View {
     }
     private func page(containing day: Date, mode: CalendarMode) -> Int {
         switch mode {
-        case .threeDay, .fiveDay:
+        case .day, .threeDay, .fiveDay:
             let delta = calendar.dateComponents([.day], from: today, to: calendar.startOfDay(for: day)).day ?? 0
             return Int((Double(delta) / Double(mode.days ?? 1)).rounded(.down))
         case .week: return calendar.dateComponents([.weekOfYear], from: startOfWeek(today), to: startOfWeek(day)).weekOfYear ?? 0
@@ -85,6 +85,7 @@ struct CalendarView: View {
                 Divider()
                 Group {
                     switch mode {
+                    case .day: hourlyPlanner
                     case .threeDay, .fiveDay, .week: dayColumns(days(from: start(of: page, mode: mode), count: mode.days ?? 7))
                     case .month: monthGrid(start(of: page, mode: mode))
                     case .year: yearGrid(start(of: page, mode: mode))
@@ -156,6 +157,14 @@ struct CalendarView: View {
                 if selected < start || selected >= end { workspace.calendarDay = (today >= start && today < end) ? today : start }
             }
         }
+    }
+
+    private var hourlyPlanner: some View {
+        HourlyPlannerView(day: selected, tasks: store.tasks, open: { workspace.open($0.id) }, complete: { task in workspace.run("Complete Task") { store.toggle(task) } }, save: { task, fields in
+            var saved = false
+            workspace.run("Schedule Task") { saved = store.commit([Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields, baseline: Dictionary(uniqueKeysWithValues: fields.keys.map { ($0, task[$0]) }))]) }
+            return saved
+        }, undo: { workspace.undoManager?.undo() }, undoDepth: store.undoStack.count)
     }
 
     /// The period title lives in the toolbar subtitle; the header holds only the centred mode switcher.
@@ -235,7 +244,7 @@ struct CalendarView: View {
                 Text(task.title).font(.callout).lineLimit(2).truncationMode(.tail).foregroundStyle(task.completed ? .secondary : .primary).strikethrough(task.completed)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: 6) {
-                    if !task.string("due_time").isEmpty { Text(TaskRowView.timeText(task.string("due_time"))).fixedSize() }
+                    if !task.string("due_time").isEmpty { Text(TaskRowView.timeText(TaskPlanner.clockValue(task))).fixedSize() }
                     if let project = store.record("projects", id: task.string("project_id")) {
                         HStack(spacing: 4) { Circle().fill(Color.project(project.string("color"))).frame(width: 6, height: 6); Text(project.name).lineLimit(1) }
                     }

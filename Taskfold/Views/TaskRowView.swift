@@ -14,10 +14,10 @@ struct TaskRowView: View {
     private var selectedForeground: Color { controlActiveState == .inactive ? Color(nsColor: .labelColor) : Color(nsColor: .alternateSelectedControlTextColor) }
     private var isSelected: Bool { workspace.selection.contains(task.id) }
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
-    private var overdue: Bool { if let due = task.due { return due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
-    private var dueToday: Bool { task.string("due_date") == Dates.day(Date()) }
+    private var overdue: Bool { if let due = TaskPlanner.dayDate(task) { return due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
+    private var dueToday: Bool { TaskPlanner.plannedDay(task) == Dates.day(Date()) }
     private var showsDate: Bool {
-        guard task.due != nil else { return false }
+        guard TaskPlanner.dayDate(task) != nil else { return false }
         if !compactDate { return true }
         return overdue || !task.string("due_time").isEmpty || task["is_recurring"].flag
     }
@@ -78,9 +78,9 @@ struct TaskRowView: View {
                 }
                 if task.deadline != nil || task.durationMinutes != nil || showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
                     HStack(spacing: 10) {
-                        if showsDate, let due = task.due {
-                            let time = task.string("due_time")
-                            let text = (compactDate && !overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))) + (task.string("time_zone").isEmpty ? "" : " · " + task.string("time_zone"))
+                        if showsDate, let due = TaskPlanner.dayDate(task) {
+                            let time = TaskPlanner.clockValue(task)
+                            let text = (compactDate && !overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))) + (TaskPlanner.zoneLabel(task).isEmpty ? "" : " · " + TaskPlanner.zoneLabel(task))
                             Button { choosingDate = true } label: {
                                 Label(text, systemImage: task["is_recurring"].flag ? "repeat" : overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
                                     .foregroundStyle(isSelected ? selectedForeground : overdue ? Color.red : dueToday ? Color.taskfold : Color.secondary)
@@ -166,7 +166,7 @@ struct TaskRowView: View {
         var parts = [task.title]
         if checked { parts.append("completed") }
         if task.priority < 4 { parts.append("priority \(task.priority)") }
-        if let due = task.due { parts.append(overdue ? "overdue since \(due.formatted(date: .abbreviated, time: .omitted))" : "due \(due.formatted(date: .abbreviated, time: .omitted))") }
+        if let due = TaskPlanner.dayDate(task) { parts.append(overdue ? "overdue since \(due.formatted(date: .abbreviated, time: .omitted))" : "due \(due.formatted(date: .abbreviated, time: .omitted))") }
         if let project = store.record("projects", id: task.string("project_id")) { parts.append("in \(project.name)") }
         return parts.joined(separator: ", ")
     }
@@ -230,7 +230,7 @@ struct TaskDatePopover: View {
     @Environment(\.dismiss) private var dismiss
     let task: Record
     @State private var date: Date
-    init(task: Record) { self.task = task; _date = State(initialValue: task.due ?? Date()) }
+    init(task: Record) { self.task = task; _date = State(initialValue: TaskPlanner.dayDate(task) ?? Date()) }
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Schedule task").font(.headline)

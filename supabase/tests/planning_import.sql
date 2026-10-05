@@ -46,6 +46,23 @@ do $$ begin
   raise exception 'Expected invalid time zone rejection';
  exception when others then if sqlerrm <> 'Choose a valid time zone' then raise; end if; end;
 end $$;
+-- Consecutive offline native edits use Z and HH:mm, while PostgREST returns offsets/seconds.
+do $$ declare t public.tasks; begin
+ t := public.taskfold_patch_task('f01dcafe-1000-4000-8000-000000000035',
+  '{"due_time":"02:30","scheduled_at":"2026-10-25T00:30:00Z"}',
+  '{"due_time":"02:45","scheduled_at":"2026-10-25T00:45:00Z"}');
+ t := public.taskfold_patch_task(t.id,
+  '{"due_time":"02:45","scheduled_at":"2026-10-25T02:45:00+02:00"}',
+  '{"due_time":"03:00","scheduled_at":"2026-10-25T02:00:00Z"}');
+ if t.scheduled_at<>'2026-10-25T02:00:00Z'::timestamptz or t.due_time<>'03:00'::time or t.deadline_date<>'2026-10-30' then raise exception 'Equivalent native temporal baselines falsely conflicted or lost deadline'; end if;
+ begin
+  perform public.taskfold_patch_task(t.id,'{"scheduled_at":"2026-10-25T00:30:00Z"}','{"scheduled_at":"2026-10-25T01:30:00Z"}');
+  raise exception 'Expected real instant conflict';
+ exception when others then if sqlerrm not like 'TASKFOLD_CONFLICT:%' then raise; end if; end;
+ t := public.taskfold_patch_task(t.id,'{"completed_at":null}','{"completed_at":"2026-10-05T12:00:00Z"}');
+ t := public.taskfold_patch_task(t.id,'{"completed_at":"2026-10-05T14:00:00+02:00"}','{"completed_at":null}');
+ if t.completed_at is not null then raise exception 'Completion timestamp could not be cleared'; end if;
+end $$;
 select set_config('request.jwt.claim.sub','f01dcafe-1000-4000-8000-000000000002',true);
 do $$ begin
  if public.get_user_email_by_id('f01dcafe-1000-4000-8000-000000000001') is not null then raise exception 'Unrelated account email leaked'; end if;

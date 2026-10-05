@@ -139,6 +139,18 @@ struct RootView: View {
                 try? store.persist()
             }
         }
+        if arguments.contains("--uitesting") && arguments.contains("--planner-fixture") {
+            store.startLocal(); store.snapshot = Snapshot(); workspace.section = .calendar; workspace.calendarMode = .day
+            workspace.calendarDay = Calendar.current.startOfDay(for: Date())
+            store.snapshot.tables["tasks"] = [("planner-design", "Design session", "09:00", 60), ("planner-review", "Review layout", "09:30", 30), ("planner-anchor", "Call Alex", "11:00", 0), ("planner-report", "Prepare report", "", 25)].map { id, title, time, estimate in
+                var task = Record.task(user: store.userID, date: Date())
+                task["id"] = .string(id); task["title"] = .string(title); task["due_time"] = time.isEmpty ? .null : .string(time)
+                if estimate > 0 { task["duration_minutes"] = .number(Double(estimate)) }
+                task["deadline_date"] = .string(Dates.day(Calendar.current.date(byAdding: .day, value: 2, to: Date())!))
+                return task
+            }
+            try? store.persist()
+        }
         if arguments.contains("--hierarchy-fixture") {
             store.startLocal(); store.snapshot = Snapshot()
             var root = Record.task(user: store.userID, date: Date())

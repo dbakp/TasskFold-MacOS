@@ -331,9 +331,10 @@ final class Workspace {
         confirm(existing.count == 1 ? "Deleted “\(title)”" : "Deleted \(existing.count) tasks")
     }
     func reschedule(_ ids: Set<String>, to day: String?, label: String) {
-        var fields: [String: JSON] = ["due_date": day.map(JSON.string) ?? .null]
-        if day == nil { fields["due_time"] = .null }
-        withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { updateTasks(ids, fields: fields, name: "Reschedule") }
+        let changes = ids.compactMap { taskRecord($0) }.map { task in
+            Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: day.map { TaskPlanner.dayFields(task: task, day: $0) } ?? ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null])
+        }.filter { !$0.fields.isEmpty }
+        withAnimation(Motion.respecting(reduceMotion, Motion.settle)) { run("Reschedule") { if !changes.isEmpty { store.commit(changes) } } }
         Feedback.drop()
         confirm(day == nil ? "Removed dates" : ids.count == 1 ? "Moved to \(label)" : "Moved \(ids.count) tasks to \(label)")
     }
@@ -419,7 +420,7 @@ final class Workspace {
         for task in tasks {
             let current = Record(snapshot.tables["tasks"]?.first(where: { $0.id == task.id })?.fields ?? task.fields)
             let members: [Record]
-            if isDay { members = snapshot.tables["tasks"]?.filter { $0.string("due_date") == slot.day && !$0.completed } ?? [] }
+            if isDay { members = snapshot.tables["tasks"]?.filter { TaskPlanner.plannedDay($0) == slot.day && !$0.completed } ?? [] }
             else {
                 let visible = drag.order.first { $0.day == slot.day }?.ids ?? []
                 let known = Set(visible)
@@ -536,12 +537,12 @@ final class DragCoordinator {
 }
 
 enum CalendarMode: String, CaseIterable, Identifiable {
-    case threeDay, fiveDay, week, month, year
+    case day, threeDay, fiveDay, week, month, year
     var id: String { rawValue }
     var title: String {
-        switch self { case .threeDay: return "3 Days"; case .fiveDay: return "5 Days"; case .week: return "Week"; case .month: return "Month"; case .year: return "Year" }
+        switch self { case .day: return "Day"; case .threeDay: return "3 Days"; case .fiveDay: return "5 Days"; case .week: return "Week"; case .month: return "Month"; case .year: return "Year" }
     }
-    var days: Int? { switch self { case .threeDay: return 3; case .fiveDay: return 5; case .week: return 7; default: return nil } }
+    var days: Int? { switch self { case .day: return 1; case .threeDay: return 3; case .fiveDay: return 5; case .week: return 7; default: return nil } }
 }
 
 enum SettingsTab: String { case general, appearance, account, imports, invitations }

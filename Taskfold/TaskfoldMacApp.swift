@@ -74,8 +74,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             await ReminderCategory.snooze(response.notification.request.content, taskID: id, by: 3600)
         case ReminderCategory.tomorrow:
             await MainActor.run {
-                if let task = Store.shared.record("tasks", id: id), let due = task.due, let next = Calendar.current.date(byAdding: .day, value: 1, to: max(due, Calendar.current.startOfDay(for: Date()))) {
-                    Store.shared.update([id], fields: ["due_date": .string(Dates.day(next))])
+                if let task = Store.shared.record("tasks", id: id), let due = TaskPlanner.dayDate(task), let next = Calendar.current.date(byAdding: .day, value: 1, to: max(due, Calendar.current.startOfDay(for: Date()))) {
+                    _ = Store.shared.commit([Mutation(table: "tasks", recordID: id, method: "PATCH", fields: TaskPlanner.dayFields(task: task, day: TaskPlanner.dayKey(next)))])
                 }
             }
         default:

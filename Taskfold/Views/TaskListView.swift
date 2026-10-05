@@ -42,7 +42,7 @@ struct TaskListView: View {
     private var overdueKey: String { "overdue:" + preferenceKey }
     private var overdueTasks: [Record] {
         if case .saved = scope { return [] }
-        return ordered(filtered.filter { !$0.completed && !$0.string("due_date").isEmpty && $0.string("due_date") < Dates.day(Date()) }, day: overdueKey)
+        return ordered(filtered.filter { !$0.completed && !TaskPlanner.plannedDay($0).isEmpty && TaskPlanner.plannedDay($0) < Dates.day(Date()) }, day: overdueKey)
     }
     private var regularTasks: [Record] {
         let overdueIDs = Set(overdueTasks.map(\.id))
@@ -77,11 +77,11 @@ struct TaskListView: View {
     private var dayGroups: [(String, [Record])] {
         let today = Dates.day(Date())
         let overdue = overdueTasks
-        if scope == .today { return [("Overdue", overdue), (today, ordered(filtered.filter { $0.string("due_date") == today }, day: today))] }
-        let future = filtered.filter { $0.string("due_date") >= today }
-        var days = Set(future.map { $0.string("due_date") })
+        if scope == .today { return [("Overdue", overdue), (today, ordered(filtered.filter { TaskPlanner.plannedDay($0) == today }, day: today))] }
+        let future = filtered.filter { TaskPlanner.plannedDay($0) >= today }
+        var days = Set(future.map { TaskPlanner.plannedDay($0) })
         for offset in 0..<14 { if let date = Calendar.current.date(byAdding: .day, value: offset, to: Date()) { days.insert(Dates.day(date)) } }
-        return [("Overdue", overdue)] + days.sorted().map { day in (day, ordered(future.filter { $0.string("due_date") == day }, day: day)) }
+        return [("Overdue", overdue)] + days.sorted().map { day in (day, ordered(future.filter { TaskPlanner.plannedDay($0) == day }, day: day)) }
     }
     private struct Group { var title: String; var key: String; var tasks: [Record] }
     private var groups: [Group] {

@@ -5,6 +5,24 @@ final class TaskfoldMacUITests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
 
 
+    @MainActor func testHourlyPlannerScheduleAndUndo() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--planner-fixture"]; app.launch()
+        XCTAssertTrue(app.buttons["plannerSchedule"].waitForExistence(timeout: 10))
+        app.buttons["plannerShowAllDay"].tap()
+        XCTAssertTrue(app.buttons["plannerAllDay-planner-report"].waitForExistence(timeout: 5))
+        app.buttons["plannerAllDay-planner-report"].tap()
+        XCTAssertTrue(app.textFields["plannerEstimate"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textFields["plannerEstimate"].value as? String, "25")
+        app.buttons["plannerSave"].tap()
+        XCTAssertTrue(app.buttons["plannerUndo"].waitForExistence(timeout: 5)); app.buttons["plannerUndo"].tap()
+        app.buttons["plannerShowAllDay"].tap()
+        XCTAssertTrue(app.buttons["plannerAllDay-planner-report"].waitForExistence(timeout: 5))
+        app.buttons["plannerAllDay-planner-report"].tap(); app.buttons["plannerSave"].tap()
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=calendar", "--calendar-mode=day"]; app.launch()
+        app.buttons["Calendar"].firstMatch.tap()
+        XCTAssertTrue(app.otherElements["plannerBlock-planner-report"].waitForExistence(timeout: 10))
+    }
+
     @MainActor func testSavedFilterSurvivesRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
         XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()

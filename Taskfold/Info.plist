@@ -39,7 +39,9 @@
 			<key>UTTypeDescription</key>
 			<string>Taskfold task</string>
 			<key>UTTypeConformsTo</key>
-			<array><string>public.data</string></array>
+			<array>
+				<string>public.data</string>
+			</array>
 		</dict>
 	</array>
 	<key>LSApplicationCategoryType</key>
@@ -54,5 +56,7 @@
 	<false/>
 	<key>NSSupportsSuddenTermination</key>
 	<false/>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Show busy time from calendars you select to help plan your tasks. Taskfold does not change your calendar events.</string>
 </dict>
 </plist>
