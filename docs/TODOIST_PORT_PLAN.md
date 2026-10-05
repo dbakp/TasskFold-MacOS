@@ -36,9 +36,11 @@ Mac widgets still require a provisioned App Group build. The existing ad hoc dis
 | Project pulse | See progress and open stalled work | Completion/reopen history and project scope | Numerator, denominator, and window are stated; project additions do not create misleading progress claims |
 | Inbox reset | Turn uncategorized work into a short triage session | Inbox projection, configurable widget links, triage route | Shows an accurate count and opens review directly, without assigning arbitrary due dates |
 | Pinned note | Keep instructions or an idea visible | Deliberately designed note entity or selected task description | Readable text with explicit selection and privacy preference; do not misuse task title as a note store |
-| Focus session | Start a timed session attached to one task | Persisted session timestamps, pause/resume rules, Live Activity integration | Timer survives process death and restarting the phone; it does not depend on widget redraw cadence |
+| Focus session | Start a timed session attached to one task | Persisted session timestamps and pause/resume rules | Timer survives process death and restarting the phone; it does not depend on widget redraw cadence |
 
 Defaults should be calm and useful. Offer system tint and accessibility contrast, light/dark styles, readable empty states, a hide-task-titles preference, and sizes that prioritize content over decoration. Add per-widget theme selection with the configurable collection; avoid duplicating six widget kinds just for six colors.
+
+Deadline radar and A small window now have independent native implementations, with per-instance look-ahead/budget, built-in scopes, palette and name privacy. Their source/model checks are recorded in [P0_IMPLEMENTATION.md](P0_IMPLEMENTATION.md); installed-host verification remains separate. Selected project/label/filter scopes and direct completion are still pending.
 
 Current implementation evidence is tracked in [P0_IMPLEMENTATION.md](P0_IMPLEMENTATION.md). The gap table below preserves the initial audit baseline; the P0 tracker records the deployed importer/planning schema and native saved-filter/organization work, its tests, and remaining acceptance gaps.
 

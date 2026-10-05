@@ -805,3 +805,22 @@ enum TaskPlanning {
         return copy
     }
 }
+
+
+/// Versioned widget payload. The extension receives planning data, never sessions or mutations.
+enum WidgetProjection {
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date()) -> [String: JSON] {
+        guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
+        let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let rows = tasks.filter { !$0.completed }.map { task -> JSON in
+            let project = projects[task.string("project_id")]
+            let instant = !task.string("time_zone").isEmpty ? TaskPlanning.start(task).map { ISO8601DateFormatter().string(from: $0) } : nil
+            return .object(["id": .string(task.id), "title": .string(task.title), "due": .string(String(task.string("due_date").prefix(10))), "time": .string(String(task.string("due_time").prefix(5))),
+                "priority": .number(Double(task.priority)), "project": .string(project?.name ?? ""), "projectID": .string(task.string("project_id")), "color": .string(project?.string("color") ?? ""),
+                "deadline": task.deadline.map { _ in .string(String(task.string("deadline_date").prefix(10))) } ?? .null,
+                "duration": task.durationMinutes.map { .number(Double($0)) } ?? .null,
+                "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
+        }
+        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows)]
+    }
+}

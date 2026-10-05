@@ -263,3 +263,12 @@ Both app-owned 91-test suites pass in debug and optimized builds (one optional l
 
 
 The final label-lifecycle regression also passes: new/existing labels together, rename/relaunch, delete one label and retain the task under its other label. Legacy rename/delete operations now preserve unrelated IDs. A post-dismissal navigation timing assumption was corrected in the test; the isolated cache showed no data loss. The reference parser no longer falls back to partial hash capture inside a path. Both final app-owned debug/optimized 91-test runs and Mac app/widget/signed test-target builds pass. Full details are recorded in `P0_IMPLEMENTATION.md`.
+
+
+### 6 October — productive deadline and time-budget widgets (in progress)
+
+Both native repositories own configurable Deadline radar and A small window implementations, with small/medium views, palettes, task/project name privacy, explicit deadline versus planned-date behavior and honest unknown estimates. Widget fixed times now agree with the planner after travel and across repeated DST clocks; signed-out snapshots clear rows and old snapshots request refreshed planning data. Native Inbox/All routes make empty-state task editing reachable.
+
+The final local 101-test suites pass in debug and optimized builds in both repositories (one optional live-account skip per run); native app/extension builds and the signed Mac UI-test target build pass. Light/dark/empty/private/legacy source previews were inspected. Source renders do not establish installed-host or accessibility behavior. Full evidence and the remaining selected-scope, interactive-completion and native-host requirements are tracked in [P0_IMPLEMENTATION.md](P0_IMPLEMENTATION.md). The apps retain independent source/release ownership; no public release or complete P0 claim is made.
+
+The signed iPhone small-widget walk also passes gallery discovery, real App Group snapshot rendering and task-link opening into the correct editor. Both new kinds appear in the gallery. The intermediate duplicate-button test lookup was scoped to one installed container before the final passing run; no app data defect was found. Native widget settings/privacy/other sizes and Mac hosts still require verification.

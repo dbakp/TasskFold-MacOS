@@ -188,13 +188,7 @@ final class Store {
     /// Widgets read a compact copy of open tasks from the shared App Group container.
     private func publishWidgetSnapshot() {
         guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.appGroup) else { return }
-        let projects = Dictionary(uniqueKeysWithValues: rows("projects").map { ($0.id, $0) })
-        let rows: [[String: JSON]] = tasks.filter { !$0.completed }.map { task in
-            let project = projects[task.string("project_id")]
-            return ["id": .string(task.id), "title": .string(task.title), "due": .string(String(task.string("due_date").prefix(10))), "time": .string(task.string("due_time")),
-                    "priority": .number(Double(task.priority)), "project": .string(project?.name ?? ""), "color": .string(project?.string("color") ?? "")]
-        }
-        let payload: [String: JSON] = ["updated": .number(Date().timeIntervalSinceReferenceDate), "tasks": .array(rows.map(JSON.object))]
+        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: signedIn || localMode ? userID : "")
         if let data = try? JSONEncoder().encode(payload) {
             try? data.write(to: container.appending(path: "widget.json"), options: .atomic)
             #if canImport(WidgetKit)

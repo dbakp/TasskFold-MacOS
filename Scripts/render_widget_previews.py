@@ -8,8 +8,7 @@ root = Path(__file__).resolve().parent.parent
 source = (root / 'TaskfoldWidgets/TaskfoldWidgets.swift').read_text()
 source = source.replace('@main\nstruct TaskfoldWidgetBundle', 'struct TaskfoldWidgetBundle')
 # WidgetKit exposes a read-only family environment; use explicit families in this standalone renderer.
-source = source.replace('@Environment(\\.widgetFamily) private var family', 'private let family: WidgetFamily = .systemMedium', 1)
-source = source.replace('@Environment(\\.widgetFamily) private var family', 'private let family: WidgetFamily = .systemSmall', 1)
+source = source.replace('@Environment(\\.widgetFamily) private var family', 'var family: WidgetFamily = .systemMedium')
 source = source.replace('Link(destination:', 'PreviewLink(destination:')
 source += r'''
 struct PreviewLink<Content: View>: View {
@@ -20,21 +19,43 @@ struct PreviewLink<Content: View>: View {
 @main struct PreviewRenderer {
     @MainActor static func main() throws {
         let dark = CommandLine.arguments[2] == "dark"
-        let empty = CommandLine.arguments[2] == "empty"
+        let mode = CommandLine.arguments[2]
+        let empty = mode == "empty"
         let entry = empty ? TodayEntry(date: Date(), snapshot: .empty) : TodayEntry.preview
+        let productivity = mode.hasPrefix("productivity")
+        let snapshot: WidgetSnapshot = mode == "productivity-empty" ? WidgetSnapshot(updated: Date().timeIntervalSinceReferenceDate, tasks: [], account: "preview") : mode == "productivity-legacy" ? WidgetSnapshot(updated: Date().timeIntervalSinceReferenceDate, tasks: entry.snapshot.tasks, version: 1) : entry.snapshot
+        let privateTitles = mode == "productivity-private"
+        let newContent = VStack(alignment: .leading, spacing: 20) {
+            Text("A little room to move").font(.system(size: 28, weight: .bold, design: .rounded))
+            Text("Hard cutoffs. Small steps. Your choice of time, color and privacy.").font(.subheadline).foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 20) {
+                DeadlineWidgetView(family: .systemSmall, entry: DeadlineEntry(date: entry.date, snapshot: snapshot, hideTitles: privateTitles)).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: brand)).clipShape(RoundedRectangle(cornerRadius: 24))
+                DeadlineWidgetView(entry: DeadlineEntry(date: entry.date, snapshot: snapshot, hideTitles: privateTitles)).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: brand)).clipShape(RoundedRectangle(cornerRadius: 24))
+            }
+            HStack(alignment: .top, spacing: 20) {
+                WindowWidgetView(family: .systemSmall, entry: WindowEntry(date: entry.date, snapshot: snapshot, hideTitles: privateTitles)).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: plum)).clipShape(RoundedRectangle(cornerRadius: 24))
+                WindowWidgetView(entry: WindowEntry(date: entry.date, snapshot: snapshot, hideTitles: privateTitles)).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: plum)).clipShape(RoundedRectangle(cornerRadius: 24))
+            }
+            HStack(alignment: .top, spacing: 9) {
+                ForEach(WindowBudget.allCases, id: \.self) { budget in
+                    WindowWidgetView(family: .systemSmall, entry: WindowEntry(date: entry.date, snapshot: snapshot, budget: budget, palette: budget == .ten ? .mint : budget == .fortyFive ? .rose : .lavender, hideTitles: privateTitles)).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: budget == .ten ? mint : budget == .fortyFive ? brand : plum)).clipShape(RoundedRectangle(cornerRadius: 24))
+                }
+            }
+        }
         let content = VStack(alignment: .leading, spacing: 20) {
             Text("Taskfold widgets").font(.system(size: 28, weight: .bold, design: .rounded))
             Text(empty ? "Empty workspace states" : "Today, Focus, Week ahead and Quick capture").font(.subheadline).foregroundStyle(.secondary)
             HStack(alignment: .top, spacing: 20) {
                 TodayWidgetView(entry: entry).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: brand)).clipShape(RoundedRectangle(cornerRadius: 24))
-                FocusWidgetView(entry: entry).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: plum)).clipShape(RoundedRectangle(cornerRadius: 24))
+                FocusWidgetView(family: .systemSmall, entry: entry).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: plum)).clipShape(RoundedRectangle(cornerRadius: 24))
             }
             HStack(alignment: .top, spacing: 20) {
                 WeekWidgetView(entry: entry).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: mint)).clipShape(RoundedRectangle(cornerRadius: 24))
                 CaptureWidgetView(entry: entry).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: brand)).clipShape(RoundedRectangle(cornerRadius: 24))
             }
         }.padding(32).background(dark ? Color(white: 0.09) : Color.white).environment(\.colorScheme, dark ? .dark : .light)
-        let renderer = ImageRenderer(content: content)
+        let actual = Group { if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
+        let renderer = ImageRenderer(content: actual)
         renderer.scale = 2
         if let image = renderer.cgImage {
             try NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: CommandLine.arguments[1]))
@@ -48,5 +69,5 @@ with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporar
     path = Path(temporary)
     (path / 'Preview.swift').write_text(source)
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', str(path / 'Preview.swift'), '-o', str(path / 'preview')], check=True)
-    for mode, name in [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')]:
+    for mode, name in [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]:
         subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode], check=True)
