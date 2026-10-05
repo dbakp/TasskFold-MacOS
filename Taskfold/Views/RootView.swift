@@ -58,6 +58,7 @@ struct RootView: View {
             }
         }
         .onOpenURL { url in
+            if url.scheme == "taskfold" && url.host == "view" && !url.lastPathComponent.isEmpty { workspace.section = .saved(url.lastPathComponent) }
             if url.scheme == "taskfold" && url.host == "today" { workspace.section = .today }
             if url.scheme == "taskfold" && url.host == "upcoming" { workspace.section = .upcoming }
             if url.scheme == "taskfold" && url.host == "add" { workspace.section = .inbox; workspace.quickAddFocusRequest += 1 }

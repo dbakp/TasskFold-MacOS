@@ -5,6 +5,23 @@ final class TaskfoldMacUITests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
 
 
+    @MainActor func testSavedFilterSurvivesRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
+        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        let name = "Workshop focus " + String(UUID().uuidString.prefix(6))
+        let nameField = app.textFields["savedViewName"]; XCTAssertTrue(nameField.waitForExistence(timeout: 5)); nameField.click(); nameField.typeText(name)
+        let expressionSwitch = app.descendants(matching: .any)["advancedFilter"]; expressionSwitch.click()
+        let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5))
+        app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("project:parity-project AND no date")
+        XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
+        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch
+        XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        XCTAssertTrue(app.descendants(matching: .any)["task-parity-1"].waitForExistence(timeout: 5))
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Saved filter list on Mac"; shot.lifetime = .keepAlways; add(shot)
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        XCTAssertTrue(app.descendants(matching: .any)["task-parity-1"].waitForExistence(timeout: 5))
+    }
     @MainActor func testDeadlineEstimateQuickEntrySurvivesRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
         XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))

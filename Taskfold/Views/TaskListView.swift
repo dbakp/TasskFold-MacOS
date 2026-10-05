@@ -9,17 +9,17 @@ struct TaskListView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let scope: TaskScope
     let preferenceKey: String
-    @AppStorage private var showCompleted: Bool
-    @AppStorage private var priorityFilter: Int
-    @AppStorage private var sortBy: String
+    private var showCompleted: Bool { get { store.viewValue(scope, field: "include_completed", fallback: .bool(false)).flag } nonmutating set { store.setViewValue(scope, field: "include_completed", value: .bool(newValue)) } }
+    private var priorityFilter: Int { get { store.viewValue(scope, field: "priority_filter", fallback: .number(0)).integer } nonmutating set { store.setViewValue(scope, field: "priority_filter", value: .number(Double(newValue))) } }
+    private var sortBy: String { get { store.viewValue(scope, field: "sort_by", fallback: .string("manual")).text } nonmutating set { store.setViewValue(scope, field: "sort_by", value: .string(newValue)) } }
     @AppStorage("defaultView") private var defaultView = "today"
-    @AppStorage private var overdueCollapsed: Bool
+    private var overdueCollapsed: Bool { get { store.viewValue(scope, field: "overdue_collapsed", fallback: .bool(false)).flag } nonmutating set { store.setViewValue(scope, field: "overdue_collapsed", value: .bool(newValue)) } }
     private var quickAdd: String {
         get { workspace.quickAdd }
         nonmutating set { workspace.quickAdd = newValue }
     }
     @AppStorage("mac.collapsedProjectSections") private var collapsedSections = ""
-    @AppStorage private var projectLayout: String
+    private var projectLayout: String { get { store.viewValue(scope, field: "layout", fallback: .string("list")).text } nonmutating set { store.setViewValue(scope, field: "layout", value: .string(newValue)) } }
     @State private var captureSection = ""
     @State private var nativeList = ListNativeHandle()
     @State private var bulkDatePicker = false
@@ -27,6 +27,7 @@ struct TaskListView: View {
     @State private var projectEditor: Record?
     @State private var collaborationProject: Record?
     @State private var sectionsEditor = false
+    @State private var filterEditor: Record?
     @State private var quickAddVisible = false
     @State private var declinedGroups = Set<String>()
     @FocusState private var filterFocused: Bool
@@ -34,19 +35,14 @@ struct TaskListView: View {
     init(scope: TaskScope, preferenceKey: String? = nil) {
         self.scope = scope
         self.preferenceKey = preferenceKey ?? scope.preferenceKey
-        let prefix = "mac.view.\(preferenceKey ?? scope.preferenceKey)."
-        _projectLayout = AppStorage(wrappedValue: "list", prefix + "layout")
-        _showCompleted = AppStorage(wrappedValue: false, prefix + "showCompleted")
-        _priorityFilter = AppStorage(wrappedValue: 0, prefix + "priorityFilter")
-        _sortBy = AppStorage(wrappedValue: "manual", prefix + "sortBy")
-        _overdueCollapsed = AppStorage(wrappedValue: false, prefix + "overdueCollapsed")
     }
 
     private var dated: Bool { scope == .today || scope == .upcoming }
     private var projectID: String { if case .project(let id) = scope { return id }; return "" }
     private var overdueKey: String { "overdue:" + preferenceKey }
     private var overdueTasks: [Record] {
-        ordered(filtered.filter { !$0.completed && !$0.string("due_date").isEmpty && $0.string("due_date") < Dates.day(Date()) }, day: overdueKey)
+        if case .saved = scope { return [] }
+        return ordered(filtered.filter { !$0.completed && !$0.string("due_date").isEmpty && $0.string("due_date") < Dates.day(Date()) }, day: overdueKey)
     }
     private var regularTasks: [Record] {
         let overdueIDs = Set(overdueTasks.map(\.id))
@@ -57,6 +53,7 @@ struct TaskListView: View {
         switch scope {
         case .project(let id): return store.record("projects", id: id)?.name ?? "Project"
         case .label(let id): return store.record("labels", id: id)?.name ?? "Label"
+        case .saved(let id): return store.record("saved_views", id: id)?.name ?? "Unavailable filter"
         default: return scope.title
         }
     }
@@ -88,6 +85,9 @@ struct TaskListView: View {
     }
     private struct Group { var title: String; var key: String; var tasks: [Record] }
     private var groups: [Group] {
+        if case .saved = scope {
+            return TaskGrouping.groups(filtered, by: store.viewValue(scope, field: "grouping", fallback: .string("none")).text, projects: store.projects).map { Group(title: $0.name, key: "scope:" + scope.preferenceKey + ":group:" + $0.id, tasks: ordered($0.tasks, day: "scope:" + scope.preferenceKey + ":group:" + $0.id)) }
+        }
         if !projectID.isEmpty {
             let sections = store.rows("sections").filter { $0.string("project_id") == projectID }.sorted { $0["order_index"].integer < $1["order_index"].integer }
             let loose = Group(title: "Tasks", key: groupKey(section: nil), tasks: ordered(regularTasks.filter { $0.string("section_id").isEmpty }, day: groupKey(section: nil)))
@@ -146,7 +146,9 @@ struct TaskListView: View {
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
-            if !projectID.isEmpty && projectLayout == "board" {
+            if let failure = store.filterError(scope) { VStack(alignment: .leading, spacing: 8) { Label(failure, systemImage: "exclamationmark.triangle"); if case .saved(let id) = scope, let view = store.record("saved_views", id: id) { Button("Edit Filter…") { filterEditor = view } } }.padding().accessibilityIdentifier("savedFilterError") }
+            if case .saved = scope, projectLayout == "board" { SavedFilterBoard(scope: scope, tasks: filtered, open: { workspace.selection = [$0.id] }, toggle: { workspace.toggle([$0.id]) }) }
+            else if !projectID.isEmpty && projectLayout == "board" {
                 ProjectBoard(columns: boardColumns) { section in captureSection = section; quickAddVisible = true }
             } else {
             List(selection: Binding(get: { workspace.section.scope == scope ? workspace.selection : [] }, set: { selection in
@@ -209,6 +211,7 @@ struct TaskListView: View {
             TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt, submit: submitQuickAdd)
         }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
+        .sheet(item: $filterEditor) { SavedViewEditor(record: $0) }
         .sheet(item: $collaborationProject) { CollaboratorsView(project: $0) }
         .sheet(isPresented: $sectionsEditor) { SectionsEditor(projectID: projectID) }
         .sheet(isPresented: $bulkDatePicker) { DatePickSheet(date: $bulkDate, count: workspace.selection.count) { workspace.reschedule(workspace.selection, to: Dates.day(bulkDate), label: bulkDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())) } }
@@ -367,18 +370,22 @@ struct TaskListView: View {
 
     private var viewOptions: some View {
             Menu {
+                Button(store.isFavorite(scope) ? "Remove Favorite" : "Add Favorite", systemImage: "star") { store.toggleFavorite(scope) }.accessibilityIdentifier("toggleFavorite")
+                if case .saved(let id) = scope { Button("Edit Filter…") { filterEditor = store.record("saved_views", id: id) } }
                 Button(defaultView == preferenceKey ? "Default View ✓" : "Make Default View", systemImage: "house") { defaultView = preferenceKey }
                 Menu("Filter") {
-                Toggle("Show Completed", isOn: $showCompleted)
-                Picker("Priority", selection: $priorityFilter) { Text("All Priorities").tag(0); ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
+                Toggle("Show Completed", isOn: Binding(get: { showCompleted }, set: { showCompleted = $0 }))
+                Picker("Priority", selection: Binding(get: { priorityFilter }, set: { priorityFilter = $0 })) { Text("All Priorities").tag(0); ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
                 }
-                Picker("Sort", selection: Binding(get: { manualOrder ? "manual" : sortBy }, set: { sortBy = $0 })) { Text("Default Order").tag("manual"); Text("Due Date").tag("date"); Text("Title").tag("title") }
-                if !projectID.isEmpty {
-                    Picker("Layout", selection: $projectLayout) { Text("List").tag("list"); Text("Board").tag("board") }
+                Picker("Sort", selection: Binding(get: { manualOrder ? "manual" : sortBy }, set: { sortBy = $0 })) { Text("Default Order").tag("manual"); Text("Due Date").tag("date"); Text("Title").tag("title"); Text("Deadline").tag("deadline"); Text("Estimate").tag("duration") }
+                if !projectID.isEmpty || scope.preferenceKey.hasPrefix("view:") {
+                    Picker("Layout", selection: Binding(get: { projectLayout }, set: { projectLayout = $0 })) { Text("List").tag("list"); Text("Board").tag("board") }
+                    if !projectID.isEmpty {
                     Divider()
                     Button("Edit Project…", systemImage: "pencil") { projectEditor = store.record("projects", id: projectID) }
                     Button("Sections…", systemImage: "rectangle.split.3x1") { sectionsEditor = true }
                     Button("Collaborators…", systemImage: "person.2") { collaborationProject = store.record("projects", id: projectID) }.disabled(store.localMode)
+                    }
                 }
             } label: { Label("View Options", systemImage: "line.3.horizontal.decrease.circle") }
                 .help("View options").accessibilityLabel("Task options")

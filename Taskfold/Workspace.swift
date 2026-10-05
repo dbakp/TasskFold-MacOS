@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 /// One entry in the sidebar. Task sections map onto the shared `TaskScope`; Calendar is its own surface.
 enum SidebarItem: Hashable {
-    case today, inbox, upcoming, calendar, all, completed, assigned, project(String), label(String)
+    case today, inbox, upcoming, calendar, all, completed, assigned, project(String), label(String), saved(String)
     var scope: TaskScope? {
         switch self {
         case .today: return .today
@@ -14,6 +14,7 @@ enum SidebarItem: Hashable {
         case .completed: return .completed
         case .project(let id): return .project(id)
         case .label(let id): return .label(id)
+        case .saved(let id): return .saved(id)
         case .calendar: return nil
         }
     }
@@ -29,6 +30,7 @@ enum SidebarItem: Hashable {
         case .completed: self = .completed
         case .project(let id): self = .project(id)
         case .label(let id): self = .label(id)
+        case .saved(let id): self = .saved(id)
         }
     }
     var symbol: String {
@@ -42,6 +44,7 @@ enum SidebarItem: Hashable {
         case .completed: return "checkmark.circle"
         case .project: return "folder.fill"
         case .label: return "tag.fill"
+        case .saved: return "line.3.horizontal.decrease.circle"
         }
     }
 }
@@ -107,6 +110,7 @@ final class Workspace {
         case .assigned: return "Assigned to Me"
         case .project(let id): return store.record("projects", id: id)?.name ?? "Project"
         case .label(let id): return store.record("labels", id: id)?.name ?? "Label"
+        case .saved(let id): return store.record("saved_views", id: id)?.name ?? "Unavailable filter"
         default: return scope.title
         }
     }
@@ -371,6 +375,8 @@ final class Workspace {
         let parsed = QuickEntry(input, disabled: declined)
         guard !parsed.title.isEmpty else { return nil }
         var task = Record.task(user: store.userID, project: project, date: date)
+        for (field, value) in store.captureDefaults(scope) { task[field] = value }
+        if let date { task["due_date"] = .string(Dates.day(date)) }
         task["title"] = .string(parsed.title)
         if !sectionID.isEmpty { task["section_id"] = .string(sectionID) }
         if section == .assigned { task["assigned_to"] = .string(store.userID) }
@@ -380,12 +386,13 @@ final class Workspace {
         }
         var created = false
         run("Add Task") { withAnimation(layout) { created = store.save("tasks", task) } }
+        if created, case .saved = scope, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }) { confirmation = Confirmation(message: "Added · outside this filter", undoable: true) }
         return created ? task.id : nil
     }
 
     // MARK: Placement
 
-    /// Device-local placement keys. Days use the calendar day (shared with iOS); other lists use a group key.
+    /// Account-synchronized placement keys. Days use the calendar day (shared with iOS); other lists use a group key.
     enum Placement {
         static func group(project: String, section: String) -> String { "group:\(project):\(section.isEmpty ? "none" : section)" }
         static func scope(_ scope: TaskScope) -> String { "scope:" + scope.preferenceKey }

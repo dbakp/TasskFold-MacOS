@@ -17,7 +17,7 @@ def uid(name):
     return hashlib.md5(name.encode()).hexdigest()[:24].upper()
 
 app_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "Taskfold").rglob("*.swift"))
-app_sources += [f"{IOS}/Core/Models.swift", f"{IOS}/Core/Store.swift", f"{IOS}/Core/Backend.swift", f"{IOS}/Core/Intents.swift"]
+app_sources += [f"{IOS}/Core/Models.swift", f"{IOS}/Core/Filters.swift", f"{IOS}/Core/Store.swift", f"{IOS}/Core/Backend.swift", f"{IOS}/Core/Intents.swift", f"{IOS}/Views/SavedViews.swift"]
 app_resources = ["Taskfold/Assets.xcassets", f"{IOS}/Backend.plist", f"{IOS}/TaskfoldIcon.icon"]
 test_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldUITests").rglob("*.swift"))
 widget_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldWidgets").rglob("*.swift"))

@@ -38,6 +38,8 @@ Mac widgets still require a provisioned App Group build. The existing ad hoc dis
 
 Defaults should be calm and useful. Offer system tint and accessibility contrast, light/dark styles, readable empty states, a hide-task-titles preference, and sizes that prioritize content over decoration. Add per-widget theme selection with the configurable collection; avoid duplicating six widget kinds just for six colors.
 
+Current implementation evidence is tracked in [P0_IMPLEMENTATION.md](P0_IMPLEMENTATION.md). The gap table below preserves the initial audit baseline; the P0 tracker records the deployed importer/planning schema and native saved-filter/organization work, its tests, and remaining acceptance gaps.
+
 ## Todoist gap audit
 
 Priority: P0 enables daily usefulness or protects data; P1 expands planning and organization; P2 covers advanced integrations and teams. The table states Taskfold source findings; linked sources establish Todoist behavior, not Taskfold's implementation quality.

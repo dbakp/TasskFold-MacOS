@@ -6,6 +6,7 @@ struct SidebarView: View {
     @Environment(Workspace.self) private var workspace
     @State private var projectEditor: Record?
     @State private var labelEditor: Record?
+    @State private var filterEditor: Record?
     @State private var projectsExpanded = true
     @State private var labelsExpanded = true
     private var today: String { Dates.day(Date()) }
@@ -35,6 +36,25 @@ struct SidebarView: View {
                 item(.assigned, "Assigned to Me", count: workspace.assignedTasks.filter { !$0.completed }.count)
                 item(.completed, "Completed", count: nil)
             }
+            if !store.favorites.isEmpty {
+                Section("Favorites") {
+                    ForEach(store.favorites) { favorite in
+                        if let scope = TaskScope(preferenceKey: favorite.id) {
+                            Group {
+                                if store.available(scope) { Label(store.title(for: scope), systemImage: "star.fill").tag(SidebarItem(key: favorite.id)) }
+                                else { HStack { Label(store.title(for: scope), systemImage: "exclamationmark.circle").foregroundStyle(.secondary); Spacer(); Button { store.toggleFavorite(scope) } label: { Image(systemName: "star.slash") }.buttonStyle(.borderless).accessibilityLabel("Remove unavailable favorite") } }
+                            }.contextMenu { Button("Remove favorite") { store.toggleFavorite(scope) } }
+                        }
+                    }.onMove { source, destination in var ids = store.favorites.map(\.id); ids.move(fromOffsets: source, toOffset: destination); store.reorderFavorites(ids) }
+                }
+            }
+            Section("Filters") {
+                ForEach(store.savedViews) { view in
+                    Label(view.name, systemImage: "line.3.horizontal.decrease.circle").tag(SidebarItem.saved(view.id))
+                        .contextMenu { Button("Edit Filter…") { filterEditor = view }; Button(store.isFavorite(.saved(view.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.saved(view.id)) } }
+                }
+                Button("New Filter", systemImage: "plus") { filterEditor = store.newSavedView() }.accessibilityIdentifier("newSavedView")
+            }
             Section(isExpanded: $projectsExpanded) {
                 ForEach(store.projects) { project in
                     ProjectDropRow(project: project) {
@@ -49,6 +69,7 @@ struct SidebarView: View {
                     .tag(SidebarItem.project(project.id))
                     .contextMenu {
                         Button("Edit Project…") { projectEditor = project }
+                        Button(store.isFavorite(.project(project.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.project(project.id)) }
                         Button("Delete Project…", role: .destructive) { projectEditor = project }
                     }
                     .accessibilityLabel(project.name)
@@ -66,7 +87,7 @@ struct SidebarView: View {
                         HStack { Text(label.name).lineLimit(1); Spacer(); count(open.filter { $0["labels"].list.contains(.string(label.id)) || $0["labels"].list.contains(.string(label.name)) }.count) }
                     } icon: { Image(systemName: "tag.fill").foregroundStyle(Color.project(label.string("color"))) }
                     .tag(SidebarItem.label(label.id))
-                    .contextMenu { Button("Edit Label…") { labelEditor = label } }
+                    .contextMenu { Button("Edit Label…") { labelEditor = label }; Button(store.isFavorite(.label(label.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.label(label.id)) } }
                 }
                 Button { labelEditor = Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": .string(""), "color": .string("#8b5cf6")]) } label: { Label("New Label", systemImage: "plus").foregroundStyle(.secondary) }
                     .buttonStyle(.plain)
@@ -76,6 +97,7 @@ struct SidebarView: View {
         .safeAreaInset(edge: .bottom) { VStack(spacing: 0) { AccountMenu(); SyncFooter() } }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
         .sheet(item: $labelEditor) { NamedEditor(table: "labels", record: $0) }
+        .sheet(item: $filterEditor) { SavedViewEditor(record: $0) }
         .onChange(of: workspace.newProjectRequest) { _, _ in newProject() }
         .toolbar { ToolbarItem(placement: .navigation) { EmptyView() } }
         }
