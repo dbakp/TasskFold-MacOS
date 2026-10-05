@@ -76,11 +76,11 @@ struct TaskRowView: View {
                 if workspace.section == .assigned, let parent = workspace.parentTitle(task.id) {
                     Text(parent).font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).lineLimit(1)
                 }
-                if showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
+                if task.deadline != nil || task.durationMinutes != nil || showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
                     HStack(spacing: 10) {
                         if showsDate, let due = task.due {
                             let time = task.string("due_time")
-                            let text = compactDate && !overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))
+                            let text = (compactDate && !overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))) + (task.string("time_zone").isEmpty ? "" : " · " + task.string("time_zone"))
                             Button { choosingDate = true } label: {
                                 Label(text, systemImage: task["is_recurring"].flag ? "repeat" : overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
                                     .foregroundStyle(isSelected ? selectedForeground : overdue ? Color.red : dueToday ? Color.taskfold : Color.secondary)
@@ -89,6 +89,12 @@ struct TaskRowView: View {
                             .help("Change date")
                             .accessibilityIdentifier("date-\(task.id)")
                         }
+                        if let deadline = task.deadline {
+                            Label("Deadline " + deadline.formatted(.dateTime.month(.abbreviated).day()), systemImage: "flag.checkered")
+                                .foregroundStyle(isSelected ? selectedForeground : deadline < Calendar.current.startOfDay(for: Date()) && !task.completed ? Color.red : Color.secondary)
+                                .accessibilityIdentifier("deadline-" + task.id)
+                        }
+                        if let minutes = task.durationMinutes { Label("\(minutes) min", systemImage: "hourglass").accessibilityIdentifier("duration-" + task.id) }
                         if let project = store.record("projects", id: task.string("project_id")) {
                             Menu { projectOptions } label: {
                                 HStack(spacing: 5) {

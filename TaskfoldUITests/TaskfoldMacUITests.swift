@@ -4,6 +4,26 @@ import AppKit
 final class TaskfoldMacUITests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
 
+
+    @MainActor func testDeadlineEstimateQuickEntrySurvivesRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--day-drag-fixture"]; app.launch()
+        XCTAssertTrue(app.textFields["listFilter"].waitForExistence(timeout: 10))
+        app.typeKey("n", modifierFlags: .command)
+        XCTAssertTrue(app.textFields["quickAdd"].waitForExistence(timeout: 5))
+        app.typeText("Planning capture ~25m {2026-10-09}")
+        XCTAssertTrue(app.buttons["decline-deadline_date"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["decline-duration_minutes"].exists)
+        app.typeKey(.return, modifierFlags: [])
+        let created = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH %@", "Planning capture")).firstMatch
+        XCTAssertTrue(created.waitForExistence(timeout: 5)); created.click()
+        XCTAssertTrue(app.descendants(matching: .any)["taskDeadline"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["taskDuration"].exists)
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        XCTAssertTrue(created.waitForExistence(timeout: 5)); created.click()
+        XCTAssertTrue(app.descendants(matching: .any)["taskDeadline"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["taskDuration"].exists)
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Deadline and estimate inspector"; shot.lifetime = .keepAlways; add(shot)
+    }
     @MainActor func testAppearanceDensityAndCustomAccentStayInSettings() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
         let first = app.descendants(matching: .any)["task-parity-1"]

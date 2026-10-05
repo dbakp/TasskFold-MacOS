@@ -82,7 +82,7 @@ struct TaskInspectorForm: View {
 
     private var current: Record? { workspace.taskRecord(taskID) }
     private func text(_ key: String) -> Binding<String> {
-        Binding(get: { draft.string(key) }, set: { draft[key] = $0.isEmpty && ["project_id", "section_id", "due_time"].contains(key) ? .null : .string($0) })
+        Binding(get: { draft.string(key) }, set: { draft[key] = $0.isEmpty && ["project_id", "section_id", "due_time", "time_zone"].contains(key) ? .null : .string($0) })
     }
     var body: some View {
         Form {
@@ -134,7 +134,7 @@ struct TaskInspectorForm: View {
                 }
             }
             Section("Plan") {
-                Toggle("Due date", isOn: Binding(get: { draft.due != nil }, set: { draft["due_date"] = $0 ? .string(Dates.day(Date())) : .null; if !$0 { draft["due_time"] = .null } }))
+                Toggle("Planned date", isOn: Binding(get: { draft.due != nil }, set: { draft["due_date"] = $0 ? .string(Dates.day(Date())) : .null; if !$0 { draft["due_time"] = .null } }))
                 if draft.due != nil {
                     DatePicker("Date", selection: Binding(get: { draft.due ?? Date() }, set: { draft["due_date"] = .string(Dates.day($0)) }), displayedComponents: .date)
                     Toggle("Time", isOn: Binding(get: { !draft.string("due_time").isEmpty }, set: { draft["due_time"] = $0 ? .string("09:00") : .null }))
@@ -147,6 +147,27 @@ struct TaskInspectorForm: View {
                     HStack(spacing: 6) {
                         quickDate("Today", Date()); quickDate("Tomorrow", Calendar.current.date(byAdding: .day, value: 1, to: Date())!); quickDate("Next week", Workspace.next(weekday: 2))
                     }.controlSize(.small)
+                }
+                Toggle("Deadline", isOn: Binding(get: { draft.deadline != nil }, set: { draft["deadline_date"] = $0 ? .string(Dates.day(Date())) : .null }))
+                if draft.deadline != nil {
+                    DatePicker("Must be done by", selection: Binding(get: { draft.deadline ?? Date() }, set: { draft["deadline_date"] = .string(Dates.day($0)) }), displayedComponents: .date)
+                        .accessibilityIdentifier("taskDeadline")
+                    Text("Rescheduling the plan leaves this deadline in place.").font(.caption).foregroundStyle(.secondary)
+                }
+                Toggle("Time estimate", isOn: Binding(get: { draft.durationMinutes != nil }, set: { draft["duration_minutes"] = $0 ? .number(30) : .null }))
+                if let minutes = draft.durationMinutes {
+                    Stepper("Estimate · \(minutes) min", value: Binding(get: { draft.durationMinutes ?? 30 }, set: { draft["duration_minutes"] = .number(Double($0)) }), in: 1...10080)
+                        .accessibilityIdentifier("taskDuration")
+                }
+                if !draft.string("due_time").isEmpty {
+                    Picker("Time zone", selection: text("time_zone")) {
+                        Text("Local time · wherever I am").tag("")
+                        Text("Fixed · " + TimeZone.current.identifier).tag(TimeZone.current.identifier)
+                        if !draft.string("time_zone").isEmpty && draft.string("time_zone") != TimeZone.current.identifier {
+                            Text("Fixed · " + draft.string("time_zone")).tag(draft.string("time_zone"))
+                        }
+                    }.accessibilityIdentifier("taskTimeZone")
+                    if !draft.string("time_zone").isEmpty { Text("Date and time are shown in " + draft.string("time_zone") + ".").font(.caption).foregroundStyle(.secondary) }
                 }
                 Picker("Priority", selection: Binding(get: { draft.priority }, set: { draft["priority"] = .number(Double($0)) })) {
                     ForEach(1...4, id: \.self) { n in Label(n == 4 ? "None" : "Priority \(n)", systemImage: "flag.fill").foregroundStyle(Color.priority(n)).tag(n) }

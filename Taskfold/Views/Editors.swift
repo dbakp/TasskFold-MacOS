@@ -231,11 +231,12 @@ struct TodoistImportView: View {
     @State private var result: Record?
     @State private var busy = false
     @State private var message: String?
+    private var warnings: [String] { (preview ?? result)?["warnings"].list.map(\.text).filter { !$0.isEmpty } ?? [] }
     var body: some View {
         Form {
             Section {
-                Text("Bring your projects, sections, labels, tasks, subtasks, and comments into Taskfold.")
-                SecureField("Todoist API token", text: $token).onChange(of: token) { _, _ in preview = nil; result = nil }
+                Text("Bring active projects, sections, labels, tasks, subtasks, and comments into Taskfold. Retrying preserves edits and skips previously imported source IDs.")
+                SecureField("Todoist API token", text: $token).onChange(of: token) { _, _ in preview = nil; if !token.isEmpty { result = nil } }
                 Button("Preview Import") { run(previewOnly: true) }.disabled(busy || token.isEmpty)
             }
             if let preview {
@@ -247,6 +248,11 @@ struct TodoistImportView: View {
             if let result {
                 Section("Import complete") { ForEach(result.fields.keys.sorted(), id: \.self) { key in if case .number(let value) = result[key] { LabeledContent(key, value: "\(Int(value))") } } }
             }
+            if !warnings.isEmpty {
+                Section("Before you leave Todoist") {
+                    ForEach(warnings, id: \.self) { Text($0).font(.footnote).foregroundStyle(.secondary) }
+                }
+            }
             if busy { HStack { ProgressView().controlSize(.small); Text("This may take a moment…") } }
             if let message { Text(message).foregroundStyle(.secondary) }
         }.formStyle(.grouped)
@@ -256,9 +262,9 @@ struct TodoistImportView: View {
         Task {
             defer { busy = false }
             do {
-                let data = try await store.backend.request("/functions/v1/import-todoist", method: "POST", body: ["userToken": .string(token), "preview": .bool(previewOnly)])
+                let data = try await store.backend.request("/functions/v1/import-todoist", method: "POST", body: ["userToken": .string(token), "preview": .bool(previewOnly), "stream": .bool(false), "sourceAccount": preview?["sourceAccount"] ?? .null])
                 let row = try JSONDecoder().decode(Record.self, from: data)
-                if previewOnly { preview = row } else { result = row; preview = nil; await store.sync() }
+                if previewOnly { preview = row } else { result = row; preview = nil; token = ""; await store.sync() }
             } catch { message = error.localizedDescription }
         }
     }
