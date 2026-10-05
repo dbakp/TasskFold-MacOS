@@ -5,7 +5,6 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 notes="${1:?Supply a reviewed release-notes file}"
 [ -z "$(git status --porcelain)" ] || { echo "Commit the verified sources before publishing."; exit 1; }
-Scripts/prepare_shared_core.sh >/dev/null
 app="${TASKFOLD_DMG_BUILD:-$HOME/Library/Caches/TaskfoldBuild/dmg-distribution}/Build/Products/Release/Taskfold.app"
 version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")"
 dmg="dist/Taskfold-$version.dmg"

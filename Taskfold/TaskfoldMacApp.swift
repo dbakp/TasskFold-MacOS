@@ -166,7 +166,7 @@ struct TaskfoldCommands: Commands {
         }
         CommandGroup(replacing: .help) {
             Button("Welcome Tour") { workspace.onboarding = true }.disabled(!store.signedIn)
-            Button("Taskfold Help") { NSWorkspace.shared.open(URL(string: "https://github.com/dbakp/TaskFold-iOS")!) }
+            Button("Taskfold Help") { NSWorkspace.shared.open(URL(string: "https://github.com/dbakp/TasskFold-MacOS")!) }
         }
     }
     private var completeTitle: String {

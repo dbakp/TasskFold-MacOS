@@ -5,7 +5,6 @@
 #                                       #   no widget extension; runs on any Mac after Privacy & Security ▸ Open Anyway
 #   Scripts/make_dmg.sh --development   # team-signed build with the widget and App Group; runs only on Macs
 #                                       #   registered to the team and expires with the seven-day profile
-#   TASKFOLD_IOS_ROOT=/path/to/TaskFold-iOS Scripts/make_dmg.sh
 #
 # Output: dist/Taskfold-<version>.dmg. Developer ID signing and notarization need a paid developer account.
 set -euo pipefail
@@ -13,7 +12,6 @@ cd "$(dirname "$0")/.."
 MODE="distribution"; [ "${1:-}" = "--development" ] && MODE="development"
 BUILD="${TASKFOLD_DMG_BUILD:-$HOME/Library/Caches/TaskfoldBuild/dmg-$MODE}"
 DIST="dist"
-IOS_ROOT="$(Scripts/prepare_shared_core.sh)"
 INPUTS="$(python3 Scripts/release_inputs.py)"
 
 restore_project() { python3 Scripts/generate_project.py >/dev/null; }
@@ -22,13 +20,13 @@ if [ "$MODE" = "distribution" ]; then
   TASKFOLD_WIDGETS=0 python3 Scripts/generate_project.py >/dev/null
   trap restore_project EXIT
   xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Release -derivedDataPath "$BUILD" \
-    TASKFOLD_IOS_ROOT="$IOS_ROOT" CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="-" DEVELOPMENT_TEAM="" \
+    CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="-" DEVELOPMENT_TEAM="" \
     PROVISIONING_PROFILE_SPECIFIER="" CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO CODE_SIGN_ENTITLEMENTS=Taskfold/Taskfold-Distribution.entitlements \
     build -quiet
 else
   echo "▸ Building Release (development: team signature with widget)"
   xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Release -derivedDataPath "$BUILD" \
-    TASKFOLD_IOS_ROOT="$IOS_ROOT" -allowProvisioningUpdates build -quiet
+    -allowProvisioningUpdates build -quiet
 fi
 APP="$BUILD/Build/Products/Release/Taskfold.app"
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")"

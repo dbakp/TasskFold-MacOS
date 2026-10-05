@@ -1,24 +1,18 @@
 #!/usr/bin/env python3
 """Regenerates Taskfold.xcodeproj/project.pbxproj.
 
-The project references the iOS repository's Core files by relative path so both apps compile the
-same Models, Store, and Backend sources. Run from the taskfold-mac directory after adding files.
+All sources and resources belong to this repository. Run after adding app or widget files.
 """
 import hashlib, os, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-# Shared sources resolve through the TASKFOLD_IOS_ROOT build setting (default: the sibling checkout), so a
-# clean iOS checkout can be substituted on the xcodebuild command line without touching the project.
-IOS = "$(TASKFOLD_IOS_ROOT)/Taskfold"
-IOS_DEFAULT = '"$(PROJECT_DIR)/build/shared-ios"'
 TEAM = "3UZ4C73FM2"
 
 def uid(name):
     return hashlib.md5(name.encode()).hexdigest()[:24].upper()
 
 app_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "Taskfold").rglob("*.swift"))
-app_sources += [f"{IOS}/Core/Models.swift", f"{IOS}/Core/Filters.swift", f"{IOS}/Core/Planner.swift", f"{IOS}/Core/CalendarEvents.swift", f"{IOS}/Core/Store.swift", f"{IOS}/Core/Backend.swift", f"{IOS}/Core/Intents.swift", f"{IOS}/Views/SavedViews.swift", f"{IOS}/Views/HourlyPlanner.swift", f"{IOS}/Views/PlannerSettings.swift"]
-app_resources = ["Taskfold/Assets.xcassets", f"{IOS}/Backend.plist", f"{IOS}/TaskfoldIcon.icon"]
+app_resources = ["Taskfold/Assets.xcassets", "Taskfold/Backend.plist", "Taskfold/TaskfoldIcon.icon"]
 test_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldUITests").rglob("*.swift"))
 widget_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldWidgets").rglob("*.swift"))
 # Set TASKFOLD_WIDGETS=0 to leave the widget extension out (for example while App Groups cannot be provisioned).
@@ -68,11 +62,11 @@ def group(name, children, gid=None):
 
 products = group("Products", [app_product, test_product] + ([widget_product] if WIDGETS else []))
 widgets_group = group("TaskfoldWidgets", [refs[p] for p in widget_sources] + [refs["TaskfoldWidgets/Info.plist"], refs["TaskfoldWidgets/TaskfoldWidgets.entitlements"]]) if WIDGETS else None
-shared_core = group("Shared Core (taskfold-ios)", [refs[p] for p in app_sources if p.startswith("$(")] + [refs[f"{IOS}/Backend.plist"], refs[f"{IOS}/TaskfoldIcon.icon"]])
+core = group("Core", [refs[p] for p in app_sources if p.startswith("Taskfold/Core/")])
 views = group("Views", [refs[p] for p in app_sources if p.startswith("Taskfold/Views/")])
-app_group = group("Taskfold", [refs[p] for p in app_sources if p.startswith("Taskfold/") and not p.startswith("Taskfold/Views/")] + [views, refs["Taskfold/Assets.xcassets"]] + [refs[p] for p in other_files if p.startswith("Taskfold/")])
+app_group = group("Taskfold", [refs[p] for p in app_sources if p.startswith("Taskfold/") and not p.startswith(("Taskfold/Views/", "Taskfold/Core/"))] + [core, views] + [refs[p] for p in app_resources] + [refs[p] for p in other_files if p.startswith("Taskfold/")])
 tests_group = group("TaskfoldUITests", [refs[p] for p in test_sources])
-main_group = group("Root", [app_group, shared_core, tests_group] + ([widgets_group] if WIDGETS else []) + [products], uid("group:main"))
+main_group = group("Root", [app_group, tests_group] + ([widgets_group] if WIDGETS else []) + [products], uid("group:main"))
 
 app_sources_phase = uid("phase:app:sources"); app_res_phase = uid("phase:app:resources"); app_fw_phase = uid("phase:app:frameworks")
 test_sources_phase = uid("phase:test:sources")
@@ -87,7 +81,7 @@ if WIDGETS:
     # Embed Foundation Extensions: dstSubfolderSpec 13 is the PlugIns folder of the app bundle.
     lines.append(f'{embed_phase} = {{ isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = ({embed_widget},); name = "Embed Foundation Extensions"; runOnlyForDeploymentPostprocessing = 0; }};')
 
-common = f'SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 15.0; TASKFOLD_IOS_ROOT = {IOS_DEFAULT}; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; DEVELOPMENT_TEAM = {TEAM}; CODE_SIGN_STYLE = Automatic; ENABLE_USER_SCRIPT_SANDBOXING = YES; COMBINE_HIDPI_IMAGES = YES; DEAD_CODE_STRIPPING = YES;'
+common = f'SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 15.0; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; DEVELOPMENT_TEAM = {TEAM}; CODE_SIGN_STYLE = Automatic; ENABLE_USER_SCRIPT_SANDBOXING = YES; COMBINE_HIDPI_IMAGES = YES; DEAD_CODE_STRIPPING = YES;'
 app_common = ('PRODUCT_NAME = Taskfold; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Taskfold/Info.plist; '
               'CODE_SIGN_ENTITLEMENTS = Taskfold/Taskfold.entitlements; ENABLE_HARDENED_RUNTIME = YES; ASSETCATALOG_COMPILER_APPICON_NAME = TaskfoldIcon; '
               'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CURRENT_PROJECT_VERSION = 2; MARKETING_VERSION = 1.1.0; SWIFT_EMIT_LOC_STRINGS = YES; '

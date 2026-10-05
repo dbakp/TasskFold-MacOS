@@ -1,17 +1,19 @@
 # Taskfold for macOS
 
-A native SwiftUI Mac app for Taskfold, built to feel like a first-class Mac citizen rather than a scaled-up phone app. It shares its data layer with [dbakp/TaskFold-iOS](https://github.com/dbakp/TaskFold-iOS): the `Core` sources (`Models.swift`, `Store.swift`, `Backend.swift`) and `Backend.plist` are referenced from that checkout, not copied, so backend access, the durable sync queue, undo history, recurrence, day placement, and quick entry stay identical across platforms.
+A native SwiftUI Mac app for Taskfold. This repository owns all Mac app code, widgets, resources, configuration, tests and release tooling. A fresh clone builds independently. The iOS app lives in [dbakp/TaskFold-iOS](https://github.com/dbakp/TaskFold-iOS); both apps use the same backend and compatible data contracts. See [repository ownership and parity](docs/REPOSITORY_OWNERSHIP.md).
 
 ## Layout
 
 ```
-TaskFold-Mac/
-├── taskfold-ios/      # git clone https://github.com/dbakp/TaskFold-iOS taskfold-ios (source of truth for Core)
-├── taskfold/          # git clone https://github.com/dbakp/taskfold (web app, layout reference)
-└── taskfold-mac/      # this repository
+Taskfold/             # Mac Core, native views, resources and backend configuration
+TaskfoldWidgets/      # Mac widget extension
+TaskfoldTests/        # Local Core and widget-model contract tests
+TaskfoldUITests/      # Mac user-flow tests with isolated fixtures
+Scripts/              # Project generation, tests, packaging and publishing
+supabase/             # Backend migrations and isolation fixtures
 ```
 
-Clone the iOS repository next to this one before opening the project. `Taskfold.xcodeproj` references `../taskfold-ios/Taskfold/Core/*.swift`, `../taskfold-ios/Taskfold/Backend.plist`, and the shared `TaskfoldIcon.icon`.
+After adding Swift files or resources, run `python3 Scripts/generate_project.py`. The generated project contains only repository-local inputs. No iOS checkout or dependency download is required.
 
 ## Run
 
@@ -26,13 +28,13 @@ Sign in with email/password or Google (`ASWebAuthenticationSession` with PKCE, c
 
 ## Install
 
-`Scripts/make_dmg.sh` produces `dist/Taskfold-<version>.dmg`: a compressed disk image with the app, an Applications shortcut, and a short "How to install" note. By default it makes a **distribution build**: signed ad hoc with no provisioning profile, so it never expires and runs on any Mac. Because it is not notarized (that needs a paid Apple Developer account), the first launch is blocked with "could not verify"; open System Settings ▸ Privacy & Security and click **Open Anyway** once. Distribution builds carry only the sandbox, network, and user-selected-file entitlements and leave out the widget extension, which needs a team-provisioned App Group.
+`Scripts/make_dmg.sh` produces `dist/Taskfold-<version>.dmg`: a compressed disk image with the app, an Applications shortcut, and a short "How to install" note. By default it makes a **distribution build**: signed ad hoc with no provisioning profile, so it never expires and runs on any Mac. Because it is not notarized (that needs a paid Apple Developer account), the first launch is blocked with "could not verify"; open System Settings ▸ Privacy & Security and click **Open Anyway** once. Distribution builds carry sandbox, network, user-selected-file and calendar-read entitlements and leave out the widget extension, which needs a team-provisioned App Group.
 
 `Scripts/make_dmg.sh --development` makes the team-signed build with the widget instead. It runs only on Macs registered to the team and stops launching when its seven-day provisioning profile expires, so it is for local use.
 
 ### Releases
 
-The current build is published as a GitHub release with the DMG attached: [github.com/dbakp/TasskFold-MacOS/releases/latest](https://github.com/dbakp/TasskFold-MacOS/releases/latest). `Scripts/publish_release.sh` rebuilds the distribution image and creates the release for the app's version, or replaces the asset when that version's release already exists; bump `MARKETING_VERSION` in `Scripts/generate_project.py` for a new version.
+The current build is published as a GitHub release with the DMG attached: [github.com/dbakp/TasskFold-MacOS/releases/latest](https://github.com/dbakp/TasskFold-MacOS/releases/latest). Build and verify a candidate with `Scripts/make_dmg.sh`, then use `Scripts/publish_release.sh <notes-file>` to publish a new immutable version. Publishing requires committed sources and a matching build-input fingerprint. It refuses to replace an existing version; bump `MARKETING_VERSION` in `Scripts/generate_project.py` for a new release.
 
 ## Welcome tour
 
@@ -46,8 +48,8 @@ A five-page tour opens on first launch and can be skipped at any point (Skip, Es
 - **Multi-select** with shift/⌘-click, right-click context menus for one or many tasks, and a **Task** menu with reschedule, move, priority, duplicate, and delete.
 - **Drag and drop** with macOS drag sessions and a real drag image (title, priority ring, count badge for multi-drags). Drop between days, onto day headers, onto empty days, onto sidebar items (Today, Upcoming, Inbox, any project), and onto calendar days. Reordering within a day preserves the iOS `DayPlacement` semantics and is one undoable change. Trackpad feedback marks slot changes and drops.
 - **Undo affordance**: a brief, non-blocking confirmation strip at the foot of the list ("Completed “…” · Undo ⌘Z") in addition to Edit ▸ Undo.
-- **Calendar** with 3-day, 5-day, week, month, and year modes laid out for a wide window: day columns or a month grid with equal-height weeks (overflow collapses into "+n more"), and the selected day's tasks in a side panel that appears when the window is wide enough for it. Tasks open in the inspector; ← / → move between periods; ⌘T jumps to today.
-- **Ordering**: every list is arranged by priority band (P1 first) with the user's manual order inside each band, the same `DayPlacement.arranged` rule as iOS. Drops stay inside the task's band; the insertion indicator shows where the task really lands and a "Stays with P2" hint explains a snapped drop. Inbox, projects, sections, and labels reorder manually with device-local placement keys.
+- **Calendar** with an hourly Day planner, 3-day, 5-day, week, month, and year modes laid out for a wide window: day columns or a month grid with equal-height weeks (overflow collapses into "+n more"), and the selected day's tasks in a side panel that appears when the window is wide enough for it. Tasks open in the inspector; ← / → move between periods; ⌘T jumps to today.
+- **Ordering**: every list is arranged by priority band (P1 first) with the user's manual order inside each band, the same `DayPlacement.arranged` rule as iOS. Drops stay inside the task's band; the insertion indicator shows where the task really lands and a "Stays with P2" hint explains a snapped drop. Inbox, projects, sections, and labels reorder manually with account-owned synchronized placement keys.
 - **Quick entry chips**: dates, times, priorities, labels, and recurrence parsed from the title appear as chips in the task-entry panel and the inspector; ✕ (or Space / Delete on a focused chip) keeps those words in the title.
 - **Links**: URLs in titles and notes render as accent-coloured page titles (fetched once, cached); click opens the browser without selecting the row, hover previews the page, right-click offers Open, Copy Link, and Share.
 - **Planning**: Plan Your Day (⌥⌘P) and Review This Week (⌥⌘W) triage tasks one card at a time with T, M, D, Space, and →.
@@ -61,16 +63,17 @@ The sidebar account menu provides direct access to sign-in, profile management, 
 
 ## Tests
 
-The shared Core tests live in the iOS repository:
+Core and widget-model tests run from this repository:
 
 ```sh
-cd ../taskfold-ios && swift test
+Scripts/test_core.sh
+Scripts/test_core.sh -c release
 ```
 
 macOS UI tests use isolated data and cover navigation, search and keyboard focus, scoped filters, account-screen access, comment image persistence, date edits, completion/undo, and day-to-day dragging:
 
 ```sh
-xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -derivedDataPath DerivedData -allowProvisioningUpdates test
+Scripts/test_mac.sh test
 ```
 
 UI testing on macOS asks once for Accessibility permission for the test runner. Passing `TEST_RUNNER_TASKFOLD_SCREENSHOTS=1` to `xcodebuild test` also renders the report screenshots (see `Screenshots/`) into the runner's temporary directory; the path is printed in the log.
@@ -97,27 +100,11 @@ Debug-only launch arguments: `--preview` (illustrative tasks), `--uitesting` wit
 
 The implementation sequence and acceptance checks live in [the polish plan](docs/PREMIUM_MAC_PLAN.md). The comparison with the original app and remaining account/feature work live in [the parity plan](docs/FEATURE_PARITY.md).
 
-You can point Xcode at a separate clean iOS checkout without modifying your existing iOS work:
-
-```sh
-xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Release \
-  -derivedDataPath /tmp/taskfold-mac-build \
-  TASKFOLD_IOS_ROOT=/absolute/path/to/TaskFold-iOS -allowProvisioningUpdates build
-```
-
-The default shared-source location remains `../taskfold-ios`.
-
 ## Collaboration
 
 The Mac now supports task/subtask assignments, Assigned to Me, and reviewable concurrent edits. See [the collaboration implementation and next steps](docs/COLLABORATION.md).
 
-This version requires the shared Core revision recorded in `SharedCoreRevision` (exactly; release packaging rejects mismatches or a dirty dependency). Use a clean dependency checkout so you do not disturb iOS work:
-
-```sh
-Scripts/prepare_shared_core.sh
-xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Release \
-  TASKFOLD_IOS_ROOT="$PWD/build/shared-ios" -allowProvisioningUpdates build
-```
+The Mac code and release inputs are owned locally. Cross-platform changes are implemented and tested in both repositories; there is no revision pin, source fetch or sibling path in the Mac build.
 
 The configured backend already has the collaboration migrations and the newer iOS member-profile migration `20260914091713_project_member_profiles.sql`. Do not replay the older Mac directory migration over that deployed definition. A new backend needs the current iOS schema/profile migration and the collaboration prerequisites.
 

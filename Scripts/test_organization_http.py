@@ -10,7 +10,7 @@ from urllib.error import HTTPError
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('fixture', type=Path)
-parser.add_argument('--configuration', type=Path, default=Path(__file__).resolve().parents[2] / 'taskfold-ios-refresh/Taskfold/Backend.plist')
+parser.add_argument('--configuration', type=Path, default=Path(__file__).resolve().parents[1] / 'Taskfold/Backend.plist')
 args = parser.parse_args()
 fixture = json.loads(args.fixture.read_text())
 config = plistlib.loads(args.configuration.read_bytes())

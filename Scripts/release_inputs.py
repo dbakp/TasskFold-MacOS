@@ -8,7 +8,7 @@ root = Path(__file__).resolve().parent.parent
 paths = subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root).decode().split("\0")
 digest = hashlib.sha256()
 for name in sorted(set(paths)):
-    if name == "SharedCoreRevision" or name.startswith(("Taskfold/", "TaskfoldWidgets/", "Scripts/", "Config/")):
+    if name == "Package.swift" or name.startswith(("Taskfold/", "TaskfoldWidgets/", "Scripts/", "Config/")):
         path = root / name
         if path.is_file():
             digest.update(name.encode() + b"\0" + path.read_bytes() + b"\0")
