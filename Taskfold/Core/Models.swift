@@ -807,6 +807,29 @@ enum TaskScope: Hashable {
     }
 }
 
+/// Native views observe civil-day and zone identity, rather than a ticking timestamp.
+/// This is process state: refreshing it must never rewrite a task or enqueue a sync edit.
+struct TaskCalendarContext: Hashable, Sendable {
+    let today: String
+    let timeZone: String
+    init(now: Date = Date(), timeZone: TimeZone = .autoupdatingCurrent) {
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = timeZone
+        let parts = calendar.dateComponents([.year, .month, .day], from: now)
+        today = String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
+        self.timeZone = timeZone.identifier
+    }
+    func applying(to query: TaskQuery) -> TaskQuery {
+        var query = query; query.today = today; query.timeZone = timeZone; return query
+    }
+    /// Wake at midnight, with a bounded fallback for clock changes without a notification.
+    /// Calendar intervals handle 23/25-hour days and non-hour DST transitions.
+    static func refreshDelay(after now: Date, timeZone: TimeZone = .autoupdatingCurrent) -> TimeInterval {
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = timeZone
+        let remaining = calendar.dateInterval(of: .day, for: now)?.end.timeIntervalSince(now) ?? 60
+        return max(0.05, min(60, remaining))
+    }
+}
+
 struct TaskQuery: Hashable {
     var scope: TaskScope
     var text = ""
@@ -1340,6 +1363,23 @@ private enum QuickReminderText {
 
 #if DEBUG
 extension Snapshot {
+    static func calendarContextFixture(user: String) -> Snapshot {
+        var result = Snapshot()
+        result.tables["tasks"] = (0..<7).map { index in
+            var row = Record.task(user: user)
+            row["id"] = .string("calendar-clock-\(index)")
+            row["title"] = .string(["Yesterday plan", "Today plan A", "Today plan B", "Today plan C", "Fixed Copenhagen plan", "Yesterday deadline", "Today deadline"][index])
+            row["due_date"] = index == 0 ? .string("2026-03-28") : index < 5 ? .string("2026-03-29") : .null
+            if index == 4 {
+                row["due_time"] = .string("01:30"); row["time_zone"] = .string("Europe/Copenhagen")
+                row["scheduled_at"] = .string("2026-03-29T00:30:00Z")
+            }
+            row["deadline_date"] = index == 5 ? .string("2026-03-28") : index == 6 ? .string("2026-03-29") : .null
+            return row
+        }
+        result.tables["saved_views"] = [Record(["id": .string("live-calendar"), "user_id": .string(user), "name": .string("Live calendar"), "query_ast": FilterRule.predicate("planned_on", "today").document, "layout": .string("list"), "sort_by": .string("title")])]
+        return result
+    }
     static func filterDateFixture(user: String) -> Snapshot {
         var result = filterPrimitiveFixture(user: user)
         result.tables["tasks"] = (0..<4).map { index in

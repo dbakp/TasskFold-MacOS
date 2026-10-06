@@ -21,6 +21,53 @@ final class Store {
     }
     @ObservationIgnored private let taskCache = TaskCache()
     private(set) var taskRevision = 0
+    private(set) var calendarContext = TaskCalendarContext()
+    /// Read synchronously on scene activation and clock notifications, before network work.
+    @discardableResult func refreshCalendarContext() -> Bool {
+        let next = TaskCalendarContext(now: calendarNow, timeZone: calendarTimeZone)
+        guard next != calendarContext else { return false }
+        calendarContext = next
+        publishWidgetSnapshot(scheduleCapacityRefresh: false)
+        return true
+    }
+    var calendarRefreshDelay: TimeInterval { TaskCalendarContext.refreshDelay(after: calendarNow, timeZone: calendarTimeZone) }
+    private var calendarNow: Date {
+        #if DEBUG
+        if calendarContextFixtureEnabled, let calendarFixtureInstant { return calendarFixtureInstant }
+        #endif
+        return Date()
+    }
+    private var calendarTimeZone: TimeZone {
+        #if DEBUG
+        if calendarContextFixtureEnabled, let calendarFixtureZone { return calendarFixtureZone }
+        #endif
+        return .autoupdatingCurrent
+    }
+    #if DEBUG
+    @ObservationIgnored private var calendarFixtureInstant: Date?
+    @ObservationIgnored private var calendarFixtureZone: TimeZone?
+    @ObservationIgnored private var calendarFixtureBaseline: Snapshot?
+    var calendarContextFixtureEnabled: Bool {
+        userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--calendar-context-testing")
+    }
+    func startCalendarContextFixture() {
+        guard calendarContextFixtureEnabled else { return }
+        dailyBackupsEnabled = false; disableNotifications()
+        snapshot = Snapshot.calendarContextFixture(user: userID); undoStack = []; redoStack = []
+        setCalendarFixtureClock(0)
+        do { try persist(); calendarFixtureBaseline = snapshot } catch { self.error = error.localizedDescription }
+        refreshCalendarContext()
+    }
+    /// Clock injection changes only the reader. Notifications/activation perform the refresh.
+    func setCalendarFixtureClock(_ stage: Int) {
+        guard calendarContextFixtureEnabled, (0...3).contains(stage) else { return }
+        calendarFixtureInstant = ISO8601DateFormatter().date(from: ["2026-03-28T22:59:59Z", "2026-03-28T23:00:00Z", "2026-03-28T23:00:00Z", "2026-03-29T10:00:00Z"][stage])
+        calendarFixtureZone = TimeZone(identifier: stage < 2 ? "Europe/Copenhagen" : "Pacific/Honolulu")
+    }
+    var calendarFixtureDataStatus: String {
+        calendarFixtureBaseline == snapshot && undoStack.isEmpty && redoStack.isEmpty ? "Workspace unchanged" : "Workspace changed"
+    }
+    #endif
     @ObservationIgnored private let reminderScheduler = ReminderScheduler()
     @ObservationIgnored private var reminderRevision = 0
     private var reminderPreferenceRevision = 0
@@ -160,9 +207,10 @@ final class Store {
         row["working_hours"] = hours.document
         return save("view_preferences", row)
     }
+    /// Native queries share the observed clock; selected calendar days remain explicit.
     func matching(_ query: TaskQuery) -> [Record] {
         _ = taskRevision
-        var query = query
+        var query = calendarContext.applying(to: query)
         if case .saved(let id) = query.scope {
             guard let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [] }
             query.filter = rule; query.filterLabels = labels.map { FilterReference(id: $0.id, name: $0.name) }; query.userID = userID
@@ -172,7 +220,7 @@ final class Store {
     }
     func captureDefaults(_ scope: TaskScope) -> [String: JSON] {
         guard case .saved(let id) = scope, let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [:] }
-        return rule.captureDefaults(in: filterContext, today: Dates.day(Date()))
+        return rule.captureDefaults(in: filterContext, today: calendarContext.today, timeZone: calendarContext.timeZone)
     }
     func filterError(_ scope: TaskScope) -> String? {
         guard case .saved(let id) = scope else { return nil }
@@ -356,6 +404,9 @@ final class Store {
 
     private func widgetActionDisk() throws -> WidgetActionDisk {
         #if DEBUG
+        if calendarContextFixtureEnabled {
+            return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "CalendarContextTests", directoryHint: .isDirectory))
+        }
         if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "WidgetActionTests", directoryHint: .isDirectory))
         }
@@ -834,6 +885,7 @@ final class Store {
         return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events)
     }
     func reschedule() async {
+        refreshCalendarContext()
         await refreshRemoteReminderRegistration()
         let state = reminderState(), generation = accountGeneration
         let report = await reminderScheduler.update(state)

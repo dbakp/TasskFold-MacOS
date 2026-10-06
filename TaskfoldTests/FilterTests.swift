@@ -7,6 +7,60 @@ final class FilterTests: XCTestCase {
     func task(_ id: String, _ fields: [String: JSON] = [:]) -> Record { var row = Record(["id": .string(id), "title": .string(id), "completed": .bool(false), "priority": .number(4)]); for (key, value) in fields { row[key] = value }; return row }
     func matches(_ rule: FilterRule, _ row: Record, labels: [FilterReference] = [FilterReference(id: "waiting-id", name: "waiting")], zone: String = "Europe/Copenhagen") -> Bool { rule.matches(row, today: "2026-10-05", userID: "owner", labels: labels, timeZone: zone) }
 
+
+    func testCalendarContextSeparatesClockTicksDayBoundariesAndSameDayZoneChanges() throws {
+        let date = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-03-28T22:59:59Z"))
+        let copenhagen = try XCTUnwrap(TimeZone(identifier: "Europe/Copenhagen"))
+        let before = TaskCalendarContext(now: date, timeZone: copenhagen)
+        XCTAssertEqual(before.today, "2026-03-28")
+        XCTAssertEqual(TaskCalendarContext(now: date.addingTimeInterval(-10), timeZone: copenhagen), before)
+        let after = TaskCalendarContext(now: date.addingTimeInterval(1), timeZone: copenhagen)
+        XCTAssertEqual(after.today, "2026-03-29"); XCTAssertNotEqual(after, before)
+        let utc = TaskCalendarContext(now: date, timeZone: try XCTUnwrap(TimeZone(secondsFromGMT: 0)))
+        XCTAssertEqual(utc.today, before.today); XCTAssertNotEqual(utc, before, "A same-day zone change still changes fixed-time membership")
+        XCTAssertEqual(TaskCalendarContext.refreshDelay(after: date, timeZone: copenhagen), 1, accuracy: 0.001)
+        XCTAssertEqual(TaskCalendarContext.refreshDelay(after: date.addingTimeInterval(1), timeZone: copenhagen), 60)
+    }
+    func testCalendarContextUsesCivilMidnightThroughNonHourDSTAndSkippedDays() throws {
+        for (zone, instant, today, nextDay) in [
+            ("Europe/Copenhagen", "2026-03-29T21:59:59Z", "2026-03-29", "2026-03-30"),
+            ("Europe/Copenhagen", "2026-10-25T22:59:59Z", "2026-10-25", "2026-10-26"),
+            ("Australia/Lord_Howe", "2026-10-04T12:59:59Z", "2026-10-04", "2026-10-05"),
+            ("Pacific/Apia", "2011-12-30T09:59:59Z", "2011-12-29", "2011-12-31")
+        ] {
+            let now = try XCTUnwrap(ISO8601DateFormatter().date(from: instant)), timeZone = try XCTUnwrap(TimeZone(identifier: zone))
+            XCTAssertEqual(TaskCalendarContext(now: now, timeZone: timeZone).today, today, zone)
+            XCTAssertEqual(TaskCalendarContext(now: now.addingTimeInterval(1), timeZone: timeZone).today, nextDay, zone)
+            XCTAssertEqual(TaskCalendarContext.refreshDelay(after: now, timeZone: timeZone), 1, accuracy: 0.001, zone)
+        }
+    }
+    func testCalendarContextInvalidatesMembershipWithoutTaskEditsAndPreservesSelectedDay() throws {
+        var snapshot = Snapshot()
+        snapshot.tables["tasks"] = [task("calendar-clock-0", ["due_date": .string("2026-03-28"), "title": .string("Yesterday plan")]),
+            task("calendar-clock-1", ["due_date": .string("2026-03-29"), "title": .string("Today plan A")]),
+            task("calendar-clock-2", ["due_date": .string("2026-03-29"), "title": .string("Today plan B")]),
+            task("calendar-clock-3", ["due_date": .string("2026-03-29"), "title": .string("Today plan C")]),
+            task("calendar-clock-4", ["due_date": .string("2026-03-29"), "due_time": .string("01:30"), "time_zone": .string("Europe/Copenhagen"), "scheduled_at": .string("2026-03-29T00:30:00Z"), "title": .string("Fixed Copenhagen plan")])]
+        let cache = TaskCache()
+        cache.update(snapshot.tables["tasks"] ?? [])
+        let original = snapshot
+        var query = TaskQuery(scope: .all); query.filter = .predicate("planned_on", "today"); query.sort = "title"
+        let stages = [("2026-03-28T22:59:59Z", "Europe/Copenhagen", ["calendar-clock-0"]),
+                      ("2026-03-28T23:00:00Z", "Europe/Copenhagen", ["calendar-clock-4", "calendar-clock-1", "calendar-clock-2", "calendar-clock-3"]),
+                      ("2026-03-28T23:00:00Z", "Pacific/Honolulu", ["calendar-clock-4", "calendar-clock-0"]),
+                      ("2026-03-29T10:00:00Z", "Pacific/Honolulu", ["calendar-clock-1", "calendar-clock-2", "calendar-clock-3"])]
+        for (instant, zone, expected) in stages {
+            let context = TaskCalendarContext(now: try XCTUnwrap(ISO8601DateFormatter().date(from: instant)), timeZone: try XCTUnwrap(TimeZone(identifier: zone)))
+            let current = context.applying(to: query)
+            XCTAssertEqual(cache.matching(current).map(\.id), expected)
+            XCTAssertEqual(cache.matching(current).map(\.id), expected)
+            var selected = TaskQuery(scope: .upcoming); selected.selectedDay = "2026-03-28"
+            XCTAssertEqual(context.applying(to: selected).selectedDay, "2026-03-28")
+            XCTAssertEqual(FilterRule.predicate("planned_on", "tomorrow").captureDefaults(in: self.context, today: context.today, timeZone: context.timeZone)["due_date"]?.text, context.today == "2026-03-28" ? "2026-03-29" : "2026-03-30")
+        }
+        XCTAssertEqual(cache.computationCount, 4); XCTAssertEqual(snapshot, original)
+    }
+
     func testExplicitDateSourcesPreferPlansAndPreserveLegacyDocuments() throws {
         let rows = [task("plan", ["due_date": .string("2026-10-05")]), task("deadline", ["deadline_date": .string("2026-10-05")]), task("both", ["due_date": .string("2026-10-06"), "deadline_date": .string("2026-10-05")]), task("neither")]
         for (expression, expected) in [("date:today", ["plan"]), ("effective-due:today", ["plan", "deadline"]), ("deadline on:today", ["deadline", "both"]), ("effective-due:tomorrow", ["both"]), ("due:2026-10-05", ["plan"]), ("today", ["plan"]), ("no date", ["deadline", "neither"])] {

@@ -1,5 +1,29 @@
 #if DEBUG
 import SwiftUI
+/// Visible only in the isolated debug workspace. Production clock events stay authoritative.
+struct CalendarContextFixtureControls: ViewModifier {
+    var editor = false
+    private var prefix: String { editor ? "calendarEditorFixture" : "calendarFixture" }
+    @Environment(Store.self) private var store
+    @ViewBuilder func body(content: Content) -> some View {
+        if store.calendarContextFixtureEnabled {
+            VStack(spacing: 0) {
+                HStack {
+                    Menu("Fixture clock") {
+                        Button("Fixture silent next day") { store.setCalendarFixtureClock(1) }
+                        Button("Fixture next day") { store.setCalendarFixtureClock(1); NotificationCenter.default.post(name: .NSCalendarDayChanged, object: nil) }
+                        Button("Fixture Honolulu") { store.setCalendarFixtureClock(2); NotificationCenter.default.post(name: .NSSystemTimeZoneDidChange, object: nil) }
+                        Button("Prepare fixture resume") { store.setCalendarFixtureClock(3) }
+                    }.accessibilityIdentifier(prefix + "Clock").frame(minHeight: 44)
+                    Text(store.calendarContext.today + " · " + store.calendarContext.timeZone).font(.caption2).accessibilityIdentifier(prefix + "Context")
+                    Text(store.calendarFixtureDataStatus).font(.caption2).accessibilityIdentifier(prefix + "DataStatus")
+                }.padding(.horizontal, 8).frame(maxWidth: .infinity).background(.bar, ignoresSafeAreaEdges: [])
+                content
+            }
+        } else { content }
+    }
+}
+
 /// Isolated app execution harness; it is not an installed WidgetKit host.
 struct WidgetActionTestPanel: View {
     @Environment(Store.self) private var store

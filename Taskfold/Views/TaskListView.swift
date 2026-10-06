@@ -91,7 +91,7 @@ struct TaskListView: View {
     private struct Group { var title: String; var key: String; var tasks: [Record] }
     private var groups: [Group] {
         if case .saved = scope {
-            return TaskGrouping.groups(filtered, by: store.viewValue(scope, field: "grouping", fallback: .string("none")).text, projects: store.projects).map { Group(title: $0.name, key: "scope:" + scope.preferenceKey + ":group:" + $0.id, tasks: ordered($0.tasks, day: "scope:" + scope.preferenceKey + ":group:" + $0.id)) }
+            return TaskGrouping.groups(filtered, by: store.viewValue(scope, field: "grouping", fallback: .string("none")).text, projects: store.projects, timeZone: store.calendarContext.timeZone).map { Group(title: $0.name, key: "scope:" + scope.preferenceKey + ":group:" + $0.id, tasks: ordered($0.tasks, day: "scope:" + scope.preferenceKey + ":group:" + $0.id)) }
         }
         if !projectID.isEmpty {
             let sections = store.rows("sections").filter { $0.string("project_id") == projectID }.sorted { $0["order_index"].integer < $1["order_index"].integer }

@@ -390,6 +390,27 @@ private struct PlannerScheduleForm: View {
 }
 
 
+/// Active native windows keep date-dependent lists and editor previews current.
+struct CivilDayRefresh: ViewModifier {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: phase, initial: true) { _, value in
+                if value == .active { store.refreshCalendarContext() }
+            }
+            .task(id: "\(phase == .active)-\(store.calendarContext.today)-\(store.calendarContext.timeZone)") {
+                guard phase == .active else { return }
+                while !Task.isCancelled {
+                    store.refreshCalendarContext()
+                    do { try await Task.sleep(for: .seconds(store.calendarRefreshDelay)) } catch { return }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in store.refreshCalendarContext() }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in store.refreshCalendarContext() }
+    }
+}
+
 /// Keep app-owned calendar totals current without requesting access from a widget.
 struct WidgetCapacityRefresh: ViewModifier {
     @Environment(Store.self) private var store

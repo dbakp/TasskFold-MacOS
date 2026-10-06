@@ -2,6 +2,27 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testOpenListAndFilterPreviewRefreshWithCivilClockEvents() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--calendar-context-testing"]; app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["Complete Yesterday plan"].waitForExistence(timeout: 10))
+        func advance(_ action: String, editor: Bool = false) { app.buttons[editor ? "calendarEditorFixtureClock" : "calendarFixtureClock"].click(); app.menuItems[action].click() }
+        advance("Fixture silent next day")
+        XCTAssertTrue(app.buttons["Complete Today plan A"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["Complete Fixed Copenhagen plan"].exists); XCTAssertFalse(app.buttons["Complete Yesterday plan"].exists)
+        advance("Fixture Honolulu")
+        XCTAssertTrue(app.buttons["Complete Yesterday plan"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["Complete Fixed Copenhagen plan"].exists); XCTAssertFalse(app.buttons["Complete Today plan A"].exists)
+        let view = app.staticTexts["Live calendar"].firstMatch; view.rightClick(); app.menuItems["Edit filter"].click()
+        app.descendants(matching: .any)["advancedFilter"].click()
+        let expression = app.textFields["filterExpression"]; app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("effective-due:today")
+        let preview = app.descendants(matching: .any)["filterPreviewCount"].firstMatch
+        XCTAssertEqual(preview.value as? String, "3")
+        advance("Prepare fixture resume", editor: true); app.typeKey("h", modifierFlags: .command); app.activate()
+        let value = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "4"), object: preview)
+        XCTAssertEqual(XCTWaiter.wait(for: [value], timeout: 5), .completed)
+        XCTAssertEqual(expression.value as? String, "effective-due:today")
+        XCTAssertEqual(app.staticTexts["calendarEditorFixtureDataStatus"].label, "Workspace unchanged")
+        app.buttons["Cancel"].click(); XCTAssertTrue(app.buttons["Complete Today plan A"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Today deadline"].exists)
+    }
+
     @MainActor func testFocusFinishAlertPreferencePauseResumeAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--focus-session-seed", "--focus-finish-testing"]; app.launch()
         XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click()

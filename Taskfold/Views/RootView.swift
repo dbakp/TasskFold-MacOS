@@ -134,6 +134,10 @@ struct RootView: View {
         #if DEBUG
         .safeAreaInset(edge: .top) { if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") { WidgetActionTestPanel() } }
         #endif
+        .modifier(CivilDayRefresh())
+        #if DEBUG
+        .modifier(CalendarContextFixtureControls())
+        #endif
         .modifier(WidgetCapacityRefresh())
         .onChange(of: phase) { _, value in if value == .active { Task { await store.reschedule(); await store.sync() } } }
         .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in Task { await store.reschedule() } }
@@ -259,6 +263,9 @@ struct RootView: View {
             workspace.projectMembers[project.id] = [Record(["user_id": .string(store.userID), "display_name": .string("Me")]), Record(["user_id": .string("morgan"), "display_name": .string("Morgan")])]
             workspace.section = .today
             try? store.persist()
+        }
+        if arguments.contains("--uitesting") && arguments.contains("--calendar-context-testing") {
+            store.startLocal(); store.startCalendarContextFixture(); workspace.section = .saved("live-calendar")
         }
         if arguments.contains("--uitesting") && arguments.contains("--filter-dates-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()

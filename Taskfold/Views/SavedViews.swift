@@ -44,7 +44,7 @@ struct SavedViewEditor: View {
     private var failure: String? { nameFailure ?? queryFailure }
     private var previewCount: Int {
         guard case .success(let rule) = parsed else { return 0 }
-        return store.tasks.filter { (record["include_completed"].flag || rule.includesCompletion || !$0.completed) && rule.matches($0, today: Dates.day(Date()), userID: store.userID, labels: store.labels.map { FilterReference(id: $0.id, name: $0.name) }, timeZone: TimeZone.current.identifier) }.count
+        return store.tasks.filter { (record["include_completed"].flag || rule.includesCompletion || !$0.completed) && rule.matches($0, today: store.calendarContext.today, userID: store.userID, labels: store.labels.map { FilterReference(id: $0.id, name: $0.name) }, timeZone: store.calendarContext.timeZone) }.count
     }
     private func text(_ field: String, fallback: String = "") -> Binding<String> { Binding(get: { record.fields[field]?.text ?? fallback }, set: { record[field] = .string($0) }) }
     var body: some View {
@@ -98,13 +98,16 @@ struct SavedViewEditor: View {
                     Toggle("Include completed", isOn: Binding(get: { record["include_completed"].flag }, set: { record["include_completed"] = .bool($0) }))
                 }
                 Section {
-                    if failure == nil { LabeledContent("Matching tasks", value: "\(previewCount)").accessibilityIdentifier("filterPreviewCount") }
+                    if failure == nil { LabeledContent("Matching tasks", value: "\(previewCount)").accessibilityElement(children: .combine).accessibilityValue("\(previewCount)").accessibilityIdentifier("filterPreviewCount") }
                     Text(store.localMode ? "This filter and its view settings are saved on this device. Sign in to keep them available across devices." : "This filter and its view settings sync with your account. Renaming projects or labels keeps the filter intact.").font(.caption).foregroundStyle(.secondary)
                 }
                 if store.record("saved_views", id: record.id) != nil { Section { Button("Delete filter", role: .destructive) { deleting = true } } }
             }
             .accessibilityIdentifier("savedViewForm")
             .scrollDismissesKeyboard(.interactively)
+            #if DEBUG
+            .modifier(CalendarContextFixtureControls(editor: true))
+            #endif
             .navigationTitle(store.record("saved_views", id: record.id) == nil ? "New filter" : "Edit filter")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -135,7 +138,8 @@ struct SavedViewEditor: View {
                 for project in store.projects { _ = try? await store.refreshProjectMembers(project.id) }
             }
             .confirmationDialog("Delete this filter?", isPresented: $deleting, titleVisibility: .visible) { Button("Delete", role: .destructive) { store.remove("saved_views", record.id); dismiss() } } message: { Text("Your tasks stay in place.") }
-        }.tint(Color.taskfold)
+        }
+        .tint(Color.taskfold)
     }
     @ViewBuilder private func valueControl(_ condition: Binding<FilterCondition>) -> some View {
         let field = condition.wrappedValue.field
@@ -169,7 +173,7 @@ struct SavedViewEditor: View {
     }
     private func defaultValue(_ field: String) -> String {
         if FilterDateReference.expressions[field] != nil { return "today" }
-        switch field { case "priority": return "1"; case "next", "deadline_next": return "7"; case "duration_max": return "25"; case "completed": return "false"; case "assignee": return "me"; case "due", "before", "deadline", "deadline_before": return Dates.day(Date()); default: return "" }
+        switch field { case "priority": return "1"; case "next", "deadline_next": return "7"; case "duration_max": return "25"; case "completed": return "false"; case "assignee": return "me"; case "due", "before", "deadline", "deadline_before": return store.calendarContext.today; default: return "" }
     }
     private func simpleConditions(_ rule: FilterRule) -> ([FilterCondition], Bool)? {
         let rules: [FilterRule], any: Bool
@@ -216,7 +220,7 @@ struct SavedFilterBoard: View {
             let columnWidth = geometry.size.height < 320 ? min(440, max(280, geometry.size.width - 32)) : 280
             ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: 16) {
-                    ForEach(TaskGrouping.groups(tasks, by: grouping, projects: store.projects)) { group in
+                    ForEach(TaskGrouping.groups(tasks, by: grouping, projects: store.projects, timeZone: store.calendarContext.timeZone)) { group in
                         VStack(alignment: .leading, spacing: 12) {
                             HStack { Text(group.name).font(.headline); Spacer(); Text("\(group.tasks.count)").foregroundStyle(.secondary).monospacedDigit() }
                             let orderKey = "scope:" + scope.preferenceKey + ":group:" + group.id
