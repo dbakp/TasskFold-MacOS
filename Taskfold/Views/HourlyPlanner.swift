@@ -6,6 +6,16 @@ struct HourlyPlannerView: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
     @Environment(\.dynamicTypeSize) private var textSize
+    #if os(iOS)
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    #endif
+    private var summaryScrolls: Bool {
+        #if os(iOS)
+        textSize.isAccessibilitySize || verticalSizeClass == .compact
+        #else
+        textSize.isAccessibilitySize
+        #endif
+    }
     let day: Date
     let tasks: [Record]
     @State private var busy = CalendarBusyStore.shared
@@ -36,11 +46,11 @@ struct HourlyPlannerView: View {
     }
     var body: some View {
         VStack(spacing: 0) {
-            if !textSize.isAccessibilitySize { summary }
+            if !summaryScrolls { summary }
             ScrollViewReader { reader in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
-                        if textSize.isAccessibilitySize { summary.id("summary") }
+                        if summaryScrolls { summary.id("summary") }
                         allDayLane.id("all-day")
                         timeline
                     }.padding(.horizontal, 12).padding(.bottom, 40)
@@ -48,9 +58,9 @@ struct HourlyPlannerView: View {
                 .task(id: TaskPlanner.dayKey(day)) {
                     try? await Task.sleep(for: .milliseconds(100))
                     guard !Task.isCancelled else { return }
-                    reader.scrollTo(textSize.isAccessibilitySize ? "summary" : "hour-\(initialHourIndex)", anchor: .top)
+                    reader.scrollTo(summaryScrolls ? "summary" : "hour-\(initialHourIndex)", anchor: .top)
                 }
-                .onChange(of: TaskPlanner.dayKey(day)) { _, _ in reader.scrollTo(textSize.isAccessibilitySize ? "summary" : "hour-\(initialHourIndex)", anchor: .top) }
+                .onChange(of: TaskPlanner.dayKey(day)) { _, _ in reader.scrollTo(summaryScrolls ? "summary" : "hour-\(initialHourIndex)", anchor: .top) }
                 .onChange(of: allDayRequest) { _, _ in reader.scrollTo("all-day", anchor: .top) }
                 .onChange(of: timelineRequest) { _, index in if let index { reader.scrollTo("hour-\(index)", anchor: .top) } }
             }
