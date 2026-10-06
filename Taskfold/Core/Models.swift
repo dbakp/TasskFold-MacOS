@@ -478,7 +478,10 @@ struct QuickEntry {
                 warnings.append("This repeat rule needs a valid first date on or before its end date. Its text stays in the title.")
             }
         }
-        if updates["due_time"] != nil && updates["due_date"] == nil { updates["due_date"] = .string(Dates.day(now)) }
+        if updates["due_time"] != nil && updates["due_date"] == nil {
+            let planned = task.string("due_date")
+            updates["due_date"] = .string(Dates.parse(planned, calendar: calendar) != nil ? planned : TaskPlanner.dayKey(now, calendar: calendar))
+        }
         // Drop a dangling "at" left behind when only the time was declined or accepted.
         if updates["due_time"] != nil { title = title.replacingOccurrences(of: #"\s+at\s*$"#, with: "", options: .regularExpression) }
         if acceptedReminders.contains(where: { $0.0.kind == "relative" }) && (updates["due_date"]?.text ?? task.string("due_date")).isEmpty {

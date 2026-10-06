@@ -102,7 +102,7 @@ struct TaskInspectorForm: View {
                     .focused($titleFocused)
                     .onChange(of: titleFocused) { _, focused in if !focused { applySuggestions(); saveNow() } }
                     .accessibilityIdentifier("taskTitle")
-                    .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, excluded: Workspace.subtaskPath(taskID) == nil ? [] : ["project_id", "section_id"], onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
+                    .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: Workspace.subtaskPath(taskID) == nil ? [] : ["project_id", "section_id"], onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
                 if let suggestions {
                     VStack(alignment: .leading, spacing: 4) {
                         ScrollView(.horizontal) {

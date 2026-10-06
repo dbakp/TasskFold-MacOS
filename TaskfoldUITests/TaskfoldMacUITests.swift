@@ -2,6 +2,16 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testPlanningSuggestionsKeyboardCaptureAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch(); app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("Planned conversation tom")
+        XCTAssertTrue(app.buttons["referenceSuggestion-due_date:planning:tomorrow"].waitForExistence(timeout: 5)); app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue((input.value as? String ?? "").contains("tomorrow")); input.typeText("every d")
+        app.buttons["referenceSuggestion-recurrence:planning:every day"].click(); input.typeText("!30mb"); app.buttons["referenceSuggestion-reminder_specs:planning:!30mb"].click(); app.buttons["Add Task"].click()
+        XCTAssertTrue(app.staticTexts["Planned conversation"].waitForExistence(timeout: 5)); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        XCTAssertTrue(app.staticTexts["Planned conversation"].waitForExistence(timeout: 5)); app.terminate()
+    }
+
     @MainActor func testReferenceSuggestionsKeyboardCaptureAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch()
         app.typeKey("n", modifierFlags: .command)

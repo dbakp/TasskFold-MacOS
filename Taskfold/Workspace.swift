@@ -392,14 +392,19 @@ final class Workspace {
         })
         return context
     }
-    /// Creates a task from quick-entry text. Returns the new task's id.
-    @discardableResult
-    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "", referenceChoices: [String: String] = [:]) -> String? {
+    /// Capture previews and Save share the same inherited planning/default fields.
+    func captureTask(project: String = "", date: Date?, sectionID: String = "") -> Record {
         var task = Record.task(user: store.userID, project: project, date: date)
         for (field, value) in store.captureDefaults(scope) { task[field] = value }
         if let date { task["due_date"] = .string(Dates.day(date)) }
         if !sectionID.isEmpty { task["section_id"] = .string(sectionID) }
         if section == .assigned { task["assigned_to"] = .string(store.userID) }
+        return task
+    }
+    /// Creates a task from quick-entry text. Returns the new task's id.
+    @discardableResult
+    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "", referenceChoices: [String: String] = [:]) -> String? {
+        var task = captureTask(project: project, date: date, sectionID: sectionID)
         let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")).choosingReferences(referenceChoices), task: task)
         guard !parsed.title.isEmpty else { return nil }
         task = parsed.applying(to: task)

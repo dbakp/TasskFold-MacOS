@@ -212,7 +212,7 @@ struct TaskListView: View {
         .toolbar { if workspace.section.scope == scope { toolbar } }
         .sheet(isPresented: $quickAddVisible) {
             TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, choices: $referenceChoices, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt,
-                context: workspace.quickEntryContext(project: projectID.isEmpty ? store.captureDefaults(scope)["project_id"]?.text ?? "" : projectID), submit: submitQuickAdd)
+                context: workspace.quickEntryContext(project: captureDraft.string("project_id")), task: captureDraft, submit: submitQuickAdd)
         }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
         .sheet(item: $filterEditor) { SavedViewEditor(record: $0) }
@@ -255,8 +255,10 @@ struct TaskListView: View {
     }
     private func revealQuickAdd() { captureSection = ""; quickAddVisible = true }
 
+    private var captureDate: Date? { scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil }
+    private var captureDraft: Record { workspace.captureTask(project: projectID, date: captureDate, sectionID: captureSection) }
     private func submitQuickAdd() {
-        let date: Date? = scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil
+        let date = captureDate
         let labelName: String? = { if case .label(let id) = scope { return store.record("labels", id: id)?.name }; return nil }()
         guard let id = workspace.add(quickAdd, project: projectID, date: date, declined: declinedGroups, sectionID: captureSection, referenceChoices: referenceChoices) else { return }
         declinedGroups = []
@@ -436,9 +438,10 @@ struct TaskCapturePanel: View {
     let destination: String
     let prompt: String
     let context: QuickEntryContext
+    var task = Record()
     let submit: () -> Void
     @FocusState private var focused: Bool
-    private var parsed: QuickEntry { QuickEntry(text, disabled: declined, context: context.choosingReferences(choices)) }
+    private var parsed: QuickEntry { QuickEntry(text, disabled: declined, context: context.choosingReferences(choices), task: task) }
     private var effectiveDestination: String {
         guard let projectID = parsed.updates["project_id"]?.text, let project = context.projects.first(where: { $0.id == projectID }) else { return destination }
         let section = (parsed.updates["section_id"]?.text).flatMap { id in context.sections.first { $0.id == id }?.name }
@@ -461,7 +464,7 @@ struct TaskCapturePanel: View {
                 .padding(16)
                 .background(Color(nsColor: .textBackgroundColor), in: .rect(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.taskfold.opacity(focused ? 0.6 : 0.2), lineWidth: 1))
-                .referenceCompletions(text: $text, selection: $titleSelection, choices: $choices, declined: $declined, context: context, focused: focused, onChoose: { focused = true }, submit: submitInWorkspace, submitsFromKeyboard: true)
+                .referenceCompletions(text: $text, selection: $titleSelection, choices: $choices, declined: $declined, context: context, focused: focused, task: task, onChoose: { focused = true }, submit: submitInWorkspace, submitsFromKeyboard: true)
             if !parsed.tokens.isEmpty {
                 ScrollView(.horizontal) {
                     QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: { focused = true })
@@ -544,50 +547,52 @@ struct QuickReferenceCompletionModifier: ViewModifier {
     @Binding var declined: Set<String>
     let context: QuickEntryContext
     let focused: Bool
+    var task = Record()
     var excluded: Set<String> = []
     var onChoose: () -> Void = {}
     var submit: () -> Void = {}
     var submitsFromKeyboard = false
     @State private var highlighted = 0
     @State private var dismissedText: String?
-    private var completion: QuickReferenceCompletion {
+    private var completion: QuickEntryCompletion {
         var c = context; c.referenceChoices = choices
         var caret: Int?
         if let selection {
             guard selection.isInsertion, case .selection(let range) = selection.indices,
-                  range.lowerBound <= text.endIndex, let index = range.lowerBound.samePosition(in: text.utf16) else { return QuickReferenceCompletion("") }
+                  range.lowerBound <= text.endIndex, let index = range.lowerBound.samePosition(in: text.utf16) else { return QuickEntryCompletion("") }
             caret = text.utf16.distance(from: text.utf16.startIndex, to: index)
         }
-        var result = QuickReferenceCompletion(text, caretUTF16: caret, context: c, disabled: declined)
+        var result = QuickEntryCompletion(text, caretUTF16: caret, context: c, task: task, disabled: declined)
         result.options.removeAll { excluded.contains($0.group) }
         return result
     }
     private var visible: Bool { focused && dismissedText != text && completion.range != nil }
     func body(content: Content) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let menu = completion
+        return VStack(alignment: .leading, spacing: 8) {
             content
             if visible {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text(completion.prompt).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                        Text(menu.prompt).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                         Spacer()
                         Button { keepLiteral() } label: {
                             Image(systemName: "xmark").font(.system(size: 12, weight: .semibold)).frame(width: 44, height: 44).contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityLabel("Keep reference as text").accessibilityIdentifier("dismissReferenceSuggestions")
+                        }.buttonStyle(.plain).accessibilityLabel("Keep suggestion as text").accessibilityIdentifier("dismissReferenceSuggestions")
                     }
-                    if completion.options.isEmpty {
+                    if menu.options.isEmpty {
                         Text("No matches. Keep typing, or choose from the field controls.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("referenceNoMatches")
                     } else {
                         ScrollViewReader { proxy in
                             ScrollView {
                                 LazyVStack(spacing: 2) {
-                                    ForEach(completion.options) { option in
-                                        QuickReferenceOptionRow(option: option, highlighted: completion.options.firstIndex(of: option) == highlighted) { choose(option) }.id(option.id)
+                                    ForEach(menu.options) { option in
+                                        QuickReferenceOptionRow(option: option, highlighted: menu.options.firstIndex(of: option) == highlighted) { choose(option) }.id(option.id)
                                     }
                                 }
                             }.frame(maxHeight: 190).scrollIndicators(.visible).accessibilityIdentifier("referenceSuggestionList")
                                 .onChange(of: highlighted) { _, value in
-                                    if completion.options.indices.contains(value) { proxy.scrollTo(completion.options[value].id, anchor: .center) }
+                                    if menu.options.indices.contains(value) { proxy.scrollTo(menu.options[value].id, anchor: .center) }
                                 }
                         }
                     }
@@ -595,13 +600,13 @@ struct QuickReferenceCompletionModifier: ViewModifier {
             }
         }
         .onSubmit {
-            if visible, completion.options.indices.contains(highlighted) { choose(completion.options[highlighted]) }
+            if visible, menu.options.indices.contains(highlighted) { choose(menu.options[highlighted]) }
             else { submit() }
         }
         .onChange(of: text) { old, new in
             if focused, let caret = QuickReferenceCompletion.returnInsertion(before: old, after: new) {
                 var c = context; c.referenceChoices = choices
-                var previous = QuickReferenceCompletion(old, caretUTF16: caret, context: c, disabled: declined)
+                var previous = QuickEntryCompletion(old, caretUTF16: caret, context: c, task: task, disabled: declined)
                 previous.options.removeAll { excluded.contains($0.group) }
                 if dismissedText != old, previous.options.indices.contains(highlighted) {
                     choose(previous.options[highlighted], using: previous, input: old)
@@ -616,7 +621,7 @@ struct QuickReferenceCompletionModifier: ViewModifier {
         .onKeyPress(.downArrow) { move(1) }
         .onKeyPress(.upArrow) { move(-1) }
         .onKeyPress(.return) {
-            if visible, !completion.options.isEmpty { return acceptHighlighted() }
+            if visible, !menu.options.isEmpty { return acceptHighlighted() }
             if focused && submitsFromKeyboard { submit(); return .handled }
             return .ignored
         }
@@ -635,22 +640,26 @@ struct QuickReferenceCompletionModifier: ViewModifier {
         guard visible, completion.options.indices.contains(highlighted) else { return .ignored }
         choose(completion.options[highlighted]); return .handled
     }
-    private func choose(_ option: QuickReferenceCompletion.Option, using candidate: QuickReferenceCompletion? = nil, input: String? = nil) {
+    private func choose(_ option: QuickReferenceCompletion.Option, using candidate: QuickEntryCompletion? = nil, input: String? = nil) {
         guard let result = (candidate ?? completion).choosing(option, in: input ?? text) else { return }
-        choices[option.reference] = option.recordID
+        if ["project_id", "section_id", "labels", "assigned_to"].contains(option.group) { choices[option.reference] = option.recordID }
         declined.remove(option.group)
+        if option.group == "reminder_specs" {
+            let accepted = QuickEntry(result.text, context: context, task: task)
+            for token in accepted.tokens where token.text.lowercased() == option.reference && token.group.hasPrefix("reminder_specs:") { declined.remove(token.group) }
+        }
         text = result.text
         if let caret = Range(NSRange(location: result.caretUTF16, length: 0), in: text)?.lowerBound { selection = TextSelection(insertionPoint: caret) }
         onChoose()
     }
     private func symbol(_ group: String) -> String {
-        switch group { case "project_id": return "folder"; case "section_id": return "rectangle.stack"; case "assigned_to": return "person.crop.circle"; default: return "tag" }
+        switch group { case "project_id": return "folder"; case "section_id": return "rectangle.stack"; case "assigned_to": return "person.crop.circle"; case "due_date": return "calendar"; case "due_time": return "clock"; case "recurrence": return "repeat"; case "reminder_specs": return "bell"; default: return "tag" }
     }
 }
 
 extension View {
-    func referenceCompletions(text: Binding<String>, selection: Binding<TextSelection?>, choices: Binding<[String: String]>, declined: Binding<Set<String>>, context: QuickEntryContext, focused: Bool, excluded: Set<String> = [], onChoose: @escaping () -> Void = {}, submit: @escaping () -> Void = {}, submitsFromKeyboard: Bool = false) -> some View {
-        modifier(QuickReferenceCompletionModifier(text: text, selection: selection, choices: choices, declined: declined, context: context, focused: focused, excluded: excluded, onChoose: onChoose, submit: submit, submitsFromKeyboard: submitsFromKeyboard))
+    func referenceCompletions(text: Binding<String>, selection: Binding<TextSelection?>, choices: Binding<[String: String]>, declined: Binding<Set<String>>, context: QuickEntryContext, focused: Bool, task: Record = Record(), excluded: Set<String> = [], onChoose: @escaping () -> Void = {}, submit: @escaping () -> Void = {}, submitsFromKeyboard: Bool = false) -> some View {
+        modifier(QuickReferenceCompletionModifier(text: text, selection: selection, choices: choices, declined: declined, context: context, focused: focused, task: task, excluded: excluded, onChoose: onChoose, submit: submit, submitsFromKeyboard: submitsFromKeyboard))
     }
 }
 
@@ -676,6 +685,6 @@ private struct QuickReferenceOptionRow: View {
             .accessibilityHint("Use this result in the task")
     }
     private var symbol: String {
-        switch option.group { case "project_id": return "folder"; case "section_id": return "rectangle.stack"; case "assigned_to": return "person.crop.circle"; default: return "tag" }
+        switch option.group { case "project_id": return "folder"; case "section_id": return "rectangle.stack"; case "assigned_to": return "person.crop.circle"; case "due_date": return "calendar"; case "due_time": return "clock"; case "recurrence": return "repeat"; case "reminder_specs": return "bell"; default: return "tag" }
     }
 }

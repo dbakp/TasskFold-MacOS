@@ -123,7 +123,7 @@ See [the detailed Todoist feature plan](docs/TODOIST_PORT_PLAN.md) for the sourc
 
 Known `#Name` references select projects; unknown hash names retain the older label meaning. A project/label name collision requires `#project:"Name"` for the project or `@"Name"` / `%"Name"` for the label. Parsing never creates projects or sections. Unavailable, multiple or ambiguous destinations remain in the title with feedback. Declining a different project keeps its dependent section/person references literal. Escaped references such as `\#"Client Work"`, ordinary quoted phrases, URLs, emails and file paths remain literal.
 
-The capture panel previews the actual parsed destination. Saving a project change clears incompatible section and assignment values, including child assignments. The inspector and Shortcuts use the same account-scoped reference rules. New label edits store stable IDs compatible with iOS and web; older label names, existing IDs and unknown legacy values remain readable. Repeat rules now include weekday sets, monthly ordinals, yearly dates, completion anchoring and start/end/count limits. Named boundaries, sub-day rules, independent reminder recurrence and date/repeat/reminder suggestion menus remain pending; see [repeat syntax](docs/RECURRENCE.md).
+The capture panel previews the actual parsed destination. Saving a project change clears incompatible section and assignment values, including child assignments. The inspector and Shortcuts use the same account-scoped reference rules. New label edits store stable IDs compatible with iOS and web; older label names, existing IDs and unknown legacy values remain readable. Repeat rules now include weekday sets, monthly ordinals, yearly dates, completion anchoring and start/end/count limits. Named boundaries, sub-day rules, independent reminder recurrence and richer natural-language grammar remain pending; see [repeat syntax](docs/RECURRENCE.md).
 
 
 ## Productive widgets
@@ -205,3 +205,5 @@ Pins use independently synchronized, account-owned references in `view_orders`; 
 See [Repeat rules](docs/RECURRENCE.md) for quick-entry examples, completion behavior and the remaining grammar limits.
 
 Reference suggestions in native capture and task-title editing find projects, sections, labels and current members without exact typing. See [quick-entry suggestions](docs/QUICK_ENTRY_SUGGESTIONS.md) for cursor, literal and identity behavior and the remaining acceptance gates.
+
+Planning suggestions preview supported date, time, repeat and reminder phrases in the same native cursor menu. See [quick-entry suggestions](docs/QUICK_ENTRY_SUGGESTIONS.md#dates-times-repeat-rules-and-reminders).

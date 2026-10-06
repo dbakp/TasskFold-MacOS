@@ -138,7 +138,7 @@ struct CalendarView: View {
         .onChange(of: workspace.calendarDay) { _, _ in page = page(containing: selected, mode: mode) }
         .onChange(of: workspace.calendarMode) { _, _ in withAnimation(layout) { page = page(containing: selected, mode: mode) } }
         .sheet(isPresented: $quickAddVisible) {
-            TaskCapturePanel(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), declined: $declinedGroups, choices: $referenceChoices, destination: selected.formatted(date: .abbreviated, time: .omitted), prompt: "What needs to get done?", context: workspace.quickEntryContext()) {
+            TaskCapturePanel(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), declined: $declinedGroups, choices: $referenceChoices, destination: selected.formatted(date: .abbreviated, time: .omitted), prompt: "What needs to get done?", context: workspace.quickEntryContext(project: workspace.captureTask(date: selected).string("project_id")), task: workspace.captureTask(date: selected)) {
                 if let id = workspace.add(quickAdd, date: selected, declined: declinedGroups, referenceChoices: referenceChoices) {
                     quickAdd = ""; declinedGroups = []; referenceChoices = [:]; quickAddVisible = false; workspace.selection = [id]
                 }
