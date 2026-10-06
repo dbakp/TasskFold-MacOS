@@ -2,6 +2,27 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testRecurrenceCaptureInspectorAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch()
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click()
+        let name = "Studio review " + String(UUID().uuidString.prefix(6))
+        input.typeText(name + " every 2 months on last friday starting 2027-01-01 until 2027-06-30 for 3 occurrences")
+        XCTAssertTrue(app.staticTexts["quickRepeatSummary"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["quickRepeatSummary"].label.contains("Last Friday"))
+        app.buttons["Add Task"].click(); app.buttons["Inbox"].firstMatch.click()
+        XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        let link = app.disclosureTriangles["taskRepeat"]
+        for _ in 0..<8 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
+        XCTAssertTrue(link.isHittable); link.click()
+        XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("3 left"))
+        app.buttons["Today"].firstMatch.click(); app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
+        XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        for _ in 0..<8 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
+        link.click(); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("Last Friday")); app.terminate()
+    }
+
     @MainActor func testInboxReviewMoveKeepCompleteUndoAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--inbox-review-testing", "--inbox-review-seed"]; app.launch()
         XCTAssertTrue(app.staticTexts["inboxProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["inboxProjection"].label, "Inbox: 3")

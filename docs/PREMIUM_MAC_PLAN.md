@@ -375,3 +375,10 @@ Independent 251-test Debug/optimized suites, nine rendered fixture sheets, seven
 ### 6 October: Inbox widget count clarity
 
 Inbox reset now reads “Review 5 of 6” for a partial batch and “Review all 6” when the selected batch covers the Inbox. Both independently owned native extensions build in Release; regenerated small/medium normal, dense and largest-text SwiftUI fixtures fit the copy. [Evidence and limits](P0_IMPLEMENTATION.md#6-october-inbox-widget-count-clarity). Installed WidgetKit and remaining P0 acceptance are still pending.
+
+
+## 6 October: richer repeat rules
+
+Mac independently owns richer weekday-set, monthly ordinal, yearly, completion-relative and bounded repeat rules, full quick-entry previews and native inspector controls. Declining a phrase keeps its whole text literal. Late scheduled completion skips past dates without consuming the remaining count; month-end/leap-day anchors and fixed source zones survive successor creation. The iPhone controls additionally stack at accessibility sizes and use verified 44-point hit areas. No backend schema or sibling build dependency was added.
+
+Independent Debug/optimized 270-test suites pass with three optional integration skips. Five distinct new iPhone walks and two creation regressions pass across the six-pass baseline and final one-test touch-target refinement; the baseline's real target failure is recorded. Mac Release and signed UI-test compilation pass, while Mac runtime remains unexecuted on the locked desktop. [Detailed evidence](P0_IMPLEMENTATION.md#6-october-richer-repeat-rules-and-native-controls) and [repeat syntax](RECURRENCE.md) retain named/sub-day/independent-reminder grammar, autocomplete, paired/offline/account/physical/iPad/installed-host and release acceptance. Project pulse, Focus session, remote reminders and full P0 stay active.

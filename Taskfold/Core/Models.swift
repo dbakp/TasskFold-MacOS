@@ -79,37 +79,8 @@ enum Dates {
         return actual.year == year && actual.month == month && actual.day == day ? date : nil
     }
     static func timestamp() -> String { ISO8601DateFormatter().string(from: Date()) }
-    static func next(_ task: Record, calendar input: Calendar = .current) -> Date? {
-        let calendar = TaskCompletion.calendar(for: task, input: input)
-        guard task["is_recurring"].flag, let current = parse(task.string("due_date"), calendar: calendar) else { return nil }
-        let p = Record(task["recurrence_pattern"].object)
-        let interval = max(1, p["interval"].integer)
-        var next: Date?
-        switch p.string("type") {
-        case "weekly":
-            let days = p["daysOfWeek"].list.map(\.integer).filter { (0...6).contains($0) }.sorted()
-            if let first = days.first {
-                let weekday = calendar.component(.weekday, from: current) - 1
-                let delta = days.first(where: { $0 > weekday }).map { $0 - weekday }
-                    ?? (7 - weekday + first + (interval - 1) * 7)
-                next = calendar.date(byAdding: .day, value: delta, to: current)
-            } else { next = calendar.date(byAdding: .day, value: 7 * interval, to: current) }
-        case "monthly":
-            next = calendar.date(byAdding: .month, value: interval, to: current)
-            if let n = next, p["dayOfMonth"].integer > 0,
-               let range = calendar.range(of: .day, in: .month, for: n) {
-                var parts = calendar.dateComponents([.year, .month], from: n)
-                parts.day = min(p["dayOfMonth"].integer, range.count)
-                next = calendar.date(from: parts)
-            }
-        case "daily", "custom": next = calendar.date(byAdding: .day, value: interval, to: current)
-        default: return nil
-        }
-        guard let next else { return nil }
-        let endString = p.string("endDate").isEmpty ? task.string("recurrence_end_date") : p.string("endDate")
-        if let end = parse(endString, calendar: calendar), TaskPlanner.dayKey(next, calendar: calendar) > TaskPlanner.dayKey(end, calendar: calendar) { return nil }
-        if p["count"].integer == 1 { return nil }
-        return next
+    static func next(_ task: Record, calendar input: Calendar = .current, completion: Date? = nil) -> Date? {
+        Recurrence.next(task, calendar: TaskCompletion.calendar(for: task, input: input), completion: completion)
     }
 }
 
@@ -369,6 +340,7 @@ struct QuickEntry {
                 title.replaceSubrange(range, with: marker)
             }
         }
+        protect(QuickRecurrenceText.pattern.replacingOccurrences(of: #"(?<![\p{L}\p{N}_!])"#, with: #"(?<!\S)\\"#), removeEscape: true)
         protect(QuickReminderText.pattern.replacingOccurrences(of: #"(?<!\S)!"#, with: #"(?<!\S)\\!"#), removeEscape: true)
         protect(#"\\(?:[#/@%+](?:"[^"\n]*"|[^\s]+)|\{[^}]+\}|[^\s]+)"#, removeEscape: true)
         protect(#""[^"\n]*""#)
@@ -453,16 +425,23 @@ struct QuickEntry {
             }
         }
         let weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
-        if enabled("recurrence"), let m = match(#"\bevery\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b"#), let day = weekdays.firstIndex(of: m[1].lowercased()) {
-            let delta = (day - (calendar.component(.weekday, from: now) - 1) + 7) % 7
-            updates["due_date"] = .string(Dates.day(calendar.date(byAdding: .day, value: delta == 0 ? 7 : delta, to: now)!))
-            updates["is_recurring"] = .bool(true)
-            updates["recurrence_pattern"] = .object(["type": .string("weekly"), "interval": .number(1), "daysOfWeek": .array([.number(Double(day))])])
-            take("recurrence", m[0], "Every " + m[1].capitalized)
-        } else if enabled("recurrence"), let m = match(#"\b(?:every\s+(?:(\d+)\s+)?(day|week|month)s?|daily|weekly|monthly)\b"#) {
-            let kind = m[2].isEmpty ? m[0].lowercased() : ["day": "daily", "week": "weekly", "month": "monthly"][m[2].lowercased()] ?? "daily"
-            updates["is_recurring"] = .bool(true); updates["recurrence_pattern"] = .object(["type": .string(kind), "interval": .number(max(1, Double(m[1]) ?? 1))]); updates["due_date"] = .string(Dates.day(now))
-            take("recurrence", m[0], m[0].capitalized)
+        var recurrenceCandidate: (QuickRecurrenceText.Parsed, String)?
+        if let regex = try? NSRegularExpression(pattern: QuickRecurrenceText.pattern, options: .caseInsensitive) {
+            let source = title
+            let matches = regex.matches(in: source, range: NSRange(source.startIndex..., in: source))
+            for found in matches.reversed() {
+                guard let range = Range(found.range, in: source), let target = Range(found.range, in: title) else { continue }
+                let raw = String(source[range])
+                let marker = "\u{E006}" + UUID().uuidString + "\u{E007}"
+                title.replaceSubrange(target, with: marker)
+                if enabled("recurrence"), matches.count == 1, let parsed = QuickRecurrenceText.parse(raw) {
+                    recurrenceCandidate = (parsed, raw)
+                    literals.append((marker, ""))
+                } else {
+                    literals.append((marker, raw))
+                    if enabled("recurrence") { warnings.append(matches.count > 1 ? "Choose one repeat rule. Repeat phrases stay in the title." : "“\(raw)” is not a supported repeat rule. Use Repeat in task details; its text stays in the title.") }
+                }
+            }
         }
         if enabled("due_date") {
             if let m = match(#"\b(today|tomorrow|yesterday)\b"#) {
@@ -481,6 +460,22 @@ struct QuickEntry {
                 let date = calendar.date(byAdding: .day, value: delta == 0 ? 7 : delta, to: now)!
                 updates["due_date"] = .string(Dates.day(date)); take("due_date", m[0], dayLabel(date))
             } else if let m = match(#"\b\d{4}-\d{2}-\d{2}\b"#), let date = Dates.parse(m[0]) { updates["due_date"] = .string(Dates.day(date)); take("due_date", m[0], dayLabel(date)) }
+        }
+        if let (parsed, raw) = recurrenceCandidate {
+            var repeatTask = task
+            if let time = updates["due_time"] { repeatTask["due_time"] = time }
+            let gregorian = TaskCompletion.calendar(for: repeatTask, input: calendar)
+            let existing = updates["due_date"]?.text ?? task.string("due_date")
+            if (enabled("due_date") || !existing.isEmpty), let (rule, first) = QuickRecurrenceText.first(parsed, now: now, existing: existing, calendar: gregorian) {
+                updates["is_recurring"] = .bool(true); updates["recurrence_pattern"] = .object(rule.fields)
+                updates["recurrence_end_date"] = .null // A replacement rule must not inherit an older end limit.
+                if enabled("due_date") { updates["due_date"] = .string(first) }
+                tokens.append(Token(group: "recurrence", text: raw, label: Recurrence.summary(rule)))
+            } else {
+                // Restore the exact phrase without feeding its dates back into parsing.
+                if let index = literals.lastIndex(where: { $0.0.hasPrefix("\u{E006}") && $0.1.isEmpty }) { literals[index].1 = raw }
+                warnings.append("This repeat rule needs a valid first date on or before its end date. Its text stays in the title.")
+            }
         }
         if updates["due_time"] != nil && updates["due_date"] == nil { updates["due_date"] = .string(Dates.day(now)) }
         // Drop a dangling "at" left behind when only the time was declined or accepted.
@@ -1020,7 +1015,7 @@ enum TaskCompletion {
             baseline: ["completed": task["completed"], "completed_at": task["completed_at"], "completion_version": task.fields["completion_version"] ?? .number(0)])]
         let calendar = calendar(for: task, input: input)
         let parent = task.string("recurrence_parent_id").isEmpty ? task.id : task.string("recurrence_parent_id")
-        guard !task.completed, let next = Dates.next(task, calendar: calendar) else { return changes }
+        guard !task.completed, let next = Dates.next(task, calendar: calendar, completion: now) else { return changes }
         let day = TaskPlanner.dayKey(next, calendar: calendar), nextID = successorID(parent: parent, day: TaskPlanner.dayKey(next, calendar: calendar))
         guard !tasks.contains(where: { $0.id.lowercased() == nextID || ($0.string("recurrence_parent_id").lowercased() == parent.lowercased() && String($0.string("due_date").prefix(10)) == day) }) else { return changes }
         var copy = TaskPlanning.nextOccurrence(task, date: next, calendar: calendar)
@@ -1035,6 +1030,14 @@ enum TaskCompletion {
         metadata["taskfold_recurrence_v1"] = .object(["action_id": .string(changes[0].id.uuidString.lowercased())])
         copy["source_metadata"] = .object(metadata)
         var pattern = copy["recurrence_pattern"].object
+        // Preserve a legacy rule's requested calendar day before a shorter month clamps it.
+        if !pattern["fromCompletion", default: .bool(false)].flag {
+            if ["monthly", "yearly"].contains(pattern["type"]?.text ?? ""), pattern["dayOfMonth"] == nil || pattern["dayOfMonth"] == .null,
+               pattern["weekdayOrdinal"] == nil || pattern["weekdayOrdinal"] == .null,
+               let first = Dates.parse(task.string("due_date"), calendar: calendar) { pattern["dayOfMonth"] = .number(Double(calendar.component(.day, from: first))) }
+            if pattern["type"] == .string("yearly"), pattern["monthOfYear"] == nil || pattern["monthOfYear"] == .null,
+               let first = Dates.parse(task.string("due_date"), calendar: calendar) { pattern["monthOfYear"] = .number(Double(calendar.component(.month, from: first))) }
+        }
         if let count = pattern["count"]?.integer, count > 1 { pattern["count"] = .number(Double(count - 1)) }
         copy["recurrence_pattern"] = .object(pattern)
         let old = Dates.parse(task.string("due_date"), calendar: calendar)

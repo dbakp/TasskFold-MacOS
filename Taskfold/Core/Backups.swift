@@ -121,12 +121,7 @@ struct WorkspaceBackup: Codable, Sendable {
                 }
                 if table == "tasks", row["is_recurring"].flag {
                     let rule = Record(row["recurrence_pattern"].object)
-                    guard ["daily", "weekly", "monthly", "custom"].contains(rule.string("type")), case .number(let interval) = rule["interval"], interval >= 1, interval <= 10000, interval.rounded() == interval else { throw BackupFailure(message: "A recurring task has an unsupported or invalid repeat rule.") }
-                    for (key, high) in [("dayOfMonth",31),("count",2147483647)] where rule[key] != .null {
-                        guard case .number(let n) = rule[key], n.rounded() == n, n >= 1, n <= Double(high) else { throw BackupFailure(message: "A repeat rule has an invalid “\(key)” value.") }
-                    }
-                    if rule["daysOfWeek"] != .null { guard case .array(let days) = rule["daysOfWeek"], days.allSatisfy({ if case .number(let n) = $0 { return n.rounded() == n && n >= 0 && n <= 6 }; return false }) else { throw BackupFailure(message: "A repeat rule has invalid weekdays.") } }
-                    if !rule.string("endDate").isEmpty, Dates.parse(rule.string("endDate")) == nil { throw BackupFailure(message: "A repeat rule has an invalid end date.") }
+                    guard Recurrence.valid(rule), Recurrence.number(rule["interval"], in: 1...10000) != nil else { throw BackupFailure(message: "A recurring task has an unsupported or invalid repeat rule.") }
                 }
                 if table == "saved_views" { _ = try FilterRule(document: row["query_ast"]) }
                 if row["working_hours"] != .null { _ = try WorkingHours(document: row["working_hours"]) }

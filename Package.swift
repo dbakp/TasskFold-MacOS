@@ -10,7 +10,7 @@ let package = Package(
             name: "TaskfoldCore",
             path: "Taskfold/Core",
             exclude: ["Store.swift", "Intents.swift", "WidgetActionTestPanel.swift"],
-            sources: ["PinnedNotes.swift", "InboxReview.swift", "Models.swift", "WidgetActions.swift", "WidgetCompletion.swift", "Backend.swift", "Filters.swift", "Planner.swift", "CalendarEvents.swift", "Backups.swift", "Reminders.swift"]
+            sources: ["Recurrence.swift", "PinnedNotes.swift", "InboxReview.swift", "Models.swift", "WidgetActions.swift", "WidgetCompletion.swift", "Backend.swift", "Filters.swift", "Planner.swift", "CalendarEvents.swift", "Backups.swift", "Reminders.swift"]
         ),
         .target(
             name: "WidgetModel",
