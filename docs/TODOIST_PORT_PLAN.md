@@ -103,6 +103,8 @@ Estimated 2–3 engineer-weeks. Highest immediate value: users can keep “Work 
 
 Acceptance: `today OR overdue`, `project:Work AND p1`, `no date AND NOT label:waiting` return identical task IDs on all clients; offline edits persist; account switch removes another account's views; shared-project access revocation removes inaccessible tasks. Saved-view links use stable IDs.
 
+Implementation update, 6 October: both native editors show validation beside the relevant field; board columns scroll to lower cards and widen in short views to retain readable accessibility text. iOS keyboard dismissal and board completion have explicit 44-point targets. [Current usability evidence](P0_IMPLEMENTATION.md#6-october--saved-filter-keyboard-feedback-and-board-usability) records native acceptance; full query-language coverage, Mac interaction, paired/offline/account and access-revocation acceptance remain open.
+
 ### Phase 2 Deadlines and time estimates
 
 Estimated 2–3 engineer-weeks, after the query foundation.

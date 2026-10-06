@@ -32,11 +32,14 @@ struct SavedViewEditor: View {
             let valid = try FilterRule(json: root.json); try valid.validate(in: store.filterContext); return valid
         }
     }
-    private var failure: String? {
-        if record.name.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count > 120 { return "Keep the filter name within 120 characters." }
+    private var nameFailure: String? {
+        record.name.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count > 120 ? "Keep the filter name within 120 characters." : nil
+    }
+    private var queryFailure: String? {
         if case .failure(let error) = parsed { return error.localizedDescription }
         return nil
     }
+    private var failure: String? { nameFailure ?? queryFailure }
     private var previewCount: Int {
         guard case .success(let rule) = parsed else { return 0 }
         return store.tasks.filter { (record["include_completed"].flag || rule.includesCompletion || !$0.completed) && rule.matches($0, today: Dates.day(Date()), userID: store.userID, labels: store.labels.map { FilterReference(id: $0.id, name: $0.name) }, timeZone: TimeZone.current.identifier) }.count
@@ -47,6 +50,7 @@ struct SavedViewEditor: View {
             Form {
                 Section {
                     TextField("Filter name", text: text("name")).focused($focusedField, equals: "name").accessibilityIdentifier("savedViewName")
+                    if let nameFailure { Label(nameFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterNameValidationError") }
                     Toggle("Edit expression", isOn: Binding(get: { advanced }, set: { value in
                         if value, case .success(let rule) = parsed { expression = rule.expression(in: store.filterContext) }
                         if !value, case .success(let rule) = parsed, let simple = simpleConditions(rule) { conditions = simple.0; matchAny = simple.1; advanced = false }
@@ -59,15 +63,18 @@ struct SavedViewEditor: View {
                             TextField("today OR overdue", text: $expression, axis: .vertical).focused($focusedField, equals: "expression").lineLimit(2...8).accessibilityValue(expression).accessibilityIdentifier("filterExpression")
                             if !expression.isEmpty { Button { expression = ""; focusedField = "expression" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.borderless).accessibilityLabel("Clear expression").accessibilityIdentifier("clearFilterExpression") }
                         }
+                        if let queryFailure { Label(queryFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterValidationError") }
                         Text("Use AND, OR, NOT and parentheses. Targets can be quoted: project:\"Work\" AND p1. Other examples: no date AND NOT label:\"waiting\", deadline:next7, duration<=25, assignee:me.").font(.caption).foregroundStyle(.secondary)
                         Text("Nested expressions stay in expression mode so switching views cannot discard conditions.").font(.caption).foregroundStyle(.secondary)
                     }
                 } else {
                     Section("Conditions") {
                         Picker("Match", selection: $matchAny) { Text("All conditions").tag(false); Text("Any condition").tag(true) }
+                        if let queryFailure { Label(queryFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterValidationError") }
                         ForEach($conditions) { $condition in
                             VStack(alignment: .leading, spacing: 8) {
                                 Picker("Condition", selection: $condition.field) { ForEach(Self.choices, id: \.0) { Text($0.1).tag($0.0) } }
+                                    .accessibilityIdentifier("filterCondition-" + condition.id.uuidString)
                                     .onChange(of: condition.field) { _, field in condition.value = defaultValue(field) }
                                 valueControl($condition)
                                 HStack {
@@ -86,8 +93,7 @@ struct SavedViewEditor: View {
                     Toggle("Include completed", isOn: Binding(get: { record["include_completed"].flag }, set: { record["include_completed"] = .bool($0) }))
                 }
                 Section {
-                    if let failure { Label(failure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterValidationError") }
-                    else { LabeledContent("Matching tasks", value: "\(previewCount)").accessibilityIdentifier("filterPreviewCount") }
+                    if failure == nil { LabeledContent("Matching tasks", value: "\(previewCount)").accessibilityIdentifier("filterPreviewCount") }
                     Text(store.localMode ? "This filter and its view settings are saved on this device. Sign in to keep them available across devices." : "This filter and its view settings sync with your account. Renaming projects or labels keeps the filter intact.").font(.caption).foregroundStyle(.secondary)
                 }
                 if store.record("saved_views", id: record.id) != nil { Section { Button("Delete filter", role: .destructive) { deleting = true } } }
@@ -96,15 +102,24 @@ struct SavedViewEditor: View {
             .navigationTitle(store.record("saved_views", id: record.id) == nil ? "New filter" : "Edit filter")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            // Keep the keyboard dismissal control in the sheet's measured safe area.
+            // A keyboard ToolbarItem emits invalid-frame warnings as this Form gains focus.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if focusedField != nil {
+                    HStack {
+                        Spacer()
+                        Button { focusedField = nil } label: {
+                            Text("Done").font(.body.weight(.medium)).frame(minWidth: 44, minHeight: 44).contentShape(.rect)
+                        }.accessibilityIdentifier("dismissFilterKeyboard")
+                    }.padding(.horizontal, 16).background(.bar)
+                }
+            }
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
             #else
             .formStyle(.grouped).frame(minWidth: 450, idealWidth: 500, minHeight: 600, idealHeight: 720)
             #endif
             .toolbar {
-                #if os(iOS)
-                ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("Done") { focusedField = nil }.accessibilityIdentifier("dismissFilterKeyboard") }
-                #endif
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(record.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || failure != nil).accessibilityIdentifier("saveSavedView") }
             }
@@ -134,7 +149,7 @@ struct SavedViewEditor: View {
                 ForEach(people) { person in Text(person.string("display_name")).tag(person.id) }
             }
         }
-        else if ["next", "deadline_next", "duration_max"].contains(field) { TextField(field == "duration_max" ? "Minutes" : "Days", text: condition.value) }
+        else if ["next", "deadline_next", "duration_max"].contains(field) { TextField(field == "duration_max" ? "Minutes" : "Days", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString) }
         else if ["due", "before", "deadline", "deadline_before"].contains(field) { DatePicker("Date", selection: Binding(get: { Dates.parse(condition.wrappedValue.value) ?? Date() }, set: { condition.wrappedValue.value = Dates.day($0) }), displayedComponents: .date) }
     }
     private func defaultValue(_ field: String) -> String {
@@ -168,25 +183,38 @@ struct SavedFilterBoard: View {
     let toggle: (Record) -> Void
     var body: some View {
         let grouping = store.viewValue(scope, field: "grouping", fallback: .string("none")).text
-        ScrollView(.horizontal) {
-            HStack(alignment: .top, spacing: 16) {
-                ForEach(TaskGrouping.groups(tasks, by: grouping, projects: store.projects)) { group in
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack { Text(group.name).font(.headline); Spacer(); Text("\(group.tasks.count)").foregroundStyle(.secondary).monospacedDigit() }
-                        let orderKey = "scope:" + scope.preferenceKey + ":group:" + group.id
-                        let ordered = store.viewValue(scope, field: "sort_by", fallback: .string("manual")).text == "manual" ? DayPlacement.arranged(group.tasks, ids: store.record(DayPlacement.table, id: orderKey)?["ids"].list.map(\.text) ?? []) : group.tasks
-                        ForEach(ordered) { task in
-                            HStack(alignment: .top, spacing: 10) {
-                                Button { toggle(task) } label: { Image(systemName: task.completed ? "checkmark.circle.fill" : "circle").font(.title3).foregroundStyle(Color.taskfold) }.buttonStyle(.borderless).accessibilityLabel((task.completed ? "Reopen " : "Complete ") + task.title)
-                                Button { open(task) } label: {
-                                    VStack(alignment: .leading, spacing: 6) { Text(task.title).foregroundStyle(.primary).strikethrough(task.completed).multilineTextAlignment(.leading); if let deadline = task.deadline { Label(deadline.formatted(.dateTime.month(.abbreviated).day()), systemImage: "flag.checkered").font(.caption).foregroundStyle(.secondary) }; if let minutes = task.durationMinutes { Label("\(minutes) min", systemImage: "hourglass").font(.caption).foregroundStyle(.secondary) } }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                }.buttonStyle(.plain)
-                            }.padding(12).background(.background, in: .rect(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary))
-                        }
-                    }.padding(16).frame(width: 280).background(Color.secondary.opacity(0.06), in: .rect(cornerRadius: 18))
-                }
-            }.padding(16).frame(maxHeight: .infinity, alignment: .topLeading)
+        GeometryReader { geometry in
+            // Short windows need wider cards so large text leaves room for actions.
+            let columnWidth = geometry.size.height < 320 ? min(440, max(280, geometry.size.width - 32)) : 280
+            ScrollView(.horizontal) {
+                HStack(alignment: .top, spacing: 16) {
+                    ForEach(TaskGrouping.groups(tasks, by: grouping, projects: store.projects)) { group in
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack { Text(group.name).font(.headline); Spacer(); Text("\(group.tasks.count)").foregroundStyle(.secondary).monospacedDigit() }
+                            let orderKey = "scope:" + scope.preferenceKey + ":group:" + group.id
+                            let ordered = store.viewValue(scope, field: "sort_by", fallback: .string("manual")).text == "manual" ? DayPlacement.arranged(group.tasks, ids: store.record(DayPlacement.table, id: orderKey)?["ids"].list.map(\.text) ?? []) : group.tasks
+                            ScrollView(.vertical) {
+                                LazyVStack(alignment: .leading, spacing: 12) {
+                                    ForEach(ordered) { task in
+                                        HStack(alignment: .top, spacing: 10) {
+                                            Button { toggle(task) } label: {
+                                                Image(systemName: task.completed ? "checkmark.circle.fill" : "circle").font(.system(size: 20)).foregroundStyle(Color.taskfold)
+                                                #if os(iOS)
+                                                    .frame(minWidth: 44, minHeight: 44).contentShape(.rect)
+                                                #endif
+                                            }.buttonStyle(.borderless).accessibilityLabel((task.completed ? "Reopen " : "Complete ") + task.title)
+                                            Button { open(task) } label: {
+                                                VStack(alignment: .leading, spacing: 6) { Text(task.title).foregroundStyle(.primary).strikethrough(task.completed).multilineTextAlignment(.leading); if let deadline = task.deadline { Label(deadline.formatted(.dateTime.month(.abbreviated).day()), systemImage: "flag.checkered").font(.caption).foregroundStyle(.secondary) }; if let minutes = task.durationMinutes { Label("\(minutes) min", systemImage: "hourglass").font(.caption).foregroundStyle(.secondary) } }
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                            }.buttonStyle(.plain).accessibilityIdentifier("savedFilterOpen-" + task.id)
+                                        }.padding(12).background(.background, in: .rect(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary))
+                                    }
+                                }.padding(.bottom, 4)
+                            }.accessibilityIdentifier("savedFilterColumn-" + group.id)
+                        }.padding(16).frame(width: columnWidth).background(Color.secondary.opacity(0.06), in: .rect(cornerRadius: 18))
+                    }
+                }.padding(16).frame(maxHeight: .infinity, alignment: .topLeading)
+            }
         }.accessibilityIdentifier("savedFilterBoard")
     }
 }

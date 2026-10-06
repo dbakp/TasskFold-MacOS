@@ -216,6 +216,27 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.otherElements["plannerBlock-planner-report"].waitForExistence(timeout: 10))
     }
 
+    @MainActor func testSavedFilterBoardLastCardCompletionAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
+        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        let name = "Workshop board " + String(UUID().uuidString.prefix(6))
+        let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
+        app.descendants(matching: .any)["advancedFilter"].click()
+        let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("project:parity-project AND no date")
+        app.popUpButtons["savedViewLayout"].click(); app.menuItems["Board"].click(); app.buttons["saveSavedView"].click()
+        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        let column = app.scrollViews["savedFilterColumn-all"]; XCTAssertTrue(column.waitForExistence(timeout: 5))
+        let last = app.buttons["savedFilterOpen-parity-44"]
+        for _ in 0..<30 where !last.isHittable { column.swipeUp(velocity: .slow) }
+        XCTAssertTrue(last.isHittable); XCTAssertGreaterThanOrEqual(last.frame.minY, column.frame.minY); XCTAssertLessThanOrEqual(last.frame.maxY, column.frame.maxY)
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Saved filter lower card on Mac"; shot.lifetime = .keepAlways; add(shot)
+        last.click(); XCTAssertEqual(app.textFields["taskTitle"].value as? String, "Workshop task 44")
+        app.buttons["Complete Workshop task 44"].click(); XCTAssertFalse(app.buttons["Complete Workshop task 44"].waitForExistence(timeout: 2))
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        XCTAssertTrue(column.waitForExistence(timeout: 5)); for _ in 0..<30 where !app.buttons["savedFilterOpen-parity-43"].isHittable { column.swipeUp(velocity: .slow) }
+        XCTAssertTrue(app.buttons["savedFilterOpen-parity-43"].exists); XCTAssertFalse(app.buttons["Complete Workshop task 44"].exists)
+    }
+
     @MainActor func testSavedFilterSurvivesRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
         XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
