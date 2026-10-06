@@ -185,7 +185,7 @@ See the repository-owned [SwiftUI previews](docs/widget-previews/capacity.png). 
 
 ## Inbox reset
 
-**Inbox reset** shows all open tasks without a project, including dated tasks, and opens a short native review. Choose five, ten or all tasks for each widget, a palette, and whether to hide Inbox details. Small and medium sizes use an honest count; older/unreadable snapshots ask for a refresh.
+**Inbox reset** shows all open tasks without a project, including dated tasks, and opens a short native review. Choose five, ten or all tasks for each widget, a palette, and whether to hide Inbox details. Small and medium sizes use an honest count; older/unreadable snapshots ask for a refresh. The large number is the total Inbox count; “Review 5 of 6” means a five-task batch from six open tasks. The without-dates statistic is independent of that batch.
 
 Review offers Move to project, Edit details, Complete and Keep in Inbox, with Undo for the latest decision. Moving preserves planned dates/times, estimates, deadlines, notes and reminders. Keep makes no task mutation. A failed save does not advance the card. The review captures a batch, uses current task contents, and ends with the actual remaining Inbox count. Review more reaches unseen work before repeating kept tasks; Review again explicitly restarts when everything remaining has been reviewed. Open it from the Inbox options on iOS or the Inbox toolbar on Mac as well. Decisions use the existing durable save/sync queue.
 
@@ -214,3 +214,6 @@ Planning suggestions preview supported date, time, repeat and reminder phrases i
 Choose a project for a small, medium or large **Project pulse** widget. The main fraction shows completed tasks out of all current project tasks. Medium and large sizes separately show recorded completion/reopen events from the last seven local calendar days; completing and reopening a task can produce several events while its current completion count is one or zero. Recording coverage is stated, and missing history never implies zero activity. Needs-attention work uses overdue plans and deadlines through the next six days.
 
 Each instance chooses its project, appearance and whether project/task names are hidden. Tapping opens the native Project pulse screen in the original workspace; removed or inaccessible selections never substitute another project. [Behavior and cache contract](docs/PROJECT_PULSE.md), [source preview](docs/widget-previews/pulse.png). Reproduce the fixture sheets with `python3 Scripts/render_pulse_widget_previews.py`. Installed configuration, refresh, multiple-instance, physical and Mac host acceptance remain separate checks.
+
+
+Reminder routes retain their original workspace generation through scene presentation. A private remote-device registration foundation is also available to native code; automatic registration and remote delivery remain unfinished. See [delivery contract and acceptance](docs/REMOTE_REMINDER_DELIVERY.md).

@@ -46,6 +46,7 @@ final class Store {
     private(set) var widgetPublicationRevision = 0
     @ObservationIgnored private var workspaceCacheReadable = true
     #if DEBUG
+    var reminderRouteFixtureOutcome = "Waiting"
     var widgetFixtureFailSave = false
     var inboxFixtureFailSave = false
     var focusFixtureFailSave = false
@@ -782,8 +783,18 @@ final class Store {
               let signature = info["signature"] as? String else { return nil }
         return DueReminder.events(tasks: tasks).first { $0.taskID == task && $0.specID == spec && $0.signature == signature }
     }
+    func reminderTask(for route: ReminderTaskRoute) -> Record? {
+        let valid = workspaceCacheReadable && (signedIn || localMode) && remindersEnabled &&
+            route.matches(account: userID, generation: workspaceGeneration, events: DueReminder.events(tasks: tasks))
+        #if DEBUG
+        if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing") {
+            reminderRouteFixtureOutcome = valid ? "Opened" : "Ignored"
+        }
+        #endif
+        return valid ? record("tasks", id: route.taskID) : nil
+    }
     /// Actions are scoped to the receiving workspace and the current task/reminder version.
-    func handleReminder(_ info: [AnyHashable: Any], action: String) async -> String? {
+    func handleReminder(_ info: [AnyHashable: Any], action: String) async -> ReminderTaskRoute? {
         guard let event = validReminder(info), let task = record("tasks", id: event.taskID) else { return nil }
         switch action {
         case ReminderCategory.complete: toggle(task)
@@ -799,7 +810,7 @@ final class Store {
                 if report.failures > 0 { reminderStatus = "The snooze could not be scheduled. Open the task to try again." }
                 else if report.deferred > 0 { reminderStatus = "The nearest 60 reminders are scheduled. This snooze may be deferred until Taskfold refreshes." }
             }
-        default: return task.id
+        default: return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: task.id, specID: event.specID, signature: event.signature)
         }
         return nil
     }
@@ -823,6 +834,25 @@ enum ReminderCategory {
 
 #if DEBUG
 extension Store {
+    func seedReminderRouteFixture() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing") else { return }
+        dailyBackupsEnabled = false; disableNotifications(); disableFocusAlerts()
+        var task = Record.task(user: userID, date: Date().addingTimeInterval(-86400))
+        task["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa81"); task["title"] = .string("Reminder route check")
+        task["due_time"] = .string("08:00")
+        snapshot = Snapshot(tables: ["tasks": [task]])
+        // The fixture's event is in the past, so this cannot schedule an upcoming test notification.
+        UserDefaults.standard.set(true, forKey: reminderPreferenceKey); reminderPreferenceRevision += 1
+        try? persist()
+    }
+    func renewReminderRouteFixtureWorkspace() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing") else { return }
+        accountGeneration = UUID()
+    }
+    func reminderRouteFixtureRequest() -> ReminderTaskRoute? {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing"), let event = DueReminder.events(tasks: tasks).first else { return nil }
+        return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: event.taskID, specID: event.specID, signature: event.signature)
+    }
     func seedWidgetActionFixture() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--widget-action-testing") else { return }
         widgetFixtureFailSave = false; dailyBackupsEnabled = false; disableNotifications()

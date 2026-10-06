@@ -1084,3 +1084,16 @@ extension TaskfoldMacUITests {
         app.buttons["closeProjectPulse"].click(); app.terminate()
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testPendingReminderRouteEditorAndRejectedWorkspaceReentry() throws {
+        let app=XCUIApplication(); app.launchArguments=["--uitesting","--reminder-route-testing","--widget-action-testing"]; app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["holdReminderRoute"].waitForExistence(timeout:10)); app.buttons["holdReminderRoute"].click(); app.buttons["renewReminderWorkspace"].click(); app.buttons["releaseReminderRoute"].click()
+        let ignored=XCTNSPredicateExpectation(predicate:NSPredicate(format:"label == %@","Ignored"),object:app.staticTexts["reminderRouteOutcome"])
+        XCTAssertEqual(XCTWaiter.wait(for:[ignored],timeout:5),.completed); XCTAssertFalse(app.descendants(matching:.any)["taskTitle"].exists)
+        app.buttons["holdReminderRoute"].click(); app.buttons["releaseReminderRoute"].click()
+        XCTAssertTrue(app.descendants(matching:.any)["taskTitle"].waitForExistence(timeout:5)); XCTAssertEqual(app.descendants(matching:.any)["taskTitle"].value as? String,"Reminder route check")
+        app.buttons["endReminderRouteFixture"].click()
+    }
+}

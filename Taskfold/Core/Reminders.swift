@@ -334,3 +334,16 @@ struct FocusFinishReceipt: Equatable, Sendable {
         self.account == account && event?.kind == .focusFinish && event?.taskID == task && event?.specID == session && event?.signature == signature && (event?.date ?? .distantFuture) <= now
     }
 }
+
+/// A notification's validated Open action keeps its workspace incarnation through scene activation.
+struct ReminderTaskRoute: Equatable, Sendable {
+    var workspace: WorkspaceBinding
+    var taskID: String
+    var specID: String
+    var signature: String
+    func matches(account: String, generation: UUID, events: [DueReminder]) -> Bool {
+        workspace.matches(account: account, generation: generation) && events.contains {
+            $0.kind == .task && $0.taskID == taskID && $0.specID == specID && $0.signature == signature
+        }
+    }
+}

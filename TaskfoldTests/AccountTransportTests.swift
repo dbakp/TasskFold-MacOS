@@ -139,3 +139,55 @@ extension AccountTransportTests {
         XCTAssertEqual(calls, 0)
     }
 }
+
+extension AccountTransportTests {
+    func reminderDeviceCommand(account: String? = nil, retire: Bool = false) -> ReminderDeviceCommand {
+        .init(device:"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",secret:String(repeating:"a",count:64),revision:1,account:retire ? nil : account ?? owner,
+              binding:retire ? nil : .init(platform:.ios,bundle:"com.dbakp.taskfold",environment:.development,token:"aabb",time_zone:"UTC",permission:.authorized,enabled:false))
+    }
+    func reminderDeviceReceipt(_ command: ReminderDeviceCommand) throws -> Data {
+        try JSONEncoder().encode(ReminderDeviceReceipt(version:1,device:command.device,revision:command.revision,account:command.account,
+                                                       state:command.binding == nil ? "retired":"registered",enabled:command.binding?.enabled ?? false,
+                                                       expires_at_ms:Int64(Date().addingTimeInterval(86400).timeIntervalSince1970*1000)))
+    }
+    @MainActor func testDeviceRegistrationUsesBoundJWTAndRetirementUsesRevocationCapabilityOnly() async throws {
+        let api=backend(try signed(owner)), active=reminderDeviceCommand(), retired=reminderDeviceCommand(retire:true)
+        ScopedHTTP.handler = { request,transport in
+            let fields=try! JSONDecoder().decode([String:JSON].self,from:request.httpBody ?? { let stream=request.httpBodyStream!; stream.open(); defer { stream.close() }; var data=Data(),buffer=[UInt8](repeating:0,count:4096); while stream.hasBytesAvailable { let n=stream.read(&buffer,maxLength:buffer.count); if n<=0 { break }; data.append(buffer,count:n) }; return data }())
+            let isRetired=request.url?.path == retired.path
+            XCTAssertEqual(request.httpMethod,"POST"); XCTAssertEqual(fields["_secret"],.string(active.secret))
+            XCTAssertNil(fields["account"]); XCTAssertNil(fields["user_id"])
+            XCTAssertEqual(request.value(forHTTPHeaderField:"Authorization"),isRetired ? nil:"Bearer old")
+            transport.finish(200,try! self.reminderDeviceReceipt(isRetired ? retired:active))
+        }
+        defer { ScopedHTTP.handler=nil }
+        let confirmed=try await api.sendReminderDevice(active); XCTAssertEqual(confirmed.state,"registered")
+        try api.clearSession()
+        let cleared=try await api.sendReminderDevice(retired); XCTAssertEqual(cleared.state,"retired")
+    }
+    @MainActor func testDeviceBindingResponseAfterSameAccountReentryCannotBeAccepted() async throws {
+        let api=backend(try signed(owner)), command=reminderDeviceCommand(), gate=HTTPGate(), started=expectation(description:"Old binding registration in flight")
+        let session=try JSONEncoder().encode(signed(owner,token:"new-login"))
+        ScopedHTTP.handler = { request,transport in
+            if request.url?.path == command.path { gate.hold(transport); started.fulfill() }
+            else { transport.finish(200,session) }
+        }
+        defer { ScopedHTTP.handler=nil }
+        let old=Task { @MainActor in try await api.sendReminderDevice(command) }
+        await fulfillment(of:[started],timeout:3)
+        _=try await api.signIn(email:"fixture@example.invalid",password:"fixture",signup:false)
+        gate.release(200,try reminderDeviceReceipt(command))
+        do { _=try await old.value; XCTFail("A late registration from before reentry was accepted") } catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(gate.count,1); XCTAssertEqual(api.session?.access_token,"new-login")
+    }
+    @MainActor func testForeignDeviceCommandIsRejectedBeforeHTTPAndWrongReceiptNeverEnables() async throws {
+        let api=backend(try signed(other)), command=reminderDeviceCommand(); var calls=0
+        ScopedHTTP.handler = { _,transport in calls+=1; transport.finish(200,try! self.reminderDeviceReceipt(command)) }
+        defer { ScopedHTTP.handler=nil }
+        do { _=try await api.sendReminderDevice(command); XCTFail("Foreign command used current JWT") } catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(calls,0)
+        let own=reminderDeviceCommand(account:other)
+        do { _=try await api.sendReminderDevice(own); XCTFail("Wrong-account receipt was confirmed") } catch { XCTAssertTrue(error is AppFailure) }
+        XCTAssertEqual(calls,1)
+    }
+}

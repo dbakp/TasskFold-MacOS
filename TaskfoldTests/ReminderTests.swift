@@ -240,3 +240,20 @@ final class ReminderTests: XCTestCase {
         let pending = await center.requests; XCTAssertEqual(pending.filter(\.snoozed).count, 1)
     }
 }
+
+
+extension ReminderTests {
+    func testPendingOpenRouteRevalidatesWorkspaceIncarnationAndReminderCycle() throws {
+        var task=Record.task(user:"owner",date:Date().addingTimeInterval(86400)); task["due_time"] = .string("09:00")
+        let event=try XCTUnwrap(DueReminder.events(tasks:[task]).first), generation=UUID()
+        let route=ReminderTaskRoute(workspace:WorkspaceBinding(account:"owner",generation:generation),taskID:event.taskID,specID:event.specID,signature:event.signature)
+        XCTAssertTrue(route.matches(account:"owner",generation:generation,events:[event]))
+        XCTAssertFalse(route.matches(account:"other",generation:generation,events:[event]))
+        XCTAssertFalse(route.matches(account:"owner",generation:UUID(),events:[event]))
+        task["completion_version"] = .number(2)
+        XCTAssertFalse(route.matches(account:"owner",generation:generation,events:DueReminder.events(tasks:[task])))
+        task["completed"] = .bool(true)
+        XCTAssertFalse(route.matches(account:"owner",generation:generation,events:DueReminder.events(tasks:[task])))
+        XCTAssertFalse(route.matches(account:"owner",generation:generation,events:[]))
+    }
+}

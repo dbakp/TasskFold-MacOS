@@ -3,6 +3,7 @@ import SwiftUI
 /// Isolated app execution harness; it is not an installed WidgetKit host.
 struct WidgetActionTestPanel: View {
     @Environment(Store.self) private var store
+    @State private var reminderRoute: ReminderTaskRoute?
     @State private var captured: WidgetCompletionRequest?
     @State private var message: String?
     @State private var pending = 0
@@ -13,7 +14,17 @@ struct WidgetActionTestPanel: View {
         return components.url!
     }
     var body: some View {
-        if ProcessInfo.processInfo.arguments.contains("--pulse-widget-testing") {
+        if ProcessInfo.processInfo.arguments.contains("--reminder-route-testing") {
+            VStack(spacing: 4) {
+                Text(store.reminderRouteFixtureOutcome).accessibilityIdentifier("reminderRouteOutcome")
+                Button("End fixture") { store.disableNotifications() }.accessibilityIdentifier("endReminderRouteFixture")
+                HStack {
+                    Button("Hold reminder") { reminderRoute = store.reminderRouteFixtureRequest() }.accessibilityIdentifier("holdReminderRoute")
+                    Button("Reenter workspace") { store.renewReminderRouteFixtureWorkspace() }.accessibilityIdentifier("renewReminderWorkspace")
+                    Button("Release reminder") { NotificationRoute.shared.taskRequest = reminderRoute }.accessibilityIdentifier("releaseReminderRoute")
+                }.font(.system(size: 12))
+            }
+        } else if ProcessInfo.processInfo.arguments.contains("--pulse-widget-testing") {
             VStack(spacing: 4) {
                 Text(store.pulseWidgetFixtureProjection()).font(.system(size: 10)).accessibilityIdentifier("pulseProjection")
                 HStack {

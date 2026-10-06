@@ -81,8 +81,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             await MainActor.run { NotificationRoute.shared.focusReceipt = receipt }
             return
         }
-        if let id = await Store.shared.handleReminder(response.notification.request.content.userInfo, action: response.actionIdentifier) {
-            await MainActor.run { NotificationRoute.shared.taskID = id }
+        if let route = await Store.shared.handleReminder(response.notification.request.content.userInfo, action: response.actionIdentifier) {
+            await MainActor.run { NotificationRoute.shared.taskRequest = route }
         }
     }
 }
@@ -90,7 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 @MainActor @Observable
 final class NotificationRoute {
     static let shared = NotificationRoute()
-    var taskID: String?
+    var taskRequest: ReminderTaskRoute?
     var focusReceipt: FocusFinishReceipt?
 }
 

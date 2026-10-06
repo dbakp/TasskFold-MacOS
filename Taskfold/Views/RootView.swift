@@ -77,12 +77,13 @@ struct RootView: View {
             guard store.validFocusFinish(receipt) else { return }
             focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
         }
-        .task(id: "reminder-\(NotificationRoute.shared.taskID ?? "")-\(store.taskRevision)") {
-            guard let id = NotificationRoute.shared.taskID else { return }
+        .task(id: "reminder-\(NotificationRoute.shared.taskRequest?.signature ?? "")-\(store.workspaceGeneration)-\(store.taskRevision)") {
+            guard let route = NotificationRoute.shared.taskRequest else { return }
             await Task.yield()
-            guard !Task.isCancelled, store.record("tasks", id: id) != nil else { return }
-            workspace.open(id)
-            NotificationRoute.shared.taskID = nil
+            guard !Task.isCancelled, NotificationRoute.shared.taskRequest == route else { return }
+            NotificationRoute.shared.taskRequest = nil
+            guard let task = store.reminderTask(for: route) else { return }
+            workspace.open(task.id)
         }
         .task(id: "invitation-route-\(pendingInvitations)-\(store.signedIn)-\(store.localMode)") {
             guard pendingInvitations else { return }
@@ -290,6 +291,9 @@ struct RootView: View {
         if arguments.contains("--uitesting") && arguments.contains("--deadline-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
             store.snapshot = Snapshot.deadlineFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
+        }
+        if arguments.contains("--uitesting") && arguments.contains("--reminder-route-testing") {
+            store.startLocal(); store.seedReminderRouteFixture(); workspace.section = .today; workspace.inspectorShown = false
         }
         if arguments.contains("--uitesting") && arguments.contains("--reminder-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
