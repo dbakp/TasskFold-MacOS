@@ -16,9 +16,10 @@ struct SavedViewEditor: View {
     @State private var loaded = false
     @State private var deleting = false
     @State private var baseline: Record?
+    @State private var loadFailure: String?
     @FocusState private var focusedField: String?
     private static let choices: [(String, String)] = [
-        ("all","All tasks"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
+        ("all","All tasks"),("search","Keywords"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
         ("priority","Priority"),("project","Project"),("section","Section"),("label","Label"),("completed","Completion"),("assignee","Assigned to"),
         ("due","Planned on date"),("before","Planned before date"),("deadline_today","Deadline today"),("deadline_overdue","Past deadline"),("deadline_next","Deadline in next days"),("no_deadline","No deadline"),("deadline","Deadline on date"),("deadline_before","Deadline before date"),("duration_max","Estimate up to minutes"),("no_estimate","No estimate")]
     private var people: [Record] {
@@ -27,6 +28,7 @@ struct SavedViewEditor: View {
     }
     private var parsed: Result<FilterRule, Error> {
         Result {
+            if let loadFailure { throw FilterFailure(message: loadFailure) }
             if advanced { var parser = try FilterParser(expression, context: store.filterContext); return try parser.parse() }
             let root: FilterRule = matchAny ? .or(conditions.map(\.rule)) : .and(conditions.map(\.rule))
             let valid = try FilterRule(json: root.json); try valid.validate(in: store.filterContext); return valid
@@ -55,16 +57,16 @@ struct SavedViewEditor: View {
                         if value, case .success(let rule) = parsed { expression = rule.expression(in: store.filterContext) }
                         if !value, case .success(let rule) = parsed, let simple = simpleConditions(rule) { conditions = simple.0; matchAny = simple.1; advanced = false }
                         else if value { advanced = true }
-                    })).accessibilityIdentifier("advancedFilter")
+                    })).disabled(loadFailure != nil).accessibilityIdentifier("advancedFilter")
                 }
                 if advanced {
                     Section("Expression") {
                         HStack(alignment: .top) {
-                            TextField("today OR overdue", text: $expression, axis: .vertical).focused($focusedField, equals: "expression").lineLimit(2...8).accessibilityValue(expression).accessibilityIdentifier("filterExpression")
-                            if !expression.isEmpty { Button { expression = ""; focusedField = "expression" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.borderless).accessibilityLabel("Clear expression").accessibilityIdentifier("clearFilterExpression") }
+                            TextField(loadFailure == nil ? "today OR overdue" : "Query preserved", text: $expression, axis: .vertical).disabled(loadFailure != nil).focused($focusedField, equals: "expression").lineLimit(2...8).accessibilityValue(expression).accessibilityIdentifier("filterExpression")
+                            if !expression.isEmpty && loadFailure == nil { Button { expression = ""; focusedField = "expression" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.borderless).accessibilityLabel("Clear expression").accessibilityIdentifier("clearFilterExpression") }
                         }
                         if let queryFailure { Label(queryFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterValidationError") }
-                        Text("Use AND, OR, NOT and parentheses. Targets can be quoted: project:\"Work\" AND p1. Other examples: no date AND NOT label:\"waiting\", deadline:next7, duration<=25, assignee:me.").font(.caption).foregroundStyle(.secondary)
+                        Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
                         Text("Nested expressions stay in expression mode so switching views cannot discard conditions.").font(.caption).foregroundStyle(.secondary)
                     }
                 } else {
@@ -98,6 +100,7 @@ struct SavedViewEditor: View {
                 }
                 if store.record("saved_views", id: record.id) != nil { Section { Button("Delete filter", role: .destructive) { deleting = true } } }
             }
+            .accessibilityIdentifier("savedViewForm")
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle(store.record("saved_views", id: record.id) == nil ? "New filter" : "Edit filter")
             #if os(iOS)
@@ -123,7 +126,7 @@ struct SavedViewEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(record.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || failure != nil).accessibilityIdentifier("saveSavedView") }
             }
-            .onAppear { guard !loaded else { return }; loaded = true; baseline = store.record("saved_views", id: record.id); if let rule = try? FilterRule(document: record["query_ast"]) { expression = rule.expression(in: store.filterContext); if let simple = simpleConditions(rule) { conditions = simple.0; matchAny = simple.1 } else { advanced = true } } }
+            .onAppear(perform: load)
             .task(id: conditions.contains { $0.field == "assignee" }) {
                 guard !store.localMode, conditions.contains(where: { $0.field == "assignee" }) else { return }
                 for project in store.projects { _ = try? await store.refreshProjectMembers(project.id) }
@@ -149,6 +152,10 @@ struct SavedViewEditor: View {
                 ForEach(people) { person in Text(person.string("display_name")).tag(person.id) }
             }
         }
+        else if field == "search" {
+            TextField("Words in title or description", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
+            Text("Matches every word, in any order. Letter case and accents do not matter.").font(.caption).foregroundStyle(.secondary)
+        }
         else if ["next", "deadline_next", "duration_max"].contains(field) { TextField(field == "duration_max" ? "Minutes" : "Days", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString) }
         else if ["due", "before", "deadline", "deadline_before"].contains(field) { DatePicker("Date", selection: Binding(get: { Dates.parse(condition.wrappedValue.value) ?? Date() }, set: { condition.wrappedValue.value = Dates.day($0) }), displayedComponents: .date) }
     }
@@ -167,6 +174,18 @@ struct SavedViewEditor: View {
             }
         }
         return (conditions, any)
+    }
+    private func load() {
+        guard !loaded else { return }
+        loaded = true; baseline = store.record("saved_views", id: record.id)
+        do {
+            let rule = try FilterRule(document: record["query_ast"])
+            expression = rule.expression(in: store.filterContext)
+            if let simple = simpleConditions(rule) { conditions = simple.0; matchAny = simple.1 } else { advanced = true }
+        } catch {
+            advanced = true
+            loadFailure = "This saved query is unsupported. Update Taskfold to edit it; your query is preserved."
+        }
     }
     private func save() {
         guard case .success(let rule) = parsed else { return }

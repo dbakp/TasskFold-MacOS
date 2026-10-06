@@ -237,6 +237,24 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.buttons["savedFilterOpen-parity-43"].exists); XCTAssertFalse(app.buttons["Complete Workshop task 44"].exists)
     }
 
+
+    @MainActor func testKeywordFilterAndUnsupportedQueryPreservation() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--filter-primitives-fixture"]; app.launch()
+        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        let name = "Email review " + String(UUID().uuidString.prefix(6))
+        let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
+        app.descendants(matching: .any)["advancedFilter"].click()
+        let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText(#"search:"cafe email" & recurring & no time & no labels & #Studio"#)
+        XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
+        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        XCTAssertTrue(app.buttons["Complete Send email agenda"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Send email call"].exists); XCTAssertFalse(app.buttons["Complete Email café notes"].exists); XCTAssertFalse(app.buttons["Complete Send email café report"].exists)
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click(); XCTAssertTrue(app.buttons["Complete Send email agenda"].exists)
+        app.staticTexts["Future filter"].click(); app.buttons["Edit filter"].click()
+        XCTAssertFalse(app.buttons["saveSavedView"].isEnabled); XCTAssertFalse(app.descendants(matching: .any)["advancedFilter"].isEnabled)
+        XCTAssertTrue(app.staticTexts["filterValidationError"].firstMatch.label.contains("preserved")); app.buttons["Cancel"].click()
+        app.terminate(); app.launch(); app.staticTexts["Future filter"].click(); XCTAssertTrue(app.descendants(matching: .any)["savedFilterError"].exists)
+    }
+
     @MainActor func testSavedFilterSurvivesRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
         XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()

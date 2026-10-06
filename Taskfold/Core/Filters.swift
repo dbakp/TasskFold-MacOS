@@ -28,7 +28,7 @@ struct FilterContext {
 /// Versioned query AST shared by app lists, exported backups and widget projections.
 indirect enum FilterRule: Hashable, Sendable {
     case predicate(String, String), and([FilterRule]), or([FilterRule]), not(FilterRule)
-    static let fields = ["all", "inbox", "today", "overdue", "next", "no_date", "priority", "project", "section", "label", "completed", "assignee", "due", "before", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline", "deadline", "deadline_before", "duration_max", "no_estimate"]
+    static let fields = ["all", "inbox", "today", "overdue", "next", "no_date", "priority", "project", "section", "label", "completed", "assignee", "due", "before", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline", "deadline", "deadline_before", "duration_max", "no_estimate", "search", "recurring", "no_time", "no_labels"]
     var json: JSON {
         switch self {
         case .predicate(let field, let value): return .object(["op": .string("predicate"), "field": .string(field), "value": .string(value)])
@@ -56,6 +56,12 @@ indirect enum FilterRule: Hashable, Sendable {
             if field == "assignee", !["me", "unassigned"].contains(value), UUID(uuidString: value) == nil { throw FilterFailure(message: "Choose an available collaborator.") }
             if field == "completed", !["true", "false"].contains(value) { throw FilterFailure(message: "Choose a valid completion state.") }
             if ["project", "section", "label", "assignee"].contains(field), value.isEmpty { throw FilterFailure(message: "Choose a \(field) target.") }
+            if field == "search" {
+                guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, value.unicodeScalars.count <= 400 else { throw FilterFailure(message: "Enter 1–400 characters to search for.") }
+            }
+            if ["recurring", "no_time", "no_labels"].contains(field) {
+                guard row["value"] == .string("") else { throw FilterFailure(message: "This condition does not take a value.") }
+            }
             self = .predicate(field, value)
         case "and", "or":
             guard case .array(let nodes) = row["children"], !nodes.isEmpty, nodes.count <= 20 else { throw FilterFailure(message: "A filter group needs 1–20 conditions.") }
@@ -110,6 +116,14 @@ indirect enum FilterRule: Hashable, Sendable {
             case "deadline_before": return !deadline.isEmpty && deadline < value
             case "duration_max": return task.durationMinutes.map { $0 <= (Int(value) ?? 0) } ?? false
             case "no_estimate": return task.durationMinutes == nil
+            case "search":
+                let locale = Locale(identifier: "en_US_POSIX")
+                let content = (task.title + " " + task.string("description")).folding(options: [.caseInsensitive, .diacriticInsensitive], locale: locale)
+                let words = value.unicodeScalars.split(whereSeparator: { $0.properties.isWhitespace }).map { String(String.UnicodeScalarView($0)).folding(options: [.caseInsensitive, .diacriticInsensitive], locale: locale) }
+                return !words.isEmpty && words.allSatisfy { !$0.isEmpty && content.contains($0) }
+            case "recurring": return task["is_recurring"].flag
+            case "no_time": return task.string("due_time").isEmpty
+            case "no_labels": return task["labels"].list.isEmpty
             default: return false
             }
         }
@@ -182,6 +196,9 @@ indirect enum FilterRule: Hashable, Sendable {
             case "no_deadline": return "no deadline"
             case "duration_max": return "duration<=" + value
             case "no_estimate": return "no estimate"
+            case "search": return "search:" + quote(value)
+            case "no_time": return "no time"
+            case "no_labels": return "no labels"
             case "deadline_before": return "deadline-before:" + value
             case "due", "before", "deadline": return field + ":" + value
             default: return field
@@ -193,32 +210,43 @@ indirect enum FilterRule: Hashable, Sendable {
 struct FilterParser {
     private var tokens: [String] = []
     private var cursor = 0
+    private var quotedTokens = Set<Int>()
     let context: FilterContext
     init(_ expression: String, context: FilterContext) throws {
         self.context = context
         guard expression.count <= 4000 else { throw FilterFailure(message: "Keep the filter expression under 4,000 characters.") }
-        var token = "", quoted = false, escaped = false
-        for character in expression {
+        var token = "", quoted = false, escaped = false, hadQuote = false
+        func appendToken() {
+            if !token.isEmpty {
+                if hadQuote { quotedTokens.insert(tokens.count) }
+                tokens.append(token)
+            }
+            token = ""; hadQuote = false
+        }
+        // Tokenize scalars so an accent attached to a space or quote cannot swallow the delimiter.
+        for scalar in expression.unicodeScalars {
+            let character = Character(String(scalar))
             if escaped { token.append(character); escaped = false; continue }
             if quoted && character == "\\" { escaped = true; continue }
-            if character == "\"" { quoted.toggle(); continue }
+            if character == "\"" { quoted.toggle(); hadQuote = true; continue }
             if quoted { token.append(character); continue }
-            if character.isWhitespace { if !token.isEmpty { tokens.append(token); token = "" }; continue }
-            if "()&|!".contains(character) { if !token.isEmpty { tokens.append(token); token = "" }; tokens.append(String(character)); continue }
+            if character.isWhitespace { appendToken(); continue }
+            if "()&|!,".contains(character) { appendToken(); tokens.append(String(character)); continue }
             token.append(character)
         }
         guard !quoted && !escaped else { throw FilterFailure(message: "Close the quoted target name.") }
-        if !token.isEmpty { tokens.append(token) }
+        appendToken()
         guard !tokens.isEmpty, tokens.count <= 300 else { throw FilterFailure(message: "Add a filter condition.") }
     }
     mutating func parse() throws -> FilterRule {
         let rule = try parseOr(depth: 0)
+        if cursor < tokens.count, tokens[cursor] == ",", !quotedTokens.contains(cursor) { throw FilterFailure(message: "Multiple query sections are not supported yet. Create separate filters to keep their results separate.") }
         guard cursor == tokens.count else { throw FilterFailure(message: "Unexpected “\(tokens[cursor])”. Join conditions with AND or OR.") }
         let checked = try FilterRule(json: rule.json)
         try checked.validate(in: context); return checked
     }
     private mutating func consume(_ choices: [String]) -> Bool {
-        guard cursor < tokens.count, choices.contains(tokens[cursor].lowercased()) else { return false }; cursor += 1; return true
+        guard cursor < tokens.count, !quotedTokens.contains(cursor), choices.contains(tokens[cursor].lowercased()) else { return false }; cursor += 1; return true
     }
     private mutating func parseOr(depth: Int) throws -> FilterRule {
         var rules = [try parseAnd(depth: depth)]
@@ -234,15 +262,34 @@ struct FilterParser {
         guard depth < 24, cursor < tokens.count else { throw FilterFailure(message: "Add a condition after the operator.") }
         if consume(["not", "!"]) { return .not(try atom(depth: depth + 1)) }
         if consume(["("]) { let rule = try parseOr(depth: depth + 1); guard consume([")"]) else { throw FilterFailure(message: "Close the filter parenthesis.") }; return rule }
-        let token = tokens[cursor]; cursor += 1; let lower = token.lowercased()
-        if ["all", "inbox", "today", "overdue"].contains(lower) { return .predicate(lower, "") }
-        if lower == "no", cursor < tokens.count, ["date", "deadline", "estimate"].contains(tokens[cursor].lowercased()) { let kind = tokens[cursor].lowercased(); cursor += 1; return .predicate("no_" + kind, "") }
+        let token = tokens[cursor]; cursor += 1; let lower = token.lowercased(), scalars = token.unicodeScalars
+        if scalars.first == "#" {
+            let target = String(String.UnicodeScalarView(scalars.dropFirst()))
+            if target.caseInsensitiveCompare("Inbox") == .orderedSame { return .predicate("inbox", "") }
+            return .predicate("project", try context.resolve("project", target))
+        }
+        if scalars.first == "%" || scalars.first == "@" { return .predicate("label", try context.resolve("label", String(String.UnicodeScalarView(scalars.dropFirst())))) }
+        if !quotedTokens.contains(cursor - 1), ["all", "inbox", "today", "overdue", "recurring"].contains(lower) { return .predicate(lower, "") }
+        if lower == "no", !quotedTokens.contains(cursor - 1), cursor < tokens.count, !quotedTokens.contains(cursor), ["date", "deadline", "estimate", "time", "labels", "priority"].contains(tokens[cursor].lowercased()) {
+            let kind = tokens[cursor].lowercased(); cursor += 1
+            return kind == "priority" ? .predicate("priority", "4") : .predicate("no_" + kind, "")
+        }
         if lower == "next", cursor + 1 < tokens.count, Int(tokens[cursor]) != nil, consumeNumberDays() { return .predicate("next", tokens[cursor - 2]) }
         if lower == "completed" || lower == "open" { return .predicate("completed", lower == "completed" ? "true" : "false") }
         if lower.count == 2, lower.first == "p", let number = Int(lower.dropFirst()), (1...4).contains(number) { return .predicate("priority", String(number)) }
         if lower.hasPrefix("duration<=") { return .predicate("duration_max", String(lower.dropFirst(10))) }
-        if let colon = token.firstIndex(of: ":") {
-            let field = token[..<colon].lowercased(), value = String(token[token.index(after: colon)...])
+        if let colon = scalars.firstIndex(of: ":") {
+            let field = String(String.UnicodeScalarView(scalars[..<colon])).lowercased()
+            let value = String(String.UnicodeScalarView(scalars[scalars.index(after: colon)...]))
+            if field == "search" {
+                var words = value.isEmpty ? [] : [value]
+                if value.isEmpty && quotedTokens.contains(cursor - 1) { throw FilterFailure(message: "Enter 1–400 characters to search for.") }
+                while cursor < tokens.count {
+                    if !quotedTokens.contains(cursor), ["and", "or", "&", "|", "!", "not", "(", ")", ","].contains(tokens[cursor].lowercased()) { break }
+                    words.append(tokens[cursor]); cursor += 1
+                }
+                return .predicate("search", words.joined(separator: " "))
+            }
             if ["project", "section", "label", "assignee"].contains(field) { return .predicate(field, try context.resolve(field, value)) }
             if ["due", "before", "deadline", "deadline-before"].contains(field) {
                 if field == "deadline", ["today", "overdue"].contains(value.lowercased()) { return .predicate("deadline_" + value.lowercased(), "") }

@@ -1337,3 +1337,27 @@ private enum QuickReminderText {
         rows.append(.object(spec.raw)); return true
     }
 }
+
+#if DEBUG
+extension Snapshot {
+    static func filterPrimitiveFixture(user: String) -> Snapshot {
+        var result = Snapshot()
+        let project = Record(["id": .string("filter-studio"), "name": .string("Studio"), "user_id": .string(user)])
+        result.tables["projects"] = [project]
+        result.tables["labels"] = [Record(["id": .string("filter-waiting"), "name": .string("Waiting"), "user_id": .string(user)])]
+        result.tables["tasks"] = (0..<6).map { index in
+            var row = Record.task(user: user, project: project.id, date: Date())
+            row["id"] = .string("filter-primitive-\(index)")
+            row["title"] = .string(["Send email agenda", "Send email call", "Email café notes", "Send email café report", "Café meeting", "Café comments"][index])
+            row["description"] = .string(index < 4 ? "Meet at the café" : "Discuss the route")
+            row["is_recurring"] = .bool(index != 3); row["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
+            if index == 1 { row["due_time"] = .string("09:00") }
+            if index == 2 { row["labels"] = .array([.string("Waiting")]) }
+            if index == 5 { row["comments"] = .array([.object(["text": .string("email")])]) }
+            return row
+        }
+        result.tables["saved_views"] = [Record(["id": .string("filter-future"), "user_id": .string(user), "name": .string("Future filter"), "query_ast": .object(["version": .number(1), "root": .object(["op": .string("predicate"), "field": .string("future_field"), "value": .string("retain this value")])]), "layout": .string("list"), "grouping": .string("none"), "sort_by": .string("manual"), "include_completed": .bool(false), "order_index": .number(0)])]
+        return result
+    }
+}
+#endif

@@ -112,4 +112,26 @@ final class WidgetListTests: XCTestCase {
         XCTAssertEqual(data.listSubtitle(label), "Label")
     }
 
+
+    func testKeywordTimeLabelsAndRecurringFiltersUsePrivateNativeProjection() throws {
+        var selected = task("Send email"); selected["description"] = .string("Café agenda"); selected["is_recurring"] = .bool(true)
+        var timed = selected; timed["id"] = .string("timed"); timed["due_time"] = .string("09:00")
+        var labelled = selected; labelled["id"] = .string("labelled"); labelled["labels"] = .array([.string("Waiting")])
+        var plain = selected; plain["id"] = .string("plain"); plain["is_recurring"] = .bool(false)
+        var parser = try FilterParser("search: café email & no time & no labels & recurring", context: FilterContext())
+        let rule = try parser.parse(); let data = try snapshot([selected, timed, labelled, plain], views: [view(rule)])
+        let key = try XCTUnwrap(data.availableLists.first { $0.kind == "filter" }?.id)
+        XCTAssertEqual(data.listTasks(key, at: now, calendar: cph).map(\.id), [selected.id])
+        let encoded = String(data: try JSONEncoder().encode(data), encoding: .utf8)!
+        XCTAssertFalse(encoded.contains("Café agenda")); XCTAssertFalse(encoded.contains("query_ast")); XCTAssertFalse(encoded.contains("recurrence_pattern"))
+    }
+    func testChangedSearchDescriptionAndAccountInvalidateWidgetMembership() throws {
+        var row = task("Draft"); row["description"] = .string("Send email")
+        let rule = FilterRule.predicate("search", "email")
+        let first = try snapshot([row], views: [view(rule)]); let key = try XCTUnwrap(first.availableLists.first { $0.kind == "filter" }?.id)
+        XCTAssertEqual(first.listTasks(key, at: now).map(\.id), [row.id])
+        row["description"] = .string("Call the studio")
+        let changed = try snapshot([row], views: [view(rule)]); XCTAssertTrue(changed.listTasks(key, at: now).isEmpty)
+        let other = try snapshot([row], account: "another", views: [view(rule)]); XCTAssertNil(other.list(key)); XCTAssertTrue(other.listTasks(key, at: now).isEmpty)
+    }
 }

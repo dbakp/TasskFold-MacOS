@@ -243,4 +243,16 @@ final class BackupTests: XCTestCase {
         AuthTransportTests.Stub.handler = { _ in (200,Data("[]".utf8)) }
         do { try await backend.send(Mutation(table:"tasks",recordID:taskID,method:"POST",fields:["id":.string(taskID),"user_id":.string(owner)],insertOnly:true)); XCTFail("A missing inaccessible row cannot acknowledge a restore") } catch { XCTAssertTrue(error.localizedDescription.contains("could not confirm")) }
     }
+
+    func testExtendedKeywordAndMetadataFiltersKeepMeaningAcrossBackupAccounts() throws {
+        var file = backup()
+        let rule = FilterRule.and([.predicate("project", projectID), .predicate("search", "read paper"), .predicate("no_time", ""), .not(.predicate("no_labels", "")), .predicate("recurring", "")])
+        file.tables["saved_views"]![0]["query_ast"] = rule.document
+        let read = try WorkspaceBackup.read(file.data()); XCTAssertEqual(read.tables["saved_views"]![0]["query_ast"], rule.document)
+        let plan = try read.plan(current: Snapshot(), account: other)
+        let restored = try XCTUnwrap(plan.changes.first { $0.table == "saved_views" })
+        let expected = FilterRule.and([.predicate("project", plan.mappedIDs["projects"]![projectID]!), .predicate("search", "read paper"), .predicate("no_time", ""), .not(.predicate("no_labels", "")), .predicate("recurring", "")])
+        XCTAssertEqual(try FilterRule(document: try XCTUnwrap(restored.fields["query_ast"])), expected)
+        XCTAssertEqual(expected.captureDefaults(in: FilterContext(), today: "2026-10-05"), ["project_id": .string(plan.mappedIDs["projects"]![projectID]!)])
+    }
 }
