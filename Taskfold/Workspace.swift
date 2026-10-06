@@ -230,9 +230,9 @@ final class Workspace {
 
     /// Runs a store change and mirrors it into the window's undo manager so Edit ▸ Undo and ⌘Z work.
     func run(_ name: String, _ body: () -> Void) {
-        let depth = store.undoStack.count
+        let previous = store.undoStack.last?.redo.map(\.id)
         body()
-        if store.undoStack.count > depth { register(name) }
+        if store.undoStack.last?.redo.map(\.id) != previous { register(name) }
     }
     private func register(_ name: String) {
         guard let undoManager else { return }

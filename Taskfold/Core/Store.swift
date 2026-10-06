@@ -43,6 +43,7 @@ final class Store {
     @ObservationIgnored private var workspaceCacheReadable = true
     #if DEBUG
     var widgetFixtureFailSave = false
+    var inboxFixtureFailSave = false
     var widgetFixtureReady = false
     #endif
     var workspaceGeneration: UUID { accountGeneration }
@@ -256,6 +257,7 @@ final class Store {
     }
     func persist() throws {
         #if DEBUG
+        if inboxFixtureFailSave { throw WidgetActionFailure("Isolated Inbox review save-failure fixture") }
         if widgetFixtureFailSave, !snapshot.widgetCompletion.receipts.isEmpty { throw WidgetActionFailure("Isolated widget save-failure fixture") }
         #endif
         WidgetCompletion.prepare(&snapshot)
@@ -264,6 +266,12 @@ final class Store {
         publishWidgetSnapshot()
         scheduleDailyBackup()
     }
+    func makeInboxReview(batch: InboxReviewBatch = .five, excluding: Set<String> = []) -> InboxReviewRequest? {
+        guard signedIn || localMode, workspaceCacheReadable else { error = "Open a readable workspace before reviewing Inbox."; return nil }
+        let order = record(DayPlacement.table, id: "scope:inbox")?["ids"].list.map(\.text) ?? []
+        return InboxReviewRequest(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), tasks: tasks, batch: batch, order: order, excluding: excluding)
+    }
+
     static let appGroup = "group.com.dbakp.taskfold"
     /// The private cache is saved before its actionable projection is published.
     private func publishWidgetSnapshot(scheduleCapacityRefresh: Bool = true) {
@@ -724,6 +732,41 @@ extension Store {
         snapshot = Snapshot(tables: ["tasks": [task]]); undoStack = []; redoStack = []; try? persist()
         widgetFixtureFailSave = ProcessInfo.processInfo.arguments.contains("--widget-action-fail-save")
         widgetFixtureReady = true
+    }
+
+    func seedInboxReviewFixture() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--inbox-review-seed") else { return }
+        inboxFixtureFailSave = false; snapshot = Snapshot(); undoStack = []; redoStack = []
+        dailyBackupsEnabled = false; disableNotifications()
+        let project = Record(["id": .string("inbox-project"), "user_id": .string(userID), "name": .string("Studio"), "color": .string("purple")])
+        let next = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        var first = Record.task(user: userID, date: next); first["id"] = .string("inbox-first"); first["title"] = .string("Inbox launch notes"); first["priority"] = .number(1)
+        first["due_time"] = .string("10:30"); first["duration_minutes"] = .number(45); first["deadline_date"] = .string(Dates.day(Calendar.current.date(byAdding: .day, value: 3, to: Date())!))
+        first["description"] = .string("Keep the planned time, estimate and deadline when organizing this thought.")
+        var second = Record.task(user: userID); second["id"] = .string("inbox-second"); second["title"] = .string("Inbox studio sketch"); second["priority"] = .number(2)
+        var third = Record.task(user: userID); third["id"] = .string("inbox-third"); third["title"] = .string("Inbox reference"); third["priority"] = .number(3)
+        var assigned = Record.task(user: userID); assigned["id"] = .string("inbox-assigned"); assigned["title"] = .string("Already organized"); assigned["project_id"] = .string(project.id)
+        var done = Record.task(user: userID); done["id"] = .string("inbox-done"); done["title"] = .string("Already finished"); done["completed"] = .bool(true)
+        snapshot.tables["tasks"] = [first, second, third, assigned, done]; snapshot.tables["projects"] = [project]
+        if ProcessInfo.processInfo.arguments.contains("--inbox-review-batches") {
+            for index in 1...3 {
+                var task = Record.task(user: userID); task["id"] = .string("inbox-next-\(index)"); task["title"] = .string("Inbox next \(index)")
+                task["created_at"] = .string(String(format: "2026-01-01T00:00:%02dZ", 3 - index))
+                snapshot.tables["tasks", default: []].append(task)
+            }
+        }
+        try? persist()
+    }
+    func inboxWidgetFixtureCount() -> String {
+        _ = widgetPublicationRevision
+        guard let read = try? widgetActionDisk().read(), let data = read.data,
+              let payload = try? JSONDecoder().decode([String: JSON].self, from: data) else { return "Inbox unavailable" }
+        let count = payload["tasks"]?.list.filter { $0.object["projectID"]?.text == "" }.count ?? 0
+        return "Inbox: \(count)"
+    }
+    func inboxFixturePlan() -> String {
+        guard let row = record("tasks", id: "inbox-first") else { return "Plan unavailable" }
+        return "\(row.string("due_date")) · \(row.string("due_time")) · \(row.durationMinutes ?? 0)m · \(row.string("deadline_date"))"
     }
 
     func seedCapacityWidgetFixture() {

@@ -66,6 +66,7 @@ struct TaskInspectorForm: View {
     let taskID: String
     @State private var draft = Record()
     @State private var original = Record()
+    @State private var workspaceBinding: WorkspaceBinding?
     @State private var subtask = ""
     @State private var comment = ""
     @State private var pastedImageName: String?
@@ -294,7 +295,7 @@ struct TaskInspectorForm: View {
             } catch { store.error = error.localizedDescription }
         }
         .quickLookPreview($preview)
-        .onAppear { load(); if draft.title.isEmpty { titleFocused = true } }
+        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); load(); if draft.title.isEmpty { titleFocused = true } }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .sheet(isPresented: $showingReminders) {
             NavigationStack {
@@ -305,7 +306,7 @@ struct TaskInspectorForm: View {
         .onChange(of: draft) { _, _ in scheduleSave() }
         .onChange(of: current) { _, value in
             // Untouched fields follow sync; the user's in-progress edits win.
-            guard let value else { return }
+            guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, let value else { return }
             var merged = value
             var nextOriginal = value
             for (key, field) in draft.fields where original.fields[key] != field {
@@ -337,6 +338,7 @@ struct TaskInspectorForm: View {
         saveTask = Task { try? await Task.sleep(for: .milliseconds(600)); guard !Task.isCancelled else { return }; saveNow() }
     }
     private func saveNow() {
+        guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { return }
         guard draft != original, let current else { return }
         var merged = current
         for (key, value) in draft.fields where original.fields[key] != value { merged[key] = value }

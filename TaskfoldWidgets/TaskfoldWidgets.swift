@@ -62,6 +62,26 @@ enum WidgetLinks {
     }
 }
 
+enum InboxWidgetBatch: String, CaseIterable, Codable {
+    case five = "5", ten = "10", all = "all"
+    var limit: Int? { Int(rawValue) }
+}
+struct WidgetInboxReading {
+    var tasks: [WidgetTask]?
+    var count: Int? { tasks?.count }
+    var undated: Int { tasks?.filter { $0.due.isEmpty }.count ?? 0 }
+    var priorities: Int { tasks?.filter { $0.priority <= 2 }.count ?? 0 }
+}
+extension WidgetLinks {
+    static func inboxReview(account: String, batch: InboxWidgetBatch) -> URL {
+        guard !account.isEmpty else { return URL(string: "taskfold://inbox")! }
+        var components = URLComponents()
+        components.scheme = "taskfold"; components.host = "review"; components.path = "/inbox"
+        components.queryItems = [URLQueryItem(name: "account", value: account), URLQueryItem(name: "batch", value: batch.rawValue)]
+        return components.url ?? URL(string: "taskfold://inbox")!
+    }
+}
+
 enum WindowBudget: String, CaseIterable, Codable { case ten = "10", twentyFive = "25", fortyFive = "45"; var minutes: Int { Int(rawValue) ?? 25 } }
 enum WindowScope: String, CaseIterable, Codable { case ready, inbox, all }
 enum WidgetPalette: String, CaseIterable, Codable { case standard, rose, lavender, mint }
@@ -249,6 +269,20 @@ struct WidgetSnapshot: Codable {
     func scoped(to id: String?, at date: Date, calendar: Calendar = .current) -> WidgetSnapshot {
         guard let id else { return self }
         var copy = self; copy.tasks = listTasks(id, at: date, calendar: calendar); return copy
+    }
+
+    func inboxReading() -> WidgetInboxReading {
+        guard version == 2, !account.isEmpty, updated.isFinite, updated > 0,
+              tasks.allSatisfy({ !$0.id.isEmpty && $0.projectID != nil }) else { return WidgetInboxReading(tasks: nil) }
+        var seen = Set<String>()
+        let inbox = tasks.filter { seen.insert($0.id).inserted }.filter { $0.projectID == "" }
+        let sorted = inbox.enumerated().sorted { $0.element.priority == $1.element.priority ? $0.offset < $1.offset : $0.element.priority < $1.element.priority }.map(\.element)
+        return WidgetInboxReading(tasks: sorted)
+    }
+
+    func inboxReviewURL(batch: InboxWidgetBatch) -> URL {
+        guard let count = inboxReading().count, count > 0 else { return URL(string: "taskfold://inbox")! }
+        return WidgetLinks.inboxReview(account: account, batch: batch)
     }
 
     func capacityReading(at date: Date, day: CapacityDay = .today, calendar input: Calendar = .current) -> WidgetCapacityReading {
@@ -963,6 +997,109 @@ struct CapacityWidget: Widget {
     }
 }
 
+extension InboxWidgetBatch: AppEnum {
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Inbox review"
+    static var caseDisplayRepresentations: [InboxWidgetBatch: DisplayRepresentation] = [.five: "Five tasks", .ten: "Ten tasks", .all: "All Inbox tasks"]
+}
+struct InboxConfiguration: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Inbox reset"
+    static var description = IntentDescription("Choose how much to review and what to show on this widget.")
+    @Parameter(title: "Review", default: .five) var batch: InboxWidgetBatch
+    @Parameter(title: "Color", default: .standard) var palette: WidgetPalette
+    @Parameter(title: "Hide Inbox details", default: false) var hideDetails: Bool
+}
+struct InboxEntry: TimelineEntry {
+    var date: Date
+    var snapshot: WidgetSnapshot
+    var batch: InboxWidgetBatch = .five
+    var palette: WidgetPalette = .standard
+    var hideDetails = false
+    static var preview: InboxEntry {
+        let tasks = ["Untangle the launch checklist", "Book the studio", "Sketch the next little idea", "Check the delivery", "Save a good reference", "Read the draft"].enumerated().map { index, title in
+            WidgetTask(id: "inbox-\(index)", title: title, due: index == 1 ? WidgetSnapshot.day(Date()) : "", time: "", priority: index < 2 ? 2 : 4, project: "", color: "", projectID: "")
+        }
+        return InboxEntry(date: Date(), snapshot: WidgetSnapshot(updated: Date().timeIntervalSinceReferenceDate, tasks: tasks, account: "preview"))
+    }
+}
+struct InboxProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> InboxEntry { .preview }
+    func snapshot(for configuration: InboxConfiguration, in context: Context) async -> InboxEntry {
+        context.isPreview ? .preview : entry(Date(), snapshot: .load(), configuration: configuration)
+    }
+    func timeline(for configuration: InboxConfiguration, in context: Context) async -> Timeline<InboxEntry> {
+        let now = Date(), snapshot = WidgetSnapshot.load()
+        return Timeline(entries: WidgetSnapshot.timelineDates(from: now).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+    }
+    private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: InboxConfiguration) -> InboxEntry {
+        InboxEntry(date: date, snapshot: snapshot, batch: configuration.batch, palette: configuration.palette, hideDetails: configuration.hideDetails)
+    }
+}
+struct InboxWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: InboxEntry
+    private var reading: WidgetInboxReading { entry.snapshot.inboxReading() }
+    private var tint: Color { entry.palette.color(fallback: plum) }
+    private var count: Int? { reading.count }
+    private var reviewLabel: String {
+        guard let count, count > 0 else { return "Open Inbox" }
+        return "Review \(min(count, entry.batch.limit ?? count))"
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 5) {
+                Image(systemName: "tray").foregroundStyle(tint)
+                Text("Inbox reset").font(.caption.weight(.semibold))
+                Spacer(minLength: 0)
+            }
+            if entry.hideDetails {
+                Spacer(minLength: 0)
+                Text("A little clarity").font(.headline).lineLimit(2)
+                Text("Open Inbox to choose what comes next.").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+                Spacer(minLength: 0)
+            } else if let count {
+                HStack(alignment: .center, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(count == 0 ? "Clear" : "\(count)").font(.system(size: count == 0 ? 30 : 50, weight: .semibold, design: .rounded)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.65)
+                        Text(count == 0 ? "Room for a fresh thought" : "open in Inbox").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+                    }.frame(maxWidth: .infinity, alignment: .leading).privacySensitive()
+                    if family != .systemSmall, count > 0 {
+                        VStack(alignment: .leading, spacing: 7) {
+                            ForEach(Array((reading.tasks ?? []).prefix(2))) { task in
+                                HStack(alignment: .top, spacing: 5) {
+                                    Circle().fill(task.priority <= 2 ? brand : tint).frame(width: 5, height: 5).padding(.top, 4)
+                                    Text(task.title).font(.caption2).lineLimit(2)
+                                }
+                            }
+                        }.frame(maxWidth: .infinity, alignment: .leading).privacySensitive()
+                    }
+                }
+                if count > 0 {
+                    Text("\(reading.priorities) priorities · \(reading.undated) without dates").font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.75).privacySensitive()
+                }
+                Spacer(minLength: 0)
+            } else {
+                Spacer(minLength: 0)
+                Text(entry.snapshot.updated == 0 ? "A fresh start" : "Refresh Inbox").font(.headline).lineLimit(2)
+                Text("Open Taskfold to load your Inbox.").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+                Spacer(minLength: 0)
+            }
+            HStack(spacing: 5) {
+                Text(entry.hideDetails ? "Review Inbox" : reviewLabel).font(.caption2.weight(.semibold)).lineLimit(1)
+                Image(systemName: "arrow.right").font(.system(size: 9, weight: .semibold))
+            }.foregroundStyle(tint)
+            WidgetFooter(entry: TodayEntry(date: entry.date, snapshot: entry.snapshot))
+        }
+        .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+        .widgetURL(entry.snapshot.inboxReviewURL(batch: entry.batch))
+    }
+}
+struct InboxWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "TaskfoldInboxReset", intent: InboxConfiguration.self, provider: InboxProvider()) { InboxWidgetView(entry: $0) }
+            .configurationDisplayName("Inbox reset").description("See what is still in Inbox and review a few tasks at a time. Move, edit, finish or keep each one.").supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
 @main
 struct TaskfoldWidgetBundle: WidgetBundle {
     var body: some Widget {
@@ -974,6 +1111,7 @@ struct TaskfoldWidgetBundle: WidgetBundle {
         WindowWidget()
         ListWidget()
         CapacityWidget()
+        InboxWidget()
         #if os(iOS)
         AddTaskControl()
         #endif

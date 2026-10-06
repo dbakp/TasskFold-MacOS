@@ -7,8 +7,22 @@ struct WidgetActionTestPanel: View {
     @State private var message: String?
     @State private var pending = 0
     private let rootID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa10"
+    private func inboxLink(account: String) -> URL {
+        var components = URLComponents(); components.scheme = "taskfold"; components.host = "review"; components.path = "/inbox"
+        components.queryItems = [URLQueryItem(name: "account", value: account), URLQueryItem(name: "batch", value: "5")]
+        return components.url!
+    }
     var body: some View {
-        if ProcessInfo.processInfo.arguments.contains("--capacity-widget-testing") {
+        if ProcessInfo.processInfo.arguments.contains("--inbox-review-testing") {
+            VStack(spacing: 4) {
+                Text(store.inboxWidgetFixtureCount()).font(.system(size: 10)).accessibilityIdentifier("inboxProjection")
+                Text(store.inboxFixturePlan()).font(.system(size: 10)).accessibilityIdentifier("inboxFixturePlan")
+                HStack {
+                    Link("Review Inbox", destination: inboxLink(account: store.userID)).accessibilityIdentifier("inboxOpenReview")
+                    Link("Other workspace", destination: inboxLink(account: "other-workspace")).accessibilityIdentifier("inboxOtherWorkspace")
+                }.font(.system(size: 12))
+            }
+        } else if ProcessInfo.processInfo.arguments.contains("--capacity-widget-testing") {
             VStack(spacing: 4) {
                 Text(store.capacityWidgetFixtureDay()).font(.system(size: 10)).accessibilityIdentifier("capacityProjection")
                 HStack {

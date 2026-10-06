@@ -2,6 +2,25 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testInboxReviewMoveKeepCompleteUndoAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--inbox-review-testing", "--inbox-review-seed"]; app.launch()
+        XCTAssertTrue(app.staticTexts["inboxProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["inboxProjection"].label, "Inbox: 3")
+        let plan = app.staticTexts["inboxFixturePlan"].label
+        app.buttons["reviewInbox"].click(); XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].label, "Inbox launch notes")
+        app.buttons["inboxReviewMove"].click(); app.buttons["Studio"].click()
+        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].label, "Inbox studio sketch"); app.buttons["inboxReviewKeep"].click()
+        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].label, "Inbox reference"); app.buttons["inboxReviewComplete"].click()
+        XCTAssertTrue(app.staticTexts["inboxReviewSummary"].waitForExistence(timeout: 5)); app.buttons["inboxReviewUndo"].click()
+        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].label, "Inbox reference"); app.buttons["inboxReviewComplete"].click()
+        XCTAssertEqual(app.staticTexts["inboxReviewRemaining"].label, "1 open task remains in Inbox."); app.buttons["inboxReviewClose"].click()
+        XCTAssertEqual(app.staticTexts["inboxProjection"].label, "Inbox: 1"); XCTAssertEqual(app.staticTexts["inboxFixturePlan"].label, plan)
+        app.terminate(); app.launchArguments.removeAll { $0 == "--inbox-review-seed" }; app.launch()
+        XCTAssertTrue(app.staticTexts["inboxProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["inboxProjection"].label, "Inbox: 1")
+        app.buttons["reviewInbox"].click(); XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["inboxReviewTitle"].label, "Inbox studio sketch"); app.buttons["inboxReviewClose"].click(); app.terminate()
+    }
+
     @MainActor func testBulkDeadlineInspectorSetUndoAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--deadline-fixture"]; app.launch()
         let first = app.staticTexts["Prepare launch"], second = app.staticTexts["Review copy"]

@@ -119,7 +119,34 @@ extension PreviewLink where Content == Text {
             }
         }.environment(\.dynamicTypeSize, mode == "capacity-largest" ? .accessibility3 : .large)
 
-        let actual = Group { if capacity { capacityContent.padding(32).background(mode == "capacity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "capacity-dark" ? .dark : .light) } else if lists { listContent.padding(32).background(mode == "lists-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "lists-dark" ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
+
+        let inbox = mode.hasPrefix("inbox")
+        var inboxEntry = InboxEntry.preview
+        if mode == "inbox-empty" { inboxEntry.snapshot.tasks = [] }
+        if mode == "inbox-private" { inboxEntry.hideDetails = true }
+        if mode == "inbox-legacy" { inboxEntry.snapshot.version = 1 }
+        if mode == "inbox-dense", let first = inboxEntry.snapshot.tasks.first {
+            inboxEntry.snapshot.tasks = (0..<125).map { index in
+                var task = first; task.id = "inbox-dense-\(index)"
+                task.title = "Prepare the quarterly planning notes and share the final draft with the team"
+                return task
+            }
+        }
+        var tenInbox = inboxEntry; tenInbox.batch = .ten; tenInbox.palette = .mint
+        let inboxContent = VStack(alignment: .leading, spacing: 20) {
+            Text("A little clarity, one decision at a time").font(.system(size: 28, weight: .bold, design: .rounded))
+            Text("An honest Inbox count. Keep, organize or finish. Your dates stay yours.").font(.subheadline).foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 20) {
+                InboxWidgetView(family: .systemSmall, entry: inboxEntry).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: plum)).clipShape(RoundedRectangle(cornerRadius: 24))
+                InboxWidgetView(entry: inboxEntry).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: plum)).clipShape(RoundedRectangle(cornerRadius: 24))
+            }
+            HStack(alignment: .top, spacing: 20) {
+                InboxWidgetView(family: .systemSmall, entry: tenInbox).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: mint)).clipShape(RoundedRectangle(cornerRadius: 24))
+                InboxWidgetView(entry: tenInbox).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: mint)).clipShape(RoundedRectangle(cornerRadius: 24))
+            }
+        }.environment(\.dynamicTypeSize, mode == "inbox-largest" ? .accessibility3 : .large)
+
+        let actual = Group { if inbox { inboxContent.padding(32).background(mode == "inbox-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "inbox-dark" ? .dark : .light) } else if capacity { capacityContent.padding(32).background(mode == "capacity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "capacity-dark" ? .dark : .light) } else if lists { listContent.padding(32).background(mode == "lists-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "lists-dark" ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
         let renderer = ImageRenderer(content: actual)
         renderer.scale = 2
         if let image = renderer.cgImage {
@@ -134,6 +161,6 @@ with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporar
     path = Path(temporary)
     (path / 'Preview.swift').write_text(source)
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-D', 'TASKFOLD_WIDGET_EXTENSION', str(root / 'Taskfold/Core/WidgetActions.swift'), str(path / 'Preview.swift'), '-o', str(path / 'preview')], check=True)
-    modes = [(mode, mode) for mode in ['capacity', 'capacity-dark', 'capacity-overload', 'capacity-unknown', 'capacity-off', 'capacity-incomplete', 'capacity-refresh', 'capacity-empty', 'capacity-private', 'capacity-rest', 'capacity-largest']] if '--capacity' in sys.argv else [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable', 'lists-pending', 'lists-sync', 'lists-dense']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
+    modes = [(mode, mode) for mode in ['inbox', 'inbox-dark', 'inbox-empty', 'inbox-private', 'inbox-legacy', 'inbox-dense', 'inbox-largest']] if '--inbox' in sys.argv else [(mode, mode) for mode in ['capacity', 'capacity-dark', 'capacity-overload', 'capacity-unknown', 'capacity-off', 'capacity-incomplete', 'capacity-refresh', 'capacity-empty', 'capacity-private', 'capacity-rest', 'capacity-largest']] if '--capacity' in sys.argv else [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable', 'lists-pending', 'lists-sync', 'lists-dense']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
     for mode, name in modes:
         subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode], check=True)

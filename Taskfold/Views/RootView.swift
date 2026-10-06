@@ -7,6 +7,7 @@ struct RootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.undoManager) private var undoManager
     @Environment(\.scenePhase) private var phase
+    @State private var inboxReview: InboxReviewRequest?
     @State private var seeded = false
     @Environment(\.openSettings) private var openSettings
     @AppStorage("mac.pendingInvitations") private var pendingInvitations = false
@@ -22,6 +23,9 @@ struct RootView: View {
         .onChange(of: store.signedIn) { _, signedIn in if !signedIn { workspace.clearNavigationMemory() } }
         .onChange(of: reduceMotion) { _, value in workspace.reduceMotion = value }
         .onChange(of: undoManager) { _, value in workspace.undoManager = value }
+        .environment(\.startInboxReview, startInboxReview)
+        .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
+        .onChange(of: store.workspaceGeneration) { _, _ in inboxReview = nil }
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
             BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.ids.sorted().compactMap { workspace.taskRecord($0) } : []) { day in
                 try workspace.setDeadlines(request, day: day)
@@ -64,6 +68,11 @@ struct RootView: View {
             }
         }
         .onOpenURL { url in
+            if let review = InboxReviewLink.parse(url) {
+                guard store.signedIn, review.account == store.userID else { store.error = "This widget belongs to another workspace. Open Inbox to review your current tasks."; return }
+                workspace.section = .inbox; startInboxReview(review.batch)
+                return
+            }
             if let day = PlannerWidgetRoute.day(url) { workspace.calendarDay = day; workspace.calendarMode = .day; workspace.section = .calendar }
             if url.scheme == "taskfold" && url.host == "view" && !url.lastPathComponent.isEmpty { workspace.section = .saved(url.lastPathComponent) }
             if url.scheme == "taskfold", url.host == "project", store.record("projects", id: url.lastPathComponent) != nil { workspace.section = .project(url.lastPathComponent) }
@@ -86,6 +95,11 @@ struct RootView: View {
         .onChange(of: phase) { _, value in if value == .active { Task { await store.reschedule(); await store.sync() } } }
         .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in Task { await store.reschedule() } }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in Task { await store.reschedule() } }
+    }
+
+    private func startInboxReview(_ batch: InboxReviewBatch) {
+        guard inboxReview == nil else { return }
+        inboxReview = store.makeInboxReview(batch: batch)
     }
 
     /// Debug-only fixtures shared with the UI tests. Release builds ignore these arguments.
@@ -269,6 +283,7 @@ struct RootView: View {
                     try? store.persist()
                     workspace.section = .today
                 }
+        if arguments.contains("--inbox-review-seed") { store.startLocal(); store.seedInboxReviewFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
         if arguments.contains("--capacity-widget-seed") { store.startLocal(); store.seedCapacityWidgetFixture(); workspace.section = .today }
         if arguments.contains("--completion-cycle-fixture") { store.startLocal(); store.seedCompletionCycleFixture(); workspace.section = .today }
         if arguments.contains("--widget-action-seed") { store.startLocal(); store.seedWidgetActionFixture(); workspace.section = .today }
