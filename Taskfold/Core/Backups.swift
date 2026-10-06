@@ -193,7 +193,7 @@ extension WorkspaceBackup {
             if required { throw BackupFailure(message: "A \(table) reference is missing from this backup and workspace.") }
             return Self.stableID(source + "|" + canonical(account) + "|" + table, canonical(value))
         }
-        let scopeReferences = try NSRegularExpression(pattern: "(?<![a-zA-Z0-9_])(project|label|view|section):([^:|]+)")
+        let scopeReferences = try NSRegularExpression(pattern: "(?<![a-zA-Z0-9_])(project|label|view|section|note):([^:|]+)")
         func scope(_ key: String) throws -> String {
             guard key.unicodeScalars.count <= 300 else { throw BackupFailure(message: "A view key is too long.") }
             let matches = scopeReferences.matches(in: key, range: NSRange(key.startIndex..., in: key))
@@ -204,7 +204,7 @@ extension WorkspaceBackup {
                 guard let kindRange = Range(match.range(at: 1), in: key), let idRange = Range(match.range(at: 2), in: key), let wholeRange = Range(match.range, in: updated) else { continue }
                 let kind = String(key[kindRange]), id = String(key[idRange])
                 if kind == "project" && id == "none" && key[..<kindRange.lowerBound].hasSuffix("group:") { continue }
-                let table = ["project":"projects", "label":"labels", "view":"saved_views", "section":"sections"][kind]!
+                let table = ["project":"projects", "label":"labels", "view":"saved_views", "section":"sections", "note":"tasks"][kind]!
                 updated.replaceSubrange(wholeRange, with: kind + ":" + (try mapped(table, id)))
             }
             if key.hasPrefix("group:") {

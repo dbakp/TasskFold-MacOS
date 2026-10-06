@@ -146,7 +146,38 @@ extension PreviewLink where Content == Text {
             }
         }.environment(\.dynamicTypeSize, mode == "inbox-largest" ? .accessibility3 : .large)
 
-        let actual = Group { if inbox { inboxContent.padding(32).background(mode == "inbox-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "inbox-dark" ? .dark : .light) } else if capacity { capacityContent.padding(32).background(mode == "capacity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "capacity-dark" ? .dark : .light) } else if lists { listContent.padding(32).background(mode == "lists-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "lists-dark" ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
+
+        let notes = mode.hasPrefix("notes")
+        var noteEntry = NoteEntry.preview
+        if mode == "notes-private" { noteEntry.hideDetails = true }
+        if mode == "notes-choose" { noteEntry.noteID = nil }
+        if mode == "notes-deleted" { noteEntry.snapshot.notes = [] }
+        if mode == "notes-legacy" { noteEntry.snapshot.notes = nil }
+        if mode == "notes-blank" { noteEntry.snapshot.notes?[0].text = "" }
+        if mode == "notes-dense" {
+            noteEntry.snapshot.notes?[0].title = "A longer reference for the café, the studio and the next good idea"
+            noteEntry.snapshot.notes?[0].text = String(repeating: "Keep the café and 👩🏽‍💻 details.\nLeave room for ideas and finish one clear step.\n", count: 12)
+            noteEntry.snapshot.notes?[0].truncated = true
+        }
+        var roseNote = noteEntry; roseNote.palette = .rose
+        var lavenderNote = noteEntry; lavenderNote.palette = .lavender
+        let noteContent = VStack(alignment: .leading, spacing: 20) {
+            Text("A thought worth keeping close").font(.system(size: 28, weight: .bold, design: .rounded))
+            Text("Instructions, a checklist, an idea. Explicitly pinned. Tap to read it all.").font(.subheadline).foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 20) {
+                NoteWidgetView(family: .systemSmall, entry: noteEntry).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: mint)).clipShape(RoundedRectangle(cornerRadius: 24))
+                NoteWidgetView(entry: noteEntry).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: mint)).clipShape(RoundedRectangle(cornerRadius: 24))
+            }
+            HStack(alignment: .top, spacing: 20) {
+                NoteWidgetView(family: .systemLarge, entry: roseNote).padding(16).frame(width: 338, height: 354).background(WidgetSurface(tint: brand)).clipShape(RoundedRectangle(cornerRadius: 24))
+                VStack(spacing: 14) {
+                    NoteWidgetView(family: .systemSmall, entry: roseNote).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: brand)).clipShape(RoundedRectangle(cornerRadius: 24))
+                    NoteWidgetView(family: .systemSmall, entry: lavenderNote).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: plum)).clipShape(RoundedRectangle(cornerRadius: 24))
+                }
+            }
+        }.environment(\.dynamicTypeSize, mode == "notes-largest" ? .accessibility3 : .large)
+
+        let actual = Group { if notes { noteContent.padding(32).background(mode == "notes-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "notes-dark" ? .dark : .light) } else if inbox { inboxContent.padding(32).background(mode == "inbox-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "inbox-dark" ? .dark : .light) } else if capacity { capacityContent.padding(32).background(mode == "capacity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "capacity-dark" ? .dark : .light) } else if lists { listContent.padding(32).background(mode == "lists-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "lists-dark" ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
         let renderer = ImageRenderer(content: actual)
         renderer.scale = 2
         if let image = renderer.cgImage {
@@ -161,6 +192,6 @@ with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporar
     path = Path(temporary)
     (path / 'Preview.swift').write_text(source)
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-D', 'TASKFOLD_WIDGET_EXTENSION', str(root / 'Taskfold/Core/WidgetActions.swift'), str(path / 'Preview.swift'), '-o', str(path / 'preview')], check=True)
-    modes = [(mode, mode) for mode in ['inbox', 'inbox-dark', 'inbox-empty', 'inbox-private', 'inbox-legacy', 'inbox-dense', 'inbox-largest']] if '--inbox' in sys.argv else [(mode, mode) for mode in ['capacity', 'capacity-dark', 'capacity-overload', 'capacity-unknown', 'capacity-off', 'capacity-incomplete', 'capacity-refresh', 'capacity-empty', 'capacity-private', 'capacity-rest', 'capacity-largest']] if '--capacity' in sys.argv else [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable', 'lists-pending', 'lists-sync', 'lists-dense']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
+    modes = [(mode, mode) for mode in ['notes', 'notes-dark', 'notes-private', 'notes-choose', 'notes-deleted', 'notes-legacy', 'notes-blank', 'notes-dense', 'notes-largest']] if '--notes' in sys.argv else [(mode, mode) for mode in ['inbox', 'inbox-dark', 'inbox-empty', 'inbox-private', 'inbox-legacy', 'inbox-dense', 'inbox-largest']] if '--inbox' in sys.argv else [(mode, mode) for mode in ['capacity', 'capacity-dark', 'capacity-overload', 'capacity-unknown', 'capacity-off', 'capacity-incomplete', 'capacity-refresh', 'capacity-empty', 'capacity-private', 'capacity-rest', 'capacity-largest']] if '--capacity' in sys.argv else [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable', 'lists-pending', 'lists-sync', 'lists-dense']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
     for mode, name in modes:
         subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode], check=True)

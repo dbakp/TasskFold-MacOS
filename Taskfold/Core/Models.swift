@@ -1066,7 +1066,7 @@ enum TaskCompletion {
 
 /// Versioned widget payload. The extension receives planning data, never sessions or mutations.
 enum WidgetProjection {
-    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off") -> [String: JSON] {
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = []) -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
         let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar)
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
@@ -1080,7 +1080,7 @@ enum WidgetProjection {
                 "duration": task.durationMinutes.map { .number(Double($0)) } ?? .null,
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
-        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "lists": .array(lists), "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
+        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
     }
 
     /// Materialize the planner's exact day semantics in a bounded, title-free projection.

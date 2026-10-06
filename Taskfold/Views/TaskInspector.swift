@@ -65,6 +65,7 @@ struct TaskInspectorForm: View {
     @Environment(Workspace.self) private var workspace
     let taskID: String
     @State private var draft = Record()
+    @State private var notePin: Bool?
     @State private var original = Record()
     @State private var workspaceBinding: WorkspaceBinding?
     @State private var subtask = ""
@@ -111,7 +112,11 @@ struct TaskInspectorForm: View {
                     }
                     .transition(.opacity)
                 }
-                TextField("Notes", text: text("description"), prompt: Text("Notes"), axis: .vertical).labelsHidden().multilineTextAlignment(.leading).textFieldStyle(.plain).lineLimit(2...10).foregroundStyle(.secondary)
+                TextField("Notes", text: text("description"), prompt: Text("Notes"), axis: .vertical).labelsHidden().multilineTextAlignment(.leading).textFieldStyle(.plain).lineLimit(2...10).foregroundStyle(.secondary).accessibilityIdentifier("taskDescription")
+                if store.record("tasks", id: taskID) != nil {
+                    Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
+                    Text("Pin only text you want visible on your desktop or Home Screen. Choose it in the Pinned note widget; hide its details for privacy.").font(.caption).foregroundStyle(.secondary)
+                }
                 HStack {
                     Button(draft.completed ? "Reopen" : "Complete", systemImage: draft.completed ? "arrow.uturn.backward.circle" : "checkmark.circle") { if let current { workspace.complete(current) } }
                         .controlSize(.small)
@@ -339,16 +344,19 @@ struct TaskInspectorForm: View {
     }
     private func saveNow() {
         guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { return }
-        guard draft != original, let current else { return }
+        guard draft != original || notePin != nil, let current else { return }
         var merged = current
         for (key, value) in draft.fields where original.fields[key] != value { merged[key] = value }
         merged["title"] = .string(merged.title.trimmingCharacters(in: .whitespacesAndNewlines))
         if merged.title.isEmpty { merged["title"] = original["title"] }
         if merged["is_recurring"].flag && merged.due == nil { merged["due_date"] = .string(Dates.day(Date())) }
-        guard merged != current else { original = merged; draft = merged; return }
-        if workspace.save("tasks", merged, name: "Edit Task", baseline: original) {
-            original = merged; draft = merged
-        }
+        guard merged != current || notePin != nil else { original = merged; draft = merged; return }
+        var saved = false
+        if let notePin {
+            workspace.run("Edit Pinned Note") { saved = store.saveTaskWithNotePin(merged, pin: notePin, baseline: original) }
+            self.notePin = nil
+        } else { saved = workspace.save("tasks", merged, name: "Edit Task", baseline: original) }
+        if saved { original = merged; draft = merged }
     }
     private func addSubtask() {
         guard workspace.taskDepth(taskID) < 2 else { return }

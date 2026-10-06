@@ -150,19 +150,43 @@ struct WidgetList: Codable, Identifiable, Sendable {
 
 enum WidgetListStatus: Equatable { case ready, choose, unavailable, refresh }
 
+struct WidgetNote: Codable, Identifiable, Sendable {
+    var id: String
+    var taskID: String
+    var title: String
+    var text: String
+    var truncated: Bool
+    var completed: Bool
+    func belongs(to account: String) -> Bool {
+        guard !account.isEmpty, !taskID.isEmpty, taskID.utf8.count <= 200, !taskID.contains(":"), !taskID.contains("|"),
+              title.count <= 160, title.utf8.count <= 1000, text.count <= 1200, text.utf8.count <= 6000,
+              let data = Data(base64Encoded: id), let key = try? JSONDecoder().decode([String].self, from: data) else { return false }
+        return key == [account, "note", taskID]
+    }
+    func url(account: String) -> URL {
+        var parts = URLComponents(); parts.scheme = "taskfold"; parts.host = "note"
+        var allowed = CharacterSet.urlPathAllowed; allowed.remove(charactersIn: "/%?#")
+        parts.percentEncodedPath = "/" + (taskID.addingPercentEncoding(withAllowedCharacters: allowed) ?? "")
+        parts.queryItems = [URLQueryItem(name: "account", value: account)]
+        return parts.url ?? URL(string: "taskfold://notes")!
+    }
+}
+enum WidgetNoteStatus: Equatable { case ready, choose, unavailable, refresh }
+
 struct WidgetSnapshot: Codable {
     var updated: TimeInterval
     var tasks: [WidgetTask]
     var version: Int
     var account: String
     var lists: [WidgetList] = []
+    var notes: [WidgetNote]? = nil // nil means this publisher predates pinned notes.
     var capacity: WidgetCapacity? = nil
     var pendingSync: Int = 0
     var pendingTaskIDs: [String] = [] // Derived under the same disk lock as the snapshot read.
     init(updated: TimeInterval, tasks: [WidgetTask], version: Int = 2, account: String = "", lists: [WidgetList] = []) {
         self.updated = updated; self.tasks = tasks; self.version = version; self.account = account; self.lists = lists
     }
-    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync, capacity }
+    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync, capacity, notes }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         version = try row.decodeIfPresent(Int.self, forKey: .version) ?? 1
@@ -172,7 +196,36 @@ struct WidgetSnapshot: Codable {
         account = try row.decodeIfPresent(String.self, forKey: .account) ?? ""
         lists = try row.decodeIfPresent([WidgetList].self, forKey: .lists) ?? []
         pendingSync = max(0, try row.decodeIfPresent(Int.self, forKey: .pendingSync) ?? 0)
+        notes = try? row.decode([WidgetNote].self, forKey: .notes)
         capacity = try? row.decode(WidgetCapacity.self, forKey: .capacity)
+    }
+    var availableNotes: [WidgetNote] {
+        var seen = Set<String>()
+        return (notes ?? []).filter { seen.insert($0.taskID).inserted && $0.belongs(to: account) }.sorted {
+            $0.title == $1.title ? $0.id < $1.id : $0.title.localizedStandardCompare($1.title) == .orderedAscending
+        }
+    }
+    func note(_ id: String?) -> WidgetNote? { guard let id else { return nil }; return availableNotes.first { $0.id == id } }
+    func noteSubtitle(_ note: WidgetNote) -> String {
+        let duplicate = availableNotes.filter { $0.title.caseInsensitiveCompare(note.title) == .orderedSame }.count > 1
+        return (note.completed ? "Completed task notes" : "Task notes") + (duplicate ? " · " + note.taskID : "")
+    }
+    func notesFresh(at date: Date) -> Bool { !account.isEmpty && notes != nil && updated.isFinite && updated > 0 && date.timeIntervalSinceReferenceDate >= updated - 300 && date.timeIntervalSinceReferenceDate < updated + 86_400 }
+    func noteTimelineDates(from date: Date, calendar: Calendar = .current) -> [Date] {
+        let days = Self.timelineDates(from: date, calendar: calendar)
+        guard notesFresh(at: date) else { return days }
+        let expiry = Date(timeIntervalSinceReferenceDate: updated + 86_400)
+        return Array(Set(days + [expiry])).sorted()
+    }
+    func noteStatus(_ id: String?, at date: Date) -> WidgetNoteStatus {
+        guard notesFresh(at: date) else { return .refresh }
+        guard id != nil else { return .choose }
+        return note(id) == nil ? .unavailable : .ready
+    }
+    var notesURL: URL {
+        guard !account.isEmpty else { return URL(string: "taskfold://all")! }
+        var parts = URLComponents(); parts.scheme = "taskfold"; parts.host = "notes"; parts.queryItems = [URLQueryItem(name: "account", value: account)]
+        return parts.url ?? URL(string: "taskfold://all")!
     }
     var hasPlanningFields: Bool { version == 2 }
     static let empty = WidgetSnapshot(updated: 0, tasks: [])
@@ -1100,6 +1153,111 @@ struct InboxWidget: Widget {
     }
 }
 
+struct WidgetNoteEntity: AppEntity {
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Pinned note")
+    static var defaultQuery = WidgetNoteQuery()
+    var id: String
+    var name: String
+    var subtitle: String
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)", subtitle: "\(subtitle)") }
+    init(_ note: WidgetNote, subtitle: String) { id = note.id; name = note.title; self.subtitle = subtitle }
+}
+struct WidgetNoteQuery: EntityStringQuery {
+    func entities(for identifiers: [String]) async throws -> [WidgetNoteEntity] {
+        let snapshot = WidgetSnapshot.load()
+        guard snapshot.notesFresh(at: Date()) else { return [] }
+        return identifiers.compactMap { snapshot.note($0).map { WidgetNoteEntity($0, subtitle: snapshot.noteSubtitle($0)) } }
+    }
+    func entities(matching string: String) async throws -> [WidgetNoteEntity] {
+        try await suggestedEntities().filter { $0.name.localizedCaseInsensitiveContains(string) }
+    }
+    func suggestedEntities() async throws -> [WidgetNoteEntity] {
+        let snapshot = WidgetSnapshot.load()
+        return snapshot.notesFresh(at: Date()) ? snapshot.availableNotes.map { WidgetNoteEntity($0, subtitle: snapshot.noteSubtitle($0)) } : []
+    }
+}
+struct NoteConfiguration: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Pinned note"
+    static var description = IntentDescription("Keep instructions or an idea close. Pin a task's notes in Taskfold, then choose it here.")
+    @Parameter(title: "Note") var note: WidgetNoteEntity?
+    @Parameter(title: "Color", default: .standard) var palette: WidgetPalette
+    @Parameter(title: "Hide title and text", default: false) var hideDetails: Bool
+}
+struct NoteEntry: TimelineEntry {
+    var date: Date
+    var snapshot: WidgetSnapshot
+    var noteID: String?
+    var palette: WidgetPalette = .standard
+    var hideDetails: Bool = false
+    static var preview: NoteEntry {
+        let now = Date(), account = "preview", taskID = "preview-note"
+        let id = try! JSONEncoder().encode([account, "note", taskID]).base64EncodedString()
+        var snapshot = WidgetSnapshot(updated: now.timeIntervalSinceReferenceDate, tasks: [], account: account)
+        snapshot.notes = [WidgetNote(id: id, taskID: taskID, title: "Make room for good ideas", text: "Start with one clear thought.\nSketch it before polishing.\nLeave a little space for surprise.", truncated: false, completed: false)]
+        return NoteEntry(date: now, snapshot: snapshot, noteID: id)
+    }
+}
+struct NoteProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> NoteEntry { .preview }
+    func snapshot(for configuration: NoteConfiguration, in context: Context) async -> NoteEntry { context.isPreview ? .preview : entry(Date(), snapshot: .load(), configuration: configuration) }
+    func timeline(for configuration: NoteConfiguration, in context: Context) async -> Timeline<NoteEntry> {
+        let now = Date(), snapshot = WidgetSnapshot.load()
+        return Timeline(entries: snapshot.noteTimelineDates(from: now).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+    }
+    private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: NoteConfiguration) -> NoteEntry {
+        NoteEntry(date: date, snapshot: snapshot, noteID: configuration.note?.id, palette: configuration.palette, hideDetails: configuration.hideDetails)
+    }
+}
+struct NoteWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: NoteEntry
+    private var tint: Color { entry.palette.color(fallback: mint) }
+    private var status: WidgetNoteStatus { entry.snapshot.noteStatus(entry.noteID, at: entry.date) }
+    private var note: WidgetNote? { status == .ready ? entry.snapshot.note(entry.noteID) : nil }
+    var body: some View {
+        VStack(alignment: .leading, spacing: family == .systemLarge ? 12 : 8) {
+            HStack {
+                Label("PINNED NOTE", systemImage: "pin.fill").font(.system(size: 10, weight: .semibold, design: .rounded)).tracking(1).foregroundStyle(tint)
+                Spacer(minLength: 0)
+                if note?.completed == true { Image(systemName: "checkmark.circle").foregroundStyle(tint).accessibilityLabel("Task completed") }
+            }
+            if entry.hideDetails {
+                Spacer(minLength: 0)
+                Label("A note, just for you", systemImage: "lock").font(.headline).lineLimit(2)
+                Text("Open Taskfold to read it.").font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                Spacer(minLength: 0)
+            } else if let note {
+                Text(note.title.isEmpty ? "Your pinned note" : note.title).font(.system(.headline, design: .rounded)).lineLimit(family == .systemSmall ? 2 : 1).privacySensitive()
+                if note.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(note.truncated ? "Open Taskfold to read the full note." : "Add note text in task details.").font(.callout).foregroundStyle(.secondary).lineLimit(3)
+                } else {
+                    Text(note.text).font(.system(family == .systemSmall ? .caption : family == .systemLarge ? .callout : .subheadline, design: .rounded)).lineSpacing(family == .systemLarge ? 3 : 2).lineLimit(family == .systemSmall ? 3 : family == .systemLarge ? 12 : 4).frame(maxWidth: .infinity, alignment: .leading).privacySensitive()
+                }
+                Spacer(minLength: 0)
+            } else {
+                Spacer(minLength: 0)
+                Text(status == .choose ? "Keep a thought close" : status == .unavailable ? "Note unavailable" : "Refresh your notes").font(.headline).lineLimit(2)
+                Text(status == .choose ? "Pin notes in Taskfold, then choose one in Edit Widget." : status == .unavailable ? "It was unpinned, removed, or belongs to another workspace." : "Open Taskfold to update this widget.").font(.caption).foregroundStyle(.secondary).lineLimit(family == .systemSmall ? 3 : 4)
+                Spacer(minLength: 0)
+            }
+            HStack {
+                Text(note == nil ? "OPEN TASKFOLD" : "READ FULL NOTE").font(.system(size: 9, weight: .semibold, design: .rounded)).tracking(1).foregroundStyle(tint)
+                Spacer(minLength: 2)
+                if entry.snapshot.pendingSync > 0 { Image(systemName: "icloud").font(.caption2).foregroundStyle(.secondary).accessibilityLabel("Saved, sync pending") }
+                Image(systemName: "arrow.up.right").font(.caption2).foregroundStyle(tint)
+            }
+        }
+        .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+        .widgetURL(note?.url(account: entry.snapshot.account) ?? entry.snapshot.notesURL)
+    }
+}
+struct NoteWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "TaskfoldPinnedNote", intent: NoteConfiguration.self, provider: NoteProvider()) { NoteWidgetView(entry: $0) }
+            .configurationDisplayName("Pinned note").description("Keep instructions, a checklist, or an idea within reach. Tap to read the full note.").supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+    }
+}
+
 @main
 struct TaskfoldWidgetBundle: WidgetBundle {
     var body: some Widget {
@@ -1112,6 +1270,7 @@ struct TaskfoldWidgetBundle: WidgetBundle {
         ListWidget()
         CapacityWidget()
         InboxWidget()
+        NoteWidget()
         #if os(iOS)
         AddTaskControl()
         #endif

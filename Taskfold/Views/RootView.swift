@@ -7,6 +7,7 @@ struct RootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.undoManager) private var undoManager
     @Environment(\.scenePhase) private var phase
+    @State private var pinnedNote: PinnedNoteRequest?
     @State private var inboxReview: InboxReviewRequest?
     @State private var seeded = false
     @Environment(\.openSettings) private var openSettings
@@ -24,8 +25,10 @@ struct RootView: View {
         .onChange(of: reduceMotion) { _, value in workspace.reduceMotion = value }
         .onChange(of: undoManager) { _, value in workspace.undoManager = value }
         .environment(\.startInboxReview, startInboxReview)
+        .environment(\.openPinnedNotes, { pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
+        .sheet(item: $pinnedNote) { PinnedNotesView(request: $0) }
         .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
-        .onChange(of: store.workspaceGeneration) { _, _ in inboxReview = nil }
+        .onChange(of: store.workspaceGeneration) { _, _ in inboxReview = nil; pinnedNote = nil }
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
             BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.ids.sorted().compactMap { workspace.taskRecord($0) } : []) { day in
                 try workspace.setDeadlines(request, day: day)
@@ -68,6 +71,11 @@ struct RootView: View {
             }
         }
         .onOpenURL { url in
+            if url.scheme == "taskfold", url.host == "note" || url.host == "notes" {
+                guard let note = PinnedNoteLink.parse(url), store.signedIn, note.account == store.userID else { store.error = "This note link belongs to another workspace or is unavailable. Open Pinned notes in your current workspace."; return }
+                pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), taskID: note.taskID)
+                return
+            }
             if let review = InboxReviewLink.parse(url) {
                 guard store.signedIn, review.account == store.userID else { store.error = "This widget belongs to another workspace. Open Inbox to review your current tasks."; return }
                 workspace.section = .inbox; startInboxReview(review.batch)
@@ -283,6 +291,7 @@ struct RootView: View {
                     try? store.persist()
                     workspace.section = .today
                 }
+        if arguments.contains("--pinned-notes-seed") { store.startLocal(); store.seedPinnedNotesFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
         if arguments.contains("--inbox-review-seed") { store.startLocal(); store.seedInboxReviewFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
         if arguments.contains("--capacity-widget-seed") { store.startLocal(); store.seedCapacityWidgetFixture(); workspace.section = .today }
         if arguments.contains("--completion-cycle-fixture") { store.startLocal(); store.seedCompletionCycleFixture(); workspace.section = .today }

@@ -13,7 +13,17 @@ struct WidgetActionTestPanel: View {
         return components.url!
     }
     var body: some View {
-        if ProcessInfo.processInfo.arguments.contains("--inbox-review-testing") {
+        if ProcessInfo.processInfo.arguments.contains("--pinned-notes-testing") {
+            VStack(spacing: 4) {
+                Text(store.pinnedNotesFixtureProjection()).font(.system(size: 10)).accessibilityIdentifier("noteProjection")
+                HStack {
+                    Link("Read note", destination: noteLink(account: store.userID, id: "note-first")).accessibilityIdentifier("noteOpenRead")
+                    Link("Missing note", destination: noteLink(account: store.userID, id: "missing-note")).accessibilityIdentifier("noteOpenMissing")
+                    Link("Other workspace", destination: noteLink(account: "other-workspace", id: "note-first")).accessibilityIdentifier("noteOtherWorkspace")
+                }.font(.system(size: 12))
+                Button("Fail next save") { store.inboxFixtureFailSave = true }.accessibilityIdentifier("noteFailSave")
+            }
+        } else if ProcessInfo.processInfo.arguments.contains("--inbox-review-testing") {
             VStack(spacing: 4) {
                 Text(store.inboxWidgetFixtureCount()).font(.system(size: 10)).accessibilityIdentifier("inboxProjection")
                 Text(store.inboxFixturePlan()).font(.system(size: 10)).accessibilityIdentifier("inboxFixturePlan")
@@ -64,6 +74,10 @@ struct WidgetActionTestPanel: View {
                 Button("OK") { message = nil }
             } message: { Text(message ?? "") }
         }
+    }
+    private func noteLink(account: String, id: String) -> URL {
+        var parts = URLComponents(); parts.scheme = "taskfold"; parts.host = "note"; parts.path = "/" + id
+        parts.queryItems = [URLQueryItem(name: "account", value: account)]; return parts.url!
     }
     private func perform(_ request: WidgetCompletionRequest?) {
         guard let request else { return }

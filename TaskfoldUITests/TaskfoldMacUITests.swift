@@ -949,4 +949,21 @@ final class TaskfoldMacUITests: XCTestCase {
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
+    @MainActor func testPinnedNoteReadEditUnpinUndoAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--pinned-notes-seed", "--widget-action-testing", "--pinned-notes-testing"]; app.launch()
+        XCTAssertTrue(app.staticTexts["noteProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["noteProjection"].label, "Notes: 2 · Private: hidden")
+        app.buttons["openPinnedNotes"].click(); XCTAssertTrue(app.buttons["pinnedNote-note-first"].waitForExistence(timeout: 5)); app.buttons["pinnedNote-note-first"].click()
+        XCTAssertTrue(app.staticTexts["pinnedNoteText"].waitForExistence(timeout: 5)); XCTAssertTrue(app.staticTexts["pinnedNoteText"].label.contains("Final instruction"))
+        app.buttons["editPinnedNote"].click()
+        let input = app.descendants(matching: .any).matching(identifier: "taskDescription").firstMatch
+        XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("\nEdited on Mac.")
+        app.buttons["Done"].click(); XCTAssertTrue(app.staticTexts["pinnedNoteText"].label.contains("Edited on Mac."))
+        app.buttons["unpinNote"].click(); app.buttons["closePinnedNotes"].click()
+        XCTAssertEqual(app.staticTexts["noteProjection"].label, "Notes: 1 · Private: hidden")
+        app.typeKey("z", modifierFlags: .command); XCTAssertEqual(app.staticTexts["noteProjection"].label, "Notes: 2 · Private: hidden")
+        app.terminate(); app.launchArguments.removeAll { $0 == "--pinned-notes-seed" }; app.launch()
+        XCTAssertTrue(app.staticTexts["noteProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["noteProjection"].label, "Notes: 2 · Private: hidden")
+        app.terminate()
+    }
+
 }

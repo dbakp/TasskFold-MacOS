@@ -5,6 +5,7 @@ import AppKit
 /// day sections that accept drags. Everything the iOS TaskScreen did with sheets happens in the inspector.
 struct TaskListView: View {
     @Environment(Store.self) private var store
+    @Environment(\.openPinnedNotes) private var openPinnedNotes
     @Environment(\.startInboxReview) private var startInboxReview
     @Environment(Workspace.self) private var workspace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -396,6 +397,7 @@ struct TaskListView: View {
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
+            Button("Pinned notes", systemImage: "pin") { openPinnedNotes() }.accessibilityIdentifier("openPinnedNotes")
             if scope == .inbox {
                 Button { startInboxReview(.five) } label: { Label("Review Inbox", systemImage: "tray") }
                     .accessibilityIdentifier("reviewInbox")

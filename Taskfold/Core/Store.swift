@@ -282,7 +282,7 @@ final class Store {
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.connected ? (busy.selected.isEmpty ? "choose" : "refresh") : "off"
-        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback)
+        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"))
         do { try disk.publish(JSONEncoder().encode(payload)); widgetPublicationRevision += 1 }
         catch { try? disk.clearProjection() } // A failed publication must not leave actionable old data.
         #if canImport(WidgetKit)
@@ -461,6 +461,23 @@ final class Store {
             }
         }
         return commit(changes)
+    }
+    func isPinnedNote(_ taskID: String) -> Bool { PinnedNotes.contains(taskID, pins: rows("view_orders"), account: userID) }
+    /// Task edits and selection reach disk together before any sync begins.
+    @discardableResult
+    func saveTaskWithNotePin(_ task: Record, pin: Bool?, baseline: Record? = nil) -> Bool {
+        guard let pin else { return save("tasks", task, baseline: baseline) }
+        guard workspaceCacheReadable, signedIn || localMode, PinnedNotes.validID(task.id) else { error = "Open your workspace before pinning notes."; return false }
+        guard record("view_orders", id: PinnedNotes.key(task.id)).map({ $0.string("user_id") == userID }) ?? true else { error = "This pin belongs to another workspace."; return false }
+        let changes = [PinnedNotes.edit(task, existing: record("tasks", id: task.id), baseline: baseline),
+                       PinnedNotes.change(taskID: task.id, enabled: pin, pins: rows("view_orders"), account: userID)].compactMap { $0 }
+        return changes.isEmpty || commit(changes)
+    }
+    @discardableResult
+    func setPinnedNote(_ taskID: String, enabled: Bool) -> Bool {
+        guard workspaceCacheReadable, signedIn || localMode, record("tasks", id: taskID) != nil, PinnedNotes.validID(taskID) else { error = "This note is no longer available in your workspace."; return false }
+        guard let change = PinnedNotes.change(taskID: taskID, enabled: enabled, pins: rows("view_orders"), account: userID) else { return isPinnedNote(taskID) == enabled }
+        return commit([change])
     }
     func remove(_ table: String, _ id: String) {
         var changes: [Mutation] = []
@@ -734,6 +751,24 @@ extension Store {
         widgetFixtureReady = true
     }
 
+    func seedPinnedNotesFixture() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--pinned-notes-seed") else { return }
+        inboxFixtureFailSave = false; dailyBackupsEnabled = false; disableNotifications()
+        var first = Record.task(user: userID); first["id"] = .string("note-first"); first["title"] = .string("Launch reference")
+        first["description"] = .string("Start with a clear thought.\nKeep the café and 👩🏽‍💻 details.\nFinal instruction remains available.")
+        var done = Record.task(user: userID); done["id"] = .string("note-done"); done["title"] = .string("Completed reference"); done["completed"] = .bool(true)
+        done["description"] = .string("A completed task can still hold useful instructions.")
+        var privateTask = Record.task(user: userID); privateTask["id"] = .string("note-private"); privateTask["title"] = .string("Private reference"); privateTask["description"] = .string("Do not publish this unpinned description.")
+        snapshot = Snapshot(tables: ["tasks": [first, done, privateTask]])
+        for task in [first, done] { if let change = PinnedNotes.change(taskID: task.id, enabled: true, pins: [], account: userID) { snapshot.apply(change) } }
+        undoStack = []; redoStack = []; try? persist()
+    }
+    func pinnedNotesFixtureProjection() -> String {
+        _ = widgetPublicationRevision
+        guard let data = try? widgetActionDisk().read().data, let payload = try? JSONDecoder().decode([String: JSON].self, from: data) else { return "Notes: unavailable" }
+        let notes = payload["notes"]?.list ?? []
+        return "Notes: \(notes.count) · Private: \(notes.contains { $0.object["taskID"] == .string("note-private") } ? "visible" : "hidden")"
+    }
     func seedInboxReviewFixture() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--inbox-review-seed") else { return }
         inboxFixtureFailSave = false; snapshot = Snapshot(); undoStack = []; redoStack = []
