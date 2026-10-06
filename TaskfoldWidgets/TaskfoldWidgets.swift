@@ -180,6 +180,7 @@ struct WidgetSnapshot: Codable {
     var account: String
     var lists: [WidgetList] = []
     var notes: [WidgetNote]? = nil // nil means this publisher predates pinned notes.
+    var projectPulse: ProjectPulseSnapshot? = nil
     var focusSession: FocusWidgetSnapshot? = nil
     var capacity: WidgetCapacity? = nil
     var pendingSync: Int = 0
@@ -187,7 +188,7 @@ struct WidgetSnapshot: Codable {
     init(updated: TimeInterval, tasks: [WidgetTask], version: Int = 2, account: String = "", lists: [WidgetList] = []) {
         self.updated = updated; self.tasks = tasks; self.version = version; self.account = account; self.lists = lists
     }
-    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync, capacity, notes, focusSession }
+    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync, capacity, notes, focusSession, projectPulse }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         version = try row.decodeIfPresent(Int.self, forKey: .version) ?? 1
@@ -200,6 +201,7 @@ struct WidgetSnapshot: Codable {
         notes = try? row.decode([WidgetNote].self, forKey: .notes)
         capacity = try? row.decode(WidgetCapacity.self, forKey: .capacity)
         focusSession = try? row.decode(FocusWidgetSnapshot.self, forKey: .focusSession)
+        projectPulse = try? row.decode(ProjectPulseSnapshot.self, forKey: .projectPulse)
     }
     var availableNotes: [WidgetNote] {
         var seen = Set<String>()
@@ -235,6 +237,19 @@ struct WidgetSnapshot: Codable {
         return focusSession!.timelineDates(from: date, updated: updated)
     }
     var focusSessionURL: URL { account.isEmpty ? URL(string: "taskfold://today")! : FocusSessionLink(account: account).url }
+    var availablePulseProjects: [PulseProject] {
+        guard projectPulse?.fresh(at: Date(), owner: account, updated: updated) == true else { return [] }
+        return projectPulse!.projects.sorted { $0.name == $1.name ? $0.id < $1.id : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+    func pulseSubtitle(_ project: PulseProject) -> String {
+        let duplicate = projectPulse?.projects.filter { $0.name.caseInsensitiveCompare(project.name) == .orderedSame }.count ?? 0
+        return duplicate > 1 ? "Project · " + project.recordID : "Project"
+    }
+    func pulseStatus(_ id: String?, at date: Date, calendar: Calendar = .current) -> PulseWidgetStatus { projectPulse?.status(id, at: date, owner: account, updated: updated, calendar: calendar) ?? .refresh }
+    func pulseURL(_ id: String?) -> URL {
+        guard !account.isEmpty else { return URL(string: "taskfold://all")! }
+        return id.flatMap(PulseProject.link)?.url ?? ProjectPulseLink(account: account).url
+    }
     var hasPlanningFields: Bool { version == 2 }
     static let empty = WidgetSnapshot(updated: 0, tasks: [])
     static func day(_ date: Date, calendar: Calendar = .current) -> String {
@@ -1407,6 +1422,164 @@ struct FocusSessionWidget: Widget {
     }
 }
 
+struct PulseProjectEntity: AppEntity {
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Project")
+    static var defaultQuery = PulseProjectQuery()
+    var id: String
+    var name: String
+    var subtitle: String
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)", subtitle: "\(subtitle)") }
+    init(_ project: PulseProject, subtitle: String) { id = project.id; name = project.name; self.subtitle = subtitle }
+    init(unavailable id: String) { self.id = id; name = "Unavailable project"; subtitle = "Open Taskfold to review" }
+}
+struct PulseProjectQuery: EntityStringQuery {
+    func entities(for identifiers: [String]) async throws -> [PulseProjectEntity] {
+        let snapshot = WidgetSnapshot.load()
+        return identifiers.filter { PulseProject.link(for: $0) != nil }.map { id in
+            snapshot.availablePulseProjects.first { $0.id == id }.map { PulseProjectEntity($0, subtitle: snapshot.pulseSubtitle($0)) } ?? PulseProjectEntity(unavailable: id)
+        }
+    }
+    func entities(matching string: String) async throws -> [PulseProjectEntity] { try await suggestedEntities().filter { $0.name.localizedCaseInsensitiveContains(string) } }
+    func suggestedEntities() async throws -> [PulseProjectEntity] {
+        let snapshot = WidgetSnapshot.load()
+        return snapshot.availablePulseProjects.map { PulseProjectEntity($0, subtitle: snapshot.pulseSubtitle($0)) }
+    }
+}
+struct PulseConfiguration: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Project pulse"
+    static var description = IntentDescription("Choose a project to see current completion, recorded events and work needing attention.")
+    @Parameter(title: "Project") var project: PulseProjectEntity?
+    @Parameter(title: "Appearance", default: .standard) var palette: WidgetPalette
+    @Parameter(title: "Hide project and task names", default: false) var hideNames: Bool
+}
+struct PulseEntry: TimelineEntry {
+    var date: Date, snapshot: WidgetSnapshot
+    var projectID: String? = nil
+    var palette: WidgetPalette = .standard
+    var hideNames = false
+    static var preview: PulseEntry {
+        let now = Date(), account = "preview", id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71"
+        let day = PulseDay(completions: 6, reopens: 1, additions: 3, movedIn: 0, movedOut: 1, attentionCount: 2, attention: [PulseAttention(id: "draft", title: "Shape the launch story"), PulseAttention(id: "review", title: "Review the final details")])
+        var days: [String: PulseDay] = [:]
+        for offset in 0..<8 { days[ProjectPulseSnapshot.day(Calendar.current.date(byAdding: .day, value: offset, to: now)!)] = day }
+        let project = PulseProject(account: account, recordID: id, name: "A good idea, taking shape", total: 12, completed: 8, days: days)
+        var snapshot = WidgetSnapshot(updated: now.timeIntervalSinceReferenceDate, tasks: [], account: account)
+        snapshot.projectPulse = ProjectPulseSnapshot(account: account, timeZone: TimeZone.current.identifier, history: "ready", recordedFrom: now.addingTimeInterval(-30 * 86400).timeIntervalSince1970, projects: [project])
+        return PulseEntry(date: now, snapshot: snapshot, projectID: project.id)
+    }
+}
+struct PulseProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> PulseEntry { .preview }
+    func snapshot(for configuration: PulseConfiguration, in context: Context) async -> PulseEntry { context.isPreview ? .preview : entry(Date(), snapshot: .load(), configuration: configuration) }
+    func timeline(for configuration: PulseConfiguration, in context: Context) async -> Timeline<PulseEntry> {
+        let now = Date(), snapshot = WidgetSnapshot.load()
+        let dates = snapshot.projectPulse?.timelineDates(from: now, updated: snapshot.updated) ?? [now]
+        return Timeline(entries: dates.map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+    }
+    private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: PulseConfiguration) -> PulseEntry { PulseEntry(date: date, snapshot: snapshot, projectID: configuration.project?.id, palette: configuration.palette, hideNames: configuration.hideNames) }
+}
+struct PulseWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: PulseEntry
+    private var tint: Color { entry.palette.color(fallback: mint) }
+    private var status: PulseWidgetStatus { entry.snapshot.pulseStatus(entry.projectID, at: entry.date) }
+    private var project: PulseProject? { status == .ready ? entry.snapshot.projectPulse?.project(entry.projectID) : nil }
+    private var day: PulseDay? { project?.days[ProjectPulseSnapshot.day(entry.date)] }
+    private var large: Bool { family == .systemLarge }
+    private var small: Bool { family == .systemSmall }
+    var body: some View {
+        VStack(alignment: .leading, spacing: small ? 5 : 8) {
+            HStack {
+                Label("PROJECT PULSE", systemImage: "chart.bar.fill").font(.system(size: 9, weight: .semibold, design: .rounded)).tracking(0.8).foregroundStyle(tint)
+                Spacer(minLength: 0)
+                if entry.hideNames { Image(systemName: "lock").font(.system(size: 9)).foregroundStyle(tint).accessibilityLabel("Project and task names hidden") }
+                if entry.snapshot.pendingSync > 0 { Image(systemName: "icloud").font(.system(size: 9)).foregroundStyle(.secondary).accessibilityLabel("Saved, sync pending; events update after sync") }
+            }
+            if let project, let day {
+                Text(entry.hideNames ? "Your chosen project" : project.name).font((small ? Font.caption : Font.subheadline).weight(.semibold)).lineLimit(small ? 2 : 1).privacySensitive()
+                if small { progress(project); Text("\(day.attentionCount) need attention").font(.system(size: 10, weight: .medium)).foregroundStyle(day.attentionCount > 0 ? tint : .secondary).lineLimit(1) }
+                else {
+                    HStack(alignment: .top, spacing: 20) {
+                        progress(project).frame(width: large ? 124 : 115, alignment: .leading)
+                        VStack(alignment: .leading, spacing: 6) { recent(day); if !large { attention(day, limit: 1) } }.frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    if large {
+                        if entry.snapshot.projectPulse?.history == "ready" { Text("\(day.additions) added · \(day.movedIn) moved in · \(day.movedOut) moved out").font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1) }
+                        Divider()
+                        attention(day, limit: 3)
+                        Text(coverage).font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(2)
+                    }
+                }
+                Spacer(minLength: 0)
+                HStack {
+                    Text("Review project").font(.system(size: 10, weight: .semibold)).foregroundStyle(tint)
+                    Spacer(minLength: 2)
+                    Image(systemName: "arrow.up.right").font(.system(size: 10)).foregroundStyle(tint)
+                }
+            } else {
+                Spacer(minLength: 0)
+                Text(status == .choose ? "Make it yours" : status == .unavailable ? "Project unavailable" : "Refresh your project").font(.headline).lineLimit(2)
+                Text(status == .choose ? "Edit this widget to choose a project." : status == .unavailable ? "Its access or availability changed. Choose another project." : "Open Taskfold for the latest progress.").font(.caption).foregroundStyle(.secondary).lineLimit(3)
+                Spacer(minLength: 0)
+                Text("Open Taskfold ↗").font(.system(size: 10, weight: .semibold)).foregroundStyle(tint)
+            }
+        }.containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+            .widgetURL(entry.snapshot.pulseURL(entry.projectID))
+    }
+    private func progress(_ project: PulseProject) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(project.completed) / \(project.total)").font(.system(size: small ? 32 : 30, weight: .semibold, design: .rounded).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.5).accessibilityLabel("\(project.completed) of \(project.total) current project tasks completed").accessibilityIdentifier("pulseWidgetProgress")
+            Text("completed · current tasks").font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.85)
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(tint.opacity(0.15))
+                    Capsule().fill(tint).frame(width: project.total == 0 ? 0 : proxy.size.width * Double(project.completed) / Double(project.total))
+                }
+            }.frame(height: 5).accessibilityHidden(true)
+        }
+    }
+    private func recent(_ day: PulseDay) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("Recorded · last 7 days").font(.system(size: 9, weight: .semibold)).foregroundStyle(tint)
+            if entry.snapshot.projectPulse?.history == "ready" {
+                Text("\(day.completions) completion \(day.completions == 1 ? "event" : "events")").font(.system(size: 11, weight: .medium)).lineLimit(1).minimumScaleFactor(0.8).accessibilityIdentifier("pulseWidgetEvents")
+                Text("\(day.reopens) reopen \(day.reopens == 1 ? "event" : "events")").font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1)
+                Text(window + " · " + coverageStart).font(.system(size: 8)).foregroundStyle(.secondary).lineLimit(1)
+            } else {
+                Text(entry.snapshot.projectPulse?.history == "incomplete" ? "History needs refresh" : "History not loaded").font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(2)
+            }
+        }
+    }
+    private func attention(_ day: PulseDay, limit: Int) -> some View {
+        VStack(alignment: .leading, spacing: large ? 8 : 3) {
+            Text("\(day.attentionCount) need attention").font(.system(size: large ? 11 : 9, weight: .semibold)).foregroundStyle(day.attentionCount > 0 ? tint : .secondary).lineLimit(1)
+            if !entry.hideNames {
+                ForEach(day.attention.prefix(limit)) { task in
+                    HStack(alignment: .top, spacing: 6) { Circle().fill(tint).frame(width: 4, height: 4).padding(.top, 4); Text(task.title).font(.system(size: large ? 12 : 10, weight: .medium)).lineLimit(large ? 2 : 1).privacySensitive() }
+                }
+            } else if day.attentionCount > 0 { Text("Task names hidden").font(.system(size: 10)).foregroundStyle(.secondary) }
+        }
+    }
+    private var window: String {
+        let start = Calendar.current.date(byAdding: .day, value: -6, to: entry.date)!
+        return start.formatted(.dateTime.day().month(.abbreviated)) + "–" + entry.date.formatted(.dateTime.day().month(.abbreviated))
+    }
+    private var coverageStart: String {
+        guard let from = entry.snapshot.projectPulse?.recordedFrom else { return "" }
+        return "since " + Date(timeIntervalSince1970: from).formatted(.dateTime.day().month(.abbreviated))
+    }
+    private var coverage: String {
+        guard let pulse = entry.snapshot.projectPulse, let from = pulse.recordedFrom else { return "Open Taskfold to load recording coverage." }
+        return "History since " + Date(timeIntervalSince1970: from).formatted(date: .abbreviated, time: .omitted) + ". Earlier work has no timeline. Events are separate from current completion."
+    }
+}
+struct PulseWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "TaskfoldProjectPulse", intent: PulseConfiguration.self, provider: PulseProvider()) { PulseWidgetView(entry: $0) }
+            .configurationDisplayName("Project pulse").description("Current project progress, recorded completion/reopen events and the work needing attention. Choose a project, appearance and name privacy.").supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+    }
+}
+
 @main
 struct TaskfoldWidgetBundle: WidgetBundle {
     var body: some Widget {
@@ -1421,6 +1594,7 @@ struct TaskfoldWidgetBundle: WidgetBundle {
         InboxWidget()
         NoteWidget()
         FocusSessionWidget()
+        PulseWidget()
         #if os(iOS)
         AddTaskControl()
         #endif

@@ -13,7 +13,16 @@ struct WidgetActionTestPanel: View {
         return components.url!
     }
     var body: some View {
-        if ProcessInfo.processInfo.arguments.contains("--focus-widget-testing") {
+        if ProcessInfo.processInfo.arguments.contains("--pulse-widget-testing") {
+            VStack(spacing: 4) {
+                Text(store.pulseWidgetFixtureProjection()).font(.system(size: 10)).accessibilityIdentifier("pulseProjection")
+                HStack {
+                    Link("Open pulse", destination: ProjectPulseLink(account: store.userID, project: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71").url).accessibilityIdentifier("pulseWidgetOpen")
+                    Link("Other workspace", destination: ProjectPulseLink(account: "other-workspace", project: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71").url).accessibilityIdentifier("pulseWidgetOther")
+                    Link("Missing project", destination: ProjectPulseLink(account: store.userID, project: "missing-project").url).accessibilityIdentifier("pulseWidgetMissing")
+                }.font(.system(size: 12))
+            }
+        } else if ProcessInfo.processInfo.arguments.contains("--focus-widget-testing") {
             VStack(spacing: 4) {
                 Text(store.focusWidgetFixtureProjection()).font(.system(size: 10)).accessibilityIdentifier("focusProjection")
                 HStack {

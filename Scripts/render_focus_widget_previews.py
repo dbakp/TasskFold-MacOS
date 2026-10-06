@@ -50,6 +50,6 @@ output.mkdir(parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(prefix='taskfold-focus-previews-') as temporary:
     path = Path(temporary)
     (path / 'Preview.swift').write_text(source)
-    subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-D', 'TASKFOLD_WIDGET_EXTENSION', str(root / 'Taskfold/Core/WidgetActions.swift'), str(root / 'Taskfold/Core/FocusWidget.swift'), str(path / 'Preview.swift'), '-o', str(path / 'preview')], check=True)
+    subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-D', 'TASKFOLD_WIDGET_EXTENSION', str(root / 'Taskfold/Core/WidgetActions.swift'), str(root / 'Taskfold/Core/FocusWidget.swift'), str(root / 'Taskfold/Core/ProjectPulseWidget.swift'), str(path / 'Preview.swift'), '-o', str(path / 'preview')], check=True)
     for mode in ['focus', 'focus-dark', 'focus-paused', 'focus-ended', 'focus-finished', 'focus-idle', 'focus-private', 'focus-conflict', 'focus-missing', 'focus-refresh', 'focus-dense', 'focus-largest']:
         subprocess.run([str(path / 'preview'), str(output / f'{mode}.png'), mode], check=True)

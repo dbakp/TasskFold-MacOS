@@ -1,6 +1,6 @@
 # Project pulse
 
-Both native repositories own a Project pulse screen and compatible activity contracts independently. Open it from iPhone Browse, a project's Task options, or the Mac toolbar. Choose a project to see current completion, tasks needing attention and its recorded timeline. The dedicated WidgetKit widget remains pending.
+Both native repositories own a Project pulse screen and compatible activity contracts independently. Open it from iPhone Browse, a project's Task options, or the Mac toolbar. Choose a project to see current completion, tasks needing attention and its recorded timeline. Small, medium and large Project pulse widgets now offer per-instance project selection, appearance and name privacy.
 
 ## What the numbers mean
 
@@ -26,6 +26,16 @@ Each repository owns the deployed migrations `20261006100647_task_activity_histo
 
 The implementation follows official [database trigger](https://supabase.com/docs/guides/database/postgres/triggers), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security) and [database function](https://supabase.com/docs/guides/database/functions) guidance. The public Supabase changelog was checked before migration. Existing unrelated security/performance findings are not resolved by this feature.
 
+## Widgets
+
+Edit a Project pulse widget to choose its project, Default/Rose/Lavender/Mint appearance, and whether project/task names are hidden. Small shows current completed/total and the attention count. Medium adds recorded completion/reopen events, seven-day date window/recording start and one attention title. Large adds additions/moves, up to three attention titles and recording-coverage explanation. Hidden names preserve useful counts. Every tap opens the native current Project pulse screen; no widget task mutation is performed.
+
+The version-1 pulse cache has stable account/project identity, current unique task counts and eight precomputed local-day summaries. Each daily summary uses the same native seven-day and attention semantics. Unreceived/future-clock events are excluded; tomorrow drops old events without inventing future changes. At local midnight, an exact timeline entry updates the window and attention reading; at 24 hours from publication it becomes Refresh. Time-zone changes require a fresh app publication. Legacy, unreadable, malformed or foreign-account projections cannot present fresh project counts. Missing history is stated separately from current task completion.
+
+The extension receives at most 2,048 deterministically ordered project cards, 160-character/1,000-byte project names and three 120-character/800-byte attention titles per day. Counts are validated to one million; unique IDs and eight valid day keys are required. The app retains its whole project catalogue. An omitted selection yields Refresh rather than falsely claiming deletion or substituting another project. No full activity rows, notes, actor identities, credentials or executable commands appear in this new cache. Widget settings are local to each instance; project/task/history data remains account-synchronized.
+
+Selection IDs encode the account and stable project ID. Rename retains the choice; deleted/revoked choices remain Unavailable, and unresolved entity queries retain a neutral label for their old identity. Stale/foreign taps preserve the encoded target account and are rejected by the native handler. A missing project opens its explicit unavailable screen. The implementation follows Apple's [configurable widget guidance](https://developer.apple.com/documentation/widgetkit/making-a-configurable-widget) and [AppIntentConfiguration contract](https://developer.apple.com/documentation/widgetkit/appintentconfiguration).
+
 ## Remaining acceptance
 
-Dedicated Project pulse widget, per-instance project/palette/privacy selection, bounded projection/routes/freshness and installed system hosts remain to implement and verify. Native Mac interaction, physical/iPad, paired/offline/account revocation/reentry/restore and provisioned distribution remain open. Current Core/SQL/iPhone fixture evidence is recorded in the platform validation tracker; it does not establish these broader requirements or completion of the full P0 objective.
+Installed configuration/multiple-host/refresh and live privacy/account-change acceptance remain to verify. Native Mac interaction, physical/iPad, paired/offline/account revocation/reentry/restore and provisioned distribution remain open. Current Core/SQL/iPhone fixture evidence is recorded in the platform validation tracker; it does not establish these broader requirements or completion of the full P0 objective.

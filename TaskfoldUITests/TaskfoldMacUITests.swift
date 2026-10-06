@@ -1071,3 +1071,16 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(counts.label, "2 completion events · 1 reopen event"); app.terminate()
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor func testPulseWidgetPublicationAndCurrentProjectRoute() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--project-pulse-seed", "--widget-action-testing", "--pulse-widget-testing"]; app.launch()
+        XCTAssertTrue(app.staticTexts["pulseProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["pulseProjection"].label, "Pulse: 1/3 · 2 completion events · 1 reopen events")
+        app.buttons["pulseWidgetOpen"].click()
+        XCTAssertTrue(app.staticTexts["pulseProgress"].waitForExistence(timeout: 5)); XCTAssertEqual(app.staticTexts["pulseProgress"].label, "1 of 3 completed")
+        let counts = app.staticTexts["pulseActivityCounts"]
+        for _ in 0..<8 where !counts.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -300) }
+        XCTAssertEqual(counts.label, "2 completion events · 1 reopen event")
+        app.buttons["closeProjectPulse"].click(); app.terminate()
+    }
+}

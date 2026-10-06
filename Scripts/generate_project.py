@@ -14,7 +14,7 @@ def uid(name):
 app_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "Taskfold").rglob("*.swift"))
 app_resources = ["Taskfold/Assets.xcassets", "Taskfold/Backend.plist", "Taskfold/TaskfoldIcon.icon"]
 test_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldUITests").rglob("*.swift"))
-widget_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldWidgets").rglob("*.swift")) + ["Taskfold/Core/WidgetActions.swift", "Taskfold/Core/FocusWidget.swift"]
+widget_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldWidgets").rglob("*.swift")) + ["Taskfold/Core/WidgetActions.swift", "Taskfold/Core/FocusWidget.swift", "Taskfold/Core/ProjectPulseWidget.swift"]
 # Set TASKFOLD_WIDGETS=0 to leave the widget extension out (for example while App Groups cannot be provisioned).
 WIDGETS = os.environ.get("TASKFOLD_WIDGETS", "1") != "0" and widget_sources
 other_files = ["Taskfold/Info.plist", "Taskfold/Taskfold.entitlements", "Taskfold/Taskfold-Distribution.entitlements"] + (["TaskfoldWidgets/Info.plist", "TaskfoldWidgets/TaskfoldWidgets.entitlements"] if WIDGETS else [])

@@ -313,7 +313,7 @@ final class Store {
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.connected ? (busy.selected.isEmpty ? "choose" : "refresh") : "off"
-        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable)
+        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable))
         do { try disk.publish(JSONEncoder().encode(payload)); widgetPublicationRevision += 1 }
         catch { try? disk.clearProjection() } // A failed publication must not leave actionable old data.
         #if canImport(WidgetKit)
@@ -855,6 +855,14 @@ extension Store {
               let encoded = try? JSONEncoder().encode(payload["focusSession"] ?? .null),
               let focus = try? JSONDecoder().decode(FocusWidgetSnapshot.self, from: encoded), focus.valid(for: userID) else { return "Focus: refresh" }
         return "Focus: " + (focus.conflict ? "review" : focus.clock?.status ?? "idle")
+    }
+    func pulseWidgetFixtureProjection() -> String {
+        _ = widgetPublicationRevision
+        guard let data = try? widgetActionDisk().read().data, let payload = try? JSONDecoder().decode([String: JSON].self, from: data),
+              let encoded = try? JSONEncoder().encode(payload["projectPulse"] ?? .null),
+              let pulse = try? JSONDecoder().decode(ProjectPulseSnapshot.self, from: encoded), pulse.valid(for: userID),
+              let project = pulse.projects.first, let day = project.days[ProjectPulseSnapshot.day(Date())] else { return "Pulse: refresh" }
+        return "Pulse: \(project.completed)/\(project.total) · \(day.completions) completion events · \(day.reopens) reopen events"
     }
     func seedProjectPulseFixture() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--project-pulse-seed") else { return }

@@ -95,6 +95,11 @@ struct RootView: View {
             }
         }
         .onOpenURL { url in
+            if url.scheme == "taskfold", url.host == "pulse" {
+                guard let link = ProjectPulseLink.parse(url), store.focusAvailable, link.account == store.userID else { store.error = "This project widget belongs to another workspace or is unavailable. Open Project pulse in your current workspace."; return }
+                pulseRequest = ProjectPulseRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), projectID: link.project)
+                return
+            }
             if url.scheme == "taskfold", url.host == "focus" {
                 guard let link = FocusSessionLink.parse(url), store.focusAvailable, link.account == store.userID else { store.error = "This Focus widget belongs to another workspace or is unavailable. Open Focus session in your current workspace."; return }
                 focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
