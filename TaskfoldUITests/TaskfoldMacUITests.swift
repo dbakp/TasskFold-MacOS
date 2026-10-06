@@ -2,6 +2,20 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testReferenceSuggestionsKeyboardCaptureAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch()
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("Suggested proposal #Cli")
+        XCTAssertTrue(app.buttons["referenceSuggestion-project_id:qe-work"].waitForExistence(timeout: 5))
+        app.typeKey(.downArrow, modifierFlags: []); app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue((input.value as? String ?? "").contains("Client Work")); XCTAssertTrue(app.buttons["Add Task"].exists)
+        input.typeText("/Ne"); app.buttons["referenceSuggestion-section_id:qe-next"].click()
+        input.typeText("@Cli"); app.buttons["referenceSuggestion-labels:qe-client-label"].click()
+        app.buttons["Add Task"].click(); app.buttons["Client Work"].firstMatch.click()
+        XCTAssertTrue(app.staticTexts["Suggested proposal"].waitForExistence(timeout: 5)); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        app.buttons["Client Work"].firstMatch.click(); XCTAssertTrue(app.staticTexts["Suggested proposal"].waitForExistence(timeout: 5)); app.terminate()
+    }
+
     @MainActor func testRecurrenceCaptureInspectorAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch()
         app.typeKey("n", modifierFlags: .command)

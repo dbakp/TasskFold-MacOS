@@ -394,16 +394,16 @@ final class Workspace {
     }
     /// Creates a task from quick-entry text. Returns the new task's id.
     @discardableResult
-    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "") -> String? {
+    func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "", referenceChoices: [String: String] = [:]) -> String? {
         var task = Record.task(user: store.userID, project: project, date: date)
         for (field, value) in store.captureDefaults(scope) { task[field] = value }
         if let date { task["due_date"] = .string(Dates.day(date)) }
         if !sectionID.isEmpty { task["section_id"] = .string(sectionID) }
         if section == .assigned { task["assigned_to"] = .string(store.userID) }
-        let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")), task: task)
+        let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")).choosingReferences(referenceChoices), task: task)
         guard !parsed.title.isEmpty else { return nil }
         task = parsed.applying(to: task)
-        for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text }) {
+        for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text || $0.id == value.text }) {
             _ = store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": value, "color": .string("#e31e4b")]))
         }
         var created = false

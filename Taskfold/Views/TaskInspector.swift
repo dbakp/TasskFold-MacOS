@@ -67,6 +67,7 @@ struct TaskInspectorForm: View {
     @State private var draft = Record()
     @State private var notePin: Bool?
     @State private var original = Record()
+    @State private var titleParsingBaseline = ""
     @State private var workspaceBinding: WorkspaceBinding?
     @State private var subtask = ""
     @State private var comment = ""
@@ -76,13 +77,15 @@ struct TaskInspectorForm: View {
     @State private var confirmDelete = false
     @State private var saveTask: Task<Void, Never>?
     @State private var declined = Set<String>()
+    @State private var titleSelection: TextSelection?
+    @State private var referenceChoices: [String: String] = [:]
     @FocusState private var titleFocused: Bool
     /// Parsing runs while the title differs from the saved one; Return (or leaving the field) applies it.
     private var suggestions: QuickEntry? {
-        guard draft.title != original.title else { return nil }
+        guard draft.title != titleParsingBaseline else { return nil }
         let nested = Workspace.subtaskPath(taskID) != nil
         let parsed = QuickEntry(draft.title, disabled: nested ? declined.union(["project_id", "section_id"]) : declined,
-            context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), task: draft)
+            context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices), task: draft)
         return parsed.tokens.isEmpty && parsed.warnings.isEmpty ? nil : parsed
     }
 
@@ -93,12 +96,13 @@ struct TaskInspectorForm: View {
     var body: some View {
         Form {
             Section {
-                TextField("Title", text: text("title"), prompt: Text("What needs doing?"), axis: .vertical)
+                TextField("Title", text: text("title"), selection: $titleSelection, prompt: Text("What needs doing?"), axis: .vertical)
                     .labelsHidden().multilineTextAlignment(.leading)
                     .font(.title3.weight(.semibold)).textFieldStyle(.plain).lineLimit(1...4)
-                    .focused($titleFocused).onSubmit { applySuggestions(); saveNow() }
-                    .onChange(of: titleFocused) { _, focused in if !focused { applySuggestions() } }
+                    .focused($titleFocused)
+                    .onChange(of: titleFocused) { _, focused in if !focused { applySuggestions(); saveNow() } }
                     .accessibilityIdentifier("taskTitle")
+                    .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, excluded: Workspace.subtaskPath(taskID) == nil ? [] : ["project_id", "section_id"], onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
                 if let suggestions {
                     VStack(alignment: .leading, spacing: 4) {
                         ScrollView(.horizontal) {
@@ -304,6 +308,7 @@ struct TaskInspectorForm: View {
         }
         .quickLookPreview($preview)
         .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); load(); if draft.title.isEmpty { titleFocused = true } }
+        .task(id: suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) { _ = try? await store.refreshProjectMembers(suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .sheet(isPresented: $showingReminders) {
             NavigationStack {
@@ -321,25 +326,40 @@ struct TaskInspectorForm: View {
                 merged[key] = field
                 nextOriginal[key] = original[key]
             }
+            if draft.title == titleParsingBaseline { titleParsingBaseline = merged.title }
             original = nextOriginal
             if merged != draft { draft = merged }
         }
-        .onDisappear { saveTask?.cancel(); saveNow() }
+        .onDisappear { saveTask?.cancel(); titleFocused = false; applySuggestions(); saveNow() }
     }
     private func quickDate(_ title: String, _ date: Date) -> some View {
         Button(title) { draft["due_date"] = .string(Dates.day(date)) }.buttonStyle(.bordered)
     }
-    private func load() { if let current { draft = current; original = current } }
+    private func load() { if let current { draft = current; original = current; titleParsingBaseline = current.title } }
     /// Moves accepted quick-entry pieces out of the title into their fields, like the iOS editor's save.
     private func applySuggestions() {
-        guard let parsed = suggestions, parsed.hasSuggestions else { return }
+        guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, current != nil else { return }
+        guard QuickReferenceCompletion(draft.title, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices)).range == nil else { titleParsingBaseline = draft.title; return }
+        guard let parsed = suggestions, parsed.hasSuggestions else { titleParsingBaseline = draft.title; return }
         withAnimation(workspace.layout) {
             draft = parsed.applying(to: draft)
         }
-        for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text }) {
+        for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text || $0.id == value.text }) {
             _ = store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": value, "color": .string("#e31e4b")]))
         }
-        declined = []
+        declined = []; titleParsingBaseline = draft.title
+    }
+    private func applyReferenceChoices() {
+        guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, current != nil else { return }
+        let referenceGroups: Set<String> = ["project_id", "section_id", "assigned_to", "labels"]
+        let excluded = Set(QuickEntry.groups).subtracting(referenceGroups).union(declined).union(Workspace.subtaskPath(taskID) == nil ? [] : ["project_id", "section_id"])
+        let parsed = QuickEntry(draft.title, disabled: excluded, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices), task: draft)
+        draft = parsed.applying(to: draft)
+        for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.id == value.text || $0.name == value.text }) {
+            _ = store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": value, "color": .string("#e31e4b")]))
+        }
+        titleSelection = TextSelection(insertionPoint: draft.title.endIndex)
+        saveNow()
     }
     private func scheduleSave() {
         saveTask?.cancel()

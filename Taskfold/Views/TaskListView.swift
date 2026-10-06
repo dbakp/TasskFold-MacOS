@@ -30,6 +30,7 @@ struct TaskListView: View {
     @State private var collaborationProject: Record?
     @State private var sectionsEditor = false
     @State private var filterEditor: Record?
+    @State private var referenceChoices: [String: String] = [:]
     @State private var quickAddVisible = false
     @State private var declinedGroups = Set<String>()
     @FocusState private var filterFocused: Bool
@@ -210,7 +211,7 @@ struct TaskListView: View {
         .animation(Transitions.Ease.smoothOut, value: subtitle)
         .toolbar { if workspace.section.scope == scope { toolbar } }
         .sheet(isPresented: $quickAddVisible) {
-            TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt,
+            TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, choices: $referenceChoices, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt,
                 context: workspace.quickEntryContext(project: projectID.isEmpty ? store.captureDefaults(scope)["project_id"]?.text ?? "" : projectID), submit: submitQuickAdd)
         }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
@@ -257,12 +258,13 @@ struct TaskListView: View {
     private func submitQuickAdd() {
         let date: Date? = scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil
         let labelName: String? = { if case .label(let id) = scope { return store.record("labels", id: id)?.name }; return nil }()
-        guard let id = workspace.add(quickAdd, project: projectID, date: date, declined: declinedGroups, sectionID: captureSection) else { return }
+        guard let id = workspace.add(quickAdd, project: projectID, date: date, declined: declinedGroups, sectionID: captureSection, referenceChoices: referenceChoices) else { return }
         declinedGroups = []
         if let labelName, var task = store.record("tasks", id: id), !task["labels"].list.contains(.string(labelName)) {
             task["labels"] = .array(task["labels"].list + [.string(labelName)]); store.save("tasks", task)
         }
         quickAdd = ""
+        referenceChoices = [:]
         quickAddVisible = false
         workspace.selection = [id]
     }
@@ -426,14 +428,17 @@ enum ReadingColumn { static let width: CGFloat = 860 }
 struct TaskCapturePanel: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @State private var workspaceBinding: WorkspaceBinding?
     @Binding var text: String
     @Binding var declined: Set<String>
+    @Binding var choices: [String: String]
+    @State private var titleSelection: TextSelection?
     let destination: String
     let prompt: String
     let context: QuickEntryContext
     let submit: () -> Void
     @FocusState private var focused: Bool
-    private var parsed: QuickEntry { QuickEntry(text, disabled: declined, context: context) }
+    private var parsed: QuickEntry { QuickEntry(text, disabled: declined, context: context.choosingReferences(choices)) }
     private var effectiveDestination: String {
         guard let projectID = parsed.updates["project_id"]?.text, let project = context.projects.first(where: { $0.id == projectID }) else { return destination }
         let section = (parsed.updates["section_id"]?.text).flatMap { id in context.sections.first { $0.id == id }?.name }
@@ -450,13 +455,13 @@ struct TaskCapturePanel: View {
                 Button { dismiss() } label: { Image(systemName: "xmark").font(.body.weight(.medium)) }
                     .buttonStyle(.plain).help("Close (Esc)").accessibilityLabel("Close task entry")
             }
-            TextField(prompt, text: $text, axis: .vertical)
+            TextField(prompt, text: $text, selection: $titleSelection, axis: .vertical)
                 .font(.title3).lineLimit(2...4).textFieldStyle(.plain)
                 .focused($focused).accessibilityIdentifier("quickAdd")
                 .padding(16)
                 .background(Color(nsColor: .textBackgroundColor), in: .rect(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.taskfold.opacity(focused ? 0.6 : 0.2), lineWidth: 1))
-                .onSubmit(submit)
+                .referenceCompletions(text: $text, selection: $titleSelection, choices: $choices, declined: $declined, context: context, focused: focused, onChoose: { focused = true }, submit: submitInWorkspace, submitsFromKeyboard: true)
             if !parsed.tokens.isEmpty {
                 ScrollView(.horizontal) {
                     QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: { focused = true })
@@ -472,14 +477,19 @@ struct TaskCapturePanel: View {
             HStack {
                 Text("Try “Call Sam tomorrow at 4pm !30mb p1”").font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Button("Add Task", action: submit).buttonStyle(.borderedProminent)
+                Button("Add Task", action: submitInWorkspace).buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction).disabled(parsed.title.isEmpty)
             }
         }
         .padding(24).frame(width: 540)
-        .onAppear { focused = true }
+        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); focused = true }
+        .task(id: parsed.updates["project_id"]?.text ?? context.currentProject) { _ = try? await store.refreshProjectMembers(parsed.updates["project_id"]?.text ?? context.currentProject) }
         .onExitCommand { dismiss() }
         .onChange(of: text) { _, value in if value.isEmpty { declined = [] } }
+    }
+    private func submitInWorkspace() {
+        guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { store.error = "The workspace changed. Close this capture and open it in the current workspace."; return }
+        submit()
     }
 }
 
@@ -522,5 +532,150 @@ struct DatePickSheet: View {
             }
         }
         .padding(20).frame(width: 320)
+    }
+}
+
+/// Each app owns this native presentation. Suggestions are explicit draft choices;
+/// the normal parser, Save and durable queue remain the authority for task changes.
+struct QuickReferenceCompletionModifier: ViewModifier {
+    @Binding var text: String
+    @Binding var selection: TextSelection?
+    @Binding var choices: [String: String]
+    @Binding var declined: Set<String>
+    let context: QuickEntryContext
+    let focused: Bool
+    var excluded: Set<String> = []
+    var onChoose: () -> Void = {}
+    var submit: () -> Void = {}
+    var submitsFromKeyboard = false
+    @State private var highlighted = 0
+    @State private var dismissedText: String?
+    private var completion: QuickReferenceCompletion {
+        var c = context; c.referenceChoices = choices
+        var caret: Int?
+        if let selection {
+            guard selection.isInsertion, case .selection(let range) = selection.indices,
+                  range.lowerBound <= text.endIndex, let index = range.lowerBound.samePosition(in: text.utf16) else { return QuickReferenceCompletion("") }
+            caret = text.utf16.distance(from: text.utf16.startIndex, to: index)
+        }
+        var result = QuickReferenceCompletion(text, caretUTF16: caret, context: c, disabled: declined)
+        result.options.removeAll { excluded.contains($0.group) }
+        return result
+    }
+    private var visible: Bool { focused && dismissedText != text && completion.range != nil }
+    func body(content: Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            content
+            if visible {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(completion.prompt).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                        Spacer()
+                        Button { keepLiteral() } label: {
+                            Image(systemName: "xmark").font(.system(size: 12, weight: .semibold)).frame(width: 44, height: 44).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityLabel("Keep reference as text").accessibilityIdentifier("dismissReferenceSuggestions")
+                    }
+                    if completion.options.isEmpty {
+                        Text("No matches. Keep typing, or choose from the field controls.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("referenceNoMatches")
+                    } else {
+                        ScrollViewReader { proxy in
+                            ScrollView {
+                                LazyVStack(spacing: 2) {
+                                    ForEach(completion.options) { option in
+                                        QuickReferenceOptionRow(option: option, highlighted: completion.options.firstIndex(of: option) == highlighted) { choose(option) }.id(option.id)
+                                    }
+                                }
+                            }.frame(maxHeight: 190).scrollIndicators(.visible).accessibilityIdentifier("referenceSuggestionList")
+                                .onChange(of: highlighted) { _, value in
+                                    if completion.options.indices.contains(value) { proxy.scrollTo(completion.options[value].id, anchor: .center) }
+                                }
+                        }
+                    }
+                }.padding(8).background(Color.taskfold.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
+            }
+        }
+        .onSubmit {
+            if visible, completion.options.indices.contains(highlighted) { choose(completion.options[highlighted]) }
+            else { submit() }
+        }
+        .onChange(of: text) { old, new in
+            if focused, let caret = QuickReferenceCompletion.returnInsertion(before: old, after: new) {
+                var c = context; c.referenceChoices = choices
+                var previous = QuickReferenceCompletion(old, caretUTF16: caret, context: c, disabled: declined)
+                previous.options.removeAll { excluded.contains($0.group) }
+                if dismissedText != old, previous.options.indices.contains(highlighted) {
+                    choose(previous.options[highlighted], using: previous, input: old)
+                } else if submitsFromKeyboard {
+                    text = old
+                    if let point = Range(NSRange(location: caret, length: 0), in: text)?.lowerBound { selection = TextSelection(insertionPoint: point) }
+                    submit()
+                }
+            }
+            highlighted = 0; dismissedText = nil
+        }
+        .onKeyPress(.downArrow) { move(1) }
+        .onKeyPress(.upArrow) { move(-1) }
+        .onKeyPress(.return) {
+            if visible, !completion.options.isEmpty { return acceptHighlighted() }
+            if focused && submitsFromKeyboard { submit(); return .handled }
+            return .ignored
+        }
+        .onKeyPress(.tab) { acceptHighlighted() }
+        .onKeyPress(.escape) {
+            guard visible else { return .ignored }; keepLiteral(); return .handled
+        }
+    }
+    private func keepLiteral() { declined.formUnion(completion.literalGroups); dismissedText = text }
+    private func move(_ delta: Int) -> KeyPress.Result {
+        guard visible, !completion.options.isEmpty else { return .ignored }
+        highlighted = (highlighted + delta + completion.options.count) % completion.options.count
+        return .handled
+    }
+    private func acceptHighlighted() -> KeyPress.Result {
+        guard visible, completion.options.indices.contains(highlighted) else { return .ignored }
+        choose(completion.options[highlighted]); return .handled
+    }
+    private func choose(_ option: QuickReferenceCompletion.Option, using candidate: QuickReferenceCompletion? = nil, input: String? = nil) {
+        guard let result = (candidate ?? completion).choosing(option, in: input ?? text) else { return }
+        choices[option.reference] = option.recordID
+        declined.remove(option.group)
+        text = result.text
+        if let caret = Range(NSRange(location: result.caretUTF16, length: 0), in: text)?.lowerBound { selection = TextSelection(insertionPoint: caret) }
+        onChoose()
+    }
+    private func symbol(_ group: String) -> String {
+        switch group { case "project_id": return "folder"; case "section_id": return "rectangle.stack"; case "assigned_to": return "person.crop.circle"; default: return "tag" }
+    }
+}
+
+extension View {
+    func referenceCompletions(text: Binding<String>, selection: Binding<TextSelection?>, choices: Binding<[String: String]>, declined: Binding<Set<String>>, context: QuickEntryContext, focused: Bool, excluded: Set<String> = [], onChoose: @escaping () -> Void = {}, submit: @escaping () -> Void = {}, submitsFromKeyboard: Bool = false) -> some View {
+        modifier(QuickReferenceCompletionModifier(text: text, selection: selection, choices: choices, declined: declined, context: context, focused: focused, excluded: excluded, onChoose: onChoose, submit: submit, submitsFromKeyboard: submitsFromKeyboard))
+    }
+}
+
+
+private struct QuickReferenceOptionRow: View {
+    let option: QuickReferenceCompletion.Option
+    let highlighted: Bool
+    let choose: () -> Void
+    var body: some View {
+        Button(action: choose) {
+            HStack(spacing: 10) {
+                Image(systemName: symbol).font(.system(size: 18, weight: .medium)).foregroundStyle(Color.taskfold).frame(width: 24).accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(option.name).font(.subheadline.weight(.medium)).fixedSize(horizontal: false, vertical: true)
+                    Text(option.detail).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                if highlighted { Image(systemName: "return").font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary).frame(width: 20).accessibilityHidden(true) }
+            }.padding(.horizontal, 10).padding(.vertical, 8).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                .background(highlighted ? Color.taskfold.opacity(0.09) : Color.clear, in: RoundedRectangle(cornerRadius: 10))
+        }.buttonStyle(.plain).accessibilityIdentifier("referenceSuggestion-" + option.id)
+            .accessibilityLabel(option.name + ", " + option.detail)
+            .accessibilityHint("Use this result in the task")
+    }
+    private var symbol: String {
+        switch option.group { case "project_id": return "folder"; case "section_id": return "rectangle.stack"; case "assigned_to": return "person.crop.circle"; default: return "tag" }
     }
 }

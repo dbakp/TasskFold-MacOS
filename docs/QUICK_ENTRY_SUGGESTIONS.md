@@ -1,0 +1,21 @@
+# Quick-entry reference suggestions
+
+Taskfold's native capture and task-title editors show searchable directory choices beside the cursor. They use the same saved project, section, label and member identities as the normal task fields. Each repository owns its model and native view; there is no sibling checkout dependency or new backend schema.
+
+| Type | Choices |
+| --- | --- |
+| `#Cli` | Matching projects and labels, with distinct icons/type labels |
+| `#project:Cli` | Projects only; archived projects are excluded |
+| `@Cli`, `%Cli`, `#label:Cli` | Existing labels |
+| `/Ne` | Sections of the selected project |
+| `+Al` | Current members of the selected project; pending, declined and revoked invitations are excluded |
+
+Names can have spaces. Choosing a result supplies a quoted reference and the selected directory identity, so duplicate names do not select an arbitrary row. The project form uses `#project:"Client Work"` to avoid a project/label name collision. Search ignores case and diacritics, ranks prefix matches first, then sorts deterministically. An empty prefix shows the available directory. All matches remain reachable in the scrolling list; choosing a project is required before showing its sections or members. Quoted prose, escaped markers, URLs, email addresses and ordinary file paths are not suggestion triggers. Names containing a quote or newline remain available through the normal field controls; they are outside this reference grammar.
+
+A choice replaces the current reference token, preserving later task-name text and moving the insertion point just after the new reference. Selecting a text range hides suggestions. The X/“Keep reference as text” action, or Escape while the list is active, keeps the words literal. Choosing a result explicitly reenables its field group if it had previously been declined. The normal removable chips can still keep accepted reference text in the title. With a hardware keyboard, Up/Down changes the highlighted result and Return/Tab selects it while the list is active; normal submission remains available when it closes. In capture, the onscreen Done key chooses the highlighted result first, then submits on a later press. A single inserted return is handled for native multiline fields; pasting multiple lines does not submit the draft. Hardware keyboard and Mac runtime acceptance are tracked separately from compilation.
+
+On iPhone, choices remain in the draft until Save or More; More passes resolved task fields to the full editor. The Mac capture panel uses the same normal Add transport, including Day planner capture. In the Mac inspector, choosing references applies those reference fields through its existing autosave queue; other pending date, priority and reminder pieces stay available for normal acceptance/decline. Autosaved title text does not erase the inspector's pending parsing feedback.
+
+The selected ID is draft-only and is revalidated against the current permission-scoped directory when parsing. Removed/renamed projects, removed labels, changed project scope or revoked members cannot silently select another row with the same name. A deleted selected label cannot be recreated from its ID. Persisted tasks carry the existing stable field IDs, not a separate suggestion or account model. Existing workspace-generation, save/merge, assignment-cleanup, offline queue, sync and backup rules still apply.
+
+The public capture vocabulary was checked against [Todoist Quick Add](https://www.todoist.com/help/todoist/features/use-task-quick-add-in-todoist-va4Lhpzz) on 6 October 2026. Taskfold retains its established `@`/`%` label and `#` compatibility behavior. New-project creation, date/repeat/reminder suggestion menus, richer natural-language grammar, physical/iPad, Mac runtime and paired native/offline acceptance remain tracked P0 work. This document describes reference suggestions, not complete Todoist parity.

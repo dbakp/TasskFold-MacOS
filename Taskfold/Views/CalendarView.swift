@@ -14,6 +14,7 @@ struct CalendarView: View {
         get { workspace.quickAdd }
         nonmutating set { workspace.quickAdd = newValue }
     }
+    @State private var referenceChoices: [String: String] = [:]
     @State private var quickAddVisible = false
     @State private var declinedGroups = Set<String>()
     @FocusState private var calendarFocused: Bool
@@ -137,9 +138,9 @@ struct CalendarView: View {
         .onChange(of: workspace.calendarDay) { _, _ in page = page(containing: selected, mode: mode) }
         .onChange(of: workspace.calendarMode) { _, _ in withAnimation(layout) { page = page(containing: selected, mode: mode) } }
         .sheet(isPresented: $quickAddVisible) {
-            TaskCapturePanel(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), declined: $declinedGroups, destination: selected.formatted(date: .abbreviated, time: .omitted), prompt: "What needs to get done?", context: workspace.quickEntryContext()) {
-                if let id = workspace.add(quickAdd, date: selected, declined: declinedGroups) {
-                    quickAdd = ""; declinedGroups = []; quickAddVisible = false; workspace.selection = [id]
+            TaskCapturePanel(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), declined: $declinedGroups, choices: $referenceChoices, destination: selected.formatted(date: .abbreviated, time: .omitted), prompt: "What needs to get done?", context: workspace.quickEntryContext()) {
+                if let id = workspace.add(quickAdd, date: selected, declined: declinedGroups, referenceChoices: referenceChoices) {
+                    quickAdd = ""; declinedGroups = []; referenceChoices = [:]; quickAddVisible = false; workspace.selection = [id]
                 }
             }
         }

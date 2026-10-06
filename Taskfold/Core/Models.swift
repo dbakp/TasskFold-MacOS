@@ -322,6 +322,7 @@ struct QuickEntry {
     var updates: [String: JSON] = [:]
     var tokens: [Token] = []
     var warnings: [String] = []
+    var referenceProjectBlocked = false
     private var knownLabels: [Record] = []
     private var acceptedReminders: [(ReminderSpec, String)] = []
     var hasSuggestions: Bool { !updates.isEmpty }
@@ -329,7 +330,7 @@ struct QuickEntry {
     /// so a user can decline a single suggestion (for example keep "tomorrow" as part of the name).
     init(_ input: String, now: Date = Date(), calendar: Calendar = .current, disabled: Set<String> = [], context: QuickEntryContext = QuickEntryContext(), task: Record = Record()) {
         let references = QuickEntryReferences(input, context: context, disabled: disabled)
-        title = references.title; updates = references.updates; tokens = references.tokens; warnings = references.warnings; knownLabels = context.labels
+        title = references.title; updates = references.updates; tokens = references.tokens; warnings = references.warnings; knownLabels = context.labels; referenceProjectBlocked = references.blockedProject
         var literals = references.literals
         func protect(_ pattern: String, removeEscape: Bool = false) {
             guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return }
@@ -549,8 +550,11 @@ struct QuickEntryContext {
     var labels: [Record] = []
     /// Members are already permission-filtered by the platform's directory. IDs identify users.
     var members: [String: [Record]] = [:]
+    /// Exact reference text to an explicitly selected directory ID, scoped to this draft.
+    var referenceChoices: [String: String] = [:]
     var currentProject = ""
     var currentUser = ""
+    func choosingReferences(_ choices: [String: String]) -> Self { var copy = self; copy.referenceChoices = choices; return copy }
     static func key(_ name: String) -> String {
         name.trimmingCharacters(in: .whitespacesAndNewlines).folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
     }
@@ -562,6 +566,7 @@ private struct QuickEntryReferences {
     var tokens: [QuickEntry.Token] = []
     var warnings: [String] = []
     var literals: [(String, String)] = []
+    var blockedProject = false
     private struct Reference {
         var raw: String, symbol: String, qualifier: String, name: String, marker: String
     }
@@ -581,7 +586,11 @@ private struct QuickEntryReferences {
             title.replaceSubrange(range, with: marker)
         }
         func named(_ records: [Record], _ name: String) -> [Record] { records.filter { QuickEntryContext.key($0.name) == QuickEntryContext.key(name) } }
-        func projects(_ reference: Reference) -> [Record] { named(context.projects.filter { !$0["is_archived"].flag }, reference.name) }
+        func chosen(_ rows: [Record], _ reference: Reference) -> [Record] {
+            guard let id = context.referenceChoices[reference.raw] else { return rows }
+            return rows.filter { $0.id == id }
+        }
+        func projects(_ reference: Reference) -> [Record] { chosen(named(context.projects.filter { !$0["is_archived"].flag }, reference.name), reference) }
         var replacements: [String: String] = [:]
         func keep(_ reference: Reference, warning: String? = nil) {
             literals.append((reference.marker, reference.raw))
@@ -594,7 +603,6 @@ private struct QuickEntryReferences {
         }
         let projectRefs = references.filter { $0.symbol == "#" && ($0.qualifier == "project" || ($0.qualifier.isEmpty && !projects($0).isEmpty)) }
         var effectiveProject = context.currentProject
-        var blockedProject = false
         let targetIDs = Set(projectRefs.flatMap { projects($0).map(\.id) })
         for reference in projectRefs {
             let candidates = projects(reference)
@@ -611,10 +619,10 @@ private struct QuickEntryReferences {
         }
         let remaining = references.filter { reference in !projectRefs.contains(where: { $0.marker == reference.marker }) }
         let sectionRefs = remaining.filter { $0.symbol == "/" && ($0.qualifier.isEmpty || $0.qualifier == "section") }
-        let sectionTargets = Set(sectionRefs.flatMap { named(context.sections.filter { $0.string("project_id") == effectiveProject }, $0.name).map(\.id) })
+        let sectionTargets = Set(sectionRefs.flatMap { chosen(named(context.sections.filter { $0.string("project_id") == effectiveProject }, $0.name), $0).map(\.id) })
         for reference in sectionRefs {
             if disabled.contains("section_id") || blockedProject { keep(reference); continue }
-            let candidates = named(context.sections.filter { $0.string("project_id") == effectiveProject }, reference.name)
+            let candidates = chosen(named(context.sections.filter { $0.string("project_id") == effectiveProject }, reference.name), reference)
             guard !effectiveProject.isEmpty, candidates.count == 1, sectionTargets.count == 1 else { keep(reference, warning: "Choose a section in the selected project. “\(reference.raw)” stays in the title."); continue }
             updates["section_id"] = .string(candidates[0].id)
             take(reference, group: "section_id", label: candidates[0].name)
@@ -626,8 +634,8 @@ private struct QuickEntryReferences {
                 let key = QuickEntryContext.key(reference.name)
                 return (key == "me" && member.id == context.currentUser) || [member.string("display_name"), member.string("email"), member.string("invited_email")].contains { !$0.isEmpty && QuickEntryContext.key($0) == key }
             }
-            if !exact.isEmpty { return exact }
-            return members.filter { QuickEntryContext.key($0.string("display_name").split(separator: " ").first.map(String.init) ?? "") == QuickEntryContext.key(reference.name) }
+            if !exact.isEmpty { return chosen(exact, reference) }
+            return chosen(members.filter { QuickEntryContext.key($0.string("display_name").split(separator: " ").first.map(String.init) ?? "") == QuickEntryContext.key(reference.name) }, reference)
         }
         let personTargets = Set(personRefs.flatMap { people($0).map(\.id) })
         for reference in personRefs {
@@ -640,13 +648,13 @@ private struct QuickEntryReferences {
         for reference in remaining where !sectionRefs.contains(where: { $0.marker == reference.marker }) && !personRefs.contains(where: { $0.marker == reference.marker }) {
             guard reference.symbol == "@" || reference.symbol == "%" || (reference.symbol == "#" && (reference.qualifier.isEmpty || reference.qualifier == "label")) else { keep(reference); continue }
             if disabled.contains("labels") { keep(reference); continue }
-            let candidates = named(context.labels, reference.name)
-            guard candidates.count <= 1, !(candidates.isEmpty && context.labels.contains(where: { $0.id == reference.name })) else { keep(reference, warning: "Choose the label in Labels. “\(reference.raw)” stays in the title."); continue }
-            let name = candidates.first?.name ?? reference.name
+            let candidates = chosen(named(context.labels, reference.name), reference)
+            guard candidates.count <= 1, !(candidates.isEmpty && (context.referenceChoices[reference.raw] != nil || context.labels.contains(where: { $0.id == reference.name }))) else { keep(reference, warning: "Choose the label in Labels. “\(reference.raw)” stays in the title."); continue }
+            let name = context.referenceChoices[reference.raw] != nil ? candidates.first?.id ?? reference.name : candidates.first?.name ?? reference.name
             var labels = updates["labels"]?.list ?? []
             if !labels.contains(.string(name)) { labels.append(.string(name)) }
             updates["labels"] = .array(labels)
-            take(reference, group: "labels", label: name)
+            take(reference, group: "labels", label: candidates.first?.name ?? reference.name)
         }
         for (marker, replacement) in replacements { title = title.replacingOccurrences(of: marker, with: replacement) }
     }
