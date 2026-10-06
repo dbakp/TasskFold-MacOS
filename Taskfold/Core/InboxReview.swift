@@ -35,6 +35,7 @@ struct InboxReviewRequest: Identifiable, Sendable {
     func actionable(_ shown: Record, tasks: [Record], account: String, generation: UUID) -> Record? {
         guard workspace.matches(account: account, generation: generation), ids.contains(shown.id),
               let row = tasks.first(where: { $0.id == shown.id }), Self.eligible(row),
+              row["task_generation"] == shown["task_generation"],
               row["completion_version"].integer == shown["completion_version"].integer else { return nil }
         return row
     }

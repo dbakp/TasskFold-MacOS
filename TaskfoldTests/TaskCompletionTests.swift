@@ -16,7 +16,7 @@ final class TaskCompletionTests: XCTestCase {
         let second = TaskCompletion.complete(source, tasks: [source], at: now.addingTimeInterval(5), calendar: cph)
         XCTAssertEqual(first.count, 2); XCTAssertEqual(first[1].recordID, second[1].recordID)
         XCTAssertNotNil(UUID(uuidString: first[1].recordID)); XCTAssertEqual(first[1].insertOnly, true)
-        XCTAssertEqual(first[0].baseline, ["completed": .bool(false), "completed_at": .null, "completion_version": .number(0)])
+        XCTAssertEqual(first[0].baseline, ["completed": .bool(false), "completed_at": .null, "completion_version": .number(0), "task_generation": .null])
         XCTAssertEqual(Set(first[0].fields.keys), ["completed", "completed_at"])
         XCTAssertNotEqual(first[1].fields["created_at"], second[1].fields["created_at"])
     }

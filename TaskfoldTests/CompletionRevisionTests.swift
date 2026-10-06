@@ -7,6 +7,7 @@ final class CompletionRevisionTests: XCTestCase {
     private func root(version: Int = 0) -> Record {
         var task = Record.task(user: owner); task["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
         task["title"] = .string("Recurring review"); task["due_date"] = .string("2026-10-06")
+        task["task_generation"] = .string("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee")
         task["completed_at"] = .null; task["completion_version"] = .number(Double(version))
         task["is_recurring"] = .bool(true); task["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
         return task
@@ -88,7 +89,7 @@ final class CompletionRevisionTests: XCTestCase {
         var (snapshot, changes) = queued(); var child = Record(changes[1].fields)
         var metadata = child["source_metadata"].object; metadata["future"] = .string("Keep me")
         child["source_metadata"] = .object(metadata)
-        let edit = Mutation(table: "tasks", recordID: child.id, method: "PATCH", fields: ["title": .string("Keep my draft"), "source_metadata": child["source_metadata"]], baseline: ["title": changes[1].fields["title"]!, "source_metadata": changes[1].fields["source_metadata"]!])
+        let edit = Mutation(table: "tasks", recordID: child.id, method: "PATCH", fields: ["title": .string("Keep my draft"), "source_metadata": child["source_metadata"]], baseline: ["task_generation": child["task_generation"], "title": changes[1].fields["title"]!, "source_metadata": changes[1].fields["source_metadata"]!])
         snapshot.apply(edit); snapshot.pending.append(edit)
         let resolved = try XCTUnwrap(SyncConflict(mutation: changes[0], remote: root(version: 2)).resolving(snapshot, keepLocal: false))
         let durable = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(resolved))

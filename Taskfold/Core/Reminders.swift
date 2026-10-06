@@ -119,12 +119,14 @@ enum ReminderSignature {
         return DueReminder.digest(encoded+"|"+String(date.timeIntervalSince1970)+"|completion:"+String(task["completion_version"].integer))
     }
     static func make(task: Record, spec: ReminderSpec, date: Date) -> String {
-        let fields = ["taskfold.reminder.v3", task.id.lowercased(), spec.id, spec.kind,
+        let generation = task.string("task_generation").lowercased()
+        var fields = [generation.isEmpty ? "taskfold.reminder.v3" : "taskfold.reminder.v4", task.id.lowercased(), spec.id, spec.kind,
                       spec.kind == "relative" ? "planned" : "", spec.kind == "relative" ? spec.offset.map(String.init) ?? "" : "",
                       spec.kind == "absolute" ? spec.absolute.map(milliseconds) ?? "" : "", spec.kind == "absolute" ? spec.raw["time_zone"]?.text ?? "" : "",
                       (spec.raw["channels"]?.list ?? []).map(\.text).sorted().joined(separator: ","), "1",
                       milliseconds(date), String(task["completion_version"].integer)]
-        return "r3:" + DueReminder.digest(fields.map { "\($0.utf8.count):\($0)" }.joined())
+        if !generation.isEmpty { fields.append(generation) }
+        return (generation.isEmpty ? "r3:" : "r4:") + DueReminder.digest(fields.map { "\($0.utf8.count):\($0)" }.joined())
     }
 }
 
@@ -148,6 +150,9 @@ struct DueReminder: Equatable, Sendable {
     static func digest(_ value: String) -> String { SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined() }
     static func events(tasks: [Record], calendar: Calendar = .current, channels: Set<String> = ["local"]) -> [DueReminder] {
         tasks.filter { !$0.completed }.flatMap { task -> [DueReminder] in
+            if let generation = task.fields["task_generation"], generation != .null {
+                guard case .string(let value) = generation, UUID(uuidString: value) != nil else { return [] }
+            }
             let raw = ReminderSpec.rows(task)
             let specs = raw.isEmpty ? [ReminderSpec.relative(0, id: ReminderSpec.plannedID)] : raw.prefix(ReminderSpec.maximum).compactMap(ReminderSpec.init(row:))
             // Duplicate IDs cannot produce competing requests; retain only the first valid row.
@@ -155,7 +160,7 @@ struct DueReminder: Equatable, Sendable {
             return specs.filter { seen.insert($0.id).inserted && $0.enabled && !channels.isDisjoint(with: ($0.raw["channels"]?.list ?? []).map(\.text)) }.compactMap { spec in
                 guard let date = spec.date(task: task, calendar: calendar) else { return nil }
                 let signature = ReminderSignature.make(task: task, spec: spec, date: date)
-                return DueReminder(id: raw.isEmpty ? task.id : task.id + "." + spec.id, title: task.title, body: task.string("description"), date: date, taskID: task.id, specID: spec.id, signature: signature, legacySignature: ReminderSignature.legacy(task: task, spec: spec, date: date))
+                return DueReminder(id: raw.isEmpty ? task.id : task.id + "." + spec.id, title: task.title, body: task.string("description"), date: date, taskID: task.id, specID: spec.id, signature: signature, legacySignature: task.string("task_generation").isEmpty ? ReminderSignature.legacy(task: task, spec: spec, date: date) : nil)
             }
         }.sorted { $0.date == $1.date ? $0.id < $1.id : $0.date < $1.date }
     }
@@ -334,7 +339,9 @@ enum FocusFinish {
         guard available, !conflict, !account.isEmpty, let row,
               let session = FocusSessionChange.session(in: row, account: account), session.status == .running,
               let end = session.endDate, let task = tasks.first(where: { $0.id.lowercased() == session.taskID && !$0.completed }) else { return nil }
-        let document: JSON = .object(["state": session.document, "baseline": .object(FocusSessionChange.baseline(row)), "completion": task["completion_version"]])
+        var fields: [String: JSON] = ["state": session.document, "baseline": .object(FocusSessionChange.baseline(row)), "completion": task["completion_version"]]
+        if !task.string("task_generation").isEmpty { fields["task_generation"] = task["task_generation"] }
+        let document: JSON = .object(fields)
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         guard let data = try? encoder.encode(document), let encoded = String(data: data, encoding: .utf8) else { return nil }
         // Calendar notification triggers resolve to whole seconds. Never alert before the timer ends.

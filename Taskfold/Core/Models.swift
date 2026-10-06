@@ -51,7 +51,7 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
     static func task(user: String, project: String = "", date: Date? = nil) -> Record {
         Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(user),
                 "title": .string(""), "description": .string(""), "completed": .bool(false),
-                "completion_version": .number(0), "priority": .number(4), "project_id": project.isEmpty ? .null : .string(project),
+                "completion_version": .number(0), "task_generation": .string(UUID().uuidString.lowercased()), "priority": .number(4), "project_id": project.isEmpty ? .null : .string(project),
                 "due_date": date.map { .string(Dates.day($0)) } ?? .null,
                 "created_at": .string(Dates.timestamp()), "labels": .array([]),
                 "subtasks": .array([]), "comments": .array([]), "attachments": .array([]),
@@ -96,26 +96,56 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var insertOnly: Bool? = nil
 }
 
+/// Undo/redo recreation is a new task incarnation; an exact queued retry retains its chosen ID.
+enum TaskGeneration {
+    static func permitsLocalAction(_ change: Mutation, existing: Record?) -> Bool {
+        guard change.table == "tasks", ["PATCH", "DELETE"].contains(change.method), change.baseline != nil, let existing else { return true }
+        return existing["task_generation"] == (change.baseline?["task_generation"] ?? .null)
+    }
+    static func restoring(_ change: Mutation, existing: Record?) -> Mutation {
+        guard change.table == "tasks", change.method == "POST", existing == nil else { return change }
+        var restored = change
+        restored.fields["task_generation"] = .string(UUID().uuidString.lowercased())
+        restored.fields["completion_version"] = .number(0)
+        restored.insertOnly = true
+        return restored
+    }
+}
+
 /// A local prediction follows the server counter; only the server owns confirmed revisions.
 enum TaskCompletionRevision {
     static func touches(_ fields: [String: JSON]) -> Bool { fields["completed"] != nil || fields["completed_at"] != nil }
     static func editBaseline(for fields: [String: JSON], from original: Record) -> [String: JSON] {
         var baseline = Dictionary(uniqueKeysWithValues: fields.keys.map { ($0, original[$0]) })
+        baseline["task_generation"] = original["task_generation"]
         if touches(fields) { baseline["completion_version"] = original.fields["completion_version"] ?? .number(0) }
         return baseline
     }
     static func capturing(_ change: Mutation, existing: Record?) -> Mutation {
         var change = change
-        if change.table == "tasks", change.method == "PATCH" { change.fields.removeValue(forKey: "completion_version") }
+        if change.table == "tasks", change.method == "PATCH" {
+            change.fields.removeValue(forKey: "completion_version")
+            change.fields.removeValue(forKey: "task_generation")
+            if let existing {
+                if change.baseline == nil { change.baseline = editBaseline(for: change.fields, from: existing) }
+                if change.baseline?["task_generation"] == nil { change.baseline?["task_generation"] = existing["task_generation"] }
+            }
+        }
         if change.table == "tasks", change.method == "PATCH", touches(change.fields), let existing {
             if change.baseline == nil { change.baseline = editBaseline(for: change.fields, from: existing) }
             if change.baseline?["completion_version"] == nil { change.baseline?["completion_version"] = existing.fields["completion_version"] ?? .number(0) }
         }
-        if change.table == "tasks", change.method == "POST" { change.fields["completion_version"] = .number(0) }
+        if change.table == "tasks", change.method == "POST" {
+            change.fields["completion_version"] = .number(0)
+            if change.fields["task_generation"] == nil || change.fields["task_generation"] == .null {
+                change.fields["task_generation"] = .string(change.id.uuidString.lowercased())
+            }
+            change.insertOnly = true
+        }
         return change
     }
     static func applying(_ fields: [String: JSON], to old: Record) -> Record {
-        var row = old; row.fields.merge(fields) { _, new in new }
+        var row = old; row.fields.merge(fields.filter { $0.key != "task_generation" }) { _, new in new }
         if fields["completion_version"] == nil, touches(fields),
            old.completed != row.completed || instant(old["completed_at"]) != instant(row["completed_at"]) {
             row["completion_version"] = .number(Double(old["completion_version"].integer + 1))
@@ -211,7 +241,12 @@ struct SyncConflict: Identifiable {
             return row
         }
         var remoteFields = remote.fields; remoteFields["id"] = .string(mutation.recordID)
-        result.apply(Mutation(table: "tasks", recordID: mutation.recordID, method: "PATCH", fields: remoteFields))
+        // A confirmed row replaces identity as well as values. Ordinary local PATCHes
+        // cannot change generation, so do not install a server row through that path.
+        var confirmed = result.tables["tasks"] ?? []
+        if let row = confirmed.firstIndex(where: { $0.id.lowercased() == mutation.recordID.lowercased() }) { confirmed[row] = Record(remoteFields) }
+        else { confirmed.append(Record(remoteFields)) }
+        result.tables["tasks"] = confirmed
         for change in result.pending where change.table == "tasks" && change.recordID.lowercased() == mutation.recordID.lowercased() {
             var local = change; local.recordID = mutation.recordID
             if local.fields["id"] != nil { local.fields["id"] = .string(mutation.recordID) }
@@ -267,6 +302,8 @@ struct Snapshot: Codable, Equatable, Sendable {
     var widgetCompletion = WidgetCompletionCache()
     mutating func apply(_ change: Mutation) {
         var rows = tables[change.table] ?? []
+        // A fetched recreated task must remain visible while its older queued action needs review.
+        if !TaskGeneration.permitsLocalAction(change, existing: rows.first(where: { $0.id == change.recordID })) { return }
         if change.method == "DELETE" { rows.removeAll { $0.id == change.recordID } }
         else if let i = rows.firstIndex(where: { $0.id == change.recordID }) {
             if change.method == "POST", change.insertOnly == true { return }
@@ -667,6 +704,7 @@ private struct QuickEntryReferences {
 struct EditHistory {
     var undo: [Mutation]
     var redo: [Mutation]
+    var reversed: EditHistory { var result = self; swap(&result.undo, &result.redo); return result }
     init(changes: [Mutation], snapshot: Snapshot) {
         redo = []
         var current = snapshot
@@ -674,9 +712,9 @@ struct EditHistory {
         for change in changes {
             if let old = current.tables[change.table]?.first(where: { $0.id == change.recordID }) {
                 let fields = change.method == "DELETE" ? old.fields : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old.fields[$0] ?? .null) })
-                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : change.fields, insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil))
+                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(change.fields, to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil))
                 var forward = change
-                if change.method == "PATCH" { forward.baseline = Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old[$0]) }) }
+                if change.method == "PATCH" { forward.baseline = change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: change.fields, from: old) : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old[$0]) }) }
                 redo.append(forward)
             } else {
                 redo.append(change)
@@ -1046,7 +1084,7 @@ enum TaskCompletion {
         let stamp = ISO8601DateFormatter().string(from: now)
         let fields: [String: JSON] = ["completed": .bool(!task.completed), "completed_at": task.completed ? .null : .string(stamp)]
         var changes = [Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields,
-            baseline: ["completed": task["completed"], "completed_at": task["completed_at"], "completion_version": task.fields["completion_version"] ?? .number(0)])]
+            baseline: TaskCompletionRevision.editBaseline(for: fields, from: task))]
         let calendar = calendar(for: task, input: input)
         let parent = task.string("recurrence_parent_id").isEmpty ? task.id : task.string("recurrence_parent_id")
         guard !task.completed, let next = Dates.next(task, calendar: calendar, completion: now) else { return changes }
@@ -1054,6 +1092,7 @@ enum TaskCompletion {
         guard !tasks.contains(where: { $0.id.lowercased() == nextID || ($0.string("recurrence_parent_id").lowercased() == parent.lowercased() && String($0.string("due_date").prefix(10)) == day) }) else { return changes }
         var copy = TaskPlanning.nextOccurrence(task, date: next, calendar: calendar)
         copy["id"] = .string(nextID); copy["completed"] = .bool(false); copy["completed_at"] = .null; copy["completion_version"] = .number(0)
+        copy["task_generation"] = .string(UUID().uuidString.lowercased())
         copy["notification_sent_at"] = .null; copy["created_at"] = .string(stamp); copy.fields.removeValue(forKey: "updated_at")
         copy["comments"] = .array([]); copy["recurrence_parent_id"] = .string(parent)
         // One occurrence identity, but separate actions: undo must not delete another device's copy.

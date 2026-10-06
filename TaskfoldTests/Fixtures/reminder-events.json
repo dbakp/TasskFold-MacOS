@@ -358,7 +358,7 @@
             "enabled": true,
             "opaque_extension": {
               "url": "https://example.invalid/a",
-              "unicode": "🎯 æ ø",
+              "unicode": "\ud83c\udfaf \u00e6 \u00f8",
               "fraction": 1e-09
             }
           }
@@ -707,6 +707,70 @@
           "signature": "r3:70737d0729b0205f43f41feb808925ddb38b64dae6cd49dd2ae281974246ccd8"
         }
       ]
+    },
+    {
+      "name": "same task restored generation 1",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [],
+        "task_generation": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-10-25T00:30:00Z",
+          "signature": "r4:d98331d99ac6a72cfb94e8af8614a3ea2d4d4eea688f78ab5a7b4c28f7a2182e"
+        }
+      ]
+    },
+    {
+      "name": "same task restored generation 2",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [],
+        "task_generation": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-10-25T00:30:00Z",
+          "signature": "r4:e1024f88b66c53cb467f929e00e365321c350927a4f1ee9a0e38d3e4800459fe"
+        }
+      ]
+    },
+    {
+      "name": "non-UUID generation",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [],
+        "task_generation": "invalid"
+      },
+      "events": []
+    },
+    {
+      "name": "non-text generation",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [],
+        "task_generation": 1
+      },
+      "events": []
     }
   ]
 }

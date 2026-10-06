@@ -194,7 +194,7 @@ final class AuthTransportTests: XCTestCase {
         var task = Record.task(user: fixture["userID"]!, date: Date().addingTimeInterval(86400)); task["title"] = .string("Native integration verification")
         try await backend.send(Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields))
         let created = try await backend.rows("tasks"); XCTAssertTrue(created.contains { $0.id == task.id })
-        try await backend.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["completed": .bool(true)], baseline: ["completed": .bool(false), "completion_version": .number(0)]))
+        try await backend.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["completed": .bool(true)], baseline: ["task_generation": task["task_generation"], "completed": .bool(false), "completion_version": .number(0)]))
         let edited = try await backend.rows("tasks"); XCTAssertEqual(edited.first { $0.id == task.id }?.completed, true)
         try await backend.send(Mutation(table: "tasks", recordID: task.id, method: "DELETE", fields: [:], baseline: try XCTUnwrap(edited.first { $0.id == task.id }).fields))
         let removed = try await backend.rows("tasks"); XCTAssertFalse(removed.contains { $0.id == task.id })

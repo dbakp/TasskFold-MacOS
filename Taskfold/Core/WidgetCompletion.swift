@@ -22,7 +22,8 @@ enum WidgetCompletion {
         snapshot.widgetCompletion.states = snapshot.widgetCompletion.states.filter { ids.contains($0.key) }
         for task in tasks where !task.id.isEmpty {
             let id = task.id.lowercased()
-            let values: [JSON] = [.bool(task.completed), .string(instant(task.string("created_at"))), .string(instant(task.string("completed_at"))), task["completion_version"]]
+            var values: [JSON] = [.bool(task.completed), .string(instant(task.string("created_at"))), .string(instant(task.string("completed_at"))), task["completion_version"]]
+            if !task.string("task_generation").isEmpty { values.append(task["task_generation"]) }
             let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
             let signature = (try? encoder.encode(values)).map { DueReminder.digest(String(decoding: $0, as: UTF8.self)) } ?? ""
             if snapshot.widgetCompletion.states[id]?.signature != signature {

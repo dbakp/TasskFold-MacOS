@@ -26,24 +26,24 @@ final class NativeConflictIntegrationTests: XCTestCase {
         do {
             // A pre-upgrade queue with no baseline cannot silently replace work.
             do { try await a.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["title": .string("Unreviewed legacy title")])); XCTFail("Legacy edits need review") } catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:")) }
-            try await b.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["title": .string("First device title")], baseline: ["title": task["title"]]))
-            try await a.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["deadline_date": .string("2026-10-25")], baseline: ["deadline_date": .null]))
+            try await b.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["title": .string("First device title")], baseline: ["task_generation": task["task_generation"], "title": task["title"]]))
+            try await a.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["deadline_date": .string("2026-10-25")], baseline: ["task_generation": task["task_generation"], "deadline_date": .null]))
             let mine: JSON = .array([.object(["id": .string("a"), "text": .string("First comment")])])
             let theirs: JSON = .array([.object(["id": .string("b"), "text": .string("Independent comment")])])
-            try await a.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["comments": mine], baseline: ["comments": .array([])]))
-            let second = Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["comments": theirs], baseline: ["comments": .array([])])
+            try await a.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["comments": mine], baseline: ["task_generation": task["task_generation"], "comments": .array([])]))
+            let second = Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["comments": theirs], baseline: ["task_generation": task["task_generation"], "comments": .array([])])
             try await b.send(second); try await b.send(second)
             let remoteRows = try await b.rows("tasks")
             let remote = try XCTUnwrap(remoteRows.first { $0.id == task.id })
             XCTAssertEqual(remote.title, "First device title"); XCTAssertEqual(remote["deadline_date"], .string("2026-10-25")); XCTAssertEqual(remote["comments"].list.count, 2)
-            let desired = Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["title": .string("My chosen title")], baseline: ["title": task["title"]])
+            let desired = Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["title": .string("My chosen title")], baseline: ["task_generation": task["task_generation"], "title": task["title"]])
             do { try await a.send(desired); XCTFail("An overlapping edit must pause") } catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:")) }
             var queue = Snapshot(); queue.tables["tasks"] = [remote]; queue.pending = [desired]
             let reviewed = try XCTUnwrap(SyncConflict(mutation: desired, remote: remote).resolving(queue, keepLocal: true))
             let saved = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(reviewed))
             let rebased = try XCTUnwrap(saved.pending.first)
             // An edit made after the review must conflict again, rather than be overwritten.
-            try await b.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["title": .string("Changed during review")], baseline: ["title": remote["title"]]))
+            try await b.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["title": .string("Changed during review")], baseline: ["task_generation": task["task_generation"], "title": remote["title"]]))
             do { try await a.send(rebased); XCTFail("A newer overlapping edit must pause again") } catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:")) }
             let latestRows = try await a.rows("tasks")
             let latest = try XCTUnwrap(latestRows.first { $0.id == task.id })
@@ -73,11 +73,35 @@ final class NativeConflictIntegrationTests: XCTestCase {
             // A later cycle ends in precisely the same visible completion state.
             let oldReopen = try XCTUnwrap(TaskCompletion.toggle(approved, tasks: [approved]).first)
             let reopenedResult = try await b.send(oldReopen); let reopened = try XCTUnwrap(reopenedResult)
-            let reComplete = Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["completed": .bool(true), "completed_at": approved["completed_at"]], baseline: ["completed": reopened["completed"], "completed_at": reopened["completed_at"], "completion_version": reopened["completion_version"]])
+            let reComplete = Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["completed": .bool(true), "completed_at": approved["completed_at"]], baseline: ["task_generation": task["task_generation"], "completed": reopened["completed"], "completed_at": reopened["completed_at"], "completion_version": reopened["completion_version"]])
             let cycleResult = try await b.send(reComplete); let cycled = try XCTUnwrap(cycleResult)
             XCTAssertEqual(cycled["completed_at"], approved["completed_at"])
             do { try await a.send(oldReopen); XCTFail("Offline reopen replaced a later completion cycle") }
             catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:")) }
+            // Same-account backup restoration reuses the row ID but must retire its old actions.
+            let reopenedAgain = try XCTUnwrap(TaskCompletion.toggle(cycled, tasks: [cycled]).first)
+            let openSaved = try await b.send(reopenedAgain), beforeDelete = try XCTUnwrap(openSaved)
+            let earlierEvent = try XCTUnwrap(DueReminder.events(tasks: [beforeDelete]).first)
+            let backup = WorkspaceBackup.make(Snapshot(tables: ["tasks": [beforeDelete]]), account: owner)
+            try await a.send(Mutation(table: "tasks", recordID: task.id, method: "DELETE", fields: [:], baseline: beforeDelete.fields))
+            let restore = try XCTUnwrap(backup.plan(current: Snapshot(), account: owner, policy: .backupValues).changes.first { $0.table == "tasks" })
+            let restoreReply = try await a.send(restore), restored = try XCTUnwrap(restoreReply)
+            XCTAssertEqual(restored.id, task.id); XCTAssertNotEqual(restored["task_generation"], beforeDelete["task_generation"])
+            let restoreRetry = try await a.send(restore); XCTAssertEqual(restoreRetry?["task_generation"], restored["task_generation"])
+            XCTAssertFalse(try XCTUnwrap(DueReminder.events(tasks: [restored]).first).hasSignature(earlierEvent.signature))
+            let staleEdit = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["title": .string("Old device draft")]), existing: beforeDelete)
+            do { try await b.send(staleEdit); XCTFail("Old task edit replaced restored work") }
+            catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:")) }
+            do { try await b.send(Mutation(table: "tasks", recordID: task.id, method: "DELETE", fields: [:], baseline: beforeDelete.fields)); XCTFail("Old task deletion removed restored work") }
+            catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:")) }
+            let oldDeviceCache = Snapshot(tables: ["tasks": [beforeDelete]], pending: [staleEdit])
+            let restoreReview = try XCTUnwrap(SyncConflict(mutation: staleEdit, remote: restored).resolving(oldDeviceCache, keepLocal: true))
+            let reviewedRestoreEdit = try XCTUnwrap(restoreReview.pending.first)
+            XCTAssertEqual(restoreReview.tables["tasks"]?.first?["task_generation"], restored["task_generation"])
+            try await b.send(reviewedRestoreEdit)
+            let otherDeviceRows = try await b.rows("tasks")
+            XCTAssertEqual(otherDeviceRows.first { $0.id == task.id }?["task_generation"], restored["task_generation"])
+            XCTAssertEqual(otherDeviceRows.first { $0.id == task.id }?.title, "Old device draft")
         } catch { try? await cleanup(); throw error }
         try await cleanup()
         let remaining = try await b.rows("tasks"); XCTAssertFalse(remaining.contains { $0.id == task.id })

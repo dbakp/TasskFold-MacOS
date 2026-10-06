@@ -461,6 +461,7 @@ final class Store {
             }
             return change
         }
+        var committedChanges: [Mutation] = []
         for var change in changes {
             if change.table == "tasks", change.method == "PATCH", change.baseline == nil, let existing = record("tasks", id: change.recordID) {
                 change.baseline = Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, existing[$0]) })
@@ -469,6 +470,12 @@ final class Store {
                 change.baseline = existing.fields
             }
             change = TaskCompletionRevision.capturing(change, existing: record(change.table, id: change.recordID))
+            guard TaskGeneration.permitsLocalAction(change, existing: record(change.table, id: change.recordID)) else {
+                snapshot = old
+                error = "This task was deleted and restored while you were editing. Reopen its current copy before applying this change."
+                return false
+            }
+            committedChanges.append(change)
             let before = change.table == "tasks" ? record("tasks", id: change.recordID) : nil
             snapshot.apply(change)
             if localMode { TaskActivity.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID) }
@@ -476,7 +483,7 @@ final class Store {
         }
         if let widgetReceipt { snapshot.widgetCompletion.record(widgetReceipt) }
         do { try persist() } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
-        let historyChanges = changes.filter { $0.table != FocusSessionChange.table }
+        let historyChanges = committedChanges.filter { $0.table != FocusSessionChange.table }
         if remember, !historyChanges.isEmpty { undoStack.append(EditHistory(changes: historyChanges, snapshot: old)); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
         Task { await reschedule(); await sync() }
         return true
@@ -484,7 +491,7 @@ final class Store {
     @discardableResult
     func save(_ table: String, _ record: Record, baseline: Record? = nil) -> Bool {
         let existing = self.record(table, id: record.id)
-        let editable = record.fields.filter { table != "tasks" || $0.key != "completion_version" }
+        let editable = record.fields.filter { table != "tasks" || $0.key != "completion_version" && (existing == nil || $0.key != "task_generation") }
         let changed = (baseline ?? existing).map { old in editable.filter { old.fields[$0.key] != $0.value } } ?? editable
         guard !changed.isEmpty else { return true }
         var changes = [Mutation(table: table, recordID: record.id, method: existing == nil ? "POST" : "PATCH", fields: changed, baseline: baseline.map { old in
@@ -565,6 +572,9 @@ final class Store {
     func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks) }
     private func historyChanges(_ changes: [Mutation]) -> [Mutation] {
         changes.map { change in
+            if change.table == "tasks", change.method == "POST" {
+                return TaskGeneration.restoring(change, existing: record("tasks", id: change.recordID))
+            }
             guard change.table == "tasks", change.method == "PATCH", let base = change.baseline,
                   let current = record("tasks", id: change.recordID) else { return change }
             var next = change
@@ -577,11 +587,13 @@ final class Store {
     }
     func undo() {
         guard let entry = undoStack.popLast() else { return }
-        if commit(historyChanges(entry.undo), remember: false) { redoStack.append(entry) } else { undoStack.append(entry) }
+        let changes = historyChanges(entry.undo), applied = EditHistory(changes: changes, snapshot: snapshot)
+        if commit(changes, remember: false) { redoStack.append(applied.reversed) } else { undoStack.append(entry) }
     }
     func redo() {
         guard let entry = redoStack.popLast() else { return }
-        if commit(historyChanges(entry.redo), remember: false) { undoStack.append(entry) } else { redoStack.append(entry) }
+        let changes = historyChanges(entry.redo), applied = EditHistory(changes: changes, snapshot: snapshot)
+        if commit(changes, remember: false) { undoStack.append(applied) } else { redoStack.append(entry) }
     }
     func sync() async {
         consumeWidgetCompletions()
@@ -838,12 +850,17 @@ extension Store {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing") else { return }
         dailyBackupsEnabled = false; disableNotifications(); disableFocusAlerts()
         var task = Record.task(user: userID, date: Date().addingTimeInterval(-86400))
+        task.fields.removeValue(forKey: "task_generation") // Existing pre-migration task for the legacy alert walk.
         task["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa81"); task["title"] = .string("Reminder route check")
         task["due_time"] = .string("08:00")
         snapshot = Snapshot(tables: ["tasks": [task]])
         // The fixture's event is in the past, so this cannot schedule an upcoming test notification.
         UserDefaults.standard.set(true, forKey: reminderPreferenceKey); reminderPreferenceRevision += 1
         try? persist()
+    }
+    func restoreReminderRouteFixtureTask() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing"), let task = tasks.first else { return }
+        remove("tasks", task.id); undo()
     }
     func renewReminderRouteFixtureWorkspace() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing") else { return }

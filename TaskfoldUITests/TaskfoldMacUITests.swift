@@ -1108,3 +1108,18 @@ extension TaskfoldMacUITests {
         app.buttons["endReminderRouteFixture"].click()
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor func testEarlierReminderCannotOpenRecreatedTaskAndCurrentReminderStillWorks() throws {
+        let app=XCUIApplication(); app.launchArguments=["--uitesting","--reminder-route-testing","--widget-action-testing"]; app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["holdReminderRoute"].waitForExistence(timeout:10)); app.buttons["holdReminderRoute"].tap()
+        app.buttons["restoreReminderTask"].tap(); app.buttons["releaseReminderRoute"].tap()
+        let ignored=XCTNSPredicateExpectation(predicate:NSPredicate(format:"label == %@","Ignored"),object:app.staticTexts["reminderRouteOutcome"])
+        XCTAssertEqual(XCTWaiter.wait(for:[ignored],timeout:5),.completed)
+        XCTAssertFalse(app.descendants(matching:.any)["taskTitle"].firstMatch.exists)
+        app.buttons["holdReminderRoute"].tap(); app.buttons["releaseReminderRoute"].tap()
+        let title=app.descendants(matching:.any)["taskTitle"].firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout:5)); XCTAssertEqual(title.value as? String,"Reminder route check")
+        app.buttons["Cancel"].firstMatch.tap(); app.buttons["endReminderRouteFixture"].tap()
+    }
+}

@@ -70,7 +70,7 @@ struct WorkspaceBackup: Codable, Sendable {
         "projects": ["id","user_id","name","description","color","created_at","order_index","source_metadata"],
         "labels": ["id","user_id","name","color","created_at"],
         "sections": ["id","user_id","project_id","name","created_at","order_index"],
-        "tasks": ["id","user_id","title","description","completed","completion_version","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at"],
+        "tasks": ["id","user_id","title","description","completed","completion_version","task_generation","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at"],
         "saved_views": ["id","user_id","name","query_ast","layout","grouping","sort_by","include_completed","order_index","created_at","updated_at"],
         "favorites": ["id","user_id","order_index","created_at"],
         "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours"],
@@ -100,6 +100,10 @@ struct WorkspaceBackup: Codable, Sendable {
                 guard let allowed = Self.columns[table == "_local_day_order" ? "view_orders" : table], Set(row.fields.keys).isSubset(of: allowed) else { throw BackupFailure(message: "The \(table) table includes newer or unsupported fields. Update Taskfold before restoring it.") }
                 for key in ["id","user_id","name","title","description","color","project_id","section_id","assigned_to","recurrence_parent_id","time_zone","due_date","due_time","deadline_date","recurrence_end_date","scheduled_at"] {
                     if let value = row.fields[key], value != .null, case .string = value {} else if let value = row.fields[key], value != .null { throw BackupFailure(message: "\(table).\(key) must be text.") }
+                }
+                if let generation = row.fields["task_generation"], generation != .null {
+                    guard case .string(let value) = generation, UUID(uuidString: value) != nil,
+                          value.lowercased() != "00000000-0000-0000-0000-000000000000" else { throw BackupFailure(message: "A task has an invalid generation ID.") }
                 }
                 for key in ["completed","is_recurring","include_completed","overdue_collapsed"] {
                     if let value = row.fields[key], value != .null, case .bool = value {} else if row.fields[key] != nil && row.fields[key] != .null { throw BackupFailure(message: "\(table).\(key) must be a boolean.") }
@@ -346,7 +350,7 @@ extension WorkspaceBackup {
                 if let existing {
                     guard existing.string("user_id") == account else { throw BackupFailure(message: "A restore target belongs to another account. Your workspace was not changed.") }
                     if policy == .keepCurrent { result.kept += 1; continue }
-                    let fields = row.fields.filter { !["id","user_id","created_at","completion_version"].contains($0.key) && existing.fields[$0.key] != $0.value }
+                    let fields = row.fields.filter { !["id","user_id","created_at","completion_version","task_generation"].contains($0.key) && existing.fields[$0.key] != $0.value }
                     if fields.isEmpty { result.kept += 1; continue }
                     result.changes.append(Mutation(table: table, recordID: row.id, method: "PATCH", fields: fields, baseline: Dictionary(uniqueKeysWithValues: fields.keys.map { ($0, existing[$0]) })))
                     // The ordinary project-move mutation clears assignments first. Restore
@@ -362,6 +366,7 @@ extension WorkspaceBackup {
                     }
                     result.updated += 1
                 } else {
+                    if table == "tasks" { row["task_generation"] = .string(UUID().uuidString.lowercased()) }
                     result.changes.append(Mutation(table: table, recordID: row.id, method: "POST", fields: row.fields, insertOnly: true)); result.added += 1
                 }
                 result.counts[table, default: 0] += 1

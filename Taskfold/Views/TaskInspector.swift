@@ -67,6 +67,7 @@ struct TaskInspectorForm: View {
     @State private var draft = Record()
     @State private var notePin: Bool?
     @State private var original = Record()
+    @State private var editingGeneration: JSON = .null
     @State private var titleParsingBaseline = ""
     @State private var workspaceBinding: WorkspaceBinding?
     @State private var subtask = ""
@@ -90,6 +91,10 @@ struct TaskInspectorForm: View {
     }
 
     private var current: Record? { workspace.taskRecord(taskID) }
+    private var currentGeneration: JSON {
+        let root = Workspace.subtaskPath(taskID)?.first ?? taskID
+        return store.record("tasks", id: root)?["task_generation"] ?? .null
+    }
     private func text(_ key: String) -> Binding<String> {
         Binding(get: { draft.string(key) }, set: { draft[key] = $0.isEmpty && ["project_id", "section_id", "due_time", "time_zone"].contains(key) ? .null : .string($0) })
     }
@@ -307,7 +312,7 @@ struct TaskInspectorForm: View {
             } catch { store.error = error.localizedDescription }
         }
         .quickLookPreview($preview)
-        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); load(); if draft.title.isEmpty { titleFocused = true } }
+        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; load(); if draft.title.isEmpty { titleFocused = true } }
         .task(id: suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) { _ = try? await store.refreshProjectMembers(suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .sheet(isPresented: $showingReminders) {
@@ -317,9 +322,16 @@ struct TaskInspectorForm: View {
             }.frame(minWidth: 550, minHeight: 620)
         }
         .onChange(of: draft) { _, _ in scheduleSave() }
+        .onChange(of: currentGeneration) { _, value in
+            if draft == original && notePin == nil { editingGeneration = value; load() }
+            else {
+                saveTask?.cancel()
+                store.error = "This task was deleted and restored while you were editing. Your draft is still here; reopen the current task before saving."
+            }
+        }
         .onChange(of: current) { _, value in
             // Untouched fields follow sync; the user's in-progress edits win.
-            guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, let value else { return }
+            guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, editingGeneration == currentGeneration, let value else { return }
             var merged = value
             var nextOriginal = value
             for (key, field) in draft.fields where original.fields[key] != field {
@@ -368,6 +380,10 @@ struct TaskInspectorForm: View {
     private func saveNow() {
         guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { return }
         guard draft != original || notePin != nil, let current else { return }
+        guard editingGeneration == currentGeneration else {
+            store.error = "This task was deleted and restored while you were editing. Your draft is still here; reopen the current task before saving."
+            return
+        }
         var merged = current
         for (key, value) in draft.fields where original.fields[key] != value { merged[key] = value }
         merged["title"] = .string(merged.title.trimmingCharacters(in: .whitespacesAndNewlines))
