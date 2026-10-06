@@ -149,7 +149,7 @@ final class RecurrenceTests: XCTestCase {
         XCTAssertEqual(TaskCompletion.complete(first,tasks:[],at:date("2026-02-28"),calendar:calendar()).last?.fields["due_date"],.string("2026-03-31"))
     }
     func testUnsupportedSuffixesAndWeekdayListsRemainWholeLiterals() {
-        for phrase in ["every day until next friday", "every monday and bananas starting 2027-01-01", "every day for 3 weeks", "every week on monday, banana until 2027-12-31", "every monday and every friday", "every monday and 2027-01-01"] {
+        for phrase in ["every day until next banana", "every monday and bananas starting 2027-01-01", "every day for 3 weeks", "every week on monday, banana until 2027-12-31", "every monday and every friday", "every monday and 2027-01-01"] {
             let p=quick("Review " + phrase)
             XCTAssertEqual(p.title,"Review " + phrase);XCTAssertTrue(p.updates.isEmpty,phrase);XCTAssertFalse(p.warnings.isEmpty,phrase)
         }

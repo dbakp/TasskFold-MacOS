@@ -437,10 +437,15 @@ struct QuickEntry {
         func dayLabel(_ date: Date) -> String {
             if calendar.isDate(date, inSameDayAs: now) { return "Today" }
             if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now), calendar.isDate(date, inSameDayAs: tomorrow) { return "Tomorrow" }
-            return date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
+            var style = Date.FormatStyle().weekday(.abbreviated).month(.abbreviated).day()
+            style.calendar = calendar; style.timeZone = calendar.timeZone
+            if calendar.component(.year, from: date) != calendar.component(.year, from: now) { style = style.year() }
+            return date.formatted(style)
         }
-        if enabled("deadline_date"), let m = match(#"\{(\d{4}-\d{2}-\d{2})\}"#), let date = Dates.parse(m[1], calendar: calendar) {
-            updates["deadline_date"] = .string(m[1]); take("deadline_date", m[0], "Deadline " + dayLabel(date))
+        if enabled("deadline_date"), let m = match(#"\{([^}]*)\}"#) {
+            if let date = QuickNaturalDateText.resolve(m[1], relativeTo: now, calendar: calendar) {
+                updates["deadline_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar)); take("deadline_date", m[0], "Deadline " + dayLabel(date))
+            } else { warnings.append("“\(m[0])” is not a valid deadline date. Its text stays in the title.") }
         }
         // A declined or unrecognized deadline stays literal and cannot become a planned date.
         protect(#"\{[^}]*\}"#)
@@ -472,7 +477,7 @@ struct QuickEntry {
                 let raw = String(source[range])
                 let marker = "\u{E006}" + UUID().uuidString + "\u{E007}"
                 title.replaceSubrange(target, with: marker)
-                if enabled("recurrence"), matches.count == 1, let parsed = QuickRecurrenceText.parse(raw) {
+                if enabled("recurrence"), matches.count == 1, let parsed = QuickRecurrenceText.parse(raw, now: now, calendar: TaskCompletion.calendar(for: task, input: calendar)) {
                     recurrenceCandidate = (parsed, raw)
                     literals.append((marker, ""))
                 } else {
@@ -482,22 +487,26 @@ struct QuickEntry {
             }
         }
         if enabled("due_date") {
-            if let m = match(#"\b(today|tomorrow|yesterday)\b"#) {
+            if let m = match(#"(?<![\p{L}\p{N}_])"# + QuickNaturalDateText.expanded) {
+                if let date = QuickNaturalDateText.resolve(m[0], relativeTo: now, calendar: calendar) {
+                    updates["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar)); take("due_date", m[0], dayLabel(date))
+                } else { warnings.append("“\(m[0])” is not a valid calendar date. Its text stays in the title.") }
+            } else if let m = match(#"\b(today|tomorrow|yesterday)\b"#) {
                 let delta = ["today": 0, "tomorrow": 1, "yesterday": -1][m[1].lowercased()] ?? 0
                 let date = calendar.date(byAdding: .day, value: delta, to: now)!
-                updates["due_date"] = .string(Dates.day(date)); take("due_date", m[0], dayLabel(date))
+                updates["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar)); take("due_date", m[0], dayLabel(date))
             } else if let m = match(#"\bin\s+(\d+)\s+(day|week|month|hour|minute)s?\b"#), let count = Int(m[1]), count < 10000 {
                 let component: Calendar.Component = ["day": .day, "week": .weekOfYear, "month": .month, "hour": .hour, "minute": .minute][m[2].lowercased()] ?? .day
                 if let date = calendar.date(byAdding: component, value: count, to: now) {
-                    updates["due_date"] = .string(Dates.day(date))
+                    updates["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar))
                     if component == .hour || component == .minute { updates["due_time"] = .string(String(format: "%02d:%02d", calendar.component(.hour, from: date), calendar.component(.minute, from: date))) }
                     take("due_date", m[0], component == .hour || component == .minute ? dayLabel(date) + " " + date.formatted(date: .omitted, time: .shortened) : dayLabel(date))
                 }
             } else if let m = match(#"\b(?:next\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b"#), let day = weekdays.firstIndex(of: m[1].lowercased()) {
                 let delta = (day - (calendar.component(.weekday, from: now) - 1) + 7) % 7
                 let date = calendar.date(byAdding: .day, value: delta == 0 ? 7 : delta, to: now)!
-                updates["due_date"] = .string(Dates.day(date)); take("due_date", m[0], dayLabel(date))
-            } else if let m = match(#"\b\d{4}-\d{2}-\d{2}\b"#), let date = Dates.parse(m[0]) { updates["due_date"] = .string(Dates.day(date)); take("due_date", m[0], dayLabel(date)) }
+                updates["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar)); take("due_date", m[0], dayLabel(date))
+            } else if let m = match(#"\b\d{4}-\d{2}-\d{2}\b"#), let date = Dates.parse(m[0], calendar: calendar) { updates["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar)); take("due_date", m[0], dayLabel(date)) }
         }
         if let (parsed, raw) = recurrenceCandidate {
             var repeatTask = task

@@ -64,6 +64,23 @@ final class TaskfoldMacUITests: XCTestCase {
         app.buttons["Client Work"].firstMatch.click(); XCTAssertTrue(app.staticTexts["Suggested proposal"].waitForExistence(timeout: 5)); app.terminate()
     }
 
+    @MainActor func testNamedRepeatBoundariesCaptureInspectorAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch(); app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click()
+        let name = "Boundary review " + String(UUID().uuidString.prefix(6))
+        input.typeText(name + " every day from 3 January 2028 until 5 January 2028 for 3 occurrences {6 January 2028} ~25m")
+        let summary = app.staticTexts["quickRepeatSummary"]; XCTAssertTrue(summary.waitForExistence(timeout: 5))
+        XCTAssertTrue(summary.label.contains("2028-01-05")); XCTAssertTrue(summary.label.contains("3 left"))
+        app.buttons["Add Task"].click(); app.buttons["Inbox"].firstMatch.click(); XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        let link = app.disclosureTriangles["taskRepeat"]
+        for _ in 0..<8 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
+        XCTAssertTrue(link.isHittable); link.click(); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("2028-01-05")); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("3 left"))
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        for _ in 0..<8 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }; if link.isHittable { link.click() }
+        XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5)); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("2028-01-05")); app.terminate()
+    }
+
     @MainActor func testRecurrenceCaptureInspectorAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch()
         app.typeKey("n", modifierFlags: .command)

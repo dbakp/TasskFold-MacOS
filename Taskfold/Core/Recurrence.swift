@@ -153,6 +153,60 @@ enum Recurrence {
     }
 }
 
+
+/// English civil-date phrases resolve once at acceptance, then use the existing ISO fields.
+/// Invalid named days never normalize into another month; omitted years look forward.
+enum QuickNaturalDateText {
+    static let months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
+    static let month = "(?:" + months.flatMap { [$0, String($0.prefix(3))] }.joined(separator: "|") + ")"
+    static let named = "(?:" + month + #"\s+\d+(?:st|nd|rd|th)?(?:,?\s+\d{4})?|\d+(?:st|nd|rd|th)?\s+"# + month + #"(?:\s+\d{4})?)"#
+    static let expanded = "(?:" + named + #"|next\s+(?:week|month|year)|end\s+of\s+(?:month|year))\b"#
+    static let boundary = "(?:" + named + #"|\d{4}-\d{2}-\d{2}|today|tomorrow|yesterday|next\s+(?:week|month|year|"# + Recurrence.weekdays.joined(separator: "|") + #")|end\s+of\s+(?:month|year)|"# + Recurrence.weekdays.flatMap { [$0, String($0.prefix(3))] }.joined(separator: "|") + ")\\b"
+    /// Consume unsupported boundaries as one phrase as well, preserving decline/invalid safety.
+    static let capturedBoundary = "(?:" + boundary + #"|(?:next\s+)?\S+(?:\s+\d+(?:st|nd|rd|th)?(?:\s+\d{4})?)?)"#
+
+    static func resolve(_ raw: String, relativeTo reference: Date, calendar input: Calendar, inclusiveWeekday: Bool = false) -> Date? {
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
+        let origin = calendar.startOfDay(for: reference)
+        let text = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        func match(_ pattern: String) -> [String]? {
+            guard let regex = try? NSRegularExpression(pattern: "^(?:" + pattern + ")$"), let m = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) else { return nil }
+            return (0..<m.numberOfRanges).map { Range(m.range(at: $0), in: text).map { String(text[$0]) } ?? "" }
+        }
+        if text.count == 10, match(#"\d{4}-\d{2}-\d{2}"#) != nil { return Dates.parse(text, calendar: calendar) }
+        if let delta = ["today": 0, "tomorrow": 1, "yesterday": -1][text] { return calendar.date(byAdding: .day, value: delta, to: origin) }
+        if text == "next week" {
+            let delta = (2 - calendar.component(.weekday, from: origin) + 7) % 7
+            return calendar.date(byAdding: .day, value: delta == 0 ? 7 : delta, to: origin)
+        }
+        if text == "next month" { return calendar.date(byAdding: .month, value: 1, to: origin) }
+        if text == "next year" {
+            return Dates.parse(String(format: "%04d-01-01", calendar.component(.year, from: origin) + 1), calendar: calendar)
+        }
+        if text == "end of month" || text == "end of year" {
+            let unit: Calendar.Component = text == "end of month" ? .month : .year
+            guard let interval = calendar.dateInterval(of: unit, for: origin) else { return nil }
+            return calendar.date(byAdding: .day, value: -1, to: interval.end)
+        }
+        let weekday = text.hasPrefix("next ") ? String(text.dropFirst(5)) : text
+        if let day = Recurrence.weekdays.firstIndex(where: { $0 == weekday || String($0.prefix(3)) == weekday }) {
+            let delta = (day - (calendar.component(.weekday, from: origin) - 1) + 7) % 7
+            return calendar.date(byAdding: .day, value: delta == 0 && (!inclusiveWeekday || text.hasPrefix("next ")) ? 7 : delta, to: origin)
+        }
+        var name = "", dayText = "", yearText = ""
+        if let m = match("(" + month + #")\s+(\d+)(?:st|nd|rd|th)?(?:,?\s+(\d{4}))?"#) { name = m[1]; dayText = m[2]; yearText = m[3] }
+        else if let m = match(#"(\d+)(?:st|nd|rd|th)?\s+("# + month + #")(?:\s+(\d{4}))?"#) { dayText = m[1]; name = m[2]; yearText = m[3] }
+        else { return nil }
+        guard let monthIndex = months.firstIndex(where: { $0 == name || String($0.prefix(3)) == name }), let day = Int(dayText), (1...31).contains(day) else { return nil }
+        if !yearText.isEmpty { return Dates.parse(String(format: "%04d-%02d-%02d", Int(yearText) ?? 0, monthIndex + 1, day), calendar: calendar) }
+        let year = calendar.component(.year, from: origin)
+        for offset in 0...8 where year + offset <= 9999 {
+            if let date = Dates.parse(String(format: "%04d-%02d-%02d", year + offset, monthIndex + 1, day), calendar: calendar), date >= origin { return date }
+        }
+        return nil
+    }
+}
+
 /// Complete phrases are protected as one unit when declined/invalid, so an end date or
 /// weekday cannot accidentally be consumed by the ordinary planned-date parser.
 enum QuickRecurrenceText {
@@ -161,24 +215,34 @@ enum QuickRecurrenceText {
     static let months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
     static let days = day + #"(?:(?:\s*,\s*(?:and\s+)?|\s+and\s+)(?!(?:every!?|daily|weekly|monthly|yearly)\b)[\p{L}\p{N}_-]+\b)*"#
     static let on = #"(?:the\s+)?(?:"# + ordinal + #"\s+"# + day + #"|[a-z]+\s+\d+(?:st|nd|rd|th)?|"# + days + #"|\S+)"#
-    static let pattern = #"(?<![\p{L}\p{N}_!])(?:every!?\s+(?:(?:(?:\d+|other)\s+)?(?:days?|weeks?|months?|years?)\b(?:\s+on\s+"# + on + #")?|(?:weekdays?|workdays?|weekends?)\b|"# + ordinal + #"\s+"# + day + #"|"# + days + #"|\S+(?:\s+"# + day + #")?)|daily\b|weekly\b|monthly\b|yearly\b)(?:\s+(?:(?:starting|from|until|ending)(?:\s+on)?\s+(?:next\s+)?\S+(?:\s+\d{1,2}(?:st|nd|rd|th)?\b)?|for\s+\S+\s+\S+))*"#
+    static let pattern = #"(?<![\p{L}\p{N}_!])(?:every!?\s+(?:(?:(?:\d+|other)\s+)?(?:days?|weeks?|months?|years?)\b(?:\s+on\s+"# + on + #")?|(?:weekdays?|workdays?|weekends?)\b|"# + ordinal + #"\s+"# + day + #"|"# + days + #"|\S+(?:\s+"# + day + #")?)|daily\b|weekly\b|monthly\b|yearly\b)(?:\s+(?:(?:starting|from|until|ending)(?:\s+on)?\s+"# + QuickNaturalDateText.capturedBoundary + #"|for\s+\S+\s+\S+))*"#
     struct Parsed { var rule: Record; var start: String? }
-    static func parse(_ raw: String) -> Parsed? {
+    static func parse(_ raw: String, now: Date = Date(), calendar: Calendar = .current) -> Parsed? {
         var body = raw.lowercased().trimmingCharacters(in: .whitespaces)
         var rule = Record(["interval": .number(1)])
         var start: String?
-        let suffix = #"\s+(starting|from|until|ending)(?:\s+on)?\s+(\S+)|\s+for\s+(\S+)\s+(?:occurrences?|times)\b"#
+        let suffix = #"\s+(starting|from|until|ending)(?:\s+on)?\s+("# + QuickNaturalDateText.capturedBoundary + #")|\s+for\s+(\S+)\s+(?:occurrences?|times)\b"#
         guard let regex = try? NSRegularExpression(pattern: suffix) else { return nil }
         let matches = regex.matches(in: body, range: NSRange(body.startIndex..., in: body))
         var keys = Set<String>()
+        var dates: [String: String] = [:]
         for m in matches.reversed() {
             func value(_ i: Int) -> String { Range(m.range(at: i), in: body).map { String(body[$0]) } ?? "" }
             let kind = value(1), date = value(2)
             let key = kind.isEmpty ? "count" : ["starting", "from"].contains(kind) ? "start" : "endDate"
             guard keys.insert(key).inserted else { return nil }
             if key == "count" { guard let n = Int(value(3)), (1...999).contains(n) else { return nil }; rule["count"] = .number(Double(n)) }
-            else { guard date.count == 10, Dates.parse(date) != nil else { return nil }; if key == "start" { start = date } else { rule["endDate"] = .string(date) } }
+            else { dates[key] = date }
             if let range = Range(m.range, in: body) { body.removeSubrange(range) }
+        }
+        if let raw = dates["start"] {
+            guard let date = QuickNaturalDateText.resolve(raw, relativeTo: now, calendar: calendar, inclusiveWeekday: true) else { return nil }
+            start = TaskPlanner.dayKey(date, calendar: calendar)
+        }
+        if let raw = dates["endDate"] {
+            let anchor = start.flatMap { Dates.parse($0, calendar: calendar) } ?? now
+            guard let date = QuickNaturalDateText.resolve(raw, relativeTo: anchor, calendar: calendar, inclusiveWeekday: true) else { return nil }
+            rule["endDate"] = .string(TaskPlanner.dayKey(date, calendar: calendar))
         }
         func match(_ pattern: String, _ input: String) -> [String]? {
             guard let regex = try? NSRegularExpression(pattern: "^(?:" + pattern + ")$"), let m = regex.firstMatch(in: input, range: NSRange(input.startIndex..., in: input)) else { return nil }

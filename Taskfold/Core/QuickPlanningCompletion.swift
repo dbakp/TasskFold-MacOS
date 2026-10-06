@@ -15,13 +15,13 @@ struct QuickPlanningCompletion {
         guard caret >= 0, let prefixRange = Range(NSRange(location: 0, length: caret), in: input) else { return }
         let prefix = String(input[prefixRange])
         // Protection consumes complete references, quotes, escaped words and URLs first.
-        let pattern = #"\\(?:[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|\S*)|"[^"\n]*(?:"|$)|(?<!\S)(?:https?://|www\.)\S*|(?<!\S)[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|(?<!\S)(!(?:[\p{L}\p{N}:.]*(?:\s+(?:at\s+)?[\p{L}\p{N}:.]*)?)|ev(?:e(?:r(?:y!?)?)?)?(?:\s+[\p{L}\p{N}, -]*)?|next(?:\s+[\p{L}]*)?|in(?:\s+\d*(?:\s+[\p{L}]*)?)?|at(?:\s+[\p{N}:.apm]*)?|[\p{L}]{2,})"#
+        let pattern = #"\\(?:[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|\S*)|"[^"\n]*(?:"|$)|(?<!\S)(?:https?://|www\.)\S*|(?<!\S)[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|(?<!\S)(!(?:[\p{L}\p{N}:.]*(?:\s+(?:at\s+)?[\p{L}\p{N}:.]*)?)|ev(?:e(?:r(?:y!?)?)?)?(?:\s+[\p{L}\p{N}, -]*)?|end(?:\s+of(?:\s+[\p{L}]*)?)?|next(?:\s+[\p{L}]*)?|in(?:\s+\d*(?:\s+[\p{L}]*)?)?|at(?:\s+[\p{N}:.apm]*)?|[\p{L}]{2,})"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
               let match = regex.matches(in: prefix, range: NSRange(prefix.startIndex..., in: prefix)).last,
               match.range.location + match.range.length == caret, match.range(at: 1).location != NSNotFound,
               let matched = Range(match.range(at: 1), in: prefix) else { return }
         let fragment = String(prefix[matched]).lowercased()
-        if fragment.last?.isWhitespace == true && !["every", "every!", "next", "in", "at"].contains(fragment.trimmingCharacters(in: .whitespaces)) { return }
+        if fragment.last?.isWhitespace == true && !["every", "every!", "next", "in", "at", "end", "end of"].contains(fragment.trimmingCharacters(in: .whitespaces)) { return }
         guard let start = Range(NSRange(location: match.range.location, length: 0), in: input)?.lowerBound,
               var end = Range(NSRange(location: caret, length: 0), in: input)?.lowerBound else { return }
         // Complete the current word in the middle of a title, retaining later words.
@@ -56,7 +56,7 @@ struct QuickPlanningCompletion {
             if let h = Int(fragment.dropFirst(3)), (0...23).contains(h) { candidates.insert(String(format: "at %02d:00", h), at: 0) }
         } else {
             group = "due_date"; prompt = "Choose a planned date"
-            candidates = ["today", "tomorrow", "yesterday"] + weekdays + weekdays.map { "next " + $0 }
+            candidates = ["today", "tomorrow", "yesterday", "next week", "next month", "next year", "end of month", "end of year"] + weekdays + weekdays.map { "next " + $0 }
             if fragment == "in" || fragment.hasPrefix("in ") {
                 candidates = ["in 1 day", "in 2 days", "in 1 week", "in 1 month"]
                 if let number = fragment.split(separator: " ").dropFirst().first, let n = Int(number), (1..<10000).contains(n) {

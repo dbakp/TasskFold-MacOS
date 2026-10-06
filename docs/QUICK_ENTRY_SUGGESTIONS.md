@@ -43,3 +43,8 @@ Choices preserve the rest of the title and move the cursor after the selected ph
 The same native rows, scroll area, 44-point targets and keyboard controls serve planning and directory results. Done selects the highlighted result before capture submits. The iPhone editor leaves choices in its draft until Save/Cancel. Mac inspector references retain immediate application; planning words retain chips for acceptance/decline and apply through its normal Return/focus-exit autosave. Existing workspace-generation and current-record guards still protect every save.
 
 Richer natural-language grammar, independently repeating reminders, native Mac/hardware keyboard, paired/offline/account, physical/iPad and installed-widget acceptance remain open. This menu is not a claim of full Todoist Quick Add grammar parity.
+
+
+### Named dates and period choices — 6 October
+
+The planned-date menu now offers `next week`, `next month`, `next year`, `end of month` and `end of year`, with previews from the actual parser. Full English named dates can be typed directly into a plan, a brace-delimited deadline or a repeat start/end boundary. The exact syntax, omitted-year policy and Taskfold weekday behavior are documented in [Repeat rules and named dates](RECURRENCE.md#named-planned-dates-and-deadlines). Named-month/day autocomplete is not included; complete phrases still produce their normal declineable chips. Independent repeating reminders and the remaining richer grammar/device acceptance stay open.
