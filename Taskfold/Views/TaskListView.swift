@@ -7,6 +7,7 @@ struct TaskListView: View {
     @Environment(Store.self) private var store
     @Environment(\.openPinnedNotes) private var openPinnedNotes
     @Environment(\.openFocusSession) private var openFocusSession
+    @Environment(\.openProjectPulse) private var openProjectPulse
     @Environment(\.startInboxReview) private var startInboxReview
     @Environment(Workspace.self) private var workspace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -403,6 +404,7 @@ struct TaskListView: View {
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
             Button("Pinned notes", systemImage: "pin") { openPinnedNotes() }.accessibilityIdentifier("openPinnedNotes")
+            Button("Project pulse", systemImage: "chart.bar") { if case .project(let id) = scope { openProjectPulse(id) } else { openProjectPulse(nil) } }.accessibilityIdentifier("openProjectPulse")
             Button("Focus session", systemImage: "timer") { openFocusSession() }.accessibilityIdentifier("openFocusSession")
             if scope == .inbox {
                 Button { startInboxReview(.five) } label: { Label("Review Inbox", systemImage: "tray") }

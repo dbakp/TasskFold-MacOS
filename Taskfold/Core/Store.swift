@@ -443,6 +443,7 @@ final class Store {
     }
     @discardableResult
     func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil) -> Bool {
+        guard changes.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable }) else { error = "Activity history is read-only."; return false }
         guard changes.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
             error = "This Focus command needs a valid workspace and revision."; return false
         }
@@ -467,7 +468,9 @@ final class Store {
                 change.baseline = existing.fields
             }
             change = TaskCompletionRevision.capturing(change, existing: record(change.table, id: change.recordID))
+            let before = change.table == "tasks" ? record("tasks", id: change.recordID) : nil
             snapshot.apply(change)
+            if localMode { TaskActivity.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID) }
             if !localMode { snapshot.pending.append(change) }
         }
         if let widgetReceipt { snapshot.widgetCompletion.record(widgetReceipt) }
@@ -593,7 +596,7 @@ final class Store {
                 snapshot.acknowledge(mutation, saved: saved); try persist()
             }
             var remote: [String: [Record]] = [:]
-            for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions"] {
+            for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions", "task_activity_epoch", "task_activity"] {
                 remote[table] = try await backend.rows(table)
                 guard generation == accountGeneration else { return }
             }
@@ -852,6 +855,28 @@ extension Store {
               let encoded = try? JSONEncoder().encode(payload["focusSession"] ?? .null),
               let focus = try? JSONDecoder().decode(FocusWidgetSnapshot.self, from: encoded), focus.valid(for: userID) else { return "Focus: refresh" }
         return "Focus: " + (focus.conflict ? "review" : focus.clock?.status ?? "idle")
+    }
+    func seedProjectPulseFixture() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--project-pulse-seed") else { return }
+        dailyBackupsEnabled = false; disableNotifications(); disableFocusAlerts()
+        let project = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71", now = Date()
+        snapshot = Snapshot(tables: ["projects": [Record(["id": .string(project), "user_id": .string(userID), "name": .string("Studio"), "color": .string("#e31e4b")])]])
+        for (index, title) in ["Finish a useful draft", "Review the launch checklist", "A task without urgency"].enumerated() {
+            var task = Record.task(user: userID, project: project); task["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa7" + String(index + 2)); task["title"] = .string(title)
+            if index == 1 { task["deadline_date"] = .string(TaskPlanner.dayKey(now)) }
+            let change = Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields)
+            snapshot.apply(change); TaskActivity.recordLocal(change, before: nil, after: task, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-2 * 86400))
+        }
+        for interval in [-3600.0, -1800.0, -900.0] {
+            guard let task = snapshot.tables["tasks"]?.first else { continue }
+            for change in TaskCompletion.toggle(task, tasks: tasks, at: now.addingTimeInterval(interval)) {
+                snapshot.apply(change); TaskActivity.recordLocal(change, before: task, after: record("tasks", id: task.id), snapshot: &snapshot, account: userID, now: now.addingTimeInterval(interval))
+            }
+        }
+        if ProcessInfo.processInfo.arguments.contains("--project-pulse-no-history") {
+            snapshot.tables[TaskActivity.table] = []; snapshot.tables[TaskActivity.epochTable] = []
+        }
+        undoStack = []; redoStack = []; try? persist()
     }
     func seedFocusSessionFixture() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--focus-session-seed") else { return }

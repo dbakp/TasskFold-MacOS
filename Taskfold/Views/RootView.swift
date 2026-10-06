@@ -8,6 +8,7 @@ struct RootView: View {
     @Environment(\.undoManager) private var undoManager
     @Environment(\.scenePhase) private var phase
     @State private var pinnedNote: PinnedNoteRequest?
+    @State private var pulseRequest: ProjectPulseRequest?
     @State private var focusRequest: FocusSessionRequest?
     @State private var inboxReview: InboxReviewRequest?
     @State private var seeded = false
@@ -28,6 +29,11 @@ struct RootView: View {
         .environment(\.startInboxReview, startInboxReview)
         .environment(\.openPinnedNotes, { pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .environment(\.openFocusSession, { focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
+        .environment(\.openProjectPulse, { project in pulseRequest = ProjectPulseRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), projectID: project) })
+        .sheet(item: $pulseRequest) { request in ProjectPulseView(request: request) { task in
+            guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), store.record("tasks", id: task.id) != nil else { return }
+            pulseRequest = nil; workspace.openFromFinder(task.id)
+        } }
         .sheet(item: $focusRequest) { FocusSessionView(request: $0) }
         .safeAreaInset(edge: .top) {
             if store.focusSyncConflict != nil {
@@ -38,7 +44,7 @@ struct RootView: View {
         }
         .sheet(item: $pinnedNote) { PinnedNotesView(request: $0) }
         .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
-        .onChange(of: store.workspaceGeneration) { _, _ in inboxReview = nil; pinnedNote = nil; focusRequest = nil }
+        .onChange(of: store.workspaceGeneration) { _, _ in inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil }
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
             BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.ids.sorted().compactMap { workspace.taskRecord($0) } : []) { day in
                 try workspace.setDeadlines(request, day: day)
@@ -315,6 +321,7 @@ struct RootView: View {
                     workspace.section = .today
                 }
         if arguments.contains("--pinned-notes-seed") { store.startLocal(); store.seedPinnedNotesFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
+        if arguments.contains("--project-pulse-seed") { store.startLocal(); store.seedProjectPulseFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
         if arguments.contains("--focus-session-seed") {
             store.startLocal(); store.seedFocusSessionFixture(); workspace.section = .inbox; workspace.inspectorShown = false
         }

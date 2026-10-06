@@ -191,6 +191,18 @@ final class Backend: NSObject {
     }
     #endif
     func rows(_ table: String) async throws -> [Record] {
+        if table == TaskActivity.table {
+            let owner = session?.user.id, generation = sessionGeneration
+            var result: [Record] = []; var cursor: Int64 = 0
+            while true {
+                guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
+                let data = try await request(TaskActivityPage.query(after: cursor), expectedAccount: owner)
+                guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
+                let page = try JSONDecoder().decode([Record].self, from: data)
+                cursor = try TaskActivityPage.cursor(page, after: cursor); result += page
+                if page.count < 500 { return result }
+            }
+        }
         // PostgREST caps responses; paginate so large task libraries are not truncated.
         var result: [Record] = []; var offset = 0
         while true {
@@ -201,6 +213,7 @@ final class Backend: NSObject {
         }
     }
     @discardableResult func send(_ change: Mutation, expectedAccount: String? = nil) async throws -> Record? {
+        guard change.table != TaskActivity.table, change.table != TaskActivity.epochTable else { throw AppFailure(message: "Activity history is read-only.") }
         let expectedOwner = expectedAccount ?? session?.user.id
         guard expectedOwner == session?.user.id else { throw CancellationError() }
         if change.table == FocusSessionChange.table {

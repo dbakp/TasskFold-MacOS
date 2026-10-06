@@ -91,3 +91,51 @@ final class AccountTransportTests: XCTestCase {
         XCTAssertEqual(gate.count, 1); XCTAssertEqual(api.session?.user.id, other); XCTAssertEqual(saved?.user.id, other)
     }
 }
+
+
+extension AccountTransportTests {
+    @MainActor func testActivityHistoryReadsBeyondOnePageUsingTheServerSequence() async throws {
+        let api = backend(try signed(owner)); var calls = 0
+        ScopedHTTP.handler = { request, transport in
+            XCTAssertEqual(request.url?.path, "/rest/v1/task_activity")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer old")
+            let query = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)!.queryItems!
+            let after = query.first { $0.name == "sequence" }?.value
+            XCTAssertEqual(query.first { $0.name == "order" }?.value, "sequence.asc")
+            calls += 1
+            let rows = after == "gt.0" ? (1...500).map { Record(["sequence": .number(Double($0))]) } : [Record(["sequence": .number(800)])]
+            if calls == 2 { XCTAssertEqual(after, "gt.500") }
+            transport.finish(200, try! JSONEncoder().encode(rows))
+        }
+        defer { ScopedHTTP.handler = nil }
+        let rows = try await api.rows(TaskActivity.table)
+        XCTAssertEqual(rows.count, 501); XCTAssertEqual(rows.last?["sequence"], .number(800)); XCTAssertEqual(calls, 2)
+    }
+    @MainActor func testActivityPageArrivingAfterAccountSwitchCannotContinueInAnotherWorkspace() async throws {
+        for destination in [other, owner] {
+            let gate = HTTPGate(), started = expectation(description: "Old activity page started")
+            let api = backend(try signed(owner)), next = try JSONEncoder().encode(signed(destination, token: "new"))
+            ScopedHTTP.handler = { request, transport in
+                if request.url?.path == "/auth/v1/token" { transport.finish(200, next) }
+                else { XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer old"); gate.hold(transport); started.fulfill() }
+            }
+            defer { ScopedHTTP.handler = nil }
+            let read = Task { @MainActor in try await api.rows(TaskActivity.table) }
+            await fulfillment(of: [started], timeout: 3)
+            _ = try await api.signIn(email: "fixture@example.invalid", password: "fixture", signup: false)
+            gate.release(200, try JSONEncoder().encode((1...500).map { Record(["sequence": .number(Double($0))]) }))
+            do { _ = try await read.value; XCTFail("History combined workspaces") } catch { XCTAssertTrue(error is CancellationError) }
+            XCTAssertEqual(gate.count, 1)
+        }
+    }
+    @MainActor func testActivityHistoryCannotBeSubmittedAsANativeMutation() async throws {
+        let api = backend(try signed(owner)); var calls = 0
+        ScopedHTTP.handler = { _, transport in calls += 1; transport.finish(200, Data("[]".utf8)) }
+        defer { ScopedHTTP.handler = nil }
+        for table in [TaskActivity.table, TaskActivity.epochTable] {
+            do { _ = try await api.send(Mutation(table: table, recordID: "fixture", method: "POST", fields: [:])); XCTFail("History was sent") }
+            catch { XCTAssertEqual(error.localizedDescription, "Activity history is read-only.") }
+        }
+        XCTAssertEqual(calls, 0)
+    }
+}

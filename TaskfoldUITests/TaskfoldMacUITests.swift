@@ -1050,3 +1050,24 @@ final class TaskfoldMacUITests: XCTestCase {
     }
 
 }
+
+extension TaskfoldMacUITests {
+    @MainActor func testProjectPulseCurrentScopeRecordedHistoryAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--project-pulse-seed"]; app.launch()
+        XCTAssertTrue(app.buttons["openProjectPulse"].waitForExistence(timeout: 10)); app.buttons["openProjectPulse"].click()
+        let picker = app.descendants(matching: .any).matching(identifier: "pulseProjectPicker").firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 5)); picker.click(); app.menuItems["Studio"].click()
+        XCTAssertTrue(app.staticTexts["pulseProgress"].waitForExistence(timeout: 5)); XCTAssertEqual(app.staticTexts["pulseProgress"].label, "1 of 3 completed")
+        let counts = app.staticTexts["pulseActivityCounts"]
+        for _ in 0..<8 where !counts.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
+        XCTAssertEqual(counts.label, "2 completion events · 1 reopen event")
+        XCTAssertTrue(app.staticTexts["pulseHistoryCoverage"].label.contains("Earlier work has no recorded timeline."))
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        XCTAssertTrue(app.buttons["openProjectPulse"].waitForExistence(timeout: 10)); app.buttons["openProjectPulse"].click()
+        let again = app.descendants(matching: .any).matching(identifier: "pulseProjectPicker").firstMatch
+        again.click(); app.menuItems["Studio"].click()
+        XCTAssertEqual(app.staticTexts["pulseProgress"].label, "1 of 3 completed")
+        for _ in 0..<8 where !counts.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
+        XCTAssertEqual(counts.label, "2 completion events · 1 reopen event"); app.terminate()
+    }
+}
