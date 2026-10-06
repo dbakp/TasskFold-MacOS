@@ -308,3 +308,9 @@ The deployed backend's owner `USING`/`WITH CHECK` RLS was inspected. `Scripts/ve
 Final iOS Release app/widget and universal arm64/x86_64 Mac Release app/widget builds pass (`/tmp/taskfold-pinned-notes-{ios,mac}-final-release.log`). Signed Mac UI-test compilation passes (`/tmp/taskfold-pinned-notes-mac-final-testbuild.log`); the new Mac edit/unpin/Undo/relaunch walk remains unexecuted on the locked desktop. App Intents metadata includes the Note configuration, entity/query and privacy/palette parameters. No installed Mac application was replaced or public release package produced.
 
 Remaining acceptance: installed multiple widget instances/selection/privacy/system routing; native Mac runtime and Undo; paired/offline/account-revocation/restore/reentry/deletion during editing; physical/iPad/closed-app hosts and provisioned widget distribution. The ad hoc Mac DMG still omits widgets. Project pulse, Focus session, remote reminders and every remaining P0 requirement stay active. This milestone does not complete the full goal.
+
+## 6 October: Inbox widget count clarity
+
+Inbox reset now distinguishes the total open count from the configured review batch: six open tasks with a five-task batch show “Review 5 of 6”; a batch covering the entire Inbox shows “Review all 6”. Empty, unavailable and private labels retain their existing behavior. This is a display-copy refinement; batch selection and native routes are unchanged.
+
+Each repository independently regenerated its seven Inbox SwiftUI fixture sheets. Normal, dense and largest-text source renders were inspected for small/medium fit; both native Release app/widget builds pass (`/tmp/taskfold-inbox-copy-{ios,mac}-release.log`). Source renders do not prove installed WidgetKit behavior. The full P0 goal and previously documented acceptance gates remain active.

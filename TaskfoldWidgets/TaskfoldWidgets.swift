@@ -1095,7 +1095,8 @@ struct InboxWidgetView: View {
     private var count: Int? { reading.count }
     private var reviewLabel: String {
         guard let count, count > 0 else { return "Open Inbox" }
-        return "Review \(min(count, entry.batch.limit ?? count))"
+        let batchCount = min(count, entry.batch.limit ?? count)
+        return batchCount < count ? "Review \(batchCount) of \(count)" : "Review all \(count)"
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
