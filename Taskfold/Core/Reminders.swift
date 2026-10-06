@@ -108,7 +108,10 @@ enum ReminderPreferences {
     }
 }
 
+enum ReminderEventKind: String, Sendable { case task, focusFinish }
+
 struct DueReminder: Equatable, Sendable {
+    var kind: ReminderEventKind = .task
     var id: String
     var title: String
     var body: String
@@ -145,11 +148,11 @@ struct ReminderRequest: Equatable, Sendable {
     var fireAt: Date
     var snoozed = false
     static func make(account: String, event: DueReminder, fireAt: Date? = nil, snoozed: Bool = false) -> Self {
-        let id = prefix + DueReminder.digest(account + "|" + event.taskID.lowercased() + "|" + event.specID)
+        let id = (event.kind == .focusFinish ? FocusFinish.prefix : prefix) + DueReminder.digest(account + "|" + event.taskID.lowercased() + "|" + event.specID)
         return Self(identifier: id + (snoozed ? ".snooze" : ""), account: account, event: event, fireAt: fireAt ?? event.date, snoozed: snoozed)
     }
     func valid(account: String, events: [DueReminder]) -> Bool {
-        self.account == account && events.contains { $0.taskID == event.taskID && $0.specID == event.specID && $0.signature == event.signature }
+        self.account == account && events.contains { $0.taskID == event.taskID && $0.specID == event.specID && $0.signature == event.signature && $0.kind == event.kind }
     }
 }
 struct ReminderState: Sendable {
@@ -163,6 +166,14 @@ struct ReminderReport: Equatable, Sendable {
     var scheduled = 0
     var deferred = 0
     var failures = 0
+    var focusScheduled = false
+    var focusFailure = false
+    mutating func accepted(_ request: ReminderRequest) {
+        if request.event.kind == .focusFinish { focusScheduled = true } else { scheduled += 1 }
+    }
+    mutating func failed(_ request: ReminderRequest) {
+        if request.event.kind == .focusFinish { focusFailure = true } else { failures += 1 }
+    }
 }
 protocol ReminderCenter: Sendable {
     func pending() async -> [ReminderRequest]
@@ -187,7 +198,7 @@ actor ReminderScheduler {
         return await sweep()
     }
     func snooze(account: String, taskID: String, specID: String, signature: String, now: Date = Date()) async -> ReminderReport? {
-        guard account == desired.account, let event = desired.events.first(where: { $0.taskID == taskID && $0.specID == specID && $0.signature == signature }) else { return nil }
+        guard account == desired.account, let event = desired.events.first(where: { $0.kind == .task && $0.taskID == taskID && $0.specID == specID && $0.signature == signature }) else { return nil }
         let request = ReminderRequest.make(account: account, event: event, fireAt: now.addingTimeInterval(3600), snoozed: true)
         snoozes.removeAll { $0.identifier == request.identifier }; snoozes.append(request); sequence += 1
         return await sweep()
@@ -208,7 +219,10 @@ actor ReminderScheduler {
             var requests = state.account.isEmpty ? [] : state.events.filter { $0.date > state.now }.map { ReminderRequest.make(account: state.account, event: $0) }
             requests += retained.filter { old in !snoozes.contains(where: { $0.identifier == old.identifier }) }
             requests += snoozes
-            requests.sort { $0.fireAt == $1.fireAt ? $0.identifier < $1.identifier : $0.fireAt < $1.fireAt }
+            requests.sort {
+                if $0.event.kind != $1.event.kind { return $0.event.kind == .focusFinish }
+                return $0.fireAt == $1.fireAt ? $0.identifier < $1.identifier : $0.fireAt < $1.fireAt
+            }
             var report = ReminderReport(revision: state.revision, deferred: max(0, requests.count - 60))
             requests = Array(requests.prefix(60))
             await center.removeInvalid(account: state.account, events: state.events)
@@ -219,9 +233,9 @@ actor ReminderScheduler {
             var acceptedSnoozes = Set<String>()
             for request in requests {
                 if token != sequence { break }
-                if existing.contains(request) { report.scheduled += 1; if request.snoozed { acceptedSnoozes.insert(request.identifier) }; continue }
-                do { try await center.add(request); report.scheduled += 1; if request.snoozed { acceptedSnoozes.insert(request.identifier) } }
-                catch { report.failures += 1 }
+                if existing.contains(request) { report.accepted(request); if request.snoozed { acceptedSnoozes.insert(request.identifier) }; continue }
+                do { try await center.add(request); report.accepted(request); if request.snoozed { acceptedSnoozes.insert(request.identifier) } }
+                catch { report.failed(request) }
             }
             guard token == sequence else { continue }
             snoozes.removeAll { acceptedSnoozes.contains($0.identifier) }
@@ -236,19 +250,27 @@ struct SystemReminderCenter: ReminderCenter {
     private var center: UNUserNotificationCenter { .current() }
     static func decode(_ request: UNNotificationRequest) -> ReminderRequest? {
         let info = request.content.userInfo
-        guard request.identifier.hasPrefix(ReminderRequest.prefix),
+        guard (request.identifier.hasPrefix(ReminderRequest.prefix) || request.identifier.hasPrefix(FocusFinish.prefix)),
               let account = info["accountID"] as? String, let task = info["taskID"] as? String,
               let spec = info["specID"] as? String, let signature = info["signature"] as? String,
               let original = info["originalAt"] as? Double, let fire = info["fireAt"] as? Double else { return nil }
-        return ReminderRequest(identifier: request.identifier, account: account,
-            event: DueReminder(id: info["eventID"] as? String ?? task + "." + spec, title: request.content.title, body: request.content.body, date: Date(timeIntervalSince1970: original), taskID: task, specID: spec, signature: signature),
+        let kind: ReminderEventKind = request.identifier.hasPrefix(FocusFinish.prefix) ? .focusFinish : .task
+        guard (kind == .focusFinish ? request.content.categoryIdentifier == FocusFinish.category && info["eventKind"] as? String == kind.rawValue : request.content.categoryIdentifier == "taskfold.reminder" && (info["eventKind"] == nil || info["eventKind"] as? String == kind.rawValue)) else { return nil }
+        if kind == .focusFinish {
+            guard FocusFinishReceipt(info: info) != nil, info["snoozed"] as? Bool == false, original.isFinite, fire.isFinite,
+                  original == fire, (0...(Double(FocusSession.maximumTimestamp) / 1000 + 180 * 60)).contains(original) else { return nil }
+        }
+        let decoded = ReminderRequest(identifier: request.identifier, account: account,
+            event: DueReminder(kind: kind, id: info["eventID"] as? String ?? task + "." + spec, title: request.content.title, body: request.content.body, date: Date(timeIntervalSince1970: original), taskID: task, specID: spec, signature: signature),
             fireAt: Date(timeIntervalSince1970: fire), snoozed: info["snoozed"] as? Bool ?? false)
+        if kind == .focusFinish && decoded.identifier != ReminderRequest.make(account: account, event: decoded.event).identifier { return nil }
+        return decoded
     }
     func pending() async -> [ReminderRequest] { await center.pendingNotificationRequests().compactMap(Self.decode) }
     func removeInvalid(account: String, events: [DueReminder]) async {
         func stale(_ request: UNNotificationRequest) -> Bool {
             // Touch only Taskfold's reminder category and versioned namespace.
-            guard request.content.categoryIdentifier == "taskfold.reminder" || request.identifier.hasPrefix(ReminderRequest.prefix) else { return false }
+            guard request.content.categoryIdentifier == "taskfold.reminder" || request.identifier.hasPrefix(ReminderRequest.prefix) || request.content.categoryIdentifier == FocusFinish.category || request.identifier.hasPrefix(FocusFinish.prefix) else { return false }
             return Self.decode(request)?.valid(account: account, events: events) != true
         }
         center.removePendingNotificationRequests(withIdentifiers: await center.pendingNotificationRequests().filter(stale).map(\.identifier))
@@ -261,12 +283,54 @@ struct SystemReminderCenter: ReminderCenter {
         components.timeZone = calendar.timeZone; components.calendar = calendar
         return UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
     }
-    func add(_ request: ReminderRequest) async throws {
+    static func content(for request: ReminderRequest) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
         content.title = request.event.title; content.body = request.event.body; content.sound = .default
-        content.categoryIdentifier = "taskfold.reminder"
-        content.userInfo = ["eventID": request.event.id, "accountID": request.account, "taskID": request.event.taskID, "specID": request.event.specID, "signature": request.event.signature, "originalAt": request.event.date.timeIntervalSince1970, "fireAt": request.fireAt.timeIntervalSince1970, "snoozed": request.snoozed]
+        content.categoryIdentifier = request.event.kind == .focusFinish ? FocusFinish.category : "taskfold.reminder"
+        content.userInfo = ["eventKind": request.event.kind.rawValue, "eventID": request.event.id, "accountID": request.account, "taskID": request.event.taskID, "specID": request.event.specID, "signature": request.event.signature, "originalAt": request.event.date.timeIntervalSince1970, "fireAt": request.fireAt.timeIntervalSince1970, "snoozed": request.snoozed]
+        return content
+    }
+    func add(_ request: ReminderRequest) async throws {
         // An explicit UTC instant preserves both sides of a daylight-saving fold.
-        try await center.add(UNNotificationRequest(identifier: request.identifier, content: content, trigger: Self.trigger(at: request.fireAt)))
+        try await center.add(UNNotificationRequest(identifier: request.identifier, content: Self.content(for: request), trigger: Self.trigger(at: request.fireAt)))
+    }
+}
+
+
+/// One optional device-local finish alert shares the existing serialized 60-request budget.
+/// State and task completion revisions invalidate old alerts; task titles are not signature inputs.
+enum FocusFinish {
+    static let prefix = "taskfold.f1."
+    static let category = "taskfold.focus.finished"
+    static func preferenceKey(_ account: String) -> String { "taskfold.focus.alerts.enabled." + account.lowercased() }
+    static func event(row: Record?, tasks: [Record], account: String, available: Bool = true, conflict: Bool = false) -> DueReminder? {
+        guard available, !conflict, !account.isEmpty, let row,
+              let session = FocusSessionChange.session(in: row, account: account), session.status == .running,
+              let end = session.endDate, let task = tasks.first(where: { $0.id.lowercased() == session.taskID && !$0.completed }) else { return nil }
+        let document: JSON = .object(["state": session.document, "baseline": .object(FocusSessionChange.baseline(row)), "completion": task["completion_version"]])
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        guard let data = try? encoder.encode(document), let encoded = String(data: data, encoding: .utf8) else { return nil }
+        // Calendar notification triggers resolve to whole seconds. Never alert before the timer ends.
+        return DueReminder(kind: .focusFinish, id: "focus." + session.id, title: "Time well spent",
+            body: PinnedNotes.excerpt(task.title, characters: 160, bytes: 1000).0 + "\nYour Focus timer is finished.",
+            date: Date(timeIntervalSince1970: ceil(end.timeIntervalSince1970)), taskID: session.taskID,
+            specID: session.id, signature: DueReminder.digest(encoded))
+    }
+}
+struct FocusFinishReceipt: Equatable, Sendable {
+    var account: String
+    var task: String
+    var session: String
+    var signature: String
+    init?(info: [AnyHashable: Any]) {
+        guard let account = info["accountID"] as? String, !account.isEmpty, account.utf8.count <= 256,
+              let task = info["taskID"] as? String, UUID(uuidString: task) != nil,
+              let session = info["specID"] as? String, UUID(uuidString: session) != nil,
+              let signature = info["signature"] as? String, signature.count == 64,
+              signature.allSatisfy({ "0123456789abcdef".contains($0) }) else { return nil }
+        self.account = account; self.task = task; self.session = session; self.signature = signature
+    }
+    func valid(account: String, event: DueReminder?, now: Date = Date()) -> Bool {
+        self.account == account && event?.kind == .focusFinish && event?.taskID == task && event?.specID == session && event?.signature == signature && (event?.date ?? .distantFuture) <= now
     }
 }

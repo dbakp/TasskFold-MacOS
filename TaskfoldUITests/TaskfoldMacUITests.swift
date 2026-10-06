@@ -2,6 +2,31 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testFocusFinishAlertPreferencePauseResumeAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--focus-session-seed", "--focus-finish-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click()
+        let toggle = app.descendants(matching: .any).matching(identifier: "focusAlerts").firstMatch
+        for _ in 0..<5 where !toggle.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400) }
+        XCTAssertTrue(toggle.isHittable); toggle.click()
+        if app.alerts.buttons["Allow"].waitForExistence(timeout: 3) { app.alerts.buttons["Allow"].click() }
+        let picker = app.descendants(matching: .any).matching(identifier: "focusTaskPicker").firstMatch
+        for _ in 0..<5 where !picker.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: 400) }
+        picker.click(); app.menuItems["Focus on the next useful step"].click(); app.buttons["startFocus"].click()
+        func pending(_ count: Int) {
+            let refresh = app.buttons["focusRefreshAlerts"]
+            for _ in 0..<5 where !refresh.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400) }
+            refresh.click()
+            XCTAssertTrue(app.staticTexts["Pending Focus alerts: \(count)"].waitForExistence(timeout: 5))
+        }
+        pending(1)
+        let pause = app.buttons["pauseResumeFocus"]
+        for _ in 0..<5 where !pause.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: 400) }
+        pause.click(); pending(0)
+        for _ in 0..<5 where !pause.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: 400) }
+        pause.click(); pending(1)
+        app.terminate(); app.launchArguments = ["--uitesting", "--focus-finish-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click(); pending(1); app.terminate()
+    }
     @MainActor func testFocusPauseResumeEndAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--focus-session-seed"]; app.launch()
         XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click()

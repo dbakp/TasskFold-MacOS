@@ -1,4 +1,7 @@
 import SwiftUI
+#if DEBUG
+import UserNotifications
+#endif
 
 struct FocusSessionRequest: Identifiable {
     var id = UUID()
@@ -42,6 +45,10 @@ struct FocusSessionView: View {
                         }
                         newSession
                     }
+                    if activeWorkspace { finishAlerts }
+                    #if DEBUG
+                    if store.userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--focus-finish-testing") { finishFixture }
+                    #endif
                     if let message { Text(message).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusError") }
                 }.padding(24).frame(maxWidth: 640, alignment: .leading).frame(maxWidth: .infinity)
             }
@@ -50,6 +57,7 @@ struct FocusSessionView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("closeFocusSession") } }
+            .task { await store.reschedule() }
             .onAppear {
                 if let session = store.focusSession, choices.contains(where: { $0.id.lowercased() == session.taskID }) {
                     taskID = session.taskID; minutes = session.durationSeconds / 60
@@ -64,6 +72,32 @@ struct FocusSessionView: View {
         .frame(minWidth: 460, idealWidth: 580, minHeight: 540)
         #endif
     }
+    #if DEBUG
+    @State private var fixturePending = -1
+    private var finishFixture: some View {
+        VStack {
+            Text("Pending Focus alerts: \(fixturePending)").accessibilityIdentifier("focusPendingAlerts")
+            Button("Refresh scheduled alerts") { Task {
+                fixturePending = await UNUserNotificationCenter.current().pendingNotificationRequests().filter { $0.identifier.hasPrefix(FocusFinish.prefix) }.count
+            } }.accessibilityIdentifier("focusRefreshAlerts")
+            Button("Finish soon fixture") {
+                guard activeWorkspace, let task = choices.first, let session = try? FocusSession(taskID: task.id, minutes: 1, now: Date().addingTimeInterval(-45)) else { return }
+                _ = store.changeFocus(session, expected: store.focusRecord, workspace: request.workspace)
+            }.accessibilityIdentifier("focusFinishSoon")
+        }
+    }
+    #endif
+    private var finishAlerts: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle("Alert when Focus finishes", isOn: Binding(get: { store.focusAlertsEnabled }, set: { enabled in
+                guard activeWorkspace else { return }
+                if enabled { Task { await store.enableFocusAlerts() } } else { store.disableFocusAlerts() }
+            })).disabled(store.requestingFocusAlerts || store.requestingNotifications).frame(minHeight: 44).accessibilityIdentifier("focusAlerts")
+            Text(store.focusAlertStatus).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusAlertStatus")
+            Text("Enable on each device where you want a finish alert. The alert opens your session; task completion is up to you.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            ReminderSystemSettingsButton()
+        }
+    }
     private var newSession: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Your next session").font(.headline)
@@ -75,13 +109,13 @@ struct FocusSessionView: View {
                 }.accessibilityIdentifier("focusTaskPicker")
                 #if os(iOS)
                 HStack {
-                    Text("\(minutes) minutes").fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusDuration")
+                    Text("\(minutes) \(minutes == 1 ? "minute" : "minutes")").fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusDuration")
                     Spacer()
                     Button { minutes -= 1 } label: { Image(systemName: "minus").frame(minWidth: 44, minHeight: 44) }.disabled(minutes == 1).accessibilityLabel("Shorter Focus session")
                     Button { minutes += 1 } label: { Image(systemName: "plus").frame(minWidth: 44, minHeight: 44) }.disabled(minutes == 180).accessibilityLabel("Longer Focus session")
                 }
                 #else
-                Stepper(value: $minutes, in: 1...180) { Text("\(minutes) minutes").fixedSize(horizontal: false, vertical: true) }.accessibilityIdentifier("focusDuration")
+                Stepper(value: $minutes, in: 1...180) { Text("\(minutes) \(minutes == 1 ? "minute" : "minutes")").fixedSize(horizontal: false, vertical: true) }.accessibilityIdentifier("focusDuration")
                 #endif
                 Button {
                     let row = store.focusRecord

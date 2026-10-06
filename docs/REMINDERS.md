@@ -92,3 +92,10 @@ The existing web-owned `check-due-tasks` source uses one OneSignal subscription 
 ## 6 October: completion-cycle reminder cancellation
 
 Both native clients now include the server-owned completion revision in reminder signatures. Once a complete/reopen cycle is observed, a notification or snooze from before that cycle cannot act on the reopened task, even when its planned instant is unchanged. Missing legacy revisions and revision zero use the same signature; unrelated title edits do not invalidate the schedule. Stable request identifiers let the scheduler replace obsolete notifications. This is native scheduling/action validation, not evidence of remote delivery. The future worker/native canonical-signature vectors must include this revision and the existing specification/instant fields.
+
+
+## Focus finish alerts and the shared device budget
+
+The Focus screen owns a separate, default-off, per-workspace device choice. One current finish alert reserves one of the same 60 pending request slots, leaving 59 for the nearest enabled task reminders and snoozes. Without a Focus alert, task reminders keep all 60. Task counts/failures in the reminder editor exclude Focus; the Focus screen reports its own scheduling status. Turning either preference off reconciles only its own events through the shared serialized scheduler.
+
+Focus uses the `taskfold.f1.` namespace and `taskfold.focus.finished` category, while ordinary reminders retain their existing `taskfold.r2.` identifiers and actions. Focus has no Complete/Snooze/Tomorrow actions. Pause/end/replacement, task completion/removal, sync conflict, unreadable workspace and sign-out invalidate old requests/receipts. Task completion revisions also invalidate alerts across complete/reopen cycles. [Focus behavior and outstanding acceptance](FOCUS_SESSIONS.md#finish-alerts-on-this-device) describe the contract. No APNs worker, device registration or independent remote reconciliation is added by this milestone.

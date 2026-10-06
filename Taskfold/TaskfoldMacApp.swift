@@ -64,12 +64,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         return true
     }
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        if notification.request.content.categoryIdentifier == FocusFinish.category || notification.request.identifier.hasPrefix(FocusFinish.prefix) {
+            let receipt = FocusFinishReceipt(info: notification.request.content.userInfo)
+            let valid = await MainActor.run { receipt.map { Store.shared.validFocusFinish($0) } ?? false }
+            return valid ? [.banner, .sound] : []
+        }
         guard notification.request.content.categoryIdentifier == ReminderCategory.identifier || notification.request.identifier.hasPrefix(ReminderRequest.prefix) else { return [.banner, .sound] }
         let valid = await MainActor.run { Store.shared.validReminder(notification.request.content.userInfo) != nil }
         return valid ? [.banner, .sound] : []
     }
     /// Reminder actions mirror iOS: complete, snooze an hour, or move to tomorrow, straight from the banner.
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        if response.notification.request.content.categoryIdentifier == FocusFinish.category || response.notification.request.identifier.hasPrefix(FocusFinish.prefix) {
+            guard response.actionIdentifier == UNNotificationDefaultActionIdentifier, let receipt = FocusFinishReceipt(info: response.notification.request.content.userInfo) else { return }
+            // Retain a bounded receipt until Root has loaded the receiving workspace on a cold launch.
+            await MainActor.run { NotificationRoute.shared.focusReceipt = receipt }
+            return
+        }
         if let id = await Store.shared.handleReminder(response.notification.request.content.userInfo, action: response.actionIdentifier) {
             await MainActor.run { NotificationRoute.shared.taskID = id }
         }
@@ -80,6 +91,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 final class NotificationRoute {
     static let shared = NotificationRoute()
     var taskID: String?
+    var focusReceipt: FocusFinishReceipt?
 }
 
 /// Menu bar commands mirror every keyboard shortcut in the window so they are discoverable and scriptable.

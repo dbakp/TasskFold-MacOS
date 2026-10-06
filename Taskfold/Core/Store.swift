@@ -20,6 +20,9 @@ final class Store {
     @ObservationIgnored private var reminderRevision = 0
     private var reminderPreferenceRevision = 0
     var reminderStatus = "Choose whether this device delivers reminders."
+    var focusAlertStatus = "Finish alerts are off on this device."
+    private var focusPermissionDenied = false
+    var requestingFocusAlerts = false
     var requestingNotifications = false
     var signedIn = false
     var localMode = false
@@ -139,7 +142,7 @@ final class Store {
         }
         let old = snapshot; snapshot = next
         do { try persist() } catch { snapshot = old; self.error = error.localizedDescription; return false }
-        focusSyncConflict = nil; notice = nil; publishWidgetSnapshot(scheduleCapacityRefresh: false); Task { await sync() }; return true
+        focusSyncConflict = nil; notice = nil; publishWidgetSnapshot(scheduleCapacityRefresh: false); Task { await reschedule(); await sync() }; return true
     }
     @discardableResult func setWorkingHours(_ hours: WorkingHours) -> Bool {
         guard (try? WorkingHours(document: hours.document)) != nil else { error = "Choose valid working hours."; return false }
@@ -613,6 +616,7 @@ final class Store {
                     let remote = remoteRows.first ?? FocusSessionChange.emptyRow(account: userID)
                     guard FocusSessionChange.validRow(remote, account: userID) else { return }
                     focusSyncConflict = FocusSyncConflict(mutation: mutation, remote: remote)
+                    Task { await reschedule() }
                     publishWidgetSnapshot(scheduleCapacityRefresh: false)
                     notice = "Focus changed on another device. Open Focus session to review it and resume sync."
                 }
@@ -688,7 +692,7 @@ final class Store {
         return ReminderPreferences.enabled(account: userID, fixture: userID == "ui-testing" || userID == "preview")
     }
     func enableNotifications() async {
-        guard !requestingNotifications, signedIn || localMode else { return }
+        guard !requestingNotifications, !requestingFocusAlerts, signedIn || localMode else { return }
         let generation = accountGeneration, account = userID, key = reminderPreferenceKey
         requestingNotifications = true
         defer { requestingNotifications = false }
@@ -700,16 +704,42 @@ final class Store {
             else { reminderStatus = "Permission is off. Allow Taskfold notifications in system settings." }
         } catch { if generation == accountGeneration { reminderStatus = "Notifications could not be enabled: " + error.localizedDescription } }
     }
+    var focusAlertsEnabled: Bool {
+        _ = reminderPreferenceRevision
+        return focusAvailable && !userID.isEmpty && UserDefaults.standard.bool(forKey: FocusFinish.preferenceKey(userID))
+    }
+    private var focusFinishEvent: DueReminder? {
+        FocusFinish.event(row: focusRecord, tasks: tasks, account: userID, available: focusAvailable, conflict: focusSyncConflict != nil)
+    }
+    func validFocusFinish(_ receipt: FocusFinishReceipt, now: Date = Date()) -> Bool {
+        focusAlertsEnabled && receipt.valid(account: userID, event: focusFinishEvent, now: now)
+    }
+    func enableFocusAlerts() async {
+        guard !requestingFocusAlerts, !requestingNotifications, focusAvailable else { return }
+        let generation = accountGeneration, account = userID
+        requestingFocusAlerts = true; defer { requestingFocusAlerts = false }
+        do {
+            let allowed = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+            guard generation == accountGeneration, account == userID else { return }
+            UserDefaults.standard.set(allowed, forKey: FocusFinish.preferenceKey(account)); reminderPreferenceRevision += 1; focusPermissionDenied = !allowed
+            await reschedule()
+        } catch { if generation == accountGeneration { focusAlertStatus = "Finish alerts could not be enabled: " + error.localizedDescription } }
+    }
+    func disableFocusAlerts() {
+        UserDefaults.standard.set(false, forKey: FocusFinish.preferenceKey(userID)); reminderPreferenceRevision += 1
+        focusPermissionDenied = false; focusAlertStatus = "Finish alerts are off on this device."
+        Task { await reschedule() }
+    }
     private func reminderState() -> ReminderState {
         reminderRevision += 1
-        let enabled = remindersEnabled
-        return ReminderState(revision: reminderRevision, account: enabled ? userID : "", events: enabled ? DueReminder.events(tasks: tasks) : [])
+        var events = remindersEnabled ? DueReminder.events(tasks: tasks) : []
+        if focusAlertsEnabled, let event = focusFinishEvent { events.append(event) }
+        return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events)
     }
     func reschedule() async {
         let state = reminderState(), generation = accountGeneration
         let report = await reminderScheduler.update(state)
         guard generation == accountGeneration, state.revision == reminderRevision, report.revision == state.revision else { return }
-        guard remindersEnabled else { reminderStatus = "Reminders are off for this workspace on this device."; return }
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         guard generation == accountGeneration, state.revision == reminderRevision else { return }
         var allowed = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
@@ -717,20 +747,30 @@ final class Store {
         allowed = allowed || settings.authorizationStatus == .ephemeral
         #endif
         guard allowed else {
-            reminderStatus = "Permission is off. Allow Taskfold notifications in system settings."; return
+            reminderStatus = remindersEnabled ? "Permission is off. Allow Taskfold notifications in system settings." : "Reminders are off for this workspace on this device."
+            focusAlertStatus = focusAlertsEnabled || focusPermissionDenied ? "Permission is off. Allow Taskfold notifications in system settings." : "Finish alerts are off on this device."
+            return
         }
+        if !focusAlertsEnabled { focusAlertStatus = "Finish alerts are off on this device." }
+        else if report.focusFailure { focusAlertStatus = "The finish alert could not be scheduled. Open Focus to retry." }
+        else if report.focusScheduled { focusAlertStatus = "A finish alert is scheduled on this device." }
+        else if focusSyncConflict != nil { focusAlertStatus = "Review the session changes before a finish alert can be scheduled." }
+        else if focusSession?.finished(at: Date()) == true { focusAlertStatus = "Start another session to receive its finish alert." }
+        else { focusAlertStatus = "Start or resume a session to schedule its finish alert." }
+        guard remindersEnabled else { reminderStatus = "Reminders are off for this workspace on this device."; return }
         if report.failures > 0 { reminderStatus = "\(report.failures) \(report.failures == 1 ? "reminder" : "reminders") could not be scheduled. Taskfold will retry when opened." }
         else if report.deferred > 0 { reminderStatus = "\(report.scheduled) upcoming reminders scheduled; \(report.deferred) later ones will be refreshed while Taskfold is open." }
         else { reminderStatus = "\(report.scheduled) upcoming \(report.scheduled == 1 ? "reminder" : "reminders") scheduled on this device." }
     }
     func disableNotifications() {
         UserDefaults.standard.set(false, forKey: reminderPreferenceKey); reminderPreferenceRevision += 1
-        clearScheduledReminders()
+        if focusAlertsEnabled { Task { await reschedule() } } else { clearScheduledReminders() }
     }
     private func clearScheduledReminders() {
         reminderRevision += 1
         let state = ReminderState(revision: reminderRevision, account: "", events: [])
         reminderStatus = "Reminders are off for this workspace on this device."
+        focusPermissionDenied = false; focusAlertStatus = "Finish alerts are off on this device."
         Task { _ = await reminderScheduler.update(state) }
     }
     func validReminder(_ info: [AnyHashable: Any]) -> DueReminder? {
@@ -774,7 +814,7 @@ enum ReminderCategory {
             UNNotificationAction(identifier: snoozeHour, title: "Remind me in 1 hour", options: [], icon: UNNotificationActionIcon(systemImageName: "clock")),
             UNNotificationAction(identifier: tomorrow, title: "Move to tomorrow", options: [], icon: UNNotificationActionIcon(systemImageName: "sunrise")),
         ], intentIdentifiers: [], options: [])
-        UNUserNotificationCenter.current().setNotificationCategories([category])
+        UNUserNotificationCenter.current().setNotificationCategories([category, UNNotificationCategory(identifier: FocusFinish.category, actions: [], intentIdentifiers: [], options: [])])
     }
 }
 
@@ -815,7 +855,7 @@ extension Store {
     }
     func seedFocusSessionFixture() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--focus-session-seed") else { return }
-        dailyBackupsEnabled = false; disableNotifications(); focusSyncConflict = nil
+        dailyBackupsEnabled = false; disableNotifications(); disableFocusAlerts(); focusSyncConflict = nil
         var task = Record.task(user: userID); task["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31"); task["title"] = .string("Focus on the next useful step")
         snapshot = Snapshot(tables: ["tasks": [task]]); undoStack = []; redoStack = []
         if ProcessInfo.processInfo.arguments.contains("--focus-session-unavailable"),

@@ -63,6 +63,14 @@ struct RootView: View {
                 try? await Task.sleep(for: .seconds(5))
             }
         }
+        .task(id: "focus-finished-\(NotificationRoute.shared.focusReceipt?.signature ?? "")-\(store.workspaceGeneration)-\(store.widgetPublicationRevision)") {
+            guard let receipt = NotificationRoute.shared.focusReceipt, store.signedIn || store.localMode else { return }
+            await Task.yield()
+            guard !Task.isCancelled, NotificationRoute.shared.focusReceipt == receipt else { return }
+            NotificationRoute.shared.focusReceipt = nil
+            guard store.validFocusFinish(receipt) else { return }
+            focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+        }
         .task(id: "reminder-\(NotificationRoute.shared.taskID ?? "")-\(store.taskRevision)") {
             guard let id = NotificationRoute.shared.taskID else { return }
             await Task.yield()

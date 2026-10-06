@@ -49,12 +49,12 @@ struct TaskReminderEditor: View {
             Section {
                 Toggle("Deliver reminders", isOn: Binding(get: { store.remindersEnabled }, set: { value in
                     if value { Task { await store.enableNotifications() } } else { store.disableNotifications() }
-                })).disabled(store.requestingNotifications).accessibilityIdentifier("reminderDelivery")
+                })).disabled(store.requestingNotifications || store.requestingFocusAlerts).accessibilityIdentifier("reminderDelivery")
                 if store.requestingNotifications { ProgressView("Requesting permission…") }
                 Text(store.reminderStatus).font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("reminderStatus")
                 ReminderSystemSettingsButton()
             } header: { Text("This device") } footer: {
-                Text("Reminder choices sync with the task. Enable delivery separately on each device. The nearest 60 notifications are scheduled; later ones refresh while Taskfold is open.")
+                Text("Reminder choices sync with the task. Enable delivery separately on each device. Up to 60 notifications are scheduled, including one enabled Focus finish alert. Later reminders refresh while Taskfold is open.")
             }
             Section {
                 #if os(macOS)
