@@ -56,7 +56,7 @@ export const uuid = (value: unknown): value is string =>
 const hash = (value: unknown): value is string =>
   typeof value === "string" && /^[0-9a-f]{64}$/.test(value);
 const signature = (value: unknown): value is string =>
-  typeof value === "string" && /^r[34]:[0-9a-f]{64}$/.test(value);
+  typeof value === "string" && /^r[345]:[0-9a-f]{64}$/.test(value);
 const object = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === "object" && !Array.isArray(v);
 const scope = (k: { platform: string; environment: string; bundle: string }) =>
@@ -76,8 +76,11 @@ export function validPrepared(v: unknown, job: Claim): v is Prepared {
   ) return false;
   const b = v.binding,
     info = v.content.info,
-    instant = Date.parse(job.fire_at) / 1000;
-  return (b.platform === "ios" || b.platform === "macos") &&
+    instant = Date.parse(job.fire_at) / 1000,
+    calendar = job.signature.startsWith("r5:");
+  return Number.isFinite(instant) &&
+    Number.isSafeInteger(Math.round(instant * 1000)) &&
+    (b.platform === "ios" || b.platform === "macos") &&
     b.bundle ===
       (b.platform === "ios"
         ? "com.dbakp.taskfold"
@@ -88,7 +91,13 @@ export function validPrepared(v: unknown, job: Claim): v is Prepared {
     typeof b.token === "string" && /^[0-9a-f]{2,1024}$/.test(b.token) &&
     b.token.length % 2 === 0 && typeof v.content.title === "string" &&
     info.eventKind === "task" &&
-    (info.eventID === job.task || info.eventID === `${job.task}.${job.spec}`) &&
+    (calendar
+      ? info.calendarOccurrence === true &&
+        info.eventID === `${job.task}.${job.spec}.${Math.round(instant * 1000)}`
+      : (info.calendarOccurrence === undefined ||
+        info.calendarOccurrence === false) &&
+        (info.eventID === job.task ||
+          info.eventID === `${job.task}.${job.spec}`)) &&
     info.accountID === job.account && info.taskID === job.task &&
     info.specID === job.spec && info.signature === job.signature &&
     info.snoozed === false && typeof info.originalAt === "number" &&
@@ -217,6 +226,7 @@ export function createAPNsProvider(
           "originalAt",
           "fireAt",
           "snoozed",
+          "calendarOccurrence",
         ].map((key) => [key, info[key]]),
       );
       const title = [...payload.content.title].slice(0, 128).join("");

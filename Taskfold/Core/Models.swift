@@ -1290,10 +1290,14 @@ private enum QuickReminderText {
             guard let hour = numbers.first.flatMap({ Int($0) }), let minute = Int(numbers.count > 1 ? String(numbers[1]) : "0"), (0...59).contains(minute),
                   (am || pm ? (1...12).contains(hour) : (0...23).contains(hour)) else { return nil }
             var phrase = text; phrase.removeSubrange(fullRange)
-            guard let parsed = QuickRecurrenceText.parse(phrase, now: now, calendar: calendar), !parsed.rule["fromCompletion"].flag,
-                  let (rule, firstDay) = QuickRecurrenceText.first(parsed, now: now, existing: TaskPlanner.dayKey(now, calendar: calendar), calendar: calendar) else { return nil }
+            var civil = Calendar(identifier: .gregorian); civil.timeZone = TimeZone(secondsFromGMT: 0)!
+            let sourceDay = TaskPlanner.dayKey(now, calendar: calendar)
             let time = String(format: "%02d:%02d", am || pm ? hour % 12 + (pm ? 12 : 0) : hour, minute)
-            var raw: [String: JSON] = ["start_day": .string(firstDay), "time": .string(time), "time_zone": .string(calendar.timeZone.identifier), "recurrence": .object(rule.fields)]
+            guard let civilNow = Dates.parse(sourceDay, calendar: civil),
+                  let parsed = QuickRecurrenceText.parse(phrase, now: civilNow, calendar: civil), !parsed.rule["fromCompletion"].flag,
+                  let initial = ReminderCalendarSchedule.make(phrase, time: time, start: sourceDay, zone: calendar.timeZone.identifier) else { return nil }
+            let rule = initial.rule
+            var raw = initial.raw
             // A rule with no explicit starting day begins with its next future clock.
             if parsed.start == nil {
                 var unbounded = rule; unbounded["count"] = .null; raw["recurrence"] = .object(unbounded.fields)

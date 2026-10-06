@@ -41,4 +41,4 @@ do $$ declare t jsonb; begin
  if exists(select 1 from taskfold_private.reminder_events(t,'Europe/Copenhagen')) then raise exception 'Remote projector scheduled a local-only future capability'; end if;
 end $$;
 rollback;
-select 'Calendar reminder JSON preserved across native guarded edits, independent planning, conflicts and RLS; remote projector safely skips v2; all fixtures rolled back' as result;
+select 'Calendar reminder JSON preserved across native guarded edits, independent planning, conflicts and RLS; legacy single-event projector safely skips v2; all fixtures rolled back' as result;

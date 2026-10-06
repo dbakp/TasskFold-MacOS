@@ -1,0 +1,5 @@
+
+# Retain exact deployed migration bytes, including their terminal blank lines.
+supabase/migrations/20261006225450_calendar_reminder_projection_aliases.sql whitespace=-blank-at-eof
+supabase/migrations/20261006230025_calendar_reminder_history_counts.sql whitespace=-blank-at-eof
+supabase/migrations/20261006233453_calendar_reminder_null_bounds.sql whitespace=-blank-at-eof

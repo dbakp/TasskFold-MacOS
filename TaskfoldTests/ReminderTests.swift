@@ -396,7 +396,7 @@ extension ReminderTests {
     }
     func testMalformedCalendarRowsFailClosedAndKnownExtensionFieldsAreSemanticNeutral() throws {
         let spec = try calendarSpec(); let event = try XCTUnwrap(DueReminder.events(tasks: [task(specs: [spec])], now: now).first)
-        for (key, value) in [("version", JSON.number(1)), ("time", .string("25:60")), ("time", .string("9:00")), ("time_zone", .string("missing")), ("start_day", .string("2026-02-30")), ("channels", .array([.string("push")])), ("channels", .array([.string("local"), .string("push")]))] {
+        for (key, value) in [("version", JSON.number(1)), ("time", .string("25:60")), ("time", .string("9:00")), ("time_zone", .string("missing")), ("time_zone", .string("GMT+0200")), ("start_day", .string("2026-02-30")), ("channels", .array([.string("push")])), ("channels", .array([.string("local"), .string("push")]))] {
             var raw = spec.raw; raw[key] = value; XCTAssertNil(ReminderSpec(row: .object(raw)), key)
         }
         for (key, value) in [("count", JSON.number(1000)), ("fromCompletion", .bool(true)), ("interval", .number(0))] {
@@ -499,5 +499,44 @@ extension ReminderTests {
         XCTAssertEqual(restored.fields["reminder_specs"], row["reminder_specs"])
         row["is_recurring"] = .bool(true); row["recurrence_pattern"] = .object(["type": .string("daily")])
         XCTAssertEqual(ReminderSpec.rows(TaskPlanning.nextOccurrence(row, date: now)), ReminderSpec.rows(row))
+    }
+}
+
+
+extension ReminderTests {
+    func testIndependentCalendarUsesProlepticCivilDaysAndSkipsAbsentDaysWithoutLosingCount() throws {
+        let julianOnly = ReminderCalendarSchedule.make("every day", time: "09:00", start: "1500-02-29", zone: "Etc/UTC")
+        XCTAssertNil(julianOnly, "Persisted Gregorian dates must not adopt Foundation’s historical Julian cutover")
+        let cutover = try calendarSpec("every day for 3 occurrences", start: "1582-10-04", zone: "Etc/UTC")
+        XCTAssertEqual(cutover.schedule?.dates(after: Date(timeIntervalSince1970: -12220329600)).map(\.timeIntervalSince1970), [-12220210800, -12220124400, -12220038000])
+        let skipped = try calendarSpec("every day for 3 occurrences", start: "2011-12-29", zone: "Pacific/Apia")
+        let schedule = try XCTUnwrap(skipped.schedule)
+        XCTAssertEqual(schedule.dates(after: TaskPlanning.instant("2011-12-28T00:00:00Z")!).map { TaskPlanner.dayKey($0, calendar: schedule.calendar) }, ["2011-12-29", "2011-12-31", "2012-01-01"])
+        let weekly = try calendarSpec("every saturday for 3 occurrences", start: "2011-12-24", zone: "Pacific/Apia")
+        let w = try XCTUnwrap(weekly.schedule)
+        XCTAssertEqual(w.dates(after: TaskPlanning.instant("2011-12-23T00:00:00Z")!).map { TaskPlanner.dayKey($0, calendar: w.calendar) }, ["2011-12-24", "2011-12-31", "2012-01-07"])
+        let interval = try calendarSpec("every 2 days for 3 occurrences", start: "2011-12-29", zone: "Pacific/Apia")
+        XCTAssertEqual(interval.schedule?.dates(after: TaskPlanning.instant("2011-12-28T00:00:00Z")!).map { TaskPlanner.dayKey($0, calendar: schedule.calendar) }, ["2011-12-29", "2011-12-31", "2012-01-02"])
+    }
+}
+
+extension ReminderTests {
+    func testSharedCalendarWorkerVectorsMatchNativeOccurrencesAndSignatures() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "reminder-calendar-events", withExtension: "json", subdirectory: "Fixtures"))
+        let fixture = try JSONDecoder().decode(JSON.self, from: Data(contentsOf: url))
+        for item in fixture.object["cases"]?.list ?? [] {
+            let c = item.object, name = c["name"]?.text ?? ""
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.timeZone = try XCTUnwrap(TimeZone(identifier: c["zone"]?.text ?? ""))
+            let from = Double(try XCTUnwrap(c["from"]).integer), until = Double(try XCTUnwrap(c["until"]).integer)
+            let task = Record(c["task"]?.object ?? [:]), expected = c["events"]?.list ?? []
+            let actual = DueReminder.events(tasks: [task], calendar: calendar, channels: ["local", "push"], now: Date(timeIntervalSince1970: from - 0.001)).filter { $0.date.timeIntervalSince1970 >= from && $0.date.timeIntervalSince1970 <= until }
+            XCTAssertEqual(actual.count, expected.count, name)
+            for (event, row) in zip(actual, expected) {
+                XCTAssertEqual(event.specID, row.object["spec"]?.text, name)
+                XCTAssertEqual(event.date.timeIntervalSince1970, Double(try XCTUnwrap(row.object["epoch"]).integer), accuracy: 0.0001, name)
+                XCTAssertEqual(event.signature, row.object["signature"]?.text, name)
+            }
+        }
     }
 }

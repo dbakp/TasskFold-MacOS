@@ -123,7 +123,7 @@ struct ReminderSpecEditor: View {
         _kind = State(initialValue: draft.spec.kind)
         _minutes = State(initialValue: abs(draft.spec.offset ?? -10))
         _before = State(initialValue: (draft.spec.offset ?? -10) <= 0)
-        _date = State(initialValue: draft.spec.schedule?.first ?? draft.spec.absolute ?? Date().addingTimeInterval(3600))
+        _date = State(initialValue: draft.spec.schedule.flatMap { Dates.parse($0.startDay, calendar: $0.calendar) } ?? draft.spec.absolute ?? Date().addingTimeInterval(3600))
         var utc = Calendar(identifier: .gregorian); utc.timeZone = TimeZone(secondsFromGMT: 0)!
         let source = draft.spec.schedule?.calendar ?? Calendar.current
         let initial = draft.spec.absolute ?? Date().addingTimeInterval(3600)

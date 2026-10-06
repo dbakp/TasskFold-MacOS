@@ -8,6 +8,7 @@ import {
   type Prepared,
   type Provider,
   type Transport,
+  validClaim,
   validPrepared,
 } from "./apns.ts";
 import { type Config, createHandler } from "./handler.ts";
@@ -117,6 +118,7 @@ const provider: Provider = {
 function fixtureDB(
   options: {
     prepare?: unknown;
+    claim?: Claim;
     finish?: boolean;
     devices?: string[];
     failFinish?: boolean;
@@ -158,7 +160,10 @@ function fixtureDB(
         assert(body._limit === 1);
         if (claimed) return Response.json([]);
         claimed = true;
-        return Response.json([{ ...job, device: body._device }]);
+        return Response.json([{
+          ...(options.claim ?? job),
+          device: body._device,
+        }]);
       case "taskfold_prepare_sweep_reminder_job":
         equal(body, { _sweep: lease, _id: id, _lease: lease });
         return Response.json("prepare" in options ? options.prepare : prepared);
@@ -826,4 +831,94 @@ Deno.test("oversized provider reason is cancelled and supplementary Unicode titl
     "transient",
   );
   assert(cancelled);
+});
+
+function calendarPayload(): { claim: Claim; payload: Prepared } {
+  const claim = clone(job);
+  claim.signature = "r5:" + "e".repeat(64);
+  const payload = clone(prepared);
+  payload.content.info.signature = claim.signature;
+  payload.content.info.calendarOccurrence = true;
+  payload.content.info.eventID = `${task}.${spec}.${instant}`;
+  return { claim, payload };
+}
+Deno.test("calendar claims bind the r5 marker and exact original occurrence route", () => {
+  const { claim, payload } = calendarPayload();
+  assert(validClaim(claim, device));
+  assert(validPrepared(payload, claim));
+  for (
+    const [key, value] of [
+      ["calendarOccurrence", false],
+      ["calendarOccurrence", undefined],
+      ["eventID", `${task}.${spec}`],
+      ["eventID", `${task}.${spec}.${instant + 86400000}`],
+      ["originalAt", instant / 1000 + 60],
+      ["originalAt", Number.NaN],
+    ] as const
+  ) {
+    const changed = clone(payload);
+    changed.content.info[key] = value;
+    assert(!validPrepared(changed, claim));
+  }
+  const legacy = clone(prepared);
+  legacy.content.info.calendarOccurrence = true;
+  assert(!validPrepared(legacy, job));
+});
+Deno.test("calendar worker prepares and acknowledges the current bounded occurrence", async () => {
+  const { claim, payload } = calendarPayload();
+  const f = fixtureDB({ claim, prepare: payload });
+  let sent = 0;
+  const h = createHandler(config, {
+    ready: async () => {},
+    send: async (p) => {
+      sent++;
+      equal(p.content.info, payload.content.info);
+      return result;
+    },
+  }, { send: f.send, now: () => instant });
+  const response = await h(request());
+  assert(response.status === 200);
+  const body = await response.json();
+  assert(body.accepted === 1 && sent === 1);
+  assert(
+    f.calls.some((c) =>
+      c.name === "taskfold_finish_reminder_delivery" &&
+      c.body._outcome === "accepted"
+    ),
+  );
+});
+Deno.test("APNs retains distinct calendar occurrence routes and per-job collapse identities", async () => {
+  const { payload } = calendarPayload();
+  const messages: Record<string, unknown>[] = [];
+  const collapses: string[] = [];
+  const p = createAPNsProvider(parseKeys(JSON.stringify([key])), {
+    now: () => instant,
+    send: async (req) => {
+      messages.push(await req.json());
+      collapses.push(req.headers.get("apns-collapse-id")!);
+      return new Response(null, { status: 200 });
+    },
+  });
+  await p.ready();
+  payload.content.info.privateRule = "NEVER IN CALENDAR PUSH";
+  equal(
+    (await p.send(payload, new AbortController().signal)).outcome,
+    "accepted",
+  );
+  const next = clone(payload);
+  next.id = "f".repeat(64);
+  next.collapse_id = next.id;
+  next.provider_id = "ffffffff-ffff-5fff-afff-ffffffffffff";
+  next.content.info.eventID = `${task}.${spec}.${instant + 86400000}`;
+  next.content.info.signature = "r5:" + "f".repeat(64);
+  next.content.info.originalAt = (instant + 86400000) / 1000;
+  next.content.info.fireAt = next.content.info.originalAt;
+  equal((await p.send(next, new AbortController().signal)).outcome, "accepted");
+  equal(collapses, [id, next.id]);
+  assert(messages.every((m) => m.calendarOccurrence === true));
+  equal(messages.map((m) => m.eventID), [
+    payload.content.info.eventID,
+    next.content.info.eventID,
+  ]);
+  assert(!JSON.stringify(messages).includes("NEVER IN CALENDAR PUSH"));
 });

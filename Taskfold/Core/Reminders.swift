@@ -121,61 +121,173 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
 }
 
 
+/// Proleptic Gregorian civil dates. UTC seconds are an arithmetic representation,
+/// never the reminder's actual fire instant. No locale cutover or skipped zone day
+/// may change weekday/interval/count semantics.
+private struct ReminderCivilDay: Comparable {
+    let year: Int, month: Int, day: Int
+    var key: String { String(format: "%04d-%02d-%02d", year, month, day) }
+    static func monthLength(_ year: Int, _ month: Int) -> Int {
+        if month == 2 { return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0) ? 29 : 28 }
+        return [4, 6, 9, 11].contains(month) ? 30 : 31
+    }
+    init?(_ key: String) {
+        guard key.count == 10, key.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil else { return nil }
+        let parts = key.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3, (1...9999).contains(parts[0]), (1...12).contains(parts[1]), (1...Self.monthLength(parts[0], parts[1])).contains(parts[2]) else { return nil }
+        year = parts[0]; month = parts[1]; day = parts[2]
+    }
+    var serial: Int {
+        let y = year - (month <= 2 ? 1 : 0), era = y / 400, yo = y - era * 400
+        let m = month + (month > 2 ? -3 : 9)
+        return era * 146097 + yo * 365 + yo / 4 - yo / 100 + (153 * m + 2) / 5 + day - 1 - 719468
+    }
+    init?(serial: Int) {
+        let z = serial + 719468
+        guard z >= 306, z <= 3652364 else { return nil }
+        let era = z / 146097, doe = z - era * 146097
+        let yo = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
+        let y = yo + era * 400, doy = doe - (yo * 365 + yo / 4 - yo / 100)
+        let mp = (5 * doy + 2) / 153
+        let d = doy - (153 * mp + 2) / 5 + 1, m = mp + (mp < 10 ? 3 : -9)
+        let yr = y + (m <= 2 ? 1 : 0)
+        guard (1...9999).contains(yr) else { return nil }
+        year = yr; month = m; day = d
+    }
+    var weekday: Int { ((serial + 4) % 7 + 7) % 7 }
+    func adding(_ days: Int) -> Self? { Self(serial: serial + days) }
+    static func < (a: Self, b: Self) -> Bool { a.serial < b.serial }
+    static func monthDay(year: Int, month: Int, rule: Record, fallback: Int) -> Self? {
+        guard (1...9999).contains(year), (1...12).contains(month) else { return nil }
+        let length = monthLength(year, month)
+        var day = min(rule["dayOfMonth"] == .null ? fallback : rule["dayOfMonth"].integer, length)
+        if let ordinal = Recurrence.number(rule["weekdayOrdinal"], in: -1...5), let weekday = Recurrence.number(rule["weekday"], in: 0...6) {
+            let edge = Self(String(format: "%04d-%02d-%02d", year, month, ordinal == -1 ? length : 1))!
+            day = ordinal == -1 ? length - (edge.weekday - weekday + 7) % 7 : 1 + (weekday - edge.weekday + 7) % 7 + (ordinal - 1) * 7
+        }
+        guard (1...length).contains(day) else { return nil }
+        return Self(String(format: "%04d-%02d-%02d", year, month, day))
+    }
+    func monthOffset(_ n: Int, rule: Record) -> Self? {
+        let index = (year - 1) * 12 + month - 1 + n
+        guard (0..<9999 * 12).contains(index) else { return nil }
+        return Self.monthDay(year: index / 12 + 1, month: index % 12 + 1, rule: rule, fallback: day)
+    }
+    func next(_ rule: Record, after: Self) -> Self? {
+        let threshold = max(self, after), n = rule["interval"] == .null ? 1 : rule["interval"].integer
+        let selected = Array(Set(rule["daysOfWeek"].list.map(\.integer))).sorted()
+        var result: Self?
+        switch rule.string("type") {
+        case "daily", "custom": result = adding(((threshold.serial - serial) / n + 1) * n)
+        case "weekly":
+            if selected.isEmpty { let span = 7 * n; result = adding(((threshold.serial - serial) / span + 1) * span) }
+            else {
+                let week = serial - weekday, span = 7 * n, cycle = (threshold.serial - week) / span
+                for offset in cycle...(cycle + 1) {
+                    for day in selected {
+                        if let value = Self(serial: week + offset * span + day), value > threshold { result = value; break }
+                    }
+                    if result != nil { break }
+                }
+            }
+        case "monthly":
+            let elapsed = (threshold.year - year) * 12 + threshold.month - month, first = max(1, elapsed / n)
+            for offset in first...(first + 400) {
+                if let value = monthOffset(offset * n, rule: rule), value > threshold { result = value; break }
+                if (year - 1) * 12 + month - 1 + offset * n >= 9999 * 12 { break }
+            }
+        case "yearly":
+            let first = max(1, (threshold.year - year) / n)
+            for offset in first...(first + 1) {
+                if let value = Self.monthDay(year: year + offset * n, month: rule["monthOfYear"].integer, rule: rule, fallback: day), value > threshold { result = value; break }
+            }
+        default: break
+        }
+        if let end = Self(rule.string("endDate")), let value = result, value > end { return nil }
+        return result
+    }
+    func first(_ rule: Record) -> Self? {
+        var result: Self? = self
+        let selected = rule["daysOfWeek"].list.map(\.integer)
+        if !selected.isEmpty { result = adding(selected.map { ($0 - weekday + 7) % 7 }.min()!) }
+        else if rule.string("type") == "monthly" {
+            result = nil
+            for offset in 0...400 { if let value = monthOffset(offset, rule: rule), value >= self { result = value; break } }
+        } else if rule.string("type") == "yearly" {
+            result = Self.monthDay(year: year, month: rule["monthOfYear"].integer, rule: rule, fallback: day)
+            if let value = result, value < self { result = Self.monthDay(year: year + 1, month: rule["monthOfYear"].integer, rule: rule, fallback: day) }
+        }
+        if let end = Self(rule.string("endDate")), let value = result, value > end { return nil }
+        return result
+    }
+    static func current(_ date: Date, zone: TimeZone) -> Self? {
+        let wall = date.timeIntervalSince1970 + Double(zone.secondsFromGMT(for: date))
+        guard wall.isFinite, wall < 253402300800 else { return nil }
+        if wall < -62135596800 { return Self("0001-01-01") }
+        return Self(serial: Int(floor(wall / 86400)))
+    }
+}
+
 /// Version 2 is an independent Gregorian wall-clock schedule in its source zone.
-/// Limited counts are bounded to 999, matching quick entry. Unlimited rules jump to the
-/// current period rather than replaying every historical occurrence. No task plan is read.
+/// Finite limits count actual calendar occurrences from the original anchor. Unlimited
+/// rules jump to the current period. Missing civil days never drift weekday anchors.
 struct ReminderCalendarSchedule: Equatable, Sendable {
     let startDay: String
     let time: String
     let timeZone: String
     let rule: Record
     var calendar: Calendar { var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: timeZone)!; return c }
-    var first: Date { instant(on: Dates.parse(startDay, calendar: calendar)!)! }
+    var first: Date { instant(on: ReminderCivilDay(startDay)!)! }
     init?(raw: [String: JSON]) {
-        guard case .string(let start)? = raw["start_day"], start.count == 10,
+        guard case .string(let start)? = raw["start_day"], let day = ReminderCivilDay(start),
               case .string(let time)? = raw["time"], time.range(of: #"^([01][0-9]|2[0-3]):[0-5][0-9]$"#, options: .regularExpression) != nil,
               case .string(let zone)? = raw["time_zone"], TimeZone(identifier: zone) != nil,
+              !zone.hasPrefix("GMT+"), !zone.hasPrefix("GMT-"),
               case .object(let fields)? = raw["recurrence"] else { return nil }
         startDay = start; self.time = time; timeZone = zone; rule = Record(fields)
-        guard Dates.parse(start, calendar: calendar) != nil, Recurrence.valid(rule),
-              !rule["fromCompletion"].flag,
+        guard Recurrence.valid(rule), !rule["fromCompletion"].flag,
               rule["count"] == .null || Recurrence.number(rule["count"], in: 1...999) != nil,
-              let normalized = QuickRecurrenceText.first(.init(rule: rule, start: start), now: Dates.parse(start, calendar: calendar)!, existing: start, calendar: calendar),
-              normalized.1 == start, instant(on: Dates.parse(start, calendar: calendar)!) != nil else { return nil }
+              rule.string("endDate").isEmpty || ReminderCivilDay(rule.string("endDate")) != nil else { return nil }
         if rule["daysOfWeek"] != .null && rule.string("type") != "weekly" { return nil }
         if rule["dayOfMonth"] != .null && !["monthly", "yearly"].contains(rule.string("type")) { return nil }
         if rule["monthOfYear"] != .null && rule.string("type") != "yearly" { return nil }
         if rule["weekday"] != .null && rule["weekdayOrdinal"] == .null { return nil }
-        // Month/year anchors must be explicit so stepping never drifts after clamping.
         if ["monthly", "yearly"].contains(rule.string("type")), rule["dayOfMonth"] == .null, rule["weekdayOrdinal"] == .null { return nil }
         if rule.string("type") == "yearly", rule["monthOfYear"] == .null { return nil }
+        guard day.first(rule) == day, instant(on: day) != nil else { return nil }
     }
-    private func instant(on day: Date) -> Date? {
-        TaskPlanning.wallTime(day: day, hour: Int(time.prefix(2))!, minute: Int(time.suffix(2))!, calendar: calendar)
-    }
-    private var anchor: Record {
-        var pattern = rule; pattern["count"] = .null
-        return Record(["is_recurring": .bool(true), "due_date": .string(startDay), "recurrence_pattern": .object(pattern.fields)])
+    private func instant(on day: ReminderCivilDay) -> Date? {
+        let zone = TimeZone(identifier: timeZone)!, wall = Double(day.serial * 86400 + Int(time.prefix(2))! * 3600 + Int(time.suffix(2))! * 60)
+        let offsets = Set(stride(from: -36, through: 36, by: 6).map { zone.secondsFromGMT(for: Date(timeIntervalSince1970: wall + Double($0 * 3600))) })
+        // Match adjacent actual offsets. Earliest exact match is the first autumn fold;
+        // advance to the next valid minute in a spring gap, never into another civil day.
+        for shift in 0..<1440 {
+            let requested = wall + Double(shift * 60)
+            guard Int(floor(requested / 86400)) == day.serial else { return nil }
+            let matches = offsets.compactMap { offset -> Date? in
+                let value = Date(timeIntervalSince1970: requested - Double(offset))
+                return zone.secondsFromGMT(for: value) == offset ? value : nil
+            }
+            if let date = matches.min() { return date }
+        }
+        return nil
     }
     func dates(after now: Date, limit: Int = 60) -> [Date] {
-        guard limit > 0, now.timeIntervalSince1970.isFinite else { return [] }
-        let c = calendar, task = anchor, cap = min(limit, 60)
-        var day = Dates.parse(startDay, calendar: c)!, result: [Date] = []
+        guard limit > 0, now.timeIntervalSince1970.isFinite, let today = ReminderCivilDay.current(now, zone: calendar.timeZone) else { return [] }
+        let anchor = ReminderCivilDay(startDay)!, cap = min(limit, 60)
+        var day = anchor, result: [Date] = []
         if let count = Recurrence.number(rule["count"], in: 1...999) {
-            for _ in 0..<count {
-                if let date = instant(on: day), date > now { result.append(date); if result.count == cap { break } }
-                guard let next = Recurrence.next(task, calendar: c, completion: day), next > day else { break }
-                day = next
+            var consumed = 0
+            while consumed < count {
+                if let date = instant(on: day) { consumed += 1; if date > now { result.append(date); if result.count == cap { break } } }
+                guard let next = anchor.next(rule, after: day) else { break }; day = next
             }
         } else {
             if first > now { result.append(first) }
-            // Include a later clock on today's day. The first occurrence is handled above.
-            let preceding = c.date(byAdding: .day, value: -1, to: c.startOfDay(for: now)) ?? now
-            var threshold = max(day, preceding)
+            var threshold = max(anchor, today.adding(-1) ?? today)
             while result.count < cap {
-                guard let next = Recurrence.next(task, calendar: c, completion: threshold), next > threshold,
-                      let date = instant(on: next) else { break }
-                if date > now { result.append(date) }
+                guard let next = anchor.next(rule, after: threshold) else { break }
+                if let date = instant(on: next), date > now { result.append(date) }
                 threshold = next
             }
         }
@@ -191,7 +303,10 @@ struct ReminderCalendarSchedule: Equatable, Sendable {
          ["dayOfMonth", "monthOfYear", "weekday", "weekdayOrdinal", "count"].map { rule[$0] == .null ? "" : String(rule[$0].integer) }.joined(separator: ","), rule.string("endDate")]
     }
     func formatted(_ date: Date) -> String {
-        date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, calendar: calendar, timeZone: calendar.timeZone))
+        let formatter = DateFormatter(); formatter.calendar = calendar; formatter.timeZone = calendar.timeZone
+        formatter.dateStyle = .medium; formatter.timeStyle = .short
+        formatter.gregorianStartDate = Date(timeIntervalSince1970: -62135596800)
+        return formatter.string(from: date)
     }
     /// Calendar limits are totals from the original anchor, not remaining task cycles.
     var summary: String {
@@ -214,11 +329,15 @@ struct ReminderCalendarSchedule: Equatable, Sendable {
         return value
     }
     static func make(_ phrase: String, time: String, start: String, zone: String) -> Self? {
-        guard let tz = TimeZone(identifier: zone) else { return nil }
-        var c = Calendar(identifier: .gregorian); c.timeZone = tz
-        guard let day = Dates.parse(start, calendar: c), let parsed = QuickRecurrenceText.parse(phrase, now: day, calendar: c), !parsed.rule["fromCompletion"].flag,
-              let (pattern, firstDay) = QuickRecurrenceText.first(parsed, now: day, existing: start, calendar: c) else { return nil }
-        return Self(raw: ["start_day": .string(firstDay), "time": .string(time), "time_zone": .string(zone), "recurrence": .object(pattern.fields)])
+        guard let anchor = ReminderCivilDay(start) else { return nil }
+        var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(secondsFromGMT: 0)!
+        guard let now = Dates.parse(start, calendar: c), let parsed = QuickRecurrenceText.parse(phrase, now: now, calendar: c), !parsed.rule["fromCompletion"].flag else { return nil }
+        var rule = parsed.rule
+        let day = parsed.start.flatMap(ReminderCivilDay.init) ?? anchor
+        if ["monthly", "yearly"].contains(rule.string("type")), rule["dayOfMonth"] == .null, rule["weekdayOrdinal"] == .null { rule["dayOfMonth"] = .number(Double(day.day)) }
+        if rule.string("type") == "yearly", rule["monthOfYear"] == .null { rule["monthOfYear"] = .number(Double(day.month)) }
+        guard let first = day.first(rule) else { return nil }
+        return Self(raw: ["start_day": .string(first.key), "time": .string(time), "time_zone": .string(zone), "recurrence": .object(rule.fields)])
     }
     var raw: [String: JSON] { ["start_day": .string(startDay), "time": .string(time), "time_zone": .string(timeZone), "recurrence": .object(rule.fields)] }
 }
