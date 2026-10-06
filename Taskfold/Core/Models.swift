@@ -572,26 +572,6 @@ enum OAuthCallback {
 }
 private extension Optional where Wrapped == [URLQueryItem] { var orEmpty: [URLQueryItem] { self ?? [] } }
 
-struct DueReminder: Equatable, Sendable {
-    var id: String
-    var title: String
-    var body: String
-    var date: Date
-    static func plan(tasks: [Record], now: Date = Date(), calendar: Calendar = .current, limit: Int = 60) -> [DueReminder] {
-        tasks.compactMap { task -> DueReminder? in
-            guard !task.completed, let day = Dates.parse(task.string("due_date"), calendar: calendar) else { return nil }
-            let text = task.string("due_time")
-            let pieces = text.split(separator: ":")
-            var hour = 8, minute = 0
-            if !text.isEmpty {
-                guard pieces.count >= 2, let h = Int(pieces[0]), let m = Int(pieces[1]), (0...23).contains(h), (0...59).contains(m) else { return nil }
-                hour = h; minute = m
-            }
-            guard let date = text.isEmpty ? calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day) : TaskPlanning.start(task, calendar: calendar), date > now else { return nil }
-            return DueReminder(id: task.id, title: task.title, body: task.string("description"), date: date)
-        }.sorted { $0.date == $1.date ? $0.id < $1.id : $0.date < $1.date }.prefix(max(0, limit)).map { $0 }
-    }
-}
 
 enum TaskScope: Hashable {
     case today, inbox, upcoming, all, completed, project(String), label(String), saved(String)
@@ -836,6 +816,7 @@ enum TaskPlanning {
         copy["due_date"] = .string(Dates.day(date))
         copy["deadline_date"] = .null // A one-off hard deadline never follows a repeat.
         copy["scheduled_at"] = .null
+        copy["reminder_specs"] = .array(ReminderSpec.successorRows(ReminderSpec.rows(task)))
         copy.fields = fields(copy.fields, existing: nil)
         return copy
     }

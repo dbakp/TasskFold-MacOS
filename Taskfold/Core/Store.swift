@@ -17,6 +17,10 @@ final class Store {
     @ObservationIgnored private let taskCache = TaskCache()
     private(set) var taskRevision = 0
     @ObservationIgnored private let reminderScheduler = ReminderScheduler()
+    @ObservationIgnored private var reminderRevision = 0
+    private var reminderPreferenceRevision = 0
+    var reminderStatus = "Choose whether this device delivers reminders."
+    var requestingNotifications = false
     var signedIn = false
     var localMode = false
     var syncing = false
@@ -251,7 +255,7 @@ final class Store {
     }
     func startLocal() {
         let firstRun = !FileManager.default.fileExists(atPath: URL.applicationSupportDirectory.appending(path: "Taskfold/local.json").path)
-        localMode = true; signedIn = true; UserDefaults.standard.set(true, forKey: "localMode"); load()
+        accountGeneration = UUID(); localMode = true; signedIn = true; UserDefaults.standard.set(true, forKey: "localMode"); load()
         CalendarBusyStore.shared.bind(account: userID)
         if firstRun && userID == "local" && tasks.isEmpty { seedGettingStarted() }
     }
@@ -298,7 +302,7 @@ final class Store {
         snapshot = Snapshot(); undoStack = []; redoStack = []; lastSync = nil; syncConflict = nil
         CalendarBusyStore.shared.bind(account: "")
         publishWidgetSnapshot()
-        Task { await reminderScheduler.update([]) }
+        clearScheduledReminders()
     }
     @discardableResult
     func commit(_ changes: [Mutation], remember: Bool = true) -> Bool {
@@ -520,63 +524,86 @@ final class Store {
         return true
     }
 
+    private var reminderPreferenceKey: String { ReminderPreferences.key(userID) }
+    var remindersEnabled: Bool {
+        _ = reminderPreferenceRevision
+        guard signedIn || localMode, !userID.isEmpty else { return false }
+        return ReminderPreferences.enabled(account: userID, fixture: userID == "ui-testing" || userID == "preview")
+    }
     func enableNotifications() async {
+        guard !requestingNotifications, signedIn || localMode else { return }
+        let generation = accountGeneration, account = userID, key = reminderPreferenceKey
+        requestingNotifications = true
+        defer { requestingNotifications = false }
         do {
             let allowed = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
-            UserDefaults.standard.set(allowed, forKey: "remindersEnabled")
-            if allowed { await reschedule() } else { notice = "Allow notifications in iOS Settings to receive reminders." }
-        } catch { self.error = error.localizedDescription }
+            guard generation == accountGeneration, account == userID else { return }
+            UserDefaults.standard.set(allowed, forKey: key); reminderPreferenceRevision += 1
+            if allowed { await reschedule() }
+            else { reminderStatus = "Permission is off. Allow Taskfold notifications in system settings." }
+        } catch { if generation == accountGeneration { reminderStatus = "Notifications could not be enabled: " + error.localizedDescription } }
+    }
+    private func reminderState() -> ReminderState {
+        reminderRevision += 1
+        let enabled = remindersEnabled
+        return ReminderState(revision: reminderRevision, account: enabled ? userID : "", events: enabled ? DueReminder.events(tasks: tasks) : [])
     }
     func reschedule() async {
-        let plan = UserDefaults.standard.bool(forKey: "remindersEnabled") ? DueReminder.plan(tasks: tasks) : []
-        await reminderScheduler.update(plan)
+        let state = reminderState(), generation = accountGeneration
+        let report = await reminderScheduler.update(state)
+        guard generation == accountGeneration, state.revision == reminderRevision, report.revision == state.revision else { return }
+        guard remindersEnabled else { reminderStatus = "Reminders are off for this workspace on this device."; return }
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        guard generation == accountGeneration, state.revision == reminderRevision else { return }
+        var allowed = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
+        #if os(iOS)
+        allowed = allowed || settings.authorizationStatus == .ephemeral
+        #endif
+        guard allowed else {
+            reminderStatus = "Permission is off. Allow Taskfold notifications in system settings."; return
+        }
+        if report.failures > 0 { reminderStatus = "\(report.failures) \(report.failures == 1 ? "reminder" : "reminders") could not be scheduled. Taskfold will retry when opened." }
+        else if report.deferred > 0 { reminderStatus = "\(report.scheduled) upcoming reminders scheduled; \(report.deferred) later ones will be refreshed while Taskfold is open." }
+        else { reminderStatus = "\(report.scheduled) upcoming \(report.scheduled == 1 ? "reminder" : "reminders") scheduled on this device." }
     }
     func disableNotifications() {
-        UserDefaults.standard.set(false, forKey: "remindersEnabled")
-        Task { await reminderScheduler.update([]) }
+        UserDefaults.standard.set(false, forKey: reminderPreferenceKey); reminderPreferenceRevision += 1
+        clearScheduledReminders()
     }
-}
-
-/// Serializes requests and applies a diff so foreground refreshes never cancel unchanged reminders.
-actor ReminderScheduler {
-    private var desired: [DueReminder] = []
-    private var revision = 0
-    private var updating = false
-    func update(_ plan: [DueReminder]) async {
-        desired = plan; revision += 1
-        guard !updating else { return }
-        updating = true
-        defer { updating = false }
-        let center = UNUserNotificationCenter.current()
-        while true {
-            let currentRevision = revision
-            let current = desired
-            let existing = await center.pendingNotificationRequests()
-            if currentRevision != revision { continue }
-            let expected = Set(current.map { "taskfold." + $0.id })
-            center.removePendingNotificationRequests(withIdentifiers: existing.map(\.identifier).filter { !expected.contains($0) && !$0.hasPrefix("taskfold.snooze.") })
-            for reminder in current {
-                if currentRevision != revision { break }
-                let identifier = "taskfold." + reminder.id
-                let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: reminder.date)
-                if let old = existing.first(where: { $0.identifier == identifier }),
-                   old.content.title == reminder.title, old.content.body == reminder.body,
-                   let trigger = old.trigger as? UNCalendarNotificationTrigger,
-                   trigger.dateComponents == components { continue }
-                let content = UNMutableNotificationContent()
-                content.title = reminder.title; content.body = reminder.body; content.sound = .default
-                content.userInfo = ["taskID": reminder.id]
-                content.categoryIdentifier = ReminderCategory.identifier
-                let request = UNNotificationRequest(identifier: identifier, content: content,
-                    trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: false))
-                do { try await center.add(request) }
-                catch { /* The next foreground refresh retries requests that iOS did not accept. */ }
+    private func clearScheduledReminders() {
+        reminderRevision += 1
+        let state = ReminderState(revision: reminderRevision, account: "", events: [])
+        reminderStatus = "Reminders are off for this workspace on this device."
+        Task { _ = await reminderScheduler.update(state) }
+    }
+    func validReminder(_ info: [AnyHashable: Any]) -> DueReminder? {
+        guard remindersEnabled, let account = info["accountID"] as? String, account == userID,
+              let task = info["taskID"] as? String, let spec = info["specID"] as? String,
+              let signature = info["signature"] as? String else { return nil }
+        return DueReminder.events(tasks: tasks).first { $0.taskID == task && $0.specID == spec && $0.signature == signature }
+    }
+    /// Actions are scoped to the receiving workspace and the current task/reminder version.
+    func handleReminder(_ info: [AnyHashable: Any], action: String) async -> String? {
+        guard let event = validReminder(info), let task = record("tasks", id: event.taskID) else { return nil }
+        switch action {
+        case ReminderCategory.complete: toggle(task)
+        case ReminderCategory.tomorrow:
+            if let due = TaskPlanner.dayDate(task), let next = Calendar.current.date(byAdding: .day, value: 1, to: max(due, Calendar.current.startOfDay(for: Date()))) {
+                _ = commit([Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: TaskPlanner.dayFields(task: task, day: TaskPlanner.dayKey(next)))])
             }
-            if currentRevision == revision { break }
+        case ReminderCategory.snoozeHour:
+            let generation = accountGeneration, account = userID
+            await reschedule()
+            guard generation == accountGeneration, validReminder(info) != nil else { return nil }
+            if let report = await reminderScheduler.snooze(account: account, taskID: event.taskID, specID: event.specID, signature: event.signature), generation == accountGeneration {
+                if report.failures > 0 { reminderStatus = "The snooze could not be scheduled. Open the task to try again." }
+                else if report.deferred > 0 { reminderStatus = "The nearest 60 reminders are scheduled. This snooze may be deferred until Taskfold refreshes." }
+            }
+        default: return task.id
         }
+        return nil
     }
 }
-
 
 /// Actionable reminder category: complete or snooze straight from the notification.
 enum ReminderCategory {
@@ -591,11 +618,5 @@ enum ReminderCategory {
             UNNotificationAction(identifier: tomorrow, title: "Move to tomorrow", options: [], icon: UNNotificationActionIcon(systemImageName: "sunrise")),
         ], intentIdentifiers: [], options: [])
         UNUserNotificationCenter.current().setNotificationCategories([category])
-    }
-    /// Re-delivers the same reminder later without touching the task.
-    static func snooze(_ content: UNNotificationContent, taskID: String, by interval: TimeInterval) async {
-        let copy = (content.mutableCopy() as? UNMutableNotificationContent) ?? UNMutableNotificationContent()
-        let request = UNNotificationRequest(identifier: "taskfold.snooze." + taskID, content: copy, trigger: UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false))
-        try? await UNUserNotificationCenter.current().add(request)
     }
 }

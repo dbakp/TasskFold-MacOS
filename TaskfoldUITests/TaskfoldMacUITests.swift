@@ -2,6 +2,28 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testMultipleRemindersInspectorAutosaveAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--reminder-fixture"]; app.launch()
+        let title = app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"]
+        XCTAssertTrue(title.waitForExistence(timeout: 10)); title.click()
+        let reminders = app.buttons["taskReminders"]
+        for _ in 0..<6 where !reminders.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
+        XCTAssertTrue(reminders.isHittable); reminders.click()
+        XCTAssertTrue(app.buttons["reminderAdd"].waitForExistence(timeout: 5)); app.buttons["reminderAdd"].click()
+        XCTAssertTrue(app.buttons["reminderSave"].waitForExistence(timeout: 5)); app.buttons["reminderSave"].click()
+        XCTAssertTrue(app.buttons["reminderEdit-1"].waitForExistence(timeout: 5))
+        app.buttons["Done"].click()
+        // Selecting another scope flushes the inspector's autosave before relaunch.
+        app.buttons["Today"].firstMatch.click()
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
+        XCTAssertTrue(title.waitForExistence(timeout: 10)); title.click()
+        for _ in 0..<6 where !reminders.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
+        reminders.click(); XCTAssertTrue(app.buttons["reminderEdit-1"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["reminderEdit-1"].label, "10 min before")
+        app.buttons["reminderDelete-1"].click(); XCTAssertFalse(app.buttons["reminderEdit-1"].exists)
+        app.buttons["Done"].click(); app.terminate()
+    }
+
     @MainActor func testQuickEntryProjectSectionAndAssignment() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch()
         app.typeKey("n", modifierFlags: .command)

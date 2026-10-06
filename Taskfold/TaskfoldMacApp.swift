@@ -63,22 +63,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         if !flag { sender.windows.first?.makeKeyAndOrderFront(nil) }
         return true
     }
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions { [.banner, .sound] }
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        guard notification.request.content.categoryIdentifier == ReminderCategory.identifier || notification.request.identifier.hasPrefix(ReminderRequest.prefix) else { return [.banner, .sound] }
+        let valid = await MainActor.run { Store.shared.validReminder(notification.request.content.userInfo) != nil }
+        return valid ? [.banner, .sound] : []
+    }
     /// Reminder actions mirror iOS: complete, snooze an hour, or move to tomorrow, straight from the banner.
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        guard let id = response.notification.request.content.userInfo["taskID"] as? String else { return }
-        switch response.actionIdentifier {
-        case ReminderCategory.complete:
-            await MainActor.run { if let task = Store.shared.record("tasks", id: id), !task.completed { Store.shared.toggle(task) } }
-        case ReminderCategory.snoozeHour:
-            await ReminderCategory.snooze(response.notification.request.content, taskID: id, by: 3600)
-        case ReminderCategory.tomorrow:
-            await MainActor.run {
-                if let task = Store.shared.record("tasks", id: id), let due = TaskPlanner.dayDate(task), let next = Calendar.current.date(byAdding: .day, value: 1, to: max(due, Calendar.current.startOfDay(for: Date()))) {
-                    _ = Store.shared.commit([Mutation(table: "tasks", recordID: id, method: "PATCH", fields: TaskPlanner.dayFields(task: task, day: TaskPlanner.dayKey(next)))])
-                }
-            }
-        default:
+        if let id = await Store.shared.handleReminder(response.notification.request.content.userInfo, action: response.actionIdentifier) {
             await MainActor.run { NotificationRoute.shared.taskID = id }
         }
     }

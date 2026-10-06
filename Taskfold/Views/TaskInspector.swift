@@ -59,6 +59,7 @@ struct MultiSelectionInspector: View {
 }
 
 struct TaskInspectorForm: View {
+    @State private var showingReminders = false
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     let taskID: String
@@ -189,9 +190,7 @@ struct TaskInspectorForm: View {
                     }
                 }
                 RecurrenceEditor(task: $draft)
-                if draft.due != nil {
-                    Label(draft.string("due_time").isEmpty ? "Reminder at 8:00 AM" : "Reminder at the due time", systemImage: "bell").font(.caption).foregroundStyle(.secondary)
-                }
+                Button("Reminders…", systemImage: "bell") { showingReminders = true }.accessibilityIdentifier("taskReminders")
             }
             Section("Labels") {
                 if store.labels.isEmpty { Text("Create labels from the sidebar.").foregroundStyle(.secondary) }
@@ -293,6 +292,12 @@ struct TaskInspectorForm: View {
         .quickLookPreview($preview)
         .onAppear { load(); if draft.title.isEmpty { titleFocused = true } }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
+        .sheet(isPresented: $showingReminders) {
+            NavigationStack {
+                TaskReminderEditor(task: $draft)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showingReminders = false } } }
+            }.frame(minWidth: 550, minHeight: 620)
+        }
         .onChange(of: draft) { _, _ in scheduleSave() }
         .onChange(of: current) { _, value in
             // Untouched fields follow sync; the user's in-progress edits win.
@@ -337,10 +342,6 @@ struct TaskInspectorForm: View {
         guard merged != current else { original = merged; draft = merged; return }
         if workspace.save("tasks", merged, name: "Edit Task", baseline: original) {
             original = merged; draft = merged
-            if merged.due != nil && !UserDefaults.standard.bool(forKey: "remindersAsked") {
-                UserDefaults.standard.set(true, forKey: "remindersAsked")
-                Task { await store.enableNotifications() }
-            }
         }
     }
     private func addSubtask() {

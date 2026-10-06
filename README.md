@@ -141,3 +141,7 @@ Versioned JSON export, validated restore previews, both matching policies, encry
 ## Reviewed sync edits
 
 Both native clients use guarded task edits and review overlapping changes before continuing. Later offline work remains queued; older edits without a baseline require review. See [sync review behavior and verification](docs/SYNC_CONFLICTS.md).
+
+## Multiple reminders
+
+The inspector’s Reminders screen supports fixed dates and offsets before or after planned time, per-task opt-out, device/workspace delivery permission and visible scheduling feedback. Reminder choices sync with iOS through the guarded task queue. Completion, deletion, rescheduling and account switches invalidate stale reminders and snoozes. See [behavior, the persisted contract and the remaining remote delivery plan](docs/REMINDERS.md).

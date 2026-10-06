@@ -29,6 +29,7 @@ struct RootView: View {
             await store.sync()
             while !Task.isCancelled {
                 do { try await Task.sleep(for: .seconds(60)) } catch { return }
+                await store.reschedule()
                 await store.sync()
             }
         }
@@ -70,6 +71,8 @@ struct RootView: View {
             if url.scheme == "taskfold" && url.host == "task", store.record("tasks", id: url.lastPathComponent) != nil { workspace.open(url.lastPathComponent) }
         }
         .task(id: "members-\(store.userID)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { await workspace.loadProjectMembers() }
+        .onChange(of: phase) { _, value in if value == .active { Task { await store.reschedule(); await store.sync() } } }
+        .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in Task { await store.reschedule() } }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in Task { await store.reschedule() } }
     }
 
@@ -212,6 +215,13 @@ struct RootView: View {
             try? store.persist()
         }
         if arguments.contains("--invitation-link-fixture") { pendingInvitations = true }
+        if arguments.contains("--uitesting") && arguments.contains("--reminder-fixture") {
+            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            var task = Record.task(user: store.userID, date: Date())
+            task["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"); task["title"] = .string("Reminder review")
+            task["due_time"] = .string("23:55"); task["reminder_specs"] = .array([])
+            store.snapshot = Snapshot(); store.snapshot.tables["tasks"] = [task]; workspace.section = .inbox; try? store.persist()
+        }
         if arguments.contains("--conflict-fixture") {
             store.startLocal(); store.snapshot = Snapshot()
             var local = Record.task(user: store.userID, date: Date())
