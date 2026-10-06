@@ -19,7 +19,7 @@ struct SavedViewEditor: View {
     @State private var loadFailure: String?
     @FocusState private var focusedField: String?
     private static let choices: [(String, String)] = [
-        ("all","All tasks"),("search","Keywords"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
+        ("all","All tasks"),("search","Keywords"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
         ("priority","Priority"),("project","Project"),("section","Section"),("label","Label"),("completed","Completion"),("assignee","Assigned to"),
         ("due","Planned on date"),("before","Planned before date"),("deadline_today","Deadline today"),("deadline_overdue","Past deadline"),("deadline_next","Deadline in next days"),("no_deadline","No deadline"),("deadline","Deadline on date"),("deadline_before","Deadline before date"),("duration_max","Estimate up to minutes"),("no_estimate","No estimate")]
     private var people: [Record] {
@@ -66,12 +66,15 @@ struct SavedViewEditor: View {
                             if !expression.isEmpty && loadFailure == nil { Button { expression = ""; focusedField = "expression" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.borderless).accessibilityLabel("Clear expression").accessibilityIdentifier("clearFilterExpression") }
                         }
                         if let queryFailure { Label(queryFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterValidationError") }
-                        Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
+                        DisclosureGroup("Syntax examples") {
+                            Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
+                            Text("Date examples: date:tomorrow, date before:\"next Monday\", effective-due:today, deadline after:yesterday. Effective due uses the planned date, falling back to the deadline only when there is no plan. Legacy due:YYYY-MM-DD and Today keep using the plan.").font(.caption).foregroundStyle(.secondary)
+                        }.font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("filterSyntaxExamples")
                         Text("Nested expressions stay in expression mode so switching views cannot discard conditions.").font(.caption).foregroundStyle(.secondary)
                     }
                 } else {
                     Section("Conditions") {
-                        Picker("Match", selection: $matchAny) { Text("All conditions").tag(false); Text("Any condition").tag(true) }
+                        Picker("Match", selection: $matchAny) { Text("All").tag(false); Text("Any").tag(true) }
                         if let queryFailure { Label(queryFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterValidationError") }
                         ForEach($conditions) { $condition in
                             VStack(alignment: .leading, spacing: 8) {
@@ -152,6 +155,11 @@ struct SavedViewEditor: View {
                 ForEach(people) { person in Text(person.string("display_name")).tag(person.id) }
             }
         }
+        else if FilterDateReference.expressions[field] != nil {
+            TextField("Date or phrase", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
+            Text("Try today, tomorrow, Monday, 6 October 2026 or in 7 days. Relative dates stay relative. Before and after exclude the chosen day.").font(.caption).foregroundStyle(.secondary)
+            if field.hasPrefix("effective_due_") { Text("Uses the planned date. If there is no plan, uses the deadline.").font(.caption).foregroundStyle(.secondary) }
+        }
         else if field == "search" {
             TextField("Words in title or description", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
             Text("Matches every word, in any order. Letter case and accents do not matter.").font(.caption).foregroundStyle(.secondary)
@@ -160,6 +168,7 @@ struct SavedViewEditor: View {
         else if ["due", "before", "deadline", "deadline_before"].contains(field) { DatePicker("Date", selection: Binding(get: { Dates.parse(condition.wrappedValue.value) ?? Date() }, set: { condition.wrappedValue.value = Dates.day($0) }), displayedComponents: .date) }
     }
     private func defaultValue(_ field: String) -> String {
+        if FilterDateReference.expressions[field] != nil { return "today" }
         switch field { case "priority": return "1"; case "next", "deadline_next": return "7"; case "duration_max": return "25"; case "completed": return "false"; case "assignee": return "me"; case "due", "before", "deadline", "deadline_before": return Dates.day(Date()); default: return "" }
     }
     private func simpleConditions(_ rule: FilterRule) -> ([FilterCondition], Bool)? {

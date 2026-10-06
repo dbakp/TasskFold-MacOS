@@ -255,4 +255,19 @@ final class BackupTests: XCTestCase {
         XCTAssertEqual(try FilterRule(document: try XCTUnwrap(restored.fields["query_ast"])), expected)
         XCTAssertEqual(expected.captureDefaults(in: FilterContext(), today: "2026-10-05"), ["project_id": .string(plan.mappedIDs["projects"]![projectID]!)])
     }
+    func testRelativeDateSourcesRemainRelativeAcrossBackupAccountRemapping() throws {
+        var file = backup()
+        let rule = FilterRule.and([.predicate("project", projectID), .predicate("effective_due_on", "tomorrow"), .predicate("deadline_after", "yesterday")])
+        file.tables["saved_views"]![0]["query_ast"] = rule.document
+        let read = try WorkspaceBackup.read(file.data())
+        let plan = try read.plan(current: Snapshot(), account: other)
+        let restored = try XCTUnwrap(plan.changes.first { $0.table == "saved_views" })
+        let expected = FilterRule.and([.predicate("project", plan.mappedIDs["projects"]![projectID]!), .predicate("effective_due_on", "tomorrow"), .predicate("deadline_after", "yesterday")])
+        XCTAssertEqual(try FilterRule(document: try XCTUnwrap(restored.fields["query_ast"])), expected)
+        XCTAssertEqual(expected.captureDefaults(in: FilterContext(), today: "2026-10-05"), ["project_id": .string(plan.mappedIDs["projects"]![projectID]!)])
+        let row = Record(try XCTUnwrap(plan.changes.first { $0.table == "tasks" }).fields)
+        XCTAssertTrue(expected.matches(row, today: "2026-10-24", userID: other, labels: [], timeZone: "Europe/Copenhagen"))
+        XCTAssertFalse(expected.matches(row, today: "2026-10-25", userID: other, labels: [], timeZone: "Europe/Copenhagen"))
+    }
+
 }

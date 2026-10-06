@@ -238,6 +238,27 @@ final class TaskfoldMacUITests: XCTestCase {
     }
 
 
+    @MainActor func testExplicitDateSourcesAndRelativeFilterSurviveRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--filter-dates-fixture"]; app.launch()
+        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        let name = "Date sources " + String(UUID().uuidString.prefix(6))
+        let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
+        app.descendants(matching: .any)["advancedFilter"].click()
+        let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("effective-due:today")
+        XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
+        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        XCTAssertTrue(app.buttons["Complete Plan only"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["Complete Deadline only"].exists)
+        XCTAssertFalse(app.buttons["Complete Both uses plan"].exists); XCTAssertFalse(app.buttons["Complete Neither date"].exists)
+        view.rightClick(); app.menuItems["Edit filter"].click(); app.descendants(matching: .any)["advancedFilter"].click()
+        XCTAssertTrue((expression.value as? String ?? "").contains(#"effective-due:"today""#))
+        app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("date: tomorrow"); app.buttons["saveSavedView"].click()
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        XCTAssertTrue(app.buttons["Complete Both uses plan"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Plan only"].exists); XCTAssertFalse(app.buttons["Complete Deadline only"].exists)
+        view.rightClick(); app.menuItems["Edit filter"].click()
+        let value = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@", "filterConditionValue-")).firstMatch
+        XCTAssertTrue(value.waitForExistence(timeout: 5)); XCTAssertEqual(value.value as? String, "tomorrow"); app.buttons["Cancel"].click()
+    }
+
     @MainActor func testKeywordFilterAndUnsupportedQueryPreservation() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--filter-primitives-fixture"]; app.launch()
         XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()

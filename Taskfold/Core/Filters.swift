@@ -25,10 +25,46 @@ struct FilterContext {
     }
 }
 
+/// Civil-day references stay relative in persisted queries; no clock or task mutation is needed.
+enum FilterDateReference {
+    static let expressions = [
+        "planned_on": "date", "planned_before": "date before", "planned_after": "date after",
+        "effective_due_on": "effective-due", "effective_due_before": "effective-due before", "effective_due_after": "effective-due after",
+        "deadline_on": "deadline on", "deadline_before_day": "deadline before", "deadline_after": "deadline after"
+    ]
+    private static func offset(_ text: String) -> Int? {
+        let words = text.split(separator: " ")
+        if words.count == 3, words[0] == "in", ["day", "days"].contains(words[2]), let n = Int(words[1]), (0...3650).contains(n) { return n }
+        if words.count == 3, ["day", "days"].contains(words[1]), words[2] == "ago", let n = Int(words[0]), (0...3650).contains(n) { return -n }
+        return nil
+    }
+    static func canonical(_ raw: String) throws -> String {
+        let text = raw.lowercased().split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
+        guard !text.isEmpty, text.unicodeScalars.count <= 80 else { throw FilterFailure(message: "Enter a date or a short date phrase.") }
+        if let delta = offset(text) { return delta == 0 ? "today" : delta > 0 ? "in \(delta) days" : "\(-delta) days ago" }
+        // Next-week preferences and sub-day windows need separate persisted capabilities.
+        guard text != "next week" else { throw FilterFailure(message: "Choose a weekday, such as next Monday, instead of next week.") }
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let anchor = calendar.date(from: DateComponents(year: 2000, month: 1, day: 1, hour: 12))!
+        guard QuickNaturalDateText.resolve(text, relativeTo: anchor, calendar: calendar, inclusiveWeekday: true) != nil else {
+            throw FilterFailure(message: "Enter a valid date phrase. Time windows are not supported yet.")
+        }
+        return text
+    }
+    static func day(_ reference: String, today: String, timeZone: String) -> String? {
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(identifier: timeZone) ?? .current
+        guard let anchor = Dates.parse(today, calendar: calendar) else { return nil }
+        let date: Date?
+        if let delta = offset(reference) { date = calendar.date(byAdding: .day, value: delta, to: anchor) }
+        else { date = QuickNaturalDateText.resolve(reference, relativeTo: anchor, calendar: calendar, inclusiveWeekday: true) }
+        return date.map { TaskPlanner.dayKey($0, calendar: calendar) }
+    }
+}
+
 /// Versioned query AST shared by app lists, exported backups and widget projections.
 indirect enum FilterRule: Hashable, Sendable {
     case predicate(String, String), and([FilterRule]), or([FilterRule]), not(FilterRule)
-    static let fields = ["all", "inbox", "today", "overdue", "next", "no_date", "priority", "project", "section", "label", "completed", "assignee", "due", "before", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline", "deadline", "deadline_before", "duration_max", "no_estimate", "search", "recurring", "no_time", "no_labels"]
+    static let fields = ["all", "inbox", "today", "overdue", "next", "no_date", "priority", "project", "section", "label", "completed", "assignee", "due", "before", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline", "deadline", "deadline_before", "duration_max", "no_estimate", "search", "recurring", "no_time", "no_labels"] + FilterDateReference.expressions.keys.sorted()
     var json: JSON {
         switch self {
         case .predicate(let field, let value): return .object(["op": .string("predicate"), "field": .string(field), "value": .string(value)])
@@ -62,7 +98,10 @@ indirect enum FilterRule: Hashable, Sendable {
             if ["recurring", "no_time", "no_labels"].contains(field) {
                 guard row["value"] == .string("") else { throw FilterFailure(message: "This condition does not take a value.") }
             }
-            self = .predicate(field, value)
+            if FilterDateReference.expressions[field] != nil {
+                guard case .string = row["value"] else { throw FilterFailure(message: "Enter a date or a short date phrase.") }
+                self = .predicate(field, try FilterDateReference.canonical(value))
+            } else { self = .predicate(field, value) }
         case "and", "or":
             guard case .array(let nodes) = row["children"], !nodes.isEmpty, nodes.count <= 20 else { throw FilterFailure(message: "A filter group needs 1–20 conditions.") }
             let rules = try nodes.map { try Self(json: $0, depth: depth + 1) }
@@ -92,6 +131,14 @@ indirect enum FilterRule: Hashable, Sendable {
             func next(_ date: String) -> Bool {
                 guard !date.isEmpty, let start = Dates.parse(today), let end = Calendar(identifier: .gregorian).date(byAdding: .day, value: Int(value) ?? 1, to: start) else { return false }
                 return date >= today && date < Dates.day(end)
+            }
+            if FilterDateReference.expressions[field] != nil {
+                guard let boundary = FilterDateReference.day(value, today: today, timeZone: timeZone) else { return false }
+                let candidate = field.hasPrefix("planned_") ? day : field.hasPrefix("effective_due_") ? (day.isEmpty ? deadline : day) : deadline
+                guard !candidate.isEmpty else { return false }
+                if field.contains("_before") { return candidate < boundary }
+                if field.hasSuffix("_after") { return candidate > boundary }
+                return candidate == boundary
             }
             switch field {
             case "all": return true
@@ -136,13 +183,13 @@ indirect enum FilterRule: Hashable, Sendable {
     }
     /// Only explicit creation fields common to every OR branch become capture defaults.
     /// Relative windows, negation and estimates never invent a date or duration.
-    func captureDefaults(in context: FilterContext, today: String) -> [String: JSON] {
+    func captureDefaults(in context: FilterContext, today: String, timeZone: String = TimeZone.current.identifier) -> [String: JSON] {
         switch self {
         case .not: return [:]
         case .and(let rules):
             var result: [String: JSON] = [:], conflicts = Set<String>()
             for rule in rules {
-                for (field, value) in rule.captureDefaults(in: context, today: today) {
+                for (field, value) in rule.captureDefaults(in: context, today: today, timeZone: timeZone) {
                     if field == "labels", let old = result[field] { result[field] = .array(Array(Set((old.list + value.list).map(\.text))).sorted().map(JSON.string)) }
                     else if let old = result[field], old != value { conflicts.insert(field) }
                     else { result[field] = value }
@@ -152,8 +199,8 @@ indirect enum FilterRule: Hashable, Sendable {
             return result
         case .or(let rules):
             guard let first = rules.first else { return [:] }
-            return rules.dropFirst().reduce(first.captureDefaults(in: context, today: today)) { defaults, rule in
-                let branch = rule.captureDefaults(in: context, today: today)
+            return rules.dropFirst().reduce(first.captureDefaults(in: context, today: today, timeZone: timeZone)) { defaults, rule in
+                let branch = rule.captureDefaults(in: context, today: today, timeZone: timeZone)
                 return defaults.filter { branch[$0.key] == $0.value }
             }
         case .predicate(let field, let value):
@@ -165,6 +212,9 @@ indirect enum FilterRule: Hashable, Sendable {
             case "inbox": return ["project_id": .null]
             case "priority": return ["priority": .number(Double(Int(value) ?? 4))]
             case "label": return ["labels": .array([.string(context.labels.first(where: { $0.id == value })?.name ?? value)])]
+            case "planned_on", "deadline_on":
+                guard let day = FilterDateReference.day(value, today: today, timeZone: timeZone) else { return [:] }
+                return [field == "planned_on" ? "due_date" : "deadline_date": .string(day)]
             case "today": return ["due_date": .string(today)]
             case "due": return ["due_date": .string(value)]
             case "no_date": return ["due_date": .null]
@@ -181,6 +231,7 @@ indirect enum FilterRule: Hashable, Sendable {
         case .or(let rules): return rules.map { "(" + $0.expression(in: context) + ")" }.joined(separator: " OR ")
         case .not(let rule): return "NOT (" + rule.expression(in: context) + ")"
         case .predicate(let field, let value):
+            if let name = FilterDateReference.expressions[field] { return name + ":" + quote(value) }
             switch field {
             case "all": return "all"
             case "inbox": return "inbox"
@@ -262,7 +313,12 @@ struct FilterParser {
         guard depth < 24, cursor < tokens.count else { throw FilterFailure(message: "Add a condition after the operator.") }
         if consume(["not", "!"]) { return .not(try atom(depth: depth + 1)) }
         if consume(["("]) { let rule = try parseOr(depth: depth + 1); guard consume([")"]) else { throw FilterFailure(message: "Close the filter parenthesis.") }; return rule }
-        let token = tokens[cursor]; cursor += 1; let lower = token.lowercased(), scalars = token.unicodeScalars
+        var token = tokens[cursor]; cursor += 1
+        if ["date", "effective-due", "deadline"].contains(token.lowercased()), !quotedTokens.contains(cursor - 1), cursor < tokens.count {
+            let next = tokens[cursor].lowercased()
+            if ["before:", "after:", "on:"].contains(next) || next.hasPrefix("before:") || next.hasPrefix("after:") || next.hasPrefix("on:") { token += " " + tokens[cursor]; cursor += 1 }
+        }
+        let lower = token.lowercased(), scalars = token.unicodeScalars
         if scalars.first == "#" {
             let target = String(String.UnicodeScalarView(scalars.dropFirst()))
             if target.caseInsensitiveCompare("Inbox") == .orderedSame { return .predicate("inbox", "") }
@@ -281,6 +337,13 @@ struct FilterParser {
         if let colon = scalars.firstIndex(of: ":") {
             let field = String(String.UnicodeScalarView(scalars[..<colon])).lowercased()
             let value = String(String.UnicodeScalarView(scalars[scalars.index(after: colon)...]))
+            if let dateField = FilterDateReference.expressions.first(where: { $0.value == field })?.key {
+                return .predicate(dateField, try FilterDateReference.canonical(readValue(starting: value)))
+            }
+            // Existing deadline shorthands retain their exact stored meaning.
+            if field == "deadline", !["today", "overdue"].contains(value.lowercased()), !(value.lowercased().hasPrefix("next") && Int(value.dropFirst(4)) != nil), !(value.count == 10 && Dates.parse(value) != nil) {
+                return .predicate("deadline_on", try FilterDateReference.canonical(readValue(starting: value)))
+            }
             if field == "search" {
                 var words = value.isEmpty ? [] : [value]
                 if value.isEmpty && quotedTokens.contains(cursor - 1) { throw FilterFailure(message: "Enter 1–400 characters to search for.") }
@@ -298,6 +361,14 @@ struct FilterParser {
             }
         }
         throw FilterFailure(message: "Unknown condition “\(token)”. Use the builder or the syntax examples.")
+    }
+    private mutating func readValue(starting value: String) -> String {
+        var words = value.isEmpty ? [] : [value]
+        while cursor < tokens.count {
+            if !quotedTokens.contains(cursor), ["and", "or", "&", "|", "!", "not", "(", ")", ","].contains(tokens[cursor].lowercased()) { break }
+            words.append(tokens[cursor]); cursor += 1
+        }
+        return words.joined(separator: " ")
     }
     private mutating func consumeNumberDays() -> Bool {
         guard cursor + 1 < tokens.count, ["days", "day"].contains(tokens[cursor + 1].lowercased()) else { return false }; cursor += 2; return true

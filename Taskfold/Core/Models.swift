@@ -1340,6 +1340,18 @@ private enum QuickReminderText {
 
 #if DEBUG
 extension Snapshot {
+    static func filterDateFixture(user: String) -> Snapshot {
+        var result = filterPrimitiveFixture(user: user)
+        result.tables["tasks"] = (0..<4).map { index in
+            var row = Record.task(user: user, project: "filter-studio")
+            row["id"] = .string("filter-date-\(index)")
+            row["title"] = .string(["Plan only", "Deadline only", "Both uses plan", "Neither date"][index])
+            row["due_date"] = index == 0 ? .string(Dates.day(Date())) : index == 2 ? .string(Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!)) : .null
+            row["deadline_date"] = [1, 2].contains(index) ? .string(Dates.day(Date())) : .null
+            return row
+        }
+        return result
+    }
     static func filterPrimitiveFixture(user: String) -> Snapshot {
         var result = Snapshot()
         let project = Record(["id": .string("filter-studio"), "name": .string("Studio"), "user_id": .string(user)])

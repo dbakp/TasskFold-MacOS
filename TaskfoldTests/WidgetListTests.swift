@@ -18,6 +18,27 @@ final class WidgetListTests: XCTestCase {
         return try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(payload))
     }
     private func view(_ rule: FilterRule, name: String = "Today") -> Record { Record(["id": .string("filter"), "name": .string(name), "query_ast": rule.document]) }
+
+    func testRelativePlanAndDeadlineFallbackProjectionChangesAtCivilMidnightAcrossDST() throws {
+        var deadline = task("deadline"); deadline["deadline_date"] = .string("2026-10-25")
+        var both = task("both", due: "2026-10-26"); both["deadline_date"] = .string("2026-10-25")
+        let rows = [task("plan", due: "2026-10-25"), deadline, both, task("none")]
+        for expression in ["date:tomorrow", "effective-due:tomorrow", "deadline after:today"] {
+            var parser = try FilterParser(expression, context: FilterContext()); let rule = try parser.parse()
+            let data = try snapshot(rows, views: [view(rule)])
+            let key = try XCTUnwrap(data.availableLists.first { $0.kind == "filter" }?.id)
+            for offset in 0...7 {
+                let instant = try XCTUnwrap(cph.date(byAdding: .day, value: offset, to: now))
+                let expected = rows.filter { rule.matches($0, today: WidgetSnapshot.day(instant, calendar: cph), userID: "owner", labels: [], timeZone: cph.timeZone.identifier) }.map(\.id)
+                XCTAssertEqual(Set(data.listTasks(key, at: instant, calendar: cph).map(\.id)), Set(expected), expression)
+            }
+            XCTAssertEqual(data.listStatus(key, at: cph.date(byAdding: .day, value: 8, to: now)!, calendar: cph), .refresh)
+            let encoded = String(decoding: try JSONEncoder().encode(data), as: UTF8.self)
+            XCTAssertFalse(encoded.contains("query_ast")); XCTAssertFalse(encoded.contains("effective_due_on"))
+            if expression == "effective-due:tomorrow" { XCTAssertEqual(Set(data.listTasks(key, at: now, calendar: cph).map(\.id)), ["plan", "deadline"]) }
+        }
+    }
+
     func testRenameKeepsIdentityAndAccountSwitchCannotReuseSelectedList() throws {
         let first = try snapshot([task("a")]); let key = try XCTUnwrap(first.availableLists.first { $0.kind == "project" }?.id)
         var renamed = project; renamed["name"] = .string("New Studio")

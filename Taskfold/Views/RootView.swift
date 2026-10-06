@@ -260,6 +260,10 @@ struct RootView: View {
             workspace.section = .today
             try? store.persist()
         }
+        if arguments.contains("--uitesting") && arguments.contains("--filter-dates-fixture") {
+            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            store.snapshot = Snapshot.filterDateFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
+        }
         if arguments.contains("--uitesting") && arguments.contains("--filter-primitives-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
             store.snapshot = Snapshot.filterPrimitiveFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
