@@ -197,6 +197,16 @@ enum TaskDeadlines {
 
 #if DEBUG
 extension Snapshot {
+    static func widgetListFixture(user: String) -> Snapshot {
+        let project = Record(["id": .string("eeeeeeee-eeee-4eee-8eee-eeeeeeeeee01"), "name": .string("Widget Studio"), "user_id": .string(user), "color": .string("#32856d")])
+        let label = Record(["id": .string("eeeeeeee-eeee-4eee-8eee-eeeeeeeeee02"), "name": .string("Widget Waiting"), "user_id": .string(user)])
+        let view = Record(["id": .string("eeeeeeee-eeee-4eee-8eee-eeeeeeeeee03"), "name": .string("Widget Today"), "user_id": .string(user), "query_ast": FilterRule.predicate("today", "").document])
+        var selected = Record.task(user: user, project: project.id, date: Date())
+        selected["id"] = .string("eeeeeeee-eeee-4eee-8eee-eeeeeeeeee04"); selected["title"] = .string("Sketch widget concept")
+        selected["labels"] = .array([.string(label.id)]); selected["duration_minutes"] = .number(10)
+        var outside = Record.task(user: user); outside["id"] = .string("eeeeeeee-eeee-4eee-8eee-eeeeeeeeee05"); outside["title"] = .string("Unrelated Inbox task")
+        var result = Snapshot(); result.tables["projects"] = [project]; result.tables["labels"] = [label]; result.tables["saved_views"] = [view]; result.tables["tasks"] = [selected, outside]; return result
+    }
     static func deadlineFixture(user: String) -> Snapshot {
         var first = Record.task(user: user)
         first["id"] = .string("dddddddd-dddd-4ddd-8ddd-dddddddddd01"); first["title"] = .string("Prepare launch")

@@ -65,6 +65,8 @@ struct RootView: View {
         }
         .onOpenURL { url in
             if url.scheme == "taskfold" && url.host == "view" && !url.lastPathComponent.isEmpty { workspace.section = .saved(url.lastPathComponent) }
+            if url.scheme == "taskfold", url.host == "project", store.record("projects", id: url.lastPathComponent) != nil { workspace.section = .project(url.lastPathComponent) }
+            if url.scheme == "taskfold", url.host == "label", store.record("labels", id: url.lastPathComponent) != nil { workspace.section = .label(url.lastPathComponent) }
             if url.scheme == "taskfold" && url.host == "today" { workspace.section = .today }
             if url.scheme == "taskfold" && url.host == "inbox" { workspace.section = .inbox }
             if url.scheme == "taskfold" && url.host == "all" { workspace.section = .all }
@@ -220,6 +222,10 @@ struct RootView: View {
             try? store.persist()
         }
         if arguments.contains("--invitation-link-fixture") { pendingInvitations = true }
+        if arguments.contains("--uitesting") && arguments.contains("--widget-list-fixture") {
+            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            store.snapshot = Snapshot.widgetListFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
+        }
         if arguments.contains("--uitesting") && arguments.contains("--deadline-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
             store.snapshot = Snapshot.deadlineFixture(user: store.userID); workspace.section = .inbox; try? store.persist()

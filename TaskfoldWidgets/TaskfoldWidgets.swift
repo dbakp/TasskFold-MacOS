@@ -50,10 +50,11 @@ struct WidgetTask: Codable, Identifiable {
 }
 
 enum WidgetLinks {
-    static func task(_ id: String) -> URL {
+    static func task(_ id: String) -> URL { scoped("task", id: id) }
+    static func scoped(_ host: String, id: String) -> URL {
         var allowed = CharacterSet.urlPathAllowed; allowed.remove(charactersIn: "/?#%")
         let component = id.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
-        return URL(string: "taskfold://task/" + component) ?? URL(string: "taskfold://today")!
+        return URL(string: "taskfold://" + host + "/" + component) ?? URL(string: "taskfold://today")!
     }
 }
 
@@ -68,15 +69,34 @@ struct WidgetDay: Identifiable {
     var id: Date { date }
 }
 
+struct WidgetList: Codable, Identifiable, Sendable {
+    var id: String
+    var recordID: String
+    var kind: String
+    var name: String
+    var days: [String: [String]]
+    var timeZone: String
+    var invalid: Bool
+    func belongs(to account: String) -> Bool {
+        guard !account.isEmpty, let data = Data(base64Encoded: id), let key = try? JSONDecoder().decode([String].self, from: data) else { return false }
+        return key == [account, kind, recordID] && ["project", "label", "filter"].contains(kind)
+    }
+    var url: URL { WidgetLinks.scoped(kind == "filter" ? "view" : kind, id: recordID) }
+    var typeName: String { kind == "project" ? "Project" : kind == "label" ? "Label" : "Saved filter" }
+}
+
+enum WidgetListStatus: Equatable { case ready, choose, unavailable, refresh }
+
 struct WidgetSnapshot: Codable {
     var updated: TimeInterval
     var tasks: [WidgetTask]
     var version: Int
     var account: String
-    init(updated: TimeInterval, tasks: [WidgetTask], version: Int = 2, account: String = "") {
-        self.updated = updated; self.tasks = tasks; self.version = version; self.account = account
+    var lists: [WidgetList] = []
+    init(updated: TimeInterval, tasks: [WidgetTask], version: Int = 2, account: String = "", lists: [WidgetList] = []) {
+        self.updated = updated; self.tasks = tasks; self.version = version; self.account = account; self.lists = lists
     }
-    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account }
+    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         version = try row.decodeIfPresent(Int.self, forKey: .version) ?? 1
@@ -84,6 +104,7 @@ struct WidgetSnapshot: Codable {
         updated = try row.decode(TimeInterval.self, forKey: .updated)
         tasks = try row.decode([WidgetTask].self, forKey: .tasks)
         account = try row.decodeIfPresent(String.self, forKey: .account) ?? ""
+        lists = try row.decodeIfPresent([WidgetList].self, forKey: .lists) ?? []
     }
     var hasPlanningFields: Bool { version == 2 }
     static let empty = WidgetSnapshot(updated: 0, tasks: [])
@@ -158,6 +179,29 @@ struct WidgetSnapshot: Codable {
             return $0.id < $1.id
         }
     }
+    func listSubtitle(_ target: WidgetList) -> String {
+        let duplicates = availableLists.filter { $0.kind == target.kind && $0.name.caseInsensitiveCompare(target.name) == .orderedSame }.count
+        return target.typeName + (duplicates > 1 ? " · " + target.recordID : "")
+    }
+    var availableLists: [WidgetList] { lists.filter { $0.belongs(to: account) }.sorted { $0.name == $1.name ? $0.id < $1.id : $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
+    func list(_ id: String?) -> WidgetList? { guard let id else { return nil }; return availableLists.first { $0.id == id } }
+    func listStatus(_ id: String?, at date: Date, calendar: Calendar = .current) -> WidgetListStatus {
+        guard id != nil else { return .choose }
+        guard let target = list(id), !target.invalid else { return .unavailable }
+        if target.kind == "filter", (target.timeZone != calendar.timeZone.identifier || target.days[Self.day(date, calendar: calendar)] == nil) { return .refresh }
+        return .ready
+    }
+    func listTasks(_ id: String?, at date: Date, calendar: Calendar = .current) -> [WidgetTask] {
+        guard listStatus(id, at: date, calendar: calendar) == .ready, let target = list(id) else { return [] }
+        let ids = target.kind == "filter" ? target.days[Self.day(date, calendar: calendar)] ?? [] : target.days["*"] ?? []
+        let byID = Dictionary(tasks.map { ($0.id, $0.displayed(calendar: calendar)) }, uniquingKeysWith: { first, _ in first })
+        var seen = Set<String>()
+        return ids.compactMap { seen.insert($0).inserted ? byID[$0] : nil }
+    }
+    func scoped(to id: String?, at date: Date, calendar: Calendar = .current) -> WidgetSnapshot {
+        guard let id else { return self }
+        var copy = self; copy.tasks = listTasks(id, at: date, calendar: calendar); return copy
+    }
     /// Day entries make relative selections change at midnight even while the app is closed.
     static func timelineDates(from now: Date, calendar: Calendar = .current) -> [Date] {
         [now] + (1..<8).compactMap { calendar.date(byAdding: .day, value: $0, to: calendar.startOfDay(for: now)) }
@@ -184,7 +228,7 @@ struct TodayEntry: TimelineEntry {
             WidgetTask(id: "preview-3", title: "Take a proper lunch break", due: WidgetSnapshot.day(now), time: "", priority: 3, project: "Personal", color: "#32856d", projectID: "preview-personal"),
             WidgetTask(id: "preview-4", title: "Review the first draft", due: WidgetSnapshot.day(Calendar.current.date(byAdding: .day, value: 2, to: now)!), time: "", priority: 2, project: "Studio", color: "#e31e4b", projectID: "preview-studio", duration: 45),
             WidgetTask(id: "preview-5", title: "File the expense report", due: WidgetSnapshot.day(now), time: "", priority: 2, project: "Work", color: "#7863c8", projectID: "preview-work", deadline: WidgetSnapshot.day(Calendar.current.date(byAdding: .day, value: -1, to: now)!), duration: 15)
-        ], account: "preview"))
+        ], account: "preview", lists: [WidgetList(id: (try! JSONEncoder().encode(["preview", "project", "preview-studio"])).base64EncodedString(), recordID: "preview-studio", kind: "project", name: "Studio", days: ["*": ["preview-1", "preview-4"]], timeZone: TimeZone.current.identifier, invalid: false)]))
     }
 }
 
@@ -404,20 +448,51 @@ extension WidgetPalette: AppEnum {
     func color(fallback: Color) -> Color { switch self { case .standard: return fallback; case .rose: return brand; case .lavender: return plum; case .mint: return paletteMint } }
 }
 
+struct WidgetListEntity: AppEntity {
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Task list")
+    static var defaultQuery = WidgetListQuery()
+    var id: String
+    var name: String
+    var subtitle: String
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)", subtitle: "\(subtitle)") }
+    init(_ list: WidgetList, subtitle: String) { id = list.id; name = list.name; self.subtitle = subtitle }
+}
+struct WidgetListQuery: EntityStringQuery {
+    func entities(for identifiers: [String]) async throws -> [WidgetListEntity] {
+        let snapshot = WidgetSnapshot.load()
+        return identifiers.compactMap { snapshot.list($0).map { WidgetListEntity($0, subtitle: snapshot.listSubtitle($0)) } }
+    }
+    func entities(matching string: String) async throws -> [WidgetListEntity] {
+        let snapshot = WidgetSnapshot.load()
+        return snapshot.availableLists.filter { $0.name.localizedCaseInsensitiveContains(string) }.map { WidgetListEntity($0, subtitle: snapshot.listSubtitle($0)) }
+    }
+    func suggestedEntities() async throws -> [WidgetListEntity] { let snapshot = WidgetSnapshot.load(); return snapshot.availableLists.map { WidgetListEntity($0, subtitle: snapshot.listSubtitle($0)) } }
+}
+
+struct ListConfiguration: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "My list"
+    static var description = IntentDescription("Keep one project's, label's or saved filter's open tasks close by.")
+    @Parameter(title: "List") var list: WidgetListEntity?
+    @Parameter(title: "Color", default: .standard) var palette: WidgetPalette
+    @Parameter(title: "Hide task and list names", default: false) var hideTitles: Bool
+}
+
 struct WindowConfiguration: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "A small window"
     static var description = IntentDescription("Pick work with a known estimate that fits your available time. Ready work includes today, overdue and undated tasks.")
     @Parameter(title: "Time available", default: .twentyFive) var budget: WindowBudget
+    @Parameter(title: "Limit to a list") var list: WidgetListEntity?
     @Parameter(title: "Tasks", default: .ready) var scope: WindowScope
     @Parameter(title: "Color", default: .standard) var palette: WidgetPalette
-    @Parameter(title: "Hide task and project names", default: false) var hideTitles: Bool
+    @Parameter(title: "Hide task and list names", default: false) var hideTitles: Bool
 }
 struct DeadlineConfiguration: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "Deadline radar"
     static var description = IntentDescription("Missed and approaching hard deadlines. Moving the planned work date leaves the deadline unchanged.")
     @Parameter(title: "Look ahead", default: .week) var window: DeadlineWindow
+    @Parameter(title: "Limit to a list") var list: WidgetListEntity?
     @Parameter(title: "Color", default: .standard) var palette: WidgetPalette
-    @Parameter(title: "Hide task and project names", default: false) var hideTitles: Bool
+    @Parameter(title: "Hide task and list names", default: false) var hideTitles: Bool
 }
 
 struct WindowEntry: TimelineEntry {
@@ -427,6 +502,7 @@ struct WindowEntry: TimelineEntry {
     var scope: WindowScope = .ready
     var palette: WidgetPalette = .standard
     var hideTitles = false
+    var listID: String? = nil
     var footer: TodayEntry { TodayEntry(date: date, snapshot: snapshot) }
 }
 struct DeadlineEntry: TimelineEntry {
@@ -435,6 +511,7 @@ struct DeadlineEntry: TimelineEntry {
     var window: DeadlineWindow = .week
     var palette: WidgetPalette = .standard
     var hideTitles = false
+    var listID: String? = nil
     var footer: TodayEntry { TodayEntry(date: date, snapshot: snapshot) }
 }
 struct WindowProvider: AppIntentTimelineProvider {
@@ -447,7 +524,7 @@ struct WindowProvider: AppIntentTimelineProvider {
         return Timeline(entries: WidgetSnapshot.timelineDates(from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
     }
     private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: WindowConfiguration) -> WindowEntry {
-        WindowEntry(date: date, snapshot: snapshot, budget: configuration.budget, scope: configuration.scope, palette: configuration.palette, hideTitles: configuration.hideTitles)
+        WindowEntry(date: date, snapshot: snapshot, budget: configuration.budget, scope: configuration.scope, palette: configuration.palette, hideTitles: configuration.hideTitles, listID: configuration.list?.id)
     }
 }
 struct DeadlineProvider: AppIntentTimelineProvider {
@@ -460,7 +537,7 @@ struct DeadlineProvider: AppIntentTimelineProvider {
         return Timeline(entries: WidgetSnapshot.timelineDates(from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
     }
     private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: DeadlineConfiguration) -> DeadlineEntry {
-        DeadlineEntry(date: date, snapshot: snapshot, window: configuration.window, palette: configuration.palette, hideTitles: configuration.hideTitles)
+        DeadlineEntry(date: date, snapshot: snapshot, window: configuration.window, palette: configuration.palette, hideTitles: configuration.hideTitles, listID: configuration.list?.id)
     }
 }
 
@@ -490,13 +567,15 @@ struct DeadlineWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let entry: DeadlineEntry
     private var tint: Color { entry.palette.color(fallback: brand) }
-    private var tasks: [WidgetTask] { entry.snapshot.deadlines(at: entry.date, days: entry.window.days) }
+    private var tasks: [WidgetTask] { entry.snapshot.scoped(to: entry.listID, at: entry.date).deadlines(at: entry.date, days: entry.window.days) }
     private var today: String { WidgetSnapshot.day(entry.date) }
     private var missed: Int { tasks.filter { ($0.deadlineDay ?? "9999") < today }.count }
     var body: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 7 : 5) {
-            HStack { Label("Deadline radar", systemImage: "flag.checkered").font(family == .systemSmall ? .caption.weight(.semibold) : .headline); Spacer(minLength: 0); if family != .systemSmall && entry.snapshot.updated > 0 && entry.snapshot.hasPlanningFields { Text("\(tasks.count)").font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(tint) } }
-            if tasks.isEmpty {
+            HStack { Label("Deadline radar", systemImage: "flag.checkered").font(family == .systemSmall ? .caption.weight(.semibold) : .headline); Spacer(minLength: 0); if family != .systemSmall && entry.snapshot.updated > 0 && entry.snapshot.hasPlanningFields && (entry.listID == nil || entry.snapshot.listStatus(entry.listID, at: entry.date) == .ready) { Text("\(tasks.count)").font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(tint) } }
+            if let listID = entry.listID, entry.snapshot.listStatus(listID, at: entry.date) != .ready {
+                WidgetListEmpty(status: entry.snapshot.listStatus(listID, at: entry.date))
+            } else if tasks.isEmpty {
                 Spacer(minLength: 0)
                 PlanningWidgetEmpty(snapshot: entry.snapshot, title: "Room to breathe", message: "No missed deadlines or cutoffs in the next \(entry.window.days) days.", symbol: "checkmark.seal", compact: family == .systemSmall)
             } else {
@@ -526,7 +605,7 @@ struct DeadlineWidgetView: View {
             HStack { WidgetFooter(entry: entry.footer); Spacer(minLength: 0); if family != .systemSmall && tasks.count > 3 { Text("+\(tasks.count - 3)").font(.caption2).foregroundStyle(.secondary) } }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
-        .widgetURL(tasks.first?.url ?? URL(string: "taskfold://all"))
+        .widgetURL(tasks.first?.url ?? entry.snapshot.list(entry.listID)?.url ?? URL(string: "taskfold://all"))
     }
     private func deadlineBadge(_ task: WidgetTask) -> some View {
         let day = task.deadlineDay ?? ""
@@ -541,8 +620,8 @@ struct WindowWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let entry: WindowEntry
     private var tint: Color { entry.palette.color(fallback: plum) }
-    private var tasks: [WidgetTask] { entry.snapshot.smallWindow(minutes: entry.budget.minutes, scope: entry.scope, at: entry.date) }
-    private var unknown: Int { entry.snapshot.windowTasks(scope: entry.scope, at: entry.date).filter { $0.estimate == nil }.count }
+    private var tasks: [WidgetTask] { entry.snapshot.scoped(to: entry.listID, at: entry.date).smallWindow(minutes: entry.budget.minutes, scope: entry.scope, at: entry.date) }
+    private var unknown: Int { entry.snapshot.scoped(to: entry.listID, at: entry.date).windowTasks(scope: entry.scope, at: entry.date).filter { $0.estimate == nil }.count }
     var body: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 6 : 5) {
             HStack {
@@ -551,8 +630,10 @@ struct WindowWidgetView: View {
                 if family != .systemSmall { budgetBadge }
             }
             if family == .systemSmall { HStack(alignment: .firstTextBaseline, spacing: 5) { Text("\(entry.budget.minutes)").font(.system(size: 36, weight: .semibold, design: .rounded)).monospacedDigit().foregroundStyle(tint); Text("min to spare").font(.caption2).foregroundStyle(.secondary) } }
-            else { Text(entry.scope.label).font(.caption2).foregroundStyle(.secondary).lineLimit(1) }
-            if tasks.isEmpty {
+            else { Text(entry.listID == nil ? entry.scope.label : entry.hideTitles ? "Selected list · " + entry.scope.label : (entry.snapshot.list(entry.listID)?.name ?? "Selected list") + " · " + entry.scope.label).font(.caption2).foregroundStyle(.secondary).lineLimit(1).privacySensitive() }
+            if let listID = entry.listID, entry.snapshot.listStatus(listID, at: entry.date) != .ready {
+                WidgetListEmpty(status: entry.snapshot.listStatus(listID, at: entry.date))
+            } else if tasks.isEmpty {
                 PlanningWidgetEmpty(snapshot: entry.snapshot, title: "Nothing fits yet", message: unknown > 0 ? "\(unknown) tasks need estimates. Add one in Taskfold." : "No known estimate fits this budget and scope.", symbol: "sparkle", compact: family == .systemSmall)
             } else {
                 ForEach(tasks.prefix(family == .systemSmall ? 1 : 3)) { task in
@@ -569,16 +650,88 @@ struct WindowWidgetView: View {
                 }
             }
             Spacer(minLength: 0)
-            if family == .systemSmall && entry.snapshot.hasPlanningFields && entry.snapshot.updated > 0 && entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated <= 86400 {
+            if family == .systemSmall && entry.snapshot.hasPlanningFields && entry.snapshot.updated > 0 && entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated <= 86400 && (entry.listID == nil || entry.snapshot.listStatus(entry.listID, at: entry.date) == .ready) {
                 Text("\(tasks.count) fit\(unknown > 0 ? " · \(unknown) unestimated" : " · estimates only")").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
             } else {
                 HStack { WidgetFooter(entry: entry.footer); Spacer(minLength: 0); if tasks.count > 3 { Text("+\(tasks.count - 3) fit").font(.caption2).foregroundStyle(.secondary) }; if unknown > 0 { Text("\(unknown) unestimated").font(.caption2).foregroundStyle(.secondary).lineLimit(1) } }
             }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
-        .widgetURL(tasks.first?.url ?? (entry.snapshot.updated == 0 || !entry.snapshot.hasPlanningFields ? URL(string: "taskfold://all") : entry.scope.url))
+        .widgetURL(tasks.first?.url ?? (entry.snapshot.updated == 0 || !entry.snapshot.hasPlanningFields ? URL(string: "taskfold://all") : entry.snapshot.list(entry.listID)?.url ?? entry.scope.url))
     }
     private var budgetBadge: some View { Text("\(entry.budget.minutes) min").font(.subheadline.weight(.semibold)).monospacedDigit().padding(.horizontal, 9).padding(.vertical, 4).foregroundStyle(tint).background(tint.opacity(0.12), in: .capsule) }
+}
+
+struct ListEntry: TimelineEntry {
+    var date: Date
+    var snapshot: WidgetSnapshot
+    var listID: String? = nil
+    var palette: WidgetPalette = .standard
+    var hideTitles = false
+}
+struct ListProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> ListEntry { let preview = TodayEntry.preview; return ListEntry(date: preview.date, snapshot: preview.snapshot, listID: preview.snapshot.availableLists.first?.id) }
+    func snapshot(for configuration: ListConfiguration, in context: Context) async -> ListEntry { context.isPreview ? placeholder(in: context) : entry(Date(), snapshot: .load(), configuration: configuration) }
+    func timeline(for configuration: ListConfiguration, in context: Context) async -> Timeline<ListEntry> {
+        let snapshot = WidgetSnapshot.load()
+        return Timeline(entries: WidgetSnapshot.timelineDates(from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+    }
+    private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: ListConfiguration) -> ListEntry {
+        ListEntry(date: date, snapshot: snapshot, listID: configuration.list?.id, palette: configuration.palette, hideTitles: configuration.hideTitles)
+    }
+}
+struct WidgetListEmpty: View {
+    var status: WidgetListStatus
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(status == .choose ? "Choose your list" : status == .refresh ? "Refresh this list" : "List unavailable").font(.subheadline.weight(.semibold)).lineLimit(2)
+            Text(status == .choose ? "Edit this widget to pick a project, label or filter." : status == .refresh ? "Open Taskfold to update this filter for today and your time zone." : "Open Taskfold to refresh, or edit this widget to choose another list.").font(.caption2).foregroundStyle(.secondary).lineLimit(3)
+        }
+    }
+}
+struct ListWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: ListEntry
+    private var target: WidgetList? { entry.snapshot.list(entry.listID) }
+    private var tasks: [WidgetTask] { entry.snapshot.listTasks(entry.listID, at: entry.date) }
+    private var status: WidgetListStatus { entry.snapshot.listStatus(entry.listID, at: entry.date) }
+    private var tint: Color { entry.palette.color(fallback: mint) }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Label(entry.hideTitles ? "My list" : target?.name ?? "My list", systemImage: "list.bullet.rectangle").font(.headline).lineLimit(1).privacySensitive()
+                Spacer(minLength: 0)
+                if status == .ready { Text("\(tasks.count)").font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(tint) }
+            }
+            if status != .ready { Spacer(minLength: 0); WidgetListEmpty(status: status) }
+            else if tasks.isEmpty {
+                Spacer(minLength: 0); Text("All clear").font(.headline)
+                Text("No open tasks in this list.").font(.caption2).foregroundStyle(.secondary)
+            } else {
+                Text(target?.typeName ?? "Open tasks").font(.caption2).foregroundStyle(.secondary)
+                ForEach(tasks.prefix(family == .systemSmall ? 2 : family == .systemLarge ? 8 : 3)) { task in
+                    Link(destination: task.url) {
+                        HStack(spacing: 7) {
+                            Circle().strokeBorder(task.priority <= 2 ? tint : Color.secondary.opacity(0.5), lineWidth: 1.5).frame(width: 10, height: 10)
+                            Text(entry.hideTitles ? "Private task" : task.title).font(.caption.weight(.medium)).lineLimit(1).privacySensitive()
+                            Spacer(minLength: 0)
+                            if family != .systemSmall, let day = task.deadlineDay { Text(widgetDate(day)).font(.caption2).foregroundStyle(tint).accessibilityLabel("Deadline \(day)") }
+                        }
+                    }.buttonStyle(.plain)
+                }
+            }
+            Spacer(minLength: 0)
+            WidgetFooter(entry: TodayEntry(date: entry.date, snapshot: entry.snapshot))
+        }
+        .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+        .widgetURL(status == .ready ? target?.url : URL(string: "taskfold://all"))
+    }
+}
+struct ListWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "TaskfoldMyList", intent: ListConfiguration.self, provider: ListProvider()) { ListWidgetView(entry: $0) }
+            .configurationDisplayName("My list").description("Your chosen project's, label's or saved filter's open tasks.").supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+    }
 }
 
 struct DeadlineWidget: Widget {
@@ -603,6 +756,7 @@ struct TaskfoldWidgetBundle: WidgetBundle {
         CaptureWidget()
         DeadlineWidget()
         WindowWidget()
+        ListWidget()
         #if os(iOS)
         AddTaskControl()
         #endif

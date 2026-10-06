@@ -3,6 +3,7 @@
 from pathlib import Path
 import subprocess
 import tempfile
+import sys
 
 root = Path(__file__).resolve().parent.parent
 source = (root / 'TaskfoldWidgets/TaskfoldWidgets.swift').read_text()
@@ -54,7 +55,26 @@ struct PreviewLink<Content: View>: View {
                 CaptureWidgetView(entry: entry).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: brand)).clipShape(RoundedRectangle(cornerRadius: 24))
             }
         }.padding(32).background(dark ? Color(white: 0.09) : Color.white).environment(\.colorScheme, dark ? .dark : .light)
-        let actual = Group { if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
+        let lists = mode.hasPrefix("lists")
+        let listSnapshot = mode == "lists-empty" ? WidgetSnapshot(updated: Date().timeIntervalSinceReferenceDate, tasks: [], account: "preview", lists: entry.snapshot.lists) : entry.snapshot
+        let chosen = mode == "lists-unavailable" ? "deleted-list" : listSnapshot.availableLists.first?.id
+        let listPrivate = mode == "lists-private"
+        let listContent = VStack(alignment: .leading, spacing: 20) {
+            Text("Your work, close by").font(.system(size: 28, weight: .bold, design: .rounded))
+            Text("Choose a project, label or saved filter. Keep the useful part in view.").font(.subheadline).foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 20) {
+                ListWidgetView(family: .systemSmall, entry: ListEntry(date: entry.date, snapshot: listSnapshot, listID: chosen, hideTitles: listPrivate)).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: mint)).clipShape(RoundedRectangle(cornerRadius: 24))
+                ListWidgetView(entry: ListEntry(date: entry.date, snapshot: listSnapshot, listID: chosen, hideTitles: listPrivate)).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: mint)).clipShape(RoundedRectangle(cornerRadius: 24))
+            }
+            HStack(alignment: .top, spacing: 20) {
+                ListWidgetView(family: .systemLarge, entry: ListEntry(date: entry.date, snapshot: listSnapshot, listID: chosen, palette: .lavender, hideTitles: listPrivate)).padding(16).frame(width: 338, height: 354).background(WidgetSurface(tint: plum)).clipShape(RoundedRectangle(cornerRadius: 24))
+                VStack(spacing: 14) {
+                    WindowWidgetView(entry: WindowEntry(date: entry.date, snapshot: listSnapshot, hideTitles: listPrivate, listID: chosen)).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: plum)).clipShape(RoundedRectangle(cornerRadius: 24))
+                    ListWidgetView(entry: ListEntry(date: entry.date, snapshot: listSnapshot)).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: mint)).clipShape(RoundedRectangle(cornerRadius: 24))
+                }
+            }
+        }
+        let actual = Group { if lists { listContent.padding(32).background(mode == "lists-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "lists-dark" ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
         let renderer = ImageRenderer(content: actual)
         renderer.scale = 2
         if let image = renderer.cgImage {
@@ -69,5 +89,6 @@ with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporar
     path = Path(temporary)
     (path / 'Preview.swift').write_text(source)
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', str(path / 'Preview.swift'), '-o', str(path / 'preview')], check=True)
-    for mode, name in [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]:
+    modes = [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
+    for mode, name in modes:
         subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode], check=True)

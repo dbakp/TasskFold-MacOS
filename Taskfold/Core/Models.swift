@@ -875,8 +875,9 @@ enum TaskPlanning {
 
 /// Versioned widget payload. The extension receives planning data, never sessions or mutations.
 enum WidgetProjection {
-    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date()) -> [String: JSON] {
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current) -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
+        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar)
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let rows = tasks.filter { !$0.completed }.map { task -> JSON in
             let project = projects[task.string("project_id")]
@@ -887,8 +888,41 @@ enum WidgetProjection {
                 "duration": task.durationMinutes.map { .number(Double($0)) } ?? .null,
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
-        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows)]
+        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "lists": .array(lists)]
     }
+    /// Only open task IDs and display names leave the app; filter expressions and credentials do not.
+    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar) -> [JSON] {
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
+        let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account)
+        let cache = TaskCache(); cache.update(tasks)
+        func row(_ record: Record, kind: String, days: [String: [String]], error: Bool = false) -> JSON {
+            let key = (try? JSONEncoder().encode([account, kind, record.id]).base64EncodedString()) ?? ""
+            return .object(["id": .string(key), "recordID": .string(record.id), "kind": .string(kind), "name": .string(record.name),
+                "days": .object(days.mapValues { .array($0.map(JSON.string)) }), "timeZone": .string(calendar.timeZone.identifier), "invalid": .bool(error)])
+        }
+        var result = projects.filter { !$0.id.isEmpty }.map { project in
+            row(project, kind: "project", days: ["*": cache.matching(TaskQuery(scope: .project(project.id))).map(\.id)])
+        }
+        result += labels.filter { !$0.id.isEmpty }.map { label in
+            row(label, kind: "label", days: ["*": cache.matching(TaskQuery(scope: .label(label.id), labelName: label.name)).map(\.id)])
+        }
+        for view in savedViews where !view.id.isEmpty {
+            guard let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: context)) != nil else {
+                result.append(row(view, kind: "filter", days: [:], error: true)); continue
+            }
+            var days: [String: [String]] = [:]
+            for offset in 0..<8 {
+                guard let date = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)) else { continue }
+                let day = TaskPlanner.dayKey(date, calendar: calendar)
+                let query = TaskQuery(scope: .all, sort: view.string("sort_by"), today: day, filter: rule,
+                    filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) }, userID: account, timeZone: calendar.timeZone.identifier)
+                days[day] = cache.matching(query).map(\.id)
+            }
+            result.append(row(view, kind: "filter", days: days))
+        }
+        return result
+    }
+
 }
 
 /// Reminder syntax is protected before task dates/times are parsed, including declined or invalid

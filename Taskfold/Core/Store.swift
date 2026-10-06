@@ -245,7 +245,7 @@ final class Store {
     /// Widgets read a compact copy of open tasks from the shared App Group container.
     private func publishWidgetSnapshot() {
         guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.appGroup) else { return }
-        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: signedIn || localMode ? userID : "")
+        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: signedIn || localMode ? userID : "", labels: labels, sections: rows("sections"), savedViews: savedViews)
         if let data = try? JSONEncoder().encode(payload) {
             try? data.write(to: container.appending(path: "widget.json"), options: .atomic)
             #if canImport(WidgetKit)

@@ -112,7 +112,7 @@ Release products build in `~/Library/Caches/TaskfoldBuild` (outside synced Docum
 
 ## Productive widgets and feature roadmap
 
-The provisioned widget extension includes Today, Focus, Week ahead, Quick capture, Deadline radar and A small window. Today opens individual tasks and exposes +; Focus explains one selected next action; Week ahead shows seven actual task counts and opens Upcoming. Soft surfaces adapt to light/dark appearance. The ad hoc distribution DMG still excludes widgets.
+The provisioned widget extension includes Today, Focus, Week ahead, Quick capture, Deadline radar, A small window and My list. Today opens individual tasks and exposes +; Focus explains one selected next action; Week ahead shows seven actual task counts and opens Upcoming. Soft surfaces adapt to light/dark appearance. The ad hoc distribution DMG still excludes widgets.
 
 See [the detailed Todoist feature plan](docs/TODOIST_PORT_PLAN.md) for the source audit, import API compatibility risk, phased backlog, estimates, data migrations and acceptance criteria. [Widget preview](docs/widget-previews/catalog.png). Run `python3 Scripts/render_widget_previews.py` to render the SwiftUI fixture views in light, dark and empty states. Rendering does not prove installed WidgetKit-host behavior.
 
@@ -128,7 +128,7 @@ The capture panel previews the actual parsed destination. Saving a project chang
 
 ## Productive widgets
 
-The widget collection includes Today, Focus, Week ahead, Quick capture, **Deadline radar** and **A small window**. Deadline radar shows missed and approaching independent deadlines, with a 7-, 14- or 30-day look-ahead. Rescheduling planned work leaves the cutoff intact. A small window suggests tasks with a known estimate within a 10-, 25- or 45-minute budget; unestimated work is counted separately. Choose Ready work (today, overdue and undated), Inbox, or All open tasks (including future dates). Each instance has its own settings. Both new widgets support small and medium sizes, Default/Rose/Lavender/Mint color choices and a preference to hide task and project names. Task rows open the native task editor.
+The widget collection includes Today, Focus, Week ahead, Quick capture, **Deadline radar**, **A small window** and **My list**. Deadline radar shows missed and approaching independent deadlines, with a 7-, 14- or 30-day look-ahead. Rescheduling planned work leaves the cutoff intact. A small window suggests tasks with a known estimate within a 10-, 25- or 45-minute budget; unestimated work is counted separately. Choose Ready work (today, overdue and undated), Inbox, or All open tasks (including future dates). Each instance has its own settings. Both new widgets support small and medium sizes, Default/Rose/Lavender/Mint color choices and a preference to hide task and project names. Task rows open the native task editor.
 
 A versioned read-only App Group snapshot carries stable project IDs, independent deadlines, estimates and fixed scheduling instants. Fixed times use the device's local day after travel; floating times retain their wall-clock date. Signed-out snapshots clear task data. Daily timeline entries use actual local midnights across daylight-saving changes; stale snapshots ask the user to refresh. Widgets use cached app data and require the app to refresh remote changes.
 
@@ -152,3 +152,12 @@ Quick entry also accepts multiple `!30m` (from now), `!30mb` (before the plan), 
 ## Bulk deadlines
 
 Select tasks → inspector Actions → Edit Deadlines, use the task context menu, or Task → Edit Deadlines (⌘⌥⇧D). Set one hard cutoff or clear existing cutoffs after reviewing current deadlines and planned dates/times. The edit preserves plans, fixed instants, estimates and reminders and uses one undo step. Cancel saves nothing; unchanged/missing tasks are skipped. Selection and workspace are captured when opening the sheet, current records are used at Apply, and switching workspaces prevents saving into another account. [Current test evidence](docs/P0_IMPLEMENTATION.md#6-october-bulk-deadline-editing) distinguishes iPhone runtime checks from Mac compilation.
+
+
+## Choose a widget list
+
+**My list** keeps one project’s, label’s or saved filter’s open tasks on the Home Screen or desktop in small, medium or large size. Edit the widget to choose its list, color and whether task/list names are hidden. Each instance chooses independently. Task rows open the task; the widget background opens its list. A small window and Deadline radar can also be limited to one selected list; their budget/Ready work or deadline horizon still applies.
+
+List selections use stable IDs bound to the current workspace. Rename keeps the selection. Deleted/inaccessible lists ask you to refresh or choose again. Signed-out snapshots clear all tasks and list metadata. Saved filters use the native evaluator to prepare eight local days of open-task membership, including DST midnights; exhausted dates or a changed device time zone ask you to open the app. Widget data remains cached until the app publishes a new snapshot. Project and label lists use default priority ordering; filters use their saved sort. My list shows only open tasks even if a saved filter includes completed work. Direct completion remains pending.
+
+[Light widget preview](docs/widget-previews/lists.png), [dark](docs/widget-previews/lists-dark.png), [names hidden](docs/widget-previews/lists-private.png), [empty](docs/widget-previews/lists-empty.png), [unavailable](docs/widget-previews/lists-unavailable.png). `python3 Scripts/render_widget_previews.py --lists` renders the repository’s real SwiftUI fixture views on macOS; those images alone do not prove installed-host behavior.
