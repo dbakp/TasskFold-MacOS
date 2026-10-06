@@ -34,3 +34,10 @@ Older native completions without revision baselines require review before making
 
 
 Task editor saves use the revision from the original form baseline when changing completion. A remote complete/reopen cycle during an open editor cannot become an implicitly approved newer baseline. The shorter Use synced action remains readable at maximum text size; the iPhone walkthrough verifies the complete comparison values are above its fixed action area after scrolling.
+
+
+## Account-scoped transport and Focus
+
+Sync captures its workspace account for each queue run. Backend sends reject a stale account before HTTP, retain account/session-generation guards across response awaits and 401 retries, and prevent joined token refreshes from restoring an older sign-in. `AccountTransportTests.swift` exercises late 401, stale shared-task/Focus transport and joined-refresh races through held responses. These deterministic regressions do not replace native paired/offline account-switch acceptance.
+
+Focus has its own revision/action guarded slot and review: [Focus sessions](FOCUS_SESSIONS.md). Use synced removes the dependent Focus command chain; Keep this device rebases its final desired state while retaining unrelated queued task edits. Timer commands are excluded from ordinary task Undo history.

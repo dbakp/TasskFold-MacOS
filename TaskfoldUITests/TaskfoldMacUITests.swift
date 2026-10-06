@@ -2,6 +2,19 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testFocusPauseResumeEndAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--focus-session-seed"]; app.launch()
+        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click()
+        let picker = app.descendants(matching: .any).matching(identifier: "focusTaskPicker").firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 10)); picker.click(); app.menuItems["Focus on the next useful step"].click(); app.buttons["startFocus"].click()
+        XCTAssertTrue(app.staticTexts["focusStatus"].waitForExistence(timeout: 5)); app.buttons["pauseResumeFocus"].click()
+        XCTAssertEqual(app.staticTexts["focusStatus"].label, "Paused"); let remaining = app.staticTexts["focusRemaining"].label
+        app.buttons["closeFocusSession"].click(); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        let open = app.buttons["openFocusSession"]; XCTAssertTrue(open.waitForExistence(timeout: 10)); open.click()
+        XCTAssertEqual(app.staticTexts["focusStatus"].label, "Paused"); XCTAssertEqual(app.staticTexts["focusRemaining"].label, remaining)
+        app.buttons["pauseResumeFocus"].click(); XCTAssertEqual(app.staticTexts["focusStatus"].label, "Time to focus")
+        app.buttons["endFocus"].click(); XCTAssertEqual(app.staticTexts["focusStatus"].label, "Session ended"); app.terminate()
+    }
     @MainActor func testPlanningSuggestionsKeyboardCaptureAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch(); app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("Planned conversation tom")

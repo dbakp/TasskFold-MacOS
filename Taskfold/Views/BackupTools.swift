@@ -220,7 +220,7 @@ struct RestoreReview: View {
                         LabeledContent("Update", value: "\(value.updated)").accessibilityIdentifier("restoreUpdated")
                         LabeledContent("Keep", value: "\(value.kept)")
                         ForEach(WorkspaceBackup.workTables.filter { value.counts[$0] != nil }, id: \.self) { table in
-                            LabeledContent(["projects":"Projects", "labels":"Labels", "sections":"Sections", "tasks":"Tasks", "saved_views":"Saved filters", "favorites":"Favorites", "view_preferences":"View settings", "view_orders":"Task ordering"][table] ?? table, value: "\(value.counts[table] ?? 0)")
+                            LabeledContent(["projects":"Projects", "labels":"Labels", "sections":"Sections", "tasks":"Tasks", "saved_views":"Saved filters", "favorites":"Favorites", "view_preferences":"View settings", "view_orders":"Task ordering", "focus_sessions":"Focus session"][table] ?? table, value: "\(value.counts[table] ?? 0)")
                         }
                     }
                     Section("Before you restore") {

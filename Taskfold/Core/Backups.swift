@@ -7,7 +7,7 @@ struct BackupFailure: LocalizedError, Equatable {
     var errorDescription: String? { message }
 }
 
-/// Portable work, without sessions or executable mutation queues. Retained recovery files
+/// Portable work, without authentication sessions or executable mutation queues. Retained recovery files
 /// additionally preserve the queue inside the encrypted, account-bound vault.
 struct WorkspaceBackup: Codable, Sendable {
     var format = "com.taskfold.workspace"
@@ -19,10 +19,16 @@ struct WorkspaceBackup: Codable, Sendable {
     var unsyncedChanges: Int
     var legacy = false
     static let maximumBytes = 256 * 1024 * 1024
-    static let workTables = ["projects", "labels", "sections", "tasks", "saved_views", "favorites", "view_preferences", "view_orders"]
+    static let workTables = ["projects", "labels", "sections", "tasks", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions"]
     static func make(_ snapshot: Snapshot, account: String, now: Date = Date()) -> Self {
-        Self(id: UUID().uuidString.lowercased(), createdAt: ISO8601DateFormatter().string(from: now), sourceAccount: account,
-             tables: snapshot.tables, unsyncedChanges: snapshot.pending.count)
+        var tables = snapshot.tables
+        tables[FocusSessionChange.table] = tables[FocusSessionChange.table]?.map { row in
+            var row = row
+            if let session = FocusSessionChange.session(in: row, account: account), let checkpoint = try? session.checkpoint(at: now) { row["state"] = checkpoint.document }
+            return row
+        }
+        return Self(id: UUID().uuidString.lowercased(), createdAt: ISO8601DateFormatter().string(from: now), sourceAccount: account,
+                    tables: tables, unsyncedChanges: snapshot.pending.count)
     }
     func data() throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -68,7 +74,8 @@ struct WorkspaceBackup: Codable, Sendable {
         "saved_views": ["id","user_id","name","query_ast","layout","grouping","sort_by","include_completed","order_index","created_at","updated_at"],
         "favorites": ["id","user_id","order_index","created_at"],
         "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours"],
-        "view_orders": ["id","user_id","ids","updated_at"]
+        "view_orders": ["id","user_id","ids","updated_at"],
+        "focus_sessions": ["id","user_id","revision","action_id","state","updated_at"]
     ]
     func validate() throws {
         guard tables.values.reduce(0, { $0 + $1.count }) <= 50000 else { throw BackupFailure(message: "This backup exceeds the 50,000-record limit.") }
@@ -125,6 +132,9 @@ struct WorkspaceBackup: Codable, Sendable {
                 }
                 if table == "saved_views" { _ = try FilterRule(document: row["query_ast"]) }
                 if row["working_hours"] != .null { _ = try WorkingHours(document: row["working_hours"]) }
+                if table == FocusSessionChange.table, !FocusSessionChange.validRow(row, account: row.string("user_id")) {
+                    throw BackupFailure(message: "The backup includes an invalid Focus session.")
+                }
                 if ["projects","labels","sections","saved_views"].contains(table), row.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { throw BackupFailure(message: "A \(table) record has no name.") }
                 if table == "saved_views", row.name.unicodeScalars.count > 120 { throw BackupFailure(message: "A filter name exceeds 120 characters.") }
                 if table == "tasks", !(row.fields["title"].map { if case .string = $0 { return true }; return false } ?? false) { throw BackupFailure(message: "A task has no title field.") }
@@ -268,6 +278,28 @@ extension WorkspaceBackup {
         }
         for table in Self.workTables {
             for original in try orderedRows(table) {
+                if table == FocusSessionChange.table {
+                    let existing = currentRows[table]?[FocusSessionChange.recordID]
+                    if existing != nil && policy == .keepCurrent { result.kept += 1; continue }
+                    var session = try original["state"] == .null ? nil : FocusSession(document: original["state"])
+                    if var value = session {
+                        value = try value.checkpoint(at: TaskPlanning.instant(createdAt) ?? Date(timeIntervalSince1970: Double(value.changedAt) / 1000))
+                        value.taskID = try mapped("tasks", value.taskID, required: true)
+                        value.id = Self.stableID(id + "|" + account + "|focus-session", value.id)
+                        session = value
+                    }
+                    if session == nil && existing == nil { result.kept += 1; continue }
+                    if existing?["state"] == session?.document { result.kept += 1; continue }
+                    guard let revision = FocusSession.integer(existing?["revision"] ?? .number(0), in: 0...FocusSessionChange.maximumRevision) else {
+                        throw BackupFailure(message: "Refresh Focus before restoring its session. The current revision could not be read.")
+                    }
+                    let baseKey = String(revision) + "|" + (existing?.string("action_id") ?? "")
+                    let action = UUID(uuidString: Self.stableID(id + "|" + account + "|focus-action", baseKey))!
+                    result.changes.append(try FocusSessionChange.make(session, current: existing, account: account, action: action))
+                    if existing == nil { result.added += 1 } else { result.updated += 1 }
+                    result.counts[table, default: 0] += 1
+                    continue
+                }
                 var row = original
                 row["user_id"] = .string(account)
                 for (key, value) in defaults[table] ?? [:] where row[key] == .null { row[key] = value }

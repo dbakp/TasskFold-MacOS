@@ -8,6 +8,7 @@ struct RootView: View {
     @Environment(\.undoManager) private var undoManager
     @Environment(\.scenePhase) private var phase
     @State private var pinnedNote: PinnedNoteRequest?
+    @State private var focusRequest: FocusSessionRequest?
     @State private var inboxReview: InboxReviewRequest?
     @State private var seeded = false
     @Environment(\.openSettings) private var openSettings
@@ -26,9 +27,18 @@ struct RootView: View {
         .onChange(of: undoManager) { _, value in workspace.undoManager = value }
         .environment(\.startInboxReview, startInboxReview)
         .environment(\.openPinnedNotes, { pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
+        .environment(\.openFocusSession, { focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
+        .sheet(item: $focusRequest) { FocusSessionView(request: $0) }
+        .safeAreaInset(edge: .top) {
+            if store.focusSyncConflict != nil {
+                Button { focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) } label: {
+                    Label("Review Focus session", systemImage: "exclamationmark.icloud").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                }.padding(.horizontal).accessibilityIdentifier("reviewFocusConflict")
+            }
+        }
         .sheet(item: $pinnedNote) { PinnedNotesView(request: $0) }
         .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
-        .onChange(of: store.workspaceGeneration) { _, _ in inboxReview = nil; pinnedNote = nil }
+        .onChange(of: store.workspaceGeneration) { _, _ in inboxReview = nil; pinnedNote = nil; focusRequest = nil }
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
             BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.ids.sorted().compactMap { workspace.taskRecord($0) } : []) { day in
                 try workspace.setDeadlines(request, day: day)
@@ -292,6 +302,9 @@ struct RootView: View {
                     workspace.section = .today
                 }
         if arguments.contains("--pinned-notes-seed") { store.startLocal(); store.seedPinnedNotesFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
+        if arguments.contains("--focus-session-seed") {
+            store.startLocal(); store.seedFocusSessionFixture(); workspace.section = .inbox; workspace.inspectorShown = false
+        }
         if arguments.contains("--inbox-review-seed") { store.startLocal(); store.seedInboxReviewFixture(); workspace.section = .inbox; workspace.inspectorShown = false }
         if arguments.contains("--capacity-widget-seed") { store.startLocal(); store.seedCapacityWidgetFixture(); workspace.section = .today }
         if arguments.contains("--completion-cycle-fixture") { store.startLocal(); store.seedCompletionCycleFixture(); workspace.section = .today }

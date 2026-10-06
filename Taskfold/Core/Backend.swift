@@ -45,6 +45,7 @@ final class Backend: NSObject {
     private let saveSession: (Session?) throws -> Void
     private var sessionGeneration = UUID()
     private var refreshTask: Task<Session, Error>?
+    private var refreshID: UUID?
     private let config: [String: String]
     init(configuration: [String: String]? = nil, http: URLSession = .shared,
          session: Session? = SecureSession.read(),
@@ -61,17 +62,21 @@ final class Backend: NSObject {
     }
     func clearSession() throws {
         sessionGeneration = UUID()
-        refreshTask?.cancel(); refreshTask = nil
+        refreshTask?.cancel(); refreshTask = nil; refreshID = nil
         try saveSession(nil); session = nil
     }
     private func accept(_ next: Session) throws {
         try saveSession(next)
+        sessionGeneration = UUID(); refreshTask?.cancel(); refreshTask = nil; refreshID = nil
         session = next
     }
     var baseURL: String { config["URL"] ?? "" }
     func request(_ path: String, method: String = "GET", body: [String: JSON]? = nil,
-                 authenticated: Bool = true, extra: [String: String] = [:], retryAuthentication: Bool = true) async throws -> Data {
+                 authenticated: Bool = true, extra: [String: String] = [:], retryAuthentication: Bool = true,
+                 expectedAccount: String? = nil) async throws -> Data {
+        let generation = sessionGeneration, owner = expectedAccount ?? session?.user.id
         if authenticated { try await refreshIfNeeded() }
+        if authenticated, generation != sessionGeneration || session?.user.id != owner { throw CancellationError() }
         guard let url = URL(string: baseURL + path), url.scheme == "https" else {
             throw AppFailure(message: "The Supabase configuration is missing.")
         }
@@ -85,9 +90,10 @@ final class Backend: NSObject {
         extra.forEach { request.setValue($1, forHTTPHeaderField: $0) }
         if let body { request.httpBody = try JSONEncoder().encode(body) }
         let (data, response) = try await http.data(for: request)
+        if authenticated, generation != sessionGeneration || session?.user.id != owner { throw CancellationError() }
         if authenticated, (response as? HTTPURLResponse)?.statusCode == 401, retryAuthentication {
             try await refreshIfNeeded(force: true)
-            return try await self.request(path, method: method, body: body, authenticated: true, extra: extra, retryAuthentication: false)
+            return try await self.request(path, method: method, body: body, authenticated: true, extra: extra, retryAuthentication: false, expectedAccount: owner)
         }
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let error = (try? JSONDecoder().decode(Record.self, from: data)) ?? Record()
@@ -99,19 +105,26 @@ final class Backend: NSObject {
     func refreshIfNeeded(force: Bool = false) async throws {
         guard let current = session else { throw AppFailure(message: "Please sign in again.") }
         guard force || current.expires_at < Date().timeIntervalSince1970 + 90 else { return }
-        if let refreshTask { session = try await refreshTask.value; return }
         let generation = sessionGeneration
+        if let refreshTask {
+            let next = try await refreshTask.value
+            guard generation == sessionGeneration, session?.user.id == current.user.id, next.user.id == current.user.id else { throw CancellationError() }
+            session = next; return
+        }
+        let id = UUID(); refreshID = id
         let task = Task { @MainActor in
             let data = try await self.request("/auth/v1/token?grant_type=refresh_token", method: "POST",
                 body: ["refresh_token": .string(current.refresh_token)], authenticated: false)
             let next = try JSONDecoder().decode(Session.self, from: data)
-            guard generation == self.sessionGeneration else { throw CancellationError() }
+            guard generation == self.sessionGeneration, self.session?.user.id == current.user.id, next.user.id == current.user.id else { throw CancellationError() }
             try self.saveSession(next)
             return next
         }
         refreshTask = task
-        defer { refreshTask = nil }
-        session = try await task.value
+        defer { if refreshID == id { refreshTask = nil; refreshID = nil } }
+        let next = try await task.value
+        guard generation == sessionGeneration, session?.user.id == current.user.id else { throw CancellationError() }
+        session = next
     }
     /// Hydrates metadata discarded by older app versions without requiring another sign-in.
     func refreshUser() async throws {
@@ -187,7 +200,23 @@ final class Backend: NSObject {
             if page.count < 500 { return result }; offset += page.count
         }
     }
-    @discardableResult func send(_ change: Mutation) async throws -> Record? {
+    @discardableResult func send(_ change: Mutation, expectedAccount: String? = nil) async throws -> Record? {
+        let expectedOwner = expectedAccount ?? session?.user.id
+        guard expectedOwner == session?.user.id else { throw CancellationError() }
+        if change.table == FocusSessionChange.table {
+            guard let account = session?.user.id, FocusSessionChange.valid(change, account: account), let baseline = change.baseline else {
+                throw AppFailure(message: "TASKFOLD_FOCUS_CONFLICT: Review this Focus session before replacing synced state.")
+            }
+            let data = try await request("/rest/v1/rpc/taskfold_set_focus_session", method: "POST", body: [
+                "_base": .object(baseline), "_action": change.fields["action_id"]!, "_state": change.fields["state"]!], expectedAccount: account)
+            let saved = try JSONDecoder().decode(Record.self, from: data)
+            guard FocusSessionChange.validRow(saved, account: account),
+                  saved["revision"] == change.fields["revision"], saved["action_id"] == change.fields["action_id"],
+                  saved["state"] == change.fields["state"] else {
+                throw AppFailure(message: "The server did not confirm this Focus session. It remains saved on this device.")
+            }
+            return saved
+        }
         // Both native clients protect edits with the same server-side baseline merge.
         if change.table == "tasks", change.method == "PATCH" {
             // Missing baselines cannot safely distinguish a clear from no change.
@@ -201,7 +230,7 @@ final class Backend: NSObject {
                 }
             }
             let data = try await request("/rest/v1/rpc/taskfold_patch_task", method: "POST", body: [
-                "_id": .string(change.recordID), "_base": .object(baseline), "_changes": .object(change.fields)])
+                "_id": .string(change.recordID), "_base": .object(baseline), "_changes": .object(change.fields)], expectedAccount: expectedOwner)
             let saved = try JSONDecoder().decode(Record.self, from: data)
             guard saved.id.lowercased() == change.recordID.lowercased() else {
                 throw AppFailure(message: "The server did not confirm this edit. Your change is saved on this device.")
@@ -212,12 +241,12 @@ final class Backend: NSObject {
             guard let baseline = change.baseline, baseline["id"] != nil, baseline["user_id"] != nil, baseline["title"] != nil else {
                 // An old queue can outlive the task. Only visible, existing rows need review.
                 let escaped = change.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? change.recordID
-                let data = try await request("/rest/v1/tasks?id=eq.\(escaped)&select=id")
+                let data = try await request("/rest/v1/tasks?id=eq.\(escaped)&select=id", expectedAccount: expectedOwner)
                 if try JSONDecoder().decode([Record].self, from: data).isEmpty { return nil }
                 throw AppFailure(message: "TASKFOLD_CONFLICT: Review this older queued deletion before removing a synced task.")
             }
             let data = try await request("/rest/v1/rpc/taskfold_delete_task", method: "POST", body: [
-                "_id": .string(change.recordID), "_base": .object(baseline)])
+                "_id": .string(change.recordID), "_base": .object(baseline)], expectedAccount: expectedOwner)
             guard try JSONDecoder().decode(Bool.self, from: data) else {
                 throw AppFailure(message: "The server did not confirm this deletion. Your change is saved on this device.")
             }
@@ -228,13 +257,13 @@ final class Backend: NSObject {
         let query = change.method == "POST" ? "?on_conflict=\(conflictKey)" : "?id=eq.\(escapedID)"
         let data = try await request("/rest/v1/\(change.table)\(query)", method: change.method,
             body: change.method == "DELETE" ? nil : change.fields,
-            extra: ["Prefer": change.method == "POST" ? (change.insertOnly == true ? "handling=strict,resolution=ignore-duplicates,missing=default,return=representation" : "resolution=merge-duplicates,return=representation") : "return=representation"])
+            extra: ["Prefer": change.method == "POST" ? (change.insertOnly == true ? "handling=strict,resolution=ignore-duplicates,missing=default,return=representation" : "resolution=merge-duplicates,return=representation") : "return=representation"], expectedAccount: expectedOwner)
         if change.method == "POST", change.insertOnly == true {
             let rows = try JSONDecoder().decode([Record].self, from: data)
             if let saved = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() && $0.string("user_id") == change.fields["user_id"]?.text }) { return saved }
             let owner = (change.fields["user_id"]?.text ?? "").addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
             guard !owner.isEmpty else { throw AppFailure(message: "This new item has no workspace owner.") }
-            let existing = try await request("/rest/v1/\(change.table)?id=eq.\(escapedID)&user_id=eq.\(owner)&select=*")
+            let existing = try await request("/rest/v1/\(change.table)?id=eq.\(escapedID)&user_id=eq.\(owner)&select=*", expectedAccount: expectedOwner)
             let found = try JSONDecoder().decode([Record].self, from: existing)
             guard found.contains(where: { $0.id == change.recordID && $0.string("user_id") == change.fields["user_id"]?.text }) else {
                 throw AppFailure(message: "The server could not confirm this new item. It remains saved on this device.")
@@ -276,7 +305,7 @@ extension Backend {
         let socket = URLSession.shared.webSocketTask(with: components.url!)
         socket.resume()
         defer { socket.cancel(with: .goingAway, reason: nil) }
-        let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders"].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
+        let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions"].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
         let join: [String: JSON] = ["topic": .string("realtime:taskfold-ios"), "event": .string("phx_join"), "ref": .string("1"), "join_ref": .string("1"), "payload": .object(["access_token": .string(session.access_token), "config": .object(["postgres_changes": .array(subscriptions)])])]
         try await socket.send(.string(String(decoding: JSONEncoder().encode(join), as: UTF8.self)))
         let heartbeat = Task { @MainActor in

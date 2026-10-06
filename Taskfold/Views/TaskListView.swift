@@ -6,6 +6,7 @@ import AppKit
 struct TaskListView: View {
     @Environment(Store.self) private var store
     @Environment(\.openPinnedNotes) private var openPinnedNotes
+    @Environment(\.openFocusSession) private var openFocusSession
     @Environment(\.startInboxReview) private var startInboxReview
     @Environment(Workspace.self) private var workspace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -402,6 +403,7 @@ struct TaskListView: View {
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
             Button("Pinned notes", systemImage: "pin") { openPinnedNotes() }.accessibilityIdentifier("openPinnedNotes")
+            Button("Focus session", systemImage: "timer") { openFocusSession() }.accessibilityIdentifier("openFocusSession")
             if scope == .inbox {
                 Button { startInboxReview(.five) } label: { Label("Review Inbox", systemImage: "tray") }
                     .accessibilityIdentifier("reviewInbox")

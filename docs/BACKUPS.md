@@ -35,3 +35,7 @@ A recovery-copy menu offers **Preview restore** and **Export copy**. Preview fol
 Native iPhone user-flow evidence and Mac build results are recorded in the platform validation files. Mac runtime, native cross-device recovery, physical device failure/recovery and online/offline replay remain separate acceptance checks until explicitly recorded.
 
 Completion revisions are exported as historical task metadata and validated as nonnegative integer counters. They cannot be restored over a current server counter. Newly created restore rows start at zero; updates retain the existing counter and completion edits capture its baseline. Old exports without the field remain valid. Older app versions that cannot read the new field need updating before restoring such an export.
+
+## Focus checkpoints
+
+Portable exports save a running Focus session as a paused checkpoint. Restore preserves its elapsed time, remaps task/session IDs and guards the target account’s current revision; it does not resume an old timer or import a server counter. Keep current retains an existing session. Encrypted recovery snapshots also retain queued Focus commands. See [Focus session rules](FOCUS_SESSIONS.md).

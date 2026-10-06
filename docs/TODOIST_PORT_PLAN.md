@@ -247,3 +247,8 @@ Implementation update, 6 October: both native repositories now own cursor-local 
 
 
 Implementation update, 6 October: supported date/time/repeat/reminder phrases now have cursor-local native suggestions in both repositories. Previews use the actual parser and inherited draft fields. Adding a time retains an existing future plan, and keeping a partial reminder leaves earlier reminders accepted. [Verification and limits](P0_IMPLEMENTATION.md#6-october-planning-suggestions-and-preserved-plans) records independent 304-test core suites, six distinct planning iPhone walks, two reference regressions and final native builds; Mac runtime, richer grammar/independent reminders and the remaining full P0/widget/device acceptance stay open.
+
+
+### 6 October: Focus persistence foundation
+
+Both native apps now own a durable task-bound timer and conflict review backed by deployed account-scoped guarded state. Timestamp clocks survive app process death; portable backups freeze running sessions as paused checkpoints and restore against the target revision. Authenticated request/retry/refresh and queued mutation scopes reject stale accounts. [Implementation evidence](P0_IMPLEMENTATION.md#6-october-durable-native-focus-sessions-and-account-scoped-transport) and [Focus contract](FOCUS_SESSIONS.md) separate passing core/SQL/iPhone fixtures from remaining acceptance. The existing ten-widget collection has no dedicated session timer yet. Implement that widget's privacy/palette, owner-bound routes and timestamp rendering, add finish delivery and improve duplicate/large-task selection before installed-host and paired native acceptance. Project pulse, remote reminders and the full P0 scope remain active.

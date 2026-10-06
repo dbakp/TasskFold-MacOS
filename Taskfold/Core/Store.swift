@@ -29,6 +29,7 @@ final class Store {
     var notice: String?
     var widgetActionStatus: String?
     var syncConflict: SyncConflict?
+    var focusSyncConflict: FocusSyncConflict?
     var lastSync: Date?
     var undoStack: [EditHistory] = []
     var redoStack: [EditHistory] = []
@@ -44,6 +45,7 @@ final class Store {
     #if DEBUG
     var widgetFixtureFailSave = false
     var inboxFixtureFailSave = false
+    var focusFixtureFailSave = false
     var widgetFixtureReady = false
     #endif
     var workspaceGeneration: UUID { accountGeneration }
@@ -114,6 +116,31 @@ final class Store {
     var savedViews: [Record] { rows("saved_views").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
     var favorites: [Record] { rows("favorites").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
     var workingHours: WorkingHours { (try? WorkingHours(document: record("view_preferences", id: "planner")?["working_hours"] ?? .null)) ?? WorkingHours() }
+    var focusRecord: Record? { record(FocusSessionChange.table, id: FocusSessionChange.recordID) }
+    var focusAvailable: Bool { workspaceCacheReadable && (signedIn || localMode) }
+    var focusSession: FocusSession? { FocusSessionChange.session(in: focusRecord, account: userID) }
+    @discardableResult func changeFocus(_ session: FocusSession?, expected: Record?, workspace: WorkspaceBinding) -> Bool {
+        guard workspace.matches(account: userID, generation: workspaceGeneration), workspaceCacheReadable, signedIn || localMode,
+              focusSyncConflict == nil, FocusSessionChange.baseline(focusRecord) == FocusSessionChange.baseline(expected) else {
+            error = "This Focus session changed. Review its current state before continuing."; return false
+        }
+        if let session, session.status == .running || session.id != focusSession?.id {
+            guard tasks.contains(where: { $0.id.lowercased() == session.taskID && !$0.completed }) else {
+                error = "This task is no longer open in your workspace."; return false
+            }
+        }
+        do { return commit([try FocusSessionChange.make(session, current: focusRecord, account: userID)], remember: false) }
+        catch { self.error = error.localizedDescription; return false }
+    }
+    @discardableResult func resolveFocusConflict(id: UUID, keepLocal: Bool) -> Bool {
+        guard let conflict = focusSyncConflict, conflict.id == id,
+              let next = conflict.resolving(snapshot, account: userID, keepLocal: keepLocal) else {
+            error = "Reopen the current Focus review before choosing a session."; return false
+        }
+        let old = snapshot; snapshot = next
+        do { try persist() } catch { snapshot = old; self.error = error.localizedDescription; return false }
+        focusSyncConflict = nil; notice = nil; Task { await sync() }; return true
+    }
     @discardableResult func setWorkingHours(_ hours: WorkingHours) -> Bool {
         guard (try? WorkingHours(document: hours.document)) != nil else { error = "Choose valid working hours."; return false }
         var row = record("view_preferences", id: "planner") ?? Record(["id": .string("planner"), "user_id": .string(userID)])
@@ -258,6 +285,7 @@ final class Store {
     func persist() throws {
         #if DEBUG
         if inboxFixtureFailSave { throw WidgetActionFailure("Isolated Inbox review save-failure fixture") }
+        if focusFixtureFailSave { throw WidgetActionFailure("Isolated Focus save-failure fixture") }
         if widgetFixtureFailSave, !snapshot.widgetCompletion.receipts.isEmpty { throw WidgetActionFailure("Isolated widget save-failure fixture") }
         #endif
         WidgetCompletion.prepare(&snapshot)
@@ -394,7 +422,7 @@ final class Store {
     func authenticated() async {
         guard backend.session != nil else { return }
         googleAvatarURL = backend.session?.user.googleAvatarURL; avatarMetadataLoaded = false
-        accountGeneration = UUID(); localMode = false; signedIn = true; syncConflict = nil
+        accountGeneration = UUID(); localMode = false; signedIn = true; syncConflict = nil; focusSyncConflict = nil
         CalendarBusyStore.shared.bind(account: userID)
         UserDefaults.standard.set(false, forKey: "localMode")
         snapshot = Snapshot(); undoStack = []; redoStack = []; load(); Task { await sync() }
@@ -405,13 +433,16 @@ final class Store {
         googleAvatarURL = nil; avatarMetadataLoaded = false
         accountGeneration = UUID(); backend.session = nil; signedIn = false; localMode = false
         UserDefaults.standard.set(false, forKey: "localMode")
-        snapshot = Snapshot(); undoStack = []; redoStack = []; lastSync = nil; syncConflict = nil
+        snapshot = Snapshot(); undoStack = []; redoStack = []; lastSync = nil; syncConflict = nil; focusSyncConflict = nil
         CalendarBusyStore.shared.bind(account: "")
         publishWidgetSnapshot()
         clearScheduledReminders()
     }
     @discardableResult
     func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil) -> Bool {
+        guard changes.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
+            error = "This Focus command needs a valid workspace and revision."; return false
+        }
         let old = snapshot
         let changes = changes.flatMap { TaskAssignment.mutations($0, existing: record($0.table, id: $0.recordID)) }.map { change in
             var change = change
@@ -438,7 +469,8 @@ final class Store {
         }
         if let widgetReceipt { snapshot.widgetCompletion.record(widgetReceipt) }
         do { try persist() } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
-        if remember, !changes.isEmpty { undoStack.append(EditHistory(changes: changes, snapshot: old)); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
+        let historyChanges = changes.filter { $0.table != FocusSessionChange.table }
+        if remember, !historyChanges.isEmpty { undoStack.append(EditHistory(changes: historyChanges, snapshot: old)); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
         Task { await reschedule(); await sync() }
         return true
     }
@@ -546,19 +578,19 @@ final class Store {
     }
     func sync() async {
         consumeWidgetCompletions()
-        guard signedIn, !localMode, online, !syncing, syncConflict == nil else { return }
-        syncing = true; let generation = accountGeneration
+        guard signedIn, !localMode, online, !syncing, syncConflict == nil, focusSyncConflict == nil else { return }
+        syncing = true; let generation = accountGeneration, account = userID
         var sending: Mutation?
         defer { syncing = false }
         do {
             while let mutation = snapshot.pending.first {
                 sending = mutation
-                let saved = try await backend.send(mutation)
+                let saved = try await backend.send(mutation, expectedAccount: account)
                 guard generation == accountGeneration else { return }
                 snapshot.acknowledge(mutation, saved: saved); try persist()
             }
             var remote: [String: [Record]] = [:]
-            for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders"] {
+            for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions"] {
                 remote[table] = try await backend.rows(table)
                 guard generation == accountGeneration else { return }
             }
@@ -573,6 +605,16 @@ final class Store {
         } catch {
             if generation == accountGeneration {
                 notice = "Sync paused: \(error.localizedDescription)"
+                if error.localizedDescription.contains("TASKFOLD_FOCUS_CONFLICT:"), let mutation = sending,
+                   mutation.table == FocusSessionChange.table,
+                   let data = try? await backend.request("/rest/v1/focus_sessions?id=eq.current&select=*"),
+                   let remoteRows = try? JSONDecoder().decode([Record].self, from: data),
+                   generation == accountGeneration, snapshot.pending.contains(mutation) {
+                    let remote = remoteRows.first ?? FocusSessionChange.emptyRow(account: userID)
+                    guard FocusSessionChange.validRow(remote, account: userID) else { return }
+                    focusSyncConflict = FocusSyncConflict(mutation: mutation, remote: remote)
+                    notice = "Focus changed on another device. Open Focus session to review it and resume sync."
+                }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation = sending,
                    mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
                    let escaped = mutation.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics),
@@ -762,6 +804,34 @@ extension Store {
         snapshot = Snapshot(tables: ["tasks": [first, done, privateTask]])
         for task in [first, done] { if let change = PinnedNotes.change(taskID: task.id, enabled: true, pins: [], account: userID) { snapshot.apply(change) } }
         undoStack = []; redoStack = []; try? persist()
+    }
+    func seedFocusSessionFixture() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--focus-session-seed") else { return }
+        dailyBackupsEnabled = false; disableNotifications(); focusSyncConflict = nil
+        var task = Record.task(user: userID); task["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31"); task["title"] = .string("Focus on the next useful step")
+        snapshot = Snapshot(tables: ["tasks": [task]]); undoStack = []; redoStack = []
+        if ProcessInfo.processInfo.arguments.contains("--focus-session-unavailable"),
+           let session = try? FocusSession(taskID: task.id, minutes: 25),
+           let start = try? FocusSessionChange.make(session, current: nil, account: userID) {
+            snapshot.apply(start); snapshot.tables["tasks"] = []
+        }
+        if ProcessInfo.processInfo.arguments.contains("--focus-session-finished"),
+           let session = try? FocusSession(taskID: task.id, minutes: 1, now: Date().addingTimeInterval(-120)),
+           let start = try? FocusSessionChange.make(session, current: nil, account: userID) { snapshot.apply(start) }
+        if ProcessInfo.processInfo.arguments.contains("--focus-session-conflict") {
+            let now = Date()
+            if let session = try? FocusSession(taskID: task.id, minutes: 25, now: now.addingTimeInterval(-60)),
+               let start = try? FocusSessionChange.make(session, current: nil, account: userID),
+               let paused = try? session.paused(at: now),
+               let pause = try? FocusSessionChange.make(paused, current: Record(start.fields), account: userID),
+               let other = try? FocusSession(taskID: task.id, minutes: 45, now: now),
+               let remote = try? FocusSessionChange.make(other, current: nil, account: userID) {
+                snapshot.apply(start); snapshot.apply(pause); snapshot.pending = [start,pause]
+                focusSyncConflict = FocusSyncConflict(mutation: start, remote: Record(remote.fields))
+            }
+        }
+        try? persist()
+        focusFixtureFailSave = ProcessInfo.processInfo.arguments.contains("--focus-session-fail-save")
     }
     func pinnedNotesFixtureProjection() -> String {
         _ = widgetPublicationRevision
