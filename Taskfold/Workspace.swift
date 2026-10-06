@@ -87,6 +87,7 @@ final class Workspace {
             quickAdd = remembered.draft
         }
     }
+    var deadlineSelection: DeadlineSelection?
     var selection = Set<String>() {
         didSet { if selection != oldValue && !selection.isEmpty { finderTaskID = nil } }
     }
@@ -180,6 +181,7 @@ final class Workspace {
         finderPresented = false
         pendingFinderCommand = nil
         selection = []
+        deadlineSelection = nil
         search = ""
         quickAdd = ""
     }
@@ -342,6 +344,16 @@ final class Workspace {
         withAnimation(layout) { updateTasks(ids, fields: ["project_id": project.isEmpty ? .null : .string(project), "section_id": .null], name: "Move to Project") }
         Feedback.drop()
         confirm("Moved to \(project.isEmpty ? "Inbox" : store.record("projects", id: project)?.name ?? "project")")
+    }
+    func editDeadlines(_ ids: Set<String>) { deadlineSelection = DeadlineSelection(account: store.userID, ids: ids) }
+    func setDeadlines(_ request: DeadlineSelection, day: String?) throws -> Bool {
+        guard request.account == store.userID else { throw PlannerFailure(message: "This workspace changed. Select tasks again.") }
+        let changes = try TaskDeadlines.changes(tasks: request.ids.compactMap { taskRecord($0) }, day: day)
+        guard !changes.isEmpty else { return true }
+        let fields = try TaskDeadlines.fields(day: day)
+        guard updateTasks(request.ids, fields: fields, name: day == nil ? "Clear Deadlines" : "Set Deadlines") else { return false }
+        Feedback.drop(); confirm(day == nil ? "Deadlines cleared" : "\(changes.count) \(changes.count == 1 ? "deadline" : "deadlines") set")
+        return true
     }
     func setPriority(_ ids: Set<String>, _ value: Int) {
         withAnimation(layout) { updateTasks(ids, fields: ["priority": .number(Double(value))], name: "Set Priority") }
@@ -605,7 +617,8 @@ extension Workspace {
         }
         var result = root; result["subtasks"] = .array(list); return result
     }
-    func updateTasks(_ ids: Set<String>, fields: [String: JSON], name: String) {
+    @discardableResult
+    func updateTasks(_ ids: Set<String>, fields: [String: JSON], name: String) -> Bool {
         var roots: [String: Record] = [:]
         for id in ids.sorted(by: { taskDepth($0) < taskDepth($1) }) {
             guard var task = taskRecord(id) else { continue }
@@ -620,6 +633,9 @@ extension Workspace {
             let changed = record.fields.filter { original.fields[$0.key] != $0.value }
             return changed.isEmpty ? nil : Mutation(table: "tasks", recordID: record.id, method: "PATCH", fields: changed)
         }
-        run(name) { _ = store.commit(changes) }
+        guard !changes.isEmpty else { return true }
+        var saved = false
+        run(name) { saved = store.commit(changes) }
+        return saved
     }
 }

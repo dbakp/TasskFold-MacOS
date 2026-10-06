@@ -2,6 +2,23 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testBulkDeadlineInspectorSetUndoAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--deadline-fixture"]; app.launch()
+        let first = app.staticTexts["Prepare launch"], second = app.staticTexts["Review copy"]
+        XCTAssertTrue(first.waitForExistence(timeout: 10)); first.click()
+        XCUIElement.perform(withKeyModifiers: [.command]) { second.click() }
+        XCTAssertTrue(app.buttons["bulkDeadlines"].waitForExistence(timeout: 5)); app.buttons["bulkDeadlines"].click()
+        XCTAssertTrue(app.buttons["bulkDeadlineApply"].waitForExistence(timeout: 5)); app.buttons["bulkDeadlineApply"].click()
+        XCTAssertTrue(app.buttons["undoConfirmation"].waitForExistence(timeout: 5)); app.buttons["undoConfirmation"].click()
+        app.typeKey("z", modifierFlags: [.command, .shift])
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
+        XCTAssertTrue(first.waitForExistence(timeout: 10)); first.click()
+        XCUIElement.perform(withKeyModifiers: [.command]) { second.click() }
+        app.buttons["bulkDeadlines"].click()
+        XCTAssertFalse(app.staticTexts["No deadline"].exists)
+        XCTAssertFalse(app.buttons["bulkDeadlineApply"].isEnabled); app.buttons["bulkDeadlineCancel"].click(); app.terminate()
+    }
+
     @MainActor func testQuickReminderCaptureInspectorAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch()
         app.typeKey("n", modifierFlags: .command)

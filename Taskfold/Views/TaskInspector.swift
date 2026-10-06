@@ -46,6 +46,7 @@ struct MultiSelectionInspector: View {
                     Divider()
                     Button("Remove Date") { workspace.reschedule(workspace.selection, to: nil, label: "") }
                 }
+                Button("Edit Deadlines…", systemImage: "flag.checkered") { workspace.editDeadlines(workspace.selection) }.accessibilityIdentifier("bulkDeadlines")
                 Menu("Move to") {
                     Button("Inbox") { workspace.move(workspace.selection, toProject: "") }
                     ForEach(store.projects) { project in Button(project.name) { workspace.move(workspace.selection, toProject: project.id) } }
@@ -433,5 +434,81 @@ struct CommentAttachmentPreview: View {
             if value.hasPrefix("data:image/"), let comma = value.firstIndex(of: ","),
                let data = Data(base64Encoded: String(value[value.index(after: comma)...])) { image = NSImage(data: data) }
         }
+    }
+}
+
+
+/// The captured IDs never expand when selection or scope changes behind this sheet.
+struct BulkDeadlineEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(Store.self) private var store
+    let request: DeadlineSelection
+    let records: [Record]
+    let apply: (String?) throws -> Bool
+    @State private var date = Date()
+    @State private var clearing = false
+    @State private var message: String?
+    private var day: String? { clearing ? nil : TaskPlanner.dayKey(date) }
+    private var changedCount: Int { records.filter { $0["deadline_date"] != day.map(JSON.string) ?? .null }.count }
+    private var available: Bool { request.account == store.userID && !records.isEmpty }
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Picker("Action", selection: $clearing) {
+                        Text("Set a deadline").tag(false); Text("Clear deadlines").tag(true)
+                    }.pickerStyle(.segmented).accessibilityIdentifier("bulkDeadlineAction")
+                    if !clearing {
+                        DatePicker("Deadline", selection: $date, displayedComponents: .date)
+                            .datePickerStyle(.graphical).accessibilityIdentifier("bulkDeadlineDate")
+                    }
+                } footer: {
+                    Text("A deadline is when work must be finished. Planned dates, times, estimates and reminders stay in place.")
+                }
+                Section("Selected tasks") {
+                    if request.account != store.userID { Text("This workspace changed. Close this editor and select tasks again.").foregroundStyle(.secondary) }
+                    else {
+                        ForEach(records) { task in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(task.title).font(.body.weight(.medium))
+                                Text(task.deadline.map { "Deadline · " + $0.formatted(date: .abbreviated, time: .omitted) } ?? "No deadline")
+                                    .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("bulkDeadlineCurrent-" + task.id)
+                                Text(TaskPlanner.dayDate(task).map { "Planned · " + $0.formatted(date: .abbreviated, time: .omitted) + (task.string("due_time").isEmpty ? "" : " · " + TaskPlanner.clockValue(task)) } ?? "No planned date")
+                                    .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("bulkDeadlinePlan-" + task.id)
+                            }.padding(.vertical, 3)
+                        }
+                        let missing = request.ids.count - records.count
+                        if missing > 0 { Text("\(missing) selected \(missing == 1 ? "task is" : "tasks are") no longer available and will be skipped.").font(.footnote).foregroundStyle(.secondary) }
+                    }
+                }
+                Section {
+                    Text(changedCount == 0 ? "The selected tasks already match this choice." : "\(changedCount) \(changedCount == 1 ? "task will" : "tasks will") change as one undoable step.").font(.footnote).foregroundStyle(.secondary)
+                    if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("bulkDeadlineError") }
+                }
+            }.formStyle(.grouped)
+            .navigationTitle("Edit deadlines")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("bulkDeadlineCancel") }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(clearing ? "Clear" : "Apply") {
+                        do {
+                            if try apply(day) { dismiss() } else { message = "The deadlines could not be saved. Try again." }
+                        } catch { message = error.localizedDescription }
+                    }.disabled(!available || changedCount == 0).accessibilityIdentifier("bulkDeadlineApply")
+                }
+            }
+            .onAppear {
+                let values = Set(records.map { $0.string("deadline_date") })
+                if values.count == 1, let value = values.first, let existing = Dates.parse(value) { date = existing }
+            }
+        }
+        #if os(iOS)
+        .presentationDetents([.large])
+        #else
+        .frame(width: 460, height: 570)
+        #endif
     }
 }

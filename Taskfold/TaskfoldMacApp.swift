@@ -128,6 +128,7 @@ struct TaskfoldCommands: Commands {
                 Divider()
                 Button("Remove Date") { workspace.reschedule(workspace.actionSelection, to: nil, label: "") }
             }.disabled(workspace.actionSelection.isEmpty)
+            Button("Edit Deadlines…") { workspace.editDeadlines(workspace.actionSelection) }.keyboardShortcut("d", modifiers: [.command, .option, .shift]).disabled(workspace.actionSelection.isEmpty)
             Menu("Move to Project") {
                 Button("Inbox") { workspace.move(workspace.actionSelection, toProject: "") }
                 ForEach(store.projects) { project in Button(project.name) { workspace.move(workspace.actionSelection, toProject: project.id) } }

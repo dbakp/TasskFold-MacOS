@@ -147,3 +147,8 @@ Both native clients use guarded task edits and review overlapping changes before
 The inspector’s Reminders screen supports fixed dates and offsets before or after planned time, per-task opt-out, device/workspace delivery permission and visible scheduling feedback. Reminder choices sync with iOS through the guarded task queue. Completion, deletion, rescheduling and account switches invalidate stale reminders and snoozes. See [behavior, the persisted contract and the remaining remote delivery plan](docs/REMINDERS.md).
 
 Quick entry also accepts multiple `!30m` (from now), `!30mb` (before the plan), and `!tomorrow 9am` fixed reminder shortcuts. Each has its own removable chip; see [reminder syntax and delivery](docs/REMINDERS.md#reminders-in-quick-entry).
+
+
+## Bulk deadlines
+
+Select tasks → inspector Actions → Edit Deadlines, use the task context menu, or Task → Edit Deadlines (⌘⌥⇧D). Set one hard cutoff or clear existing cutoffs after reviewing current deadlines and planned dates/times. The edit preserves plans, fixed instants, estimates and reminders and uses one undo step. Cancel saves nothing; unchanged/missing tasks are skipped. Selection and workspace are captured when opening the sheet, current records are used at Apply, and switching workspaces prevents saving into another account. [Current test evidence](docs/P0_IMPLEMENTATION.md#6-october-bulk-deadline-editing) distinguishes iPhone runtime checks from Mac compilation.

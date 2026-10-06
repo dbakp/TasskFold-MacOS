@@ -165,3 +165,48 @@ enum TaskPlanner {
         return min(10080, max(1, old + delta))
     }
 }
+
+
+struct DeadlineSelection: Identifiable, Sendable {
+    var id = UUID()
+    var account: String
+    var ids: Set<String>
+}
+
+/// A deadline is a Gregorian calendar date, separate from every planned-time field.
+enum TaskDeadlines {
+    static func fields(day: String?) throws -> [String: JSON] {
+        guard let day else { return ["deadline_date": .null] }
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        guard day.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil,
+              let year = Int(day.prefix(4)), year > 0,
+              let date = Dates.parse(day, calendar: calendar), TaskPlanner.dayKey(date, calendar: calendar) == day else {
+            throw PlannerFailure(message: "Choose a valid deadline date.")
+        }
+        return ["deadline_date": .string(day)]
+    }
+    static func changes(tasks: [Record], day: String?) throws -> [Mutation] {
+        let fields = try fields(day: day)
+        var seen = Set<String>()
+        return tasks.sorted { $0.id < $1.id }.compactMap { task in
+            guard !task.id.isEmpty, seen.insert(task.id).inserted, task["deadline_date"] != fields["deadline_date"] else { return nil }
+            return Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields, baseline: ["deadline_date": task["deadline_date"]])
+        }
+    }
+}
+
+#if DEBUG
+extension Snapshot {
+    static func deadlineFixture(user: String) -> Snapshot {
+        var first = Record.task(user: user)
+        first["id"] = .string("dddddddd-dddd-4ddd-8ddd-dddddddddd01"); first["title"] = .string("Prepare launch")
+        first["due_date"] = .string("2026-10-10"); first["due_time"] = .string("09:00"); first["time_zone"] = .string("Europe/Copenhagen")
+        first["scheduled_at"] = .string("2026-10-10T07:00:00Z"); first["deadline_date"] = .string("2026-10-12")
+        first["duration_minutes"] = .number(25); first["reminder_specs"] = .array([.object(ReminderSpec.relative(-30).raw)])
+        var second = Record.task(user: user)
+        second["id"] = .string("dddddddd-dddd-4ddd-8ddd-dddddddddd02"); second["title"] = .string("Review copy")
+        second["due_date"] = .string("2026-10-11"); second["due_time"] = .string("15:00"); second["deadline_date"] = .null
+        var result = Snapshot(); result.tables["tasks"] = [first, second]; return result
+    }
+}
+#endif

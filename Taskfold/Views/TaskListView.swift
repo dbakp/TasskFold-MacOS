@@ -355,6 +355,7 @@ struct TaskListView: View {
                 Divider()
                 Button("Remove Date", systemImage: "calendar.badge.minus") { workspace.reschedule(targets, to: nil, label: "") }
             }
+            Button("Edit Deadlines…", systemImage: "flag.checkered") { workspace.editDeadlines(targets) }.accessibilityIdentifier("bulkDeadlines")
             Menu("Move to") {
                 Button("Inbox", systemImage: "tray") { workspace.move(targets, toProject: "") }
                 ForEach(store.projects) { project in Button(project.name, systemImage: "folder") { workspace.move(targets, toProject: project.id) } }

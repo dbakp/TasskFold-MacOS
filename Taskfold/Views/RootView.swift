@@ -22,6 +22,11 @@ struct RootView: View {
         .onChange(of: store.signedIn) { _, signedIn in if !signedIn { workspace.clearNavigationMemory() } }
         .onChange(of: reduceMotion) { _, value in workspace.reduceMotion = value }
         .onChange(of: undoManager) { _, value in workspace.undoManager = value }
+        .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
+            BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.ids.sorted().compactMap { workspace.taskRecord($0) } : []) { day in
+                try workspace.setDeadlines(request, day: day)
+            }
+        }
         .alert("Something needs attention", isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) { Button("OK") { store.error = nil } } message: { Text(store.error ?? "") }
         .task(id: "refresh-\(store.signedIn)") {
             guard store.signedIn else { return }
@@ -215,6 +220,10 @@ struct RootView: View {
             try? store.persist()
         }
         if arguments.contains("--invitation-link-fixture") { pendingInvitations = true }
+        if arguments.contains("--uitesting") && arguments.contains("--deadline-fixture") {
+            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            store.snapshot = Snapshot.deadlineFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
+        }
         if arguments.contains("--uitesting") && arguments.contains("--reminder-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
             var task = Record.task(user: store.userID, date: Date())

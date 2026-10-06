@@ -55,7 +55,7 @@ Priority: P0 enables daily usefulness or protects data; P1 expands planning and 
 | Subtasks, comments, file attachments | Present; embedded arrays and depth differ between clients | Stable child IDs, equivalent hierarchy/editor behavior, item-level conflict handling; audio comments and richer text are absent | P1 |
 | Task quick entry | Project/section/assignee references, stable labels, date/time/priority, estimate/deadline and multiple fixed/relative reminder tokens, escaping and declined chips implemented in both native apps | Richer task/independent-reminder recurrence grammar, autocomplete and remaining platform/runtime acceptance | P0 |
 | Saved filters and favorites | Versioned query AST/evaluator, builder, named views, favorites, list/board choices and synchronized preferences/orders implemented in both native apps | Full Todoist query-language/import coverage and paired native/offline/account acceptance | P0 |
-| Date versus hard deadline | Independent deadline, editor controls, filters, badges, import, backup and Deadline radar implemented; moving the plan preserves the cutoff | Bulk deadline editing and remaining paired/device acceptance | P0 |
+| Date versus hard deadline | Independent deadline, editor controls, filters, badges, bulk set/clear with grouped undo, import, backup and Deadline radar implemented; moving the plan preserves the cutoff | Remaining paired/device acceptance and native Mac bulk interaction | P0 |
 | Task duration and calendar time blocking | Estimates and hourly Day planner, all-day lane, overlaps, drag/resize undo, DST handling and selected EventKit busy time implemented | Remaining native Mac/iPad/accessibility, calendar-permission, keyboard and paired-device acceptance | P0 |
 | Fixed versus floating time | Floating wall-clock plans and explicit zoned instants implemented, including local-day projection and the second DST fold | Physical travel, closed-app floating reminder behavior and remaining native interaction acceptance | P1 |
 | Advanced recurring dates | Basic daily/weekly/monthly/custom rules exist | Completion-relative repeats, yearly/ordinal rules and end/start boundaries with explicit semantics | P1 |
@@ -113,6 +113,8 @@ Estimated 2–3 engineer-weeks, after the query foundation.
 - Use one timestamp/date policy across clients. Add `time_mode` and IANA `time_zone` before introducing travel-sensitive calendar sync; migrate existing times as floating to preserve behavior.
 
 Acceptance: moving a task to tomorrow never moves its deadline; old caches decode; undo restores both fields; recurrence does not copy an expired one-off deadline; exports/imports preserve supported fields. Fixture travel from Copenhagen to New York keeps a fixed instant fixed and a floating 09:00 at 09:00.
+
+Implementation update, 6 October: both native apps now own bulk deadline set/clear previews with grouped undo, preserved planning/reminder fields, captured selection/workspace and current-record application. iPhone cancellation, set, undo/redo, clear, relaunch and dark largest-text walks pass. Mac interaction and paired native sync remain acceptance work; see [P0 evidence](P0_IMPLEMENTATION.md#6-october-bulk-deadline-editing).
 
 ### Phase 3 Reminder and recurrence reliability
 
