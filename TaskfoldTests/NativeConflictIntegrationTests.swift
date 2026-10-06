@@ -53,6 +53,31 @@ final class NativeConflictIntegrationTests: XCTestCase {
             let final = try XCTUnwrap(finalRows.first { $0.id == task.id })
             XCTAssertEqual(final.title, "My chosen title"); XCTAssertEqual(final["deadline_date"], .string("2026-10-25"))
             XCTAssertEqual(Set(final["comments"].list.map { $0.object["id"]?.text ?? "" }), ["a", "b"])
+            // One native client is offline while the other completes and reopens.
+            let oldCompletion = try XCTUnwrap(TaskCompletion.complete(final, tasks: [final]).first)
+            let otherCompletion = try XCTUnwrap(TaskCompletion.complete(final, tasks: [final], at: Date().addingTimeInterval(-60)).first)
+            let firstResult = try await b.send(otherCompletion); let firstDone = try XCTUnwrap(firstResult)
+            XCTAssertEqual(firstDone["completion_version"].integer, final["completion_version"].integer + 1)
+            let reopen = try XCTUnwrap(TaskCompletion.toggle(firstDone, tasks: [firstDone]).first)
+            let openResult = try await b.send(reopen); let currentOpen = try XCTUnwrap(openResult)
+            XCTAssertFalse(currentOpen.completed)
+            do { try await a.send(oldCompletion); XCTFail("Offline completion replaced remote reopen") }
+            catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:")) }
+            var offline = Snapshot(); offline.tables["tasks"] = [final]; offline.pending = [oldCompletion]; offline.apply(oldCompletion)
+            let reviewedCompletion = try XCTUnwrap(SyncConflict(mutation: oldCompletion, remote: currentOpen).resolving(offline, keepLocal: true))
+            let approvedCompletion = try XCTUnwrap(reviewedCompletion.pending.first)
+            let approvedResult = try await a.send(approvedCompletion); let approved = try XCTUnwrap(approvedResult)
+            let retryResult = try await a.send(approvedCompletion); let retry = try XCTUnwrap(retryResult)
+            XCTAssertTrue(approved.completed); XCTAssertEqual(retry["completion_version"], approved["completion_version"])
+            XCTAssertEqual(TaskPlanning.instant(approved.string("completed_at")), TaskPlanning.instant(approvedCompletion.fields["completed_at"]!.text))
+            // A later cycle ends in precisely the same visible completion state.
+            let oldReopen = try XCTUnwrap(TaskCompletion.toggle(approved, tasks: [approved]).first)
+            let reopenedResult = try await b.send(oldReopen); let reopened = try XCTUnwrap(reopenedResult)
+            let reComplete = Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["completed": .bool(true), "completed_at": approved["completed_at"]], baseline: ["completed": reopened["completed"], "completed_at": reopened["completed_at"], "completion_version": reopened["completion_version"]])
+            let cycleResult = try await b.send(reComplete); let cycled = try XCTUnwrap(cycleResult)
+            XCTAssertEqual(cycled["completed_at"], approved["completed_at"])
+            do { try await a.send(oldReopen); XCTFail("Offline reopen replaced a later completion cycle") }
+            catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:")) }
         } catch { try? await cleanup(); throw error }
         try await cleanup()
         let remaining = try await b.rows("tasks"); XCTAssertFalse(remaining.contains { $0.id == task.id })

@@ -127,7 +127,7 @@ struct DueReminder: Equatable, Sendable {
                 guard let date = spec.date(task: task, calendar: calendar) else { return nil }
                 let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
                 let encoded = (try? encoder.encode(JSON.object(spec.raw))).flatMap { String(data: $0, encoding: .utf8) } ?? ""
-                let signature = digest(encoded + "|" + String(date.timeIntervalSince1970))
+                let signature = digest(encoded + "|" + String(date.timeIntervalSince1970) + "|completion:" + String(task["completion_version"].integer))
                 return DueReminder(id: raw.isEmpty ? task.id : task.id + "." + spec.id, title: task.title, body: task.string("description"), date: date, taskID: task.id, specID: spec.id, signature: signature)
             }
         }.sorted { $0.date == $1.date ? $0.id < $1.id : $0.date < $1.date }

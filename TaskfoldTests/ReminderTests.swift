@@ -37,6 +37,19 @@ final class ReminderTests: XCTestCase {
     func state(_ revision: Int, tasks: [Record], account: String = "account") -> ReminderState {
         ReminderState(revision: revision, account: account, events: DueReminder.events(tasks: tasks, calendar: calendar), now: now)
     }
+    func testCompletionCycleInvalidatesOldNotificationAndSnoozeWithoutChangingItsPlannedTime() throws {
+        var row = task(); let first = try XCTUnwrap(DueReminder.events(tasks: [row], calendar: calendar).first)
+        let request = ReminderRequest.make(account: "account", event: first, fireAt: first.date.addingTimeInterval(3600), snoozed: true)
+        row["completion_version"] = .number(0)
+        XCTAssertEqual(DueReminder.events(tasks: [row], calendar: calendar).first?.signature, first.signature)
+        row["title"] = .string("Unrelated edit")
+        XCTAssertTrue(request.valid(account: "account", events: DueReminder.events(tasks: [row], calendar: calendar)))
+        row["completion_version"] = .number(2)
+        let next = try XCTUnwrap(DueReminder.events(tasks: [row], calendar: calendar).first)
+        XCTAssertEqual(first.date, next.date); XCTAssertNotEqual(first.signature, next.signature)
+        XCTAssertFalse(request.valid(account: "account", events: [next]))
+        XCTAssertEqual(ReminderRequest.make(account: "account", event: next).identifier, ReminderRequest.make(account: "account", event: first).identifier)
+    }
     func testLegacyPreferenceIsScopedAndDisablingDoesNotAffectAnotherAccount() {
         let name = "taskfold-reminder-tests-" + UUID().uuidString
         let defaults = UserDefaults(suiteName: name)!; defer { defaults.removePersistentDomain(forName: name) }

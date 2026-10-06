@@ -47,7 +47,7 @@ final class NativeReminderIntegrationTests: XCTestCase {
             let finalRows = try await b.rows("tasks"), final = try XCTUnwrap(finalRows.first { $0.id == task.id })
             XCTAssertEqual(final.title, "Independent device edit"); XCTAssertEqual(final["reminder_specs"], edited["reminder_specs"])
             XCTAssertTrue(final["reminder_specs"].list.contains(unknown)); XCTAssertEqual(DueReminder.events(tasks: [final]).count, 3)
-            try await b.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["completed": .bool(true)], baseline: ["completed": .bool(false)]))
+            try await b.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["completed": .bool(true)], baseline: ["completed": .bool(false), "completion_version": .number(0)]))
             let completedRows = try await a.rows("tasks"), completed = try XCTUnwrap(completedRows.first { $0.id == task.id })
             XCTAssertTrue(DueReminder.events(tasks: [completed]).isEmpty)
         } catch { try? await cleanup(); throw error }

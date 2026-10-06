@@ -51,7 +51,7 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
     static func task(user: String, project: String = "", date: Date? = nil) -> Record {
         Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(user),
                 "title": .string(""), "description": .string(""), "completed": .bool(false),
-                "priority": .number(4), "project_id": project.isEmpty ? .null : .string(project),
+                "completion_version": .number(0), "priority": .number(4), "project_id": project.isEmpty ? .null : .string(project),
                 "due_date": date.map { .string(Dates.day($0)) } ?? .null,
                 "created_at": .string(Dates.timestamp()), "labels": .array([]),
                 "subtasks": .array([]), "comments": .array([]), "attachments": .array([]),
@@ -125,6 +125,40 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var insertOnly: Bool? = nil
 }
 
+/// A local prediction follows the server counter; only the server owns confirmed revisions.
+enum TaskCompletionRevision {
+    static func touches(_ fields: [String: JSON]) -> Bool { fields["completed"] != nil || fields["completed_at"] != nil }
+    static func editBaseline(for fields: [String: JSON], from original: Record) -> [String: JSON] {
+        var baseline = Dictionary(uniqueKeysWithValues: fields.keys.map { ($0, original[$0]) })
+        if touches(fields) { baseline["completion_version"] = original.fields["completion_version"] ?? .number(0) }
+        return baseline
+    }
+    static func capturing(_ change: Mutation, existing: Record?) -> Mutation {
+        var change = change
+        if change.table == "tasks", change.method == "PATCH" { change.fields.removeValue(forKey: "completion_version") }
+        if change.table == "tasks", change.method == "PATCH", touches(change.fields), let existing {
+            if change.baseline == nil { change.baseline = editBaseline(for: change.fields, from: existing) }
+            if change.baseline?["completion_version"] == nil { change.baseline?["completion_version"] = existing.fields["completion_version"] ?? .number(0) }
+        }
+        if change.table == "tasks", change.method == "POST" { change.fields["completion_version"] = .number(0) }
+        return change
+    }
+    static func applying(_ fields: [String: JSON], to old: Record) -> Record {
+        var row = old; row.fields.merge(fields) { _, new in new }
+        if fields["completion_version"] == nil, touches(fields),
+           old.completed != row.completed || instant(old["completed_at"]) != instant(row["completed_at"]) {
+            row["completion_version"] = .number(Double(old["completion_version"].integer + 1))
+        }
+        return row
+    }
+    private static func instant(_ value: JSON) -> JSON {
+        guard case .string(let text) = value else { return value }
+        let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let date = formatter.date(from: text) ?? ISO8601DateFormatter().date(from: text) else { return value }
+        return .number(date.timeIntervalSince1970)
+    }
+}
+
 /// Applies only the user's changes when explicitly resolving a conflict. Remote-only items survive.
 enum TaskEdit {
     static func keepingLocal(base: JSON, desired: JSON, remote: JSON) -> JSON {
@@ -181,7 +215,23 @@ struct SyncConflict: Identifiable {
                 (key, mutation.baseline?[key].map { TaskEdit.keepingLocal(base: $0, desired: value, remote: remote[key]) } ?? value)
             })
             result.pending[index].baseline = Dictionary(uniqueKeysWithValues: mutation.fields.keys.map { ($0, remote[$0]) })
-        } else { result.pending.remove(at: index) }
+            result.pending[index] = TaskCompletionRevision.capturing(result.pending[index], existing: remote)
+            if TaskCompletionRevision.touches(mutation.fields) {
+                let before = TaskCompletionRevision.applying(mutation.fields, to: Record(mutation.baseline ?? [:]))["completion_version"].integer
+                let after = TaskCompletionRevision.applying(result.pending[index].fields, to: remote)["completion_version"].integer
+                let delta = after - before
+                for next in result.pending.indices where next > index && result.pending[next].table == "tasks" && result.pending[next].recordID.lowercased() == mutation.recordID.lowercased() && TaskCompletionRevision.touches(result.pending[next].fields) {
+                    if case .number(let version)? = result.pending[next].baseline?["completion_version"], version >= Double(before) {
+                        result.pending[next].baseline?["completion_version"] = .number(version + Double(delta))
+                    }
+                }
+            }
+        } else {
+            result.pending.remove(at: index)
+            if !remote.completed, mutation.fields["completed"] == .bool(true) {
+                cancelUnacceptedSuccessors(in: &result)
+            }
+        }
         // PostgreSQL spells UUIDs in lowercase. Retain one cache identity while
         // replaying a pre-upgrade queue that may use a different UUID spelling.
         result.tables["tasks"] = (result.tables["tasks"] ?? []).map { value in
@@ -198,6 +248,46 @@ struct SyncConflict: Identifiable {
         }
         return result
     }
+    private func cancelUnacceptedSuccessors(in result: inout Snapshot) {
+        let action = mutation.id.uuidString.lowercased()
+        let creations = result.pending.filter {
+            $0.table == "tasks" && $0.method == "POST" && $0.insertOnly == true &&
+            $0.fields["source_metadata"]?.object["taskfold_recurrence_v1"]?.object["action_id"]?.text == action
+        }
+        for creation in creations {
+            let later = result.pending.filter { $0.table == "tasks" && $0.recordID.lowercased() == creation.recordID.lowercased() && $0.id != creation.id }
+            let current = result.tables["tasks"]?.first { $0.id.lowercased() == creation.recordID.lowercased() }
+            if later.isEmpty && (current == nil || current == Record(creation.fields)) {
+                result.pending.removeAll { $0.id == creation.id }
+                result.tables["tasks"]?.removeAll { $0.id.lowercased() == creation.recordID.lowercased() }
+            } else {
+                // Later user work becomes its own series rather than an occurrence of
+                // the completion that was declined. Keep every later queued mutation.
+                func independent(_ fields: [String: JSON]) -> [String: JSON] {
+                    var fields = fields
+                    if fields["recurrence_parent_id"] == creation.fields["recurrence_parent_id"] { fields["recurrence_parent_id"] = .null }
+                    var metadata = fields["source_metadata"]?.object ?? [:]
+                    if metadata["taskfold_recurrence_v1"]?.object["action_id"]?.text == action { metadata.removeValue(forKey: "taskfold_recurrence_v1") }
+                    fields["source_metadata"] = .object(metadata); return fields
+                }
+                if let index = result.pending.firstIndex(where: { $0.id == creation.id }) { result.pending[index].fields = independent(creation.fields) }
+                for index in result.pending.indices where result.pending[index].table == "tasks" && result.pending[index].recordID.lowercased() == creation.recordID.lowercased() && result.pending[index].id != creation.id {
+                    // Rebase only the structural fields changed by detaching. Preserve
+                    // the user's actual fields, identity and completion baselines.
+                    if var base = result.pending[index].baseline {
+                        let detached = independent(base)
+                        for key in ["recurrence_parent_id", "source_metadata"] where base[key] != nil { base[key] = detached[key] }
+                        result.pending[index].baseline = base
+                    }
+                    let detached = independent(result.pending[index].fields)
+                    for key in ["recurrence_parent_id", "source_metadata"] where result.pending[index].fields[key] != nil { result.pending[index].fields[key] = detached[key] }
+                }
+                if let index = result.tables["tasks"]?.firstIndex(where: { $0.id.lowercased() == creation.recordID.lowercased() }), let fields = current?.fields {
+                    result.tables["tasks"]?[index].fields = independent(fields)
+                }
+            }
+        }
+    }
 }
 
 struct Snapshot: Codable, Equatable, Sendable {
@@ -208,9 +298,29 @@ struct Snapshot: Codable, Equatable, Sendable {
         var rows = tables[change.table] ?? []
         if change.method == "DELETE" { rows.removeAll { $0.id == change.recordID } }
         else if let i = rows.firstIndex(where: { $0.id == change.recordID }) {
-            rows[i].fields.merge(change.fields) { _, new in new }
-        } else { rows.append(Record(change.fields)) }
+            if change.method == "POST", change.insertOnly == true { return }
+            rows[i] = change.table == "tasks" ? TaskCompletionRevision.applying(change.fields, to: rows[i]) : Record(rows[i].fields.merging(change.fields) { _, new in new })
+        } else {
+            var fields = change.fields
+            if change.table == "tasks", change.method == "POST" { fields["completion_version"] = .number(0) }
+            rows.append(Record(fields))
+        }
         tables[change.table] = rows
+    }
+    /// Confirm the server revision before replaying work queued during the request.
+    mutating func acknowledge(_ change: Mutation, saved: Record?) {
+        pending.removeAll { $0.id == change.id }
+        guard let saved else { return }
+        var rows = tables[change.table] ?? []
+        if let index = rows.firstIndex(where: { $0.id.lowercased() == change.recordID.lowercased() }) {
+            var confirmed = saved; confirmed["id"] = .string(rows[index].id); rows[index] = confirmed
+        } else { rows.append(saved) }
+        tables[change.table] = rows
+        for queued in pending where queued.table == change.table && queued.recordID.lowercased() == change.recordID.lowercased() {
+            var queued = queued
+            if let id = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() })?.id { queued.recordID = id }
+            apply(queued)
+        }
     }
     mutating func mergeRemote(_ remote: [String: [Record]]) {
         tables.merge(remote) { _, new in new }
@@ -907,14 +1017,14 @@ enum TaskCompletion {
         let stamp = ISO8601DateFormatter().string(from: now)
         let fields: [String: JSON] = ["completed": .bool(!task.completed), "completed_at": task.completed ? .null : .string(stamp)]
         var changes = [Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields,
-            baseline: ["completed": task["completed"], "completed_at": task["completed_at"]])]
+            baseline: ["completed": task["completed"], "completed_at": task["completed_at"], "completion_version": task.fields["completion_version"] ?? .number(0)])]
         let calendar = calendar(for: task, input: input)
         let parent = task.string("recurrence_parent_id").isEmpty ? task.id : task.string("recurrence_parent_id")
         guard !task.completed, let next = Dates.next(task, calendar: calendar) else { return changes }
         let day = TaskPlanner.dayKey(next, calendar: calendar), nextID = successorID(parent: parent, day: TaskPlanner.dayKey(next, calendar: calendar))
         guard !tasks.contains(where: { $0.id.lowercased() == nextID || ($0.string("recurrence_parent_id").lowercased() == parent.lowercased() && String($0.string("due_date").prefix(10)) == day) }) else { return changes }
         var copy = TaskPlanning.nextOccurrence(task, date: next, calendar: calendar)
-        copy["id"] = .string(nextID); copy["completed"] = .bool(false); copy["completed_at"] = .null
+        copy["id"] = .string(nextID); copy["completed"] = .bool(false); copy["completed_at"] = .null; copy["completion_version"] = .number(0)
         copy["notification_sent_at"] = .null; copy["created_at"] = .string(stamp); copy.fields.removeValue(forKey: "updated_at")
         copy["comments"] = .array([]); copy["recurrence_parent_id"] = .string(parent)
         // One occurrence identity, but separate actions: undo must not delete another device's copy.

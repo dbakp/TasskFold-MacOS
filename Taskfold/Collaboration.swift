@@ -125,7 +125,7 @@ struct ConflictReview: View {
     private var deleting: Bool { conflict.mutation.method == "DELETE" }
     private var keys: [String] {
         let fields = deleting ? conflict.remote.fields : conflict.mutation.fields
-        return fields.keys.filter { !deleting || !["id", "user_id", "source_metadata", "created_at", "notification_sent_at"].contains($0) }.sorted()
+        return fields.keys.filter { $0 != "completion_version" && (!deleting || !["id", "user_id", "source_metadata", "created_at", "notification_sent_at"].contains($0)) }.sorted()
     }
     var body: some View {
         NavigationStack {
@@ -150,6 +150,8 @@ struct ConflictReview: View {
                 Section {
                     if deleting {
                         Text("Keep task cancels this queued deletion and restores the synced task. Delete task removes the contents shown here; if another device changes them again, you will be asked to review again. Later offline edits and other tasks are kept.").font(.callout).foregroundStyle(.secondary)
+                    } else if TaskCompletionRevision.touches(conflict.mutation.fields) {
+                        Text((conflict.mutation.baseline?["completion_version"] == nil ? "This older completion needs review. " : "Completion changed on another device. ") + "Keep my edit applies the completion shown above. Use synced version keeps the synced task and removes an unedited next occurrence created by this completion. Any later edits to that occurrence are kept as an independent task. Later offline work is retained.").font(.callout).foregroundStyle(.secondary)
                     } else if conflict.mutation.fields.keys.contains(where: { conflict.mutation.baseline?[$0] == nil }) {
                         Text("This edit came from an older app version. Keep my edit uses the values shown above, including any comments or subtasks in this edit. Use synced version keeps the current synced values. Later offline edits and other tasks are kept.").font(.callout).foregroundStyle(.secondary)
                     } else {
@@ -168,7 +170,7 @@ struct ConflictReview: View {
                     Divider()
                     Button(deleting ? "Delete task" : "Keep my edit", role: deleting ? .destructive : nil) { resolve(keepLocal: true) }
                         .buttonStyle(.borderedProminent).accessibilityIdentifier("keepMyEdit")
-                    Button(deleting ? "Keep task" : "Use synced version") { resolve(keepLocal: false) }
+                    Button(deleting ? "Keep task" : "Use synced") { resolve(keepLocal: false) }
                         .buttonStyle(.bordered).accessibilityIdentifier("useSharedEdit")
                     Button { dismiss() } label: { Text("Later").frame(minHeight: 44) }
                         .buttonStyle(.plain).accessibilityIdentifier("conflictLater")
@@ -190,9 +192,11 @@ struct ConflictReview: View {
         else { message = store.error ?? "Reopen the current sync review."; store.error = nil }
     }
     private func fieldName(_ key: String) -> String {
-        ["title":"Task title", "description":"Notes", "due_date":"Planned date", "due_time":"Planned time", "deadline_date":"Deadline", "duration_minutes":"Estimate", "project_id":"Project", "section_id":"Section", "assigned_to":"Assigned to", "subtasks":"Subtasks", "comments":"Comments", "scheduled_at":"Scheduled instant", "time_zone":"Time zone", "recurrence_pattern":"Repeat rule", "reminder_specs":"Reminders", "completed":"Completed", "priority":"Priority", "labels":"Labels"][key] ?? key.replacingOccurrences(of: "_", with: " ").capitalized
+        ["title":"Task title", "description":"Notes", "due_date":"Planned date", "due_time":"Planned time", "deadline_date":"Deadline", "duration_minutes":"Estimate", "project_id":"Project", "section_id":"Section", "assigned_to":"Assigned to", "subtasks":"Subtasks", "comments":"Comments", "scheduled_at":"Scheduled instant", "time_zone":"Time zone", "recurrence_pattern":"Repeat rule", "reminder_specs":"Reminders", "completed":"Status", "completed_at":"Completed at", "priority":"Priority", "labels":"Labels"][key] ?? key.replacingOccurrences(of: "_", with: " ").capitalized
     }
     private func summary(_ value: JSON, key: String = "") -> String {
+        if key == "completed", case .bool(let flag) = value { return flag ? "Completed" : "Open" }
+        if key == "completed_at", let date = TaskPlanning.instant(value.text) { return date.formatted(date: .abbreviated, time: .shortened) }
         if value == .null { return "None" }
         if key == "duration_minutes", case .number(let minutes) = value { return "\(Int(minutes)) minutes" }
         if key == "priority", case .number(let number) = value { return "P\(Int(number))" }

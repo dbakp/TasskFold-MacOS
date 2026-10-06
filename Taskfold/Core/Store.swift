@@ -391,6 +391,7 @@ final class Store {
             if change.table == "tasks", change.method == "DELETE", change.baseline == nil, let existing = record("tasks", id: change.recordID) {
                 change.baseline = existing.fields
             }
+            change = TaskCompletionRevision.capturing(change, existing: record(change.table, id: change.recordID))
             snapshot.apply(change)
             if !localMode { snapshot.pending.append(change) }
         }
@@ -403,9 +404,12 @@ final class Store {
     @discardableResult
     func save(_ table: String, _ record: Record, baseline: Record? = nil) -> Bool {
         let existing = self.record(table, id: record.id)
-        let changed = (baseline ?? existing).map { old in record.fields.filter { old.fields[$0.key] != $0.value } } ?? record.fields
+        let editable = record.fields.filter { table != "tasks" || $0.key != "completion_version" }
+        let changed = (baseline ?? existing).map { old in editable.filter { old.fields[$0.key] != $0.value } } ?? editable
         guard !changed.isEmpty else { return true }
-        var changes = [Mutation(table: table, recordID: record.id, method: existing == nil ? "POST" : "PATCH", fields: changed, baseline: baseline.map { old in Dictionary(uniqueKeysWithValues: changed.keys.map { ($0, old[$0]) }) })]
+        var changes = [Mutation(table: table, recordID: record.id, method: existing == nil ? "POST" : "PATCH", fields: changed, baseline: baseline.map { old in
+            table == "tasks" ? TaskCompletionRevision.editBaseline(for: changed, from: old) : Dictionary(uniqueKeysWithValues: changed.keys.map { ($0, old[$0]) })
+        })]
         if table == "labels", let existing, existing.name != record.name {
             for task in tasks {
                 let values = TaskLabels.normalized(task["labels"].list, labels: labels)
@@ -491,9 +495,9 @@ final class Store {
         do {
             while let mutation = snapshot.pending.first {
                 sending = mutation
-                try await backend.send(mutation)
+                let saved = try await backend.send(mutation)
                 guard generation == accountGeneration else { return }
-                snapshot.pending.removeAll { $0.id == mutation.id }; try persist()
+                snapshot.acknowledge(mutation, saved: saved); try persist()
             }
             var remote: [String: [Record]] = [:]
             for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders"] {
@@ -687,6 +691,20 @@ extension Store {
         snapshot = Snapshot(tables: ["tasks": [task]]); undoStack = []; redoStack = []; try? persist()
         widgetFixtureFailSave = ProcessInfo.processInfo.arguments.contains("--widget-action-fail-save")
         widgetFixtureReady = true
+    }
+    func seedCompletionCycleFixture() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--completion-cycle-fixture") else { return }
+        seedWidgetActionFixture()
+        guard let root = tasks.first else { return }
+        let changes = TaskCompletion.complete(root, tasks: tasks)
+        for change in changes { snapshot.apply(change); snapshot.pending.append(change) }
+        if ProcessInfo.processInfo.arguments.contains("--edited-occurrence-fixture"), let creation = changes.last, creation.method == "POST" {
+            let edit = Mutation(table: "tasks", recordID: creation.recordID, method: "PATCH", fields: ["title": .string("Saved occurrence draft")], baseline: ["title": creation.fields["title"] ?? .null])
+            snapshot.apply(edit); snapshot.pending.append(edit)
+        }
+        var remote = root; remote["completion_version"] = .number(2); remote["description"] = .string("Updated on another device")
+        if let change = changes.first { syncConflict = SyncConflict(mutation: change, remote: remote) }
+        try? persist()
     }
     func queueWidgetActionFixture(_ request: WidgetCompletionRequest) throws {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--widget-action-testing") else { throw WidgetActionFailure("Use an isolated fixture") }

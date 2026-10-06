@@ -64,7 +64,7 @@ struct WorkspaceBackup: Codable, Sendable {
         "projects": ["id","user_id","name","description","color","created_at","order_index","source_metadata"],
         "labels": ["id","user_id","name","color","created_at"],
         "sections": ["id","user_id","project_id","name","created_at","order_index"],
-        "tasks": ["id","user_id","title","description","completed","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at"],
+        "tasks": ["id","user_id","title","description","completed","completion_version","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at"],
         "saved_views": ["id","user_id","name","query_ast","layout","grouping","sort_by","include_completed","order_index","created_at","updated_at"],
         "favorites": ["id","user_id","order_index","created_at"],
         "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours"],
@@ -87,7 +87,7 @@ struct WorkspaceBackup: Codable, Sendable {
                 for key in ["completed","is_recurring","include_completed","overdue_collapsed"] {
                     if let value = row.fields[key], value != .null, case .bool = value {} else if row.fields[key] != nil && row.fields[key] != .null { throw BackupFailure(message: "\(table).\(key) must be a boolean.") }
                 }
-                for (key, low, high) in [("priority",1,4),("priority_filter",0,4),("duration_minutes",1,10080),("order_index",0,2147483647)] {
+                for (key, low, high) in [("priority",1,4),("priority_filter",0,4),("duration_minutes",1,10080),("order_index",0,2147483647),("completion_version",0,9007199254740991)] {
                     if let value = row.fields[key], value != .null {
                         guard case .number(let number) = value, number.rounded() == number, number >= Double(low), number <= Double(high) else { throw BackupFailure(message: "\(table).\(key) is out of range.") }
                     }
@@ -284,6 +284,7 @@ extension WorkspaceBackup {
                 if ["sections","tasks"].contains(table) && !original.string("project_id").isEmpty { row["project_id"] = .string(try mapped("projects", original.string("project_id"), required: true)) }
                 if table == "sections", row.string("project_id").isEmpty { throw BackupFailure(message: "A section has no project.") }
                 if table == "tasks" {
+                    row["completion_version"] = .number(0)
                     if !original.string("section_id").isEmpty {
                         let section = try mapped("sections", original.string("section_id"), required: true)
                         let parent = tables["sections"]?.first { $0.id == original.string("section_id") }?.string("project_id") ?? currentRows["sections"]?[section]?.string("project_id")
@@ -308,7 +309,7 @@ extension WorkspaceBackup {
                 if let existing {
                     guard existing.string("user_id") == account else { throw BackupFailure(message: "A restore target belongs to another account. Your workspace was not changed.") }
                     if policy == .keepCurrent { result.kept += 1; continue }
-                    let fields = row.fields.filter { !["id","user_id","created_at"].contains($0.key) && existing.fields[$0.key] != $0.value }
+                    let fields = row.fields.filter { !["id","user_id","created_at","completion_version"].contains($0.key) && existing.fields[$0.key] != $0.value }
                     if fields.isEmpty { result.kept += 1; continue }
                     result.changes.append(Mutation(table: table, recordID: row.id, method: "PATCH", fields: fields, baseline: Dictionary(uniqueKeysWithValues: fields.keys.map { ($0, existing[$0]) })))
                     // The ordinary project-move mutation clears assignments first. Restore

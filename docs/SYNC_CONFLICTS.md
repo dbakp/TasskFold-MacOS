@@ -1,6 +1,6 @@
 # Reviewed sync edits
 
-Both native apps own their guarded task transport and review screen independently. The existing authenticated `taskfold_patch_task` RPC compares each changed field with the queued baseline under a row lock. It merges independent fields and identifiable comment/subtask items. Overlapping changes pause the durable queue instead of replacing the other edit. The deployed function is `SECURITY INVOKER`; existing row access rules apply. No schema or function change was required for this rollout.
+Both native apps own their guarded task transport and review screen independently. The existing authenticated `taskfold_patch_task` RPC compares each changed field with the queued baseline under a row lock. It merges independent fields and identifiable comment/subtask items. Overlapping changes pause the durable queue instead of replacing the other edit. The deployed function is `SECURITY INVOKER`; existing row access rules apply. The original field-merge rollout needed no schema change; the later completion-cycle guard adds the server-owned revision described below.
 
 ## Review choices
 
@@ -23,3 +23,14 @@ Older queues may lack a baseline or individual baseline fields. Those edits requ
 Provide a private JSON fixture with `url`, public `key`, `email`, `password` and `userID` through `TASKFOLD_CONFLICT_LIVE_FIXTURE`. Only `taskfold-conflict-…@example.invalid` accounts with UUID owner IDs are accepted. Sessions are retained in memory; the test supplies a no-op Keychain persistence closure. Do not commit the fixture. Without it the integration test explicitly skips. Live evidence and native user walks are recorded in each platform's validation record.
 
 The live backend test is not proof of two simultaneously running native UI apps, physical devices, OS background replay, shared-project access revocation or deleted-task recovery. Those remain broader P0 acceptance checks. Clients predating this rollout can still send legacy direct updates; this source change does not upgrade an already distributed binary. No new app release is implied.
+
+## Completion and reopen cycles
+
+A task’s `completion_version` advances when its completion state or completion instant changes. The server owns this value, starting at zero at migration/creation. Native completion/reopen queues capture it in the baseline; ordinary title/notes edits do not advance it. A stale completion/reopen pauses even if the task’s visible state returned to the same values after an intervening cycle. An immediately following revision with the exact desired completion values can acknowledge a lost-response retry. Later matching cycles still conflict. Explicit completion instants are preserved, while older clients that omit a timestamp keep the server-time default.
+
+Keep my edit rebases the completion revision and the known later offline completion chain. Use synced version cancels an unedited, unsent recurring successor if the synced root is open. Later edited successor work is retained as an independent task/series, including future metadata and pending edits. A remotely completed root retains its create-only successor request. Server acknowledgement saves the confirmed row and replays later work rather than replacing it with the earlier response. Create-only queue replay never overwrites an existing remote row.
+
+Older native completions without revision baselines require review before making an update request. The new client does not upgrade the safety behavior of already distributed binaries that still make legacy direct writes. The live native fixture now also exercises an unseen complete/reopen cycle, reviewed retry, preserved completion time and a later cycle ending with the same visible completion time.
+
+
+Task editor saves use the revision from the original form baseline when changing completion. A remote complete/reopen cycle during an open editor cannot become an implicitly approved newer baseline. The shorter Use synced action remains readable at maximum text size; the iPhone walkthrough verifies the complete comparison values are above its fixed action area after scrolling.

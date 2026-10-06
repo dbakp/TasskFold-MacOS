@@ -14,6 +14,7 @@ struct WidgetActionTestPanel: View {
                 Text("Next copies: \(store.tasks.filter { $0.string("recurrence_parent_id") == rootID }.count)").accessibilityIdentifier("widgetCopyCount")
                 Text("Queued: \(pending)").accessibilityIdentifier("widgetPendingCount")
             }.font(.caption)
+            Text("Drafts: \(store.tasks.filter { $0.title == "Saved occurrence draft" }.count)").font(.caption).accessibilityIdentifier("widgetDraftCount")
             HStack {
                 Button("Complete via intent") { perform(captured) }.accessibilityIdentifier("widgetCompleteFixture")
                 Button("Queue only") {

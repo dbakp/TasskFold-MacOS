@@ -187,7 +187,7 @@ final class Backend: NSObject {
             if page.count < 500 { return result }; offset += page.count
         }
     }
-    func send(_ change: Mutation) async throws {
+    @discardableResult func send(_ change: Mutation) async throws -> Record? {
         // Both native clients protect edits with the same server-side baseline merge.
         if change.table == "tasks", change.method == "PATCH" {
             // Missing baselines cannot safely distinguish a clear from no change.
@@ -195,20 +195,25 @@ final class Backend: NSObject {
             guard let baseline = change.baseline, change.fields.keys.allSatisfy({ baseline[$0] != nil }) else {
                 throw AppFailure(message: "TASKFOLD_CONFLICT: This older queued edit needs review before replacing synced values.")
             }
+            if TaskCompletionRevision.touches(change.fields) {
+                guard case .number(let version)? = baseline["completion_version"], version.isFinite, version >= 0, version.rounded(.down) == version else {
+                    throw AppFailure(message: "TASKFOLD_CONFLICT: Review this older completion before replacing synced state.")
+                }
+            }
             let data = try await request("/rest/v1/rpc/taskfold_patch_task", method: "POST", body: [
                 "_id": .string(change.recordID), "_base": .object(baseline), "_changes": .object(change.fields)])
             let saved = try JSONDecoder().decode(Record.self, from: data)
             guard saved.id.lowercased() == change.recordID.lowercased() else {
                 throw AppFailure(message: "The server did not confirm this edit. Your change is saved on this device.")
             }
-            return
+            return saved
         }
         if change.table == "tasks", change.method == "DELETE" {
             guard let baseline = change.baseline, baseline["id"] != nil, baseline["user_id"] != nil, baseline["title"] != nil else {
                 // An old queue can outlive the task. Only visible, existing rows need review.
                 let escaped = change.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? change.recordID
                 let data = try await request("/rest/v1/tasks?id=eq.\(escaped)&select=id")
-                if try JSONDecoder().decode([Record].self, from: data).isEmpty { return }
+                if try JSONDecoder().decode([Record].self, from: data).isEmpty { return nil }
                 throw AppFailure(message: "TASKFOLD_CONFLICT: Review this older queued deletion before removing a synced task.")
             }
             let data = try await request("/rest/v1/rpc/taskfold_delete_task", method: "POST", body: [
@@ -216,7 +221,7 @@ final class Backend: NSObject {
             guard try JSONDecoder().decode(Bool.self, from: data) else {
                 throw AppFailure(message: "The server did not confirm this deletion. Your change is saved on this device.")
             }
-            return
+            return nil
         }
         let conflictKey = ["favorites", "view_preferences", "view_orders"].contains(change.table) ? "user_id,id" : "id"
         let escapedID = change.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? change.recordID
@@ -226,7 +231,7 @@ final class Backend: NSObject {
             extra: ["Prefer": change.method == "POST" ? (change.insertOnly == true ? "handling=strict,resolution=ignore-duplicates,missing=default,return=representation" : "resolution=merge-duplicates,return=representation") : "return=representation"])
         if change.method == "POST", change.insertOnly == true {
             let rows = try JSONDecoder().decode([Record].self, from: data)
-            if rows.contains(where: { $0.id == change.recordID && $0.string("user_id") == change.fields["user_id"]?.text }) { return }
+            if let saved = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() && $0.string("user_id") == change.fields["user_id"]?.text }) { return saved }
             let owner = (change.fields["user_id"]?.text ?? "").addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
             guard !owner.isEmpty else { throw AppFailure(message: "This new item has no workspace owner.") }
             let existing = try await request("/rest/v1/\(change.table)?id=eq.\(escapedID)&user_id=eq.\(owner)&select=*")
@@ -234,14 +239,16 @@ final class Backend: NSObject {
             guard found.contains(where: { $0.id == change.recordID && $0.string("user_id") == change.fields["user_id"]?.text }) else {
                 throw AppFailure(message: "The server could not confirm this new item. It remains saved on this device.")
             }
-            return
+            return found.first
         }
         if change.method != "DELETE" {
             let rows = try JSONDecoder().decode([Record].self, from: data)
             guard rows.contains(where: { $0.id == change.recordID }) else {
                 throw AppFailure(message: "This record is no longer available or you do not have permission to edit it. Your change is saved on this device.")
             }
+            return rows.first { $0.id == change.recordID }
         }
+        return nil
     }
     func uploadAvatar(_ data: Data) async throws -> String {
         try await refreshIfNeeded()
