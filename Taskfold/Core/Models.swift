@@ -203,6 +203,7 @@ struct SyncConflict: Identifiable {
 struct Snapshot: Codable, Equatable, Sendable {
     var tables: [String: [Record]] = [:]
     var pending: [Mutation] = []
+    var widgetCompletion = WidgetCompletionCache()
     mutating func apply(_ change: Mutation) {
         var rows = tables[change.table] ?? []
         if change.method == "DELETE" { rows.removeAll { $0.id == change.recordID } }
@@ -214,6 +215,16 @@ struct Snapshot: Codable, Equatable, Sendable {
     mutating func mergeRemote(_ remote: [String: [Record]]) {
         tables.merge(remote) { _, new in new }
         for change in pending { apply(change) }
+    }
+}
+
+extension Snapshot {
+    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion }
+    init(from decoder: Decoder) throws {
+        let row = try decoder.container(keyedBy: CodingKeys.self)
+        tables = try row.decode([String: [Record]].self, forKey: .tables)
+        pending = try row.decode([Mutation].self, forKey: .pending)
+        widgetCompletion = try row.decodeIfPresent(WidgetCompletionCache.self, forKey: .widgetCompletion) ?? WidgetCompletionCache()
     }
 }
 
@@ -945,7 +956,7 @@ enum TaskCompletion {
 
 /// Versioned widget payload. The extension receives planning data, never sessions or mutations.
 enum WidgetProjection {
-    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current) -> [String: JSON] {
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0) -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
         let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar)
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
@@ -953,12 +964,13 @@ enum WidgetProjection {
             let project = projects[task.string("project_id")]
             let instant = !task.string("time_zone").isEmpty ? TaskPlanning.start(task).map { ISO8601DateFormatter().string(from: $0) } : nil
             return .object(["id": .string(task.id), "title": .string(task.title), "due": .string(String(task.string("due_date").prefix(10))), "time": .string(String(task.string("due_time").prefix(5))),
+                "completionToken": completionTokens[task.id.lowercased()].map(JSON.string) ?? .null,
                 "priority": .number(Double(task.priority)), "project": .string(project?.name ?? ""), "projectID": .string(task.string("project_id")), "color": .string(project?.string("color") ?? ""),
                 "deadline": task.deadline.map { _ in .string(String(task.string("deadline_date").prefix(10))) } ?? .null,
                 "duration": task.durationMinutes.map { .number(Double($0)) } ?? .null,
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
-        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "lists": .array(lists)]
+        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "lists": .array(lists), "pendingSync": .number(Double(max(0, pendingSync)))]
     }
     /// Only open task IDs and display names leave the app; filter expressions and credentials do not.
     static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar) -> [JSON] {

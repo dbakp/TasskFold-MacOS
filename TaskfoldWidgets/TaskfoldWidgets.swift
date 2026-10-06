@@ -1,11 +1,14 @@
 import Foundation
+#if WIDGET_MODEL_TESTING
+import TaskfoldCore
+#endif
 #if !WIDGET_MODEL_TESTING
 import WidgetKit
 import SwiftUI
 import AppIntents
 #endif
 
-/// A version-tolerant, read-only projection. No credentials or task mutations live in the extension.
+/// A version-tolerant projection. Completion tokens hand off actions without credentials or task mutations.
 struct WidgetTask: Codable, Identifiable {
     var id: String
     var title: String
@@ -19,6 +22,7 @@ struct WidgetTask: Codable, Identifiable {
     var duration: Int? = nil
     var scheduledAt: String? = nil
     var timeZone: String? = nil
+    var completionToken: String? = nil
     var estimate: Int? { duration.flatMap { (1...10080).contains($0) ? $0 : nil } }
     var deadlineDay: String? { deadline.flatMap { WidgetSnapshot.validDay($0) ? $0 : nil } }
     func displayed(calendar: Calendar) -> WidgetTask {
@@ -93,10 +97,12 @@ struct WidgetSnapshot: Codable {
     var version: Int
     var account: String
     var lists: [WidgetList] = []
+    var pendingSync: Int = 0
+    var pendingTaskIDs: [String] = [] // Derived under the same disk lock as the snapshot read.
     init(updated: TimeInterval, tasks: [WidgetTask], version: Int = 2, account: String = "", lists: [WidgetList] = []) {
         self.updated = updated; self.tasks = tasks; self.version = version; self.account = account; self.lists = lists
     }
-    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists }
+    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         version = try row.decodeIfPresent(Int.self, forKey: .version) ?? 1
@@ -105,6 +111,7 @@ struct WidgetSnapshot: Codable {
         tasks = try row.decode([WidgetTask].self, forKey: .tasks)
         account = try row.decodeIfPresent(String.self, forKey: .account) ?? ""
         lists = try row.decodeIfPresent([WidgetList].self, forKey: .lists) ?? []
+        pendingSync = max(0, try row.decodeIfPresent(Int.self, forKey: .pendingSync) ?? 0)
     }
     var hasPlanningFields: Bool { version == 2 }
     static let empty = WidgetSnapshot(updated: 0, tasks: [])
@@ -208,8 +215,9 @@ struct WidgetSnapshot: Codable {
     }
     #if !WIDGET_MODEL_TESTING
     static func load() -> WidgetSnapshot {
-        guard let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.dbakp.taskfold")?.appending(path: "widget.json"),
-              let data = try? Data(contentsOf: url), let snapshot = try? JSONDecoder().decode(WidgetSnapshot.self, from: data) else { return .empty }
+        guard let read = try? WidgetActionDisk.system().read(), let data = read.data,
+              var snapshot = try? JSONDecoder().decode(WidgetSnapshot.self, from: data) else { return .empty }
+        snapshot.pendingTaskIDs = read.pendingTaskIDs
         // Signed-out v2 payloads cannot accidentally expose retained task rows.
         return snapshot.version == 2 && snapshot.account.isEmpty ? .empty : snapshot
     }
@@ -228,7 +236,7 @@ struct TodayEntry: TimelineEntry {
             WidgetTask(id: "preview-3", title: "Take a proper lunch break", due: WidgetSnapshot.day(now), time: "", priority: 3, project: "Personal", color: "#32856d", projectID: "preview-personal"),
             WidgetTask(id: "preview-4", title: "Review the first draft", due: WidgetSnapshot.day(Calendar.current.date(byAdding: .day, value: 2, to: now)!), time: "", priority: 2, project: "Studio", color: "#e31e4b", projectID: "preview-studio", duration: 45),
             WidgetTask(id: "preview-5", title: "File the expense report", due: WidgetSnapshot.day(now), time: "", priority: 2, project: "Work", color: "#7863c8", projectID: "preview-work", deadline: WidgetSnapshot.day(Calendar.current.date(byAdding: .day, value: -1, to: now)!), duration: 15)
-        ], account: "preview", lists: [WidgetList(id: (try! JSONEncoder().encode(["preview", "project", "preview-studio"])).base64EncodedString(), recordID: "preview-studio", kind: "project", name: "Studio", days: ["*": ["preview-1", "preview-4"]], timeZone: TimeZone.current.identifier, invalid: false)]))
+        ].map { var task = $0; task.completionToken = UUID().uuidString.lowercased(); return task }, account: "preview", lists: [WidgetList(id: (try! JSONEncoder().encode(["preview", "project", "preview-studio"])).base64EncodedString(), recordID: "preview-studio", kind: "project", name: "Studio", days: ["*": ["preview-1", "preview-4"]], timeZone: TimeZone.current.identifier, invalid: false)]))
     }
 }
 
@@ -280,6 +288,10 @@ struct WidgetFooter: View {
     var body: some View {
         if entry.snapshot.updated == 0 {
             Text("Open Taskfold to begin").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+        } else if !entry.snapshot.pendingTaskIDs.isEmpty {
+            Link("Open Taskfold to finish", destination: URL(string: "taskfold://all")!).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+        } else if entry.snapshot.pendingSync > 0 {
+            Text("Saved · sync pending").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
         } else if entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated > 86_400 {
             Label("Open app to refresh", systemImage: "arrow.clockwise").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
         } else {
@@ -708,23 +720,31 @@ struct ListWidgetView: View {
                 Spacer(minLength: 0); Text("All clear").font(.headline)
                 Text("No open tasks in this list.").font(.caption2).foregroundStyle(.secondary)
             } else {
-                Text(target?.typeName ?? "Open tasks").font(.caption2).foregroundStyle(.secondary)
-                ForEach(tasks.prefix(family == .systemSmall ? 2 : family == .systemLarge ? 8 : 3)) { task in
-                    Link(destination: task.url) {
-                        HStack(spacing: 7) {
-                            Circle().strokeBorder(task.priority <= 2 ? tint : Color.secondary.opacity(0.5), lineWidth: 1.5).frame(width: 10, height: 10)
-                            Text(entry.hideTitles ? "Private task" : task.title).font(.caption.weight(.medium)).lineLimit(1).privacySensitive()
-                            Spacer(minLength: 0)
-                            if family != .systemSmall, let day = task.deadlineDay { Text(widgetDate(day)).font(.caption2).foregroundStyle(tint).accessibilityLabel("Deadline \(day)") }
+                ForEach(tasks.prefix(family == .systemSmall ? 1 : family == .systemLarge ? 5 : 2)) { task in
+                    HStack(spacing: 2) {
+                        if let token = task.completionToken, !entry.snapshot.account.isEmpty {
+                            let pending = entry.snapshot.pendingTaskIDs.contains(task.id)
+                            Button(intent: CompleteWidgetTaskIntent(account: entry.snapshot.account, taskID: task.id, token: token)) {
+                                Image(systemName: pending ? "hourglass" : "circle")
+                                    .font(.system(size: 21, weight: .regular)).foregroundStyle(task.priority <= 2 ? tint : .secondary)
+                                    .frame(width: 44, height: 44).contentShape(Rectangle())
+                            }.buttonStyle(.plain).disabled(pending)
+                                .accessibilityLabel(pending ? "Waiting to complete" : entry.hideTitles ? "Complete private task" : "Complete \(task.title)")
                         }
-                    }.buttonStyle(.plain)
+                        Link(destination: task.url) {
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(entry.hideTitles ? "Private task" : task.title).font(.caption.weight(.semibold)).lineLimit(2).privacySensitive()
+                                if family != .systemSmall, let day = task.deadlineDay { Text(widgetDate(day)).font(.caption2).foregroundStyle(tint).accessibilityLabel("Deadline \(day)") }
+                            }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                        }.buttonStyle(.plain)
+                    }
                 }
             }
             Spacer(minLength: 0)
             WidgetFooter(entry: TodayEntry(date: entry.date, snapshot: entry.snapshot))
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
-        .widgetURL(status == .ready ? target?.url : URL(string: "taskfold://all"))
+        .widgetURL(status == .ready ? (family == .systemSmall ? tasks.first?.url ?? target?.url : target?.url) : URL(string: "taskfold://all"))
     }
 }
 struct ListWidget: Widget {

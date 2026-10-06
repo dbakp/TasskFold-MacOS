@@ -78,6 +78,9 @@ struct RootView: View {
             if url.scheme == "taskfold" && url.host == "task", store.record("tasks", id: url.lastPathComponent) != nil { workspace.open(url.lastPathComponent) }
         }
         .task(id: "members-\(store.userID)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { await workspace.loadProjectMembers() }
+        #if DEBUG
+        .safeAreaInset(edge: .top) { if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") { WidgetActionTestPanel() } }
+        #endif
         .onChange(of: phase) { _, value in if value == .active { Task { await store.reschedule(); await store.sync() } } }
         .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in Task { await store.reschedule() } }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in Task { await store.reschedule() } }
@@ -264,6 +267,7 @@ struct RootView: View {
                     try? store.persist()
                     workspace.section = .today
                 }
+        if arguments.contains("--widget-action-seed") { store.startLocal(); store.seedWidgetActionFixture(); workspace.section = .today }
         if arguments.contains("--sticky-fixture") {
             store.startLocal(); store.snapshot = Snapshot()
             store.snapshot.tables["tasks"] = (0..<100).map { index in

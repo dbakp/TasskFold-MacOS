@@ -96,7 +96,7 @@ final class WidgetListTests: XCTestCase {
     func testPayloadExposesOnlyListDisplayMetadataAndOpenIDsAndScopeLinksEscapeIDs() throws {
         let data = try snapshot([task("a")], views: [view(.predicate("all", ""))])
         let encoded = try XCTUnwrap(String(data: JSONEncoder().encode(data), encoding: .utf8))
-        XCTAssertFalse(encoded.contains("query_ast")); XCTAssertFalse(encoded.contains("reminder_specs")); XCTAssertFalse(encoded.contains("pending")); XCTAssertFalse(encoded.contains("description"))
+        XCTAssertFalse(encoded.contains("query_ast")); XCTAssertFalse(encoded.contains("reminder_specs")); XCTAssertFalse(encoded.contains("\"pending\"")); XCTAssertFalse(encoded.contains("description"))
         let link = WidgetLinks.scoped("label", id: "with /?#% spaces")
         XCTAssertEqual(URLComponents(url: link, resolvingAgainstBaseURL: false)?.percentEncodedPath, "/with%20%2F%3F%23%25%20spaces")
         XCTAssertNil(link.query); XCTAssertNil(link.fragment)

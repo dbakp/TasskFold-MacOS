@@ -315,6 +315,19 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Independent teammate comment"].waitForExistence(timeout: 5))
     }
 
+    @MainActor func testWidgetIntentRecurringCompletionRetryUndoAndOldTap() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--widget-action-seed"]; app.launch()
+        XCTAssertTrue(app.staticTexts["widgetRootState"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["widgetRootState"].label, "Original: open")
+        app.buttons["widgetCompleteFixture"].click()
+        XCTAssertEqual(app.staticTexts["widgetRootState"].label, "Original: completed"); XCTAssertEqual(app.staticTexts["widgetCopyCount"].label, "Next copies: 1")
+        app.buttons["widgetRetryFixture"].click(); XCTAssertEqual(app.staticTexts["widgetCopyCount"].label, "Next copies: 1")
+        app.buttons["widgetUndoFixture"].click(); app.buttons["widgetRetryFixture"].click()
+        XCTAssertEqual(app.staticTexts["widgetRootState"].label, "Original: open"); XCTAssertEqual(app.staticTexts["widgetCopyCount"].label, "Next copies: 0")
+        app.terminate(); app.launchArguments = ["--uitesting", "--widget-action-testing"]; app.launch()
+        XCTAssertTrue(app.staticTexts["widgetRootState"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["widgetCopyCount"].label, "Next copies: 0")
+    }
+
     @MainActor func testDeletionReviewKeepsTaskContentsAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--deletion-conflict-fixture"]; app.launch()
         XCTAssertTrue(app.links["reviewSyncConflict"].waitForExistence(timeout: 10)); app.links["reviewSyncConflict"].click()

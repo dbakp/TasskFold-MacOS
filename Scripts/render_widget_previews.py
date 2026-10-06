@@ -10,12 +10,15 @@ source = (root / 'TaskfoldWidgets/TaskfoldWidgets.swift').read_text()
 source = source.replace('@main\nstruct TaskfoldWidgetBundle', 'struct TaskfoldWidgetBundle')
 # WidgetKit exposes a read-only family environment; use explicit families in this standalone renderer.
 source = source.replace('@Environment(\\.widgetFamily) private var family', 'var family: WidgetFamily = .systemMedium')
-source = source.replace('Link(destination:', 'PreviewLink(destination:')
+source = source.replace('Link(destination:', 'PreviewLink(destination:').replace('Link("', 'PreviewLink("')
 source += r'''
 struct PreviewLink<Content: View>: View {
     let content: Content
     init(destination: URL, @ViewBuilder label: () -> Content) { content = label() }
     var body: some View { content }
+}
+extension PreviewLink where Content == Text {
+    init(_ title: String, destination: URL) { content = Text(title) }
 }
 @main struct PreviewRenderer {
     @MainActor static func main() throws {
@@ -56,7 +59,18 @@ struct PreviewLink<Content: View>: View {
             }
         }.padding(32).background(dark ? Color(white: 0.09) : Color.white).environment(\.colorScheme, dark ? .dark : .light)
         let lists = mode.hasPrefix("lists")
-        let listSnapshot = mode == "lists-empty" ? WidgetSnapshot(updated: Date().timeIntervalSinceReferenceDate, tasks: [], account: "preview", lists: entry.snapshot.lists) : entry.snapshot
+        var listSnapshot = mode == "lists-empty" ? WidgetSnapshot(updated: Date().timeIntervalSinceReferenceDate, tasks: [], account: "preview", lists: entry.snapshot.lists) : entry.snapshot
+        if mode == "lists-pending" { listSnapshot.pendingTaskIDs = ["preview-1"] }
+        if mode == "lists-sync" { listSnapshot.pendingSync = 2 }
+        if mode == "lists-dense", let first = listSnapshot.tasks.first {
+            listSnapshot.tasks = (0..<9).map { index in
+                var task = first; task.id = "dense-\(index)"
+                task.title = "Prepare the quarterly planning notes and share the final draft with the team"
+                task.deadline = WidgetSnapshot.day(entry.date); task.completionToken = UUID().uuidString.lowercased()
+                return task
+            }
+            listSnapshot.lists[0].days = ["*": listSnapshot.tasks.map(\.id)]
+        }
         let chosen = mode == "lists-unavailable" ? "deleted-list" : listSnapshot.availableLists.first?.id
         let listPrivate = mode == "lists-private"
         let listContent = VStack(alignment: .leading, spacing: 20) {
@@ -88,7 +102,7 @@ output.mkdir(parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporary:
     path = Path(temporary)
     (path / 'Preview.swift').write_text(source)
-    subprocess.run(['xcrun', 'swiftc', '-parse-as-library', str(path / 'Preview.swift'), '-o', str(path / 'preview')], check=True)
-    modes = [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
+    subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-D', 'TASKFOLD_WIDGET_EXTENSION', str(root / 'Taskfold/Core/WidgetActions.swift'), str(path / 'Preview.swift'), '-o', str(path / 'preview')], check=True)
+    modes = [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable', 'lists-pending', 'lists-sync', 'lists-dense']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
     for mode, name in modes:
         subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode], check=True)

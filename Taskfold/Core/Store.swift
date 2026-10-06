@@ -27,6 +27,7 @@ final class Store {
     var online = true
     var error: String?
     var notice: String?
+    var widgetActionStatus: String?
     var syncConflict: SyncConflict?
     var lastSync: Date?
     var undoStack: [EditHistory] = []
@@ -34,6 +35,12 @@ final class Store {
     let backend = Backend()
     private let monitor = NWPathMonitor()
     private var accountGeneration = UUID()
+    @ObservationIgnored private var consumingWidgetActions = false
+    @ObservationIgnored private var workspaceCacheReadable = true
+    #if DEBUG
+    var widgetFixtureFailSave = false
+    var widgetFixtureReady = false
+    #endif
     var workspaceGeneration: UUID { accountGeneration }
     var backupWarning: String?
     @ObservationIgnored private var dailyBackupRunning = false
@@ -225,33 +232,91 @@ final class Store {
         return projectMembers(projectID)
     }
     func load() {
-        defer { if localMode { migrateOrganization() }; publishWidgetSnapshot() }
-        guard FileManager.default.fileExists(atPath: cacheURL.path) else { snapshot = Snapshot(); return }
+        workspaceCacheReadable = false
+        defer {
+            if localMode, workspaceCacheReadable { migrateOrganization() }
+            if workspaceCacheReadable {
+                do { try persist(); consumeWidgetCompletions() }
+                catch { self.error = "Could not prepare widget actions: " + error.localizedDescription }
+            }
+        }
+        guard FileManager.default.fileExists(atPath: cacheURL.path) else { snapshot = Snapshot(); workspaceCacheReadable = true; return }
         do {
             snapshot = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
+            workspaceCacheReadable = true
             if snapshot.tables[DayPlacement.table] == nil, let legacy = snapshot.tables["_local_day_order"] {
                 snapshot.tables[DayPlacement.table] = legacy.map { row in var row = row; row["user_id"] = .string(userID); return row }
             }
         }
-        catch { self.error = "Could not read saved tasks: \(error.localizedDescription)" }
+        catch { self.error = "Could not read saved tasks: \(error.localizedDescription)"; if let disk = try? widgetActionDisk() { try? disk.clearProjection() } }
     }
     func persist() throws {
+        #if DEBUG
+        if widgetFixtureFailSave, !snapshot.widgetCompletion.receipts.isEmpty { throw WidgetActionFailure("Isolated widget save-failure fixture") }
+        #endif
+        WidgetCompletion.prepare(&snapshot)
         try FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try JSONEncoder().encode(snapshot).write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         publishWidgetSnapshot()
         scheduleDailyBackup()
     }
     static let appGroup = "group.com.dbakp.taskfold"
-    /// Widgets read a compact copy of open tasks from the shared App Group container.
+    /// The private cache is saved before its actionable projection is published.
     private func publishWidgetSnapshot() {
-        guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.appGroup) else { return }
-        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: signedIn || localMode ? userID : "", labels: labels, sections: rows("sections"), savedViews: savedViews)
-        if let data = try? JSONEncoder().encode(payload) {
-            try? data.write(to: container.appending(path: "widget.json"), options: .atomic)
-            #if canImport(WidgetKit)
-            WidgetCenter.shared.reloadAllTimelines()
-            #endif
+        guard let disk = try? widgetActionDisk() else { return }
+        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: signedIn || localMode ? userID : "", labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount)
+        do { try disk.publish(JSONEncoder().encode(payload)) }
+        catch { try? disk.clearProjection() } // A failed publication must not leave actionable old data.
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
+    }
+    private func widgetActionDisk() throws -> WidgetActionDisk {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") {
+            return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "WidgetActionTests", directoryHint: .isDirectory))
         }
+        #endif
+        return try WidgetActionDisk.system()
+    }
+    /// Intent execution returns only after task edits, queue and receipt are saved together.
+    func performWidgetCompletion(_ incoming: WidgetCompletionRequest) throws {
+        guard signedIn || localMode, workspaceCacheReadable, userID == incoming.account else {
+            throw WidgetActionFailure("Open the widget's workspace in Taskfold before completing this task.")
+        }
+        let disk = try widgetActionDisk()
+        if snapshot.widgetCompletion.saved(incoming) { try? disk.acknowledge(incoming); return }
+        let request = try disk.enqueue(incoming)
+        guard try applyWidgetCompletion(request) else {
+            try? disk.acknowledge(request)
+            throw WidgetActionFailure("This task changed after the widget was shown. Refresh the widget and try again.")
+        }
+        try? disk.acknowledge(request) // A failed acknowledgement is retried using the durable receipt.
+    }
+    @discardableResult private func applyWidgetCompletion(_ request: WidgetCompletionRequest) throws -> Bool {
+        switch WidgetCompletion.plan(request, snapshot: snapshot, account: userID) {
+        case .saved: return true
+        case .stale: return false
+        case .complete(let changes):
+            guard commit(changes, widgetReceipt: request) else {
+                throw WidgetActionFailure(error ?? "Your widget completion could not be saved. Open Taskfold to retry.")
+            }
+            return true
+        }
+    }
+    /// Startup, foreground refresh and connectivity retry the same credential-free handoff.
+    func consumeWidgetCompletions() {
+        guard !consumingWidgetActions, workspaceCacheReadable, signedIn || localMode,
+              let disk = try? widgetActionDisk() else { return }
+        consumingWidgetActions = true; defer { consumingWidgetActions = false }
+        widgetActionStatus = nil
+        do {
+            for request in try disk.pending(account: userID) {
+                let applied = try applyWidgetCompletion(request)
+                if !applied { widgetActionStatus = "A widget completion became out of date. Refresh the widget before trying again."; notice = widgetActionStatus }
+                try disk.acknowledge(request)
+            }
+        } catch { widgetActionStatus = "A widget completion is waiting: " + error.localizedDescription; notice = widgetActionStatus }
     }
     func startLocal() {
         let firstRun = !FileManager.default.fileExists(atPath: URL.applicationSupportDirectory.appending(path: "Taskfold/local.json").path)
@@ -305,7 +370,7 @@ final class Store {
         clearScheduledReminders()
     }
     @discardableResult
-    func commit(_ changes: [Mutation], remember: Bool = true) -> Bool {
+    func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil) -> Bool {
         let old = snapshot
         let changes = changes.flatMap { TaskAssignment.mutations($0, existing: record($0.table, id: $0.recordID)) }.map { change in
             var change = change
@@ -329,8 +394,9 @@ final class Store {
             snapshot.apply(change)
             if !localMode { snapshot.pending.append(change) }
         }
+        if let widgetReceipt { snapshot.widgetCompletion.record(widgetReceipt) }
         do { try persist() } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
-        if remember { undoStack.append(EditHistory(changes: changes, snapshot: old)); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
+        if remember, !changes.isEmpty { undoStack.append(EditHistory(changes: changes, snapshot: old)); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
         Task { await reschedule(); await sync() }
         return true
     }
@@ -417,6 +483,7 @@ final class Store {
         if commit(historyChanges(entry.redo), remember: false) { undoStack.append(entry) } else { redoStack.append(entry) }
     }
     func sync() async {
+        consumeWidgetCompletions()
         guard signedIn, !localMode, online, !syncing, syncConflict == nil else { return }
         syncing = true; let generation = accountGeneration
         var sending: Mutation?
@@ -457,7 +524,7 @@ final class Store {
             }
             return
         }
-        notice = nil
+        notice = widgetActionStatus
         // Edits made while fetching are still queued; flush after this sync releases its lock.
         if !snapshot.pending.isEmpty { Task { await self.sync() } }
     }
@@ -605,3 +672,26 @@ enum ReminderCategory {
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }
 }
+
+#if DEBUG
+extension Store {
+    func seedWidgetActionFixture() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--widget-action-testing") else { return }
+        widgetFixtureFailSave = false; dailyBackupsEnabled = false; disableNotifications()
+        if let disk = try? widgetActionDisk() {
+            for request in (try? disk.pending(account: userID)) ?? [] { try? disk.acknowledge(request) }
+        }
+        var task = Record.task(user: userID, date: Calendar.current.date(byAdding: .day, value: -1, to: Date()))
+        task["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa10"); task["title"] = .string("Daily widget review")
+        task["is_recurring"] = .bool(true); task["recurrence_pattern"] = .object(["type": .string("daily")])
+        snapshot = Snapshot(tables: ["tasks": [task]]); undoStack = []; redoStack = []; try? persist()
+        widgetFixtureFailSave = ProcessInfo.processInfo.arguments.contains("--widget-action-fail-save")
+        widgetFixtureReady = true
+    }
+    func queueWidgetActionFixture(_ request: WidgetCompletionRequest) throws {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--widget-action-testing") else { throw WidgetActionFailure("Use an isolated fixture") }
+        _ = try widgetActionDisk().enqueue(request)
+    }
+    func widgetActionFixturePending() -> Int { ((try? widgetActionDisk().pending(account: userID)) ?? []).count }
+}
+#endif

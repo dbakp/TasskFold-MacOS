@@ -14,7 +14,7 @@ def uid(name):
 app_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "Taskfold").rglob("*.swift"))
 app_resources = ["Taskfold/Assets.xcassets", "Taskfold/Backend.plist", "Taskfold/TaskfoldIcon.icon"]
 test_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldUITests").rglob("*.swift"))
-widget_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldWidgets").rglob("*.swift"))
+widget_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldWidgets").rglob("*.swift")) + ["Taskfold/Core/WidgetActions.swift"]
 # Set TASKFOLD_WIDGETS=0 to leave the widget extension out (for example while App Groups cannot be provisioned).
 WIDGETS = os.environ.get("TASKFOLD_WIDGETS", "1") != "0" and widget_sources
 other_files = ["Taskfold/Info.plist", "Taskfold/Taskfold.entitlements", "Taskfold/Taskfold-Distribution.entitlements"] + (["TaskfoldWidgets/Info.plist", "TaskfoldWidgets/TaskfoldWidgets.entitlements"] if WIDGETS else [])
@@ -30,14 +30,15 @@ def file_type(path):
 lines = ["// !$*UTF8*$!", "{ archiveVersion = 1; classes = {}; objectVersion = 56; objects = {"]
 refs = {}
 def add_ref(path):
+    if path in refs: return refs[path]
     rid = uid("ref:" + path)
     refs[path] = rid
     name = os.path.basename(path)
     extra = f' name = "{name}";' if path.startswith("$(") else ""
     lines.append(f'{rid} = {{ isa = PBXFileReference; lastKnownFileType = {file_type(path)};{extra} path = "{path}"; sourceTree = "<group>"; }};')
     return rid
-def add_build(path):
-    bid = uid("build:" + path)
+def add_build(path, scope=""):
+    bid = uid("build:" + scope + path)
     lines.append(f"{bid} = {{ isa = PBXBuildFile; fileRef = {refs[path]}; }};")
     return bid
 
@@ -45,7 +46,7 @@ for p in app_sources + app_resources + test_sources + other_files + (widget_sour
 app_source_builds = [add_build(p) for p in app_sources]
 app_resource_builds = [add_build(p) for p in app_resources]
 test_source_builds = [add_build(p) for p in test_sources]
-widget_source_builds = [add_build(p) for p in widget_sources] if WIDGETS else []
+widget_source_builds = [add_build(p, "widgets:") for p in widget_sources] if WIDGETS else []
 
 app_product = uid("product:app"); test_product = uid("product:tests"); widget_product = uid("product:widgets")
 lines.append(f'{app_product} = {{ isa = PBXFileReference; explicitFileType = wrapper.application; path = Taskfold.app; sourceTree = BUILT_PRODUCTS_DIR; }};')
@@ -61,7 +62,7 @@ def group(name, children, gid=None):
     return gid
 
 products = group("Products", [app_product, test_product] + ([widget_product] if WIDGETS else []))
-widgets_group = group("TaskfoldWidgets", [refs[p] for p in widget_sources] + [refs["TaskfoldWidgets/Info.plist"], refs["TaskfoldWidgets/TaskfoldWidgets.entitlements"]]) if WIDGETS else None
+widgets_group = group("TaskfoldWidgets", [refs[p] for p in widget_sources if p.startswith("TaskfoldWidgets/")] + [refs["TaskfoldWidgets/Info.plist"], refs["TaskfoldWidgets/TaskfoldWidgets.entitlements"]]) if WIDGETS else None
 core = group("Core", [refs[p] for p in app_sources if p.startswith("Taskfold/Core/")])
 views = group("Views", [refs[p] for p in app_sources if p.startswith("Taskfold/Views/")])
 app_group = group("Taskfold", [refs[p] for p in app_sources if p.startswith("Taskfold/") and not p.startswith(("Taskfold/Views/", "Taskfold/Core/"))] + [core, views] + [refs[p] for p in app_resources] + [refs[p] for p in other_files if p.startswith("Taskfold/")])
@@ -87,7 +88,7 @@ app_common = ('PRODUCT_NAME = Taskfold; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.ta
               'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CURRENT_PROJECT_VERSION = 2; MARKETING_VERSION = 1.1.0; SWIFT_EMIT_LOC_STRINGS = YES; '
               'ENABLE_PREVIEWS = YES; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks"; ')
 test_common = 'PRODUCT_NAME = TaskfoldUITests; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.uitests; GENERATE_INFOPLIST_FILE = YES; TEST_TARGET_NAME = Taskfold; '
-widget_common = ('PRODUCT_NAME = TaskfoldWidgets; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.widgets; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = TaskfoldWidgets/Info.plist; '
+widget_common = ('SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) TASKFOLD_WIDGET_EXTENSION"; APPLICATION_EXTENSION_API_ONLY = YES; PRODUCT_NAME = TaskfoldWidgets; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.widgets; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = TaskfoldWidgets/Info.plist; '
                  'CODE_SIGN_ENTITLEMENTS = TaskfoldWidgets/TaskfoldWidgets.entitlements; ENABLE_HARDENED_RUNTIME = YES; SKIP_INSTALL = YES; CURRENT_PROJECT_VERSION = 2; MARKETING_VERSION = 1.1.0; '
                  'LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"; ')
 
