@@ -2,6 +2,27 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testQuickReminderCaptureInspectorAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch()
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click()
+        let name = "Reminder capture " + String(UUID().uuidString.prefix(6))
+        input.typeText(name + " tomorrow at 4pm !30mb !2h !tomorrow 9am")
+        let chips = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "decline-reminder_specs:"))
+        XCTAssertTrue(chips.firstMatch.waitForExistence(timeout: 5)); XCTAssertEqual(chips.count, 3)
+        app.buttons["Add Task"].click(); app.buttons["Inbox"].firstMatch.click()
+        XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        let link = app.buttons["taskReminders"]
+        for _ in 0..<6 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
+        XCTAssertTrue(link.isHittable); link.click()
+        XCTAssertTrue(app.buttons["30 min before"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH %@ OR label BEGINSWITH %@", "Fixed instant", "Fixed instant")).count, 2)
+        app.buttons["Done"].click(); app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
+        XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
+        for _ in 0..<6 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
+        link.click(); XCTAssertTrue(app.buttons["30 min before"].waitForExistence(timeout: 5)); app.terminate()
+    }
+
     @MainActor func testMultipleRemindersInspectorAutosaveAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--reminder-fixture"]; app.launch()
         let title = app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"]

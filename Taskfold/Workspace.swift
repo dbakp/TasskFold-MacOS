@@ -388,7 +388,7 @@ final class Workspace {
         if let date { task["due_date"] = .string(Dates.day(date)) }
         if !sectionID.isEmpty { task["section_id"] = .string(sectionID) }
         if section == .assigned { task["assigned_to"] = .string(store.userID) }
-        let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")))
+        let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")), task: task)
         guard !parsed.title.isEmpty else { return nil }
         task = parsed.applying(to: task)
         for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text }) {

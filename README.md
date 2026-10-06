@@ -145,3 +145,5 @@ Both native clients use guarded task edits and review overlapping changes before
 ## Multiple reminders
 
 The inspector’s Reminders screen supports fixed dates and offsets before or after planned time, per-task opt-out, device/workspace delivery permission and visible scheduling feedback. Reminder choices sync with iOS through the guarded task queue. Completion, deletion, rescheduling and account switches invalidate stale reminders and snoozes. See [behavior, the persisted contract and the remaining remote delivery plan](docs/REMINDERS.md).
+
+Quick entry also accepts multiple `!30m` (from now), `!30mb` (before the plan), and `!tomorrow 9am` fixed reminder shortcuts. Each has its own removable chip; see [reminder syntax and delivery](docs/REMINDERS.md#reminders-in-quick-entry).

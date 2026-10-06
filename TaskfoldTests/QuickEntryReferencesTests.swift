@@ -127,3 +127,147 @@ final class QuickEntryReferencesTests: XCTestCase {
         XCTAssertEqual(result["labels"], .array([.string("client-label"), .string("another")]))
     }
 }
+
+
+final class QuickEntryRemindersTests: XCTestCase {
+    private var calendar: Calendar {
+        var result = Calendar(identifier: .gregorian); result.timeZone = TimeZone(identifier: "Europe/Copenhagen")!; return result
+    }
+    private var now: Date { TaskPlanning.instant("2026-10-06T10:00:00Z")! }
+    private func parse(_ text: String, disabled: Set<String> = [], task: Record = Record()) -> QuickEntry {
+        QuickEntry(text, now: now, calendar: calendar, disabled: disabled, task: task)
+    }
+    private func specs(_ parsed: QuickEntry, task: Record = Record()) -> [ReminderSpec] {
+        ReminderSpec.rows(parsed.applying(to: task)).compactMap(ReminderSpec.init(row:))
+    }
+    func testFromNowAndBeforeRemainIndependentOfTaskDateTime() {
+        let parsed = parse("Call tomorrow at 4pm !30m !30mb p1")
+        XCTAssertEqual(parsed.title, "Call"); XCTAssertEqual(parsed.updates["due_time"], .string("16:00"))
+        XCTAssertEqual(parsed.updates["priority"], .number(1)); XCTAssertEqual(parsed.tokens.filter { $0.group.hasPrefix("reminder_specs") }.count, 2)
+        let values = specs(parsed)
+        XCTAssertEqual(values.count, 3); XCTAssertEqual(values.first?.id, ReminderSpec.plannedID)
+        XCTAssertEqual(values.first { $0.kind == "absolute" }?.absolute, now.addingTimeInterval(1800))
+        XCTAssertEqual(values.first { $0.offset == -30 }?.offset, -30)
+        var task = parsed.applying(to: Record()); let before = DueReminder.events(tasks: [task], calendar: calendar)
+        task["due_date"] = .string("2026-10-09")
+        let after = DueReminder.events(tasks: [task], calendar: calendar)
+        XCTAssertEqual(before.first { $0.specID == values[1].id }?.date, after.first { $0.specID == values[1].id }?.date)
+        XCTAssertNotEqual(before.first { $0.specID == values[2].id }?.date, after.first { $0.specID == values[2].id }?.date)
+    }
+    func testCompoundMinutesUnitsAfterAndZeroBefore() {
+        let parsed = parse("Call tomorrow !2h30m !1h before !45min after !0mb")
+        XCTAssertEqual(parsed.title, "Call"); XCTAssertTrue(parsed.warnings.isEmpty)
+        let values = specs(parsed)
+        XCTAssertEqual(values.count, 4)
+        XCTAssertEqual(values.filter { $0.id == ReminderSpec.plannedID }.count, 1)
+        XCTAssertEqual(values.first { $0.kind == "absolute" }?.absolute, now.addingTimeInterval(9000))
+        XCTAssertTrue(values.contains { $0.offset == -60 }); XCTAssertTrue(values.contains { $0.offset == 45 })
+        XCTAssertEqual(specs(parse("Call !1d")).last?.absolute, now.addingTimeInterval(86400))
+    }
+    func testAbsoluteReminderDateNeverBecomesPlannedDateOrRecurrence() {
+        for syntax in ["!tomorrow 3pm", "!tmr at 15:00", "!2026-10-07 15:00", "!wed 3pm"] {
+            let parsed = parse("Call " + syntax)
+            XCTAssertEqual(parsed.title, "Call", syntax); XCTAssertNil(parsed.updates["due_date"], syntax)
+            XCTAssertNil(parsed.updates["due_time"], syntax); XCTAssertNil(parsed.updates["is_recurring"], syntax)
+            XCTAssertEqual(specs(parsed).last?.absolute, TaskPlanning.instant("2026-10-07T13:00:00Z"), syntax)
+        }
+        XCTAssertEqual(specs(parse("Call !tomorrow")).last?.absolute, TaskPlanning.instant("2026-10-07T07:00:00Z"))
+    }
+    func testBareClockUsesNextOccurrenceAndLaterUsesElapsedTime() {
+        XCTAssertEqual(specs(parse("Call !11am")).last?.absolute, TaskPlanning.instant("2026-10-07T09:00:00Z"))
+        XCTAssertEqual(specs(parse("Call !6pm")).last?.absolute, TaskPlanning.instant("2026-10-06T16:00:00Z"))
+        XCTAssertEqual(specs(parse("Call !later")).last?.absolute, now.addingTimeInterval(14400))
+        XCTAssertEqual(specs(parse("Call !12am")).last?.absolute, TaskPlanning.instant("2026-10-06T22:00:00Z"))
+    }
+    func testDeclineOneReminderProtectsItsTimeAndOtherRemindersRemain() {
+        let text = "Call tomorrow at 4pm !30mb !tomorrow 9am"
+        let declined = parse(text).tokens.filter { $0.group.hasPrefix("reminder_specs") }[1].group
+        let parsed = parse(text, disabled: [declined])
+        XCTAssertEqual(parsed.title, "Call !tomorrow 9am")
+        XCTAssertEqual(parsed.updates["due_time"], .string("16:00")); XCTAssertEqual(specs(parsed).count, 2)
+        XCTAssertTrue(parsed.warnings.isEmpty)
+        XCTAssertEqual(parse("Call !tomorrow 9am", disabled: [declined]).title, "Call !tomorrow 9am")
+        let all = parse(text, disabled: ["reminder_specs"])
+        XCTAssertEqual(all.title, "Call !30mb !tomorrow 9am"); XCTAssertNil(all.updates["reminder_specs"])
+    }
+    func testEscapingQuotesAndNonTokenBoundariesRemainLiteral() {
+        let input = #"Write \!tomorrow "!today 3pm" URL https://host/!tomorrow email!30m"#
+        let parsed = parse(input)
+        XCTAssertEqual(parsed.title, #"Write !tomorrow "!today 3pm" URL https://host/!tomorrow email!30m"#)
+        XCTAssertTrue(parsed.updates.isEmpty); XCTAssertTrue(parsed.warnings.isEmpty)
+    }
+    func testEscapedMultiwordReminderCannotBecomeTaskTime() {
+        for expression in [#"\!tomorrow 3pm"#, #"\!MON 9AM"#, #"\!1h before"#, #"\!every sat 9am"#] {
+            let parsed = parse("Literal " + expression)
+            XCTAssertEqual(parsed.title, "Literal " + String(expression.dropFirst()), expression)
+            XCTAssertTrue(parsed.updates.isEmpty, expression); XCTAssertTrue(parsed.warnings.isEmpty, expression)
+        }
+    }
+    func testUnsupportedReminderRestoresNestedProtectedProse() {
+        let input = #"Call !every day "tomorrow p1" https://host/tomorrow !25:60"#
+        let parsed = parse(input)
+        XCTAssertEqual(parsed.title, input); XCTAssertTrue(parsed.updates.isEmpty)
+        XCTAssertFalse(parsed.title.contains("\u{E000}")); XCTAssertFalse(parsed.title.contains("\u{E004}"))
+    }
+    func testInvalidReminderIsProtectedAndNeverSchedulesTheTask() {
+        for expression in ["!0m", "!25:60", "!13pm", "!0am", "!2026-02-30 3pm", "!today 9am", "!10081mb", "!99999999999999999999h", "!every sat 9am", "!every 2 hours", "!nonsense"] {
+            let parsed = parse("Call " + expression)
+            XCTAssertEqual(parsed.title, "Call " + expression, expression); XCTAssertTrue(parsed.updates.isEmpty, expression)
+            XCTAssertFalse(parsed.warnings.isEmpty, expression)
+        }
+        let parsed = parse("Call tomorrow at 4pm !25:60 p2")
+        XCTAssertEqual(parsed.title, "Call !25:60"); XCTAssertEqual(parsed.updates["due_time"], .string("16:00"))
+        XCTAssertEqual(parsed.updates["priority"], .number(2))
+    }
+    func testDuplicatesStayLiteralWithUsefulWarningAndStableIDs() {
+        let first = parse("Call tomorrow !30mb !30min before !0mb !0min before")
+        XCTAssertEqual(first.title, "Call !30min before !0min before")
+        XCTAssertEqual(first.warnings.count, 2); XCTAssertEqual(specs(first).count, 2)
+        XCTAssertEqual(first.updates, parse("Call tomorrow !30mb !30min before !0mb !0min before").updates)
+        XCTAssertEqual(Set(first.tokens.map(\.id)).count, first.tokens.count)
+    }
+    func testExistingRowsUnknownFieldsAndOptOutSurviveEditingAndApplying() {
+        var task = Record.task(user: "owner")
+        let unknown: JSON = .object(["version": .number(2), "id": .string(UUID().uuidString.lowercased()), "future": .bool(true)])
+        var off = ReminderSpec.relative(0, id: ReminderSpec.plannedID, enabled: false).raw; off["extra"] = .string("keep")
+        task["reminder_specs"] = .array([.object(off), unknown])
+        let parsed = parse("Call !30m", task: task)
+        let result = parsed.applying(to: task)
+        XCTAssertEqual(Array(result["reminder_specs"].list.prefix(2)), [.object(off), unknown])
+        XCTAssertFalse(ReminderSpec.plannedEnabled(result)); XCTAssertEqual(result["reminder_specs"].list.count, 3)
+        let enable = parse("Call tomorrow !0mb", task: task).applying(to: task)
+        XCTAssertTrue(ReminderSpec.plannedEnabled(enable)); XCTAssertEqual(enable["reminder_specs"].list[0].object["extra"], .string("keep"))
+    }
+    func testMaximumAndReapplyingDoNotDropAcceptedTextOrExistingRows() {
+        var task = Record.task(user: "owner", date: now)
+        task["reminder_specs"] = .array((0..<20).map { .object(ReminderSpec.relative($0).raw) })
+        let parsed = parse("Call !30mb", task: task)
+        XCTAssertEqual(parsed.title, "Call !30mb"); XCTAssertEqual(parsed.warnings.count, 1)
+        XCTAssertEqual(parsed.applying(to: task)["reminder_specs"], task["reminder_specs"])
+        let empty = parse("Call !30mb")
+        let applied = empty.applying(to: task)
+        XCTAssertEqual(applied.title, "Call !30mb"); XCTAssertEqual(applied["reminder_specs"], task["reminder_specs"])
+    }
+    func testRelativeUndatedWaitsAndDateOnlyUsesEightAM() {
+        let parsed = parse("Call !30mb")
+        XCTAssertEqual(parsed.warnings, ["Relative reminders wait for a planned date. Date-only tasks use 8 AM."])
+        XCTAssertTrue(DueReminder.events(tasks: [parsed.applying(to: Record())], calendar: calendar).isEmpty)
+        let dated = parse("Call tomorrow !30mb").applying(to: Record())
+        XCTAssertEqual(DueReminder.events(tasks: [dated], calendar: calendar).first?.date, TaskPlanning.instant("2026-10-07T05:30:00Z"))
+    }
+    func testRecurringTaskRetainsRelativeAndDropsOneOffShortcutReminder() {
+        let parsed = parse("Call every day at 4pm !30mb !2h")
+        XCTAssertEqual(parsed.title, "Call"); XCTAssertEqual(parsed.updates["is_recurring"], .bool(true))
+        let values = ReminderSpec.successorRows(ReminderSpec.rows(parsed.applying(to: Record())))
+        XCTAssertEqual(values.compactMap(ReminderSpec.init(row:)).map(\.kind), ["relative", "relative"])
+    }
+    func testCalendarZoneAndDSTResolveAbsoluteOnce() {
+        let spring = TaskPlanning.instant("2027-03-27T12:00:00Z")!
+        let parsed = QuickEntry("Call !tomorrow 2:30am", now: spring, calendar: calendar)
+        let spec = specs(parsed).last!
+        XCTAssertEqual(spec.absolute, TaskPlanning.instant("2027-03-28T01:00:00Z"))
+        XCTAssertEqual(spec.raw["time_zone"], .string("Europe/Copenhagen"))
+        var travel = calendar; travel.timeZone = TimeZone(identifier: "America/New_York")!
+        XCTAssertEqual(DueReminder.events(tasks: [parsed.applying(to: Record())], calendar: travel).last?.date, spec.absolute)
+    }
+}

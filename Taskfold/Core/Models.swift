@@ -222,21 +222,22 @@ struct QuickEntry {
         var label: String
         var id: String { group + ":" + text }
     }
-    static let groups = ["priority", "labels", "due_time", "recurrence", "due_date", "deadline_date", "duration_minutes", "project_id", "section_id", "assigned_to"]
+    static let groups = ["priority", "labels", "due_time", "recurrence", "due_date", "deadline_date", "duration_minutes", "project_id", "section_id", "assigned_to", "reminder_specs"]
     var title: String
     var updates: [String: JSON] = [:]
     var tokens: [Token] = []
     var warnings: [String] = []
     private var knownLabels: [Record] = []
+    private var acceptedReminders: [(ReminderSpec, String)] = []
     var hasSuggestions: Bool { !updates.isEmpty }
     /// Parses `input`. Groups in `disabled` are left untouched in the title and produce no updates,
     /// so a user can decline a single suggestion (for example keep "tomorrow" as part of the name).
-    init(_ input: String, now: Date = Date(), calendar: Calendar = .current, disabled: Set<String> = [], context: QuickEntryContext = QuickEntryContext()) {
+    init(_ input: String, now: Date = Date(), calendar: Calendar = .current, disabled: Set<String> = [], context: QuickEntryContext = QuickEntryContext(), task: Record = Record()) {
         let references = QuickEntryReferences(input, context: context, disabled: disabled)
         title = references.title; updates = references.updates; tokens = references.tokens; warnings = references.warnings; knownLabels = context.labels
         var literals = references.literals
         func protect(_ pattern: String, removeEscape: Bool = false) {
-            guard let regex = try? NSRegularExpression(pattern: pattern) else { return }
+            guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return }
             while let found = regex.firstMatch(in: title, range: NSRange(title.startIndex..., in: title)), let range = Range(found.range, in: title) {
                 let original = String(title[range])
                 let marker = "\u{E000}" + UUID().uuidString + "\u{E001}"
@@ -244,8 +245,47 @@ struct QuickEntry {
                 title.replaceSubrange(range, with: marker)
             }
         }
+        protect(QuickReminderText.pattern.replacingOccurrences(of: #"(?<!\S)!"#, with: #"(?<!\S)\\!"#), removeEscape: true)
         protect(#"\\(?:[#/@%+](?:"[^"\n]*"|[^\s]+)|\{[^}]+\}|[^\s]+)"#, removeEscape: true)
         protect(#""[^"\n]*""#)
+        protect(#"(?<!\S)(?:https?://|www\.)\S+"#)
+        protect(#"(?<!\S)[^\s!]+![^\s!]+"#)
+        var reminderRows = ReminderSpec.rows(task)
+        let reminderSeed = reminderRows.map { $0.object["id"]?.text ?? "" }.joined(separator: "|")
+        if let regex = try? NSRegularExpression(pattern: QuickReminderText.pattern, options: .caseInsensitive) {
+            let input = title
+            let matches = regex.matches(in: input, range: NSRange(input.startIndex..., in: input))
+            var seen = Set<String>()
+            var occurrences: [String: Int] = [:]
+            var replacements: [(NSRange, String)] = []
+            for match in matches {
+                guard let range = Range(match.range, in: input) else { continue }
+                let raw = String(input[range]).trimmingCharacters(in: .whitespaces), key = raw.lowercased()
+                let ordinal = occurrences[key, default: 0]; occurrences[key] = ordinal + 1
+                let group = "reminder_specs:" + String(DueReminder.digest(key).prefix(12)) + ":\(ordinal)"
+                let marker = "\u{E004}" + UUID().uuidString + "\u{E005}"
+                var accepted = false
+                if !disabled.contains("reminder_specs") && !disabled.contains(group) {
+                    let id = QuickReminderText.stableID(reminderSeed + "|" + key + "|\(ordinal)")
+                    if let spec = QuickReminderText.spec(raw, id: id, now: now, calendar: calendar) {
+                        let semantic = spec.kind + "|" + (spec.kind == "relative" ? String(spec.offset ?? 0) : spec.raw["at"]?.text ?? "")
+                        if seen.insert(semantic).inserted && QuickReminderText.merge(spec, into: &reminderRows) {
+                            acceptedReminders.append((spec, raw))
+                            tokens.append(Token(group: group, text: raw, label: spec.kind == "relative" ? spec.label : "Remind " + spec.label))
+                            accepted = true
+                        } else { warnings.append("“\(raw)” duplicates a reminder or exceeds the 20-setting limit. Its text stays in the title.") }
+                    } else {
+                        warnings.append(raw.lowercased().hasPrefix("!every") ? "Independently recurring reminders are not available yet. “\(raw)” stays in the title." : "“\(raw)” is not a future reminder. Try !30m, !30mb or !tomorrow 9am. Its text stays in the title.")
+                    }
+                }
+                replacements.append((match.range, accepted ? "" : marker))
+                if !accepted { literals.append((marker, raw)) }
+            }
+            for (range, replacement) in replacements.reversed() {
+                if let range = Range(range, in: title) { title.replaceSubrange(range, with: replacement) }
+            }
+            if !acceptedReminders.isEmpty { updates["reminder_specs"] = .array(reminderRows) }
+        }
         func match(_ pattern: String) -> [String]? {
             guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
                   let m = regex.firstMatch(in: title, range: NSRange(title.startIndex..., in: title)) else { return nil }
@@ -321,7 +361,10 @@ struct QuickEntry {
         if updates["due_time"] != nil && updates["due_date"] == nil { updates["due_date"] = .string(Dates.day(now)) }
         // Drop a dangling "at" left behind when only the time was declined or accepted.
         if updates["due_time"] != nil { title = title.replacingOccurrences(of: #"\s+at\s*$"#, with: "", options: .regularExpression) }
-        for (marker, original) in literals { title = title.replacingOccurrences(of: marker, with: original) }
+        if acceptedReminders.contains(where: { $0.0.kind == "relative" }) && (updates["due_date"]?.text ?? task.string("due_date")).isEmpty {
+            warnings.append("Relative reminders wait for a planned date. Date-only tasks use 8 AM.")
+        }
+        for (marker, original) in literals.reversed() { title = title.replacingOccurrences(of: marker, with: original) }
         title = title.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
@@ -334,7 +377,14 @@ struct QuickEntry {
             if !result["subtasks"].list.isEmpty { result["subtasks"] = TaskAssignment.clearChildren(result["subtasks"]) }
         }
         result["title"] = .string(title.trimmingCharacters(in: .whitespacesAndNewlines))
-        for (key, value) in updates where key != "labels" { result[key] = value }
+        for (key, value) in updates where key != "labels" && key != "reminder_specs" { result[key] = value }
+        if !acceptedReminders.isEmpty {
+            var rows = ReminderSpec.rows(task)
+            for (spec, raw) in acceptedReminders where !QuickReminderText.merge(spec, into: &rows) {
+                result["title"] = .string(result.title + " " + raw)
+            }
+            result["reminder_specs"] = .array(rows)
+        }
         if let labels = updates["labels"] {
             let additions = labels.list.map { value in knownLabels.first { $0.name == value.text }.map { JSON.string($0.id) } ?? value }
             result["labels"] = .array(TaskLabels.normalized(task["labels"].list + additions, labels: knownLabels))
@@ -838,5 +888,97 @@ enum WidgetProjection {
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
         return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows)]
+    }
+}
+
+/// Reminder syntax is protected before task dates/times are parsed, including declined or invalid
+/// expressions. An exclamation in a URL, quoted prose, or an escaped token remains ordinary text.
+private enum QuickReminderText {
+    static let clock = #"(?:\d{1,2}(?:[:.]\d{2})?\s*(?:am|pm)|\d{1,2}[:.]\d{2})"#
+    static let day = #"(?:today|tomorrow|tmr|sun(?:day)?|mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|\d{4}-\d{2}-\d{2})"#
+    static let duration = #"(?:\d+\s*(?:minutes?|mins?|m|hours?|hrs?|h|days?|d)\s*)+"#
+    static var pattern: String {
+        #"(?<!\S)!(?:every!?[^\n!#/@%+{~]*|"# + day + #"(?:\s+(?:at\s+)?"# + clock + #")?|"# + duration + #"(?:before|after|b|a)?|"# + clock + #"|later|[^\s]+)(?!\S)"#
+    }
+    static func stableID(_ seed: String) -> String {
+        let hex = Array(DueReminder.digest(seed).prefix(32))
+        let value = String(hex[0..<8]) + "-" + String(hex[8..<12]) + "-5" + String(hex[13..<16]) + "-a" + String(hex[17..<20]) + "-" + String(hex[20..<32])
+        return value
+    }
+    static func spec(_ raw: String, id: String, now: Date, calendar input: Calendar) -> ReminderSpec? {
+        let text = raw.dropFirst().trimmingCharacters(in: .whitespaces).lowercased()
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
+        if text == "later" { return .absolute(now.addingTimeInterval(4 * 3600), id: id, zone: calendar.timeZone.identifier) }
+        let relative = text.hasSuffix("before") || text.hasSuffix("after") || text.hasSuffix("b") || text.hasSuffix("a")
+        let suffix = text.hasSuffix("before") ? 6 : text.hasSuffix("after") ? 5 : relative ? 1 : 0
+        let amount = String(text.dropLast(suffix)).trimmingCharacters(in: .whitespaces)
+        let unitPattern = #"(\d+)\s*(minutes?|mins?|m|hours?|hrs?|h|days?|d)"#
+        if let units = try? NSRegularExpression(pattern: unitPattern) {
+            let matches = units.matches(in: amount, range: NSRange(amount.startIndex..., in: amount))
+            let covered = matches.compactMap { Range($0.range, in: amount).map { String(amount[$0]).filter { !$0.isWhitespace } } }.joined()
+            if !matches.isEmpty && covered == amount.filter({ !$0.isWhitespace }) {
+                var minutes = 0
+                for match in matches {
+                    guard let nr = Range(match.range(at: 1), in: amount), let ur = Range(match.range(at: 2), in: amount),
+                          let number = Int(amount[nr]), number <= 10080 else { return nil }
+                    let unit = amount[ur]; let multiplier = unit.hasPrefix("d") ? 1440 : unit.hasPrefix("h") ? 60 : 1
+                    let value = number * multiplier
+                    guard value <= 10080, minutes <= 10080 - value else { return nil }
+                    minutes += value
+                }
+                if relative {
+                    let before = text.hasSuffix("b") || text.hasSuffix("before")
+                    let offset = before ? -minutes : minutes
+                    return .relative(offset, id: offset == 0 ? ReminderSpec.plannedID : id)
+                }
+                guard minutes > 0 else { return nil }
+                return .absolute(now.addingTimeInterval(Double(minutes) * 60), id: id, zone: calendar.timeZone.identifier)
+            }
+        }
+        guard let regex = try? NSRegularExpression(pattern: "^(?:((?:" + day + "))(?:\\s+(?:at\\s+)?)?)?(" + clock + ")?$"),
+              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) else { return nil }
+        func part(_ index: Int) -> String { Range(match.range(at: index), in: text).map { String(text[$0]) } ?? "" }
+        let dayText = part(1), time = part(2)
+        guard !dayText.isEmpty || !time.isEmpty else { return nil }
+        var hour = 9, minute = 0
+        if !time.isEmpty {
+            let pieces = time.replacingOccurrences(of: #"\s"#, with: "", options: .regularExpression)
+            let am = pieces.hasSuffix("am"), pm = pieces.hasSuffix("pm")
+            let numbers = (am || pm ? String(pieces.dropLast(2)) : pieces).split(whereSeparator: { $0 == ":" || $0 == "." })
+            guard let h = Int(numbers[0]), let m = Int(numbers.count > 1 ? String(numbers[1]) : "0"), (0...59).contains(m),
+                  (am || pm ? (1...12).contains(h) : (0...23).contains(h)) else { return nil }
+            hour = am || pm ? h % 12 + (pm ? 12 : 0) : h; minute = m
+        }
+        var date: Date?
+        let components = DateComponents(hour: hour, minute: minute, second: 0)
+        if dayText.isEmpty {
+            date = calendar.nextDate(after: now, matching: components, matchingPolicy: .nextTime, repeatedTimePolicy: .first)
+        } else if dayText == "today" || dayText == "tomorrow" || dayText == "tmr" {
+            let day = calendar.date(byAdding: .day, value: dayText == "today" ? 0 : 1, to: now)!
+            date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day)
+        } else if let weekday = ["sun": 1, "mon": 2, "tue": 3, "wed": 4, "thu": 5, "fri": 6, "sat": 7][String(dayText.prefix(3))] {
+            var parts = components; parts.weekday = weekday
+            date = calendar.nextDate(after: now, matching: parts, matchingPolicy: .nextTime, repeatedTimePolicy: .first)
+        } else if let day = Dates.parse(dayText, calendar: calendar) {
+            date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day)
+        }
+        guard let date, date > now else { return nil }
+        return .absolute(date, id: id, zone: calendar.timeZone.identifier)
+    }
+    /// Merge into current rows, retaining unknown fields/versions and explicit planned opt-out.
+    static func merge(_ spec: ReminderSpec, into rows: inout [JSON]) -> Bool {
+        if spec.id == ReminderSpec.plannedID {
+            if let index = rows.firstIndex(where: { $0.object["id"]?.text.lowercased() == spec.id }) {
+                guard var old = ReminderSpec(row: rows[index]), old.locallyEditable,
+                      !ReminderSpec.duplicates(spec, in: rows, excluding: spec.id) else { return false }
+                old.raw["enabled"] = .bool(true); rows[index] = .object(old.raw); return true
+            }
+            guard rows.count < ReminderSpec.maximum, !ReminderSpec.duplicates(spec, in: rows) else { return false }
+            rows.append(.object(spec.raw)); return true
+        }
+        if rows.isEmpty { rows.append(.object(ReminderSpec.relative(0, id: ReminderSpec.plannedID).raw)) }
+        guard rows.count < ReminderSpec.maximum, !rows.contains(where: { $0.object["id"]?.text.lowercased() == spec.id }),
+              !ReminderSpec.duplicates(spec, in: rows) else { return false }
+        rows.append(.object(spec.raw)); return true
     }
 }

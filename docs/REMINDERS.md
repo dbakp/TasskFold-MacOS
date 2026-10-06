@@ -12,6 +12,27 @@ On iPhone, reminder edits belong to the task editor’s draft: Save keeps them a
 
 Enable **Deliver reminders** to request system permission. Merely saving a dated task does not open a permission prompt. If permission is refused, the screen provides an explanation and a system-settings link. Delivery failures and deferred notifications are reported. Existing device-wide preferences migrate only to the first active workspace; signing into another workspace does not inherit them.
 
+## Reminders in quick entry
+
+Add reminders while capturing or editing a task. `Call Sam tomorrow at 4pm !30mb !2h !tomorrow 9am` creates a task planned for tomorrow at 4 PM with three custom reminders: 30 minutes before the plan, two hours after acceptance, and tomorrow at 9 AM. The existing planned-time reminder stays enabled unless the task already opted out. Reminder times never become the task’s planned date or time.
+
+| Shortcut | Meaning |
+| --- | --- |
+| `!30m`, `!2h30m`, `!1d` | A fixed instant this many elapsed minutes/hours/days after accepting the entry |
+| `!30mb`, `!1h before` | This offset before the task’s planned time; follows rescheduling and task recurrence |
+| `!30ma`, `!45min after` | This offset after the task’s planned time |
+| `!0mb` | Enable the planned-time reminder, preserving any extra fields on that setting |
+| `!3pm`, `!15:00` | The next occurrence of this clock time in the current device time zone |
+| `!tomorrow 9am`, `!tmr at 15:00`, `!Mon 9am`, `!2026-10-12 9am` | A fixed local date/time converted to an instant when accepted |
+| `!tomorrow` | Tomorrow at 9 AM |
+| `!later` | Exactly four elapsed hours after acceptance |
+
+Tap a reminder chip’s cross to keep that expression in the title. Each reminder can be declined independently. In the iPhone composer, manually choosing a project, date or priority retains declined choices until the text is cleared. `\!tomorrow 9am` keeps the entire expression as prose, and `"!tomorrow 9am"` remains quoted text. URLs and expressions attached to another word are literal. An invalid, duplicate or over-limit expression stays in the title with feedback. Existing reminder settings, unsupported versions and explicit planned opt-out are retained when adding another reminder. Without a plan, a relative shortcut waits for a planned date; date-only tasks use 8 AM.
+
+On iPhone, multiple reminder shortcuts carry into **More options**, save with the task and survive relaunch. Both platforms use the same persisted reminder contract; the Mac capture/inspector/relaunch walk still needs runtime validation. The capture/editor surfaces explain when delivery is off on this device; saving a reminder never requests notification permission by itself. Enable delivery explicitly in the task’s Reminders screen. A fixed-date shortcut belongs to one task occurrence; before/after shortcuts carry to its successor. Independently recurring shortcuts such as `!every sat 9am` remain literal with an explanation until their occurrence model is implemented. `!later` is exact elapsed time; this differs from Todoist’s rounded shorthand. [Todoist’s reminder shortcut guide](https://www.todoist.com/help/todoist/features/introduction-to-reminders-9PezfU) documents the `!30m` versus `!30mb` distinction used here.
+
+Explicit fixed dates in the past are rejected. A spring clock gap advances to the next valid local time; an ambiguous clock uses its first occurrence. This instant then stays fixed during travel. Reminder offsets support at most seven days, and all settings together retain the 20-row bound. Autocomplete and independently recurring reminder schedules remain open work.
+
 ## Scheduling and notification actions
 
 Taskfold schedules the nearest 60 upcoming notifications, including snoozes, and refreshes the queue after edits, sync and foreground/significant-time changes. Later reminders need a subsequent refresh. The operating system can deliver already scheduled local notifications while the app is closed, subject to system permission and notification settings. [Apple’s local notification documentation](https://developer.apple.com/documentation/usernotifications/scheduling-a-notification-locally-from-your-app) describes this delivery model.
@@ -52,7 +73,7 @@ The native clients deliver only `local` entries. `push` and `email` are recogniz
 
 ## Remaining Todoist reminder gaps
 
-Todoist supports several reminder types, desktop/mobile/email channels, reminders for particular collaborators, and independently recurring reminder schedules. Taskfold now covers multiple fixed reminders and before/after offsets in both native editors, with relative offsets carried through task recurrence. It still needs remote channels, assigned reminder recipients, independently recurring reminders, configurable automatic offsets and snooze intervals, and reminder quick-entry grammar. Location and urgent reminders remain later platform work. [Todoist’s current reminder guide](https://www.todoist.com/help/todoist/features/introduction-to-reminders-9PezfU) is the comparison source.
+Todoist supports several reminder types, desktop/mobile/email channels, reminders for particular collaborators, and independently recurring reminder schedules. Taskfold now covers multiple fixed reminders and before/after offsets in both native editors, with relative offsets carried through task recurrence. It still needs remote channels, assigned reminder recipients, independently recurring reminders, configurable automatic offsets and snooze intervals, and independently recurring reminder quick-entry grammar and autocomplete. Location and urgent reminders remain later platform work. [Todoist’s current reminder guide](https://www.todoist.com/help/todoist/features/introduction-to-reminders-9PezfU) is the comparison source.
 
 ## Remote delivery implementation plan
 

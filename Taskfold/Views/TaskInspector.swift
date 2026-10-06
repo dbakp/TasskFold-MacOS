@@ -79,7 +79,7 @@ struct TaskInspectorForm: View {
         guard draft.title != original.title else { return nil }
         let nested = Workspace.subtaskPath(taskID) != nil
         let parsed = QuickEntry(draft.title, disabled: nested ? declined.union(["project_id", "section_id"]) : declined,
-            context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)))
+            context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), task: draft)
         return parsed.tokens.isEmpty && parsed.warnings.isEmpty ? nil : parsed
     }
 
@@ -102,6 +102,9 @@ struct TaskInspectorForm: View {
                             QuickEntryChips(tokens: suggestions.tokens, decline: { token in _ = declined.insert(token.group) }, returnFocus: { titleFocused = true }).padding(.vertical, 2)
                         }.scrollIndicators(.hidden).scrollClipDisabled()
                         if !suggestions.tokens.isEmpty { Text("Return applies these · ✕ keeps the words in the title").font(.caption2).foregroundStyle(.tertiary) }
+                        if suggestions.updates["reminder_specs"] != nil && !store.remindersEnabled {
+                            Text("Reminders are off on this device. Enable delivery in Reminders below.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickReminderDeliveryOff")
+                        }
                         ForEach(suggestions.warnings, id: \.self) { warning in Text(warning).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickEntryWarning") }
                     }
                     .transition(.opacity)

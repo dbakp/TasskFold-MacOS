@@ -416,6 +416,7 @@ enum ReadingColumn { static let width: CGFloat = 860 }
 
 /// A focused, native sheet keeps capture prominent without moving the task list.
 struct TaskCapturePanel: View {
+    @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Binding var text: String
     @Binding var declined: Set<String>
@@ -454,8 +455,11 @@ struct TaskCapturePanel: View {
                 }.scrollIndicators(.hidden)
             }
             ForEach(parsed.warnings, id: \.self) { warning in Text(warning).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickEntryWarning") }
+            if parsed.updates["reminder_specs"] != nil && !store.remindersEnabled {
+                Text("Reminders are off on this device. Enable delivery in the task’s Reminders after saving.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickReminderDeliveryOff")
+            }
             HStack {
-                Text("Try “Call Sam tomorrow at 4pm p1”").font(.caption).foregroundStyle(.secondary)
+                Text("Try “Call Sam tomorrow at 4pm !30mb p1”").font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Button("Add Task", action: submit).buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction).disabled(parsed.title.isEmpty)
