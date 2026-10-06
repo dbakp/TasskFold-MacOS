@@ -53,6 +53,7 @@ struct TaskReminderEditor: View {
                 if store.requestingNotifications { ProgressView("Requesting permission…") }
                 Text(store.reminderStatus).font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("reminderStatus")
                 ReminderSystemSettingsButton()
+                RemoteReminderRegistrationView()
             } header: { Text("This device") } footer: {
                 Text("Reminder choices sync with the task. Enable delivery separately on each device. Up to 60 notifications are scheduled, including one enabled Focus finish alert. Later reminders refresh while Taskfold is open.")
             }
@@ -178,5 +179,28 @@ struct ReminderSystemSettingsButton: View {
         #else
         Button("Open Notification Settings…") { if let url = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension") { NSWorkspace.shared.open(url) } }
         #endif
+    }
+}
+
+/// Distinguish successful inactive registration from actual reminder delivery. No activation
+/// control is exposed before the provider/authority/device rollout gates are accepted.
+struct RemoteReminderRegistrationView: View {
+    @Environment(Store.self) private var store
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Remote reminders are not available yet. Scheduled reminders continue on this device.")
+                .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("remoteReminderAvailability")
+            if store.signedIn && !store.localMode {
+                Text(store.remoteReminderStatus).font(.footnote).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("remoteReminderStatus")
+                Button { Task { await store.refreshRemoteReminderRegistration(force: true) } } label: {
+                    Label(store.remoteReminderBusy ? "Checking setup…" : "Check remote setup", systemImage: "arrow.clockwise")
+                        .frame(minHeight: 44)
+                }.disabled(store.remoteReminderBusy).accessibilityIdentifier("remoteReminderRetry")
+            } else {
+                Text("Sign in to connect this device to your account.").font(.footnote).foregroundStyle(.secondary)
+            }
+        }
     }
 }

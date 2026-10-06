@@ -1,6 +1,11 @@
 import SwiftUI
 import Network
 import UserNotifications
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 #if canImport(WidgetKit)
 import WidgetKit
 #endif
@@ -19,6 +24,10 @@ final class Store {
     @ObservationIgnored private let reminderScheduler = ReminderScheduler()
     @ObservationIgnored private var reminderRevision = 0
     private var reminderPreferenceRevision = 0
+    @ObservationIgnored private var reminderDeviceLifecycle: ReminderDeviceLifecycle?
+    @ObservationIgnored private lazy var reminderAppIdentity = ReminderAppIdentity.signed()
+    var remoteReminderStatus = "Remote reminders are not available yet. Reminders stay on this device."
+    var remoteReminderBusy = false
     var reminderStatus = "Choose whether this device delivers reminders."
     var focusAlertStatus = "Finish alerts are off on this device."
     private var focusPermissionDenied = false
@@ -236,10 +245,11 @@ final class Store {
         monitor.pathUpdateHandler = { [weak self] path in
             Task { @MainActor in
                 self?.online = path.status == .satisfied
-                if path.status == .satisfied { await self?.sync() }
+                if path.status == .satisfied { await self?.refreshRemoteReminderRegistration(); await self?.sync() }
             }
         }
         monitor.start(queue: DispatchQueue(label: "taskfold.connectivity"))
+        Task { await refreshRemoteReminderRegistration() }
     }
     func rows(_ table: String) -> [Record] { snapshot.tables[table] ?? [] }
     func record(_ table: String, id: String) -> Record? { rows(table).first { $0.id == id } }
@@ -393,6 +403,7 @@ final class Store {
     }
     func startLocal() {
         let firstRun = !FileManager.default.fileExists(atPath: URL.applicationSupportDirectory.appending(path: "Taskfold/local.json").path)
+        do { try prepareReminderDeviceRetirement() } catch { remoteReminderStatus = "Device unlinking could not be saved securely. Retry remote setup." }
         accountGeneration = UUID(); localMode = true; signedIn = true; UserDefaults.standard.set(true, forKey: "localMode"); load()
         CalendarBusyStore.shared.bind(account: userID)
         if firstRun && userID == "local" && tasks.isEmpty { seedGettingStarted() }
@@ -429,11 +440,11 @@ final class Store {
         accountGeneration = UUID(); localMode = false; signedIn = true; syncConflict = nil; focusSyncConflict = nil
         CalendarBusyStore.shared.bind(account: userID)
         UserDefaults.standard.set(false, forKey: "localMode")
-        snapshot = Snapshot(); undoStack = []; redoStack = []; load(); Task { await sync() }
+        snapshot = Snapshot(); undoStack = []; redoStack = []; load(); Task { await refreshRemoteReminderRegistration(); await sync() }
     }
     func signOut() {
         // The account-specific cache and unsent queue stay on disk for the next sign-in.
-        do { try persist(); try backend.clearSession() } catch { self.error = error.localizedDescription; return }
+        do { try persist(); try prepareReminderDeviceRetirement(); try backend.clearSession() } catch { self.error = error.localizedDescription; return }
         googleAvatarURL = nil; avatarMetadataLoaded = false
         accountGeneration = UUID(); backend.session = nil; signedIn = false; localMode = false
         UserDefaults.standard.set(false, forKey: "localMode")
@@ -701,6 +712,75 @@ final class Store {
         return true
     }
 
+
+    private var isolatedReminderDeviceFixture: Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("--uitesting") || ProcessInfo.processInfo.arguments.contains("--preview")
+        #else
+        return false
+        #endif
+    }
+    private func deviceRegistration(create: Bool) throws -> ReminderDeviceLifecycle? {
+        guard !isolatedReminderDeviceFixture, let bundle = Bundle.main.bundleIdentifier else { return nil }
+        if let reminderDeviceLifecycle { return reminderDeviceLifecycle }
+        var installation = try ReminderDeviceVault.read(bundle: bundle)
+        if installation == nil, create { installation = try .make(); try ReminderDeviceVault.save(installation!, bundle: bundle) }
+        guard let installation else { return nil }
+        let lifecycle = try ReminderDeviceLifecycle(installation: installation,
+            save: { try ReminderDeviceVault.save($0, bundle: bundle) },
+            send: { [backend] command, incarnation in try await backend.sendReminderDevice(command, expectedIncarnation: incarnation) },
+            changed: { [weak self] status, busy in self?.remoteReminderStatus = status; self?.remoteReminderBusy = busy })
+        reminderDeviceLifecycle = lifecycle; return lifecycle
+    }
+    /// Persist proof retirement synchronously before clearing the session, including when the
+    /// installation was loaded after a restart and no APNs token has yet been received.
+    private func prepareReminderDeviceRetirement() throws {
+        try deviceRegistration(create: false)?.retire()
+    }
+    func refreshRemoteReminderRegistration(force: Bool = false) async {
+        guard !isolatedReminderDeviceFixture else {
+            remoteReminderStatus = "Remote reminders are not available in this workspace. Reminders stay on this device."; return
+        }
+        let generation = accountGeneration, incarnation = backend.reminderSessionIncarnation, account = userID
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        guard generation == accountGeneration, incarnation == backend.reminderSessionIncarnation, account == userID else { return }
+        let permission: ReminderDeviceBinding.Permission = settings.authorizationStatus == .authorized ? .authorized : settings.authorizationStatus == .provisional ? .provisional : .denied
+        let eligible = signedIn && !localMode && remindersEnabled && permission != .denied && UUID(uuidString: account) != nil
+        do {
+            let lifecycle = try deviceRegistration(create: eligible && reminderAppIdentity != nil)
+            let context = eligible ? reminderAppIdentity.map {
+                ReminderDeviceContext(account: account.lowercased(), workspace: generation, session: incarnation, identity: $0,
+                                      timeZone: TimeZone.current.identifier, permission: permission)
+            } : nil
+            try lifecycle?.update(context, online: online)
+            try lifecycle?.retry(force: force)
+            if lifecycle?.needsToken == true {
+                lifecycle?.requestedToken()
+                #if os(iOS)
+                UIApplication.shared.registerForRemoteNotifications()
+                #elseif os(macOS)
+                NSApplication.shared.registerForRemoteNotifications()
+                #endif
+            } else if lifecycle == nil || context == nil && lifecycle?.busy != true && lifecycle?.retirementPending != true {
+                remoteReminderStatus = localMode || !signedIn ? "Sign in to prepare remote reminders. Current reminders stay on this device." :
+                    eligible && reminderAppIdentity == nil ? "Remote setup is unavailable in this build. Reminders continue on this device." :
+                    "Remote reminders are not available yet. Reminders stay on this device."
+            }
+        } catch {
+            remoteReminderStatus = "Device registration could not be saved securely. Reminders continue on this device."; remoteReminderBusy = false
+        }
+    }
+    func receivedRemoteReminderToken(_ token: Data) async {
+        guard !isolatedReminderDeviceFixture else { return }
+        await refreshRemoteReminderRegistration()
+        do { try reminderDeviceLifecycle?.receivedToken(token) }
+        catch { remoteReminderStatus = "Device registration could not be saved securely. Reminders continue on this device."; remoteReminderBusy = false }
+    }
+    func failedRemoteReminderToken() {
+        guard !isolatedReminderDeviceFixture else { return }
+        reminderDeviceLifecycle?.failedToken()
+    }
+
     private var reminderPreferenceKey: String { ReminderPreferences.key(userID) }
     var remindersEnabled: Bool {
         _ = reminderPreferenceRevision
@@ -718,6 +798,7 @@ final class Store {
             UserDefaults.standard.set(allowed, forKey: key); reminderPreferenceRevision += 1
             if allowed { await reschedule() }
             else { reminderStatus = "Permission is off. Allow Taskfold notifications in system settings." }
+            await refreshRemoteReminderRegistration()
         } catch { if generation == accountGeneration { reminderStatus = "Notifications could not be enabled: " + error.localizedDescription } }
     }
     var focusAlertsEnabled: Bool {
@@ -753,6 +834,7 @@ final class Store {
         return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events)
     }
     func reschedule() async {
+        await refreshRemoteReminderRegistration()
         let state = reminderState(), generation = accountGeneration
         let report = await reminderScheduler.update(state)
         guard generation == accountGeneration, state.revision == reminderRevision, report.revision == state.revision else { return }
@@ -779,6 +861,7 @@ final class Store {
         else { reminderStatus = "\(report.scheduled) upcoming \(report.scheduled == 1 ? "reminder" : "reminders") scheduled on this device." }
     }
     func disableNotifications() {
+        do { try prepareReminderDeviceRetirement() } catch { remoteReminderStatus = "Device unlinking could not be saved securely. Retry remote setup." }
         UserDefaults.standard.set(false, forKey: reminderPreferenceKey); reminderPreferenceRevision += 1
         if focusAlertsEnabled { Task { await reschedule() } } else { clearScheduledReminders() }
     }

@@ -59,6 +59,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         }
         #endif
     }
+    func application(_ application: NSApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Task { @MainActor in await Store.shared.receivedRemoteReminderToken(deviceToken) }
+    }
+    func application(_ application: NSApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        Task { @MainActor in Store.shared.failedRemoteReminderToken() }
+    }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag { sender.windows.first?.makeKeyAndOrderFront(nil) }
         return true

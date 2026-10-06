@@ -40,6 +40,7 @@ struct GeneralSettings: View {
             Text("Choose fixed-time and before/after reminders in each task. Delivery is enabled separately for this workspace on each device. The nearest 60 notifications refresh while Taskfold is open.").font(.caption).foregroundStyle(.secondary)
             Text(store.reminderStatus).font(.caption).foregroundStyle(.secondary)
             ReminderSystemSettingsButton()
+            Section("Remote reminders") { RemoteReminderRegistrationView() }
             Section {
                 Button("Show Welcome Tour…") { workspace.onboarding = true; NSApp.windows.first { $0.identifier?.rawValue.contains("Taskfold") == true || $0.title == workspace.navigationTitle }?.makeKeyAndOrderFront(nil) }
                     .disabled(!store.signedIn)

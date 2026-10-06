@@ -44,6 +44,8 @@ final class Backend: NSObject {
     private let http: URLSession
     private let saveSession: (Session?) throws -> Void
     private var sessionGeneration = UUID()
+    /// Changes on sign-in/sign-out, and stays stable across ordinary token refresh.
+    var reminderSessionIncarnation: UUID { sessionGeneration }
     private var refreshTask: Task<Session, Error>?
     private var refreshID: UUID?
     private let config: [String: String]
