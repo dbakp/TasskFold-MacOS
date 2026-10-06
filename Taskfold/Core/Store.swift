@@ -139,7 +139,7 @@ final class Store {
         }
         let old = snapshot; snapshot = next
         do { try persist() } catch { snapshot = old; self.error = error.localizedDescription; return false }
-        focusSyncConflict = nil; notice = nil; Task { await sync() }; return true
+        focusSyncConflict = nil; notice = nil; publishWidgetSnapshot(scheduleCapacityRefresh: false); Task { await sync() }; return true
     }
     @discardableResult func setWorkingHours(_ hours: WorkingHours) -> Bool {
         guard (try? WorkingHours(document: hours.document)) != nil else { error = "Choose valid working hours."; return false }
@@ -310,7 +310,7 @@ final class Store {
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.connected ? (busy.selected.isEmpty ? "choose" : "refresh") : "off"
-        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"))
+        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable)
         do { try disk.publish(JSONEncoder().encode(payload)); widgetPublicationRevision += 1 }
         catch { try? disk.clearProjection() } // A failed publication must not leave actionable old data.
         #if canImport(WidgetKit)
@@ -613,6 +613,7 @@ final class Store {
                     let remote = remoteRows.first ?? FocusSessionChange.emptyRow(account: userID)
                     guard FocusSessionChange.validRow(remote, account: userID) else { return }
                     focusSyncConflict = FocusSyncConflict(mutation: mutation, remote: remote)
+                    publishWidgetSnapshot(scheduleCapacityRefresh: false)
                     notice = "Focus changed on another device. Open Focus session to review it and resume sync."
                 }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation = sending,
@@ -804,6 +805,13 @@ extension Store {
         snapshot = Snapshot(tables: ["tasks": [first, done, privateTask]])
         for task in [first, done] { if let change = PinnedNotes.change(taskID: task.id, enabled: true, pins: [], account: userID) { snapshot.apply(change) } }
         undoStack = []; redoStack = []; try? persist()
+    }
+    func focusWidgetFixtureProjection() -> String {
+        _ = widgetPublicationRevision
+        guard let data = try? widgetActionDisk().read().data, let payload = try? JSONDecoder().decode([String: JSON].self, from: data),
+              let encoded = try? JSONEncoder().encode(payload["focusSession"] ?? .null),
+              let focus = try? JSONDecoder().decode(FocusWidgetSnapshot.self, from: encoded), focus.valid(for: userID) else { return "Focus: refresh" }
+        return "Focus: " + (focus.conflict ? "review" : focus.clock?.status ?? "idle")
     }
     func seedFocusSessionFixture() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--focus-session-seed") else { return }

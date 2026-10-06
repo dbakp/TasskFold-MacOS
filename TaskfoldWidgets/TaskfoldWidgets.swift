@@ -180,13 +180,14 @@ struct WidgetSnapshot: Codable {
     var account: String
     var lists: [WidgetList] = []
     var notes: [WidgetNote]? = nil // nil means this publisher predates pinned notes.
+    var focusSession: FocusWidgetSnapshot? = nil
     var capacity: WidgetCapacity? = nil
     var pendingSync: Int = 0
     var pendingTaskIDs: [String] = [] // Derived under the same disk lock as the snapshot read.
     init(updated: TimeInterval, tasks: [WidgetTask], version: Int = 2, account: String = "", lists: [WidgetList] = []) {
         self.updated = updated; self.tasks = tasks; self.version = version; self.account = account; self.lists = lists
     }
-    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync, capacity, notes }
+    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync, capacity, notes, focusSession }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         version = try row.decodeIfPresent(Int.self, forKey: .version) ?? 1
@@ -198,6 +199,7 @@ struct WidgetSnapshot: Codable {
         pendingSync = max(0, try row.decodeIfPresent(Int.self, forKey: .pendingSync) ?? 0)
         notes = try? row.decode([WidgetNote].self, forKey: .notes)
         capacity = try? row.decode(WidgetCapacity.self, forKey: .capacity)
+        focusSession = try? row.decode(FocusWidgetSnapshot.self, forKey: .focusSession)
     }
     var availableNotes: [WidgetNote] {
         var seen = Set<String>()
@@ -227,6 +229,12 @@ struct WidgetSnapshot: Codable {
         var parts = URLComponents(); parts.scheme = "taskfold"; parts.host = "notes"; parts.queryItems = [URLQueryItem(name: "account", value: account)]
         return parts.url ?? URL(string: "taskfold://all")!
     }
+    func focusSessionStatus(at date: Date) -> FocusWidgetStatus { focusSession?.status(at: date, owner: account, updated: updated) ?? .refresh }
+    func focusSessionTimelineDates(from date: Date) -> [Date] {
+        guard focusSession?.valid(for: account) == true else { return [date] }
+        return focusSession!.timelineDates(from: date, updated: updated)
+    }
+    var focusSessionURL: URL { account.isEmpty ? URL(string: "taskfold://today")! : FocusSessionLink(account: account).url }
     var hasPlanningFields: Bool { version == 2 }
     static let empty = WidgetSnapshot(updated: 0, tasks: [])
     static func day(_ date: Date, calendar: Calendar = .current) -> String {
@@ -1259,6 +1267,146 @@ struct NoteWidget: Widget {
     }
 }
 
+struct FocusSessionConfiguration: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Focus session"
+    static var description = IntentDescription("Follow your current workspace's timer. Tap to start, pause, resume or review it in Taskfold.")
+    @Parameter(title: "Appearance", default: .standard) var palette: WidgetPalette
+    @Parameter(title: "Hide task title", default: false) var hideTitle: Bool
+}
+struct FocusSessionEntry: TimelineEntry {
+    var date: Date
+    var snapshot: WidgetSnapshot
+    var palette: WidgetPalette = .standard
+    var hideTitle = false
+    static var preview: FocusSessionEntry {
+        let now = Date(), start = Int64(now.addingTimeInterval(-300).timeIntervalSince1970 * 1000)
+        var snapshot = WidgetSnapshot(updated: now.timeIntervalSinceReferenceDate, tasks: [], account: "preview")
+        snapshot.focusSession = FocusWidgetSnapshot(account: "preview", clock: FocusWidgetClock(
+            sessionID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa32", taskID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+            durationSeconds: 1500, elapsedMilliseconds: 0, startedAt: start, changedAt: start, runningSince: start,
+            status: "running", taskState: "open", title: "Make room for the next good idea"))
+        return FocusSessionEntry(date: now, snapshot: snapshot)
+    }
+}
+struct FocusSessionProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> FocusSessionEntry { .preview }
+    func snapshot(for configuration: FocusSessionConfiguration, in context: Context) async -> FocusSessionEntry {
+        context.isPreview ? .preview : entry(Date(), snapshot: .load(), configuration: configuration)
+    }
+    func timeline(for configuration: FocusSessionConfiguration, in context: Context) async -> Timeline<FocusSessionEntry> {
+        let now = Date(), snapshot = WidgetSnapshot.load()
+        return Timeline(entries: snapshot.focusSessionTimelineDates(from: now).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+    }
+    private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: FocusSessionConfiguration) -> FocusSessionEntry {
+        FocusSessionEntry(date: date, snapshot: snapshot, palette: configuration.palette, hideTitle: configuration.hideTitle)
+    }
+}
+struct FocusSessionWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: FocusSessionEntry
+    private var tint: Color { entry.palette.color(fallback: plum) }
+    private var status: FocusWidgetStatus { entry.snapshot.focusSessionStatus(at: entry.date) }
+    private var clock: FocusWidgetClock? { status == .refresh ? nil : entry.snapshot.focusSession?.clock }
+    private var heading: String {
+        switch status {
+        case .running: return "Time to focus"
+        case .paused: return "Paused"
+        case .ended: return "Session ended"
+        case .finished: return "Time well spent"
+        case .conflict: return "Review changes"
+        case .unavailable: return clock?.taskState == "completed" ? "Task completed" : "Task unavailable"
+        case .idle: return "One useful step"
+        case .refresh: return "Refresh Focus"
+        }
+    }
+    private var action: String {
+        switch status {
+        case .running: return "Open session"
+        case .paused: return "Resume in app"
+        case .conflict, .unavailable: return "Review in app"
+        case .ended, .finished, .idle: return "Start in app"
+        case .refresh: return "Open Taskfold"
+        }
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: family == .systemSmall ? 4 : 8) {
+            HStack {
+                Label(family == .systemSmall ? "FOCUS" : "FOCUS SESSION", systemImage: status == .paused ? "pause.circle" : "timer")
+                    .font(.system(size: 10, weight: .semibold, design: .rounded)).tracking(1).foregroundStyle(tint)
+                Spacer(minLength: 0)
+                if entry.hideTitle { Image(systemName: "lock").font(.caption2).foregroundStyle(tint).accessibilityLabel("Task title hidden") }
+                if entry.snapshot.pendingSync > 0 { Image(systemName: "icloud").font(.caption2).foregroundStyle(.secondary).accessibilityLabel("Saved, sync pending") }
+            }
+            if family == .systemSmall {
+                clockContent
+                Text(heading).font(.caption.weight(.semibold)).foregroundStyle(tint).lineLimit(1)
+                taskContent
+            } else {
+                HStack(alignment: .center, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 8) { clockContent; Text(heading).font(.caption.weight(.semibold)).foregroundStyle(tint).lineLimit(2) }
+                        .frame(width: 124, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 6) {
+                        taskContent
+                        Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            Spacer(minLength: 0)
+            HStack {
+                Text(action).font(.system(size: 10, weight: .semibold, design: .rounded)).foregroundStyle(tint).lineLimit(1)
+                Spacer(minLength: 2)
+                Image(systemName: "arrow.up.right").font(.caption2).foregroundStyle(tint)
+            }
+        }
+        .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+        .widgetURL(entry.snapshot.focusSessionURL)
+    }
+    @ViewBuilder private var clockContent: some View {
+        if let clock {
+            Group {
+                if status == .running, let interval = clock.timerInterval {
+                    Text(timerInterval: interval, countsDown: true, showsHours: false)
+                } else { Text(clock.clock(at: entry.date, spent: clock.status == "stopped")) }
+            }
+            .font(.system(size: clock.durationSeconds >= 6000 ? 32 : (family == .systemSmall ? 36 : 40), weight: .semibold, design: .rounded).monospacedDigit())
+            .lineLimit(1).minimumScaleFactor(0.75).frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityHint(clock.status == "stopped" ? "Time focused" : "Time remaining")
+            .accessibilityIdentifier("focusWidgetClock")
+        } else {
+            Image(systemName: status == .idle ? "sparkles" : "arrow.clockwise").font(.system(size: 28)).foregroundStyle(tint).frame(height: 42)
+        }
+    }
+    @ViewBuilder private var taskContent: some View {
+        if status == .refresh || status == .idle {
+            Text(status == .idle ? "Give one task a little time." : "Open Taskfold to update your session.").font(.subheadline.weight(.medium)).lineLimit(3)
+        } else if entry.hideTitle {
+            Text("A little time, just for you").font(.subheadline.weight(.medium)).lineLimit(2)
+        } else {
+            Text(clock?.title ?? "Choose another task").font((family == .systemSmall ? Font.caption : Font.subheadline).weight(.medium)).lineLimit(family == .systemSmall ? 2 : 3).fixedSize(horizontal: false, vertical: true).privacySensitive()
+        }
+    }
+    private var detail: String {
+        switch status {
+        case .running:
+            let minutes = (clock?.durationSeconds ?? 0) / 60
+            return "\(minutes) \(minutes == 1 ? "minute" : "minutes") for one task."
+        case .paused: return "Your progress is saved."
+        case .ended: return "Your task stays unchanged."
+        case .finished: return "Complete the task when its work is done."
+        case .conflict: return "Choose which session to keep."
+        case .unavailable: return "End this session or choose another task."
+        case .idle: return "Choose a task and a duration."
+        case .refresh: return "See your latest session."
+        }
+    }
+}
+struct FocusSessionWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "TaskfoldFocusSession", intent: FocusSessionConfiguration.self, provider: FocusSessionProvider()) { FocusSessionWidgetView(entry: $0) }
+            .configurationDisplayName("Focus session").description("Keep one task's timer close. See time remaining and reopen the session to pause, resume or start again.").supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
 @main
 struct TaskfoldWidgetBundle: WidgetBundle {
     var body: some Widget {
@@ -1272,6 +1420,7 @@ struct TaskfoldWidgetBundle: WidgetBundle {
         CapacityWidget()
         InboxWidget()
         NoteWidget()
+        FocusSessionWidget()
         #if os(iOS)
         AddTaskControl()
         #endif

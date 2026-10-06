@@ -13,7 +13,15 @@ struct WidgetActionTestPanel: View {
         return components.url!
     }
     var body: some View {
-        if ProcessInfo.processInfo.arguments.contains("--pinned-notes-testing") {
+        if ProcessInfo.processInfo.arguments.contains("--focus-widget-testing") {
+            VStack(spacing: 4) {
+                Text(store.focusWidgetFixtureProjection()).font(.system(size: 10)).accessibilityIdentifier("focusProjection")
+                HStack {
+                    Link("Open Focus", destination: FocusSessionLink(account: store.userID).url).accessibilityIdentifier("focusWidgetOpen")
+                    Link("Other workspace", destination: FocusSessionLink(account: "other-workspace").url).accessibilityIdentifier("focusWidgetOtherWorkspace")
+                }.font(.system(size: 12))
+            }
+        } else if ProcessInfo.processInfo.arguments.contains("--pinned-notes-testing") {
             VStack(spacing: 4) {
                 Text(store.pinnedNotesFixtureProjection()).font(.system(size: 10)).accessibilityIdentifier("noteProjection")
                 HStack {

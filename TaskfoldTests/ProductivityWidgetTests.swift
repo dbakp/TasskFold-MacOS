@@ -25,7 +25,7 @@ final class ProductivityWidgetTests: XCTestCase {
         XCTAssertEqual(task.displayed(calendar: calendar("America/New_York")).due, TaskPlanner.plannedDay(row, calendar: calendar("America/New_York")))
         let cleared = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(WidgetProjection.payload(tasks: [row], projects: [project], account: "", now: now)))
         XCTAssertTrue(cleared.tasks.isEmpty); XCTAssertEqual(cleared.updated, 0); XCTAssertEqual(cleared.account, "")
-        XCTAssertEqual(Set(payload.keys), ["version", "updated", "account", "tasks", "lists", "pendingSync", "capacity", "notes"])
+        XCTAssertEqual(Set(payload.keys), ["version", "updated", "account", "tasks", "lists", "pendingSync", "capacity", "notes", "focusSession"])
     }
     func testFixedTimeTravelAndFloatingTimeUseTheSameLocalDayAsPlanner() {
         var fixed = task("fixed", due: "2026-10-06", deadline: "2026-10-09", minutes: 25)

@@ -1078,9 +1078,9 @@ enum TaskCompletion {
     }
 }
 
-/// Versioned widget payload. The extension receives planning data, never sessions or mutations.
+/// Versioned widget payload. The extension receives bounded planning/Focus data, never authentication sessions or executable mutations.
 enum WidgetProjection {
-    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = []) -> [String: JSON] {
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true) -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
         let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar)
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
@@ -1094,7 +1094,21 @@ enum WidgetProjection {
                 "duration": task.durationMinutes.map { .number(Double($0)) } ?? .null,
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
-        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
+        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "focusSession": focusReadable ? focusPayload(focusRecord, tasks: tasks, account: account, conflict: focusConflict) : .null, "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
+    }
+
+    static func focusPayload(_ row: Record?, tasks: [Record], account: String, conflict: Bool) -> JSON {
+        guard row.map({ FocusSessionChange.validRow($0, account: account) }) ?? true else { return .null }
+        var clock: FocusWidgetClock?
+        if let session = FocusSessionChange.session(in: row, account: account) {
+            let task = tasks.first { $0.id.lowercased() == session.taskID }
+            clock = FocusWidgetClock(sessionID: session.id, taskID: session.taskID, durationSeconds: session.durationSeconds,
+                elapsedMilliseconds: session.elapsedMilliseconds, startedAt: session.startedAt, changedAt: session.changedAt,
+                runningSince: session.runningSince, status: session.status.rawValue,
+                taskState: task.map { $0.completed ? "completed" : "open" } ?? "unavailable",
+                title: task.map { PinnedNotes.excerpt($0.title, characters: 160, bytes: 1000).0 })
+        }
+        return (try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(FocusWidgetSnapshot(account: account, clock: clock, conflict: conflict)))) ?? .null
     }
 
     /// Materialize the planner's exact day semantics in a bounded, title-free projection.
