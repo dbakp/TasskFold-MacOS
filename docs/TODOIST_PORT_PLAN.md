@@ -66,7 +66,7 @@ Priority: P0 enables daily usefulness or protects data; P1 expands planning and 
 | Google and Outlook calendar integration | Calendar is currently Taskfold tasks only | Event overlay first, then explicit task mirroring and reconciliation | P1 |
 | Completion history and productivity goals | Completed lists exist; no activity ledger, goals, or Insights surface | Completion/reopen events, daily/weekly targets and honest project progress | P1 |
 | Collaboration and team workspaces | Project invites exist; Mac and current iOS have assignment/member UI; Mac has conflict review; Android and transport parity still need work | Align assignment UI and conflict handling, shared activity, mentions; team roles/folders/admin later | P1/P2 |
-| Export, backup, restore, migration | JSON export and Todoist preview/import exist | Validated restore, versioned backups and current API/schema import; unsupported fields must be reported | P0/P1 |
+| Export, backup, restore, migration | Versioned/legacy JSON export, validated merge preview, encrypted retained copies and recovery UI implemented; native pair and provider round-trip evidence remains | Validated restore, versioned backups and current API/schema import; unsupported fields must be reported | P0/P1 |
 | Email, browser and automation capture | Android text share and Apple intents exist; no email/API integration layer found | Share extensions, browser capture, email intake, scoped public API/webhooks | P2 |
 | Voice and AI capture | Siri/Shortcuts and keyboard dictation can add single tasks | Voice-to-multiple-task review, optional breakdown and filter assistance, preview before changes | P2 |
 | Watch and Wear OS | No wearable targets found | Capture, Today and durable complete, after mobile foundations | P2 |

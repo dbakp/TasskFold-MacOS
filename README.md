@@ -133,3 +133,7 @@ The widget collection includes Today, Focus, Week ahead, Quick capture, **Deadli
 A versioned read-only App Group snapshot carries stable project IDs, independent deadlines, estimates and fixed scheduling instants. Fixed times use the device's local day after travel; floating times retain their wall-clock date. Signed-out snapshots clear task data. Daily timeline entries use actual local midnights across daylight-saving changes; stale snapshots ask the user to refresh. Widgets use cached app data and require the app to refresh remote changes.
 
 Selected project/label/filter scopes and direct completion are still planned. Source renders and model tests do not establish every installed host, accessibility size or distribution entitlement. See [P0_IMPLEMENTATION.md](docs/P0_IMPLEMENTATION.md) for the verified scope. The distributed ad hoc DMG currently excludes widgets; desktop installation needs an App Group-capable provisioned build.
+
+## Backups and restore
+
+Versioned JSON export, validated restore previews, both matching policies, encrypted manual/daily recovery copies and 20-copy retention are implemented locally in this app. See [backup behavior and verification scope](docs/BACKUPS.md). Private recovery files stay on their device; portable exports work across the native apps.

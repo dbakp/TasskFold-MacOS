@@ -112,7 +112,7 @@ enum Dates {
     }
 }
 
-struct Mutation: Codable, Identifiable, Equatable {
+struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var id = UUID()
     var table: String
     var recordID: String
@@ -120,6 +120,8 @@ struct Mutation: Codable, Identifiable, Equatable {
     var fields: [String: JSON]
     /// Optional for caches written before collaboration support. Captured before applying an edit.
     var baseline: [String: JSON]? = nil
+    /// Restore creates never overwrite an already present server row on retry.
+    var insertOnly: Bool? = nil
 }
 
 /// Applies only the user's changes when explicitly resolving a conflict. Remote-only items survive.
@@ -165,7 +167,7 @@ struct SyncConflict: Identifiable {
     var id: UUID { mutation.id }
 }
 
-struct Snapshot: Codable, Equatable {
+struct Snapshot: Codable, Equatable, Sendable {
     var tables: [String: [Record]] = [:]
     var pending: [Mutation] = []
     mutating func apply(_ change: Mutation) {
@@ -749,6 +751,9 @@ enum TaskAssignment {
         var move = change
         move.fields["assigned_to"] = .null
         move.fields["subtasks"] = clearChildren(change.fields["subtasks"] ?? existing["subtasks"])
+        if move.baseline != nil {
+            for field in ["assigned_to", "subtasks"] where move.baseline?[field] == nil { move.baseline?[field] = existing[field] }
+        }
         if let person = change.fields["assigned_to"], !person.text.isEmpty, !project.text.isEmpty {
             return [move, Mutation(table: "tasks", recordID: change.recordID, method: "PATCH", fields: ["assigned_to": person], baseline: ["assigned_to": .null])]
         }

@@ -30,6 +30,58 @@ final class Store {
     let backend = Backend()
     private let monitor = NWPathMonitor()
     private var accountGeneration = UUID()
+    var workspaceGeneration: UUID { accountGeneration }
+    var backupWarning: String?
+    @ObservationIgnored private var dailyBackupRunning = false
+    var dailyBackupsEnabled: Bool {
+        get { UserDefaults.standard.object(forKey: "dailyBackups." + userID) as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: "dailyBackups." + userID); if newValue { scheduleDailyBackup() } }
+    }
+    var backupVault: BackupVault {
+        let account = userID
+        let folder = cacheURL.deletingLastPathComponent().appending(path: "Backups", directoryHint: .isDirectory)
+            .appending(path: WorkspaceBackup.stableID("vault", account), directoryHint: .isDirectory)
+        return BackupVault(directory: folder, account: account, key: { try BackupVault.deviceKey(account: account) })
+    }
+    func makeRecoveryBackup(kind: String = "Manual") async throws -> RecoveryEntry {
+        guard signedIn || localMode, !userID.isEmpty else { throw BackupFailure(message: "Open a workspace before backing it up.") }
+        let vault = backupVault, before = snapshot, generation = accountGeneration
+        let entry = try await Task.detached(priority: .utility) { try vault.save(before, kind: kind) }.value
+        guard generation == accountGeneration else { throw BackupFailure(message: "The workspace changed. The backup belongs to the previous workspace.") }
+        backupWarning = nil
+        return entry
+    }
+    private func scheduleDailyBackup() {
+        guard (signedIn || localMode), !userID.isEmpty, dailyBackupsEnabled, !dailyBackupRunning else { return }
+        let vault = backupVault, before = snapshot, generation = accountGeneration
+        dailyBackupRunning = true
+        Task {
+            defer { dailyBackupRunning = false }
+            do {
+                try await Task.detached(priority: .utility) {
+                    if try vault.entries().contains(where: { $0.kind == "Daily" && Calendar.current.isDateInToday($0.createdAt) }) { return }
+                    _ = try vault.save(before, kind: "Daily")
+                }.value
+                if generation == accountGeneration { backupWarning = nil }
+            } catch { if generation == accountGeneration { backupWarning = "Daily backup could not be saved: " + error.localizedDescription } }
+        }
+    }
+    /// The reviewed snapshot must still be current after the encrypted checkpoint is written.
+    func restore(_ backup: WorkspaceBackup, policy: RestorePolicy, reviewed: Snapshot, generation: UUID) async throws -> RestorePlan {
+        guard generation == accountGeneration, snapshot == reviewed, signedIn || localMode else { throw BackupFailure(message: "Your workspace changed. Refresh the restore preview before continuing.") }
+        guard !syncing else { throw BackupFailure(message: "Wait for sync to finish, then refresh the restore preview.") }
+        let plan = try backup.plan(current: reviewed, account: userID, policy: policy)
+        guard plan.total > 0 else { return plan }
+        _ = try await makeRecoveryBackup(kind: "Before restore")
+        guard generation == accountGeneration, snapshot == reviewed, !syncing else { throw BackupFailure(message: "Your workspace changed while the recovery copy was saved. Refresh the preview before continuing.") }
+        guard commit(plan.changes, remember: false) else {
+            let message = error ?? "The restore could not be saved. Your workspace was not changed."
+            error = nil
+            throw BackupFailure(message: message)
+        }
+        undoStack = []; redoStack = []
+        return plan
+    }
     var userID: String {
         if localMode {
             #if DEBUG
@@ -183,6 +235,7 @@ final class Store {
         try FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try JSONEncoder().encode(snapshot).write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         publishWidgetSnapshot()
+        scheduleDailyBackup()
     }
     static let appGroup = "group.com.dbakp.taskfold"
     /// Widgets read a compact copy of open tasks from the shared App Group container.

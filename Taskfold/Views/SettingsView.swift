@@ -57,8 +57,6 @@ struct AccountSettings: View {
     @State private var confirmSignOut = false
     @State private var importingAvatar = false
     @State private var uploading = false
-    @State private var exporting = false
-    @State private var exportDocument: JSONExport?
     @State private var changingEmail = false
     @State private var changingPassword = false
     @State private var deletingAccount = false
@@ -102,19 +100,15 @@ struct AccountSettings: View {
                     Button(store.syncing ? "Syncing…" : "Sync Now") { Task { await store.sync() } }.disabled(store.syncing)
                     if let notice = store.notice { Text(notice).font(.caption).foregroundStyle(.secondary) }
                 }
-                Button("Export Workspace…") {
-                    let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-                    do {
-                        exportDocument = JSONExport(data: try encoder.encode(store.snapshot.tables)); exporting = true
-                    } catch { store.error = error.localizedDescription }
-                }
             }
+            BackupTools()
             if store.signedIn {
                 Section {
                     Button(store.localMode ? "Leave Local Workspace…" : "Sign Out…", role: .destructive) { confirmSignOut = true }
                 }
             }
         }
+        .modifier(BackupPresentation())
         .formStyle(.grouped)
         .onAppear { displayName = store.accountName; consumeSignInRequest() }
         .onChange(of: workspace.signInRequested) { _, _ in consumeSignInRequest() }
@@ -129,7 +123,6 @@ struct AccountSettings: View {
                 AuthView()
             }.frame(width: 820, height: 550)
         }
-        .fileExporter(isPresented: $exporting, document: exportDocument, contentType: .json, defaultFilename: "Taskfold-export") { result in if case .failure(let error) = result { store.error = error.localizedDescription } }
         .fileImporter(isPresented: $importingAvatar, allowedContentTypes: [.image]) { result in
             uploading = true
             Task {
@@ -236,12 +229,4 @@ struct AccountMenu: View {
         .accessibilityIdentifier("accountMenu").accessibilityLabel(store.accountName + ", Account")
     }
     private func show(_ tab: SettingsTab) { workspace.settingsTab = tab; openSettings() }
-}
-
-struct JSONExport: FileDocument {
-    static var readableContentTypes: [UTType] { [.json] }
-    var data: Data
-    init(data: Data) { self.data = data }
-    init(configuration: ReadConfiguration) throws { data = configuration.file.regularFileContents ?? Data() }
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper { FileWrapper(regularFileWithContents: data) }
 }

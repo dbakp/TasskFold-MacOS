@@ -205,7 +205,19 @@ final class Backend: NSObject {
         let query = change.method == "POST" ? "?on_conflict=\(conflictKey)" : "?id=eq.\(escapedID)"
         let data = try await request("/rest/v1/\(change.table)\(query)", method: change.method,
             body: change.method == "DELETE" ? nil : change.fields,
-            extra: ["Prefer": change.method == "POST" ? "resolution=merge-duplicates,return=representation" : "return=representation"])
+            extra: ["Prefer": change.method == "POST" ? (change.insertOnly == true ? "handling=strict,resolution=ignore-duplicates,missing=default,return=representation" : "resolution=merge-duplicates,return=representation") : "return=representation"])
+        if change.method == "POST", change.insertOnly == true {
+            let rows = try JSONDecoder().decode([Record].self, from: data)
+            if rows.contains(where: { $0.id == change.recordID && $0.string("user_id") == change.fields["user_id"]?.text }) { return }
+            let owner = (change.fields["user_id"]?.text ?? "").addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
+            guard !owner.isEmpty else { throw AppFailure(message: "A restore change has no workspace owner.") }
+            let existing = try await request("/rest/v1/\(change.table)?id=eq.\(escapedID)&user_id=eq.\(owner)&select=*")
+            let found = try JSONDecoder().decode([Record].self, from: existing)
+            guard found.contains(where: { $0.id == change.recordID && $0.string("user_id") == change.fields["user_id"]?.text }) else {
+                throw AppFailure(message: "The server could not confirm this restored item. It remains saved on this device.")
+            }
+            return
+        }
         if change.method != "DELETE" {
             let rows = try JSONDecoder().decode([Record].self, from: data)
             guard rows.contains(where: { $0.id == change.recordID }) else {
