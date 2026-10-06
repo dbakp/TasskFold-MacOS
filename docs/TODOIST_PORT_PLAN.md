@@ -203,3 +203,8 @@ Track each phase as: schema → model and queue → primary UI → other clients
 5. Time-blocking and event overlay follow; then collaboration/history/recovery and advanced capture.
 
 The complete sequence is approximately 24–37+ engineer-weeks under the one-engineer cross-platform assumption, before external-provider approvals and optional wearable/team scope. Re-estimate after Phases 1–2 with measured delivery times. The first two feature phases are the highest-value small release and should take priority over decorative widgets or gamification.
+
+
+## 6 October: safe completion prerequisite
+
+The independently owned native completion engines now converge on one create-only successor per parent/day, preserve fixed-zone recurrence after travel, renew nested checklist identities/plans and guard undo/deletion against newer remote work. Both apps review changed deletions before sync can remove the row. The deployed guard preserves RLS and rejects edits made during review. See [the implementation evidence](P0_IMPLEMENTATION.md#6-october-recurrence-identity-and-guarded-deletion) for the 195-test suites, three iPhone user walks and rolled-back backend tests. This closes recurrence/deletion prerequisites for interactive My list actions. The widget completion intent, durable offline requests, stale/account-bound tap rejection, installed-host checks and the broader P0 acceptance backlog remain to be delivered.

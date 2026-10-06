@@ -20,7 +20,12 @@ final class NativeReminderIntegrationTests: XCTestCase {
         var extended = relative; extended.raw["future"] = .string("retained")
         let unknown: JSON = .object(["version": .number(2), "id": .string(UUID().uuidString.lowercased()), "provider_extension": .string("keep")])
         task["reminder_specs"] = .array([.object(extended.raw), .object(absolute.raw), unknown])
-        let deletion = Mutation(table: "tasks", recordID: task.id, method: "DELETE", fields: [:])
+        func cleanup() async throws {
+            let rows = try await a.rows("tasks")
+            if let current = rows.first(where: { $0.id == task.id }) {
+                try await a.send(Mutation(table: "tasks", recordID: task.id, method: "DELETE", fields: [:], baseline: current.fields))
+            }
+        }
         try await a.send(Mutation(table: "tasks", recordID: task.id, method: "POST", fields: TaskPlanning.fields(task.fields, existing: nil)))
         do {
             let firstRows = try await b.rows("tasks"), remote = try XCTUnwrap(firstRows.first { $0.id == task.id })
@@ -45,8 +50,8 @@ final class NativeReminderIntegrationTests: XCTestCase {
             try await b.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["completed": .bool(true)], baseline: ["completed": .bool(false)]))
             let completedRows = try await a.rows("tasks"), completed = try XCTUnwrap(completedRows.first { $0.id == task.id })
             XCTAssertTrue(DueReminder.events(tasks: [completed]).isEmpty)
-        } catch { try? await a.send(deletion); throw error }
-        try await a.send(deletion)
+        } catch { try? await cleanup(); throw error }
+        try await cleanup()
         let remaining = try await b.rows("tasks"); XCTAssertFalse(remaining.contains { $0.id == task.id })
     }
 }

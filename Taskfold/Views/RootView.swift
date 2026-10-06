@@ -251,6 +251,19 @@ struct RootView: View {
             workspace.section = .today
             try? store.persist()
         }
+                if ProcessInfo.processInfo.arguments.contains("--deletion-conflict-fixture") {
+                    store.startLocal(); store.dailyBackupsEnabled = false
+                    var before = Record.task(user: store.userID, date: Date())
+                    before["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"); before["title"] = .string("Next occurrence")
+                    var remote = before; remote["title"] = .string("Updated next occurrence")
+                    remote["duration_minutes"] = .number(25)
+                    remote["comments"] = .array([.object(["id": .string("c"), "text": .string("New work from another device")])])
+                    let deletion = Mutation(table: "tasks", recordID: before.id, method: "DELETE", fields: [:], baseline: before.fields)
+                    store.snapshot = Snapshot(tables: ["tasks": []], pending: [deletion])
+                    store.syncConflict = SyncConflict(mutation: deletion, remote: remote)
+                    try? store.persist()
+                    workspace.section = .today
+                }
         if arguments.contains("--sticky-fixture") {
             store.startLocal(); store.snapshot = Snapshot()
             store.snapshot.tables["tasks"] = (0..<100).map { index in

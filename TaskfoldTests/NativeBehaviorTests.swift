@@ -196,7 +196,7 @@ final class AuthTransportTests: XCTestCase {
         let created = try await backend.rows("tasks"); XCTAssertTrue(created.contains { $0.id == task.id })
         try await backend.send(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["completed": .bool(true)], baseline: ["completed": .bool(false)]))
         let edited = try await backend.rows("tasks"); XCTAssertEqual(edited.first { $0.id == task.id }?.completed, true)
-        try await backend.send(Mutation(table: "tasks", recordID: task.id, method: "DELETE", fields: [:]))
+        try await backend.send(Mutation(table: "tasks", recordID: task.id, method: "DELETE", fields: [:], baseline: try XCTUnwrap(edited.first { $0.id == task.id }).fields))
         let removed = try await backend.rows("tasks"); XCTAssertFalse(removed.contains { $0.id == task.id })
     }
 }

@@ -203,6 +203,21 @@ final class Backend: NSObject {
             }
             return
         }
+        if change.table == "tasks", change.method == "DELETE" {
+            guard let baseline = change.baseline, baseline["id"] != nil, baseline["user_id"] != nil, baseline["title"] != nil else {
+                // An old queue can outlive the task. Only visible, existing rows need review.
+                let escaped = change.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? change.recordID
+                let data = try await request("/rest/v1/tasks?id=eq.\(escaped)&select=id")
+                if try JSONDecoder().decode([Record].self, from: data).isEmpty { return }
+                throw AppFailure(message: "TASKFOLD_CONFLICT: Review this older queued deletion before removing a synced task.")
+            }
+            let data = try await request("/rest/v1/rpc/taskfold_delete_task", method: "POST", body: [
+                "_id": .string(change.recordID), "_base": .object(baseline)])
+            guard try JSONDecoder().decode(Bool.self, from: data) else {
+                throw AppFailure(message: "The server did not confirm this deletion. Your change is saved on this device.")
+            }
+            return
+        }
         let conflictKey = ["favorites", "view_preferences", "view_orders"].contains(change.table) ? "user_id,id" : "id"
         let escapedID = change.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? change.recordID
         let query = change.method == "POST" ? "?on_conflict=\(conflictKey)" : "?id=eq.\(escapedID)"
@@ -213,11 +228,11 @@ final class Backend: NSObject {
             let rows = try JSONDecoder().decode([Record].self, from: data)
             if rows.contains(where: { $0.id == change.recordID && $0.string("user_id") == change.fields["user_id"]?.text }) { return }
             let owner = (change.fields["user_id"]?.text ?? "").addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
-            guard !owner.isEmpty else { throw AppFailure(message: "A restore change has no workspace owner.") }
+            guard !owner.isEmpty else { throw AppFailure(message: "This new item has no workspace owner.") }
             let existing = try await request("/rest/v1/\(change.table)?id=eq.\(escapedID)&user_id=eq.\(owner)&select=*")
             let found = try JSONDecoder().decode([Record].self, from: existing)
             guard found.contains(where: { $0.id == change.recordID && $0.string("user_id") == change.fields["user_id"]?.text }) else {
-                throw AppFailure(message: "The server could not confirm this restored item. It remains saved on this device.")
+                throw AppFailure(message: "The server could not confirm this new item. It remains saved on this device.")
             }
             return
         }

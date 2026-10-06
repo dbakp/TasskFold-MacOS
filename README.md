@@ -132,7 +132,7 @@ The widget collection includes Today, Focus, Week ahead, Quick capture, **Deadli
 
 A versioned read-only App Group snapshot carries stable project IDs, independent deadlines, estimates and fixed scheduling instants. Fixed times use the device's local day after travel; floating times retain their wall-clock date. Signed-out snapshots clear task data. Daily timeline entries use actual local midnights across daylight-saving changes; stale snapshots ask the user to refresh. Widgets use cached app data and require the app to refresh remote changes.
 
-Selected project/label/filter scopes and direct completion are still planned. Source renders and model tests do not establish every installed host, accessibility size or distribution entitlement. See [P0_IMPLEMENTATION.md](docs/P0_IMPLEMENTATION.md) for the verified scope. The distributed ad hoc DMG currently excludes widgets; desktop installation needs an App Group-capable provisioned build.
+Selected project/label/filter scopes are implemented. Direct completion remains pending. Source renders and model tests do not establish every installed host, accessibility size or distribution entitlement. See [P0_IMPLEMENTATION.md](docs/P0_IMPLEMENTATION.md) for the verified scope. The distributed ad hoc DMG currently excludes widgets; desktop installation needs an App Group-capable provisioned build.
 
 ## Backups and restore
 
@@ -161,3 +161,6 @@ Select tasks → inspector Actions → Edit Deadlines, use the task context menu
 List selections use stable IDs bound to the current workspace. Rename keeps the selection. Deleted/inaccessible lists ask you to refresh or choose again. Signed-out snapshots clear all tasks and list metadata. Saved filters use the native evaluator to prepare eight local days of open-task membership, including DST midnights; exhausted dates or a changed device time zone ask you to open the app. Widget data remains cached until the app publishes a new snapshot. Project and label lists use default priority ordering; filters use their saved sort. My list shows only open tasks even if a saved filter includes completed work. Direct completion remains pending.
 
 [Light widget preview](docs/widget-previews/lists.png), [dark](docs/widget-previews/lists-dark.png), [names hidden](docs/widget-previews/lists-private.png), [empty](docs/widget-previews/lists-empty.png), [unavailable](docs/widget-previews/lists-unavailable.png). `python3 Scripts/render_widget_previews.py --lists` renders the repository’s real SwiftUI fixture views on macOS; those images alone do not prove installed-host behavior.
+
+
+Recurring completion now gives each next occurrence a stable ID and a create-only insert, preserves the fixed schedule's source time zone after travel, and renews checklist IDs and planned dates. Task deletion and undo carry the whole saved task as a baseline; newer synced work pauses for review with Keep task/Delete task choices. Both clients use the shared `taskfold_delete_task` backend guard while owning all native sources independently. Interactive widget completion is still pending. See the platform validation record for verified behavior and outstanding runtime checks.

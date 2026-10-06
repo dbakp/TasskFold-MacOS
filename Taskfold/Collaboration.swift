@@ -122,21 +122,25 @@ struct ConflictReview: View {
     let conflict: SyncConflict
     @State private var message: String?
     private var current: Bool { store.syncConflict?.id == conflict.id && store.snapshot.pending.contains(conflict.mutation) }
-    private var keys: [String] { conflict.mutation.fields.keys.sorted() }
+    private var deleting: Bool { conflict.mutation.method == "DELETE" }
+    private var keys: [String] {
+        let fields = deleting ? conflict.remote.fields : conflict.mutation.fields
+        return fields.keys.filter { !deleting || !["id", "user_id", "source_metadata", "created_at", "notification_sent_at"].contains($0) }.sorted()
+    }
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     Label("Your work is saved", systemImage: "checkmark.icloud").font(.headline).foregroundStyle(Color.taskfold)
                     Text(conflict.remote.title).font(.headline)
-                    Text("Changes from another device overlap with this edit. Compare the values below, then choose how to continue.").foregroundStyle(.secondary)
+                    Text(deleting ? "This task changed before it could be deleted. Review its current contents before choosing how to continue." : "Changes from another device overlap with this edit. Compare the values below, then choose how to continue.").foregroundStyle(.secondary)
                 }
                 ForEach(keys, id: \.self) { key in
                     Section(fieldName(key)) {
-                        VStack(alignment: .leading, spacing: 6) {
+                        if !deleting { VStack(alignment: .leading, spacing: 6) {
                             Text("My edit").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
                             Text(summary(conflict.mutation.fields[key] ?? .null, key: key)).textSelection(.enabled)
-                        }
+                        } }
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Synced version").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
                             Text(summary(conflict.remote[key], key: key)).textSelection(.enabled)
@@ -144,7 +148,9 @@ struct ConflictReview: View {
                     }
                 }
                 Section {
-                    if conflict.mutation.fields.keys.contains(where: { conflict.mutation.baseline?[$0] == nil }) {
+                    if deleting {
+                        Text("Keep task cancels this queued deletion and restores the synced task. Delete task removes the contents shown here; if another device changes them again, you will be asked to review again. Later offline edits and other tasks are kept.").font(.callout).foregroundStyle(.secondary)
+                    } else if conflict.mutation.fields.keys.contains(where: { conflict.mutation.baseline?[$0] == nil }) {
                         Text("This edit came from an older app version. Keep my edit uses the values shown above, including any comments or subtasks in this edit. Use synced version keeps the current synced values. Later offline edits and other tasks are kept.").font(.callout).foregroundStyle(.secondary)
                     } else {
                         Text("Keep my edit applies your changes and retains independent comments and subtask edits. Use synced version discards this queued edit. Later offline edits and other tasks are kept with either choice.").font(.callout).foregroundStyle(.secondary)
@@ -160,9 +166,9 @@ struct ConflictReview: View {
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 10) {
                     Divider()
-                    Button("Keep my edit") { resolve(keepLocal: true) }
+                    Button(deleting ? "Delete task" : "Keep my edit", role: deleting ? .destructive : nil) { resolve(keepLocal: true) }
                         .buttonStyle(.borderedProminent).accessibilityIdentifier("keepMyEdit")
-                    Button("Use synced version") { resolve(keepLocal: false) }
+                    Button(deleting ? "Keep task" : "Use synced version") { resolve(keepLocal: false) }
                         .buttonStyle(.bordered).accessibilityIdentifier("useSharedEdit")
                     Button { dismiss() } label: { Text("Later").frame(minHeight: 44) }
                         .buttonStyle(.plain).accessibilityIdentifier("conflictLater")

@@ -16,7 +16,12 @@ final class NativeConflictIntegrationTests: XCTestCase {
         XCTAssertTrue(signedA && signedB); XCTAssertEqual(a.session?.user.id, owner); XCTAssertEqual(b.session?.user.id, owner)
         XCTAssertNotEqual(a.session?.access_token, b.session?.access_token)
         var task = Record.task(user: owner, date: Date().addingTimeInterval(86400)); task["title"] = .string("Native conflict fixture"); task["comments"] = .array([])
-        let deletion = Mutation(table: "tasks", recordID: task.id, method: "DELETE", fields: [:])
+        func cleanup() async throws {
+            let rows = try await a.rows("tasks")
+            if let current = rows.first(where: { $0.id == task.id }) {
+                try await a.send(Mutation(table: "tasks", recordID: task.id, method: "DELETE", fields: [:], baseline: current.fields))
+            }
+        }
         try await a.send(Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields))
         do {
             // A pre-upgrade queue with no baseline cannot silently replace work.
@@ -48,8 +53,8 @@ final class NativeConflictIntegrationTests: XCTestCase {
             let final = try XCTUnwrap(finalRows.first { $0.id == task.id })
             XCTAssertEqual(final.title, "My chosen title"); XCTAssertEqual(final["deadline_date"], .string("2026-10-25"))
             XCTAssertEqual(Set(final["comments"].list.map { $0.object["id"]?.text ?? "" }), ["a", "b"])
-        } catch { try? await a.send(deletion); throw error }
-        try await a.send(deletion)
+        } catch { try? await cleanup(); throw error }
+        try await cleanup()
         let remaining = try await b.rows("tasks"); XCTAssertFalse(remaining.contains { $0.id == task.id })
     }
 }

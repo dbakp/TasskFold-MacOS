@@ -323,6 +323,9 @@ final class Store {
             if change.table == "tasks", change.method == "PATCH", change.baseline == nil, let existing = record("tasks", id: change.recordID) {
                 change.baseline = Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, existing[$0]) })
             }
+            if change.table == "tasks", change.method == "DELETE", change.baseline == nil, let existing = record("tasks", id: change.recordID) {
+                change.baseline = existing.fields
+            }
             snapshot.apply(change)
             if !localMode { snapshot.pending.append(change) }
         }
@@ -392,25 +395,7 @@ final class Store {
         let changes = ids.filter { record("tasks", id: $0) != nil }.map { Mutation(table: "tasks", recordID: $0, method: "DELETE", fields: [:]) }
         if !changes.isEmpty { commit(changes) }
     }
-    func toggleChanges(_ task: Record) -> [Mutation] {
-        var edited = task; edited["completed"] = .bool(!task.completed)
-        edited["completed_at"] = task.completed ? .null : .string(Dates.timestamp())
-        var changes = [Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["completed": edited["completed"], "completed_at": edited["completed_at"]])]
-        let parentID = task.string("recurrence_parent_id").isEmpty ? task.id : task.string("recurrence_parent_id")
-        if !task.completed, let next = Dates.next(task), !tasks.contains(where: { $0.string("recurrence_parent_id") == parentID && $0.string("due_date") == Dates.day(next) }) {
-            var copy = TaskPlanning.nextOccurrence(task, date: next); copy["id"] = .string(UUID().uuidString.lowercased())
-            copy["completed"] = .bool(false); copy["completed_at"] = .null
-            copy["due_date"] = .string(Dates.day(next)); copy["notification_sent_at"] = .null
-            copy["created_at"] = .string(Dates.timestamp()); copy["comments"] = .array([])
-            copy["recurrence_parent_id"] = .string(task.string("recurrence_parent_id").isEmpty ? task.id : task.string("recurrence_parent_id"))
-            var pattern = copy["recurrence_pattern"].object
-            if let count = pattern["count"]?.integer, count > 1 { pattern["count"] = .number(Double(count - 1)) }
-            copy["recurrence_pattern"] = .object(pattern)
-            copy["subtasks"] = .array(task["subtasks"].list.map { value in var sub = value.object; sub["completed"] = .bool(false); return .object(sub) })
-            changes.append(Mutation(table: "tasks", recordID: copy.id, method: "POST", fields: copy.fields))
-        }
-        return changes
-    }
+    func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks) }
     private func historyChanges(_ changes: [Mutation]) -> [Mutation] {
         changes.map { change in
             guard change.table == "tasks", change.method == "PATCH", let base = change.baseline,
@@ -460,14 +445,14 @@ final class Store {
             if generation == accountGeneration {
                 notice = "Sync paused: \(error.localizedDescription)"
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation = sending,
-                   mutation.table == "tasks", mutation.method == "PATCH",
+                   mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
                    let escaped = mutation.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics),
                    let data = try? await backend.request("/rest/v1/tasks?id=eq.\(escaped)&select=*"),
                    let remote = try? JSONDecoder().decode([Record].self, from: data).first,
                    generation == accountGeneration, snapshot.pending.contains(mutation),
                    remote.id.lowercased() == mutation.recordID.lowercased() {
                     syncConflict = SyncConflict(mutation: mutation, remote: remote)
-                    notice = "Changes overlap on the same task. Review this edit to resume sync."
+                    notice = mutation.method == "DELETE" ? "This task changed before deletion. Review it to resume sync." : "Changes overlap on the same task. Review this edit to resume sync."
                 }
             }
             return

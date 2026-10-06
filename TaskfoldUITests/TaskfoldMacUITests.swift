@@ -315,6 +315,18 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Independent teammate comment"].waitForExistence(timeout: 5))
     }
 
+    @MainActor func testDeletionReviewKeepsTaskContentsAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--deletion-conflict-fixture"]; app.launch()
+        XCTAssertTrue(app.links["reviewSyncConflict"].waitForExistence(timeout: 10)); app.links["reviewSyncConflict"].click()
+        XCTAssertTrue(app.buttons["useSharedEdit"].waitForExistence(timeout: 5)); XCTAssertEqual(app.buttons["useSharedEdit"].label, "Keep task")
+        XCTAssertEqual(app.buttons["keepMyEdit"].label, "Delete task"); app.buttons["useSharedEdit"].click()
+        XCTAssertTrue(waitForDisappearance(app.links["reviewSyncConflict"], timeout: 5))
+        app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"].click()
+        XCTAssertTrue(app.staticTexts["New work from another device"].waitForExistence(timeout: 5))
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        XCTAssertTrue(app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"].waitForExistence(timeout: 10))
+    }
+
     @MainActor func testExpandableSubtasksEditCompleteAndPersist() throws {
         func nestedID(_ path: [String]) throws -> String { "subtask:" + (try JSONEncoder().encode(path)).base64EncodedString() }
         let childID = try nestedID(["hierarchy-root", "child-one"])

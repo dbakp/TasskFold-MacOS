@@ -79,8 +79,9 @@ enum Dates {
         return actual.year == year && actual.month == month && actual.day == day ? date : nil
     }
     static func timestamp() -> String { ISO8601DateFormatter().string(from: Date()) }
-    static func next(_ task: Record, calendar: Calendar = .current) -> Date? {
-        guard task["is_recurring"].flag, let current = task.due else { return nil }
+    static func next(_ task: Record, calendar input: Calendar = .current) -> Date? {
+        let calendar = TaskCompletion.calendar(for: task, input: input)
+        guard task["is_recurring"].flag, let current = parse(task.string("due_date"), calendar: calendar) else { return nil }
         let p = Record(task["recurrence_pattern"].object)
         let interval = max(1, p["interval"].integer)
         var next: Date?
@@ -106,7 +107,7 @@ enum Dates {
         }
         guard let next else { return nil }
         let endString = p.string("endDate").isEmpty ? task.string("recurrence_end_date") : p.string("endDate")
-        if let end = parse(endString), day(next) > day(end) { return nil }
+        if let end = parse(endString, calendar: calendar), TaskPlanner.dayKey(next, calendar: calendar) > TaskPlanner.dayKey(end, calendar: calendar) { return nil }
         if p["count"].integer == 1 { return nil }
         return next
     }
@@ -120,7 +121,7 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var fields: [String: JSON]
     /// Optional for caches written before collaboration support. Captured before applying an edit.
     var baseline: [String: JSON]? = nil
-    /// Restore creates never overwrite an already present server row on retry.
+    /// Create-only operations never overwrite an already present server row on retry.
     var insertOnly: Bool? = nil
 }
 
@@ -169,11 +170,13 @@ struct SyncConflict: Identifiable {
     /// Resolve only the edit that was reviewed, then replay later offline work.
     /// Returning nil leaves stale or mismatched review requests untouched.
     func resolving(_ snapshot: Snapshot, keepLocal: Bool) -> Snapshot? {
-        guard mutation.table == "tasks", mutation.method == "PATCH",
+        guard mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
               remote.id.lowercased() == mutation.recordID.lowercased(),
               let index = snapshot.pending.firstIndex(where: { $0 == mutation }) else { return nil }
         var result = snapshot
-        if keepLocal {
+        if keepLocal, mutation.method == "DELETE" {
+            result.pending[index].baseline = remote.fields
+        } else if keepLocal {
             result.pending[index].fields = Dictionary(uniqueKeysWithValues: mutation.fields.map { key, value in
                 (key, mutation.baseline?[key].map { TaskEdit.keepingLocal(base: $0, desired: value, remote: remote[key]) } ?? value)
             })
@@ -544,13 +547,13 @@ struct EditHistory {
         for change in changes {
             if let old = current.tables[change.table]?.first(where: { $0.id == change.recordID }) {
                 let fields = change.method == "DELETE" ? old.fields : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old.fields[$0] ?? .null) })
-                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : change.fields))
+                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : change.fields, insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil))
                 var forward = change
                 if change.method == "PATCH" { forward.baseline = Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old[$0]) }) }
                 redo.append(forward)
             } else {
                 redo.append(change)
-                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: "DELETE", fields: [:]))
+                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: "DELETE", fields: [:], baseline: change.table == "tasks" ? change.fields : nil))
             }
             current.apply(change)
         }
@@ -861,17 +864,84 @@ enum TaskPlanning {
         else { result["scheduled_at"] = start(task, calendar: calendar).map { .string(ISO8601DateFormatter().string(from: $0)) } ?? .null }
         return result
     }
-    static func nextOccurrence(_ task: Record, date: Date) -> Record {
+    static func nextOccurrence(_ task: Record, date: Date, calendar: Calendar = .current) -> Record {
         var copy = task
-        copy["due_date"] = .string(Dates.day(date))
+        copy["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar))
         copy["deadline_date"] = .null // A one-off hard deadline never follows a repeat.
         copy["scheduled_at"] = .null
         copy["reminder_specs"] = .array(ReminderSpec.successorRows(ReminderSpec.rows(task)))
-        copy.fields = fields(copy.fields, existing: nil)
+        copy.fields = fields(copy.fields, existing: nil, calendar: calendar)
         return copy
     }
 }
 
+
+/// One completion contract for native actions and widgets. An occurrence has one stable successor ID.
+enum TaskCompletion {
+    static func calendar(for task: Record, input: Calendar = .current) -> Calendar {
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
+        if !task.string("due_time").isEmpty, let zone = TimeZone(identifier: task.string("time_zone")) { calendar.timeZone = zone }
+        return calendar
+    }
+    static func successorID(parent: String, day: String) -> String {
+        let hex = Array(DueReminder.digest("com.taskfold.recurrence.v1|" + parent.lowercased() + "|" + day).prefix(32))
+        return String(hex[0..<8]) + "-" + String(hex[8..<12]) + "-5" + String(hex[13..<16]) + "-a" + String(hex[17..<20]) + "-" + String(hex[20..<32])
+    }
+    static func complete(_ task: Record, tasks: [Record], at now: Date = Date(), calendar input: Calendar = .current) -> [Mutation] {
+        guard !task.completed, !task.id.isEmpty else { return [] }
+        return toggle(task, tasks: tasks, at: now, calendar: input)
+    }
+    static func toggle(_ task: Record, tasks: [Record], at now: Date = Date(), calendar input: Calendar = .current) -> [Mutation] {
+        guard !task.id.isEmpty else { return [] }
+        let stamp = ISO8601DateFormatter().string(from: now)
+        let fields: [String: JSON] = ["completed": .bool(!task.completed), "completed_at": task.completed ? .null : .string(stamp)]
+        var changes = [Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields,
+            baseline: ["completed": task["completed"], "completed_at": task["completed_at"]])]
+        let calendar = calendar(for: task, input: input)
+        let parent = task.string("recurrence_parent_id").isEmpty ? task.id : task.string("recurrence_parent_id")
+        guard !task.completed, let next = Dates.next(task, calendar: calendar) else { return changes }
+        let day = TaskPlanner.dayKey(next, calendar: calendar), nextID = successorID(parent: parent, day: TaskPlanner.dayKey(next, calendar: calendar))
+        guard !tasks.contains(where: { $0.id.lowercased() == nextID || ($0.string("recurrence_parent_id").lowercased() == parent.lowercased() && String($0.string("due_date").prefix(10)) == day) }) else { return changes }
+        var copy = TaskPlanning.nextOccurrence(task, date: next, calendar: calendar)
+        copy["id"] = .string(nextID); copy["completed"] = .bool(false); copy["completed_at"] = .null
+        copy["notification_sent_at"] = .null; copy["created_at"] = .string(stamp); copy.fields.removeValue(forKey: "updated_at")
+        copy["comments"] = .array([]); copy["recurrence_parent_id"] = .string(parent)
+        // One occurrence identity, but separate actions: undo must not delete another device's copy.
+        var metadata = copy["source_metadata"].object
+        if case .object = copy["source_metadata"] {} else if copy["source_metadata"] != .null {
+            metadata["taskfold_previous_source_metadata"] = copy["source_metadata"]
+        }
+        metadata["taskfold_recurrence_v1"] = .object(["action_id": .string(changes[0].id.uuidString.lowercased())])
+        copy["source_metadata"] = .object(metadata)
+        var pattern = copy["recurrence_pattern"].object
+        if let count = pattern["count"]?.integer, count > 1 { pattern["count"] = .number(Double(count - 1)) }
+        copy["recurrence_pattern"] = .object(pattern)
+        let old = Dates.parse(task.string("due_date"), calendar: calendar)
+        let delta = old.flatMap { calendar.dateComponents([.day], from: $0, to: next).day } ?? 0
+        copy["subtasks"] = .array(successorChildren(task["subtasks"].list, root: nextID, path: "", delta: delta, calendar: calendar))
+        changes.append(Mutation(table: "tasks", recordID: nextID, method: "POST", fields: copy.fields, insertOnly: true))
+        return changes
+    }
+    private static func successorChildren(_ values: [JSON], root: String, path: String, delta: Int, calendar input: Calendar, depth: Int = 0) -> [JSON] {
+        guard depth < 24 else { return values }
+        return values.enumerated().map { index, value in
+            guard case .object(let fields) = value else { return value }
+            var child = Record(fields)
+            let path = path + "/" + String(index) + ":" + child.id
+            child["id"] = .string(successorID(parent: root + path, day: "child"))
+            child["completed"] = .bool(false); child["completed_at"] = .null; child["comments"] = .array([])
+            child["deadline_date"] = .null; child["notification_sent_at"] = .null
+            child["reminder_specs"] = .array(ReminderSpec.successorRows(ReminderSpec.rows(child)))
+            let calendar = calendar(for: child, input: input)
+            if let old = Dates.parse(child.string("due_date"), calendar: calendar), let next = calendar.date(byAdding: .day, value: delta, to: old) {
+                child["due_date"] = .string(TaskPlanner.dayKey(next, calendar: calendar)); child["scheduled_at"] = .null
+                child.fields = TaskPlanning.fields(child.fields, existing: nil, calendar: calendar)
+            }
+            if case .array(let nested) = child["subtasks"] { child["subtasks"] = .array(successorChildren(nested, root: root, path: path, delta: delta, calendar: calendar, depth: depth + 1)) }
+            return .object(child.fields)
+        }
+    }
+}
 
 /// Versioned widget payload. The extension receives planning data, never sessions or mutations.
 enum WidgetProjection {
