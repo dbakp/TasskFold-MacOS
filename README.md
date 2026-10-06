@@ -223,3 +223,6 @@ Planned work and reminder shortcuts now handle half-hour clock gaps on the reque
 
 
 Deleted tasks restored from backups or Undo receive a fresh generation. Both native apps preserve that generation through their own durable queues and reject old reminder/widget actions or stale edits against a recreated task. Restoring a still-existing task preserves its identity. Private remote delivery eligibility prevents old-alert bursts after imports or opt-in; remote delivery remains unavailable until its provider and device acceptance gates pass. See [generation and catch-up rules](docs/REMOTE_REMINDER_DELIVERY.md#task-recreation-and-catch-up-eligibility).
+
+
+Both native repos independently own the canonical queue and APNs provider worker. The deployed native worker remains disabled; remote reminders still require native lifecycle/opt-in, one delivery authority, cursor scheduling, credentials and physical-device acceptance. `Scripts/test_reminder_worker.sh` runs 23 credential-free backend/provider checks. [Operations and current gates](docs/APNS_WORKER_OPERATIONS.md).

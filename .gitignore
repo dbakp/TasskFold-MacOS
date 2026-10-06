@@ -6,3 +6,6 @@ Screenshots/*.tmp.png
 build/
 dist/
 xcuserdata/
+
+# Local Supabase CLI metadata is not a deployment input.
+supabase/.temp/
