@@ -315,6 +315,19 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Independent teammate comment"].waitForExistence(timeout: 5))
     }
 
+
+    @MainActor func testCapacityWidgetDayLinksAndRetainedProjection() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--capacity-widget-testing", "--capacity-widget-seed"]; app.launch()
+        let projection = app.staticTexts["capacityProjection"]
+        XCTAssertTrue(projection.waitForExistence(timeout: 10)); XCTAssertEqual(projection.label, "Work 480 · Tasks 90 · Unknown 1 · Calendar off")
+        app.links["capacityOpenTomorrow"].click(); XCTAssertTrue(app.otherElements["hourlyPlanner"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["plannerCapacity"].label, "30 min estimated · 0 without estimates")
+        app.buttons["plannerShowAllDay"].click(); XCTAssertTrue(app.buttons["plannerAllDay-capacity-tomorrow"].waitForExistence(timeout: 5))
+        app.links["capacityOpenToday"].click(); XCTAssertEqual(app.staticTexts["plannerCapacity"].label, "90 min estimated · 1 without estimates")
+        app.terminate(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--capacity-widget-testing"]; app.launch()
+        XCTAssertTrue(projection.waitForExistence(timeout: 10)); XCTAssertEqual(projection.label, "Work 480 · Tasks 90 · Unknown 1 · Calendar off"); app.terminate()
+    }
+
     @MainActor func testCompletionCycleUseSyncedKeepsLaterOccurrenceDraftAndSurvivesRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--completion-cycle-fixture", "--edited-occurrence-fixture"]; app.launch()
         XCTAssertTrue(app.links["reviewSyncConflict"].waitForExistence(timeout: 10)); app.links["reviewSyncConflict"].click()

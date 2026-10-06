@@ -88,7 +88,38 @@ extension PreviewLink where Content == Text {
                 }
             }
         }
-        let actual = Group { if lists { listContent.padding(32).background(mode == "lists-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "lists-dark" ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
+
+        let capacity = mode.hasPrefix("capacity")
+        var capacityEntry = CapacityEntry.preview
+        if mode == "capacity-empty" { capacityEntry.snapshot = .empty }
+        if mode == "capacity-private" { capacityEntry.hideDetails = true }
+        if var value = capacityEntry.snapshot.capacity {
+            if mode == "capacity-off" { value.calendarState = "off"; value.calendarUpdated = nil }
+            if mode == "capacity-incomplete" { value.calendarState = "incomplete" }
+            if mode == "capacity-refresh" { value.calendarUpdated = capacityEntry.date.addingTimeInterval(-3601).timeIntervalSinceReferenceDate }
+            for key in value.days.keys {
+                if mode == "capacity-overload" { value.days[key]?.estimated = 540; value.days[key]?.busy = 120; value.days[key]?.unknown = 0 }
+                if mode == "capacity-unknown" { value.days[key]?.unknown = 4 }
+                if mode == "capacity-off" { value.days[key]?.busy = 0 }
+                if mode == "capacity-rest" { value.days[key]?.working = 0; value.days[key]?.busy = 0; value.days[key]?.estimated = 60 }
+            }
+            capacityEntry.snapshot.capacity = value
+        }
+        var tomorrowCapacity = capacityEntry; tomorrowCapacity.day = .tomorrow; tomorrowCapacity.palette = .lavender
+        let capacityContent = VStack(alignment: .leading, spacing: 20) {
+            Text("A day with room to breathe").font(.system(size: 28, weight: .bold, design: .rounded))
+            Text("A whole-day budget. Real estimates. Calendar busy time counted once.").font(.subheadline).foregroundStyle(.secondary)
+            HStack(alignment: .top, spacing: 20) {
+                CapacityWidgetView(family: .systemSmall, entry: capacityEntry).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: mint)).clipShape(RoundedRectangle(cornerRadius: 24))
+                CapacityWidgetView(entry: capacityEntry).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: mint)).clipShape(RoundedRectangle(cornerRadius: 24))
+            }
+            HStack(alignment: .top, spacing: 20) {
+                CapacityWidgetView(family: .systemSmall, entry: tomorrowCapacity).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: plum)).clipShape(RoundedRectangle(cornerRadius: 24))
+                CapacityWidgetView(entry: tomorrowCapacity).padding(16).frame(width: 338, height: 170).background(WidgetSurface(tint: plum)).clipShape(RoundedRectangle(cornerRadius: 24))
+            }
+        }.environment(\.dynamicTypeSize, mode == "capacity-largest" ? .accessibility3 : .large)
+
+        let actual = Group { if capacity { capacityContent.padding(32).background(mode == "capacity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "capacity-dark" ? .dark : .light) } else if lists { listContent.padding(32).background(mode == "lists-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "lists-dark" ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
         let renderer = ImageRenderer(content: actual)
         renderer.scale = 2
         if let image = renderer.cgImage {
@@ -103,6 +134,6 @@ with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporar
     path = Path(temporary)
     (path / 'Preview.swift').write_text(source)
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-D', 'TASKFOLD_WIDGET_EXTENSION', str(root / 'Taskfold/Core/WidgetActions.swift'), str(path / 'Preview.swift'), '-o', str(path / 'preview')], check=True)
-    modes = [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable', 'lists-pending', 'lists-sync', 'lists-dense']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
+    modes = [(mode, mode) for mode in ['capacity', 'capacity-dark', 'capacity-overload', 'capacity-unknown', 'capacity-off', 'capacity-incomplete', 'capacity-refresh', 'capacity-empty', 'capacity-private', 'capacity-rest', 'capacity-largest']] if '--capacity' in sys.argv else [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable', 'lists-pending', 'lists-sync', 'lists-dense']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
     for mode, name in modes:
         subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode], check=True)

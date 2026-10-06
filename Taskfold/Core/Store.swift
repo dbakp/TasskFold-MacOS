@@ -36,6 +36,10 @@ final class Store {
     private let monitor = NWPathMonitor()
     private var accountGeneration = UUID()
     @ObservationIgnored private var consumingWidgetActions = false
+    @ObservationIgnored private var widgetCalendarWindow: CalendarCapacityWindow?
+    @ObservationIgnored private var widgetCalendarRevision = -1
+    @ObservationIgnored private var capacityRequest: (UUID, String)?
+    private(set) var widgetPublicationRevision = 0
     @ObservationIgnored private var workspaceCacheReadable = true
     #if DEBUG
     var widgetFixtureFailSave = false
@@ -262,15 +266,44 @@ final class Store {
     }
     static let appGroup = "group.com.dbakp.taskfold"
     /// The private cache is saved before its actionable projection is published.
-    private func publishWidgetSnapshot() {
+    private func publishWidgetSnapshot(scheduleCapacityRefresh: Bool = true) {
         guard let disk = try? widgetActionDisk() else { return }
-        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: signedIn || localMode ? userID : "", labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount)
-        do { try disk.publish(JSONEncoder().encode(payload)) }
+        let account = signedIn || localMode ? userID : ""
+        let busy = CalendarBusyStore.shared; busy.bind(account: account)
+        let current = widgetCalendarWindow.flatMap { value -> CalendarCapacityWindow? in
+            value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
+        }
+        let fallback = busy.connected ? (busy.selected.isEmpty ? "choose" : "refresh") : "off"
+        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback)
+        do { try disk.publish(JSONEncoder().encode(payload)); widgetPublicationRevision += 1 }
         catch { try? disk.clearProjection() } // A failed publication must not leave actionable old data.
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
         #endif
+        if scheduleCapacityRefresh, !account.isEmpty, workspaceCacheReadable, current == nil, capacityRequest?.1 != account {
+            capacityRequest = (UUID(), account)
+            Task { await refreshWidgetCapacity() }
+        }
     }
+
+    /// Calendar reads remain in the app. Publication never blocks a durable task save.
+    func refreshWidgetCapacity() async {
+        let account = signedIn || localMode ? userID : ""
+        guard !account.isEmpty, workspaceCacheReadable else { return }
+        let request = UUID(), generation = accountGeneration
+        capacityRequest = (request, account)
+        let busy = CalendarBusyStore.shared; busy.bind(account: account)
+        let revision = busy.revision
+        widgetCalendarWindow = nil
+        publishWidgetSnapshot(scheduleCapacityRefresh: false)
+        let window = await busy.capacityWindow()
+        guard capacityRequest?.0 == request else { return }
+        capacityRequest = nil
+        guard generation == accountGeneration, account == userID, !Task.isCancelled, busy.revision == revision, let window else { return }
+        widgetCalendarWindow = window; widgetCalendarRevision = revision
+        publishWidgetSnapshot(scheduleCapacityRefresh: false)
+    }
+
     private func widgetActionDisk() throws -> WidgetActionDisk {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") {
@@ -692,6 +725,27 @@ extension Store {
         widgetFixtureFailSave = ProcessInfo.processInfo.arguments.contains("--widget-action-fail-save")
         widgetFixtureReady = true
     }
+
+    func seedCapacityWidgetFixture() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--capacity-widget-seed") else { return }
+        snapshot = Snapshot(); dailyBackupsEnabled = false; disableNotifications()
+        let today = Date(), tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+        var work = Record.task(user: userID, date: today); work["id"] = .string("capacity-today"); work["title"] = .string("Capacity focus draft"); work["duration_minutes"] = .number(90)
+        var unknown = Record.task(user: userID, date: today); unknown["id"] = .string("capacity-unknown"); unknown["title"] = .string("Unestimated capacity review")
+        var next = Record.task(user: userID, date: tomorrow); next["id"] = .string("capacity-tomorrow"); next["title"] = .string("Tomorrow capacity review"); next["duration_minutes"] = .number(30)
+        snapshot.tables["tasks"] = [work, unknown, next]
+        snapshot.tables["view_preferences"] = [Record(["id": .string("planner"), "user_id": .string(userID), "working_hours": WorkingHours(weekdays: Set(1...7)).document])]
+        try? persist()
+    }
+    func capacityWidgetFixtureDay() -> String {
+        _ = widgetPublicationRevision
+        guard let read = try? widgetActionDisk().read(), let data = read.data,
+              let payload = try? JSONDecoder().decode([String: JSON].self, from: data) else { return "Capacity unavailable" }
+        let day = payload["capacity"]?.object["days"]?.object[TaskPlanner.dayKey(Date())]?.object ?? [:]
+        let state = payload["capacity"]?.object["calendarState"]?.text ?? "missing"
+        return "Work \(day["working"]?.integer ?? -1) · Tasks \(day["estimated"]?.integer ?? -1) · Unknown \(day["unknown"]?.integer ?? -1) · Calendar \(state)"
+    }
+
     func seedCompletionCycleFixture() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--completion-cycle-fixture") else { return }
         seedWidgetActionFixture()

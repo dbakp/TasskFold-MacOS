@@ -220,3 +220,21 @@ extension Snapshot {
     }
 }
 #endif
+
+
+/// Memory-only calendar input. Widget files receive totals, never event identities or titles.
+struct CalendarCapacityWindow: Sendable {
+    var account: String
+    var timeZone: String
+    var updated: Date
+    var state: String
+    var events: [PlannerEvent] = []
+}
+
+enum PlannerWidgetRoute {
+    static func day(_ url: URL) -> Date? {
+        guard url.scheme == "taskfold", url.host == "day", url.pathComponents.count == 2,
+              url.query == nil, url.fragment == nil, url.lastPathComponent.count == 10 else { return nil }
+        return Dates.parse(url.lastPathComponent)
+    }
+}

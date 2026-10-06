@@ -5,6 +5,7 @@ import EventKit
 struct HourlyPlannerView: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
+    @Environment(\.dynamicTypeSize) private var textSize
     let day: Date
     let tasks: [Record]
     @State private var busy = CalendarBusyStore.shared
@@ -35,10 +36,11 @@ struct HourlyPlannerView: View {
     }
     var body: some View {
         VStack(spacing: 0) {
-            summary
+            if !textSize.isAccessibilitySize { summary }
             ScrollViewReader { reader in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
+                        if textSize.isAccessibilitySize { summary.id("summary") }
                         allDayLane.id("all-day")
                         timeline
                     }.padding(.horizontal, 12).padding(.bottom, 40)
@@ -46,9 +48,9 @@ struct HourlyPlannerView: View {
                 .task(id: TaskPlanner.dayKey(day)) {
                     try? await Task.sleep(for: .milliseconds(100))
                     guard !Task.isCancelled else { return }
-                    reader.scrollTo("hour-\(initialHourIndex)", anchor: .top)
+                    reader.scrollTo(textSize.isAccessibilitySize ? "summary" : "hour-\(initialHourIndex)", anchor: .top)
                 }
-                .onChange(of: TaskPlanner.dayKey(day)) { _, _ in reader.scrollTo("hour-\(initialHourIndex)", anchor: .top) }
+                .onChange(of: TaskPlanner.dayKey(day)) { _, _ in reader.scrollTo(textSize.isAccessibilitySize ? "summary" : "hour-\(initialHourIndex)", anchor: .top) }
                 .onChange(of: allDayRequest) { _, _ in reader.scrollTo("all-day", anchor: .top) }
                 .onChange(of: timelineRequest) { _, index in if let index { reader.scrollTo("hour-\(index)", anchor: .top) } }
             }
@@ -88,40 +90,72 @@ struct HourlyPlannerView: View {
     private var initialHourIndex: Int { TaskPlanner.slots(on: day, every: 60).firstIndex { calendar.component(.hour, from: $0) == initialHour } ?? 0 }
     private var summary: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(day.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())).font(.headline)
-                Spacer(minLength: 8)
-                Button { choose(nil) } label: { Label("Schedule", systemImage: "clock.badge.plus") }.accessibilityIdentifier("plannerSchedule")
-                Button { settings = true } label: { Image(systemName: "slider.horizontal.3") }.accessibilityLabel("Planner settings").accessibilityIdentifier("plannerSettings")
+            if textSize.isAccessibilitySize {
+                Text(day.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())).font(.headline).fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 12) { scheduleButton; Spacer(minLength: 8); settingsButton }
+                estimateSummary
+                allDayButton
+            } else {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(day.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())).font(.headline)
+                    Spacer(minLength: 8)
+                    scheduleButton; settingsButton
+                }
+                HStack { estimateSummary; Spacer(minLength: 4); allDayButton }
             }
-            HStack {
-                Text("\(capacity.estimatedMinutes) min estimated · \(capacity.unknownTasks) without estimates")
-                    .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("plannerCapacity")
-                Spacer(minLength: 4)
-                Button("All day (\(allDay.count))") { allDayRequest += 1 }.font(.caption).accessibilityIdentifier("plannerShowAllDay")
-            }
-            if busy.ready {
-                Text("\(capacity.workingMinutes) min working day · \(capacity.busyMinutes) min calendar busy · \(capacity.afterKnownWork) min after known work")
-                    .font(.caption2).foregroundStyle(.secondary)
-            }
-            Text(busy.status).font(.caption2).foregroundStyle(.secondary)
+            Text(workingSummary).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerWorkingCapacity")
+            Text(busy.status).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }.padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.regularMaterial)
+    }
+    private var estimateSummary: some View {
+        Text("\(capacity.estimatedMinutes) min estimated · \(capacity.unknownTasks) without estimates")
+            .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerCapacity")
+    }
+    private var workingSummary: String {
+        if busy.ready { return "\(capacity.workingMinutes) min working day · \(capacity.busyMinutes) min calendar busy · \(capacity.afterKnownWork) min after known work" }
+        if busy.connected { return "\(capacity.workingMinutes) min working day · calendar data incomplete" }
+        return "\(capacity.workingMinutes) min working day · \(capacity.workingMinutes - capacity.estimatedMinutes) min after task estimates"
+    }
+    private var scheduleButton: some View {
+        Button { choose(nil) } label: { Label("Schedule", systemImage: "clock.badge.plus").frame(minHeight: 44) }.accessibilityIdentifier("plannerSchedule")
+    }
+    private var settingsButton: some View {
+        Button { settings = true } label: { Image(systemName: "slider.horizontal.3").font(.system(size: 20)).frame(width: 44, height: 44) }.accessibilityLabel("Planner settings").accessibilityIdentifier("plannerSettings")
+    }
+    private var allDayButton: some View {
+        Button { allDayRequest += 1 } label: { Text("All day (\(allDay.count))").font(.caption).frame(minHeight: 44) }.accessibilityIdentifier("plannerShowAllDay")
     }
     private var allDayLane: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("ALL DAY").font(.caption2.weight(.semibold)).foregroundStyle(.secondary).tracking(0.8)
             if allDay.isEmpty { Text("Tasks with a date and no time appear here.").font(.caption).foregroundStyle(.secondary) }
             ForEach(allDay) { task in
-                HStack(spacing: 10) {
-                    Button { complete(task) } label: { Image(systemName: "circle").font(.title3).foregroundStyle(Color.taskfold) }.buttonStyle(.plain).accessibilityLabel("Complete " + task.title)
-                    Button { open(task) } label: { Text(task.title).frame(maxWidth: .infinity, alignment: .leading) }.buttonStyle(.plain)
-                    Text(task.durationMinutes.map { "\($0)m" } ?? "No estimate").font(.caption).foregroundStyle(.secondary)
-                    Button { choose(task) } label: { Image(systemName: "clock") }.accessibilityLabel("Schedule " + task.title).accessibilityIdentifier("plannerAllDay-" + task.id)
+                Group {
+                    if textSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: 12) {
+                            taskTitle(task)
+                            HStack(spacing: 12) { completeButton(task); estimate(task); Spacer(minLength: 8); taskScheduleButton(task) }
+                        }
+                    } else {
+                        HStack(spacing: 10) { completeButton(task); taskTitle(task); estimate(task); taskScheduleButton(task) }
+                    }
                 }.padding(10).background(Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 12))
             }
         }.padding(.top, 12)
+    }
+    private func taskTitle(_ task: Record) -> some View {
+        Button { open(task) } label: { Text(task.title).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.buttonStyle(.plain)
+    }
+    private func completeButton(_ task: Record) -> some View {
+        Button { complete(task) } label: { Image(systemName: "circle").font(.system(size: 24)).foregroundStyle(Color.taskfold).frame(width: 44, height: 44).contentShape(Rectangle()) }.buttonStyle(.plain).accessibilityLabel("Complete " + task.title)
+    }
+    private func taskScheduleButton(_ task: Record) -> some View {
+        Button { choose(task) } label: { Image(systemName: "clock").font(.system(size: 20)).frame(width: 44, height: 44) }.accessibilityLabel("Schedule " + task.title).accessibilityIdentifier("plannerAllDay-" + task.id)
+    }
+    private func estimate(_ task: Record) -> some View {
+        Text(task.durationMinutes.map { "\($0)m" } ?? "No estimate").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
     }
     private var timeline: some View {
         let ticks = TaskPlanner.slots(on: day, every: 60)
@@ -342,5 +376,26 @@ private struct PlannerScheduleForm: View {
             if !estimated { fields["duration_minutes"] = .null }
             save(fields)
         } catch { self.error = error.localizedDescription }
+    }
+}
+
+
+/// Keep app-owned calendar totals current without requesting access from a widget.
+struct WidgetCapacityRefresh: ViewModifier {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    func body(content: Content) -> some View {
+        content
+            .task(id: "\(store.userID)-\(CalendarBusyStore.shared.revision)-\(phase == .active)") {
+                guard store.signedIn, phase == .active else { return }
+                await store.refreshWidgetCapacity()
+                while !Task.isCancelled {
+                    do { try await Task.sleep(for: .seconds(900)) } catch { return }
+                    await store.refreshWidgetCapacity()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged)) { _ in Task { await store.refreshWidgetCapacity() } }
+            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in Task { await store.refreshWidgetCapacity() } }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in Task { await store.refreshWidgetCapacity() } }
     }
 }

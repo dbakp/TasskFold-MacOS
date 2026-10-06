@@ -62,6 +62,7 @@ struct EmptyPlannerCalendarProvider: PlannerCalendarProviding {
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private var generation = UUID()
     @ObservationIgnored private var accountGeneration = UUID()
+    @ObservationIgnored private var capacityGeneration = UUID()
     private(set) var account = ""
     private(set) var connected = false
     private(set) var selected = Set<String>()
@@ -120,4 +121,35 @@ struct EmptyPlannerCalendarProvider: PlannerCalendarProviding {
         ready = available.count == selected.count
         status = ready ? "Busy time from \(available.count) selected calendar\(available.count == 1 ? "" : "s")." : "Some selected calendars are unavailable; busy time is incomplete."
     }
+    /// An independent eight-day read never replaces the day currently displayed in the planner.
+    /// No permission request, event names or calendar IDs are sent to the extension.
+    func capacityWindow(now: Date = Date(), calendar input: Calendar = .current) async -> CalendarCapacityWindow? {
+        let token = UUID(); capacityGeneration = token
+        let owner = account, settings = revision, binding = accountGeneration
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
+        func result(_ state: String, events: [PlannerEvent] = []) -> CalendarCapacityWindow {
+            CalendarCapacityWindow(account: owner, timeZone: calendar.timeZone.identifier, updated: now, state: state, events: events)
+        }
+        func current() -> Bool { token == capacityGeneration && binding == accountGeneration && owner == account && settings == revision && !Task.isCancelled }
+        guard !owner.isEmpty else { return nil }
+        guard connected else { return result("off") }
+        guard !selected.isEmpty else { return result("choose") }
+        let authorized = await provider.authorized()
+        guard current() else { return nil }
+        guard authorized else { return result("unavailable") }
+        let calendars = await provider.calendars()
+        guard current() else { return nil }
+        let available = selected.intersection(calendars.map(\.id))
+        guard !available.isEmpty else { return result("unavailable") }
+        let start = calendar.startOfDay(for: now)
+        guard let end = calendar.date(byAdding: .day, value: 8, to: start) else { return result("unavailable") }
+        let events = await provider.events(ids: available, window: DateInterval(start: start, end: end), titles: false)
+        guard current() else { return nil }
+        let stillAuthorized = await provider.authorized()
+        guard current() else { return nil }
+        guard stillAuthorized else { return result("unavailable") }
+        let known = events.filter { available.contains($0.calendarID) && $0.end > $0.start }
+        return result(available == selected ? "ready" : "incomplete", events: known)
+    }
+
 }

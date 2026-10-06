@@ -223,3 +223,8 @@ Both native cores predict local revisions, reconcile returned rows before replay
 
 
 Final follow-up evidence adds stale-editor completion baselines and completion-cycle notification/snooze cancellation. Both native Debug/optimized suites pass 218 tests with three optional skips, while the earlier live 216-test runs retain the native HTTP evidence above. Eight unique iPhone app-intent/review paths pass; the final largest-text comparison is inspected and checked for full values above the action area. Native Release and signed Mac test-target compilation pass. [Detailed current evidence](P0_IMPLEMENTATION.md#6-october-completion-cycle-revisions-and-retained-offline-work) records host, pair/offline/physical, provider and remaining widget/P0 gates.
+
+
+### 6 October: Day capacity implementation progress
+
+Day capacity now has independently owned iOS/Mac Today/Tomorrow widgets, palette/privacy, whole-day estimates/working hours/selected-calendar totals and honest unknown/incomplete/expired states. Its native links, iPhone settings/completion/relaunch and largest-text planner/menu walks pass; 228-test Debug/optimized suites and app/extension builds pass. [Current evidence](P0_IMPLEMENTATION.md#6-october-day-capacity-and-accessible-planning) retains the installed-host, real-calendar, physical and paired/offline gates. Project pulse, Inbox reset, Pinned note and Focus session remain planned; this milestone does not complete P0 or the full widget collection.

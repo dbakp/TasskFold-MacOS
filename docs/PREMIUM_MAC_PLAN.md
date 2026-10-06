@@ -4,8 +4,8 @@ The goal is a calm, fast native Mac app: daily actions should take few steps, na
 
 ## Delivery rules
 
-- Build and validate each milestone, install the verified app locally, then commit and push all changes to this repository.
-- Preserve local iOS work. Shared Core comes from the iOS repository; use `TASKFOLD_IOS_ROOT` to build against a clean checkout when needed.
+- Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.
+- Preserve local iOS work. Each native repository owns its Core, app, widget, tests, resources and release inputs; keep compatible behavior without sibling build dependencies.
 - Use native controls and the existing Store/Workspace undo paths. No backend or data model changes are required for the first milestone.
 - Test changes with isolated fixtures. Never use real tasks as disposable test data.
 
@@ -350,3 +350,10 @@ The Mac app now owns the same account-bound completion intent, credential-free p
 The deployed server-owned completion revision closes the unseen remote complete/reopen gap for the new native clients. Mac independently owns local counter prediction, confirmed-row replay, retained stale editor baselines, reviewed offline chains and recurring successor cancellation that keeps later drafts. Widget and notification actions invalidate after observed cycles; exports/restores respect server ownership. Existing deployed clients remain compatible with their legacy writes.
 
 Final independent Debug/optimized suites pass 218 tests with three optional skips; earlier 216-test live runs in both repos pass two-session native HTTP cycle/review/retry checks with two optional skips. Rolled-back SQL authorization/concurrency fixtures pass and disposable account/session/task/profile cleanup is verified. Eight unique iPhone app-intent/review paths pass, with an additional final large-text frame/readability check and inspected screenshots. Final universal Mac/iOS Release app/widgets and signed Mac UI-test compilation pass. The Mac retained-draft/relaunch test is compiled, but the locked desktop prevents runtime evidence. [Full evidence and remaining gates](P0_IMPLEMENTATION.md#6-october-completion-cycle-revisions-and-retained-offline-work). Full P0, installed-host, native pair/offline/physical/provider acceptance and additional productive widgets remain active; no public package is released.
+
+
+## 6 October: Day capacity
+
+The Mac repository independently owns Day capacity with Today/Tomorrow, small/medium sizes, palette/privacy, whole-day task/calendar totals, explicit unknown/outside-plan work and one-hour calendar expiry. Calendar reads remain in the app and daily numeric totals reach the extension. The Day link preserves task plans. Both planner copies now stack all-day titles and scroll the summary at accessibility sizes; Mac calendar modes fall back to a native menu in narrow layouts.
+
+Independent Debug/optimized suites pass 228 tests with three optional skips; 11 SwiftUI fixture sheets are rendered and inspected. Six distinct iPhone walks pass across focused runs, including capacity settings/completion/relaunch, maximum text/menu scrolling and planner/collapse regressions. Final universal Mac/iOS Release app/extensions and signed Mac test compilation pass. The Mac Day-link/relaunch test compiles but remains unexecuted on the locked desktop. [Detailed evidence and remaining acceptance](P0_IMPLEMENTATION.md#6-october-day-capacity-and-accessible-planning) records installed-host, calendar, physical/iPad and paired/offline gates. The remaining productive widgets, remote reminders and full P0 goal stay active. No public package or installed Mac replacement is claimed.

@@ -67,6 +67,45 @@ enum WindowScope: String, CaseIterable, Codable { case ready, inbox, all }
 enum WidgetPalette: String, CaseIterable, Codable { case standard, rose, lavender, mint }
 enum DeadlineWindow: String, CaseIterable, Codable { case week = "7", fortnight = "14", month = "30"; var days: Int { Int(rawValue) ?? 7 } }
 
+
+
+enum CapacityDay: String, CaseIterable, Codable { case today, tomorrow; var offset: Int { self == .today ? 0 : 1 } }
+struct WidgetCapacityDay: Codable, Equatable {
+    var working: Int, busy: Int, estimated: Int, unknown: Int, overdue: Int
+    var afterKnownWork: Int { working - busy - estimated }
+    var valid: Bool { (0...1500).contains(working) && (0...working).contains(busy) && (0...100_000_000).contains(estimated) && (0...1_000_000).contains(unknown) && (0...1_000_000).contains(overdue) }
+}
+struct WidgetCapacity: Codable {
+    var version: Int
+    var timeZone: String
+    var calendarState: String
+    var calendarUpdated: TimeInterval?
+    var hours: String
+    var days: [String: WidgetCapacityDay]
+}
+struct WidgetCapacityReading {
+    var day: WidgetCapacityDay?
+    var state: String
+    var dayKey: String
+    var hours: String = ""
+    var canCalculateRoom: Bool { state == "ready" || state == "off" }
+    var calendarNote: String {
+        switch state {
+        case "ready": return "Calendar busy time included"
+        case "off": return "Calendar not included"
+        case "incomplete": return "Calendar data incomplete"
+        case "choose": return "Choose calendars in Taskfold"
+        case "unavailable": return "Calendar access unavailable"
+        default: return "Open Taskfold to refresh"
+        }
+    }
+    static func minutes(_ value: Int) -> String {
+        let value = abs(value)
+        if value < 60 { return "\(value)m" }
+        return value % 60 == 0 ? "\(value / 60)h" : "\(value / 60)h \(value % 60)m"
+    }
+}
+
 struct WidgetDay: Identifiable {
     var date: Date
     var count: Int
@@ -97,12 +136,13 @@ struct WidgetSnapshot: Codable {
     var version: Int
     var account: String
     var lists: [WidgetList] = []
+    var capacity: WidgetCapacity? = nil
     var pendingSync: Int = 0
     var pendingTaskIDs: [String] = [] // Derived under the same disk lock as the snapshot read.
     init(updated: TimeInterval, tasks: [WidgetTask], version: Int = 2, account: String = "", lists: [WidgetList] = []) {
         self.updated = updated; self.tasks = tasks; self.version = version; self.account = account; self.lists = lists
     }
-    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync }
+    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync, capacity }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         version = try row.decodeIfPresent(Int.self, forKey: .version) ?? 1
@@ -112,6 +152,7 @@ struct WidgetSnapshot: Codable {
         account = try row.decodeIfPresent(String.self, forKey: .account) ?? ""
         lists = try row.decodeIfPresent([WidgetList].self, forKey: .lists) ?? []
         pendingSync = max(0, try row.decodeIfPresent(Int.self, forKey: .pendingSync) ?? 0)
+        capacity = try? row.decode(WidgetCapacity.self, forKey: .capacity)
     }
     var hasPlanningFields: Bool { version == 2 }
     static let empty = WidgetSnapshot(updated: 0, tasks: [])
@@ -209,6 +250,29 @@ struct WidgetSnapshot: Codable {
         guard let id else { return self }
         var copy = self; copy.tasks = listTasks(id, at: date, calendar: calendar); return copy
     }
+
+    func capacityReading(at date: Date, day: CapacityDay = .today, calendar input: Calendar = .current) -> WidgetCapacityReading {
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
+        let selected = calendar.date(byAdding: .day, value: day.offset, to: date) ?? date
+        let key = Self.day(selected, calendar: calendar)
+        guard !account.isEmpty, let capacity, capacity.version == 1, capacity.timeZone == calendar.timeZone.identifier,
+              let value = capacity.days[key], value.valid else { return WidgetCapacityReading(day: nil, state: "refresh", dayKey: key) }
+        var state = capacity.calendarState
+        if !["ready", "off", "incomplete", "choose", "unavailable", "refresh"].contains(state) { state = "refresh" }
+        if state == "ready" || state == "incomplete" {
+            if let updated = capacity.calendarUpdated, updated.isFinite, date.timeIntervalSinceReferenceDate >= updated - 300, date.timeIntervalSinceReferenceDate < updated + 3600 {} else { state = "refresh" }
+        }
+        return WidgetCapacityReading(day: value, state: state, dayKey: key, hours: capacity.hours)
+    }
+    func capacityTimelineDates(from now: Date, calendar: Calendar = .current) -> [Date] {
+        var dates = Self.timelineDates(from: now, calendar: calendar)
+        if let capacity, ["ready", "incomplete"].contains(capacity.calendarState), let stamp = capacity.calendarUpdated, stamp.isFinite {
+            let expiry = Date(timeIntervalSinceReferenceDate: stamp + 3600)
+            if expiry > now, expiry < dates.last ?? now { dates.append(expiry) }
+        }
+        return Array(Set(dates)).sorted()
+    }
+
     /// Day entries make relative selections change at midnight even while the app is closed.
     static func timelineDates(from now: Date, calendar: Calendar = .current) -> [Date] {
         [now] + (1..<8).compactMap { calendar.date(byAdding: .day, value: $0, to: calendar.startOfDay(for: now)) }
@@ -767,6 +831,138 @@ struct WindowWidget: Widget {
     }
 }
 
+
+// MARK: Day capacity
+extension CapacityDay: AppEnum {
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Capacity day")
+    static var caseDisplayRepresentations: [CapacityDay: DisplayRepresentation] = [.today: "Today", .tomorrow: "Tomorrow"]
+}
+struct CapacityConfiguration: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Day capacity"
+    static var description = IntentDescription("Compare your whole day's task estimates, working hours and selected calendar busy time. Missing estimates stay visible.")
+    @Parameter(title: "Day", default: .today) var day: CapacityDay
+    @Parameter(title: "Color", default: .standard) var palette: WidgetPalette
+    @Parameter(title: "Hide capacity details", default: false) var hideDetails: Bool
+}
+struct CapacityEntry: TimelineEntry {
+    var date: Date
+    var snapshot: WidgetSnapshot
+    var day: CapacityDay = .today
+    var palette: WidgetPalette = .standard
+    var hideDetails = false
+    static var preview: CapacityEntry {
+        let date = Date(); var snapshot = TodayEntry.preview.snapshot
+        let days = Dictionary(uniqueKeysWithValues: (0..<8).compactMap { offset -> (String, WidgetCapacityDay)? in
+            guard let day = Calendar.current.date(byAdding: .day, value: offset, to: date) else { return nil }
+            return (WidgetSnapshot.day(day), WidgetCapacityDay(working: 480, busy: 90, estimated: 50, unknown: 1, overdue: 0))
+        })
+        snapshot.capacity = WidgetCapacity(version: 1, timeZone: TimeZone.current.identifier, calendarState: "ready", calendarUpdated: date.timeIntervalSinceReferenceDate, hours: "09:00–17:00", days: days)
+        return CapacityEntry(date: date, snapshot: snapshot)
+    }
+}
+struct CapacityProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> CapacityEntry { .preview }
+    func snapshot(for configuration: CapacityConfiguration, in context: Context) async -> CapacityEntry {
+        entry(Date(), snapshot: context.isPreview ? CapacityEntry.preview.snapshot : .load(), configuration: configuration)
+    }
+    func timeline(for configuration: CapacityConfiguration, in context: Context) async -> Timeline<CapacityEntry> {
+        let now = Date(), snapshot = WidgetSnapshot.load()
+        let entries = snapshot.capacityTimelineDates(from: now).map { entry($0, snapshot: snapshot, configuration: configuration) }
+        return Timeline(entries: entries, policy: .atEnd)
+    }
+    private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: CapacityConfiguration) -> CapacityEntry {
+        CapacityEntry(date: date, snapshot: snapshot, day: configuration.day, palette: configuration.palette, hideDetails: configuration.hideDetails)
+    }
+}
+struct CapacityWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    let entry: CapacityEntry
+    private var reading: WidgetCapacityReading { entry.snapshot.capacityReading(at: entry.date, day: entry.day) }
+    private var tint: Color { entry.palette.color(fallback: mint) }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 5) {
+                Image(systemName: "chart.bar.xaxis").foregroundStyle(tint)
+                Text(family == .systemSmall && entry.day == .tomorrow ? "Tomorrow’s capacity" : "Day capacity").font(.caption.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                Spacer(minLength: 2)
+                if family != .systemSmall { Text(entry.day == .today ? "Today" : "Tomorrow").font(.caption2).foregroundStyle(.secondary) }
+            }
+            if entry.hideDetails {
+                Spacer(minLength: 0)
+                Text("Your day's plan").font(.headline).lineLimit(2)
+                Text("Open Taskfold for capacity details.").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+                Spacer(minLength: 0)
+            } else if let day = reading.day {
+                HStack(alignment: .center, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(headline(day)).font(.system(size: family == .systemSmall ? 34 : 36, weight: .semibold, design: .rounded)).monospacedDigit().minimumScaleFactor(0.55).lineLimit(1)
+                            .foregroundStyle(reading.canCalculateRoom && day.afterKnownWork < 0 && day.working > 0 ? brand : .primary)
+                        Text(qualifier(day)).font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+                    }.frame(maxWidth: .infinity, alignment: .leading).privacySensitive()
+                    if family != .systemSmall {
+                        VStack(alignment: .leading, spacing: 4) {
+                            metric("Working", value: WidgetCapacityReading.minutes(day.working), color: tint)
+                            metric("Calendar", value: reading.state == "ready" ? WidgetCapacityReading.minutes(day.busy) : reading.state == "incomplete" ? "≥ " + WidgetCapacityReading.minutes(day.busy) : "—", color: plum)
+                            metric("Tasks", value: WidgetCapacityReading.minutes(day.estimated), color: brand)
+                        }.privacySensitive()
+                    }
+                }
+                capacityBar(day).padding(.vertical, 2)
+                Text(caution(day)).font(.caption2).foregroundStyle(.secondary).lineLimit(family == .systemSmall ? 2 : 1).minimumScaleFactor(0.8).privacySensitive()
+                Spacer(minLength: 0)
+                Text(reading.calendarNote).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.7)
+            } else {
+                Spacer(minLength: 0)
+                Text(entry.snapshot.updated == 0 ? "Make room for your day" : "Refresh your day").font(.headline).lineLimit(2)
+                Text("Open Taskfold to load working hours and your plan.").font(.caption2).foregroundStyle(.secondary).lineLimit(3)
+                Spacer(minLength: 0)
+            }
+            WidgetFooter(entry: TodayEntry(date: entry.date, snapshot: entry.snapshot))
+        }
+        .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+        .widgetURL(WidgetLinks.scoped("day", id: reading.dayKey))
+    }
+    private func headline(_ day: WidgetCapacityDay) -> String {
+        if !reading.canCalculateRoom { return "Review" }
+        if day.working == 0 { return "No workday" }
+        return WidgetCapacityReading.minutes(day.afterKnownWork) + (day.afterKnownWork < 0 ? " over" : "")
+    }
+    private func qualifier(_ day: WidgetCapacityDay) -> String {
+        if !reading.canCalculateRoom { return "Calendar needs attention" }
+        if day.working == 0 { return WidgetCapacityReading.minutes(day.estimated) + " task estimates" }
+        if day.afterKnownWork < 0 { return "over the day’s budget" }
+        return reading.state == "off" ? "whole day after estimates" : "whole day after known work"
+    }
+    private func caution(_ day: WidgetCapacityDay) -> String {
+        let estimate = day.unknown == 0 ? "All planned tasks estimated" : "\(day.unknown) unestimated"
+        return estimate + (day.overdue == 0 ? "" : " · \(day.overdue) overdue outside plan")
+    }
+    private func metric(_ title: String, value: String, color: Color) -> some View {
+        HStack(spacing: 5) {
+            Circle().fill(color).frame(width: 5, height: 5)
+            Text(title).foregroundStyle(.secondary)
+            Spacer(minLength: 3)
+            Text(value).fontWeight(.semibold).monospacedDigit()
+        }.font(.system(size: 10)).accessibilityElement(children: .combine)
+    }
+    private func capacityBar(_ day: WidgetCapacityDay) -> some View {
+        GeometryReader { geometry in
+            let denominator = Double(max(1, max(day.working, day.busy + day.estimated)))
+            HStack(spacing: 0) {
+                if reading.state == "ready" || reading.state == "incomplete" { Rectangle().fill(plum.opacity(0.75)).frame(width: geometry.size.width * Double(day.busy) / denominator) }
+                Rectangle().fill(brand.opacity(0.75)).frame(width: geometry.size.width * Double(day.estimated) / denominator)
+                Spacer(minLength: 0)
+            }.background(tint.opacity(0.17)).clipShape(Capsule())
+        }.frame(height: 6).accessibilityHidden(true)
+    }
+}
+struct CapacityWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "TaskfoldDayCapacity", intent: CapacityConfiguration.self, provider: CapacityProvider()) { CapacityWidgetView(entry: $0) }
+            .configurationDisplayName("Day capacity").description("Your whole-day budget after task estimates and known calendar busy time, with missing estimates made clear.").supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
 @main
 struct TaskfoldWidgetBundle: WidgetBundle {
     var body: some Widget {
@@ -777,6 +973,7 @@ struct TaskfoldWidgetBundle: WidgetBundle {
         DeadlineWidget()
         WindowWidget()
         ListWidget()
+        CapacityWidget()
         #if os(iOS)
         AddTaskControl()
         #endif

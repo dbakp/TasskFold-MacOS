@@ -8,6 +8,7 @@ struct CalendarView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var textSize
     @State private var page = 0
     private var quickAdd: String {
         get { workspace.quickAdd }
@@ -133,6 +134,7 @@ struct CalendarView: View {
             // it in the sidebar keeps Calendar's active accent selection lit.
             calendarFocused = true
         }
+        .onChange(of: workspace.calendarDay) { _, _ in page = page(containing: selected, mode: mode) }
         .onChange(of: workspace.calendarMode) { _, _ in withAnimation(layout) { page = page(containing: selected, mode: mode) } }
         .sheet(isPresented: $quickAddVisible) {
             TaskCapturePanel(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), declined: $declinedGroups, destination: selected.formatted(date: .abbreviated, time: .omitted), prompt: "What needs to get done?", context: workspace.quickEntryContext()) {
@@ -171,12 +173,26 @@ struct CalendarView: View {
     private var header: some View {
         HStack {
             Spacer(minLength: 0)
-            SlidingTabs(options: CalendarMode.allCases, selection: mode, title: { $0.title }) { workspace.calendarMode = $0 }
-                .fixedSize()
-                .accessibilityLabel("Calendar view")
+            if textSize.isAccessibilitySize { modeMenu }
+            else {
+                ViewThatFits(in: .horizontal) {
+                    SlidingTabs(options: CalendarMode.allCases, selection: mode, title: { $0.title }) { workspace.calendarMode = $0 }
+                        .fixedSize().accessibilityLabel("Calendar view")
+                    modeMenu
+                }
+            }
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
+    }
+    private var modeMenu: some View {
+        Menu {
+            ForEach(CalendarMode.allCases) { option in
+                Button(option.title) { workspace.calendarMode = option }
+            }
+        } label: { Label(mode.title, systemImage: "calendar").frame(minHeight: 44) }
+        .accessibilityLabel("Calendar view, " + mode.title)
+        .accessibilityIdentifier("calendarModeMenu")
     }
     private func shift(_ delta: Int) { withAnimation(layout) { page += delta } }
     private func jump(to day: Date) { withAnimation(layout) { workspace.calendarDay = day; page = page(containing: day, mode: mode) } }
