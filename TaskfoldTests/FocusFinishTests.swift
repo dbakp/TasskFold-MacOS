@@ -8,7 +8,7 @@ private actor FinishCenter: ReminderCenter {
     var paused = false
     var gate: CheckedContinuation<Void, Never>?
     func pending() -> [ReminderRequest] { requests }
-    func removeInvalid(account: String, events: [DueReminder]) { requests.removeAll { !$0.valid(account: account, events: events) } }
+    func removeInvalid(_ state: ReminderState) { requests.removeAll { !$0.valid(state: state) } }
     func remove(_ ids: [String]) { requests.removeAll { ids.contains($0.identifier) } }
     func add(_ request: ReminderRequest) async throws {
         if paused { await withCheckedContinuation { gate = $0 }; paused = false }

@@ -882,7 +882,7 @@ final class Store {
         reminderRevision += 1
         var events = remindersEnabled ? DueReminder.events(tasks: tasks) : []
         if focusAlertsEnabled, let event = focusFinishEvent { events.append(event) }
-        return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events)
+        return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events, validationTasks: remindersEnabled ? tasks : [])
     }
     func reschedule() async {
         refreshCalendarContext()
@@ -928,11 +928,12 @@ final class Store {
         guard remindersEnabled, let account = info["accountID"] as? String, account == userID,
               let task = info["taskID"] as? String, let spec = info["specID"] as? String,
               let signature = info["signature"] as? String else { return nil }
-        return DueReminder.events(tasks: tasks).first { $0.taskID == task && $0.specID == spec && $0.hasSignature(signature) }
+        return DueReminder.validated(tasks: tasks, taskID: task, specID: spec, signature: signature, originalAt: (info["originalAt"] as? Double).map { Date(timeIntervalSince1970: $0) })
     }
     func reminderTask(for route: ReminderTaskRoute) -> Record? {
         let valid = workspaceCacheReadable && (signedIn || localMode) && remindersEnabled &&
-            route.matches(account: userID, generation: workspaceGeneration, events: DueReminder.events(tasks: tasks))
+            route.workspace.matches(account: userID, generation: workspaceGeneration) &&
+            DueReminder.validated(tasks: tasks, taskID: route.taskID, specID: route.specID, signature: route.signature, originalAt: route.originalAt) != nil
         #if DEBUG
         if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing") {
             reminderRouteFixtureOutcome = valid ? "Opened" : "Ignored"
@@ -953,11 +954,11 @@ final class Store {
             let generation = accountGeneration, account = userID
             await reschedule()
             guard generation == accountGeneration, validReminder(info) != nil else { return nil }
-            if let report = await reminderScheduler.snooze(account: account, taskID: event.taskID, specID: event.specID, signature: event.signature), generation == accountGeneration {
+            if let report = await reminderScheduler.snooze(account: account, taskID: event.taskID, specID: event.specID, signature: event.signature, originalAt: event.date), generation == accountGeneration {
                 if report.failures > 0 { reminderStatus = "The snooze could not be scheduled. Open the task to try again." }
                 else if report.deferred > 0 { reminderStatus = "The nearest 60 reminders are scheduled. This snooze may be deferred until Taskfold refreshes." }
             }
-        default: return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: task.id, specID: event.specID, signature: event.signature)
+        default: return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: task.id, specID: event.specID, signature: event.signature, originalAt: event.date)
         }
         return nil
     }

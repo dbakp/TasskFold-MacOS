@@ -35,6 +35,7 @@ The same cursor menu now previews the supported planning vocabulary. Each offere
 | `every month on ` | First Monday, last Friday or the 15th |
 | `!`, `!30` | Fixed reminders from now, or offsets before/after the plan |
 | `!tom` | Tomorrow at 9 AM |
+| `!every ` | Independent daily/weekday/weekly/monthly calendar reminders with a clock |
 
 These are offered templates of Taskfold's supported grammar. The existing [repeat controls](RECURRENCE.md) and [reminder controls](REMINDERS.md) remain available for custom choices. Numeric intervals are checked by the real parser. Duplicate reminders and additions beyond the 20-setting limit are not offered. An offset without a plan explicitly shows that it waits for a planned date; date-only tasks use 8 AM. A fixed reminder retains its instant after task rescheduling. Adding only a time retains an existing planned date; when no valid plan exists, it uses the current calendar’s local day. The preview states the resulting date. Mac capture previews and Save use the same inherited filter/list/Day planning fields. Time-relative phrases are resolved when saving, as in normal quick entry.
 
@@ -42,9 +43,9 @@ Choices preserve the rest of the title and move the cursor after the selected ph
 
 The same native rows, scroll area, 44-point targets and keyboard controls serve planning and directory results. Done selects the highlighted result before capture submits. The iPhone editor leaves choices in its draft until Save/Cancel. Mac inspector references retain immediate application; planning words retain chips for acceptance/decline and apply through its normal Return/focus-exit autosave. Existing workspace-generation and current-record guards still protect every save.
 
-Richer natural-language grammar, independently repeating reminders, native Mac/hardware keyboard, paired/offline/account, physical/iPad and installed-widget acceptance remain open. This menu is not a claim of full Todoist Quick Add grammar parity.
+Independent calendar reminder suggestions are implemented (`!every day 9am`, weekdays, Saturday, Monday and month-last-Friday), using the real reminder parser and preserving literal/declined text. Richer natural-language grammar, sub-day independent rules, native Mac/hardware keyboard, paired/offline/account, physical and installed-widget acceptance remain open. This menu is not a claim of full Todoist Quick Add grammar parity.
 
 
 ### Named dates and period choices — 6 October
 
-The planned-date menu now offers `next week`, `next month`, `next year`, `end of month` and `end of year`, with previews from the actual parser. Full English named dates can be typed directly into a plan, a brace-delimited deadline or a repeat start/end boundary. The exact syntax, omitted-year policy and Taskfold weekday behavior are documented in [Repeat rules and named dates](RECURRENCE.md#named-planned-dates-and-deadlines). Named-month/day autocomplete is not included; complete phrases still produce their normal declineable chips. Independent repeating reminders and the remaining richer grammar/device acceptance stay open.
+The planned-date menu now offers `next week`, `next month`, `next year`, `end of month` and `end of year`, with previews from the actual parser. Full English named dates can be typed directly into a plan, a brace-delimited deadline or a repeat start/end boundary. The exact syntax, omitted-year policy and Taskfold weekday behavior are documented in [Repeat rules and named dates](RECURRENCE.md#named-planned-dates-and-deadlines). Named-month/day autocomplete is not included; complete phrases still produce their normal declineable chips. Independent calendar reminders are implemented; richer grammar and remaining device acceptance stay open.

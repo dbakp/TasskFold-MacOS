@@ -123,7 +123,7 @@ See [the detailed Todoist feature plan](docs/TODOIST_PORT_PLAN.md) for the sourc
 
 Known `#Name` references select projects; unknown hash names retain the older label meaning. A project/label name collision requires `#project:"Name"` for the project or `@"Name"` / `%"Name"` for the label. Parsing never creates projects or sections. Unavailable, multiple or ambiguous destinations remain in the title with feedback. Declining a different project keeps its dependent section/person references literal. Escaped references such as `\#"Client Work"`, ordinary quoted phrases, URLs, emails and file paths remain literal.
 
-The capture panel previews the actual parsed destination. Saving a project change clears incompatible section and assignment values, including child assignments. The inspector and Shortcuts use the same account-scoped reference rules. New label edits store stable IDs compatible with iOS and web; older label names, existing IDs and unknown legacy values remain readable. Repeat rules now include weekday sets, monthly ordinals, yearly dates, completion anchoring and start/end/count limits. Named boundaries, sub-day rules, independent reminder recurrence and richer natural-language grammar remain pending; see [repeat syntax](docs/RECURRENCE.md).
+The capture panel previews the actual parsed destination. Saving a project change clears incompatible section and assignment values, including child assignments. The inspector and Shortcuts use the same account-scoped reference rules. New label edits store stable IDs compatible with iOS and web; older label names, existing IDs and unknown legacy values remain readable. Repeat rules now include weekday sets, monthly ordinals, yearly dates, completion anchoring and start/end/count limits. Named date/repeat boundaries and independent calendar reminder recurrence are implemented. Sub-day rules, multiple monthly dates and richer natural-language grammar remain pending; see [repeat syntax](docs/RECURRENCE.md).
 
 
 ## Productive widgets
@@ -144,9 +144,9 @@ Both native clients use guarded task edits and review overlapping changes before
 
 ## Multiple reminders
 
-The inspector’s Reminders screen supports fixed dates and offsets before or after planned time, per-task opt-out, device/workspace delivery permission and visible scheduling feedback. Reminder choices sync with iOS through the guarded task queue. Completion, deletion, rescheduling and account switches invalidate stale reminders and snoozes. See [behavior, the persisted contract and the remaining remote delivery plan](docs/REMINDERS.md).
+The inspector’s Reminders screen supports fixed dates, offsets before or after planned time, independent calendar schedules with their own clock/time zone/end/count limits, per-task opt-out, device/workspace delivery permission and visible scheduling feedback. Reminder choices sync with iOS through the guarded task queue. Completion, deletion, rescheduling and account switches invalidate stale reminders and snoozes. See [behavior, the persisted contract and the remaining remote delivery plan](docs/REMINDERS.md).
 
-Quick entry also accepts multiple `!30m` (from now), `!30mb` (before the plan), and `!tomorrow 9am` fixed reminder shortcuts. Each has its own removable chip; see [reminder syntax and delivery](docs/REMINDERS.md#reminders-in-quick-entry).
+Quick entry also accepts multiple `!30m` (from now), `!30mb` (before the plan), `!tomorrow 9am` fixed reminders, and `!every sat 9am` independent calendar reminders. Repeating reminders work on undated tasks and have cursor-local suggestions. Each has its own removable chip; see [reminder syntax and delivery](docs/REMINDERS.md#reminders-in-quick-entry).
 
 
 ## Bulk deadlines

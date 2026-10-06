@@ -11,9 +11,9 @@ private actor TestReminderCenter: ReminderCenter {
     var paused = false
     private var gate: CheckedContinuation<Void, Never>?
     func pending() async -> [ReminderRequest] { requests }
-    func removeInvalid(account: String, events: [DueReminder]) async {
-        requests.removeAll { !$0.valid(account: account, events: events) }
-        delivered.removeAll { !$0.valid(account: account, events: events) }
+    func removeInvalid(_ state: ReminderState) async {
+        requests.removeAll { !$0.valid(state: state) }
+        delivered.removeAll { !$0.valid(state: state) }
     }
     func remove(_ identifiers: [String]) async { requests.removeAll { identifiers.contains($0.identifier) } }
     func add(_ request: ReminderRequest) async throws {
@@ -338,5 +338,166 @@ extension ReminderTests {
         c.timeZone=TimeZone(identifier:"Europe/Copenhagen")!
         let folded=try XCTUnwrap(Dates.parse("2026-10-25",calendar:c)), long=try XCTUnwrap(WorkingHours(start:135,end:165,weekdays:[1]).interval(on:folded,calendar:c))
         XCTAssertEqual(long.duration,90*60)
+    }
+}
+
+
+extension ReminderTests {
+    func calendarSpec(_ text: String = "every saturday", start: String = "2026-10-24", time: String = "09:00", zone: String = "Europe/Copenhagen") throws -> ReminderSpec {
+        .recurring(try XCTUnwrap(ReminderCalendarSchedule.make(text, time: time, start: start, zone: zone)))
+    }
+    func testIndependentScheduleDoesNotReadPlanAndQueuesDistinctOccurrences() throws {
+        let spec = try calendarSpec()
+        var row = task(specs: [spec]); row["due_date"] = .null; row["due_time"] = .null
+        let events = DueReminder.events(tasks: [row], calendar: calendar, now: now)
+        XCTAssertEqual(events.count, 60); XCTAssertEqual(events.first?.date, TaskPlanning.instant("2026-10-24T07:00:00Z"))
+        XCTAssertEqual(events[1].date, TaskPlanning.instant("2026-10-31T08:00:00Z"))
+        XCTAssertEqual(Set(events.map(\.signature)).count, 60)
+        XCTAssertEqual(Set(events.map { ReminderRequest.make(account: "account", event: $0).identifier }).count, 60)
+        row["due_date"] = .string("2027-02-01"); row["due_time"] = .string("15:00")
+        XCTAssertEqual(DueReminder.events(tasks: [row], calendar: calendar, now: now), events)
+        row["completed"] = .bool(true); XCTAssertTrue(DueReminder.events(tasks: [row], now: now).isEmpty)
+    }
+    func testCalendarSchedulesKeepSourceClockAcrossTravelDSTGapsAndFolds() throws {
+        let spring = try calendarSpec("every day for 3 occurrences", start: "2026-03-28", time: "02:30")
+        let dates = try XCTUnwrap(spring.schedule).dates(after: TaskPlanning.instant("2026-03-27T00:00:00Z")!)
+        XCTAssertEqual(dates.count, 3)
+        XCTAssertEqual(dates.map { calendar.component(.minute, from: $0) }, [30, 0, 30], "A missing clock uses the next valid minute, matching task planning")
+        XCTAssertEqual(dates.map { calendar.component(.hour, from: $0) }, [2, 3, 2])
+        let autumn = try calendarSpec("every day for 3 occurrences", time: "02:30")
+        let fall = try XCTUnwrap(autumn.schedule).dates(after: now)
+        XCTAssertEqual(fall[1], TaskPlanning.instant("2026-10-25T00:30:00Z"))
+        XCTAssertFalse(try XCTUnwrap(autumn.schedule).contains(TaskPlanning.instant("2026-10-25T01:30:00Z")!))
+        var travel = calendar; travel.timeZone = TimeZone(identifier: "Pacific/Honolulu")!
+        XCTAssertEqual(DueReminder.events(tasks: [task(specs: [autumn])], calendar: calendar, now: now), DueReminder.events(tasks: [task(specs: [autumn])], calendar: travel, now: now))
+    }
+    func testCalendarRuleIntervalsCountsEndLimitsAndSkippedFifthWeekdays() throws {
+        let weekly = try calendarSpec("every 2 weeks on monday and friday for 5 occurrences", start: "2026-10-19")
+        XCTAssertEqual(weekly.schedule?.dates(after: TaskPlanning.instant("2026-10-18T00:00:00Z")!).map { TaskPlanner.dayKey($0, calendar: calendar) }, ["2026-10-19", "2026-10-23", "2026-11-02", "2026-11-06", "2026-11-16"])
+        let monthly = try calendarSpec("every month on 31 for 4 occurrences", start: "2027-01-31")
+        XCTAssertEqual(monthly.schedule?.dates(after: now).map { TaskPlanner.dayKey($0, calendar: calendar) }, ["2027-01-31", "2027-02-28", "2027-03-31", "2027-04-30"])
+        let fifth = try calendarSpec("every month on fifth monday for 3 occurrences", start: "2026-01-01")
+        XCTAssertEqual(fifth.schedule?.dates(after: TaskPlanning.instant("2025-12-31T00:00:00Z")!).map { TaskPlanner.dayKey($0, calendar: calendar) }, ["2026-03-30", "2026-06-29", "2026-08-31"])
+        let end = try calendarSpec("every day until 2026-10-26")
+        XCTAssertEqual(end.schedule?.dates(after: now).count, 3)
+        XCTAssertTrue(try XCTUnwrap(end.schedule).dates(after: TaskPlanning.instant("2026-10-26T08:00:00Z")!).isEmpty)
+        let leap = try calendarSpec("every year on february 29 for 3 occurrences", start: "2028-02-29")
+        XCTAssertEqual(leap.schedule?.dates(after: now).map { TaskPlanner.dayKey($0, calendar: calendar) }, ["2028-02-29", "2029-02-28", "2030-02-28"])
+    }
+    func testUnlimitedScheduleJumpsFromHistoricalAnchorAndCountDoesNotReset() throws {
+        let old = try calendarSpec("every day", start: "0001-01-01", zone: "Etc/UTC")
+        let current = try XCTUnwrap(old.schedule).dates(after: now, limit: 3)
+        XCTAssertEqual(current.first, TaskPlanning.instant("2026-10-24T09:00:00Z")); XCTAssertEqual(current.count, 3)
+        let finite = try calendarSpec("every day for 5 occurrences")
+        XCTAssertEqual(finite.schedule?.dates(after: TaskPlanning.instant("2026-10-26T08:00:00Z")!).count, 2)
+        XCTAssertEqual(finite.schedule?.summary, "Every day · 5 occurrences total")
+        XCTAssertEqual(finite.label, "Every day · 5 occurrences total · 09:00")
+        XCTAssertTrue(try XCTUnwrap(finite.schedule).dates(after: TaskPlanning.instant("2026-10-29T00:00:00Z")!).isEmpty)
+    }
+    func testMalformedCalendarRowsFailClosedAndKnownExtensionFieldsAreSemanticNeutral() throws {
+        let spec = try calendarSpec(); let event = try XCTUnwrap(DueReminder.events(tasks: [task(specs: [spec])], now: now).first)
+        for (key, value) in [("version", JSON.number(1)), ("time", .string("25:60")), ("time", .string("9:00")), ("time_zone", .string("missing")), ("start_day", .string("2026-02-30")), ("channels", .array([.string("push")])), ("channels", .array([.string("local"), .string("push")]))] {
+            var raw = spec.raw; raw[key] = value; XCTAssertNil(ReminderSpec(row: .object(raw)), key)
+        }
+        for (key, value) in [("count", JSON.number(1000)), ("fromCompletion", .bool(true)), ("interval", .number(0))] {
+            var raw = spec.raw, pattern = raw["recurrence"]!.object; pattern[key] = value; raw["recurrence"] = .object(pattern)
+            XCTAssertNil(ReminderSpec(row: .object(raw)), key)
+        }
+        var extended = spec; extended.raw["future"] = .string("preserve")
+        var pattern = extended.raw["recurrence"]!.object; pattern["future"] = .string("preserve rule"); extended.raw["recurrence"] = .object(pattern)
+        XCTAssertEqual(ReminderSignature.make(task: task(specs: [spec]), spec: extended, date: event.date), event.signature)
+        var row = task(specs: [spec]); XCTAssertFalse(ReminderSpec.append(extended, task: &row))
+        var disabled = extended; disabled.raw["id"] = .string(UUID().uuidString); disabled.raw["enabled"] = .bool(false)
+        XCTAssertTrue(ReminderSpec.append(disabled, task: &row))
+    }
+    func testEditingCalendarRulePreservesExtensionsWithoutRetainingPreviousKnownLimits() throws {
+        var previous = try calendarSpec("every week until 2027-01-01 for 5 occurrences")
+        previous.raw["future"] = .string("row extension")
+        var pattern = previous.raw["recurrence"]!.object; pattern["future"] = .string("rule extension"); previous.raw["recurrence"] = .object(pattern)
+        let replacement = ReminderSpec.recurring(try XCTUnwrap(ReminderCalendarSchedule.make("every month on last friday", time: "02:30", start: "2026-10-24", zone: "Europe/Copenhagen")), id: previous.id)
+        let edited = previous.mergingSettings(from: replacement)
+        XCTAssertNotNil(ReminderSpec(row: .object(edited.raw)))
+        XCTAssertEqual(edited.raw["future"], .string("row extension")); XCTAssertEqual(edited.raw["recurrence"]?.object["future"], .string("rule extension"))
+        XCTAssertNil(edited.raw["recurrence"]?.object["count"]); XCTAssertNil(edited.raw["recurrence"]?.object["endDate"]); XCTAssertNil(edited.raw["recurrence"]?.object["daysOfWeek"])
+        XCTAssertEqual(edited.schedule?.time, "02:30")
+        var invalid = replacement.raw, rule = invalid["recurrence"]!.object; rule["type"] = .string("daily"); invalid["recurrence"] = .object(rule)
+        XCTAssertNil(ReminderSpec(row: .object(invalid)), "A daily rule cannot silently ignore a monthly ordinal")
+        invalid = previous.raw; rule = invalid["recurrence"]!.object; rule["daysOfWeek"] = .array([.number(6)]); rule["type"] = .string("daily"); invalid["recurrence"] = .object(rule)
+        XCTAssertNil(ReminderSpec(row: .object(invalid)), "A daily rule cannot silently ignore selected weekly days")
+    }
+    func testCalendarReceiptReconstructsHistoricalOccurrenceAndRejectsChanges() throws {
+        let spec = try calendarSpec(); var row = task(specs: [spec])
+        let event = try XCTUnwrap(DueReminder.events(tasks: [row], now: now).first)
+        func validate(_ row: Record, date: Date? = nil, signature: String? = nil) -> DueReminder? {
+            DueReminder.validated(tasks: [row], taskID: row.id, specID: spec.id, signature: signature ?? event.signature, originalAt: date ?? event.date, calendar: calendar)
+        }
+        XCTAssertNotNil(validate(row))
+        XCTAssertNil(DueReminder.validated(tasks: [row], taskID: row.id, specID: spec.id, signature: event.signature, originalAt: nil))
+        XCTAssertNil(validate(row, date: event.date.addingTimeInterval(1)))
+        XCTAssertNil(validate(row, date: Date(timeIntervalSince1970: .nan)))
+        row["title"] = .string("Renamed"); row["due_date"] = .string("2028-01-01"); XCTAssertEqual(validate(row)?.title, "Renamed")
+        row["completion_version"] = .number(2); XCTAssertNil(validate(row))
+        row["completion_version"] = .number(0); row["task_generation"] = .string(UUID().uuidString); XCTAssertNil(validate(row))
+        row["task_generation"] = .null; row["reminder_specs"] = .array([]); XCTAssertNil(validate(row))
+        var edited = spec; edited.raw["time"] = .string("10:00"); row["reminder_specs"] = .array([.object(edited.raw)]); XCTAssertNil(validate(row))
+    }
+    func testCalendarNotificationRoundTripRetainsOccurrenceIdentityAndSourceFields() throws {
+        let spec = try calendarSpec(); let events = DueReminder.events(tasks: [task(specs: [spec])], now: now)
+        let request = ReminderRequest.make(account: "account", event: events[1], fireAt: events[1].date.addingTimeInterval(3600), snoozed: true)
+        let native = UNNotificationRequest(identifier: request.identifier, content: SystemReminderCenter.content(for: request), trigger: SystemReminderCenter.trigger(at: request.fireAt))
+        XCTAssertEqual(SystemReminderCenter.decode(native), request)
+        XCTAssertNotEqual(request.identifier, ReminderRequest.make(account: "other", event: events[1], snoozed: true).identifier)
+        XCTAssertTrue(request.event.signature.hasPrefix("r5:"))
+    }
+    func testHistoricalCalendarSnoozeSurvivesRefreshButCompletionAndAccountChangeCancel() async throws {
+        let spec = try calendarSpec(); var row = task(specs: [spec]); let event = try XCTUnwrap(DueReminder.events(tasks: [row], now: now).first)
+        let later = TaskPlanning.instant("2026-11-15T00:00:00Z")!
+        let center = TestReminderCenter(), scheduler = ReminderScheduler(center: center)
+        await center.deliver(ReminderRequest.make(account: "account", event: event))
+        func current(_ revision: Int, account: String = "account") -> ReminderState {
+            ReminderState(revision: revision, account: account, events: DueReminder.events(tasks: [row], now: later), now: later, validationTasks: [row], calendar: calendar)
+        }
+        _ = await scheduler.update(current(1))
+        let delivered = await center.delivered; XCTAssertEqual(delivered.count, 1)
+        let report = await scheduler.snooze(account: "account", taskID: event.taskID, specID: event.specID, signature: event.signature, now: later, originalAt: event.date)
+        XCTAssertNotNil(report)
+        _ = await scheduler.update(current(2)); let pending = await center.requests
+        XCTAssertEqual(pending.filter(\.snoozed).count, 1); XCTAssertEqual(pending.first(where: \.snoozed)?.event.date, event.date)
+        row["completed"] = .bool(true); _ = await scheduler.update(current(3)); let cleared = await center.requests, clearedDelivered = await center.delivered
+        XCTAssertTrue(cleared.isEmpty); XCTAssertTrue(clearedDelivered.isEmpty)
+        row["completed"] = .bool(false); _ = await scheduler.update(current(4)); _ = await scheduler.update(current(5, account: "other"))
+        let switched = await center.requests; XCTAssertTrue(switched.allSatisfy { $0.account == "other" && !$0.snoozed })
+    }
+    func testIndependentScheduleQuickEntryDeclineProtectionAndAutocomplete() throws {
+        let parsed = QuickEntry("Review !every sat 9am p2 ~25m", now: now, calendar: calendar)
+        XCTAssertEqual(parsed.title, "Review"); XCTAssertNil(parsed.updates["due_date"]); XCTAssertNil(parsed.updates["due_time"]); XCTAssertNil(parsed.updates["is_recurring"])
+        XCTAssertEqual(parsed.updates["priority"], .number(2)); XCTAssertEqual(parsed.updates["duration_minutes"], .number(25))
+        let raw = try XCTUnwrap(parsed.updates["reminder_specs"]?.list.last), spec = try XCTUnwrap(ReminderSpec(row: raw))
+        XCTAssertEqual(spec.schedule?.startDay, "2026-10-24"); XCTAssertEqual(spec.schedule?.time, "09:00")
+        let token = try XCTUnwrap(parsed.tokens.first { $0.group.hasPrefix("reminder_specs:") })
+        let declined = QuickEntry("Review !every sat 9am p2 ~25m", now: now, calendar: calendar, disabled: [token.group])
+        XCTAssertEqual(declined.title, "Review !every sat 9am"); XCTAssertNil(declined.updates["reminder_specs"]); XCTAssertNil(declined.updates["due_date"])
+        let completion = QuickPlanningCompletion("Review !every sat", now: now, calendar: calendar)
+        let option = try XCTUnwrap(completion.options.first { $0.reference == "!every saturday 9am" })
+        let chosen = try XCTUnwrap(completion.choosing(option, in: "Review !every sat"))
+        XCTAssertEqual(QuickEntry(chosen.text, now: now, calendar: calendar).title, "Review")
+        let finite = QuickEntry("Review !every day at 9am until 2026-10-27 for 3 occurrences", now: now, calendar: calendar)
+        XCTAssertEqual(finite.title, "Review"); XCTAssertEqual(ReminderSpec(row: try XCTUnwrap(finite.updates["reminder_specs"]?.list.last))?.schedule?.dates(after: now).count, 3)
+        for text in ["!every sat", "!every! sat 9am", "!every 2 hours", "!every day 25:60", "!every day 9am 10am"] {
+            let value = QuickEntry("Review " + text, now: now, calendar: calendar); XCTAssertEqual(value.title, "Review " + text); XCTAssertNil(value.updates["due_date"]); XCTAssertNil(value.updates["reminder_specs"])
+        }
+    }
+    func testIndependentScheduleSurvivesOwnBackupRestoreQueueAndTaskRecurrence() throws {
+        let spec = try calendarSpec("every week until 2027-01-01 for 5 occurrences")
+        let fixture = BackupTests(); var snapshot = fixture.fixture(), row = snapshot.tables["tasks"]![0]
+        row["reminder_specs"] = .array([.object(spec.raw)]); snapshot.tables["tasks"] = [row]
+        snapshot.pending = [Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: ["reminder_specs": row["reminder_specs"]])]
+        let roundTrip = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot)); XCTAssertEqual(roundTrip.pending.first?.fields["reminder_specs"], row["reminder_specs"])
+        let backup = try WorkspaceBackup.read(WorkspaceBackup.make(snapshot, account: fixture.owner).data())
+        let plan = try backup.plan(current: Snapshot(), account: fixture.other)
+        let restored = try XCTUnwrap(plan.changes.first { $0.table == "tasks" })
+        XCTAssertEqual(restored.fields["reminder_specs"], row["reminder_specs"])
+        row["is_recurring"] = .bool(true); row["recurrence_pattern"] = .object(["type": .string("daily")])
+        XCTAssertEqual(ReminderSpec.rows(TaskPlanning.nextOccurrence(row, date: now)), ReminderSpec.rows(row))
     }
 }

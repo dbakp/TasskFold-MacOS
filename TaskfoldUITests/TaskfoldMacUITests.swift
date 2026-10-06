@@ -180,6 +180,25 @@ final class TaskfoldMacUITests: XCTestCase {
         link.click(); XCTAssertTrue(app.buttons["30 min before"].waitForExistence(timeout: 5)); app.terminate()
     }
 
+    @MainActor func testIndependentReminderEditorValidationAutosaveAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--reminder-fixture"]; app.launch(); defer { app.terminate() }
+        let title = app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"]
+        XCTAssertTrue(title.waitForExistence(timeout: 10)); title.click()
+        let reminders = app.buttons["taskReminders"]
+        for _ in 0..<6 where !reminders.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }; reminders.click()
+        app.buttons["reminderAdd"].click(); app.popUpButtons["reminderKind"].click(); app.menuItems["Repeats"].click()
+        let rule = app.textFields["reminderRepeatRule"]; XCTAssertTrue(rule.waitForExistence(timeout: 5))
+        rule.click(); app.typeKey("a", modifierFlags: .command); rule.typeText("every! day"); XCTAssertFalse(app.buttons["reminderSave"].isEnabled)
+        app.typeKey("a", modifierFlags: .command); rule.typeText("every 2 weeks on monday and friday for 5 occurrences")
+        XCTAssertTrue(app.buttons["reminderSave"].isEnabled); XCTAssertTrue(app.staticTexts["reminderRepeatSummary"].label.contains("5 occurrences total")); app.buttons["reminderSave"].click()
+        XCTAssertTrue(app.buttons["reminderEdit-1"].waitForExistence(timeout: 5)); app.buttons["Done"].click(); app.buttons["Today"].firstMatch.click()
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
+        XCTAssertTrue(title.waitForExistence(timeout: 10)); title.click()
+        for _ in 0..<6 where !reminders.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }; reminders.click()
+        app.buttons["reminderEdit-1"].click(); XCTAssertEqual(rule.value as? String, "every 2 weeks on monday and friday for 5 occurrences")
+        app.buttons["Cancel"].click(); app.buttons["reminderDelete-1"].click(); XCTAssertFalse(app.buttons["reminderEdit-1"].exists); app.buttons["Done"].click()
+    }
+
     @MainActor func testMultipleRemindersInspectorAutosaveAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--reminder-fixture"]; app.launch()
         let title = app.staticTexts["title-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"]

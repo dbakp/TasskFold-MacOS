@@ -402,14 +402,14 @@ struct QuickEntry {
                 if !disabled.contains("reminder_specs") && !disabled.contains(group) {
                     let id = QuickReminderText.stableID(reminderSeed + "|" + key + "|\(ordinal)")
                     if let spec = QuickReminderText.spec(raw, id: id, now: now, calendar: calendar) {
-                        let semantic = spec.kind + "|" + (spec.kind == "relative" ? String(spec.offset ?? 0) : spec.raw["at"]?.text ?? "")
+                        let semantic = spec.semanticKey
                         if seen.insert(semantic).inserted && QuickReminderText.merge(spec, into: &reminderRows) {
                             acceptedReminders.append((spec, raw))
                             tokens.append(Token(group: group, text: raw, label: spec.kind == "relative" ? spec.label : "Remind " + spec.label))
                             accepted = true
                         } else { warnings.append("“\(raw)” duplicates a reminder or exceeds the 20-setting limit. Its text stays in the title.") }
                     } else {
-                        warnings.append(raw.lowercased().hasPrefix("!every") ? "Independently recurring reminders are not available yet. “\(raw)” stays in the title." : "“\(raw)” is not a future reminder. Try !30m, !30mb or !tomorrow 9am. Its text stays in the title.")
+                        warnings.append(raw.lowercased().hasPrefix("!every") ? "Choose a calendar repeat and a clock time, such as !every sat 9am. Completion-based or invalid reminder rules stay in the title: “\(raw)”." : "“\(raw)” is not a future reminder. Try !30m, !30mb or !tomorrow 9am. Its text stays in the title.")
                     }
                 }
                 replacements.append((match.range, accepted ? "" : marker))
@@ -1269,7 +1269,7 @@ private enum QuickReminderText {
     static let day = #"(?:today|tomorrow|tmr|sun(?:day)?|mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|\d{4}-\d{2}-\d{2})"#
     static let duration = #"(?:\d+\s*(?:minutes?|mins?|m|hours?|hrs?|h|days?|d)\s*)+"#
     static var pattern: String {
-        #"(?<!\S)!(?:every!?[^\n!#/@%+{~]*|"# + day + #"(?:\s+(?:at\s+)?"# + clock + #")?|"# + duration + #"(?:before|after|b|a)?|"# + clock + #"|later|[^\s]+)(?!\S)"#
+        #"(?<!\S)!(?:every!?(?:(?!\bp[1-4]\b)[^\n!#/@%+{~])*|"# + day + #"(?:\s+(?:at\s+)?"# + clock + #")?|"# + duration + #"(?:before|after|b|a)?|"# + clock + #"|later|[^\s]+)(?!\S)"#
     }
     static func stableID(_ seed: String) -> String {
         let hex = Array(DueReminder.digest(seed).prefix(32))
@@ -1279,6 +1279,30 @@ private enum QuickReminderText {
     static func spec(_ raw: String, id: String, now: Date, calendar input: Calendar) -> ReminderSpec? {
         let text = raw.dropFirst().trimmingCharacters(in: .whitespaces).lowercased()
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
+        if text.hasPrefix("every ") {
+            guard let regex = try? NSRegularExpression(pattern: #"(?:\s+at)?\s+("# + clock + #")(?=\s|$)"#),
+                  case let matches = regex.matches(in: text, range: NSRange(text.startIndex..., in: text)), matches.count == 1,
+                  let match = matches.first,
+                  let timeRange = Range(match.range(at: 1), in: text), let fullRange = Range(match.range, in: text) else { return nil }
+            let clockText = String(text[timeRange]).filter { !$0.isWhitespace }
+            let am = clockText.hasSuffix("am"), pm = clockText.hasSuffix("pm")
+            let numbers = (am || pm ? String(clockText.dropLast(2)) : clockText).split(whereSeparator: { $0 == ":" || $0 == "." })
+            guard let hour = numbers.first.flatMap({ Int($0) }), let minute = Int(numbers.count > 1 ? String(numbers[1]) : "0"), (0...59).contains(minute),
+                  (am || pm ? (1...12).contains(hour) : (0...23).contains(hour)) else { return nil }
+            var phrase = text; phrase.removeSubrange(fullRange)
+            guard let parsed = QuickRecurrenceText.parse(phrase, now: now, calendar: calendar), !parsed.rule["fromCompletion"].flag,
+                  let (rule, firstDay) = QuickRecurrenceText.first(parsed, now: now, existing: TaskPlanner.dayKey(now, calendar: calendar), calendar: calendar) else { return nil }
+            let time = String(format: "%02d:%02d", am || pm ? hour % 12 + (pm ? 12 : 0) : hour, minute)
+            var raw: [String: JSON] = ["start_day": .string(firstDay), "time": .string(time), "time_zone": .string(calendar.timeZone.identifier), "recurrence": .object(rule.fields)]
+            // A rule with no explicit starting day begins with its next future clock.
+            if parsed.start == nil {
+                var unbounded = rule; unbounded["count"] = .null; raw["recurrence"] = .object(unbounded.fields)
+                guard let next = ReminderCalendarSchedule(raw: raw)?.dates(after: now, limit: 1).first else { return nil }
+                raw["start_day"] = .string(TaskPlanner.dayKey(next, calendar: calendar)); raw["recurrence"] = .object(rule.fields)
+            }
+            guard let schedule = ReminderCalendarSchedule(raw: raw), !schedule.dates(after: now, limit: 1).isEmpty else { return nil }
+            return .recurring(schedule, id: id)
+        }
         if text == "later" { return .absolute(now.addingTimeInterval(4 * 3600), id: id, zone: calendar.timeZone.identifier) }
         let relative = text.hasSuffix("before") || text.hasSuffix("after") || text.hasSuffix("b") || text.hasSuffix("a")
         let suffix = text.hasSuffix("before") ? 6 : text.hasSuffix("after") ? 5 : relative ? 1 : 0

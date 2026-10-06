@@ -16,7 +16,7 @@ struct TaskReminderEditor: View {
                 Toggle("At planned time", isOn: Binding(get: { ReminderSpec.plannedEnabled(task) }, set: { if !ReminderSpec.setPlanned($0, task: &task) { message = "Another reminder is already enabled at planned time. Turn it off or delete it first." } }))
                     .disabled(!plannedEditable).accessibilityIdentifier("reminderPlanned")
             } footer: {
-                Text(task.due == nil ? "Choose a planned date to activate reminders relative to the task. Fixed-date reminders work without one." : task.string("due_time").isEmpty ? "With a date but no time, the planned reminder is at 8:00 AM." : "Before and after reminders move with the task’s planned time.")
+                Text(task.due == nil ? "Choose a planned date to activate reminders relative to the task. Fixed-date and repeating reminders work without one." : task.string("due_time").isEmpty ? "With a date but no time, the planned reminder is at 8:00 AM." : "Before and after reminders move with the task’s planned time.")
             }
             Section("Custom reminders") {
                 ForEach(Array(rows.enumerated()), id: \.offset) { index, value in
@@ -91,9 +91,10 @@ struct TaskReminderEditor: View {
     }
     private func status(_ spec: ReminderSpec) -> String {
         if !spec.enabled { return "Off" }
-        guard let date = spec.date(task: task, calendar: .current) else { return "Waiting for a planned date" }
+        guard let date = spec.date(task: task, calendar: .current) else { return spec.kind == "recurring" ? "This schedule has ended" : "Waiting for a planned date" }
         if date <= Date() { return "This reminder time has passed" }
         let time = date.formatted(date: .abbreviated, time: .shortened)
+        if let schedule = spec.schedule { return "Next · \(schedule.formatted(date)) · \(schedule.timeZone)" }
         return spec.kind == "absolute" ? "Fixed instant · \(time) · shown in your current time zone" : "Next · \(time)"
     }
 }
@@ -112,22 +113,34 @@ struct ReminderSpecEditor: View {
     @State private var before: Bool
     @State private var date: Date
     @State private var enabled: Bool
+    @State private var repeatClock: Date
+    @State private var repeatText: String
+    @FocusState private var repeatFocused: Bool
+    @State private var sourceZone: String
     @State private var message: String?
     init(draft: ReminderDraft, save: @escaping (ReminderSpec) -> String?) {
         self.draft = draft; self.save = save
         _kind = State(initialValue: draft.spec.kind)
         _minutes = State(initialValue: abs(draft.spec.offset ?? -10))
         _before = State(initialValue: (draft.spec.offset ?? -10) <= 0)
-        _date = State(initialValue: draft.spec.absolute ?? Date().addingTimeInterval(3600))
+        _date = State(initialValue: draft.spec.schedule?.first ?? draft.spec.absolute ?? Date().addingTimeInterval(3600))
+        var utc = Calendar(identifier: .gregorian); utc.timeZone = TimeZone(secondsFromGMT: 0)!
+        let source = draft.spec.schedule?.calendar ?? Calendar.current
+        let initial = draft.spec.absolute ?? Date().addingTimeInterval(3600)
+        let hour = draft.spec.schedule.flatMap { Int($0.time.prefix(2)) } ?? source.component(.hour, from: initial)
+        let minute = draft.spec.schedule.flatMap { Int($0.time.suffix(2)) } ?? source.component(.minute, from: initial)
+        _repeatClock = State(initialValue: utc.date(from: DateComponents(year: 2000, month: 1, day: 1, hour: hour, minute: minute))!)
+        _repeatText = State(initialValue: draft.spec.schedule?.expression ?? "every week")
+        _sourceZone = State(initialValue: draft.spec.schedule?.timeZone ?? TimeZone.current.identifier)
         _enabled = State(initialValue: draft.spec.enabled)
     }
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("When", selection: $kind) { Text("Before or after plan").tag("relative"); Text("A fixed date and time").tag("absolute") }
+                    Picker("When", selection: $kind) { Text("From plan").tag("relative"); Text("Fixed time").tag("absolute"); Text("Repeats").tag("recurring") }
                         .accessibilityIdentifier("reminderKind")
-                    Toggle("Enabled", isOn: $enabled)
+                    Toggle("Enabled", isOn: $enabled).accessibilityIdentifier("reminderEnabled")
                 }
                 if kind == "relative" {
                     Section {
@@ -139,6 +152,49 @@ struct ReminderSpecEditor: View {
                         }.accessibilityIdentifier("reminderOffset")
                         Stepper("\(minutes) minutes", value: $minutes, in: 0...10080).accessibilityIdentifier("reminderMinutes")
                     } footer: { Text("Uses elapsed minutes before or after the task’s planned time. A date without a time uses 8:00 AM.") }
+                } else if kind == "recurring" {
+                    Section {
+                        DatePicker("Starts", selection: $date, displayedComponents: [.date])
+                            .environment(\.timeZone, TimeZone(identifier: sourceZone) ?? .current).accessibilityIdentifier("reminderRepeatStart")
+                        DatePicker("At", selection: $repeatClock, displayedComponents: [.hourAndMinute])
+                            .environment(\.timeZone, TimeZone(secondsFromGMT: 0)!).accessibilityIdentifier("reminderRepeatTime")
+                        HStack {
+                            TextField("Repeat rule", text: $repeatText, prompt: Text("every Saturday"))
+                                .focused($repeatFocused).onSubmit { repeatFocused = false }.submitLabel(.done)
+                                .accessibilityIdentifier("reminderRepeatRule")
+                            if !repeatText.isEmpty {
+                                Button { repeatText = ""; repeatFocused = true } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary).frame(minWidth: 44, minHeight: 44) }
+                                    .buttonStyle(.borderless).accessibilityLabel("Clear repeat rule").accessibilityIdentifier("clearReminderRepeatRule")
+                            }
+                        }
+                        Menu("Repeat suggestions") {
+                            ForEach(["every day", "every weekdays", "every saturday", "every month on last friday", "every year on january 1"], id: \.self) { phrase in
+                                Button(phrase.capitalized) { repeatText = phrase }
+                            }
+                        }.frame(minHeight: 44).accessibilityIdentifier("reminderRepeatSuggestions")
+                        Text(sourceZone).font(.footnote).foregroundStyle(.secondary)
+                        if sourceZone != TimeZone.current.identifier {
+                            Button("Use current time zone") {
+                                let c = recurringCalendar
+                                let parts = c.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+                                sourceZone = TimeZone.current.identifier
+                                if let moved = recurringCalendar.date(from: parts) { date = moved }
+                            }.frame(minHeight: 44)
+                        }
+                        if let schedule = recurringSchedule, let next = schedule.dates(after: Date(), limit: 1).first {
+                            Text(schedule.summary).font(.footnote).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("reminderRepeatSummary")
+                            Text("Next · " + schedule.formatted(next) + " · " + schedule.timeZone)
+                                .font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("reminderRepeatPreview")
+                        } else if recurringSchedule != nil && !enabled {
+                            Text("This schedule has ended. Its settings will be saved with delivery off.").font(.footnote).foregroundStyle(.secondary)
+                        } else {
+                            Text("Enter a calendar rule with a future occurrence. Try every Saturday, every 2 weeks on Monday and Friday, or every month on last Friday. Add until YYYY-MM-DD or for 5 occurrences if needed.")
+                                .font(.footnote).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
+                                .accessibilityIdentifier("reminderRepeatError")
+                        }
+                    } header: { Text("Schedule") } footer: {
+                        Text("Repeats at this clock time in its time zone, independently of the task’s plan. The task must remain open. Completing the task cancels its remaining alerts. Completion-based rules (every!) belong to the task’s repeat setting.")
+                    }
                 } else {
                     Section {
                         DatePicker("Remind me", selection: $date, displayedComponents: [.date, .hourAndMinute]).accessibilityIdentifier("reminderDate")
@@ -146,13 +202,13 @@ struct ReminderSpecEditor: View {
                         if enabled && date <= Date() { Text("Choose a future time, or turn this reminder off.").foregroundStyle(.red) }
                     }
                 }
-            }.formStyle(.grouped).navigationTitle(draft.index == nil ? "Add reminder" : "Edit reminder")
+            }.formStyle(.grouped).accessibilityIdentifier("reminderSpecForm").navigationTitle(draft.index == nil ? "Add reminder" : "Edit reminder")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { apply() }.disabled(kind == "absolute" && enabled && date <= Date()).accessibilityIdentifier("reminderSave") }
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { apply() }.disabled((kind == "absolute" && enabled && date <= Date()) || (kind == "recurring" && (recurringSchedule == nil || (enabled && recurringSchedule?.dates(after: Date(), limit: 1).isEmpty == true)))).accessibilityIdentifier("reminderSave") }
             }
         }
         .alert("Reminder not saved", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) { Button("OK") { message = nil } } message: { Text(message ?? "") }
@@ -160,13 +216,23 @@ struct ReminderSpecEditor: View {
         .frame(minWidth: 520, minHeight: 530)
         #endif
     }
+    private var recurringCalendar: Calendar {
+        var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: sourceZone) ?? .current; return c
+    }
+    private var recurringSchedule: ReminderCalendarSchedule? {
+        let c = recurringCalendar
+        var utc = Calendar(identifier: .gregorian); utc.timeZone = TimeZone(secondsFromGMT: 0)!
+        return ReminderCalendarSchedule.make(repeatText, time: String(format: "%02d:%02d", utc.component(.hour, from: repeatClock), utc.component(.minute, from: repeatClock)), start: TaskPlanner.dayKey(date, calendar: c), zone: sourceZone)
+    }
     private func apply() {
         // The sheet may have stayed open past its chosen time since the button rendered.
         guard kind != "absolute" || !enabled || date > Date() else { message = "Choose a future time, or turn this reminder off."; return }
-        let changed = kind == "absolute" ? ReminderSpec.absolute(date, id: draft.spec.id) : ReminderSpec.relative(before ? -minutes : minutes, id: draft.spec.id, enabled: enabled)
-        var spec = draft.spec
-        // Merge known fields, retaining extensions of this version.
-        for (key, value) in changed.raw { spec.raw[key] = value }
+        let changed: ReminderSpec
+        if kind == "recurring" {
+            guard let schedule = recurringSchedule, !enabled || !schedule.dates(after: Date(), limit: 1).isEmpty else { message = "Choose a valid calendar rule with a future occurrence."; return }
+            changed = .recurring(schedule, id: draft.spec.id, enabled: enabled)
+        } else { changed = kind == "absolute" ? .absolute(date, id: draft.spec.id) : .relative(before ? -minutes : minutes, id: draft.spec.id, enabled: enabled) }
+        var spec = draft.spec.mergingSettings(from: changed)
         spec.raw["enabled"] = .bool(enabled)
         if let error = save(spec) { message = error; return }
         dismiss()

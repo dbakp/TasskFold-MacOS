@@ -210,7 +210,7 @@ final class QuickEntryRemindersTests: XCTestCase {
         XCTAssertFalse(parsed.title.contains("\u{E000}")); XCTAssertFalse(parsed.title.contains("\u{E004}"))
     }
     func testInvalidReminderIsProtectedAndNeverSchedulesTheTask() {
-        for expression in ["!0m", "!25:60", "!13pm", "!0am", "!2026-02-30 3pm", "!today 9am", "!10081mb", "!99999999999999999999h", "!every sat 9am", "!every 2 hours", "!nonsense"] {
+        for expression in ["!0m", "!25:60", "!13pm", "!0am", "!2026-02-30 3pm", "!today 9am", "!10081mb", "!99999999999999999999h", "!every! sat 9am", "!every 2 hours", "!nonsense"] {
             let parsed = parse("Call " + expression)
             XCTAssertEqual(parsed.title, "Call " + expression, expression); XCTAssertTrue(parsed.updates.isEmpty, expression)
             XCTAssertFalse(parsed.warnings.isEmpty, expression)
