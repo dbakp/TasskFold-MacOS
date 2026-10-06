@@ -120,6 +120,10 @@ function fixtureDB(
     finish?: boolean;
     devices?: string[];
     failFinish?: boolean;
+    after?: string | null;
+    sweep?: unknown;
+    finishSweep?: boolean;
+    failSweepFinish?: boolean;
   } = {},
 ) {
   const calls: { name: string; body: Record<string, unknown> }[] = [];
@@ -133,6 +137,17 @@ function fixtureDB(
       body = await req.json();
     calls.push({ name, body });
     switch (name) {
+      case "taskfold_claim_reminder_sweep":
+        return Response.json(
+          "sweep" in options ? options.sweep : {
+            version: 1,
+            lease,
+            after: options.after ?? null,
+          },
+        );
+      case "taskfold_finish_reminder_sweep":
+        if (options.failSweepFinish) throw new Error("PRIVATE SWEEP ERROR");
+        return Response.json(options.finishSweep ?? true);
       case "taskfold_maintain_reminder_queue":
         return Response.json({ retired: 0, removed: 0 });
       case "taskfold_reminder_device_page":
@@ -143,9 +158,9 @@ function fixtureDB(
         assert(body._limit === 1);
         if (claimed) return Response.json([]);
         claimed = true;
-        return Response.json([job]);
-      case "taskfold_prepare_reminder_job":
-        equal(body, { _id: id, _lease: lease });
+        return Response.json([{ ...job, device: body._device }]);
+      case "taskfold_prepare_sweep_reminder_job":
+        equal(body, { _sweep: lease, _id: id, _lease: lease });
         return Response.json("prepare" in options ? options.prepare : prepared);
       case "taskfold_finish_reminder_delivery":
         if (options.failFinish) throw new Error("PRIVATE DATABASE EXCEPTION");
@@ -177,6 +192,7 @@ Deno.test("authorization, method, cursor and rollout fail closed without queue/p
   for (
     const query of [
       "?after=invalid",
+      "?after=" + device,
       "?device=" + device,
       "?after=" + device + "&after=" + device,
     ]
@@ -382,16 +398,214 @@ Deno.test("ordered keyset page returns cursor after last fully processed device"
   );
 });
 Deno.test("time budget stops before claiming and retains previous cursor", async () => {
-  const db = fixtureDB();
+  const db = fixtureDB({ after: "00000000-0000-4000-8000-000000000001" });
   let tick = 0;
   const response = await createHandler(config, provider, {
     send: db.send,
     now: () => tick++ === 0 ? instant : instant + 31_000,
-  })(request("?after=00000000-0000-4000-8000-000000000001"));
+  })(request());
   const data = await response.json();
   equal(data.status, "paused");
   equal(data.nextCursor, "00000000-0000-4000-8000-000000000001");
   assert(!db.calls.some((c) => c.name === "taskfold_claim_reminder_jobs"));
+});
+Deno.test("busy/backoff sweep never touches device jobs or provider", async () => {
+  const db = fixtureDB({ sweep: null });
+  let sends = 0;
+  const response = await createHandler(config, {
+    ...provider,
+    send: async () => {
+      sends++;
+      return result;
+    },
+  }, { send: db.send })(request());
+  equal(await response.json(), { status: "busy" });
+  equal(sends, 0);
+  equal(db.calls.map((c) => c.name), ["taskfold_claim_reminder_sweep"]);
+});
+Deno.test("malformed sweep leases fail closed before touching private delivery", async () => {
+  for (
+    const sweep of [
+      [],
+      {},
+      { version: 2, lease, after: null },
+      { version: 1, lease: "not-a-nonce", after: null },
+      { version: 1, lease, after: "not-a-cursor" },
+      { version: 1, lease, after: null, extra: "PRIVATE" },
+    ]
+  ) {
+    const db = fixtureDB({ sweep });
+    equal(
+      (await createHandler(config, provider, { send: db.send })(request()))
+        .status,
+      502,
+    );
+    equal(db.calls.map((c) => c.name), ["taskfold_claim_reminder_sweep"]);
+  }
+});
+Deno.test("durable cursor resumes after twenty devices and wraps at exhaustion", async () => {
+  const devices = Array.from(
+    { length: 45 },
+    (_, i) => `00000000-0000-4000-8000-${String(i + 21).padStart(12, "0")}`,
+  );
+  let cursor: string | null = null;
+  const visited: string[] = [], committed: (string | null)[] = [];
+  for (let run = 0; run < 4; run++) {
+    const next = devices.filter((d) => cursor === null || d > cursor).slice(
+      0,
+      20,
+    );
+    const db = fixtureDB({ devices: next, after: cursor, prepare: null });
+    const response = await createHandler(config, provider, {
+      send: async (req) => {
+        const name = new URL(req.url).pathname.split("/").at(-1);
+        if (name === "taskfold_finish_reminder_sweep") {
+          const body = await req.clone().json();
+          equal(body._after, cursor);
+          equal(body._lease, lease);
+          cursor = body._next;
+          committed.push(cursor);
+        }
+        return db.send(req);
+      },
+    })(request());
+    equal(response.status, 200);
+    equal((await response.json()).nextCursor, cursor);
+    visited.push(
+      ...db.calls.filter((c) => c.name === "taskfold_reconcile_reminder_jobs")
+        .map((c) => c.body._device as string),
+    );
+  }
+  equal(committed, [devices[19], devices[39], null, devices[19]]);
+  equal(visited, [...devices, ...devices.slice(0, 20)]);
+});
+Deno.test("lost delivery acknowledgement records error without advancing saved cursor", async () => {
+  const after = "00000000-0000-4000-8000-000000000001";
+  const db = fixtureDB({ after, failFinish: true });
+  equal(
+    (await createHandler(config, provider, { send: db.send })(request()))
+      .status,
+    502,
+  );
+  const finish = db.calls.find((c) =>
+    c.name === "taskfold_finish_reminder_sweep"
+  )!;
+  equal([
+    finish.body._after,
+    finish.body._next,
+    finish.body._lease,
+    finish.body._status,
+    finish.body._retry_after_seconds,
+  ], [after, after, lease, "error", 30]);
+});
+Deno.test("lost or expired sweep receipt never reports committed progress", async () => {
+  for (const options of [{ finishSweep: false }, { failSweepFinish: true }]) {
+    const db = fixtureDB(options);
+    let sends = 0;
+    const response = await createHandler(config, {
+      ...provider,
+      send: async () => {
+        sends++;
+        return result;
+      },
+    }, { send: db.send })(request());
+    equal(response.status, 502);
+    equal(sends, 1);
+    const receipts = db.calls.filter((c) =>
+      c.name === "taskfold_finish_reminder_sweep"
+    );
+    equal(receipts.map((c) => c.body._status), ["processed", "error"]);
+    equal(receipts[1].body._next, receipts[1].body._after);
+    assert(!(await response.text()).includes("PRIVATE"));
+  }
+});
+Deno.test("provider pause persists preceding cursor and bounded global retry floor", async () => {
+  const after = "00000000-0000-4000-8000-000000000001";
+  for (const delay of [null, 1, 900, 3601]) {
+    const db = fixtureDB({ after });
+    const response = await createHandler(config, {
+      ...provider,
+      send: async () => ({
+        outcome: "transient",
+        retryAfter: delay,
+        halt: true,
+        code: "transport",
+      }),
+    }, { send: db.send })(request());
+    equal(response.status, 200);
+    const receipt = db.calls.find((c) =>
+      c.name === "taskfold_finish_reminder_sweep"
+    )!;
+    equal([
+      receipt.body._after,
+      receipt.body._next,
+      receipt.body._status,
+      receipt.body._retry_after_seconds,
+    ], [after, after, "paused", Math.min(3600, Math.max(30, delay ?? 900))]);
+  }
+});
+Deno.test("lost response after cursor commit cannot rewind the replacement sweep", async () => {
+  const devices = Array.from(
+    { length: 20 },
+    (_, i) => `00000000-0000-4000-8000-${String(i + 21).padStart(12, "0")}`,
+  );
+  let saved: string | null = null, active: string | null = lease;
+  let receipts = 0;
+  const db = fixtureDB({ devices });
+  const response = await createHandler(config, provider, {
+    send: async (req) => {
+      if (
+        new URL(req.url).pathname.endsWith("taskfold_finish_reminder_sweep")
+      ) {
+        const body = await req.json();
+        receipts++;
+        if (active !== body._lease) return Response.json(false);
+        saved = body._next;
+        active = null;
+        throw new Error("PRIVATE LOST RESPONSE");
+      }
+      return db.send(req);
+    },
+  })(request());
+  equal(response.status, 502);
+  equal(saved, devices[19]);
+  equal(receipts, 2);
+});
+Deno.test("request abort does not send a second provider call or advance cursor", async () => {
+  const controller = new AbortController(), db = fixtureDB();
+  let sends = 0;
+  const response = await createHandler(config, {
+    ...provider,
+    send: async () => {
+      sends++;
+      controller.abort();
+      throw new Error("PRIVATE ABORT");
+    },
+  }, { send: db.send })(new Request(request(), { signal: controller.signal }));
+  equal(response.status, 502);
+  equal(sends, 1);
+  assert(!db.calls.some((c) => c.name === "taskfold_finish_reminder_sweep"));
+});
+Deno.test("late preparation response cannot dispatch after invocation budget", async () => {
+  let tick = 0, sends = 0;
+  const db = fixtureDB();
+  const response = await createHandler(config, {
+    ...provider,
+    send: async () => {
+      sends++;
+      return result;
+    },
+  }, {
+    send: db.send,
+    now: () => tick++ < 3 ? instant : instant + 121_000,
+  })(request());
+  equal(response.status, 200);
+  equal((await response.json()).status, "paused");
+  equal(sends, 0);
+  assert(
+    db.calls.some((c) => c.name === "taskfold_prepare_sweep_reminder_job"),
+  );
+  assert(!db.calls.some((c) => c.name === "taskfold_finish_reminder_delivery"));
 });
 Deno.test("APNs sends signed ES256 request, exact topic/environment and bounded private route", async () => {
   let sent!: Request;

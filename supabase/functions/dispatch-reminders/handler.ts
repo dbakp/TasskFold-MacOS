@@ -36,12 +36,10 @@ export function createHandler(
       return json(401, { error: "Unauthorized" });
     }
     if (req.method !== "POST") return json(405, { error: "Use POST" });
-    const url = new URL(req.url), after = url.searchParams.get("after");
-    if (
-      [...url.searchParams.keys()].some((k) => k !== "after") ||
-      url.searchParams.getAll("after").length > 1 ||
-      (after !== null && !uuid(after))
-    ) return json(400, { error: "Invalid cursor" });
+    // The database owns cursor progress. A caller cannot reset/skip the durable sweep.
+    if ([...new URL(req.url).searchParams.keys()].length) {
+      return json(400, { error: "Query parameters are not supported" });
+    }
     if (!config.enabled) return json(200, { status: "disabled" });
     if (!config.serviceKey || !/^https:\/\/[^/]+\/?$/.test(config.url)) {
       return json(503, { error: "Delivery configuration unavailable" });
@@ -84,8 +82,31 @@ export function createHandler(
       receiptRejected: 0,
     };
     const diagnostics: Partial<Record<DeliveryResult["code"], number>> = {};
-    let cursor = after;
+    let sweep: { lease: string; after: string | null } | undefined;
+    let cursor: string | null = null, retryAfter = 0;
+    const finishSweep = (status: "processed" | "paused" | "error") =>
+      rpc("taskfold_finish_reminder_sweep", {
+        _lease: sweep!.lease,
+        _after: sweep!.after,
+        _next: status === "error" ? sweep!.after : cursor,
+        _status: status,
+        _counts: counts,
+        _retry_after_seconds: status === "error" ? 30 : retryAfter,
+      });
     try {
+      const claimed = await rpc("taskfold_claim_reminder_sweep", {});
+      if (claimed === null) return json(200, { status: "busy" });
+      if (
+        typeof claimed !== "object" || Array.isArray(claimed) ||
+        Object.keys(claimed).sort().join(",") !== "after,lease,version" ||
+        (claimed as Record<string, unknown>).version !== 1 ||
+        !uuid((claimed as Record<string, unknown>).lease) ||
+        ((claimed as Record<string, unknown>).after !== null &&
+          !uuid((claimed as Record<string, unknown>).after))
+      ) throw new Error("database");
+      sweep = claimed as { lease: string; after: string | null };
+      const after = sweep.after;
+      cursor = after;
       await rpc("taskfold_maintain_reminder_queue", { _limit: 1000 });
       const page = await rpc("taskfold_reminder_device_page", {
         _after: after,
@@ -120,7 +141,8 @@ export function createHandler(
           if (jobs.length === 0) break;
           if (!validClaim(jobs[0], device)) throw new Error("database");
           const job: Claim = jobs[0];
-          const prepared = await rpc("taskfold_prepare_reminder_job", {
+          const prepared = await rpc("taskfold_prepare_sweep_reminder_job", {
+            _sweep: sweep.lease,
             _id: job.id,
             _lease: job.lease,
           });
@@ -129,6 +151,11 @@ export function createHandler(
             continue;
           }
           if (!validPrepared(prepared, job)) throw new Error("database");
+          // A delayed response must not dispatch after our invocation/sweep budget expired.
+          if (req.signal.aborted || now() > deadline - 25_000) {
+            stop = true;
+            break;
+          }
           // No await between final preparation and dispatch apart from provider token reuse.
           const result = await provider.send(
             prepared,
@@ -147,6 +174,7 @@ export function createHandler(
           else if (result.outcome === "transient") counts.retry++;
           else counts.failed++;
           if (result.halt) {
+            retryAfter = Math.min(3600, Math.max(30, result.retryAfter ?? 900));
             stop = true;
             break;
           }
@@ -155,13 +183,23 @@ export function createHandler(
         if (stop) break;
         cursor = device;
       }
+      if (!stop && page.length < 20) cursor = null;
+      const status = stop ? "paused" : "processed";
+      if (await finishSweep(status) !== true) throw new Error("database");
       return json(200, {
-        status: stop ? "paused" : "processed",
+        status,
         ...counts,
         diagnostics,
-        nextCursor: !stop && page.length < 20 ? null : cursor,
+        nextCursor: cursor,
       });
     } catch {
+      if (sweep && !req.signal.aborted) {
+        // Never advance after a lost response. The nonce also fences a lost sweep receipt;
+        // if it committed already, this cleanup cannot overwrite the newer progress.
+        try {
+          await finishSweep("error");
+        } catch { /* two-minute lease recovery */ }
+      }
       // Leases recover after two minutes. Never retry an accepted provider request in this
       // invocation after a lost database acknowledgement, or include private exception text.
       return json(502, { error: "Reminder delivery could not be completed" });
