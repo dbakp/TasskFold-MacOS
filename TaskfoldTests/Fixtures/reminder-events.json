@@ -1,0 +1,712 @@
+{
+  "cases": [
+    {
+      "name": "implicit first DST fold",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": []
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-10-25T00:30:00Z",
+          "signature": "r3:64e62c1e7b8f5e12c722785b4c87a82088f4f692b3ffbb5873100cad9cd0add1"
+        }
+      ]
+    },
+    {
+      "name": "missing and zero completion agree",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [],
+        "completion_version": 0
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-10-25T00:30:00Z",
+          "signature": "r3:64e62c1e7b8f5e12c722785b4c87a82088f4f692b3ffbb5873100cad9cd0add1"
+        }
+      ]
+    },
+    {
+      "name": "complete reopen fence",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [],
+        "completion_version": 2
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-10-25T00:30:00Z",
+          "signature": "r3:d2fcee5467738bdcb91f203783ad9158110e585de0045d13e69e3a2d32baf2f3"
+        }
+      ]
+    },
+    {
+      "name": "date only ignores task zone",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": null,
+        "reminder_specs": [],
+        "time_zone": "America/New_York"
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-10-25T07:00:00Z",
+          "signature": "r3:6b426a825950a7e181a67515b255fe1aaf8be1a21eab451386ef16dcc5d40cc1"
+        }
+      ]
+    },
+    {
+      "name": "fixed second fold with elapsed offset",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": -30,
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          }
+        ],
+        "time_zone": "Europe/Copenhagen",
+        "scheduled_at": "2026-10-25T01:30:00Z"
+      },
+      "events": [
+        {
+          "spec": "11111111-1111-4111-8111-111111111111",
+          "instant": "2026-10-25T01:00:00Z",
+          "signature": "r3:189dbe4aaf3f29d4c9d1b97ce2e3aba7264668f4c95b622a2f88cd7d704ed907"
+        }
+      ]
+    },
+    {
+      "name": "invalid saved instant uses first fold",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [],
+        "time_zone": "Europe/Copenhagen",
+        "scheduled_at": "2026-10-25T06:00:00Z"
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-10-25T00:30:00Z",
+          "signature": "r3:64e62c1e7b8f5e12c722785b4c87a82088f4f692b3ffbb5873100cad9cd0add1"
+        }
+      ]
+    },
+    {
+      "name": "spring gap uses next valid wall minute",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-03-29",
+        "due_time": "02:30",
+        "reminder_specs": []
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-03-29T01:00:00Z",
+          "signature": "r3:8277fede825bca9a9eb551d9b21fc352c1aa332ff09c9ffa38b3ff018b8532f8"
+        }
+      ]
+    },
+    {
+      "name": "half hour spring gap",
+      "zone": "Australia/Lord_Howe",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-04",
+        "due_time": "02:15",
+        "reminder_specs": []
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-10-03T15:30:00Z",
+          "signature": "r3:81a4751b9643cca33d20c001502ef3afa1636c96eb189d1d3190e15b671f396f"
+        }
+      ]
+    },
+    {
+      "name": "new york spring gap",
+      "zone": "America/New_York",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-03-08",
+        "due_time": "02:30",
+        "reminder_specs": []
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-03-08T07:00:00Z",
+          "signature": "r3:d256e59f753fda41b3697cb39c30577cc65905a1e885ac801a55cc0164eae6e2"
+        }
+      ]
+    },
+    {
+      "name": "new york first fold",
+      "zone": "America/New_York",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-11-01",
+        "due_time": "01:30",
+        "reminder_specs": []
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-11-01T05:30:00Z",
+          "signature": "r3:9dbda6f7f9b94a2882cf51b0a7092fb97a837717ba1db849dd208d43b8807d40"
+        }
+      ]
+    },
+    {
+      "name": "floating travel",
+      "zone": "America/New_York",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": []
+      },
+      "events": [
+        {
+          "spec": "00000000-0000-4000-8000-000000000001",
+          "instant": "2026-10-25T06:30:00Z",
+          "signature": "r3:070d3458cbd7824212ab893d7b12d3c303585743e6a0c98320b1323ca93ec334"
+        }
+      ]
+    },
+    {
+      "name": "absolute instant milliseconds",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": null,
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "absolute",
+            "at": "2026-10-25T02:30:00.123+02:00",
+            "time_zone": "Europe/Copenhagen",
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          }
+        ]
+      },
+      "events": [
+        {
+          "spec": "11111111-1111-4111-8111-111111111111",
+          "instant": "2026-10-25T00:30:00.123Z",
+          "signature": "r3:7104581117cdd46896260b9b8c645bbcca7277d92af9a84ee971d96bf574130b"
+        }
+      ]
+    },
+    {
+      "name": "equivalent absolute UTC spelling",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": null,
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "absolute",
+            "at": "2026-10-25T00:30:00.123Z",
+            "time_zone": "Europe/Copenhagen",
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          }
+        ]
+      },
+      "events": [
+        {
+          "spec": "11111111-1111-4111-8111-111111111111",
+          "instant": "2026-10-25T00:30:00.123Z",
+          "signature": "r3:7104581117cdd46896260b9b8c645bbcca7277d92af9a84ee971d96bf574130b"
+        }
+      ]
+    },
+    {
+      "name": "offset across local day",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": -90,
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          }
+        ]
+      },
+      "events": [
+        {
+          "spec": "11111111-1111-4111-8111-111111111111",
+          "instant": "2026-10-24T23:00:00Z",
+          "signature": "r3:0ec426d129dee7222c03f02fcbc8efc21dc57f2189d69995ce408e0af097e6a7"
+        }
+      ]
+    },
+    {
+      "name": "maximum offset",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": 10080,
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          }
+        ]
+      },
+      "events": [
+        {
+          "spec": "11111111-1111-4111-8111-111111111111",
+          "instant": "2026-11-01T00:30:00Z",
+          "signature": "r3:7e00232379ae9d868bf8014a0654471da578d9df56d24718457c81823f8a04c7"
+        }
+      ]
+    },
+    {
+      "name": "opaque fields do not alter v1 semantics",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": 0,
+            "channels": [
+              "local"
+            ],
+            "enabled": true,
+            "opaque_extension": {
+              "url": "https://example.invalid/a",
+              "unicode": "🎯 æ ø",
+              "fraction": 1e-09
+            }
+          }
+        ]
+      },
+      "events": [
+        {
+          "spec": "11111111-1111-4111-8111-111111111111",
+          "instant": "2026-10-25T00:30:00Z",
+          "signature": "r3:2ac2ed936c88c1cac660b06319f911f0f577fa45dd50e2a2b699598afda47fd4"
+        }
+      ]
+    },
+    {
+      "name": "completed produces no events",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": true,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": []
+      },
+      "events": []
+    },
+    {
+      "name": "no plan waits",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": null,
+        "due_time": "02:30",
+        "reminder_specs": []
+      },
+      "events": []
+    },
+    {
+      "name": "first disabled duplicate suppresses later row",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": 0,
+            "channels": [
+              "local"
+            ],
+            "enabled": false
+          },
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": 0,
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          }
+        ]
+      },
+      "events": []
+    },
+    {
+      "name": "unsupported row does not hide valid ID",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 2,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": 0,
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          },
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": 0,
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          }
+        ]
+      },
+      "events": [
+        {
+          "spec": "11111111-1111-4111-8111-111111111111",
+          "instant": "2026-10-25T00:30:00Z",
+          "signature": "r3:2ac2ed936c88c1cac660b06319f911f0f577fa45dd50e2a2b699598afda47fd4"
+        }
+      ]
+    },
+    {
+      "name": "push only remote projection",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": 0,
+            "channels": [
+              "push"
+            ],
+            "enabled": true
+          }
+        ]
+      },
+      "events": [
+        {
+          "spec": "11111111-1111-4111-8111-111111111111",
+          "instant": "2026-10-25T00:30:00Z",
+          "signature": "r3:1deaaece6d02cfe5573735dd91d660a623c089f556098bb4329c58f8c211cd81"
+        }
+      ]
+    },
+    {
+      "name": "email is not a device alert",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": 0,
+            "channels": [
+              "email"
+            ],
+            "enabled": true
+          }
+        ]
+      },
+      "events": []
+    },
+    {
+      "name": "row bound includes unsupported rows",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 2
+          },
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": 0,
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          }
+        ]
+      },
+      "events": []
+    },
+    {
+      "name": "reserved planned identity requires zero relative offset",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "00000000-0000-4000-8000-000000000001",
+            "kind": "absolute",
+            "at": "2026-10-25T00:30:00Z",
+            "time_zone": "Europe/Copenhagen",
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          }
+        ]
+      },
+      "events": []
+    },
+    {
+      "name": "skipped local date cannot invent a reminder",
+      "zone": "Pacific/Apia",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2011-12-30",
+        "due_time": null,
+        "reminder_specs": []
+      },
+      "events": []
+    },
+    {
+      "name": "absolute parser truncates submillisecond precision",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": null,
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "absolute",
+            "at": "2026-10-25T00:30:00.999999Z",
+            "time_zone": "Europe/Copenhagen",
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          }
+        ]
+      },
+      "events": [
+        {
+          "spec": "11111111-1111-4111-8111-111111111111",
+          "instant": "2026-10-25T00:30:00.999Z",
+          "signature": "r3:64c76c377461c314cb00f52c14012fe2cc87b8163986c06d168eae1c5dfd8270"
+        }
+      ]
+    },
+    {
+      "name": "saved fold truncates submillisecond precision",
+      "zone": "Europe/Copenhagen",
+      "task": {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "completed": false,
+        "due_date": "2026-10-25",
+        "due_time": "02:30",
+        "reminder_specs": [
+          {
+            "version": 1,
+            "id": "11111111-1111-4111-8111-111111111111",
+            "kind": "relative",
+            "anchor": "planned",
+            "offset_minutes": -30,
+            "channels": [
+              "local"
+            ],
+            "enabled": true
+          }
+        ],
+        "time_zone": "Europe/Copenhagen",
+        "scheduled_at": "2026-10-25T01:30:00.999999Z"
+      },
+      "events": [
+        {
+          "spec": "11111111-1111-4111-8111-111111111111",
+          "instant": "2026-10-25T01:00:00.999Z",
+          "signature": "r3:70737d0729b0205f43f41feb808925ddb38b64dae6cd49dd2ae281974246ccd8"
+        }
+      ]
+    }
+  ]
+}

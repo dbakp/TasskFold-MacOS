@@ -1097,3 +1097,14 @@ extension TaskfoldMacUITests {
         app.buttons["endReminderRouteFixture"].click()
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testEarlierReminderSignatureOpensCurrentEditor() throws {
+        let app=XCUIApplication(); app.launchArguments=["--uitesting","--reminder-route-testing","--widget-action-testing"]; app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["openLegacyReminderRoute"].waitForExistence(timeout:10)); app.buttons["openLegacyReminderRoute"].click()
+        let title=app.descendants(matching:.any)["taskTitle"].firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout:5)); XCTAssertEqual(title.value as? String,"Reminder route check")
+        app.buttons["endReminderRouteFixture"].click()
+    }
+}

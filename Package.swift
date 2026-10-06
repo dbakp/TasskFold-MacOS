@@ -20,6 +20,6 @@ let package = Package(
             sources: ["TaskfoldWidgets.swift"],
             swiftSettings: [.define("WIDGET_MODEL_TESTING")]
         ),
-        .testTarget(name: "TaskfoldCoreTests", dependencies: ["TaskfoldCore", "WidgetModel"], path: "TaskfoldTests")
+        .testTarget(name: "TaskfoldCoreTests", dependencies: ["TaskfoldCore", "WidgetModel"], path: "TaskfoldTests", resources: [.copy("Fixtures")])
     ]
 )

@@ -257,3 +257,86 @@ extension ReminderTests {
         XCTAssertFalse(route.matches(account:"owner",generation:generation,events:[]))
     }
 }
+
+
+extension ReminderTests {
+    func testSharedWorkerProjectionVectorsMatchNativeCalendarAndCanonicalSignatures() throws {
+        let url=try XCTUnwrap(Bundle.module.url(forResource:"reminder-events",withExtension:"json",subdirectory:"Fixtures"))
+        let fixture=try JSONDecoder().decode(JSON.self,from:Data(contentsOf:url))
+        for item in fixture.object["cases"]?.list ?? [] {
+            let c=item.object; let name=c["name"]?.text ?? ""; var calendar=Calendar(identifier:.gregorian)
+            calendar.timeZone=try XCTUnwrap(TimeZone(identifier:c["zone"]?.text ?? ""))
+            let task=Record(c["task"]?.object ?? [:]), expected=c["events"]?.list ?? []
+            let actual=DueReminder.events(tasks:[task],calendar:calendar,channels:["local","push"])
+            XCTAssertEqual(actual.count,expected.count,name)
+            for (event,row) in zip(actual,expected) {
+                XCTAssertEqual(event.specID,row.object["spec"]?.text,name)
+                XCTAssertEqual(event.date.timeIntervalSince1970,try XCTUnwrap(TaskPlanning.instant(row.object["instant"]?.text ?? "")).timeIntervalSince1970,accuracy:0.0001,name)
+                XCTAssertEqual(event.signature,row.object["signature"]?.text,name)
+            }
+            if name == "push only remote projection" { XCTAssertTrue(DueReminder.events(tasks:[task],calendar:calendar).isEmpty) }
+        }
+    }
+    func testSemanticSignatureIgnoresJSONSpellingButRetainsScheduleChannelsAndCycle() {
+        let at=TaskPlanning.instant("2026-10-25T00:30:00Z")!
+        var spec=ReminderSpec.relative(0), row=task(); let base=ReminderSignature.make(task:row,spec:spec,date:at)
+        spec.raw["extra"] = .object(["future":.string("Keep intact")]); spec.raw["at"] = .string("2027-01-01T00:00:00Z")
+        XCTAssertEqual(ReminderSignature.make(task:row,spec:spec,date:at),base)
+        spec.raw["channels"] = .array([.string("local"),.string("push")]); XCTAssertNotEqual(ReminderSignature.make(task:row,spec:spec,date:at),base)
+        let channelSignature=ReminderSignature.make(task:row,spec:spec,date:at)
+        spec.raw["channels"] = .array([.string("push"),.string("local")]); XCTAssertEqual(ReminderSignature.make(task:row,spec:spec,date:at),channelSignature)
+        row["completion_version"] = .number(2); XCTAssertNotEqual(ReminderSignature.make(task:row,spec:spec,date:at),channelSignature)
+        let changed=ReminderSignature.make(task:row,spec:spec,date:at)
+        XCTAssertNotEqual(ReminderSignature.make(task:row,spec:spec,date:at.addingTimeInterval(1)),changed)
+    }
+}
+
+
+extension ReminderTests {
+    func testHalfHourDSTReminderShortcutsKeepTheRequestedDay() throws {
+        var calendar=Calendar(identifier:.gregorian); calendar.timeZone=TimeZone(identifier:"Australia/Lord_Howe")!
+        let now=try XCTUnwrap(TaskPlanning.instant("2026-10-03T14:00:00Z")), expected=try XCTUnwrap(TaskPlanning.instant("2026-10-03T15:30:00Z"))
+        for text in ["today 2:15am","2026-10-04 2:15am","sun 2:15am","2:15am"] {
+            let entry=QuickEntry("Check !"+text,now:now,calendar:calendar)
+            let spec=try XCTUnwrap(entry.updates["reminder_specs"]?.list.compactMap(ReminderSpec.init(row:)).first { $0.kind == "absolute" },text)
+            XCTAssertEqual(spec.absolute,expected,text)
+        }
+    }
+}
+
+
+extension ReminderTests {
+    func testLegacySignaturesAcceptOnlyUnchangedCurrentScheduleAndCompletionCycle() throws {
+        var row=task(); let event=try XCTUnwrap(DueReminder.events(tasks:[row],calendar:calendar).first)
+        let old=try XCTUnwrap(event.legacySignature); XCTAssertTrue(event.hasSignature(old)); XCTAssertFalse(event.hasSignature("arbitrary"))
+        var decoded=event; decoded.signature=old; decoded.legacySignature=nil
+        let request=ReminderRequest.make(account:"owner",event:decoded)
+        XCTAssertTrue(request.valid(account:"owner",events:[event])); XCTAssertFalse(request.valid(account:"other",events:[event]))
+        row["completion_version"] = .number(2)
+        XCTAssertFalse(request.valid(account:"owner",events:DueReminder.events(tasks:[row],calendar:calendar)))
+        row["completion_version"] = .number(0); row["due_time"] = .string("10:00")
+        XCTAssertFalse(request.valid(account:"owner",events:DueReminder.events(tasks:[row],calendar:calendar)))
+        var same=event; same.legacySignature=nil; XCTAssertEqual(same,event)
+    }
+    func testLegacySnoozeUpgradesItsReceiptWithoutLosingTheChosenFireTime() async throws {
+        var row=task(); let current=try XCTUnwrap(DueReminder.events(tasks:[row],calendar:calendar).first)
+        var old=current; old.signature=try XCTUnwrap(current.legacySignature); old.legacySignature=nil
+        let fire=current.date.addingTimeInterval(3600), center=TestReminderCenter(), scheduler=ReminderScheduler(center:center)
+        try await center.add(ReminderRequest.make(account:"account",event:old,fireAt:fire,snoozed:true))
+        row["title"] = .string("Current title")
+        _=await scheduler.update(state(1,tasks:[row]))
+        let pending=await center.requests, snooze=try XCTUnwrap(pending.first { $0.snoozed })
+        XCTAssertEqual(snooze.fireAt,fire); XCTAssertEqual(snooze.event.signature,current.signature); XCTAssertEqual(snooze.event.title,"Current title")
+        let adds=await center.additions
+        _=await scheduler.update(state(2,tasks:[row]))
+        let laterAdds=await center.additions; XCTAssertEqual(adds,laterAdds)
+    }
+    func testWorkingHoursUseNextValidGapAndLastFoldForTheEnd() throws {
+        var c=Calendar(identifier:.gregorian); c.timeZone=TimeZone(identifier:"Australia/Lord_Howe")!
+        let day=try XCTUnwrap(Dates.parse("2026-10-04",calendar:c)), interval=try XCTUnwrap(WorkingHours(start:135,end:180,weekdays:[1]).interval(on:day,calendar:c))
+        XCTAssertEqual(interval.start,TaskPlanning.instant("2026-10-03T15:30:00Z")); XCTAssertEqual(interval.duration,30*60)
+        c.timeZone=TimeZone(identifier:"Europe/Copenhagen")!
+        let folded=try XCTUnwrap(Dates.parse("2026-10-25",calendar:c)), long=try XCTUnwrap(WorkingHours(start:135,end:165,weekdays:[1]).interval(on:folded,calendar:c))
+        XCTAssertEqual(long.duration,90*60)
+    }
+}

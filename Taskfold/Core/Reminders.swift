@@ -53,7 +53,7 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
     static func plannedDate(_ task: Record, calendar: Calendar) -> Date? {
         if !task.string("due_time").isEmpty { return TaskPlanning.start(task, calendar: calendar) }
         guard let day = Dates.parse(task.string("due_date"), calendar: calendar) else { return nil }
-        return calendar.date(bySettingHour: 8, minute: 0, second: 0, of: day)
+        return TaskPlanning.wallTime(day: day, hour: 8, minute: 0, calendar: calendar)
     }
     static func rows(_ task: Record) -> [JSON] { task["reminder_specs"].list }
     static func plannedEnabled(_ task: Record) -> Bool {
@@ -108,6 +108,26 @@ enum ReminderPreferences {
     }
 }
 
+/// Versioned semantic fields use UTF-8 byte-length framing, independent of JSON spelling,
+/// key order, number formatting and platform calendar serialization. Unknown extension fields
+/// are preserved but cannot change version-1 scheduling semantics.
+enum ReminderSignature {
+    static func milliseconds(_ date: Date) -> String { String(Int64((date.timeIntervalSince1970 * 1000).rounded())) }
+    static func legacy(task: Record, spec: ReminderSpec, date: Date) -> String {
+        let encoder=JSONEncoder(); encoder.outputFormatting=[.sortedKeys]
+        let encoded=(try? encoder.encode(JSON.object(spec.raw))).flatMap { String(data:$0,encoding:.utf8) } ?? ""
+        return DueReminder.digest(encoded+"|"+String(date.timeIntervalSince1970)+"|completion:"+String(task["completion_version"].integer))
+    }
+    static func make(task: Record, spec: ReminderSpec, date: Date) -> String {
+        let fields = ["taskfold.reminder.v3", task.id.lowercased(), spec.id, spec.kind,
+                      spec.kind == "relative" ? "planned" : "", spec.kind == "relative" ? spec.offset.map(String.init) ?? "" : "",
+                      spec.kind == "absolute" ? spec.absolute.map(milliseconds) ?? "" : "", spec.kind == "absolute" ? spec.raw["time_zone"]?.text ?? "" : "",
+                      (spec.raw["channels"]?.list ?? []).map(\.text).sorted().joined(separator: ","), "1",
+                      milliseconds(date), String(task["completion_version"].integer)]
+        return "r3:" + DueReminder.digest(fields.map { "\($0.utf8.count):\($0)" }.joined())
+    }
+}
+
 enum ReminderEventKind: String, Sendable { case task, focusFinish }
 
 struct DueReminder: Equatable, Sendable {
@@ -119,19 +139,23 @@ struct DueReminder: Equatable, Sendable {
     var taskID: String
     var specID: String
     var signature: String
+    var legacySignature: String? = nil
+    func hasSignature(_ value: String) -> Bool { signature == value || legacySignature == value }
+    static func == (a: Self, b: Self) -> Bool {
+        a.kind == b.kind && a.id == b.id && a.title == b.title && a.body == b.body && a.date == b.date &&
+        a.taskID == b.taskID && a.specID == b.specID && a.signature == b.signature
+    }
     static func digest(_ value: String) -> String { SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined() }
-    static func events(tasks: [Record], calendar: Calendar = .current) -> [DueReminder] {
+    static func events(tasks: [Record], calendar: Calendar = .current, channels: Set<String> = ["local"]) -> [DueReminder] {
         tasks.filter { !$0.completed }.flatMap { task -> [DueReminder] in
             let raw = ReminderSpec.rows(task)
             let specs = raw.isEmpty ? [ReminderSpec.relative(0, id: ReminderSpec.plannedID)] : raw.prefix(ReminderSpec.maximum).compactMap(ReminderSpec.init(row:))
             // Duplicate IDs cannot produce competing requests; retain only the first valid row.
             var seen = Set<String>()
-            return specs.filter { seen.insert($0.id).inserted && $0.enabled && $0.local }.compactMap { spec in
+            return specs.filter { seen.insert($0.id).inserted && $0.enabled && !channels.isDisjoint(with: ($0.raw["channels"]?.list ?? []).map(\.text)) }.compactMap { spec in
                 guard let date = spec.date(task: task, calendar: calendar) else { return nil }
-                let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
-                let encoded = (try? encoder.encode(JSON.object(spec.raw))).flatMap { String(data: $0, encoding: .utf8) } ?? ""
-                let signature = digest(encoded + "|" + String(date.timeIntervalSince1970) + "|completion:" + String(task["completion_version"].integer))
-                return DueReminder(id: raw.isEmpty ? task.id : task.id + "." + spec.id, title: task.title, body: task.string("description"), date: date, taskID: task.id, specID: spec.id, signature: signature)
+                let signature = ReminderSignature.make(task: task, spec: spec, date: date)
+                return DueReminder(id: raw.isEmpty ? task.id : task.id + "." + spec.id, title: task.title, body: task.string("description"), date: date, taskID: task.id, specID: spec.id, signature: signature, legacySignature: ReminderSignature.legacy(task: task, spec: spec, date: date))
             }
         }.sorted { $0.date == $1.date ? $0.id < $1.id : $0.date < $1.date }
     }
@@ -152,7 +176,7 @@ struct ReminderRequest: Equatable, Sendable {
         return Self(identifier: id + (snoozed ? ".snooze" : ""), account: account, event: event, fireAt: fireAt ?? event.date, snoozed: snoozed)
     }
     func valid(account: String, events: [DueReminder]) -> Bool {
-        self.account == account && events.contains { $0.taskID == event.taskID && $0.specID == event.specID && $0.signature == event.signature && $0.kind == event.kind }
+        self.account == account && events.contains { $0.taskID == event.taskID && $0.specID == event.specID && $0.hasSignature(event.signature) && $0.kind == event.kind }
     }
 }
 struct ReminderState: Sendable {
@@ -198,7 +222,7 @@ actor ReminderScheduler {
         return await sweep()
     }
     func snooze(account: String, taskID: String, specID: String, signature: String, now: Date = Date()) async -> ReminderReport? {
-        guard account == desired.account, let event = desired.events.first(where: { $0.kind == .task && $0.taskID == taskID && $0.specID == specID && $0.signature == signature }) else { return nil }
+        guard account == desired.account, let event = desired.events.first(where: { $0.kind == .task && $0.taskID == taskID && $0.specID == specID && $0.hasSignature(signature) }) else { return nil }
         let request = ReminderRequest.make(account: account, event: event, fireAt: now.addingTimeInterval(3600), snoozed: true)
         snoozes.removeAll { $0.identifier == request.identifier }; snoozes.append(request); sequence += 1
         return await sweep()
@@ -215,7 +239,10 @@ actor ReminderScheduler {
             let existing = await center.pending()
             guard token == sequence else { continue }
             snoozes.removeAll { !$0.valid(account: state.account, events: state.events) || $0.fireAt <= state.now }
-            let retained = existing.filter { $0.snoozed && $0.valid(account: state.account, events: state.events) && $0.fireAt > state.now }
+            let retained = existing.filter { $0.snoozed && $0.valid(account: state.account, events: state.events) && $0.fireAt > state.now }.compactMap { old -> ReminderRequest? in
+                guard let event=state.events.first(where: { $0.kind == old.event.kind && $0.taskID == old.event.taskID && $0.specID == old.event.specID && $0.hasSignature(old.event.signature) }) else { return nil }
+                return ReminderRequest.make(account:state.account,event:event,fireAt:old.fireAt,snoozed:true)
+            }
             var requests = state.account.isEmpty ? [] : state.events.filter { $0.date > state.now }.map { ReminderRequest.make(account: state.account, event: $0) }
             requests += retained.filter { old in !snoozes.contains(where: { $0.identifier == old.identifier }) }
             requests += snoozes

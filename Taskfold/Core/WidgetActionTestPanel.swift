@@ -18,6 +18,7 @@ struct WidgetActionTestPanel: View {
             VStack(spacing: 4) {
                 Text(store.reminderRouteFixtureOutcome).accessibilityIdentifier("reminderRouteOutcome")
                 Button("End fixture") { store.disableNotifications() }.accessibilityIdentifier("endReminderRouteFixture")
+                Button("Open earlier reminder") { Task { NotificationRoute.shared.taskRequest = await store.legacyReminderRouteFixtureRequest() } }.accessibilityIdentifier("openLegacyReminderRoute")
                 HStack {
                     Button("Hold reminder") { reminderRoute = store.reminderRouteFixtureRequest() }.accessibilityIdentifier("holdReminderRoute")
                     Button("Reenter workspace") { store.renewReminderRouteFixtureWorkspace() }.accessibilityIdentifier("renewReminderWorkspace")

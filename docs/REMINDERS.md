@@ -104,3 +104,10 @@ Focus uses the `taskfold.f1.` namespace and `taskfold.focus.finished` category, 
 ## Reminder routes after workspace reentry
 
 Opening a task from a validated notification now carries the original workspace generation through scene activation and checks the current reminder signature again before showing the editor. A packet held across same-account reentry is rejected, as are removed/completed/rescheduled tasks and disabled delivery. The iPhone route harness and existing system permission regression pass; killed-process/cold system routing, physical and Mac runtime acceptance remain open. See [contract and evidence](REMOTE_REMINDER_DELIVERY.md#reminder-scene-handoff).
+
+
+## Canonical worker projection and time changes
+
+Both apps and the private SQL projector now use a framed version-3 semantic reminder signature. A 27-case fixture contract covers device/task time zones, saved folds, spring gaps (including half-hour changes), absolute instants and elapsed offsets. Planned work, working hours and reminder shortcuts use the next valid minute on the same day; a nonexistent 02:15 during Lord Howe's change becomes 02:30 rather than tomorrow. Current legacy notification receipts and persisted snoozes remain scoped to their unchanged schedule/cycle, with snooze fire times preserved during upgrade.
+
+Service-only reconciliation, leased delivery jobs, retry/backoff, pre-dispatch access/signature checks and expiry/invalid-token maintenance are deployed. They are not yet scheduled or connected to providers. Restore/deletion identities and initial-enable/import/backdated catch-up rules remain delivery release gates, along with native lifecycle/opt-in/entitlements, provider integration, local/remote authority and device acceptance. See [current queue contract](REMOTE_REMINDER_DELIVERY.md#canonical-occurrences-and-private-delivery-jobs).

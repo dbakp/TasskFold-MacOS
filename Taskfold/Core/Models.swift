@@ -961,6 +961,29 @@ enum TaskPlanning {
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter.date(from: value) ?? ISO8601DateFormatter().date(from: value)
     }
+    /// Resolve a Gregorian wall minute using actual zone offsets: the first fold, or the
+    /// next valid minute on the same day. Foundation's hour-setting API can skip a whole
+    /// day for a half-hour DST gap (for example Australia/Lord_Howe at 02:15).
+    static func wallTime(day: Date, hour: Int, minute: Int, calendar input: Calendar, fold: Calendar.RepeatedTimePolicy = .first) -> Date? {
+        guard (0...23).contains(hour), (0...59).contains(minute) else { return nil }
+        var local=Calendar(identifier:.gregorian); local.timeZone=input.timeZone
+        let dayParts=local.dateComponents([.year,.month,.day],from:day)
+        var utc=Calendar(identifier:.gregorian); utc.timeZone=TimeZone(secondsFromGMT:0)!
+        var parts=dayParts; parts.hour=hour; parts.minute=minute; parts.second=0
+        guard let nominal=utc.date(from:parts) else { return nil }
+        let offsets=Set(stride(from:-36,through:36,by:6).map { input.timeZone.secondsFromGMT(for:nominal.addingTimeInterval(Double($0)*3600)) })
+        for shift in 0..<1440 {
+            let requested=nominal.addingTimeInterval(Double(shift)*60)
+            guard utc.dateComponents([.year,.month,.day],from:requested)==dayParts else { return nil }
+            let wanted=utc.dateComponents([.year,.month,.day,.hour,.minute,.second],from:requested)
+            let valid=offsets.compactMap { offset -> Date? in
+                let candidate=requested.addingTimeInterval(-Double(offset))
+                return local.dateComponents([.year,.month,.day,.hour,.minute,.second],from:candidate)==wanted ? candidate:nil
+            }
+            if let chosen=fold == .last ? valid.max() : valid.min() { return chosen }
+        }
+        return nil
+    }
     static func start(_ task: Record, calendar: Calendar = .current) -> Date? {
         var sourceCalendar = calendar
         let zone = task.string("time_zone")
@@ -977,7 +1000,7 @@ enum TaskPlanning {
             let time = sourceCalendar.dateComponents([.hour, .minute], from: saved)
             if a == b && time.hour == pieces[0] && time.minute == pieces[1] { return saved }
         }
-        return sourceCalendar.date(bySettingHour: pieces[0], minute: pieces[1], second: 0, of: day)
+        return wallTime(day: day, hour: pieces[0], minute: pieces[1], calendar: sourceCalendar)
     }
     static func fields(_ fields: [String: JSON], existing: Record?, calendar: Calendar = .current) -> [String: JSON] {
         guard !keys.isDisjoint(with: fields.keys) else { return fields }
@@ -1227,17 +1250,24 @@ private enum QuickReminderText {
             hour = am || pm ? h % 12 + (pm ? 12 : 0) : h; minute = m
         }
         var date: Date?
-        let components = DateComponents(hour: hour, minute: minute, second: 0)
         if dayText.isEmpty {
-            date = calendar.nextDate(after: now, matching: components, matchingPolicy: .nextTime, repeatedTimePolicy: .first)
+            date = TaskPlanning.wallTime(day: now, hour: hour, minute: minute, calendar: calendar)
+            if let current=date, current<=now, let tomorrow=calendar.date(byAdding:.day,value:1,to:now) {
+                date = TaskPlanning.wallTime(day: tomorrow, hour: hour, minute: minute, calendar: calendar)
+            }
         } else if dayText == "today" || dayText == "tomorrow" || dayText == "tmr" {
             let day = calendar.date(byAdding: .day, value: dayText == "today" ? 0 : 1, to: now)!
-            date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day)
+            date = TaskPlanning.wallTime(day: day, hour: hour, minute: minute, calendar: calendar)
         } else if let weekday = ["sun": 1, "mon": 2, "tue": 3, "wed": 4, "thu": 5, "fri": 6, "sat": 7][String(dayText.prefix(3))] {
-            var parts = components; parts.weekday = weekday
-            date = calendar.nextDate(after: now, matching: parts, matchingPolicy: .nextTime, repeatedTimePolicy: .first)
+            let delta=(weekday-calendar.component(.weekday,from:now)+7)%7
+            if let day=calendar.date(byAdding:.day,value:delta,to:now) {
+                date = TaskPlanning.wallTime(day: day, hour: hour, minute: minute, calendar: calendar)
+                if let current=date, current<=now, let next=calendar.date(byAdding:.day,value:7,to:day) {
+                    date = TaskPlanning.wallTime(day: next, hour: hour, minute: minute, calendar: calendar)
+                }
+            }
         } else if let day = Dates.parse(dayText, calendar: calendar) {
-            date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day)
+            date = TaskPlanning.wallTime(day: day, hour: hour, minute: minute, calendar: calendar)
         }
         guard let date, date > now else { return nil }
         return .absolute(date, id: id, zone: calendar.timeZone.identifier)

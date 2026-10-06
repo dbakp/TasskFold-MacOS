@@ -781,7 +781,7 @@ final class Store {
         guard remindersEnabled, let account = info["accountID"] as? String, account == userID,
               let task = info["taskID"] as? String, let spec = info["specID"] as? String,
               let signature = info["signature"] as? String else { return nil }
-        return DueReminder.events(tasks: tasks).first { $0.taskID == task && $0.specID == spec && $0.signature == signature }
+        return DueReminder.events(tasks: tasks).first { $0.taskID == task && $0.specID == spec && $0.hasSignature(signature) }
     }
     func reminderTask(for route: ReminderTaskRoute) -> Record? {
         let valid = workspaceCacheReadable && (signedIn || localMode) && remindersEnabled &&
@@ -848,6 +848,11 @@ extension Store {
     func renewReminderRouteFixtureWorkspace() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing") else { return }
         accountGeneration = UUID()
+    }
+    func legacyReminderRouteFixtureRequest() async -> ReminderTaskRoute? {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing"),
+              let event=DueReminder.events(tasks:tasks).first, let old=event.legacySignature else { return nil }
+        return await handleReminder(["accountID":userID,"taskID":event.taskID,"specID":event.specID,"signature":old],action:UNNotificationDefaultActionIdentifier)
     }
     func reminderRouteFixtureRequest() -> ReminderTaskRoute? {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing"), let event = DueReminder.events(tasks: tasks).first else { return nil }

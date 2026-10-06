@@ -217,3 +217,6 @@ Each instance chooses its project, appearance and whether project/task names are
 
 
 Reminder routes retain their original workspace generation through scene presentation. A private remote-device registration foundation is also available to native code; automatic registration and remote delivery remain unfinished. See [delivery contract and acceptance](docs/REMOTE_REMINDER_DELIVERY.md).
+
+
+Planned work and reminder shortcuts now handle half-hour clock gaps on the requested day. Existing reminder receipts and snoozes preserve their current schedule through the signature upgrade. Canonical private delivery-job APIs are implemented; remote delivery and restore/catch-up release gates remain open. See [contract](docs/REMOTE_REMINDER_DELIVERY.md#canonical-occurrences-and-private-delivery-jobs).

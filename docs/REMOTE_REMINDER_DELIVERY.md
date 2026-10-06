@@ -1,6 +1,6 @@
 # Remote reminder registration foundation
 
-Native reminder delivery currently uses local notifications. The private device registry and native transport contract below are implemented, but the apps do not yet register automatically or offer remote delivery. An enabled registry receipt alone cannot establish a working provider or notification pipeline. The complete [remote delivery plan](REMINDERS.md#remote-delivery-implementation-plan) remains required.
+Native reminder delivery currently uses local notifications. The private device registry, native transport, canonical projection and service job APIs below are implemented, but the apps do not yet register automatically or offer remote delivery. An enabled registry receipt alone cannot establish a working provider or notification pipeline. The complete [remote delivery plan](REMINDERS.md#remote-delivery-implementation-plan) remains required.
 
 ## Ownership and API
 
@@ -52,4 +52,39 @@ The two iPhone route walks inject held validated packets through an isolated Deb
 
 Security/performance advisors were inspected. The reminder table's initial no-policy finding was resolved by the explicit deny policy migration. Its unused expiry index is intentional preparation for lease scanning on the currently empty registry. Existing unrelated findings remain; this is not a project-wide security audit.
 
-Remaining delivery work includes native callback/coordinator/opt-in/status and sign-out integration; expiry/token/reinstall recovery; canonical occurrence/signature projection; leased jobs/retries/access revalidation; APNs/email provider configuration and delivery; local/remote authority and deduplication; staged rollout/operations; and paired/offline, cold/closed-app, physical iPhone and signed Mac acceptance. No complete remote-delivery claim is made at this checkpoint.
+Remaining delivery work includes native callback/coordinator/opt-in/status and sign-out integration; expiry/token/reinstall recovery; scheduled worker invocation and provider integration; APNs/email configuration and delivery; local/remote authority and deduplication; staged rollout/operations; and paired/offline, cold/closed-app, physical iPhone and signed Mac acceptance. No complete remote-delivery claim is made at this checkpoint.
+
+
+## Canonical occurrences and private delivery jobs
+
+The deployed `20261006120049_remote_reminder_jobs.sql` and `20261006120520_reminder_queue_session_privacy.sql` migrations add the service-only occurrence projection and job queue. These routines are not yet scheduled or connected to an APNs provider. No native remote delivery setting is enabled by this work.
+
+Both native cores and the SQL projector use the `r3:` SHA-256 signature. Its ordered semantic fields are version namespace, lowercased task/spec IDs, kind, planned anchor/offset or absolute instant/time zone, sorted channels, enabled state, fire instant and completion revision. Each field uses UTF-8 byte-length framing (`length:value`); instants use integral epoch milliseconds. Version-1 extension fields remain preserved but do not alter its scheduling semantics. Native scheduling continues to select local channels by default; the remote projection selects local/push specifications, excluding email-only and unsupported rows. A first valid duplicate ID wins even if disabled, and all raw rows count toward the 20-setting bound.
+
+Date-only plans use 8 AM in the registered device's zone; floating timed plans use that zone, while a task's explicit zone and a matching saved instant retain the chosen fold. Absolute instants remain fixed; offsets use elapsed minutes. A repeated wall time chooses its first occurrence unless the saved instant explicitly chooses the second. A gap uses the next valid minute on the same local day. The native planned-time and reminder-shortcut resolvers now correct Foundation's next-day behavior in Lord Howe's half-hour DST gap. [PostgreSQL's default ambiguity rules](https://www.postgresql.org/docs/current/datetime-invalid-input.html) differ; the projector therefore enumerates actual adjacent offsets rather than relying on the default conversion.
+
+Reconciliation selects each registered account's own accessible open tasks. Project access is checked even for the task creator. Reminder recipients for other collaborators remain a separate unimplemented choice; a shared task does not automatically notify every member. A seven-day future window and one-hour catch-up window bound lateness, not the number of owned tasks. Repeated reconciliation produces the same logical job ID for account/device/task/spec/signature. Sent events are not requeued. A cancelled future event can resume after a device revision update; a past cancelled event is not resurrected after opting back in. A genuine reschedule or complete/reopen cycle has a new signature.
+
+The private job table stores only IDs, signatures, times, binding revision, lease/retry state and bounded outcome codes. It has RLS, an explicit client deny policy, no anonymous/authenticated table grants, and indexes for due work and each foreign key. Auth-session rows remain private: a private service-only definer helper returns a live-session boolean without granting service-role SELECT on the Auth session table. Public worker RPCs use invoker security and have service-role-only execution grants.
+
+| Worker RPC | Behavior |
+| --- | --- |
+| `taskfold_reminder_device_page` | Keyset-paged enabled device IDs, bounded to 100. No addresses or capabilities. |
+| `taskfold_reconcile_reminder_jobs` | Reconcile one device's currently eligible owner occurrences and cancel obsolete work. |
+| `taskfold_claim_reminder_jobs` | Claim up to 100 due jobs with `FOR UPDATE SKIP LOCKED`, fresh UUID lease nonces, two-minute leases and at most eight attempts. |
+| `taskfold_prepare_reminder_job` | Immediately recheck task/access/signature, current device revision/permission/expiry and Auth session before returning the current provider address/content. Wrong, expired or obsolete leases return no payload. |
+| `taskfold_finish_reminder_job` | Accept only the current lease's bounded outcome: accepted, transient, permanent or invalid token. Retry transient outcomes with exponential backoff; terminal outcomes cannot be reclaimed. Invalid tokens retire the current binding. |
+| `taskfold_maintain_reminder_queue` | Retire expired/session-invalid bindings and delete terminal jobs older than eight days, with bounded batches and retained installation tombstones. |
+
+Task mutations, device updates and collaborator access changes immediately invalidate obsolete pending/leased jobs. Task/account deletion cascades remove their queued work. Claims and pre-dispatch preparation also revalidate independently. Reconciliation and preparation use consistent device-before-job locking where both are locked. Lease expiry/retry uses a new nonce so a late outcome cannot acknowledge a replacement attempt.
+
+Stable provider UUID and collapse IDs accompany the prepared payload. They are inputs for the future provider adapter, not a proof of exactly-once delivery: a provider acceptance followed by a lost acknowledgement remains ambiguous. Local/remote authority, reconnect reconciliation, actual provider idempotency behavior and OS display/action deduplication must be verified before rollout. Accepted provider alerts cannot be recalled by a later task edit; the apps must also validate notification actions against current state.
+
+Verification uses 27 owned native/SQL fixtures covering folds, a saved second fold, full-hour and half-hour gaps, travel, date-only plans, absolute instants, offsets, completion cycles, malformed/unsupported rows, channel selection, duplicates, row bounds and a skipped local date. Rolled-back service/client SQL tests cover reconciliation, payload privacy, lease/retry/restart fencing, accepted-event non-replay, task completion/reopen, opt-out, revoked creator access, retry exhaustion, invalid tokens, expiry maintenance and grants. Two genuinely concurrent database transactions competed for one disposable job: one claimed it, the other claimed zero, and the resulting attempt count was one. Cleanup verified zero fixture users, registry rows and jobs. No provider request was made.
+
+
+### Native signature upgrade and release gates
+
+The native scheduler bridges exact prior signatures for the currently accessible task/spec/instant/completion revision. It does not accept arbitrary earlier hashes. Standard pending requests refresh in place; snoozes retain their selected fire instant while replacing the receipt and task text. A title edit or retained opaque extension does not change v3 scheduling semantics. Both route validation and scene incarnation checks remain required. The registered raw specifications and existing `taskfold.r2.` OS request identifiers remain unchanged.
+
+A restore/deletion identity gate remains: backups can reuse task IDs and server INSERT currently resets completion revision to zero. A stateless SQL counterexample confirms that the recreated record can recover its pre-cycle signature. Task deletion currently cascades its queued/sent records, so accepted-event history does not survive that ID reuse. A durable incarnation/revision floor and restore-aware native validation, together with accepted-event history policy, must be implemented and verified before remote provider rollout. Initial opt-in and import/backdated-edit catch-up eligibility also require explicit rules; a generic one-hour window alone is not sufficient. These are remaining requirements, not completed restore/background acceptance.

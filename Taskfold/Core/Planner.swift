@@ -15,8 +15,8 @@ struct WorkingHours: Equatable, Sendable {
     }
     func interval(on day: Date, calendar: Calendar = .current) -> DateInterval? {
         guard start >= 0, end <= 1440, start < end, weekdays.contains(calendar.component(.weekday, from: day)), let bounds = calendar.dateInterval(of: .day, for: day),
-              let start = calendar.date(bySettingHour: start / 60, minute: start % 60, second: 0, of: bounds.start, matchingPolicy: .nextTime, repeatedTimePolicy: .first, direction: .forward) else { return nil }
-        let end = self.end == 1440 ? bounds.end : calendar.date(bySettingHour: end / 60, minute: end % 60, second: 0, of: bounds.start, matchingPolicy: .nextTime, repeatedTimePolicy: .last, direction: .forward)
+              let start = TaskPlanning.wallTime(day: bounds.start, hour: start / 60, minute: start % 60, calendar: calendar) else { return nil }
+        let end = self.end == 1440 ? bounds.end : TaskPlanning.wallTime(day: bounds.start, hour: end / 60, minute: end % 60, calendar: calendar, fold: .last)
         guard let end, end > start else { return nil }
         return DateInterval(start: start, end: end)
     }
