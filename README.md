@@ -137,3 +137,7 @@ Selected project/label/filter scopes and direct completion are still planned. So
 ## Backups and restore
 
 Versioned JSON export, validated restore previews, both matching policies, encrypted manual/daily recovery copies and 20-copy retention are implemented locally in this app. See [backup behavior and verification scope](docs/BACKUPS.md). Private recovery files stay on their device; portable exports work across the native apps.
+
+## Reviewed sync edits
+
+Both native clients use guarded task edits and review overlapping changes before continuing. Later offline work remains queued; older edits without a baseline require review. See [sync review behavior and verification](docs/SYNC_CONFLICTS.md).

@@ -165,6 +165,36 @@ struct SyncConflict: Identifiable {
     var mutation: Mutation
     var remote: Record
     var id: UUID { mutation.id }
+
+    /// Resolve only the edit that was reviewed, then replay later offline work.
+    /// Returning nil leaves stale or mismatched review requests untouched.
+    func resolving(_ snapshot: Snapshot, keepLocal: Bool) -> Snapshot? {
+        guard mutation.table == "tasks", mutation.method == "PATCH",
+              remote.id.lowercased() == mutation.recordID.lowercased(),
+              let index = snapshot.pending.firstIndex(where: { $0 == mutation }) else { return nil }
+        var result = snapshot
+        if keepLocal {
+            result.pending[index].fields = Dictionary(uniqueKeysWithValues: mutation.fields.map { key, value in
+                (key, mutation.baseline?[key].map { TaskEdit.keepingLocal(base: $0, desired: value, remote: remote[key]) } ?? value)
+            })
+            result.pending[index].baseline = Dictionary(uniqueKeysWithValues: mutation.fields.keys.map { ($0, remote[$0]) })
+        } else { result.pending.remove(at: index) }
+        // PostgreSQL spells UUIDs in lowercase. Retain one cache identity while
+        // replaying a pre-upgrade queue that may use a different UUID spelling.
+        result.tables["tasks"] = (result.tables["tasks"] ?? []).map { value in
+            var row = value
+            if row.id.lowercased() == mutation.recordID.lowercased() { row["id"] = .string(mutation.recordID) }
+            return row
+        }
+        var remoteFields = remote.fields; remoteFields["id"] = .string(mutation.recordID)
+        result.apply(Mutation(table: "tasks", recordID: mutation.recordID, method: "PATCH", fields: remoteFields))
+        for change in result.pending where change.table == "tasks" && change.recordID.lowercased() == mutation.recordID.lowercased() {
+            var local = change; local.recordID = mutation.recordID
+            if local.fields["id"] != nil { local.fields["id"] = .string(mutation.recordID) }
+            result.apply(local)
+        }
+        return result
+    }
 }
 
 struct Snapshot: Codable, Equatable, Sendable {

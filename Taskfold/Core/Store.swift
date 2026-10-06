@@ -430,9 +430,11 @@ final class Store {
     func sync() async {
         guard signedIn, !localMode, online, !syncing, syncConflict == nil else { return }
         syncing = true; let generation = accountGeneration
+        var sending: Mutation?
         defer { syncing = false }
         do {
             while let mutation = snapshot.pending.first {
+                sending = mutation
                 try await backend.send(mutation)
                 guard generation == accountGeneration else { return }
                 snapshot.pending.removeAll { $0.id == mutation.id }; try persist()
@@ -453,12 +455,15 @@ final class Store {
         } catch {
             if generation == accountGeneration {
                 notice = "Sync paused: \(error.localizedDescription)"
-                if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation = snapshot.pending.first,
-                   let data = try? await backend.request("/rest/v1/tasks?id=eq.\(mutation.recordID)&select=*"),
+                if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation = sending,
+                   mutation.table == "tasks", mutation.method == "PATCH",
+                   let escaped = mutation.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics),
+                   let data = try? await backend.request("/rest/v1/tasks?id=eq.\(escaped)&select=*"),
                    let remote = try? JSONDecoder().decode([Record].self, from: data).first,
-                   generation == accountGeneration {
+                   generation == accountGeneration, snapshot.pending.contains(mutation),
+                   remote.id.lowercased() == mutation.recordID.lowercased() {
                     syncConflict = SyncConflict(mutation: mutation, remote: remote)
-                    notice = "Two people changed the same task. Review the conflicting edit to resume sync."
+                    notice = "Changes overlap on the same task. Review this edit to resume sync."
                 }
             }
             return
@@ -501,22 +506,18 @@ final class Store {
         #endif
     }
     /// Resolution is persisted before resuming. A second simultaneous edit can still conflict safely.
-    func resolveConflict(keepLocal: Bool) {
-        guard let conflict = syncConflict, let index = snapshot.pending.firstIndex(where: { $0.id == conflict.id }) else { return }
+    @discardableResult func resolveConflict(id: UUID, keepLocal: Bool) -> Bool {
+        guard let conflict = syncConflict, conflict.id == id,
+              let next = conflict.resolving(snapshot, keepLocal: keepLocal) else {
+            error = "This edit is no longer waiting for review. Reopen the current sync review."
+            return false
+        }
         let old = snapshot
-        if keepLocal {
-            let change = conflict.mutation
-            snapshot.pending[index].fields = Dictionary(uniqueKeysWithValues: change.fields.map { key, value in
-                (key, TaskEdit.keepingLocal(base: change.baseline?[key] ?? .null, desired: value, remote: conflict.remote[key]))
-            })
-            snapshot.pending[index].baseline = Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, conflict.remote[$0]) })
-        } else { snapshot.pending.remove(at: index) }
-        // Replace this task, then replay subsequent offline work so resolving never drops later edits.
-        snapshot.apply(Mutation(table: "tasks", recordID: conflict.remote.id, method: "PATCH", fields: conflict.remote.fields))
-        for change in snapshot.pending where change.table == "tasks" && change.recordID == conflict.remote.id { snapshot.apply(change) }
-        do { try persist() } catch { snapshot = old; self.error = error.localizedDescription; return }
+        snapshot = next
+        do { try persist() } catch { snapshot = old; self.error = error.localizedDescription; return false }
         undoStack = []; redoStack = []; syncConflict = nil; notice = nil
         Task { await sync() }
+        return true
     }
 
     func enableNotifications() async {

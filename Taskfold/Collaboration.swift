@@ -115,44 +115,93 @@ struct AssigneeMenu: View {
 
 }
 
+/// A review is tied to one queued mutation; Later leaves synchronization paused.
 struct ConflictReview: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     let conflict: SyncConflict
+    @State private var message: String?
+    private var current: Bool { store.syncConflict?.id == conflict.id && store.snapshot.pending.contains(conflict.mutation) }
     private var keys: [String] { conflict.mutation.fields.keys.sorted() }
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Text("Review conflicting edit").font(.title2.weight(.semibold))
-            Text(conflict.remote.title).font(.headline)
-            Text("Your edit is saved on this Mac. Choose which version to use for this edit; changes to other fields and items will be kept.").foregroundStyle(.secondary)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    ForEach(keys, id: \.self) { key in
+        NavigationStack {
+            Form {
+                Section {
+                    Label("Your work is saved", systemImage: "checkmark.icloud").font(.headline).foregroundStyle(Color.taskfold)
+                    Text(conflict.remote.title).font(.headline)
+                    Text("Changes from another device overlap with this edit. Compare the values below, then choose how to continue.").foregroundStyle(.secondary)
+                }
+                ForEach(keys, id: \.self) { key in
+                    Section(fieldName(key)) {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(key.replacingOccurrences(of: "_", with: " ").capitalized).font(.headline)
-                            LabeledContent("On this Mac") { Text(summary(conflict.mutation.fields[key] ?? .null)).textSelection(.enabled) }
-                            LabeledContent("Shared version") { Text(summary(conflict.remote[key])).textSelection(.enabled) }
+                            Text("My edit").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                            Text(summary(conflict.mutation.fields[key] ?? .null, key: key)).textSelection(.enabled)
+                        }
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Synced version").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                            Text(summary(conflict.remote[key], key: key)).textSelection(.enabled)
                         }
                     }
                 }
-            }.frame(maxHeight: 300)
-            HStack {
-                Button("Later") { dismiss() }.keyboardShortcut(.cancelAction)
-                Spacer()
-                Button("Use Shared Edit") { store.resolveConflict(keepLocal: false); dismiss() }.accessibilityIdentifier("useSharedEdit")
-                Button("Keep My Edit") { store.resolveConflict(keepLocal: true); dismiss() }.keyboardShortcut(.defaultAction).accessibilityIdentifier("keepMyEdit")
+                Section {
+                    if conflict.mutation.fields.keys.contains(where: { conflict.mutation.baseline?[$0] == nil }) {
+                        Text("This edit came from an older app version. Keep my edit uses the values shown above, including any comments or subtasks in this edit. Use synced version keeps the current synced values. Later offline edits and other tasks are kept.").font(.callout).foregroundStyle(.secondary)
+                    } else {
+                        Text("Keep my edit applies your changes and retains independent comments and subtask edits. Use synced version discards this queued edit. Later offline edits and other tasks are kept with either choice.").font(.callout).foregroundStyle(.secondary)
+                    }
+                    if !current { Text("This edit is no longer waiting for review. Close this screen and reopen the current review.").foregroundStyle(.secondary) }
+                }
+            }.formStyle(.grouped)
+            .navigationTitle("Review sync edit")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button { dismiss() } label: { Text("Later").frame(minHeight: 44) }.accessibilityIdentifier("conflictClose") } }
+            .safeAreaInset(edge: .bottom) {
+                VStack(spacing: 10) {
+                    Divider()
+                    Button("Keep my edit") { resolve(keepLocal: true) }
+                        .buttonStyle(.borderedProminent).accessibilityIdentifier("keepMyEdit")
+                    Button("Use synced version") { resolve(keepLocal: false) }
+                        .buttonStyle(.bordered).accessibilityIdentifier("useSharedEdit")
+                    Button { dismiss() } label: { Text("Later").frame(minHeight: 44) }
+                        .buttonStyle(.plain).accessibilityIdentifier("conflictLater")
+                        .keyboardShortcut(.cancelAction)
+                }.controlSize(.large).padding([.horizontal, .bottom]).frame(maxWidth: .infinity)
+                    .background(.regularMaterial).disabled(!current)
             }
-        }.padding(24).frame(width: 560)
+            .alert("Review could not finish", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+                Button("OK") { message = nil }
+            } message: { Text(message ?? "") }
+        }
+        #if os(macOS)
+        .frame(width: 620, height: 680)
+        #endif
+        .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
     }
-    private func summary(_ value: JSON) -> String {
+    private func resolve(keepLocal: Bool) {
+        if store.resolveConflict(id: conflict.id, keepLocal: keepLocal) { dismiss() }
+        else { message = store.error ?? "Reopen the current sync review."; store.error = nil }
+    }
+    private func fieldName(_ key: String) -> String {
+        ["title":"Task title", "description":"Notes", "due_date":"Planned date", "due_time":"Planned time", "deadline_date":"Deadline", "duration_minutes":"Estimate", "project_id":"Project", "section_id":"Section", "assigned_to":"Assigned to", "subtasks":"Subtasks", "comments":"Comments", "scheduled_at":"Scheduled instant", "time_zone":"Time zone", "recurrence_pattern":"Repeat rule", "reminder_specs":"Reminders", "completed":"Completed", "priority":"Priority", "labels":"Labels"][key] ?? key.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+    private func summary(_ value: JSON, key: String = "") -> String {
+        if value == .null { return "None" }
+        if key == "duration_minutes", case .number(let minutes) = value { return "\(Int(minutes)) minutes" }
+        if key == "priority", case .number(let number) = value { return "P\(Int(number))" }
+        if let table = ["project_id":"projects", "section_id":"sections", "labels":"labels"][key] {
+            if case .array(let items) = value { return items.isEmpty ? "No labels" : items.map { store.record(table, id: $0.text)?.name ?? $0.text }.joined(separator: ", ") }
+            return store.record(table, id: value.text)?.name ?? "Unavailable \(key == "project_id" ? "project" : "section")"
+        }
         switch value {
         case .null: return "None"
         case .string(let text): return text.isEmpty ? "Empty" : text
         case .bool(let flag): return flag ? "Yes" : "No"
         case .number(let number): return String(format: "%g", number)
-        case .array(let items): return items.isEmpty ? "No items" : items.map(summary).joined(separator: "\n")
+        case .array(let items): return items.isEmpty ? "No items" : items.map { summary($0) }.joined(separator: "\n\n")
         case .object(let fields):
-            return fields.keys.sorted().filter { !["id", "authorId", "data"].contains($0) }.map { "\($0): \(summary(fields[$0]!))" }.joined(separator: " · ")
+            return fields.keys.sorted().filter { !["id", "authorId", "data"].contains($0) }.map { "\(fieldName($0)): \(summary(fields[$0]!))" }.joined(separator: " · ")
         }
     }
 }

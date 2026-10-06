@@ -1,0 +1,25 @@
+# Reviewed sync edits
+
+Both native apps own their guarded task transport and review screen independently. The existing authenticated `taskfold_patch_task` RPC compares each changed field with the queued baseline under a row lock. It merges independent fields and identifiable comment/subtask items. Overlapping changes pause the durable queue instead of replacing the other edit. The deployed function is `SECURITY INVOKER`; existing row access rules apply. No schema or function change was required for this rollout.
+
+## Review choices
+
+On iPhone, **Review sync edit** appears above the workspace when an overlap pauses sync. Mac offers **Review** in the sync footer. Each review shows My edit and Synced version for the affected fields.
+
+- **Keep my edit** rebases the reviewed values on the fetched server version, keeping independent collection edits where the original baseline is available.
+- **Use synced version** drops this queued edit, then replays later offline edits to the task. It does not discard later queued work or changes to other tasks.
+- **Later** closes the review and leaves sync paused; the edit remains saved on this device.
+
+The resolution and rebased queue are persisted before sync resumes. Save failure retains the original snapshot and review. Undo history is cleared after a successful resolution so an earlier inverse cannot remove independent server work. A new overlapping edit during review can pause again; choosing a version is not permission to overwrite all future changes.
+
+Reviews identify the exact queued mutation. Stale/mismatched requests cannot resolve a different task or edit. Account changes clear the review. Conflict detection captures the request that failed instead of assuming the first queued edit is still that request after an asynchronous fetch.
+
+Older queues may lack a baseline or individual baseline fields. Those edits require explicit review before any update is sent. The review explains that Keep my edit uses the shown values in full, including comments/subtasks in the affected fields; automatic collection merging cannot reconstruct an unknown original state. An intentional clear remains a clear after that choice. New task edits capture all affected baselines normally.
+
+## Verification
+
+`CollaborationTests.swift` covers reference identity, nested merge behavior, reviewed versus later queued edits, stale/mismatched requests, durable encoding, old-baseline clearing, RPC confirmation and rejection of unknown-baseline transport. `NativeConflictIntegrationTests.swift` is an opt-in live test of two native Backend instances with separately authenticated URLSessions against a disposable account. It exercises independent title/deadline edits, independent comments, retry deduplication, same-field rejection, persisted resolution/rebase and a second conflict when the server changes during review. It deletes the task it creates. The operator must revoke/delete the disposable account afterward.
+
+Provide a private JSON fixture with `url`, public `key`, `email`, `password` and `userID` through `TASKFOLD_CONFLICT_LIVE_FIXTURE`. Only `taskfold-conflict-…@example.invalid` accounts with UUID owner IDs are accepted. Sessions are retained in memory; the test supplies a no-op Keychain persistence closure. Do not commit the fixture. Without it the integration test explicitly skips. Live evidence and native user walks are recorded in each platform's validation record.
+
+The live backend test is not proof of two simultaneously running native UI apps, physical devices, OS background replay, shared-project access revocation or deleted-task recovery. Those remain broader P0 acceptance checks. Clients predating this rollout can still send legacy direct updates; this source change does not upgrade an already distributed binary. No new app release is implied.

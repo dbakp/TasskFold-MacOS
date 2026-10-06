@@ -188,9 +188,13 @@ final class Backend: NSObject {
         }
     }
     func send(_ change: Mutation) async throws {
-        #if os(macOS)
-        // Roll out the RPC with the Mac conflict-review UI. iOS can adopt it with its own review surface.
-        if change.table == "tasks", change.method == "PATCH", let baseline = change.baseline {
+        // Both native clients protect edits with the same server-side baseline merge.
+        if change.table == "tasks", change.method == "PATCH" {
+            // Missing baselines cannot safely distinguish a clear from no change.
+            // Keep old queued work for explicit review, without sending a blind PATCH.
+            guard let baseline = change.baseline, change.fields.keys.allSatisfy({ baseline[$0] != nil }) else {
+                throw AppFailure(message: "TASKFOLD_CONFLICT: This older queued edit needs review before replacing synced values.")
+            }
             let data = try await request("/rest/v1/rpc/taskfold_patch_task", method: "POST", body: [
                 "_id": .string(change.recordID), "_base": .object(baseline), "_changes": .object(change.fields)])
             let saved = try JSONDecoder().decode(Record.self, from: data)
@@ -199,7 +203,6 @@ final class Backend: NSObject {
             }
             return
         }
-        #endif
         let conflictKey = ["favorites", "view_preferences", "view_orders"].contains(change.table) ? "user_id,id" : "id"
         let escapedID = change.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? change.recordID
         let query = change.method == "POST" ? "?on_conflict=\(conflictKey)" : "?id=eq.\(escapedID)"
