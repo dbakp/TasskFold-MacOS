@@ -1079,6 +1079,25 @@ extension Store {
         dailyBackupsEnabled = false; disableNotifications(); disableFocusAlerts(); focusSyncConflict = nil
         var task = Record.task(user: userID); task["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31"); task["title"] = .string("Focus on the next useful step")
         snapshot = Snapshot(tables: ["tasks": [task]]); undoStack = []; redoStack = []
+
+        if ProcessInfo.processInfo.arguments.contains("--focus-catalog-seed") {
+            let studio = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa81", home = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa82", section = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa83"
+            snapshot.tables["projects"] = [Record(["id": .string(studio), "name": .string("Studio"), "user_id": .string(userID)]), Record(["id": .string(home), "name": .string("Home"), "user_id": .string(userID)])]
+            snapshot.tables["sections"] = [Record(["id": .string(section), "project_id": .string(studio), "name": .string("Client launch")])]
+            for index in 0..<250 {
+                var candidate = Record.task(user: userID, project: index == 249 ? home : studio)
+                candidate["id"] = .string(String(format: "aaaaaaaa-aaaa-4aaa-8aaa-%012d", index + 1000))
+                candidate["title"] = .string(index >= 248 ? "Review the proposal" : String(format: "Catalogue task %03d", index))
+                if index == 248 {
+                    candidate["section_id"] = .string(section)
+                    candidate["description"] = .string("Check the café launch details before sending the proposal to the client.")
+                }
+                if index == 249 { candidate["description"] = .string("Choose paint colours for the home renovation.") }
+                snapshot.tables["tasks", default: []].append(candidate)
+            }
+            var done = Record.task(user: userID); done["title"] = .string("Completed proposal"); done["completed"] = .bool(true)
+            snapshot.tables["tasks", default: []].append(done)
+        }
         if ProcessInfo.processInfo.arguments.contains("--focus-session-unavailable"),
            let session = try? FocusSession(taskID: task.id, minutes: 25),
            let start = try? FocusSessionChange.make(session, current: nil, account: userID) {

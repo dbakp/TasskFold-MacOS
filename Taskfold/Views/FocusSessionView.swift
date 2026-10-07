@@ -19,13 +19,16 @@ struct FocusSessionView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     let request: FocusSessionRequest
-    @State private var taskID = ""
+    @State private var selectedTask: FocusTaskCatalog.Choice?
+    @State private var choosingTask = false
     @State private var minutes = 25
     @State private var message: String?
     @State private var replacing = false
     @State private var replacementBase: Record?
     private var activeWorkspace: Bool { request.workspace.matches(account: store.userID, generation: store.workspaceGeneration) && store.focusAvailable }
-    private var choices: [Record] { store.tasks.filter { !$0.completed }.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending } }
+    private var choices: [FocusTaskCatalog.Choice] { guard activeWorkspace else { return [] }; return FocusTaskCatalog(tasks: store.tasks, projects: store.projects, sections: store.rows("sections")).choices }
+    private var currentChoice: FocusTaskCatalog.Choice? { choices.first { $0.id == selectedTask?.id && $0.generation == selectedTask?.generation } }
+    private func taskContext(_ task: Record) -> String { FocusTaskCatalog.context(task, tasks: store.tasks, projects: store.projects, sections: store.rows("sections")) }
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -48,6 +51,7 @@ struct FocusSessionView: View {
                     if activeWorkspace { finishAlerts }
                     #if DEBUG
                     if store.userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--focus-finish-testing") { finishFixture }
+                    if store.userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--focus-catalog-seed") { selectionFixture }
                     #endif
                     if let message { Text(message).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusError") }
                 }.padding(24).frame(maxWidth: 640, alignment: .leading).frame(maxWidth: .infinity)
@@ -59,11 +63,17 @@ struct FocusSessionView: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("closeFocusSession") } }
             .task { await store.reschedule() }
             .onAppear {
-                if let session = store.focusSession, choices.contains(where: { $0.id.lowercased() == session.taskID }) {
-                    taskID = session.taskID; minutes = session.durationSeconds / 60
+                if let session = store.focusSession, let task = choices.first(where: { $0.id == session.taskID }) {
+                    selectedTask = task; minutes = session.durationSeconds / 60
                 }
             }
             .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
+            .sheet(isPresented: $choosingTask) {
+                FocusTaskChooser(workspace: request.workspace, selectedID: currentChoice?.id) { task in
+                    guard activeWorkspace, FocusTaskCatalog.selectable(task, tasks: store.tasks) else { return }
+                    selectedTask = task; choosingTask = false; message = nil
+                }
+            }
             .confirmationDialog("Replace the current session?", isPresented: $replacing, titleVisibility: .visible) {
                 Button("Start new session") { start(expected: replacementBase) }
             } message: { Text("The current timer will be replaced. Your task stays unchanged.") }
@@ -73,6 +83,19 @@ struct FocusSessionView: View {
         #endif
     }
     #if DEBUG
+    private var selectionFixture: some View {
+        VStack {
+            Text("Selected task: " + (currentChoice?.id ?? "none")).accessibilityIdentifier("focusSelectedTaskFixture")
+            Button("Recreate selected task fixture") {
+                guard activeWorkspace, let choice = currentChoice, var task = store.tasks.first(where: { $0.id.lowercased() == choice.id }) else { return }
+                task["task_generation"] = .string(UUID().uuidString.lowercased())
+                _ = store.commit([
+                    Mutation(table: "tasks", recordID: task.id, method: "DELETE", fields: [:]),
+                    Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields, insertOnly: true)
+                ], remember: false)
+            }.accessibilityIdentifier("focusRecreateSelectedFixture")
+        }
+    }
     @State private var fixturePending = -1
     private var finishFixture: some View {
         VStack {
@@ -103,10 +126,18 @@ struct FocusSessionView: View {
             Text("Your next session").font(.headline)
             if choices.isEmpty { Text("Add an open task to start focusing.").foregroundStyle(.secondary) }
             else {
-                Picker("Task", selection: $taskID) {
-                    Text("Choose a task").tag("")
-                    ForEach(choices) { task in Text(task.title).tag(task.id.lowercased()) }
-                }.accessibilityIdentifier("focusTaskPicker")
+                Button { choosingTask = true } label: {
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(currentChoice?.title ?? "Choose a task").font(.body.weight(.medium)).fixedSize(horizontal: false, vertical: true)
+                            if let choice = currentChoice { Text(choice.context).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                        }.frame(maxWidth: .infinity, alignment: .leading)
+                        Image(systemName: "chevron.up.chevron.down").font(.caption).accessibilityHidden(true)
+                    }.frame(minHeight: 44).contentShape(.rect)
+                }.buttonStyle(.bordered).accessibilityIdentifier("focusTaskPicker")
+                if selectedTask != nil && currentChoice == nil {
+                    Text("The selected task changed or is no longer open. Choose it again.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusSelectionStatus")
+                }
                 #if os(iOS)
                 HStack {
                     Text("\(minutes) \(minutes == 1 ? "minute" : "minutes")").fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusDuration")
@@ -123,7 +154,7 @@ struct FocusSessionView: View {
                         replacementBase = row; replacing = true
                     } else { start(expected: row) }
                 } label: { Label("Start Focus", systemImage: "play.fill").frame(maxWidth: .infinity, minHeight: 44) }
-                    .buttonStyle(.borderedProminent).disabled(taskID.isEmpty || !choices.contains { $0.id.lowercased() == taskID })
+                    .buttonStyle(.borderedProminent).disabled(currentChoice == nil)
                     .accessibilityIdentifier("startFocus")
             }
             Text(store.localMode ? "Saved on this device." : store.pendingCount > 0 ? "Changes are saved here and waiting to sync. Open Taskfold on both devices to receive the latest session." : "Your session syncs with your workspace.")
@@ -136,6 +167,7 @@ struct FocusSessionView: View {
             Label(session.status == .stopped ? "Session ended" : session.finished(at: now) ? "Time well spent" : session.status == .paused ? "Paused" : "Time to focus", systemImage: "timer")
                 .font(.headline).foregroundStyle(.secondary).accessibilityIdentifier("focusStatus")
             Text(task?.title ?? "Task unavailable").font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusTaskTitle")
+            if let task { Text(taskContext(task)).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusTaskContext") }
             Text(clock(session.remaining(at: now))).font(.system(.largeTitle, design: .rounded).monospacedDigit().weight(.semibold)).accessibilityIdentifier("focusRemaining")
             ProgressView(value: Double(session.elapsed(at: now)), total: Double(session.durationSeconds * 1000)).tint(.accentColor)
             if task == nil || task?.completed == true {
@@ -170,13 +202,19 @@ struct FocusSessionView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(heading).font(.headline)
             Text(store.tasks.first { $0.id.lowercased() == session.taskID }?.title ?? "Task unavailable").fixedSize(horizontal: false, vertical: true)
+            if let task = store.tasks.first(where: { $0.id.lowercased() == session.taskID }) { Text(taskContext(task)).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
             Text("\(clock(session.remaining(at: Date()))) remaining · \(session.finished(at: Date()) ? "Finished" : session.status.rawValue.capitalized)").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }.padding(16).frame(maxWidth: .infinity, alignment: .leading).background(.quaternary, in: RoundedRectangle(cornerRadius: 16))
     }
     private func clock(_ seconds: TimeInterval) -> String {
         let remaining = Int(ceil(seconds)); return String(format: "%02d:%02d", remaining / 60, remaining % 60)
     }
-    private func start(expected: Record?) { change(expected: expected) { try FocusSession(taskID: taskID, minutes: minutes) } }
+    private func start(expected: Record?) {
+        guard activeWorkspace, let choice = currentChoice, FocusTaskCatalog.selectable(choice, tasks: store.tasks) else {
+            message = "Choose an open task from your current workspace."; return
+        }
+        change(expected: expected) { try FocusSession(taskID: choice.id, minutes: minutes) }
+    }
     private func change(expected: Record?, _ make: () throws -> FocusSession) {
         do {
             let session = try make()
@@ -188,5 +226,87 @@ struct FocusSessionView: View {
         guard activeWorkspace else { return }
         if store.resolveFocusConflict(id: conflict.id, keepLocal: keepLocal) { message = nil }
         else { message = store.error; store.error = nil }
+    }
+}
+
+private struct FocusTaskChooser: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var search = ""
+    @FocusState private var searching: Bool
+    let workspace: WorkspaceBinding
+    let selectedID: String?
+    let choose: (FocusTaskCatalog.Choice) -> Void
+    private var choices: [FocusTaskCatalog.Choice] {
+        guard workspace.matches(account: store.userID, generation: store.workspaceGeneration), store.focusAvailable else { return [] }
+        return FocusTaskCatalog(tasks: store.tasks, projects: store.projects, sections: store.rows("sections"), search: search).choices
+    }
+    var body: some View {
+        let choices = self.choices
+        return NavigationStack {
+            VStack(spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
+                    TextField("Search tasks", text: $search, axis: .vertical).lineLimit(1...3).autocorrectionDisabled()
+                        .focused($searching).submitLabel(.search).onSubmit { searching = false }
+                        .onChange(of: search) { _, query in
+                            if query.contains(where: { $0.isNewline }) {
+                                search = query.filter { !$0.isNewline }; searching = false
+                            }
+                        }
+                        .accessibilityLabel("Search tasks, projects, sections or notes")
+                        .accessibilityIdentifier("focusTaskSearch")
+                    if !search.isEmpty {
+                        Button { search = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary).frame(minWidth: 44, minHeight: 44) }
+                            .buttonStyle(.plain).accessibilityLabel("Clear task search").accessibilityIdentifier("clearFocusTaskSearch")
+                    }
+                }.padding(.horizontal, 12).frame(minHeight: 44).background(.quaternary, in: RoundedRectangle(cornerRadius: 14)).padding()
+                List {
+                    ForEach(choices) { choice in
+                        FocusTaskChoiceRow(choice: choice, selected: choice.id == selectedID) { choose(choice) }
+                    }
+                }.listStyle(.plain).accessibilityIdentifier("focusTaskChoices")
+                    .overlay { if choices.isEmpty { ContentUnavailableView("No matching tasks", systemImage: "magnifyingglass", description: Text("Try another task, project or section name.")) } }
+            }.navigationTitle("Choose a task")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction).accessibilityIdentifier("cancelFocusTaskChoice") } }
+            .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
+        }
+        #if os(iOS)
+        .presentationDetents([.large])
+        #else
+        .frame(minWidth: 500, minHeight: 520)
+        #endif
+    }
+}
+
+private struct FocusTaskChoiceRow: View {
+    @Environment(\.dynamicTypeSize) private var textSize
+    let choice: FocusTaskCatalog.Choice
+    let selected: Bool
+    let choose: () -> Void
+    private var excerpt: String { String(choice.description.prefix(240)) }
+    private var spokenLabel: String {
+        choice.title + ", " + choice.context + (excerpt.isEmpty ? "" : ", " + excerpt)
+    }
+    var body: some View {
+        Button(action: choose) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(choice.title).font(.body.weight(.medium)).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
+                    Text(choice.context).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    if !excerpt.isEmpty {
+                        Text(excerpt).font(.footnote).foregroundStyle(.secondary)
+                            .lineLimit(textSize.isAccessibilitySize ? nil : 2).fixedSize(horizontal: false, vertical: true)
+                    }
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                if selected { Image(systemName: "checkmark").foregroundStyle(Color.taskfold).accessibilityHidden(true) }
+            }.frame(minHeight: 44).contentShape(.rect)
+        }.buttonStyle(.plain)
+            .accessibilityLabel(spokenLabel)
+            .accessibilityValue(selected ? "Selected" : "")
+            .accessibilityIdentifier("focusTaskChoice-" + choice.id)
     }
 }

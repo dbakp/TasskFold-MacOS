@@ -180,3 +180,75 @@ final class FocusSessionTests: XCTestCase {
         }
     }
 }
+
+
+final class FocusTaskCatalogTests: XCTestCase {
+    private func task(_ number: Int, title: String = "Review proposal", project: String = "p") -> Record {
+        Record(["id": .string(String(format: "aaaaaaaa-aaaa-4aaa-8aaa-%012d", number)), "title": .string(title), "project_id": .string(project), "completed": .bool(false), "task_generation": .string("generation-\(number)")])
+    }
+    private let projects = [Record(["id": .string("p"), "name": .string("Studio")]), Record(["id": .string("h"), "name": .string("Home")])]
+    func testDuplicateNamesKeepStableTaskIdentitiesAndProjectSectionParentContext() {
+        var studio = task(1), home = task(2, project: "h"), child = task(3)
+        studio["section_id"] = .string("launch"); child["parent_id"] = .string(studio.id)
+        home["description"] = .string("Paint colours")
+        let sections = [Record(["id": .string("launch"), "project_id": .string("p"), "name": .string("Client launch")])]
+        let choices = FocusTaskCatalog(tasks: [child,studio,home], projects: projects, sections: sections).choices
+        XCTAssertEqual(choices.map(\.id), [home.id,studio.id,child.id])
+        XCTAssertEqual(choices.map(\.context), ["Home", "Studio · Client launch", "Studio · Review proposal"])
+        XCTAssertEqual(FocusTaskCatalog(tasks: [home,studio,child], projects: projects, sections: sections).choices, choices)
+    }
+    func testSearchMatchesEveryWordAcrossTitleContextAndNotesWithAccentsAndUnicode() {
+        var studio = task(1); studio["description"] = .string("Review the café launch 東京 🥐")
+        let sections = [Record(["id": .string("launch"), "project_id": .string("p"), "name": .string("Client launch")])]
+        studio["section_id"] = .string("launch")
+        for query in ["  CAFE \n studio proposal ", "client 東京", "🥐 review"] {
+            XCTAssertEqual(FocusTaskCatalog(tasks: [task(2,project: "h"),studio], projects: projects, sections: sections, search: query).choices.map(\.id), [studio.id])
+        }
+        XCTAssertTrue(FocusTaskCatalog(tasks: [studio], projects: projects, sections: sections, search: "studio absent").choices.isEmpty)
+        XCTAssertEqual(FocusTaskCatalog(tasks: [studio], projects: projects, sections: sections, search: " \n ").choices.count, 1)
+    }
+    func testMissingAndForeignDirectoryReferencesNeverUseAnotherProjectsSection() {
+        var unknown = task(1, project: "gone"), wrongSection = task(2), inbox = task(3, project: "")
+        unknown["section_id"] = .string("foreign"); wrongSection["section_id"] = .string("foreign")
+        inbox["parent_id"] = .string(wrongSection.id)
+        let sections = [Record(["id": .string("foreign"), "project_id": .string("h"), "name": .string("Private home section")])]
+        let choices = FocusTaskCatalog(tasks: [unknown,wrongSection,inbox], projects: projects, sections: sections).choices
+        XCTAssertEqual(Set(choices.map(\.context)), ["Project unavailable", "Studio", "Inbox"])
+        XCTAssertTrue(FocusTaskCatalog(tasks: [unknown,wrongSection,inbox], projects: projects, sections: sections, search: "private").choices.isEmpty)
+        XCTAssertEqual(FocusTaskCatalog(tasks: [], projects: projects, sections: sections).choices, [])
+    }
+    func testCompletedInvalidAndRepeatedIDsAreExcludedWithoutChangingTasks() {
+        var done = task(2), invalid = task(3), untitled = task(4)
+        done["completed"] = .bool(true); invalid["id"] = .string("bad"); untitled["title"] = .string(" \n ")
+        let tasks = [done,task(1),invalid,task(1),untitled], before = tasks
+        let choices = FocusTaskCatalog(tasks: tasks, projects: projects, sections: []).choices
+        XCTAssertEqual(choices.map(\.title), ["Review proposal", "Untitled task"])
+        XCTAssertEqual(tasks, before)
+    }
+    func testNaturalNumberOrderingAndStableTiesSurviveDirectoryReordering() {
+        let rows = [task(3,title: "Task 10"),task(2,title: "TASK 2"),task(1,title: "Task 2")]
+        let expected = [rows[2].id,rows[1].id,rows[0].id]
+        XCTAssertEqual(FocusTaskCatalog(tasks: rows,projects: projects,sections: []).choices.map(\.id), expected)
+        XCTAssertEqual(FocusTaskCatalog(tasks: Array(rows.reversed()),projects: projects,sections: []).choices.map(\.id), expected)
+    }
+    func testLargeCatalogueSearchIncludesLastTaskAndFullNotesBeyondDisplayExcerpt() {
+        var rows = (1...5000).map { task($0,title: "Task \($0)") }
+        rows[4999]["description"] = .string(String(repeating: "intro ",count: 100) + "lastneedle")
+        let choices = FocusTaskCatalog(tasks: rows, projects: projects, sections: [], search: "studio lastneedle").choices
+        XCTAssertEqual(choices.map(\.id), [rows[4999].id])
+    }
+    func testSelectionAllowsRenamesButRejectsDeletionCompletionAndTaskRecreation() throws {
+        var row = task(1)
+        let choice = try XCTUnwrap(FocusTaskCatalog(tasks: [row], projects: projects, sections: []).choices.first)
+        row["title"] = .string("Renamed task"); row["project_id"] = .string("h")
+        XCTAssertTrue(FocusTaskCatalog.selectable(choice, tasks: [row]))
+        XCTAssertFalse(FocusTaskCatalog.selectable(choice, tasks: []))
+        row["completed"] = .bool(true); XCTAssertFalse(FocusTaskCatalog.selectable(choice, tasks: [row]))
+        row["completed"] = .bool(false); row["task_generation"] = .string("replacement")
+        XCTAssertFalse(FocusTaskCatalog.selectable(choice, tasks: [row]))
+        row["task_generation"] = .null
+        let legacy = try XCTUnwrap(FocusTaskCatalog(tasks: [row], projects: projects, sections: []).choices.first)
+        XCTAssertTrue(FocusTaskCatalog.selectable(legacy, tasks: [row]))
+        row["task_generation"] = .string("new-incarnation"); XCTAssertFalse(FocusTaskCatalog.selectable(legacy, tasks: [row]))
+    }
+}

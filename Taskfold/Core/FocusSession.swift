@@ -163,3 +163,61 @@ struct FocusSyncConflict: Identifiable {
         return result
     }
 }
+
+/// A transient directory of visible tasks, never a second persisted task model.
+struct FocusTaskCatalog {
+    struct Choice: Identifiable, Equatable {
+        var id: String
+        var generation: JSON
+        var title: String
+        var context: String
+        var description: String
+    }
+    var choices: [Choice]
+    init(tasks: [Record], projects: [Record], sections: [Record], search: String = "") {
+        let projects = Self.directory(projects), sections = Self.directory(sections), parents = Self.directory(tasks)
+        let words = QuickEntryContext.key(search).split(whereSeparator: \.isWhitespace).map(String.init)
+        var seen = Set<String>()
+        choices = tasks.compactMap { task in
+            let id = task.id.lowercased()
+            guard UUID(uuidString: id) != nil, !task.completed, seen.insert(id).inserted else { return nil }
+            let title = task.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            let choice = Choice(id: id, generation: task["task_generation"], title: title.isEmpty ? "Untitled task" : title,
+                                context: Self.context(task, projects: projects, sections: sections, parents: parents),
+                                description: task.string("description").trimmingCharacters(in: .whitespacesAndNewlines))
+            let haystack = QuickEntryContext.key(choice.title + " " + choice.context + " " + choice.description)
+            return words.allSatisfy { haystack.contains($0) } ? choice : nil
+        }.sorted {
+            let a = QuickEntryContext.key($0.title), b = QuickEntryContext.key($1.title)
+            if a != b {
+                let order = a.compare(b, options: .numeric, locale: Locale(identifier: "en_US_POSIX"))
+                return order == .orderedSame ? a < b : order == .orderedAscending
+            }
+            let ac = QuickEntryContext.key($0.context), bc = QuickEntryContext.key($1.context)
+            if ac != bc { return ac < bc }
+            return $0.id < $1.id
+        }
+    }
+    static func selectable(_ choice: Choice, tasks: [Record]) -> Bool {
+        tasks.contains { $0.id.lowercased() == choice.id && !$0.completed && $0["task_generation"] == choice.generation }
+    }
+    static func context(_ task: Record, tasks: [Record], projects: [Record], sections: [Record]) -> String {
+        context(task, projects: directory(projects), sections: directory(sections), parents: directory(tasks))
+    }
+    private static func directory(_ records: [Record]) -> [String: Record] {
+        records.reduce(into: [:]) { if !$1.id.isEmpty { $0[$1.id.lowercased()] = $1 } }
+    }
+    private static func context(_ task: Record, projects: [String: Record], sections: [String: Record], parents: [String: Record]) -> String {
+        let projectID = task.string("project_id").lowercased()
+        var parts = [projectID.isEmpty ? "Inbox" : projects[projectID]?.name.nonemptyFocusName ?? "Project unavailable"]
+        if !projectID.isEmpty, projects[projectID] != nil,
+           let section = sections[task.string("section_id").lowercased()], section.string("project_id").lowercased() == projectID,
+           let name = section.name.nonemptyFocusName { parts.append(name) }
+        if let parent = parents[task.string("parent_id").lowercased()], parent.id.lowercased() != task.id.lowercased(),
+           parent.string("project_id").lowercased() == projectID, let title = parent.title.nonemptyFocusName { parts.append(title) }
+        return parts.joined(separator: " · ")
+    }
+}
+private extension String {
+    var nonemptyFocusName: String? { let value = trimmingCharacters(in: .whitespacesAndNewlines); return value.isEmpty ? nil : value }
+}

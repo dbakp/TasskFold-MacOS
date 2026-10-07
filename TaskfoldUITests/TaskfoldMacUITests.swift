@@ -32,7 +32,7 @@ final class TaskfoldMacUITests: XCTestCase {
         if app.alerts.buttons["Allow"].waitForExistence(timeout: 3) { app.alerts.buttons["Allow"].click() }
         let picker = app.descendants(matching: .any).matching(identifier: "focusTaskPicker").firstMatch
         for _ in 0..<5 where !picker.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: 400) }
-        picker.click(); app.menuItems["Focus on the next useful step"].click(); app.buttons["startFocus"].click()
+        picker.click(); app.buttons["focusTaskChoice-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31"].click(); app.buttons["startFocus"].click()
         func pending(_ count: Int) {
             let refresh = app.buttons["focusRefreshAlerts"]
             for _ in 0..<5 where !refresh.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400) }
@@ -52,7 +52,7 @@ final class TaskfoldMacUITests: XCTestCase {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--focus-session-seed"]; app.launch()
         XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click()
         let picker = app.descendants(matching: .any).matching(identifier: "focusTaskPicker").firstMatch
-        XCTAssertTrue(picker.waitForExistence(timeout: 10)); picker.click(); app.menuItems["Focus on the next useful step"].click(); app.buttons["startFocus"].click()
+        XCTAssertTrue(picker.waitForExistence(timeout: 10)); picker.click(); app.buttons["focusTaskChoice-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31"].click(); app.buttons["startFocus"].click()
         XCTAssertTrue(app.staticTexts["focusStatus"].waitForExistence(timeout: 5)); app.buttons["pauseResumeFocus"].click()
         XCTAssertEqual(app.staticTexts["focusStatus"].label, "Paused"); let remaining = app.staticTexts["focusRemaining"].label
         app.buttons["closeFocusSession"].click(); app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
@@ -1294,5 +1294,22 @@ extension TaskfoldMacUITests {
         let title=app.descendants(matching:.any)["taskTitle"].firstMatch
         XCTAssertTrue(title.waitForExistence(timeout:5)); XCTAssertEqual(title.value as? String,"Reminder route check")
         app.buttons["Cancel"].firstMatch.tap(); app.buttons["endReminderRouteFixture"].tap()
+    }
+}
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testFocusSearchDuplicateContextCancelAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--focus-session-seed", "--focus-catalog-seed"]; app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click()
+        app.buttons["focusTaskPicker"].click()
+        let search = app.descendants(matching: .any)["focusTaskSearch"].firstMatch; XCTAssertTrue(search.waitForExistence(timeout: 5)); search.click(); search.typeText("proposal\n")
+        let home = app.buttons["focusTaskChoice-aaaaaaaa-aaaa-4aaa-8aaa-000000001249"], studio = app.buttons["focusTaskChoice-aaaaaaaa-aaaa-4aaa-8aaa-000000001248"]
+        XCTAssertTrue(home.waitForExistence(timeout: 5)); XCTAssertTrue(studio.exists); XCTAssertTrue(home.label.contains("Home")); XCTAssertTrue(studio.label.contains("Client launch"))
+        home.click(); app.buttons["focusTaskPicker"].click(); app.buttons["cancelFocusTaskChoice"].click()
+        XCTAssertTrue(app.buttons["focusTaskPicker"].label.contains("Home")); app.buttons["startFocus"].click()
+        XCTAssertTrue(app.staticTexts["focusStatus"].waitForExistence(timeout: 5)); XCTAssertEqual(app.staticTexts["focusTaskContext"].label, "Home"); app.buttons["pauseResumeFocus"].click()
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); app.buttons["openFocusSession"].click()
+        XCTAssertEqual(app.staticTexts["focusStatus"].label, "Paused"); XCTAssertEqual(app.staticTexts["focusTaskContext"].label, "Home")
     }
 }
