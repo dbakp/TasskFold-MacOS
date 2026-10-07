@@ -19,7 +19,7 @@ struct WorkspaceBackup: Codable, Sendable {
     var unsyncedChanges: Int
     var legacy = false
     static let maximumBytes = 256 * 1024 * 1024
-    static let workTables = ["projects", "labels", "sections", "tasks", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions"]
+    static let workTables = ["projects", "labels", "sections", "tasks", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions", ReminderSnooze.table]
     static func make(_ snapshot: Snapshot, account: String, now: Date = Date()) -> Self {
         var tables = snapshot.tables
         tables[FocusSessionChange.table] = tables[FocusSessionChange.table]?.map { row in
@@ -75,7 +75,8 @@ struct WorkspaceBackup: Codable, Sendable {
         "favorites": ["id","user_id","order_index","created_at"],
         "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours"],
         "view_orders": ["id","user_id","ids","updated_at"],
-        "focus_sessions": ["id","user_id","revision","action_id","state","updated_at"]
+        "focus_sessions": ["id","user_id","revision","action_id","state","updated_at"],
+        ReminderSnooze.table: ["id","user_id","settings","updated_at"]
     ]
     func validate() throws {
         guard tables.values.reduce(0, { $0 + $1.count }) <= 50000 else { throw BackupFailure(message: "This backup exceeds the 50,000-record limit.") }
@@ -143,6 +144,9 @@ struct WorkspaceBackup: Codable, Sendable {
                 if table == "tasks", row["is_recurring"].flag {
                     let rule = Record(row["recurrence_pattern"].object)
                     guard Recurrence.valid(rule), Recurrence.number(rule["interval"], in: 1...10000) != nil else { throw BackupFailure(message: "A recurring task has an unsupported or invalid repeat rule.") }
+                }
+                if table == ReminderSnooze.table, row.id != ReminderSnooze.recordID || !ReminderSnooze.validDocument(row["settings"]) {
+                    throw BackupFailure(message: "The backup includes invalid reminder preferences.")
                 }
                 if table == "saved_views" { _ = try FilterRule(document: row["query_ast"]) }
                 if row["working_hours"] != .null { _ = try WorkingHours(document: row["working_hours"]) }

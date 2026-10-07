@@ -176,6 +176,23 @@ final class Store {
     var savedViews: [Record] { rows("saved_views").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
     var favorites: [Record] { rows("favorites").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
     var workingHours: WorkingHours { (try? WorkingHours(document: record("view_preferences", id: "planner")?["working_hours"] ?? .null)) ?? WorkingHours() }
+    var reminderSnoozeRecord: Record? { ReminderSnooze.row(rows(ReminderSnooze.table), account: userID) }
+    var reminderSnoozeMinutes: Int { ReminderSnooze.minutes(reminderSnoozeRecord?["settings"] ?? .null) ?? 60 }
+    var reminderSnoozeEditable: Bool {
+        workspaceCacheReadable && (signedIn || localMode) && (reminderSnoozeRecord == nil || ReminderSnooze.validDocument(reminderSnoozeRecord!["settings"]) && ReminderSnooze.version(reminderSnoozeRecord!["settings"]) == 1)
+    }
+    @discardableResult func setReminderSnooze(_ minutes: Int, workspace: WorkspaceBinding) -> Bool {
+        guard workspace.matches(account: userID, generation: workspaceGeneration), reminderSnoozeEditable,
+              let settings = ReminderSnooze.changing(reminderSnoozeRecord?["settings"] ?? .null, minutes: minutes) else {
+            error = "Reopen Notifications before changing this workspace's snooze preference."; return false
+        }
+        if settings == reminderSnoozeRecord?["settings"] { return true }
+        let change = Mutation(table: ReminderSnooze.table, recordID: ReminderSnooze.recordID, method: "POST",
+            fields: ["id": .string(ReminderSnooze.recordID), "user_id": .string(userID), "settings": settings])
+        let saved = commit([change], remember: false)
+        if saved { ReminderCategory.register(minutes: reminderSnoozeMinutes) }
+        return saved
+    }
     var focusRecord: Record? { record(FocusSessionChange.table, id: FocusSessionChange.recordID) }
     var focusAvailable: Bool { workspaceCacheReadable && (signedIn || localMode) }
     var focusSession: FocusSession? { FocusSessionChange.session(in: focusRecord, account: userID) }
@@ -671,7 +688,7 @@ final class Store {
                 snapshot.acknowledge(mutation, saved: saved); try persist()
             }
             var remote: [String: [Record]] = [:]
-            for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions", "task_activity_epoch", "task_activity"] {
+            for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", ReminderSnooze.table, "focus_sessions", "task_activity_epoch", "task_activity"] {
                 remote[table] = try await backend.rows(table)
                 guard generation == accountGeneration else { return }
             }
@@ -885,6 +902,7 @@ final class Store {
         return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events, validationTasks: remindersEnabled ? tasks : [])
     }
     func reschedule() async {
+        ReminderCategory.register(minutes: reminderSnoozeMinutes)
         refreshCalendarContext()
         await refreshRemoteReminderRegistration()
         let state = reminderState(), generation = accountGeneration
@@ -950,14 +968,16 @@ final class Store {
             if let due = TaskPlanner.dayDate(task), let next = Calendar.current.date(byAdding: .day, value: 1, to: max(due, Calendar.current.startOfDay(for: Date()))) {
                 _ = commit([Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: TaskPlanner.dayFields(task: task, day: TaskPlanner.dayKey(next)))])
             }
-        case ReminderCategory.snoozeHour:
+        case let action where ReminderSnooze.minutes(action: action) != nil:
+            guard let minutes = ReminderSnooze.minutes(action: action) else { return nil }
             let generation = accountGeneration, account = userID
             await reschedule()
             guard generation == accountGeneration, validReminder(info) != nil else { return nil }
-            if let report = await reminderScheduler.snooze(account: account, taskID: event.taskID, specID: event.specID, signature: event.signature, originalAt: event.date), generation == accountGeneration {
+            if let report = await reminderScheduler.snooze(account: account, taskID: event.taskID, specID: event.specID, signature: event.signature, minutes: minutes, originalAt: event.date), generation == accountGeneration {
                 if report.failures > 0 { reminderStatus = "The snooze could not be scheduled. Open the task to try again." }
                 else if report.deferred > 0 { reminderStatus = "The nearest 60 reminders are scheduled. This snooze may be deferred until Taskfold refreshes." }
             }
+        case let action where action.hasPrefix("taskfold.snooze."): return nil
         default: return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: task.id, specID: event.specID, signature: event.signature, originalAt: event.date)
         }
         return nil
@@ -970,10 +990,11 @@ enum ReminderCategory {
     static let complete = "taskfold.complete"
     static let snoozeHour = "taskfold.snooze.hour"
     static let tomorrow = "taskfold.tomorrow"
-    static func register() {
+    static func register(minutes: Int = 60) {
+        let minutes = ReminderSnooze.validMinutes(minutes) ? minutes : 60
         let category = UNNotificationCategory(identifier: identifier, actions: [
             UNNotificationAction(identifier: complete, title: "Complete", options: [], icon: UNNotificationActionIcon(systemImageName: "checkmark.circle")),
-            UNNotificationAction(identifier: snoozeHour, title: "Remind me in 1 hour", options: [], icon: UNNotificationActionIcon(systemImageName: "clock")),
+            UNNotificationAction(identifier: ReminderSnooze.action(minutes: minutes)!, title: "Remind me in " + ReminderSnooze.label(minutes), options: [], icon: UNNotificationActionIcon(systemImageName: "clock")),
             UNNotificationAction(identifier: tomorrow, title: "Move to tomorrow", options: [], icon: UNNotificationActionIcon(systemImageName: "sunrise")),
         ], intentIdentifiers: [], options: [])
         UNUserNotificationCenter.current().setNotificationCategories([category, UNNotificationCategory(identifier: FocusFinish.category, actions: [], intentIdentifiers: [], options: [])])

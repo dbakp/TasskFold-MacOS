@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-07",
+  "migration": {
+    "version": "20261007065249",
+    "name": "reminder_snooze_preferences",
+    "deployed": true,
+    "owned_source_matches_stored_sql_after_trailing_whitespace_normalization": true
+  },
+  "sql": {
+    "own_deployed_fixture_passed": true,
+    "roles": [
+      "authenticated owner",
+      "authenticated outsider"
+    ],
+    "fixture_namespace": "f0721000",
+    "remaining_fixture_accounts": 0,
+    "remaining_fixture_preferences": 0
+  },
+  "core": {
+    "tests": 477,
+    "optional_live_account_skips": 4,
+    "failures": 0
+  },
+  "advisors": {
+    "security_before": {
+      "extension_in_public": 1,
+      "pg_graphql_anon_table_exposed": 6,
+      "pg_graphql_authenticated_table_exposed": 14,
+      "anon_security_definer_function_executable": 8,
+      "authenticated_security_definer_function_executable": 9,
+      "auth_leaked_password_protection": 1
+    },
+    "security_after": {
+      "extension_in_public": 1,
+      "pg_graphql_anon_table_exposed": 6,
+      "pg_graphql_authenticated_table_exposed": 15,
+      "anon_security_definer_function_executable": 8,
+      "authenticated_security_definer_function_executable": 9,
+      "auth_leaked_password_protection": 1
+    },
+    "performance_before": {
+      "unindexed_foreign_keys": 4,
+      "auth_rls_initplan": 14,
+      "unused_index": 6,
+      "table_bloat": 1,
+      "auth_db_connections_absolute": 1
+    },
+    "performance_after": {
+      "unindexed_foreign_keys": 4,
+      "auth_rls_initplan": 14,
+      "unused_index": 6,
+      "table_bloat": 1,
+      "auth_db_connections_absolute": 1
+    }
+  },
+  "delivery": {
+    "native_dispatch_job": "taskfold-native-reminder-sweep",
+    "active": false,
+    "physical_delivery_proven": false,
+    "paired_native_proven": false,
+    "mac_runtime_proven": false
+  },
+  "platform": "mac",
+  "native_build": {
+    "debug_app_widget_and_ui_test_target": "passed compilation only",
+    "release_app_widget": "passed unsigned build",
+    "mac_release_architectures": [
+      "x86_64",
+      "arm64"
+    ],
+    "widget_catalog": {
+      "configurations": 8,
+      "entities": 3,
+      "enums": 6,
+      "app_widget_completion_metadata": "passed",
+      "installed_host_proven": false
+    }
+  },
+  "ios_user_walks": {
+    "scope": "isolated local workspace; settings choice, target bounds, relaunch persistence; final neutral colors",
+    "runtime": "iOS 26.5",
+    "devices": [
+      "iPhone 17 Pro",
+      "iPad Pro 11-inch (M5)"
+    ],
+    "tests_per_device": 2,
+    "failures": 0,
+    "phone_bundle": "/tmp/taskfold-snooze-phone-neutral.xcresult",
+    "ipad_bundle": "/tmp/taskfold-snooze-ipad-neutral.xcresult",
+    "screenshots_visually_inspected": true
+  }
+}

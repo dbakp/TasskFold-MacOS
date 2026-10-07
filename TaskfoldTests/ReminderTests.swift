@@ -540,3 +540,70 @@ extension ReminderTests {
         }
     }
 }
+
+
+extension ReminderTests {
+    func testSnoozeDelayFramesActionsAndFuturePreservation() throws {
+        for value in [1, 5, 15, 30, 60, 120, 240, 1440] {
+            let document = try XCTUnwrap(ReminderSnooze.changing(.null, minutes: value))
+            XCTAssertEqual(ReminderSnooze.minutes(document), value)
+            XCTAssertEqual(ReminderSnooze.minutes(action: try XCTUnwrap(ReminderSnooze.action(minutes: value))), value)
+        }
+        XCTAssertEqual(ReminderSnooze.minutes(action: "taskfold.snooze.hour"), 60)
+        for action in ["taskfold.snooze.minutes.0", "taskfold.snooze.minutes.1441", "taskfold.snooze.minutes.015", "taskfold.snooze.minutes.+15", "taskfold.snooze.minutes.15.0", "taskfold.snooze.minutes.15 ", "taskfold.snooze.hour.extra", "taskfold.complete"] { XCTAssertNil(ReminderSnooze.minutes(action: action), action) }
+        for value in [-1, 0, 1441, Int.max] { XCTAssertNil(ReminderSnooze.changing(.null, minutes: value)) }
+        for field in [JSON.bool(true), .string("15"), .number(15.5), .number(.nan), .null] {
+            XCTAssertFalse(ReminderSnooze.validDocument(.object(["version": .number(1), "snooze_minutes": field])))
+        }
+        let supported: JSON = .object(["version": .number(1), "snooze_minutes": .number(15), "extension": .object(["marker": .string("retained")])])
+        let changed = try XCTUnwrap(ReminderSnooze.changing(supported, minutes: 30))
+        XCTAssertEqual(changed.object["extension"], supported.object["extension"])
+        let future: JSON = .object(["version": .number(2), "future": .object(["delay": .string("opaque")])])
+        XCTAssertTrue(ReminderSnooze.validDocument(future)); XCTAssertNil(ReminderSnooze.minutes(future)); XCTAssertNil(ReminderSnooze.changing(future, minutes: 30))
+    }
+    func testServerSizedSnoozeMetadataRemainsBackupReadable() throws {
+        let frame = JSON.object(["version": .number(2), "extension": .string(String(repeating: "/", count: 5000))])
+        XCTAssertTrue(ReminderSnooze.validDocument(frame))
+        XCTAssertNil(ReminderSnooze.minutes(frame))
+        XCTAssertNil(ReminderSnooze.changing(frame, minutes: 15))
+        XCTAssertFalse(ReminderSnooze.validDocument(.object(["version": .number(2), "extension": .string(String(repeating: "a", count: 8192))])))
+    }
+    func testSnoozeAccountRowDoesNotReadAnotherOwner() {
+        let row = Record(["id": .string("current"), "user_id": .string("owner"), "settings": .object(["version": .number(1), "snooze_minutes": .number(15)])])
+        XCTAssertEqual(ReminderSnooze.row([row], account: "OWNER"), row)
+        XCTAssertNil(ReminderSnooze.row([row], account: "other")); XCTAssertNil(ReminderSnooze.row([row], account: ""))
+        var foreignID = row; foreignID["id"] = .string("other")
+        XCTAssertNil(ReminderSnooze.row([foreignID], account: "owner"))
+    }
+    func testCustomSnoozeExactElapsedDelayAndRestartKeepsChosenInstant() async throws {
+        for minutes in [5, 15, 30, 120, 1440] {
+            let center = TestReminderCenter(), scheduler = ReminderScheduler(center: center)
+            let row = task(); _ = await scheduler.update(state(1, tasks: [row]))
+            let event = try XCTUnwrap(DueReminder.events(tasks: [row], calendar: calendar).first)
+            let report = await scheduler.snooze(account: "account", taskID: event.taskID, specID: event.specID, signature: event.signature, minutes: minutes, now: now)
+            XCTAssertEqual(report?.failures, 0)
+            let pending = await center.requests
+            let chosen = try XCTUnwrap(pending.first { $0.snoozed })
+            XCTAssertEqual(chosen.fireAt, now.addingTimeInterval(Double(minutes) * 60))
+            // A new actor reads the persisted OS request; a preference change does not retime it.
+            let relaunched = ReminderScheduler(center: center)
+            _ = await relaunched.update(state(2, tasks: [row]))
+            let retained = await center.requests
+            XCTAssertEqual(retained.first { $0.snoozed }?.fireAt, chosen.fireAt)
+            XCTAssertEqual(retained.filter(\.snoozed).count, 1)
+        }
+    }
+    func testInvalidSnoozeDelayDoesNotTouchValidPendingRequests() async throws {
+        let center = TestReminderCenter(), scheduler = ReminderScheduler(center: center)
+        let row = task(); _ = await scheduler.update(state(1, tasks: [row]))
+        let event = try XCTUnwrap(DueReminder.events(tasks: [row], calendar: calendar).first)
+        let before = await center.requests
+        for minutes in [0, -1, 1441, Int.max] {
+            let rejected = await scheduler.snooze(account: "account", taskID: event.taskID, specID: event.specID, signature: event.signature, minutes: minutes, now: now)
+            XCTAssertNil(rejected)
+        }
+        let invalidClock = await scheduler.snooze(account: "account", taskID: event.taskID, specID: event.specID, signature: event.signature, minutes: 15, now: Date(timeIntervalSince1970: .nan))
+        XCTAssertNil(invalidClock)
+        let after = await center.requests; XCTAssertEqual(after, before)
+    }
+}

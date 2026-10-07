@@ -191,3 +191,64 @@ extension AccountTransportTests {
         XCTAssertEqual(calls,1)
     }
 }
+
+
+extension AccountTransportTests {
+    func snoozeMutation(minutes: Int = 15) -> Mutation {
+        Mutation(table: ReminderSnooze.table, recordID: ReminderSnooze.recordID, method: "POST", fields: [
+            "id": .string(ReminderSnooze.recordID), "user_id": .string(owner),
+            "settings": .object(["version": .number(1), "snooze_minutes": .number(Double(minutes)), "extension": .string("old")])])
+    }
+    @MainActor func testSnoozeSyncSendsOnlyDelayAndAcceptsLatestServerMetadata() async throws {
+        let api = backend(try signed(owner)); var calls = 0
+        let latest = Record(["id": .string("current"), "user_id": .string(owner), "settings": .object([
+            "version": .number(1), "snooze_minutes": .number(15), "extension": .string("newer device metadata")])])
+        ScopedHTTP.handler = { request, transport in
+            calls += 1; XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_set_reminder_snooze")
+            XCTAssertEqual(request.httpMethod, "POST"); XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer old")
+            let body = request.httpBody ?? {
+                let stream = request.httpBodyStream!; stream.open(); defer { stream.close() }
+                var data = Data(), buffer = [UInt8](repeating: 0, count: 4096)
+                while stream.hasBytesAvailable { let n = stream.read(&buffer, maxLength: buffer.count); if n <= 0 { break }; data.append(buffer, count: n) }
+                return data
+            }()
+            XCTAssertEqual(try! JSONDecoder().decode([String: JSON].self, from: body), ["_minutes": .number(15)])
+            transport.finish(200, try! JSONEncoder().encode(latest))
+        }
+        defer { ScopedHTTP.handler = nil }
+        let saved = try await api.send(snoozeMutation(), expectedAccount: owner)
+        XCTAssertEqual(saved, latest); XCTAssertEqual(calls, 1)
+    }
+    @MainActor func testSnoozeSyncRejectsWrongOwnerDelayAndUnsupportedQueueBeforeAcknowledgement() async throws {
+        let api = backend(try signed(owner)); var calls = 0
+        ScopedHTTP.handler = { _, transport in
+            calls += 1
+            transport.finish(200, try! JSONEncoder().encode(Record(["id": .string("current"), "user_id": .string(calls == 1 ? self.other : self.owner), "settings": .object(["version": .number(1), "snooze_minutes": .number(calls == 1 ? 15 : 30)])])))
+        }
+        defer { ScopedHTTP.handler = nil }
+        for _ in 0..<2 {
+            do { _ = try await api.send(snoozeMutation(), expectedAccount: owner); XCTFail("Unconfirmed preference was acknowledged") }
+            catch { XCTAssertTrue(error.localizedDescription.contains("server did not confirm")) }
+        }
+        var future = snoozeMutation(); future.fields["settings"] = .object(["version": .number(2), "future": .string("preserved")])
+        do { _ = try await api.send(future, expectedAccount: owner); XCTFail("Unsupported future queue submitted") }
+        catch { XCTAssertTrue(error.localizedDescription.contains("supported delay")) }
+        XCTAssertEqual(calls, 2)
+    }
+    @MainActor func testSnoozeResponseAfterWorkspaceReentryCannotBeAccepted() async throws {
+        let api = backend(try signed(owner)), gate = HTTPGate(), started = expectation(description: "Old snooze request in flight")
+        let next = try JSONEncoder().encode(signed(owner, token: "new-login"))
+        ScopedHTTP.handler = { request, transport in
+            if request.url?.path == "/auth/v1/token" { transport.finish(200, next) }
+            else { gate.hold(transport); started.fulfill() }
+        }
+        defer { ScopedHTTP.handler = nil }
+        let request = Task { @MainActor in try await api.send(self.snoozeMutation(), expectedAccount: self.owner) }
+        await fulfillment(of: [started], timeout: 3)
+        _ = try await api.signIn(email: "fixture@example.invalid", password: "fixture", signup: false)
+        gate.release(200, try JSONEncoder().encode(Record(snoozeMutation().fields)))
+        do { _ = try await request.value; XCTFail("Stale workspace accepted snooze receipt") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(gate.count, 1)
+    }
+}

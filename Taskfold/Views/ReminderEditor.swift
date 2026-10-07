@@ -270,3 +270,50 @@ struct RemoteReminderRegistrationView: View {
         }
     }
 }
+
+
+/// One synchronized workspace preference; notification permission remains per device.
+struct ReminderSnoozePreferencesView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var workspace: WorkspaceBinding?
+    private var editable: Bool {
+        workspace?.matches(account: store.userID, generation: store.workspaceGeneration) == true && store.reminderSnoozeEditable
+    }
+    private var choices: [Int] { Array(Set(ReminderSnooze.presets + [store.reminderSnoozeMinutes])).sorted() }
+    private var selection: Binding<Int> {
+        Binding(get: { store.reminderSnoozeMinutes }, set: { value in
+            guard let workspace else { return }
+            _ = store.setReminderSnooze(value, workspace: workspace)
+        })
+    }
+    private var picker: some View {
+        Picker("Snooze for", selection: selection) {
+            ForEach(choices, id: \.self) { Text(ReminderSnooze.label($0)).tag($0) }
+        }
+    }
+    var body: some View {
+        Group {
+            Menu { picker } label: {
+                HStack {
+                    if typeSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Snooze for").font(.caption).foregroundStyle(Color.secondary)
+                            Text(ReminderSnooze.label(store.reminderSnoozeMinutes)).foregroundStyle(Color.primary).fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer()
+                    } else {
+                        Text("Snooze for").foregroundStyle(Color.primary); Spacer()
+                        Text(ReminderSnooze.label(store.reminderSnoozeMinutes)).fontWeight(.medium).foregroundStyle(Color.primary)
+                    }
+                    Image(systemName: "chevron.up.chevron.down").font(.caption).foregroundStyle(.tint)
+                }.frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
+            }.accessibilityIdentifier(typeSize.isAccessibilitySize ? "reminderSnoozeMenu" : "reminderSnooze")
+                .accessibilityLabel("Snooze for").accessibilityValue(ReminderSnooze.label(store.reminderSnoozeMinutes))
+                .disabled(!editable)
+            Text(editable ? "Snooze waits this amount of time from your tap. " + (store.localMode ? "This choice is saved in this workspace" : "This choice syncs with your workspace") + "; existing snoozes keep their scheduled time." : "This snooze preference is unavailable or needs a newer app. Its settings are preserved. Reopen Notifications after changing workspaces.")
+                .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
+        .onAppear { if workspace == nil { workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) } }
+    }
+}

@@ -514,9 +514,9 @@ actor ReminderScheduler {
         desired = state; sequence += 1
         return await sweep()
     }
-    func snooze(account: String, taskID: String, specID: String, signature: String, now: Date = Date(), originalAt: Date? = nil) async -> ReminderReport? {
-        guard account == desired.account, let event = desired.events.first(where: { $0.kind == .task && $0.taskID == taskID && $0.specID == specID && $0.hasSignature(signature) }) ?? DueReminder.validated(tasks: desired.validationTasks, taskID: taskID, specID: specID, signature: signature, originalAt: originalAt, calendar: desired.calendar) else { return nil }
-        let request = ReminderRequest.make(account: account, event: event, fireAt: now.addingTimeInterval(3600), snoozed: true)
+    func snooze(account: String, taskID: String, specID: String, signature: String, minutes: Int = 60, now: Date = Date(), originalAt: Date? = nil) async -> ReminderReport? {
+        guard ReminderSnooze.validMinutes(minutes), now.timeIntervalSince1970.isFinite, account == desired.account, let event = desired.events.first(where: { $0.kind == .task && $0.taskID == taskID && $0.specID == specID && $0.hasSignature(signature) }) ?? DueReminder.validated(tasks: desired.validationTasks, taskID: taskID, specID: specID, signature: signature, originalAt: originalAt, calendar: desired.calendar) else { return nil }
+        let request = ReminderRequest.make(account: account, event: event, fireAt: now.addingTimeInterval(TimeInterval(minutes) * 60), snoozed: true)
         snoozes.removeAll { $0.identifier == request.identifier }; snoozes.append(request); sequence += 1
         return await sweep()
     }
@@ -669,5 +669,57 @@ struct ReminderTaskRoute: Equatable, Sendable {
         workspace.matches(account: account, generation: generation) && events.contains {
             $0.kind == .task && $0.taskID == taskID && $0.specID == specID && $0.signature == signature
         }
+    }
+}
+
+
+/// Account-owned delay preference. Notification actions carry the shown delay independently
+/// of later preference edits; pending requests retain their exact existing fire instant.
+enum ReminderSnooze {
+    static let table = "reminder_preferences"
+    static let recordID = "current"
+    static let presets = [5, 15, 30, 60, 120, 240, 1440]
+    static let actionPrefix = "taskfold.snooze.minutes."
+    static func validMinutes(_ minutes: Int) -> Bool { (1...1440).contains(minutes) }
+    static func version(_ document: JSON) -> Int? {
+        guard case .object = document, case .number(let value)? = document.object["version"], value.isFinite,
+              value.rounded() == value, (1...1000).contains(value) else { return nil }
+        return Int(value)
+    }
+    static func minutes(_ document: JSON) -> Int? {
+        guard version(document) == 1, case .number(let value)? = document.object["snooze_minutes"],
+              value.isFinite, value.rounded() == value, (1...1440).contains(value) else { return nil }
+        return Int(value)
+    }
+    static func validDocument(_ document: JSON) -> Bool {
+        // Compact UTF-8 must accept every server-approved 8 KB frame, including opaque metadata.
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.withoutEscapingSlashes]
+        guard let version = version(document), let data = try? encoder.encode(document), data.count <= 8192 else { return false }
+        return version != 1 || minutes(document) != nil
+    }
+    static func changing(_ document: JSON, minutes: Int) -> JSON? {
+        guard validMinutes(minutes), document == .null || validDocument(document) && version(document) == 1 else { return nil }
+        var fields = document.object
+        fields["version"] = .number(1); fields["snooze_minutes"] = .number(Double(minutes))
+        let result = JSON.object(fields)
+        return validDocument(result) ? result : nil
+    }
+    static func row(_ rows: [Record], account: String) -> Record? {
+        rows.first { $0.id == recordID && $0.string("user_id").lowercased() == account.lowercased() && !account.isEmpty }
+    }
+    static func action(minutes: Int) -> String? {
+        validMinutes(minutes) ? actionPrefix + String(minutes) : nil
+    }
+    static func minutes(action: String) -> Int? {
+        if action == "taskfold.snooze.hour" { return 60 } // Already delivered legacy buttons.
+        guard action.hasPrefix(actionPrefix), let value = Int(action.dropFirst(actionPrefix.count)),
+              validMinutes(value), action == self.action(minutes: value) else { return nil }
+        return value
+    }
+    static func label(_ minutes: Int) -> String {
+        if minutes == 1 { return "1 minute" }
+        if minutes == 60 { return "1 hour" }
+        if minutes % 60 == 0 { return "\(minutes / 60) hours" }
+        return "\(minutes) minutes"
     }
 }

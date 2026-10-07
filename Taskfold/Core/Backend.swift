@@ -267,7 +267,18 @@ final class Backend: NSObject {
             }
             return nil
         }
-        let conflictKey = ["favorites", "view_preferences", "view_orders"].contains(change.table) ? "user_id,id" : "id"
+        if change.table == ReminderSnooze.table, change.method == "POST", change.insertOnly != true {
+            guard let owner = expectedOwner, change.recordID == ReminderSnooze.recordID, let minutes = ReminderSnooze.minutes(change.fields["settings"] ?? .null) else {
+                throw AppFailure(message: "This snooze preference needs a supported delay before syncing.")
+            }
+            let data = try await request("/rest/v1/rpc/taskfold_set_reminder_snooze", method: "POST", body: ["_minutes": .number(Double(minutes))], expectedAccount: expectedOwner)
+            let saved = try JSONDecoder().decode(Record.self, from: data)
+            guard ReminderSnooze.row([saved], account: owner) != nil, ReminderSnooze.minutes(saved["settings"]) == minutes else {
+                throw AppFailure(message: "The server did not confirm this snooze preference. Your choice is saved on this device.")
+            }
+            return saved
+        }
+        let conflictKey = ["favorites", "view_preferences", "view_orders", ReminderSnooze.table].contains(change.table) ? "user_id,id" : "id"
         let escapedID = change.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? change.recordID
         let query = change.method == "POST" ? "?on_conflict=\(conflictKey)" : "?id=eq.\(escapedID)"
         let data = try await request("/rest/v1/\(change.table)\(query)", method: change.method,
@@ -320,7 +331,7 @@ extension Backend {
         let socket = URLSession.shared.webSocketTask(with: components.url!)
         socket.resume()
         defer { socket.cancel(with: .goingAway, reason: nil) }
-        let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions"].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
+        let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders", ReminderSnooze.table, "focus_sessions"].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
         let join: [String: JSON] = ["topic": .string("realtime:taskfold-ios"), "event": .string("phx_join"), "ref": .string("1"), "join_ref": .string("1"), "payload": .object(["access_token": .string(session.access_token), "config": .object(["postgres_changes": .array(subscriptions)])])]
         try await socket.send(.string(String(decoding: JSONEncoder().encode(join), as: UTF8.self)))
         let heartbeat = Task { @MainActor in

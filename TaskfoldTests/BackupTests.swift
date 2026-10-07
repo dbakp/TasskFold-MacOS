@@ -298,3 +298,31 @@ final class BackupTests: XCTestCase {
     }
 
 }
+
+
+extension BackupTests {
+    func testSnoozePreferenceBackupCrossAccountIdentityAndCreateOnlyRetry() throws {
+        let settings: JSON = .object(["version": .number(1), "snooze_minutes": .number(15), "extension": .string("keep")])
+        var source = fixture(); source.tables[ReminderSnooze.table] = [Record(["id": .string("current"), "user_id": .string(owner), "settings": settings])]
+        let read = try WorkspaceBackup.read(WorkspaceBackup.make(source, account: owner).data())
+        let plan = try read.plan(current: Snapshot(), account: other)
+        let change = try XCTUnwrap(plan.changes.first { $0.table == ReminderSnooze.table })
+        XCTAssertEqual(change.recordID, "current"); XCTAssertEqual(change.fields["user_id"], .string(other)); XCTAssertEqual(change.fields["settings"], settings); XCTAssertTrue(change.insertOnly == true)
+        var applied = Snapshot(); plan.changes.forEach { applied.apply($0) }
+        let retry = try read.plan(current: applied, account: other)
+        XCTAssertFalse(retry.changes.contains { $0.table == ReminderSnooze.table })
+        let future: JSON = .object(["version": .number(2), "future": .array([.string("opaque")]), "extension": .string(String(repeating: "/", count: 5000))])
+        source.tables[ReminderSnooze.table]![0]["settings"] = future
+        let futureRead = try WorkspaceBackup.read(WorkspaceBackup.make(source, account: owner).data())
+        XCTAssertEqual(futureRead.tables[ReminderSnooze.table]?[0]["settings"], future)
+        let futurePlan = try futureRead.plan(current: Snapshot(), account: other)
+        XCTAssertEqual(futurePlan.changes.first { $0.table == ReminderSnooze.table }?.fields["settings"], future)
+    }
+    func testMalformedSnoozePreferenceBackupFailsBeforeAnyRestorePlan() throws {
+        var source = fixture(); source.tables[ReminderSnooze.table] = [Record(["id": .string("current"), "user_id": .string(owner), "settings": .object(["version": .number(1), "snooze_minutes": .number(0)])])]
+        XCTAssertThrowsError(try WorkspaceBackup.read(WorkspaceBackup.make(source, account: owner).data()))
+        source.tables[ReminderSnooze.table]![0]["settings"] = .object(["version": .number(1), "snooze_minutes": .number(30)])
+        source.tables[ReminderSnooze.table]![0]["id"] = .string("different")
+        XCTAssertThrowsError(try WorkspaceBackup.read(WorkspaceBackup.make(source, account: owner).data()))
+    }
+}
