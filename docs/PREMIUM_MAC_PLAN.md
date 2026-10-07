@@ -568,3 +568,18 @@ The corresponding iOS implementation now passes six final phone/tablet user flow
 ### 7 October — saved startup actions and closed-app local delivery
 
 Both independently owned app delegates register the saved snooze choice at launch. Two final iOS 26.5 phone/tablet Simulator walks pass with the app terminated before both original and retained delivery; actual OS actions and task opening start new processes without test arguments. [Closed-app contract and evidence](REMINDER_SNOOZE.md#closed-app-notification-acceptance--7-october) distinguishes runtime acceptance from own universal Mac compilation. Physical/provisioned/locked, actual paired account/offline/restore, Mac runtime, remote/APNs/provider and broader P0 gates remain open. No Mac GUI or installed replacement occurs.
+
+
+## 7 October — automatic timed-task reminder defaults
+
+Each native repo now owns account-synced timed defaults, captured as ordinary
+relative task reminders, with preserved manual choices/snoozes and semantic
+offline preference replay. [Behavior and release contract](AUTOMATIC_REMINDERS.md).
+Own Core suite: 487 tests, four existing environment skips, zero failures. Both
+actual-role preference SQL fixture suites pass and roll back. Own Release and
+Debug app/widget/test-target compile checks pass; the Mac executable contains
+x86_64 and arm64. Six final isolated phone/tablet flows pass, including actual UN
+trigger offset, capture/custom/off, retained task/fire instant, relaunch and
+light/dark largest text. Four inspected, unmodified native captures and scoped
+evidence are retained independently. Mac GUI and paired/physical/provider
+acceptance remain open; full P0 is still in progress.

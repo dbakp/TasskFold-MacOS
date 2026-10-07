@@ -607,3 +607,118 @@ extension ReminderTests {
         let after = await center.requests; XCTAssertEqual(after, before)
     }
 }
+
+extension ReminderTests {
+    func testAutomaticFramesPreserveSnoozeMetadataAndFutureDocuments() throws {
+        let old: JSON = .object(["version": .number(1), "snooze_minutes": .number(5), "extension": .object(["keep": .bool(true)])])
+        XCTAssertEqual(ReminderAutomatic.minutes(old), 0)
+        for value in [-1, 0, 1, 15, 1440, 10080] {
+            let changed = try XCTUnwrap(ReminderAutomatic.changing(old, minutes: value))
+            XCTAssertEqual(ReminderAutomatic.minutes(changed), value)
+            XCTAssertEqual(ReminderSnooze.minutes(changed), 5)
+            XCTAssertEqual(changed.object["extension"], old.object["extension"])
+            XCTAssertEqual(ReminderAutomatic.minutes(try XCTUnwrap(ReminderSnooze.changing(changed, minutes: 30))), value)
+        }
+        for value in [-2, 10081, Int.max] { XCTAssertNil(ReminderAutomatic.changing(old, minutes: value)) }
+        for value in [JSON.null, .bool(true), .string("15"), .number(15.5), .number(-2), .number(10081)] {
+            var raw = old.object; raw[ReminderAutomatic.field] = value
+            XCTAssertFalse(ReminderSnooze.validDocument(.object(raw)))
+            XCTAssertNil(ReminderAutomatic.changing(.object(raw), minutes: 0))
+        }
+        let future: JSON = .object(["version": .number(2), ReminderAutomatic.field: .string("opaque")])
+        XCTAssertTrue(ReminderSnooze.validDocument(future)); XCTAssertNil(ReminderAutomatic.minutes(future))
+        XCTAssertNil(ReminderAutomatic.changing(future, minutes: 0))
+    }
+    func testAutomaticFirstTimedPlanStoresOrdinaryOffsetAndKeepsItAfterMove() throws {
+        var previous = task(); previous["due_time"] = .null
+        let captured = ReminderAutomatic.applying(to: task(), previous: previous, minutes: 15, calendar: calendar)
+        let spec = try XCTUnwrap(ReminderSpec.rows(captured).first.flatMap(ReminderSpec.init(row:)))
+        XCTAssertEqual(spec.id, ReminderAutomatic.specID); XCTAssertEqual(spec.offset, -15)
+        XCTAssertEqual(spec.raw["version"], .number(1))
+        let event = try XCTUnwrap(DueReminder.events(tasks: [captured], calendar: calendar).first)
+        XCTAssertEqual(event.date.timeIntervalSince(try XCTUnwrap(TaskPlanning.start(captured, calendar: calendar))), -900)
+        var moved = captured; moved["due_time"] = .string("10:00")
+        let retained = ReminderAutomatic.applying(to: moved, previous: captured, minutes: 30, calendar: calendar)
+        XCTAssertEqual(retained["reminder_specs"], captured["reminder_specs"])
+        XCTAssertEqual(DueReminder.events(tasks: [retained], calendar: calendar).first!.date.timeIntervalSince(event.date), 3600)
+        XCTAssertEqual(ReminderAutomatic.applying(to: task(), previous: task(), minutes: 15, calendar: calendar), task())
+        XCTAssertEqual(ReminderAutomatic.applying(to: previous, previous: nil, minutes: 15, calendar: calendar), previous)
+        XCTAssertEqual(DueReminder.events(tasks: [previous], calendar: calendar).first!.date, TaskPlanning.wallTime(day: previous.due!, hour: 8, minute: 0, calendar: calendar))
+    }
+    func testAutomaticOffAtTimeAndCustomPlannedChoiceRemainExplicit() throws {
+        let off = ReminderAutomatic.applying(to: task(), previous: nil, minutes: -1, calendar: calendar)
+        XCTAssertFalse(ReminderSpec.plannedEnabled(off)); XCTAssertTrue(DueReminder.events(tasks: [off], calendar: calendar).isEmpty)
+        XCTAssertEqual(ReminderAutomatic.applying(to: off, previous: nil, minutes: 15, calendar: calendar), off)
+        let on = ReminderAutomatic.applying(to: task(), previous: nil, minutes: 0, calendar: calendar)
+        XCTAssertTrue(ReminderSpec.plannedEnabled(on)); XCTAssertEqual(DueReminder.events(tasks: [on], calendar: calendar).count, 1)
+        for enabled in [true, false] {
+            var chosen = task(); XCTAssertTrue(ReminderSpec.setPlanned(enabled, task: &chosen))
+            XCTAssertEqual(ReminderAutomatic.applying(to: chosen, previous: nil, minutes: 15, calendar: calendar), chosen)
+        }
+    }
+    func testAutomaticReplacesOnlyRecognizedPlaceholderAndDoesNotDuplicateCustom() throws {
+        var manual = task(); XCTAssertTrue(ReminderSpec.append(.relative(-30), task: &manual))
+        manual.fields["reminder_specs"] = .array(ReminderSpec.rows(manual).enumerated().map { index, row in
+            var fields = row.object; if index == 0 { fields["extra"] = .string("keep") }; return .object(fields)
+        })
+        let captured = ReminderAutomatic.applying(to: manual, previous: nil, minutes: 15, calendar: calendar)
+        let specs = ReminderSpec.rows(captured).compactMap(ReminderSpec.init(row:))
+        XCTAssertEqual(Set(specs.compactMap(\.offset)), [-15, -30]); XCTAssertEqual(specs.count, 2)
+        XCTAssertEqual(specs.first { $0.id == ReminderAutomatic.specID }?.raw["extra"], .string("keep"))
+        XCTAssertFalse(ReminderSpec.rows(captured).contains { $0.object[ReminderAutomatic.placeholder] != nil })
+        let duplicate = ReminderAutomatic.applying(to: manual, previous: nil, minutes: 30, calendar: calendar)
+        XCTAssertEqual(ReminderSpec.rows(duplicate).count, 1); XCTAssertEqual(ReminderSpec.rows(duplicate).first, ReminderSpec.rows(manual).last)
+        var explicit = manual; XCTAssertTrue(ReminderSpec.setPlanned(true, task: &explicit))
+        XCTAssertEqual(ReminderAutomatic.applying(to: explicit, previous: nil, minutes: 15, calendar: calendar), explicit)
+        var future = task(); future["reminder_specs"] = .array([.object(["version": .number(99), "extra": .string("opaque")])])
+        XCTAssertEqual(ReminderAutomatic.applying(to: future, previous: nil, minutes: 15, calendar: calendar), future)
+    }
+    func testAutomaticQuickTokensAndCapacityPreserveManualRows() throws {
+        let parsed = QuickEntry("Prepare tomorrow at 9am !30mb", now: now, calendar: calendar, task: task())
+        let captured = ReminderAutomatic.applying(to: parsed.applying(to: task()), previous: nil, minutes: 15, calendar: calendar)
+        XCTAssertEqual(Set(ReminderSpec.rows(captured).compactMap(ReminderSpec.init(row:)).compactMap(\.offset)), [-15, -30])
+        var full = task(); full["reminder_specs"] = .array([ReminderAutomatic.legacyPlaceholder] + (1..<20).map { .object(ReminderSpec.relative(-$0).raw) })
+        let replaced = ReminderAutomatic.applying(to: full, previous: nil, minutes: 60, calendar: calendar)
+        XCTAssertEqual(ReminderSpec.rows(replaced).count, 20)
+        XCTAssertEqual(Array(ReminderSpec.rows(replaced).prefix(19)), Array(ReminderSpec.rows(full).dropFirst()))
+        XCTAssertEqual(ReminderSpec.successorRows(ReminderSpec.rows(replaced)), ReminderSpec.rows(replaced))
+    }
+    func testAutomaticSemanticQueueReplaysOnlyItsFieldAgainstLatestMetadata() throws {
+        let owner = "owner"
+        let initial = Record(["id": .string("current"), "user_id": .string(owner), "settings": .object(["version": .number(1), "snooze_minutes": .number(5), ReminderAutomatic.field: .number(15), "extension": .string("old")])])
+        let auto = Mutation(table: ReminderSnooze.table, recordID: "current", method: "POST", fields: initial.fields, reminderPreferenceField: ReminderAutomatic.field)
+        var snooze = auto; snooze.id = UUID(); snooze.reminderPreferenceField = nil
+        snooze.fields["settings"] = ReminderSnooze.changing(initial["settings"], minutes: 30)
+        var latest = initial; latest["settings"] = .object(["version": .number(1), "snooze_minutes": .number(60), ReminderAutomatic.field: .number(120), "extension": .string("new")])
+        var snapshot = Snapshot(); snapshot.tables[ReminderSnooze.table] = [initial]; snapshot.pending = [auto, snooze]
+        snapshot.mergeRemote([ReminderSnooze.table: [latest]])
+        let settings = try XCTUnwrap(snapshot.tables[ReminderSnooze.table]?.first?["settings"])
+        XCTAssertEqual(ReminderAutomatic.minutes(settings), 15); XCTAssertEqual(ReminderSnooze.minutes(settings), 30)
+        XCTAssertEqual(settings.object["extension"], .string("new"))
+        snapshot.acknowledge(auto, saved: latest)
+        XCTAssertEqual(ReminderAutomatic.minutes(snapshot.tables[ReminderSnooze.table]!.first!["settings"]), 120)
+        XCTAssertEqual(ReminderSnooze.minutes(snapshot.tables[ReminderSnooze.table]!.first!["settings"]), 30)
+        let reopened = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+        XCTAssertEqual(reopened, snapshot)
+        latest["settings"] = .object(["version": .number(2), "future": .string("keep")])
+        snapshot.mergeRemote([ReminderSnooze.table: [latest]])
+        XCTAssertEqual(snapshot.tables[ReminderSnooze.table], [latest]); XCTAssertEqual(snapshot.pending.count, 1)
+        var restore = auto; restore.insertOnly = true
+        snapshot.apply(restore); XCTAssertEqual(snapshot.tables[ReminderSnooze.table], [latest])
+    }
+}
+
+extension ReminderTests {
+    func testLegacyClockRemovalKeepsItsExistingChoiceAcrossNewDefault() throws {
+        let original = task()
+        var undated = original; undated["due_time"] = .null
+        let frozen = ReminderAutomatic.applying(to: undated, previous: original, minutes: 15, calendar: calendar)
+        XCTAssertEqual(ReminderSpec.rows(frozen).compactMap(ReminderSpec.init(row:)).map(\.offset), [0])
+        var timedAgain = frozen; timedAgain["due_time"] = .string("10:00")
+        XCTAssertEqual(ReminderAutomatic.applying(to: timedAgain, previous: frozen, minutes: 30, calendar: calendar), timedAgain)
+        var manual = original; XCTAssertTrue(ReminderSpec.append(.relative(-30), task: &manual))
+        let saved = ReminderAutomatic.applying(to: manual, previous: original, minutes: 15, calendar: calendar)
+        XCTAssertEqual(Set(ReminderSpec.rows(saved).compactMap(ReminderSpec.init(row:)).compactMap(\.offset)), [0, -30])
+        XCTAssertFalse(ReminderSpec.rows(saved).contains { $0.object[ReminderAutomatic.placeholder] != nil })
+    }
+}

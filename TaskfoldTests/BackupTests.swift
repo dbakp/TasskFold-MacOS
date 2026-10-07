@@ -326,3 +326,24 @@ extension BackupTests {
         XCTAssertThrowsError(try WorkspaceBackup.read(WorkspaceBackup.make(source, account: owner).data()))
     }
 }
+
+extension BackupTests {
+    func testAutomaticPreferenceRoundTripAndCreateOnlyRestorePreserveBothChoices() throws {
+        let settings: JSON = .object(["version": .number(1), "snooze_minutes": .number(5), ReminderAutomatic.field: .number(15), "extension": .string("keep")])
+        var source = fixture()
+        source.tables[ReminderSnooze.table] = [Record(["id": .string("current"), "user_id": .string(owner), "settings": settings])]
+        let file = try WorkspaceBackup.read(WorkspaceBackup.make(source, account: owner).data())
+        XCTAssertEqual(file.tables[ReminderSnooze.table]?.first?["settings"], settings)
+        let plan = try file.plan(current: Snapshot(), account: other)
+        let change = try XCTUnwrap(plan.changes.first { $0.table == ReminderSnooze.table })
+        XCTAssertEqual(change.insertOnly, true); XCTAssertNil(change.reminderPreferenceField)
+        XCTAssertEqual(change.fields["user_id"], .string(other)); XCTAssertEqual(change.fields["settings"], settings)
+        var restored = Snapshot(); restored.apply(change)
+        var newer = restored.tables[ReminderSnooze.table]!.first!
+        newer["settings"] = ReminderAutomatic.changing(newer["settings"], minutes: -1)!
+        restored.tables[ReminderSnooze.table] = [newer]; restored.apply(change)
+        XCTAssertEqual(restored.tables[ReminderSnooze.table], [newer])
+        source.tables[ReminderSnooze.table]![0]["settings"] = .object(["version": .number(1), "snooze_minutes": .number(5), ReminderAutomatic.field: .number(15.5)])
+        XCTAssertThrowsError(try WorkspaceBackup.read(WorkspaceBackup.make(source, account: owner).data()))
+    }
+}

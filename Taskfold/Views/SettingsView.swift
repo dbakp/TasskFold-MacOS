@@ -40,6 +40,7 @@ struct GeneralSettings: View {
             Text("Choose fixed-time and before/after reminders in each task. Delivery is enabled separately for this workspace on each device. The nearest 60 notifications refresh while Taskfold is open.").font(.caption).foregroundStyle(.secondary)
             Text(store.reminderStatus).font(.caption).foregroundStyle(.secondary)
             ReminderSystemSettingsButton()
+            Section("Automatic reminders") { ReminderAutomaticPreferencesView() }
             Section("Snooze") { ReminderSnoozePreferencesView() }
             Section("Remote reminders") { RemoteReminderRegistrationView() }
             Section {

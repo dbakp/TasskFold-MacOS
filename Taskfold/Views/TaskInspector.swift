@@ -317,7 +317,7 @@ struct TaskInspectorForm: View {
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .sheet(isPresented: $showingReminders) {
             NavigationStack {
-                TaskReminderEditor(task: $draft)
+                TaskReminderEditor(task: $draft).onAppear { draft = store.applyingReminderDefault(draft, previous: original) }
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showingReminders = false } } }
             }.frame(minWidth: 550, minHeight: 620)
         }
@@ -389,6 +389,7 @@ struct TaskInspectorForm: View {
         merged["title"] = .string(merged.title.trimmingCharacters(in: .whitespacesAndNewlines))
         if merged.title.isEmpty { merged["title"] = original["title"] }
         if merged["is_recurring"].flag && merged.due == nil { merged["due_date"] = .string(Dates.day(Date())) }
+        merged = store.applyingReminderDefault(merged, previous: original)
         guard merged != current || notePin != nil else { original = merged; draft = merged; return }
         var saved = false
         if let notePin {

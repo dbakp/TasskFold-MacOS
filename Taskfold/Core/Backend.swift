@@ -268,13 +268,21 @@ final class Backend: NSObject {
             return nil
         }
         if change.table == ReminderSnooze.table, change.method == "POST", change.insertOnly != true {
-            guard let owner = expectedOwner, change.recordID == ReminderSnooze.recordID, let minutes = ReminderSnooze.minutes(change.fields["settings"] ?? .null) else {
-                throw AppFailure(message: "This snooze preference needs a supported delay before syncing.")
+            let automatic = change.reminderPreferenceField == ReminderAutomatic.field
+            let settings = change.fields["settings"] ?? .null
+            let minutes = automatic ? ReminderAutomatic.minutes(settings) : ReminderSnooze.minutes(settings)
+            guard let owner = expectedOwner, change.recordID == ReminderSnooze.recordID,
+                  change.fields["user_id"]?.text.lowercased() == owner.lowercased(),
+                  [nil, "snooze_minutes", ReminderAutomatic.field].contains(change.reminderPreferenceField),
+                  ReminderSnooze.validDocument(settings), let minutes else {
+                throw AppFailure(message: "This reminder preference needs a supported delay before syncing.")
             }
-            let data = try await request("/rest/v1/rpc/taskfold_set_reminder_snooze", method: "POST", body: ["_minutes": .number(Double(minutes))], expectedAccount: expectedOwner)
+            let rpc = automatic ? "taskfold_set_automatic_reminder" : "taskfold_set_reminder_snooze"
+            let data = try await request("/rest/v1/rpc/" + rpc, method: "POST", body: ["_minutes": .number(Double(minutes))], expectedAccount: expectedOwner)
             let saved = try JSONDecoder().decode(Record.self, from: data)
-            guard ReminderSnooze.row([saved], account: owner) != nil, ReminderSnooze.minutes(saved["settings"]) == minutes else {
-                throw AppFailure(message: "The server did not confirm this snooze preference. Your choice is saved on this device.")
+            guard ReminderSnooze.row([saved], account: owner) != nil, ReminderSnooze.validDocument(saved["settings"]),
+                  (automatic ? ReminderAutomatic.minutes(saved["settings"]) : ReminderSnooze.minutes(saved["settings"])) == minutes else {
+                throw AppFailure(message: "The server did not confirm this reminder preference. Your choice is saved on this device.")
             }
             return saved
         }

@@ -1,0 +1,110 @@
+{
+  "builds": {
+    "mac_debug": {
+      "log": "/tmp/taskfold-automatic-mac-debug-closed.log",
+      "result": "passed"
+    },
+    "mac_release": {
+      "log": "/tmp/taskfold-automatic-mac-release-closed.log",
+      "result": "passed"
+    }
+  },
+  "compiled_widget_catalogue": {
+    "completion_metadata": "passed",
+    "configurations": 8,
+    "entities": 3,
+    "enums": 6
+  },
+  "core": {
+    "failed": 0,
+    "log": "/tmp/taskfold-automatic-mac-core-closed.log",
+    "scope": "Own Swift package on the Mac host; existing environment-dependent native integration skips.",
+    "skipped": 4,
+    "test_count": 487
+  },
+  "date": "2026-10-07",
+  "earlier_native_attempts": {
+    "closed_ipad": "Two flows passed with clock and retained-task checks; superseded by final pass.",
+    "closed_phone": "Moving the DEBUG inspection strip to the bottom interfered with Settings navigation. Reverted before final pass.",
+    "initial_ipad": "Two flows passed; superseded by final pass.",
+    "initial_phone": "Capture passed; largest menu lacked a scroll gesture. Superseded by final pass."
+  },
+  "full_p0_status": "in_progress",
+  "inspected_unmodified_screenshots": {
+    "ios-largest-dark.png": "464c6e3fb5e9751cd6247e565765e5b47a8f63726cab35774354a629b655e276",
+    "ios-light.png": "876398bf47969eb7396ef5d893b8f4840cb70f5e352a0fc46947075653318d5a",
+    "ipad-largest-dark.png": "ffd4be5923e15fc5c3dfd64a9300c4ab0229d4ecbd70d50bcc353269b25ad87b",
+    "ipad-light.png": "c55355f4778970c4616c344f29a982a61d3f5173d3b2e53268945e4bc1c1769d"
+  },
+  "migration": {
+    "active_reminder_crons": 0,
+    "actual_role_fixtures": [
+      "automatic_reminder_preferences.sql",
+      "reminder_preferences.sql"
+    ],
+    "deployed_sql_md5": "6817cef653cfa3552993db907d5b597b",
+    "fixture_accounts_remaining": 0,
+    "name": "automatic_reminder_preferences",
+    "owned_sql_sha256": "f68c469120e046dae8778f04306e7440085adfa939196ca09b013c9ea04a3f0c",
+    "version": "20261007101832"
+  },
+  "native_acceptance": [
+    "15-minute default captured from real Quick Add",
+    "Real UN fire/trigger instant equals entered next-day 09:00 minus 900 seconds",
+    "Custom 30-minute reminder coexists without an extra at-time alert",
+    "No automatic reminder persists after process relaunch",
+    "Off creates an explicit disabled planned row and no pending alert",
+    "Existing reminder/task fields and fire instant survive setting change and relaunch",
+    "Largest dark text menu scrolling and 1-hour default persist alongside 15-minute snooze",
+    "Minimum 44-point control and clean light settings presentation"
+  ],
+  "native_simulator_flows": {
+    "ipad": {
+      "elapsed_seconds": 256.352,
+      "failed": 0,
+      "log": "/tmp/taskfold-automatic-ipad-final.log",
+      "result": "passed",
+      "result_bundle": "/tmp/taskfold-automatic-ipad-final.xcresult",
+      "skipped": 0,
+      "test_count": 3
+    },
+    "phone": {
+      "elapsed_seconds": 295.725,
+      "failed": 0,
+      "log": "/tmp/taskfold-automatic-phone-final.log",
+      "result": "passed",
+      "result_bundle": "/tmp/taskfold-automatic-phone-final.xcresult",
+      "skipped": 0,
+      "test_count": 3
+    }
+  },
+  "owned_platform": "macOS",
+  "performance_advisors_after": {
+    "auth_db_connections_absolute": 1,
+    "auth_rls_initplan": 14,
+    "table_bloat": 1,
+    "unindexed_foreign_keys": 4,
+    "unused_index": 6
+  },
+  "remaining": [
+    "Physical/provisioned/locked-device delivery",
+    "Paired native online/offline/account/access-revocation/restore",
+    "Mac GUI runtime acceptance",
+    "Remote/APNs provider delivery",
+    "Configured widget all-family/privacy/completion/closed-finish acceptance",
+    "Broader full P0 port and premium/accessibility audit"
+  ],
+  "security_advisor_counts_unchanged": {
+    "anon_security_definer_function_executable": 8,
+    "auth_leaked_password_protection": 1,
+    "authenticated_security_definer_function_executable": 9,
+    "extension_in_public": 1,
+    "pg_graphql_anon_table_exposed": 6,
+    "pg_graphql_authenticated_table_exposed": 15
+  },
+  "temporary_fixture_cleanup": "Separate phone app/runner uninstalled; only newly created tablet shut down/deleted after terminal test completion.",
+  "universal_architectures": [
+    "x86_64",
+    "arm64"
+  ]
+}

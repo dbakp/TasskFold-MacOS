@@ -78,7 +78,7 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
         var rows = rows(task)
         if enabled && duplicates(relative(0, id: plannedID), in: rows, excluding: plannedID) { return false }
         if let index = rows.firstIndex(where: { $0.object["id"]?.text.lowercased() == plannedID }), var spec = ReminderSpec(row: rows[index]), spec.locallyEditable {
-            spec.raw["enabled"] = .bool(enabled); rows[index] = .object(spec.raw)
+            spec.raw["enabled"] = .bool(enabled); spec.raw.removeValue(forKey: ReminderAutomatic.placeholder); rows[index] = .object(spec.raw)
         } else if !rows.contains(where: { $0.object["id"]?.text.lowercased() == plannedID }), rows.count < maximum {
             rows.append(.object(relative(0, id: plannedID, enabled: enabled).raw))
         } else { return false }
@@ -95,7 +95,7 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
     static func append(_ spec: ReminderSpec, task: inout Record) -> Bool {
         var values = rows(task)
         // Materialize the legacy default before introducing an explicit override.
-        if values.isEmpty { values = [.object(relative(0, id: plannedID).raw)] }
+        if values.isEmpty { values = [ReminderAutomatic.legacyPlaceholder] }
         guard values.count < maximum, !values.contains(where: { $0.object["id"]?.text.lowercased() == spec.id }),
               !duplicates(spec, in: values) else { return false }
         values.append(.object(spec.raw)); task["reminder_specs"] = .array(values); return true
@@ -675,6 +675,98 @@ struct ReminderTaskRoute: Equatable, Sendable {
 
 /// Account-owned delay preference. Notification actions carry the shown delay independently
 /// of later preference edits; pending requests retain their exact existing fire instant.
+/// Account default captured as an ordinary relative spec when a task first gains
+/// a valid date and time. Subsequent edits and preference changes keep that choice.
+enum ReminderAutomatic {
+    static let field = "automatic_before_minutes"
+    static let specID = "00000000-0000-4000-8000-000000000002"
+    static let placeholder = "taskfold_default_placeholder"
+    static let presets = [-1, 0, 5, 10, 15, 30, 60, 120, 1440]
+    static func validMinutes(_ value: Int) -> Bool { (-1...10080).contains(value) }
+    static func minutes(_ document: JSON) -> Int? {
+        guard ReminderSnooze.version(document) == 1 else { return nil }
+        guard let field = document.object[field] else { return 0 } // Legacy default.
+        guard case .number(let value) = field, value.isFinite, value.rounded() == value,
+              (-1...10080).contains(value) else { return nil }
+        return Int(value)
+    }
+    static func changing(_ document: JSON, minutes: Int) -> JSON? {
+        guard validMinutes(minutes), document == .null || ReminderSnooze.validDocument(document) && ReminderSnooze.version(document) == 1 else { return nil }
+        var fields = document == .null ? ["version": JSON.number(1), "snooze_minutes": .number(60)] : document.object
+        fields[field] = .number(Double(minutes))
+        let result = JSON.object(fields)
+        return ReminderSnooze.validDocument(result) ? result : nil
+    }
+    static func label(_ minutes: Int) -> String {
+        minutes == -1 ? "No automatic reminder" : minutes == 0 ? "At planned time" : ReminderSnooze.label(minutes) + " before"
+    }
+    static func timed(_ task: Record, calendar: Calendar) -> Bool {
+        !task.string("due_date").isEmpty && !task.string("due_time").isEmpty && TaskPlanning.start(task, calendar: calendar) != nil
+    }
+    /// A temporary legacy default added alongside a manual reminder is distinguishable
+    /// from an explicit at-planned-time choice. Never replace unmarked/manual rows.
+    static var legacyPlaceholder: JSON {
+        var spec = ReminderSpec.relative(0, id: ReminderSpec.plannedID)
+        spec.raw[placeholder] = .bool(true)
+        return .object(spec.raw)
+    }
+    static func applying(to task: Record, previous: Record?, minutes: Int, calendar: Calendar = .current) -> Record {
+        guard validMinutes(minutes) else { return task }
+        if let previous, timed(previous, calendar: calendar) {
+            var result = task
+            var rows = ReminderSpec.rows(task)
+            // Removing a clock does not reset an existing task's legacy choice.
+            if rows.isEmpty && !timed(task, calendar: calendar) {
+                rows = [.object(ReminderSpec.relative(0, id: ReminderSpec.plannedID).raw)]
+            }
+            rows = rows.map { value in
+                guard let spec = ReminderSpec(row: value), spec.id == ReminderSpec.plannedID,
+                      spec.locallyEditable, spec.raw[placeholder] == .bool(true) else { return value }
+                var raw = spec.raw; raw.removeValue(forKey: placeholder); return .object(raw)
+            }
+            if rows != ReminderSpec.rows(task) { result["reminder_specs"] = .array(rows) }
+            return result
+        }
+        guard timed(task, calendar: calendar) else { return task }
+        var rows = ReminderSpec.rows(task)
+        let index = rows.firstIndex { value in
+            guard let spec = ReminderSpec(row: value) else { return false }
+            return spec.id == ReminderSpec.plannedID && spec.enabled && spec.locallyEditable && spec.raw[placeholder] == .bool(true)
+        }
+        guard rows.isEmpty || index != nil else { return task }
+        let id = minutes > 0 ? specID : ReminderSpec.plannedID
+        guard !rows.enumerated().contains(where: { $0.offset != index && $0.element.object["id"]?.text.lowercased() == id }) else { return task }
+        var spec = ReminderSpec.relative(minutes > 0 ? -minutes : 0, id: id, enabled: minutes != -1)
+        if let index {
+            // Preserve extension metadata of the recognized legacy placeholder.
+            let old = rows.remove(at: index).object
+            for (key, value) in old where spec.raw[key] == nil && key != placeholder { spec.raw[key] = value }
+        }
+        if !ReminderSpec.duplicates(spec, in: rows) { rows.append(.object(spec.raw)) }
+        guard rows.count <= ReminderSpec.maximum else { return task }
+        var result = task; result["reminder_specs"] = .array(rows)
+        return result
+    }
+    /// Replaying a queued semantic choice overlays only its field onto latest settings.
+    /// Restores retain their separate create-only contract, and future documents stay opaque.
+    static func replay(_ change: Mutation, onto row: Record?) -> Record? {
+        guard change.recordID == ReminderSnooze.recordID,
+              row == nil || row?.string("user_id").lowercased() == change.fields["user_id"]?.text.lowercased() else { return nil }
+        let queued = change.fields["settings"] ?? .null
+        guard ReminderSnooze.validDocument(queued), ReminderSnooze.version(queued) == 1 else { return nil }
+        let settings: JSON?
+        switch change.reminderPreferenceField {
+        case nil, "snooze_minutes": settings = ReminderSnooze.minutes(queued).flatMap { ReminderSnooze.changing(row?["settings"] ?? .null, minutes: $0) }
+        case field: settings = minutes(queued).flatMap { changing(row?["settings"] ?? .null, minutes: $0) }
+        default: return nil
+        }
+        guard let settings else { return nil }
+        var result = row ?? Record(change.fields)
+        result["settings"] = settings
+        return result
+    }
+}
+
 enum ReminderSnooze {
     static let table = "reminder_preferences"
     static let recordID = "current"
@@ -695,7 +787,7 @@ enum ReminderSnooze {
         // Compact UTF-8 must accept every server-approved 8 KB frame, including opaque metadata.
         let encoder = JSONEncoder(); encoder.outputFormatting = [.withoutEscapingSlashes]
         guard let version = version(document), let data = try? encoder.encode(document), data.count <= 8192 else { return false }
-        return version != 1 || minutes(document) != nil
+        return version != 1 || minutes(document) != nil && ReminderAutomatic.minutes(document) != nil
     }
     static func changing(_ document: JSON, minutes: Int) -> JSON? {
         guard validMinutes(minutes), document == .null || validDocument(document) && version(document) == 1 else { return nil }

@@ -912,3 +912,18 @@ Final normal and isolated iOS Debug app/widget/UI-test-target builds pass. Own u
 Four inspected, unmodified captures in `cold-notifications/` show readable 5/15-minute native actions on each device. They are Simulator notification evidence, not installed-widget or Mac runtime evidence. The temporary phone app is removed and the newly created tablet fixture is shut down/deleted after terminal test completion. No real task data, Mac GUI, installed Mac replacement, provider activation or public release is involved.
 
 This closes local closed-app delivery, cold OS snooze action and cold task-opening acceptance on the two Simulators. Physical/provisioned/locked-device delivery, actual paired native online/offline/account/access-revocation/restore, Mac runtime, remote/APNs delivery and broader P0 acceptance remain open. Full P0 remains in progress.
+
+
+## 7 October — automatic timed-task reminder defaults
+
+Each native repo now owns account-synced timed defaults, captured as ordinary
+relative task reminders, with preserved manual choices/snoozes and semantic
+offline preference replay. [Behavior and release contract](AUTOMATIC_REMINDERS.md).
+Own Core suite: 487 tests, four existing environment skips, zero failures. Both
+actual-role preference SQL fixture suites pass and roll back. Own Release and
+Debug app/widget/test-target compile checks pass; the Mac executable contains
+x86_64 and arm64. Six final isolated phone/tablet flows pass, including actual UN
+trigger offset, capture/custom/off, retained task/fire instant, relaunch and
+light/dark largest text. Four inspected, unmodified native captures and scoped
+evidence are retained independently. Mac GUI and paired/physical/provider
+acceptance remain open; full P0 is still in progress.

@@ -317,3 +317,59 @@ struct ReminderSnoozePreferencesView: View {
         .onAppear { if workspace == nil { workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) } }
     }
 }
+
+struct ReminderAutomaticPreferencesView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var workspace: WorkspaceBinding?
+    private var editable: Bool {
+        workspace?.matches(account: store.userID, generation: store.workspaceGeneration) == true && store.reminderSnoozeEditable
+    }
+    private var choices: [Int] { Array(Set(ReminderAutomatic.presets + [store.reminderAutomaticMinutes])).sorted() }
+    var body: some View {
+        Group {
+            Menu {
+                Picker("Timed task default", selection: Binding(get: { store.reminderAutomaticMinutes }, set: { value in
+                    guard let workspace else { return }
+                    _ = store.setReminderAutomatic(value, workspace: workspace)
+                })) {
+                    ForEach(choices, id: \.self) { Text(ReminderAutomatic.label($0)).tag($0) }
+                }
+            } label: {
+                HStack {
+                    if typeSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Timed task default").font(.caption).foregroundStyle(Color.secondary)
+                            Text(ReminderAutomatic.label(store.reminderAutomaticMinutes)).foregroundStyle(Color.primary).fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer()
+                    } else {
+                        Text("Timed task default").foregroundStyle(Color.primary); Spacer()
+                        Text(ReminderAutomatic.label(store.reminderAutomaticMinutes)).fontWeight(.medium).foregroundStyle(Color.primary).fixedSize(horizontal: false, vertical: true)
+                    }
+                    Image(systemName: "chevron.up.chevron.down").font(.caption).foregroundStyle(.tint)
+                }.frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
+            }.accessibilityIdentifier("reminderAutomatic")
+                .accessibilityLabel("Timed task default").accessibilityValue(ReminderAutomatic.label(store.reminderAutomaticMinutes)).disabled(!editable)
+            Text(editable ? "Applied when a task first gets a date and time. Existing reminder choices stay as they are. " + (store.localMode ? "Saved in this workspace." : "Syncs with your workspace.") + " Date-only tasks keep their 8 AM planned reminder." : "This preference is unavailable or needs a newer app. Its settings are preserved. Reopen Notifications after changing workspaces.")
+                .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }.onAppear { if workspace == nil { workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) } }
+    }
+}
+
+/// Preview uses the same materialization policy as Save and never writes the Store.
+struct ReminderAutomaticPreview: View {
+    @Environment(Store.self) private var store
+    let task: Record
+    var previous: Record? = nil
+    var body: some View {
+        let resolved = store.applyingReminderDefault(task, previous: previous)
+        if resolved["reminder_specs"] != task["reminder_specs"] {
+            Text("Default reminder: " + ReminderAutomatic.label(store.reminderAutomaticMinutes))
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("automaticReminderPreview")
+            if store.reminderAutomaticMinutes != -1 && !store.remindersEnabled {
+                Text("Delivery is off on this device. Enable it in Reminders.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}

@@ -193,6 +193,26 @@ final class Store {
         if saved { ReminderCategory.register(minutes: reminderSnoozeMinutes) }
         return saved
     }
+    var reminderAutomaticMinutes: Int { ReminderAutomatic.minutes(reminderSnoozeRecord?["settings"] ?? .null) ?? 0 }
+    @discardableResult func setReminderAutomatic(_ minutes: Int, workspace: WorkspaceBinding) -> Bool {
+        guard workspace.matches(account: userID, generation: workspaceGeneration), reminderSnoozeEditable,
+              let settings = ReminderAutomatic.changing(reminderSnoozeRecord?["settings"] ?? .null, minutes: minutes) else {
+            error = "Reopen Notifications before changing this workspace's automatic reminder."; return false
+        }
+        if settings == reminderSnoozeRecord?["settings"] { return true }
+        return commit([Mutation(table: ReminderSnooze.table, recordID: ReminderSnooze.recordID, method: "POST",
+            fields: ["id": .string(ReminderSnooze.recordID), "user_id": .string(userID), "settings": settings], reminderPreferenceField: ReminderAutomatic.field)], remember: false)
+    }
+    func applyingReminderDefault(_ task: Record, previous: Record?) -> Record {
+        // An unsupported preference is not permission to invent a legacy default.
+        guard reminderSnoozeEditable else { return task }
+        let current = record("tasks", id: task.id)
+        if let previous, let current, task["reminder_specs"] == previous["reminder_specs"],
+           current["reminder_specs"] != previous["reminder_specs"] { return task }
+        // A newly synced clock/choice belongs to the task already; a stale editor's
+        // implicit default must not replace it. Explicit reminder edits keep their guard.
+        return ReminderAutomatic.applying(to: task, previous: current ?? previous, minutes: reminderAutomaticMinutes)
+    }
     var focusRecord: Record? { record(FocusSessionChange.table, id: FocusSessionChange.recordID) }
     var focusAvailable: Bool { workspaceCacheReadable && (signedIn || localMode) }
     var focusSession: FocusSession? { FocusSessionChange.session(in: focusRecord, account: userID) }
@@ -532,6 +552,16 @@ final class Store {
             var change = change
             if change.table == "tasks", change.method != "DELETE" {
                 change.fields = TaskPlanning.fields(change.fields, existing: record("tasks", id: change.recordID))
+                if change.method == "PATCH", change.fields["reminder_specs"] == nil,
+                   !Set(change.fields.keys).isDisjoint(with: ["due_date", "due_time", "scheduled_at", "time_zone"]),
+                   let existing = record("tasks", id: change.recordID) {
+                    let proposed = Record(existing.fields.merging(change.fields) { _, new in new })
+                    let resolved = applyingReminderDefault(proposed, previous: existing)
+                    if resolved["reminder_specs"] != proposed["reminder_specs"] {
+                        change.fields["reminder_specs"] = resolved["reminder_specs"]
+                        if change.baseline != nil { change.baseline?["reminder_specs"] = existing["reminder_specs"] }
+                    }
+                }
                 if case .array(let values)? = change.fields["labels"] { change.fields["labels"] = .array(TaskLabels.normalized(values, labels: labels)) }
             }
             if change.table == DayPlacement.table, change.method != "DELETE" {
@@ -568,8 +598,9 @@ final class Store {
         return true
     }
     @discardableResult
-    func save(_ table: String, _ record: Record, baseline: Record? = nil) -> Bool {
+    func save(_ table: String, _ record: Record, baseline: Record? = nil, applyReminderDefaults: Bool = true) -> Bool {
         let existing = self.record(table, id: record.id)
+        let record = table == "tasks" && applyReminderDefaults ? applyingReminderDefault(record, previous: baseline ?? existing) : record
         let editable = record.fields.filter { table != "tasks" || $0.key != "completion_version" && (existing == nil || $0.key != "task_generation") }
         let changed = (baseline ?? existing).map { old in editable.filter { old.fields[$0.key] != $0.value } } ?? editable
         guard !changed.isEmpty else { return true }
@@ -594,6 +625,7 @@ final class Store {
         guard let pin else { return save("tasks", task, baseline: baseline) }
         guard workspaceCacheReadable, signedIn || localMode, PinnedNotes.validID(task.id) else { error = "Open your workspace before pinning notes."; return false }
         guard record("view_orders", id: PinnedNotes.key(task.id)).map({ $0.string("user_id") == userID }) ?? true else { error = "This pin belongs to another workspace."; return false }
+        let task = applyingReminderDefault(task, previous: baseline ?? record("tasks", id: task.id))
         let changes = [PinnedNotes.edit(task, existing: record("tasks", id: task.id), baseline: baseline),
                        PinnedNotes.change(taskID: task.id, enabled: pin, pins: rows("view_orders"), account: userID)].compactMap { $0 }
         return changes.isEmpty || commit(changes)

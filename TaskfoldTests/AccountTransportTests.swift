@@ -252,3 +252,55 @@ extension AccountTransportTests {
         XCTAssertEqual(gate.count, 1)
     }
 }
+
+extension AccountTransportTests {
+    func automaticMutation(minutes: Int = 15) -> Mutation {
+        var result = snoozeMutation()
+        result.reminderPreferenceField = ReminderAutomatic.field
+        result.fields["settings"] = ReminderAutomatic.changing(result.fields["settings"]!, minutes: minutes)
+        return result
+    }
+    @MainActor func testAutomaticSyncSendsOnlyOffsetAndConfirmsLatestOwnerMetadata() async throws {
+        let api = backend(try signed(owner)); var calls = 0
+        let latest = Record(["id": .string("current"), "user_id": .string(owner), "settings": .object(["version": .number(1), "snooze_minutes": .number(120), ReminderAutomatic.field: .number(15), "extension": .string("new")])])
+        ScopedHTTP.handler = { request, transport in
+            calls += 1; XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_set_automatic_reminder")
+            let body = request.httpBody ?? {
+                let stream = request.httpBodyStream!; stream.open(); defer { stream.close() }
+                var data = Data(), buffer = [UInt8](repeating: 0, count: 4096)
+                while stream.hasBytesAvailable { let n = stream.read(&buffer, maxLength: buffer.count); if n <= 0 { break }; data.append(buffer, count: n) }
+                return data
+            }()
+            XCTAssertEqual(try! JSONDecoder().decode([String: JSON].self, from: body), ["_minutes": .number(15)])
+            transport.finish(200, try! JSONEncoder().encode(latest))
+        }
+        defer { ScopedHTTP.handler = nil }
+        let saved = try await api.send(automaticMutation(), expectedAccount: owner)
+        XCTAssertEqual(saved, latest); XCTAssertEqual(calls, 1)
+        let encoded = try JSONEncoder().encode(automaticMutation())
+        XCTAssertEqual(try JSONDecoder().decode(Mutation.self, from: encoded).reminderPreferenceField, ReminderAutomatic.field)
+    }
+    @MainActor func testAutomaticSyncRejectsUnconfirmedResponsesAndUnknownCommands() async throws {
+        let api = backend(try signed(owner)); var calls = 0
+        ScopedHTTP.handler = { _, transport in
+            calls += 1
+            var saved = Record(self.automaticMutation().fields)
+            if calls == 1 { saved["user_id"] = .string(self.other) }
+            if calls == 2 { saved["settings"] = ReminderAutomatic.changing(saved["settings"], minutes: 30)! }
+            if calls == 3 { saved["settings"] = .object(["version": .number(2), "future": .string("keep")]) }
+            transport.finish(200, try! JSONEncoder().encode(saved))
+        }
+        defer { ScopedHTTP.handler = nil }
+        for _ in 0..<3 {
+            do { _ = try await api.send(automaticMutation(), expectedAccount: owner); XCTFail("Unconfirmed choice acknowledged") }
+            catch { XCTAssertTrue(error.localizedDescription.contains("server did not confirm")) }
+        }
+        for selector in ["unknown", ReminderAutomatic.field] {
+            var invalid = automaticMutation(); invalid.reminderPreferenceField = selector
+            if selector == ReminderAutomatic.field { invalid.fields["user_id"] = .string(other) }
+            do { _ = try await api.send(invalid, expectedAccount: owner); XCTFail("Invalid command sent") }
+            catch { XCTAssertTrue(error.localizedDescription.contains("supported delay")) }
+        }
+        XCTAssertEqual(calls, 3)
+    }
+}

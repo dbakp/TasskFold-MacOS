@@ -94,6 +94,8 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var baseline: [String: JSON]? = nil
     /// Create-only operations never overwrite an already present server row on retry.
     var insertOnly: Bool? = nil
+    /// Semantic preference command; absent in older queues means snooze. Never a row field.
+    var reminderPreferenceField: String? = nil
 }
 
 /// Undo/redo recreation is a new task incarnation; an exact queued retry retains its chosen ID.
@@ -304,7 +306,11 @@ struct Snapshot: Codable, Equatable, Sendable {
         var rows = tables[change.table] ?? []
         // A fetched recreated task must remain visible while its older queued action needs review.
         if !TaskGeneration.permitsLocalAction(change, existing: rows.first(where: { $0.id == change.recordID })) { return }
-        if change.method == "DELETE" { rows.removeAll { $0.id == change.recordID } }
+        if change.table == ReminderSnooze.table, change.method == "POST", change.insertOnly != true {
+            let index = rows.firstIndex { $0.id == change.recordID }
+            guard let replayed = ReminderAutomatic.replay(change, onto: index.map { rows[$0] }) else { return }
+            if let index { rows[index] = replayed } else { rows.append(replayed) }
+        } else if change.method == "DELETE" { rows.removeAll { $0.id == change.recordID } }
         else if let i = rows.firstIndex(where: { $0.id == change.recordID }) {
             if change.method == "POST", change.insertOnly == true { return }
             rows[i] = change.table == "tasks" ? TaskCompletionRevision.applying(change.fields, to: rows[i]) : Record(rows[i].fields.merging(change.fields) { _, new in new })
@@ -1377,12 +1383,12 @@ private enum QuickReminderText {
             if let index = rows.firstIndex(where: { $0.object["id"]?.text.lowercased() == spec.id }) {
                 guard var old = ReminderSpec(row: rows[index]), old.locallyEditable,
                       !ReminderSpec.duplicates(spec, in: rows, excluding: spec.id) else { return false }
-                old.raw["enabled"] = .bool(true); rows[index] = .object(old.raw); return true
+                old.raw["enabled"] = .bool(true); old.raw.removeValue(forKey: ReminderAutomatic.placeholder); rows[index] = .object(old.raw); return true
             }
             guard rows.count < ReminderSpec.maximum, !ReminderSpec.duplicates(spec, in: rows) else { return false }
             rows.append(.object(spec.raw)); return true
         }
-        if rows.isEmpty { rows.append(.object(ReminderSpec.relative(0, id: ReminderSpec.plannedID).raw)) }
+        if rows.isEmpty { rows.append(ReminderAutomatic.legacyPlaceholder) }
         guard rows.count < ReminderSpec.maximum, !rows.contains(where: { $0.object["id"]?.text.lowercased() == spec.id }),
               !ReminderSpec.duplicates(spec, in: rows) else { return false }
         rows.append(.object(spec.raw)); return true
