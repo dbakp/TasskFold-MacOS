@@ -163,6 +163,9 @@ do $$ begin
 end $$;
 set local role service_role;
 do $$ declare n int; begin
+ -- Establish a fresh catalog inside this rolled-back fixture; an inactive worker
+ -- may leave the real catalog older than the one-hour cache interval.
+ perform taskfold_private.refresh_reminder_time_zones(true);
  if taskfold_private.refresh_reminder_time_zones()<>0 then raise exception 'Fresh catalog rescanned'; end if;
  insert into taskfold_private.reminder_time_zones(name,refreshed_at) values('Taskfold/ObsoleteFixture',now()-interval '2 hours');
  n:=taskfold_private.refresh_reminder_time_zones(true);

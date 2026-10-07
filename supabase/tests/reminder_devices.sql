@@ -13,8 +13,8 @@ begin
   begin perform public.taskfold_register_reminder_device(d,s,1,b||'{"enabled":true}'); raise exception 'Active first enrollment accepted'; exception when others then if sqlerrm not like 'Enroll an inactive%' then raise; end if; end;
   r := public.taskfold_register_reminder_device(d,s,1,b);
   if r->>'revision'<>'1' or r->>'enabled'<>'false' or r->>'account'<>'fd229de1-c5b4-4f06-a4e1-e6a329310901' or r->>'state'<>'registered' then raise exception 'Enrollment receipt incorrect'; end if;
-  if (r-array['version','device','revision','account','state','enabled','expires_at_ms'])<>'{}'::jsonb then raise exception 'Receipt leaked private data'; end if;
-  old := public.taskfold_register_reminder_device(d,s,1,b); if old<>r then raise exception 'Retry renewed lease'; end if;
+  if (r-array['version','device','revision','account','state','enabled','expires_at_ms','authority_version','server_time_ms','enabled_since_ms','authority_nonce'])<>'{}'::jsonb then raise exception 'Receipt leaked private data'; end if;
+  old := public.taskfold_register_reminder_device(d,s,1,b); if (old-'server_time_ms')<>(r-'server_time_ms') then raise exception 'Retry renewed lease'; end if;
   r := public.taskfold_register_reminder_device(d,s,2,b||'{"enabled":true}'); if r->>'enabled'<>'true' then raise exception 'Activation failed'; end if;
   begin perform public.taskfold_register_reminder_device(d,s,1,b); raise exception 'Old registration accepted'; exception when others then if sqlerrm not like 'TASKFOLD_DEVICE_CONFLICT:%' then raise; end if; end;
   begin perform public.taskfold_register_reminder_device(d,s,2,b); raise exception 'Changed same-revision retry accepted'; exception when others then if sqlerrm not like 'TASKFOLD_DEVICE_CONFLICT:%' then raise; end if; end;
@@ -46,7 +46,7 @@ do $$ declare r jsonb; begin
   begin perform public.taskfold_retire_reminder_device('fd229de1-c5b4-4f06-a4e1-e6a329310921',repeat('b',64),5); raise exception 'Anonymous wrong-proof revocation accepted'; exception when insufficient_privilege then null; end;
   r:=public.taskfold_retire_reminder_device('fd229de1-c5b4-4f06-a4e1-e6a329310921',repeat('a',64),5);
   if r->>'enabled'<>'false' or r->>'state'<>'retired' or r->'account'<>'null'::jsonb then raise exception 'Retirement did not clear scope'; end if;
-  if public.taskfold_retire_reminder_device('fd229de1-c5b4-4f06-a4e1-e6a329310921',repeat('a',64),5)<>r then raise exception 'Retirement retry changed receipt'; end if;
+  if (public.taskfold_retire_reminder_device('fd229de1-c5b4-4f06-a4e1-e6a329310921',repeat('a',64),5)-'server_time_ms')<>(r-'server_time_ms') then raise exception 'Retirement retry changed receipt'; end if;
   perform public.taskfold_retire_reminder_device('fd229de1-c5b4-4f06-a4e1-e6a329310924',repeat('a',64),2);
 end $$;
 set local role authenticated;

@@ -1,0 +1,284 @@
+{
+  "checkpoint": "2026-10-07 per-device reminder delivery authority",
+  "repository": "mac",
+  "baseCommit": "71c53660796b91d68b972620a092cbbe9736d9cb",
+  "inputManifest": "docs/reminder-authority-inputs-sha256.json",
+  "inputManifestSHA256": "9f214d959b41616b52d73c20ce8bc5fdaa05a9a463d5bdb3d9c2a309d0d73901",
+  "verifiedInputCounts": {
+    "native": 75,
+    "core": 59,
+    "sql": 6
+  },
+  "ownCore": {
+    "tests": 501,
+    "skipped": 4,
+    "failures": 0,
+    "log": "/tmp/taskfold-authority-mac-core-polish.log"
+  },
+  "ownBuilds": {
+    "release": "/tmp/taskfold-authority-mac-release-polish.log",
+    "debug": "/tmp/taskfold-authority-mac-debug-polish.log",
+    "result": "passed",
+    "signing": "disabled",
+    "macArchitectures": [
+      "arm64",
+      "x86_64"
+    ]
+  },
+  "nativeIOSRuntime": {
+    "scope": "Isolated DEBUG iOS fixture; synthetic transport receipts, real UNUserNotificationCenter; no live account or provider enrollment. These are iOS runtime results even when copied into the independently owned Mac documentation.",
+    "bundleIDs": [
+      "com.dbakp.taskfold.reminderauthoritytests",
+      "com.dbakp.taskfold.reminderauthoritytests.widgets",
+      "com.dbakp.taskfold.reminderauthoritytests.uitests"
+    ],
+    "testProjectOverlay": "/tmp/taskfold-authority-ios-test-overlay.json",
+    "runs": [
+      {
+        "resultBundle": "/tmp/taskfold-authority-phone-final.xcresult",
+        "log": "/tmp/taskfold-authority-phone-final.log",
+        "summary": {
+          "devicesAndConfigurations": [
+            {
+              "device": {
+                "architecture": "arm64",
+                "deviceId": "AB4560BB-1EFA-4B32-A2E8-2B89068A3075",
+                "deviceName": "Taskfold authority iPhone",
+                "modelName": "iPhone 17 Pro",
+                "osBuildNumber": "23F77",
+                "osVersion": "26.5",
+                "platform": "iOS Simulator"
+              },
+              "expectedFailures": 0,
+              "failedTests": 0,
+              "passedTests": 4,
+              "skippedTests": 0,
+              "testPlanConfiguration": {
+                "configurationId": "1",
+                "configurationName": "Test Scheme Action"
+              }
+            }
+          ],
+          "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "finishTime": 1791383760.145,
+          "passedTests": 4,
+          "result": "Passed",
+          "runtimeWarnings": [],
+          "skippedTests": 0,
+          "startTime": 1791383255.222,
+          "statistics": [],
+          "testFailures": [],
+          "title": "Test - Taskfold",
+          "topInsights": [],
+          "totalTestCount": 4
+        },
+        "tests": [
+          "testRemoteAuthoritySwitchRelaunchAndReturnToLocalPreservesTaskAndOriginalTime",
+          "testRemoteAuthorityLostAckStaysPendingThenRelaunchRecoversInDarkLargeText",
+          "testRemoteAuthorityLightPresentationWithoutInspection",
+          "testRemoteAuthorityDarkLargestPresentationWithoutInspection"
+        ]
+      },
+      {
+        "resultBundle": "/tmp/taskfold-authority-tablet-final.xcresult",
+        "log": "/tmp/taskfold-authority-tablet-final.log",
+        "summary": {
+          "devicesAndConfigurations": [
+            {
+              "device": {
+                "architecture": "arm64",
+                "deviceId": "D21555E8-B870-4ADF-8412-7ADF459EFC6D",
+                "deviceName": "Taskfold authority iPad",
+                "modelName": "iPad Pro 11-inch (M5)",
+                "osBuildNumber": "23F77",
+                "osVersion": "26.5",
+                "platform": "iOS Simulator"
+              },
+              "expectedFailures": 0,
+              "failedTests": 0,
+              "passedTests": 4,
+              "skippedTests": 0,
+              "testPlanConfiguration": {
+                "configurationId": "1",
+                "configurationName": "Test Scheme Action"
+              }
+            }
+          ],
+          "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "finishTime": 1791383616.142,
+          "passedTests": 4,
+          "result": "Passed",
+          "runtimeWarnings": [],
+          "skippedTests": 0,
+          "startTime": 1791383255.222,
+          "statistics": [],
+          "testFailures": [],
+          "title": "Test - Taskfold",
+          "topInsights": [],
+          "totalTestCount": 4
+        },
+        "tests": [
+          "testRemoteAuthoritySwitchRelaunchAndReturnToLocalPreservesTaskAndOriginalTime",
+          "testRemoteAuthorityLostAckStaysPendingThenRelaunchRecoversInDarkLargeText",
+          "testRemoteAuthorityLightPresentationWithoutInspection",
+          "testRemoteAuthorityDarkLargestPresentationWithoutInspection"
+        ]
+      }
+    ],
+    "captureNotes": "Four final presentation captures hide the DEBUG strip. Functional diagnostics retain the strip and can overlap navigation; they are not production presentation evidence. Largest text uses scrolling rather than fitting every setting in one viewport.",
+    "captures": [
+      {
+        "path": "docs/reminder-authority/final/ios-light.png",
+        "source": "/tmp/taskfold-authority-phone-final-attachments/D9A0E089-C4BE-4F12-ADAF-62B87B91C972.png",
+        "sha256": "510d61b382bf90940b1057ed886e4b19da45225fca3fa8638c1f725d9fc41a1f",
+        "scope": "presentation, inspection hidden",
+        "inspected": true,
+        "modified": false
+      },
+      {
+        "path": "docs/reminder-authority/final/ios-dark-largest.png",
+        "source": "/tmp/taskfold-authority-phone-final-attachments/7E55219C-2AA6-4057-8588-BA4BC302391A.png",
+        "sha256": "5321ea8823ca3cb1bd08169613d9cd9b73abd47d0a4fd2d785094db8dfad2295",
+        "scope": "presentation, inspection hidden, accessibility XXXL",
+        "inspected": true,
+        "modified": false
+      },
+      {
+        "path": "docs/reminder-authority/final/ipad-light.png",
+        "source": "/tmp/taskfold-authority-tablet-final-attachments/BFC90689-A868-40FA-890D-4E785AEC071E.png",
+        "sha256": "24b9d859ff94327525a0782fd61782bcff7a16d7da48b31671f132f7bbc176b4",
+        "scope": "presentation, inspection hidden",
+        "inspected": true,
+        "modified": false
+      },
+      {
+        "path": "docs/reminder-authority/final/ipad-dark-largest.png",
+        "source": "/tmp/taskfold-authority-tablet-final-attachments/4DD4F160-1286-47AD-833F-50F132EF0011.png",
+        "sha256": "36511eea85b8a9271bf3f64d8e1f80321f8cdbed2111fb46cdcf7eeb3cd1334f",
+        "scope": "presentation, inspection hidden, accessibility XXXL",
+        "inspected": true,
+        "modified": false
+      },
+      {
+        "path": "docs/reminder-authority/final/ios-pending-debug.png",
+        "source": "/tmp/taskfold-authority-phone-final-attachments/8BA4FC0A-8D0C-40F9-93D2-0FF22E5424C6.png",
+        "sha256": "191bb2ae5046cc4ad730171df111f49abbfca6756068193b7e0c8372e3b231cb",
+        "scope": "functional diagnostic with DEBUG inspection strip; viewport does not show status",
+        "inspected": true,
+        "modified": false
+      },
+      {
+        "path": "docs/reminder-authority/final/ios-confirmed-debug.png",
+        "source": "/tmp/taskfold-authority-phone-final-attachments/6EEFCD26-C530-4017-A534-9D370C261A74.png",
+        "sha256": "9d7bedb77eac7c63e0e6fcdc675d7c1662b7284e1899686b93c13b33e4cd4d1a",
+        "scope": "functional diagnostic with DEBUG inspection strip",
+        "inspected": true,
+        "modified": false
+      },
+      {
+        "path": "docs/reminder-authority/final/ipad-pending-debug.png",
+        "source": "/tmp/taskfold-authority-tablet-final-attachments/E3D715B2-DC53-4FC1-AE0A-D1D3B7128285.png",
+        "sha256": "58bdca8201a147be7785c58bd257680b8e2e63634e41de467e338841b3c91d3e",
+        "scope": "functional diagnostic with DEBUG inspection strip",
+        "inspected": true,
+        "modified": false
+      },
+      {
+        "path": "docs/reminder-authority/final/ipad-confirmed-debug.png",
+        "source": "/tmp/taskfold-authority-tablet-final-attachments/EC63DAAF-8A9F-40AE-91C7-F834D341F21D.png",
+        "sha256": "57d6a9e400d7af30ea9663f6aaecacc11868af4831f29bd034887daefbe0a7ce",
+        "scope": "functional diagnostic with DEBUG inspection strip",
+        "inspected": true,
+        "modified": false
+      }
+    ]
+  },
+  "sql": {
+    "project": "zqxflydiyfjeedqvyova",
+    "ownSuitesPassed": [
+      "reminder_delivery_authority",
+      "reminder_worker_cursor",
+      "reminder_devices",
+      "reminder_jobs",
+      "calendar_reminder_jobs",
+      "calendar_reminder_bounds",
+      "calendar_reminder_cohort",
+      "recurring_reminder_transport",
+      "automatic_reminder_preferences",
+      "reminder_preferences"
+    ],
+    "suiteSHA256": {
+      "reminder_delivery_authority": "8022d4e961d1be92dfccfdefc8b0ee7d5eb36b53c072187c88c95418c44cffc7",
+      "reminder_worker_cursor": "a078088a2a994f6ece57a68743ec95165ea87556f65efb2ec569cd1ec8fc4d70",
+      "reminder_devices": "ccf8a720a05c46bb5f955f3444f911d5dc239ad7ac92526199748eea1ff8ebbd",
+      "reminder_jobs": "71e4bb432ed088a3afd697f411b7405611dcd490eec2870520d015114e8bd6b7",
+      "calendar_reminder_jobs": "a9a1d625575551358306729118b339fa035d822a8c70e5455adb110b09bc05c2",
+      "calendar_reminder_bounds": "fb97b119e329ee86a19af631457c7d8c2a0a3969729744cb17d5e6945479a567",
+      "calendar_reminder_cohort": "22edb9deca2790f423e9573b62cfd517bbe08a40c6774ba88a189c2ffd1a4fe3",
+      "recurring_reminder_transport": "88cb7b18793e5fb16d7323577c3b6c45a36727169c8f9efc6c88cf320a5ca1d3",
+      "automatic_reminder_preferences": "762124592446b8488ee157a4da695e2db3f3561f95e06b51add2763bb7402a5f",
+      "reminder_preferences": "211c62b50af238a8dcedc92866f9fd035c1f85a5aff257610e87d7c13f43d88c"
+    },
+    "migrations": [
+      {
+        "version": "20261007130553",
+        "name": "reminder_delivery_authority",
+        "rawDeployedSQLMD5": "e39a31ef27d4201f3e0ac72d937c3ddb"
+      },
+      {
+        "version": "20261007131151",
+        "name": "private_reminder_availability",
+        "rawDeployedSQLMD5": "784593714413fedd9e36a96d7562f0bf"
+      }
+    ],
+    "transactions": "rolled back",
+    "finalState": {
+      "fixtureUsers": 0,
+      "pilots": 0,
+      "authorityDevices": 0,
+      "generalEnabled": false,
+      "nativeCronActive": false
+    },
+    "advisors": {
+      "security": {
+        "extension_in_public": 1,
+        "pg_graphql_anon_table_exposed": 6,
+        "pg_graphql_authenticated_table_exposed": 15,
+        "anon_security_definer_function_executable": 8,
+        "authenticated_security_definer_function_executable": 9,
+        "auth_leaked_password_protection": 1
+      },
+      "performance": {
+        "unindexed_foreign_keys": 4,
+        "auth_rls_initplan": 14,
+        "unused_index": 6,
+        "table_bloat": 1,
+        "auth_db_connections_absolute": 1
+      }
+    },
+    "advisorScope": "Counts equal the pre-change baseline; existing findings remain. Not a full security audit."
+  },
+  "productionDeliveryEnabled": false,
+  "remainingAcceptance": [
+    "physical/provisioned device and real APNs token/topic/environment",
+    "Mac runtime (not authorized)",
+    "actual paired-account/offline/access-revocation/restore behavior",
+    "provider credentials, hosted HTTP/2, ambiguity and delayed payload privacy",
+    "reinstall/device-management recovery",
+    "production sweep volume and operational ownership",
+    "full P0 user acceptance"
+  ],
+  "diagnosticsPreserved": [
+    "/tmp/taskfold-authority-phone.xcresult",
+    "/tmp/taskfold-authority-phone-fixed.xcresult",
+    "/tmp/taskfold-authority-phone-thumb.xcresult",
+    "/tmp/taskfold-authority-tablet.xcresult",
+    "/tmp/taskfold-authority-tablet-fixed.xcresult",
+    "/tmp/taskfold-authority-tablet-thumb.xcresult"
+  ],
+  "notes": "Earlier failed and first-green diagnostic bundles are preserved. Final presentation copy and tests supersede them. No Mac GUI runtime or installed application was touched."
+}

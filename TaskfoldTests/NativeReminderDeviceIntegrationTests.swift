@@ -25,7 +25,10 @@ final class NativeReminderDeviceIntegrationTests: XCTestCase {
         }
         do {
             let first=try await a.sendReminderDevice(command), retry=try await a.sendReminderDevice(command)
-            XCTAssertEqual(first,retry); XCTAssertFalse(first.enabled)
+            var stableFirst = first, stableRetry = retry
+            XCTAssertNotNil(first.server_time_ms); XCTAssertNotNil(retry.server_time_ms)
+            stableFirst.server_time_ms = nil; stableRetry.server_time_ms = nil
+            XCTAssertEqual(stableFirst, stableRetry); XCTAssertFalse(first.enabled)
             binding.enabled=true; command.binding=binding; command.revision=2
             let active=try await b.sendReminderDevice(command); XCTAssertTrue(active.enabled)
             var old=command; old.revision=1; old.binding?.enabled=false

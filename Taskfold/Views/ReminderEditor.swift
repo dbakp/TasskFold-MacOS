@@ -248,16 +248,20 @@ struct ReminderSystemSettingsButton: View {
     }
 }
 
-/// Distinguish successful inactive registration from actual reminder delivery. No activation
-/// control is exposed before the provider/authority/device rollout gates are accepted.
+/// A device-owned opt-in appears only for an eligible rollout or an existing
+/// choice that still needs a confirmed handoff. Pending delivery remains explicit.
 struct RemoteReminderRegistrationView: View {
     @Environment(Store.self) private var store
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Remote reminders are not available yet. Scheduled reminders continue on this device.")
+            if store.remoteReminderAvailable || store.remoteReminderSelected || store.remoteReminderNeedsConfirmation {
+                Toggle("Remote delivery", isOn: Binding(get: { store.remoteReminderSelected }, set: { store.chooseRemoteReminders($0) }))
+                    .frame(minHeight: 44).accessibilityLabel("Remote task reminders on this device").accessibilityIdentifier("remoteReminderDelivery")
+            }
+            Text(store.remoteReminderAvailable || store.remoteReminderSelected || store.remoteReminderNeedsConfirmation ? "For this device. Focus and snoozes stay local. Switching back waits for confirmation." : "Remote reminders are not available yet. Scheduled reminders continue on this device.")
                 .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("remoteReminderAvailability")
-            if store.signedIn && !store.localMode {
+            if store.signedIn && (!store.localMode || store.remoteReminderTestWorkspace) {
                 Text(store.remoteReminderStatus).font(.footnote).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("remoteReminderStatus")
                 Button { Task { await store.refreshRemoteReminderRegistration(force: true) } } label: {

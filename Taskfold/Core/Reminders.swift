@@ -472,6 +472,12 @@ struct ReminderState: Sendable {
     var now = Date()
     var validationTasks: [Record] = []
     var calendar = Calendar.current
+    var deliveryAuthority: ReminderDeliveryAuthority? = nil
+    var deliveryAuthorityUnreadable = false
+    var deliveryAuthorityAccount: String? = nil
+    func permitsOriginal(_ event: DueReminder) -> Bool {
+        event.kind == .focusFinish || (!deliveryAuthorityUnreadable && (deliveryAuthority?.allowsLocalOriginal(account: deliveryAuthorityAccount ?? account, at: event.date) ?? true))
+    }
     func validated(_ event: DueReminder) -> DueReminder? {
         if let matching = events.first(where: { $0.kind == event.kind && $0.taskID == event.taskID && $0.specID == event.specID && $0.hasSignature(event.signature) }) { return matching }
         guard event.kind == .task else { return nil }
@@ -536,7 +542,7 @@ actor ReminderScheduler {
                 guard let event = state.validated(old.event) else { return nil }
                 return ReminderRequest.make(account:state.account,event:event,fireAt:old.fireAt,snoozed:true)
             }
-            var requests = state.account.isEmpty ? [] : state.events.filter { $0.date > state.now }.map { ReminderRequest.make(account: state.account, event: $0) }
+            var requests = state.account.isEmpty ? [] : state.events.filter { $0.date > state.now && state.permitsOriginal($0) }.map { ReminderRequest.make(account: state.account, event: $0) }
             requests += retained.filter { old in !snoozes.contains(where: { $0.identifier == old.identifier }) }
             requests += snoozes
             requests.sort {
@@ -600,7 +606,10 @@ struct SystemReminderCenter: ReminderCenter {
     func remove(_ identifiers: [String]) async { center.removePendingNotificationRequests(withIdentifiers: identifiers) }
     static func trigger(at date: Date) -> UNCalendarNotificationTrigger {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-        var components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
+        // Calendar triggers resolve to whole seconds. Round forward so a fractional
+        // task instant or explicit snooze cannot fire before its handoff cutoff.
+        let scheduled = Date(timeIntervalSince1970: ceil(date.timeIntervalSince1970))
+        var components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: scheduled)
         components.timeZone = calendar.timeZone; components.calendar = calendar
         return UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
     }

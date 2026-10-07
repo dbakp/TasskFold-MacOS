@@ -21,6 +21,13 @@ private final class DeviceMemory: @unchecked Sendable {
     var hold: Set<Int64> = []
     var held: [Int64: CheckedContinuation<Void, Never>] = [:]
     var badReceipt = false
+    var authority: ReminderDeliveryAuthority?
+    var authoritySaves: [ReminderDeliveryAuthority] = []
+    var authoritySaveFails = false
+    var authorityReceipts = false
+    var drainCount = 0
+    var holdDrain = false
+    var drainGate: CheckedContinuation<Void, Never>?
     var clock = Date(timeIntervalSince1970: 1_791_273_600)
     func save(_ next: ReminderDeviceInstallation) throws {
         if saveFails { throw AppFailure(message: "Fixture secure storage failure") }
@@ -28,20 +35,130 @@ private final class DeviceMemory: @unchecked Sendable {
     }
     func send(_ command: ReminderDeviceCommand, incarnation: UUID?) async throws -> ReminderDeviceReceipt {
         XCTAssertGreaterThanOrEqual(persisted.revision, command.revision, "Dispatch preceded secure persistence")
+        if command.binding?.enabled == true {
+            XCTAssertEqual(authority?.phase, .remotePending)
+            XCTAssertEqual(authority?.pendingRevision, command.revision)
+            XCTAssertEqual(authority?.transition, command.authorityTransition)
+            XCTAssertNotNil(authority?.drainedAtMS)
+        }
         sent.append((command, incarnation))
         if hold.contains(command.revision) { await withCheckedContinuation { held[command.revision] = $0 } }
         if failOnce.remove(command.revision) != nil { throw AppFailure(message: "PRIVATE fixture response must not appear in status") }
         return ReminderDeviceReceipt(version: 1, device: command.device, revision: command.revision,
-            account: badReceipt ? "wrong-owner" : command.account, state: command.binding == nil ? "retired" : "registered", enabled: false,
-            expires_at_ms: Int64(clock.addingTimeInterval(30 * 86400).timeIntervalSince1970 * 1000))
+            account: badReceipt ? "wrong-owner" : command.account, state: command.binding == nil ? "retired" : "registered", enabled: command.binding?.enabled ?? false,
+            expires_at_ms: Int64(clock.addingTimeInterval(30 * 86400).timeIntervalSince1970 * 1000),
+            authority_version: authorityReceipts ? 1 : nil,
+            server_time_ms: authorityReceipts ? Int64(clock.timeIntervalSince1970 * 1000) : nil,
+            enabled_since_ms: command.binding?.enabled == true ? (command.localCutoffMS ?? 0) + 1 : nil,
+            authority_nonce: authorityReceipts ? command.authorityTransition : nil)
     }
     func release(_ revision: Int64) { held.removeValue(forKey: revision)?.resume() }
     func engine() throws -> ReminderDeviceLifecycle {
-        try ReminderDeviceLifecycle(installation: persisted, save: { try self.save($0) }, send: { c, i in try await self.send(c, incarnation: i) }, now: { self.clock })
+        try ReminderDeviceLifecycle(installation: persisted, save: { try self.save($0) }, send: { c, i in try await self.send(c, incarnation: i) }, now: { self.clock },
+            authority: authority,
+            saveAuthority: { next in
+                if self.authoritySaveFails { throw AppFailure(message: "Fixture authority save failure") }
+                self.authority = next; self.authoritySaves.append(next)
+            },
+            quiesceLocal: { state in
+                XCTAssertEqual(self.authority, state, "Queue drain preceded durable suppression")
+                self.drainCount += 1
+                if self.holdDrain { await withCheckedContinuation { self.drainGate = $0 } }
+                return Int64(self.clock.timeIntervalSince1970 * 1000)
+            })
     }
     var context: ReminderDeviceContext {
         .init(account: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", workspace: UUID(), session: UUID(),
               identity: .init(platform: .ios, bundle: "com.dbakp.taskfold", environment: .development), timeZone: "Europe/Copenhagen", permission: .authorized)
+    }
+}
+
+final class ReminderDeliveryAuthorityTests: XCTestCase {
+    private let owner = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+    private let device = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+    private let clock = Date(timeIntervalSince1970: 1_791_273_600)
+    private var milliseconds: Int64 { Int64(clock.timeIntervalSince1970 * 1000) }
+    private func command(_ state: ReminderDeliveryAuthority, revision: Int64 = 2, enabled: Bool = true) -> ReminderDeviceCommand {
+        var value = ReminderDeviceCommand(device: device, secret: String(repeating: "a", count: 64), revision: revision,
+            account: enabled ? owner : nil, binding: enabled ? ReminderDeviceBinding(platform: .ios, bundle: "com.dbakp.taskfold",
+                environment: .development, token: "aa", time_zone: "Europe/Copenhagen", permission: .authorized, enabled: true) : nil)
+        if enabled { value.authorityTransition = state.transition; value.localCutoffMS = state.drainedAtMS }
+        return value
+    }
+    private func receipt(_ command: ReminderDeviceCommand, cutoff: Int64? = nil) -> ReminderDeviceReceipt {
+        ReminderDeviceReceipt(version: 1, device: device, revision: command.revision, account: command.account,
+            state: command.binding == nil ? "retired" : "registered", enabled: command.binding?.enabled ?? false,
+            expires_at_ms: milliseconds + 30 * 86_400_000, authority_version: 1, server_time_ms: cutoff ?? milliseconds + 5,
+            enabled_since_ms: command.binding?.enabled == true ? milliseconds + 1 : nil, authority_nonce: command.authorityTransition)
+    }
+    private func pending() throws -> ReminderDeliveryAuthority {
+        let stop = try ReminderDeliveryAuthority(account: owner).choosing(remote: true)
+        return try stop.quiesced(at: milliseconds, transition: stop.transition).dispatching(revision: 2)
+    }
+    func testRestartAndLostAckNeverRestoreOriginalLocalAlerts() throws {
+        let local = ReminderDeliveryAuthority(account: owner), future = clock.addingTimeInterval(3600)
+        XCTAssertTrue(local.allowsLocalOriginal(account: owner, at: future))
+        let stop = try local.choosing(remote: true)
+        XCTAssertFalse(stop.allowsLocalOriginal(account: owner, at: future))
+        XCTAssertThrowsError(try stop.dispatching(revision: 2), "Activation must follow the serialized drain")
+        let waiting = try pending()
+        let restored = try JSONDecoder().decode(ReminderDeliveryAuthority.self, from: JSONEncoder().encode(waiting))
+        XCTAssertEqual(restored, waiting); XCTAssertTrue(restored.mayBeRemote)
+        XCTAssertFalse(restored.allowsLocalOriginal(account: owner, at: future))
+        let enable = command(restored), active = try XCTUnwrap(restored.accepting(receipt(enable), command: enable, transition: restored.transition, now: clock))
+        XCTAssertEqual(active.phase, .remote)
+        XCTAssertFalse(active.allowsLocalOriginal(account: owner, at: future))
+    }
+    func testDeactivationNeedsExactAckAndServerCutoffExcludesClockSkewedOldEvents() throws {
+        let waiting = try pending(), enable = command(waiting)
+        let active = try XCTUnwrap(waiting.accepting(receipt(enable), command: enable, transition: waiting.transition, now: clock))
+        let off = try active.choosing(remote: false).dispatching(revision: 3), disable = command(off, revision: 3, enabled: false)
+        let restored = try JSONDecoder().decode(ReminderDeliveryAuthority.self, from: JSONEncoder().encode(off))
+        XCTAssertFalse(restored.allowsLocalOriginal(account: owner, at: clock.addingTimeInterval(600)))
+        let serverCutoff = milliseconds + 120_000
+        let local = try XCTUnwrap(restored.accepting(receipt(disable, cutoff: serverCutoff), command: disable, transition: restored.transition, now: clock))
+        XCTAssertEqual(local.phase, .local); XCTAssertFalse(local.mayBeRemote)
+        XCTAssertFalse(local.allowsLocalOriginal(account: owner, at: clock.addingTimeInterval(60)))
+        XCTAssertFalse(local.allowsLocalOriginal(account: owner, at: clock.addingTimeInterval(120)))
+        XCTAssertTrue(local.allowsLocalOriginal(account: owner, at: clock.addingTimeInterval(121)))
+        XCTAssertTrue(local.allowsLocalOriginal(account: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", at: clock.addingTimeInterval(60)))
+    }
+    func testCancelBeforeDispatchStaysLocalButAmbiguousDispatchRequiresDisable() throws {
+        let initial = ReminderDeliveryAuthority(account: owner), stop = try initial.choosing(remote: true)
+        let cancelled = try stop.choosing(remote: false)
+        XCTAssertEqual(cancelled.phase, .local); XCTAssertFalse(cancelled.mayBeRemote)
+        let waiting = try pending(), disabling = try waiting.choosing(remote: false)
+        XCTAssertEqual(disabling.phase, .stoppingRemote); XCTAssertTrue(disabling.mayBeRemote)
+        XCTAssertFalse(disabling.allowsLocalOriginal(account: owner, at: clock.addingTimeInterval(600)))
+        let enable = command(waiting)
+        XCTAssertNil(disabling.accepting(receipt(enable), command: enable, transition: waiting.transition, now: clock))
+        let renewed = try waiting.dispatching(revision: 4)
+        XCTAssertNil(renewed.accepting(receipt(enable), command: enable, transition: renewed.transition, now: clock))
+    }
+    func testMalformedLegacyAndMismatchedAuthorityReceiptsCannotConfirm() throws {
+        let waiting = try pending(), enable = command(waiting), correct = receipt(enable)
+        XCTAssertTrue(enable.valid); XCTAssertEqual(enable.path, "/rest/v1/rpc/taskfold_activate_reminder_device")
+        XCTAssertEqual(try enable.body()["_local_cutoff_ms"], .number(Double(milliseconds)))
+        for index in 0..<8 {
+            var bad = correct
+            switch index {
+            case 0: bad.authority_version = nil
+            case 1: bad.server_time_ms = nil
+            case 2: bad.enabled_since_ms = milliseconds
+            case 3: bad.enabled_since_ms = milliseconds + 600_000
+            case 4: bad.authority_nonce = UUID()
+            case 5: bad.account = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+            case 6: bad.revision = 1
+            default: bad.server_time_ms = -1
+            }
+            XCTAssertNil(waiting.accepting(bad, command: enable, transition: waiting.transition, now: clock))
+        }
+        var legacy = enable; legacy.authorityTransition = nil; legacy.localCutoffMS = nil
+        XCTAssertNil(waiting.accepting(correct, command: legacy, transition: waiting.transition, now: clock))
+        var future = waiting; future.version = 2
+        XCTAssertFalse(future.valid); XCTAssertThrowsError(try future.choosing(remote: false))
+        XCTAssertFalse(future.allowsLocalOriginal(account: owner, at: clock.addingTimeInterval(600)))
+        XCTAssertFalse(waiting.allowsLocalOriginal(account: owner, at: Date(timeIntervalSince1970: .nan)))
     }
 }
 
@@ -50,6 +167,133 @@ private final class DeviceMemory: @unchecked Sendable {
         for _ in 0..<2000 { if condition() { return }; await Task.yield() }
         XCTFail("Lifecycle did not reach the expected state", file: file, line: line)
     }
+    func testRemoteAuthorityMustMatchItsSecureInstallationBeforeRestartCanDispatch() async throws {
+        let fixture = LifecycleFixture(); fixture.authorityReceipts = true
+        let engine = try fixture.engine(), context = fixture.context
+        try engine.update(context, online: true); try engine.receivedToken(Data([0xaa]))
+        await eventually { fixture.sent.count == 1 && !engine.busy }
+        engine.setAvailability(true, account: context.account, session: context.session); try engine.chooseRemote(true)
+        await eventually { fixture.authority?.phase == .remote && !engine.busy }
+        XCTAssertEqual(fixture.authority?.installationID, fixture.persisted.id)
+        let original = fixture.persisted
+        fixture.persisted.id = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+        XCTAssertThrowsError(try fixture.engine(), "A different installation cannot retire the old binding")
+        fixture.persisted = original; fixture.authority = nil
+        XCTAssertTrue(fixture.persisted.mayHaveRemoteAuthority)
+        let restored = try JSONDecoder().decode(ReminderDeviceInstallation.self, from: JSONEncoder().encode(fixture.persisted))
+        XCTAssertTrue(restored.mayHaveRemoteAuthority)
+        XCTAssertThrowsError(try fixture.engine(), "Loss of the separate consent item cannot become local delivery")
+        fixture.authority = fixture.authoritySaves.last; fixture.authority?.installationID = nil
+        XCTAssertThrowsError(try fixture.engine(), "An unassociated remote record must stay paused")
+        XCTAssertEqual(fixture.sent.count, 2)
+    }
+    func testExplicitRemoteChoiceDrainsBeforeActivationAndOfflineOffWaitsForExactAck() async throws {
+        let fixture = LifecycleFixture(); fixture.authorityReceipts = true
+        let engine = try fixture.engine(), context = fixture.context
+        try engine.update(context, online: true); try engine.receivedToken(Data([0xaa]))
+        await eventually { fixture.sent.count == 1 && !engine.busy }
+        XCTAssertThrowsError(try engine.chooseRemote(true), "Rollout availability is necessary")
+        engine.setAvailability(true, account: context.account, session: context.session)
+        try engine.chooseRemote(true)
+        await eventually { fixture.authority?.phase == .remote && !engine.busy }
+        XCTAssertEqual(fixture.sent.map { $0.0.binding?.enabled }, [false, true]); XCTAssertEqual(fixture.drainCount, 1)
+        XCTAssertFalse(fixture.authority!.allowsLocalOriginal(account: context.account, at: fixture.clock.addingTimeInterval(60)))
+        try engine.update(context, online: false); try engine.chooseRemote(false)
+        XCTAssertEqual(fixture.authority?.phase, .stoppingRemote); XCTAssertEqual(fixture.sent.count, 2)
+        try engine.update(context, online: true)
+        await eventually { fixture.authority?.phase == .local && !engine.busy }
+        XCTAssertEqual(fixture.sent.last?.0.binding?.enabled, false)
+        XCTAssertTrue(fixture.authority!.allowsLocalOriginal(account: context.account, at: fixture.clock.addingTimeInterval(60)))
+    }
+    func testLostActivationAckRestartPreservesConsentWithoutTransientLocalAuthority() async throws {
+        let fixture = LifecycleFixture(); fixture.authorityReceipts = true; fixture.failOnce = [2]
+        let engine = try fixture.engine(), context = fixture.context
+        try engine.update(context, online: true); try engine.receivedToken(Data([0xaa]))
+        await eventually { fixture.sent.count == 1 && !engine.busy }
+        engine.setAvailability(true, account: context.account, session: context.session); try engine.chooseRemote(true)
+        await eventually { fixture.sent.count == 2 && !engine.busy }
+        XCTAssertEqual(fixture.authority?.phase, .remotePending)
+        let boundary = fixture.authoritySaves.count, restarted = try fixture.engine()
+        try restarted.update(context, online: true); try restarted.receivedToken(Data([0xbb]))
+        await eventually { fixture.sent.count >= 4 && !restarted.busy }
+        XCTAssertTrue(fixture.authority?.wantsRemote == true)
+        XCTAssertFalse(fixture.authoritySaves.dropFirst(boundary).contains { $0.phase == .local })
+        XCTAssertNil(fixture.sent[2].0.binding); XCTAssertEqual(fixture.sent[3].0.binding?.enabled, false)
+        restarted.setAvailability(true, account: context.account, session: context.session)
+        await eventually { fixture.authority?.phase == .remote && !restarted.busy }
+        XCTAssertEqual(fixture.sent.last?.0.binding?.token, "bb")
+        XCTAssertEqual(fixture.sent.last?.0.binding?.enabled, true)
+    }
+    func testCancelHeldDrainAndStaleActivationResponseCannotReenableChoice() async throws {
+        let fixture = LifecycleFixture(); fixture.authorityReceipts = true; fixture.holdDrain = true
+        let engine = try fixture.engine(), context = fixture.context
+        try engine.update(context, online: true); try engine.receivedToken(Data([0xaa]))
+        await eventually { fixture.sent.count == 1 && !engine.busy }
+        engine.setAvailability(true, account: context.account, session: context.session); try engine.chooseRemote(true)
+        await eventually { fixture.drainGate != nil }
+        try engine.chooseRemote(false)
+        XCTAssertEqual(fixture.authority?.phase, .local)
+        fixture.holdDrain = false; fixture.drainGate?.resume(); fixture.drainGate = nil
+        await Task.yield(); XCTAssertEqual(fixture.sent.count, 1)
+        fixture.hold = [2]; try engine.chooseRemote(true)
+        await eventually { fixture.held[2] != nil }
+        try engine.chooseRemote(false)
+        await eventually { fixture.authority?.phase == .local && !engine.busy }
+        fixture.release(2); await Task.yield()
+        XCTAssertEqual(fixture.authority?.phase, .local); XCTAssertFalse(engine.status.contains("are enabled"))
+    }
+    func testAuthoritySaveFailureAndLegacyAckNeverFallBackToLocalDuringAmbiguousDelivery() async throws {
+        let fixture = LifecycleFixture(); fixture.authorityReceipts = true
+        let engine = try fixture.engine(), context = fixture.context
+        try engine.update(context, online: true); try engine.receivedToken(Data([0xaa]))
+        await eventually { fixture.sent.count == 1 && !engine.busy }
+        engine.setAvailability(true, account: context.account, session: context.session)
+        fixture.authoritySaveFails = true
+        XCTAssertThrowsError(try engine.chooseRemote(true)); XCTAssertEqual(fixture.sent.count, 1)
+        fixture.authoritySaveFails = false; try engine.chooseRemote(true)
+        await eventually { fixture.authority?.phase == .remote && !engine.busy }
+        fixture.authorityReceipts = false; try engine.chooseRemote(false)
+        await eventually { fixture.sent.count == 3 && !engine.busy }
+        XCTAssertEqual(fixture.authority?.phase, .stoppingRemote)
+        XCTAssertFalse(fixture.authority!.allowsLocalOriginal(account: context.account, at: fixture.clock.addingTimeInterval(60)))
+        fixture.authorityReceipts = true; try engine.retry(force: true)
+        await eventually { fixture.authority?.phase == .local && !engine.busy }
+        XCTAssertEqual(fixture.sent[2].0, fixture.sent[3].0)
+    }
+    func testFailedAuthoritySaveDuringRetirementCannotRedispatchHeldActivation() async throws {
+        let fixture = LifecycleFixture(); fixture.authorityReceipts = true; fixture.hold = [2]
+        let engine = try fixture.engine(), context = fixture.context
+        try engine.update(context, online: true); try engine.receivedToken(Data([0xaa]))
+        await eventually { fixture.sent.count == 1 && !engine.busy }
+        engine.setAvailability(true, account: context.account, session: context.session); try engine.chooseRemote(true)
+        await eventually { fixture.held[2] != nil }
+        fixture.authoritySaveFails = true; XCTAssertThrowsError(try engine.retire())
+        XCTAssertTrue(engine.retirementPending); XCTAssertEqual(fixture.sent.count, 2)
+        fixture.authoritySaveFails = false; try engine.retire()
+        await eventually { fixture.authority?.phase == .local && !engine.busy }
+        XCTAssertNil(fixture.sent.last?.0.binding); XCTAssertEqual(fixture.sent.last?.0.revision, 3)
+        fixture.release(2); await Task.yield(); XCTAssertEqual(fixture.authority?.phase, .local)
+    }
+
+    func testRemoteSignOutAndAccountSwitchNeedProofRetirementAndNeverTransferConsent() async throws {
+        let fixture = LifecycleFixture(); fixture.authorityReceipts = true
+        let engine = try fixture.engine(), context = fixture.context
+        try engine.update(context, online: true); try engine.receivedToken(Data([0xaa]))
+        await eventually { fixture.sent.count == 1 && !engine.busy }
+        engine.setAvailability(true, account: context.account, session: context.session); try engine.chooseRemote(true)
+        await eventually { fixture.authority?.phase == .remote && !engine.busy }
+        fixture.failOnce = [3]; try engine.update(nil, online: true)
+        await eventually { fixture.sent.count == 3 && !engine.busy }
+        XCTAssertTrue(fixture.persisted.pendingRetirement); XCTAssertEqual(fixture.authority?.phase, .stoppingRemote)
+        let restarted = try fixture.engine(); try restarted.update(nil, online: true)
+        await eventually { fixture.authority?.phase == .local && !restarted.busy }
+        var other = context; other.account = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"; other.session = UUID(); other.workspace = UUID()
+        try restarted.update(other, online: true); try restarted.receivedToken(Data([0xbb]))
+        await eventually { fixture.sent.count >= 5 && !restarted.busy }
+        XCTAssertEqual(fixture.sent.last?.0.account, other.account); XCTAssertEqual(fixture.sent.last?.0.binding?.enabled, false)
+        XCTAssertFalse(fixture.authority?.wantsRemote == true)
+    }
+
     func testFreshLaunchRequiresFreshTokenAndNeverEnablesRemoteDelivery() async throws {
         let fixture = LifecycleFixture(), engine = try fixture.engine(), context = fixture.context
         try engine.update(context, online: true)
@@ -183,7 +427,7 @@ private final class DeviceMemory: @unchecked Sendable {
         let value = try JSONDecoder().decode(ReminderDeviceInstallation.self, from: old)
         XCTAssertTrue(value.valid); XCTAssertFalse(value.pendingRetirement); XCTAssertNil(value.retirement)
         let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(value)) as! [String: Any]
-        XCTAssertEqual(Set(object.keys), Set(["id","secret","revision","pendingRetirement"]))
+        XCTAssertEqual(Set(object.keys), Set(["id","secret","revision","pendingRetirement","mayHaveRemoteAuthority"]))
     }
     func testBackendRejectsEarlierSameAccountIncarnationBeforeUsingNewCredentials() async throws {
         let fixture = LifecycleFixture(), context = fixture.context

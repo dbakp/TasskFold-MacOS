@@ -583,3 +583,8 @@ trigger offset, capture/custom/off, retained task/fire instant, relaunch and
 light/dark largest text. Four inspected, unmodified native captures and scoped
 evidence are retained independently. Mac GUI and paired/physical/provider
 acceptance remain open; full P0 is still in progress.
+
+
+## 7 October — per-device delivery handoff
+
+Both independently owned apps now implement explicit per-device consent, serialized local drain, nonce/cutoff activation, durable pending/offline/restart recovery and exact off/retirement confirmation before future local originals resume. Missing or mismatched secure installation/consent state fails closed. Existing snoozes and Focus stay local; consent is excluded from workspaces and backups. The two authority migrations are deployed with availability false and no pilots. Each owned Core suite passes 501 tests with four existing optional integration skips; ten owned actual-role SQL suites pass and roll back. Owned Release app/widget and Debug app/widget/test-target compilation passes, including both Mac architectures. See [contract, scoped verification and rollout gates](REMINDER_AUTHORITY.md). Eight final isolated iOS Simulator flows pass across iPhone and iPad, including handoff/relaunch/lost-response recovery and light/maximum-accessibility-dark presentation; this does not establish Mac runtime or real provider/paired-device acceptance. Provider ambiguity/privacy, provisioned/physical/Mac runtime, paired/offline/access-revocation, reinstall management and production-volume/operations acceptance remain open. Full P0 remains in progress.

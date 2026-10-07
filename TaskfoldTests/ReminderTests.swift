@@ -37,6 +37,46 @@ final class ReminderTests: XCTestCase {
     func state(_ revision: Int, tasks: [Record], account: String = "account") -> ReminderState {
         ReminderState(revision: revision, account: account, events: DueReminder.events(tasks: tasks, calendar: calendar), now: now)
     }
+    func testAuthorityDrainKeepsExplicitSnoozesAndFocusThenResumesOnlyFutureCutoffEvents() async throws {
+        let account = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", center = TestReminderCenter(), scheduler = ReminderScheduler(center: center)
+        let date = now.addingTimeInterval(60)
+        let task = DueReminder(id: "task", title: "Prepare", body: "", date: date, taskID: "task", specID: "spec", signature: "signature")
+        let later = DueReminder(id: "later", title: "After cutoff", body: "", date: now.addingTimeInterval(121), taskID: "later", specID: "spec", signature: "later")
+        let focus = DueReminder(kind: .focusFinish, id: "focus", title: "Focus", body: "", date: now.addingTimeInterval(90), taskID: "task", specID: "session", signature: "focus")
+        var state = ReminderState(revision: 1, account: account, events: [task, later, focus], now: now)
+        _ = await scheduler.update(state)
+        _ = await scheduler.snooze(account: account, taskID: task.taskID, specID: task.specID, signature: task.signature, minutes: 10, now: now)
+        state.revision = 2; state.deliveryAuthority = try ReminderDeliveryAuthority(account: account).choosing(remote: true)
+        let report = await scheduler.update(state), held = await center.pending()
+        XCTAssertTrue(report.focusScheduled); XCTAssertEqual(held.count, 2)
+        XCTAssertEqual(held.filter { $0.event.kind == .task }.map(\.snoozed), [true])
+        let relaunched = ReminderScheduler(center: center); state.revision = 3
+        _ = await relaunched.update(state)
+        let relaunchedCount = await center.pending().count; XCTAssertEqual(relaunchedCount, 2)
+        state.revision = 4; state.deliveryAuthority = ReminderDeliveryAuthority(account: account, localResumeAfterMS: Int64(now.addingTimeInterval(120).timeIntervalSince1970 * 1000))
+        _ = await relaunched.update(state)
+        let restored = await center.pending()
+        XCTAssertEqual(restored.count, 3)
+        XCTAssertFalse(restored.contains { !$0.snoozed && $0.event.id == task.id })
+        XCTAssertTrue(restored.contains { !$0.snoozed && $0.event.id == later.id })
+        state.revision = 5; state.deliveryAuthorityUnreadable = true
+        _ = await relaunched.update(state)
+        let unreadable = await center.pending()
+        XCTAssertEqual(unreadable.count, 2); XCTAssertTrue(unreadable.contains { $0.event.kind == .focusFinish })
+    }
+    func testAuthorityDrainWaitsForInFlightOriginalAdditionBeforeCompleting() async throws {
+        let account = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", center = TestReminderCenter(), scheduler = ReminderScheduler(center: center)
+        let event = DueReminder(id: "task", title: "Prepare", body: "", date: now.addingTimeInterval(60), taskID: "task", specID: "spec", signature: "signature")
+        await center.pause()
+        let original = Task { await scheduler.update(ReminderState(revision: 1, account: account, events: [event], now: now)) }
+        for _ in 0..<2000 { if await center.paused { break }; await Task.yield() }
+        let authority = try ReminderDeliveryAuthority(account: account).choosing(remote: true)
+        let drain = Task { await scheduler.update(ReminderState(revision: 2, account: account, events: [event], now: now, deliveryAuthority: authority)) }
+        for _ in 0..<2000 { if await scheduler.currentRevision == 2 { break }; await Task.yield() }
+        await center.release(); _ = await original.value; _ = await drain.value
+        let requests = await center.pending(); XCTAssertTrue(requests.isEmpty)
+    }
+
     func testCompletionCycleInvalidatesOldNotificationAndSnoozeWithoutChangingItsPlannedTime() throws {
         var row = task(); let first = try XCTUnwrap(DueReminder.events(tasks: [row], calendar: calendar).first)
         let request = ReminderRequest.make(account: "account", event: first, fireAt: first.date.addingTimeInterval(3600), snoozed: true)
@@ -75,6 +115,17 @@ final class ReminderTests: XCTestCase {
         reserved["offset_minutes"] = .number(5)
         XCTAssertNil(ReminderSpec(row: .object(reserved)))
     }
+    func testCalendarTriggerNeverDeliversFractionalTaskOrSnoozeBeforeItsNominalInstant() throws {
+        let start = try XCTUnwrap(TaskPlanning.instant("2026-10-25T01:30:00Z"))
+        for fraction in [0.0, 0.001, 0.25, 0.999] {
+            let instant = start.addingTimeInterval(fraction), trigger = SystemReminderCenter.trigger(at: instant)
+            let actual = try XCTUnwrap(trigger.dateComponents.calendar?.date(from: trigger.dateComponents))
+            XCTAssertGreaterThanOrEqual(actual, instant)
+            XCTAssertEqual(actual, start.addingTimeInterval(fraction == 0 ? 0 : 1))
+            XCTAssertEqual(trigger.dateComponents.timeZone?.secondsFromGMT(for: actual), 0)
+        }
+    }
+
     func testAddingDuplicateReminderDoesNotMutateTheTask() {
         var row = task(); let original = row
         XCTAssertFalse(ReminderSpec.append(.relative(0), task: &row)); XCTAssertEqual(row, original)

@@ -6,6 +6,9 @@ insert into auth.users(id,email) values
 insert into auth.sessions(id,user_id) values
  ('f8001000-0000-4000-8000-000000000011','f8001000-0000-4000-8000-000000000001'),
  ('f8001000-0000-4000-8000-000000000012','f8001000-0000-4000-8000-000000000002');
+insert into taskfold_private.reminder_authority_pilots(user_id,expires_at) values
+ ('f8001000-0000-4000-8000-000000000001',clock_timestamp()+interval '5 minutes'),
+ ('f8001000-0000-4000-8000-000000000002',clock_timestamp()+interval '5 minutes');
 set local role anon;
 do $$ begin
  begin perform public.taskfold_claim_reminder_sweep(); raise exception 'Anonymous sweep claim allowed'; exception when insufficient_privilege then null; end;
@@ -31,7 +34,8 @@ do $$ declare owner uuid; session_key uuid; device uuid; binding jsonb; begin
   binding:=jsonb_build_object('platform','ios','bundle','com.dbakp.taskfold','environment','development',
    'token',lpad(to_hex(i),4,'0'),'time_zone','Europe/Copenhagen','permission','authorized','enabled',false);
   perform public.taskfold_register_reminder_device(device,repeat('c',64),1,binding);
-  perform public.taskfold_register_reminder_device(device,repeat('c',64),2,binding||'{"enabled":true}');
+  perform public.taskfold_activate_reminder_device(device,repeat('c',64),2,binding||'{"enabled":true}',
+   floor(extract(epoch from clock_timestamp())*1000)::bigint,gen_random_uuid());
  end loop;
  perform set_config('request.jwt.claim.sub','f8001000-0000-4000-8000-000000000001',true);
  perform set_config('request.jwt.claims','{"sub":"f8001000-0000-4000-8000-000000000001","role":"authenticated","session_id":"f8001000-0000-4000-8000-000000000011"}',true);

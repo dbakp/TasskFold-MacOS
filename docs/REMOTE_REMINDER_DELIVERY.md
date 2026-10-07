@@ -1,6 +1,6 @@
 # Remote reminder registration foundation
 
-Native reminder delivery currently uses local notifications. The private device registry, native transport, canonical projection, service job APIs and APNs adapter/disabled worker below are implemented, but the apps do not yet register automatically or offer remote delivery. An enabled registry receipt alone cannot establish a working provider or notification pipeline. The complete [remote delivery plan](REMINDERS.md#remote-delivery-implementation-plan) remains required.
+Native reminders use local notifications by default. Both apps now own explicit per-device consent and a durable local/remote handoff, behind a server rollout that remains disabled. The private registry, canonical jobs and disabled APNs worker are implemented; provisioned/provider/physical/paired acceptance remains open. See the current [delivery authority contract](REMINDER_AUTHORITY.md). Earlier checkpoints below retain their historical scope.
 
 ## Ownership and API
 
