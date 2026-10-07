@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-07",
+  "migration": "20261007055145_reminder_calendar_cohort_budget",
+  "iteratorComparisons": 1283,
+  "originComparisons": 120,
+  "ownerTasks": 160,
+  "ownerSettings": 3010,
+  "expiredCountLimitedSettings": 2000,
+  "invalidZoneSettings": 1000,
+  "activeCalendarSettings": 10,
+  "activeDevices": 2,
+  "inactiveDevices": 1,
+  "foreignTasks": 1,
+  "expectedInitialJobsPerActiveDevice": 30,
+  "expectedRetryJobs": 0,
+  "rpcBoundSeconds": 4,
+  "preMigrationThreeTaskBenchmarkSeconds": 3.726993,
+  "postMigrationThreeTaskBenchmarkSeconds": 0.118391,
+  "providerRequests": 0,
+  "allFixturesRolledBack": true,
+  "metrics": {
+    "ios": [
+      {
+        "name": "device-3-pass-1",
+        "result": {
+          "queued": 30
+        },
+        "seconds": 3.169141
+      },
+      {
+        "name": "device-3-pass-2",
+        "result": {
+          "queued": 0
+        },
+        "seconds": 3.199331
+      },
+      {
+        "name": "device-4-pass-1",
+        "result": {
+          "queued": 30
+        },
+        "seconds": 3.153107
+      },
+      {
+        "name": "device-4-pass-2",
+        "result": {
+          "queued": 0
+        },
+        "seconds": 3.171432
+      }
+    ],
+    "mac": [
+      {
+        "name": "device-3-pass-1",
+        "result": {
+          "queued": 30
+        },
+        "seconds": 3.101061
+      },
+      {
+        "name": "device-3-pass-2",
+        "result": {
+          "queued": 0
+        },
+        "seconds": 3.114388
+      },
+      {
+        "name": "device-4-pass-1",
+        "result": {
+          "queued": 30
+        },
+        "seconds": 3.091551
+      },
+      {
+        "name": "device-4-pass-2",
+        "result": {
+          "queued": 0
+        },
+        "seconds": 3.113746
+      }
+    ]
+  },
+  "sqlSuitesEach": 8,
+  "credentialFreeWorkerTestsEach": 35,
+  "nativeRuntimeTestedThisCheckpoint": false,
+  "productionVolumeAcceptance": false,
+  "fullP0Complete": false,
+  "ownedInputHashes": [
+    {
+      "file": "calendar_reminder_cohort.sql",
+      "sha256": "087b3c5778f95aa874a9045ef7ad3a70d1dc4c1b677e5420a0003a51d6b274dc"
+    },
+    {
+      "file": "calendar_reminder_bounds.sql",
+      "sha256": "fb97b119e329ee86a19af631457c7d8c2a0a3969729744cb17d5e6945479a567"
+    },
+    {
+      "file": "calendar_reminder_jobs.sql",
+      "sha256": "a9a1d625575551358306729118b339fa035d822a8c70e5455adb110b09bc05c2"
+    },
+    {
+      "file": "reminder_jobs.sql",
+      "sha256": "71e4bb432ed088a3afd697f411b7405611dcd490eec2870520d015114e8bd6b7"
+    },
+    {
+      "file": "reminder_devices.sql",
+      "sha256": "0255141fcce334999096e70365aca6ae9b47eac230786cc62a2fc4e8ce8518e1"
+    },
+    {
+      "file": "reminder_worker_cursor.sql",
+      "sha256": "83c5cf502d3196e79a42f82ee9f59fd5a5ab32b13a8abcdbe823135774baff91"
+    },
+    {
+      "file": "task_generations.sql",
+      "sha256": "167ae0d68fd5f2fde5208d8423dd0fadc31f21b76854069db056834ae290eb2d"
+    },
+    {
+      "file": "recurring_reminder_transport.sql",
+      "sha256": "88cb7b18793e5fb16d7323577c3b6c45a36727169c8f9efc6c88cf320a5ca1d3"
+    }
+  ],
+  "migrationNormalizedSha256": "d612b6426ee386c67e177a40fa2eb6032eb32bf13832bcde121070918e0b2b23"
+}
