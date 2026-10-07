@@ -111,12 +111,13 @@ final class QuickPlanningCompletionTests: XCTestCase {
         XCTAssertEqual(value.string("due_date"), "2027-05-20"); XCTAssertEqual(value.string("due_time"), "09:00"); XCTAssertEqual(value.string("deadline_date"), "2027-05-25")
         XCTAssertTrue(menu("Call at 9", task: task).options.first { $0.reference == "at 9am" }?.detail.contains("2027-05-20") == true)
     }
-    func testTimeWithoutPlanUsesInjectedCalendarLocalDay() throws {
+    func testTimeWithoutPlanUsesInjectedCalendarDayAndRollover() throws {
         var c = calendar; c.timeZone = TimeZone(identifier: "Pacific/Auckland")!
         let date = ISO8601DateFormatter().date(from: "2026-10-06T23:30:00Z")!
         var task = Record.task(user: "owner"); task["due_date"] = .string("invalid")
         let value = QuickEntry("Call at 9am", now: date, calendar: c, task: task)
-        XCTAssertEqual(value.updates["due_date"], .string("2026-10-07"))
+        XCTAssertEqual(value.updates["due_date"], .string("2026-10-08"))
+        XCTAssertEqual(QuickEntry("Call at 1pm", now: date, calendar: c, task: task).updates["due_date"], .string("2026-10-07"))
     }
     func testOtherClockHoursAndHalfHoursAreAvailable() throws {
         XCTAssertEqual(try choose("Call at 1", phrase: "at 1pm").updates["due_time"], .string("13:00"))

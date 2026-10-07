@@ -1,0 +1,117 @@
+{
+  "checkpoint": "2026-10-07 natural clock periods and next-day time-only capture",
+  "repository": "mac",
+  "inputManifest": "docs/natural-clock-inputs-sha256.json",
+  "inputManifestSHA256": "6919e0e8584d6a3615a3ecc7c88602a074ebfd1d7fb68ed3de74d55dd97c6f7f",
+  "source": "/tmp/taskfold-natural-clock-mac-source",
+  "ownCore": {
+    "Debug": {
+      "tests": 540,
+      "skipped": 4,
+      "failed": 0,
+      "terminalExitCode": 0,
+      "log": "/tmp/taskfold-natural-clock-mac-core-final.log",
+      "SHA256": "b3434b72abeef7ad80f40148652a22029d8cf245f25e417fcc6c9bbd27c7b5b5"
+    },
+    "Release": {
+      "tests": 540,
+      "skipped": 4,
+      "failed": 0,
+      "terminalExitCode": 0,
+      "log": "/tmp/taskfold-natural-clock-mac-optimized.log",
+      "SHA256": "72ee67ca9c688d33bc8c7ec36e676d2ef6e88fc817565795c8feb4c159056a50"
+    }
+  },
+  "newRegressions": 8,
+  "ownBuilds": {
+    "debug": {
+      "terminalExitCode": 0,
+      "operation": "build-for-testing",
+      "log": "/tmp/taskfold-natural-clock-mac-debug.log",
+      "SHA256": "106a7bb97187b0a4a5c0966f837378614ae682e9699ef338a23c4c75edf2aec6",
+      "derivedData": "/tmp/taskfold-natural-clock-mac-debug-build"
+    },
+    "release": {
+      "terminalExitCode": 0,
+      "operation": "build",
+      "log": "/tmp/taskfold-natural-clock-mac-release.log",
+      "SHA256": "a59f286496fe880808ee82e759e0d166fecaec1061ab68cdec9c99919eb33a6f",
+      "derivedData": "/tmp/taskfold-natural-clock-mac-release-build"
+    }
+  },
+  "nativeIOS": {
+    "walks": [
+      {
+        "device": "phone",
+        "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "testIdentifiers": [
+          "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+          "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()"
+        ],
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": [],
+        "terminalExitCode": 0,
+        "resultBundle": "/tmp/taskfold-natural-clock-fit2-phone.xcresult",
+        "log": "/tmp/taskfold-natural-clock-fit2-phone.log",
+        "logSHA256": "b4cbcaad13504f636887c7dae4144a26f2c868b7b6712e9f2b3cac619697e5bd",
+        "summary": "/tmp/taskfold-natural-clock-fit2-phone-summary.json",
+        "summarySHA256": "18057ee5e6c47582ae87392b05df2b25d368bcd731853117ac0941fcf250e9a8"
+      },
+      {
+        "device": "tablet",
+        "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "testIdentifiers": [
+          "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+          "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()"
+        ],
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "runtimeWarnings": [],
+        "terminalExitCode": 0,
+        "resultBundle": "/tmp/taskfold-natural-clock-fit2-tablet.xcresult",
+        "log": "/tmp/taskfold-natural-clock-fit2-tablet.log",
+        "logSHA256": "93cdba285122dc2a69b97cd4a8e55a3e12f21fb7b80a248bfe95d077c5fb93ee",
+        "summary": "/tmp/taskfold-natural-clock-fit2-tablet-summary.json",
+        "summarySHA256": "d66d214bb8f99d35881959b26dd24f03b704d28390d71ac86b47ddd70832d634"
+      }
+    ],
+    "source": "/tmp/taskfold-natural-clock-fit2-ios-test-source",
+    "derivedData": "/tmp/taskfold-natural-clock-fit2-ios-debug-build",
+    "iosInputManifestSHA256": "671472d36cc57a70ad337ee4e42caa87c7f05f97c4c8c6063ba543034d54c23f",
+    "iosUITestSHA256": "8c3fc015511791ea7ceeee84265cea0961804f1cf3075661cfcbb25bde2068ca",
+    "captureManifest": "docs/natural-clock-captures.json",
+    "captureManifestSHA256": "745539229882a19163ba0ecb976451b714399088224c16a37efe3f2a4378d0b2",
+    "captures": 20,
+    "allActualCapturesVisuallyInspected": true,
+    "fixtureEvidence": "docs/natural-clock-fixture-persistence.json",
+    "fixtureEvidenceSHA256": "13855f1832559ce55a0e70846f734dff1ace91771de5d0e2bd9d4c97d8f6cf90",
+    "limitations": "Horizontal chip/control strips use partial viewports; full-width single-line chip retains background and is horizontally scrollable. Largest phone/tablet editor and time-zone chooser use scrolling/truncation. Four targeted Simulator walks, not full native surface/VoiceOver/paired-account/widget-host acceptance. The largest-phone persisted-morning photo reveals only the planned day; its exact 09:00 value is established by the bounded persisted fixture record and native toggle assertions, not that photo."
+  },
+  "nativeMac": "UI-test target compiled; runtime unrun and prohibited",
+  "storageCompatibility": "Existing canonical HH:mm, planned day, source zone and normalized scheduled_at; reminder specifications unchanged. No schema/AST/queue/widget payload/sibling dependency change. Stored tasks are not migrated.",
+  "diagnostics": {
+    "before": "/tmp/taskfold-natural-clock-ios-before.log",
+    "baselineTests": "/tmp/taskfold-natural-clock-baseline-tests.swift",
+    "initialSelected": "/tmp/taskfold-natural-clock-mac-selected.log",
+    "initialFull": "/tmp/taskfold-natural-clock-mac-core.log",
+    "notes": "Initial eight regressions reproduced 52 assertion failures. The recurrence completion prefix consumed eve inside even; keyword boundary corrected while ev keeps repeat choices. An older assertion expected an already-passed clock to stay today; updated for the deliberate rollover behavior and retained a future-clock/today assertion.",
+    "visualReview": "All 20 initial captures inspected; rollover label overflowed capsule at largest text. Initial intrinsic-height attempt still overflowed despite four passing walks; source/products/results/captures preserved. Final single-line full-width scrollable chips resolve overflow. Extra persisted-editor scroll restricted to tablet after phone overshoot; final 20 actual photos inspected.",
+    "visualEvidence": "docs/natural-clock-visual-diagnostics.json"
+  },
+  "remaining": [
+    "Richer date/repeat grammar and configurable next-week/weekend settings",
+    "Full paired native account/offline/access-revocation/restore",
+    "Native Mac runtime and full VoiceOver/surface acceptance",
+    "Physical/provisioned configured widget hosts and distribution",
+    "Remote/provider delivery and isolated actual provider import",
+    "Full P0 objective remains active"
+  ],
+  "macReleaseArchitectures": [
+    "x86_64",
+    "arm64"
+  ],
+  "coreProvenance": "All own Core/application parser and Core-test bytes match the initial natural-clock source that passed 540/4skip/0fail in Debug and optimized. Follow-up changes affect only iOS native chip layout/UI-test capture scrolling."
+}

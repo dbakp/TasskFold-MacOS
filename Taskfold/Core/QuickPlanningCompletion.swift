@@ -15,13 +15,13 @@ struct QuickPlanningCompletion {
         guard caret >= 0, let prefixRange = Range(NSRange(location: 0, length: caret), in: input) else { return }
         let prefix = String(input[prefixRange])
         // Protection consumes complete references, quotes, escaped words and URLs first.
-        let pattern = #"\\(?:[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|\S*)|"[^"\n]*(?:"|$)|(?<!\S)(?:https?://|www\.)\S*|(?<!\S)[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|(?<!\S)(!(?:every(?:\s+[\p{L}\p{N}:.,-]*)*|[\p{L}\p{N}:.]*(?:\s+(?:at\s+)?[\p{L}\p{N}:.]*)?)|ev(?:e(?:r(?:y!?)?)?)?(?:\s+[\p{L}\p{N}, -]*)?|end(?:\s+of(?:\s+[\p{L}]*)?)?|next(?:\s+[\p{L}]*)?|in(?:\s+\d*(?:\s+[\p{L}]*)?)?|at(?:\s+[\p{L}\p{N}:.]*)?|[\p{L}]{2,})"#
+        let pattern = #"\\(?:[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|\S*)|"[^"\n]*(?:"|$)|(?<!\S)(?:https?://|www\.)\S*|(?<!\S)[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|(?<!\S)(!(?:every(?:\s+[\p{L}\p{N}:.,-]*)*|[\p{L}\p{N}:.]*(?:\s+(?:at\s+)?[\p{L}\p{N}:.]*)?)|ev(?:e(?:r(?:y!?)?)?)?(?![\p{L}\p{N}_])(?:\s+[\p{L}\p{N}, -]*)?|end(?:\s+of(?:\s+[\p{L}]*)?)?|next(?:\s+[\p{L}]*)?|in(?:\s+(?:the(?:\s+[\p{L}]*)?|\d*(?:\s+[\p{L}]*)?))?|at(?:\s+[\p{L}\p{N}:.]*)?|[\p{L}]{2,})"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
               let match = regex.matches(in: prefix, range: NSRange(prefix.startIndex..., in: prefix)).last,
               match.range.location + match.range.length == caret, match.range(at: 1).location != NSNotFound,
               let matched = Range(match.range(at: 1), in: prefix) else { return }
         let fragment = String(prefix[matched]).lowercased()
-        if fragment.last?.isWhitespace == true && !["!every", "every", "every!", "next", "in", "at", "end", "end of"].contains(fragment.trimmingCharacters(in: .whitespaces)) { return }
+        if fragment.last?.isWhitespace == true && !["!every", "every", "every!", "next", "in", "in the", "at", "end", "end of"].contains(fragment.trimmingCharacters(in: .whitespaces)) { return }
         guard let start = Range(NSRange(location: match.range.location, length: 0), in: input)?.lowerBound,
               var end = Range(NSRange(location: caret, length: 0), in: input)?.lowerBound else { return }
         // Complete the current word in the middle of a title, retaining later words.
@@ -33,7 +33,7 @@ struct QuickPlanningCompletion {
         let group: String
         if fragment.hasPrefix("!") {
             group = "reminder_specs"; prompt = "Choose a reminder"
-            candidates = ["!15m", "!30m", "!1h", "!later", "!tomorrow 9am", "!tomorrow noon", "!midnight", "!every day noon", "!15mb", "!30mb", "!1hb", "!15ma", "!30ma", "!every day 9am", "!every weekdays 9am", "!every saturday 9am", "!every monday 9am", "!every month on last friday 9am"]
+            candidates = ["!15m", "!30m", "!1h", "!later", "!tomorrow 9am", "!tomorrow noon", "!midnight", "!every day noon", "!tomorrow morning", "!tomorrow evening", "!every day afternoon", "!15mb", "!30mb", "!1hb", "!15ma", "!30ma", "!every day 9am", "!every weekdays 9am", "!every saturday 9am", "!every monday 9am", "!every month on last friday 9am"]
             if let number = fragment.dropFirst().split(whereSeparator: { !$0.isNumber }).first, let n = Int(number), (1...10080).contains(n) {
                 candidates.insert(contentsOf: ["!\(n)m", "!\(n)mb", "!\(n)ma", "!\(n)h", "!\(n)hb", "!\(n)ha"], at: 0)
             }
@@ -48,6 +48,9 @@ struct QuickPlanningCompletion {
                 candidates += weekdays.map { anchor + "\(n) weeks on " + $0 }
             }
             if ["daily", "weekly", "monthly", "yearly"].contains(where: { fragment.count >= 4 && $0.hasPrefix(fragment) }) { candidates = ["daily", "weekly", "monthly", "yearly"] }
+        } else if fragment == "in the" || fragment.hasPrefix("in the ") || ["morning", "afternoon", "evening", "night"].contains(where: { fragment.count >= 3 && $0.hasPrefix(fragment) }) {
+            group = "due_time"; prompt = "Choose a planned time"
+            candidates = ["morning", "afternoon", "evening", "night"] + ["morning", "afternoon", "evening", "night"].map { "in the " + $0 }
         } else if fragment == "at" || fragment.hasPrefix("at ") {
             group = "due_time"; prompt = "Choose a planned time"
             candidates = ["at 9am", "at noon", "at midnight", "at 12pm", "at 3pm", "at 6pm"]

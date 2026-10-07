@@ -82,15 +82,15 @@ Productivity and recovery references: [Insights](https://www.todoist.com/help/to
 
 ## Implementation sequence
 
-### Phase 0 Repair the Todoist import boundary
+### Phase 0 Repair the Todoist import boundary — original 5 October baseline
 
-Estimated 3–5 engineer-days. The reviewed edge function still calls `/rest/v2/projects`, `/sections`, `/tasks`, and `/comments`. Todoist announced the shutdown of REST v2 for 10 February 2026; current documentation uses the unified API v1. This is a source-confirmed compatibility risk and the first release blocker to investigate. The deployed edge-function version was not inspected and no private token was used. [Official shutdown notice](https://groups.google.com/a/doist.com/g/todoist-api/c/brwENjfT_tk), [current API](https://developer.todoist.com/api/v1/)
+Historical estimate: 3–5 engineer-days. The initial 5 October review found that the edge function called `/rest/v2/projects`, `/sections`, `/tasks`, and `/comments`. Todoist announced the shutdown of REST v2 for 10 February 2026; current documentation uses the unified API v1. This is a source-confirmed compatibility risk and the first release blocker to investigate. The deployed edge-function version was not inspected and no private token was used. [Official shutdown notice](https://groups.google.com/a/doist.com/g/todoist-api/c/brwENjfT_tk), [current API](https://developer.todoist.com/api/v1/)
 
 - Update the importer against the current response envelopes, cursor pagination and identifiers; do not perform a URL-only replacement.
 - Preserve preview-before-import and add replay-safe source ID mappings. Report unsupported deadline/duration/recurrence/attachment fields until the schema supports them.
 - Validate using official response fixtures and an isolated Todoist account, then deploy the reviewed function through the established backend workflow.
 
-Acceptance: preview lists all pages, authentication errors remain useful, labels/sections/child relationships survive mapping, and repeating an import does not duplicate tasks. Source checks do not prove the deployed importer is currently broken; verify that boundary before release.
+Acceptance: preview lists all pages, authentication errors remain useful, labels/sections/child relationships survive mapping, and repeating an import does not duplicate tasks. The API v1 implementation and source-bound native review now exist; see [current import evidence](TODOIST_IMPORT_REVIEW.md) and the P0 tracker. The original REST v2 audit describes the starting source, not a claim about today's deployed implementation. Real isolated provider-account import/persistence/retry remains an acceptance gate.
 
 ### Phase 1 Saved filters and favorites
 
@@ -451,3 +451,6 @@ Both repositories independently validate whole clock phrases, preserve invalid/a
 Each own Core suite passes 532 tests with four optional integration skips and zero failures. Own unsigned Debug/Release builds pass; Mac Release includes x86_64/arm64 and its UI test compiles without runtime. All four final isolated iPhone/iPad light/dark-largest capture/save/More/decline/relaunch walks pass, zero failures/skips and no runtime warnings in these result summaries. Twelve inspected unmodified captures and bounded exact fixture-record evidence are retained. Application/Core/widget/Release bytes remain unchanged through UI-test-only fixture and scrolling corrections; those earlier failures, sources, products and results are preserved. [Evidence](strict-clock-evidence.json).
 
 Largest phone text requires scrolling and the time-zone chooser truncates; horizontal chips/toolbars and largest iPad editor captures use partial viewports. No schema, authorization policy, provider or rollout changes are made. Mac GUI, actual paired native account/offline/member-revocation/restore, physical/provisioned widgets/delivery, VoiceOver/full-surface, richer grammar and full P0 acceptance remain open.
+
+
+Natural clock checkpoint (7 October): period clocks and passed time-only next-day planning now have independent own Core/native build checks; four final isolated iOS walks and 20 inspected actual captures are recorded in [natural-clock-evidence.json](natural-clock-evidence.json). See [NATURAL_CLOCK_CAPTURE.md](NATURAL_CLOCK_CAPTURE.md) for the precise grammar/rollover contract and remaining parity gates. Full P0 is still active.

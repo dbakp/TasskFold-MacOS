@@ -1,0 +1,182 @@
+[
+  {
+    "file": "docs/natural-clock/final/phone-light-standard-persisted-rollover-editor.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-phone-attachments/79109CA9-1DA1-452E-BB9E-AE704368399F.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/phone-light-standard-persisted-rollover-editor.png",
+    "SHA256": "e029f8100bfde9c938f1df7d1408fdab4457238776c1686a1f53fe6efbabd59e",
+    "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "label": "Natural clock persisted rollover editor"
+  },
+  {
+    "file": "docs/natural-clock/final/phone-light-standard-persisted-morning-editor.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-phone-attachments/5DB67EB6-787A-4232-A026-6F8AA1992282.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/phone-light-standard-persisted-morning-editor.png",
+    "SHA256": "a945bde7ec79fb4998be9ab7cdd950484d09ed23f7e0be5e7c7b3068aed66ebb",
+    "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "label": "Natural clock persisted morning editor"
+  },
+  {
+    "file": "docs/natural-clock/final/phone-light-standard-time-only-rollover.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-phone-attachments/A312A9FF-1DD0-41E7-A4BC-244C1A0C16B4.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/phone-light-standard-time-only-rollover.png",
+    "SHA256": "fa3665c244b135ebcb9ee71e8cf8e1ac30d8a9d56253d718e55e7a5f2bb1f331",
+    "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "label": "Natural clock time-only rollover"
+  },
+  {
+    "file": "docs/natural-clock/final/phone-light-standard-morning-capture.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-phone-attachments/53472C05-29D1-4EFE-A0A1-0A2063C15139.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/phone-light-standard-morning-capture.png",
+    "SHA256": "f5ac9af4d23441101d047ffe4d1867dd298078608d54d3d4ab2bfa9134c88f7d",
+    "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "label": "Natural clock morning capture"
+  },
+  {
+    "file": "docs/natural-clock/final/phone-light-standard-invalid-input-feedback.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-phone-attachments/FE772D6E-1FF9-4613-82CC-5E582EFAAE54.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/phone-light-standard-invalid-input-feedback.png",
+    "SHA256": "6bc7767d43a85f03c85a958a07f71b6a4c6227c00bb3fdef7296e54f0be7b210",
+    "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "label": "Strict clock invalid input feedback"
+  },
+  {
+    "file": "docs/natural-clock/final/phone-dark-largest-persisted-rollover-editor.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-phone-attachments/503AFFD2-56CC-41E3-AD32-2802A99DD709.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/phone-dark-largest-persisted-rollover-editor.png",
+    "SHA256": "d87b3577b85ec4b4fc6aabc0ecd1c7d5a1614acb34b77ced5c85a50c484da14b",
+    "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "label": "Natural clock persisted rollover editor"
+  },
+  {
+    "file": "docs/natural-clock/final/phone-dark-largest-persisted-morning-editor.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-phone-attachments/D67D10F7-48DA-4A14-984A-D8F048A3BEEA.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/phone-dark-largest-persisted-morning-editor.png",
+    "SHA256": "72439f100c01a0009679649179502a7f0596bb38a6b21877f4b8fb1a02b1c232",
+    "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "label": "Natural clock persisted morning editor"
+  },
+  {
+    "file": "docs/natural-clock/final/phone-dark-largest-time-only-rollover.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-phone-attachments/2CE20FEC-E682-4F81-A647-63BC1E7BA75D.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/phone-dark-largest-time-only-rollover.png",
+    "SHA256": "f738f1864828db28531919da8f5eafe9f7524e330cecdcf05a756a23f7e83fcb",
+    "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "label": "Natural clock time-only rollover"
+  },
+  {
+    "file": "docs/natural-clock/final/phone-dark-largest-morning-capture.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-phone-attachments/150CA5AE-39DD-4444-A745-116EE7D4CD10.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/phone-dark-largest-morning-capture.png",
+    "SHA256": "f3322cbfe7b4174302178b35f31630dea7ac6fe12acfbb1ac76436f345714c6f",
+    "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "label": "Natural clock morning capture"
+  },
+  {
+    "file": "docs/natural-clock/final/phone-dark-largest-invalid-input-feedback.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-phone-attachments/2F4A5EE0-FC28-487F-AE67-2336578D2C6F.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/phone-dark-largest-invalid-input-feedback.png",
+    "SHA256": "fac3706143ebb8430aa15617e6ef351464f565de0f17706c851431faeda846a4",
+    "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "label": "Strict clock invalid input feedback"
+  },
+  {
+    "file": "docs/natural-clock/final/tablet-light-standard-persisted-rollover-editor.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-tablet-attachments/E63E9DCA-FEDE-4CDE-B8C7-345E4C7AD7B2.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/tablet-light-standard-persisted-rollover-editor.png",
+    "SHA256": "3080213953753f3291a8c3cf43c126cb3497f168d916008b7c9c5fc21df9e581",
+    "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "label": "Natural clock persisted rollover editor"
+  },
+  {
+    "file": "docs/natural-clock/final/tablet-light-standard-persisted-morning-editor.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-tablet-attachments/5A9583C1-AC93-45D4-BE5F-22F9EE0AA585.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/tablet-light-standard-persisted-morning-editor.png",
+    "SHA256": "cf264471a3de5f22a95dfe43af112f8d5f61b9f648e65003bfefd5a047f1ab29",
+    "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "label": "Natural clock persisted morning editor"
+  },
+  {
+    "file": "docs/natural-clock/final/tablet-light-standard-time-only-rollover.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-tablet-attachments/7D882642-0955-43BE-9820-C5D9C92988B8.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/tablet-light-standard-time-only-rollover.png",
+    "SHA256": "747c96eb9451e8a847905460a3af83a61ee1d39c1f36f501c28aafb61e8732cf",
+    "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "label": "Natural clock time-only rollover"
+  },
+  {
+    "file": "docs/natural-clock/final/tablet-light-standard-morning-capture.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-tablet-attachments/5D50913F-A04E-4E70-B53A-63E3DDA8AE33.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/tablet-light-standard-morning-capture.png",
+    "SHA256": "bb0a34314dce9f2d5a02fa01d181f9f95c2955075c1134c18f69e0a2dc4cf0fa",
+    "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "label": "Natural clock morning capture"
+  },
+  {
+    "file": "docs/natural-clock/final/tablet-light-standard-invalid-input-feedback.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-tablet-attachments/030F1922-9282-4267-9F41-2907675C901A.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/tablet-light-standard-invalid-input-feedback.png",
+    "SHA256": "db2904e672beadc2b4ec89332c13b0bc1120a52d7c2575fd26c3fe8ad507392b",
+    "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "label": "Strict clock invalid input feedback"
+  },
+  {
+    "file": "docs/natural-clock/final/tablet-dark-largest-persisted-rollover-editor.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-tablet-attachments/38AAA574-B724-4746-9B99-4A656B47FE2D.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/tablet-dark-largest-persisted-rollover-editor.png",
+    "SHA256": "6e5fac831fab9ab0cd8ce48f2de703d61b438633a79bfca0ff4c33a16b48ea32",
+    "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "label": "Natural clock persisted rollover editor"
+  },
+  {
+    "file": "docs/natural-clock/final/tablet-dark-largest-persisted-morning-editor.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-tablet-attachments/430218F5-72F5-42BA-883C-B860F4611498.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/tablet-dark-largest-persisted-morning-editor.png",
+    "SHA256": "096a1a8e39051605da72c728cfe7043a7be8054d26d4f5a468509386b90e4f30",
+    "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "label": "Natural clock persisted morning editor"
+  },
+  {
+    "file": "docs/natural-clock/final/tablet-dark-largest-time-only-rollover.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-tablet-attachments/C168F47F-7DB5-4672-B75A-33841D69A863.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/tablet-dark-largest-time-only-rollover.png",
+    "SHA256": "b5678ace8bc964d090559412bca9b897bf41ab4d8acc6cfbd8c6a460841626a2",
+    "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "label": "Natural clock time-only rollover"
+  },
+  {
+    "file": "docs/natural-clock/final/tablet-dark-largest-morning-capture.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-tablet-attachments/55B18649-A20E-410E-A360-A320D1B34EBB.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/tablet-dark-largest-morning-capture.png",
+    "SHA256": "b2f1df2b7ae7187dcd53bf8e186440e8de5c7c96e7d3b8b7941b5ef3528a8cb1",
+    "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "label": "Natural clock morning capture"
+  },
+  {
+    "file": "docs/natural-clock/final/tablet-dark-largest-invalid-input-feedback.png",
+    "source": "/tmp/taskfold-natural-clock-fit2-tablet-attachments/13548E8A-C3E0-48F5-A8BA-4E21A0A20D00.png",
+    "preview": "/tmp/taskfold-natural-clock-fit2-final-captures/tablet-dark-largest-invalid-input-feedback.png",
+    "SHA256": "ac106a80631d5ce554e67da513aeedc0ef1eac3dae810788801c1f30b9332c84",
+    "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "label": "Strict clock invalid input feedback"
+  }
+]

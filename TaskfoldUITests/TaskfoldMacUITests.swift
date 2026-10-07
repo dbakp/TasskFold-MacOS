@@ -82,10 +82,13 @@ final class TaskfoldMacUITests: XCTestCase {
         app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("Literal clock at 13pm")
         let warning = app.staticTexts["quickEntryWarning"].firstMatch; XCTAssertTrue(warning.waitForExistence(timeout: 5)); XCTAssertTrue(warning.label.contains("valid planned time"))
-        app.buttons["Add Task"].click(); app.typeKey("n", modifierFlags: .command); input.click(); input.typeText("Clock plan tomorrow at mid")
-        let choice = app.buttons["referenceSuggestion-due_time:planning:at midnight"]; XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.click(); app.buttons["Add Task"].click()
+        app.buttons["Add Task"].click(); app.typeKey("n", modifierFlags: .command); input.click(); input.typeText("Clock plan tomorrow in the mor")
+        let choice = app.buttons["referenceSuggestion-due_time:planning:in the morning"]; XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.click(); app.buttons["Add Task"].click()
         app.buttons["Inbox"].firstMatch.click(); XCTAssertTrue(app.staticTexts["Clock plan"].waitForExistence(timeout: 5))
-        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.staticTexts["Clock plan"].waitForExistence(timeout: 5)); XCTAssertTrue(app.staticTexts["Literal clock at 13pm"].exists)
+        app.typeKey("n", modifierFlags: .command); input.click(); input.typeText("Clock shift at midnight")
+        let rollover = app.descendants(matching: .any).matching(identifier: "chip-due_time").firstMatch
+        XCTAssertTrue(rollover.waitForExistence(timeout: 5)); XCTAssertTrue(rollover.label.contains("Tomorrow")); app.buttons["Add Task"].click()
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.staticTexts["Clock plan"].waitForExistence(timeout: 5)); XCTAssertTrue(app.staticTexts["Clock shift"].exists); XCTAssertTrue(app.staticTexts["Literal clock at 13pm"].exists)
     }
 
     @MainActor func testPlanningSuggestionsKeyboardCaptureAndRelaunch() throws {

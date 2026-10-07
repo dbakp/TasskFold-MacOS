@@ -1,0 +1,154 @@
+{
+  "bundleID": "com.dbakp.taskfold.naturalclocktests",
+  "scope": "Only four final dark/largest-text fixture tasks per owned device; earlier light case reset at dark-case launch. No real task data/account sync assertion.",
+  "devices": {
+    "phone": {
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "cacheSHA256": "5f5718f8f6cdd6b03fdbc41044ecb9c8a17a24b86791154d659c310ca608a787",
+      "rows": [
+        {
+          "id": "1bf4396c-2a1e-4868-a3b3-70541577438e",
+          "title": "Literal clock C14C58 at 13pm",
+          "user_id": "ui-testing",
+          "due_date": null,
+          "due_time": null,
+          "scheduled_at": null,
+          "priority": 2,
+          "completed": false,
+          "reminder_specs": null
+        },
+        {
+          "id": "ea8f9834-c166-49b8-9c05-0df300eba216",
+          "title": "Clock plan C14C58",
+          "user_id": "ui-testing",
+          "due_date": "2026-10-08",
+          "due_time": "09:00",
+          "scheduled_at": null,
+          "priority": 4,
+          "completed": false,
+          "reminder_specs": [
+            {
+              "anchor": "planned",
+              "version": 1,
+              "channels": [
+                "local"
+              ],
+              "offset_minutes": 0,
+              "enabled": true,
+              "kind": "relative",
+              "id": "00000000-0000-4000-8000-000000000001"
+            }
+          ]
+        },
+        {
+          "id": "a6bffa66-339d-446c-a052-b50506b9d8e6",
+          "title": "Clock shift C14C58",
+          "user_id": "ui-testing",
+          "due_date": "2026-10-08",
+          "due_time": "00:00",
+          "scheduled_at": null,
+          "priority": 4,
+          "completed": false,
+          "reminder_specs": [
+            {
+              "anchor": "planned",
+              "version": 1,
+              "channels": [
+                "local"
+              ],
+              "offset_minutes": 0,
+              "enabled": true,
+              "kind": "relative",
+              "id": "00000000-0000-4000-8000-000000000001"
+            }
+          ]
+        },
+        {
+          "id": "aa3e6e0b-0be5-4da5-837d-53e305f81d2d",
+          "title": "Clock prose C14C58 at midnight",
+          "user_id": "ui-testing",
+          "due_date": null,
+          "due_time": null,
+          "scheduled_at": null,
+          "priority": 4,
+          "completed": false,
+          "reminder_specs": null
+        }
+      ]
+    },
+    "tablet": {
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "cacheSHA256": "c85bc1d4bc0d98df2c9ebb4ee3be0d917f553cac39dd3a1e255cbcba2d298d76",
+      "rows": [
+        {
+          "id": "79c27edf-199f-4ebf-a758-2e7a33177afa",
+          "title": "Literal clock C05A52 at 13pm",
+          "user_id": "ui-testing",
+          "due_date": null,
+          "due_time": null,
+          "scheduled_at": null,
+          "priority": 2,
+          "completed": false,
+          "reminder_specs": null
+        },
+        {
+          "id": "1f69903c-e3a4-4fac-a56e-5cb26bb76607",
+          "title": "Clock plan C05A52",
+          "user_id": "ui-testing",
+          "due_date": "2026-10-08",
+          "due_time": "09:00",
+          "scheduled_at": null,
+          "priority": 4,
+          "completed": false,
+          "reminder_specs": [
+            {
+              "version": 1,
+              "id": "00000000-0000-4000-8000-000000000001",
+              "offset_minutes": 0,
+              "channels": [
+                "local"
+              ],
+              "kind": "relative",
+              "enabled": true,
+              "anchor": "planned"
+            }
+          ]
+        },
+        {
+          "id": "df2e1f9e-89d0-4892-84ad-ca63baa46f88",
+          "title": "Clock shift C05A52",
+          "user_id": "ui-testing",
+          "due_date": "2026-10-08",
+          "due_time": "00:00",
+          "scheduled_at": null,
+          "priority": 4,
+          "completed": false,
+          "reminder_specs": [
+            {
+              "version": 1,
+              "id": "00000000-0000-4000-8000-000000000001",
+              "channels": [
+                "local"
+              ],
+              "offset_minutes": 0,
+              "kind": "relative",
+              "enabled": true,
+              "anchor": "planned"
+            }
+          ]
+        },
+        {
+          "id": "bf782bd9-a5f2-4efe-b9b1-5fda0edb5e92",
+          "title": "Clock prose C05A52 at midnight",
+          "user_id": "ui-testing",
+          "due_date": null,
+          "due_time": null,
+          "scheduled_at": null,
+          "priority": 4,
+          "completed": false,
+          "reminder_specs": null
+        }
+      ]
+    }
+  }
+}

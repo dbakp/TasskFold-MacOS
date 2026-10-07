@@ -354,14 +354,17 @@ extension Snapshot {
 
 /// Recognize an entire clock before validation so malformed input cannot become a partial time.
 private enum QuickPlannedClockText {
-    static let clock = #"(?:noon|midnight|\d+(?:[:.]\d+)+(?:\s*(?:am|pm))?|\d+\s*(?:am|pm))"#
-    static let body = #"(?:at\s+(?:noon|midnight|\d+(?:[:.]\d+)*(?:\s*(?:am|pm))?)|"# + clock + ")"
+    static let period = #"(?:morning|afternoon|evening|night)"#
+    static let clock = #"(?:noon|midnight|"# + period + #"|\d+(?:[:.]\d+)+(?:\s*(?:am|pm))?|\d+\s*(?:am|pm))"#
+    static let body = #"(?:in\s+the\s+"# + period + #"|at\s+(?:noon|midnight|"# + period + #"|\d+(?:[:.]\d+)*(?:\s*(?:am|pm))?)|"# + clock + ")"
     static let ending = #"(?![\p{L}\p{N}_:/]|\.[\p{L}\p{N}])"#
     static let pattern = #"(?<![\p{L}\p{N}_:/.])"# + body + ending
     static func canonical(_ raw: String) -> String? {
-        var text = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        var text = raw.lowercased().split(whereSeparator: \.isWhitespace).joined(separator: " ")
         let hasAt = text.hasPrefix("at ")
         if hasAt { text = String(text.dropFirst(3)).trimmingCharacters(in: .whitespacesAndNewlines) }
+        if text.hasPrefix("in the ") { text = String(text.dropFirst(7)) }
+        if let time = ["morning": "09:00", "afternoon": "12:00", "evening": "19:00", "night": "22:00"][text] { return time }
         if text == "noon" { return "12:00" }
         if text == "midnight" { return "00:00" }
         if hasAt, !text.isEmpty, text.utf8.allSatisfy({ (48...57).contains($0) }), text.count <= 2 { text += ":00" }
@@ -558,9 +561,19 @@ struct QuickEntry {
                 warnings.append("This repeat rule needs a valid first date on or before its end date. Its text stays in the title.")
             }
         }
-        if updates["due_time"] != nil && updates["due_date"] == nil {
-            let planned = task.string("due_date")
-            updates["due_date"] = .string(Dates.parse(planned, calendar: calendar) != nil ? planned : TaskPlanner.dayKey(now, calendar: calendar))
+        if let clock = updates["due_time"]?.text, !clock.isEmpty, updates["due_date"] == nil {
+            var timed = task; timed["due_time"] = .string(clock)
+            let sourceCalendar = TaskCompletion.calendar(for: timed, input: calendar), planned = task.string("due_date")
+            if Dates.parse(planned, calendar: sourceCalendar) != nil { updates["due_date"] = .string(planned) }
+            else {
+                let today = sourceCalendar.startOfDay(for: now), pieces = clock.split(separator: ":").compactMap { Int($0) }
+                let candidate = pieces.count == 2 ? TaskPlanning.wallTime(day: today, hour: pieces[0], minute: pieces[1], calendar: sourceCalendar) : nil
+                let passed = candidate.map { $0 < now } ?? false
+                let selected = passed ? sourceCalendar.date(byAdding: .day, value: 1, to: today) ?? today : today
+                updates["due_date"] = .string(TaskPlanner.dayKey(selected, calendar: sourceCalendar))
+                // The clock chip owns its derived date: declining it removes both together.
+                if passed, let index = tokens.firstIndex(where: { $0.group == "due_time" }) { tokens[index].label = "Tomorrow · " + tokens[index].label }
+            }
         }
         // Drop a dangling "at" left behind when only the time was declined or accepted.
         if updates["due_time"] != nil { title = title.replacingOccurrences(of: #"\s+at\s*$"#, with: "", options: .regularExpression) }
