@@ -563,3 +563,8 @@ The account table adds one expected authenticated GraphQL schema-discovery findi
 ### 7 October — Simulator system snooze acceptance
 
 The corresponding iOS implementation now passes six final phone/tablet user flows: light and largest-text settings/relaunch, plus actual OS 5-minute snooze actions, retained delivery after relaunch/settings changes, current 15-minute actions and correct task opening. [Detailed acceptance](REMINDER_SNOOZE.md#7-october--actual-system-snooze-action-and-retained-delivery) and own retained evidence distinguish iOS/iPadOS runtime from previous Mac compilation. Mac production sources and release inputs are unchanged. Physical/provisioned and cold-process delivery, paired native account/offline/restore, Mac runtime, remote authority/APNs/provider and broader full P0 gates remain open.
+
+
+### 7 October — saved startup actions and closed-app local delivery
+
+Both independently owned app delegates register the saved snooze choice at launch. Two final iOS 26.5 phone/tablet Simulator walks pass with the app terminated before both original and retained delivery; actual OS actions and task opening start new processes without test arguments. [Closed-app contract and evidence](REMINDER_SNOOZE.md#closed-app-notification-acceptance--7-october) distinguishes runtime acceptance from own universal Mac compilation. Physical/provisioned/locked, actual paired account/offline/restore, Mac runtime, remote/APNs/provider and broader P0 gates remain open. No Mac GUI or installed replacement occurs.

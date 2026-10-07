@@ -49,7 +49,7 @@ struct TaskfoldMacApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = self
-        ReminderCategory.register()
+        ReminderCategory.register(minutes: Store.shared.reminderSnoozeMinutes)
         #if DEBUG
         if ProcessInfo.processInfo.environment["TASKFOLD_TRACE"] == "1" {
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
@@ -79,7 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         let valid = await MainActor.run { Store.shared.validReminder(notification.request.content.userInfo) != nil }
         return valid ? [.banner, .sound] : []
     }
-    /// Reminder actions mirror iOS: complete, snooze an hour, or move to tomorrow, straight from the banner.
+    /// Reminder actions mirror iOS: complete, snooze for the displayed delay, or move to tomorrow.
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         if response.notification.request.content.categoryIdentifier == FocusFinish.category || response.notification.request.identifier.hasPrefix(FocusFinish.prefix) {
             guard response.actionIdentifier == UNNotificationDefaultActionIdentifier, let receipt = FocusFinishReceipt(info: response.notification.request.content.userInfo) else { return }

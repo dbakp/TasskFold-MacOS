@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-07",
+  "production_change": "Each app delegate registers the saved snooze delay at startup",
+  "baselines": {
+    "ios": "3611a690a0a7579e79b86b49c9c5b96bad0c64c0",
+    "mac": "1c300c15528cde380e3ffc70d44bc86a55a77ed3"
+  },
+  "scope": "iOS/iPadOS 26.5 Simulator local closed-app delivery/cold actions; Mac runtime untested",
+  "final_results": [
+    {
+      "device": "iPhone 17 Pro",
+      "bundle": "/tmp/taskfold-cold-notification-phone-closed.xcresult",
+      "seconds": 492.658,
+      "failures": 0,
+      "skips": 0
+    },
+    {
+      "device": "iPad Pro 11-inch (M5)",
+      "bundle": "/tmp/taskfold-cold-notification-ipad-closed.xcresult",
+      "seconds": 490.65,
+      "failures": 0,
+      "skips": 0
+    }
+  ],
+  "checks": [
+    "terminated before original delivery",
+    "original delivery does not launch app",
+    "real five-minute OS action starts new process without XCTest arguments",
+    "actual UN calendar trigger and receipt agree with elapsed tap-time delay",
+    "account/task/spec/signature/original occurrence retained",
+    "fire instant survives explicit relaunch and preference change to fifteen minutes",
+    "terminated before retained snooze delivery",
+    "retained delivery does not launch app",
+    "current fifteen-minute native action visible",
+    "alert header starts another process without XCTest arguments and opens correct task",
+    "task completion and date/time unchanged",
+    "teardown removes pending fixture alerts"
+  ],
+  "fixture": "Separate DEBUG notificationtests bundle identity; local ui-testing owner; private widget files; Release ignores marker",
+  "fixture_script": "Owned by iOS repo; fresh copy changes copied bundle identities only; existing output rejected",
+  "builds": {
+    "iOS_normal_debug": "/tmp/taskfold-cold-notification-ios-normal-debug-closed.log",
+    "iOS_isolated_debug": "/tmp/taskfold-cold-notification-ios-debug-closed.log",
+    "iOS_release": "/tmp/taskfold-cold-notification-ios-release.log",
+    "macOS_release": "/tmp/taskfold-cold-notification-mac-release.log",
+    "all_passed": true,
+    "mac_architectures": [
+      "x86_64",
+      "arm64"
+    ],
+    "release_scope": "Final subsequent edit changes UI-test termination order only, outside Release inputs",
+    "catalogue_per_platform": {
+      "configurations": 8,
+      "entities": 3,
+      "enums": 6,
+      "completion_metadata": true
+    },
+    "existing_release_warning_counts": {
+      "iOS": 14,
+      "macOS": 6
+    }
+  },
+  "input_hashes": "cold-notification-inputs-sha256.json",
+  "captures_sha256": {
+    "cold-notifications/ios-action-5.png": "d320e165267b6ce2bbd6a3b920d8cfab1352f2707b7690ac188575efd467637e",
+    "cold-notifications/ios-retained-action-15.png": "a5e0243387f3902f4a9cb669918bb6a85648669c8ec01c698f0df371360a3d1c",
+    "cold-notifications/ipad-action-5.png": "8ce0d67cd7bfc3c17b8ba408164c3ba734db87eff3d9adbdb2e6430fe17346ce",
+    "cold-notifications/ipad-retained-action-15.png": "4be4579b7a0bd335f713c5e3e22c39db8eb291830c3789d083c1b21ee8ab00c7"
+  },
+  "superseded_runs": "Initial cold-action phone/tablet bundles pass but terminate after delivery; final runs terminate before both alerts",
+  "historical_not_rerun": [
+    "477-test Core/SQL suites",
+    "light/dark largest-text settings acceptance"
+  ],
+  "remaining": [
+    "physical/provisioned/locked-device delivery",
+    "actual paired native online/offline/account/revocation/restore",
+    "Mac runtime",
+    "remote/APNs/provider delivery",
+    "provisioned widget hosts",
+    "broader full P0 acceptance"
+  ]
+}
