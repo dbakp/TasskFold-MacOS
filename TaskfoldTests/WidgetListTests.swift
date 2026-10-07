@@ -3,6 +3,31 @@ import XCTest
 @testable import WidgetModel
 
 final class WidgetListTests: XCTestCase {
+    func testCreationProjectionUsesCivilDaysAndExpiresWithoutPublishingCreationMetadata() throws {
+        var first = task("created-first"); first["created_at"] = .string("2026-10-23T22:00:00Z")
+        var fold = task("created-fold"); fold["created_at"] = .string("2026-10-25T01:30:00Z")
+        var unknown = task("unknown-creation"); unknown["created_at"] = .null
+        let rows = [first, fold, unknown]
+        for expression in ["created:today", "created before:today", "created after:-1 days"] {
+            var parser = try FilterParser(expression, context: FilterContext()); let rule = try parser.parse()
+            let data = try snapshot(rows, views: [view(rule, name: "Creation")]); let key = try XCTUnwrap(data.availableLists.first { $0.kind == "filter" }?.id)
+            for offset in 0...7 {
+                let instant = try XCTUnwrap(cph.date(byAdding: .day, value: offset, to: now))
+                let day = WidgetSnapshot.day(instant, calendar: cph)
+                let expected: Set<String>
+                switch expression {
+                case "created:today": expected = offset == 0 ? [first.id] : offset == 1 ? [fold.id] : []
+                case "created before:today": expected = offset == 0 ? [] : offset == 1 ? [first.id] : [first.id, fold.id]
+                default: expected = offset == 0 ? [first.id, fold.id] : offset == 1 ? [fold.id] : []
+                }
+                XCTAssertEqual(Set(data.listTasks(key, at: instant, calendar: cph).map(\.id)), expected, "\(expression), \(day)")
+            }
+            XCTAssertEqual(data.listStatus(key, at: cph.date(byAdding: .day, value: 8, to: now)!, calendar: cph), .refresh)
+            let encoded = String(decoding: try JSONEncoder().encode(data), as: UTF8.self)
+            XCTAssertFalse(encoded.contains("created_at")); XCTAssertFalse(encoded.contains("created_on")); XCTAssertFalse(encoded.contains("2026-10-23T22"))
+        }
+    }
+
     private let now = ISO8601DateFormatter().date(from: "2026-10-24T12:00:00Z")!
     private var cph: Calendar { var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: "Europe/Copenhagen")!; return c }
     private let project = Record(["id": .string("studio"), "name": .string("Studio")])

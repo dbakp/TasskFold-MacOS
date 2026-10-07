@@ -267,6 +267,10 @@ struct RootView: View {
         if arguments.contains("--uitesting") && arguments.contains("--calendar-context-testing") {
             store.startLocal(); store.startCalendarContextFixture(); workspace.section = .saved("live-calendar")
         }
+        if arguments.contains("--uitesting") && arguments.contains("--filter-creation-fixture") {
+            store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
+            store.snapshot = Snapshot.filterCreationFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
+        }
         if arguments.contains("--uitesting") && arguments.contains("--filter-times-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
             store.snapshot = Snapshot.filterTimeFixture(user: store.userID); workspace.section = .inbox; try? store.persist()

@@ -117,10 +117,42 @@ enum FilterDateReference {
     }
 }
 
+/// Creation dates are recorded metadata, independent of plans and deadlines.
+enum FilterCreationReference {
+    static let expressions = ["created_on": "created", "created_before": "created before", "created_after": "created after"]
+    static func canonical(_ raw: String) throws -> String {
+        let text = raw.lowercased().split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
+        let parts = text.split(separator: " ")
+        if parts.count == 2, parts[0].hasPrefix("-"), ["day", "days"].contains(parts[1]) {
+            let digits = parts[0].dropFirst()
+            guard !digits.isEmpty, digits.utf8.allSatisfy({ (48...57).contains($0) }), let offset = Int(digits), (0...3650).contains(offset) else {
+                throw FilterFailure(message: "Use a day offset from -0 to -3650 days.")
+            }
+            return try FilterDateReference.canonical("\(offset) days ago", allowTime: false)
+        }
+        do { return try FilterDateReference.canonical(text, allowTime: false) }
+        catch let error as FilterFailure {
+            if text == "next week" { throw error }
+            throw FilterFailure(message: "Enter a creation date without a time. Try today, yesterday or -30 days.")
+        }
+    }
+    static func day(_ task: Record, timeZone: String) -> String? {
+        let value = task.string("created_at")
+        // Preserve date-only legacy records as civil dates. Do not invent a date
+        // for absent or malformed metadata from the plan, deadline or current clock.
+        if value.count == 10, Dates.parse(value) != nil { return value }
+        guard value.range(of: #"^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"#, options: .regularExpression) != nil,
+              Dates.parse(String(value.prefix(10))) != nil,
+              let instant = TaskPlanning.instant(value), let zone = TimeZone(identifier: timeZone) else { return nil }
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = zone
+        return TaskPlanner.dayKey(instant, calendar: calendar)
+    }
+}
+
 /// Versioned query AST shared by app lists, exported backups and widget projections.
 indirect enum FilterRule: Hashable, Sendable {
     case predicate(String, String), and([FilterRule]), or([FilterRule]), not(FilterRule)
-    static let fields = ["all", "inbox", "today", "overdue", "next", "no_date", "priority", "project", "section", "label", "completed", "assignee", "due", "before", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline", "deadline", "deadline_before", "duration_max", "no_estimate", "search", "recurring", "no_time", "no_labels"] + FilterDateReference.expressions.keys.sorted() + FilterTimeReference.expressions.keys.sorted()
+    static let fields = ["all", "inbox", "today", "overdue", "next", "no_date", "priority", "project", "section", "label", "completed", "assignee", "due", "before", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline", "deadline", "deadline_before", "duration_max", "no_estimate", "search", "recurring", "no_time", "no_labels"] + FilterDateReference.expressions.keys.sorted() + FilterTimeReference.expressions.keys.sorted() + FilterCreationReference.expressions.keys.sorted()
     var json: JSON {
         switch self {
         case .predicate(let field, let value): return .object(["op": .string("predicate"), "field": .string(field), "value": .string(value)])
@@ -154,7 +186,10 @@ indirect enum FilterRule: Hashable, Sendable {
             if ["recurring", "no_time", "no_labels"].contains(field) {
                 guard row["value"] == .string("") else { throw FilterFailure(message: "This condition does not take a value.") }
             }
-            if FilterDateReference.expressions[field] != nil {
+            if FilterCreationReference.expressions[field] != nil {
+                guard case .string = row["value"] else { throw FilterFailure(message: "Enter a creation date or a short date phrase.") }
+                self = .predicate(field, try FilterCreationReference.canonical(value))
+            } else if FilterDateReference.expressions[field] != nil {
                 guard case .string = row["value"] else { throw FilterFailure(message: "Enter a date or a short date phrase.") }
                 self = .predicate(field, try FilterDateReference.canonical(value, allowTime: !field.hasPrefix("deadline")))
             } else if FilterTimeReference.expressions[field] != nil {
@@ -196,6 +231,13 @@ indirect enum FilterRule: Hashable, Sendable {
                 if field.hasSuffix("_before") { return candidate < value }
                 if field.hasSuffix("_after") { return candidate > value }
                 return candidate == value
+            }
+            if FilterCreationReference.expressions[field] != nil {
+                guard let candidate = FilterCreationReference.day(task, timeZone: timeZone),
+                      let boundary = FilterDateReference.day(value, today: today, timeZone: timeZone) else { return false }
+                if field == "created_before" { return candidate < boundary }
+                if field == "created_after" { return candidate > boundary }
+                return candidate == boundary
             }
             if FilterDateReference.expressions[field] != nil {
                 if FilterTimeReference.split(value) != nil {
@@ -304,7 +346,7 @@ indirect enum FilterRule: Hashable, Sendable {
         case .or(let rules): return rules.map { "(" + $0.expression(in: context) + ")" }.joined(separator: " OR ")
         case .not(let rule): return "NOT (" + rule.expression(in: context) + ")"
         case .predicate(let field, let value):
-            if let name = FilterDateReference.expressions[field] ?? FilterTimeReference.expressions[field] { return name + ":" + quote(value) }
+            if let name = FilterDateReference.expressions[field] ?? FilterTimeReference.expressions[field] ?? FilterCreationReference.expressions[field] { return name + ":" + quote(value) }
             switch field {
             case "all": return "all"
             case "inbox": return "inbox"
@@ -387,7 +429,7 @@ struct FilterParser {
         if consume(["not", "!"]) { return .not(try atom(depth: depth + 1)) }
         if consume(["("]) { let rule = try parseOr(depth: depth + 1); guard consume([")"]) else { throw FilterFailure(message: "Close the filter parenthesis.") }; return rule }
         var token = tokens[cursor]; cursor += 1
-        if ["date", "effective-due", "deadline", "time"].contains(token.lowercased()), !quotedTokens.contains(cursor - 1), cursor < tokens.count {
+        if ["date", "effective-due", "deadline", "time", "created"].contains(token.lowercased()), !quotedTokens.contains(cursor - 1), cursor < tokens.count {
             let next = tokens[cursor].lowercased()
             if ["before:", "after:", "on:"].contains(next) || next.hasPrefix("before:") || next.hasPrefix("after:") || next.hasPrefix("on:") { token += " " + tokens[cursor]; cursor += 1 }
         }
@@ -410,6 +452,9 @@ struct FilterParser {
         if let colon = scalars.firstIndex(of: ":") {
             let field = String(String.UnicodeScalarView(scalars[..<colon])).lowercased()
             let value = String(String.UnicodeScalarView(scalars[scalars.index(after: colon)...]))
+            if let creationField = FilterCreationReference.expressions.first(where: { $0.value == field || ($0.key == "created_on" && field == "created on") })?.key {
+                return .predicate(creationField, try FilterCreationReference.canonical(readValue(starting: value)))
+            }
             if let dateField = FilterDateReference.expressions.first(where: { $0.value == field })?.key {
                 return .predicate(dateField, try FilterDateReference.canonical(readValue(starting: value), allowTime: !dateField.hasPrefix("deadline")))
             }

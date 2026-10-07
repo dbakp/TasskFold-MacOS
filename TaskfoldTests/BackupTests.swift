@@ -3,6 +3,20 @@ import CryptoKit
 @testable import TaskfoldCore
 
 final class BackupTests: XCTestCase {
+    func testCreationFilterBackupRestorePreservesOriginalDatesAndRelativeQuery() throws {
+        var snapshot = fixture(); snapshot.tables["tasks"]![0]["created_at"] = .string("2024-02-29T23:30:00Z")
+        let rule = FilterRule.and([.predicate("created_after", "365 days ago"), .predicate("project", projectID)])
+        snapshot.tables["saved_views"]![0]["query_ast"] = rule.document
+        let file = try WorkspaceBackup.read(WorkspaceBackup.make(snapshot, account: owner).data())
+        let plan = try file.plan(current: Snapshot(), account: other)
+        let restored = Record(try XCTUnwrap(plan.changes.first { $0.table == "tasks" }).fields)
+        XCTAssertEqual(restored.string("created_at"), "2024-02-29T23:30:00Z")
+        let view = Record(try XCTUnwrap(plan.changes.first { $0.table == "saved_views" }).fields)
+        let expected = FilterRule.and([.predicate("created_after", "365 days ago"), .predicate("project", try XCTUnwrap(plan.mappedIDs["projects"]?[projectID]))])
+        XCTAssertEqual(try FilterRule(document: view["query_ast"]), expected)
+        XCTAssertTrue(expected.captureDefaults(in: FilterContext(projects: [Record(["id": .string(plan.mappedIDs["projects"]![projectID]!), "name": .string("Research")])]), today: "2026-10-07")["created_at"] == nil)
+    }
+
     let owner = "11111111-1111-4111-8111-111111111111"
     let other = "22222222-2222-4222-8222-222222222222"
     let projectID = "33333333-3333-4333-8333-333333333333"

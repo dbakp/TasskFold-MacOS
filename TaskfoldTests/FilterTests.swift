@@ -2,6 +2,59 @@ import XCTest
 @testable import TaskfoldCore
 
 final class FilterTests: XCTestCase {
+    func testCreationExpressionsCanonicalizeAndRoundTripWithoutChangingOldDateFields() throws {
+        for (input, field, value) in [("created:today", "created_on", "today"), ("created on:Jan 3 2023", "created_on", "jan 3 2023"), ("created before: -365 days", "created_before", "365 days ago"), ("created after: yesterday", "created_after", "yesterday"), ("created:-0 days", "created_on", "today"), (#"created after:"in 3 days""#, "created_after", "in 3 days")] {
+            let rule = try parse(input)
+            XCTAssertEqual(rule, .predicate(field, value), input)
+            XCTAssertEqual(try FilterRule(document: rule.document), rule)
+            XCTAssertEqual(try parse(rule.expression(in: context)), rule)
+            XCTAssertTrue(rule.captureDefaults(in: context, today: "2026-10-05").isEmpty)
+        }
+        XCTAssertEqual(try parse("due:2026-10-05"), .predicate("due", "2026-10-05"))
+        XCTAssertEqual(try parse("created before:-30 days AND #Work").captureDefaults(in: context, today: "2026-10-05"), ["project_id": .string("work-id")])
+        for value in ["-3651 days", "--1 days", "-1.5 days", "-１ days", "- days", "today at 14:00", "next week", "2026-02-30", "", "tomorrow nonsense"] { XCTAssertThrowsError(try parse("created:" + value), value) }
+        for value: JSON in [.null, .number(2), .bool(true), .array([])] {
+            XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string("created_on"), "value": value])))
+        }
+    }
+    func testCreationFeedbackDoesNotSuggestUnsupportedTimesOrAnotherDateSource() throws {
+        for value in ["today at 14:00", "today at 25:00", "bad date", "", "2026-02-30"] {
+            XCTAssertThrowsError(try FilterCreationReference.canonical(value)) { error in
+                XCTAssertEqual(error.localizedDescription, "Enter a creation date without a time. Try today, yesterday or -30 days.")
+            }
+        }
+    }
+    func testCreationDatesUseViewerDayExclusiveBoundariesAndNeverPlanningFallback() throws {
+        let rows = [task("before", ["created_at": .string("2026-10-04T21:59:59.999Z")]), task("start", ["created_at": .string("2026-10-04T22:00:00Z")]), task("end", ["created_at": .string("2026-10-05T23:59:59+02:00")]), task("after", ["created_at": .string("2026-10-05T22:00:00Z")]), task("legacy", ["created_at": .string("2026-10-05")]), task("unknown", ["due_date": .string("2026-10-05"), "deadline_date": .string("2026-10-05")])]
+        for (expression, expected) in [("created:today", ["start", "end", "legacy"]), ("created before:today", ["before"]), ("created after:today", ["after"])] {
+            let rule = try parse(expression)
+            XCTAssertEqual(rows.filter { matches(rule, $0) }.map(\.id), expected, expression)
+        }
+        XCTAssertEqual(rows.filter { matches(try! parse("created:today"), $0, zone: "UTC") }.map(\.id), ["end", "after", "legacy"])
+        for value in ["", "not a date", "2026-02-30T12:00:00Z", "2026-10-05T24:00:00Z", "2026-10-05T12:60:00Z", "2026-10-05T12:00:00", "2026-10-05T12:00:00Z junk"] { XCTAssertNil(FilterCreationReference.day(task("invalid", ["created_at": .string(value)]), timeZone: "UTC"), value) }
+        XCTAssertNil(FilterCreationReference.day(rows[1], timeZone: "Invented/Zone"))
+    }
+    func testCreationDatesHandleDSTFoldsHalfHourTravelAndCalendarOffsets() throws {
+        for (zone, instant, day) in [("Europe/Copenhagen", "2026-10-25T00:30:00Z", "2026-10-25"), ("Europe/Copenhagen", "2026-10-25T01:30:00Z", "2026-10-25"), ("Europe/Copenhagen", "2026-03-29T22:00:00Z", "2026-03-30"), ("Australia/Lord_Howe", "2026-10-03T13:30:00Z", "2026-10-04"), ("Pacific/Honolulu", "2026-10-05T00:30:00Z", "2026-10-04"), ("Pacific/Apia", "2011-12-30T10:00:00Z", "2011-12-31")] {
+            XCTAssertEqual(FilterCreationReference.day(task("timed", ["created_at": .string(instant)]), timeZone: zone), day)
+        }
+        XCTAssertEqual(FilterDateReference.day(try FilterCreationReference.canonical("-1 days"), today: "2026-03-30", timeZone: "Europe/Copenhagen"), "2026-03-29")
+        XCTAssertEqual(FilterDateReference.day(try FilterCreationReference.canonical("-1 days"), today: "2024-03-01", timeZone: "Australia/Lord_Howe"), "2024-02-29")
+    }
+    func testCreationMembershipInvalidatesForDayZoneAndMetadataEditsWithoutRewritingQueuedQuery() throws {
+        let rule = try parse("created:today")
+        var row = task("creation", ["created_at": .string("2026-10-04T22:30:00Z")]); let cache = TaskCache(); cache.update([row])
+        var query = TaskQuery(scope: .saved("creation"), today: "2026-10-05", filter: rule, timeZone: "Europe/Copenhagen")
+        XCTAssertEqual(cache.matching(query).map(\.id), [row.id])
+        query.timeZone = "UTC"; XCTAssertTrue(cache.matching(query).isEmpty)
+        query.today = "2026-10-04"; XCTAssertEqual(cache.matching(query).map(\.id), [row.id])
+        row["created_at"] = .string("2026-10-05T22:30:00Z"); cache.update([row]); XCTAssertTrue(cache.matching(query).isEmpty)
+        let view = Record(["id": .string("creation"), "name": .string("New work"), "query_ast": rule.document])
+        let original = Snapshot(tables: ["tasks": [row], "saved_views": [view]], pending: [Mutation(table: "saved_views", recordID: view.id, method: "POST", fields: view.fields)])
+        let decoded = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(original))
+        XCTAssertEqual(decoded, original); XCTAssertEqual(decoded.pending[0].fields["query_ast"], rule.document)
+    }
+
     let context = FilterContext(projects: [Record(["id": .string("work-id"), "name": .string("Work")])], sections: [Record(["id": .string("section-id"), "name": .string("Next steps")])], labels: [Record(["id": .string("waiting-id"), "name": .string("waiting")])], userID: "owner")
     func parse(_ input: String, context: FilterContext? = nil) throws -> FilterRule { var parser = try FilterParser(input, context: context ?? self.context); return try parser.parse() }
     func task(_ id: String, _ fields: [String: JSON] = [:]) -> Record { var row = Record(["id": .string(id), "title": .string(id), "completed": .bool(false), "priority": .number(4)]); for (key, value) in fields { row[key] = value }; return row }

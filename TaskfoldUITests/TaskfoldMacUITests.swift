@@ -294,6 +294,26 @@ final class TaskfoldMacUITests: XCTestCase {
 
 
 
+    @MainActor func testCreationFiltersValidationAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--filter-creation-fixture"]; app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        let name = "Creation dates " + String(UUID().uuidString.prefix(6))
+        let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
+        app.descendants(matching: .any)["advancedFilter"].click()
+        let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("created:today at 14:00")
+        XCTAssertFalse(app.buttons["saveSavedView"].isEnabled); XCTAssertTrue(app.staticTexts["filterValidationError"].label.contains("creation date without a time"))
+        app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("created before:-30 days"); XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
+        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        XCTAssertTrue(app.buttons["Complete Older reference"].waitForExistence(timeout: 5)); for title in ["Recent addition", "Unknown creation", "Old completed task"] { XCTAssertFalse(app.buttons["Complete " + title].exists) }
+        view.rightClick(); app.menuItems["Edit filter"].click(); app.descendants(matching: .any)["advancedFilter"].click()
+        app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("created after:-30 days"); app.buttons["saveSavedView"].click()
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        XCTAssertTrue(app.buttons["Complete Recent addition"].waitForExistence(timeout: 5)); for title in ["Older reference", "Unknown creation", "Old completed task"] { XCTAssertFalse(app.buttons["Complete " + title].exists) }
+        view.rightClick(); app.menuItems["Edit filter"].click()
+        let value = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@", "filterConditionValue-")).firstMatch
+        XCTAssertTrue(value.waitForExistence(timeout: 5)); XCTAssertEqual(value.value as? String, "30 days ago"); app.buttons["Cancel"].click()
+    }
+
     @MainActor func testTimeFiltersAndDatedBoundarySurviveRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--filter-times-fixture"]; app.launch(); defer { app.terminate() }
         XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
