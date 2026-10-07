@@ -3,6 +3,64 @@ import XCTest
 
 final class FilterTests: XCTestCase {
 
+    func testAssignmentStatesAndMissingIdentityFailClosed() throws {
+        let me = "11111111-1111-4111-8111-111111111111", other = "22222222-2222-4222-8222-222222222222"
+        let context = FilterContext(userID: me)
+        func rule(_ input: String) throws -> FilterRule { var p = try FilterParser(input, context: context); return try p.parse() }
+        let assigned = try rule("assigned"), others = try rule("assigned to: others")
+        let rows = [task("mine", ["assigned_to": .string(me)]), task("other", ["assigned_to": .string(other)]), task("none", [:])]
+        for (r, ids) in [(assigned, ["mine", "other"]), (others, ["other"]), (.not(assigned), ["none"]), (.not(others), ["mine", "none"])] {
+            XCTAssertEqual(rows.filter { r.matches($0, today: "2026-10-07", userID: me, labels: [], timeZone: "UTC") }.map(\.id), ids)
+            XCTAssertEqual(try FilterRule(document: r.document), r)
+            XCTAssertEqual(try rule(r.expression(in: context)), r)
+            XCTAssertTrue(r.captureDefaults(in: context, today: "2026-10-07").isEmpty)
+        }
+        for input in ["assignee:me", "assigned to:others", "NOT assignee:me", "all OR assignee:others"] {
+            let r = try rule(input)
+            XCTAssertFalse(r.matches(rows[2], today: "2026-10-07", userID: "", labels: [], timeZone: "UTC"))
+        }
+        XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string("assigned"), "value": .string("yes")])))
+    }
+    func testNamedAssigneesResolveExactAcceptedCatalogAndRetainIdentity() throws {
+        let id = "22222222-2222-4222-8222-222222222222"
+        let me = "11111111-1111-4111-8111-111111111111"
+        var context = FilterContext(userID: me, people: [Record(["id": .string(id), "display_name": .string("Alex Smith"), "email": .string("alex@example.test")]), Record(["id": .string(id), "display_name": .string("Alex Smith")]), Record(["id": .string(me), "display_name": .string("My Name")])])
+        func parse(_ input: String, _ context: FilterContext) throws -> FilterRule { var p = try FilterParser(input, context: context); return try p.parse() }
+        for input in [#"assigned to:"alex smith""#, "assigned to:alex@example.test", #"assignee:"Alex Smith""#, "assignee:" + id] {
+            let r = try parse(input, context)
+            XCTAssertEqual(r, .predicate("assignee", id))
+            XCTAssertEqual(try parse(r.expression(in: context), FilterContext(userID: me)), r, "Stored UUID survives missing directory and renames")
+        }
+        XCTAssertEqual(try parse(#"assigned to:"My Name""#, context), .predicate("assignee", "me"))
+        for input in [#"assigned to:"Alex""#, #"assigned to:"Alex*""#, "assigned by:me", "assigned to:nobody", "assigned to:"] { XCTAssertThrowsError(try parse(input, context)) }
+        context.people.append(Record(["id": .string("33333333-3333-4333-8333-333333333333"), "display_name": .string("Alex Smith")]))
+        XCTAssertThrowsError(try parse(#"assigned to:"Alex Smith""#, context))
+        XCTAssertEqual(try parse("assigned to:alex@example.test", context), .predicate("assignee", id))
+        let project = Record(["id": .string("p"), "user_id": .string(me)])
+        let pending = Record(["user_id": .string(id), "status": .string("pending"), "display_name": .string("Alex Smith")])
+        let people = TaskAssignment.members(project: project, collaborators: [pending], currentUser: me, profile: Record([:]))
+        XCTAssertThrowsError(try parse(#"assigned to:"Alex Smith""#, FilterContext(userID: me, people: people)))
+    }
+    func testAssignmentQueriesShareWidgetMembershipAndOfflineCodec() throws {
+        let me = "11111111-1111-4111-8111-111111111111", other = "22222222-2222-4222-8222-222222222222"
+        let rule = FilterRule.and([.predicate("assigned", ""), .predicate("assignee", "others")])
+        let view = Record(["id": .string("assignment-view"), "name": .string("Delegated"), "query_ast": rule.document])
+        let tasks = [task("mine", ["assigned_to": .string(me)]), task("delegated", ["assigned_to": .string(other)]), task("unassigned", [:])]
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let payload = WidgetProjection.listPayload(tasks: tasks, projects: [], labels: [], sections: [], savedViews: [view], account: me, now: Dates.parse("2026-10-07")!, calendar: calendar)
+        XCTAssertEqual(Record(payload[0].object)["days"].object.count, 8)
+        XCTAssertTrue(Record(payload[0].object)["days"].object.values.allSatisfy { $0 == .array([.string("delegated")]) })
+        let data = try JSONEncoder().encode(payload)
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains(other))
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("query_ast"))
+        var snapshot = Snapshot(); snapshot.tables["saved_views"] = [view]
+        snapshot.pending = [Mutation(table: "saved_views", recordID: view.id, method: "POST", fields: view.fields)]
+        let restored = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+        XCTAssertEqual(try FilterRule(document: restored.tables["saved_views"]![0]["query_ast"]), rule)
+        XCTAssertEqual(restored.pending[0].fields["query_ast"], rule.document)
+    }
+
+
     func testNamePatternProjectionStaysBoundedWithThreeThousandTasksAndLongPatterns() throws {
         let rows = (0..<3000).map { task("volume-\($0)", ["project_id": .string("p")]) }
         let rule = FilterRule.predicate("project_name", String(repeating: "*a", count: 59) + "c")

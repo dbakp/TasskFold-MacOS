@@ -3,6 +3,16 @@ import CryptoKit
 @testable import TaskfoldCore
 
 final class BackupTests: XCTestCase {
+    func testAssignmentStateFiltersKeepDestinationViewerSemanticsOnRestore() throws {
+        var snapshot = fixture()
+        let rule = FilterRule.and([.predicate("assigned", ""), .predicate("assignee", "others"), .predicate("assignee", owner)])
+        snapshot.tables["saved_views"]![0]["query_ast"] = rule.document
+        let file = try WorkspaceBackup.read(WorkspaceBackup.make(snapshot, account: owner).data())
+        let plan = try file.plan(current: Snapshot(), account: other)
+        let view = Record(try XCTUnwrap(plan.changes.first { $0.table == "saved_views" }).fields)
+        XCTAssertEqual(try FilterRule(document: view["query_ast"]), .and([.predicate("assigned", ""), .predicate("assignee", "others"), .predicate("assignee", "me")]))
+    }
+
     func testNamePatternsRestoreAsPatternsWhileExactTargetsRemap() throws {
         var snapshot = fixture()
         let rule = FilterRule.and([.predicate("project_name", "*search"), .predicate("section_name", "Read*"), .predicate("label_name", "*work"), .predicate("project", projectID)])

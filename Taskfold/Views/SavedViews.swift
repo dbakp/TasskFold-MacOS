@@ -21,8 +21,28 @@ struct SavedViewEditor: View {
     @FocusState private var focusedField: String?
     private static let choices: [(String, String)] = [
         ("all","All tasks"),("search","Keywords"),("created_on","Created on"),("created_before","Created before"),("created_after","Created after"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
-        ("priority","Priority"),("project","Project"),("project_name","Project name matches"),("section","Section"),("section_name","Section name matches"),("label","Label"),("label_name","Label name matches"),("completed","Completion"),("assignee","Assigned to"),
+        ("priority","Priority"),("project","Project"),("project_name","Project name matches"),("section","Section"),("section_name","Section name matches"),("label","Label"),("label_name","Label name matches"),("completed","Completion"),("assigned","Assigned tasks"),("assignee","Assigned to"),
         ("due","Planned on date"),("before","Planned before date"),("deadline_today","Deadline today"),("deadline_overdue","Past deadline"),("deadline_next","Deadline in next days"),("no_deadline","No deadline"),("deadline","Deadline on date"),("deadline_before","Deadline before date"),("duration_max","Estimate up to minutes"),("no_estimate","No estimate")]
+    private static let conditionGroups: [(String, [String])] = [
+        ("Basics", ["all", "search", "recurring", "inbox", "no_labels", "priority"]),
+        ("Planned dates", ["planned_on", "planned_before", "planned_after", "today", "overdue", "next", "no_date"]),
+        ("Effective due", ["effective_due_on", "effective_due_before", "effective_due_after"]),
+        ("Deadlines", ["deadline_on", "deadline_before_day", "deadline_after", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline"]),
+        ("Times and estimates", ["planned_time_on", "planned_time_before", "planned_time_after", "no_time", "duration_max", "no_estimate"]),
+        ("Projects and labels", ["project", "project_name", "section", "section_name", "label", "label_name"]),
+        ("People and status", ["assigned", "assignee", "completed"]),
+        ("Creation dates", ["created_on", "created_before", "created_after"]),
+        ("Exact dates", ["due", "before", "deadline", "deadline_before"])
+    ]
+    @ViewBuilder private func conditionOptions(_ condition: Binding<FilterCondition>) -> some View {
+        ForEach(Self.conditionGroups, id: \.0) { group in
+            Menu(group.0) {
+                Picker("Condition", selection: condition.field) {
+                    ForEach(Self.choices.filter { group.1.contains($0.0) }, id: \.0) { Text($0.1).tag($0.0) }
+                }
+            }
+        }
+    }
     private var people: [Record] {
         var seen = Set<String>()
         return store.projects.flatMap { store.projectMembers($0.id) }.filter { $0.id != store.userID && seen.insert($0.id).inserted }.sorted { $0.string("display_name") < $1.string("display_name") }
@@ -72,7 +92,7 @@ struct SavedViewEditor: View {
                         }
                         if let queryFailure { validationFeedback(queryFailure) }
                         DisclosureGroup("Syntax examples") {
-                            Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
+                            Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me, assigned, assigned to:others, assigned to:\"Alex Smith\". Collaborator names/emails resolve to a stable identity; quote names with spaces. Name patterns for people are not supported. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
                             Text("Date examples: date:tomorrow, date before:\"next Monday\", effective-due:today, deadline after:yesterday. Effective due uses the planned date, falling back to the deadline only when there is no plan. Legacy due:YYYY-MM-DD and Today keep using the plan. Add a time: date before:\"today at 2pm\". Date-and-time conditions exclude tasks without a planned time.").font(.caption).foregroundStyle(.secondary)
                             Text("Creation examples: created:today, created before:-30 days, created after:yesterday. Uses the recorded creation date in your current time zone. Before and after exclude the chosen day. Plans and deadlines do not change when a task was created.").font(.caption).foregroundStyle(.secondary)
                             Text("Name patterns: %home*, #*Work, /*Meetings*. Use * for any characters, or project matching:\"*Work Admin*\" for spaces. Pattern results follow name changes; exact targets retain their identity.").font(.caption).foregroundStyle(.secondary)
@@ -140,8 +160,8 @@ struct SavedViewEditor: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(record.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || failure != nil).accessibilityIdentifier("saveSavedView") }
             }
             .onAppear(perform: load)
-            .task(id: conditions.contains { $0.field == "assignee" }) {
-                guard !store.localMode, conditions.contains(where: { $0.field == "assignee" }) else { return }
+            .task(id: advanced || conditions.contains { $0.field == "assignee" }) {
+                guard !store.localMode, advanced || conditions.contains(where: { $0.field == "assignee" }) else { return }
                 for project in store.projects { _ = try? await store.refreshProjectMembers(project.id) }
             }
             .confirmationDialog("Delete this filter?", isPresented: $deleting, titleVisibility: .visible) { Button("Delete", role: .destructive) { store.remove("saved_views", record.id); dismiss() } } message: { Text("Your tasks stay in place.") }
@@ -159,16 +179,13 @@ struct SavedViewEditor: View {
         if textSize.isAccessibilitySize {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Condition").font(.caption).foregroundStyle(.secondary)
-                Menu {
-                    Picker("Condition", selection: condition.field) {
-                        ForEach(Self.choices, id: \.0) { Text($0.1).tag($0.0) }
-                    }
+                NavigationLink {
+                    SavedFilterConditionChooser(field: condition.field, choices: Self.choices, groups: Self.conditionGroups)
                 } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(Self.choices.first { $0.0 == condition.wrappedValue.field }?.1 ?? "Condition")
                             .multilineTextAlignment(.leading).lineLimit(nil).fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        Image(systemName: "chevron.up.chevron.down").font(.caption).accessibilityHidden(true)
                     }.frame(minHeight: 44).contentShape(.rect)
                 }
                 .accessibilityLabel("Condition")
@@ -176,7 +193,15 @@ struct SavedViewEditor: View {
                 .accessibilityIdentifier("filterCondition-" + condition.wrappedValue.id.uuidString)
             }
         } else {
-            Picker("Condition", selection: condition.field) { ForEach(Self.choices, id: \.0) { Text($0.1).tag($0.0) } }
+            Menu { conditionOptions(condition) } label: {
+                HStack {
+                    Text("Condition").foregroundStyle(.primary)
+                    Spacer()
+                    Text(Self.choices.first { $0.0 == condition.wrappedValue.field }?.1 ?? "Condition")
+                    Image(systemName: "chevron.up.chevron.down").font(.caption).accessibilityHidden(true)
+                }.frame(minHeight: 44).contentShape(.rect)
+            }.menuOrder(.fixed).accessibilityLabel("Condition")
+                .accessibilityValue(Self.choices.first { $0.0 == condition.wrappedValue.field }?.1 ?? "Condition")
                 .accessibilityIdentifier("filterCondition-" + condition.wrappedValue.id.uuidString)
         }
     }
@@ -191,12 +216,13 @@ struct SavedViewEditor: View {
             }
         } else if field == "priority" { Picker("Priority", selection: condition.value) { ForEach(1...4, id: \.self) { Text("Priority \($0)").tag(String($0)) } } }
         else if field == "completed" { Picker("State", selection: condition.value) { Text("Open").tag("false"); Text("Completed").tag("true") } }
+        else if field == "assigned" { Text("Tasks with a person assigned, including you. Exclude matches to show unassigned tasks.").font(.caption).foregroundStyle(.secondary) }
         else if field == "assignee" {
             Picker("Person", selection: condition.value) {
-                Text("Me").tag("me"); Text("Unassigned").tag("unassigned")
-                if !["me", "unassigned"].contains(condition.wrappedValue.value) && !people.contains(where: { $0.id == condition.wrappedValue.value }) { Text("Unavailable collaborator").tag(condition.wrappedValue.value) }
+                Text("Me").tag("me"); Text("Others").tag("others"); Text("Unassigned").tag("unassigned")
+                if !["me", "unassigned", "others"].contains(condition.wrappedValue.value) && !people.contains(where: { $0.id == condition.wrappedValue.value }) { Text("Unavailable collaborator").tag(condition.wrappedValue.value) }
                 ForEach(people) { person in Text(person.string("display_name")).tag(person.id) }
-            }
+            }.accessibilityIdentifier("filterAssignee-" + condition.wrappedValue.id.uuidString)
         }
         else if FilterNamePattern.expressions[field] != nil {
             TextField("Name pattern, such as *Work*", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
@@ -302,5 +328,39 @@ struct SavedFilterBoard: View {
                 }.padding(16).frame(maxHeight: .infinity, alignment: .topLeading)
             }
         }.accessibilityIdentifier("savedFilterBoard")
+    }
+}
+
+private struct SavedFilterConditionChooser: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var field: String
+    let choices: [(String, String)]
+    let groups: [(String, [String])]
+    @State private var expandedGroup: String?
+    var body: some View {
+        List {
+            ForEach(groups, id: \.0) { group in
+                DisclosureGroup(isExpanded: Binding(get: { expandedGroup == group.0 }, set: { expandedGroup = $0 ? group.0 : nil })) {
+                    ForEach(choices.filter { group.1.contains($0.0) }, id: \.0) { choice in
+                        Button { field = choice.0; dismiss() } label: {
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(choice.1).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                                Spacer(minLength: 8)
+                                if field == choice.0 { Image(systemName: "checkmark").foregroundStyle(Color.taskfold).accessibilityHidden(true) }
+                            }.frame(minHeight: 44).contentShape(.rect)
+                        }.buttonStyle(.plain).foregroundStyle(.primary)
+                            .accessibilityIdentifier("filterConditionChoice-" + choice.0)
+                    }
+                } label: {
+                    Text(group.0).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true).frame(minHeight: 44)
+                }.accessibilityIdentifier("filterConditionGroup-" + group.0)
+            }
+        }.accessibilityIdentifier("filterConditionChooser")
+            .navigationTitle("Choose condition")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden()
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
     }
 }

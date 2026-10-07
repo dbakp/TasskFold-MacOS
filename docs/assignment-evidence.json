@@ -1,0 +1,276 @@
+{
+  "checkpoint": "2026-10-07 assignment filters",
+  "repository": "mac",
+  "baseCommit": "026e6fb5b12e4f635b6d75e7117ce6872c5d9895",
+  "inputManifest": "docs/assignment-inputs-sha256.json",
+  "inputManifestSHA256": "c90329397b358b2e5f0d384151f47c54f58e7e0a51966d5ca2f5870d195c7e30",
+  "verifiedInputCounts": {
+    "nativeAppWidget": 74,
+    "nativeUITests": 1,
+    "core": 59,
+    "sql": 1
+  },
+  "ownCore": {
+    "tests": 512,
+    "skipped": 4,
+    "failures": 0,
+    "log": "/tmp/taskfold-assignment-mac-core-final.log",
+    "logSHA256": "63d916120f0ad6dc31cf01e8a7b72bd8646b47b227e0876c2c64974bfae08441"
+  },
+  "ownBuilds": {
+    "result": "passed",
+    "signing": "disabled",
+    "macArchitectures": [
+      "x86_64",
+      "arm64"
+    ],
+    "nativeSource": "/tmp/taskfold-assignment-mac-navigation-source",
+    "logs": {
+      "release": "/tmp/taskfold-assignment-mac-release-navigation.log",
+      "debug": "/tmp/taskfold-assignment-mac-debug-navigation.log"
+    },
+    "logSHA256": {
+      "release": "a5bc48dc842cc429f20d916d50f6171ba35c3b34dc680fa3eeb8f5bddaaf4e7d",
+      "debug": "d16e1f2a45c2238566babab34af5401104f4ba2118eb44bafffeba71bf90e2fd"
+    },
+    "architectureArtifact": "/tmp/taskfold-assignment-mac-release-navigation-architectures.txt",
+    "architectureArtifactSHA256": "9cb483fd3739db2602d4c5bf672f4af954dc6dad82b36e8642b034af58f11c11"
+  },
+  "sql": {
+    "project": "zqxflydiyfjeedqvyova",
+    "ownSuite": "supabase/tests/assignment_filters.sql",
+    "ownSuiteSHA256": "634b5cb06d641b7c9247445863ebfba8530078edef9731a85b9d2b03aef2aa7e",
+    "result": "passed",
+    "scope": "Actual authenticated and anon SQL roles; simulated JWT claims. Owner CRUD/preservation, foreign/anonymous denial. Not native sign-in or real paired HTTP transport.",
+    "transaction": "rolled back",
+    "fixtureUsers": 0,
+    "fixtureViews": 0,
+    "schemaChanges": false
+  },
+  "remainingAcceptance": [
+    "Real paired native account online/offline/member-revocation and restore",
+    "Mac GUI runtime (not authorized)",
+    "Physical/provisioned widget hosts",
+    "VoiceOver/full-surface audit",
+    "Dynamic assignee patterns, assigned-by metadata, shared/personal scopes and hierarchy",
+    "Remaining query grammar and full P0 acceptance"
+  ],
+  "diagnosticsPreserved": [
+    "/tmp/taskfold-assignment-ios-core.log",
+    "/tmp/taskfold-assignment-mac-core.log",
+    "/tmp/taskfold-assignment-phone.xcresult",
+    "/tmp/taskfold-assignment-phone.log",
+    "/tmp/taskfold-assignment-tablet.xcresult",
+    "/tmp/taskfold-assignment-tablet.log",
+    "/tmp/taskfold-assignment-ios-source",
+    "/tmp/taskfold-assignment-mac-source",
+    "/tmp/taskfold-assignment-cache-recovery.json",
+    "/tmp/taskfold-assignment-phone-polish.xcresult",
+    "/tmp/taskfold-assignment-phone-polish.log",
+    "/tmp/taskfold-assignment-tablet-polish.xcresult",
+    "/tmp/taskfold-assignment-tablet-polish.log",
+    "/tmp/taskfold-assignment-phone-polish-final-attachments",
+    "/tmp/taskfold-assignment-tablet-polish-attachments",
+    "/tmp/taskfold-assignment-ios-polish-source",
+    "/tmp/taskfold-assignment-mac-polish-source",
+    "/tmp/taskfold-assignment-polish-cache-recovery.json",
+    "/tmp/taskfold-assignment-phone-final.log",
+    "/tmp/taskfold-assignment-phone-final.xcresult",
+    "/tmp/taskfold-assignment-tablet-final.log",
+    "/tmp/taskfold-assignment-tablet-final.xcresult",
+    "/tmp/taskfold-assignment-tablet-before-chooser-attachments",
+    "/tmp/taskfold-assignment-final-cache-recovery.json",
+    "/tmp/taskfold-assignment-chooser-debug-cache-recovery.json",
+    "/tmp/taskfold-assignment-swift-cache-recovery.json",
+    "/tmp/taskfold-assignment-final-test-cache-recovery.json",
+    "/tmp/taskfold-assignment-chooser-release-cache-recovery.json",
+    "/tmp/taskfold-assignment-phone-chooser.log",
+    "/tmp/taskfold-assignment-phone-chooser.xcresult",
+    "/tmp/taskfold-assignment-tablet-chooser.log",
+    "/tmp/taskfold-assignment-tablet-chooser.xcresult",
+    "/tmp/taskfold-assignment-phone-chooser-attachments",
+    "/tmp/taskfold-assignment-tablet-chooser-attachments",
+    "/tmp/taskfold-assignment-ios-chooser-source",
+    "/tmp/taskfold-assignment-mac-chooser-source",
+    "/tmp/taskfold-assignment-navigation-cache-recovery.json",
+    "/tmp/taskfold-assignment-phone-navigation.log",
+    "/tmp/taskfold-assignment-phone-navigation.xcresult",
+    "/tmp/taskfold-assignment-phone-navigation-attachments",
+    "/tmp/taskfold-assignment-phone-navigation-summary.json",
+    "/tmp/taskfold-assignment-tablet-navigation.log",
+    "/tmp/taskfold-assignment-tablet-navigation.xcresult",
+    "/tmp/taskfold-assignment-tablet-navigation-attachments",
+    "/tmp/taskfold-assignment-tablet-navigation-summary.json"
+  ],
+  "diagnosticNotes": "Initial tests attempted a subscript on raw JSON; tests were corrected to use the Record wrapper. Core product code did not change for that correction. Existing live native jobs were preserved throughout startup waits. Only task-owned SDK/module caches from terminal completed native builds were reclaimed; logs, captures and build products retained. Initial UI flows passed phone light and tablet dark but failed the other condition-menu scrolls. The long menu was replaced with shorter groups. Phone bundle saving also hit disk exhaustion; the partial Staging/result bundle is preserved, not treated as complete evidence. Cache recovery used terminal successful build logs and absence of live jobs for each task-owned SDK/module cache; no products/source/Git/logs/results were deleted. Grouped-menu preliminary runs passed all four iPad cases and three iPhone cases; largest-text iPhone assignment failed because the test did not scroll the root category menu. The exported AX hierarchy shows Basics/Planned dates/Effective due/Deadlines and no virtualized People row. The test now scrolls root categories as well as their shorter child menus. Parent menus explicitly use fixed ordering; Exact dates replaces implementation jargon. The failed phone job and diagnostic child were polled until terminal; Xcode diagnostics reached its own 600-second timeout and the sealed result bundle exported successfully. Old captures/products remain retained. Fixed-order menus passed five phone cases and four tablet cases; the tablet largest-text child menu remained clipped, and dragging its lone visible row selected Completion. Both apps now use a navigated, scrollable grouped chooser at accessibility text sizes; normal text retains short fixed-order native menus. Independent final sources and previous products are preserved for both cohorts. The first scrollable chooser cohort passed all ten cases, five per device. Fourteen assignment captures were inspected and showed redundant menu/navigation arrows and chooser return controls. Final navigation polish removes those duplicates; the preceding source/products and captures remain unchanged. Core/SQL inputs remain the tested bytes. Final navigation-polish jobs reached terminal success: five flows per device, ten total, zero failures/skips. All 14 final assignment captures were inspected and copied independently into each repository. Final captures confirm removal of redundant arrows and chooser return controls. No Mac GUI runtime was launched.",
+  "nativeIOSRuntime": {
+    "source": "/tmp/taskfold-assignment-ios-test-navigation-source",
+    "bundleIdentifiers": [
+      "com.dbakp.taskfold.assignmenttests",
+      "com.dbakp.taskfold.assignmenttests.widgets",
+      "com.dbakp.taskfold.assignmenttests.uitests"
+    ],
+    "scope": "Isolated DEBUG iOS Simulator fixtures only. iOS native interaction evidence for shared assignment behavior; not Mac GUI runtime, physical widget-host, VoiceOver, real account sign-in or paired-device acceptance.",
+    "devices": {
+      "phone": {
+        "result": "passed",
+        "terminalExitCode": 0,
+        "tests": 5,
+        "failures": 0,
+        "skipped": 0,
+        "cases": [
+          "testAssignmentBuilderNamesAndRelaunch",
+          "testAssignmentDarkLargestBuilderNamesAndRelaunch",
+          "testKeywordFilterBuilderExpressionAndRelaunchKeepExactResults",
+          "testNamePatternBuilderExpressionAndRelaunch",
+          "testNamePatternDarkLargestBuilderExpressionAndRelaunch"
+        ],
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+          "deviceName": "Taskfold assignment iPhone",
+          "modelName": "iPhone 17 Pro",
+          "osBuildNumber": "23F77",
+          "osVersion": "26.5",
+          "platform": "iOS Simulator"
+        },
+        "log": "/tmp/taskfold-assignment-phone-navigation.log",
+        "logSHA256": "02a290bc540f0f74cf27bb6b9663fa62f6ec30f88993dacd2d6c311420e1ed6b",
+        "summary": "/tmp/taskfold-assignment-phone-navigation-summary.json",
+        "summarySHA256": "42c7c75a7e5dd120767f267e5a401f29c3b7eb84d565d7463620eb84c50a87a1",
+        "xcresult": "/tmp/taskfold-assignment-phone-navigation.xcresult",
+        "attachments": "/tmp/taskfold-assignment-phone-navigation-attachments"
+      },
+      "tablet": {
+        "result": "passed",
+        "terminalExitCode": 0,
+        "tests": 5,
+        "failures": 0,
+        "skipped": 0,
+        "cases": [
+          "testAssignmentBuilderNamesAndRelaunch",
+          "testAssignmentDarkLargestBuilderNamesAndRelaunch",
+          "testKeywordFilterBuilderExpressionAndRelaunchKeepExactResults",
+          "testNamePatternBuilderExpressionAndRelaunch",
+          "testNamePatternDarkLargestBuilderExpressionAndRelaunch"
+        ],
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+          "deviceName": "Taskfold assignment iPad",
+          "modelName": "iPad Pro 11-inch (M5)",
+          "osBuildNumber": "23F77",
+          "osVersion": "26.5",
+          "platform": "iOS Simulator"
+        },
+        "log": "/tmp/taskfold-assignment-tablet-navigation.log",
+        "logSHA256": "46088d1527c0e021e0db813341e1f369eb3b21dd09172f254cbf6f2c205e2712",
+        "summary": "/tmp/taskfold-assignment-tablet-navigation-summary.json",
+        "summarySHA256": "127549e234babded6ad2b98de6e7d27d04b5923116ad391ef7196e06231dffb7",
+        "xcresult": "/tmp/taskfold-assignment-tablet-navigation.xcresult",
+        "attachments": "/tmp/taskfold-assignment-tablet-navigation-attachments"
+      }
+    },
+    "assignmentCaptures": [
+      {
+        "path": "docs/assignments/final/phone-light-result.png",
+        "sha256": "2149c4a7c4442354bc818c64967d67a3e002e56dffb11c665be4c4057c5c8967",
+        "source": "/tmp/taskfold-assignment-phone-navigation-attachments/32DCF034-72AA-4D31-92AC-531FBF5BFB84.png",
+        "test": "TaskfoldUITests/testAssignmentBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/phone-light-expression.png",
+        "sha256": "943881a22bf671b4a9dea0b59fd548e1388203f4acfe3494ec75d59aa5eb1ac2",
+        "source": "/tmp/taskfold-assignment-phone-navigation-attachments/F0A8058F-9E9C-4DCE-B643-D7032959EF33.png",
+        "test": "TaskfoldUITests/testAssignmentBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/phone-light-builder.png",
+        "sha256": "45db3afb51871fae4e0cf9474fb3f2cf5165bf26b86c1267d00e4cd0ef6c2a3e",
+        "source": "/tmp/taskfold-assignment-phone-navigation-attachments/2508FC2A-A4BC-4CCA-ACA7-C4BABF4A4C59.png",
+        "test": "TaskfoldUITests/testAssignmentBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/phone-dark-largest-result.png",
+        "sha256": "2d65e431add3a8b2780af7b58e29a6e86127673e598bfcbc6021294b67b35cbf",
+        "source": "/tmp/taskfold-assignment-phone-navigation-attachments/D02BDAEC-3426-4B78-9E2B-FE37227AB587.png",
+        "test": "TaskfoldUITests/testAssignmentDarkLargestBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/phone-dark-largest-expression.png",
+        "sha256": "7615fa9181b05fd8ac088dcde9fb27ed3e7295103e29abca05fd7e26bbdbc185",
+        "source": "/tmp/taskfold-assignment-phone-navigation-attachments/C68DDDFC-966B-4969-A80B-38961E37011C.png",
+        "test": "TaskfoldUITests/testAssignmentDarkLargestBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/phone-dark-largest-builder.png",
+        "sha256": "5b372e557bc6fed0db3a05e1398082f718ff2c819a602ac8de2a23847f2f6f2b",
+        "source": "/tmp/taskfold-assignment-phone-navigation-attachments/17E466C4-5B24-4457-A93A-F6946EB4DC81.png",
+        "test": "TaskfoldUITests/testAssignmentDarkLargestBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/phone-dark-largest-chooser.png",
+        "sha256": "6a773877cd540b37e22272a8b191815fa2f91feb911077084fa9def563266fee",
+        "source": "/tmp/taskfold-assignment-phone-navigation-attachments/0B50ADB3-9AEA-4EDF-83E8-FC31C8E07419.png",
+        "test": "TaskfoldUITests/testAssignmentDarkLargestBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/tablet-light-result.png",
+        "sha256": "9313f7ad66d9a0ba45e5c0778af6ab0f1e8f52d159517deee94fcb915895aa15",
+        "source": "/tmp/taskfold-assignment-tablet-navigation-attachments/8F74662F-9546-486C-9CDC-E975DB01EDCE.png",
+        "test": "TaskfoldUITests/testAssignmentBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/tablet-light-expression.png",
+        "sha256": "18b68dfc1de5857b784a19f018207faa18656b8566e3e45dba48d828f5596e1b",
+        "source": "/tmp/taskfold-assignment-tablet-navigation-attachments/46E0582B-2DD0-4CB6-A0C4-C264940C56C4.png",
+        "test": "TaskfoldUITests/testAssignmentBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/tablet-light-builder.png",
+        "sha256": "1a6b5bbb5cc5309fa2e7bd92d167477496385d9c9c3aed53335626234687c047",
+        "source": "/tmp/taskfold-assignment-tablet-navigation-attachments/2A7474EC-2929-4637-88B0-6482B2439954.png",
+        "test": "TaskfoldUITests/testAssignmentBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/tablet-dark-largest-result.png",
+        "sha256": "1242ce5c3c62cfa0ec51bd42ab69b29c249c50bd018a4e1dfe6feed12d0103a5",
+        "source": "/tmp/taskfold-assignment-tablet-navigation-attachments/5F18CD66-DFDE-4A5A-AD2D-5D9EEDEA24A9.png",
+        "test": "TaskfoldUITests/testAssignmentDarkLargestBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/tablet-dark-largest-expression.png",
+        "sha256": "6c719913817b1bf2330b9001eab0fbf56e2dc403b43081391a04aa9388e8acc5",
+        "source": "/tmp/taskfold-assignment-tablet-navigation-attachments/723CFC03-06AA-4440-AB63-74CC552935B4.png",
+        "test": "TaskfoldUITests/testAssignmentDarkLargestBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/tablet-dark-largest-builder.png",
+        "sha256": "bca2d0cab6bbbfaf5575d8223411f0d519085c67add854a6a0e221746112ae26",
+        "source": "/tmp/taskfold-assignment-tablet-navigation-attachments/A72B0CB2-5106-4B0C-BB45-798E7E001108.png",
+        "test": "TaskfoldUITests/testAssignmentDarkLargestBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      },
+      {
+        "path": "docs/assignments/final/tablet-dark-largest-chooser.png",
+        "sha256": "9445e827714e60f189071b480db9baebb12b68c592f4497147cc21cdd51905e0",
+        "source": "/tmp/taskfold-assignment-tablet-navigation-attachments/C84C7373-AEBD-4D4F-A923-65C900EABF35.png",
+        "test": "TaskfoldUITests/testAssignmentDarkLargestBuilderNamesAndRelaunch()",
+        "visuallyInspected": true
+      }
+    ],
+    "visualReview": "All 14 final assignment captures inspected unmodified. Light and dark Accessibility XXXL builder/expression/result states show Others and exact named assignment. Largest text uses ordinary scrolling and partial form/chooser viewports; selected condition remains readable with one native navigation arrow and chooser has one Cancel control. Long list titles can truncate at largest text sizes. Functional assertions establish choice selection and relaunch persistence. Other regression attachments remain preserved but are not claimed as visually inspected."
+  }
+}
