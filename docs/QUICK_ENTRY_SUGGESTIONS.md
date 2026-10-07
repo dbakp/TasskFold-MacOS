@@ -49,3 +49,5 @@ Independent calendar reminder suggestions are implemented (`!every day 9am`, wee
 ### Named dates and period choices — 6 October
 
 The planned-date menu now offers `next week`, `next month`, `next year`, `end of month` and `end of year`, with previews from the actual parser. Full English named dates can be typed directly into a plan, a brace-delimited deadline or a repeat start/end boundary. The exact syntax, omitted-year policy and Taskfold weekday behavior are documented in [Repeat rules and named dates](RECURRENCE.md#named-planned-dates-and-deadlines). Named-month/day autocomplete is not included; complete phrases still produce their normal declineable chips. Independent calendar reminders are implemented; richer grammar and remaining device acceptance stay open.
+
+7 October: planned-time and reminder suggestions now include explicit noon/midnight clocks. Whole-clock validation prevents invalid AM/PM and partial-time capture; conflicting clocks stay literal with feedback. [Behavior and remaining grammar](STRICT_CLOCK_CAPTURE.md).

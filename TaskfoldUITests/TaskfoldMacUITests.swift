@@ -77,6 +77,17 @@ final class TaskfoldMacUITests: XCTestCase {
         app.buttons["pauseResumeFocus"].click(); XCTAssertEqual(app.staticTexts["focusStatus"].label, "Time to focus")
         app.buttons["endFocus"].click(); XCTAssertEqual(app.staticTexts["focusStatus"].label, "Session ended"); app.terminate()
     }
+    @MainActor func testStrictClockFeedbackSuggestionAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch(); defer { app.terminate() }
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("Literal clock at 13pm")
+        let warning = app.staticTexts["quickEntryWarning"].firstMatch; XCTAssertTrue(warning.waitForExistence(timeout: 5)); XCTAssertTrue(warning.label.contains("valid planned time"))
+        app.buttons["Add Task"].click(); app.typeKey("n", modifierFlags: .command); input.click(); input.typeText("Clock plan tomorrow at mid")
+        let choice = app.buttons["referenceSuggestion-due_time:planning:at midnight"]; XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.click(); app.buttons["Add Task"].click()
+        app.buttons["Inbox"].firstMatch.click(); XCTAssertTrue(app.staticTexts["Clock plan"].waitForExistence(timeout: 5))
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.staticTexts["Clock plan"].waitForExistence(timeout: 5)); XCTAssertTrue(app.staticTexts["Literal clock at 13pm"].exists)
+    }
+
     @MainActor func testPlanningSuggestionsKeyboardCaptureAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--quick-entry-fixture"]; app.launch(); app.typeKey("n", modifierFlags: .command)
         let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("Planned conversation tom")

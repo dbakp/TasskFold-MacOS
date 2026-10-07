@@ -1,0 +1,62 @@
+[
+  {
+    "device": "phone",
+    "workspace": "ui-testing",
+    "bundleID": "com.dbakp.taskfold.clocktests",
+    "cacheSHA256": "9bb5091c9d0bfb400e74e15012b2403af4d063e0c856542fbc2e4df3a78c8044",
+    "scope": "Final largest-text case only; quick-entry fixture replaces snapshot at the start of each case. No real app container read.",
+    "records": [
+      {
+        "title": "Literal clock 9E82D2 at 13pm",
+        "due_date": null,
+        "due_time": null,
+        "scheduled_at": null,
+        "priority": 2
+      },
+      {
+        "title": "Clock plan 9E82D2",
+        "due_date": "2026-10-08",
+        "due_time": "00:00",
+        "scheduled_at": null,
+        "priority": 4
+      },
+      {
+        "title": "Clock prose 9E82D2 at midnight",
+        "due_date": null,
+        "due_time": null,
+        "scheduled_at": null,
+        "priority": 4
+      }
+    ]
+  },
+  {
+    "device": "tablet",
+    "workspace": "ui-testing",
+    "bundleID": "com.dbakp.taskfold.clocktests",
+    "cacheSHA256": "37bcd2c65c6a9d6838d2d57538dfec896615734283a33001ab4a5d684c196196",
+    "scope": "Final largest-text case only; quick-entry fixture replaces snapshot at the start of each case. No real app container read.",
+    "records": [
+      {
+        "title": "Literal clock 29528F at 13pm",
+        "due_date": null,
+        "due_time": null,
+        "scheduled_at": null,
+        "priority": 2
+      },
+      {
+        "title": "Clock plan 29528F",
+        "due_date": "2026-10-08",
+        "due_time": "00:00",
+        "scheduled_at": null,
+        "priority": 4
+      },
+      {
+        "title": "Clock prose 29528F at midnight",
+        "due_date": null,
+        "due_time": null,
+        "scheduled_at": null,
+        "priority": 4
+      }
+    ]
+  }
+]

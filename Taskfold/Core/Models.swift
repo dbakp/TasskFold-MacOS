@@ -352,6 +352,23 @@ extension Snapshot {
     }
 }
 
+/// Recognize an entire clock before validation so malformed input cannot become a partial time.
+private enum QuickPlannedClockText {
+    static let clock = #"(?:noon|midnight|\d+(?:[:.]\d+)+(?:\s*(?:am|pm))?|\d+\s*(?:am|pm))"#
+    static let body = #"(?:at\s+(?:noon|midnight|\d+(?:[:.]\d+)*(?:\s*(?:am|pm))?)|"# + clock + ")"
+    static let ending = #"(?![\p{L}\p{N}_:/]|\.[\p{L}\p{N}])"#
+    static let pattern = #"(?<![\p{L}\p{N}_:/.])"# + body + ending
+    static func canonical(_ raw: String) -> String? {
+        var text = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasAt = text.hasPrefix("at ")
+        if hasAt { text = String(text.dropFirst(3)).trimmingCharacters(in: .whitespacesAndNewlines) }
+        if text == "noon" { return "12:00" }
+        if text == "midnight" { return "00:00" }
+        if hasAt, !text.isEmpty, text.utf8.allSatisfy({ (48...57).contains($0) }), text.count <= 2 { text += ":00" }
+        return try? FilterTimeReference.canonical(text.replacingOccurrences(of: ".", with: ":"))
+    }
+}
+
 struct QuickEntry {
     /// One recognised piece of the title: which field group it feeds and the exact text it came from.
     struct Token: Equatable, Identifiable {
@@ -384,6 +401,7 @@ struct QuickEntry {
                 title.replaceSubrange(range, with: marker)
             }
         }
+        protect(#"(?<!\S)\\"# + QuickPlannedClockText.body + QuickPlannedClockText.ending, removeEscape: true)
         protect(QuickRecurrenceText.pattern.replacingOccurrences(of: #"(?<![\p{L}\p{N}_!])"#, with: #"(?<!\S)\\"#), removeEscape: true)
         protect(QuickReminderText.pattern.replacingOccurrences(of: #"(?<!\S)!"#, with: #"(?<!\S)\\!"#), removeEscape: true)
         protect(#"\\(?:[#/@%+](?:"[^"\n]*"|[^\s]+)|\{[^}]+\}|[^\s]+)"#, removeEscape: true)
@@ -460,17 +478,27 @@ struct QuickEntry {
             if (1...10080).contains(minutes) { updates["duration_minutes"] = .number(Double(minutes)); take("duration_minutes", m[0], "\(minutes) min") }
         }
         if enabled("priority"), let m = match(#"\b(?:p|priority\s*)([1-4])\b"#) { updates["priority"] = .number(Double(m[1]) ?? 4); take("priority", m[0], "P" + m[1]) }
-        if enabled("due_time"), let m = match(#"\b(?:at\s+)?(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)\b|\bat\s+(\d{1,2})(?:[:.](\d{2}))?\b|\b(\d{1,2})[:.](\d{2})\b"#) {
-            let hourText = [m[1], m[4], m[6]].first { !$0.isEmpty } ?? ""
-            let minuteText = [m[2], m[5], m[7]].first { !$0.isEmpty } ?? ""
-            if let h = Int(hourText), h < 24, (Int(minuteText) ?? 0) < 60 {
-                var hour = h
-                let suffix = m[3].lowercased()
-                if suffix == "pm" && hour < 12 { hour += 12 }
-                if suffix == "am" && hour == 12 { hour = 0 }
-                let minute = Int(minuteText) ?? 0
-                updates["due_time"] = .string(String(format: "%02d:%02d", hour, minute))
-                take("due_time", m[0], timeLabel(hour, minute))
+        if let regex = try? NSRegularExpression(pattern: QuickPlannedClockText.pattern, options: .caseInsensitive) {
+            let source = title, clocks = regex.matches(in: title, range: NSRange(title.startIndex..., in: title))
+            let relative = (try? NSRegularExpression(pattern: #"\bin\s+\d+\s+(?:hours?|minutes?)\b"#, options: .caseInsensitive))?.matches(in: title, range: NSRange(title.startIndex..., in: title)) ?? []
+            let clockCount = (enabled("due_time") ? clocks.count : 0) + (enabled("due_date") ? relative.count : 0)
+            let candidates = (clocks + (clockCount > 1 ? relative : [])).sorted { $0.range.location > $1.range.location }
+            for candidate in candidates {
+                guard let range = Range(candidate.range, in: source), let target = Range(candidate.range, in: title) else { continue }
+                let raw = String(source[range]), marker = "\u{E008}" + UUID().uuidString + "\u{E009}"
+                title.replaceSubrange(target, with: marker)
+                if enabled("due_time"), clockCount == 1, let clock = QuickPlannedClockText.canonical(raw) {
+                    let pieces = clock.split(separator: ":").compactMap { Int($0) }
+                    updates["due_time"] = .string(clock)
+                    tokens.append(Token(group: "due_time", text: raw, label: timeLabel(pieces[0], pieces[1])))
+                    literals.append((marker, ""))
+                } else {
+                    literals.append((marker, raw))
+                    if enabled("due_time") || (enabled("due_date") && clockCount > 1) {
+                        let warning = clockCount > 1 ? "Choose one planned time. Time phrases stay in the title." : "“\(raw)” is not a valid planned time. Use 14:00, 2pm, noon or midnight. Its text stays in the title."
+                        if !warnings.contains(warning) { warnings.append(warning) }
+                    }
+                }
             }
         }
         let weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
@@ -1280,7 +1308,7 @@ enum WidgetProjection {
 /// Reminder syntax is protected before task dates/times are parsed, including declined or invalid
 /// expressions. An exclamation in a URL, quoted prose, or an escaped token remains ordinary text.
 private enum QuickReminderText {
-    static let clock = #"(?:\d{1,2}(?:[:.]\d{2})?\s*(?:am|pm)|\d{1,2}[:.]\d{2})"#
+    static let clock = QuickPlannedClockText.clock
     static let day = #"(?:today|tomorrow|tmr|sun(?:day)?|mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|\d{4}-\d{2}-\d{2})"#
     static let duration = #"(?:\d+\s*(?:minutes?|mins?|m|hours?|hrs?|h|days?|d)\s*)+"#
     static var pattern: String {
@@ -1299,15 +1327,10 @@ private enum QuickReminderText {
                   case let matches = regex.matches(in: text, range: NSRange(text.startIndex..., in: text)), matches.count == 1,
                   let match = matches.first,
                   let timeRange = Range(match.range(at: 1), in: text), let fullRange = Range(match.range, in: text) else { return nil }
-            let clockText = String(text[timeRange]).filter { !$0.isWhitespace }
-            let am = clockText.hasSuffix("am"), pm = clockText.hasSuffix("pm")
-            let numbers = (am || pm ? String(clockText.dropLast(2)) : clockText).split(whereSeparator: { $0 == ":" || $0 == "." })
-            guard let hour = numbers.first.flatMap({ Int($0) }), let minute = Int(numbers.count > 1 ? String(numbers[1]) : "0"), (0...59).contains(minute),
-                  (am || pm ? (1...12).contains(hour) : (0...23).contains(hour)) else { return nil }
+            guard let time = QuickPlannedClockText.canonical(String(text[timeRange])) else { return nil }
             var phrase = text; phrase.removeSubrange(fullRange)
             var civil = Calendar(identifier: .gregorian); civil.timeZone = TimeZone(secondsFromGMT: 0)!
             let sourceDay = TaskPlanner.dayKey(now, calendar: calendar)
-            let time = String(format: "%02d:%02d", am || pm ? hour % 12 + (pm ? 12 : 0) : hour, minute)
             guard let civilNow = Dates.parse(sourceDay, calendar: civil),
                   let parsed = QuickRecurrenceText.parse(phrase, now: civilNow, calendar: civil), !parsed.rule["fromCompletion"].flag,
                   let initial = ReminderCalendarSchedule.make(phrase, time: time, start: sourceDay, zone: calendar.timeZone.identifier) else { return nil }
@@ -1356,12 +1379,9 @@ private enum QuickReminderText {
         guard !dayText.isEmpty || !time.isEmpty else { return nil }
         var hour = 9, minute = 0
         if !time.isEmpty {
-            let pieces = time.replacingOccurrences(of: #"\s"#, with: "", options: .regularExpression)
-            let am = pieces.hasSuffix("am"), pm = pieces.hasSuffix("pm")
-            let numbers = (am || pm ? String(pieces.dropLast(2)) : pieces).split(whereSeparator: { $0 == ":" || $0 == "." })
-            guard let h = Int(numbers[0]), let m = Int(numbers.count > 1 ? String(numbers[1]) : "0"), (0...59).contains(m),
-                  (am || pm ? (1...12).contains(h) : (0...23).contains(h)) else { return nil }
-            hour = am || pm ? h % 12 + (pm ? 12 : 0) : h; minute = m
+            guard let canonical = QuickPlannedClockText.canonical(time) else { return nil }
+            let pieces = canonical.split(separator: ":").compactMap { Int($0) }
+            hour = pieces[0]; minute = pieces[1]
         }
         var date: Date?
         if dayText.isEmpty {

@@ -15,7 +15,7 @@ struct QuickPlanningCompletion {
         guard caret >= 0, let prefixRange = Range(NSRange(location: 0, length: caret), in: input) else { return }
         let prefix = String(input[prefixRange])
         // Protection consumes complete references, quotes, escaped words and URLs first.
-        let pattern = #"\\(?:[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|\S*)|"[^"\n]*(?:"|$)|(?<!\S)(?:https?://|www\.)\S*|(?<!\S)[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|(?<!\S)(!(?:every(?:\s+[\p{L}\p{N}:.,-]*)*|[\p{L}\p{N}:.]*(?:\s+(?:at\s+)?[\p{L}\p{N}:.]*)?)|ev(?:e(?:r(?:y!?)?)?)?(?:\s+[\p{L}\p{N}, -]*)?|end(?:\s+of(?:\s+[\p{L}]*)?)?|next(?:\s+[\p{L}]*)?|in(?:\s+\d*(?:\s+[\p{L}]*)?)?|at(?:\s+[\p{N}:.apm]*)?|[\p{L}]{2,})"#
+        let pattern = #"\\(?:[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|\S*)|"[^"\n]*(?:"|$)|(?<!\S)(?:https?://|www\.)\S*|(?<!\S)[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|(?<!\S)(!(?:every(?:\s+[\p{L}\p{N}:.,-]*)*|[\p{L}\p{N}:.]*(?:\s+(?:at\s+)?[\p{L}\p{N}:.]*)?)|ev(?:e(?:r(?:y!?)?)?)?(?:\s+[\p{L}\p{N}, -]*)?|end(?:\s+of(?:\s+[\p{L}]*)?)?|next(?:\s+[\p{L}]*)?|in(?:\s+\d*(?:\s+[\p{L}]*)?)?|at(?:\s+[\p{L}\p{N}:.]*)?|[\p{L}]{2,})"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
               let match = regex.matches(in: prefix, range: NSRange(prefix.startIndex..., in: prefix)).last,
               match.range.location + match.range.length == caret, match.range(at: 1).location != NSNotFound,
@@ -33,7 +33,7 @@ struct QuickPlanningCompletion {
         let group: String
         if fragment.hasPrefix("!") {
             group = "reminder_specs"; prompt = "Choose a reminder"
-            candidates = ["!15m", "!30m", "!1h", "!later", "!tomorrow 9am", "!15mb", "!30mb", "!1hb", "!15ma", "!30ma", "!every day 9am", "!every weekdays 9am", "!every saturday 9am", "!every monday 9am", "!every month on last friday 9am"]
+            candidates = ["!15m", "!30m", "!1h", "!later", "!tomorrow 9am", "!tomorrow noon", "!midnight", "!every day noon", "!15mb", "!30mb", "!1hb", "!15ma", "!30ma", "!every day 9am", "!every weekdays 9am", "!every saturday 9am", "!every monday 9am", "!every month on last friday 9am"]
             if let number = fragment.dropFirst().split(whereSeparator: { !$0.isNumber }).first, let n = Int(number), (1...10080).contains(n) {
                 candidates.insert(contentsOf: ["!\(n)m", "!\(n)mb", "!\(n)ma", "!\(n)h", "!\(n)hb", "!\(n)ha"], at: 0)
             }
@@ -50,7 +50,7 @@ struct QuickPlanningCompletion {
             if ["daily", "weekly", "monthly", "yearly"].contains(where: { fragment.count >= 4 && $0.hasPrefix(fragment) }) { candidates = ["daily", "weekly", "monthly", "yearly"] }
         } else if fragment == "at" || fragment.hasPrefix("at ") {
             group = "due_time"; prompt = "Choose a planned time"
-            candidates = ["at 9am", "at 12pm", "at 3pm", "at 6pm"]
+            candidates = ["at 9am", "at noon", "at midnight", "at 12pm", "at 3pm", "at 6pm"]
             candidates += (1...12).flatMap { ["at \($0)am", "at \($0)pm"] }
             candidates += (0...23).flatMap { [String(format: "at %02d:00", $0), String(format: "at %02d:30", $0)] }
             if let h = Int(fragment.dropFirst(3)), (0...23).contains(h) { candidates.insert(String(format: "at %02d:00", h), at: 0) }

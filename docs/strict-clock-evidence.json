@@ -1,0 +1,326 @@
+{
+  "checkpoint": "2026-10-07 strict planned clock capture",
+  "repository": "mac",
+  "inputManifest": "docs/strict-clock-inputs-sha256.json",
+  "inputManifestSHA256": "663770eea0aeeadfa4b08a24951ce5327f46605c9fd70788ce7e69560a28da5e",
+  "ownCore": {
+    "tests": 532,
+    "skipped": 4,
+    "failures": 0,
+    "terminalExitCode": 0,
+    "newClockRegressions": 8,
+    "log": "/tmp/taskfold-clock-mac-core-final.log",
+    "logSHA256": "baed81446adb58dd537e154acf92444d477aaebf1a9aeb289c353dceff2c6e22"
+  },
+  "ownBuilds": {
+    "status": "passed",
+    "source": "/tmp/taskfold-clock-fixturefix-mac-source",
+    "signing": "disabled",
+    "configurations": {
+      "debug": {
+        "terminalExitCode": 0,
+        "log": "/tmp/taskfold-clock-fixturefix-mac-debug.log",
+        "logSHA256": "b0b89374fec71c0bcf169d7a6e17f664536a2b3756ed83800eeffe75359d172d",
+        "derivedData": "/tmp/taskfold-clock-fixturefix-mac-debug-build",
+        "configuration": "Debug",
+        "operation": "build-for-testing",
+        "inputManifest": "docs/strict-clock-inputs-sha256.json"
+      },
+      "release": {
+        "terminalExitCode": 0,
+        "log": "/tmp/taskfold-clock-final-mac-release.log",
+        "logSHA256": "b3d6602ad4244883eff6492e282f61e3c306bd2c7bb1c037d891717968662037",
+        "derivedData": "/tmp/taskfold-clock-final-mac-release-build",
+        "configuration": "Release",
+        "operation": "build",
+        "inputManifest": "docs/strict-clock-release-inputs-sha256.json",
+        "inputManifestSHA256": "98aa151b0f2a77fbb666e543f30c69a6b4487223696e6c535e935981166f38bd",
+        "differenceToCurrent": [
+          "TaskfoldUITests/TaskfoldMacUITests.swift"
+        ],
+        "unchangedApplicationCoreWidgetReleaseInputs": true
+      }
+    },
+    "sourceManifestVerified": true,
+    "releaseArchitectures": [
+      "x86_64",
+      "arm64"
+    ]
+  },
+  "nativeIOSRuntime": {
+    "status": "passed",
+    "scope": "Isolated DEBUG ui-testing local workspace; actual capture/save/relaunch. No real task data, provider or native account sync.",
+    "source": "/tmp/taskfold-clock-editor-scroll-ios-test-source",
+    "iOSInputManifestSHA256": "dcb84ae104f8c3747db9f942dc43885bceead2ca99ba943a3195e73b57fa9b91",
+    "iOSUITestSourceSHA256": "44865160dbc7dcaa0f540b9b7b58b1e2e5139c822cbdd5d677d1ac4279673f04",
+    "sourceOverlay": "Only three isolated bundle IDs differ; reverse overlay matches own production PBX input; other 104 own inputs match.",
+    "deviceRuns": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+          "deviceName": "Taskfold assignment iPhone",
+          "modelName": "iPhone 17 Pro",
+          "osBuildNumber": "23F77",
+          "osVersion": "26.5",
+          "platform": "iOS Simulator"
+        },
+        "resultBundle": "/tmp/taskfold-clock-phone-editor-scroll.xcresult",
+        "terminalExitCode": 0,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "summary": "/tmp/taskfold-clock-phone-editor-scroll-summary.json",
+        "summarySHA256": "b9266cbf9f80d88a20d0e88be7b1c811d72a387dbfc44b411888d7e0fb34f32c",
+        "log": "/tmp/taskfold-clock-phone-editor-scroll.log",
+        "logSHA256": "7a2cf34bfe9d9449b4af082c1fecbde2bcc604e4a9064deb3ae99a328d8ee40f",
+        "exportTerminalExitCode": 0,
+        "attachmentManifestSHA256": "fbe676f3347f0ae16118eb1e85406d298664bc57867e1e0500bec59238d6d827"
+      },
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+          "deviceName": "Taskfold assignment iPad",
+          "modelName": "iPad Pro 11-inch (M5)",
+          "osBuildNumber": "23F77",
+          "osVersion": "26.5",
+          "platform": "iOS Simulator"
+        },
+        "resultBundle": "/tmp/taskfold-clock-tablet-editor-scroll.xcresult",
+        "terminalExitCode": 0,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": [],
+        "summary": "/tmp/taskfold-clock-tablet-editor-scroll-summary.json",
+        "summarySHA256": "993dece8e2c03469f9457c086fa694d9d2d6fa6233d0fbd80fcd1dd6160e67d9",
+        "log": "/tmp/taskfold-clock-tablet-editor-scroll.log",
+        "logSHA256": "aa58081f262f4e1707ddb8b91615261712a65fe973a2a292123fea849b648756",
+        "exportTerminalExitCode": 0,
+        "attachmentManifestSHA256": "d4363607ddc047a9eb19214d8bce503cba68b54f893c09935fdc6044b0bd4930"
+      }
+    ],
+    "captures": [
+      {
+        "file": "docs/strict-clock/final/phone-light-standard-persisted-midnight-editor.png",
+        "SHA256": "916a2990895399164a3fb5b28dac852b85fb27a9429dfd2575fa17af722a9fa7",
+        "source": "/tmp/taskfold-clock-phone-editor-scroll-attachments/E3F6691B-AE33-493C-98BB-8CF6CF0CB372.png",
+        "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+        "attachmentName": "Strict clock persisted midnight editor",
+        "visuallyInspected": true,
+        "unmodified": true
+      },
+      {
+        "file": "docs/strict-clock/final/phone-light-standard-midnight-capture.png",
+        "SHA256": "3f9feb4a7e812964de178193241a5422bb836cb48fa78e941bb0cc5de6409225",
+        "source": "/tmp/taskfold-clock-phone-editor-scroll-attachments/AC318560-7C3B-4685-A57A-60DD5EC6AC99.png",
+        "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+        "attachmentName": "Strict clock midnight capture",
+        "visuallyInspected": true,
+        "unmodified": true
+      },
+      {
+        "file": "docs/strict-clock/final/phone-light-standard-invalid-input-feedback.png",
+        "SHA256": "ed4b2b45787fd3eebab2689fd757471f09f55342095340973cf0c055617160ed",
+        "source": "/tmp/taskfold-clock-phone-editor-scroll-attachments/E699B519-59AC-4AC9-A905-41E9980CCB6C.png",
+        "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+        "attachmentName": "Strict clock invalid input feedback",
+        "visuallyInspected": true,
+        "unmodified": true
+      },
+      {
+        "file": "docs/strict-clock/final/phone-dark-largest-persisted-midnight-editor.png",
+        "SHA256": "632e3cefaa99c21e73e62fc497f2139528f742ff6c9917d1b61b17fd914bb358",
+        "source": "/tmp/taskfold-clock-phone-editor-scroll-attachments/89E51CD9-400A-425B-A04A-22B749BDC4F8.png",
+        "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+        "attachmentName": "Strict clock persisted midnight editor",
+        "visuallyInspected": true,
+        "unmodified": true
+      },
+      {
+        "file": "docs/strict-clock/final/phone-dark-largest-midnight-capture.png",
+        "SHA256": "50f13134ebca4e83adea43c5d44a74581b2e690c457f5dc3d78cfc1d4f0f5e99",
+        "source": "/tmp/taskfold-clock-phone-editor-scroll-attachments/4ED67362-E8B4-4A47-8F67-461612900C67.png",
+        "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+        "attachmentName": "Strict clock midnight capture",
+        "visuallyInspected": true,
+        "unmodified": true
+      },
+      {
+        "file": "docs/strict-clock/final/phone-dark-largest-invalid-input-feedback.png",
+        "SHA256": "43924d299c24a2c2daa58a170775b34a3872627cd1ebc93b76788a104ed7b0e8",
+        "source": "/tmp/taskfold-clock-phone-editor-scroll-attachments/6F854262-1B7F-428D-B6B5-ADB7E9CCA71B.png",
+        "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+        "attachmentName": "Strict clock invalid input feedback",
+        "visuallyInspected": true,
+        "unmodified": true
+      },
+      {
+        "file": "docs/strict-clock/final/tablet-light-standard-persisted-midnight-editor.png",
+        "SHA256": "684bcf01194cb8c88d446ed26328e8d7bf034d39d85bc893c72e54aea8bc0aec",
+        "source": "/tmp/taskfold-clock-tablet-editor-scroll-attachments/492B395A-2262-48DB-96B5-A82D0BCE98D6.png",
+        "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+        "attachmentName": "Strict clock persisted midnight editor",
+        "visuallyInspected": true,
+        "unmodified": true
+      },
+      {
+        "file": "docs/strict-clock/final/tablet-light-standard-midnight-capture.png",
+        "SHA256": "f4db8b54484750da9c6cd95dbda01d8535e674e77debbe0fa53b66ad06a14944",
+        "source": "/tmp/taskfold-clock-tablet-editor-scroll-attachments/0DF12A70-9B0A-47B9-9D0D-095FF48D90A1.png",
+        "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+        "attachmentName": "Strict clock midnight capture",
+        "visuallyInspected": true,
+        "unmodified": true
+      },
+      {
+        "file": "docs/strict-clock/final/tablet-light-standard-invalid-input-feedback.png",
+        "SHA256": "eeb49b3eaccc07f0edc0a7e2622d647c5006d222e7dc41442cac4e8bb552f471",
+        "source": "/tmp/taskfold-clock-tablet-editor-scroll-attachments/70D47FC2-CB37-4A3B-8768-9FE7B19DE574.png",
+        "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "testIdentifier": "TaskfoldUITests/testStrictClockCaptureAndRelaunch()",
+        "attachmentName": "Strict clock invalid input feedback",
+        "visuallyInspected": true,
+        "unmodified": true
+      },
+      {
+        "file": "docs/strict-clock/final/tablet-dark-largest-persisted-midnight-editor.png",
+        "SHA256": "6bc226812a77f50df41a7ca3f00322bc56702c23ad8e8fb683f99e5a4da03126",
+        "source": "/tmp/taskfold-clock-tablet-editor-scroll-attachments/A7BFAE78-0D83-4F4A-847D-118EEFF1F4E8.png",
+        "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+        "attachmentName": "Strict clock persisted midnight editor",
+        "visuallyInspected": true,
+        "unmodified": true
+      },
+      {
+        "file": "docs/strict-clock/final/tablet-dark-largest-midnight-capture.png",
+        "SHA256": "2d6a8760d0eb64436d1b2668eb1222ce7b71f6eb0b84fd5c5e3897a4ebf754a3",
+        "source": "/tmp/taskfold-clock-tablet-editor-scroll-attachments/DCE28977-5FEF-4326-9291-A33A6892E316.png",
+        "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+        "attachmentName": "Strict clock midnight capture",
+        "visuallyInspected": true,
+        "unmodified": true
+      },
+      {
+        "file": "docs/strict-clock/final/tablet-dark-largest-invalid-input-feedback.png",
+        "SHA256": "f0f85aaf4e2f7fe0fe3c6df7df8bb4b3ed0b8bbe428d4dd85bad67dced2bc783",
+        "source": "/tmp/taskfold-clock-tablet-editor-scroll-attachments/8BEFD272-4AA5-4392-875D-505C7D615BDE.png",
+        "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "testIdentifier": "TaskfoldUITests/testStrictClockDarkLargestCaptureAndRelaunch()",
+        "attachmentName": "Strict clock invalid input feedback",
+        "visuallyInspected": true,
+        "unmodified": true
+      }
+    ],
+    "persistedFixtureProof": {
+      "file": "docs/strict-clock-fixture-persistence.json",
+      "SHA256": "562dc27acec2263c200bd7c9d77d8d4a8c67eee75d07154155161b81421db803",
+      "scope": "Final largest-text case on each device; each case replaces the fixture snapshot. Exact 00:00 on 2026-10-08; invalid p2 and declined phrases have no due_date/due_time/scheduled_at."
+    },
+    "visualLimits": [
+      "Largest phone composer and editor require scrolling; chips/toolbar remain horizontal scroll regions with partial viewports.",
+      "Largest phone time-zone chooser label truncates.",
+      "Largest iPad editor capture shows planned date and a partial Time row; native switch assertion and separate fixture record validate saved time.",
+      "These walks do not constitute full VoiceOver/surface, physical delivery, widget-host or paired account acceptance."
+    ],
+    "ownedSimulatorShutdown": {
+      "phone": {
+        "terminalExitCode": 0,
+        "log": "/tmp/taskfold-clock-phone-shutdown.log"
+      },
+      "tablet": {
+        "terminalExitCode": 0,
+        "log": "/tmp/taskfold-clock-tablet-shutdown.log"
+      },
+      "unrelatedDevices": "untouched"
+    }
+  },
+  "nativeMacRuntime": {
+    "status": "not run; user prohibits Mac app GUI/runtime"
+  },
+  "schemaPolicyProviderRolloutChanges": false,
+  "compatibility": "Canonical HH:mm and existing reminder specifications; own independent source/build/release inputs. No new AST field, storage column, sibling dependency or remote activation. Existing same-day time-only planning retained; midnight starts the selected day.",
+  "remainingAcceptance": [
+    "Actual paired native account/offline/access-revocation/restore",
+    "Native Mac GUI and full VoiceOver/surface acceptance",
+    "Physical/provisioned/installed widget and distribution acceptance",
+    "Richer date/repeat grammar and remaining P0 requirements"
+  ],
+  "diagnosticsPreserved": [
+    "/tmp/taskfold-clock-ios-before.log",
+    "/tmp/taskfold-clock-mac-core.log",
+    "/tmp/taskfold-clock-mac-core-fixed.log",
+    "/tmp/taskfold-clock-mac-source",
+    "/tmp/taskfold-clock-mac-debug-build",
+    "/tmp/taskfold-clock-mac-release-build",
+    "/tmp/taskfold-clock-phone-final.xcresult",
+    "/tmp/taskfold-clock-tablet-final.xcresult",
+    "/tmp/taskfold-clock-phone-final-attachments",
+    "/tmp/taskfold-clock-tablet-final-attachments",
+    "/tmp/taskfold-clock-phone-fixturefix.xcresult",
+    "/tmp/taskfold-clock-tablet-fixturefix.xcresult",
+    "/tmp/taskfold-clock-phone-edgegesture.xcresult",
+    "/tmp/taskfold-clock-tablet-edgegesture.xcresult",
+    "/tmp/taskfold-clock-phone-large-failure-frame.png"
+  ],
+  "diagnosticNotes": "Six initial pre-change regressions reproduced 45 assertion failures. A test used an incorrect ReminderSpec property, corrected to schedule. Final own Core passed 532 tests with four existing optional integration skips and zero failures. Initial native builds passed before ambiguity warning deduplication; final Debug/Release builds then passed. Subsequent UI-only fixture fixes removed an accidental Midnight clock from test titles, scrolled the composer outside the multiline title and revealed the lazy editor Time control. Application/Core/widget/Release inputs did not change through these UI-test corrections. All earlier source cohorts, products, logs, failed results, photos, recordings and diagnostic frame remain preserved.",
+  "priorNativeRuns": [
+    {
+      "cohort": "final",
+      "phone": {
+        "terminalExitCode": 65,
+        "passedTests": 0,
+        "failedTests": 2
+      },
+      "tablet": {
+        "terminalExitCode": 65,
+        "passedTests": 0,
+        "failedTests": 2
+      },
+      "resultPattern": "/tmp/taskfold-clock-{phone|tablet}-final.xcresult",
+      "source": "/tmp/taskfold-clock-final-ios-test-source"
+    },
+    {
+      "cohort": "fixturefix",
+      "phone": {
+        "terminalExitCode": 65,
+        "passedTests": 1,
+        "failedTests": 1
+      },
+      "tablet": {
+        "terminalExitCode": 0,
+        "passedTests": 2,
+        "failedTests": 0
+      },
+      "resultPattern": "/tmp/taskfold-clock-{phone|tablet}-fixturefix.xcresult",
+      "source": "/tmp/taskfold-clock-fixturefix-ios-test-source"
+    },
+    {
+      "cohort": "edgegesture",
+      "phone": {
+        "terminalExitCode": 65,
+        "passedTests": 1,
+        "failedTests": 1
+      },
+      "tablet": {
+        "terminalExitCode": 0,
+        "passedTests": 2,
+        "failedTests": 0
+      },
+      "resultPattern": "/tmp/taskfold-clock-{phone|tablet}-edgegesture.xcresult",
+      "source": "/tmp/taskfold-clock-edgegesture-ios-test-source"
+    }
+  ]
+}
