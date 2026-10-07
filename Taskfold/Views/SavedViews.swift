@@ -8,6 +8,7 @@ private struct FilterCondition: Identifiable {
 struct SavedViewEditor: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var textSize
     @State var record: Record
     @State private var conditions = [FilterCondition()]
     @State private var matchAny = false
@@ -65,7 +66,7 @@ struct SavedViewEditor: View {
                             TextField(loadFailure == nil ? "today OR overdue" : "Query preserved", text: $expression, axis: .vertical).disabled(loadFailure != nil).focused($focusedField, equals: "expression").lineLimit(2...8).accessibilityValue(expression).accessibilityIdentifier("filterExpression")
                             if !expression.isEmpty && loadFailure == nil { Button { expression = ""; focusedField = "expression" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.borderless).accessibilityLabel("Clear expression").accessibilityIdentifier("clearFilterExpression") }
                         }
-                        if let queryFailure { Label(queryFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterValidationError") }
+                        if let queryFailure { validationFeedback(queryFailure) }
                         DisclosureGroup("Syntax examples") {
                             Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
                             Text("Date examples: date:tomorrow, date before:\"next Monday\", effective-due:today, deadline after:yesterday. Effective due uses the planned date, falling back to the deadline only when there is no plan. Legacy due:YYYY-MM-DD and Today keep using the plan. Add a time: date before:\"today at 2pm\". Date-and-time conditions exclude tasks without a planned time.").font(.caption).foregroundStyle(.secondary)
@@ -77,11 +78,10 @@ struct SavedViewEditor: View {
                 } else {
                     Section("Conditions") {
                         Picker("Match", selection: $matchAny) { Text("All").tag(false); Text("Any").tag(true) }
-                        if let queryFailure { Label(queryFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterValidationError") }
+                        if let queryFailure { validationFeedback(queryFailure) }
                         ForEach($conditions) { $condition in
                             VStack(alignment: .leading, spacing: 8) {
-                                Picker("Condition", selection: $condition.field) { ForEach(Self.choices, id: \.0) { Text($0.1).tag($0.0) } }
-                                    .accessibilityIdentifier("filterCondition-" + condition.id.uuidString)
+                                conditionControl($condition)
                                     .onChange(of: condition.field) { _, field in condition.value = defaultValue(field) }
                                 valueControl($condition)
                                 HStack {
@@ -142,6 +142,38 @@ struct SavedViewEditor: View {
             .confirmationDialog("Delete this filter?", isPresented: $deleting, titleVisibility: .visible) { Button("Delete", role: .destructive) { store.remove("saved_views", record.id); dismiss() } } message: { Text("Your tasks stay in place.") }
         }
         .tint(Color.taskfold)
+    }
+    private func validationFeedback(_ message: String) -> some View {
+        Label(message, systemImage: "exclamationmark.triangle")
+            .font(.callout).labelStyle(WrappingMetadataLabelStyle(wraps: textSize.isAccessibilitySize))
+            .foregroundStyle(.red)
+            .accessibilityElement(children: .ignore).accessibilityLabel(message)
+            .accessibilityIdentifier("filterValidationError")
+    }
+    @ViewBuilder private func conditionControl(_ condition: Binding<FilterCondition>) -> some View {
+        if textSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Condition").font(.caption).foregroundStyle(.secondary)
+                Menu {
+                    Picker("Condition", selection: condition.field) {
+                        ForEach(Self.choices, id: \.0) { Text($0.1).tag($0.0) }
+                    }
+                } label: {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(Self.choices.first { $0.0 == condition.wrappedValue.field }?.1 ?? "Condition")
+                            .multilineTextAlignment(.leading).lineLimit(nil).fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Image(systemName: "chevron.up.chevron.down").font(.caption).accessibilityHidden(true)
+                    }.frame(minHeight: 44).contentShape(.rect)
+                }
+                .accessibilityLabel("Condition")
+                .accessibilityValue(Self.choices.first { $0.0 == condition.wrappedValue.field }?.1 ?? "Condition")
+                .accessibilityIdentifier("filterCondition-" + condition.wrappedValue.id.uuidString)
+            }
+        } else {
+            Picker("Condition", selection: condition.field) { ForEach(Self.choices, id: \.0) { Text($0.1).tag($0.0) } }
+                .accessibilityIdentifier("filterCondition-" + condition.wrappedValue.id.uuidString)
+        }
     }
     @ViewBuilder private func valueControl(_ condition: Binding<FilterCondition>) -> some View {
         let field = condition.wrappedValue.field

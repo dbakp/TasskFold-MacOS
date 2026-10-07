@@ -182,3 +182,19 @@ struct TaskfoldMark: View {
             .background(Color.taskfold.opacity(0.1), in: .rect(cornerRadius: size * 0.28, style: .continuous))
     }
 }
+
+/// Metadata must retain its value when text grows or the task column narrows.
+struct WrappingMetadataLabelStyle: LabelStyle {
+    var wraps: Bool
+    func makeBody(configuration: Configuration) -> some View {
+        if wraps {
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                configuration.icon.accessibilityHidden(true)
+                configuration.title.lineLimit(nil).fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }.accessibilityElement(children: .combine)
+        } else {
+            Label(configuration).labelStyle(.titleAndIcon)
+        }
+    }
+}

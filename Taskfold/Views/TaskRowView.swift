@@ -77,43 +77,12 @@ struct TaskRowView: View {
                     Text(parent).font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).lineLimit(1)
                 }
                 if task.deadline != nil || task.durationMinutes != nil || showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
-                    HStack(spacing: 10) {
-                        if showsDate, let due = TaskPlanner.dayDate(task) {
-                            let time = TaskPlanner.clockValue(task)
-                            let text = (compactDate && !overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))) + (TaskPlanner.zoneLabel(task).isEmpty ? "" : " · " + TaskPlanner.zoneLabel(task))
-                            Button { choosingDate = true } label: {
-                                Label(text, systemImage: task["is_recurring"].flag ? "repeat" : overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
-                                    .foregroundStyle(isSelected ? selectedForeground : overdue ? Color.red : dueToday ? Color.taskfold : Color.secondary)
-                            }
-                            .buttonStyle(.borderless)
-                            .help("Change date")
-                            .accessibilityIdentifier("date-\(task.id)")
-                        }
-                        if let deadline = task.deadline {
-                            Label("Deadline " + deadline.formatted(.dateTime.month(.abbreviated).day()), systemImage: "flag.checkered")
-                                .foregroundStyle(isSelected ? selectedForeground : deadline < Calendar.current.startOfDay(for: Date()) && !task.completed ? Color.red : Color.secondary)
-                                .accessibilityIdentifier("deadline-" + task.id)
-                        }
-                        if let minutes = task.durationMinutes { Label("\(minutes) min", systemImage: "hourglass").accessibilityIdentifier("duration-" + task.id) }
-                        if let project = store.record("projects", id: task.string("project_id")) {
-                            Menu { projectOptions } label: {
-                                HStack(spacing: 5) {
-                                    Circle().fill(Color.project(project.string("color"))).frame(width: 7, height: 7)
-                                    Text(project.name).lineLimit(1)
-                                }
-                            }
-                            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-                            .tint(isSelected ? selectedForeground : nil)
-                            .help("Move to project")
-                        }
-                        ForEach(task["labels"].list.map(\.text).filter { !$0.isEmpty }, id: \.self) { name in
-                            Text(store.record("labels", id: name)?.name ?? name).lineLimit(1).fixedSize().padding(.horizontal, 6).padding(.vertical, 1)
-                                .background(Color.secondary.opacity(0.12), in: .capsule)
-                        }
-                        if !task["subtasks"].list.isEmpty { Label("\(task["subtasks"].list.filter { $0.object["completed"]?.flag == true }.count)/\(task["subtasks"].list.count)", systemImage: "checklist") }
-                        if !task["comments"].list.isEmpty { Label("\(task["comments"].list.count)", systemImage: "text.bubble") }
-                        if !task["attachments"].list.isEmpty { Image(systemName: "paperclip") }
-                    }.font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).labelStyle(.titleAndIcon).lineLimit(1)
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 10) { metadata(wrapping: false) }
+                            .labelStyle(.titleAndIcon).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                        VStack(alignment: .leading, spacing: 4) { metadata(wrapping: true) }
+                            .labelStyle(WrappingMetadataLabelStyle(wraps: true))
+                    }.font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -162,6 +131,44 @@ struct TaskRowView: View {
             Button(priority == 4 ? "None" : "Priority \(priority)") { workspace.setPriority([task.id], priority) }
         }
     }
+    @ViewBuilder private func metadata(wrapping: Bool) -> some View {
+        if showsDate, let due = TaskPlanner.dayDate(task) {
+            let time = TaskPlanner.clockValue(task)
+            let text = (compactDate && !overdue && !time.isEmpty ? Self.timeText(time) : due.formatted(.dateTime.month(.abbreviated).day()) + (time.isEmpty ? "" : " · " + Self.timeText(time))) + (TaskPlanner.zoneLabel(task).isEmpty ? "" : " · " + TaskPlanner.zoneLabel(task))
+            Button { choosingDate = true } label: {
+                Label(text, systemImage: task["is_recurring"].flag ? "repeat" : overdue ? "exclamationmark.circle" : time.isEmpty ? "calendar" : "clock")
+                    .foregroundStyle(isSelected ? selectedForeground : overdue ? Color.red : dueToday ? Color.taskfold : Color.secondary)
+            }
+            .buttonStyle(.borderless)
+            .help("Change date")
+            .accessibilityIdentifier("date-\(task.id)")
+        }
+        if let deadline = task.deadline {
+            Label("Deadline " + deadline.formatted(.dateTime.month(.abbreviated).day()), systemImage: "flag.checkered")
+                .foregroundStyle(isSelected ? selectedForeground : deadline < Calendar.current.startOfDay(for: Date()) && !task.completed ? Color.red : Color.secondary)
+                .accessibilityIdentifier("deadline-" + task.id)
+        }
+        if let minutes = task.durationMinutes { Label("\(minutes) min", systemImage: "hourglass").accessibilityIdentifier("duration-" + task.id) }
+        if let project = store.record("projects", id: task.string("project_id")) {
+            Menu { projectOptions } label: {
+                HStack(spacing: 5) {
+                    Circle().fill(Color.project(project.string("color"))).frame(width: 7, height: 7)
+                    Text(project.name).lineLimit(wrapping ? nil : 1).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize(horizontal: !wrapping, vertical: true)
+            .tint(isSelected ? selectedForeground : nil)
+            .help("Move to project")
+        }
+        ForEach(task["labels"].list.map(\.text).filter { !$0.isEmpty }, id: \.self) { name in
+            Text(store.record("labels", id: name)?.name ?? name).lineLimit(wrapping ? nil : 1).fixedSize(horizontal: !wrapping, vertical: true).padding(.horizontal, 6).padding(.vertical, 1)
+                .background(Color.secondary.opacity(0.12), in: .capsule)
+        }
+        if !task["subtasks"].list.isEmpty { Label("\(task["subtasks"].list.filter { $0.object["completed"]?.flag == true }.count)/\(task["subtasks"].list.count)", systemImage: "checklist") }
+        if !task["comments"].list.isEmpty { Label("\(task["comments"].list.count)", systemImage: "text.bubble") }
+        if !task["attachments"].list.isEmpty { Image(systemName: "paperclip") }
+    }
+
     private var accessibilitySummary: String {
         var parts = [task.title]
         if checked { parts.append("completed") }

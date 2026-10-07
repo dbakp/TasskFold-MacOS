@@ -533,3 +533,8 @@ Both own packages pass 68 widget-related tests. Each repo now owns a compiled-wi
 ### 7 October: recorded creation-date filters
 
 Mac owns Created on/before/after controls, canonical query fields, relative negative-day syntax and exact creation-only validation feedback, with the matching iOS implementation in its own repo. Both 460-test Debug packages and 84-test optimized filter/backup/widget suites pass. Mac unsigned universal app/extension Release and native UI-test compilation pass. [Contract](CREATION_DATE_FILTERS.md) and [P0 evidence](P0_IMPLEMENTATION.md#7-october--creation-date-filters-and-precise-feedback) preserve the distinction between local builds/fixtures and installed, paired-account or Mac runtime acceptance. Hierarchy, wildcard/collaboration queries, sliding time windows, ordered sections and native parity gates remain open.
+
+
+## 7 October — wrapping task metadata and complete filter labels
+
+Mac independently owns adaptive compact/wrapped task metadata, a full selected condition label at accessibility sizes and one complete accessible query-feedback message, preserving native selection colors, task actions and persistent contracts. Own unsigned universal app/widget Release and native test-target compilation pass. Eight distinct phone/tablet filter scenarios pass against the corresponding iOS presentation inputs; final helper regressions add two successful reruns. [Detailed checkpoint](P0_IMPLEMENTATION.md#7-october--full-deadline-and-filter-labels-at-large-text) records the iOS phone/tablet user-flow checks, screenshots, diagnostic failures and final verification separately from Mac compilation. Mac runtime and the broader P0/paired/provider/provisioned-widget acceptance gates remain active.
