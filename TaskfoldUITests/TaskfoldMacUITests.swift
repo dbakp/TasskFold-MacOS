@@ -256,6 +256,21 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.otherElements["plannerBlock-planner-report"].waitForExistence(timeout: 10))
     }
 
+    @MainActor func testPlannerEstimateValidationCancelAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--planner-fixture"]; app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["plannerShowAllDay"].waitForExistence(timeout: 10)); app.buttons["plannerShowAllDay"].click()
+        let report = app.buttons["plannerAllDay-planner-report"]; XCTAssertTrue(report.waitForExistence(timeout: 5)); report.click()
+        let estimate = app.textFields["plannerEstimate"]; XCTAssertTrue(estimate.waitForExistence(timeout: 5)); XCTAssertEqual(estimate.value as? String, "25")
+        estimate.click(); estimate.typeKey("a", modifierFlags: .command); estimate.typeText("0")
+        XCTAssertFalse(app.buttons["plannerSave"].isEnabled); XCTAssertTrue(app.staticTexts["plannerEstimateValidation"].exists)
+        estimate.click(); estimate.typeKey("a", modifierFlags: .command); estimate.typeText("45")
+        XCTAssertTrue(app.buttons["plannerSave"].isEnabled); XCTAssertFalse(app.staticTexts["plannerEstimateValidation"].exists)
+        app.buttons["Cancel"].click(); XCTAssertTrue(report.waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["plannerUndo"].exists)
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=calendar", "--calendar-mode=day"]; app.launch()
+        app.buttons["Calendar"].firstMatch.click(); XCTAssertTrue(app.buttons["plannerShowAllDay"].waitForExistence(timeout: 10)); app.buttons["plannerShowAllDay"].click()
+        XCTAssertTrue(report.waitForExistence(timeout: 5)); report.click(); XCTAssertEqual(estimate.value as? String, "25"); app.buttons["Cancel"].click()
+    }
+
     @MainActor func testSavedFilterBoardLastCardCompletionAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--parity-fixture"]; app.launch()
         XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
