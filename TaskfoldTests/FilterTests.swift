@@ -2,6 +2,89 @@ import XCTest
 @testable import TaskfoldCore
 
 final class FilterTests: XCTestCase {
+
+    func testNamePatternProjectionStaysBoundedWithThreeThousandTasksAndLongPatterns() throws {
+        let rows = (0..<3000).map { task("volume-\($0)", ["project_id": .string("p")]) }
+        let rule = FilterRule.predicate("project_name", String(repeating: "*a", count: 59) + "c")
+        let cache = TaskCache(); cache.update(rows)
+        let started = Date()
+        for day in 7..<15 {
+            let query = TaskQuery(scope: .all, today: String(format: "2026-10-%02d", day), filter: rule, filterProjects: [.init(id: "p", name: String(repeating: "a", count: 399) + "b")])
+            XCTAssertTrue(cache.matching(query).isEmpty)
+        }
+        XCTAssertLessThan(Date().timeIntervalSince(started), 2, "Name patterns must resolve against the catalog, not once per task.")
+    }
+    func testNamePatternsAnchorFoldEscapeAndBoundWork() throws {
+        for (name, pattern, expected) in [("Network", "*Work", true), ("Artwork admin", "*Work", false), ("HOMEoffice", "home*", true), ("Café meeting", "cafe*", true), ("Admin Work Calls", "*Work*", true), ("Urgent", "urgent*", true), ("Work*", #"Work\*"#, true), ("Working", #"Work\*"#, false), ("a\\b", #"a\\b"#, true), ("abcd", "a**d", true), ("ab", "a?", false)] {
+            XCTAssertEqual(FilterNamePattern.matches(name, pattern: pattern), expected, "\(name) / \(pattern)")
+        }
+        for value in ["", " \n ", "abc\nxyz", String(repeating: "*", count: 121), #"bad\q"#, "bad\\"] { XCTAssertThrowsError(try FilterNamePattern.canonical(value)) }
+        XCTAssertFalse(FilterNamePattern.matches(String(repeating: "x", count: 401), pattern: "*"))
+        XCTAssertFalse(FilterNamePattern.matches(String(repeating: "a", count: 399) + "b", pattern: String(repeating: "*a", count: 59) + "c"))
+    }
+    func testNamePatternParserSeparatesLiteralIDsAndDynamicPatterns() throws {
+        let literal = FilterContext(projects: [Record(["id": .string("literal"), "name": .string("Work*")])], labels: [Record(["id": .string("star"), "name": .string("home*")])])
+        for (input, field, value) in [("#*Work", "project_name", "*Work"), ("%home*", "label_name", "home*"), ("@home*", "label_name", "home*"), ("/*Work*", "section_name", "*Work*"), ("/Meetings", "section_name", "Meetings"), (#"project matching:"*Work Admin*""#, "project_name", "*Work Admin*"), (#"label matching:"AND*""#, "label_name", "AND*")] {
+            let rule = try parse(input)
+            XCTAssertEqual(rule, .predicate(field, value))
+            XCTAssertEqual(try parse(rule.expression(in: context)), rule)
+            XCTAssertEqual(try FilterRule(document: rule.document), rule)
+            XCTAssertTrue(rule.captureDefaults(in: context, today: "2026-10-07").isEmpty)
+        }
+        XCTAssertEqual(try parse(#"#"Work*""#, context: literal), .predicate("project", "literal"))
+        XCTAssertEqual(try parse(#"%"home*""#, context: literal), .predicate("label", "star"))
+        XCTAssertThrowsError(try parse("##Work"))
+        for field in FilterNamePattern.expressions.keys {
+            for value: JSON in [.null, .number(1), .string("")] { XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string(field), "value": value]))) }
+        }
+    }
+    func testNamePatternsRespectCatalogIdentityLegacyLabelsAndMissingReferencesUnderNegation() throws {
+        let projects = [FilterReference(id: "p", name: "Network")], sections = [FilterReference(id: "s", name: "Work Calls")], labels = [FilterReference(id: "l", name: "Homeoffice")]
+        let row = task("work", ["project_id": .string("p"), "section_id": .string("s"), "labels": .array([.string("l")])])
+        func check(_ input: String, _ task: Record, _ p: [FilterReference] = projects, _ s: [FilterReference] = sections, _ l: [FilterReference] = labels) throws -> Bool {
+            try parse(input).matches(task, today: "2026-10-07", userID: "owner", labels: l, timeZone: "UTC", projects: p, sections: s)
+        }
+        XCTAssertTrue(try check("#*Work & /*Calls & %home*", row))
+        var legacy = row; legacy["labels"] = .array([.string("Homeoffice")]); XCTAssertTrue(try check("%home*", legacy))
+        XCTAssertFalse(try check("!#*Work", row, [])); XCTAssertFalse(try check("!/*", row, projects, []))
+        XCTAssertFalse(try check("!%home*", row, projects, sections, []))
+        XCTAssertFalse(try check("!#*Work | all", row, []))
+        XCTAssertFalse(try check("!%home*", row, [], sections, labels))
+        XCTAssertFalse(try check("!/*", row, projects, [FilterReference(id: "s", name: "Work Calls", projectID: "another-project")], labels))
+        XCTAssertTrue(try check("!/*", task("inbox"), [], [], []))
+        XCTAssertFalse(try check("/*", task("inbox"), [], [], []))
+        XCTAssertTrue(try check("!#*School", row))
+        XCTAssertFalse(try check("%home*", row, projects, sections, [FilterReference(id: "other-account-label", name: "Homeoffice")]))
+    }
+    func testNamePatternCacheReevaluatesRenamesNewTargetsAndRevocationWithoutTaskMutation() throws {
+        let cache = TaskCache(), row = task("task", ["project_id": .string("p")])
+        cache.update([row])
+        var query = TaskQuery(scope: .all, filter: try parse("#*Work"), filterProjects: [FilterReference(id: "p", name: "Artwork")])
+        XCTAssertEqual(cache.matching(query).map(\.id), [row.id]); let count = cache.computationCount
+        query.filterProjects[0].name = "Studio"; XCTAssertTrue(cache.matching(query).isEmpty); XCTAssertGreaterThan(cache.computationCount, count)
+        query.filterProjects += [FilterReference(id: "new", name: "Network")]; var next = row; next["id"] = .string("next"); next["project_id"] = .string("new"); cache.update([row, next]); XCTAssertEqual(cache.matching(query).map(\.id), [next.id])
+        query.filter = try parse("!#*Work"); query.filterProjects = []; XCTAssertTrue(cache.matching(query).isEmpty)
+        XCTAssertEqual(cache.tasks.first { $0.id == row.id }, row)
+        let snapshot = Snapshot(tables: ["saved_views": [Record(["id": .string("names"), "query_ast": query.filter!.document])]], pending: [Mutation(table: "saved_views", recordID: "names", method: "PATCH", fields: ["query_ast": query.filter!.document])])
+        XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot)), snapshot)
+    }
+    func testNamePatternWidgetMembershipUsesSameCatalogAndPublishesNoPatterns() throws {
+        let row = task("visible", ["project_id": .string("p"), "section_id": .string("s"), "labels": .array([.string("Waiting")])])
+        let rule = try parse("#*Work & /Calls & %wait*")
+        let projects = [Record(["id": .string("p"), "name": .string("Artwork")])], sections = [Record(["id": .string("s"), "name": .string("Calls")])], labels = [Record(["id": .string("l"), "name": .string("Waiting")])]
+        let views = [Record(["id": .string("v"), "name": .string("Work calls"), "query_ast": rule.document])]
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let now = try XCTUnwrap(Dates.parse("2026-10-07", calendar: calendar))
+        let payload = WidgetProjection.listPayload(tasks: [row], projects: projects, labels: labels, sections: sections, savedViews: views, account: "owner", now: now, calendar: calendar)
+        let filter = try XCTUnwrap(payload.first { $0.object["kind"] == .string("filter") })
+        XCTAssertEqual(filter.object["days"]?.object.count, 8)
+        for ids in filter.object["days"]!.object.values { XCTAssertEqual(ids.list, [.string(row.id)]) }
+        let encoded = String(decoding: try JSONEncoder().encode(payload), as: UTF8.self)
+        XCTAssertFalse(encoded.contains("query_ast")); XCTAssertFalse(encoded.contains("*Work")); XCTAssertFalse(encoded.contains("wait*"))
+        let revoked = WidgetProjection.listPayload(tasks: [row], projects: [], labels: labels, sections: sections, savedViews: views, account: "owner", now: now, calendar: calendar)
+        let revokedFilter = try XCTUnwrap(revoked.first { $0.object["kind"] == .string("filter") })
+        XCTAssertTrue(revokedFilter.object["days"]!.object.values.allSatisfy { $0.list.isEmpty })
+    }
     func testCreationExpressionsCanonicalizeAndRoundTripWithoutChangingOldDateFields() throws {
         for (input, field, value) in [("created:today", "created_on", "today"), ("created on:Jan 3 2023", "created_on", "jan 3 2023"), ("created before: -365 days", "created_before", "365 days ago"), ("created after: yesterday", "created_after", "yesterday"), ("created:-0 days", "created_on", "today"), (#"created after:"in 3 days""#, "created_after", "in 3 days")] {
             let rule = try parse(input)
@@ -356,7 +439,7 @@ final class FilterTests: XCTestCase {
         let renamed = FilterContext(projects: [Record(["id": .string("work-id"), "name": .string("Renamed")])], labels: context.labels)
         XCTAssertNoThrow(try rule.validate(in: renamed)); XCTAssertEqual(try parse(rule.expression(in: renamed), context: renamed), rule)
         XCTAssertThrowsError(try rule.validate(in: FilterContext(projects: renamed.projects)))
-        for expression in ["#missing", "%missing", "#", "%", "@", "#Work*", "%wait*"] { XCTAssertThrowsError(try parse(expression), expression) }
+        for expression in ["#missing", "%missing", "#", "%", "@"] { XCTAssertThrowsError(try parse(expression), expression) }
     }
     func testNewConditionsRoundTripWithoutInventingCaptureSettings() throws {
         let rule = try parse(#"search:"send email" & no time & no labels & recurring & #Work"#)

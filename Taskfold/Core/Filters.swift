@@ -1,7 +1,7 @@
 import Foundation
 
 struct FilterFailure: LocalizedError, Equatable { var message: String; var errorDescription: String? { message } }
-struct FilterReference: Hashable, Sendable { var id: String; var name: String }
+struct FilterReference: Hashable, Sendable { var id: String; var name: String; var projectID: String? = nil }
 struct FilterContext {
     var projects: [Record] = [], sections: [Record] = [], labels: [Record] = []
     var userID = ""
@@ -149,10 +149,62 @@ enum FilterCreationReference {
     }
 }
 
+/// Name patterns are explicit dynamic selectors; exact targets retain their stored IDs.
+enum FilterNamePattern {
+    static let expressions = ["project_name": "project matching", "section_name": "section matching", "label_name": "label matching"]
+    static func canonical(_ raw: String) throws -> String {
+        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty, value.unicodeScalars.count <= 120,
+              !value.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }) else {
+            throw FilterFailure(message: "Enter a name pattern of 1–120 characters. Use * for any characters.")
+        }
+        var escaped = false
+        for scalar in value.unicodeScalars {
+            if escaped {
+                guard scalar == "*" || scalar == "\\" else { throw FilterFailure(message: "Only * and backslash can be escaped in a name pattern.") }
+                escaped = false
+            } else if scalar == "\\" { escaped = true }
+        }
+        guard !escaped else { throw FilterFailure(message: "Finish the escaped character in the name pattern.") }
+        return value
+    }
+    static func matches(_ name: String, pattern: String) -> Bool {
+        guard let pattern = try? canonical(pattern), name.unicodeScalars.count <= 400 else { return false }
+        let locale = Locale(identifier: "en_US_POSIX")
+        func folded(_ value: String) -> [Unicode.Scalar] {
+            Array(value.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: locale).unicodeScalars)
+        }
+        // Bounded dynamic programming; wildcard matching cannot backtrack exponentially.
+        var tokens: [Unicode.Scalar?] = [], escaped = false
+        for scalar in folded(pattern) {
+            if escaped { tokens.append(scalar); escaped = false }
+            else if scalar == "\\" { escaped = true }
+            else { tokens.append(scalar == "*" ? nil : scalar) }
+        }
+        let characters = folded(name)
+        var previous = [Bool](repeating: false, count: characters.count + 1); previous[0] = true
+        for token in tokens {
+            var next = [Bool](repeating: false, count: previous.count)
+            if token == nil { next[0] = previous[0] }
+            for i in characters.indices {
+                next[i + 1] = token.map { previous[i] && $0 == characters[i] } ?? (previous[i + 1] || next[i])
+            }
+            previous = next
+        }
+        return previous[characters.count]
+    }
+}
+
+/// Resolve each name pattern once per catalog/query, rather than for every task.
+struct FilterNameBinding {
+    var field: String, value: String
+    var ids: Set<String>, names: Set<String>
+}
+
 /// Versioned query AST shared by app lists, exported backups and widget projections.
 indirect enum FilterRule: Hashable, Sendable {
     case predicate(String, String), and([FilterRule]), or([FilterRule]), not(FilterRule)
-    static let fields = ["all", "inbox", "today", "overdue", "next", "no_date", "priority", "project", "section", "label", "completed", "assignee", "due", "before", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline", "deadline", "deadline_before", "duration_max", "no_estimate", "search", "recurring", "no_time", "no_labels"] + FilterDateReference.expressions.keys.sorted() + FilterTimeReference.expressions.keys.sorted() + FilterCreationReference.expressions.keys.sorted()
+    static let fields = ["all", "inbox", "today", "overdue", "next", "no_date", "priority", "project", "section", "label", "completed", "assignee", "due", "before", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline", "deadline", "deadline_before", "duration_max", "no_estimate", "search", "recurring", "no_time", "no_labels"] + FilterDateReference.expressions.keys.sorted() + FilterTimeReference.expressions.keys.sorted() + FilterCreationReference.expressions.keys.sorted() + FilterNamePattern.expressions.keys.sorted()
     var json: JSON {
         switch self {
         case .predicate(let field, let value): return .object(["op": .string("predicate"), "field": .string(field), "value": .string(value)])
@@ -186,7 +238,10 @@ indirect enum FilterRule: Hashable, Sendable {
             if ["recurring", "no_time", "no_labels"].contains(field) {
                 guard row["value"] == .string("") else { throw FilterFailure(message: "This condition does not take a value.") }
             }
-            if FilterCreationReference.expressions[field] != nil {
+            if FilterNamePattern.expressions[field] != nil {
+                guard case .string = row["value"] else { throw FilterFailure(message: "Enter a name pattern.") }
+                self = .predicate(field, try FilterNamePattern.canonical(value))
+            } else if FilterCreationReference.expressions[field] != nil {
                 guard case .string = row["value"] else { throw FilterFailure(message: "Enter a creation date or a short date phrase.") }
                 self = .predicate(field, try FilterCreationReference.canonical(value))
             } else if FilterDateReference.expressions[field] != nil {
@@ -215,11 +270,43 @@ indirect enum FilterRule: Hashable, Sendable {
     var includesCompletion: Bool {
         switch self { case .predicate(let field, _): return field == "completed"; case .and(let r), .or(let r): return r.contains { $0.includesCompletion }; case .not(let r): return r.includesCompletion }
     }
-    func matches(_ task: Record, today: String, userID: String, labels: [FilterReference], timeZone: String) -> Bool {
+    func nameBindings(projects: [FilterReference], sections: [FilterReference], labels: [FilterReference]) -> [FilterNameBinding] {
         switch self {
-        case .and(let rules): return rules.allSatisfy { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone) }
-        case .or(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone) }
-        case .not(let rule): return !rule.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone)
+        case .and(let rules), .or(let rules): return rules.flatMap { $0.nameBindings(projects: projects, sections: sections, labels: labels) }
+        case .not(let rule): return rule.nameBindings(projects: projects, sections: sections, labels: labels)
+        case .predicate(let field, let value):
+            guard FilterNamePattern.expressions[field] != nil else { return [] }
+            let rows = field == "project_name" ? projects : field == "section_name" ? sections : labels
+            let matching = rows.filter { FilterNamePattern.matches($0.name, pattern: value) }
+            return [FilterNameBinding(field: field, value: value, ids: Set(matching.map(\.id)), names: Set(matching.map(\.name)))]
+        }
+    }
+    /// Missing catalog references remain excluded even under NOT or OR.
+    private func nameReferencesAvailable(_ task: Record, projects: [FilterReference], sections: [FilterReference], labels: [FilterReference]) -> Bool {
+        switch self {
+        case .and(let rules), .or(let rules): return rules.allSatisfy { $0.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels) }
+        case .not(let rule): return rule.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels)
+        case .predicate(let field, _):
+            if FilterNamePattern.expressions[field] != nil, !task.string("project_id").isEmpty, !projects.contains(where: { $0.id == task.string("project_id") }) { return false }
+            if field == "project_name" { let id = task.string("project_id"); return id.isEmpty || projects.contains { $0.id == id } }
+            if field == "section_name" { let id = task.string("section_id"); return id.isEmpty || sections.contains { $0.id == id && ($0.projectID == nil || $0.projectID == task.string("project_id")) } }
+            if field == "label_name" {
+                return task["labels"].list.allSatisfy { stored in
+                    guard case .string(let value) = stored else { return false }
+                    return labels.contains { $0.id == value || $0.name == value }
+                }
+            }
+            return true
+        }
+    }
+    func matches(_ task: Record, today: String, userID: String, labels: [FilterReference], timeZone: String,
+                 projects: [FilterReference] = [], sections: [FilterReference] = [], nameBindings supplied: [FilterNameBinding]? = nil) -> Bool {
+        let bindings = supplied ?? nameBindings(projects: projects, sections: sections, labels: labels)
+        guard nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels) else { return false }
+        switch self {
+        case .and(let rules): return rules.allSatisfy { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings) }
+        case .or(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings) }
+        case .not(let rule): return !rule.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings)
         case .predicate(let field, let value):
             let day = Self.plannedDay(task, timeZone: timeZone), deadline = task.string("deadline_date")
             func next(_ date: String) -> Bool {
@@ -262,6 +349,12 @@ indirect enum FilterRule: Hashable, Sendable {
             case "next": return next(day)
             case "no_date": return day.isEmpty
             case "priority": return task.priority == Int(value)
+            case "project_name", "section_name", "label_name":
+                guard let binding = bindings.first(where: { $0.field == field && $0.value == value }) else { return false }
+                if field != "label_name" { return binding.ids.contains(task.string(field == "project_name" ? "project_id" : "section_id")) }
+                return task["labels"].list.contains { stored in
+                    guard case .string(let item) = stored else { return false }; return binding.ids.contains(item) || binding.names.contains(item)
+                }
             case "project": return task.string("project_id") == value
             case "section": return task.string("section_id") == value
             case "label": return task["labels"].list.contains(.string(value)) || labels.first(where: { $0.id == value }).map { task["labels"].list.contains(.string($0.name)) } == true
@@ -346,7 +439,7 @@ indirect enum FilterRule: Hashable, Sendable {
         case .or(let rules): return rules.map { "(" + $0.expression(in: context) + ")" }.joined(separator: " OR ")
         case .not(let rule): return "NOT (" + rule.expression(in: context) + ")"
         case .predicate(let field, let value):
-            if let name = FilterDateReference.expressions[field] ?? FilterTimeReference.expressions[field] ?? FilterCreationReference.expressions[field] { return name + ":" + quote(value) }
+            if let name = FilterDateReference.expressions[field] ?? FilterTimeReference.expressions[field] ?? FilterCreationReference.expressions[field] ?? FilterNamePattern.expressions[field] { return name + ":" + quote(value) }
             switch field {
             case "all": return "all"
             case "inbox": return "inbox"
@@ -429,17 +522,23 @@ struct FilterParser {
         if consume(["not", "!"]) { return .not(try atom(depth: depth + 1)) }
         if consume(["("]) { let rule = try parseOr(depth: depth + 1); guard consume([")"]) else { throw FilterFailure(message: "Close the filter parenthesis.") }; return rule }
         var token = tokens[cursor]; cursor += 1
-        if ["date", "effective-due", "deadline", "time", "created"].contains(token.lowercased()), !quotedTokens.contains(cursor - 1), cursor < tokens.count {
+        if ["date", "effective-due", "deadline", "time", "created", "project", "section", "label"].contains(token.lowercased()), !quotedTokens.contains(cursor - 1), cursor < tokens.count {
             let next = tokens[cursor].lowercased()
-            if ["before:", "after:", "on:"].contains(next) || next.hasPrefix("before:") || next.hasPrefix("after:") || next.hasPrefix("on:") { token += " " + tokens[cursor]; cursor += 1 }
+            if next.hasPrefix("matching:") || ["before:", "after:", "on:"].contains(next) || next.hasPrefix("before:") || next.hasPrefix("after:") || next.hasPrefix("on:") { token += " " + tokens[cursor]; cursor += 1 }
         }
         let lower = token.lowercased(), scalars = token.unicodeScalars
         if scalars.first == "#" {
             let target = String(String.UnicodeScalarView(scalars.dropFirst()))
+            if !quotedTokens.contains(cursor - 1), target.contains("*") { return .predicate("project_name", try FilterNamePattern.canonical(target)) }
             if target.caseInsensitiveCompare("Inbox") == .orderedSame { return .predicate("inbox", "") }
             return .predicate("project", try context.resolve("project", target))
         }
-        if scalars.first == "%" || scalars.first == "@" { return .predicate("label", try context.resolve("label", String(String.UnicodeScalarView(scalars.dropFirst())))) }
+        if scalars.first == "%" || scalars.first == "@" {
+            let target = String(String.UnicodeScalarView(scalars.dropFirst()))
+            if !quotedTokens.contains(cursor - 1), target.contains("*") { return .predicate("label_name", try FilterNamePattern.canonical(target)) }
+            return .predicate("label", try context.resolve("label", target))
+        }
+        if scalars.first == "/" { return .predicate("section_name", try FilterNamePattern.canonical(String(String.UnicodeScalarView(scalars.dropFirst())))) }
         if !quotedTokens.contains(cursor - 1), ["all", "inbox", "today", "overdue", "recurring"].contains(lower) { return .predicate(lower, "") }
         if lower == "no", !quotedTokens.contains(cursor - 1), cursor < tokens.count, !quotedTokens.contains(cursor), ["date", "deadline", "estimate", "time", "labels", "priority"].contains(tokens[cursor].lowercased()) {
             let kind = tokens[cursor].lowercased(); cursor += 1
@@ -452,6 +551,9 @@ struct FilterParser {
         if let colon = scalars.firstIndex(of: ":") {
             let field = String(String.UnicodeScalarView(scalars[..<colon])).lowercased()
             let value = String(String.UnicodeScalarView(scalars[scalars.index(after: colon)...]))
+            if let nameField = FilterNamePattern.expressions.first(where: { $0.value == field })?.key {
+                return .predicate(nameField, try FilterNamePattern.canonical(readValue(starting: value)))
+            }
             if let creationField = FilterCreationReference.expressions.first(where: { $0.value == field || ($0.key == "created_on" && field == "created on") })?.key {
                 return .predicate(creationField, try FilterCreationReference.canonical(readValue(starting: value)))
             }

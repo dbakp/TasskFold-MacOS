@@ -1,0 +1,259 @@
+{
+  "checkpoint": "2026-10-07 saved-filter name patterns",
+  "repository": "mac",
+  "baseCommit": "85b95f00f4a2fcd457bf3c00aae27e74730d63d8",
+  "inputManifest": "docs/name-pattern-inputs-sha256.json",
+  "inputManifestSHA256": "c9c53ba4c7cdbacbe354b58ba03b8f48a35d586fde6f6f1d818e4a4365b9ea41",
+  "verifiedInputCounts": {
+    "nativeAppWidget": 74,
+    "nativeUITests": 1,
+    "core": 59,
+    "sql": 1
+  },
+  "ownCore": {
+    "tests": 508,
+    "skipped": 4,
+    "failures": 0,
+    "log": "/tmp/taskfold-name-pattern-mac-core-verified.log",
+    "optimizedSelection": {
+      "tests": 79,
+      "skipped": 0,
+      "failures": 0,
+      "log": "/tmp/taskfold-name-pattern-mac-optimized.log"
+    }
+  },
+  "ownBuilds": {
+    "result": "passed",
+    "signing": "disabled",
+    "release": "/tmp/taskfold-name-pattern-mac-release-final.log",
+    "debug": "/tmp/taskfold-name-pattern-mac-debug-final.log",
+    "nativeSource": "/tmp/taskfold-name-pattern-mac-native-final-source",
+    "macArchitectures": [
+      "x86_64",
+      "arm64"
+    ],
+    "scope": "App/widget Release and Debug UI-test-target compilation; Mac runtime was not opened. Native app/widget input bytes match final captures. Updated iOS UI-test menu selector was separately captured and compiled; it does not change Release app/widget inputs.",
+    "logSHA256": {
+      "release": "cc8a30a71aa20b25489527ae259ed1be7209290d6374e03c786e844ab0c22a5d",
+      "debug": "0bc344e2ddf2e9bdf86518187a5cdacbbe8333f5edb2019639a6a2a178190496"
+    }
+  },
+  "sql": {
+    "project": "zqxflydiyfjeedqvyova",
+    "ownSuite": "supabase/tests/name_pattern_filters.sql",
+    "ownSuiteSHA256": "078e388572567c7dc3d98cbc8eaf23c9cf9a5342476e5946d7e7609b100f74bd",
+    "result": "passed",
+    "scope": "Actual authenticated/anonymous SQL roles with simulated JWT claims; owner CRUD and pattern preservation, foreign/anonymous denial. Not a real native sign-in or HTTP transport test.",
+    "transaction": "rolled back",
+    "fixtureUsers": 0,
+    "fixtureViews": 0,
+    "schemaChanges": false
+  },
+  "remainingAcceptance": [
+    "Real paired native account, online/offline, access-revocation and restore flows",
+    "Mac runtime (not authorized)",
+    "Provisioned widget hosts and physical devices",
+    "Full surface and VoiceOver audit",
+    "Remaining query grammar, hierarchy, named assignees and ordered query sections",
+    "Full P0 acceptance"
+  ],
+  "diagnosticsPreserved": [
+    "/tmp/taskfold-name-pattern-phone.xcresult",
+    "/tmp/taskfold-name-pattern-tablet.xcresult",
+    "/tmp/taskfold-name-pattern-ios-debug-menu.log"
+  ],
+  "diagnosticNotes": "Initial UI walks failed because the test selector lacked new menu row ranks and visible anchors. The selector was corrected. A subsequent SDK-cache rebuild hit disk exhaustion; that job reached terminal failure before a new attempt. Only task-owned rebuildable caches from completed builds were reclaimed. Source captures, app products, logs and result bundles were preserved.",
+  "nativeIOSRuntime": {
+    "scope": "Isolated DEBUG iOS app, local four-task workspace; real native UI and persisted account cache. Not live native account/paired HTTP transport. Copied Mac docs retain explicitly iOS runtime scope.",
+    "bundleIDs": [
+      "com.dbakp.taskfold.namepatterntests",
+      "com.dbakp.taskfold.namepatterntests.widgets",
+      "com.dbakp.taskfold.namepatterntests.uitests"
+    ],
+    "testProjectOverlay": "/tmp/taskfold-name-pattern-ios-test-menu-overlay.json",
+    "runs": [
+      {
+        "resultBundle": "/tmp/taskfold-name-pattern-phone-menu.xcresult",
+        "log": "/tmp/taskfold-name-pattern-phone-menu.log",
+        "summary": {
+          "devicesAndConfigurations": [
+            {
+              "device": {
+                "architecture": "arm64",
+                "deviceId": "25598FAB-E460-43F4-949D-D6BD9F3E6B02",
+                "deviceName": "Taskfold name patterns iPhone",
+                "modelName": "iPhone 17 Pro",
+                "osBuildNumber": "23F77",
+                "osVersion": "26.5",
+                "platform": "iOS Simulator"
+              },
+              "expectedFailures": 0,
+              "failedTests": 0,
+              "passedTests": 2,
+              "skippedTests": 0,
+              "testPlanConfiguration": {
+                "configurationId": "1",
+                "configurationName": "Test Scheme Action"
+              }
+            }
+          ],
+          "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "finishTime": 1791390058.557,
+          "passedTests": 2,
+          "result": "Passed",
+          "runtimeWarnings": [],
+          "skippedTests": 0,
+          "startTime": 1791389774.474,
+          "statistics": [],
+          "testFailures": [],
+          "title": "Test - Taskfold",
+          "topInsights": [],
+          "totalTestCount": 2
+        }
+      },
+      {
+        "resultBundle": "/tmp/taskfold-name-pattern-tablet-menu.xcresult",
+        "log": "/tmp/taskfold-name-pattern-tablet-menu.log",
+        "summary": {
+          "devicesAndConfigurations": [
+            {
+              "device": {
+                "architecture": "arm64",
+                "deviceId": "8C2818F3-9B3F-4A1F-BBD9-28DE76F82133",
+                "deviceName": "Taskfold name patterns iPad",
+                "modelName": "iPad Pro 11-inch (M5)",
+                "osBuildNumber": "23F77",
+                "osVersion": "26.5",
+                "platform": "iOS Simulator"
+              },
+              "expectedFailures": 0,
+              "failedTests": 0,
+              "passedTests": 2,
+              "skippedTests": 0,
+              "testPlanConfiguration": {
+                "configurationId": "1",
+                "configurationName": "Test Scheme Action"
+              }
+            }
+          ],
+          "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "finishTime": 1791390046.187,
+          "passedTests": 2,
+          "result": "Passed",
+          "runtimeWarnings": [],
+          "skippedTests": 0,
+          "startTime": 1791389774.474,
+          "statistics": [],
+          "testFailures": [],
+          "title": "Test - Taskfold",
+          "topInsights": [],
+          "totalTestCount": 2
+        }
+      }
+    ],
+    "captures": [
+      {
+        "path": "docs/name-patterns/final/phone-light-results.png",
+        "source": "/tmp/taskfold-name-pattern-phone-menu-attachments/052D909C-58FA-4271-8FF5-6CEC6DF5FDB8.png",
+        "sha256": "4383aecf356aff0078d30bc1a48b41583382da42c4e361879ae02818bd154755",
+        "scope": "iOS Simulator phone, light, results; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      },
+      {
+        "path": "docs/name-patterns/final/phone-light-expression.png",
+        "source": "/tmp/taskfold-name-pattern-phone-menu-attachments/4F651035-2FEE-4670-A214-D6C3731BAC5C.png",
+        "sha256": "54449625d84bb50aeabd011dd0a061972ffc9621011a18ec2f59728a8231c75d",
+        "scope": "iOS Simulator phone, light, expression; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      },
+      {
+        "path": "docs/name-patterns/final/phone-light-builder.png",
+        "source": "/tmp/taskfold-name-pattern-phone-menu-attachments/672A2FB7-BE19-4EFC-B362-AECA4A4C68D6.png",
+        "sha256": "e1e34daa663e52331640bfc7d5a5ffaa8b1764eea8c3d001a5deb428f7b1b27f",
+        "scope": "iOS Simulator phone, light, builder; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      },
+      {
+        "path": "docs/name-patterns/final/phone-dark-largest-results.png",
+        "source": "/tmp/taskfold-name-pattern-phone-menu-attachments/7619A03B-145F-47CF-B908-85F0CA1C0E16.png",
+        "sha256": "80e480add732e88512a260a8d983d9276e80243ecd2ad43a2886507de493f39c",
+        "scope": "iOS Simulator phone, dark-largest, results; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      },
+      {
+        "path": "docs/name-patterns/final/phone-dark-largest-expression.png",
+        "source": "/tmp/taskfold-name-pattern-phone-menu-attachments/53AA7558-C936-4482-99BE-F4CAB9E175D0.png",
+        "sha256": "a3c0803ab4f656bfa3fd4fbeca97a7597456da2703b79e478a80a3581034bc8f",
+        "scope": "iOS Simulator phone, dark-largest, expression; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      },
+      {
+        "path": "docs/name-patterns/final/phone-dark-largest-builder.png",
+        "source": "/tmp/taskfold-name-pattern-phone-menu-attachments/DA3E66D2-1FE9-4EA3-BE79-1A8248BCEF99.png",
+        "sha256": "23c0cad533db5435e4bc4efaa2c079488e110b83339a32f43479344d637f674e",
+        "scope": "iOS Simulator phone, dark-largest, builder; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      },
+      {
+        "path": "docs/name-patterns/final/tablet-light-results.png",
+        "source": "/tmp/taskfold-name-pattern-tablet-menu-attachments/8D5118E2-232C-4606-B856-63B5A682558B.png",
+        "sha256": "c33329b1a7b203fb1b14f0ad363bbbde5230873baca87f7b0c69732c7149e30b",
+        "scope": "iOS Simulator tablet, light, results; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      },
+      {
+        "path": "docs/name-patterns/final/tablet-light-expression.png",
+        "source": "/tmp/taskfold-name-pattern-tablet-menu-attachments/70C35C41-4A55-451D-86EC-F15B15AD9B67.png",
+        "sha256": "8a8fcc03ce0f2adb0c9817290b1f43952cfcab975a7e005cfb97402343d2c501",
+        "scope": "iOS Simulator tablet, light, expression; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      },
+      {
+        "path": "docs/name-patterns/final/tablet-light-builder.png",
+        "source": "/tmp/taskfold-name-pattern-tablet-menu-attachments/C9234DDB-03AF-4C47-ACFD-30BE54967C6E.png",
+        "sha256": "e9d48983510423bded6dc9ca1f7a101d31ec82ce7f4cf18c89fcd3b252ecd06c",
+        "scope": "iOS Simulator tablet, light, builder; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      },
+      {
+        "path": "docs/name-patterns/final/tablet-dark-largest-results.png",
+        "source": "/tmp/taskfold-name-pattern-tablet-menu-attachments/CA02E743-6185-4DB0-86D4-992F0CB4E585.png",
+        "sha256": "7c83764c6a14a2aaba6f0b1d36df97e82e2d9f89d55e76f448261d65288c0806",
+        "scope": "iOS Simulator tablet, dark-largest, results; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      },
+      {
+        "path": "docs/name-patterns/final/tablet-dark-largest-expression.png",
+        "source": "/tmp/taskfold-name-pattern-tablet-menu-attachments/69F9CFA3-DC74-4FF0-BE2E-F6AEA341AFC5.png",
+        "sha256": "15cd88c5ed4fae7efa417c9975148f234cf6ea950858bc301408cfb47b679c24",
+        "scope": "iOS Simulator tablet, dark-largest, expression; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      },
+      {
+        "path": "docs/name-patterns/final/tablet-dark-largest-builder.png",
+        "source": "/tmp/taskfold-name-pattern-tablet-menu-attachments/4BD35992-B93A-4817-9475-48F69CA7CD7A.png",
+        "sha256": "199382fce95616a493a7648900474aaf71a623c4ce54cbf9be28b72a8c0fac87",
+        "scope": "iOS Simulator tablet, dark-largest, builder; unmodified native screenshot",
+        "modified": false,
+        "inspected": true
+      }
+    ],
+    "captureNotes": "Largest text uses native scrolling. Phone dark builder capture is a lower form viewport without the selected pattern visible; selected condition is established by functional assertions. Expressions/results are visible. Long phone list titles truncate. Not a full surface or VoiceOver audit.",
+    "testProjectOverlaySHA256": "ed77e675c95c51003decce0d3ea58dc80f272e88510c5362a4a02395f2fbb4bd"
+  }
+}

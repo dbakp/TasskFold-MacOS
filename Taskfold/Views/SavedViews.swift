@@ -21,7 +21,7 @@ struct SavedViewEditor: View {
     @FocusState private var focusedField: String?
     private static let choices: [(String, String)] = [
         ("all","All tasks"),("search","Keywords"),("created_on","Created on"),("created_before","Created before"),("created_after","Created after"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
-        ("priority","Priority"),("project","Project"),("section","Section"),("label","Label"),("completed","Completion"),("assignee","Assigned to"),
+        ("priority","Priority"),("project","Project"),("project_name","Project name matches"),("section","Section"),("section_name","Section name matches"),("label","Label"),("label_name","Label name matches"),("completed","Completion"),("assignee","Assigned to"),
         ("due","Planned on date"),("before","Planned before date"),("deadline_today","Deadline today"),("deadline_overdue","Past deadline"),("deadline_next","Deadline in next days"),("no_deadline","No deadline"),("deadline","Deadline on date"),("deadline_before","Deadline before date"),("duration_max","Estimate up to minutes"),("no_estimate","No estimate")]
     private var people: [Record] {
         var seen = Set<String>()
@@ -45,7 +45,11 @@ struct SavedViewEditor: View {
     private var failure: String? { nameFailure ?? queryFailure }
     private var previewCount: Int {
         guard case .success(let rule) = parsed else { return 0 }
-        return store.tasks.filter { (record["include_completed"].flag || rule.includesCompletion || !$0.completed) && rule.matches($0, today: store.calendarContext.today, userID: store.userID, labels: store.labels.map { FilterReference(id: $0.id, name: $0.name) }, timeZone: store.calendarContext.timeZone) }.count
+        let projects = store.projects.map { FilterReference(id: $0.id, name: $0.name) }
+        let sections = store.rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
+        let labels = store.labels.map { FilterReference(id: $0.id, name: $0.name) }
+        let bindings = rule.nameBindings(projects: projects, sections: sections, labels: labels)
+        return store.tasks.filter { (record["include_completed"].flag || rule.includesCompletion || !$0.completed) && rule.matches($0, today: store.calendarContext.today, userID: store.userID, labels: labels, timeZone: store.calendarContext.timeZone, projects: projects, sections: sections, nameBindings: bindings) }.count
     }
     private func text(_ field: String, fallback: String = "") -> Binding<String> { Binding(get: { record.fields[field]?.text ?? fallback }, set: { record[field] = .string($0) }) }
     var body: some View {
@@ -71,6 +75,7 @@ struct SavedViewEditor: View {
                             Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
                             Text("Date examples: date:tomorrow, date before:\"next Monday\", effective-due:today, deadline after:yesterday. Effective due uses the planned date, falling back to the deadline only when there is no plan. Legacy due:YYYY-MM-DD and Today keep using the plan. Add a time: date before:\"today at 2pm\". Date-and-time conditions exclude tasks without a planned time.").font(.caption).foregroundStyle(.secondary)
                             Text("Creation examples: created:today, created before:-30 days, created after:yesterday. Uses the recorded creation date in your current time zone. Before and after exclude the chosen day. Plans and deadlines do not change when a task was created.").font(.caption).foregroundStyle(.secondary)
+                            Text("Name patterns: %home*, #*Work, /*Meetings*. Use * for any characters, or project matching:\"*Work Admin*\" for spaces. Pattern results follow name changes; exact targets retain their identity.").font(.caption).foregroundStyle(.secondary)
                             Text("Time examples: today & time before:14:00, time after:6pm. Time-only conditions compare the planned clock on any day in your current time zone. Combine with a date to choose a day.").font(.caption).foregroundStyle(.secondary)
                         }.font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("filterSyntaxExamples")
                         Text("Nested expressions stay in expression mode so switching views cannot discard conditions.").font(.caption).foregroundStyle(.secondary)
@@ -193,6 +198,10 @@ struct SavedViewEditor: View {
                 ForEach(people) { person in Text(person.string("display_name")).tag(person.id) }
             }
         }
+        else if FilterNamePattern.expressions[field] != nil {
+            TextField("Name pattern, such as *Work*", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
+            Text("Use * for any characters. Matches the whole name; letter case and accents do not matter. Results follow renames and newly matching names. Exact target conditions keep their identity.").font(.caption).foregroundStyle(.secondary)
+        }
         else if FilterCreationReference.expressions[field] != nil {
             TextField("Creation date or phrase", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
             Text("Try today, yesterday or -30 days. Uses the recorded creation date in your current time zone. Before and after exclude the chosen day. Tasks without a recorded creation date do not match.").font(.caption).foregroundStyle(.secondary)
@@ -217,6 +226,7 @@ struct SavedViewEditor: View {
     private func defaultValue(_ field: String) -> String {
         if FilterDateReference.expressions[field] != nil || FilterCreationReference.expressions[field] != nil { return "today" }
         if FilterTimeReference.expressions[field] != nil { return "14:00" }
+        if FilterNamePattern.expressions[field] != nil { return "*" }
         switch field { case "priority": return "1"; case "next", "deadline_next": return "7"; case "duration_max": return "25"; case "completed": return "false"; case "assignee": return "me"; case "due", "before", "deadline", "deadline_before": return store.calendarContext.today; default: return "" }
     }
     private func simpleConditions(_ rule: FilterRule) -> ([FilterCondition], Bool)? {

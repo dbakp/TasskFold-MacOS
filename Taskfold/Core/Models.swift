@@ -847,6 +847,8 @@ struct TaskQuery: Hashable {
     var labelName = ""
     var filter: FilterRule?
     var filterLabels: [FilterReference] = []
+    var filterProjects: [FilterReference] = []
+    var filterSections: [FilterReference] = []
     var userID = ""
     var timeZone = TimeZone.current.identifier
 }
@@ -867,12 +869,13 @@ final class TaskCache {
     func matching(_ query: TaskQuery) -> [Record] {
         if let cached = results[query] { return cached }
         computationCount += 1
+        let nameBindings = query.filter?.nameBindings(projects: query.filterProjects, sections: query.filterSections, labels: query.filterLabels)
         let matched = tasks.filter { task in
             if query.scope == .completed { if !task.completed { return false } }
             else if !query.includeCompleted && task.completed { return false }
             if query.priority > 0 && task.priority != query.priority { return false }
             if !query.text.isEmpty && !(task.title + " " + task.string("description")).localizedCaseInsensitiveContains(query.text) { return false }
-            if let filter = query.filter, !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone) { return false }
+            if let filter = query.filter, !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings) { return false }
             let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
             switch query.scope {
             case .inbox: return task.string("project_id").isEmpty
@@ -1258,7 +1261,9 @@ enum WidgetProjection {
                 guard let date = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)) else { continue }
                 let day = TaskPlanner.dayKey(date, calendar: calendar)
                 let query = TaskQuery(scope: .all, sort: view.string("sort_by"), today: day, filter: rule,
-                    filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) }, userID: account, timeZone: calendar.timeZone.identifier)
+                    filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) },
+                    filterProjects: projects.map { FilterReference(id: $0.id, name: $0.name) },
+                    filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, userID: account, timeZone: calendar.timeZone.identifier)
                 days[day] = cache.matching(query).map(\.id)
             }
             result.append(row(view, kind: "filter", days: days))

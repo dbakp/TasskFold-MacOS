@@ -3,6 +3,22 @@ import CryptoKit
 @testable import TaskfoldCore
 
 final class BackupTests: XCTestCase {
+    func testNamePatternsRestoreAsPatternsWhileExactTargetsRemap() throws {
+        var snapshot = fixture()
+        let rule = FilterRule.and([.predicate("project_name", "*search"), .predicate("section_name", "Read*"), .predicate("label_name", "*work"), .predicate("project", projectID)])
+        snapshot.tables["saved_views"]![0]["query_ast"] = rule.document
+        let file = try WorkspaceBackup.read(WorkspaceBackup.make(snapshot, account: owner).data())
+        let plan = try file.plan(current: Snapshot(), account: other)
+        let view = Record(try XCTUnwrap(plan.changes.first { $0.table == "saved_views" }).fields)
+        let restored = try FilterRule(document: view["query_ast"])
+        XCTAssertEqual(restored, .and([.predicate("project_name", "*search"), .predicate("section_name", "Read*"), .predicate("label_name", "*work"), .predicate("project", try XCTUnwrap(plan.mappedIDs["projects"]?[projectID]))]))
+        let task = Record(try XCTUnwrap(plan.changes.first { $0.table == "tasks" }).fields)
+        let project = Record(try XCTUnwrap(plan.changes.first { $0.table == "projects" }).fields)
+        let section = Record(try XCTUnwrap(plan.changes.first { $0.table == "sections" }).fields)
+        let label = Record(try XCTUnwrap(plan.changes.first { $0.table == "labels" }).fields)
+        XCTAssertTrue(restored.matches(task, today: "2026-10-07", userID: other, labels: [.init(id: label.id, name: label.name)], timeZone: "UTC", projects: [.init(id: project.id, name: project.name)], sections: [.init(id: section.id, name: section.name, projectID: section.string("project_id"))]))
+    }
+
     func testCreationFilterBackupRestorePreservesOriginalDatesAndRelativeQuery() throws {
         var snapshot = fixture(); snapshot.tables["tasks"]![0]["created_at"] = .string("2024-02-29T23:30:00Z")
         let rule = FilterRule.and([.predicate("created_after", "365 days ago"), .predicate("project", projectID)])
