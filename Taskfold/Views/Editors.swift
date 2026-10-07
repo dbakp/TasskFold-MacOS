@@ -226,46 +226,84 @@ struct InvitationsView: View {
 
 struct TodoistImportView: View {
     @Environment(Store.self) private var store
-    @State private var token = ""
-    @State private var preview: Record?
-    @State private var result: Record?
-    @State private var busy = false
-    @State private var message: String?
-    private var warnings: [String] { (preview ?? result)?["warnings"].list.map(\.text).filter { !$0.isEmpty } ?? [] }
+    @State private var flow = TodoistImportFlow()
+    #if DEBUG
+    @State private var fixtureAttempts = 0
+    #endif
     var body: some View {
         Form {
             Section {
-                Text("Bring active projects, sections, labels, tasks, subtasks, and comments into Taskfold. Retrying preserves edits and skips previously imported source IDs.")
-                SecureField("Todoist API token", text: $token).onChange(of: token) { _, _ in preview = nil; if !token.isEmpty { result = nil } }
-                Button("Preview Import") { run(previewOnly: true) }.disabled(busy || token.isEmpty)
-            }
-            if let preview {
+                SecureField("Todoist API token", text: Binding(get: { flow.token }, set: { flow.updateToken($0) }))
+                    .disabled(flow.busy).accessibilityIdentifier("todoistToken")
+
+                if !flow.token.isEmpty { Button("Clear token") { flow.updateToken("") }.disabled(flow.busy).accessibilityIdentifier("todoistClearToken") }
+                Button("Preview import") { run(previewOnly: true) }.disabled(!flow.canPreview).accessibilityIdentifier("todoistPreview")
+            } footer: { Text("Bring active projects, sections, labels, tasks, subtasks, and comments into Taskfold. Retrying preserves edits and skips previously imported source IDs.") }
+            if let preview = flow.preview {
                 Section("Ready to import") {
-                    ForEach(preview["counts"].object.keys.sorted(), id: \.self) { key in LabeledContent(key.capitalized, value: "\(preview["counts"].object[key]?.integer ?? 0)") }
-                    Button("Import into Taskfold") { run(previewOnly: false) }.disabled(busy)
+                    ForEach(TodoistImportFlow.countKeys, id: \.self) { key in
+                        LabeledContent(key.capitalized, value: "\(preview["counts"].object[key]?.integer ?? 0)").accessibilityIdentifier("todoistCount-" + key)
+                    }
                 }
             }
-            if let result {
-                Section("Import complete") { ForEach(result.fields.keys.sorted(), id: \.self) { key in if case .number(let value) = result[key] { LabeledContent(key, value: "\(Int(value))") } } }
-            }
-            if !warnings.isEmpty {
+            if !flow.warnings.isEmpty {
                 Section("Before you leave Todoist") {
-                    ForEach(warnings, id: \.self) { Text($0).font(.footnote).foregroundStyle(.secondary) }
+                    ForEach(Array(flow.warnings.enumerated()), id: \.offset) { index, warning in
+                        Text(warning).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistWarning-\(index)")
+                    }
                 }
             }
-            if busy { HStack { ProgressView().controlSize(.small); Text("This may take a moment…") } }
-            if let message { Text(message).foregroundStyle(.secondary) }
-        }.formStyle(.grouped)
+            if flow.preview != nil {
+                Section {
+                    Button("Import into Taskfold") { run(previewOnly: false) }.disabled(flow.busy).accessibilityIdentifier("todoistImport")
+                } footer: { Text("Source IDs prevent duplicates when you retry this account. Existing imported tasks keep your Taskfold edits.") }
+            }
+            if let result = flow.result {
+                Section("Import complete") {
+                    ForEach(TodoistImportFlow.resultKeys, id: \.self) { key in
+                        LabeledContent(TodoistImportFlow.resultTitle(key), value: "\(result[key].integer)").accessibilityIdentifier("todoistReceipt-" + key)
+                    }
+                }
+            }
+            if flow.busy { HStack { ProgressView(); Text(flow.active?.previewOnly == true ? "Preparing preview…" : "Importing your tasks…") }.accessibilityIdentifier("todoistImportBusy") }
+            if let message = flow.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistImportError") }
+        }.formStyle(.grouped).accessibilityIdentifier("todoistImportForm")
+        .onChange(of: store.workspaceGeneration) { _, _ in flow.reset() }
+        .onDisappear { if flow.active?.previewOnly != false { flow.reset() } }
     }
     private func run(previewOnly: Bool) {
-        busy = true; message = nil
+        guard let request = try? flow.begin(previewOnly: previewOnly, workspace: store.workspaceGeneration) else { return }
         Task {
-            defer { busy = false }
             do {
-                let data = try await store.backend.request("/functions/v1/import-todoist", method: "POST", body: ["userToken": .string(token), "preview": .bool(previewOnly), "stream": .bool(false), "sourceAccount": preview?["sourceAccount"] ?? .null])
+                let data: Data
+                #if DEBUG
+                if store.todoistImportFixture { data = try await fixtureResponse(request) }
+                else { data = try await store.backend.request("/functions/v1/import-todoist", method: "POST", body: request.body) }
+                #else
+                data = try await store.backend.request("/functions/v1/import-todoist", method: "POST", body: request.body)
+                #endif
                 let row = try JSONDecoder().decode(Record.self, from: data)
-                if previewOnly { preview = row } else { result = row; preview = nil; token = ""; await store.sync() }
-            } catch { message = error.localizedDescription }
+                if try flow.accept(row, request: request, workspace: store.workspaceGeneration) { await store.sync() }
+            } catch { flow.fail(error, request: request, workspace: store.workspaceGeneration) }
         }
     }
+    #if DEBUG
+    /// Response-state acceptance only: this fixture never calls a provider or mutates tasks.
+    private func fixtureResponse(_ request: TodoistImportFlow.Request) async throws -> Data {
+        try await Task.sleep(for: .seconds(1))
+        if request.token == "fixture-rejected-token" { throw AppFailure(message: "Todoist rejected this API token. Check the token and its permissions.") }
+        if request.token == "fixture-malformed-token" { return try JSONEncoder().encode(Record(["preview": .bool(true), "sourceAccount": .string("fixture-source"), "counts": .object([:]), "warnings": .array([])])) }
+        var fields: [String: JSON] = ["sourceAccount": .string("fixture-source"), "warnings": .array([.string("Completed history and archived projects are not imported."), .string("Reminder settings and saved filters stay in Todoist.")])]
+        if request.previewOnly {
+            fields["preview"] = .bool(true)
+            fields["counts"] = .object(["projects": .number(2), "sections": .number(3), "labels": .number(2), "tasks": .number(4), "subtasks": .number(2), "comments": .number(3)])
+        } else {
+            fixtureAttempts += 1
+            if fixtureAttempts == 1 { throw AppFailure(message: "The connection was lost while saving. Preview and retry: source IDs prevent duplicate imports.") }
+            fields["success"] = .bool(true)
+            for key in TodoistImportFlow.resultKeys { fields[key] = .number(key.hasSuffix("Skipped") ? (key == "tasksSkipped" ? 4 : 2) : 0) }
+        }
+        return try JSONEncoder().encode(Record(fields))
+    }
+    #endif
 }

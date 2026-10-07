@@ -2,6 +2,22 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testTodoistImportPreviewFailureAndSafeRetry() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--todoist-import-testing"]; app.launch(); defer { app.terminate() }
+        app.menuBars.menuBarItems["Account"].click(); app.menuItems["Import from Todoist…"].click()
+        let field = app.secureTextFields["todoistToken"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText("fixture-native-token-0001")
+        app.buttons["todoistPreview"].click()
+        let importer = app.buttons["todoistImport"]
+        XCTAssertTrue(importer.waitForExistence(timeout: 5))
+        for _ in 0..<8 where !importer.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400) }
+        XCTAssertTrue(app.staticTexts["todoistWarning-1"].exists); importer.click()
+        XCTAssertTrue(app.staticTexts["todoistImportError"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["todoistImportError"].label.contains("connection was lost")); XCTAssertTrue(importer.isEnabled); importer.click()
+        XCTAssertTrue(app.descendants(matching: .any)["todoistReceipt-tasksSkipped"].waitForExistence(timeout: 5)); XCTAssertFalse(importer.exists)
+    }
+
+
     @MainActor func testOpenListAndFilterPreviewRefreshWithCivilClockEvents() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--calendar-context-testing"]; app.launch(); defer { app.terminate() }
         XCTAssertTrue(app.buttons["Complete Yesterday plan"].waitForExistence(timeout: 10))

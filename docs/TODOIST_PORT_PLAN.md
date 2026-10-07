@@ -436,3 +436,9 @@ Both native apps implement Assigned/Others and exact accepted collaborator names
 ### Ordered query lists — 7 October
 
 Both native apps now retain top-level comma query order and display separate lists/board columns, including overlap and empty sections. Completion visibility belongs to each query; manual query/group order keys remap during restore. Widgets keep flat, unique open-task projections and their existing selected-view ranking. [Contract](QUERY_SECTIONS.md) and [verification record](query-sections-evidence.json). Remaining grammar, hierarchy, import and full paired/device/widget-host acceptance remain open.
+
+## 7 October: source-bound native Todoist import review
+
+Both repositories independently implement token/workspace-bound preview approval, strict six-count preview and ten-count confirmed receipt validation, warnings before import, readable receipts and source-bound retry after a lost response. Input changes, workspace changes and leaving preview discard approval; successful receipt clears the token. [Contract](TODOIST_IMPORT_REVIEW.md) and [current evidence](todoist-import-review-evidence.json).
+
+Each own Core suite passes 524 tests with four optional skips. Own Debug/Release builds pass; Mac includes both architectures and its import UI test compiles without a Mac runtime run. Current owner/foreign/anonymous receipt SQL fixtures pass and roll back to zero fixture users/tasks/mappings. Four final iPhone/iPad response-state walks pass with 16 inspected unmodified captures; these do not call Todoist or import task data. The current edge function was observed active as version 41, without deployment changes. Largest phone text uses scrolling and initial title truncation; source-unlocated frame warnings remain recorded. Real isolated provider-account import/persistence/retry, Mac runtime, paired native/offline/restore, physical/provisioned widgets and full P0 acceptance remain active.

@@ -186,7 +186,7 @@ struct ImportSettings: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Import from Todoist").accessibilityIdentifier("todoistImportSettings").font(.title2.weight(.semibold)).padding(.horizontal, 20).padding(.top, 16)
-            if store.localMode || !store.signedIn {
+            if (store.localMode || !store.signedIn) && !store.todoistImportFixture {
                 AccountRequiredView(title: "Bring your tasks to Taskfold", detail: "Sign in to preview and import your Todoist projects, sections, labels, tasks, subtasks, and comments.")
             } else { TodoistImportView() }
         }

@@ -111,10 +111,14 @@ final class Store {
     @ObservationIgnored private var workspaceCacheReadable = true
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"
+    var todoistImportFixture: Bool { userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--todoist-import-testing") }
     var widgetFixtureFailSave = false
     var inboxFixtureFailSave = false
     var focusFixtureFailSave = false
     var widgetFixtureReady = false
+    #endif
+    #if !DEBUG
+    var todoistImportFixture: Bool { false }
     #endif
     var workspaceGeneration: UUID { accountGeneration }
     var backupWarning: String?

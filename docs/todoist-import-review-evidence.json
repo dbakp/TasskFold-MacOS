@@ -1,0 +1,399 @@
+{
+  "checkpoint": "2026-10-07 native Todoist import review",
+  "repository": "mac",
+  "inputManifest": "docs/todoist-import-review-inputs-sha256.json",
+  "inputManifestSHA256": "f22f11fa91ac18ba03f36a2596234af6b741f49b7bfc7d89fba1ee5c6b848401",
+  "ownCore": {
+    "result": "passed",
+    "tests": 524,
+    "skipped": 4,
+    "failures": 0,
+    "log": "/tmp/taskfold-import-mac-core-final.log",
+    "logSHA256": "420b2cc3b9d46fc860ad45ab497135654fd677f507e15b78c60520a18359f85a",
+    "newImportRegressions": 6
+  },
+  "ownBuilds": {
+    "result": "passed",
+    "signing": "disabled",
+    "terminalExitCodes": {
+      "debug": 0,
+      "release": 0
+    },
+    "source": "/tmp/taskfold-import-mac-receipt-source",
+    "logs": {
+      "debug": "/tmp/taskfold-import-mac-debug-receipt.log",
+      "release": "/tmp/taskfold-import-mac-release-receipt.log"
+    },
+    "logSHA256": {
+      "debug": "40c750966b5d8d75cb1820c63f2358b7a0b55766c6e6b3268b469438d95d0161",
+      "release": "bb2505477c640218f964b0c7af48577dfdaeb4dbc82ae306873d307f74efda3b"
+    },
+    "releaseArchitectures": [
+      "x86_64",
+      "arm64"
+    ],
+    "architectureEvidence": "/tmp/taskfold-import-mac-receipt-architectures.txt",
+    "architectureEvidenceSHA256": "9cb483fd3739db2602d4c5bf672f4af954dc6dad82b36e8642b034af58f11c11"
+  },
+  "nativeIOSRuntime": {
+    "status": "passed",
+    "scope": "Isolated DEBUG response fixtures only; no provider/network/task import. Not Mac GUI, paired native or physical acceptance.",
+    "source": "/tmp/taskfold-import-ios-test-receipt-source",
+    "testCompilation": "passed",
+    "testCompilationExitCode": 0,
+    "testCompilationLog": "/tmp/taskfold-import-ios-debug-receipt.log",
+    "testCompilationLogSHA256": "667240d3d1b43e6087541284f237c38693427d12c7a690e661d5af7cf16c4468",
+    "devices": {
+      "phone": {
+        "log": "/tmp/taskfold-import-phone-receipt.log",
+        "xcresult": "/tmp/taskfold-import-phone-receipt.xcresult",
+        "terminalExitCode": 0,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "summary": "/tmp/taskfold-import-phone-receipt-summary.json",
+        "summarySHA256": "0ca65d2535f57a84d27be3e9ef105beb1a708a4683e3d2bfedba276b464df505",
+        "logSHA256": "ff4c685364902debfeecf9c5db47c2e29eb54be3214744e9dbf7dc7bd60f7ed2",
+        "attachmentManifest": "/tmp/taskfold-import-phone-receipt-attachments/manifest.json",
+        "attachmentManifestSHA256": "448aac80a2abbab16e754057841605c5c5e7ab332290c51244d118a3b8bdbab1",
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          },
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          }
+        ]
+      },
+      "tablet": {
+        "log": "/tmp/taskfold-import-tablet-receipt.log",
+        "xcresult": "/tmp/taskfold-import-tablet-receipt.xcresult",
+        "terminalExitCode": 0,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "summary": "/tmp/taskfold-import-tablet-receipt-summary.json",
+        "summarySHA256": "67007007dd45aef39aceb01d1587f30374b1e3d50ded489bfd7275a137d8a01a",
+        "logSHA256": "f3cfff744fa4bd22ce1865532826555fee2a883e936a458b8e37a643a897c610",
+        "attachmentManifest": "/tmp/taskfold-import-tablet-receipt-attachments/manifest.json",
+        "attachmentManifestSHA256": "f0a3a07a1ae069313ae77336e087c0acee76f7072de527c1ac9d0d60013643dd",
+        "runtimeWarnings": [
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          },
+          {
+            "issueType": "Runtime Warning",
+            "message": "Invalid frame dimension (negative or non-finite)."
+          }
+        ]
+      }
+    },
+    "note": "Current input-first layout and distinct child count/receipt AX identifiers; all four final native builds terminal0. Earlier failed jobs reached actual terminal65 before this run. Verbose failure diagnostics disabled using documented Xcode option; test logs, xcresults and screenshot attachments retained.",
+    "passedTests": 4,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "captures": [
+      {
+        "file": "docs/todoist-import/final/phone-dark-largest-confirmed-receipt.png",
+        "sha256": "874be0ea97a65f9ca2884b144a2eb6dd16a8a99bbc413a7a3736b393737fe775",
+        "device": "phone",
+        "appearance": "dark-largest",
+        "stage": "confirmed-receipt",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportDarkLargestPreviewValidationAndRetry()",
+        "timestamp": 1791404611.346,
+        "exportedSource": "/tmp/taskfold-import-phone-receipt-attachments/D3619A2D-F66B-4D12-93EE-0398A01CE0B2.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/phone-dark-largest-retained-retry.png",
+        "sha256": "f8f9f45c62066e2896607beaa34dc98684c43f2afc3a20a5f701e73715e096f6",
+        "device": "phone",
+        "appearance": "dark-largest",
+        "stage": "retained-retry",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportDarkLargestPreviewValidationAndRetry()",
+        "timestamp": 1791404571.878,
+        "exportedSource": "/tmp/taskfold-import-phone-receipt-attachments/FBE50588-D271-4E40-9614-E61F9DE86045.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/phone-dark-largest-warnings-before-action.png",
+        "sha256": "01652b8813b2ed7d0b00652f8337ac265522ef3358f633a618920478b3aa0434",
+        "device": "phone",
+        "appearance": "dark-largest",
+        "stage": "warnings-before-action",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportDarkLargestPreviewValidationAndRetry()",
+        "timestamp": 1791404563.272,
+        "exportedSource": "/tmp/taskfold-import-phone-receipt-attachments/2044836E-B576-4CB9-89FB-DEE18A6556E4.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/phone-dark-largest-primary-input.png",
+        "sha256": "e1cb5cc1f4b1820b170c81a45c3c8ff68b971cb1bde633c2f27835bd0b860d60",
+        "device": "phone",
+        "appearance": "dark-largest",
+        "stage": "primary-input",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportDarkLargestPreviewValidationAndRetry()",
+        "timestamp": 1791404489.438,
+        "exportedSource": "/tmp/taskfold-import-phone-receipt-attachments/0B0DBB2F-E6E2-42FC-9659-DBC3484B3FFA.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/phone-light-confirmed-receipt.png",
+        "sha256": "80cbb1dfdcf8eb1d85f7f786e9aae1def92d0837f291e18827f5dda59063c612",
+        "device": "phone",
+        "appearance": "light",
+        "stage": "confirmed-receipt",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportPreviewValidationAndRetry()",
+        "timestamp": 1791404663.696,
+        "exportedSource": "/tmp/taskfold-import-phone-receipt-attachments/811DBF60-8D5A-4319-BC01-5F4833B38012.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/phone-light-retained-retry.png",
+        "sha256": "1044d4cdd10c7f50ae0f60817138fad1b75c5686d492f7d7b7d32de39b61897b",
+        "device": "phone",
+        "appearance": "light",
+        "stage": "retained-retry",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportPreviewValidationAndRetry()",
+        "timestamp": 1791404660.742,
+        "exportedSource": "/tmp/taskfold-import-phone-receipt-attachments/FBC4920A-82E6-45B8-8CD2-5B673A811274.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/phone-light-warnings-before-action.png",
+        "sha256": "6b7796f74904d3c1862fc49f12fa138f6b613fdacc060089d17bc69062acf1a7",
+        "device": "phone",
+        "appearance": "light",
+        "stage": "warnings-before-action",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportPreviewValidationAndRetry()",
+        "timestamp": 1791404654.856,
+        "exportedSource": "/tmp/taskfold-import-phone-receipt-attachments/E5242C1D-22D8-48B5-9669-82D9002EC222.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/phone-light-primary-input.png",
+        "sha256": "d7fa91c31967ea481c6e72f19000749251f55ce0ce614f7ce0ea9db5f4592106",
+        "device": "phone",
+        "appearance": "light",
+        "stage": "primary-input",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportPreviewValidationAndRetry()",
+        "timestamp": 1791404627.427,
+        "exportedSource": "/tmp/taskfold-import-phone-receipt-attachments/499CAF72-ED59-4A96-B330-92C141486922.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/tablet-dark-largest-confirmed-receipt.png",
+        "sha256": "dd160c1c1d75ab4d62126f5cc6e1e98797623ee941efa4c7c3e5af0faece7b35",
+        "device": "tablet",
+        "appearance": "dark-largest",
+        "stage": "confirmed-receipt",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportDarkLargestPreviewValidationAndRetry()",
+        "timestamp": 1791404560.073,
+        "exportedSource": "/tmp/taskfold-import-tablet-receipt-attachments/546BAD6D-DB66-4960-B85E-59839667DEF3.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/tablet-dark-largest-retained-retry.png",
+        "sha256": "9f594af461f38433618858b2176bcd92139c396613c30a74498decdc03e23115",
+        "device": "tablet",
+        "appearance": "dark-largest",
+        "stage": "retained-retry",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportDarkLargestPreviewValidationAndRetry()",
+        "timestamp": 1791404531.012,
+        "exportedSource": "/tmp/taskfold-import-tablet-receipt-attachments/05A13AFD-09FF-43B4-871C-D664ABDD407B.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/tablet-dark-largest-warnings-before-action.png",
+        "sha256": "1beb2dad5333f2a164d94b7a6d04ca584b4a421bdf70aaa9ab6bdb0867fca560",
+        "device": "tablet",
+        "appearance": "dark-largest",
+        "stage": "warnings-before-action",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportDarkLargestPreviewValidationAndRetry()",
+        "timestamp": 1791404524.65,
+        "exportedSource": "/tmp/taskfold-import-tablet-receipt-attachments/1D33DE36-6DDA-4776-B931-A09B557BFB43.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/tablet-dark-largest-primary-input.png",
+        "sha256": "a3657614038940f970bc40e0c78b225f211c6dead65822dcb5218949921fd327",
+        "device": "tablet",
+        "appearance": "dark-largest",
+        "stage": "primary-input",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportDarkLargestPreviewValidationAndRetry()",
+        "timestamp": 1791404484.224,
+        "exportedSource": "/tmp/taskfold-import-tablet-receipt-attachments/BAD311A4-A8B6-452A-B710-389E8E563C4F.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/tablet-light-confirmed-receipt.png",
+        "sha256": "126e8196658ea024dc7216cf54d6d61071a75498915d775c979d173bd2fc5c99",
+        "device": "tablet",
+        "appearance": "light",
+        "stage": "confirmed-receipt",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportPreviewValidationAndRetry()",
+        "timestamp": 1791404608.948,
+        "exportedSource": "/tmp/taskfold-import-tablet-receipt-attachments/EADA5981-E955-4CB2-8FD2-BDEF495545B2.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/tablet-light-retained-retry.png",
+        "sha256": "27cc3db350be8ce1a236efcfddff7253f9483b1fe7e1b807475446efb161385e",
+        "device": "tablet",
+        "appearance": "light",
+        "stage": "retained-retry",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportPreviewValidationAndRetry()",
+        "timestamp": 1791404605.688,
+        "exportedSource": "/tmp/taskfold-import-tablet-receipt-attachments/D74D2913-DF5E-429D-8B79-172BB8833BC8.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/tablet-light-warnings-before-action.png",
+        "sha256": "b190e9b64e5994817af183f044600f180b05c19b4ef2100eca7ff28ed50bc68f",
+        "device": "tablet",
+        "appearance": "light",
+        "stage": "warnings-before-action",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportPreviewValidationAndRetry()",
+        "timestamp": 1791404603.16,
+        "exportedSource": "/tmp/taskfold-import-tablet-receipt-attachments/4D2F64E2-6EAA-4825-87D1-9CCCCD21B596.png",
+        "visuallyInspected": true,
+        "modified": false
+      },
+      {
+        "file": "docs/todoist-import/final/tablet-light-primary-input.png",
+        "sha256": "dfe55d7d63c05bc8715e57c723c384abe21e371fe8c8a2ca524d65ffcf872389",
+        "device": "tablet",
+        "appearance": "light",
+        "stage": "primary-input",
+        "testIdentifier": "TaskfoldUITests/testTodoistImportPreviewValidationAndRetry()",
+        "timestamp": 1791404576.604,
+        "exportedSource": "/tmp/taskfold-import-tablet-receipt-attachments/091F0D0C-6C0A-4839-998E-4E650C740A50.png",
+        "visuallyInspected": true,
+        "modified": false
+      }
+    ],
+    "visualReview": "All 16 unmodified captures inspected. Primary input is reachable at opening; warnings precede Import; retry and readable skipped-count receipt are reachable. Largest phone text requires scrolling with partial viewports; initial large navigation title truncates. Native phone tab bar collapses to its launcher in some captures. No claim of full VoiceOver or every-row simultaneously visible.",
+    "runtimeWarnings": "Each device summary contains two Invalid frame dimension (negative or non-finite) warnings at the initial navigation to import, without source location. All cases pass. Cause unresolved; source search does not establish an import-view frame defect. Preserve warnings; no warning-free runtime claim."
+  },
+  "deployedFunctionObserved": {
+    "version": 41,
+    "artifactSHA256": "b6705250a7ccb409b4bc680c449e3ff1b88a0f19adb708f1b91a56e3cf4f4ca2",
+    "changes": false
+  },
+  "remainingAcceptance": [
+    "Real isolated Todoist provider preview/import/retry",
+    "Current deployed persistence and replay after native import",
+    "Native Mac GUI (prohibited)",
+    "Real paired/offline/access-revocation/restore",
+    "Physical/provisioned widgets and full P0 acceptance"
+  ],
+  "diagnosticsPreserved": [
+    "/tmp/taskfold-import-mac-core-initial.log",
+    "/tmp/taskfold-import-mac-review-source",
+    "/tmp/taskfold-import-mac-receipt-sql-initial.sql",
+    "/tmp/taskfold-import-ios-review-inputs.json",
+    "/tmp/taskfold-import-ios-test-review-source",
+    "/tmp/taskfold-import-ios-test-walk-source",
+    "/tmp/taskfold-import-mac-receipt-sql-initial-result.json",
+    "/tmp/taskfold-import-mac-receipt-sql-final-result.json",
+    "/tmp/taskfold-import-xcode-16519-sample.txt",
+    "/tmp/taskfold-import-xcode-16523-sample.txt",
+    "/tmp/taskfold-import-mac-input-first-source"
+  ],
+  "schemaPolicyProviderRolloutChanges": false,
+  "sql": {
+    "result": "passed",
+    "project": "zqxflydiyfjeedqvyova",
+    "ownSuite": "supabase/tests/import_receipt_contract.sql",
+    "ownSuiteSHA256": "b07f2d3a0ca9759b453e341013305f767945ecaa709b8a65c7e2197cc93230f0",
+    "transaction": "rolled back",
+    "fixtureUsers": 0,
+    "fixtureTasks": 0,
+    "fixtureSources": 0,
+    "scope": "Actual owner/foreign/anonymous SQL roles with simulated JWT. Current RPC produces all ten receipt count fields; initial import and replay preserve an owner-edited task without duplication. This does not test native HTTP/provider authorization or the guarded edit RPC.",
+    "resultFile": "/tmp/taskfold-import-mac-receipt-sql-final-result.json",
+    "resultFileSHA256": "9caf4e5704648d27c2c23e610914572eeb2f58cb465e9551ab8d2cddd8f32b07"
+  },
+  "diagnosticNotes": "First owned SQL fixture used a title-only taskfold_patch_task baseline; the current generation-aware RPC rejected it as an earlier task. Both failed transactions left zero fixture users/tasks. Final receipt fixture uses an actual owner-role UPDATE to isolate import replay preservation from the independently tested guarded edit contract; both final suites pass and roll back to zero users/tasks/source mappings. Initial native builds all reached terminal0. Final iOS walk source changes only lazy-row test handling, waits for operation completion and scrolls to count/error/receipt rows; app/widget sources stay identical. Initial source, products, logs and manifests remain preserved. Initial actual phone largest-text AX hierarchy shows the introductory row at 837 points, with no mounted token field; the test also scrolled toward the top. The primary field now precedes the same copy in a footer, and the final walk checks reachability on opening and clears known previous tokens independently of lazy row existence. Both devices also exposed Section accessibility identifiers overriding all individual count row identifiers. Final source removes those parent identifiers while preserving distinct row identifiers. Initial case logs report both cases failed on both devices, but both Xcode processes reached actual terminal65 after collecting Simulator diagnostics; process samples, logs, summaries and attachments are preserved.",
+  "previousNativeBuilds": [
+    {
+      "result": "passed",
+      "signing": "disabled",
+      "terminalExitCodes": {
+        "debug": 0,
+        "release": 0
+      },
+      "source": "/tmp/taskfold-import-mac-review-source",
+      "logs": {
+        "debug": "/tmp/taskfold-import-mac-debug-review.log",
+        "release": "/tmp/taskfold-import-mac-release-review.log"
+      },
+      "logSHA256": {
+        "debug": "3b2afd122c3487d16dc13fd7bfdafc5506ca8b70460c94bff394d3d59e679166",
+        "release": "27292cc76d690cbc09bc0fa85b260ccafd639ea42f3d5e84afa3e861f70e95f1"
+      },
+      "releaseArchitectures": [
+        "x86_64",
+        "arm64"
+      ],
+      "architectureEvidence": "/tmp/taskfold-import-mac-review-architectures.txt",
+      "architectureEvidenceSHA256": "9cb483fd3739db2602d4c5bf672f4af954dc6dad82b36e8642b034af58f11c11",
+      "scope": "Previous review-source compilation passed; final receipt-source compilation passed after native evidence motivated input-first layout and distinct AX row identifiers."
+    },
+    {
+      "source": "/tmp/taskfold-import-mac-input-first-source",
+      "terminalExitCodes": {
+        "debug": 0,
+        "release": 0
+      },
+      "scope": "Intermediate compilation before removal of parent Section AX identifiers; no runtime run on this source."
+    }
+  ],
+  "previousNativeIOSRuntime": {
+    "status": "actual terminal failure, exit65 on both devices; preserved",
+    "scope": "Isolated DEBUG response fixtures only; no provider/network/task import. Not Mac GUI, paired native or physical acceptance.",
+    "source": "/tmp/taskfold-import-ios-test-walk-source",
+    "testCompilation": "passed",
+    "testCompilationExitCode": 0,
+    "testCompilationLog": "/tmp/taskfold-import-ios-debug-walk.log",
+    "testCompilationLogSHA256": "da40758c00da02f70aa06f1c46aaed7caf93b51cef38a26f2719c60eba035b32",
+    "devices": {
+      "phone": {
+        "log": "/tmp/taskfold-import-phone-walk.log",
+        "xcresult": "/tmp/taskfold-import-phone-walk.xcresult",
+        "terminalExitCode": 65,
+        "summary": "/tmp/taskfold-import-phone-walk-summary.json",
+        "attachments": "/tmp/taskfold-import-phone-walk-attachments"
+      },
+      "tablet": {
+        "log": "/tmp/taskfold-import-tablet-walk.log",
+        "xcresult": "/tmp/taskfold-import-tablet-walk.xcresult",
+        "terminalExitCode": 65,
+        "summary": "/tmp/taskfold-import-tablet-walk-summary.json",
+        "attachments": "/tmp/taskfold-import-tablet-walk-attachments"
+      }
+    }
+  },
+  "nativeMacRuntime": {
+    "status": "not run; user prohibits Mac app GUI/runtime",
+    "uiTestCompilation": "passed in final Debug build",
+    "scope": "Own native UI test compiled only; iOS captures are iOS evidence copied for parity review."
+  }
+}
