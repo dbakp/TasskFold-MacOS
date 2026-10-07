@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-07",
+  "scope": "iOS/iPadOS Simulator local system notification acceptance; copied evidence in Mac repo does not imply Mac runtime",
+  "baselines": {
+    "iOS": "e2239011c5cd427817cc70b7aab8b25db8bdc24d",
+    "macOS": "96ac89065cb696164a53c841bc673901b43053b5"
+  },
+  "os": "26.5",
+  "devices": [
+    "iPhone 17 Pro",
+    "iPad Pro 11-inch (M5)"
+  ],
+  "result_bundles": [
+    "/tmp/taskfold-system-snooze-phone-pull.xcresult",
+    "/tmp/taskfold-system-snooze-ipad-pull.xcresult"
+  ],
+  "flows": 6,
+  "failures": 0,
+  "skips": 0,
+  "checks": [
+    "light settings and relaunch",
+    "dark largest-text settings and relaunch",
+    "actual native five-minute action",
+    "UN calendar trigger agrees with elapsed tap-time delay",
+    "owner/task/spec/signature/original occurrence preserved",
+    "scheduled instant survives relaunch and later fifteen-minute preference",
+    "retained alert actually delivers with current fifteen-minute action",
+    "alert header opens correct task",
+    "task completion and due date/time unchanged",
+    "isolated fixture teardown removes pending requests"
+  ],
+  "debug_build": "/tmp/taskfold-system-snooze-ios-debug-pull.log",
+  "release_build": "/tmp/taskfold-system-snooze-ios-release-final.log",
+  "release_after_last_build": "UI-test-only gesture change; production inputs unchanged",
+  "widget_catalog": {
+    "configurations": 8,
+    "entities": 3,
+    "enums": 6,
+    "completion_metadata": true
+  },
+  "source_input_count": 103,
+  "source_hash_manifest": "system-snooze-inputs-sha256.json",
+  "captures_sha256": {
+    "system-snooze/ios-action-5.png": "3f455953562790918905646b6d50225e1069ea7d79111d8140c5bd2c9da2cfad",
+    "system-snooze/ios-retained-action-15.png": "6bf2d49fa45b3754c683e098a00614278164b748452d82119a93bc5ac31f4b80",
+    "system-snooze/ipad-action-5.png": "5814d7312204209e9c32f64bc6d396f83a3c750ae629f08a2a6ac863904ccb2c",
+    "system-snooze/ipad-retained-action-15.png": "bec29c557ef7498f399d4cfde365eb65b6e49740baba8e74435a24e056617202",
+    "system-snooze/ios-settings-dark-largest.png": "04fd974505bd0cbe42899e2d1d6629bc578bc771c7d31a58197383203da22b31",
+    "system-snooze/ios-settings-light.png": "b2dadc3a3e187477a0e5f4fcd902ea2bb9a672d7bbb66718ade47062b6507c79",
+    "system-snooze/ipad-settings-dark-largest.png": "306b69480319efb6fb57ce0c327942564a2df3ce9a4f19093d02366e218fe7bc",
+    "system-snooze/ipad-settings-light.png": "41fba2a74b91fc2cd156b21cc5d87d57799db564df588537d2916d8a4263bb01"
+  },
+  "isolation": "DEBUG-only panel; --uitesting and ui-testing workspace; real UN registry inspection",
+  "diagnostics": "Earlier switch-row, collapsed-tab and tablet banner expansion failures superseded by final green bundles; tablet SDK accessibility console errors remain",
+  "previous_evidence_not_rerun": [
+    "477-test Core suites with four optional live-account skips",
+    "actual-role SQL fixtures",
+    "universal Mac native builds"
+  ],
+  "remaining": [
+    "physical/provisioned delivery",
+    "cold-process notification action",
+    "paired native online/offline/account/revocation/restore",
+    "Mac runtime",
+    "remote/APNs delivery",
+    "provisioned widget hosts",
+    "broader full P0 acceptance"
+  ]
+}
