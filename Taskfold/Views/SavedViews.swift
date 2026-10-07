@@ -65,11 +65,8 @@ struct SavedViewEditor: View {
     private var failure: String? { nameFailure ?? queryFailure }
     private var previewCount: Int {
         guard case .success(let rule) = parsed else { return 0 }
-        let projects = store.projects.map { FilterReference(id: $0.id, name: $0.name) }
-        let sections = store.rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
-        let labels = store.labels.map { FilterReference(id: $0.id, name: $0.name) }
-        let bindings = rule.nameBindings(projects: projects, sections: sections, labels: labels)
-        return store.tasks.filter { (record["include_completed"].flag || rule.includesCompletion || !$0.completed) && rule.matches($0, today: store.calendarContext.today, userID: store.userID, labels: labels, timeZone: store.calendarContext.timeZone, projects: projects, sections: sections, nameBindings: bindings) }.count
+        let cache = TaskCache(); cache.update(store.tasks)
+        return cache.matching(TaskQuery(scope: .all, includeCompleted: record["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion), today: store.calendarContext.today, filter: rule, filterLabels: store.labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: store.projects.map { FilterReference(id: $0.id, name: $0.name) }, filterSections: store.rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, userID: store.userID, timeZone: store.calendarContext.timeZone)).count
     }
     private func text(_ field: String, fallback: String = "") -> Binding<String> { Binding(get: { record.fields[field]?.text ?? fallback }, set: { record[field] = .string($0) }) }
     var body: some View {
@@ -90,9 +87,12 @@ struct SavedViewEditor: View {
                             TextField(loadFailure == nil ? "today OR overdue" : "Query preserved", text: $expression, axis: .vertical).disabled(loadFailure != nil).focused($focusedField, equals: "expression").lineLimit(2...8).accessibilityValue(expression).accessibilityIdentifier("filterExpression")
                             if !expression.isEmpty && loadFailure == nil { Button { expression = ""; focusedField = "expression" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.borderless).accessibilityLabel("Clear expression").accessibilityIdentifier("clearFilterExpression") }
                         }
+                        if case .success(let rule) = parsed, rule.hasQuerySections {
+                            Text("Queries stay in this order; tasks can match more than one.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("filterQuerySectionsHelp")
+                        }
                         if let queryFailure { validationFeedback(queryFailure) }
                         DisclosureGroup("Syntax examples") {
-                            Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me, assigned, assigned to:others, assigned to:\"Alex Smith\". Collaborator names/emails resolve to a stable identity; quote names with spaces. Name patterns for people are not supported. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
+                            Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me, assigned, assigned to:others, assigned to:\"Alex Smith\". Collaborator names/emails resolve to a stable identity; quote names with spaces. Name patterns for people are not supported. Separate queries with commas to show ordered lists, for example overdue, today. A matching task can appear in each list. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
                             Text("Date examples: date:tomorrow, date before:\"next Monday\", effective-due:today, deadline after:yesterday. Effective due uses the planned date, falling back to the deadline only when there is no plan. Legacy due:YYYY-MM-DD and Today keep using the plan. Add a time: date before:\"today at 2pm\". Date-and-time conditions exclude tasks without a planned time.").font(.caption).foregroundStyle(.secondary)
                             Text("Creation examples: created:today, created before:-30 days, created after:yesterday. Uses the recorded creation date in your current time zone. Before and after exclude the chosen day. Plans and deadlines do not change when a task was created.").font(.caption).foregroundStyle(.secondary)
                             Text("Name patterns: %home*, #*Work, /*Meetings*. Use * for any characters, or project matching:\"*Work Admin*\" for spaces. Pattern results follow name changes; exact targets retain their identity.").font(.caption).foregroundStyle(.secondary)
@@ -289,24 +289,26 @@ struct SavedViewEditor: View {
 
 struct SavedFilterBoard: View {
     @Environment(Store.self) private var store
+    @Environment(\.dynamicTypeSize) private var textSize
     let scope: TaskScope
     let tasks: [Record]
     let open: (Record) -> Void
     let toggle: (Record) -> Void
     var body: some View {
-        let grouping = store.viewValue(scope, field: "grouping", fallback: .string("none")).text
+        let groups = store.filterGroups(scope, tasks: tasks)
         GeometryReader { geometry in
             // Short windows need wider cards so large text leaves room for actions.
-            let columnWidth = geometry.size.height < 320 ? min(440, max(280, geometry.size.width - 32)) : 280
+            let columnWidth = textSize.isAccessibilitySize ? min(560, max(280, geometry.size.width - 32)) : (geometry.size.height < 320 ? min(440, max(280, geometry.size.width - 32)) : 280)
             ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: 16) {
-                    ForEach(TaskGrouping.groups(tasks, by: grouping, projects: store.projects, timeZone: store.calendarContext.timeZone)) { group in
+                    ForEach(groups) { group in
                         VStack(alignment: .leading, spacing: 12) {
-                            HStack { Text(group.name).font(.headline); Spacer(); Text("\(group.tasks.count)").foregroundStyle(.secondary).monospacedDigit() }
+                            HStack(alignment: .firstTextBaseline) { Text(group.name).font(.headline).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true); Spacer(); Text("\(group.tasks.count)").foregroundStyle(.secondary).monospacedDigit() }
                             let orderKey = "scope:" + scope.preferenceKey + ":group:" + group.id
                             let ordered = store.viewValue(scope, field: "sort_by", fallback: .string("manual")).text == "manual" ? DayPlacement.arranged(group.tasks, ids: store.record(DayPlacement.table, id: orderKey)?["ids"].list.map(\.text) ?? []) : group.tasks
                             ScrollView(.vertical) {
                                 LazyVStack(alignment: .leading, spacing: 12) {
+                                    if ordered.isEmpty { Text("No matching tasks").font(.callout).foregroundStyle(.secondary).padding(.vertical, 8) }
                                     ForEach(ordered) { task in
                                         HStack(alignment: .top, spacing: 10) {
                                             Button { toggle(task) } label: {

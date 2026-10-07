@@ -2,6 +2,68 @@ import XCTest
 @testable import TaskfoldCore
 
 final class FilterTests: XCTestCase {
+    func testQueryHeadingsUseAvailablePeopleWithoutRetargetingStoredIdentity() throws {
+        let id = "22222222-2222-4222-8222-222222222222"
+        let rule = FilterRule.sections([.predicate("assignee", id), .predicate("assignee", "others"), .predicate("assigned", "")])
+        var context = FilterContext(people: [Record(["id": .string(id), "display_name": .string("Alex Smith")])])
+        func groups(_ context: FilterContext) -> [TaskGrouping.Group] { TaskGrouping.queryGroups([], rule: rule, by: "none", context: context, today: "2026-10-07", timeZone: "UTC") }
+        let before = groups(context)
+        XCTAssertEqual(before.map(\.name), ["1 · Assigned to Alex Smith", "2 · Assigned to others", "3 · Assigned tasks"])
+        context.people[0]["display_name"] = .string("Alex Renamed")
+        XCTAssertEqual(groups(context)[0].name, "1 · Assigned to Alex Renamed")
+        XCTAssertEqual(groups(context).map(\.id), before.map(\.id))
+        XCTAssertEqual(groups(FilterContext())[0].name, "1 · Assigned to unavailable collaborator")
+        XCTAssertEqual(try FilterRule(document: rule.document), rule)
+        XCTAssertEqual(rule.expression(in: context), "assignee:" + id + ", assignee:others, assigned")
+    }
+    func testSeparateQueriesParseInOrderWithQuotedCommasAndBooleanPrecedence() throws {
+        let input = #"search:"One, two", (p1 OR p2) & !assigned, date:tomorrow"#
+        let rule = try parse(input)
+        XCTAssertEqual(rule, .sections([.predicate("search", "One, two"), .and([.or([.predicate("priority", "1"), .predicate("priority", "2")]), .not(.predicate("assigned", ""))]), .predicate("planned_on", "tomorrow")]))
+        XCTAssertEqual(try parse(rule.expression(in: context)), rule)
+        XCTAssertEqual(try FilterRule(document: rule.document), rule)
+        for bad in [", today", "today,", "today,,overdue", "(today, overdue)", "NOT (today, overdue)", "today AND , p1", Array(repeating: "all", count: 21).joined(separator: ",")] { XCTAssertThrowsError(try parse(bad), bad) }
+        XCTAssertNoThrow(try parse(Array(repeating: "all", count: 20).joined(separator: ",")))
+        for invalid in [FilterRule.sections([]), .sections([.predicate("all", "")]), .and([rule]), .not(rule), .sections([rule, .predicate("all", "")])] { XCTAssertThrowsError(try FilterRule(document: invalid.document)) }
+        XCTAssertEqual(try parse("date:today, date:tomorrow").captureDefaults(in: context, today: "2026-10-07"), [:])
+        XCTAssertEqual(try parse("#Work & p1, #Work & p2").captureDefaults(in: context, today: "2026-10-07"), ["project_id": .string("work-id")])
+    }
+    func testSeparateQueryGroupsRetainOverlapEmptyListsStableKeysAndCompletionScope() throws {
+        let rows = [task("open", ["priority": .number(1)]), task("done", ["priority": .number(1), "completed": .bool(true)]), task("other", ["priority": .number(2)])]
+        let rule = try parse("all, p1, completed, search:nothing, p1")
+        let groups = TaskGrouping.queryGroups(rows, rule: rule, by: "none", context: context, today: "2026-10-07", timeZone: "UTC")
+        XCTAssertEqual(groups.map { $0.tasks.map(\.id) }, [["open", "other"], ["open"], ["done"], [], ["open"]])
+        XCTAssertEqual(groups.map(\.name), ["1 · all", "2 · p1", "3 · completed", "4 · search:\"nothing\"", "5 · p1"])
+        XCTAssertEqual(Set(groups.map(\.id)).count, 5)
+        let reordered = try parse("completed, p1, all, search:nothing, p1")
+        let changed = TaskGrouping.queryGroups(rows, rule: reordered, by: "none", context: context, today: "2026-10-07", timeZone: "UTC")
+        XCTAssertEqual(changed[0].id, groups[2].id); XCTAssertEqual(changed[2].id, groups[0].id)
+        let included = TaskGrouping.queryGroups(rows, rule: rule, by: "none", context: context, today: "2026-10-07", timeZone: "UTC", includeCompleted: true)
+        XCTAssertEqual(included[1].tasks.map(\.id), ["open", "done"])
+        XCTAssertEqual(TaskGrouping.queryGroups([], rule: rule, by: "priority", context: context, today: "2026-10-07", timeZone: "UTC").count, 5)
+        let projectRule = try parse("#Work, inbox")
+        let renamed = FilterContext(projects: [Record(["id": .string("work-id"), "name": .string("Renamed")])])
+        XCTAssertEqual(TaskGrouping.queryGroups([], rule: projectRule, by: "none", context: renamed, today: "2026-10-07", timeZone: "UTC").map(\.id), TaskGrouping.queryGroups([], rule: projectRule, by: "none", context: context, today: "2026-10-07", timeZone: "UTC").map(\.id))
+    }
+    func testSeparateQueryUnionWidgetProjectionAndOfflinePersistence() throws {
+        let rule = try parse("p1, all, completed")
+        let rows = [task("open", ["priority": .number(1)]), task("done", ["priority": .number(1), "completed": .bool(true)])]
+        let cache = TaskCache(); cache.update(rows)
+        XCTAssertEqual(Set(cache.matching(TaskQuery(scope: .saved("v"), filter: rule)).map(\.id)), ["open", "done"])
+        let view = Record(["id": .string("v"), "name": .string("Queries"), "query_ast": rule.document])
+        var snapshot = Snapshot(); snapshot.tables["saved_views"] = [view]
+        snapshot.pending = [Mutation(table: "saved_views", recordID: "v", method: "POST", fields: view.fields)]
+        let decoded = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+        XCTAssertEqual(decoded.tables["saved_views"], [view]); XCTAssertEqual(decoded.pending[0].fields["query_ast"], rule.document)
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let payload = WidgetProjection.listPayload(tasks: rows, projects: [], labels: [], sections: [], savedViews: [view], account: "a", now: Dates.parse("2026-10-07")!, calendar: calendar)
+        let days = Record(payload[0].object)["days"].object
+        XCTAssertEqual(days.count, 8); XCTAssertTrue(days.values.allSatisfy { $0.list.map(\.text) == ["open"] })
+        XCTAssertFalse(String(data: try JSONEncoder().encode(payload), encoding: .utf8)!.contains("query_ast"))
+        let noIdentity = try parse("NOT assignee:me, all")
+        XCTAssertTrue(noIdentity.matches(rows[0], today: "2026-10-07", userID: "", labels: [], timeZone: "UTC"), "Independent safe query still matches; the Me query fails closed.")
+    }
+
 
     func testAssignmentStatesAndMissingIdentityFailClosed() throws {
         let me = "11111111-1111-4111-8111-111111111111", other = "22222222-2222-4222-8222-222222222222"
@@ -307,7 +369,7 @@ final class FilterTests: XCTestCase {
         XCTAssertFalse(matches(try parse("date:today"), floating, zone: "America/New_York"))
     }
     func testDateGrammarRejectsAmbiguousWindowsMalformedValuesAndUnsupportedSections() throws {
-        for expression in ["date:", "date:2026-02-30", "date:2026-10-05T12:00:00Z", "date:31 February", "date:next week", "date:+4 hours", "date:3 days", "date:-3 days", "date:in 3651 days", "date:today at 25:00", "date:today p1", "date:today, date:tomorrow", "effective-due before:"] { XCTAssertThrowsError(try parse(expression), expression) }
+        for expression in ["date:", "date:2026-02-30", "date:2026-10-05T12:00:00Z", "date:31 February", "date:next week", "date:+4 hours", "date:3 days", "date:-3 days", "date:in 3651 days", "date:today at 25:00", "date:today p1", "effective-due before:"] { XCTAssertThrowsError(try parse(expression), expression) }
         for value: JSON in [.null, .number(1), .bool(true), .array([])] {
             XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string("planned_on"), "value": value])))
         }
@@ -455,14 +517,14 @@ final class FilterTests: XCTestCase {
         XCTAssertEqual(try parse("search: send email & p1 | recurring"), .or([.and([.predicate("search", "send email"), .predicate("priority", "1")]), .predicate("recurring", "")]))
     }
     func testSearchRejectsEmptyOverlongAndMalformedQueriesWithoutMergingSections() throws {
-        for expression in ["search:", #"search:"""#, "search: & today", "search: AND", "search:" + String(repeating: "x", count: 401), "search: Meeting, today", #"search:"unterminated"#] {
+        for expression in ["search:", #"search:"""#, "search: & today", "search: AND", "search:" + String(repeating: "x", count: 401), #"search:"unterminated"#] {
             XCTAssertThrowsError(try parse(expression), expression)
         }
         XCTAssertNoThrow(try parse("search:" + String(repeating: "x", count: 400)))
         XCTAssertThrowsError(try FilterRule(json: FilterRule.predicate("search", " \n\t").json))
         XCTAssertThrowsError(try FilterRule(json: FilterRule.predicate("search", String(repeating: "e\u{301}", count: 201)).json))
         XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string("search"), "value": .number(1)])))
-        XCTAssertThrowsError(try parse("today, overdue")) { XCTAssertTrue($0.localizedDescription.contains("separate filters")) }
+        XCTAssertEqual(try parse("today, overdue"), .sections([.predicate("today", ""), .predicate("overdue", "")]))
     }
     func testTimeLabelsAndRecurrenceAreIndependentMetadataConditions() throws {
         let plain = task("plain"), allDay = task("day", ["due_date": .string("2026-10-05")]), timed = task("timed", ["due_date": .string("2026-10-05"), "due_time": .string("00:00:00")]), labelled = task("labelled", ["labels": .array([.string("waiting-id")])]), repeating = task("repeat", ["is_recurring": .bool(true), "recurrence_pattern": .object(["type": .string("daily")])])

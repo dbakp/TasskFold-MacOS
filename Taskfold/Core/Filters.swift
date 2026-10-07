@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 struct FilterFailure: LocalizedError, Equatable { var message: String; var errorDescription: String? { message } }
 struct FilterReference: Hashable, Sendable { var id: String; var name: String; var projectID: String? = nil }
@@ -211,7 +212,7 @@ struct FilterNameBinding {
 
 /// Versioned query AST shared by app lists, exported backups and widget projections.
 indirect enum FilterRule: Hashable, Sendable {
-    case predicate(String, String), and([FilterRule]), or([FilterRule]), not(FilterRule)
+    case predicate(String, String), and([FilterRule]), or([FilterRule]), not(FilterRule), sections([FilterRule])
     static let fields = ["all", "inbox", "today", "overdue", "next", "no_date", "priority", "project", "section", "label", "completed", "assignee", "due", "before", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline", "deadline", "deadline_before", "duration_max", "no_estimate", "search", "recurring", "no_time", "no_labels", "assigned"] + FilterDateReference.expressions.keys.sorted() + FilterTimeReference.expressions.keys.sorted() + FilterCreationReference.expressions.keys.sorted() + FilterNamePattern.expressions.keys.sorted()
     var json: JSON {
         switch self {
@@ -219,6 +220,7 @@ indirect enum FilterRule: Hashable, Sendable {
         case .and(let rules): return .object(["op": .string("and"), "children": .array(rules.map(\.json))])
         case .or(let rules): return .object(["op": .string("or"), "children": .array(rules.map(\.json))])
         case .not(let rule): return .object(["op": .string("not"), "child": rule.json])
+        case .sections(let rules): return .object(["op": .string("sections"), "children": .array(rules.map(\.json))])
         }
     }
     var document: JSON { .object(["version": .number(1), "root": json]) }
@@ -259,6 +261,9 @@ indirect enum FilterRule: Hashable, Sendable {
                 guard case .string = row["value"] else { throw FilterFailure(message: "Enter a time such as 14:00.") }
                 self = .predicate(field, try FilterTimeReference.canonical(value))
             } else { self = .predicate(field, value) }
+        case "sections":
+            guard depth == 0, case .array(let nodes) = row["children"], (2...20).contains(nodes.count) else { throw FilterFailure(message: "Separate query lists need 2–20 queries at the top level.") }
+            self = .sections(try nodes.map { try Self(json: $0, depth: depth + 1) })
         case "and", "or":
             guard case .array(let nodes) = row["children"], !nodes.isEmpty, nodes.count <= 20 else { throw FilterFailure(message: "A filter group needs 1–20 conditions.") }
             let rules = try nodes.map { try Self(json: $0, depth: depth + 1) }
@@ -271,16 +276,32 @@ indirect enum FilterRule: Hashable, Sendable {
         switch self {
         case .predicate(let field, let value):
             if ["project", "section", "label"].contains(field) { let rows = field == "project" ? context.projects : field == "section" ? context.sections : context.labels; guard rows.contains(where: { $0.id == value }) else { throw FilterFailure(message: "A referenced " + field + " was deleted or is no longer accessible. Edit the filter to choose another target.") } }
-        case .and(let rules), .or(let rules): for rule in rules { try rule.validate(in: context) }
+        case .and(let rules), .or(let rules), .sections(let rules): for rule in rules { try rule.validate(in: context) }
         case .not(let rule): try rule.validate(in: context)
         }
     }
+    var hasQuerySections: Bool { if case .sections = self { return true }; return false }
+    var querySectionKeys: [String] {
+        guard case .sections(let queries) = self else { return [] }
+        var occurrences: [String: Int] = [:]
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        return queries.map { query in
+            let digest = SHA256.hash(data: (try? encoder.encode(query.json)) ?? Data()).map { String(format: "%02x", $0) }.joined()
+            let ordinal = occurrences[digest, default: 0]; occurrences[digest] = ordinal + 1
+            return "query:" + digest + ":" + String(ordinal)
+        }
+    }
+    /// Completion visibility belongs to each independent query, not the union.
+    func resultMatches(_ task: Record, context: FilterContext, today: String, timeZone: String, includeCompleted: Bool = false) -> Bool {
+        if case .sections(let rules) = self { return rules.contains { $0.resultMatches(task, context: context, today: today, timeZone: timeZone, includeCompleted: includeCompleted) } }
+        return (includeCompleted || includesCompletion || !task.completed) && matches(task, today: today, userID: context.userID, labels: context.labels.map { FilterReference(id: $0.id, name: $0.name) }, timeZone: timeZone, projects: context.projects.map { FilterReference(id: $0.id, name: $0.name) }, sections: context.sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) })
+    }
     var includesCompletion: Bool {
-        switch self { case .predicate(let field, _): return field == "completed"; case .and(let r), .or(let r): return r.contains { $0.includesCompletion }; case .not(let r): return r.includesCompletion }
+        switch self { case .predicate(let field, _): return field == "completed"; case .and(let r), .or(let r), .sections(let r): return r.contains { $0.includesCompletion }; case .not(let r): return r.includesCompletion }
     }
     func nameBindings(projects: [FilterReference], sections: [FilterReference], labels: [FilterReference]) -> [FilterNameBinding] {
         switch self {
-        case .and(let rules), .or(let rules): return rules.flatMap { $0.nameBindings(projects: projects, sections: sections, labels: labels) }
+        case .and(let rules), .or(let rules), .sections(let rules): return rules.flatMap { $0.nameBindings(projects: projects, sections: sections, labels: labels) }
         case .not(let rule): return rule.nameBindings(projects: projects, sections: sections, labels: labels)
         case .predicate(let field, let value):
             guard FilterNamePattern.expressions[field] != nil else { return [] }
@@ -293,6 +314,7 @@ indirect enum FilterRule: Hashable, Sendable {
     private func nameReferencesAvailable(_ task: Record, projects: [FilterReference], sections: [FilterReference], labels: [FilterReference], userID: String) -> Bool {
         let userIdentityMissing = userID.isEmpty
         switch self {
+        case .sections: return true // Each independent query checks its own references.
         case .and(let rules), .or(let rules): return rules.allSatisfy { $0.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID) }
         case .not(let rule): return rule.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID)
         case .predicate(let field, let value):
@@ -314,6 +336,7 @@ indirect enum FilterRule: Hashable, Sendable {
         let bindings = supplied ?? nameBindings(projects: projects, sections: sections, labels: labels)
         guard nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID) else { return false }
         switch self {
+        case .sections(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings) }
         case .and(let rules): return rules.allSatisfy { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings) }
         case .or(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings) }
         case .not(let rule): return !rule.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings)
@@ -418,7 +441,7 @@ indirect enum FilterRule: Hashable, Sendable {
             }
             for field in conflicts { result.removeValue(forKey: field) }
             return result
-        case .or(let rules):
+        case .or(let rules), .sections(let rules):
             guard let first = rules.first else { return [:] }
             return rules.dropFirst().reduce(first.captureDefaults(in: context, today: today, timeZone: timeZone)) { defaults, rule in
                 let branch = rule.captureDefaults(in: context, today: today, timeZone: timeZone)
@@ -446,9 +469,28 @@ indirect enum FilterRule: Hashable, Sendable {
             }
         }
     }
+    /// Native headings describe the query without exposing stored collaborator IDs.
+    /// This presentation never changes the persisted predicate or its canonical expression.
+    func sectionTitle(in context: FilterContext) -> String {
+        switch self {
+        case .predicate("assigned", _): return "Assigned tasks"
+        case .predicate("assignee", let value):
+            if value == "me" { return "Assigned to me" }
+            if value == "others" { return "Assigned to others" }
+            if value == "unassigned" { return "Unassigned tasks" }
+            guard let person = context.people.first(where: { $0.id.caseInsensitiveCompare(value) == .orderedSame }) else { return "Assigned to unavailable collaborator" }
+            let name = person.string("display_name").isEmpty ? person.string("email") : person.string("display_name")
+            return name.isEmpty ? "Assigned to unavailable collaborator" : "Assigned to " + name
+        case .and(let rules): return rules.map { "(" + $0.sectionTitle(in: context) + ")" }.joined(separator: " AND ")
+        case .or(let rules): return rules.map { "(" + $0.sectionTitle(in: context) + ")" }.joined(separator: " OR ")
+        case .not(let rule): return "NOT (" + rule.sectionTitle(in: context) + ")"
+        default: return expression(in: context)
+        }
+    }
     func expression(in context: FilterContext) -> String {
         func quote(_ value: String) -> String { "\"" + value.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\"" }
         switch self {
+        case .sections(let rules): return rules.map { $0.expression(in: context) }.joined(separator: ", ")
         case .and(let rules): return rules.map { "(" + $0.expression(in: context) + ")" }.joined(separator: " AND ")
         case .or(let rules): return rules.map { "(" + $0.expression(in: context) + ")" }.joined(separator: " OR ")
         case .not(let rule): return "NOT (" + rule.expression(in: context) + ")"
@@ -513,8 +555,12 @@ struct FilterParser {
         guard !tokens.isEmpty, tokens.count <= 300 else { throw FilterFailure(message: "Add a filter condition.") }
     }
     mutating func parse() throws -> FilterRule {
-        let rule = try parseOr(depth: 0)
-        if cursor < tokens.count, tokens[cursor] == ",", !quotedTokens.contains(cursor) { throw FilterFailure(message: "Multiple query sections are not supported yet. Create separate filters to keep their results separate.") }
+        var queries = [try parseOr(depth: 0)]
+        while consume([","]) {
+            guard queries.count < 20 else { throw FilterFailure(message: "Keep separate query lists within 20 queries.") }
+            queries.append(try parseOr(depth: 0))
+        }
+        let rule: FilterRule = queries.count == 1 ? queries[0] : .sections(queries)
         guard cursor == tokens.count else { throw FilterFailure(message: "Unexpected “\(tokens[cursor])”. Join conditions with AND or OR.") }
         let checked = try FilterRule(json: rule.json)
         try checked.validate(in: context); return checked
@@ -615,6 +661,24 @@ struct FilterParser {
 
 struct TaskGrouping {
     struct Group: Identifiable { var id: String; var name: String; var tasks: [Record] }
+    /// Sections keep query order and overlap; union results stay unique for bulk actions/widgets.
+    /// Content identity keeps manual ordering attached to the query through reordering/renames.
+    static func queryGroups(_ tasks: [Record], rule: FilterRule?, by field: String, context: FilterContext, today: String, timeZone: String, includeCompleted: Bool = false) -> [Group] {
+        guard case .sections(let queries) = rule else { return groups(tasks, by: field, projects: context.projects, timeZone: timeZone) }
+        let keys = rule?.querySectionKeys ?? []
+        let projects = context.projects.map { FilterReference(id: $0.id, name: $0.name) }
+        let sections = context.sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
+        let labels = context.labels.map { FilterReference(id: $0.id, name: $0.name) }
+        return queries.enumerated().flatMap { index, query -> [Group] in
+            let key = keys[index]
+            let bindings = query.nameBindings(projects: projects, sections: sections, labels: labels)
+            let name = "\(index + 1) · " + query.sectionTitle(in: context)
+            let matches = tasks.filter { (includeCompleted || query.includesCompletion || !$0.completed) && query.matches($0, today: today, userID: context.userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings) }
+            let nested = groups(matches, by: field, projects: context.projects, timeZone: timeZone)
+            if nested.isEmpty { return [Group(id: key + ":all", name: name, tasks: [])] }
+            return nested.map { Group(id: key + ":" + $0.id, name: field == "none" ? name : name + " / " + $0.name, tasks: $0.tasks) }
+        }
+    }
     static func groups(_ tasks: [Record], by field: String, projects: [Record], timeZone: String = TimeZone.current.identifier) -> [Group] {
         guard field != "none" else { return [Group(id: "all", name: "Tasks", tasks: tasks)] }
         let keyed = Dictionary(grouping: tasks) { task -> String in

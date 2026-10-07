@@ -3,6 +3,44 @@ import CryptoKit
 @testable import TaskfoldCore
 
 final class BackupTests: XCTestCase {
+    func testSeparateQueryGroupedOrdersRestoreInboxAndProjectIdentity() throws {
+        var snapshot = fixture()
+        let rule = FilterRule.sections([.predicate("all", ""), .predicate("project", projectID)])
+        snapshot.tables["saved_views"]![0]["query_ast"] = rule.document
+        let viewID = snapshot.tables["saved_views"]![0].id
+        let taskID = snapshot.tables["tasks"]![0].id
+        let keys = rule.querySectionKeys
+        snapshot.tables["view_orders"] = [
+            Record(["id": .string("scope:view:" + viewID + ":group:" + keys[0] + ":project:none"), "user_id": .string(owner), "ids": .array([])]),
+            Record(["id": .string("scope:view:" + viewID + ":group:" + keys[1] + ":project:" + projectID), "user_id": .string(owner), "ids": .array([.string(taskID)])])]
+        let file = try WorkspaceBackup.read(WorkspaceBackup.make(snapshot, account: owner).data())
+        let plan = try file.plan(current: Snapshot(), account: other)
+        let view = Record(try XCTUnwrap(plan.changes.first { $0.table == "saved_views" }).fields)
+        let restored = try FilterRule(document: view["query_ast"])
+        let orders = plan.changes.filter { $0.table == "view_orders" }
+        XCTAssertEqual(orders.map(\.recordID), [
+            "scope:view:" + view.id + ":group:" + restored.querySectionKeys[0] + ":project:none",
+            "scope:view:" + view.id + ":group:" + restored.querySectionKeys[1] + ":project:" + plan.mappedIDs["projects"]![projectID]!])
+    }
+    func testSeparateQueryRestoreRemapsReferencesAndRetainsEachManualOrder() throws {
+        var snapshot = fixture()
+        let rule = FilterRule.sections([.predicate("project", projectID), .predicate("assignee", owner), .predicate("assignee", "others"), .predicate("project", projectID)])
+        snapshot.tables["saved_views"]![0]["query_ast"] = rule.document
+        let viewID = snapshot.tables["saved_views"]![0].id
+        let taskID = snapshot.tables["tasks"]![0].id
+        snapshot.tables["view_orders"] = rule.querySectionKeys.map { Record(["id": .string("scope:view:" + viewID + ":group:" + $0 + ":all"), "user_id": .string(owner), "ids": .array([.string(taskID)])]) }
+        let file = try WorkspaceBackup.read(WorkspaceBackup.make(snapshot, account: owner).data())
+        let plan = try file.plan(current: Snapshot(), account: other)
+        let view = Record(try XCTUnwrap(plan.changes.first { $0.table == "saved_views" }).fields)
+        let project = try XCTUnwrap(plan.mappedIDs["projects"]?[projectID])
+        let restored = try FilterRule(document: view["query_ast"])
+        XCTAssertEqual(restored, .sections([.predicate("project", project), .predicate("assignee", "me"), .predicate("assignee", "others"), .predicate("project", project)]))
+        let orders = plan.changes.filter { $0.table == "view_orders" }
+        XCTAssertEqual(orders.map(\.recordID), restored.querySectionKeys.map { "scope:view:" + view.id + ":group:" + $0 + ":all" })
+        XCTAssertTrue(orders.allSatisfy { $0.fields["ids"] == .array([.string(plan.mappedIDs["tasks"]![taskID]!)]) })
+        XCTAssertEqual(Set(orders.map(\.recordID)).count, 4)
+    }
+
     func testAssignmentStateFiltersKeepDestinationViewerSemanticsOnRestore() throws {
         var snapshot = fixture()
         let rule = FilterRule.and([.predicate("assigned", ""), .predicate("assignee", "others"), .predicate("assignee", owner)])

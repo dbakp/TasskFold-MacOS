@@ -1,0 +1,308 @@
+{
+  "checkpoint": "2026-10-07 ordered query sections",
+  "repository": "mac",
+  "baseCommit": "8aa208cf4f46aa3d781aa039a4a0fd2837ea7606",
+  "inputManifest": "docs/query-sections-inputs-sha256.json",
+  "inputManifestSHA256": "ec6fb548c9a58f4eff5a27df7365de8753d9772d1464fc7f14406320df73c97f",
+  "ownCore": {
+    "result": "passed",
+    "tests": 518,
+    "skipped": 4,
+    "failures": 0,
+    "log": "/tmp/taskfold-query-sections-mac-core-readable-final.log",
+    "logSHA256": "9a2fbcb2f06974dbd1c43635f94b4a9aab09033b3de31825d71462b3953bf973"
+  },
+  "ownBuilds": {
+    "result": "passed",
+    "signing": "disabled",
+    "terminalExitCodes": {
+      "debug": 0,
+      "release": 0
+    },
+    "nativeSource": "/tmp/taskfold-query-sections-mac-readable-source",
+    "logs": {
+      "debug": "/tmp/taskfold-query-sections-mac-debug-readable.log",
+      "release": "/tmp/taskfold-query-sections-mac-release-readable.log"
+    },
+    "logSHA256": {
+      "debug": "d204b981ab6ddc390031a706c7857419a9fad7615969a5e4ce169f5167e357e1",
+      "release": "2be8907b1cecd73ff0b90ba5c1ff25738caa6b6c0d2333c779286a96ce2cec22"
+    },
+    "macArchitectures": [
+      "x86_64",
+      "arm64"
+    ],
+    "architectureArtifact": "/tmp/taskfold-query-sections-mac-readable-architectures.txt",
+    "architectureArtifactSHA256": "9cb483fd3739db2602d4c5bf672f4af954dc6dad82b36e8642b034af58f11c11",
+    "runtime": "No Mac GUI/runtime launched"
+  },
+  "sql": {
+    "project": "zqxflydiyfjeedqvyova",
+    "ownSuite": "supabase/tests/query_sections.sql",
+    "result": "passed",
+    "transaction": "rolled back",
+    "fixtureUsers": 0,
+    "fixtureViews": 0,
+    "scope": "Actual authenticated and anon SQL roles; simulated JWT authorization claims. Owner query order/duplicate persistence, owner CRUD, foreign/anonymous denial. Not native sign-in or paired HTTP transport.",
+    "schemaChanges": false,
+    "ownSuiteSHA256": "d917615b5985b851e1765dbee85744c6c319373c2d3a0285fbe35f5b5c5e02b6"
+  },
+  "nativeIOSRuntime": {
+    "status": "passed",
+    "source": "/tmp/taskfold-query-sections-ios-test-readable-source",
+    "scope": "Isolated DEBUG iOS Simulator fixtures only; no real user data, Mac GUI runtime, physical widget-host or real paired-device acceptance.",
+    "cases": [
+      "testAssignmentBuilderNamesAndRelaunch",
+      "testAssignmentDarkLargestBuilderNamesAndRelaunch",
+      "testQuerySectionsDarkLargestListBoardCompletionAndRelaunch",
+      "testQuerySectionsListBoardCompletionAndRelaunch"
+    ],
+    "devices": {
+      "phone": {
+        "log": "/tmp/taskfold-query-sections-phone-readable.log",
+        "xcresult": "/tmp/taskfold-query-sections-phone-readable.xcresult",
+        "result": "passed",
+        "terminalExitCode": 0,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "summary": "/tmp/taskfold-query-sections-phone-readable-summary.json",
+        "attachments": "/tmp/taskfold-query-sections-phone-readable-attachments",
+        "attachmentExportExitCode": 0,
+        "summaryExitCode": 0,
+        "logSHA256": "d801200c4464236426dc6e5412ec2d2bf6b5b290dbed7e5278e487a208627779",
+        "summarySHA256": "9f90e76274c0f2730206f98da856eb57d81ea0bed4007509f9363ff8f4a37b82"
+      },
+      "tablet": {
+        "log": "/tmp/taskfold-query-sections-tablet-readable.log",
+        "xcresult": "/tmp/taskfold-query-sections-tablet-readable.xcresult",
+        "result": "passed",
+        "terminalExitCode": 0,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "summary": "/tmp/taskfold-query-sections-tablet-readable-summary.json",
+        "attachments": "/tmp/taskfold-query-sections-tablet-readable-attachments",
+        "attachmentExportExitCode": 0,
+        "summaryExitCode": 0,
+        "logSHA256": "404c2980052e045626469b82e062b60e6bd4f50c146dccaf3f4260327f258dd3",
+        "summarySHA256": "e95bcfb5b8df9ee5e1238357d60c570c3bbf4885b04fa6ece2ff4ccea6210c09"
+      }
+    },
+    "totalPassed": 8,
+    "totalFailed": 0,
+    "totalSkipped": 0,
+    "visualReview": {
+      "count": 12,
+      "result": "inspected",
+      "scope": "Unmodified final iOS Simulator expression/list/board captures, light and dark Accessibility XXXL on both devices. Horizontal board continuation and ordinary vertical scrolling remain necessary. Long navigation titles truncate; long expression/search terms can wrap within words at the largest phone text size. Not a complete surface or VoiceOver audit."
+    },
+    "captures": [
+      {
+        "file": "docs/query-sections/final/phone-dark-largest-board.png",
+        "sha256": "d41fd117b0bc1c718113375d2b9b166db6885d6e92b1a49d3a2a5c94175c7b44",
+        "source": "/tmp/taskfold-query-sections-phone-readable-attachments/753430CC-F287-4B9D-B0DD-F8D382254BAE.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsDarkLargestListBoardCompletionAndRelaunch()",
+        "device": "phone",
+        "presentation": "dark-largest",
+        "visuallyInspected": true
+      },
+      {
+        "file": "docs/query-sections/final/phone-dark-largest-list.png",
+        "sha256": "7b8952367386f26ea52dcf8861eb1f1bb0177be9a94377f4aff9ccabccee7f83",
+        "source": "/tmp/taskfold-query-sections-phone-readable-attachments/04589F26-5D8C-40BB-B00D-8BE271F9C998.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsDarkLargestListBoardCompletionAndRelaunch()",
+        "device": "phone",
+        "presentation": "dark-largest",
+        "visuallyInspected": true
+      },
+      {
+        "file": "docs/query-sections/final/phone-dark-largest-expression.png",
+        "sha256": "ad479a720527a59cb646d5661a690ef313a1edef85ac85f9fa719f139db871ed",
+        "source": "/tmp/taskfold-query-sections-phone-readable-attachments/24F559D2-008B-48CC-AF38-0C2382130F98.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsDarkLargestListBoardCompletionAndRelaunch()",
+        "device": "phone",
+        "presentation": "dark-largest",
+        "visuallyInspected": true
+      },
+      {
+        "file": "docs/query-sections/final/phone-light-board.png",
+        "sha256": "ff4be09e1ea3917fe37bc2392b1bb6486e4e5a8c10b3b550453bb528979aca22",
+        "source": "/tmp/taskfold-query-sections-phone-readable-attachments/B8F1951B-8A82-46FB-B6F4-A4C0A292534D.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsListBoardCompletionAndRelaunch()",
+        "device": "phone",
+        "presentation": "light",
+        "visuallyInspected": true
+      },
+      {
+        "file": "docs/query-sections/final/phone-light-list.png",
+        "sha256": "2051f3fafa7b20649720554fa93afe91c0b14614663bd69328d9dcd537ddf21a",
+        "source": "/tmp/taskfold-query-sections-phone-readable-attachments/2A333F88-7863-48EC-A8C9-1098542B804E.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsListBoardCompletionAndRelaunch()",
+        "device": "phone",
+        "presentation": "light",
+        "visuallyInspected": true
+      },
+      {
+        "file": "docs/query-sections/final/phone-light-expression.png",
+        "sha256": "634ea63c866a8ddb04c584a2c7cc6eb731d76c35c278e1dd00588b14cd1ca7dc",
+        "source": "/tmp/taskfold-query-sections-phone-readable-attachments/C20512CB-D51B-467C-9668-3342E615FEFE.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsListBoardCompletionAndRelaunch()",
+        "device": "phone",
+        "presentation": "light",
+        "visuallyInspected": true
+      },
+      {
+        "file": "docs/query-sections/final/tablet-dark-largest-board.png",
+        "sha256": "df65b6c2834e04138ac9ad66263e8dc471f1b09ff90baefc3afd561ffcf05e3b",
+        "source": "/tmp/taskfold-query-sections-tablet-readable-attachments/1E47E0D6-3FDA-4DF6-A30C-35B1DB12783E.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsDarkLargestListBoardCompletionAndRelaunch()",
+        "device": "tablet",
+        "presentation": "dark-largest",
+        "visuallyInspected": true
+      },
+      {
+        "file": "docs/query-sections/final/tablet-dark-largest-list.png",
+        "sha256": "d23ae900e80e255acec4e01d91fc6a15539e2ca00cbcff034f7a372a0894f457",
+        "source": "/tmp/taskfold-query-sections-tablet-readable-attachments/A6BE4CC4-B8D5-4B10-B002-C857DBCEFC1D.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsDarkLargestListBoardCompletionAndRelaunch()",
+        "device": "tablet",
+        "presentation": "dark-largest",
+        "visuallyInspected": true
+      },
+      {
+        "file": "docs/query-sections/final/tablet-dark-largest-expression.png",
+        "sha256": "166253eb4a67b3a7f259646e8c96b10ad901e0999e6508443b0b54634a1664f0",
+        "source": "/tmp/taskfold-query-sections-tablet-readable-attachments/BEE08EC5-B880-4866-BC7E-2F90F2E5A756.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsDarkLargestListBoardCompletionAndRelaunch()",
+        "device": "tablet",
+        "presentation": "dark-largest",
+        "visuallyInspected": true
+      },
+      {
+        "file": "docs/query-sections/final/tablet-light-board.png",
+        "sha256": "416d3d25f09cba5b742c0b240d118654ade1d875f3f9a7ea4a4e03096795da05",
+        "source": "/tmp/taskfold-query-sections-tablet-readable-attachments/243ECE06-51DC-4F4A-A4AD-E990D8A74C2D.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsListBoardCompletionAndRelaunch()",
+        "device": "tablet",
+        "presentation": "light",
+        "visuallyInspected": true
+      },
+      {
+        "file": "docs/query-sections/final/tablet-light-list.png",
+        "sha256": "1e01ba4c407592b0cd4b064985ec8f91d587139761ccfaacbc93cc0659e6a74c",
+        "source": "/tmp/taskfold-query-sections-tablet-readable-attachments/E65615C2-668F-4D06-BE6C-F5FBFCBA9482.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsListBoardCompletionAndRelaunch()",
+        "device": "tablet",
+        "presentation": "light",
+        "visuallyInspected": true
+      },
+      {
+        "file": "docs/query-sections/final/tablet-light-expression.png",
+        "sha256": "eb8fb1d4ec8bd3d991b0a21d4ad8d2edd621e9ee2608391b582daf98951f3b79",
+        "source": "/tmp/taskfold-query-sections-tablet-readable-attachments/12A817B8-D190-49E0-9D4D-48AC211C4640.png",
+        "testIdentifier": "TaskfoldUITests/testQuerySectionsListBoardCompletionAndRelaunch()",
+        "device": "tablet",
+        "presentation": "light",
+        "visuallyInspected": true
+      }
+    ]
+  },
+  "remainingAcceptance": [
+    "Real paired native online/offline/member-revocation and restore",
+    "Mac GUI runtime (not authorized)",
+    "Physical/provisioned widget hosts",
+    "VoiceOver/full-surface acceptance",
+    "Remaining grammar/hierarchy/filter import and full P0 acceptance"
+  ],
+  "diagnosticsPreserved": [
+    "/tmp/taskfold-query-sections-ios-core.log",
+    "/tmp/taskfold-query-sections-ios-core-final.log",
+    "/tmp/taskfold-query-sections-ios-core-verified.log",
+    "/tmp/taskfold-query-sections-mac-core.log",
+    "/tmp/taskfold-query-sections-mac-core-final.log",
+    "/tmp/taskfold-query-sections-mac-core-verified.log",
+    "/tmp/taskfold-query-sections-ios-test-selector-source",
+    "/tmp/taskfold-query-sections-ios-debug-before-selector-products",
+    "/tmp/taskfold-query-sections-ios-debug-selector.log",
+    "/tmp/taskfold-query-sections-phone-final.log",
+    "/tmp/taskfold-query-sections-phone-final.xcresult",
+    "/tmp/taskfold-query-sections-phone-final-summary.json",
+    "/tmp/taskfold-query-sections-phone-final-attachments",
+    "/tmp/taskfold-query-sections-tablet-final.log",
+    "/tmp/taskfold-query-sections-tablet-final.xcresult",
+    "/tmp/taskfold-query-sections-tablet-final-summary.json",
+    "/tmp/taskfold-query-sections-tablet-final-attachments",
+    "/tmp/taskfold-query-sections-mac-core-grouped-final.log",
+    "/tmp/taskfold-query-sections-mac-polish-source",
+    "/tmp/taskfold-query-sections-mac-debug-polish.log",
+    "/tmp/taskfold-query-sections-mac-release-polish.log",
+    "/tmp/taskfold-query-sections-phone-readable.log",
+    "/tmp/taskfold-query-sections-phone-readable.xcresult",
+    "/tmp/taskfold-query-sections-phone-readable-summary.json",
+    "/tmp/taskfold-query-sections-phone-readable-attachments",
+    "/tmp/taskfold-query-sections-phone-readable-export.log",
+    "/tmp/taskfold-query-sections-tablet-readable.log",
+    "/tmp/taskfold-query-sections-tablet-readable.xcresult",
+    "/tmp/taskfold-query-sections-tablet-readable-summary.json",
+    "/tmp/taskfold-query-sections-tablet-readable-attachments",
+    "/tmp/taskfold-query-sections-tablet-readable-export.log"
+  ],
+  "diagnosticNotes": "Initial Core run retained three historical assertions rejecting comma queries; these were replaced with ordered-query acceptance and malformed/nested-query rejection. The first new offline codec test used an incorrect Snapshot property (queue); it was corrected to the actual pending field. Verified 516-test runs then passed. Grouped restore review added coverage for the Inbox project:none sentinel and query-specific project order keys. Immutable earlier source captures/builds/products are retained. A native board selector now queries all element types, matching established board walks; final test source includes this correction. The first complete native cohort passed all four tablet cases and three of four phone cases. Phone largest text failed on reopening the expression: the long help row before the primary input left the input virtualized below the viewport, while the test scrolled upward. The exported AX hierarchy shows help above Expression, with no mounted filterExpression. Both apps now place a shorter hint after the input; the new-query walk scrolls down toward newly mounted fields. iOS saved-list rendering also stops recomputing every query group for each manual-order key. At that earlier polish checkpoint Core/SQL inputs remained the tested 517-case bytes; the subsequent readable-heading regression increased the final own Core suites to 518. Existing jobs reached their own terminal exits (phone65/tablet0), and result bundles are preserved. The initial attachment export raced xcresulttool summary database conversion (terminal64); sequential retry after summary0 succeeded for each preserved bundle. Three earlier board captures were visually inspected (phone light, tablet light/dark-largest). Tablet largest text split normal words across narrow 280-point columns. Readable-source board columns now widen at accessibility sizes; assignment headings describe states and available names instead of canonical collaborator IDs. The new own Core heading test proves renames change display only, identity/order keys remain unchanged and unavailable collaborators do not retarget. Both own Core suites now pass518, four existing optional skips and zero failures. The final readable-source native cohort passes all eight cases (four per device), zero failures/skips, with both actual terminal exits 0. Result summary was exported before attachments; both sequential attachment exports exited 0. All twelve final query expression/list/board captures were visually inspected and independently retained in both repositories. No runtime was executed on the intermediate polish-only sources.",
+  "verifiedInputCounts": {
+    "nativeAppWidget": 74,
+    "nativeUITests": 1,
+    "core": 59,
+    "sql": 1
+  },
+  "previousNativeBuilds": [
+    {
+      "source": "/tmp/taskfold-query-sections-mac-final-source",
+      "result": "passed",
+      "logs": {
+        "debug": "/tmp/taskfold-query-sections-mac-debug-final.log",
+        "release": "/tmp/taskfold-query-sections-mac-release-final.log"
+      },
+      "logSHA256": {
+        "debug": "91810f047eb286ae3275abc6d1e070214a570c8208686b13d4c3aa86b9ff845b",
+        "release": "38d06520336b3bc65a6a794a501f48343b9a00285ead078e5865d8609474c471"
+      },
+      "scope": "Previous terminal native compilation cohort; not current source evidence."
+    },
+    {
+      "source": "/tmp/taskfold-query-sections-mac-polish-source",
+      "result": "passed",
+      "logs": {
+        "debug": "/tmp/taskfold-query-sections-mac-debug-polish.log",
+        "release": "/tmp/taskfold-query-sections-mac-release-polish.log"
+      },
+      "logSHA256": {
+        "debug": "c1ba34d118a239243feba6a60f50a1e5dbb14a1129d076f138bccf31ff8f8cab",
+        "release": "26c9da7f499914b2225be2d129eb2830c51e38dc40002415e9e3c5ff226d5f7c"
+      },
+      "scope": "Previous terminal native compilation cohort; not current source evidence."
+    }
+  ],
+  "previousNativeIOSRuntime": {
+    "phone": {
+      "result": "failed",
+      "terminalExitCode": 65,
+      "passed": 3,
+      "failed": 1,
+      "log": "/tmp/taskfold-query-sections-phone-final.log",
+      "summary": "/tmp/taskfold-query-sections-phone-final-summary.json",
+      "xcresult": "/tmp/taskfold-query-sections-phone-final.xcresult",
+      "attachments": "/tmp/taskfold-query-sections-phone-final-attachments"
+    },
+    "tablet": {
+      "result": "passed",
+      "terminalExitCode": 0,
+      "passed": 4,
+      "failed": 0,
+      "log": "/tmp/taskfold-query-sections-tablet-final.log",
+      "summary": "/tmp/taskfold-query-sections-tablet-final-summary.json",
+      "xcresult": "/tmp/taskfold-query-sections-tablet-final.xcresult",
+      "attachments": "/tmp/taskfold-query-sections-tablet-final-attachments"
+    }
+  }
+}

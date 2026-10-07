@@ -91,7 +91,7 @@ struct TaskListView: View {
     private struct Group { var title: String; var key: String; var tasks: [Record] }
     private var groups: [Group] {
         if case .saved = scope {
-            return TaskGrouping.groups(filtered, by: store.viewValue(scope, field: "grouping", fallback: .string("none")).text, projects: store.projects, timeZone: store.calendarContext.timeZone).map { Group(title: $0.name, key: "scope:" + scope.preferenceKey + ":group:" + $0.id, tasks: ordered($0.tasks, day: "scope:" + scope.preferenceKey + ":group:" + $0.id)) }
+            return store.filterGroups(scope, tasks: filtered, includeCompleted: showCompleted).map { Group(title: $0.name, key: "scope:" + scope.preferenceKey + ":group:" + $0.id, tasks: ordered($0.tasks, day: "scope:" + scope.preferenceKey + ":group:" + $0.id)) }
         }
         if !projectID.isEmpty {
             let sections = store.rows("sections").filter { $0.string("project_id") == projectID }.sorted { $0["order_index"].integer < $1["order_index"].integer }
@@ -174,6 +174,7 @@ struct TaskListView: View {
                         if scope != .completed || !group.tasks.isEmpty || !group.title.isEmpty {
                             Section {
                                 if projectID.isEmpty || !collapsed(group.key) {
+                                if group.tasks.isEmpty && group.key.contains(":group:query:") { Text("No matching tasks").foregroundStyle(.secondary) }
                                 ForEach(workspace.visibleTasks(group.tasks)) { task in row(task).modifier(DayDragRow(task: task, day: group.key, orderProvider: { order })).tag(task.id) }
                                     .onMove { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).move(from: $0, to: $1) }
                                     .onInsert(of: [.taskfoldTask]) { DayDropHandling(workspace: workspace, day: group.key, tasks: group.tasks).insert(at: $0, providers: $1) }
@@ -187,7 +188,7 @@ struct TaskListView: View {
                                         captureSection = group.key.split(separator: ":").last.map(String.init).flatMap { $0 == "none" ? nil : $0 } ?? ""
                                         quickAddVisible = true
                                     }
-                                } else if !group.title.isEmpty { Text(group.title) }
+                                } else if !group.title.isEmpty { Text(group.title).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true) }
                             }
                         }
                     }

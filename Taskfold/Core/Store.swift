@@ -260,9 +260,14 @@ final class Store {
             guard let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [] }
             query.filterProjects = projects.map { FilterReference(id: $0.id, name: $0.name) }; query.filterSections = rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
             query.filter = rule; query.filterLabels = labels.map { FilterReference(id: $0.id, name: $0.name) }; query.userID = userID
-            query.includeCompleted = query.includeCompleted || view["include_completed"].flag || rule.includesCompletion
+            query.includeCompleted = query.includeCompleted || view["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion)
         }
         return taskCache.matching(query)
+    }
+    func filterGroups(_ scope: TaskScope, tasks: [Record], includeCompleted: Bool = false) -> [TaskGrouping.Group] {
+        let view: Record? = { if case .saved(let id) = scope { return record("saved_views", id: id) }; return nil }()
+        let rule = view.flatMap { try? FilterRule(document: $0["query_ast"]) }
+        return TaskGrouping.queryGroups(tasks, rule: rule, by: viewValue(scope, field: "grouping", fallback: .string("none")).text, context: filterContext, today: calendarContext.today, timeZone: calendarContext.timeZone, includeCompleted: includeCompleted || view?["include_completed"].flag == true)
     }
     func captureDefaults(_ scope: TaskScope) -> [String: JSON] {
         guard case .saved(let id) = scope, let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [:] }

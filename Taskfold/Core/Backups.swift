@@ -216,6 +216,7 @@ extension WorkspaceBackup {
             if required { throw BackupFailure(message: "A \(table) reference is missing from this backup and workspace.") }
             return Self.stableID(source + "|" + canonical(account) + "|" + table, canonical(value))
         }
+        var queryOrderKeys: [String: String] = [:]
         let scopeReferences = try NSRegularExpression(pattern: "(?<![a-zA-Z0-9_])(project|label|view|section|note):([^:|]+)")
         func scope(_ key: String) throws -> String {
             guard key.unicodeScalars.count <= 300 else { throw BackupFailure(message: "A view key is too long.") }
@@ -226,7 +227,7 @@ extension WorkspaceBackup {
             for match in matches.reversed() {
                 guard let kindRange = Range(match.range(at: 1), in: key), let idRange = Range(match.range(at: 2), in: key), let wholeRange = Range(match.range, in: updated) else { continue }
                 let kind = String(key[kindRange]), id = String(key[idRange])
-                if kind == "project" && id == "none" && key[..<kindRange.lowerBound].hasSuffix("group:") { continue }
+                if kind == "project" && id == "none" && (key[..<kindRange.lowerBound].hasSuffix("group:") || key.contains(":group:query:")) { continue }
                 let table = ["project":"projects", "label":"labels", "view":"saved_views", "section":"sections", "note":"tasks"][kind]!
                 updated.replaceSubrange(wholeRange, with: kind + ":" + (try mapped(table, id)))
             }
@@ -235,6 +236,10 @@ extension WorkspaceBackup {
                 if parts.count == 3 && !parts[1].isEmpty {
                     updated = "group:" + (try mapped("projects", String(parts[1]))) + ":" + (parts[2] == "none" ? "none" : try mapped("sections", String(parts[2])))
                 }
+            }
+            if let replacement = queryOrderKeys.first(where: { key.hasPrefix($0.key + ":") }) {
+                let oldQuery = replacement.key.components(separatedBy: ":group:").last!
+                updated = updated.replacingOccurrences(of: ":group:" + oldQuery + ":", with: ":group:" + replacement.value + ":")
             }
             guard updated.unicodeScalars.count <= 300 else { throw BackupFailure(message: "A restored view key is too long.") }
             return updated
@@ -271,6 +276,7 @@ extension WorkspaceBackup {
                 }
                 if field == "assignee" && value == sourceAccount { return .predicate(field, "me") }
                 return rule
+            case .sections(let r): return .sections(try r.map(remapRule))
             case .and(let r): return .and(try r.map(remapRule))
             case .or(let r): return .or(try r.map(remapRule))
             case .not(let r): return .not(try remapRule(r))
@@ -347,7 +353,12 @@ extension WorkspaceBackup {
                     // The new task needs its own notification scheduling; provider import mappings are not replayed.
                     row["notification_sent_at"] = .null
                 }
-                if table == "saved_views" { row["query_ast"] = try remapRule(FilterRule(document: row["query_ast"])).document }
+                if table == "saved_views" {
+                    let originalRule = try FilterRule(document: row["query_ast"])
+                    let restoredRule = try remapRule(originalRule)
+                    row["query_ast"] = restoredRule.document
+                    for (old, new) in zip(originalRule.querySectionKeys, restoredRule.querySectionKeys) { queryOrderKeys["scope:view:" + original.id + ":group:" + old] = new }
+                }
                 if table == "view_orders" { row["ids"] = .array(try original["ids"].list.map { .string(try mapped("tasks", $0.text)) }) }
                 row.fields.removeValue(forKey: "updated_at")
                 let existing = currentRows[table]?[canonical(row.id)]

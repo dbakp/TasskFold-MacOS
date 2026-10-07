@@ -872,10 +872,14 @@ final class TaskCache {
         let nameBindings = query.filter?.nameBindings(projects: query.filterProjects, sections: query.filterSections, labels: query.filterLabels)
         let matched = tasks.filter { task in
             if query.scope == .completed { if !task.completed { return false } }
-            else if !query.includeCompleted && task.completed { return false }
+            else if !query.includeCompleted && task.completed && !(query.filter?.hasQuerySections == true && query.filter?.includesCompletion == true) { return false }
             if query.priority > 0 && task.priority != query.priority { return false }
             if !query.text.isEmpty && !(task.title + " " + task.string("description")).localizedCaseInsensitiveContains(query.text) { return false }
-            if let filter = query.filter, !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings) { return false }
+            if let filter = query.filter {
+                if case .sections(let rules) = filter {
+                    guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings) }) else { return false }
+                } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings) { return false }
+            }
             let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
             switch query.scope {
             case .inbox: return task.string("project_id").isEmpty
@@ -1264,7 +1268,7 @@ enum WidgetProjection {
                     filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) },
                     filterProjects: projects.map { FilterReference(id: $0.id, name: $0.name) },
                     filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, userID: account, timeZone: calendar.timeZone.identifier)
-                days[day] = cache.matching(query).map(\.id)
+                days[day] = cache.matching(query).filter { !$0.completed }.map(\.id)
             }
             result.append(row(view, kind: "filter", days: days))
         }
