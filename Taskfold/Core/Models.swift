@@ -1408,6 +1408,19 @@ extension Snapshot {
         result.tables["saved_views"] = [Record(["id": .string("live-calendar"), "user_id": .string(user), "name": .string("Live calendar"), "query_ast": FilterRule.predicate("planned_on", "today").document, "layout": .string("list"), "sort_by": .string("title")])]
         return result
     }
+    static func filterTimeFixture(user: String) -> Snapshot {
+        var result = filterPrimitiveFixture(user: user)
+        result.tables["tasks"] = (0..<6).map { index in
+            var row = Record.task(user: user, project: "filter-studio")
+            row["id"] = .string("filter-time-\(index)")
+            row["title"] = .string(["Morning plan", "On the hour", "Afternoon plan", "Tomorrow morning", "All-day plan", "Deadline only"][index])
+            row["due_date"] = index == 5 ? .null : .string(index == 3 ? Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!) : Dates.day(Date()))
+            row["due_time"] = index < 4 ? .string(["13:00", "14:00", "15:00", "13:00"][index]) : .null
+            row["deadline_date"] = index == 5 ? .string(Dates.day(Date())) : .null
+            return row
+        }
+        return result
+    }
     static func filterDateFixture(user: String) -> Snapshot {
         var result = filterPrimitiveFixture(user: user)
         result.tables["tasks"] = (0..<4).map { index in

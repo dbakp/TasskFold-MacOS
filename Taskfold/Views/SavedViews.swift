@@ -19,7 +19,7 @@ struct SavedViewEditor: View {
     @State private var loadFailure: String?
     @FocusState private var focusedField: String?
     private static let choices: [(String, String)] = [
-        ("all","All tasks"),("search","Keywords"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
+        ("all","All tasks"),("search","Keywords"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
         ("priority","Priority"),("project","Project"),("section","Section"),("label","Label"),("completed","Completion"),("assignee","Assigned to"),
         ("due","Planned on date"),("before","Planned before date"),("deadline_today","Deadline today"),("deadline_overdue","Past deadline"),("deadline_next","Deadline in next days"),("no_deadline","No deadline"),("deadline","Deadline on date"),("deadline_before","Deadline before date"),("duration_max","Estimate up to minutes"),("no_estimate","No estimate")]
     private var people: [Record] {
@@ -68,7 +68,8 @@ struct SavedViewEditor: View {
                         if let queryFailure { Label(queryFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterValidationError") }
                         DisclosureGroup("Syntax examples") {
                             Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
-                            Text("Date examples: date:tomorrow, date before:\"next Monday\", effective-due:today, deadline after:yesterday. Effective due uses the planned date, falling back to the deadline only when there is no plan. Legacy due:YYYY-MM-DD and Today keep using the plan.").font(.caption).foregroundStyle(.secondary)
+                            Text("Date examples: date:tomorrow, date before:\"next Monday\", effective-due:today, deadline after:yesterday. Effective due uses the planned date, falling back to the deadline only when there is no plan. Legacy due:YYYY-MM-DD and Today keep using the plan. Add a time: date before:\"today at 2pm\". Date-and-time conditions exclude tasks without a planned time.").font(.caption).foregroundStyle(.secondary)
+                            Text("Time examples: today & time before:14:00, time after:6pm. Time-only conditions compare the planned clock on any day in your current time zone. Combine with a date to choose a day.").font(.caption).foregroundStyle(.secondary)
                         }.font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("filterSyntaxExamples")
                         Text("Nested expressions stay in expression mode so switching views cannot discard conditions.").font(.caption).foregroundStyle(.secondary)
                     }
@@ -159,10 +160,15 @@ struct SavedViewEditor: View {
                 ForEach(people) { person in Text(person.string("display_name")).tag(person.id) }
             }
         }
+        else if FilterTimeReference.expressions[field] != nil {
+            TextField("Time, such as 14:00", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
+            Text("Uses your current time zone, on any day. Add a date condition to choose a day. Before and after exclude the chosen minute.").font(.caption).foregroundStyle(.secondary)
+        }
         else if FilterDateReference.expressions[field] != nil {
             TextField("Date or phrase", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
-            Text("Try today, tomorrow, Monday, 6 October 2026 or in 7 days. Relative dates stay relative. Before and after exclude the chosen day.").font(.caption).foregroundStyle(.secondary)
-            if field.hasPrefix("effective_due_") { Text("Uses the planned date. If there is no plan, uses the deadline.").font(.caption).foregroundStyle(.secondary) }
+            Text("Try today, tomorrow or in 7 days. Relative dates stay relative. Before and after exclude the chosen day or minute.").font(.caption).foregroundStyle(.secondary)
+            if !field.hasPrefix("deadline") { Text("Add a time: today at 14:00. Uses your current time zone; timed conditions exclude tasks without a time.").font(.caption).foregroundStyle(.secondary) }
+            if field.hasPrefix("effective_due_") { Text(FilterTimeReference.split(condition.wrappedValue.value) == nil ? "Uses the planned date. If there is no plan, uses the deadline." : "Timed conditions require a planned date and time.").font(.caption).foregroundStyle(.secondary) }
         }
         else if field == "search" {
             TextField("Words in title or description", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
@@ -173,6 +179,7 @@ struct SavedViewEditor: View {
     }
     private func defaultValue(_ field: String) -> String {
         if FilterDateReference.expressions[field] != nil { return "today" }
+        if FilterTimeReference.expressions[field] != nil { return "14:00" }
         switch field { case "priority": return "1"; case "next", "deadline_next": return "7"; case "duration_max": return "25"; case "completed": return "false"; case "assignee": return "me"; case "due", "before", "deadline", "deadline_before": return store.calendarContext.today; default: return "" }
     }
     private func simpleConditions(_ rule: FilterRule) -> ([FilterCondition], Bool)? {

@@ -155,4 +155,22 @@ final class WidgetListTests: XCTestCase {
         let changed = try snapshot([row], views: [view(rule)]); XCTAssertTrue(changed.listTasks(key, at: now).isEmpty)
         let other = try snapshot([row], account: "another", views: [view(rule)]); XCTAssertNil(other.list(key)); XCTAssertTrue(other.listTasks(key, at: now).isEmpty)
     }
+    func testTimedSavedFiltersProjectExactNativeMembershipAcrossDSTAndRelativeDays() throws {
+        var morning = task("morning", due: "2026-10-25"); morning["due_time"] = .string("01:30:00"); morning["time_zone"] = .string("Europe/Copenhagen")
+        var fold = task("fold", due: "2026-10-25"); fold["due_time"] = .string("02:30"); fold["time_zone"] = .string("Europe/Copenhagen"); fold["scheduled_at"] = .string("2026-10-25T01:30:00Z")
+        let rows = [morning, fold, task("untimed", due: "2026-10-25")]
+        for expression in ["date before:tomorrow at 02:30", "time before:02:30", "date:tomorrow & time:02:30"] {
+            var parser = try FilterParser(expression, context: FilterContext()); let rule = try parser.parse()
+            let data = try snapshot(rows, views: [view(rule)])
+            let key = try XCTUnwrap(data.availableLists.first { $0.kind == "filter" }?.id)
+            for offset in 0...7 {
+                let date = try XCTUnwrap(cph.date(byAdding: .day, value: offset, to: now))
+                let expected = rows.filter { rule.matches($0, today: WidgetSnapshot.day(date, calendar: cph), userID: "owner", labels: [], timeZone: cph.timeZone.identifier) }.map(\.id)
+                XCTAssertEqual(Set(data.listTasks(key, at: date, calendar: cph).map(\.id)), Set(expected))
+            }
+            if expression == "date before:tomorrow at 02:30" { XCTAssertEqual(data.listTasks(key, at: now, calendar: cph).map(\.id), ["morning"]) }
+            let encoded = String(decoding: try JSONEncoder().encode(data), as: UTF8.self); XCTAssertFalse(encoded.contains("query_ast")); XCTAssertFalse(encoded.contains("planned_time_before"))
+        }
+    }
+
 }

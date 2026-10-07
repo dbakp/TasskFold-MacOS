@@ -270,4 +270,17 @@ final class BackupTests: XCTestCase {
         XCTAssertFalse(expected.matches(row, today: "2026-10-25", userID: other, labels: [], timeZone: "Europe/Copenhagen"))
     }
 
+    func testTimedFiltersSurvivePortableBackupAccountAndProjectRemapping() throws {
+        var file = backup()
+        let rule = FilterRule.and([.predicate("project", projectID), .predicate("planned_before", "tomorrow at 03:00"), .predicate("planned_time_after", "01:00")])
+        file.tables["saved_views"]![0]["query_ast"] = rule.document
+        let plan = try WorkspaceBackup.read(file.data()).plan(current: Snapshot(), account: other)
+        let restored = try XCTUnwrap(plan.changes.first { $0.table == "saved_views" })
+        let expected = FilterRule.and([.predicate("project", plan.mappedIDs["projects"]![projectID]!), .predicate("planned_before", "tomorrow at 03:00"), .predicate("planned_time_after", "01:00")])
+        XCTAssertEqual(try FilterRule(document: try XCTUnwrap(restored.fields["query_ast"])), expected)
+        let row = Record(try XCTUnwrap(plan.changes.first { $0.table == "tasks" }).fields)
+        XCTAssertTrue(expected.matches(row, today: "2026-10-24", userID: other, labels: [], timeZone: "Europe/Copenhagen"))
+        XCTAssertFalse(expected.matches(row, today: "2026-10-23", userID: other, labels: [], timeZone: "Europe/Copenhagen"))
+    }
+
 }

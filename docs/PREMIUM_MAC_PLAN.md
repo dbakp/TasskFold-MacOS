@@ -510,3 +510,12 @@ Both own packages pass 443 Debug/optimized tests (four optional integration skip
 ## 7 October — calendar reminder parity and backend projection
 
 Mac independently owns the civil-day/count/anchor correction, editor start-day retention and 33 native/SQL calendar fixtures. Both cores pass 445 Debug/optimized tests (four optional integration skips); own Release app/widgets and native UI-test targets build, with universal Mac binaries. The disabled v6 provider worker and six exact deployed migrations support bounded version-2/r5 projection. Whole-account/cohort, authority/opt-in/provider/physical and actual paired/Mac runtime acceptance remain open. [Detailed evidence](P0_IMPLEMENTATION.md#7-october--portable-civil-day-and-backend-reminder-validation). No installed Mac app was opened or replaced; full P0 stays active.
+
+
+## 7 October — scheduled time filters and native accessibility acceptance
+
+The independently owned Mac builder/expression engine now supports clock at/before/after and explicit planned/effective-due dated-clock boundaries, compatible with the iOS-owned implementation. Inline help stays concise and distinguishes minute/day boundaries and timed versus deadline-only work. Queues, backups and private widget membership preserve the canonical contract; date-only queries retain their meaning. [Behavior and rollout](SCHEDULED_TIME_FILTERS.md).
+
+Both own Core packages pass 453 Debug/optimized tests (four optional integration skips, zero failures/core warnings). Final Release app/widget builds and UI-test compilation pass; Mac app and extension are universal. Four phone and four tablet scenarios pass against the final source, including dark largest text, exact results, validation, editing and relaunch. Six unmodified iOS/iPadOS PNGs per repository and exact bundle/log/input-manifest evidence are recorded in [the checkpoint](P0_IMPLEMENTATION.md#7-october--scheduled-clocks-and-explicit-date-at-time-filters).
+
+Mac interaction remains compile-only under the no-GUI constraint. Installed Mac app, provider/backend settings and public distribution were not changed. Actual paired/offline/account/restore/revocation, physical/provisioned widgets, provider acceptance, richer/ordered/sliding filters and reminder delivery/preferences gates remain; the full P0 goal stays active.
