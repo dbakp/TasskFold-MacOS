@@ -859,21 +859,23 @@ enum TaskScope: Hashable {
 struct TaskCalendarContext: Hashable, Sendable {
     let today: String
     let timeZone: String
+    let minute: Date
     init(now: Date = Date(), timeZone: TimeZone = .autoupdatingCurrent) {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = timeZone
         let parts = calendar.dateComponents([.year, .month, .day], from: now)
         today = String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
         self.timeZone = timeZone.identifier
+        minute = FilterClockWindow.minute(now)
     }
     func applying(to query: TaskQuery) -> TaskQuery {
-        var query = query; query.today = today; query.timeZone = timeZone; return query
+        var query = query; query.today = today; query.timeZone = timeZone; query.now = query.filter?.usesClockWindow == true ? minute : nil; return query
     }
     /// Wake at midnight, with a bounded fallback for clock changes without a notification.
     /// Calendar intervals handle 23/25-hour days and non-hour DST transitions.
     static func refreshDelay(after now: Date, timeZone: TimeZone = .autoupdatingCurrent) -> TimeInterval {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = timeZone
         let remaining = calendar.dateInterval(of: .day, for: now)?.end.timeIntervalSince(now) ?? 60
-        return max(0.05, min(60, remaining))
+        return max(0.05, min(60 - (now.timeIntervalSinceReferenceDate - FilterClockWindow.minute(now).timeIntervalSinceReferenceDate), remaining))
     }
 }
 
@@ -887,6 +889,7 @@ struct TaskQuery: Hashable {
     var selectedDay: String?
     var labelName = ""
     var filter: FilterRule?
+    var now: Date?
     var filterLabels: [FilterReference] = []
     var filterProjects: [FilterReference] = []
     var filterSections: [FilterReference] = []
@@ -907,7 +910,9 @@ final class TaskCache {
         results.removeAll(keepingCapacity: true)
         return true
     }
-    func matching(_ query: TaskQuery) -> [Record] {
+    func matching(_ incoming: TaskQuery) -> [Record] {
+        var query = incoming
+        query.now = query.filter?.usesClockWindow == true ? query.now.flatMap { $0.timeIntervalSinceReferenceDate.isFinite ? FilterClockWindow.minute($0) : nil } : nil
         if let cached = results[query] { return cached }
         computationCount += 1
         let nameBindings = query.filter?.nameBindings(projects: query.filterProjects, sections: query.filterSections, labels: query.filterLabels)
@@ -918,8 +923,8 @@ final class TaskCache {
             if !query.text.isEmpty && !(task.title + " " + task.string("description")).localizedCaseInsensitiveContains(query.text) { return false }
             if let filter = query.filter {
                 if case .sections(let rules) = filter {
-                    guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings) }) else { return false }
-                } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings) { return false }
+                    guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now) }) else { return false }
+                } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now) { return false }
             }
             let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
             switch query.scope {
@@ -1286,10 +1291,15 @@ enum WidgetProjection {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account)
         let cache = TaskCache(); cache.update(tasks)
-        func row(_ record: Record, kind: String, days: [String: [String]], error: Bool = false) -> JSON {
+        func row(_ record: Record, kind: String, days: [String: [String]], error: Bool = false, clock: Bool = false) -> JSON {
             let key = (try? JSONEncoder().encode([account, kind, record.id]).base64EncodedString()) ?? ""
-            return .object(["id": .string(key), "recordID": .string(record.id), "kind": .string(kind), "name": .string(record.name),
-                "days": .object(days.mapValues { .array($0.map(JSON.string)) }), "timeZone": .string(calendar.timeZone.identifier), "invalid": .bool(error)])
+            var fields: [String: JSON] = ["id": .string(key), "recordID": .string(record.id), "kind": .string(kind), "name": .string(record.name),
+                "days": .object(days.mapValues { .array($0.map(JSON.string)) }), "timeZone": .string(calendar.timeZone.identifier), "invalid": .bool(error)]
+            if clock {
+                let minute = FilterClockWindow.minute(now).timeIntervalSinceReferenceDate
+                fields["clockUpdated"] = .number(minute); fields["clockValidUntil"] = .number(minute + 60)
+            }
+            return .object(fields)
         }
         var result = projects.filter { !$0.id.isEmpty }.map { project in
             row(project, kind: "project", days: ["*": cache.matching(TaskQuery(scope: .project(project.id))).map(\.id)])
@@ -1302,16 +1312,16 @@ enum WidgetProjection {
                 result.append(row(view, kind: "filter", days: [:], error: true)); continue
             }
             var days: [String: [String]] = [:]
-            for offset in 0..<8 {
+            for offset in 0..<(rule.usesClockWindow ? 1 : 8) {
                 guard let date = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)) else { continue }
                 let day = TaskPlanner.dayKey(date, calendar: calendar)
-                let query = TaskQuery(scope: .all, sort: view.string("sort_by"), today: day, filter: rule,
+                let query = TaskQuery(scope: .all, sort: view.string("sort_by"), today: day, filter: rule, now: rule.usesClockWindow ? now : nil,
                     filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) },
                     filterProjects: projects.map { FilterReference(id: $0.id, name: $0.name) },
                     filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, userID: account, timeZone: calendar.timeZone.identifier)
                 days[day] = cache.matching(query).filter { !$0.completed }.map(\.id)
             }
-            result.append(row(view, kind: "filter", days: days))
+            result.append(row(view, kind: "filter", days: days, clock: rule.usesClockWindow))
         }
         return result
     }
@@ -1466,6 +1476,19 @@ extension Snapshot {
             row["completed"] = .bool(index == 3)
             row["due_date"] = .string(Dates.day(Date()))
             row["deadline_date"] = .string(Dates.day(Date()))
+            return row
+        }
+        return result
+    }
+    static func filterClockWindowFixture(user: String) -> Snapshot {
+        var result = filterPrimitiveFixture(user: user)
+        result.tables["tasks"] = (0..<5).map { index in
+            var row = Record.task(user: user, project: "filter-studio")
+            row["id"] = .string("clock-window-\(index)")
+            row["title"] = .string(["Window past", "Window boundary", "Window later", "Window all day", "Window deadline only"][index])
+            row["due_date"] = index == 4 ? .null : .string(index == 0 ? "2026-10-07" : "2026-10-08")
+            row["due_time"] = index < 3 ? .string(["09:00", "10:01", "10:02"][index]) : .null
+            row["deadline_date"] = index == 4 ? .string("2026-10-07") : .null
             return row
         }
         return result

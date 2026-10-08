@@ -6,7 +6,16 @@ struct CalendarContextFixtureControls: ViewModifier {
     private var prefix: String { editor ? "calendarEditorFixture" : "calendarFixture" }
     @Environment(Store.self) private var store
     @ViewBuilder func body(content: Content) -> some View {
-        if store.calendarContextFixtureEnabled {
+        if store.clockWindowFixtureEnabled {
+            VStack(spacing: 0) {
+                HStack {
+                    Button("Advance window clock") { store.setClockWindowFixtureClock(1) }
+                        .accessibilityIdentifier(prefix + "AdvanceWindow").frame(minHeight: 44)
+                    Text(store.clockWindowFixtureDataStatus).font(.caption2).accessibilityIdentifier(prefix + "WindowStatus")
+                }.padding(.horizontal, 8).frame(maxWidth: .infinity).background(.bar, ignoresSafeAreaEdges: [])
+                content
+            }
+        } else if store.calendarContextFixtureEnabled {
             VStack(spacing: 0) {
                 HStack {
                     Menu("Fixture clock") {

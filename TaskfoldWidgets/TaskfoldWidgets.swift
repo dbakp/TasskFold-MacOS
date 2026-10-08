@@ -140,6 +140,8 @@ struct WidgetList: Codable, Identifiable, Sendable {
     var days: [String: [String]]
     var timeZone: String
     var invalid: Bool
+    var clockUpdated: Double? = nil
+    var clockValidUntil: Double? = nil
     func belongs(to account: String) -> Bool {
         guard !account.isEmpty, let data = Data(base64Encoded: id), let key = try? JSONDecoder().decode([String].self, from: data) else { return false }
         return key == [account, kind, recordID] && ["project", "label", "filter"].contains(kind)
@@ -332,6 +334,11 @@ struct WidgetSnapshot: Codable {
     func listStatus(_ id: String?, at date: Date, calendar: Calendar = .current) -> WidgetListStatus {
         guard id != nil else { return .choose }
         guard let target = list(id), !target.invalid else { return .unavailable }
+        if target.clockUpdated != nil || target.clockValidUntil != nil {
+            guard target.kind == "filter", let start = target.clockUpdated, let end = target.clockValidUntil,
+                  start.isFinite, end.isFinite, end - start == 60,
+                  date.timeIntervalSinceReferenceDate >= start, date.timeIntervalSinceReferenceDate < end else { return .refresh }
+        }
         if target.kind == "filter", (target.timeZone != calendar.timeZone.identifier || target.days[Self.day(date, calendar: calendar)] == nil) { return .refresh }
         return .ready
     }
@@ -379,6 +386,16 @@ struct WidgetSnapshot: Codable {
         if let capacity, ["ready", "incomplete"].contains(capacity.calendarState), let stamp = capacity.calendarUpdated, stamp.isFinite {
             let expiry = Date(timeIntervalSinceReferenceDate: stamp + 3600)
             if expiry > now, expiry < dates.last ?? now { dates.append(expiry) }
+        }
+        return Array(Set(dates)).sorted()
+    }
+
+    /// Clock-window projections expire at their exact minute; retain the ordinary day entries.
+    func listTimelineDates(_ id: String?, from now: Date, calendar: Calendar = .current) -> [Date] {
+        var dates = Self.timelineDates(from: now, calendar: calendar)
+        if let expiry = list(id)?.clockValidUntil, expiry.isFinite {
+            let date = Date(timeIntervalSinceReferenceDate: expiry)
+            if date > now, date < dates.last ?? now { dates.append(date) }
         }
         return Array(Set(dates)).sorted()
     }
@@ -707,7 +724,7 @@ struct WindowProvider: AppIntentTimelineProvider {
     }
     func timeline(for configuration: WindowConfiguration, in context: Context) async -> Timeline<WindowEntry> {
         let snapshot = WidgetSnapshot.load()
-        return Timeline(entries: WidgetSnapshot.timelineDates(from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+        return Timeline(entries: snapshot.listTimelineDates(configuration.list?.id, from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
     }
     private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: WindowConfiguration) -> WindowEntry {
         WindowEntry(date: date, snapshot: snapshot, budget: configuration.budget, scope: configuration.scope, palette: configuration.palette, hideTitles: configuration.hideTitles, listID: configuration.list?.id)
@@ -720,7 +737,7 @@ struct DeadlineProvider: AppIntentTimelineProvider {
     }
     func timeline(for configuration: DeadlineConfiguration, in context: Context) async -> Timeline<DeadlineEntry> {
         let snapshot = WidgetSnapshot.load()
-        return Timeline(entries: WidgetSnapshot.timelineDates(from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+        return Timeline(entries: snapshot.listTimelineDates(configuration.list?.id, from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
     }
     private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: DeadlineConfiguration) -> DeadlineEntry {
         DeadlineEntry(date: date, snapshot: snapshot, window: configuration.window, palette: configuration.palette, hideTitles: configuration.hideTitles, listID: configuration.list?.id)
@@ -860,7 +877,7 @@ struct ListProvider: AppIntentTimelineProvider {
     func snapshot(for configuration: ListConfiguration, in context: Context) async -> ListEntry { context.isPreview ? placeholder(in: context) : entry(Date(), snapshot: .load(), configuration: configuration) }
     func timeline(for configuration: ListConfiguration, in context: Context) async -> Timeline<ListEntry> {
         let snapshot = WidgetSnapshot.load()
-        return Timeline(entries: WidgetSnapshot.timelineDates(from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+        return Timeline(entries: snapshot.listTimelineDates(configuration.list?.id, from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
     }
     private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: ListConfiguration) -> ListEntry {
         ListEntry(date: date, snapshot: snapshot, listID: configuration.list?.id, palette: configuration.palette, hideTitles: configuration.hideTitles)
@@ -871,7 +888,7 @@ struct WidgetListEmpty: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(status == .choose ? "Choose your list" : status == .refresh ? "Refresh this list" : "List unavailable").font(.subheadline.weight(.semibold)).lineLimit(2)
-            Text(status == .choose ? "Edit this widget to pick a project, label or filter." : status == .refresh ? "Open Taskfold to update this filter for today and your time zone." : "Open Taskfold to refresh, or edit this widget to choose another list.").font(.caption2).foregroundStyle(.secondary).lineLimit(3)
+            Text(status == .choose ? "Edit this widget to pick a project, label or filter." : status == .refresh ? "Open Taskfold to update this filter for the current date, time and time zone." : "Open Taskfold to refresh, or edit this widget to choose another list.").font(.caption2).foregroundStyle(.secondary).lineLimit(3)
         }
     }
 }

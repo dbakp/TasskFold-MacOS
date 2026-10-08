@@ -1,0 +1,134 @@
+{
+  "checkpoint": "2026-10-08 elapsed-time saved-filter windows",
+  "capturesInspected": 24,
+  "method": "Individual unmodified actual simulator screenshots viewed; no montage or image edits.",
+  "scope": "Light standard and dark Accessibility XXXL phone/tablet; six captures per case.",
+  "limitations": [
+    "Largest phone builder value and boundary-row clock use partial viewports; native assertions and bounded fixture cache prove those fields.",
+    "DEBUG-only clock bar consumes substantial largest-text viewport space.",
+    "Invalid +169 hours disables Save but generic date feedback does not explain the seven-day limit.",
+    "No Mac runtime, VoiceOver/full-surface, paired-account, provisioned WidgetKit host or release acceptance."
+  ],
+  "captures": [
+    {
+      "file": "phone-light-standard-elapsed-window-after-relaunch.png",
+      "SHA256": "d87a7a26e8be2979145974c9c15aaa516eb36c4b587451422a245494ad9e5591",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-light-standard-elapsed-window-persisted-expression.png",
+      "SHA256": "53fa0383268cd7b4d33bfe7927d61eb88e62ab41d49e6fb83da1d30dec7e53ef",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-light-standard-elapsed-window-after-minute-tick.png",
+      "SHA256": "d87a7a26e8be2979145974c9c15aaa516eb36c4b587451422a245494ad9e5591",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-light-standard-elapsed-window-before-minute-tick.png",
+      "SHA256": "7f2f96c334e8c9af32078ba340d8a1170bfb3d22fd5488553f2013038cbf90e9",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-light-standard-elapsed-window-builder.png",
+      "SHA256": "e0e34e002ef5afdce95a9903f4ad8e756b7b6def2bf6a092be3a457d871ecedc",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-light-standard-elapsed-window-validation.png",
+      "SHA256": "7304a0b46e74da5a1e7c52e0588243c21ec8002a800617224eacc21e046cd1cf",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-dark-largest-elapsed-window-after-relaunch.png",
+      "SHA256": "c38d938e78f25670a6402202be8a1fc170dcf331fecb0641eab3edc9c113237c",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-dark-largest-elapsed-window-persisted-expression.png",
+      "SHA256": "dd16dbd73fb95d50c7122a0707468bf935ff43c0aef27c584b7bd495e0304937",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-dark-largest-elapsed-window-after-minute-tick.png",
+      "SHA256": "80a4646ccf7102f5a4a0c4de5c6e52d9c26b905c274bee7ee0c9a60f47d01b06",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-dark-largest-elapsed-window-before-minute-tick.png",
+      "SHA256": "640c88ec82314fb3ca9361c380caeb1406ba93ba88d32f3bfdcfbfe979494e06",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-dark-largest-elapsed-window-builder.png",
+      "SHA256": "96a14877ec32210c7fed3a7dc0215529ebe477d8b17b59f0977bb3b23a15d910",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-dark-largest-elapsed-window-validation.png",
+      "SHA256": "918adb663d3fe5a63e48a4a38a1de6cbb13219a67a7b8393f9a87f120f896dcb",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-light-standard-elapsed-window-after-relaunch.png",
+      "SHA256": "6717b0463a129c54a15ec46401f90d6c69c7a2d643cae33df832ef96b45c0bfd",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-light-standard-elapsed-window-persisted-expression.png",
+      "SHA256": "4099e4e8a7b275671571ca9a6aa9e2791ac7ccd01bfdb77909c8366565882768",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-light-standard-elapsed-window-after-minute-tick.png",
+      "SHA256": "6717b0463a129c54a15ec46401f90d6c69c7a2d643cae33df832ef96b45c0bfd",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-light-standard-elapsed-window-before-minute-tick.png",
+      "SHA256": "d8fc3f63c23fb51ea7ecc6747e5a3f3cbd846b1cd61f872991962cca853a1132",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-light-standard-elapsed-window-builder.png",
+      "SHA256": "88d508b3a299764b8e9e20417fafc5a56fee089cef68b85f62558a071542c14e",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-light-standard-elapsed-window-validation.png",
+      "SHA256": "7e6d6ec97679eba1ea4e55667a74fed61b67753b7d661af8349d950f28d29d22",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-dark-largest-elapsed-window-after-relaunch.png",
+      "SHA256": "2de1dac81006f1dd5bc21ccecc400d48cd11a8b54b524a81e430e9f2a0c54f90",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-dark-largest-elapsed-window-persisted-expression.png",
+      "SHA256": "f22d784f9c1827954724637a2e16a030d07228e7b46746eea27bb31986e2fa8d",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-dark-largest-elapsed-window-after-minute-tick.png",
+      "SHA256": "0930ca0ae22344457b2deacd343cde28ff0a2be005596bb177b3485920046b48",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-dark-largest-elapsed-window-before-minute-tick.png",
+      "SHA256": "2884dd8601baf3f482db84aed7cbfe37a290e4ff32f6a944ca1a9199bdd298c4",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-dark-largest-elapsed-window-builder.png",
+      "SHA256": "ab7f593bb8a88871a708132e77b6f43d0ac648500dcb75ae0e6bb4a0a3e6331c",
+      "visuallyInspected": true
+    },
+    {
+      "file": "tablet-dark-largest-elapsed-window-validation.png",
+      "SHA256": "094e4c812a1898394fb3588556624504657f3efe5ff393e2f508cdf25243a3c4",
+      "visuallyInspected": true
+    }
+  ]
+}

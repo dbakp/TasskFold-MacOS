@@ -716,3 +716,88 @@ final class OrganizationTransportTests: XCTestCase {
     }
 
 }
+
+
+extension FilterTests {
+    func testElapsedWindowGrammarRoundTripBoundsAndDateOnlyRejection() throws {
+        for (source, expected) in [("now", "now"), ("+4 hours", "+4 hours"), ("in one minute", "+1 minute"), ("in 120 minutes", "+2 hours"), ("-30 minutes", "-30 minutes"), ("+168 hours", "+168 hours")] {
+            for prefix in ["date before", "date after", "effective-due before", "effective-due after"] {
+                let rule = try parse(prefix + ":" + source)
+                XCTAssertEqual(try parse(rule.expression(in: context)), rule)
+                XCTAssertEqual(try FilterRule(document: rule.document), rule)
+                XCTAssertTrue(rule.usesClockWindow); XCTAssertTrue(rule.expression(in: context).contains(expected))
+                XCTAssertEqual(rule.captureDefaults(in: context, today: "2026-10-08"), [:])
+            }
+        }
+        for bad in ["date:now", "deadline before:+4 hours", "created before:now", "time before:now", "date before:+169 hours", "date before:+10081 minutes", "date before:+0 hours", "date before:+-2 hours", "date after:-one thousand minutes", "date before:+4 hours at 2pm", "date before:+999999999999999999999 hours"] { XCTAssertThrowsError(try parse(bad), bad) }
+        XCTAssertEqual(try parse("before:2026-10-08"), .predicate("before", "2026-10-08"))
+    }
+    func testElapsedWindowStrictMinutesAndTimedPlanRequirement() throws {
+        let now = ISO8601DateFormatter().date(from: "2026-10-08T10:00:59Z")!
+        func row(_ id: String, _ day: String, _ clock: String) -> Record { task(id, ["due_date": .string(day), "due_time": .string(clock)]) }
+        let rows = [row("past", "2026-10-07", "23:59"), row("inside", "2026-10-08", "13:59"), row("edge", "2026-10-08", "14:00"), row("after", "2026-10-08", "14:01"), row("all-day", "2026-10-08", ""), row("bad-clock", "2026-10-08", "25:00"), task("deadline-only", ["deadline_date": .string("2026-10-07")])]
+        let cache = TaskCache(); cache.update(rows)
+        func ids(_ expression: String) throws -> Set<String> { Set(cache.matching(TaskQuery(scope: .all, today: "2026-10-08", filter: try parse(expression), now: now, timeZone: "UTC")).map(\.id)) }
+        XCTAssertEqual(try ids("date before:+4 hours"), ["past", "inside"])
+        XCTAssertEqual(try ids("date after:+4 hours"), ["after"])
+        XCTAssertEqual(try ids("effective-due before:+4 hours"), ["past", "inside"])
+        XCTAssertEqual(try ids("date after:now & date before:+4 hours"), ["inside"])
+        XCTAssertEqual(try ids("date before:-30 minutes"), ["past"])
+    }
+    func testElapsedWindowMissingReaderClockFailsClosedThroughNegationAndBooleanGroups() throws {
+        let row = task("safe", [:])
+        for input in ["date before:now", "NOT date before:now", "all OR date after:+1 hour", "NOT (date after:now AND p1)"] {
+            let rule = try parse(input)
+            XCTAssertFalse(rule.matches(row, today: "2026-10-08", userID: "a", labels: [], timeZone: "UTC"))
+            XCTAssertFalse(rule.matches(row, today: "2026-10-08", userID: "a", labels: [], timeZone: "UTC", now: Date(timeIntervalSinceReferenceDate: .nan)))
+            XCTAssertFalse(rule.resultMatches(row, context: context, today: "2026-10-08", timeZone: "UTC"))
+        }
+        let sections = try parse("NOT date before:now, all")
+        XCTAssertTrue(sections.matches(row, today: "2026-10-08", userID: "a", labels: [], timeZone: "UTC"))
+        XCTAssertEqual(TaskGrouping.queryGroups([row], rule: sections, by: "none", context: context, today: "2026-10-08", timeZone: "UTC").map { $0.tasks.map(\.id) }, [[], ["safe"]])
+    }
+    func testElapsedWindowCacheTicksWithoutTaskWritesAndOrdinaryQueriesKeepCache() throws {
+        let start = ISO8601DateFormatter().date(from: "2026-10-08T10:00:00Z")!
+        let rows = [task("edge", ["due_date": .string("2026-10-08"), "due_time": .string("10:01")])]
+        let cache = TaskCache(); cache.update(rows)
+        let window = TaskQuery(scope: .all, filter: try parse("date before:+1 minute"), timeZone: "UTC")
+        func context(_ seconds: Double) -> TaskCalendarContext { TaskCalendarContext(now: start.addingTimeInterval(seconds), timeZone: TimeZone(secondsFromGMT: 0)!) }
+        XCTAssertEqual(cache.matching(context(0).applying(to: window)).map(\.id), [])
+        let initial = cache.computationCount
+        XCTAssertEqual(cache.matching(context(59).applying(to: window)).map(\.id), []); XCTAssertEqual(cache.computationCount, initial)
+        XCTAssertEqual(cache.matching(context(60).applying(to: window)).map(\.id), ["edge"]); XCTAssertEqual(cache.computationCount, initial + 1)
+        let ordinary = TaskQuery(scope: .all, filter: try parse("date:today"))
+        _ = cache.matching(context(0).applying(to: ordinary)); let ordinaryCount = cache.computationCount
+        _ = cache.matching(context(60).applying(to: ordinary)); XCTAssertEqual(cache.computationCount, ordinaryCount)
+        XCTAssertEqual(cache.tasks, rows); XCTAssertFalse(cache.update(rows))
+        XCTAssertEqual(TaskCalendarContext.refreshDelay(after: start.addingTimeInterval(59), timeZone: TimeZone(secondsFromGMT: 0)!), 1, accuracy: 0.001)
+    }
+    func testElapsedWindowsUseAbsoluteElapsedTimeThroughDSTTravelAndMidnight() throws {
+        for (instant, expected) in [("2026-03-29T00:30:00Z", "2026-03-29T04:30:00Z"), ("2026-10-25T00:30:00Z", "2026-10-25T04:30:00Z"), ("2026-10-03T15:15:00Z", "2026-10-03T19:15:00Z"), ("2026-10-08T23:30:00Z", "2026-10-09T03:30:00Z")] {
+            let now = ISO8601DateFormatter().date(from: instant)!
+            XCTAssertEqual(FilterClockWindow.boundary("+4 hours", now: now), ISO8601DateFormatter().date(from: expected))
+            var fixed = task("fixed", ["due_date": .string("2026-10-09"), "due_time": .string("00:00"), "time_zone": .string("Europe/Copenhagen"), "scheduled_at": .string("2026-10-08T22:00:00Z")])
+            let rule = try parse("date before:+4 hours")
+            XCTAssertEqual(rule.matches(fixed, today: "2026-10-08", userID: "a", labels: [], timeZone: "Europe/Copenhagen", now: now), rule.matches(fixed, today: "2026-10-08", userID: "a", labels: [], timeZone: "Pacific/Honolulu", now: now))
+            fixed["time_zone"] = .null; fixed["scheduled_at"] = .null
+            if instant.hasSuffix("23:30:00Z") {
+                XCTAssertTrue(rule.matches(fixed, today: "2026-10-08", userID: "a", labels: [], timeZone: "UTC", now: now))
+                XCTAssertFalse(rule.matches(fixed, today: "2026-10-08", userID: "a", labels: [], timeZone: "Pacific/Honolulu", now: now))
+            }
+        }
+    }
+    func testElapsedQueriesKeepRelativeDocumentThroughOfflineQueueAndSectionGrouping() throws {
+        let rule = try parse("date before:+4 hours, date after:now & date before:+4 hours")
+        let view = Record(["id": .string("clock-view"), "name": .string("Next hours"), "query_ast": rule.document])
+        var snapshot = Snapshot(); snapshot.tables["saved_views"] = [view]
+        snapshot.pending = [Mutation(table: "saved_views", recordID: view.id, method: "POST", fields: view.fields)]
+        let decoded = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+        let restored = try FilterRule(document: decoded.tables["saved_views"]![0]["query_ast"])
+        XCTAssertEqual(restored, rule); XCTAssertEqual(decoded.pending[0].fields["query_ast"], rule.document)
+        let now = ISO8601DateFormatter().date(from: "2026-10-08T10:00:00Z")!
+        let rows = [task("past", ["due_date": .string("2026-10-07"), "due_time": .string("09:00")]), task("next", ["due_date": .string("2026-10-08"), "due_time": .string("13:00")])]
+        let groups = TaskGrouping.queryGroups(rows, rule: restored, by: "none", context: context, today: "2026-10-08", timeZone: "UTC", now: now)
+        XCTAssertEqual(groups.map { Set($0.tasks.map(\.id)) }, [["past", "next"], ["next"]]); XCTAssertEqual(groups.map(\.id).count, 2)
+        XCTAssertEqual(restored.captureDefaults(in: context, today: "2026-10-08"), [:])
+    }
+}

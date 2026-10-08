@@ -1,0 +1,144 @@
+{
+  "phone": {
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "bundleID": "com.dbakp.taskfold.clockwindowtests",
+    "cacheSHA256": "cffeae42ae295490c1d9936898469eab626bf9b9807dca4a407336fd368ed95a",
+    "tasks": [
+      {
+        "id": "clock-window-0",
+        "title": "Window past",
+        "due_date": "2026-10-07",
+        "due_time": "09:00",
+        "deadline_date": null,
+        "time_zone": null,
+        "scheduled_at": null,
+        "completed": false
+      },
+      {
+        "id": "clock-window-1",
+        "title": "Window boundary",
+        "due_date": "2026-10-08",
+        "due_time": "10:01",
+        "deadline_date": null,
+        "time_zone": null,
+        "scheduled_at": null,
+        "completed": false
+      },
+      {
+        "id": "clock-window-2",
+        "title": "Window later",
+        "due_date": "2026-10-08",
+        "due_time": "10:02",
+        "deadline_date": null,
+        "time_zone": null,
+        "scheduled_at": null,
+        "completed": false
+      },
+      {
+        "id": "clock-window-3",
+        "title": "Window all day",
+        "due_date": "2026-10-08",
+        "due_time": null,
+        "deadline_date": null,
+        "time_zone": null,
+        "scheduled_at": null,
+        "completed": false
+      },
+      {
+        "id": "clock-window-4",
+        "title": "Window deadline only",
+        "due_date": null,
+        "due_time": null,
+        "deadline_date": "2026-10-07",
+        "time_zone": null,
+        "scheduled_at": null,
+        "completed": false
+      }
+    ],
+    "queryAST": {
+      "root": {
+        "op": "and",
+        "children": [
+          {
+            "op": "predicate",
+            "field": "planned_before",
+            "value": "+1 minute"
+          }
+        ]
+      },
+      "version": 1
+    },
+    "pendingTaskMutations": 0
+  },
+  "tablet": {
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "bundleID": "com.dbakp.taskfold.clockwindowtests",
+    "cacheSHA256": "2acb638116add4c94441bd62a101a868c5d11d1e82f546d52c5a673399b327f9",
+    "tasks": [
+      {
+        "id": "clock-window-0",
+        "title": "Window past",
+        "due_date": "2026-10-07",
+        "due_time": "09:00",
+        "deadline_date": null,
+        "time_zone": null,
+        "scheduled_at": null,
+        "completed": false
+      },
+      {
+        "id": "clock-window-1",
+        "title": "Window boundary",
+        "due_date": "2026-10-08",
+        "due_time": "10:01",
+        "deadline_date": null,
+        "time_zone": null,
+        "scheduled_at": null,
+        "completed": false
+      },
+      {
+        "id": "clock-window-2",
+        "title": "Window later",
+        "due_date": "2026-10-08",
+        "due_time": "10:02",
+        "deadline_date": null,
+        "time_zone": null,
+        "scheduled_at": null,
+        "completed": false
+      },
+      {
+        "id": "clock-window-3",
+        "title": "Window all day",
+        "due_date": "2026-10-08",
+        "due_time": null,
+        "deadline_date": null,
+        "time_zone": null,
+        "scheduled_at": null,
+        "completed": false
+      },
+      {
+        "id": "clock-window-4",
+        "title": "Window deadline only",
+        "due_date": null,
+        "due_time": null,
+        "deadline_date": "2026-10-07",
+        "time_zone": null,
+        "scheduled_at": null,
+        "completed": false
+      }
+    ],
+    "queryAST": {
+      "version": 1,
+      "root": {
+        "op": "and",
+        "children": [
+          {
+            "op": "predicate",
+            "field": "planned_before",
+            "value": "+1 minute"
+          }
+        ]
+      }
+    },
+    "pendingTaskMutations": 0
+  }
+}

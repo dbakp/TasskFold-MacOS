@@ -1343,3 +1343,26 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(app.staticTexts["focusStatus"].label, "Paused"); XCTAssertEqual(app.staticTexts["focusTaskContext"].label, "Home")
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor func testElapsedFilterMinuteRefreshValidationAndRelaunch() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--clock-window-testing", "--clock-window-fixture"]; app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["newSavedView"].waitForExistence(timeout: 10)); app.buttons["newSavedView"].click()
+        let name = "Next minute " + String(UUID().uuidString.prefix(6))
+        let field = app.textFields["savedViewName"]; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeText(name)
+        app.descendants(matching: .any)["advancedFilter"].click()
+        let expression = app.textFields["filterExpression"]; XCTAssertTrue(expression.waitForExistence(timeout: 5)); app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("date before:+169 hours")
+        XCTAssertFalse(app.buttons["saveSavedView"].isEnabled)
+        app.buttons["clearFilterExpression"].click(); expression.click(); expression.typeText("date before:+1 minute"); XCTAssertTrue(app.buttons["saveSavedView"].isEnabled); app.buttons["saveSavedView"].click()
+        let view = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", name, name)).firstMatch; XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        XCTAssertTrue(app.buttons["Complete Window past"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Window boundary"].exists)
+        app.buttons["calendarFixtureAdvanceWindow"].click()
+        XCTAssertTrue(app.buttons["Complete Window boundary"].waitForExistence(timeout: 5)); XCTAssertFalse(app.buttons["Complete Window later"].exists)
+        XCTAssertEqual(app.staticTexts["calendarFixtureWindowStatus"].label, "Task plans unchanged")
+        app.terminate(); app.launchArguments = ["--uitesting", "--clock-window-testing", "--clock-window-shifted"]; app.launch(); XCTAssertTrue(view.waitForExistence(timeout: 5)); view.click()
+        XCTAssertTrue(app.buttons["Complete Window boundary"].waitForExistence(timeout: 5)); for title in ["Window later", "Window all day", "Window deadline only"] { XCTAssertFalse(app.buttons["Complete " + title].exists) }
+        view.rightClick(); app.menuItems["Edit filter"].click()
+        let value = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@", "filterConditionValue-")).firstMatch
+        XCTAssertTrue(value.waitForExistence(timeout: 5)); XCTAssertEqual(value.value as? String, "+1 minute"); app.buttons["Cancel"].click()
+    }
+}

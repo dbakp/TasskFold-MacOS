@@ -199,3 +199,40 @@ final class WidgetListTests: XCTestCase {
     }
 
 }
+
+
+extension WidgetListTests {
+    func testElapsedListMembershipExpiryTimelineAndPrivatePayload() throws {
+        var inside = task("inside", due: "2026-10-24"); inside["due_time"] = .string("15:00")
+        var edge = task("edge", due: "2026-10-24"); edge["due_time"] = .string("18:00")
+        var parser = try FilterParser("date before:+4 hours", context: FilterContext()); let rule = try parser.parse()
+        let value = try snapshot([inside, edge, task("no-clock", due: "2026-10-24")], views: [view(rule)])
+        let target = try XCTUnwrap(value.availableLists.first { $0.kind == "filter" })
+        XCTAssertEqual(target.days.count, 1)
+        XCTAssertEqual(value.listStatus(target.id, at: now, calendar: cph), .ready)
+        XCTAssertEqual(value.listTasks(target.id, at: now, calendar: cph).map(\.id), ["inside"])
+        XCTAssertEqual(value.listStatus(target.id, at: now.addingTimeInterval(59), calendar: cph), .ready)
+        for offset in [-1.0, 60, 86400] {
+            XCTAssertEqual(value.listStatus(target.id, at: now.addingTimeInterval(offset), calendar: cph), .refresh)
+            XCTAssertEqual(value.listTasks(target.id, at: now.addingTimeInterval(offset), calendar: cph).map(\.id), [])
+        }
+        XCTAssertTrue(value.listTimelineDates(target.id, from: now, calendar: cph).contains(now.addingTimeInterval(60)))
+        XCTAssertEqual(value.listTimelineDates(target.id, from: now, calendar: cph).count, 9)
+        let encoded = String(decoding: try JSONEncoder().encode(value), as: UTF8.self)
+        XCTAssertFalse(encoded.contains("query_ast")); XCTAssertFalse(encoded.contains("+4 hours")); XCTAssertFalse(encoded.contains("planned_before"))
+    }
+    func testElapsedListRejectsMalformedWindowsAndLegacyListsKeepDailyProjection() throws {
+        var parser = try FilterParser("date before:+4 hours", context: FilterContext()); let rule = try parser.parse()
+        var value = try snapshot([], views: [view(rule)])
+        let index = try XCTUnwrap(value.lists.firstIndex { $0.kind == "filter" }); let id = value.lists[index].id
+        for (start, end) in [(Optional<Double>.none, now.timeIntervalSinceReferenceDate + 60), (now.timeIntervalSinceReferenceDate, nil), (now.timeIntervalSinceReferenceDate, now.timeIntervalSinceReferenceDate + 61), (.nan, .infinity)] {
+            value.lists[index].clockUpdated = start; value.lists[index].clockValidUntil = end
+            XCTAssertEqual(value.listStatus(id, at: now, calendar: cph), .refresh)
+        }
+        let daily = try snapshot([], views: [view(.predicate("planned_on", "today"))])
+        let target = try XCTUnwrap(daily.availableLists.first { $0.kind == "filter" })
+        XCTAssertNil(target.clockUpdated); XCTAssertNil(target.clockValidUntil); XCTAssertEqual(target.days.count, 8)
+        XCTAssertEqual(daily.listStatus(target.id, at: now.addingTimeInterval(61), calendar: cph), .ready)
+        XCTAssertEqual(daily.listTimelineDates(target.id, from: now, calendar: cph), WidgetSnapshot.timelineDates(from: now, calendar: cph))
+    }
+}

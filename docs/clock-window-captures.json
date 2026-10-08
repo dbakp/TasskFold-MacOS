@@ -1,0 +1,194 @@
+[
+  {
+    "file": "phone-light-standard-elapsed-window-after-relaunch.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/793D1863-67F5-4ECD-A684-1C141C2BD597.png",
+    "SHA256": "d87a7a26e8be2979145974c9c15aaa516eb36c4b587451422a245494ad9e5591",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436064.084,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "phone-light-standard-elapsed-window-persisted-expression.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/81D90BCD-91A5-4CCA-BDCB-C291B2E424E4.png",
+    "SHA256": "53fa0383268cd7b4d33bfe7927d61eb88e62ab41d49e6fb83da1d30dec7e53ef",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436053.098,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "phone-light-standard-elapsed-window-after-minute-tick.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/3D27AA97-9832-4D98-AF1B-89C27AF5AA10.png",
+    "SHA256": "d87a7a26e8be2979145974c9c15aaa516eb36c4b587451422a245494ad9e5591",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436038.787,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "phone-light-standard-elapsed-window-before-minute-tick.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/B198D253-6E0E-4D57-9E5C-7D517E580C7F.png",
+    "SHA256": "7f2f96c334e8c9af32078ba340d8a1170bfb3d22fd5488553f2013038cbf90e9",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436035.939,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "phone-light-standard-elapsed-window-builder.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/41647A64-370C-4475-8C9A-2613F4B61529.png",
+    "SHA256": "e0e34e002ef5afdce95a9903f4ad8e756b7b6def2bf6a092be3a457d871ecedc",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436031.141,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "phone-light-standard-elapsed-window-validation.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/3760FC3E-90CC-409C-B7AD-A43F3E2E276D.png",
+    "SHA256": "7304a0b46e74da5a1e7c52e0588243c21ec8002a800617224eacc21e046cd1cf",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436022.453,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "phone-dark-largest-elapsed-window-after-relaunch.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/E39158A6-955A-45FB-9703-BA93574D0FE4.png",
+    "SHA256": "c38d938e78f25670a6402202be8a1fc170dcf331fecb0641eab3edc9c113237c",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436193.872,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "phone-dark-largest-elapsed-window-persisted-expression.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/081871F8-3120-4323-89CB-A27B344C4F5B.png",
+    "SHA256": "dd16dbd73fb95d50c7122a0707468bf935ff43c0aef27c584b7bd495e0304937",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436168.542,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "phone-dark-largest-elapsed-window-after-minute-tick.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/63CF2B7E-A4C9-4A62-BDD9-1FD95F6A7233.png",
+    "SHA256": "80a4646ccf7102f5a4a0c4de5c6e52d9c26b905c274bee7ee0c9a60f47d01b06",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436149.058,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "phone-dark-largest-elapsed-window-before-minute-tick.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/1E886DA8-D573-4134-98D3-38313ADC4C32.png",
+    "SHA256": "640c88ec82314fb3ca9361c380caeb1406ba93ba88d32f3bfdcfbfe979494e06",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436146.078,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "phone-dark-largest-elapsed-window-builder.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/5135F131-8116-4F59-8C4D-6C2EBCBEC496.png",
+    "SHA256": "96a14877ec32210c7fed3a7dc0215529ebe477d8b17b59f0977bb3b23a15d910",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436141.351,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "phone-dark-largest-elapsed-window-validation.png",
+    "origin": "/tmp/taskfold-clock-window-final-phone-attachments/0A133929-7597-4089-AD1E-5FE434C949DF.png",
+    "SHA256": "918adb663d3fe5a63e48a4a38a1de6cbb13219a67a7b8393f9a87f120f896dcb",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436128.32,
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705"
+  },
+  {
+    "file": "tablet-light-standard-elapsed-window-after-relaunch.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/9D6B7290-943C-457C-8579-A8D22120BD1D.png",
+    "SHA256": "6717b0463a129c54a15ec46401f90d6c69c7a2d643cae33df832ef96b45c0bfd",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436252.997,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  },
+  {
+    "file": "tablet-light-standard-elapsed-window-persisted-expression.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/D84EB474-8A93-46AA-AEB3-74D60046EEFE.png",
+    "SHA256": "4099e4e8a7b275671571ca9a6aa9e2791ac7ccd01bfdb77909c8366565882768",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436239.335,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  },
+  {
+    "file": "tablet-light-standard-elapsed-window-after-minute-tick.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/BF3E0931-9D83-4A6D-8499-503F6BBA597A.png",
+    "SHA256": "6717b0463a129c54a15ec46401f90d6c69c7a2d643cae33df832ef96b45c0bfd",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436224.385,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  },
+  {
+    "file": "tablet-light-standard-elapsed-window-before-minute-tick.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/AD530389-E7AA-45A1-8765-6A8D4A25F9C0.png",
+    "SHA256": "d8fc3f63c23fb51ea7ecc6747e5a3f3cbd846b1cd61f872991962cca853a1132",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436221.159,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  },
+  {
+    "file": "tablet-light-standard-elapsed-window-builder.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/E1F47D56-1960-40C1-B553-84F43C18B03E.png",
+    "SHA256": "88d508b3a299764b8e9e20417fafc5a56fee089cef68b85f62558a071542c14e",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436215.894,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  },
+  {
+    "file": "tablet-light-standard-elapsed-window-validation.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/DF77E5C6-D384-43A6-9993-29ED9AC04917.png",
+    "SHA256": "7e6d6ec97679eba1ea4e55667a74fed61b67753b7d661af8349d950f28d29d22",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterBuilderMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436206.831,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  },
+  {
+    "file": "tablet-dark-largest-elapsed-window-after-relaunch.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/7294C833-5A2D-40CB-8E71-00E80020EB5D.png",
+    "SHA256": "2de1dac81006f1dd5bc21ccecc400d48cd11a8b54b524a81e430e9f2a0c54f90",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436397.996,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  },
+  {
+    "file": "tablet-dark-largest-elapsed-window-persisted-expression.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/46CFDD30-1E3C-40CA-BA45-52E50B368041.png",
+    "SHA256": "f22d784f9c1827954724637a2e16a030d07228e7b46746eea27bb31986e2fa8d",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436382.576,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  },
+  {
+    "file": "tablet-dark-largest-elapsed-window-after-minute-tick.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/16ABFC2D-9A1E-4C1B-ADBE-D1BAB556F954.png",
+    "SHA256": "0930ca0ae22344457b2deacd343cde28ff0a2be005596bb177b3485920046b48",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436354.105,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  },
+  {
+    "file": "tablet-dark-largest-elapsed-window-before-minute-tick.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/D506661F-C9DF-4945-BA58-5A29618E3D8D.png",
+    "SHA256": "2884dd8601baf3f482db84aed7cbfe37a290e4ff32f6a944ca1a9199bdd298c4",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436351.158,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  },
+  {
+    "file": "tablet-dark-largest-elapsed-window-builder.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/FB2C46CE-3D12-4AEB-BC5B-6C3E5AAA003F.png",
+    "SHA256": "ab7f593bb8a88871a708132e77b6f43d0ac648500dcb75ae0e6bb4a0a3e6331c",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436346.218,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  },
+  {
+    "file": "tablet-dark-largest-elapsed-window-validation.png",
+    "origin": "/tmp/taskfold-clock-window-final-tablet-attachments/60B0A0EA-7B33-4B59-9511-7591F6EF6659.png",
+    "SHA256": "094e4c812a1898394fb3588556624504657f3efe5ff393e2f508cdf25243a3c4",
+    "testIdentifier": "TaskfoldUITests/testElapsedFilterDarkLargestMinuteRefreshAndRelaunch()",
+    "timestamp": 1791436321.731,
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969"
+  }
+]

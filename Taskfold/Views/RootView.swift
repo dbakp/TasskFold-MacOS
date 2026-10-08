@@ -264,6 +264,9 @@ struct RootView: View {
             workspace.section = .today
             try? store.persist()
         }
+        if arguments.contains("--uitesting") && arguments.contains("--clock-window-testing") {
+            store.startLocal(); store.startClockWindowFixture(); workspace.section = .inbox
+        }
         if arguments.contains("--uitesting") && arguments.contains("--calendar-context-testing") {
             store.startLocal(); store.startCalendarContextFixture(); workspace.section = .saved("live-calendar")
         }

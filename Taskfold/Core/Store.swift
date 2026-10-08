@@ -26,20 +26,22 @@ final class Store {
     @discardableResult func refreshCalendarContext() -> Bool {
         let next = TaskCalendarContext(now: calendarNow, timeZone: calendarTimeZone)
         guard next != calendarContext else { return false }
+        let dayOrZoneChanged = next.today != calendarContext.today || next.timeZone != calendarContext.timeZone
         calendarContext = next
-        publishWidgetSnapshot(scheduleCapacityRefresh: false)
+        let clockViews = savedViews.contains { (try? FilterRule(document: $0["query_ast"]))?.usesClockWindow == true }
+        if dayOrZoneChanged || clockViews { publishWidgetSnapshot(scheduleCapacityRefresh: false) }
         return true
     }
     var calendarRefreshDelay: TimeInterval { TaskCalendarContext.refreshDelay(after: calendarNow, timeZone: calendarTimeZone) }
     private var calendarNow: Date {
         #if DEBUG
-        if calendarContextFixtureEnabled, let calendarFixtureInstant { return calendarFixtureInstant }
+        if calendarContextFixtureEnabled || clockWindowFixtureEnabled, let calendarFixtureInstant { return calendarFixtureInstant }
         #endif
         return Date()
     }
     private var calendarTimeZone: TimeZone {
         #if DEBUG
-        if calendarContextFixtureEnabled, let calendarFixtureZone { return calendarFixtureZone }
+        if calendarContextFixtureEnabled || clockWindowFixtureEnabled, let calendarFixtureZone { return calendarFixtureZone }
         #endif
         return .autoupdatingCurrent
     }
@@ -49,6 +51,28 @@ final class Store {
     @ObservationIgnored private var calendarFixtureBaseline: Snapshot?
     var calendarContextFixtureEnabled: Bool {
         userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--calendar-context-testing")
+    }
+    var clockWindowFixtureEnabled: Bool {
+        userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--clock-window-testing")
+    }
+    func startClockWindowFixture() {
+        guard clockWindowFixtureEnabled else { return }
+        dailyBackupsEnabled = false; disableNotifications()
+        if ProcessInfo.processInfo.arguments.contains("--clock-window-fixture") {
+            snapshot = Snapshot.filterClockWindowFixture(user: userID); undoStack = []; redoStack = []
+            do { try persist() } catch { self.error = error.localizedDescription }
+        }
+        calendarFixtureBaseline = snapshot
+        setClockWindowFixtureClock(ProcessInfo.processInfo.arguments.contains("--clock-window-shifted") ? 1 : 0)
+        refreshCalendarContext()
+    }
+    func setClockWindowFixtureClock(_ stage: Int) {
+        guard clockWindowFixtureEnabled, (0...1).contains(stage) else { return }
+        calendarFixtureInstant = ISO8601DateFormatter().date(from: stage == 0 ? "2026-10-08T10:00:59Z" : "2026-10-08T10:01:00Z")
+        calendarFixtureZone = TimeZone(secondsFromGMT: 0)
+    }
+    var clockWindowFixtureDataStatus: String {
+        calendarFixtureBaseline?.tables["tasks"] == snapshot.tables["tasks"] && !snapshot.pending.contains(where: { $0.table == "tasks" }) ? "Task plans unchanged" : "Task plans changed"
     }
     func startCalendarContextFixture() {
         guard calendarContextFixtureEnabled else { return }
@@ -263,7 +287,7 @@ final class Store {
         if case .saved(let id) = query.scope {
             guard let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [] }
             query.filterProjects = projects.map { FilterReference(id: $0.id, name: $0.name) }; query.filterSections = rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
-            query.filter = rule; query.filterLabels = labels.map { FilterReference(id: $0.id, name: $0.name) }; query.userID = userID
+            query.filter = rule; query.now = rule.usesClockWindow ? calendarContext.minute : nil; query.filterLabels = labels.map { FilterReference(id: $0.id, name: $0.name) }; query.userID = userID
             query.includeCompleted = query.includeCompleted || view["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion)
         }
         return taskCache.matching(query)
@@ -271,7 +295,7 @@ final class Store {
     func filterGroups(_ scope: TaskScope, tasks: [Record], includeCompleted: Bool = false) -> [TaskGrouping.Group] {
         let view: Record? = { if case .saved(let id) = scope { return record("saved_views", id: id) }; return nil }()
         let rule = view.flatMap { try? FilterRule(document: $0["query_ast"]) }
-        return TaskGrouping.queryGroups(tasks, rule: rule, by: viewValue(scope, field: "grouping", fallback: .string("none")).text, context: filterContext, today: calendarContext.today, timeZone: calendarContext.timeZone, includeCompleted: includeCompleted || view?["include_completed"].flag == true)
+        return TaskGrouping.queryGroups(tasks, rule: rule, by: viewValue(scope, field: "grouping", fallback: .string("none")).text, context: filterContext, today: calendarContext.today, timeZone: calendarContext.timeZone, includeCompleted: includeCompleted || view?["include_completed"].flag == true, now: calendarContext.minute)
     }
     func captureDefaults(_ scope: TaskScope) -> [String: JSON] {
         guard case .saved(let id) = scope, let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [:] }
@@ -459,7 +483,7 @@ final class Store {
 
     private func widgetActionDisk() throws -> WidgetActionDisk {
         #if DEBUG
-        if calendarContextFixtureEnabled {
+        if calendarContextFixtureEnabled || clockWindowFixtureEnabled {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "CalendarContextTests", directoryHint: .isDirectory))
         }
         if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") {

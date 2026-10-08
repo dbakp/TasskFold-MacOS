@@ -1,0 +1,126 @@
+{
+  "checkpoint": "2026-10-08 elapsed-time saved-filter windows",
+  "repository": "mac",
+  "baseline": "5ebed47fd5227d31868c2ac6628a1f038e0681df",
+  "inputManifest": {
+    "path": "/tmp/taskfold-authority-mac-commit-polish/docs/clock-window-inputs-sha256.json",
+    "SHA256": "e18809b5ee7a222757aec60f2750a6729406ad4ee3643e4e810d7c1663eec104"
+  },
+  "newCoreMethods": 8,
+  "ownCore": {
+    "Debug": {
+      "tests": 548,
+      "skipped": 4,
+      "failed": 0,
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-clock-window-mac-debug.log",
+        "SHA256": "c35812a4ff7582279980b8beb8e4df40617baae574a01b07c524a31c47da4c68"
+      }
+    },
+    "Release": {
+      "tests": 548,
+      "skipped": 4,
+      "failed": 0,
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-clock-window-mac-release-core.log",
+        "SHA256": "fb13c81f9475f493cfefb6a6e9ccf1c74a3e6db0a5f8d54b700f5e304f1ea611"
+      }
+    }
+  },
+  "nativeBuilds": {
+    "Debug": {
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-clock-window-mac-debug-build.log",
+        "SHA256": "029cf732565610fc22f6bf0ebac62c56b5ff85056c5a97ab81ee82781825f98b"
+      },
+      "signingAllowed": false,
+      "overlay": "none"
+    },
+    "Release": {
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-clock-window-mac-release-build.log",
+        "SHA256": "8ad205d6b440faba0d8626c48255a5b911d1f37a67cfea22f4f3f27ef8a3acb3"
+      },
+      "signingAllowed": false,
+      "overlay": "none"
+    }
+  },
+  "nativeIOS": {
+    "phone": {
+      "resultBundle": "/tmp/taskfold-clock-window-final-phone.xcresult",
+      "log": {
+        "path": "/tmp/taskfold-clock-window-final-phone.log",
+        "SHA256": "edf94da02bc13549514d4dd55cc52908b67bc05c0711915642ec57ffbc1562e3"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-clock-window-final-phone-summary.json",
+        "SHA256": "9ec95b155c2f81d204143a8217991b9226cb6407ebbe241cd728871f4f78258a"
+      },
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "terminalExitCode": 0
+    },
+    "tablet": {
+      "resultBundle": "/tmp/taskfold-clock-window-final-tablet.xcresult",
+      "log": {
+        "path": "/tmp/taskfold-clock-window-final-tablet.log",
+        "SHA256": "fe63790dcba2008e2d02ecbe07d536e356a768fc300ad5de19b97dca8746f639"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-clock-window-final-tablet-summary.json",
+        "SHA256": "e40a198607c1d63c79934eaa865c2224139d08cedc8ef3f3e92a1d62353516c5"
+      },
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "terminalExitCode": 0
+    }
+  },
+  "nativeMac": "UI test compiles only; no Mac app runtime/installation performed",
+  "fullP0": "active; this is a checkpoint, not full acceptance",
+  "compilerNotices": "Existing nonthrowing try notice in Filters and native SDK/animation/metadata notices remain; no core-warning-free claim.",
+  "initialNative": {
+    "phone": {
+      "passed": 1,
+      "failed": 1,
+      "skipped": 0,
+      "terminalExitCode": 65,
+      "resultBundle": "/tmp/taskfold-clock-window-phone.xcresult",
+      "summary": {
+        "path": "/tmp/taskfold-clock-window-phone-initial-summary.json",
+        "SHA256": "885c916d6ddfe58eab65fbbc05e531fb7924f965b21a48609c0c81044dd39b45"
+      },
+      "log": {
+        "path": "/tmp/taskfold-clock-window-phone.log",
+        "SHA256": "3c4595e239bcdc858474654f7e09fe5d961da826853e9299cecf72c7a3597166"
+      }
+    },
+    "tablet": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "terminalExitCode": 0,
+      "resultBundle": "/tmp/taskfold-clock-window-tablet.xcresult",
+      "summary": {
+        "path": "/tmp/taskfold-clock-window-tablet-initial-summary.json",
+        "SHA256": "994dbc7b5faa0dc31ea688cc36dafb06883095945580b51fdabf3098f6f99333"
+      },
+      "log": {
+        "path": "/tmp/taskfold-clock-window-tablet.log",
+        "SHA256": "38a75e583797b4f9d339150703d077cb396f1f90b2b22e6147ca8d6381a5fdd6"
+      }
+    },
+    "initialInputManifest": {
+      "path": "/tmp/taskfold-clock-window-ios-inputs.json",
+      "SHA256": "b138a6f5482a645dafbc48a62ff2735aa50297b3cf3d0201178d8768d033e078"
+    },
+    "finding": "Phone popup rows are visible above the underlying editor Form boundary; the test helper now uses phone popup/window bounds. App source and assertions remain unchanged."
+  }
+}

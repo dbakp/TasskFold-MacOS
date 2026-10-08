@@ -111,7 +111,7 @@ Both current native implementations support `search:`, `recurring`, `no time`, `
 
 Queries keep stable target IDs in the existing version-1 document. The current editors preserve unsupported documents and disable Save rather than replacing them with Today. Both repos own their sources and tests; neither app builds against its sibling. This protects the updated clients; previously shipped older clients still require upgrade/rollout acceptance before editing queries containing new fields. [Implementation and evidence](P0_IMPLEMENTATION.md#6-october--keyword-and-metadata-filters-with-query-preservation) separates local/native/stub evidence from paired-device acceptance.
 
-The [official Todoist filter reference](https://www.todoist.com/help/todoist/features/introduction-to-filters-V98wIH), checked 6 October and dated 4 September 2026, documents `%` as the current label prefix, with `@` temporarily supported. Its `due` query uses a deadline when no planned date exists, and comma-separated queries produce separate result lists. Taskfold keeps its existing planned-date meaning for `due`, Today and Overdue. A comma outside quotes gives an explicit unsupported-section error; it is never converted to OR. Full Todoist query-language parity is still open.
+The [official Todoist filter reference](https://www.todoist.com/help/todoist/features/introduction-to-filters-V98wIH), checked 6 October and dated 4 September 2026, documents `%` as the current label prefix, with `@` temporarily supported. Its `due` query uses a deadline when no planned date exists, and comma-separated queries produce separate result lists. Taskfold keeps its existing planned-date meaning for `due`, Today and Overdue. Comma-separated queries now produce ordered result lists with independent completion visibility; they are not flattened to Boolean OR. Full Todoist query-language parity is still open.
 
 The remaining port work is ordered by contract dependencies:
 
@@ -454,3 +454,8 @@ Largest phone text requires scrolling and the time-zone chooser truncates; horiz
 
 
 Natural clock checkpoint (7 October): period clocks and passed time-only next-day planning now have independent own Core/native build checks; four final isolated iOS walks and 20 inspected actual captures are recorded in [natural-clock-evidence.json](natural-clock-evidence.json). See [NATURAL_CLOCK_CAPTURE.md](NATURAL_CLOCK_CAPTURE.md) for the precise grammar/rollover contract and remaining parity gates. Full P0 is still active.
+
+
+## 8 October — elapsed-time saved-filter windows
+
+Independent native minute/hour references, foreground minute refresh and expiring widget projections are implemented. The existing version-1 document retains relative values; legacy civil-day predicates retain their meaning. Each own Debug/optimized Core suite passes 548 tests (four optional skips); unsigned native builds pass and Mac Release is universal. Four final isolated iOS walks and 24 inspected actual captures provide scoped native evidence; Mac UI tests compile without runtime. See [ELAPSED_FILTER_WINDOWS.md](ELAPSED_FILTER_WINDOWS.md), [evidence](clock-window-evidence.json) and [visual limits](clock-window-visual-review.json). Generic out-of-range feedback remains polish. Next-week/weekend preferences, hierarchy/collaboration grammar, real paired/mixed-version account acceptance, Mac runtime, provisioned hosts, delivery and distribution remain open; full P0 is active.
