@@ -140,3 +140,21 @@ final class QuickPlanningCompletionTests: XCTestCase {
         XCTAssertEqual(planning.options.first?.reference, "tomorrow")
     }
 }
+
+extension QuickPlanningCompletionTests {
+    func testCompoundPlanningChoicePreviewsTheWholePhraseAndRetainsLaterText() throws {
+        let input = "☎️ Review 1 week after next we p2"
+        let caret = (input as NSString).range(of: "next we").location + "next we".utf16.count
+        let result = menu(input, caret: caret)
+        let option = try XCTUnwrap(result.options.first { $0.reference == "1 week after next week" })
+        let chosen = try XCTUnwrap(result.choosing(option, in: input))
+        XCTAssertEqual(chosen.text, "☎️ Review 1 week after next week p2")
+        let parsed = QuickEntry(chosen.text, now: now, calendar: calendar)
+        XCTAssertEqual(parsed.title, "☎️ Review"); XCTAssertEqual(parsed.updates["due_date"], .string("2026-10-19")); XCTAssertEqual(parsed.updates["priority"], .number(2))
+        XCTAssertEqual(result.literalGroups, ["due_date"])
+        for text in ["Review 3651 days after next we", "Review 522 weeks after next we", "Review \\1 week after next we", "Review \"1 week after next we"] { XCTAssertTrue(menu(text).options.isEmpty, text) }
+        let missing = QuickPlanningCompletion("Review 1 week after next we", now: now, calendar: calendar, datePreferences: nil)
+        XCTAssertFalse(missing.options.contains { QuickNaturalDateText.usesDatePreferences($0.reference) })
+        XCTAssertTrue(missing.options.contains { $0.reference == "1 week after next wednesday" }, "Independent weekday anchors remain usable without date preferences")
+    }
+}

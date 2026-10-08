@@ -15,7 +15,7 @@ struct QuickPlanningCompletion {
         guard caret >= 0, let prefixRange = Range(NSRange(location: 0, length: caret), in: input) else { return }
         let prefix = String(input[prefixRange])
         // Protection consumes complete references, quotes, escaped words and URLs first.
-        let pattern = #"\\(?:[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|\S*)|"[^"\n]*(?:"|$)|(?<!\S)(?:https?://|www\.)\S*|(?<!\S)[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|(?<!\S)(!(?:every(?:\s+[\p{L}\p{N}:.,-]*)*|[\p{L}\p{N}:.]*(?:\s+(?:at\s+)?[\p{L}\p{N}:.]*)?)|ev(?:e(?:r(?:y!?)?)?)?(?![\p{L}\p{N}_])(?:\s+[\p{L}\p{N}, -]*)?|end(?:\s+of(?:\s+[\p{L}]*)?)?|next(?:\s+[\p{L}]*)?|this(?:\s+[\p{L}]*)?|in(?:\s+(?:the(?:\s+[\p{L}]*)?|\d*(?:\s+[\p{L}]*)?))?|at(?:\s+[\p{L}\p{N}:.]*)?|[\p{L}]{2,})"#
+        let pattern = #"\\(?:[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|\S*)|"[^"\n]*(?:"|$)|(?<!\S)(?:https?://|www\.)\S*|(?<!\S)[#/@%+](?:[a-z]+:)?(?:"[^"\n]*(?:"|$)|\S*)|(?<!\S)(!(?:every(?:\s+[\p{L}\p{N}:.,-]*)*|[\p{L}\p{N}:.]*(?:\s+(?:at\s+)?[\p{L}\p{N}:.]*)?)|(?:\d+|one)\s+(?:days?|weeks?)\s+(?:before|after)(?:\s+[\p{L}\p{N}, -]*)?|ev(?:e(?:r(?:y!?)?)?)?(?![\p{L}\p{N}_])(?:\s+[\p{L}\p{N}, -]*)?|end(?:\s+of(?:\s+[\p{L}]*)?)?|next(?:\s+[\p{L}]*)?|this(?:\s+[\p{L}]*)?|in(?:\s+(?:the(?:\s+[\p{L}]*)?|\d*(?:\s+[\p{L}]*)?))?|at(?:\s+[\p{L}\p{N}:.]*)?|[\p{L}]{2,})"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
               let match = regex.matches(in: prefix, range: NSRange(prefix.startIndex..., in: prefix)).last,
               match.range.location + match.range.length == caret, match.range(at: 1).location != NSNotFound,
@@ -60,7 +60,9 @@ struct QuickPlanningCompletion {
         } else {
             group = "due_date"; prompt = "Choose a planned date"
             candidates = ["today", "tomorrow", "yesterday", "next week", "this weekend", "next weekend", "next month", "next year", "end of month", "end of year"] + weekdays + weekdays.map { "next " + $0 }
-            if fragment == "in" || fragment.hasPrefix("in ") {
+            if let prefix = fragment.range(of: #"^(?:\d+|one)\s+(?:days?|weeks?)\s+(?:before|after)\s+"#, options: .regularExpression) {
+                candidates = candidates.map { String(fragment[prefix]) + $0 }
+            } else if fragment == "in" || fragment.hasPrefix("in ") {
                 candidates = ["in 1 day", "in 2 days", "in 1 week", "in 1 month"]
                 if let number = fragment.split(separator: " ").dropFirst().first, let n = Int(number), (1..<10000).contains(n) {
                     candidates = ["days", "weeks", "months", "hours", "minutes"].map { "in \(n) " + $0 }

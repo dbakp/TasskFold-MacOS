@@ -249,7 +249,7 @@ struct SavedViewEditor: View {
         }
         else if FilterDateReference.expressions[field] != nil {
             TextField("Date or phrase", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
-            Text("Try today, tomorrow, next week, this weekend or in 7 days. Relative dates stay relative and use your Date phrases settings. Before and after exclude the chosen day or minute.").font(.caption).foregroundStyle(.secondary)
+            Text("Try tomorrow, next week, in 7 days or 1 week after next week. Relative dates stay relative and use your Date phrases settings. Before and after exclude the chosen day or minute.").font(.caption).foregroundStyle(.secondary)
             if !field.hasPrefix("deadline") { Text("Add a time: today at 14:00. Uses your current time zone; timed conditions exclude tasks without a time.").font(.caption).foregroundStyle(.secondary) }
             if FilterClockWindow.fields.contains(field) { Text("Try now, +4 hours or -30 minutes. These windows use timed plans and update each minute while the app is open. Before and after exclude the boundary minute.").font(.caption).foregroundStyle(.secondary) }
             if field.hasPrefix("effective_due_") { Text(FilterTimeReference.split(condition.wrappedValue.value) == nil && FilterClockWindow.offset(condition.wrappedValue.value) == nil ? "Uses the planned date. If there is no plan, uses the deadline." : "Timed conditions require a planned date and time.").font(.caption).foregroundStyle(.secondary) }

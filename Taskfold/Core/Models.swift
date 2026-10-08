@@ -407,6 +407,7 @@ struct QuickEntry {
         protect(#"(?<!\S)\\"# + QuickPlannedClockText.body + QuickPlannedClockText.ending, removeEscape: true)
         protect(QuickRecurrenceText.pattern.replacingOccurrences(of: #"(?<![\p{L}\p{N}_!])"#, with: #"(?<!\S)\\"#), removeEscape: true)
         protect(QuickReminderText.pattern.replacingOccurrences(of: #"(?<!\S)!"#, with: #"(?<!\S)\\!"#), removeEscape: true)
+        protect(#"(?<!\S)\\"# + QuickNaturalDateText.capturedCompound, removeEscape: true)
         protect(#"\\(?:[#/@%+](?:"[^"\n]*"|[^\s]+)|\{[^}]+\}|[^\s]+)"#, removeEscape: true)
         protect(#""[^"\n]*""#)
         protect(#"(?<!\S)(?:https?://|www\.)\S+"#)
@@ -523,7 +524,16 @@ struct QuickEntry {
                 }
             }
         }
-        if enabled("due_date") {
+        let compoundPattern = #"(?<![\p{L}\p{N}_])"# + QuickNaturalDateText.capturedCompound
+        if let m = match(compoundPattern) {
+            if enabled("due_date"), let date = QuickNaturalDateText.resolve(m[0], relativeTo: now, calendar: calendar, datePreferences: context.datePreferences) {
+                updates["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar)); take("due_date", m[0], dayLabel(date))
+            } else if enabled("due_date") {
+                warnings.append("“\(m[0])” is not a valid date offset. Use days or weeks before or after a supported date, within 3,650 days. Its text stays in the title.")
+            }
+        }
+        protect(compoundPattern)
+        if enabled("due_date"), updates["due_date"] == nil {
             if let m = match(#"(?<![\p{L}\p{N}_])"# + QuickNaturalDateText.expanded) {
                 if let date = QuickNaturalDateText.resolve(m[0], relativeTo: now, calendar: calendar, datePreferences: context.datePreferences) {
                     updates["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar)); take("due_date", m[0], dayLabel(date))

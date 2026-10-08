@@ -80,7 +80,7 @@ final class Store {
         if ProcessInfo.processInfo.arguments.contains("--date-phrase-fixture") {
             snapshot = Snapshot()
             snapshot.tables["saved_views"] = [("date-pref-week", "Next week choices", "next week"), ("date-pref-weekend", "Weekend choices", "this weekend")].map { id, name, phrase in
-                Record(["id": .string(id), "user_id": .string(userID), "name": .string(name), "query_ast": FilterRule.predicate("planned_on", phrase).document, "layout": .string("list"), "sort_by": .string("title")])
+                Record(["id": .string(id), "user_id": .string(userID), "name": .string(name), "query_ast": FilterRule.predicate("planned_on", ProcessInfo.processInfo.arguments.contains("--compound-date-testing") ? "1 week after " + phrase : phrase).document, "layout": .string("list"), "sort_by": .string("title")])
             }
             do { try persist() } catch { self.error = error.localizedDescription }
         }

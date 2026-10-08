@@ -343,7 +343,7 @@ indirect enum FilterRule: Hashable, Sendable {
     var usesDatePreferences: Bool {
         switch self {
         case .predicate(let field, let value):
-            return (FilterDateReference.expressions[field] != nil || FilterCreationReference.expressions[field] != nil) && DatePhrasePreferences.phrases.contains(FilterTimeReference.split(value)?.day ?? value)
+            return (FilterDateReference.expressions[field] != nil || FilterCreationReference.expressions[field] != nil) && QuickNaturalDateText.usesDatePreferences(FilterTimeReference.split(value)?.day ?? value)
         case .and(let rules), .or(let rules), .sections(let rules): return rules.contains { $0.usesDatePreferences }
         case .not(let rule): return rule.usesDatePreferences
         }

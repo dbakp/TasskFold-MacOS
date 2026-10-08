@@ -198,17 +198,52 @@ enum QuickNaturalDateText {
     static let month = "(?:" + months.flatMap { [$0, String($0.prefix(3))] }.joined(separator: "|") + ")"
     static let named = "(?:" + month + #"\s+\d+(?:st|nd|rd|th)?(?:,?\s+\d{4})?|\d+(?:st|nd|rd|th)?\s+"# + month + #"(?:\s+\d{4})?)"#
     static let expanded = "(?:" + named + #"|next\s+(?:weekend|week|month|year)|this\s+weekend|end\s+of\s+(?:month|year))\b"#
-    static let boundary = "(?:" + named + #"|\d{4}-\d{2}-\d{2}|today|tomorrow|yesterday|this\s+weekend|next\s+(?:weekend|week|month|year|"# + Recurrence.weekdays.joined(separator: "|") + #")|end\s+of\s+(?:month|year)|"# + Recurrence.weekdays.flatMap { [$0, String($0.prefix(3))] }.joined(separator: "|") + ")\\b"
+    static let baseBoundary = "(?:" + named + #"|\d{4}-\d{2}-\d{2}|today|tomorrow|yesterday|this\s+weekend|next\s+(?:weekend|week|month|year|"# + Recurrence.weekdays.joined(separator: "|") + #")|end\s+of\s+(?:month|year)|"# + Recurrence.weekdays.flatMap { [$0, String($0.prefix(3))] }.joined(separator: "|") + ")\\b"
+    // Capture the entire offset before validation, including unsupported units/counts.
+    // This prevents a declined/invalid prefix from leaving its anchor as a new date chip.
+    static let offsetPrefix = #"(?:[-+]?\d+|[a-z]+)\s+(?:days?|weeks?|months?|years?)\s+(?:before|after)\s+"#
+    private static let fallbackBoundary = #"(?:next\s+)?\S+(?:\s+\d+(?:st|nd|rd|th)?(?:\s+\d{4})?)?"#
+    static let compound = "(?:" + offsetPrefix + ")+" + baseBoundary
+    static let capturedCompound = "(?:" + offsetPrefix + ")+(?:" + baseBoundary + "|" + fallbackBoundary + ")"
+    static let boundary = "(?:" + compound + "|" + baseBoundary + ")"
     /// Consume unsupported boundaries as one phrase as well, preserving decline/invalid safety.
-    static let capturedBoundary = "(?:" + boundary + #"|(?:next\s+)?\S+(?:\s+\d+(?:st|nd|rd|th)?(?:\s+\d{4})?)?)"#
+    static let capturedBoundary = "(?:" + capturedCompound + "|" + baseBoundary + "|" + fallbackBoundary + ")"
+
+    static func usesDatePreferences(_ raw: String) -> Bool {
+        let text = raw.lowercased().split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return DatePhrasePreferences.phrases.contains { text == $0 || text.hasSuffix(" before " + $0) || text.hasSuffix(" after " + $0) }
+    }
 
     static func resolve(_ raw: String, relativeTo reference: Date, calendar input: Calendar, inclusiveWeekday: Bool = false, datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) -> Date? {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         let origin = calendar.startOfDay(for: reference)
-        let text = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = raw.lowercased().split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        guard text.unicodeScalars.count <= 240 else { return nil }
         func match(_ pattern: String) -> [String]? {
             guard let regex = try? NSRegularExpression(pattern: "^(?:" + pattern + ")$"), let m = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) else { return nil }
             return (0..<m.numberOfRanges).map { Range(m.range(at: $0), in: text).map { String(text[$0]) } ?? "" }
+        }
+        if let m = match(#"((?:(?:[-+]?\d+|[a-z]+)\s+(?:days?|weeks?|months?|years?)\s+(?:before|after)\s+)+)(.+)"#) {
+            let prefix = m[1], base = m[2]
+            guard let regex = try? NSRegularExpression(pattern: #"(\S+)\s+(\S+)\s+(before|after)\s+"#) else { return nil }
+            let offsets = regex.matches(in: prefix, range: NSRange(prefix.startIndex..., in: prefix))
+            guard (1...4).contains(offsets.count) else { return nil }
+            var days = 0, magnitude = 0
+            for offset in offsets {
+                func part(_ i: Int) -> String { Range(offset.range(at: i), in: prefix).map { String(prefix[$0]) } ?? "" }
+                let rawCount = part(1), unit = part(2)
+                guard rawCount == "one" || (!rawCount.isEmpty && rawCount.utf8.allSatisfy({ (48...57).contains($0) })),
+                      let count = rawCount == "one" ? 1 : Int(rawCount), (0...3650).contains(count),
+                      ["day", "days", "week", "weeks"].contains(unit) else { return nil }
+                let multiplier = unit.hasPrefix("week") ? 7 : 1
+                guard count <= (3650 - magnitude) / multiplier else { return nil }
+                let delta = count * multiplier; magnitude += delta
+                days += part(3) == "before" ? -delta : delta
+            }
+            guard let anchor = resolve(base, relativeTo: reference, calendar: calendar, inclusiveWeekday: inclusiveWeekday, datePreferences: datePreferences),
+                  let shifted = calendar.date(byAdding: .day, value: days, to: anchor),
+                  calendar.component(.era, from: shifted) == 1, (1...9999).contains(calendar.component(.year, from: shifted)) else { return nil }
+            return calendar.startOfDay(for: shifted)
         }
         if text.count == 10, match(#"\d{4}-\d{2}-\d{2}"#) != nil { return Dates.parse(text, calendar: calendar) }
         if let delta = ["today": 0, "tomorrow": 1, "yesterday": -1][text] { return calendar.date(byAdding: .day, value: delta, to: origin) }
