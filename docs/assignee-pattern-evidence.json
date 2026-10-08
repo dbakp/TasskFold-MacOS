@@ -1,5 +1,5 @@
 {
-  "checkpoint": "2026-10-08 assigned-name filters, current code verified in Debug Core; remaining native/optimized checks blocked by storage",
+  "checkpoint": "2026-10-08 current Debug/optimized Core and native builds verified; phone standard passes, dark-largest fails, tablet acceptance pending",
   "repository": "mac",
   "baseline": "e5edb3e417068d6a0c4be2274fdd922da7c4bd92",
   "intendedBranch": "codex/assignee-name-filters",
@@ -24,37 +24,49 @@
       "scope": "565 completed tests, four optional integration skips."
     },
     "release": {
-      "terminalExitCode": 1,
-      "tests": null,
-      "skipped": null,
-      "failedTests": null,
+      "terminalExitCode": 0,
+      "tests": 565,
+      "skipped": 4,
+      "failedTests": 0,
       "log": {
-        "path": "/tmp/taskfold-assignee-pattern-final-v5-mac-core-release.log",
-        "SHA256": "301856f8d0a6d02ef22926fa8f63b9b0a2ad24329c2d297f00e8683e3fd68c62"
+        "path": "/tmp/taskfold-assignee-pattern-final-v6-mac-core-release.log",
+        "SHA256": "3f78e72be65060210ba5c4cb65db968dff8bfe6043973eaa7494d1a0a639aca0"
       },
-      "scope": "Compilation aborted because the output volume ran out of space; tests did not run."
+      "jobs": 2,
+      "scope": "Current-source optimized suite completed; 565 tests, four optional integration skips, zero failures."
     }
   },
   "currentNative": {
     "debug": {
-      "terminalExitCode": 65,
+      "terminalExitCode": 0,
       "log": {
-        "path": "/tmp/taskfold-assignee-pattern-final-v5-mac-native-debug.log",
-        "SHA256": "92270e06c18119f903efb31548cf89a61a69badf2a9d52c13ff2228ddd7b1a85"
+        "path": "/tmp/taskfold-assignee-pattern-final-v6-mac-native-debug.log",
+        "SHA256": "5c1463ab91071d1ea6909b5ffbac89e5bb0cff6d672e1b83708a5419cc700281"
       },
       "signingAllowed": false,
-      "partialProduct": "/tmp/taskfold-assignee-pattern-final-v5-mac-debug-build",
-      "scope": "Failed output/log/product writes on the full volume; retained, not accepted as a successful build."
+      "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build",
+      "sourceDirectory": "/tmp/taskfold-assignee-pattern-final-v5-mac-native-source",
+      "jobs": 2,
+      "architectures": [
+        "arm64"
+      ],
+      "scope": "Unsigned native build passed; Debug includes UI-test compilation. Mac runtime/install was not performed."
     },
     "release": {
-      "terminalExitCode": 65,
+      "terminalExitCode": 0,
       "log": {
-        "path": "/tmp/taskfold-assignee-pattern-final-v5-mac-native-release.log",
-        "SHA256": "d27b295dd8426825a9f48bf697298934bd55abe9b15e78d5033cb9b9ca0cb95a"
+        "path": "/tmp/taskfold-assignee-pattern-final-v6-mac-native-release.log",
+        "SHA256": "ad9b434d59ea368cbe519f5f21a8cc6bc9547dca2882b88589d1040e0dd45a83"
       },
       "signingAllowed": false,
-      "partialProduct": "/tmp/taskfold-assignee-pattern-final-v5-mac-release-build",
-      "scope": "Failed output/log/product writes on the full volume; retained, not accepted as a successful build."
+      "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build",
+      "sourceDirectory": "/tmp/taskfold-assignee-pattern-final-v5-mac-native-source",
+      "jobs": 2,
+      "architectures": [
+        "x86_64",
+        "arm64"
+      ],
+      "scope": "Unsigned native build passed; Debug includes UI-test compilation. Mac runtime/install was not performed."
     }
   },
   "earlierNativeIOS": {
@@ -183,12 +195,33 @@
       "scope": "Earlier source/testing cohort; final current-source UI acceptance is pending."
     }
   },
-  "finalNativeIOS": "Not run on the last project-scoping fix. Corrected UI test source is ready; Release builds and the four phone/tablet walks require more storage. No Mac runtime/install performed.",
+  "finalNativeIOS": {
+    "terminalExitCode": 65,
+    "passed": 1,
+    "failed": 1,
+    "skipped": 0,
+    "resultBundle": "/tmp/taskfold-assignee-pattern-final-v6-phone.xcresult",
+    "log": {
+      "path": "/tmp/taskfold-assignee-pattern-final-v6-phone.log",
+      "SHA256": "bc3bc8ff56d3b0b5cc4aeaa76839039289de30ed9dcfde431f758d781acb8efe"
+    },
+    "summary": {
+      "path": "/tmp/taskfold-assignee-pattern-final-v6-phone-summary.json",
+      "SHA256": "6d1e8a287babaeaf1b3dfee612832d1c273dbabe339cd93ae86344476a0903c9"
+    },
+    "darkActivities": {
+      "path": "/tmp/taskfold-assignee-pattern-final-v6-phone-dark-activities.json",
+      "SHA256": "82bfb780c560298d46fa71bd177d32f1de308dbf04b69510c155c2a7fcef1b34"
+    },
+    "scope": "Standard-text walk passed. Dark-largest walk reached builder and two-task preview, then failed finding its saved filter in Browse. Cause unresolved; not attributed to storage without evidence.",
+    "fixtureCacheObservation": "Read-only inspection of this isolated app's ui-testing.json after the failure found no saved_views table. This is diagnostic evidence, not a paired-account test.",
+    "diagnosticsCollection": "never; ordinary logs, activities, screenshots and result bundle retained"
+  },
   "backend": {
     "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-pattern-backend-evidence.json",
     "SHA256": "baeedf343dbac1eb343e1277625df8a85cff92c17f6f953c9bb29b1d96c1a00f"
   },
-  "fullP0": "Active and unfinished. Storage is the current verification gate; existing paired, physical, provider and Mac-runtime acceptance gates remain.",
+  "fullP0": "Active and unfinished. Largest-phone failure, tablet/native visual acceptance and storage remain gates, alongside existing paired, physical, provider and restricted-Mac acceptance.",
   "scopeRegression": {
     "log": {
       "path": "/tmp/taskfold-assignee-pattern-scope-diagnostic-ios-core-debug.log",
@@ -197,7 +230,7 @@
     "terminalExitCode": 1,
     "tests": 1,
     "failedAssertions": 3,
-    "finding": "Cross-project cached names initially matched by global person ID. Current code binds matched names to project-scoped references; both full Debug Core suites now pass the regression."
+    "finding": "Cross-project cached names initially matched by global person ID. Current code binds matched names to project-scoped references; both full Debug and optimized Core suites pass the regression."
   },
   "retention": {
     "earlierBinaryHashes": {
@@ -214,12 +247,67 @@
       "path": "/tmp/taskfold-assignee-pattern-xcodebuild-help.log",
       "SHA256": "4c0f1d25c362f0cdd828783321605d0d2ced90629fc66560286284b82182dc4b"
     },
-    "futureDiagnosticsOption": "Current CLI documents -collect-test-diagnostics never; ordinary test logs/screenshots/results will still be retained."
+    "futureDiagnosticsOption": "Current CLI documents -collect-test-diagnostics never; ordinary test logs/screenshots/results will still be retained.",
+    "v6Method": "Sequential checks with two build jobs, own unchanged v5 source copies and new APFS-cloned cache directories. V5 failed logs/products and earlier artifacts remain. All jobs reached actual terminal states; no job was killed or restarted."
   },
   "earlierChecks": {
     "v1": "563 Core tests per configuration and four native builds passed before subsequent hardening; v1 phone/tablet walks both failed in the old menu helper.",
     "v2": "iOS native Debug build passed with the menu-helper correction; not used for runtime.",
     "v3": "564 Core tests per configuration and four native builds passed before the project-scoping regression was added. Each native UI cohort passed its dark-largest case and failed the standard case because the test incorrectly expected an empty default rather than *.",
     "v4": "iOS native Debug build passed with explicit default clearing and validation checks; not used for runtime before the later project-scoping fix."
+  },
+  "retainedStorageFailuresV5": {
+    "coreRelease": {
+      "terminalExitCode": 1,
+      "tests": null,
+      "skipped": null,
+      "failedTests": null,
+      "log": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v5-mac-core-release.log",
+        "SHA256": "301856f8d0a6d02ef22926fa8f63b9b0a2ad24329c2d297f00e8683e3fd68c62"
+      },
+      "scope": "Compilation aborted because the output volume ran out of space; tests did not run."
+    },
+    "native": {
+      "debug": {
+        "terminalExitCode": 0,
+        "log": {
+          "path": "/tmp/taskfold-assignee-pattern-final-v6-mac-native-debug.log",
+          "SHA256": "5c1463ab91071d1ea6909b5ffbac89e5bb0cff6d672e1b83708a5419cc700281"
+        },
+        "signingAllowed": false,
+        "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build",
+        "sourceDirectory": "/tmp/taskfold-assignee-pattern-final-v5-mac-native-source",
+        "jobs": 2,
+        "architectures": [
+          "arm64"
+        ],
+        "scope": "Unsigned native build passed; Debug includes UI-test compilation. Mac runtime/install was not performed."
+      },
+      "release": {
+        "terminalExitCode": 0,
+        "log": {
+          "path": "/tmp/taskfold-assignee-pattern-final-v6-mac-native-release.log",
+          "SHA256": "ad9b434d59ea368cbe519f5f21a8cc6bc9547dca2882b88589d1040e0dd45a83"
+        },
+        "signingAllowed": false,
+        "productDirectory": "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build",
+        "sourceDirectory": "/tmp/taskfold-assignee-pattern-final-v5-mac-native-source",
+        "jobs": 2,
+        "architectures": [
+          "x86_64",
+          "arm64"
+        ],
+        "scope": "Unsigned native build passed; Debug includes UI-test compilation. Mac runtime/install was not performed."
+      }
+    }
+  },
+  "finalTabletIOS": {
+    "status": "not launched",
+    "reason": "After sequential compilation and the phone run, storage fluctuated below 250 MiB and a shell temporary-file write failed with No space left on device. Earlier artifacts are preserved; more writable capacity is required."
+  },
+  "visualReview": {
+    "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-pattern-visual-review.json",
+    "SHA256": "002d9dbcb3eb474277c80e326e64b8d027676a00fb3402188da3bbb957411e5b"
   }
 }

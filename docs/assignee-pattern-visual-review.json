@@ -1,0 +1,95 @@
+{
+  "reviewed": 8,
+  "standardFlowPassed": true,
+  "darkLargestFlowPassed": false,
+  "tablet": "not run on current final source",
+  "macRuntime": "not performed",
+  "captures": [
+    {
+      "name": "Assignee pattern persisted result after relaunch",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-persisted-result-after-relaunch.png",
+        "SHA256": "428448d8467152972c17187429d7bb8d9bf28c0649d78641b8a20a765063c337"
+      },
+      "inspected": true,
+      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+    },
+    {
+      "name": "Assignee pattern expression edit",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-expression-edit.png",
+        "SHA256": "560c5f3dd1809c106788919e7b1f0240d5a4c9664e774264c2695571016e8a62"
+      },
+      "inspected": true,
+      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+    },
+    {
+      "name": "Assignee pattern invalid pattern feedback",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-invalid-pattern-feedback.png",
+        "SHA256": "8137c7b929f528bafb4853d7f9de985b69851a072a70bb4eb2a9d68bd1dd64e0"
+      },
+      "inspected": true,
+      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+    },
+    {
+      "name": "Assignee pattern two matching tasks",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-two-matching-tasks.png",
+        "SHA256": "0aa1dfbca28bfd5f47fc849be9fe585500431e6f2ba9ebcb21f41c5271d386ab"
+      },
+      "inspected": true,
+      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+    },
+    {
+      "name": "Assignee pattern two task preview",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-two-task-preview.png",
+        "SHA256": "aec61fc3e2e5ab972043f765a3934272e4fa5d36095d96a52b27985be1b68ea2"
+      },
+      "inspected": true,
+      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+    },
+    {
+      "name": "Assignee pattern builder",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-builder.png",
+        "SHA256": "7f71fd5b0205f4d03e9545b9e2daeb87ab3a0d67ea80ffb818ad1152dac010fc"
+      },
+      "inspected": true,
+      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+    },
+    {
+      "name": "Assignee pattern two task preview",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-dark-largest-two-task-preview.png",
+        "SHA256": "3e4ed62fd48891f6807a5eda58a5205e302606456f71b8d8a2bdd83d2e3e0d30"
+      },
+      "inspected": true,
+      "limits": "Partial failed flow: scrolling help spans several screens; sort label truncates; no post-save acceptance."
+    },
+    {
+      "name": "Assignee pattern builder",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-dark-largest-builder.png",
+        "SHA256": "715ad433a8b71d577121997c4252bd557fb4c25dbfa3b31058a2879dcee82a7f"
+      },
+      "inspected": true,
+      "limits": "Partial failed flow: scrolling help spans several screens; sort label truncates; no post-save acceptance."
+    }
+  ],
+  "gaps": [
+    "Largest-text post-save Browse lookup failure remains unresolved.",
+    "Assigned-name help is repetitive and spans multiple largest-text viewports; reduce repetition or offer expandable help.",
+    "Largest-text sort choice truncates; invalid overlong expression wraps awkwardly."
+  ],
+  "scope": "Eight unmodified actual phone PNGs individually inspected; six standard-text and two from the partial failed largest-text flow. This is not four-flow final acceptance."
+}
