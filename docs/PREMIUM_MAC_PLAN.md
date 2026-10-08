@@ -672,3 +672,8 @@ Both native repositories independently implement `assigned to: M* Smith` and exp
 ## 8 October — assigned-name sequential verification follow-up
 
 Current own Debug and optimized Core suites pass 565 tests with four optional integration skips; all four own native builds now pass with two jobs, run sequentially, and Release app/widget binaries include both architectures. The standard-text iPhone walk passes; the largest-text case fails finding the saved filter in Browse after its correct preview. Eight actual unmodified phone captures were individually inspected (six passing standard, two partial largest); tablet acceptance remains pending. Long/repetitive largest-text help, a truncated sort choice and the post-save failure remain usability work. [Current evidence and limits](ASSIGNEE_NAME_FILTERS.md) records storage pressure separately from the unresolved failure cause. Previous failures/artifacts remain intact. No Mac runtime/install/replacement, real paired-account, provider or provisioned-host acceptance is claimed. The feature branches and full P0 remain work in progress; more writable capacity is required before further runtime/build work.
+
+
+## 8 October — obsolete build-cache pruning
+
+User-authorized retirement of obsolete generated products/compiler/SDK caches reclaimed about 75 GiB, leaving about 77 GiB free. Sources, both repositories, logs/results/captures and current builds remain; protected evidence and current source manifests were checked. [Retention policy and exact receipt](BUILD_ARTIFACT_RETENTION.md) separate historical retired-product paths from retained evidence. Storage is available again; full P0 and the recorded failed-save/native/account/provider acceptance work remain unfinished.
