@@ -215,7 +215,25 @@
     },
     "scope": "Standard-text walk passed. Dark-largest walk reached builder and two-task preview, then failed finding its saved filter in Browse. Cause unresolved; not attributed to storage without evidence.",
     "fixtureCacheObservation": "Read-only inspection of this isolated app's ui-testing.json after the failure found no saved_views table. This is diagnostic evidence, not a paired-account test.",
-    "diagnosticsCollection": "never; ordinary logs, activities, screenshots and result bundle retained"
+    "diagnosticsCollection": "never; ordinary logs, activities, screenshots and result bundle retained",
+    "saveAlertDiagnostic": {
+      "observed": "The retained largest-text activity tree records Something needs attention after Save. The default XCTest interruption handler tapped OK. The isolated fixture cache remained at its startup timestamp and contained no saved_views table.",
+      "consoleLog": "Unavailable: xcresulttool reported No console log available; the attempted output file is empty, not a valid console JSON log.",
+      "scope": "The exact alert message and save-failure cause are not established. This adds evidence about error handling; it is not a passing runtime acceptance or proof that storage caused the failure.",
+      "activityTree": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v6-phone-dark-activities.json",
+        "SHA256": "82bfb780c560298d46fa71bd177d32f1de308dbf04b69510c155c2a7fcef1b34"
+      },
+      "saveEvent": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v6-dark-save-event.bin",
+        "SHA256": "746372bb5c86431a1db051104b22b7af9edfbd351bf8cb072c22b2435614b875"
+      },
+      "saveSnapshot": {
+        "path": "/tmp/taskfold-assignee-pattern-final-v6-dark-save-snapshot.bin",
+        "SHA256": "79fab23d7bb5aa93585c3e9eb39421d76f3786344d73d7c44ba720b391121344"
+      },
+      "followUp": "Make the user walk fail immediately on an unexpected save alert. On an unsuccessful filter save, keep the editable draft and useful feedback inside the editor rather than allowing a global alert to interrupt its sheet. Verify retry/cancel/relaunch with a deterministic isolated failed-save fixture, then rerun the normal and largest phone/tablet walks."
+    }
   },
   "backend": {
     "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-pattern-backend-evidence.json",
@@ -308,6 +326,6 @@
   },
   "visualReview": {
     "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-pattern-visual-review.json",
-    "SHA256": "002d9dbcb3eb474277c80e326e64b8d027676a00fb3402188da3bbb957411e5b"
+    "SHA256": "15c935681f16d60b4d123ec3c2c1b674c6539ed6e797f27352aec8a83c3472a2"
   }
 }

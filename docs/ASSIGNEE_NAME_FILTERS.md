@@ -33,3 +33,9 @@ Usability follow-up: reduce repetitive help or make it expandable at largest tex
 ## Remaining native account acceptance
 
 On provisioned iOS and an authorized Mac runtime, use the same isolated account and accepted project collaborators. Create the wildcard filter on one device, check identical IDs and a conservative capture composer on the other, then rename a collaborator and verify that only the dynamic query follows the change. An exact-person filter must retain its ID. Remove membership/project access and test NOT, OR and separate comma sections without stale results. Edit the filter offline, relaunch, reconnect and verify durable conflict handling; then switch accounts and restore a backup. Record the installed versions, task/view IDs, queued mutations and retained captures. Check keyboard, VoiceOver, largest text and board/list layouts. Local fixture and SQL-role success do not replace that acceptance.
+
+### Retained save-alert diagnostic
+
+The final-v6 largest-phone activity tree records **Something needs attention** after Save; XCTest's default interruption handler tapped OK. The isolated cache still had its startup modification time and no saved_views table. The exact alert message and failure cause are not established. No console log is available from this result bundle. These observations refine the failure without treating it as successful acceptance or proving storage causation.
+
+Next: fail the native walk immediately on an unexpected save alert; keep a failed-save draft and useful feedback within the filter editor, then verify retry/cancel/relaunch using a deterministic isolated failed-save fixture. Rerun the normal/largest phone and tablet cases after that correction and sufficient storage. Existing source/build evidence is unchanged; no new code or runtime run is claimed here.

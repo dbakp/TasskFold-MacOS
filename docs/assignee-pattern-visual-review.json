@@ -89,7 +89,8 @@
   "gaps": [
     "Largest-text post-save Browse lookup failure remains unresolved.",
     "Assigned-name help is repetitive and spans multiple largest-text viewports; reduce repetition or offer expandable help.",
-    "Largest-text sort choice truncates; invalid overlong expression wraps awkwardly."
+    "Largest-text sort choice truncates; invalid overlong expression wraps awkwardly.",
+    "The largest flow encountered an app error alert after Save; XCTest automatically dismissed it. Exact message/cause remains unresolved. Add immediate unexpected-alert detection and verify draft-preserving failed-save feedback."
   ],
   "scope": "Eight unmodified actual phone PNGs individually inspected; six standard-text and two from the partial failed largest-text flow. This is not four-flow final acceptance."
 }
