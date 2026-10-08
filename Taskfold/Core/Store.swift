@@ -172,6 +172,8 @@ final class Store {
     var widgetFixtureFailSave = false
     var inboxFixtureFailSave = false
     var focusFixtureFailSave = false
+    @ObservationIgnored private var savedFilterFixtureFailureConsumed = false
+    @ObservationIgnored private var savedFilterFixtureFailNextPersist = false
     var widgetFixtureReady = false
     #endif
     #if !DEBUG
@@ -474,6 +476,10 @@ final class Store {
     }
     func persist() throws {
         #if DEBUG
+        if savedFilterFixtureFailNextPersist {
+            savedFilterFixtureFailNextPersist = false
+            throw CocoaError(.fileWriteOutOfSpace)
+        }
         if inboxFixtureFailSave { throw WidgetActionFailure("Isolated Inbox review save-failure fixture") }
         if focusFixtureFailSave { throw WidgetActionFailure("Isolated Focus save-failure fixture") }
         if widgetFixtureFailSave, !snapshot.widgetCompletion.receipts.isEmpty { throw WidgetActionFailure("Isolated widget save-failure fixture") }
@@ -709,6 +715,12 @@ final class Store {
                 }
             }
         }
+        #if DEBUG
+        if table == "saved_views", assigneePatternFixtureEnabled,
+           ProcessInfo.processInfo.arguments.contains("--filter-save-failure-once"), !savedFilterFixtureFailureConsumed {
+            savedFilterFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
+        }
+        #endif
         return commit(changes)
     }
     func isPinnedNote(_ taskID: String) -> Bool { PinnedNotes.contains(taskID, pins: rows("view_orders"), account: userID) }

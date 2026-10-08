@@ -1,96 +1,526 @@
 {
-  "reviewed": 8,
-  "standardFlowPassed": true,
-  "darkLargestFlowPassed": false,
-  "tablet": "not run on current final source",
+  "reviewed": 46,
+  "phone": {
+    "standardPassed": true,
+    "darkLargestPassed": true
+  },
+  "tablet": {
+    "standardPassed": true,
+    "darkLargestPassed": true
+  },
   "macRuntime": "not performed",
   "captures": [
     {
-      "name": "Assignee pattern persisted result after relaunch",
+      "name": "Assignee recovery persisted result after relaunch",
       "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
       "capture": {
-        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-persisted-result-after-relaunch.png",
-        "SHA256": "428448d8467152972c17187429d7bb8d9bf28c0649d78641b8a20a765063c337"
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-standard-persisted-result-after-relaunch.png",
+        "SHA256": "8f24e31a38a923d51f0364c4a383ee6942e3c17c93ddcbf05e2ec4d1fbb5a81c"
       },
       "inspected": true,
-      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+      "observation": "Relaunched saved result contains Jane only; title, count and assignment are readable."
     },
     {
-      "name": "Assignee pattern expression edit",
+      "name": "Assignee recovery expression edit",
       "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
       "capture": {
-        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-expression-edit.png",
-        "SHA256": "560c5f3dd1809c106788919e7b1f0240d5a4c9664e774264c2695571016e8a62"
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-standard-expression-edit.png",
+        "SHA256": "76ed574e7fe3b23c78dd30d0d6d58a67c5e0459c7e425b27a7565fdc464bedc7"
       },
       "inspected": true,
-      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+      "observation": "Expression J* Smith and preview 1 are readable; full standard sort choice visible."
     },
     {
-      "name": "Assignee pattern invalid pattern feedback",
+      "name": "Assignee recovery cancelled edit after relaunch",
       "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
       "capture": {
-        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-invalid-pattern-feedback.png",
-        "SHA256": "8137c7b929f528bafb4853d7f9de985b69851a072a70bb4eb2a9d68bd1dd64e0"
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-standard-cancelled-edit-after-relaunch.png",
+        "SHA256": "d74d46812d01de3d694539ffae34938647d24956df366e8c9c9b3cb517465c27"
       },
       "inspected": true,
-      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+      "observation": "After cancelling and relaunching, Mary and Marc remain with count 2."
     },
     {
-      "name": "Assignee pattern two matching tasks",
+      "name": "Assignee recovery edit draft retained",
       "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
       "capture": {
-        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-two-matching-tasks.png",
-        "SHA256": "0aa1dfbca28bfd5f47fc849be9fe585500431e6f2ba9ebcb21f41c5271d386ab"
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-standard-edit-draft-retained.png",
+        "SHA256": "76ed574e7fe3b23c78dd30d0d6d58a67c5e0459c7e425b27a7565fdc464bedc7"
       },
       "inspected": true,
-      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+      "observation": "Failed edit retains J* Smith and preview 1 in the editor."
     },
     {
-      "name": "Assignee pattern two task preview",
+      "name": "Assignee recovery edit failure feedback",
       "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
       "capture": {
-        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-two-task-preview.png",
-        "SHA256": "aec61fc3e2e5ab972043f765a3934272e4fa5d36095d96a52b27985be1b68ea2"
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-standard-edit-failure-feedback.png",
+        "SHA256": "2925aa93c9f7d2f0a8438584bc235c6621114860e412edb337c0644f8f45e722"
       },
       "inspected": true,
-      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+      "observation": "Local failed-edit alert explains injected no-space error, retained draft and retry; OK fully visible."
     },
     {
-      "name": "Assignee pattern builder",
+      "name": "Assignee recovery invalid pattern feedback",
       "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
       "capture": {
-        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-standard-builder.png",
-        "SHA256": "7f71fd5b0205f4d03e9545b9e2daeb87ab3a0d67ea80ffb818ad1152dac010fc"
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-standard-invalid-pattern-feedback.png",
+        "SHA256": "4e36ec7b4fb79ae1045dc037c0a6f55d49bfa3e25bc81de2b87ac25ccfbe6c60"
       },
       "inspected": true,
-      "limits": "Standard phone viewport; builder/preview require scrolling; invalid overlong expression wraps awkwardly, while validation remains readable."
+      "observation": "Oversized invalid expression hyphenates awkwardly; 1\u2013120 validation is readable and Save disabled."
     },
     {
-      "name": "Assignee pattern two task preview",
+      "name": "Assignee recovery two matching tasks",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-standard-two-matching-tasks.png",
+        "SHA256": "8ca44838e86215101df664bf6c2ee3aad2f35ec601609142b0c2938363afe974"
+      },
+      "inspected": true,
+      "observation": "Successful create shows Mary and Marc only, with assignment labels and count 2."
+    },
+    {
+      "name": "Assignee recovery create draft retained",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-standard-create-draft-retained.png",
+        "SHA256": "5ad6ef2bf327d5c7e669e8e32cd783451a52fb274f62d0bff7cc94ce9b63587a"
+      },
+      "inspected": true,
+      "observation": "Failed create retains name and M* Smith; compact matching help and details disclosure readable."
+    },
+    {
+      "name": "Assignee recovery create failure feedback",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-standard-create-failure-feedback.png",
+        "SHA256": "9292ce73cf79d66e02a98a1c47bb659bede01f0cae452136dba059428e82a077"
+      },
+      "inspected": true,
+      "observation": "Local failed-create alert explains injected no-space error and retained draft/retry; preview 2 remains behind alert."
+    },
+    {
+      "name": "Assignee recovery two task preview",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-standard-two-task-preview.png",
+        "SHA256": "264bb67bb97f5b6f2b7667b28028ad9178a2da92c4c4b193f57b21880df86b59"
+      },
+      "inspected": true,
+      "observation": "Preview 2, compact help and full sort choice readable; whole page requires scrolling."
+    },
+    {
+      "name": "Assignee recovery builder",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-standard-builder.png",
+        "SHA256": "8b325f3c25cf96c15ccf461c6b5a2947503001af2cf69890ffeac5ce8c8bd49c"
+      },
+      "inspected": true,
+      "observation": "Builder M* Smith and compact help/details are readable; selected condition and full sort choice fit."
+    },
+    {
+      "name": "Assignee recovery persisted result after relaunch",
       "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
       "capture": {
-        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-dark-largest-two-task-preview.png",
-        "SHA256": "3e4ed62fd48891f6807a5eda58a5205e302606456f71b8d8a2bdd83d2e3e0d30"
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-persisted-result-after-relaunch.png",
+        "SHA256": "461ec1f3c86941d5143fd370ad4ee87c651cbcfd8e12a12c2744a838748551bf"
       },
       "inspected": true,
-      "limits": "Partial failed flow: scrolling help spans several screens; sort label truncates; no post-save acceptance."
+      "observation": "Relaunched Jane-only result/count/assignment readable; largest navigation title truncates."
     },
     {
-      "name": "Assignee pattern builder",
+      "name": "Assignee recovery expression edit",
       "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
       "capture": {
-        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-name-filter-captures/phone-dark-largest-builder.png",
-        "SHA256": "715ad433a8b71d577121997c4252bd557fb4c25dbfa3b31058a2879dcee82a7f"
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-expression-edit.png",
+        "SHA256": "f92e5bccb9e5f70cab0a4deb36ad5ac3fbac68f3ddabc044c2e7ed479fe3a094"
       },
       "inspected": true,
-      "limits": "Partial failed flow: scrolling help spans several screens; sort label truncates; no post-save acceptance."
+      "observation": "J* Smith expression wraps into two readable lines; other sections require scrolling."
+    },
+    {
+      "name": "Assignee recovery cancelled edit after relaunch",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-cancelled-edit-after-relaunch.png",
+        "SHA256": "37297d32a4195c6737d6679abdc39de59446c7eaba587b46b30ffa4ad94bcbdc"
+      },
+      "inspected": true,
+      "observation": "Mary and Marc/count 2 remain after cancellation and relaunch; largest title truncates."
+    },
+    {
+      "name": "Assignee recovery edit draft retained",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-edit-draft-retained.png",
+        "SHA256": "80ffdcb407ce0535bd45f538ad2c9c6ba9300f8c60f2e1f893e322cccf140dbe"
+      },
+      "inspected": true,
+      "observation": "Failed edit retains J* Smith expression; viewport shows expression and long nested-mode help."
+    },
+    {
+      "name": "Assignee recovery edit failure feedback",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-edit-failure-feedback.png",
+        "SHA256": "92302a30dd3ace3e69cf41428ffb564707024c7d0a23196a2de87b9cfcb86897"
+      },
+      "inspected": true,
+      "observation": "Largest local edit-failure alert has readable title/cause and pinned OK; draft/retry guidance lies below the initial scroll viewport."
+    },
+    {
+      "name": "Assignee recovery invalid pattern feedback",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-invalid-pattern-feedback.png",
+        "SHA256": "24b9c7945e69c08e0de4c54b8cc0ffd3d90dda568926d296d58be37849d066d7"
+      },
+      "inspected": true,
+      "observation": "1\u2013120 validation is fully visible after scrolling; overlong expression is partly above viewport and Save disabled."
+    },
+    {
+      "name": "Assignee recovery two matching tasks",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-two-matching-tasks.png",
+        "SHA256": "b21dc9e1c3b40494a7194fcab602033411224c8530e56be1c18e4a605cbcf210"
+      },
+      "inspected": true,
+      "observation": "Mary and Marc/count 2/assignments readable; largest title truncates."
+    },
+    {
+      "name": "Assignee recovery create draft retained",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-create-draft-retained.png",
+        "SHA256": "1cff100cf479318cfc4bd3cc4b1c7178b36044fd3d94ec778d87b6d5c3fccc93"
+      },
+      "inspected": true,
+      "observation": "Failed create retains M* Smith; name is above current viewport and was checked separately by the test."
+    },
+    {
+      "name": "Assignee recovery create failure feedback",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-create-failure-feedback.png",
+        "SHA256": "a32e63bdc95ba339ee10c94d39c3a9d26771bbebe6494a780cd91f5529907647"
+      },
+      "inspected": true,
+      "observation": "Largest local create-failure alert has readable title/cause and pinned OK; draft/retry guidance lies below the initial scroll viewport."
+    },
+    {
+      "name": "Assignee recovery two task preview",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-two-task-preview.png",
+        "SHA256": "f4b2ac2a28c0a54c7932aed85d114fb804565ea005da9b3b547798bc8fab66ad"
+      },
+      "inspected": true,
+      "observation": "Preview 2 and complete wrapped sort choice visible; whole editor requires scrolling."
+    },
+    {
+      "name": "Assignee recovery readable sort choice",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-readable-sort-choice.png",
+        "SHA256": "2340fddefa0260041bb1699088b2570b01c61ed38c3f95d8ad021d36660b2c9a"
+      },
+      "inspected": true,
+      "observation": "Full Priority and your order label wraps into two lines; no truncation in this target viewport."
+    },
+    {
+      "name": "Assignee recovery builder",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "phone",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/phone-dark-largest-builder.png",
+        "SHA256": "76a8d9560caf69968e89c9c63305819394eb6fcae3f40d21e7d593932d05b10e"
+      },
+      "inspected": true,
+      "observation": "M* Smith and compact help/details readable; condition title is above viewport, with further sections reached by scrolling."
+    },
+    {
+      "name": "Assignee recovery persisted result after relaunch",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-standard-persisted-result-after-relaunch.png",
+        "SHA256": "7349f81121ece2cec97ac6b96e18f880114a4977d0270a86851379f7075174cb"
+      },
+      "inspected": true,
+      "observation": "Persisted Jane task only; count 1, full title and assignee readable."
+    },
+    {
+      "name": "Assignee recovery expression edit",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-standard-expression-edit.png",
+        "SHA256": "fe1de842d15d2971f8ac3e6a24c09ba67086bccb01819d2d10db7cbc073020a8"
+      },
+      "inspected": true,
+      "observation": "J* Smith expression and standard sort choice readable; other view settings require scrolling."
+    },
+    {
+      "name": "Assignee recovery cancelled edit after relaunch",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-standard-cancelled-edit-after-relaunch.png",
+        "SHA256": "0914dde7db510d58ea3f64a46f159b719207e3df5adbfaf4238daf15afe0597c"
+      },
+      "inspected": true,
+      "observation": "Cancelled edit retains Mary and Marc after relaunch; count 2, full title and assignees readable."
+    },
+    {
+      "name": "Assignee recovery edit draft retained",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-standard-edit-draft-retained.png",
+        "SHA256": "03c871d3d96d372a6101927e594aeb78c9da7a75ab8097177707a1991cd40c0c"
+      },
+      "inspected": true,
+      "observation": "Failed-edit draft retains J* Smith; lower view settings require scrolling."
+    },
+    {
+      "name": "Assignee recovery edit failure feedback",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-standard-edit-failure-feedback.png",
+        "SHA256": "823f9489ad4e7532366a4c0fda4f3942ed9d9ce21b226bef22c49a7f6b283fa6"
+      },
+      "inspected": true,
+      "observation": "Standard tablet local edit error shows entire cause, retained-draft guidance and OK."
+    },
+    {
+      "name": "Assignee recovery invalid pattern feedback",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-standard-invalid-pattern-feedback.png",
+        "SHA256": "49ad9816172c2f4022298aa116bd231231080b4d42e669e7fa2a7e24d871247a"
+      },
+      "inspected": true,
+      "observation": "Oversized invalid expression prefix hyphenates awkwardly; 1\u2013120 validation readable and Save disabled."
+    },
+    {
+      "name": "Assignee recovery two matching tasks",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-standard-two-matching-tasks.png",
+        "SHA256": "823aba333d045f3707a580b47758cb8be0f824c7a4eb660313fa7c92bb8f1b10"
+      },
+      "inspected": true,
+      "observation": "Created filter shows Mary and Marc, count 2, full title and assignees readable."
+    },
+    {
+      "name": "Assignee recovery create draft retained",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-standard-create-draft-retained.png",
+        "SHA256": "0f6d57735671399f05ffd020540291147000499a5193a49bac7d6c72e81ffff8"
+      },
+      "inspected": true,
+      "observation": "Failed-create draft retains name and M* Smith; compact help/details readable; lower settings require scrolling."
+    },
+    {
+      "name": "Assignee recovery create failure feedback",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-standard-create-failure-feedback.png",
+        "SHA256": "ecf4823d1727bf0ab22d2a0830e3cdd7da48aca6a4cd9077cb4fd157d4ee0fb4"
+      },
+      "inspected": true,
+      "observation": "Standard tablet local create error shows entire cause, retained-draft guidance and OK."
+    },
+    {
+      "name": "Assignee recovery two task preview",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-standard-two-task-preview.png",
+        "SHA256": "47750fff6df58e7c7a35212fbcecae8e6cf5bb997ff000bc953e8caeda0f93bb"
+      },
+      "inspected": true,
+      "observation": "Preview count 2, full sort choice and compact help visible; lower footnote requires scrolling."
+    },
+    {
+      "name": "Assignee recovery builder",
+      "test": "TaskfoldUITests/testAssigneePatternBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-standard-builder.png",
+        "SHA256": "0f6d57735671399f05ffd020540291147000499a5193a49bac7d6c72e81ffff8"
+      },
+      "inspected": true,
+      "observation": "Builder retains name and M* Smith with compact help/details readable; lower settings require scrolling."
+    },
+    {
+      "name": "Assignee recovery persisted result after relaunch",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-persisted-result-after-relaunch.png",
+        "SHA256": "a2789b6d92e9d32dece9c018e4da53ef22e5e0bb8cef7fe5011012097416ddee"
+      },
+      "inspected": true,
+      "observation": "Largest tablet persists Jane only with count 1, full title and assignee readable. Native tab strip scrolls horizontally; earlier tabs are off viewport."
+    },
+    {
+      "name": "Assignee recovery expression edit",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-expression-edit.png",
+        "SHA256": "e81d980ab54f04a6522332cb24e26994a4de9a05acafaac828e2b77ed70916ec"
+      },
+      "inspected": true,
+      "observation": "Largest tablet expression J* Smith wraps readably. Filter name truncates within editor text field; full saved-view title visible elsewhere. Lower settings require scrolling."
+    },
+    {
+      "name": "Assignee recovery cancelled edit after relaunch",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-cancelled-edit-after-relaunch.png",
+        "SHA256": "b5b5dd80396be72e1cb5a1b8e287f178ec93dc85efe9c717ea1f0878bad687a8"
+      },
+      "inspected": true,
+      "observation": "Largest tablet cancelled edit retains Mary and Marc after relaunch; count 2 and full assignees/title readable."
+    },
+    {
+      "name": "Assignee recovery edit draft retained",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-edit-draft-retained.png",
+        "SHA256": "6dd8e5d771aefa7c65fa35923dba3db2d3efa562745278af4f87aec47657977f"
+      },
+      "inspected": true,
+      "observation": "Largest tablet failed-edit draft retains J* Smith; expression guidance readable, lower view settings require scrolling."
+    },
+    {
+      "name": "Assignee recovery edit failure feedback",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-edit-failure-feedback.png",
+        "SHA256": "a6ee04cd0f8c0665e6281b2927e2924f67fd3b9ae482f97f1e1bfac37263b690"
+      },
+      "inspected": true,
+      "observation": "Largest tablet local edit error fits entire cause, retained-draft/retry guidance and OK within the viewport."
+    },
+    {
+      "name": "Assignee recovery invalid pattern feedback",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-invalid-pattern-feedback.png",
+        "SHA256": "2a3aadb24c83a3928f704825860bdbdd977d5ab497a96c290de33f54d6a6d139"
+      },
+      "inspected": true,
+      "observation": "Largest tablet oversized expression requires scrolling; 1\u2013120 validation readable and Save disabled."
+    },
+    {
+      "name": "Assignee recovery two matching tasks",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-two-matching-tasks.png",
+        "SHA256": "1315b053880cb1140a8a99dcaf4599e37f8b7b63937bae2da86aaf151440328f"
+      },
+      "inspected": true,
+      "observation": "Largest tablet created filter shows Mary and Marc, count 2 and full assignees/title readable."
+    },
+    {
+      "name": "Assignee recovery create draft retained",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-create-draft-retained.png",
+        "SHA256": "56e70b2d21aebaf99546585df57ed7a6f78df567c83cb420bfcec3ace917ae87"
+      },
+      "inspected": true,
+      "observation": "Largest tablet failed-create draft retains M* Smith and selected Assigned name matches; surrounding fields require scrolling."
+    },
+    {
+      "name": "Assignee recovery create failure feedback",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-create-failure-feedback.png",
+        "SHA256": "8b72093e7c41fc046278e3ec570f7a442b5c7f3af0549ee111189ba8452a6eb6"
+      },
+      "inspected": true,
+      "observation": "Largest tablet local create error fits entire cause, retained-draft/retry guidance and OK within the viewport."
+    },
+    {
+      "name": "Assignee recovery two task preview",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-two-task-preview.png",
+        "SHA256": "82a1e165af06836aa3beb2f14e083e0740c80e0dc3db80e20497746b8f57398a"
+      },
+      "inspected": true,
+      "observation": "Largest tablet preview count 2 and wrapped full Priority and your order sort choice readable."
+    },
+    {
+      "name": "Assignee recovery readable sort choice",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-readable-sort-choice.png",
+        "SHA256": "c936c5b4b372b9ea35bf9953b3b2eec97bcffd461c20bc012fe12a7bd6f07c38"
+      },
+      "inspected": true,
+      "observation": "Largest tablet full sort choice wraps to two lines without truncation; control fully visible after scrolling."
+    },
+    {
+      "name": "Assignee recovery builder",
+      "test": "TaskfoldUITests/testAssigneePatternDarkLargestBuilderExpressionResultsAndRelaunch()",
+      "device": "tablet",
+      "capture": {
+        "path": "/tmp/taskfold-authority-mac-commit-polish/docs/assignee-save-recovery-captures/tablet-dark-largest-builder.png",
+        "SHA256": "516c01da6961ff019b7bb29e2548fbb55fb058686a9c5d479033e0dac0edaae0"
+      },
+      "inspected": true,
+      "observation": "Largest tablet builder M* Smith and compact help readable; Matching details disclosure collapsed, not expanded in this walk."
     }
   ],
   "gaps": [
-    "Largest-text post-save Browse lookup failure remains unresolved.",
-    "Assigned-name help is repetitive and spans multiple largest-text viewports; reduce repetition or offer expandable help.",
-    "Largest-text sort choice truncates; invalid overlong expression wraps awkwardly.",
-    "The largest flow encountered an app error alert after Save; XCTest automatically dismissed it. Exact message/cause remains unresolved. Add immediate unexpected-alert detection and verify draft-preserving failed-save feedback."
+    "Largest-phone local error alert initially shows verbose cause; draft/retry guidance requires scrolling. Prefer a concise recovery summary before details in the next polish pass.",
+    "Largest phone saved-filter navigation title truncates.",
+    "Oversized invalid expression wraps/hyphenates awkwardly."
   ],
-  "scope": "Eight unmodified actual phone PNGs individually inspected; six standard-text and two from the partial failed largest-text flow. This is not four-flow final acceptance."
+  "scope": "46 unmodified actual iOS/iPadOS native PNGs individually inspected. Local isolated acceptance; no paired-account or Mac runtime claim. Largest viewports require scrolling. Invalid oversized expression wraps; validation is visible and Save disabled."
 }

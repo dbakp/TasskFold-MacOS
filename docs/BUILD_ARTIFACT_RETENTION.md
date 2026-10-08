@@ -14,4 +14,4 @@ The cleanup reclaimed about **75 GiB**, leaving about **77 GiB free** when measu
 - Retire superseded temporary compiler, SDK, index and intermediate/product directories after their checks have been recorded and the retained current build is verified. Keep the current usable products until replaced by a verified build.
 - Check free space before a build cohort and run resource-heavy builds sequentially. If space is tight, first prune obsolete task-owned caches; do not delete user files or system/other-project storage.
 
-The storage gate is resolved. The full P0 objective remains unfinished: filter failed-save recovery and largest-phone/tablet acceptance are next; existing real paired-account, provider, physical/provisioned-widget and restricted Mac-runtime gates remain separate. Cleanup adds no runtime acceptance claim.
+The storage gate is resolved. The full P0 objective remains unfinished: isolated filter failed-save recovery and phone/tablet walks now pass; existing real paired-account, provider, physical/provisioned-widget and restricted Mac-runtime gates remain separate. Cleanup adds no runtime acceptance claim.

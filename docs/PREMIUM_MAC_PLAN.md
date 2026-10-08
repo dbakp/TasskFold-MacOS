@@ -677,3 +677,8 @@ Current own Debug and optimized Core suites pass 565 tests with four optional in
 ## 8 October — obsolete build-cache pruning
 
 User-authorized retirement of obsolete generated products/compiler/SDK caches reclaimed about 75 GiB, leaving about 77 GiB free. Sources, both repositories, logs/results/captures and current builds remain; protected evidence and current source manifests were checked. [Retention policy and exact receipt](BUILD_ARTIFACT_RETENTION.md) separate historical retired-product paths from retained evidence. Storage is available again; full P0 and the recorded failed-save/native/account/provider acceptance work remain unfinished.
+
+
+## 8 October — filter save recovery and native visual review
+
+Both own editors retain failed create/edit drafts with local feedback and a retry path; compact matching help and wrapped accessibility sort choices reduce the prior usability gaps. Four isolated phone/tablet standard and dark-largest walks pass, including injected failed writes, create retry, edit cancellation/relaunch and successful persisted edits. All 46 named PNGs were individually inspected. Largest-phone error alerts require scrolling to draft/retry guidance; largest navigation titles truncate. These visual gaps remain polish. Four native builds pass; unchanged Core package inputs retain their 565-test Debug/optimized evidence (four optional skips). Earlier failures and their diagnostic evidence remain. See [contract and scoped evidence](ASSIGNEE_NAME_FILTERS.md). Build caches were reused sequentially after actual terminal states, with distinct logs/results. Mac runtime, real paired/mixed-version and membership HTTP refresh, providers and provisioned/physical hosts remain separate; full P0 is unfinished.
