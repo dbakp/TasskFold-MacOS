@@ -215,7 +215,7 @@ final class FilterTests: XCTestCase {
         }
         XCTAssertEqual(try parse("due:2026-10-05"), .predicate("due", "2026-10-05"))
         XCTAssertEqual(try parse("created before:-30 days AND #Work").captureDefaults(in: context, today: "2026-10-05"), ["project_id": .string("work-id")])
-        for value in ["-3651 days", "--1 days", "-1.5 days", "-１ days", "- days", "today at 14:00", "next week", "2026-02-30", "", "tomorrow nonsense"] { XCTAssertThrowsError(try parse("created:" + value), value) }
+        for value in ["-3651 days", "--1 days", "-1.5 days", "-１ days", "- days", "today at 14:00", "2026-02-30", "", "tomorrow nonsense"] { XCTAssertThrowsError(try parse("created:" + value), value) }
         for value: JSON in [.null, .number(2), .bool(true), .array([])] {
             XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string("created_on"), "value": value])))
         }
@@ -369,7 +369,7 @@ final class FilterTests: XCTestCase {
         XCTAssertFalse(matches(try parse("date:today"), floating, zone: "America/New_York"))
     }
     func testDateGrammarRejectsAmbiguousWindowsMalformedValuesAndUnsupportedSections() throws {
-        for expression in ["date:", "date:2026-02-30", "date:2026-10-05T12:00:00Z", "date:31 February", "date:next week", "date:+4 hours", "date:3 days", "date:-3 days", "date:in 3651 days", "date:today at 25:00", "date:today p1", "effective-due before:"] { XCTAssertThrowsError(try parse(expression), expression) }
+        for expression in ["date:", "date:2026-02-30", "date:2026-10-05T12:00:00Z", "date:31 February", "date:+4 hours", "date:3 days", "date:-3 days", "date:in 3651 days", "date:today at 25:00", "date:today p1", "effective-due before:"] { XCTAssertThrowsError(try parse(expression), expression) }
         for value: JSON in [.null, .number(1), .bool(true), .array([])] {
             XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string("planned_on"), "value": value])))
         }
@@ -799,5 +799,35 @@ extension FilterTests {
         let groups = TaskGrouping.queryGroups(rows, rule: restored, by: "none", context: context, today: "2026-10-08", timeZone: "UTC", now: now)
         XCTAssertEqual(groups.map { Set($0.tasks.map(\.id)) }, [["past", "next"], ["next"]]); XCTAssertEqual(groups.map(\.id).count, 2)
         XCTAssertEqual(restored.captureDefaults(in: context, today: "2026-10-08"), [:])
+    }
+}
+
+
+extension FilterTests {
+    func testDatePreferenceFilterCacheGroupingDefaultsAndTimedBoundaries() throws {
+        let c = DatePhrasePreferences(nextWeek:6,weekend:1), day = "2026-10-08"
+        var local = context; local.datePreferences = c
+        let rule = try parse("date:next week, deadline:this weekend",context:local)
+        XCTAssertEqual(try FilterRule(document:rule.document),rule); XCTAssertEqual(try parse(rule.expression(in:local),context:local),rule)
+        let rows = [task("friday",["due_date":.string("2026-10-09"),"due_time":.string("13:59")]),task("monday",["due_date":.string("2026-10-12")]),task("sunday",["deadline_date":.string("2026-10-11")])]
+        let cache=TaskCache(); cache.update(rows)
+        var query=TaskQuery(scope:.all,today:day,filter:rule,datePreferences:c,timeZone:"UTC")
+        XCTAssertEqual(Set(cache.matching(query).map(\.id)),["friday","sunday"])
+        let groups=TaskGrouping.queryGroups(rows,rule:rule,by:"none",context:local,today:day,timeZone:"UTC")
+        XCTAssertEqual(groups.map { $0.tasks.map(\.id) },[["friday"],["sunday"]])
+        query.datePreferences=DatePhrasePreferences(); XCTAssertEqual(Set(cache.matching(query).map(\.id)),["monday"])
+        XCTAssertEqual(cache.tasks,rows)
+        XCTAssertEqual(try parse("date:next week",context:local).captureDefaults(in:local,today:day,timeZone:"UTC")["due_date"],.string("2026-10-09"))
+        let timed=try parse("date before:next week at 14:00",context:local)
+        XCTAssertTrue(timed.matches(rows[0],today:day,userID:"owner",labels:[],timeZone:"UTC",datePreferences:c))
+    }
+    func testDatePreferenceUnsupportedContextFailsClosedThroughNegationAndSafeIndependentQueries() throws {
+        let row=task("safe",[:]); var missing=context; missing.datePreferences=nil
+        for input in ["date:next week","NOT deadline:this weekend","all OR created before:next weekend","NOT (date before:next week at 14:00 AND p1)"] {
+            let rule=try parse(input); XCTAssertThrowsError(try rule.validate(in:missing)); XCTAssertFalse(rule.matches(row,today:"2026-10-08",userID:"owner",labels:[],timeZone:"UTC",datePreferences:nil))
+        }
+        let rule=try parse("NOT date:next week, all")
+        XCTAssertTrue(rule.matches(row,today:"2026-10-08",userID:"owner",labels:[],timeZone:"UTC",datePreferences:nil))
+        XCTAssertEqual(TaskGrouping.queryGroups([row],rule:rule,by:"none",context:missing,today:"2026-10-08",timeZone:"UTC").map { $0.tasks.map(\.id) },[[],["safe"]])
     }
 }

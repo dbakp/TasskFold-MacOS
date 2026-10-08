@@ -7,6 +7,7 @@ struct FilterContext {
     var projects: [Record] = [], sections: [Record] = [], labels: [Record] = []
     var userID = ""
     var people: [Record] = []
+    var datePreferences: DatePhrasePreferences? = DatePhrasePreferences()
     func resolve(_ field: String, _ value: String) throws -> String {
         if field == "assignee" {
             if value.lowercased() == "me" { return "me" }
@@ -60,9 +61,9 @@ enum FilterTimeReference {
         guard parts.count == 2, !parts[0].isEmpty, let clock = try? canonical(parts[1]) else { return nil }
         return (parts[0], clock)
     }
-    static func boundary(_ reference: String, today: String, timeZone: String) -> Date? {
+    static func boundary(_ reference: String, today: String, timeZone: String, datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) -> Date? {
         guard let parts = split(reference), let zone = TimeZone(identifier: timeZone),
-              let day = FilterDateReference.day(parts.day, today: today, timeZone: timeZone) else { return nil }
+              let day = FilterDateReference.day(parts.day, today: today, timeZone: timeZone, datePreferences: datePreferences) else { return nil }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = zone
         guard let date = Dates.parse(day, calendar: calendar) else { return nil }
         let clock = parts.clock.split(separator: ":").compactMap { Int($0) }
@@ -139,8 +140,6 @@ enum FilterDateReference {
             return try canonical(parts.day, allowTime: false) + " at " + parts.clock
         }
         if let delta = offset(text) { return delta == 0 ? "today" : delta > 0 ? "in \(delta) days" : "\(-delta) days ago" }
-        // Next-week preferences still need a separately defined capability.
-        guard text != "next week" else { throw FilterFailure(message: "Choose a weekday, such as next Monday, instead of next week.") }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
         let anchor = calendar.date(from: DateComponents(year: 2000, month: 1, day: 1, hour: 12))!
         guard QuickNaturalDateText.resolve(text, relativeTo: anchor, calendar: calendar, inclusiveWeekday: true) != nil else {
@@ -148,12 +147,12 @@ enum FilterDateReference {
         }
         return text
     }
-    static func day(_ reference: String, today: String, timeZone: String) -> String? {
+    static func day(_ reference: String, today: String, timeZone: String, datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) -> String? {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(identifier: timeZone) ?? .current
         guard let anchor = Dates.parse(today, calendar: calendar) else { return nil }
         let date: Date?
         if let delta = offset(reference) { date = calendar.date(byAdding: .day, value: delta, to: anchor) }
-        else { date = QuickNaturalDateText.resolve(reference, relativeTo: anchor, calendar: calendar, inclusiveWeekday: true) }
+        else { date = QuickNaturalDateText.resolve(reference, relativeTo: anchor, calendar: calendar, inclusiveWeekday: true, datePreferences: datePreferences) }
         return date.map { TaskPlanner.dayKey($0, calendar: calendar) }
     }
 }
@@ -173,7 +172,7 @@ enum FilterCreationReference {
         }
         do { return try FilterDateReference.canonical(text, allowTime: false) }
         catch let error as FilterFailure {
-            if text == "next week" { throw error }
+            if DatePhrasePreferences.phrases.contains(text) { throw error }
             throw FilterFailure(message: "Enter a creation date without a time. Try today, yesterday or -30 days.")
         }
     }
@@ -305,6 +304,7 @@ indirect enum FilterRule: Hashable, Sendable {
         }
     }
     func validate(in context: FilterContext) throws {
+        if usesDatePreferences, context.datePreferences == nil { throw FilterFailure(message: "These date preferences are unsupported. Update Taskfold before editing this filter.") }
         switch self {
         case .predicate(let field, let value):
             if ["project", "section", "label"].contains(field) { let rows = field == "project" ? context.projects : field == "section" ? context.sections : context.labels; guard rows.contains(where: { $0.id == value }) else { throw FilterFailure(message: "A referenced " + field + " was deleted or is no longer accessible. Edit the filter to choose another target.") } }
@@ -326,7 +326,15 @@ indirect enum FilterRule: Hashable, Sendable {
     /// Completion visibility belongs to each independent query, not the union.
     func resultMatches(_ task: Record, context: FilterContext, today: String, timeZone: String, includeCompleted: Bool = false, now: Date? = nil) -> Bool {
         if case .sections(let rules) = self { return rules.contains { $0.resultMatches(task, context: context, today: today, timeZone: timeZone, includeCompleted: includeCompleted, now: now) } }
-        return (includeCompleted || includesCompletion || !task.completed) && matches(task, today: today, userID: context.userID, labels: context.labels.map { FilterReference(id: $0.id, name: $0.name) }, timeZone: timeZone, projects: context.projects.map { FilterReference(id: $0.id, name: $0.name) }, sections: context.sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, now: now)
+        return (includeCompleted || includesCompletion || !task.completed) && matches(task, today: today, userID: context.userID, labels: context.labels.map { FilterReference(id: $0.id, name: $0.name) }, timeZone: timeZone, projects: context.projects.map { FilterReference(id: $0.id, name: $0.name) }, sections: context.sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, now: now, datePreferences: context.datePreferences)
+    }
+    var usesDatePreferences: Bool {
+        switch self {
+        case .predicate(let field, let value):
+            return (FilterDateReference.expressions[field] != nil || FilterCreationReference.expressions[field] != nil) && DatePhrasePreferences.phrases.contains(FilterTimeReference.split(value)?.day ?? value)
+        case .and(let rules), .or(let rules), .sections(let rules): return rules.contains { $0.usesDatePreferences }
+        case .not(let rule): return rule.usesDatePreferences
+        }
     }
     var usesClockWindow: Bool {
         switch self {
@@ -371,16 +379,17 @@ indirect enum FilterRule: Hashable, Sendable {
         }
     }
     func matches(_ task: Record, today: String, userID: String, labels: [FilterReference], timeZone: String,
-                 projects: [FilterReference] = [], sections: [FilterReference] = [], nameBindings supplied: [FilterNameBinding]? = nil, now: Date? = nil) -> Bool {
+                 projects: [FilterReference] = [], sections: [FilterReference] = [], nameBindings supplied: [FilterNameBinding]? = nil, now: Date? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) -> Bool {
+        if !hasQuerySections, usesDatePreferences, datePreferences == nil { return false }
         // Independent query sections may still show safe results when the reader has no clock.
         if !hasQuerySections, usesClockWindow, now.map({ $0.timeIntervalSinceReferenceDate.isFinite }) != true { return false }
         let bindings = supplied ?? nameBindings(projects: projects, sections: sections, labels: labels)
         guard nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID) else { return false }
         switch self {
-        case .sections(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now) }
-        case .and(let rules): return rules.allSatisfy { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now) }
-        case .or(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now) }
-        case .not(let rule): return !rule.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now)
+        case .sections(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences) }
+        case .and(let rules): return rules.allSatisfy { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences) }
+        case .or(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences) }
+        case .not(let rule): return !rule.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences)
         case .predicate(let field, let value):
             let day = Self.plannedDay(task, timeZone: timeZone), deadline = task.string("deadline_date")
             func next(_ date: String) -> Bool {
@@ -395,7 +404,7 @@ indirect enum FilterRule: Hashable, Sendable {
             }
             if FilterCreationReference.expressions[field] != nil {
                 guard let candidate = FilterCreationReference.day(task, timeZone: timeZone),
-                      let boundary = FilterDateReference.day(value, today: today, timeZone: timeZone) else { return false }
+                      let boundary = FilterDateReference.day(value, today: today, timeZone: timeZone, datePreferences: datePreferences) else { return false }
                 if field == "created_before" { return candidate < boundary }
                 if field == "created_after" { return candidate > boundary }
                 return candidate == boundary
@@ -407,13 +416,13 @@ indirect enum FilterRule: Hashable, Sendable {
                     return field.hasSuffix("_after") ? candidate >= boundary.addingTimeInterval(60) : candidate < boundary
                 }
                 if FilterTimeReference.split(value) != nil {
-                    guard let boundary = FilterTimeReference.boundary(value, today: today, timeZone: timeZone),
+                    guard let boundary = FilterTimeReference.boundary(value, today: today, timeZone: timeZone, datePreferences: datePreferences),
                           let candidate = FilterTimeReference.start(task, timeZone: timeZone) else { return false }
                     if field.contains("_before") { return candidate < boundary }
                     if field.hasSuffix("_after") { return candidate >= boundary.addingTimeInterval(60) }
                     return candidate >= boundary && candidate < boundary.addingTimeInterval(60)
                 }
-                guard let boundary = FilterDateReference.day(value, today: today, timeZone: timeZone) else { return false }
+                guard let boundary = FilterDateReference.day(value, today: today, timeZone: timeZone, datePreferences: datePreferences) else { return false }
                 let candidate = field.hasPrefix("planned_") ? day : field.hasPrefix("effective_due_") ? (day.isEmpty ? deadline : day) : deadline
                 guard !candidate.isEmpty else { return false }
                 if field.contains("_before") { return candidate < boundary }
@@ -504,7 +513,7 @@ indirect enum FilterRule: Hashable, Sendable {
             case "label": return ["labels": .array([.string(context.labels.first(where: { $0.id == value })?.name ?? value)])]
             case "planned_on", "deadline_on":
                 if FilterTimeReference.split(value) != nil { return [:] }
-                guard let day = FilterDateReference.day(value, today: today, timeZone: timeZone) else { return [:] }
+                guard let day = FilterDateReference.day(value, today: today, timeZone: timeZone, datePreferences: context.datePreferences) else { return [:] }
                 return [field == "planned_on" ? "due_date" : "deadline_date": .string(day)]
             case "today": return ["due_date": .string(today)]
             case "due": return ["due_date": .string(value)]
@@ -719,7 +728,7 @@ struct TaskGrouping {
             let key = keys[index]
             let bindings = query.nameBindings(projects: projects, sections: sections, labels: labels)
             let name = "\(index + 1) · " + query.sectionTitle(in: context)
-            let matches = tasks.filter { (includeCompleted || query.includesCompletion || !$0.completed) && query.matches($0, today: today, userID: context.userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now) }
+            let matches = tasks.filter { (includeCompleted || query.includesCompletion || !$0.completed) && query.matches($0, today: today, userID: context.userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: context.datePreferences) }
             let nested = groups(matches, by: field, projects: context.projects, timeZone: timeZone)
             if nested.isEmpty { return [Group(id: key + ":all", name: name, tasks: [])] }
             return nested.map { Group(id: key + ":" + $0.id, name: field == "none" ? name : name + " / " + $0.name, tasks: $0.tasks) }

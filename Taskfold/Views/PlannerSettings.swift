@@ -60,3 +60,33 @@ struct PlannerSettingsView: View {
         #endif
     }
 }
+
+/// Immediate account-owned date choices, separate from device calendar permissions.
+struct DatePhrasePreferencesView: View {
+    @Environment(Store.self) private var store
+    @State private var workspace: WorkspaceBinding?
+    private func selection(_ field: String) -> Binding<Int> {
+        Binding(get: { field == "next_week" ? store.datePhrasePreferences?.nextWeek ?? 2 : store.datePhrasePreferences?.weekend ?? 7 }, set: { day in
+            guard let workspace else { return }
+            _ = store.setDatePhraseWeekday(day, field: field, workspace: workspace)
+        })
+    }
+    private var editable: Bool { store.datePhraseEditable && workspace?.matches(account: store.userID, generation: store.workspaceGeneration) == true }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if store.datePhrasePreferences != nil {
+                Picker("Next week means", selection: selection("next_week")) {
+                    ForEach(1...7, id: \.self) { day in Text(Calendar.current.weekdaySymbols[day - 1]).tag(day) }
+                }.accessibilityIdentifier("datePhraseNextWeek").disabled(!editable)
+                Picker("Weekend starts", selection: selection("weekend")) {
+                    ForEach(1...7, id: \.self) { day in Text(Calendar.current.weekdaySymbols[day - 1]).tag(day) }
+                }.accessibilityIdentifier("datePhraseWeekend").disabled(!editable)
+            } else {
+                Text("These date preferences are unsupported. Update Taskfold before changing them.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+            Text("Next week chooses the next future occurrence. This weekend includes today if it is your chosen day; next weekend skips one occurrence. These choices apply to quick entry, rescheduling and relative filters. Existing task dates stay fixed.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(store.localMode ? "Saved in this local workspace." : "Saved to your account and synced across devices.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
+        .onAppear { if workspace == nil { workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) } }
+    }
+}

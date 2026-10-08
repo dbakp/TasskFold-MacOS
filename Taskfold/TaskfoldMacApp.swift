@@ -141,8 +141,8 @@ struct TaskfoldCommands: Commands {
             Menu("Reschedule") {
                 Button("Today") { workspace.reschedule(workspace.actionSelection, to: Dates.day(Date()), label: "today") }.keyboardShortcut("t", modifiers: [.command, .option])
                 Button("Tomorrow") { workspace.reschedule(workspace.actionSelection, to: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!), label: "tomorrow") }.keyboardShortcut("t", modifiers: [.command, .option, .shift])
-                Button("This Weekend") { workspace.reschedule(workspace.actionSelection, to: Dates.day(Workspace.next(weekday: 7)), label: "the weekend") }
-                Button("Next Week") { workspace.reschedule(workspace.actionSelection, to: Dates.day(Workspace.next(weekday: 2)), label: "next week") }
+                Button("This Weekend") { if let day = store.datePhraseDay("this weekend") { workspace.reschedule(workspace.actionSelection, to: Dates.day(day), label: "the weekend") } }.disabled(store.datePhrasePreferences == nil)
+                Button("Next Week") { if let day = store.datePhraseDay("next week") { workspace.reschedule(workspace.actionSelection, to: Dates.day(day), label: "next week") } }.disabled(store.datePhrasePreferences == nil)
                 Divider()
                 Button("Remove Date") { workspace.reschedule(workspace.actionSelection, to: nil, label: "") }
             }.disabled(workspace.actionSelection.isEmpty)

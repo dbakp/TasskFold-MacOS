@@ -15,7 +15,7 @@ final class QuickPlanningCompletionTests: XCTestCase {
         let result = try choose("Call tom", phrase: "tomorrow")
         XCTAssertEqual(result.title, "Call"); XCTAssertEqual(result.updates["due_date"], .string("2026-10-07"))
         XCTAssertEqual(menu("Call mon").options.map(\.reference), ["monday"])
-        XCTAssertEqual(Set(menu("Call next ").options.map(\.reference)), Set(["next week", "next month", "next year", "next monday", "next tuesday", "next wednesday", "next thursday", "next friday", "next saturday", "next sunday"]))
+        XCTAssertEqual(Set(menu("Call next ").options.map(\.reference)), Set(["next week", "next weekend", "next month", "next year", "next monday", "next tuesday", "next wednesday", "next thursday", "next friday", "next saturday", "next sunday"]))
         XCTAssertEqual(try choose("Call next wed", phrase: "next wednesday").updates["due_date"], .string("2026-10-07"))
     }
     func testRelativeDateIntervalsAndTimeChoicesUseParser() throws {

@@ -358,8 +358,8 @@ struct TaskListView: View {
             Menu("Reschedule") {
                 Button("Today", systemImage: "sun.max") { workspace.reschedule(targets, to: Dates.day(Date()), label: "today") }
                 Button("Tomorrow", systemImage: "sunrise") { workspace.reschedule(targets, to: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!), label: "tomorrow") }
-                Button("This Weekend", systemImage: "beach.umbrella") { workspace.reschedule(targets, to: Dates.day(Workspace.next(weekday: 7)), label: "the weekend") }
-                Button("Next Week", systemImage: "calendar.badge.clock") { workspace.reschedule(targets, to: Dates.day(Workspace.next(weekday: 2)), label: "next week") }
+                Button("This Weekend", systemImage: "beach.umbrella") { if let day = store.datePhraseDay("this weekend") { workspace.reschedule(targets, to: Dates.day(day), label: "the weekend") } }.disabled(store.datePhrasePreferences == nil)
+                Button("Next Week", systemImage: "calendar.badge.clock") { if let day = store.datePhraseDay("next week") { workspace.reschedule(targets, to: Dates.day(day), label: "next week") } }.disabled(store.datePhrasePreferences == nil)
                 Button("Pick a Date…", systemImage: "calendar") { workspace.selection = targets; bulkDate = Date(); bulkDatePicker = true }
                 Divider()
                 Button("Remove Date", systemImage: "calendar.badge.minus") { workspace.reschedule(targets, to: nil, label: "") }

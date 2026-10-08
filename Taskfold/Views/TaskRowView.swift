@@ -233,6 +233,7 @@ struct InsertionIndicator: View {
 
 /// Date edits commit once, through the same undo path as keyboard and inspector actions.
 struct TaskDatePopover: View {
+    @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @Environment(\.dismiss) private var dismiss
     let task: Record
@@ -244,7 +245,8 @@ struct TaskDatePopover: View {
             HStack {
                 Button("Today") { apply(Date()) }
                 Button("Tomorrow") { apply(Calendar.current.date(byAdding: .day, value: 1, to: Date())!) }
-                Button("Next Week") { apply(Workspace.next(weekday: 2)) }
+                Button("Next Week") { if let day = store.datePhraseDay("next week") { apply(day) } }.disabled(store.datePhrasePreferences == nil)
+                Button("This Weekend") { if let day = store.datePhraseDay("this weekend") { apply(day) } }.disabled(store.datePhrasePreferences == nil)
             }.controlSize(.small)
             DatePicker("Date", selection: $date, displayedComponents: .date)
                 .datePickerStyle(.graphical).labelsHidden()

@@ -328,10 +328,10 @@ struct ReminderCalendarSchedule: Equatable, Sendable {
         if let count = Recurrence.number(rule["count"], in: 1...999) { value += " for \(count) occurrences" }
         return value
     }
-    static func make(_ phrase: String, time: String, start: String, zone: String) -> Self? {
+    static func make(_ phrase: String, time: String, start: String, zone: String, datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) -> Self? {
         guard let anchor = ReminderCivilDay(start) else { return nil }
         var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(secondsFromGMT: 0)!
-        guard let now = Dates.parse(start, calendar: c), let parsed = QuickRecurrenceText.parse(phrase, now: now, calendar: c), !parsed.rule["fromCompletion"].flag else { return nil }
+        guard let now = Dates.parse(start, calendar: c), let parsed = QuickRecurrenceText.parse(phrase, now: now, calendar: c, datePreferences: datePreferences), !parsed.rule["fromCompletion"].flag else { return nil }
         var rule = parsed.rule
         let day = parsed.start.flatMap(ReminderCivilDay.init) ?? anchor
         if ["monthly", "yearly"].contains(rule.string("type")), rule["dayOfMonth"] == .null, rule["weekdayOrdinal"] == .null { rule["dayOfMonth"] = .number(Double(day.day)) }

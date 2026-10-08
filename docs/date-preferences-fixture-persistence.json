@@ -1,0 +1,106 @@
+{
+  "phone": {
+    "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "bundleID": "com.dbakp.taskfold.datephrasetests",
+    "cacheSHA256": "9277a8b8495f0375bb42371a93391441feea97df52aafbe15412fed3431428ce",
+    "task": {
+      "id": "c22c9c91-ed63-439b-81d5-5e115afda685",
+      "title": "Date phrase proof 0B9B70",
+      "due_date": "2026-10-09",
+      "deadline_date": "2026-10-11",
+      "due_time": null,
+      "time_zone": null,
+      "scheduled_at": null,
+      "completed": false
+    },
+    "preferences": {
+      "id": "dates",
+      "user_id": "ui-testing",
+      "date_preferences": {
+        "next_week": 2,
+        "weekend": 1,
+        "version": 1
+      }
+    },
+    "queries": [
+      {
+        "id": "date-pref-week",
+        "name": "Next week choices",
+        "query_ast": {
+          "root": {
+            "value": "next week",
+            "field": "planned_on",
+            "op": "predicate"
+          },
+          "version": 1
+        }
+      },
+      {
+        "id": "date-pref-weekend",
+        "name": "Weekend choices",
+        "query_ast": {
+          "version": 1,
+          "root": {
+            "field": "planned_on",
+            "value": "this weekend",
+            "op": "predicate"
+          }
+        }
+      }
+    ],
+    "pendingTaskMutations": 0,
+    "scope": "Exact isolated local fixture cache after final light walk and relaunch; not a paired cloud account test."
+  },
+  "tablet": {
+    "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+    "bundleID": "com.dbakp.taskfold.datephrasetests",
+    "cacheSHA256": "a5bd23b5b9a93d7d9491ae6764c460b8059c575a069a366c0082469acb120f71",
+    "task": {
+      "id": "4e26f8d0-de51-4935-a392-a1040de1e10c",
+      "title": "Date phrase proof A96CEB",
+      "due_date": "2026-10-09",
+      "deadline_date": "2026-10-11",
+      "due_time": null,
+      "time_zone": null,
+      "scheduled_at": null,
+      "completed": false
+    },
+    "preferences": {
+      "date_preferences": {
+        "weekend": 1,
+        "next_week": 2,
+        "version": 1
+      },
+      "user_id": "ui-testing",
+      "id": "dates"
+    },
+    "queries": [
+      {
+        "id": "date-pref-week",
+        "name": "Next week choices",
+        "query_ast": {
+          "version": 1,
+          "root": {
+            "field": "planned_on",
+            "op": "predicate",
+            "value": "next week"
+          }
+        }
+      },
+      {
+        "id": "date-pref-weekend",
+        "name": "Weekend choices",
+        "query_ast": {
+          "root": {
+            "op": "predicate",
+            "field": "planned_on",
+            "value": "this weekend"
+          },
+          "version": 1
+        }
+      }
+    ],
+    "pendingTaskMutations": 0,
+    "scope": "Exact isolated local fixture cache after final light walk and relaunch; not a paired cloud account test."
+  }
+}

@@ -141,3 +141,56 @@ final class NaturalDateTests: XCTestCase {
         XCTAssertEqual(decoded.fields["duration_minutes"], .number(25))
     }
 }
+
+
+extension NaturalDateTests {
+    func testDatePreferenceContractBoundsUnknownPreservationAndAccountSelection() throws {
+        XCTAssertEqual(try DatePhrasePreferences(document: .null), DatePhrasePreferences())
+        var original = DatePhrasePreferences(nextWeek: 6, weekend: 1).document.object; original["future_hint"] = .string("keep")
+        let updated = try XCTUnwrap(DatePhrasePreferences.changing(.object(original), field: "weekend", weekday: 3))
+        XCTAssertEqual(updated.object["next_week"], .number(6)); XCTAssertEqual(updated.object["future_hint"], .string("keep"))
+        XCTAssertEqual(try DatePhrasePreferences(document: updated).weekend, 3)
+        for bad in [JSON.number(1), .object(["version": .number(2)]), .object(["version": .number(1), "next_week": .number(1.5), "weekend": .number(7)]), .object(["version": .number(1), "next_week": .string("2"), "weekend": .number(7)])] { XCTAssertThrowsError(try DatePhrasePreferences(document: bad)); XCTAssertNil(DatePhrasePreferences.changing(bad, field: "weekend", weekday: 1)) }
+        for day in [0,8] { XCTAssertNil(DatePhrasePreferences.changing(.null, field: "weekend", weekday: day)) }
+        var snapshot = Snapshot(); snapshot.tables["view_preferences"] = [Record(["id": .string("dates"), "user_id": .string("other"), "date_preferences": updated]), Record(["id": .string("dates"), "user_id": .string("OWNER"), "date_preferences": .null])]
+        XCTAssertEqual(DatePhrasePreferences.row(snapshot, account: "owner")?["date_preferences"], .null); XCTAssertNil(DatePhrasePreferences.row(snapshot, account: "unavailable"))
+    }
+    func testDatePreferenceStrictWeekInclusiveWeekendAndSkippedOccurrence() throws {
+        let c = calendar("UTC"), preferences = DatePhrasePreferences(nextWeek: 6, weekend: 1)
+        for (day, phrase, expected) in [("2026-10-08","next week","2026-10-09"),("2026-10-09","next week","2026-10-16"),("2026-10-08","this weekend","2026-10-11"),("2026-10-11","this weekend","2026-10-11"),("2026-10-11","next weekend","2026-10-18"),("2026-10-08","next weekend","2026-10-18")] {
+            let date = try XCTUnwrap(QuickNaturalDateText.resolve(phrase, relativeTo: Dates.parse(day, calendar: c)!, calendar: c, datePreferences: preferences))
+            XCTAssertEqual(TaskPlanner.dayKey(date, calendar: c),expected)
+        }
+        XCTAssertEqual(TaskPlanner.dayKey(QuickNaturalDateText.resolve("next week", relativeTo: Dates.parse("2026-10-08", calendar: c)!, calendar: c)!, calendar: c), "2026-10-12")
+    }
+    func testDatePreferenceCaptureDeadlineRepeatAndCompletionUseOneContract() throws {
+        let instant = now("2026-10-08"), context = QuickEntryContext(datePreferences: DatePhrasePreferences(nextWeek: 6, weekend: 1))
+        let parsed = QuickEntry("Review next week {this weekend}", now: instant, calendar: calendar(), context: context)
+        XCTAssertEqual(parsed.title,"Review"); XCTAssertEqual(parsed.updates["due_date"],.string("2026-10-09")); XCTAssertEqual(parsed.updates["deadline_date"],.string("2026-10-11"))
+        let repeated = QuickEntry("Review every day from next week until next weekend", now: instant, calendar: calendar(), context: context)
+        XCTAssertEqual(repeated.title,"Review"); XCTAssertEqual(repeated.updates["due_date"],.string("2026-10-09")); XCTAssertEqual(repeated.updates["recurrence_pattern"]?.object["endDate"],.string("2026-10-18"))
+        let declined = QuickEntry("Review next weekend", now: instant, calendar: calendar(), disabled:["due_date"], context: context)
+        XCTAssertEqual(declined.title,"Review next weekend"); XCTAssertTrue(declined.updates.isEmpty)
+        let menu = QuickEntryCompletion("Review next we", now: instant, calendar: calendar(), context: context)
+        let option = try XCTUnwrap(menu.options.first { $0.reference == "next week" }); XCTAssertEqual(option.name,"Tomorrow")
+        let weekendMenu = QuickEntryCompletion("Review this we", now: instant, calendar: calendar(), context: context)
+        XCTAssertTrue(weekendMenu.options.contains { $0.reference == "this weekend" })
+        var missing = context; missing.datePreferences = nil
+        for text in ["Review next week", "Review this weekend", "Review next weekend", "Review {next week}", "Review every day from next week"] {
+            let kept = QuickEntry(text, now: instant, calendar: calendar(), context: missing); XCTAssertEqual(kept.title,text); XCTAssertNil(kept.updates["due_date"]); XCTAssertFalse(kept.warnings.isEmpty)
+        }
+        XCTAssertFalse(QuickEntryCompletion("Review next we", now: instant, calendar: calendar(), context: missing).options.contains { DatePhrasePreferences.phrases.contains($0.reference) })
+    }
+    func testDatePreferencesFollowCivilDaysAcrossDSTAndSourceZonesWithoutRewritingAcceptedDates() throws {
+        let c = calendar(), origin = Dates.parse("2026-10-24", calendar:c)!, preferences = DatePhrasePreferences(nextWeek:2,weekend:1)
+        let resolved = try XCTUnwrap(QuickNaturalDateText.resolve("next week",relativeTo:origin,calendar:c,datePreferences:preferences))
+        XCTAssertEqual(TaskPlanner.dayKey(resolved,calendar:c),"2026-10-26"); XCTAssertEqual(resolved.timeIntervalSince(origin),49*3600)
+        let context = QuickEntryContext(datePreferences: preferences)
+        let accepted = QuickEntry("Review next week",now:origin,calendar:c,context:context).applying(to:Record.task(user:"owner"))
+        var next = context; next.datePreferences = DatePhrasePreferences(nextWeek:6,weekend:7)
+        let untouched = QuickEntry(accepted.title,now:origin,calendar:c,context:next,task:accepted).applying(to:accepted)
+        XCTAssertEqual(untouched["due_date"],accepted["due_date"])
+        let rule = try XCTUnwrap(QuickRecurrenceText.parse("every day from next week",now:origin,calendar:calendar("Pacific/Honolulu"),datePreferences:preferences))
+        XCTAssertEqual(rule.start,"2026-10-26")
+    }
+}

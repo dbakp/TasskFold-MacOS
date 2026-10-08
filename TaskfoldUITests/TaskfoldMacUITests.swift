@@ -1366,3 +1366,16 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(value.waitForExistence(timeout: 5)); XCTAssertEqual(value.value as? String, "+1 minute"); app.buttons["Cancel"].click()
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testDatePhrasePreferencesGeneralSettingsPersist() throws {
+        let app=XCUIApplication();app.launchArguments=["--uitesting","--date-phrase-testing","--date-phrase-fixture","--open-settings=general"];app.launch();defer { app.terminate() }
+        let week=app.popUpButtons["datePhraseNextWeek"].firstMatch
+        XCTAssertTrue(week.waitForExistence(timeout:8));week.click();app.menuItems["Friday"].firstMatch.click()
+        let weekend=app.popUpButtons["datePhraseWeekend"].firstMatch;weekend.click();app.menuItems["Sunday"].firstMatch.click()
+        XCTAssertTrue(week.value as? String=="Friday");XCTAssertTrue(weekend.value as? String=="Sunday")
+        app.terminate();app.launchArguments.removeAll { $0=="--date-phrase-fixture" };app.launch()
+        XCTAssertTrue(week.waitForExistence(timeout:8));XCTAssertTrue(week.value as? String=="Friday");XCTAssertTrue(weekend.value as? String=="Sunday")
+    }
+}

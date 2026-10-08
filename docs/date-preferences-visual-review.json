@@ -1,0 +1,184 @@
+{
+  "checkpoint": "2026-10-08 date phrase preferences",
+  "inspectedCaptureCount": 32,
+  "method": "Each unmodified final PNG inspected individually; hashes match exported xcresult attachments.",
+  "devices": [
+    "iPhone 17 Pro iOS 26.5",
+    "iPad Pro 11-inch (M5) iOS 26.5"
+  ],
+  "appearances": [
+    "light / standard text",
+    "dark / Accessibility XXXL"
+  ],
+  "findings": [
+    "Weekday picker labels/values remain readable; largest labels wrap without overlapping the choices.",
+    "Both standard settings captures show the complete meaning and local-workspace caption.",
+    "Largest settings explanation extends below the viewport and requires scrolling.",
+    "Accepted task title/date/deadline wrap in the largest phone row; final task dates remain fully readable on phone/tablet.",
+    "The largest phone saved-filter navigation title truncates; largest tablet tabs page and phone tabs can collapse.",
+    "Capture chips/toolbars are horizontally scrollable; planned preview is outside the largest capture viewport. Largest phone title input is a partial vertical viewport. Tests assert both removable date/deadline chips and exact persisted dates, not simultaneous visibility of every chip."
+  ],
+  "scope": "Settings/capture/saved-filter membership/change/All tasks/relaunch only. Not full-surface, VoiceOver, provisioned WidgetKit host or Mac runtime acceptance.",
+  "captures": [
+    {
+      "file": "phone-dark-largest-date-phrase-task-after-relaunch.png",
+      "SHA256": "d2915884ea5282285f549d4da9df6f728e559cade94e7a40f8e8abc085af022b",
+      "inspected": true
+    },
+    {
+      "file": "phone-dark-largest-date-phrase-choices-after-relaunch.png",
+      "SHA256": "b6161929237d50fef62681c2a8ab95b85abe876dacd4e60544e13a3092b5a375",
+      "inspected": true
+    },
+    {
+      "file": "phone-dark-largest-date-phrase-concrete-task-retained.png",
+      "SHA256": "e23de96333256c42bc77fc7f4979cec933c86e5666b1a3c87e2591ee33eb5b79",
+      "inspected": true
+    },
+    {
+      "file": "phone-dark-largest-date-phrase-relative-results-changed.png",
+      "SHA256": "abb2f158ad5847f89c4042d348c86f475cd4177ecb94924b2f8a40a268433398",
+      "inspected": true
+    },
+    {
+      "file": "phone-dark-largest-date-phrase-changed-preference.png",
+      "SHA256": "ad3965708af08f078b3855fe727515e7913e963fac90619a09afa1e435e82eda",
+      "inspected": true
+    },
+    {
+      "file": "phone-dark-largest-date-phrase-next-week-membership.png",
+      "SHA256": "b3d79a92fc7730cc0f2afe8eb1e54defc52b8fff961bed92f6e47324e4c9b5bb",
+      "inspected": true
+    },
+    {
+      "file": "phone-dark-largest-date-phrase-capture-previews.png",
+      "SHA256": "d693f4f231aaed20f915f2378338e5168f3327cab0518638e0498caacf55d2d0",
+      "inspected": true
+    },
+    {
+      "file": "phone-dark-largest-date-phrase-configured-choices.png",
+      "SHA256": "4925e3cab8606f720c54c34c9469d4991e35892b3b42411c35285a86a5416d56",
+      "inspected": true
+    },
+    {
+      "file": "phone-light-standard-date-phrase-task-after-relaunch.png",
+      "SHA256": "21c15b2d38dcae569ce011d46961214e4abcabf97fc3f6f44187486a0bf4acb2",
+      "inspected": true
+    },
+    {
+      "file": "phone-light-standard-date-phrase-choices-after-relaunch.png",
+      "SHA256": "381e64020116721ceebb203707f5899c04d3611a89a70f207c951d6c999fed29",
+      "inspected": true
+    },
+    {
+      "file": "phone-light-standard-date-phrase-concrete-task-retained.png",
+      "SHA256": "01b46f7c7a31594198f85356661dd14510c943149feed62f9d36b28a325f53fe",
+      "inspected": true
+    },
+    {
+      "file": "phone-light-standard-date-phrase-relative-results-changed.png",
+      "SHA256": "358b80909adfcef593e5ba1e05f2bd8dc39e7f24ae33e6e06478499abe36f81d",
+      "inspected": true
+    },
+    {
+      "file": "phone-light-standard-date-phrase-changed-preference.png",
+      "SHA256": "5d052b5179b6a1b62bfe2dba9ffe90788700f0fc51f90a1fba777ee6ccc3df3d",
+      "inspected": true
+    },
+    {
+      "file": "phone-light-standard-date-phrase-next-week-membership.png",
+      "SHA256": "2e04eaabd68cf4278c54bb84e7d8023658039aa4b3f900764659edf780d8b970",
+      "inspected": true
+    },
+    {
+      "file": "phone-light-standard-date-phrase-capture-previews.png",
+      "SHA256": "1990b0064c6ca3e452c9245dee4d3c327f458f46a2c5bc70ae5984458f1334de",
+      "inspected": true
+    },
+    {
+      "file": "phone-light-standard-date-phrase-configured-choices.png",
+      "SHA256": "0429849c2de7035c4095ac18f1bfea83529bb4121493e4e56d28d64aa7b36dae",
+      "inspected": true
+    },
+    {
+      "file": "tablet-dark-largest-date-phrase-task-after-relaunch.png",
+      "SHA256": "b150e4204e8ee8f228644a659daecf018ecbafd5a9bb3b18c996727a92eb2c0c",
+      "inspected": true
+    },
+    {
+      "file": "tablet-dark-largest-date-phrase-choices-after-relaunch.png",
+      "SHA256": "c95e6478ed5d363edba1e7a637a0826150ef036e2c29007e539a680d4fef7251",
+      "inspected": true
+    },
+    {
+      "file": "tablet-dark-largest-date-phrase-concrete-task-retained.png",
+      "SHA256": "b150e4204e8ee8f228644a659daecf018ecbafd5a9bb3b18c996727a92eb2c0c",
+      "inspected": true
+    },
+    {
+      "file": "tablet-dark-largest-date-phrase-relative-results-changed.png",
+      "SHA256": "ad637c1c4f97b7c59ce17e45bcebc2f27a44e31f5cc3856ff53e25fa619ba208",
+      "inspected": true
+    },
+    {
+      "file": "tablet-dark-largest-date-phrase-changed-preference.png",
+      "SHA256": "64171f940bff2ed35e28bed8e9847cf152da4b741f442aafdef0f88b23b60c76",
+      "inspected": true
+    },
+    {
+      "file": "tablet-dark-largest-date-phrase-next-week-membership.png",
+      "SHA256": "a90e0f791b7f527faf915ae48a542b23228169519862a7c1c09063844fd79a96",
+      "inspected": true
+    },
+    {
+      "file": "tablet-dark-largest-date-phrase-capture-previews.png",
+      "SHA256": "05b6a6e8159733821ef5262cf1d29f1f4a9daa8cbabc706c143b606538e70218",
+      "inspected": true
+    },
+    {
+      "file": "tablet-dark-largest-date-phrase-configured-choices.png",
+      "SHA256": "70275dc34e014db1da1193bcf18e3175269ee2ab07d1b7410daa985179166941",
+      "inspected": true
+    },
+    {
+      "file": "tablet-light-standard-date-phrase-task-after-relaunch.png",
+      "SHA256": "a4ec37645abc9a34d6417766b89b7468a21889dcfd54f015ec8a1e8c115df76e",
+      "inspected": true
+    },
+    {
+      "file": "tablet-light-standard-date-phrase-choices-after-relaunch.png",
+      "SHA256": "26c4c65ac1c5119fbbd00b183874bf9ac3e38c7400d4a2970fe489640a9ed31c",
+      "inspected": true
+    },
+    {
+      "file": "tablet-light-standard-date-phrase-concrete-task-retained.png",
+      "SHA256": "a4ec37645abc9a34d6417766b89b7468a21889dcfd54f015ec8a1e8c115df76e",
+      "inspected": true
+    },
+    {
+      "file": "tablet-light-standard-date-phrase-relative-results-changed.png",
+      "SHA256": "a75fee3a05fd8bf8843e18a28c97de5869ae05f7ea7e5cc1ada19a0c66d35be3",
+      "inspected": true
+    },
+    {
+      "file": "tablet-light-standard-date-phrase-changed-preference.png",
+      "SHA256": "6ba466fb54dc2a6dff3ba9e837379d08632d2c7b4a209636d75e7961a2675d8f",
+      "inspected": true
+    },
+    {
+      "file": "tablet-light-standard-date-phrase-next-week-membership.png",
+      "SHA256": "f34728f38cf06c1cb7f0d5c071ca0244e7d4164e49d3c0e652184f4735dc8eb9",
+      "inspected": true
+    },
+    {
+      "file": "tablet-light-standard-date-phrase-capture-previews.png",
+      "SHA256": "79d3c36d3882d10bcc4d0e4d236ee7bced7fd45b215b89fb8f74fabbd8e9e5b2",
+      "inspected": true
+    },
+    {
+      "file": "tablet-light-standard-date-phrase-configured-choices.png",
+      "SHA256": "5689e1556d8f493774200852367378473a64be35ed9c083ca2780820b13bb09a",
+      "inspected": true
+    }
+  ]
+}

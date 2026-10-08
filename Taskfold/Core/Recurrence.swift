@@ -156,16 +156,53 @@ enum Recurrence {
 
 /// English civil-date phrases resolve once at acceptance, then use the existing ISO fields.
 /// Invalid named days never normalize into another month; omitted years look forward.
+/// Account-owned meanings of relative date phrases; accepted tasks retain concrete dates.
+struct DatePhrasePreferences: Hashable, Sendable {
+    static let recordID = "dates"
+    static let phrases: Set<String> = ["next week", "this weekend", "next weekend"]
+    var nextWeek = 2, weekend = 7 // Gregorian Sunday=1, Monday=2, Saturday=7.
+    var document: JSON { .object(["version": .number(1), "next_week": .number(Double(nextWeek)), "weekend": .number(Double(weekend))]) }
+    init(nextWeek: Int = 2, weekend: Int = 7) { self.nextWeek = nextWeek; self.weekend = weekend }
+    init(document: JSON) throws {
+        if document == .null { self.init(); return }
+        guard (try? JSONEncoder().encode(document).count).map({ $0 <= 2048 }) == true, document.object["version"] == .number(1),
+              let week = Self.weekday(document.object["next_week"] ?? .null),
+              let weekend = Self.weekday(document.object["weekend"] ?? .null) else {
+            throw PlannerFailure(message: "These date preferences are unsupported. Update Taskfold before changing them.")
+        }
+        self.init(nextWeek: week, weekend: weekend)
+    }
+    static func weekday(_ value: JSON) -> Int? {
+        guard case .number(let n) = value, n.isFinite, n.rounded() == n, (1...7).contains(n) else { return nil }; return Int(n)
+    }
+    static func changing(_ document: JSON, field: String, weekday: Int) -> JSON? {
+        guard ["next_week", "weekend"].contains(field), (1...7).contains(weekday), let current = try? Self(document: document) else { return nil }
+        var fields = document == .null ? current.document.object : document.object
+        fields[field] = .number(Double(weekday)); return .object(fields)
+    }
+    static func row(_ snapshot: Snapshot, account: String) -> Record? {
+        snapshot.tables["view_preferences"]?.first { $0.id == recordID && $0.string("user_id").caseInsensitiveCompare(account) == .orderedSame }
+    }
+    func resolve(_ phrase: String, from origin: Date, calendar: Calendar) -> Date? {
+        guard Self.phrases.contains(phrase), (1...7).contains(nextWeek), (1...7).contains(weekend) else { return nil }
+        let target = phrase == "next week" ? nextWeek : weekend
+        let distance = (target - calendar.component(.weekday, from: origin) + 7) % 7
+        // This weekend may be today; next week is strictly future. Next weekend skips one occurrence.
+        let days = phrase == "next weekend" ? distance + 7 : phrase == "next week" && distance == 0 ? 7 : distance
+        return calendar.date(byAdding: .day, value: days, to: calendar.startOfDay(for: origin))
+    }
+}
+
 enum QuickNaturalDateText {
     static let months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
     static let month = "(?:" + months.flatMap { [$0, String($0.prefix(3))] }.joined(separator: "|") + ")"
     static let named = "(?:" + month + #"\s+\d+(?:st|nd|rd|th)?(?:,?\s+\d{4})?|\d+(?:st|nd|rd|th)?\s+"# + month + #"(?:\s+\d{4})?)"#
-    static let expanded = "(?:" + named + #"|next\s+(?:week|month|year)|end\s+of\s+(?:month|year))\b"#
-    static let boundary = "(?:" + named + #"|\d{4}-\d{2}-\d{2}|today|tomorrow|yesterday|next\s+(?:week|month|year|"# + Recurrence.weekdays.joined(separator: "|") + #")|end\s+of\s+(?:month|year)|"# + Recurrence.weekdays.flatMap { [$0, String($0.prefix(3))] }.joined(separator: "|") + ")\\b"
+    static let expanded = "(?:" + named + #"|next\s+(?:weekend|week|month|year)|this\s+weekend|end\s+of\s+(?:month|year))\b"#
+    static let boundary = "(?:" + named + #"|\d{4}-\d{2}-\d{2}|today|tomorrow|yesterday|this\s+weekend|next\s+(?:weekend|week|month|year|"# + Recurrence.weekdays.joined(separator: "|") + #")|end\s+of\s+(?:month|year)|"# + Recurrence.weekdays.flatMap { [$0, String($0.prefix(3))] }.joined(separator: "|") + ")\\b"
     /// Consume unsupported boundaries as one phrase as well, preserving decline/invalid safety.
     static let capturedBoundary = "(?:" + boundary + #"|(?:next\s+)?\S+(?:\s+\d+(?:st|nd|rd|th)?(?:\s+\d{4})?)?)"#
 
-    static func resolve(_ raw: String, relativeTo reference: Date, calendar input: Calendar, inclusiveWeekday: Bool = false) -> Date? {
+    static func resolve(_ raw: String, relativeTo reference: Date, calendar input: Calendar, inclusiveWeekday: Bool = false, datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) -> Date? {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         let origin = calendar.startOfDay(for: reference)
         let text = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
@@ -175,10 +212,7 @@ enum QuickNaturalDateText {
         }
         if text.count == 10, match(#"\d{4}-\d{2}-\d{2}"#) != nil { return Dates.parse(text, calendar: calendar) }
         if let delta = ["today": 0, "tomorrow": 1, "yesterday": -1][text] { return calendar.date(byAdding: .day, value: delta, to: origin) }
-        if text == "next week" {
-            let delta = (2 - calendar.component(.weekday, from: origin) + 7) % 7
-            return calendar.date(byAdding: .day, value: delta == 0 ? 7 : delta, to: origin)
-        }
+        if DatePhrasePreferences.phrases.contains(text) { return datePreferences?.resolve(text, from: origin, calendar: calendar) }
         if text == "next month" { return calendar.date(byAdding: .month, value: 1, to: origin) }
         if text == "next year" {
             return Dates.parse(String(format: "%04d-01-01", calendar.component(.year, from: origin) + 1), calendar: calendar)
@@ -217,7 +251,7 @@ enum QuickRecurrenceText {
     static let on = #"(?:the\s+)?(?:"# + ordinal + #"\s+"# + day + #"|[a-z]+\s+\d+(?:st|nd|rd|th)?|"# + days + #"|\S+)"#
     static let pattern = #"(?<![\p{L}\p{N}_!])(?:every!?\s+(?:(?:(?:\d+|other)\s+)?(?:days?|weeks?|months?|years?)\b(?:\s+on\s+"# + on + #")?|(?:weekdays?|workdays?|weekends?)\b|"# + ordinal + #"\s+"# + day + #"|"# + days + #"|\S+(?:\s+"# + day + #")?)|daily\b|weekly\b|monthly\b|yearly\b)(?:\s+(?:(?:starting|from|until|ending)(?:\s+on)?\s+"# + QuickNaturalDateText.capturedBoundary + #"|for\s+\S+\s+\S+))*"#
     struct Parsed { var rule: Record; var start: String? }
-    static func parse(_ raw: String, now: Date = Date(), calendar: Calendar = .current) -> Parsed? {
+    static func parse(_ raw: String, now: Date = Date(), calendar: Calendar = .current, datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) -> Parsed? {
         var body = raw.lowercased().trimmingCharacters(in: .whitespaces)
         var rule = Record(["interval": .number(1)])
         var start: String?
@@ -236,12 +270,12 @@ enum QuickRecurrenceText {
             if let range = Range(m.range, in: body) { body.removeSubrange(range) }
         }
         if let raw = dates["start"] {
-            guard let date = QuickNaturalDateText.resolve(raw, relativeTo: now, calendar: calendar, inclusiveWeekday: true) else { return nil }
+            guard let date = QuickNaturalDateText.resolve(raw, relativeTo: now, calendar: calendar, inclusiveWeekday: true, datePreferences: datePreferences) else { return nil }
             start = TaskPlanner.dayKey(date, calendar: calendar)
         }
         if let raw = dates["endDate"] {
             let anchor = start.flatMap { Dates.parse($0, calendar: calendar) } ?? now
-            guard let date = QuickNaturalDateText.resolve(raw, relativeTo: anchor, calendar: calendar, inclusiveWeekday: true) else { return nil }
+            guard let date = QuickNaturalDateText.resolve(raw, relativeTo: anchor, calendar: calendar, inclusiveWeekday: true, datePreferences: datePreferences) else { return nil }
             rule["endDate"] = .string(TaskPlanner.dayKey(date, calendar: calendar))
         }
         func match(_ pattern: String, _ input: String) -> [String]? {

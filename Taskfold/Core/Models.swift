@@ -428,7 +428,7 @@ struct QuickEntry {
                 var accepted = false
                 if !disabled.contains("reminder_specs") && !disabled.contains(group) {
                     let id = QuickReminderText.stableID(reminderSeed + "|" + key + "|\(ordinal)")
-                    if let spec = QuickReminderText.spec(raw, id: id, now: now, calendar: calendar) {
+                    if let spec = QuickReminderText.spec(raw, id: id, now: now, calendar: calendar, datePreferences: context.datePreferences) {
                         let semantic = spec.semanticKey
                         if seen.insert(semantic).inserted && QuickReminderText.merge(spec, into: &reminderRows) {
                             acceptedReminders.append((spec, raw))
@@ -470,7 +470,7 @@ struct QuickEntry {
             return date.formatted(style)
         }
         if enabled("deadline_date"), let m = match(#"\{([^}]*)\}"#) {
-            if let date = QuickNaturalDateText.resolve(m[1], relativeTo: now, calendar: calendar) {
+            if let date = QuickNaturalDateText.resolve(m[1], relativeTo: now, calendar: calendar, datePreferences: context.datePreferences) {
                 updates["deadline_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar)); take("deadline_date", m[0], "Deadline " + dayLabel(date))
             } else { warnings.append("“\(m[0])” is not a valid deadline date. Its text stays in the title.") }
         }
@@ -514,7 +514,7 @@ struct QuickEntry {
                 let raw = String(source[range])
                 let marker = "\u{E006}" + UUID().uuidString + "\u{E007}"
                 title.replaceSubrange(target, with: marker)
-                if enabled("recurrence"), matches.count == 1, let parsed = QuickRecurrenceText.parse(raw, now: now, calendar: TaskCompletion.calendar(for: task, input: calendar)) {
+                if enabled("recurrence"), matches.count == 1, let parsed = QuickRecurrenceText.parse(raw, now: now, calendar: TaskCompletion.calendar(for: task, input: calendar), datePreferences: context.datePreferences) {
                     recurrenceCandidate = (parsed, raw)
                     literals.append((marker, ""))
                 } else {
@@ -525,7 +525,7 @@ struct QuickEntry {
         }
         if enabled("due_date") {
             if let m = match(#"(?<![\p{L}\p{N}_])"# + QuickNaturalDateText.expanded) {
-                if let date = QuickNaturalDateText.resolve(m[0], relativeTo: now, calendar: calendar) {
+                if let date = QuickNaturalDateText.resolve(m[0], relativeTo: now, calendar: calendar, datePreferences: context.datePreferences) {
                     updates["due_date"] = .string(TaskPlanner.dayKey(date, calendar: calendar)); take("due_date", m[0], dayLabel(date))
                 } else { warnings.append("“\(m[0])” is not a valid calendar date. Its text stays in the title.") }
             } else if let m = match(#"\b(today|tomorrow|yesterday)\b"#) {
@@ -650,6 +650,7 @@ struct QuickEntryContext {
     var referenceChoices: [String: String] = [:]
     var currentProject = ""
     var currentUser = ""
+    var datePreferences: DatePhrasePreferences? = DatePhrasePreferences()
     func choosingReferences(_ choices: [String: String]) -> Self { var copy = self; copy.referenceChoices = choices; return copy }
     static func key(_ name: String) -> String {
         name.trimmingCharacters(in: .whitespacesAndNewlines).folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
@@ -890,6 +891,7 @@ struct TaskQuery: Hashable {
     var labelName = ""
     var filter: FilterRule?
     var now: Date?
+    var datePreferences: DatePhrasePreferences? = DatePhrasePreferences()
     var filterLabels: [FilterReference] = []
     var filterProjects: [FilterReference] = []
     var filterSections: [FilterReference] = []
@@ -913,6 +915,7 @@ final class TaskCache {
     func matching(_ incoming: TaskQuery) -> [Record] {
         var query = incoming
         query.now = query.filter?.usesClockWindow == true ? query.now.flatMap { $0.timeIntervalSinceReferenceDate.isFinite ? FilterClockWindow.minute($0) : nil } : nil
+        if query.filter?.usesDatePreferences != true { query.datePreferences = DatePhrasePreferences() }
         if let cached = results[query] { return cached }
         computationCount += 1
         let nameBindings = query.filter?.nameBindings(projects: query.filterProjects, sections: query.filterSections, labels: query.filterLabels)
@@ -923,8 +926,8 @@ final class TaskCache {
             if !query.text.isEmpty && !(task.title + " " + task.string("description")).localizedCaseInsensitiveContains(query.text) { return false }
             if let filter = query.filter {
                 if case .sections(let rules) = filter {
-                    guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now) }) else { return false }
-                } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now) { return false }
+                    guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences) }) else { return false }
+                } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences) { return false }
             }
             let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
             switch query.scope {
@@ -1233,9 +1236,9 @@ enum TaskCompletion {
 
 /// Versioned widget payload. The extension receives bounded planning/Focus data, never authentication sessions or executable mutations.
 enum WidgetProjection {
-    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = []) -> [String: JSON] {
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
-        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar)
+        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences)
         let pulse = pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar)
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let rows = tasks.filter { !$0.completed }.map { task -> JSON in
@@ -1287,9 +1290,9 @@ enum WidgetProjection {
     }
 
     /// Only open task IDs and display names leave the app; filter expressions and credentials do not.
-    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar) -> [JSON] {
+    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar, datePreferences preferences: DatePhrasePreferences? = DatePhrasePreferences()) -> [JSON] {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
-        let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account)
+        let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account, datePreferences: preferences)
         let cache = TaskCache(); cache.update(tasks)
         func row(_ record: Record, kind: String, days: [String: [String]], error: Bool = false, clock: Bool = false) -> JSON {
             let key = (try? JSONEncoder().encode([account, kind, record.id]).base64EncodedString()) ?? ""
@@ -1315,7 +1318,7 @@ enum WidgetProjection {
             for offset in 0..<(rule.usesClockWindow ? 1 : 8) {
                 guard let date = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)) else { continue }
                 let day = TaskPlanner.dayKey(date, calendar: calendar)
-                let query = TaskQuery(scope: .all, sort: view.string("sort_by"), today: day, filter: rule, now: rule.usesClockWindow ? now : nil,
+                let query = TaskQuery(scope: .all, sort: view.string("sort_by"), today: day, filter: rule, now: rule.usesClockWindow ? now : nil, datePreferences: preferences,
                     filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) },
                     filterProjects: projects.map { FilterReference(id: $0.id, name: $0.name) },
                     filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, userID: account, timeZone: calendar.timeZone.identifier)
@@ -1342,7 +1345,7 @@ private enum QuickReminderText {
         let value = String(hex[0..<8]) + "-" + String(hex[8..<12]) + "-5" + String(hex[13..<16]) + "-a" + String(hex[17..<20]) + "-" + String(hex[20..<32])
         return value
     }
-    static func spec(_ raw: String, id: String, now: Date, calendar input: Calendar) -> ReminderSpec? {
+    static func spec(_ raw: String, id: String, now: Date, calendar input: Calendar, datePreferences: DatePhrasePreferences?) -> ReminderSpec? {
         let text = raw.dropFirst().trimmingCharacters(in: .whitespaces).lowercased()
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         if text.hasPrefix("every ") {
@@ -1355,8 +1358,8 @@ private enum QuickReminderText {
             var civil = Calendar(identifier: .gregorian); civil.timeZone = TimeZone(secondsFromGMT: 0)!
             let sourceDay = TaskPlanner.dayKey(now, calendar: calendar)
             guard let civilNow = Dates.parse(sourceDay, calendar: civil),
-                  let parsed = QuickRecurrenceText.parse(phrase, now: civilNow, calendar: civil), !parsed.rule["fromCompletion"].flag,
-                  let initial = ReminderCalendarSchedule.make(phrase, time: time, start: sourceDay, zone: calendar.timeZone.identifier) else { return nil }
+                  let parsed = QuickRecurrenceText.parse(phrase, now: civilNow, calendar: civil, datePreferences: datePreferences), !parsed.rule["fromCompletion"].flag,
+                  let initial = ReminderCalendarSchedule.make(phrase, time: time, start: sourceDay, zone: calendar.timeZone.identifier, datePreferences: datePreferences) else { return nil }
             let rule = initial.rule
             var raw = initial.raw
             // A rule with no explicit starting day begins with its next future clock.

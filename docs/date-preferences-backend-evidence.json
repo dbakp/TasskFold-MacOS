@@ -1,0 +1,81 @@
+{
+  "project": "TaskFold",
+  "projectID": "zqxflydiyfjeedqvyova",
+  "migration": "20261008053217_date_phrase_preferences.sql",
+  "migrationSHA256": "dd6deb3d08789c2b725af4bd90f808deb6466b9240306c192a08fd3e2ceb7042",
+  "migrationApplied": true,
+  "sqlFixture": {
+    "path": "Scripts/verify_date_preferences.sql",
+    "success": true,
+    "remainingFixtureUsers": 0,
+    "transaction": "rollback",
+    "coverage": [
+      "authenticated owner write/read",
+      "invalid JSON versions/weekday types/ranges rejected",
+      "unrelated legacy update retains preference",
+      "foreign read/insert/update/delete isolation",
+      "foreign own preferences independent",
+      "anonymous read denied"
+    ]
+  },
+  "advisors": {
+    "advisors_before": [
+      {
+        "name": "extension_in_public",
+        "count": 1
+      },
+      {
+        "name": "pg_graphql_anon_table_exposed",
+        "count": 6
+      },
+      {
+        "name": "pg_graphql_authenticated_table_exposed",
+        "count": 15
+      },
+      {
+        "name": "anon_security_definer_function_executable",
+        "count": 8
+      },
+      {
+        "name": "authenticated_security_definer_function_executable",
+        "count": 9
+      },
+      {
+        "name": "auth_leaked_password_protection",
+        "count": 1
+      }
+    ],
+    "advisors_after": [
+      {
+        "name": "extension_in_public",
+        "count": 1
+      },
+      {
+        "name": "pg_graphql_anon_table_exposed",
+        "count": 6
+      },
+      {
+        "name": "pg_graphql_authenticated_table_exposed",
+        "count": 15
+      },
+      {
+        "name": "anon_security_definer_function_executable",
+        "count": 8
+      },
+      {
+        "name": "authenticated_security_definer_function_executable",
+        "count": 9
+      },
+      {
+        "name": "auth_leaked_password_protection",
+        "count": 1
+      }
+    ]
+  },
+  "securityScope": "Existing findings remain; no whole-project security acceptance. Existing owner policy is retained; the private validator uses SECURITY INVOKER, a fixed empty search path and restricted execution.",
+  "nativeAccountPair": "Not exercised by this SQL fixture; real paired/offline/revocation/restore and mixed-version upgrade remain acceptance gates.",
+  "rawEvidence": {
+    "path": "/tmp/taskfold-date-preferences-backend-evidence.json",
+    "SHA256": "766298421e31e2ffa092617dccf6f3113612f289cf90b428784396aca8b4a574"
+  }
+}

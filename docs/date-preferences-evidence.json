@@ -1,0 +1,218 @@
+{
+  "checkpoint": "2026-10-08 account-owned date phrase preferences",
+  "repository": "mac",
+  "baseline": "35f3051aaac71d11e4e69f3aa4352625757555d7",
+  "inputManifest": {
+    "path": "/tmp/taskfold-authority-mac-commit-polish/docs/date-preferences-inputs-sha256.json",
+    "SHA256": "7a4ff1f89640cd5a3cda64a7d3c7f6e2e0345ed4521de7eb4fffe46c6fc279d8"
+  },
+  "ownCore": {
+    "Debug": {
+      "tests": 556,
+      "skipped": 4,
+      "failed": 0,
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-final-mac-core-debug.log",
+        "SHA256": "39f89ff95955aba20144fd5d1ce988289b5abc855f29b7ae792f51fdb5935beb"
+      }
+    },
+    "Release": {
+      "tests": 556,
+      "skipped": 4,
+      "failed": 0,
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-final-mac-core-release.log",
+        "SHA256": "9a99e30bd5a2090b85bdc868dbde0395f2cfc022b655a7a6390bdd477eaad08b"
+      }
+    }
+  },
+  "nativeBuilds": {
+    "Debug": {
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-final-mac-debug.log",
+        "SHA256": "7a22546cefe84fc8de60a8f360bf905f9a284e117d54de144d3c3818d9baed51"
+      },
+      "signingAllowed": false,
+      "overlay": "none"
+    },
+    "Release": {
+      "terminalExitCode": 0,
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-final-mac-release.log",
+        "SHA256": "a50d7b65051292ddbbf2efbe46530008ab134983a15bdc242247b4c5c1e68b6d"
+      },
+      "signingAllowed": false,
+      "overlay": "none",
+      "architectures": {
+        "app": [
+          "x86_64",
+          "arm64"
+        ],
+        "widgetExtension": [
+          "x86_64",
+          "arm64"
+        ]
+      }
+    }
+  },
+  "nativeIOS": {
+    "phone": {
+      "resultBundle": "/tmp/taskfold-date-preferences-final-v3-phone.xcresult",
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-final-v3-phone.log",
+        "SHA256": "02d5cc0841b0d506409e71f4c7f9ada6afa15d0c1abcb6677fdc8aec7cadffca"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-date-preferences-final-v3-phone-summary.json",
+        "SHA256": "f6ab935b10d9fadad0dbe0e81b9e8a5c15d1fac12223abf32526b850a56c774c"
+      },
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "terminalExitCode": 0
+    },
+    "tablet": {
+      "resultBundle": "/tmp/taskfold-date-preferences-final-v3-tablet.xcresult",
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-final-v3-tablet.log",
+        "SHA256": "c227f6706cc3964208976f24bd2890e25f58cfd19789a8cdfc20ad7b2356b9a7"
+      },
+      "summary": {
+        "path": "/tmp/taskfold-date-preferences-final-v3-tablet-summary.json",
+        "SHA256": "12b0127e8833aa76fa1e66123dc2acc314d21bb7c83edf53f080821bca2aff5e"
+      },
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "terminalExitCode": 0
+    }
+  },
+  "nativeMac": "UI test compiles only; no Mac app runtime or installation performed.",
+  "fullP0": "Active; scoped progress checkpoint, not full acceptance.",
+  "logCollision": "The earlier post-cursor-fix iOS Debug Core log was accidentally overwritten by a native Debug build sharing its filename. Its terminal exit was 0; the current full iOS Debug suite was rerun in a fresh scratch directory under verified-ios-core-debug with a distinct retained log. Other recorded logs/products/results remain preserved.",
+  "notices": "Existing nonthrowing-try compiler notice and native SDK/debugger/accessibility-hierarchy/metadata notices are retained in logs; no warning-free claim.",
+  "preservedNativeCohorts": {
+    "initial-phone": {
+      "passed": 0,
+      "failed": 2,
+      "skipped": 0,
+      "terminalExitCode": 65,
+      "resultBundle": "/tmp/taskfold-date-preferences-phone.xcresult",
+      "summary": {
+        "path": "/tmp/taskfold-date-preferences-phone-retained-summary.json",
+        "SHA256": "23555b13ddb7392c95711698720ecec00566423737b2571e26a5e743d53dc04f"
+      },
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-phone.log",
+        "SHA256": "d91ec2641b90ff490aac0779884e2dfffdb2062c50821a10aba0d0d655a7a1da"
+      }
+    },
+    "initial-tablet": {
+      "passed": 0,
+      "failed": 2,
+      "skipped": 0,
+      "terminalExitCode": 65,
+      "resultBundle": "/tmp/taskfold-date-preferences-tablet.xcresult",
+      "summary": {
+        "path": "/tmp/taskfold-date-preferences-tablet-retained-summary.json",
+        "SHA256": "e4d43db06dcaeaff17bf079ac46bff66b6154ae0128e40a3df81dc6bf295bde4"
+      },
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-tablet.log",
+        "SHA256": "5c09a31a997260d3c9451338095964e8ead6b44bfa7d22b25f1e6e5c30949cb4"
+      }
+    },
+    "final-phone": {
+      "passed": 0,
+      "failed": 2,
+      "skipped": 0,
+      "terminalExitCode": 65,
+      "resultBundle": "/tmp/taskfold-date-preferences-final-phone.xcresult",
+      "summary": {
+        "path": "/tmp/taskfold-date-preferences-final-phone-retained-summary.json",
+        "SHA256": "55dd367318a2da433f144cccb50912a7f6c28433babd4009de70fdb919370335"
+      },
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-final-phone.log",
+        "SHA256": "114b052af24a7cd5e92f02ff15fef04223f8b9832d00038bc172a021be6d7ffa"
+      }
+    },
+    "final-tablet": {
+      "passed": 0,
+      "failed": 2,
+      "skipped": 0,
+      "terminalExitCode": 65,
+      "resultBundle": "/tmp/taskfold-date-preferences-final-tablet.xcresult",
+      "summary": {
+        "path": "/tmp/taskfold-date-preferences-final-tablet-retained-summary.json",
+        "SHA256": "a30808305245a625fd8f69db0b87143623cdb26276256cd932eb59214c08ae35"
+      },
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-final-tablet.log",
+        "SHA256": "1ceec622188e2d12fb6c70a24fa056b6d043accdb63fae7c541f817938eacf99"
+      }
+    },
+    "final-v2-phone": {
+      "passed": 1,
+      "failed": 1,
+      "skipped": 0,
+      "terminalExitCode": 65,
+      "resultBundle": "/tmp/taskfold-date-preferences-final-v2-phone.xcresult",
+      "summary": {
+        "path": "/tmp/taskfold-date-preferences-final-v2-phone-retained-summary.json",
+        "SHA256": "71021bbb1a6e504f9072ef75bc8a131870efc932f1690ee5c59665c7a5e6f12e"
+      },
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-final-v2-phone.log",
+        "SHA256": "ab9f201f59fa28962541ba006401f2342e6f0bd81d5914145d96d86318b5e1c2"
+      }
+    },
+    "final-v2-tablet": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "terminalExitCode": 0,
+      "resultBundle": "/tmp/taskfold-date-preferences-final-v2-tablet.xcresult",
+      "summary": {
+        "path": "/tmp/taskfold-date-preferences-final-v2-tablet-summary.json",
+        "SHA256": "b65ae87963f180b58fce6f158e47b2f8ef53f8650e454e6d13cc3d607bd03ea3"
+      },
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-final-v2-tablet.log",
+        "SHA256": "21024e2a0d3c03d57213efa82f3409a021d271b52af9e828d338d53b64dbb87e"
+      }
+    }
+  },
+  "harnessCorrections": "Back from Date phrases before Settings Done; return to Browse root before opening Settings; scroll toward earlier lazy rows when All tasks is unmounted. Only iOS UI-test code changed after final production builds; assertions remain.",
+  "preservedCoreDiagnostics": [
+    {
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-ios-debug.log",
+        "SHA256": "b19516d16c050d777501027a4801eeddf426acf371f089e176f9ce6fdbc3bd12"
+      },
+      "terminalExitCode": 1,
+      "finding": "New backup test initially used the wrong existing API; corrected to WorkspaceBackup."
+    },
+    {
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-ios-debug-corrected.log",
+        "SHA256": "8147fd47c5ffdb51f7ad91b2c1377050008c819961779621cbd7fc043e65960b"
+      },
+      "terminalExitCode": 1,
+      "finding": "Three test expectations corrected for the chosen Friday, ordinary weekday suggestions and new next-weekend option."
+    },
+    {
+      "log": {
+        "path": "/tmp/taskfold-date-preferences-weekend-completion-diagnostic.log",
+        "SHA256": "aec39c001095934b144327dcd3f325f0e78bc13d213e7e57e80674a0ab581e97"
+      },
+      "terminalExitCode": 1,
+      "finding": "Actual this-we cursor-suggestion regression reproduced and fixed in both repositories before final verification."
+    }
+  ]
+}

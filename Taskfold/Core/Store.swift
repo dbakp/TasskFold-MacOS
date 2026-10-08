@@ -52,6 +52,20 @@ final class Store {
     var calendarContextFixtureEnabled: Bool {
         userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--calendar-context-testing")
     }
+    var datePhraseFixtureEnabled: Bool {
+        userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--date-phrase-testing")
+    }
+    func startDatePhraseFixture() {
+        guard datePhraseFixtureEnabled else { return }
+        dailyBackupsEnabled = false; disableNotifications()
+        if ProcessInfo.processInfo.arguments.contains("--date-phrase-fixture") {
+            snapshot = Snapshot()
+            snapshot.tables["saved_views"] = [("date-pref-week", "Next week choices", "next week"), ("date-pref-weekend", "Weekend choices", "this weekend")].map { id, name, phrase in
+                Record(["id": .string(id), "user_id": .string(userID), "name": .string(name), "query_ast": FilterRule.predicate("planned_on", phrase).document, "layout": .string("list"), "sort_by": .string("title")])
+            }
+            do { try persist() } catch { self.error = error.localizedDescription }
+        }
+    }
     var clockWindowFixtureEnabled: Bool {
         userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--clock-window-testing")
     }
@@ -208,10 +222,25 @@ final class Store {
     }
     var email: String { backend.session?.user.email ?? "On this iPhone" }
     var tasks: [Record] { _ = taskRevision; return taskCache.tasks }
-    var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { projectMembers($0.id) }) }
+    var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { projectMembers($0.id) }, datePreferences: datePhrasePreferences) }
     var savedViews: [Record] { rows("saved_views").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
     var favorites: [Record] { rows("favorites").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
     var workingHours: WorkingHours { (try? WorkingHours(document: record("view_preferences", id: "planner")?["working_hours"] ?? .null)) ?? WorkingHours() }
+    var datePhraseRecord: Record? { DatePhrasePreferences.row(snapshot, account: userID) }
+    var datePhrasePreferences: DatePhrasePreferences? { try? DatePhrasePreferences(document: datePhraseRecord?["date_preferences"] ?? .null) }
+    var datePhraseEditable: Bool { workspaceCacheReadable && (signedIn || localMode) && datePhrasePreferences != nil }
+    func datePhraseDay(_ phrase: String, now: Date = Date(), calendar: Calendar = .current) -> Date? {
+        datePhrasePreferences?.resolve(phrase, from: now, calendar: calendar)
+    }
+    @discardableResult func setDatePhraseWeekday(_ day: Int, field: String, workspace: WorkspaceBinding) -> Bool {
+        guard workspace.matches(account: userID, generation: workspaceGeneration), datePhraseEditable,
+              let document = DatePhrasePreferences.changing(datePhraseRecord?["date_preferences"] ?? .null, field: field, weekday: day) else {
+            error = "These date preferences changed or are unsupported. Reopen settings before changing them."; return false
+        }
+        var row = datePhraseRecord ?? Record(["id": .string(DatePhrasePreferences.recordID), "user_id": .string(userID)])
+        row["date_preferences"] = document
+        return save("view_preferences", row)
+    }
     var reminderSnoozeRecord: Record? { ReminderSnooze.row(rows(ReminderSnooze.table), account: userID) }
     var reminderSnoozeMinutes: Int { ReminderSnooze.minutes(reminderSnoozeRecord?["settings"] ?? .null) ?? 60 }
     var reminderSnoozeEditable: Bool {
@@ -287,7 +316,7 @@ final class Store {
         if case .saved(let id) = query.scope {
             guard let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [] }
             query.filterProjects = projects.map { FilterReference(id: $0.id, name: $0.name) }; query.filterSections = rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
-            query.filter = rule; query.now = rule.usesClockWindow ? calendarContext.minute : nil; query.filterLabels = labels.map { FilterReference(id: $0.id, name: $0.name) }; query.userID = userID
+            query.filter = rule; query.datePreferences = datePhrasePreferences; query.now = rule.usesClockWindow ? calendarContext.minute : nil; query.filterLabels = labels.map { FilterReference(id: $0.id, name: $0.name) }; query.userID = userID
             query.includeCompleted = query.includeCompleted || view["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion)
         }
         return taskCache.matching(query)
@@ -347,7 +376,7 @@ final class Store {
     func quickEntryContext(project: String = "") -> QuickEntryContext {
         QuickEntryContext(projects: projects, sections: rows("sections"), labels: labels,
             members: Dictionary(uniqueKeysWithValues: projects.map { ($0.id, projectMembers($0.id)) }),
-            currentProject: project, currentUser: userID)
+            currentProject: project, currentUser: userID, datePreferences: datePhrasePreferences)
     }
     var profile: Record { rows("profiles").first(where: { $0.string("user_id") == userID }) ?? Record() }
     private(set) var googleAvatarURL: URL?
@@ -451,7 +480,7 @@ final class Store {
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.connected ? (busy.selected.isEmpty ? "choose" : "refresh") : "off"
-        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable))
+        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences)
         do { try disk.publish(JSONEncoder().encode(payload)); widgetPublicationRevision += 1 }
         catch { try? disk.clearProjection() } // A failed publication must not leave actionable old data.
         #if canImport(WidgetKit)
@@ -483,7 +512,7 @@ final class Store {
 
     private func widgetActionDisk() throws -> WidgetActionDisk {
         #if DEBUG
-        if calendarContextFixtureEnabled || clockWindowFixtureEnabled {
+        if calendarContextFixtureEnabled || clockWindowFixtureEnabled || datePhraseFixtureEnabled {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "CalendarContextTests", directoryHint: .isDirectory))
         }
         if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") {

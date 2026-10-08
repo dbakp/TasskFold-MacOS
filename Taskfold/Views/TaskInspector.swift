@@ -42,7 +42,7 @@ struct MultiSelectionInspector: View {
                 Menu("Reschedule") {
                     Button("Today") { workspace.reschedule(workspace.selection, to: Dates.day(Date()), label: "today") }
                     Button("Tomorrow") { workspace.reschedule(workspace.selection, to: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!), label: "tomorrow") }
-                    Button("Next Week") { workspace.reschedule(workspace.selection, to: Dates.day(Workspace.next(weekday: 2)), label: "next week") }
+                    Button("Next Week") { if let day = store.datePhraseDay("next week") { workspace.reschedule(workspace.selection, to: Dates.day(day), label: "next week") } }.disabled(store.datePhrasePreferences == nil)
                     Divider()
                     Button("Remove Date") { workspace.reschedule(workspace.selection, to: nil, label: "") }
                 }
@@ -171,7 +171,7 @@ struct TaskInspectorForm: View {
                         }, set: { let parts = Calendar.current.dateComponents([.hour, .minute], from: $0); draft["due_time"] = .string(String(format: "%02d:%02d", parts.hour ?? 9, parts.minute ?? 0)) }), displayedComponents: .hourAndMinute)
                     }
                     HStack(spacing: 6) {
-                        quickDate("Today", Date()); quickDate("Tomorrow", Calendar.current.date(byAdding: .day, value: 1, to: Date())!); quickDate("Next week", Workspace.next(weekday: 2))
+                        quickDate("Today", Date()); quickDate("Tomorrow", Calendar.current.date(byAdding: .day, value: 1, to: Date())!); if let day = store.datePhraseDay("next week") { quickDate("Next week", day) }
                     }.controlSize(.small)
                 }
                 Toggle("Deadline", isOn: Binding(get: { draft.deadline != nil }, set: { draft["deadline_date"] = $0 ? .string(Dates.day(Date())) : .null }))

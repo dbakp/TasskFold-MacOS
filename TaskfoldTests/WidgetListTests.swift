@@ -236,3 +236,16 @@ extension WidgetListTests {
         XCTAssertEqual(daily.listTimelineDates(target.id, from: now, calendar: cph), WidgetSnapshot.timelineDates(from: now, calendar: cph))
     }
 }
+
+
+extension WidgetListTests {
+    func testDatePreferenceWidgetProjectionsMatchNativeWithoutExportingPreferences() throws {
+        var parser=try FilterParser("date:next week",context:FilterContext()); let rule=try parser.parse()
+        let rows=[task("monday",due:"2026-10-26"),task("sunday",due:"2026-10-25")]
+        let payload=WidgetProjection.payload(tasks:rows,projects:[],account:"owner",now:now,savedViews:[view(rule)],calendar:cph,datePreferences:DatePhrasePreferences(nextWeek:1,weekend:6))
+        let data=try JSONEncoder().encode(JSON.object(payload)); let value=try JSONDecoder().decode(WidgetSnapshot.self,from:data)
+        let target=try XCTUnwrap(value.availableLists.first { $0.kind=="filter" })
+        XCTAssertEqual(value.listTasks(target.id,at:now,calendar:cph).map(\.id),["sunday"])
+        XCTAssertEqual(target.days.count,8); XCTAssertFalse(String(decoding:data,as:UTF8.self).contains("date_preferences"))
+    }
+}

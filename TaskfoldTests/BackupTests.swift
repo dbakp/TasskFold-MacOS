@@ -411,3 +411,18 @@ extension BackupTests {
         XCTAssertThrowsError(try WorkspaceBackup.read(WorkspaceBackup.make(source, account: owner).data()))
     }
 }
+
+
+extension BackupTests {
+    func testDatePreferencesExportRestoreAndOfflineRelativeQueryPreservation() throws {
+        var source=fixture(); let document=DatePhrasePreferences(nextWeek:6,weekend:1).document
+        source.tables["view_preferences",default:[]].append(Record(["id":.string("dates"),"user_id":.string(owner),"date_preferences":document]))
+        let exported=WorkspaceBackup.make(source,account:owner)
+        let data=try exported.data(); let decoded=try WorkspaceBackup.read(data)
+        let plan=try decoded.plan(current:Snapshot(),account:other,policy:.keepCurrent)
+        let preference=try XCTUnwrap(plan.changes.first { $0.table=="view_preferences" && $0.recordID=="dates" })
+        XCTAssertEqual(preference.fields["user_id"],.string(other)); XCTAssertEqual(preference.fields["date_preferences"],document)
+        var queued=Snapshot(); queued.pending=[preference]
+        XCTAssertEqual(try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(queued)).pending[0].fields["date_preferences"],document)
+    }
+}

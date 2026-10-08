@@ -73,7 +73,7 @@ struct WorkspaceBackup: Codable, Sendable {
         "tasks": ["id","user_id","title","description","completed","completion_version","task_generation","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at"],
         "saved_views": ["id","user_id","name","query_ast","layout","grouping","sort_by","include_completed","order_index","created_at","updated_at"],
         "favorites": ["id","user_id","order_index","created_at"],
-        "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours"],
+        "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours","date_preferences"],
         "view_orders": ["id","user_id","ids","updated_at"],
         "focus_sessions": ["id","user_id","revision","action_id","state","updated_at"],
         ReminderSnooze.table: ["id","user_id","settings","updated_at"]
@@ -149,6 +149,7 @@ struct WorkspaceBackup: Codable, Sendable {
                     throw BackupFailure(message: "The backup includes invalid reminder preferences.")
                 }
                 if table == "saved_views" { _ = try FilterRule(document: row["query_ast"]) }
+                if row["date_preferences"] != .null { _ = try DatePhrasePreferences(document: row["date_preferences"]) }
                 if row["working_hours"] != .null { _ = try WorkingHours(document: row["working_hours"]) }
                 if table == FocusSessionChange.table, !FocusSessionChange.validRow(row, account: row.string("user_id")) {
                     throw BackupFailure(message: "The backup includes an invalid Focus session.")
