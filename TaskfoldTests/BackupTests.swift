@@ -41,6 +41,16 @@ final class BackupTests: XCTestCase {
         XCTAssertEqual(Set(orders.map(\.recordID)).count, 4)
     }
 
+    func testAssigneeNamePatternRestoreKeepsDynamicMeaningAndExactIdentityRules() throws {
+        var snapshot = fixture()
+        let rule = FilterRule.sections([.predicate("assignee_name", "M* Smith"), .predicate("assignee", owner)])
+        snapshot.tables["saved_views"]![0]["query_ast"] = rule.document
+        let file = try WorkspaceBackup.read(WorkspaceBackup.make(snapshot, account: owner).data())
+        let plan = try file.plan(current: Snapshot(), account: other)
+        let view = Record(try XCTUnwrap(plan.changes.first { $0.table == "saved_views" }).fields)
+        XCTAssertEqual(try FilterRule(document: view["query_ast"]), .sections([.predicate("assignee_name", "M* Smith"), .predicate("assignee", "me")]))
+    }
+
     func testAssignmentStateFiltersKeepDestinationViewerSemanticsOnRestore() throws {
         var snapshot = fixture()
         let rule = FilterRule.and([.predicate("assigned", ""), .predicate("assignee", "others"), .predicate("assignee", owner)])

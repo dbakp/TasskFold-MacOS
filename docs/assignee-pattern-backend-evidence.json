@@ -1,0 +1,18 @@
+{
+  "projectID": "zqxflydiyfjeedqvyova",
+  "tool": "supabase_execute_sql",
+  "isError": false,
+  "fixtureSQLSHA256": "48280a55694dae796b836c25bfc856e1f6a0fdd16464a1c662535cdc0ff342ce",
+  "postRollback": {
+    "fixture_users": 0,
+    "fixture_views": 0
+  },
+  "checked": [
+    "Owner saves, reads, renames and deletes the assignee_name and exact-ID multi-query document",
+    "Foreign owner cannot read, insert, update or delete another owner\u2019s saved view",
+    "Anonymous access cannot read, insert, update or delete the fixture view",
+    "Renaming preserves the new dynamic pattern and exact identity",
+    "Disposable fixture users and views are rolled back"
+  ],
+  "scope": "Actual SQL authenticated/anon role contexts with simulated JWT claims; not native sign-in, HTTP transport, task access revocation or paired-device evidence. No migration or real task changes."
+}

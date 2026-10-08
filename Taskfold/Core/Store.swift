@@ -52,6 +52,25 @@ final class Store {
     var calendarContextFixtureEnabled: Bool {
         userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--calendar-context-testing")
     }
+    var assigneePatternFixtureEnabled: Bool {
+        userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--assignee-pattern-testing")
+    }
+    func startAssigneePatternFixture() {
+        guard assigneePatternFixtureEnabled else { return }
+        dailyBackupsEnabled = false; disableNotifications()
+        if ProcessInfo.processInfo.arguments.contains("--assignee-pattern-fixture") {
+            snapshot = Snapshot(); undoStack = []; redoStack = []
+            let project = "assignee-pattern-project"
+            snapshot.tables["projects"] = [Record(["id": .string(project), "name": .string("Studio"), "user_id": .string(userID)])]
+            snapshot.tables["project_collaborators"] = [("22222222-2222-4222-8222-222222222222", "Mary Smith"), ("33333333-3333-4333-8333-333333333333", "Marc Smith"), ("44444444-4444-4444-8444-444444444444", "Jane Smith")].map { id, name in
+                Record(["id": .string("member-" + id), "user_id": .string(id), "project_id": .string(project), "display_name": .string(name), "status": .string("accepted")])
+            }
+            snapshot.tables["tasks"] = [("Mary task", "22222222-2222-4222-8222-222222222222"), ("Marc task", "33333333-3333-4333-8333-333333333333"), ("Jane task", "44444444-4444-4444-8444-444444444444")].map { title, person in
+                var task = Record.task(user: userID, project: project); task["title"] = .string(title); task["assigned_to"] = .string(person); return task
+            }
+            do { try persist() } catch { self.error = error.localizedDescription }
+        }
+    }
     var datePhraseFixtureEnabled: Bool {
         userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--date-phrase-testing")
     }
@@ -222,7 +241,7 @@ final class Store {
     }
     var email: String { backend.session?.user.email ?? "On this iPhone" }
     var tasks: [Record] { _ = taskRevision; return taskCache.tasks }
-    var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { projectMembers($0.id) }, datePreferences: datePhrasePreferences) }
+    var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { project in projectMembers(project.id).map { person in var scoped = person; scoped["project_id"] = .string(project.id); return scoped } }, datePreferences: datePhrasePreferences) }
     var savedViews: [Record] { rows("saved_views").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
     var favorites: [Record] { rows("favorites").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
     var workingHours: WorkingHours { (try? WorkingHours(document: record("view_preferences", id: "planner")?["working_hours"] ?? .null)) ?? WorkingHours() }
@@ -316,6 +335,7 @@ final class Store {
         if case .saved(let id) = query.scope {
             guard let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [] }
             query.filterProjects = projects.map { FilterReference(id: $0.id, name: $0.name) }; query.filterSections = rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
+            query.filterPeople = filterContext.personReferences
             query.filter = rule; query.datePreferences = datePhrasePreferences; query.now = rule.usesClockWindow ? calendarContext.minute : nil; query.filterLabels = labels.map { FilterReference(id: $0.id, name: $0.name) }; query.userID = userID
             query.includeCompleted = query.includeCompleted || view["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion)
         }
@@ -480,7 +500,7 @@ final class Store {
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.connected ? (busy.selected.isEmpty ? "choose" : "refresh") : "off"
-        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences)
+        let payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people)
         do { try disk.publish(JSONEncoder().encode(payload)); widgetPublicationRevision += 1 }
         catch { try? disk.clearProjection() } // A failed publication must not leave actionable old data.
         #if canImport(WidgetKit)
@@ -512,7 +532,7 @@ final class Store {
 
     private func widgetActionDisk() throws -> WidgetActionDisk {
         #if DEBUG
-        if calendarContextFixtureEnabled || clockWindowFixtureEnabled || datePhraseFixtureEnabled {
+        if calendarContextFixtureEnabled || clockWindowFixtureEnabled || datePhraseFixtureEnabled || assigneePatternFixtureEnabled {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "CalendarContextTests", directoryHint: .isDirectory))
         }
         if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") {

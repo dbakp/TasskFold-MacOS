@@ -21,7 +21,7 @@ struct SavedViewEditor: View {
     @FocusState private var focusedField: String?
     private static let choices: [(String, String)] = [
         ("all","All tasks"),("search","Keywords"),("created_on","Created on"),("created_before","Created before"),("created_after","Created after"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
-        ("priority","Priority"),("project","Project"),("project_name","Project name matches"),("section","Section"),("section_name","Section name matches"),("label","Label"),("label_name","Label name matches"),("completed","Completion"),("assigned","Assigned tasks"),("assignee","Assigned to"),
+        ("priority","Priority"),("project","Project"),("project_name","Project name matches"),("section","Section"),("section_name","Section name matches"),("label","Label"),("label_name","Label name matches"),("completed","Completion"),("assigned","Assigned tasks"),("assignee","Assigned to"),("assignee_name","Assigned name matches"),
         ("due","Planned on date"),("before","Planned before date"),("deadline_today","Deadline today"),("deadline_overdue","Past deadline"),("deadline_next","Deadline in next days"),("no_deadline","No deadline"),("deadline","Deadline on date"),("deadline_before","Deadline before date"),("duration_max","Estimate up to minutes"),("no_estimate","No estimate")]
     private static let conditionGroups: [(String, [String])] = [
         ("Basics", ["all", "search", "recurring", "inbox", "no_labels", "priority"]),
@@ -30,7 +30,7 @@ struct SavedViewEditor: View {
         ("Deadlines", ["deadline_on", "deadline_before_day", "deadline_after", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline"]),
         ("Times and estimates", ["planned_time_on", "planned_time_before", "planned_time_after", "no_time", "duration_max", "no_estimate"]),
         ("Projects and labels", ["project", "project_name", "section", "section_name", "label", "label_name"]),
-        ("People and status", ["assigned", "assignee", "completed"]),
+        ("People and status", ["assigned", "assignee", "assignee_name", "completed"]),
         ("Creation dates", ["created_on", "created_before", "created_after"]),
         ("Exact dates", ["due", "before", "deadline", "deadline_before"])
     ]
@@ -66,7 +66,7 @@ struct SavedViewEditor: View {
     private var previewCount: Int {
         guard case .success(let rule) = parsed else { return 0 }
         let cache = TaskCache(); cache.update(store.tasks)
-        return cache.matching(TaskQuery(scope: .all, includeCompleted: record["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion), today: store.calendarContext.today, filter: rule, now: store.calendarContext.minute, datePreferences: store.datePhrasePreferences, filterLabels: store.labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: store.projects.map { FilterReference(id: $0.id, name: $0.name) }, filterSections: store.rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, userID: store.userID, timeZone: store.calendarContext.timeZone)).count
+        return cache.matching(TaskQuery(scope: .all, includeCompleted: record["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion), today: store.calendarContext.today, filter: rule, now: store.calendarContext.minute, datePreferences: store.datePhrasePreferences, filterLabels: store.labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: store.projects.map { FilterReference(id: $0.id, name: $0.name) }, filterSections: store.rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: store.filterContext.personReferences, userID: store.userID, timeZone: store.calendarContext.timeZone)).count
     }
     private func text(_ field: String, fallback: String = "") -> Binding<String> { Binding(get: { record.fields[field]?.text ?? fallback }, set: { record[field] = .string($0) }) }
     var body: some View {
@@ -92,7 +92,7 @@ struct SavedViewEditor: View {
                         }
                         if let queryFailure { validationFeedback(queryFailure) }
                         DisclosureGroup("Syntax examples") {
-                            Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me, assigned, assigned to:others, assigned to:\"Alex Smith\". Collaborator names/emails resolve to a stable identity; quote names with spaces. Name patterns for people are not supported. Separate queries with commas to show ordered lists, for example overdue, today. A matching task can appear in each list. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
+                            Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me, assigned, assigned to:others, assigned to:\"Alex Smith\". Collaborator names/emails resolve to a stable identity; quote names with spaces. Use assigned to: M* Smith for matching display names, or assignee matching:\"M* Smith\". Quote an exact name containing * to keep it literal. Separate queries with commas to show ordered lists, for example overdue, today. A matching task can appear in each list. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
                             Text("Date examples: date:tomorrow, date before:\"next Monday\", effective-due:today, deadline after:yesterday. Effective due uses the planned date, falling back to the deadline only when there is no plan. Legacy due:YYYY-MM-DD and Today keep using the plan. Add a time: date before:\"today at 2pm\". Date-and-time conditions exclude tasks without a planned time. Try date before:+4 hours or date after:now for a window that updates each minute.").font(.caption).foregroundStyle(.secondary)
                             Text("Creation examples: created:today, created before:-30 days, created after:yesterday. Uses the recorded creation date in your current time zone. Before and after exclude the chosen day. Plans and deadlines do not change when a task was created.").font(.caption).foregroundStyle(.secondary)
                             Text("Name patterns: %home*, #*Work, /*Meetings*. Use * for any characters, or project matching:\"*Work Admin*\" for spaces. Pattern results follow name changes; exact targets retain their identity.").font(.caption).foregroundStyle(.secondary)
@@ -225,7 +225,8 @@ struct SavedViewEditor: View {
             }.accessibilityIdentifier("filterAssignee-" + condition.wrappedValue.id.uuidString)
         }
         else if FilterNamePattern.expressions[field] != nil {
-            TextField("Name pattern, such as *Work*", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
+            TextField(field == "assignee_name" ? "Display name pattern, such as M* Smith" : "Name pattern, such as *Work*", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
+            if field == "assignee_name" { Text("Matches current collaborators’ display names, not emails. Results follow renames and newly matching people. Choose Assigned to for one fixed person. Tasks with an unavailable name stay hidden, including when you exclude matches.").font(.caption).foregroundStyle(.secondary) }
             Text("Use * for any characters. Matches the whole name; letter case and accents do not matter. Results follow renames and newly matching names. Exact target conditions keep their identity.").font(.caption).foregroundStyle(.secondary)
         }
         else if FilterCreationReference.expressions[field] != nil {

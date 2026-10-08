@@ -8,6 +8,17 @@ struct FilterContext {
     var userID = ""
     var people: [Record] = []
     var datePreferences: DatePhrasePreferences? = DatePhrasePreferences()
+    /// Accepted names remain in app memory; project scope prevents stale directory matches.
+    var personReferences: [FilterReference] {
+        people.compactMap { person in
+            let name = person.string("display_name")
+            guard !person.id.isEmpty, person.id == userID || UUID(uuidString: person.id) != nil,
+                  !person["display_name_is_fallback"].flag, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  name.unicodeScalars.count <= 400, !name.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }) else { return nil }
+            let project = person.string("project_id")
+            return FilterReference(id: person.id, name: name, projectID: project.isEmpty ? nil : project)
+        }
+    }
     func resolve(_ field: String, _ value: String) throws -> String {
         if field == "assignee" {
             if value.lowercased() == "me" { return "me" }
@@ -191,7 +202,7 @@ enum FilterCreationReference {
 
 /// Name patterns are explicit dynamic selectors; exact targets retain their stored IDs.
 enum FilterNamePattern {
-    static let expressions = ["project_name": "project matching", "section_name": "section matching", "label_name": "label matching"]
+    static let expressions = ["project_name": "project matching", "section_name": "section matching", "label_name": "label matching", "assignee_name": "assignee matching"]
     static func canonical(_ raw: String) throws -> String {
         let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty, value.unicodeScalars.count <= 120,
@@ -239,6 +250,7 @@ enum FilterNamePattern {
 struct FilterNameBinding {
     var field: String, value: String
     var ids: Set<String>, names: Set<String>
+    var people: Set<FilterReference> = []
 }
 
 /// Versioned query AST shared by app lists, exported backups and widget projections.
@@ -326,7 +338,7 @@ indirect enum FilterRule: Hashable, Sendable {
     /// Completion visibility belongs to each independent query, not the union.
     func resultMatches(_ task: Record, context: FilterContext, today: String, timeZone: String, includeCompleted: Bool = false, now: Date? = nil) -> Bool {
         if case .sections(let rules) = self { return rules.contains { $0.resultMatches(task, context: context, today: today, timeZone: timeZone, includeCompleted: includeCompleted, now: now) } }
-        return (includeCompleted || includesCompletion || !task.completed) && matches(task, today: today, userID: context.userID, labels: context.labels.map { FilterReference(id: $0.id, name: $0.name) }, timeZone: timeZone, projects: context.projects.map { FilterReference(id: $0.id, name: $0.name) }, sections: context.sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, now: now, datePreferences: context.datePreferences)
+        return (includeCompleted || includesCompletion || !task.completed) && matches(task, today: today, userID: context.userID, labels: context.labels.map { FilterReference(id: $0.id, name: $0.name) }, timeZone: timeZone, projects: context.projects.map { FilterReference(id: $0.id, name: $0.name) }, sections: context.sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, now: now, datePreferences: context.datePreferences, people: context.personReferences)
     }
     var usesDatePreferences: Bool {
         switch self {
@@ -346,26 +358,34 @@ indirect enum FilterRule: Hashable, Sendable {
     var includesCompletion: Bool {
         switch self { case .predicate(let field, _): return field == "completed"; case .and(let r), .or(let r), .sections(let r): return r.contains { $0.includesCompletion }; case .not(let r): return r.includesCompletion }
     }
-    func nameBindings(projects: [FilterReference], sections: [FilterReference], labels: [FilterReference]) -> [FilterNameBinding] {
+    func nameBindings(projects: [FilterReference], sections: [FilterReference], labels: [FilterReference], people: [FilterReference] = []) -> [FilterNameBinding] {
         switch self {
-        case .and(let rules), .or(let rules), .sections(let rules): return rules.flatMap { $0.nameBindings(projects: projects, sections: sections, labels: labels) }
-        case .not(let rule): return rule.nameBindings(projects: projects, sections: sections, labels: labels)
+        case .and(let rules), .or(let rules), .sections(let rules): return rules.flatMap { $0.nameBindings(projects: projects, sections: sections, labels: labels, people: people) }
+        case .not(let rule): return rule.nameBindings(projects: projects, sections: sections, labels: labels, people: people)
         case .predicate(let field, let value):
             guard FilterNamePattern.expressions[field] != nil else { return [] }
-            let rows = field == "project_name" ? projects : field == "section_name" ? sections : labels
+            let rows = field == "project_name" ? projects : field == "section_name" ? sections : field == "assignee_name" ? people : labels
             let matching = rows.filter { FilterNamePattern.matches($0.name, pattern: value) }
-            return [FilterNameBinding(field: field, value: value, ids: Set(matching.map(\.id)), names: Set(matching.map(\.name)))]
+            return [FilterNameBinding(field: field, value: value, ids: Set(matching.map(\.id)), names: Set(matching.map(\.name)), people: field == "assignee_name" ? Set(matching) : [])]
         }
     }
     /// Missing catalog references remain excluded even under NOT or OR.
-    private func nameReferencesAvailable(_ task: Record, projects: [FilterReference], sections: [FilterReference], labels: [FilterReference], userID: String) -> Bool {
+    private func nameReferencesAvailable(_ task: Record, projects: [FilterReference], sections: [FilterReference], labels: [FilterReference], userID: String, people: [FilterReference]) -> Bool {
         let userIdentityMissing = userID.isEmpty
         switch self {
         case .sections: return true // Each independent query checks its own references.
-        case .and(let rules), .or(let rules): return rules.allSatisfy { $0.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID) }
-        case .not(let rule): return rule.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID)
+        case .and(let rules), .or(let rules): return rules.allSatisfy { $0.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID, people: people) }
+        case .not(let rule): return rule.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID, people: people)
         case .predicate(let field, let value):
             if field == "assignee", ["me", "others"].contains(value), userIdentityMissing { return false }
+            if field == "assignee_name" {
+                guard !userIdentityMissing else { return false }
+                let assignee = task.string("assigned_to"), project = task.string("project_id")
+                guard project.isEmpty || projects.contains(where: { $0.id == project }) else { return false }
+                if assignee.isEmpty { return true }
+                guard !project.isEmpty else { return false }
+                return people.contains { $0.id == assignee && ($0.projectID == nil || $0.projectID == project) }
+            }
             if FilterNamePattern.expressions[field] != nil, !task.string("project_id").isEmpty, !projects.contains(where: { $0.id == task.string("project_id") }) { return false }
             if field == "project_name" { let id = task.string("project_id"); return id.isEmpty || projects.contains { $0.id == id } }
             if field == "section_name" { let id = task.string("section_id"); return id.isEmpty || sections.contains { $0.id == id && ($0.projectID == nil || $0.projectID == task.string("project_id")) } }
@@ -379,17 +399,17 @@ indirect enum FilterRule: Hashable, Sendable {
         }
     }
     func matches(_ task: Record, today: String, userID: String, labels: [FilterReference], timeZone: String,
-                 projects: [FilterReference] = [], sections: [FilterReference] = [], nameBindings supplied: [FilterNameBinding]? = nil, now: Date? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) -> Bool {
+                 projects: [FilterReference] = [], sections: [FilterReference] = [], nameBindings supplied: [FilterNameBinding]? = nil, now: Date? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [FilterReference] = []) -> Bool {
         if !hasQuerySections, usesDatePreferences, datePreferences == nil { return false }
         // Independent query sections may still show safe results when the reader has no clock.
         if !hasQuerySections, usesClockWindow, now.map({ $0.timeIntervalSinceReferenceDate.isFinite }) != true { return false }
-        let bindings = supplied ?? nameBindings(projects: projects, sections: sections, labels: labels)
-        guard nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID) else { return false }
+        let bindings = supplied ?? nameBindings(projects: projects, sections: sections, labels: labels, people: people)
+        guard nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID, people: people) else { return false }
         switch self {
-        case .sections(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences) }
-        case .and(let rules): return rules.allSatisfy { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences) }
-        case .or(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences) }
-        case .not(let rule): return !rule.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences)
+        case .sections(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people) }
+        case .and(let rules): return rules.allSatisfy { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people) }
+        case .or(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people) }
+        case .not(let rule): return !rule.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people)
         case .predicate(let field, let value):
             let day = Self.plannedDay(task, timeZone: timeZone), deadline = task.string("deadline_date")
             func next(_ date: String) -> Bool {
@@ -437,8 +457,9 @@ indirect enum FilterRule: Hashable, Sendable {
             case "next": return next(day)
             case "no_date": return day.isEmpty
             case "priority": return task.priority == Int(value)
-            case "project_name", "section_name", "label_name":
+            case "project_name", "section_name", "label_name", "assignee_name":
                 guard let binding = bindings.first(where: { $0.field == field && $0.value == value }) else { return false }
+                if field == "assignee_name" { return binding.people.contains { $0.id == task.string("assigned_to") && ($0.projectID == nil || $0.projectID == task.string("project_id")) } }
                 if field != "label_name" { return binding.ids.contains(task.string(field == "project_name" ? "project_id" : "section_id")) }
                 return task["labels"].list.contains { stored in
                     guard case .string(let item) = stored else { return false }; return binding.ids.contains(item) || binding.names.contains(item)
@@ -528,6 +549,7 @@ indirect enum FilterRule: Hashable, Sendable {
     /// This presentation never changes the persisted predicate or its canonical expression.
     func sectionTitle(in context: FilterContext) -> String {
         switch self {
+        case .predicate("assignee_name", let value): return "Assigned name matches “" + value + "”"
         case .predicate("assigned", _): return "Assigned tasks"
         case .predicate("assignee", let value):
             if value == "me" { return "Assigned to me" }
@@ -638,7 +660,7 @@ struct FilterParser {
         if consume(["not", "!"]) { return .not(try atom(depth: depth + 1)) }
         if consume(["("]) { let rule = try parseOr(depth: depth + 1); guard consume([")"]) else { throw FilterFailure(message: "Close the filter parenthesis.") }; return rule }
         var token = tokens[cursor]; cursor += 1
-        if ["date", "effective-due", "deadline", "time", "created", "project", "section", "label", "assigned"].contains(token.lowercased()), !quotedTokens.contains(cursor - 1), cursor < tokens.count {
+        if ["date", "effective-due", "deadline", "time", "created", "project", "section", "label", "assigned", "assignee"].contains(token.lowercased()), !quotedTokens.contains(cursor - 1), cursor < tokens.count {
             let next = tokens[cursor].lowercased()
             if next.hasPrefix("to:") || next.hasPrefix("matching:") || ["before:", "after:", "on:"].contains(next) || next.hasPrefix("before:") || next.hasPrefix("after:") || next.hasPrefix("on:") { token += " " + tokens[cursor]; cursor += 1 }
         }
@@ -692,7 +714,14 @@ struct FilterParser {
                 }
                 return .predicate("search", words.joined(separator: " "))
             }
-            if ["project", "section", "label", "assignee", "assigned to"].contains(field) { let target = field == "assigned to" ? "assignee" : field; return .predicate(target, try context.resolve(target, try readValue(starting: value))) }
+            if ["project", "section", "label", "assignee", "assigned to"].contains(field) {
+                let target = field == "assigned to" ? "assignee" : field
+                let first = cursor - 1, name = readValue(starting: value)
+                if target == "assignee", name.contains("*"), !(first..<cursor).contains(where: { quotedTokens.contains($0) }) {
+                    return .predicate("assignee_name", try FilterNamePattern.canonical(name))
+                }
+                return .predicate(target, try context.resolve(target, name))
+            }
             if ["due", "before", "deadline", "deadline-before"].contains(field) {
                 if field == "deadline", ["today", "overdue"].contains(value.lowercased()) { return .predicate("deadline_" + value.lowercased(), "") }
                 if field == "deadline", value.lowercased().hasPrefix("next") { return .predicate("deadline_next", String(value.dropFirst(4))) }
@@ -724,11 +753,12 @@ struct TaskGrouping {
         let projects = context.projects.map { FilterReference(id: $0.id, name: $0.name) }
         let sections = context.sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
         let labels = context.labels.map { FilterReference(id: $0.id, name: $0.name) }
+        let people = context.personReferences
         return queries.enumerated().flatMap { index, query -> [Group] in
             let key = keys[index]
-            let bindings = query.nameBindings(projects: projects, sections: sections, labels: labels)
+            let bindings = query.nameBindings(projects: projects, sections: sections, labels: labels, people: people)
             let name = "\(index + 1) · " + query.sectionTitle(in: context)
-            let matches = tasks.filter { (includeCompleted || query.includesCompletion || !$0.completed) && query.matches($0, today: today, userID: context.userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: context.datePreferences) }
+            let matches = tasks.filter { (includeCompleted || query.includesCompletion || !$0.completed) && query.matches($0, today: today, userID: context.userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: context.datePreferences, people: people) }
             let nested = groups(matches, by: field, projects: context.projects, timeZone: timeZone)
             if nested.isEmpty { return [Group(id: key + ":all", name: name, tasks: [])] }
             return nested.map { Group(id: key + ":" + $0.id, name: field == "none" ? name : name + " / " + $0.name, tasks: $0.tasks) }
