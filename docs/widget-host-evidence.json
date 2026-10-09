@@ -158,5 +158,51 @@
     "buildScope": "Debug arm64 app/widget; iOS UI-test products. Mac compile only.",
     "signatures": "/tmp/taskfold-recurring-widget-signatures-v1.json",
     "ownWidgetSourceSHA256": "ac54ccb6e800642ba77302453007814bc0aa65857505a7699b7e6c638fead162"
+  },
+  "inboxBatchConfiguration": {
+    "test": "TaskfoldUITests/testInstalledInboxResetCountBatchConfigurationAndRoute()",
+    "result": "/tmp/taskfold-inbox-host-v4.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedRuntimeWarnings": 0,
+    "scope": "Actual small Inbox reset widget on isolated iPhone Simulator: total six, five-task and all-task configurations, matching native review routes. No review action mutates tasks.",
+    "build": "/tmp/taskfold-inbox-host-build-v4.log",
+    "signatures": "/tmp/taskfold-inbox-host-signatures-v4.json",
+    "savedState": {
+      "totalTasks": 8,
+      "openInboxTasks": 6,
+      "openProjectTasks": 1,
+      "completedTasks": 1,
+      "pendingMutations": 0
+    },
+    "capturesInIOSRepository": {
+      "inbox-five-of-six": {
+        "sha256": "64217e15fb55510fadd252c75b11a2aad82268a105da67b1847f4ce806862ef8",
+        "visuallyInspected": true
+      },
+      "inbox-all-six": {
+        "sha256": "aa4ad4195cc2a1215b98fbd68e512bd9b2e69788285154a719e570457adc117c",
+        "visuallyInspected": true
+      },
+      "inbox-six-task-review": {
+        "sha256": "0093fe021004bbabf51ad1325fb88c7774251ed4711f756ee9e6f789ba2c0c28",
+        "visuallyInspected": true
+      }
+    },
+    "testSourceSHA256": "45da07576c35fcdd6ee6e72eadb836ecd8c3cfdc817568897b76176779d73e42",
+    "earlierAttempts": [
+      "v1: fixture seeded before local workspace initialization and used private widget-action storage.",
+      "v2: asserted a diagnostic panel unavailable in the real App Group mode.",
+      "v3: five-task route passed; configuration test looked for Review button instead of Five tasks value button."
+    ],
+    "retainedState": "Final run removed the exercised widget. A second fixture Inbox widget was visible in captures; no claim that all prior test widgets were removed.",
+    "visualObservation": "Two small Inbox widgets were visible; changing the first to All Inbox tasks left the second displaying Review 5 of 6. This is visual evidence of distinct settings, not complete multiple-instance acceptance.",
+    "limitations": [
+      "Medium size",
+      "Cloud/account switching",
+      "Physical devices",
+      "Mac widget host"
+    ]
   }
 }

@@ -783,3 +783,8 @@ Nine native iOS checks and one Mac transport check pass for offline deletion ver
 ## 9 October — recurring completion continuity
 
 Five distinct native iOS phases and one Mac transport test pass: a daily completion creates one next occurrence with stable identity, correct next date/count/end rule and retained estimate across phone/tablet relaunches. Server and caches agree; task queues drain. Earlier test-title/viewport failures are documented; fixture cleanup verified. See recurrence-continuity-evidence.json and NATIVE_CONTINUITY.md. No production change or Mac GUI execution.
+
+
+## 9 October — installed Inbox batch configuration
+
+One isolated iPhone Simulator host test passes five-of-six and all-six labels, actual system configuration and matching native review routes. Screenshots inspected; all eight fixture tasks retained and no pending mutations. Final iOS Debug build/signatures verified; no production source change or Mac execution. See widget-host-evidence.json and WIDGET_HOST_ACCEPTANCE.md for scope and earlier test failures.
