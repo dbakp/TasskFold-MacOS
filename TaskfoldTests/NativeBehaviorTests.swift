@@ -274,6 +274,25 @@ final class NativeContinuityTests: XCTestCase {
         XCTAssertEqual(task.string("description"), "Independent tablet notes")
         XCTAssertEqual(task.durationMinutes, 30)
     }
+    @MainActor func testMacTransportReadsRecurringCompletionFromIOS() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_RECURRENCE_CONTINUITY_FIXTURE"] else { throw XCTSkip("Disposable recurrence fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let tasks = try await backend.rows("tasks")
+        XCTAssertEqual(tasks.count, 2)
+        let original = try XCTUnwrap(tasks.first(where: \.completed))
+        let next = try XCTUnwrap(tasks.first(where: { !$0.completed }))
+        XCTAssertNotEqual(original.id, next.id)
+        XCTAssertEqual(original.string("due_date"), "2028-01-03"); XCTAssertEqual(next.string("due_date"), "2028-01-04")
+        for task in tasks { XCTAssertEqual(task.title, "Continuity routine"); XCTAssertEqual(task.durationMinutes, 25); XCTAssertEqual(task["is_recurring"], .bool(true)) }
+        XCTAssertEqual(original["recurrence_pattern"].object["count"], .number(3))
+        var expected = original["recurrence_pattern"].object; expected["count"] = .number(2)
+        XCTAssertEqual(next["recurrence_pattern"], .object(expected))
+    }
     @MainActor func testMacTransportReadsConfirmedConcurrentDeletion() async throws {
         guard let path = ProcessInfo.processInfo.environment["TASKFOLD_CONFIRMED_DELETE_FIXTURE"] else { throw XCTSkip("Disposable confirmed-deletion fixture not supplied") }
         let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))

@@ -778,3 +778,8 @@ Both apps prioritize and identify fields changed since deletion. Two final iPhon
 ## 9 October — explicit concurrent deletion
 
 Nine native iOS checks and one Mac transport check pass for offline deletion versus a concurrent edit, explicit Delete task after review deferral/relaunch, server/cache agreement and no resurrection on tablet relaunch. No production changes; disposable fixture cleanup verified. See confirmed-deletion-continuity-evidence.json and NATIVE_CONTINUITY.md. Full P0 and Mac runtime remain open.
+
+
+## 9 October — recurring completion continuity
+
+Five distinct native iOS phases and one Mac transport test pass: a daily completion creates one next occurrence with stable identity, correct next date/count/end rule and retained estimate across phone/tablet relaunches. Server and caches agree; task queues drain. Earlier test-title/viewport failures are documented; fixture cleanup verified. See recurrence-continuity-evidence.json and NATIVE_CONTINUITY.md. No production change or Mac GUI execution.

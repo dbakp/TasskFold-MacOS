@@ -1,0 +1,157 @@
+{
+  "date": "2026-10-09",
+  "scenario": "One daily recurring completion with estimate, end date and count limit",
+  "passedIOSPhases": 5,
+  "results": [
+    "/tmp/taskfold-recurrence-continuity-v2/phone-login.xcresult",
+    "/tmp/taskfold-recurrence-continuity-v2/tablet-login.xcresult",
+    "/tmp/taskfold-recurrence-continuity-v2/phone-create.xcresult",
+    "/tmp/taskfold-recurrence-continuity-v2/phone-complete.xcresult",
+    "/tmp/taskfold-recurrence-continuity-v5/tablet-next.xcresult"
+  ],
+  "acceptedResultFailures": 0,
+  "acceptedResultSkips": 0,
+  "reportedRuntimeWarnings": 0,
+  "checkpoints": [
+    {
+      "phase": "phone-login",
+      "passed": true,
+      "serverTasks": [],
+      "durableTaskQueueEmpty": false
+    },
+    {
+      "phase": "tablet-login",
+      "passed": true,
+      "serverTasks": [],
+      "durableTaskQueueEmpty": false
+    },
+    {
+      "phase": "phone-create",
+      "passed": true,
+      "serverTasks": [
+        {
+          "id": "41dac8c0-7c28-458e-b6c1-062d577323f0",
+          "title": "Continuity routine",
+          "completed": false,
+          "due_date": "2028-01-03",
+          "is_recurring": true,
+          "recurrence_pattern": {
+            "type": "daily",
+            "count": 3,
+            "endDate": "2028-01-05",
+            "interval": 1
+          },
+          "duration_minutes": 25
+        }
+      ],
+      "durableTaskQueueEmpty": true
+    },
+    {
+      "phase": "phone-complete",
+      "passed": true,
+      "serverTasks": [
+        {
+          "id": "41dac8c0-7c28-458e-b6c1-062d577323f0",
+          "title": "Continuity routine",
+          "completed": true,
+          "due_date": "2028-01-03",
+          "is_recurring": true,
+          "recurrence_pattern": {
+            "type": "daily",
+            "count": 3,
+            "endDate": "2028-01-05",
+            "interval": 1
+          },
+          "duration_minutes": 25
+        },
+        {
+          "id": "9b980d99-f07d-549a-af58-4154758a628e",
+          "title": "Continuity routine",
+          "completed": false,
+          "due_date": "2028-01-04",
+          "is_recurring": true,
+          "recurrence_pattern": {
+            "type": "daily",
+            "count": 2,
+            "endDate": "2028-01-05",
+            "interval": 1
+          },
+          "duration_minutes": 25
+        }
+      ],
+      "durableTaskQueueEmpty": true
+    },
+    {
+      "phase": "tablet-next",
+      "passed": true,
+      "serverTasks": [
+        {
+          "id": "41dac8c0-7c28-458e-b6c1-062d577323f0",
+          "title": "Continuity routine",
+          "completed": true,
+          "due_date": "2028-01-03",
+          "is_recurring": true,
+          "recurrence_pattern": {
+            "type": "daily",
+            "count": 3,
+            "endDate": "2028-01-05",
+            "interval": 1
+          },
+          "duration_minutes": 25
+        },
+        {
+          "id": "9b980d99-f07d-549a-af58-4154758a628e",
+          "title": "Continuity routine",
+          "completed": false,
+          "due_date": "2028-01-04",
+          "is_recurring": true,
+          "recurrence_pattern": {
+            "type": "daily",
+            "count": 2,
+            "endDate": "2028-01-05",
+            "interval": 1
+          },
+          "duration_minutes": 25
+        }
+      ],
+      "durableTaskQueueEmpty": true
+    }
+  ],
+  "failedResults": {
+    "v1/phone-create": "Ambiguous title included daily plus every day; stopped before save",
+    "v2/tablet-next": "Estimate label not exposed at current viewport",
+    "v3/tablet-next": "Full-screen scrolling overshot the label",
+    "v4/tablet-next": "Text label was not the interactive stepper; scrolling bounds omitted navigation bar"
+  },
+  "macPassed": 1,
+  "macResult": "/tmp/taskfold-recurrence-continuity-mac-test-v1.log",
+  "builds": [
+    "/tmp/taskfold-recurrence-continuity-build-v5.log",
+    "/tmp/taskfold-recurrence-continuity-mac-build-v2.log"
+  ],
+  "signatureReceipt": "/tmp/taskfold-recurrence-continuity-signatures-v5.json",
+  "cleanup": {
+    "users": 0,
+    "sessions": 0,
+    "profiles": 0,
+    "tasks": 0,
+    "savedViews": 0,
+    "deviceSessionsReset": true,
+    "privateCredentialsRemoved": true,
+    "scopedCachesRemoved": true
+  },
+  "screenshotsRepository": "TaskFold-iOS",
+  "screenshots": {
+    "docs/native-continuity-previews/recurrence-phone.png": "226800dd5f27e1dec5f1463eddf707b42bd3312f7c7a6d1137559432cb834d9d",
+    "docs/native-continuity-previews/recurrence-tablet.png": "3a5efe2d551550c3728bec05ad1a0e60a4068e7137c5d3f244a1624bf13b8924"
+  },
+  "ownSourceHashes": {
+    "TaskfoldTests/NativeBehaviorTests.swift": "142d3277b19f5814d501f8ff2b757720a53acc01b2219d93671edb237153de96"
+  },
+  "limitations": [
+    "Single daily completion; concurrent completion/other rule families not inferred",
+    "Mac transport only, no GUI",
+    "Tablet screenshot is a partial scroll viewport",
+    "Full P0 remains open"
+  ]
+}
