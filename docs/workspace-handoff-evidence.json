@@ -59,7 +59,7 @@
     "v3/v4 phone-receive: XCTest off-screen board hit-point error; corrected by scrolling using bounds"
   ],
   "visualFix": "iOS metadata wraps whole items; Mac already has ViewThatFits fallback",
-  "fixtureRetention": "Disposable workspace and private credentials retained for next native file export/restore; delete account and scoped device data afterward",
+  "fixtureRetention": "Reused for the portable export/restore checkpoint, then both disposable accounts and scoped local fixture data were removed. See portable-workspace-evidence.json.",
   "limitations": [
     "Not actual Mac GUI",
     "No ordering mutation or account switch",

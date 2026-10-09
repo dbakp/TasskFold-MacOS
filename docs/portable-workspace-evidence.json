@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "exportSHA256": "8eb2802a0f93c0421922ad13e0beddcd0678f8245d419a5d9191e4eff08aa30e",
+  "exportBytes": 6223,
+  "sourceAccount": "9a3612b6-bf16-43e8-9db7-fe85bd0509cd",
+  "destinationAccount": "8d225ef5-6da3-417e-bfe3-9a3df016e3ee",
+  "destinationIDs": {
+    "projects": "785ef7fd-0f4d-8624-96f4-056f3b2a8e00",
+    "sections": "82cb911b-c9e0-8200-88f7-de4b44c137fa",
+    "labels": "efe90f11-b100-8339-90c1-5714c994eed8",
+    "tasks": "99d9ca1e-349e-85d3-a2ac-1900cab172e3",
+    "favorites": "project:785ef7fd-0f4d-8624-96f4-056f3b2a8e00",
+    "view_preferences": "project:785ef7fd-0f4d-8624-96f4-056f3b2a8e00"
+  },
+  "queueEmpty": true,
+  "donorUnchanged": true,
+  "repeatUnchanged": true,
+  "externalFileProviderTested": false,
+  "date": "2026-10-09",
+  "freshFullDriverPassed": false,
+  "passingUIResults": [
+    "/tmp/taskfold-portable-roundtrip-v1/export.xcresult",
+    "/tmp/taskfold-portable-roundtrip-v1/receiver-login.xcresult",
+    "/tmp/taskfold-portable-roundtrip-v2/verify.xcresult",
+    "/tmp/taskfold-portable-roundtrip-v2/repeat.xcresult"
+  ],
+  "initialRestoreResult": "/tmp/taskfold-portable-roundtrip-v1/restore.xcresult",
+  "initialRestoreLimitation": "Restore reached success; following off-screen recovery-row assertion failed; corrected scroll/relaunch verification passed separately",
+  "macTestsPassed": 2,
+  "macLog": "/tmp/taskfold-portable-mac-live-v1.log",
+  "iosBuild": "/tmp/taskfold-native-export-build-v3.log",
+  "cleanup": "Both accounts/sessions/work rows verified absent; fixture labels explicitly deleted; scoped native caches/vaults/device exports and credentials removed",
+  "limitations": [
+    "No Mac GUI",
+    "No external file-provider transfer",
+    "No physical devices"
+  ]
+}

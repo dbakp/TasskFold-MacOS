@@ -281,6 +281,29 @@ final class NativeContinuityTests: XCTestCase {
         XCTAssertEqual(rows["favorites"]?.first?.id, "project:" + project.id)
         XCTAssertEqual(rows["view_preferences"]?.first?.id, "project:" + project.id); XCTAssertEqual(rows["view_preferences"]?.first?.string("layout"), "board")
     }
+    func testMacReadsNativeExportAndMatchesIOSRestoreIdentityMapping() throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_PORTABLE_WORKSPACE_FILE"], let fixturePath = ProcessInfo.processInfo.environment["TASKFOLD_WORKSPACE_HANDOFF_FIXTURE"] else { throw XCTSkip("Disposable native export and receiving-account fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: fixturePath)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backup = try WorkspaceBackup.read(Data(contentsOf: URL(fileURLWithPath: path)))
+        XCTAssertNotEqual(backup.sourceAccount, owner); XCTAssertEqual(backup.unsyncedChanges, 0)
+        let plan = try backup.plan(current: Snapshot(), account: owner)
+        XCTAssertEqual(plan.added, 6); XCTAssertEqual(plan.updated, 0)
+        var restored = Snapshot(); plan.changes.forEach { restored.apply($0) }
+        for (table, key) in [("tasks", "taskID"), ("projects", "projectID"), ("sections", "sectionID"), ("labels", "labelID")] {
+            let row = try XCTUnwrap(restored.tables[table]?.first)
+            XCTAssertEqual(row.id, fixture[key], "Mac and iOS must use the same cross-account restore mapping")
+            XCTAssertEqual(row.string("user_id"), owner)
+        }
+        let task = try XCTUnwrap(restored.tables["tasks"]?.first)
+        XCTAssertEqual(task.string("project_id"), fixture["projectID"]); XCTAssertEqual(task.string("section_id"), fixture["sectionID"])
+        XCTAssertEqual(task["labels"].list, [.string(try XCTUnwrap(fixture["labelID"]))])
+        XCTAssertEqual(task.string("description"), "Tablet offline handoff notes"); XCTAssertEqual(task.durationMinutes, 26)
+        XCTAssertEqual(task.string("due_date"), "2028-01-04"); XCTAssertEqual(task.string("deadline_date"), "2028-01-05")
+        XCTAssertEqual(task["reminder_specs"].list.compactMap { ReminderSpec(row: $0)?.offset }.sorted(), [-30, -15, 0])
+        XCTAssertEqual(try backup.plan(current: restored, account: owner).total, 0)
+    }
     @MainActor private func continuityTask(environment: String) async throws -> (Record, String) {
         guard let path = ProcessInfo.processInfo.environment[environment] else {
             throw XCTSkip("Disposable iOS continuity fixture not supplied")
