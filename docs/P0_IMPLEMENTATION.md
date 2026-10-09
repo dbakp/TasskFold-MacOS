@@ -1,5 +1,7 @@
 # Taskfold P0 implementation and verification
 
+Current release-gate order and external dependencies: [P0_RELEASE_STATUS.md](P0_RELEASE_STATUS.md).
+
 Objective: complete all P0 work from `TODOIST_PORT_PLAN.md`, implement the proposed productive widgets, retain a premium experience, and verify functional and data parity between iOS and macOS. Started 5 October 2026. The full objective remains active until every requirement below is proved in current source and runtime behavior.
 
 ## Current release gates — 9 October

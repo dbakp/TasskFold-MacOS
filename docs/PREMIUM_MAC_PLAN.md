@@ -1,5 +1,7 @@
 # Taskfold macOS polish plan
 
+Current release-gate order and external dependencies: [P0_RELEASE_STATUS.md](P0_RELEASE_STATUS.md).
+
 The goal is a calm, fast native Mac app: daily actions should take few steps, navigation should preserve context, and motion should explain changes without disrupting work.
 
 ## Delivery rules
