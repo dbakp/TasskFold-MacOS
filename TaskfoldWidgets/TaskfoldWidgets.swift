@@ -902,7 +902,9 @@ struct ListWidgetView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Label(entry.hideTitles ? "My list" : target?.name ?? "My list", systemImage: "list.bullet.rectangle").font(.headline).lineLimit(1).privacySensitive()
+                Label(entry.hideTitles ? "My list" : target?.name ?? "My list", systemImage: "list.bullet.rectangle")
+                    .font(family == .systemSmall ? .caption.weight(.semibold) : .headline)
+                    .lineLimit(family == .systemSmall ? 2 : 1).fixedSize(horizontal: false, vertical: true).privacySensitive()
                 Spacer(minLength: 0)
                 if status == .ready { Text("\(tasks.count)").font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(tint) }
             }
@@ -924,7 +926,7 @@ struct ListWidgetView: View {
                         }
                         Link(destination: task.url) {
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(entry.hideTitles ? "Private task" : task.title).font(.caption.weight(.semibold)).lineLimit(2).privacySensitive()
+                                Text(entry.hideTitles ? "Private task" : task.title).font(.caption.weight(.semibold)).lineLimit(family == .systemSmall ? 3 : 2).privacySensitive()
                                 if family != .systemSmall, let day = task.deadlineDay { Text(widgetDate(day)).font(.caption2).foregroundStyle(tint).accessibilityLabel("Deadline \(day)") }
                             }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                         }.buttonStyle(.plain)

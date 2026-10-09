@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-09",
+  "test": "TaskfoldUITests/testInstalledMyListConfigurationAndTaskLink()",
+  "result": {
+    "totalTestCount": 1,
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": []
+  },
+  "scope": "One small My list widget, project configuration, scoped contents and native task route on isolated iPhone Simulator",
+  "team": "3UZ4C73FM2",
+  "buildAndInstalledSignaturesVerified": true,
+  "catalog": {
+    "configurations": 8,
+    "entities": 3,
+    "enums": 6
+  },
+  "capturesInIOSRepository": {
+    "my-list-before": {
+      "sha256": "b9b36b0da0111e19a997583bb8ff8012be8d921bcc50ccff26f2bbd9717ad5a7",
+      "visuallyInspected": true
+    },
+    "my-list-after": {
+      "sha256": "d8d6b6aa0d8c273b21d3cf1a39fd1ef84e8d557dce2ab498d3300ad5c3cf2fd4",
+      "visuallyInspected": true
+    },
+    "my-list-configuration": {
+      "sha256": "c1eb32bbec3e818ffacf15a19448f89321c3547c8ac4527b0050f00a7e3143e0",
+      "visuallyInspected": true
+    }
+  },
+  "prunedTestInstallations": {
+    "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "removed": [
+      "com.dbakp.taskfold.querytests",
+      "com.dbakp.taskfold.querytests.uitests.xctrunner",
+      "com.dbakp.taskfold.datephrasetests",
+      "com.dbakp.taskfold.datephrasetests.uitests.xctrunner",
+      "com.dbakp.taskfold.importtests",
+      "com.dbakp.taskfold.importtests.uitests.xctrunner",
+      "com.dbakp.taskfold.clocktests",
+      "com.dbakp.taskfold.clocktests.uitests.xctrunner",
+      "com.dbakp.taskfold.clockwindowtests",
+      "com.dbakp.taskfold.clockwindowtests.uitests.xctrunner",
+      "com.dbakp.taskfold.assignmenttests",
+      "com.dbakp.taskfold.assignmenttests.uitests.xctrunner",
+      "com.dbakp.taskfold.naturalclocktests",
+      "com.dbakp.taskfold.naturalclocktests.uitests.xctrunner"
+    ],
+    "retained": "com.dbakp.taskfold.assigneepatterntests"
+  },
+  "remaining": [
+    "Interactive completion",
+    "privacy toggles",
+    "multiple instances and sizes",
+    "other configured widget families",
+    "iPad and physical devices",
+    "Mac widget host",
+    "full P0 acceptance"
+  ],
+  "ownedFinalInputs": {
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "6bb75f2cdb3333f0453f082fc068b608f98d1c5f38182ad4ad74269c7e37fdf1"
+  }
+}

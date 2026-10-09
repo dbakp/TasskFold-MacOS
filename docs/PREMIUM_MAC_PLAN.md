@@ -713,3 +713,7 @@ The actual iOS phone/tablet login, relaunch and online task-edit round trip now 
 ## 9 October — offline queue and real conflict review
 
 A controlled iOS transport outage now has native proof of a durable queued edit across relaunch, real overlapping server edit, deferral/relaunch and Keep my edit preserving independent tablet notes. Mac-owned transport reads the resulting title/notes. Both apps have clearer network-failure messages and correct singular pending counts, with focused Core checks, final iOS feedback UI verification and Debug app/widget builds passing. [Scope, evidence and remaining gates](NATIVE_CONTINUITY.md). Physical reconnection, Use synced/multiple pending edits, Mac GUI and full P0 acceptance remain open.
+
+## 9 October — installed My list host path and title wrapping
+
+The isolated iOS small My list widget now passes actual project configuration, scoped contents and native task routing with verified development-team signatures. Actual host captures motivated compact wrapping headings and three-line task titles in both independently owned widgets; final iOS and Mac Debug app/widget builds pass. [Exact evidence, Simulator signing prerequisite and remaining gates](WIDGET_HOST_ACCEPTANCE.md). Mac host runtime, physical devices, interactive completion/privacy and full P0 remain open.
