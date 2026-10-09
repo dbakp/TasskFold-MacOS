@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-09",
+  "device": "iPhone 17 Pro Simulator, iOS 26.5",
+  "provider": "SystemPlannerCalendarProvider / actual EventKit",
+  "results": [
+    {
+      "path": "/tmp/taskfold-real-calendar-denied-v4.xcresult",
+      "passed": 1,
+      "reportedRuntimeWarnings": 0,
+      "scope": "Real denial, manual guidance and opening Settings; no permission recovery claim"
+    },
+    {
+      "path": "/tmp/taskfold-real-calendar-events-v2.xcresult",
+      "passed": 1,
+      "reportedRuntimeWarnings": 0,
+      "scope": "Actual local calendar selection, private/title display, relaunch, disconnect"
+    }
+  ],
+  "builds": {
+    "ios": "/tmp/taskfold-real-calendar-build-v5.log",
+    "mac": "/tmp/taskfold-real-calendar-mac-build-v2.log",
+    "scope": "Debug arm64 app/widget; iOS test products. Mac compile only."
+  },
+  "failedDirectRouteResults": [
+    "/tmp/taskfold-real-calendar-denied-v2.xcresult",
+    "/tmp/taskfold-real-calendar-denied-v3.xcresult"
+  ],
+  "cleanup": {
+    "calendars": 0,
+    "events": 0
+  },
+  "scopedCalendarPermissionsReset": true,
+  "limitations": [
+    "Settings shortcut opens root in Simulator; manual recovery not exercised",
+    "No physical devices, external calendar provider accounts or Mac runtime",
+    "Full P0 remains open"
+  ],
+  "screenshots": {
+    "docs/calendar-previews/denied-guidance.png": "a4d586eece2a6907a9987ea991db69852fc63636c53fa8e0f124fa3ab10fb64b",
+    "docs/calendar-previews/named-event-relaunch.png": "d3cb4f5dcc3c48f484cfd72a6e33397001c1c9fd4b50ed02aab3d50d92d3cdcf",
+    "docs/calendar-previews/private-event.png": "75c176af543d8285151687ee22e21251d5273d1bbb7b6ddf78f9f064005cccf5",
+    "docs/calendar-previews/settings-root.png": "874d98958fbb6795c9beb56abcf8abb3668aa9241f5be63a3dcd7071805c9f76",
+    "docs/calendar-previews/system-prompt.png": "bf3bc338540ec0f69334cdda88d2c8e39fcc0d6e85057ebfcda064f3419533e8"
+  },
+  "ownSourceHashes": {
+    "Taskfold/Views/PlannerSettings.swift": "38cf553621aa3613ae7734e5412516132aee6b54670ed04a0cebc30d7088688a",
+    "Taskfold/Core/CalendarEvents.swift": "6abce87bbb70660adbf928e61e5a3f17b92d64e96bcb40e5560b9d08b23717fa"
+  },
+  "screenshotsRepository": "TaskFold-iOS"
+}

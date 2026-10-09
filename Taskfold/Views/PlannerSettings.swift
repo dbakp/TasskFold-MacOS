@@ -43,6 +43,21 @@ struct PlannerSettingsView: View {
                             Task { await busy.connect(); connecting = false }
                         }.disabled(connecting).accessibilityIdentifier("plannerConnectCalendars")
                     }
+                    #if os(iOS)
+                    Text("In Settings, open Apps → Taskfold → Calendars and allow Full Access. Then return here and connect again.").font(.caption).foregroundStyle(.secondary)
+                    Button("Open Settings", systemImage: "arrow.up.right.square") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                    }
+                    .frame(minHeight: 44).accessibilityIdentifier("plannerSystemSettings")
+                    .accessibilityHint("Manage Taskfold's calendar permission in Settings")
+                    #elseif os(macOS)
+                    Text("In System Settings, open Privacy & Security → Calendars and allow Taskfold access. Then return here and connect again.").font(.caption).foregroundStyle(.secondary)
+                    Button("Open System Settings…", systemImage: "arrow.up.right.square") {
+                        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.systempreferences") { NSWorkspace.shared.open(url) }
+                    }
+                    .frame(minHeight: 44).accessibilityIdentifier("plannerSystemSettings")
+                    .accessibilityHint("Manage calendar access under Privacy and Security, Calendars")
+                    #endif
                 }
             }
             .formStyle(.grouped)

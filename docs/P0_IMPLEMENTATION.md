@@ -1071,3 +1071,8 @@ Development/public DMGs now have distinct names, and release verification checks
 ## 9 October — Use synced with later offline work
 
 The paired iOS flow now accepts a competing server title without losing a later queued estimate on the same task or independent tablet notes. Both clients drain their durable task queues; the Mac-owned transport reads the same result in a passing focused live test. No Mac GUI/runtime or production code change. Fixture account/sessions/data and private device caches were removed. [Exact evidence and limits](NATIVE_CONTINUITY.md). Broader queues, rich workspace/restore/revocation/mixed-version and full P0 remain open.
+
+
+## 9 October — real calendar integration and permission guidance
+
+Both apps provide a Settings shortcut and visible permission-recovery instructions. Two final isolated iPhone tests pass against actual EventKit: system denial/Settings opening and local calendar selection/private titles/named titles/relaunch/disconnect. All five retained screenshots were inspected. Final iOS and Mac Debug arm64 app/widget builds pass; Mac runtime remains restricted. The iOS Settings URL opens the Settings root in this Simulator, so successful re-enabling of denied permission remains unverified. The unsuccessful Settings.bundle experiment was removed. Fixture calendar/event counts are zero and scoped permissions were reset. [Exact scope and evidence](CALENDAR_INTEGRATION.md). Physical/external-provider/Mac calendar acceptance and full P0 remain open.
