@@ -1063,3 +1063,7 @@ A controlled iOS transport outage now has native proof of a durable queued edit 
 ## 9 October — installed My list host path and title wrapping
 
 The isolated iOS small My list widget now passes actual project configuration, scoped contents and native task routing with verified development-team signatures. Actual host captures motivated compact wrapping headings and three-line task titles in both independently owned widgets; final iOS and Mac Debug app/widget builds pass. [Exact evidence, Simulator signing prerequisite and remaining gates](WIDGET_HOST_ACCEPTANCE.md). Mac host runtime, physical devices, interactive completion/privacy and full P0 remain open.
+
+## 9 October — Mac release artifact integrity and public widget path
+
+Development/public DMGs now have distinct names, and release verification checks the actual read-only mounted payload plus DMG hash, mode and source fingerprint. Public packaging has an archive/export/notarization path requiring existing Developer ID credentials and profiles; it validates the widget, team/App Group, hardened runtime and tickets. Four packaging checks pass, using real disposable signatures/DMGs plus a forced build failure that restores the project and scheme; negative signing preflight also passes. Only an Apple Development identity is installed, so public export/notarization/install remains unproved. No Mac runtime, upload or publication occurred. [Workflow and precise evidence](MAC_RELEASE.md).
