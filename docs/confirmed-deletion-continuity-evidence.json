@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-09",
+  "scenario": "Offline deletion versus one concurrent title/notes edit; explicit Delete task after deferral/relaunch",
+  "iosPassed": 9,
+  "iosFailed": 0,
+  "iosSkipped": 0,
+  "reportedRuntimeWarnings": 0,
+  "loginResults": [
+    "/tmp/taskfold-confirm-delete-login-v1/phone.xcresult",
+    "/tmp/taskfold-confirm-delete-login-v1/tablet.xcresult"
+  ],
+  "continuityDirectory": "/tmp/taskfold-confirm-delete-v1",
+  "checkpoints": [
+    {
+      "phase": "phone-create",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "c4eaa67d-d2d6-43b8-8b62-77166fe2727f",
+      "serverTitle": "Continuity c1505f30"
+    },
+    {
+      "phase": "tablet-edit",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "c4eaa67d-d2d6-43b8-8b62-77166fe2727f",
+      "serverTitle": "Continuity c1505f30 revised"
+    },
+    {
+      "phase": "phone-observe",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "c4eaa67d-d2d6-43b8-8b62-77166fe2727f",
+      "serverTitle": "Continuity c1505f30 revised"
+    },
+    {
+      "phase": "phone-offline-delete",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "c4eaa67d-d2d6-43b8-8b62-77166fe2727f",
+      "serverTitle": "Continuity c1505f30 revised",
+      "durableOfflineDeletionWithBaselineVerified": true
+    },
+    {
+      "phase": "tablet-concurrent",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "c4eaa67d-d2d6-43b8-8b62-77166fe2727f",
+      "serverTitle": "Remote device edit",
+      "independentNotesPreserved": true
+    },
+    {
+      "phase": "phone-confirm-delete",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "deletedTaskID": "c4eaa67d-d2d6-43b8-8b62-77166fe2727f",
+      "serverAndCacheEmpty": true,
+      "taskQueueEmpty": true
+    },
+    {
+      "phase": "tablet-confirmed-delete",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "deletedTaskID": "c4eaa67d-d2d6-43b8-8b62-77166fe2727f",
+      "serverAndCacheEmpty": true,
+      "taskQueueEmpty": true
+    }
+  ],
+  "macPassed": 1,
+  "macTest": "NativeContinuityTests/testMacTransportReadsConfirmedConcurrentDeletion",
+  "macResult": "/tmp/taskfold-confirm-delete-mac-test-v1.log",
+  "builds": [
+    "/tmp/taskfold-confirm-delete-build-v1.log",
+    "/tmp/taskfold-confirm-delete-mac-build-v1.log"
+  ],
+  "signatures": "/tmp/taskfold-confirm-delete-signatures-v1.json",
+  "cleanup": {
+    "users": 0,
+    "sessions": 0,
+    "profiles": 0,
+    "tasks": 0,
+    "savedViews": 0,
+    "deviceSessionsReset": true,
+    "scopedCachesRemoved": true,
+    "privateCredentialsRemoved": true
+  },
+  "screenshotsRepository": "TaskFold-iOS",
+  "screenshots": {
+    "docs/native-continuity-previews/confirmed-delete-review.png": "6e13afdb60183c8f6aaa1cca25029d960881f45f9e6fb7ab20e5c3348cc7c0cf",
+    "docs/native-continuity-previews/confirmed-delete-tablet.png": "4a567e539c359b5a14859c34c950a0778a0ee2645b63673cf56b4166e2f475c2"
+  },
+  "ownSourceHashes": {
+    "TaskfoldTests/NativeBehaviorTests.swift": "1c1816458a05612efad658edd668270d68c4645c76630da31d29cb30395e0ad7"
+  },
+  "limitations": [
+    "Controlled transport outage, not OS network loss",
+    "One task and one concurrent edit; additional races not inferred",
+    "Mac transport only, no GUI",
+    "Full P0 remains open"
+  ]
+}

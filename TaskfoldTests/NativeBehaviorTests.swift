@@ -274,6 +274,17 @@ final class NativeContinuityTests: XCTestCase {
         XCTAssertEqual(task.string("description"), "Independent tablet notes")
         XCTAssertEqual(task.durationMinutes, 30)
     }
+    @MainActor func testMacTransportReadsConfirmedConcurrentDeletion() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_CONFIRMED_DELETE_FIXTURE"] else { throw XCTSkip("Disposable confirmed-deletion fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let tasks = try await backend.rows("tasks")
+        XCTAssertTrue(tasks.isEmpty)
+    }
     @MainActor func testMacTransportReadsTaskKeptAfterOfflineDeletion() async throws {
         let (task, _) = try await continuityTask(environment: "TASKFOLD_OFFLINE_DELETE_FIXTURE")
         XCTAssertEqual(task.title, "Remote device edit")

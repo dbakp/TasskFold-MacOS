@@ -773,3 +773,8 @@ Nine isolated native iOS cases and one live Mac transport check pass. Keep task 
 ## 9 October — changed contents first in deletion review
 
 Both apps prioritize and identify fields changed since deletion. Two final iPhone UI cases pass Keep/Delete and relaunch, asserting changed notes are immediately visible. Both native Debug builds pass; Mac compile only. See deletion-review-evidence.json and the latest NATIVE_CONTINUITY.md entry.
+
+
+## 9 October — explicit concurrent deletion
+
+Nine native iOS checks and one Mac transport check pass for offline deletion versus a concurrent edit, explicit Delete task after review deferral/relaunch, server/cache agreement and no resurrection on tablet relaunch. No production changes; disposable fixture cleanup verified. See confirmed-deletion-continuity-evidence.json and NATIVE_CONTINUITY.md. Full P0 and Mac runtime remain open.
