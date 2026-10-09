@@ -927,6 +927,10 @@ struct ListWidgetView: View {
                         Link(destination: task.url) {
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(entry.hideTitles ? "Private task" : task.title).font(.caption.weight(.semibold)).lineLimit(family == .systemSmall ? 3 : 2).privacySensitive()
+                                if WidgetSnapshot.validDay(task.due) {
+                                    Text("Planned \(widgetDate(task.due))").font(.caption2).foregroundStyle(.secondary)
+                                        .accessibilityLabel("Planned \(task.due)")
+                                }
                                 if family != .systemSmall, let day = task.deadlineDay { Text(widgetDate(day)).font(.caption2).foregroundStyle(tint).accessibilityLabel("Deadline \(day)") }
                             }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                         }.buttonStyle(.plain)

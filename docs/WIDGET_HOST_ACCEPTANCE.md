@@ -44,3 +44,10 @@ The actual small My list completion now passes after XCTest terminates Taskfold 
 The first run exposed a fixture issue: system-launched intents have no XCTest launch arguments, so the app selected the separate local workspace instead of ui-testing. The final harness retains the disposable account only for the exact isolated bundle in Debug Simulator builds. It does not alter Release or physical-device behavior, widget action execution or persistence. Ordinary UI/live-auth test launches reset its marker, which was independently verified false after the final run. Both the failed and passing results remain recorded in `widget-host-evidence.json`. No Mac code/runtime change or real account was involved.
 
 This closes one local terminated-app iPhone Simulator path. Recurring/cloud completion, physical devices, multiple configurations and Mac widget hosts remain open.
+
+
+## Recurring completion and visible next date — 9 October
+
+Both independently owned My list widgets now show the planned date beneath dated tasks. Previously a daily task could reappear with exactly the same title and no visible indication that completion advanced it. The small widget now displays the next date, while retaining its completion target and three-line title.
+
+One actual iPhone Simulator test passes after terminating Taskfold: tap Complete, see tomorrow’s date without foregrounding the app, find the original in Completed, and retain tomorrow’s occurrence after another relaunch. Independent inspection of the disposable saved workspace proves exactly one next occurrence, original completed, next open, daily rule preserved, unrelated task open and no pending mutations. The temporary cold fixture marker is reset. The actual screenshot was inspected; its title and planned date are readable. Both final Debug arm64 app/widget builds pass. Mac host interaction, cloud/physical recurring completion, other recurrence rules and repeated/stale taps remain separate acceptance work. The test setup change is confined to the existing Debug UI fixture; production completion logic is unchanged.

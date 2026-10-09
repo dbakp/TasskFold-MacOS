@@ -51,7 +51,7 @@
     "retained": "com.dbakp.taskfold.assigneepatterntests"
   },
   "remaining": [
-    "Cloud/physical cold-launch completion, account switching and recurring completion on installed hosts",
+    "Cloud/physical cold-launch and recurring completion, other recurrence rules, stale/repeated taps and account switching",
     "multiple instances and sizes",
     "other configured widget families",
     "iPad and physical devices",
@@ -127,5 +127,36 @@
     "signatures": "/tmp/taskfold-cold-widget-signatures-v2.json",
     "fixturePendingMutationsAfterRelaunch": 0,
     "completionReceiptPresent": true
+  },
+  "recurringColdCompletion": {
+    "test": "TaskfoldUITests/testInstalledMyListRecurringColdCompletionShowsNextDay()",
+    "result": "/tmp/taskfold-recurring-widget-v1.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedRuntimeWarnings": 0,
+    "scope": "One daily local task, actual small My list completion from terminated app; next day displayed without foregrounding; original in Completed; next occurrence survives app relaunch.",
+    "savedState": {
+      "originalCompleted": true,
+      "nextCopies": 1,
+      "nextOpen": true,
+      "originalDay": "2026-10-09",
+      "nextDay": "2026-10-10",
+      "repeatRule": {
+        "interval": 1,
+        "type": "daily"
+      },
+      "unrelatedOpen": true,
+      "pendingMutations": 0,
+      "coldFixtureMarker": false
+    },
+    "capture": "widget-host-previews/my-list-recurring-next-day.png",
+    "captureSHA256": "aca4c7d601d0c86aafd58b46a36182bda6ad7c9bad4696e7e398f6052af5d07e",
+    "visuallyInspected": true,
+    "iosBuild": "/tmp/taskfold-recurring-widget-build-v1.log",
+    "macBuild": "/tmp/taskfold-recurring-widget-mac-build-v1.log",
+    "buildScope": "Debug arm64 app/widget; iOS UI-test products. Mac compile only.",
+    "signatures": "/tmp/taskfold-recurring-widget-signatures-v1.json",
+    "ownWidgetSourceSHA256": "ac54ccb6e800642ba77302453007814bc0aa65857505a7699b7e6c638fead162"
   }
 }

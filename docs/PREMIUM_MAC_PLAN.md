@@ -743,3 +743,8 @@ Both apps provide a Settings shortcut and visible permission-recovery instructio
 ## 9 October — installed widget cold completion
 
 One isolated iPhone Simulator flow now passes actual completion from a terminated app, no foreground transition, unrelated-task preservation and persistence after another relaunch. The Debug Simulator harness preserves its disposable workspace across system launches; production behavior is unchanged. [Evidence and remaining limits](WIDGET_HOST_ACCEPTANCE.md). No Mac runtime or full P0 claim.
+
+
+## 9 October — recurring widget completion
+
+My list shows planned dates in both apps. One real iPhone Simulator cold-completion flow advances a daily task once, retains its repeat rule and survives relaunch; saved-state inspection confirms no extra occurrence or unrelated change. Final iOS/Mac Debug builds pass; Mac runtime remains unverified. [Evidence](WIDGET_HOST_ACCEPTANCE.md). Full P0 remains active.
