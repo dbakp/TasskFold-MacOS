@@ -52,7 +52,7 @@
   },
   "remaining": [
     "Cloud/physical cold-launch and recurring completion, other recurrence rules, stale/repeated taps and account switching",
-    "multiple instances and sizes",
+    "Other widget sizes and multi-instance conditions outside the verified small Inbox/My list pairs",
     "other configured widget families",
     "iPad and physical devices",
     "Mac widget host",
@@ -228,6 +228,61 @@
       "Cloud/account changes",
       "Other families",
       "Widget VoiceOver/accessibility acceptance"
+    ]
+  },
+  "independentMyList": {
+    "date": "2026-10-09",
+    "scope": "Two actual small My list widgets with distinct saved-filter/project choices on isolated iPhone Simulator",
+    "result": "/tmp/taskfold-independent-list-resume-v2.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedAppRuntimeWarnings": [],
+    "selections": {
+      "upper": "Widget Inbox saved filter: inbox",
+      "lower": "Widget Studio project"
+    },
+    "nativeRoutes": [
+      "Unrelated Inbox task",
+      "Sketch widget concept"
+    ],
+    "finalCache": {
+      "openTasks": 2,
+      "pendingMutations": 0,
+      "savedInboxFilter": "075d72e1-1728-46e6-bbf1-0607de7de265"
+    },
+    "capturesInIOSRepository": {
+      "list-independent-before.png": {
+        "sha256": "073d6d8c11653bb3c4c9889b7f9f2edbde30341331b5600cec853da068de5478",
+        "visuallyInspected": true
+      },
+      "list-independent-filter.png": {
+        "sha256": "679e9710805b0f7fcaa573c30d66f38f5d210dd7e1fcbd4c1b56ad7874f0d719",
+        "visuallyInspected": true
+      },
+      "list-independent-project.png": {
+        "sha256": "ba8d27fa971e2ab8b4072723dfe657ec8bb4244998529fef09532d658fd5c501",
+        "visuallyInspected": true
+      },
+      "list-independent-configured.png": {
+        "sha256": "83b6f5c5843a6f8e3fda348cd2ba9b2526632e83278eb328e02ad4b78bbb670c",
+        "visuallyInspected": true
+      },
+      "list-independent-settled.png": {
+        "sha256": "4a81e58e6684e324ff8d9a9f57d901eaf8b92f21b1abce0e6778d0251ad7500e",
+        "visuallyInspected": true
+      }
+    },
+    "sameWidgetSourceSHA256InBothRepos": "73e4c3b0a9ecf6163a7d3eabbac3a87b1acb4a3f3bac4f8491683c3378599396",
+    "initialAttempt": "/tmp/taskfold-independent-list-v1.xcresult installed the pair, then failed because the test incorrectly expected a built-in Inbox entity. Corrected to a native-created saved Inbox filter; gallery setup reused. Full setup was not rerun green.",
+    "hostLimitations": "SpringBoard exposes containers without child task text and incurs approximately 60-second menu idle waits; stale remote accessibility process warnings recur even after isolated reboot. Native route assertions and inspected captures establish scoped behavior, not VoiceOver acceptance.",
+    "relaunchCapture": "The XCTest final capture caught an animation and is excluded; a settled simctl screenshot after the completed test shows both selections retained.",
+    "retainedFixture": "Two My list widgets remain installed for rename/delete/account tests; upper Widget Inbox, lower Widget Studio. The old Inbox reset fixture was removed. Use --uitesting without reseeding to retain the new filter.",
+    "remaining": [
+      "Rename/delete/account refresh",
+      "Other sizes/surfaces",
+      "Physical/cloud/Mac hosts",
+      "VoiceOver"
     ]
   }
 }
