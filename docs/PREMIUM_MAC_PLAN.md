@@ -763,3 +763,8 @@ Native tablet deletion propagates to phone and survives relaunch, preserving the
 ## 9 October — calendar permission recovery
 
 The isolated iPhone Simulator passes actual denial, manual Settings navigation, Full Access confirmation, return/reconnect and disconnect, with zero failures/skips/reported runtime warnings. Screenshots were inspected; the local connected preference is cleared and scoped app permission reset. Test setup now tolerates a previous interrupted connection and removes fixture-reset arguments before permission-related process restart. No production code change or Mac runtime execution. See calendar-integration-evidence.json for exact evidence; physical/provider/Mac acceptance remains open.
+
+
+## 9 October — offline deletion conflict preservation
+
+Nine isolated native iOS cases and one live Mac transport check pass. Keep task preserves the concurrent title and notes, stable task identity, durable cache agreement and empty queues. Fixture cleanup verified; no production changes or Mac GUI execution. Deletion review currently buries changed contents behind alphabetical empty fields; that UI issue remains open. See docs/NATIVE_CONTINUITY.md (NATIVE_CONTINUITY.md in Mac docs) and offline-deletion-continuity-evidence.json.

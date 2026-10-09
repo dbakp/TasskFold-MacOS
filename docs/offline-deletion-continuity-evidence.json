@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-09",
+  "scenario": "Offline phone deletion versus tablet title/notes edit; review survives deferral/relaunch; Keep task",
+  "iosLoginResults": [
+    "/tmp/taskfold-offline-delete-login-v1/phone.xcresult",
+    "/tmp/taskfold-offline-delete-login-v1/tablet.xcresult"
+  ],
+  "iosContinuityDirectory": "/tmp/taskfold-offline-delete-v1",
+  "iosPassed": 9,
+  "iosFailed": 0,
+  "iosSkipped": 0,
+  "reportedRuntimeWarnings": 0,
+  "checkpoints": [
+    {
+      "phase": "phone-create",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "011ddb23-8842-4002-a35f-d287b56c01bf",
+      "serverTitle": "Continuity d6987388"
+    },
+    {
+      "phase": "tablet-edit",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "011ddb23-8842-4002-a35f-d287b56c01bf",
+      "serverTitle": "Continuity d6987388 revised"
+    },
+    {
+      "phase": "phone-observe",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "011ddb23-8842-4002-a35f-d287b56c01bf",
+      "serverTitle": "Continuity d6987388 revised"
+    },
+    {
+      "phase": "phone-offline-delete",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "011ddb23-8842-4002-a35f-d287b56c01bf",
+      "serverTitle": "Continuity d6987388 revised",
+      "durableOfflineDeletionWithBaselineVerified": true
+    },
+    {
+      "phase": "tablet-concurrent",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "011ddb23-8842-4002-a35f-d287b56c01bf",
+      "serverTitle": "Remote device edit",
+      "independentNotesPreserved": true
+    },
+    {
+      "phase": "phone-keep-task",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "011ddb23-8842-4002-a35f-d287b56c01bf",
+      "serverTitle": "Remote device edit",
+      "independentNotesPreserved": true,
+      "taskQueueEmpty": true,
+      "keptTaskCacheMatchesServer": true
+    },
+    {
+      "phase": "tablet-kept-task",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "011ddb23-8842-4002-a35f-d287b56c01bf",
+      "serverTitle": "Remote device edit",
+      "independentNotesPreserved": true,
+      "taskQueueEmpty": true,
+      "keptTaskCacheMatchesServer": true
+    }
+  ],
+  "macTest": "NativeContinuityTests/testMacTransportReadsTaskKeptAfterOfflineDeletion",
+  "macResult": "/tmp/taskfold-offline-delete-mac-test-v1.log",
+  "macPassed": 1,
+  "builds": [
+    "/tmp/taskfold-offline-delete-build-v1.log",
+    "/tmp/taskfold-offline-delete-mac-build-v1.log"
+  ],
+  "signatures": "/tmp/taskfold-offline-delete-signatures-v1.json",
+  "cleanup": {
+    "users": 0,
+    "sessions": 0,
+    "profiles": 0,
+    "tasks": 0,
+    "savedViews": 0,
+    "deviceSessionsReset": true,
+    "scopedCachesRemoved": true,
+    "privateCredentialsRemoved": true
+  },
+  "limitations": [
+    "Controlled HTTP failure, not physical network loss",
+    "Keep task verified; explicit Delete task live concurrency remains open",
+    "Changed task contents should precede empty fields in review",
+    "No Mac GUI, physical devices, restore/recurrence or full P0 acceptance"
+  ],
+  "screenshotsRepository": "TaskFold-iOS",
+  "screenshots": {
+    "docs/native-continuity-previews/offline-delete-queued.png": "94e34f68c4cc1e740ba9605ba4d28d988390722bf20f82d7c217651ae3bc8111",
+    "docs/native-continuity-previews/offline-delete-review.png": "3b7ef02245c200e81250828378c3b5923fdd5ad159ba229ca3a871319f27346d",
+    "docs/native-continuity-previews/offline-delete-kept.png": "cd13e8ff7e31b3c65efea41f6873c320c66480b128b5c80e505fa48a98acc7a9"
+  },
+  "ownSourceHashes": {
+    "TaskfoldTests/NativeBehaviorTests.swift": "4aa010d77eda87595325f5ee959ac3f81960f304ea0a3fa9852d6fedc96b57f8"
+  }
+}
