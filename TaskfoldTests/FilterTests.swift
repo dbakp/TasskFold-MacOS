@@ -2,6 +2,83 @@ import XCTest
 @testable import TaskfoldCore
 
 final class FilterTests: XCTestCase {
+    func testDayWindowsParseRoundTripAndKeepExactOffsetsSeparate() throws {
+        for (input, expected) in [("3 days", "planned_next_days"), ("-3 days", "planned_past_days"), ("date:3 days", "planned_next_days"), ("date:-3 days", "planned_past_days"), ("effective-due:3 days", "effective_due_next_days"), ("effective-due:-3 days", "effective_due_past_days"), ("deadline:3 days", "deadline_next_days"), (#"deadline on:"-3 days""#, "deadline_past_days")] {
+            let rule = try parse(input)
+            XCTAssertEqual(rule, .predicate(expected, "3"), input)
+            XCTAssertEqual(try FilterRule(document: rule.document), rule)
+            XCTAssertEqual(try parse(rule.expression(in: context)), rule)
+            XCTAssertTrue(rule.captureDefaults(in: context, today: "2026-10-05").isEmpty)
+        }
+        XCTAssertEqual(try parse("DATE: 0003 DAYS"), .predicate("planned_next_days", "3"))
+        XCTAssertEqual(try parse("1 day"), .predicate("planned_next_days", "1"))
+        XCTAssertEqual(try parse("date:in 3 days"), .predicate("planned_on", "in 3 days"))
+        XCTAssertEqual(try parse("date:3 days ago"), .predicate("planned_on", "3 days ago"))
+        XCTAssertEqual(try parse("created:-3 days"), .predicate("created_on", "3 days ago"))
+        XCTAssertEqual(try parse("next 3 days"), .predicate("next", "3"))
+        XCTAssertEqual(try parse("deadline:next3"), .predicate("deadline_next", "3"))
+        let combined = try parse("(3 days | -3 days) & !completed, deadline:3 days")
+        XCTAssertEqual(try parse(combined.expression(in: context)), combined)
+    }
+    func testDayWindowsRejectInvalidCountsAndNonRangeOperators() throws {
+        for value in ["0", "-0", "3651", "-3651", "1.5", "+3", "--3", "999999999999999999999999999"] {
+            for prefix in ["", "date:", "effective-due:", "deadline:"] { XCTAssertThrowsError(try parse(prefix + value + " days"), prefix + value) }
+        }
+        for input in ["date before:3 days", "date after:-3 days", "3 days p1", "3 days at 14:00", "date:3 days at 14:00", "3 weeks", "due:3 days"] { XCTAssertThrowsError(try parse(input), input) }
+        for field in FilterDayWindow.expressions.keys {
+            for value in ["", "0", "-3", "3651", "+3", "3 days", "3.0"] { XCTAssertThrowsError(try FilterRule(document: FilterRule.predicate(field, value).document), field + value) }
+            XCTAssertNoThrow(try FilterRule(document: FilterRule.predicate(field, "3650").document))
+        }
+        XCTAssertEqual(try parse(#"search:"3 days""#), .predicate("search", "3 days"))
+    }
+    func testDayWindowsBoundariesMissingDatesAndEffectiveDuePrecedence() throws {
+        let rows = [task("before", ["due_date": .string("2026-10-01")]), task("past-start", ["due_date": .string("2026-10-02")]), task("yesterday", ["due_date": .string("2026-10-04")]), task("today", ["due_date": .string("2026-10-05")]), task("last", ["due_date": .string("2026-10-07")]), task("outside", ["due_date": .string("2026-10-08")]), task("deadline", ["deadline_date": .string("2026-10-06")]), task("both", ["due_date": .string("2026-10-08"), "deadline_date": .string("2026-10-06")]), task("none")]
+        for (input, ids) in [("3 days", ["today", "last"]), ("-3 days", ["past-start", "yesterday"]), ("effective-due:3 days", ["today", "last", "deadline"]), ("deadline:3 days", ["deadline", "both"]), ("1 day", ["today"]), ("-1 day", ["yesterday"])] {
+            let rule = try parse(input); XCTAssertEqual(rows.filter { matches(rule, $0) }.map(\.id), ids, input)
+        }
+        XCTAssertTrue(matches(try parse("NOT 3 days"), task("none")))
+        XCTAssertFalse(FilterDayWindow.matches("2026-10-05junk", field: "planned_next_days", value: "3", today: "2026-10-05", timeZone: "UTC"))
+    }
+    func testDayWindowsUseCivilDaysAcrossDSTLeapDaysAndViewerZones() throws {
+        for zone in ["Europe/Copenhagen", "America/New_York", "Australia/Lord_Howe", "Pacific/Auckland", "Pacific/Honolulu"] {
+            for (today, last, outside) in [("2026-03-28", "2026-03-30", "2026-03-31"), ("2026-10-24", "2026-10-26", "2026-10-27"), ("2028-02-28", "2028-03-01", "2028-03-02"), ("2026-12-30", "2027-01-01", "2027-01-02")] {
+                let rule = try parse("3 days")
+                for (day, expected) in [(today, true), (last, true), (outside, false)] {
+                    XCTAssertEqual(rule.matches(task(day, ["due_date": .string(day)]), today: today, userID: "owner", labels: [], timeZone: zone), expected, "\(zone) \(today) \(day)")
+                }
+                let past = try parse("-3 days")
+                XCTAssertTrue(past.matches(task("start", ["due_date": .string(today)]), today: outside, userID: "owner", labels: [], timeZone: zone))
+                XCTAssertFalse(past.matches(task("end", ["due_date": .string(outside)]), today: outside, userID: "owner", labels: [], timeZone: zone))
+            }
+        }
+        let fixed = task("fixed", ["due_date": .string("2026-10-05"), "due_time": .string("00:30"), "time_zone": .string("Europe/Copenhagen"), "scheduled_at": .string("2026-10-04T22:30:00Z")])
+        XCTAssertTrue(matches(try parse("1 day"), fixed))
+        XCTAssertFalse(matches(try parse("1 day"), fixed, zone: "America/New_York"))
+        XCTAssertTrue(matches(try parse("-1 day"), fixed, zone: "America/New_York"))
+    }
+    func testDayWindowsRefreshCachePersistOfflineAndProjectPrivateWidgetDays() throws {
+        let rule = try parse("effective-due:3 days")
+        var row = task("target", ["deadline_date": .string("2026-10-07")])
+        let cache = TaskCache(); cache.update([row])
+        var query = TaskQuery(scope: .saved("window"), today: "2026-10-05", filter: rule, timeZone: "UTC")
+        XCTAssertEqual(cache.matching(query).map(\.id), ["target"])
+        query.today = "2026-10-08"; XCTAssertTrue(cache.matching(query).isEmpty)
+        row["deadline_date"] = .string("2026-10-09"); cache.update([row]); XCTAssertEqual(cache.matching(query).map(\.id), ["target"])
+        let view = Record(["id": .string("window"), "name": .string("Three days"), "query_ast": rule.document])
+        let original = Snapshot(tables: ["tasks": [row], "saved_views": [view]], pending: [Mutation(table: "saved_views", recordID: view.id, method: "POST", fields: view.fields)])
+        let decoded = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(original))
+        XCTAssertEqual(decoded, original)
+        XCTAssertEqual(try FilterRule(document: decoded.tables["saved_views"]![0]["query_ast"]), rule)
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let payload = WidgetProjection.listPayload(tasks: [row], projects: [], labels: [], sections: [], savedViews: [view], account: "owner", now: Dates.parse("2026-10-05")!, calendar: calendar)
+        let days = Record(payload[0].object)["days"].object
+        XCTAssertEqual(days.count, 8)
+        XCTAssertEqual(days["2026-10-06"]?.list.map(\.text), [])
+        for day in ["2026-10-07", "2026-10-08", "2026-10-09"] { XCTAssertEqual(days[day]?.list.map(\.text), ["target"]) }
+        XCTAssertEqual(days["2026-10-10"]?.list.map(\.text), [])
+        XCTAssertFalse(String(data: try JSONEncoder().encode(payload), encoding: .utf8)!.contains("query_ast"))
+    }
+
     func testQueryHeadingsUseAvailablePeopleWithoutRetargetingStoredIdentity() throws {
         let id = "22222222-2222-4222-8222-222222222222"
         let rule = FilterRule.sections([.predicate("assignee", id), .predicate("assignee", "others"), .predicate("assigned", "")])
@@ -369,7 +446,7 @@ final class FilterTests: XCTestCase {
         XCTAssertFalse(matches(try parse("date:today"), floating, zone: "America/New_York"))
     }
     func testDateGrammarRejectsAmbiguousWindowsMalformedValuesAndUnsupportedSections() throws {
-        for expression in ["date:", "date:2026-02-30", "date:2026-10-05T12:00:00Z", "date:31 February", "date:+4 hours", "date:3 days", "date:-3 days", "date:in 3651 days", "date:today at 25:00", "date:today p1", "effective-due before:"] { XCTAssertThrowsError(try parse(expression), expression) }
+        for expression in ["date:", "date:2026-02-30", "date:2026-10-05T12:00:00Z", "date:31 February", "date:+4 hours", "date:in 3651 days", "date:today at 25:00", "date:today p1", "effective-due before:"] { XCTAssertThrowsError(try parse(expression), expression) }
         for value: JSON in [.null, .number(1), .bool(true), .array([])] {
             XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string("planned_on"), "value": value])))
         }

@@ -21,14 +21,14 @@ struct SavedViewEditor: View {
     @State private var saveFailure: String?
     @FocusState private var focusedField: String?
     private static let choices: [(String, String)] = [
-        ("all","All tasks"),("search","Keywords"),("created_on","Created on"),("created_before","Created before"),("created_after","Created after"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
+        ("all","All tasks"),("search","Keywords"),("created_on","Created on"),("created_before","Created before"),("created_after","Created after"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_next_days","Planned in next days"),("planned_past_days","Planned in past days"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_next_days","Due in next days"),("effective_due_past_days","Due in past days"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_next_days","Deadline within days"),("deadline_past_days","Deadline in past days"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
         ("priority","Priority"),("project","Project"),("project_name","Project name matches"),("section","Section"),("section_name","Section name matches"),("label","Label"),("label_name","Label name matches"),("completed","Completion"),("assigned","Assigned tasks"),("assignee","Assigned to"),("assignee_name","Assigned name matches"),
         ("due","Planned on date"),("before","Planned before date"),("deadline_today","Deadline today"),("deadline_overdue","Past deadline"),("deadline_next","Deadline in next days"),("no_deadline","No deadline"),("deadline","Deadline on date"),("deadline_before","Deadline before date"),("duration_max","Estimate up to minutes"),("no_estimate","No estimate")]
     private static let conditionGroups: [(String, [String])] = [
         ("Basics", ["all", "search", "recurring", "inbox", "no_labels", "priority"]),
-        ("Planned dates", ["planned_on", "planned_before", "planned_after", "today", "overdue", "next", "no_date"]),
-        ("Effective due", ["effective_due_on", "effective_due_before", "effective_due_after"]),
-        ("Deadlines", ["deadline_on", "deadline_before_day", "deadline_after", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline"]),
+        ("Planned dates", ["planned_next_days", "planned_past_days", "planned_on", "planned_before", "planned_after", "today", "overdue", "next", "no_date"]),
+        ("Effective due", ["effective_due_next_days", "effective_due_past_days", "effective_due_on", "effective_due_before", "effective_due_after"]),
+        ("Deadlines", ["deadline_next_days", "deadline_past_days", "deadline_on", "deadline_before_day", "deadline_after", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline"]),
         ("Times and estimates", ["planned_time_on", "planned_time_before", "planned_time_after", "no_time", "duration_max", "no_estimate"]),
         ("Projects and labels", ["project", "project_name", "section", "section_name", "label", "label_name"]),
         ("People and status", ["assigned", "assignee", "assignee_name", "completed"]),
@@ -93,7 +93,7 @@ struct SavedViewEditor: View {
                         }
                         if let queryFailure { validationFeedback(queryFailure) }
                         DisclosureGroup("Syntax examples") {
-                            Text("Use AND, OR, NOT and parentheses. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me, assigned, assigned to:others, assigned to:\"Alex Smith\". Collaborator names/emails resolve to a stable identity; quote names with spaces. Use assigned to: M* Smith for matching display names, or assignee matching:\"M* Smith\". Quote an exact name containing * to keep it literal. Separate queries with commas to show ordered lists, for example overdue, today. A matching task can appear in each list. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
+                            Text("Use AND, OR, NOT and parentheses. Day ranges: 3 days (today and the next two), -3 days (the three days before today), deadline:3 days, effective-due:-3 days. Use in 3 days for one exact day. Examples: #Work & %waiting, search:\"send email\" & no time, recurring & no labels, deadline:next7, duration<=25, assignee:me, assigned, assigned to:others, assigned to:\"Alex Smith\". Collaborator names/emails resolve to a stable identity; quote names with spaces. Use assigned to: M* Smith for matching display names, or assignee matching:\"M* Smith\". Quote an exact name containing * to keep it literal. Separate queries with commas to show ordered lists, for example overdue, today. A matching task can appear in each list. Each search word can appear in the title or description. Quote words such as AND and OR to search for them.").font(.caption).foregroundStyle(.secondary)
                             Text("Date examples: date:tomorrow, date before:\"next Monday\", effective-due:today, deadline after:yesterday. Effective due uses the planned date, falling back to the deadline only when there is no plan. Legacy due:YYYY-MM-DD and Today keep using the plan. Add a time: date before:\"today at 2pm\". Date-and-time conditions exclude tasks without a planned time. Try date before:+4 hours or date after:now for a window that updates each minute.").font(.caption).foregroundStyle(.secondary)
                             Text("Creation examples: created:today, created before:-30 days, created after:yesterday. Uses the recorded creation date in your current time zone. Before and after exclude the chosen day. Plans and deadlines do not change when a task was created.").font(.caption).foregroundStyle(.secondary)
                             Text("Name patterns: %home*, #*Work, /*Meetings*. Use * for any characters, or project matching:\"*Work Admin*\" for spaces. Pattern results follow name changes; exact targets retain their identity.").font(.caption).foregroundStyle(.secondary)
@@ -258,6 +258,11 @@ struct SavedViewEditor: View {
             TextField("Words in title or description", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
             Text("Matches every word, in any order. Letter case and accents do not matter.").font(.caption).foregroundStyle(.secondary)
         }
+        else if FilterDayWindow.expressions[field] != nil {
+            TextField("Days", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString)
+            Text(field.hasSuffix("_past_days") ? "The previous 1–3650 calendar days, excluding today." : "1–3650 calendar days, including today. Three days means today and the next two days.").font(.caption).foregroundStyle(.secondary)
+            if field.hasPrefix("effective_due_") { Text("Uses the planned date. If there is no plan, uses the deadline.").font(.caption).foregroundStyle(.secondary) }
+        }
         else if ["next", "deadline_next", "duration_max"].contains(field) { TextField(field == "duration_max" ? "Minutes" : "Days", text: condition.value).focused($focusedField, equals: condition.wrappedValue.id.uuidString).accessibilityIdentifier("filterConditionValue-" + condition.wrappedValue.id.uuidString) }
         else if ["due", "before", "deadline", "deadline_before"].contains(field) { DatePicker("Date", selection: Binding(get: { Dates.parse(condition.wrappedValue.value) ?? Date() }, set: { condition.wrappedValue.value = Dates.day($0) }), displayedComponents: .date) }
     }
@@ -286,6 +291,7 @@ struct SavedViewEditor: View {
         }
     }
     private func defaultValue(_ field: String) -> String {
+        if FilterDayWindow.expressions[field] != nil { return "3" }
         if FilterDateReference.expressions[field] != nil || FilterCreationReference.expressions[field] != nil { return "today" }
         if FilterTimeReference.expressions[field] != nil { return "14:00" }
         if FilterNamePattern.expressions[field] != nil { return "*" }
