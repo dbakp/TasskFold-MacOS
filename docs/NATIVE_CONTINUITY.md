@@ -130,3 +130,12 @@ The initial phone test failed before editing because it looked for planner setti
 All seven accepted cases pass with zero failures/skips, and the native results report no runtime warnings. Three actual screenshots were inspected and retained in iOS. Final iOS Debug and Mac test builds pass; production logic is unchanged. Fixture sessions were revoked before account deletion; user/session/profile/task/preference counts verified zero. Both device sessions, scoped caches/recovery vaults and private credentials were cleared. See settings-continuity-evidence.json.
 
 Repeat with Scripts/test_settings_continuity.py and the existing private disposable-account contract (--xctestrun, --phone, --tablet, --output). Mac verification uses TASKFOLD_SETTINGS_CONTINUITY_FIXTURE. Other settings, organization, concurrent/account/mixed-version behavior, actual Mac GUI and physical-device acceptance remain open.
+
+
+## 9 October — preserve newer planner settings when editing
+
+Both apps previously rebuilt working_hours from four known fields when saving. This dropped any unknown nested fields and allowed an unsupported document to be overwritten by editable defaults. Both independently owned models now merge validated known fields into the existing supported document, preserving extensions. Unsupported or malformed documents cannot be saved; the settings form explains that Taskfold must be updated and disables Save. Missing preferences still initialize normally. The Store also requires the account/workspace binding captured when the form opened.
+
+Each repository passes all 12 focused planner tests, including preservation through edit, durable cache and portable backup. Two actual isolated iPhone UI cases pass with zero failures/skips/reported warnings: unsupported settings stay read-only after relaunch, and supported extension settings retain a changed weekday. Independent saved-state inspection confirms the extra nested data, hours, weekdays and empty queue. The actual unsupported-state screenshot was inspected. iOS/Mac Debug arm64 app/widget builds pass; no Mac GUI ran. See planner-version-safety-evidence.json.
+
+This fixes a specific mixed-version overwrite risk. It does not establish a live mixed-version pair or account-switch UI flow; the planner capacity display still uses its existing default fallback for unreadable hours outside this settings form. Other settings and full native acceptance remain open.

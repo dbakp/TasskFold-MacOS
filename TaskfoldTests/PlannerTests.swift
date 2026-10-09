@@ -116,3 +116,28 @@ final class PlannerTests: XCTestCase {
         XCTAssertEqual(changed.tables["tasks"]?.first?.string("deadline_date"), "2026-10-30")
     }
 }
+
+
+extension PlannerTests {
+    func testWorkingHoursEditPreservesExtensionsThroughCacheAndBackup() throws {
+        var document = WorkingHours().document.object
+        let extensionValue: JSON = .object(["breaks": .array([.number(720), .number(780)]), "zone": .string("Europe/Copenhagen")])
+        document["future_options"] = extensionValue
+        let changed = try WorkingHours(start: 480, end: 960, weekdays: [1, 3, 5]).replacing(.object(document))
+        XCTAssertEqual(changed.object["future_options"], extensionValue)
+        XCTAssertEqual(try WorkingHours(document: changed), WorkingHours(start: 480, end: 960, weekdays: [1, 3, 5]))
+        var snapshot = Snapshot()
+        snapshot.tables["view_preferences"] = [Record(["id": .string("planner"), "user_id": .string("owner"), "working_hours": changed])]
+        let cached = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+        let backup = try WorkspaceBackup.read(WorkspaceBackup.make(cached, account: "owner").data())
+        XCTAssertEqual(backup.tables["view_preferences"]?.first?["working_hours"], changed)
+    }
+    func testWorkingHoursNeverReplaceUnsupportedOrMalformedDocuments() throws {
+        for document: JSON in [.object(["version": .number(2), "future": .string("preserve")]), .object(["version": .number(1), "start": .number(540)]), .string("invalid"), .array([])] {
+            XCTAssertFalse(WorkingHours.editable(document))
+            XCTAssertThrowsError(try WorkingHours().replacing(document))
+        }
+        XCTAssertEqual(try WorkingHours().replacing(.null), WorkingHours().document)
+        XCTAssertThrowsError(try WorkingHours(start: 1020, end: 540).replacing(WorkingHours().document))
+    }
+}

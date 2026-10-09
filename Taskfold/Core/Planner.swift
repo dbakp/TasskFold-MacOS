@@ -13,6 +13,18 @@ struct WorkingHours: Equatable, Sendable {
               days.allSatisfy({ if case .number(let value) = $0 { return value.isFinite && value.rounded() == value && (1...7).contains(value) }; return false }) else { throw PlannerFailure(message: "Choose valid working hours and weekdays.") }
         self.init(start: Int(start), end: Int(end), weekdays: Set(days.map(\.integer)))
     }
+    /// Edit known v1 fields without discarding extensions written by another client.
+    /// A missing preference is editable; an unreadable existing document is not.
+    static func editable(_ document: JSON) -> Bool {
+        document == .null || (try? WorkingHours(document: document)) != nil
+    }
+    func replacing(_ document: JSON) throws -> JSON {
+        guard Self.editable(document) else { throw PlannerFailure(message: "These working hours are unsupported. Update Taskfold before changing them.") }
+        _ = try WorkingHours(document: self.document)
+        var fields = document.object
+        for (key, value) in self.document.object { fields[key] = value }
+        return .object(fields)
+    }
     func interval(on day: Date, calendar: Calendar = .current) -> DateInterval? {
         guard start >= 0, end <= 1440, start < end, weekdays.contains(calendar.component(.weekday, from: day)), let bounds = calendar.dateInterval(of: .day, for: day),
               let start = TaskPlanning.wallTime(day: bounds.start, hour: start / 60, minute: start % 60, calendar: calendar) else { return nil }

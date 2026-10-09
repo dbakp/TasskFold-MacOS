@@ -798,3 +798,12 @@ Seven native iOS cases and one Mac transport test pass for backup, tablet edit, 
 ## 9 October — working-week settings continuity
 
 Six accepted native iOS cases and one Mac transport test pass working-week changes across phone/tablet, including offline persistence, reconnection and unchanged clock hours. Test navigation/driver assumption failures are recorded; no production changes. Screenshots inspected and disposable fixture cleaned. See NATIVE_CONTINUITY.md and settings-continuity-evidence.json. Mac GUI and broader settings acceptance remain open.
+
+
+## 9 October — preserve newer planner settings when editing
+
+Both apps previously rebuilt working_hours from four known fields when saving. This dropped any unknown nested fields and allowed an unsupported document to be overwritten by editable defaults. Both independently owned models now merge validated known fields into the existing supported document, preserving extensions. Unsupported or malformed documents cannot be saved; the settings form explains that Taskfold must be updated and disables Save. Missing preferences still initialize normally. The Store also requires the account/workspace binding captured when the form opened.
+
+Each repository passes all 12 focused planner tests, including preservation through edit, durable cache and portable backup. Two actual isolated iPhone UI cases pass with zero failures/skips/reported warnings: unsupported settings stay read-only after relaunch, and supported extension settings retain a changed weekday. Independent saved-state inspection confirms the extra nested data, hours, weekdays and empty queue. The actual unsupported-state screenshot was inspected. iOS/Mac Debug arm64 app/widget builds pass; no Mac GUI ran. See planner-version-safety-evidence.json.
+
+This fixes a specific mixed-version overwrite risk. It does not establish a live mixed-version pair or account-switch UI flow; the planner capacity display still uses its existing default fallback for unreadable hours outside this settings form. Other settings and full native acceptance remain open.

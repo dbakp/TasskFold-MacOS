@@ -247,6 +247,8 @@ final class Store {
     var savedViews: [Record] { rows("saved_views").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
     var favorites: [Record] { rows("favorites").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
     var workingHours: WorkingHours { (try? WorkingHours(document: record("view_preferences", id: "planner")?["working_hours"] ?? .null)) ?? WorkingHours() }
+    var workingHoursDocument: JSON { record("view_preferences", id: "planner")?["working_hours"] ?? .null }
+    var workingHoursEditable: Bool { workspaceCacheReadable && (signedIn || localMode) && WorkingHours.editable(workingHoursDocument) }
     var datePhraseRecord: Record? { DatePhrasePreferences.row(snapshot, account: userID) }
     var datePhrasePreferences: DatePhrasePreferences? { try? DatePhrasePreferences(document: datePhraseRecord?["date_preferences"] ?? .null) }
     var datePhraseEditable: Bool { workspaceCacheReadable && (signedIn || localMode) && datePhrasePreferences != nil }
@@ -324,11 +326,16 @@ final class Store {
         do { try persist() } catch { snapshot = old; self.error = error.localizedDescription; return false }
         focusSyncConflict = nil; notice = nil; publishWidgetSnapshot(scheduleCapacityRefresh: false); Task { await reschedule(); await sync() }; return true
     }
-    @discardableResult func setWorkingHours(_ hours: WorkingHours) -> Bool {
-        guard (try? WorkingHours(document: hours.document)) != nil else { error = "Choose valid working hours."; return false }
-        var row = record("view_preferences", id: "planner") ?? Record(["id": .string("planner"), "user_id": .string(userID)])
-        row["working_hours"] = hours.document
-        return save("view_preferences", row)
+    @discardableResult func setWorkingHours(_ hours: WorkingHours, workspace: WorkspaceBinding) -> Bool {
+        guard workspace.matches(account: userID, generation: workspaceGeneration), workingHoursEditable else {
+            error = "These working hours changed or are unsupported. Reopen settings before changing them."; return false
+        }
+        do {
+            let document = try hours.replacing(workingHoursDocument)
+            var row = record("view_preferences", id: "planner") ?? Record(["id": .string("planner"), "user_id": .string(userID)])
+            row["working_hours"] = document
+            return save("view_preferences", row)
+        } catch { self.error = error.localizedDescription; return false }
     }
     /// Native queries share the observed clock; selected calendar days remain explicit.
     func matching(_ query: TaskQuery) -> [Record] {

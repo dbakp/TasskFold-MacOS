@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-09",
+  "problem": "Saving planner hours rebuilt the nested document, dropping unknown fields; unsupported versions appeared as editable defaults.",
+  "changes": [
+    "Merge known working-hour fields into a supported existing document",
+    "Reject malformed/unsupported existing documents; missing preference remains editable",
+    "Show unsupported settings guidance with disabled Save",
+    "Require the original account/workspace generation before Store accepts a save"
+  ],
+  "core": {
+    "ios": {
+      "passed": 12,
+      "failures": 0,
+      "log": "/tmp/taskfold-planner-version-ios-core-v1.log"
+    },
+    "mac": {
+      "passed": 12,
+      "failures": 0,
+      "log": "/tmp/taskfold-planner-version-mac-core-v1.log"
+    },
+    "scope": "Planner tests include extension preservation across edit/cache/portable backup, rejected future/malformed documents and existing planning regressions."
+  },
+  "native": {
+    "result": "/tmp/taskfold-planner-version-ui-v1.xcresult",
+    "passed": 2,
+    "failures": 0,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0,
+    "scope": "Isolated iPhone Simulator: future settings read-only across relaunch; supported extension settings editable with persisted weekday choice.",
+    "savedState": {
+      "version": 1,
+      "start": 540,
+      "end": 1020,
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "future_options": {
+        "breaks": [
+          720,
+          780
+        ]
+      },
+      "pendingMutations": 0
+    },
+    "captureInIOSRepository": "docs/native-continuity-previews/working-hours-unsupported.png",
+    "captureSHA256": "8fd7eb379fffe8e92d25c8e6b47e856cecc58eed0466d4a90fcec4100cc345be",
+    "visuallyInspected": true
+  },
+  "builds": {
+    "ios": "/tmp/taskfold-planner-version-ios-build-v1.log",
+    "mac": "/tmp/taskfold-planner-version-mac-build-v1.log",
+    "configuration": "Debug arm64 app/widgets, iOS tests",
+    "signatures": "/tmp/taskfold-planner-version-signatures-v1.json"
+  },
+  "limitations": [
+    "Mac compile/model acceptance only; no GUI",
+    "No claim of live mixed-version app-pair or account-switch UI acceptance",
+    "Unsupported working-hours documents still use existing default capacity fallback outside the settings form",
+    "Other settings and broader mixed-version coverage remain open"
+  ],
+  "sourceHashes": {
+    "Taskfold/Core/Planner.swift": "425695ec64fdc7f15c78f4d410ffd5d3573ab3c9fa932234739ea23db5d04b14",
+    "Taskfold/Core/Store.swift": "c31b254f97d801b1bee510faa9511c708a472674d16fd4cbff2574f8c139140c",
+    "Taskfold/Views/PlannerSettings.swift": "e8bd57ec30d24a1486d98a02134f790a6cf59694e51fbe68617a7fbc09a2858e",
+    "TaskfoldTests/PlannerTests.swift": "5af746271ac60313efc373a2dc30b8ec0a32a2ae7c1e9132a4f3e1ff41d1133e"
+  }
+}
