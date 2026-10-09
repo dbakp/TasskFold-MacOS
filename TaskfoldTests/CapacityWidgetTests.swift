@@ -108,3 +108,22 @@ final class CapacityWidgetTests: XCTestCase {
         XCTAssertEqual(WidgetCapacityReading.minutes(-120), "2h"); XCTAssertEqual(WidgetCapacityReading.minutes(150), "2h 30m"); XCTAssertEqual(WidgetCapacityReading.minutes(0), "0m")
     }
 }
+
+
+extension CapacityWidgetTests {
+    func testUnreadableWorkingHoursDoNotInventCapacityOrHideTasks() throws {
+        let tasks = [task("work", minutes: 90), task("unknown")]
+        let payload = WidgetProjection.payload(tasks: tasks, projects: [], account: "owner", now: now, calendar: calendar, workingHours: nil)
+        let snapshot = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(payload))
+        for day: CapacityDay in [.today, .tomorrow] {
+            let reading = snapshot.capacityReading(at: now, day: day, calendar: calendar)
+            XCTAssertNil(reading.day); XCTAssertFalse(reading.canCalculateRoom)
+            XCTAssertEqual(reading.state, "settings"); XCTAssertTrue(reading.calendarNote.contains("Update Taskfold"))
+        }
+        XCTAssertEqual(snapshot.today(at: now, calendar: calendar).count, 2)
+        XCTAssertTrue(snapshot.capacity?.days.isEmpty == true)
+        XCTAssertEqual(snapshot.capacity?.hours, "")
+        let workload = TaskPlanner.capacity(tasks, events: [], on: now, hours: nil, calendar: calendar)
+        XCTAssertEqual(workload.estimatedMinutes, 90); XCTAssertEqual(workload.unknownTasks, 1)
+    }
+}

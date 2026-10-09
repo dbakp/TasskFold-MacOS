@@ -246,7 +246,7 @@ final class Store {
     var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { project in projectMembers(project.id).map { person in var scoped = person; scoped["project_id"] = .string(project.id); return scoped } }, datePreferences: datePhrasePreferences) }
     var savedViews: [Record] { rows("saved_views").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
     var favorites: [Record] { rows("favorites").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
-    var workingHours: WorkingHours { (try? WorkingHours(document: record("view_preferences", id: "planner")?["working_hours"] ?? .null)) ?? WorkingHours() }
+    var workingHours: WorkingHours? { workingHoursDocument == .null ? WorkingHours() : try? WorkingHours(document: workingHoursDocument) }
     var workingHoursDocument: JSON { record("view_preferences", id: "planner")?["working_hours"] ?? .null }
     var workingHoursEditable: Bool { workspaceCacheReadable && (signedIn || localMode) && WorkingHours.editable(workingHoursDocument) }
     var datePhraseRecord: Record? { DatePhrasePreferences.row(snapshot, account: userID) }

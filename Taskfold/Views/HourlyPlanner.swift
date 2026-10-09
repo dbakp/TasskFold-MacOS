@@ -24,7 +24,7 @@ struct HourlyPlannerView: View {
     @State private var largeTextTimeline = false
     private var usesAgenda: Bool { textSize.isAccessibilitySize && !largeTextTimeline }
     private var events: [PlannerEvent] { busy.events }
-    private var hours: WorkingHours { store.workingHours }
+    private var hours: WorkingHours? { store.workingHours }
     let open: (Record) -> Void
     let complete: (Record) -> Void
     let save: (Record, [String: JSON]) -> Bool
@@ -143,6 +143,7 @@ struct HourlyPlannerView: View {
             .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerCapacity")
     }
     private var workingSummary: String {
+        guard hours != nil else { return "Capacity unavailable. Update Taskfold to read these working hours." }
         if busy.ready { return "\(capacity.workingMinutes) min working day · \(capacity.busyMinutes) min calendar busy · \(capacity.afterKnownWork) min after known work" }
         if busy.connected { return "\(capacity.workingMinutes) min working day · calendar data incomplete" }
         return "\(capacity.workingMinutes) min working day · \(capacity.workingMinutes - capacity.estimatedMinutes) min after task estimates"

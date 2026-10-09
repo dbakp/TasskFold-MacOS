@@ -1249,7 +1249,7 @@ enum TaskCompletion {
 
 /// Versioned widget payload. The extension receives bounded planning/Focus data, never authentication sessions or executable mutations.
 enum WidgetProjection {
-    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = []) -> [String: JSON] {
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = []) -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
         let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people)
         let pulse = pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar)
@@ -1282,8 +1282,11 @@ enum WidgetProjection {
     }
 
     /// Materialize the planner's exact day semantics in a bounded, title-free projection.
-    static func capacityPayload(tasks: [Record], account: String, hours: WorkingHours, window: CalendarCapacityWindow?, fallback: String, now: Date, calendar input: Calendar) -> JSON {
+    static func capacityPayload(tasks: [Record], account: String, hours: WorkingHours?, window: CalendarCapacityWindow?, fallback: String, now: Date, calendar input: Calendar) -> JSON {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
+        guard let hours else {
+            return .object(["version": .number(1), "timeZone": .string(calendar.timeZone.identifier), "calendarState": .string("settings"), "calendarUpdated": .null, "hours": .string(""), "days": .object([:])])
+        }
         let usable = window.flatMap { value -> CalendarCapacityWindow? in
             value.account == account && value.timeZone == calendar.timeZone.identifier && now >= value.updated.addingTimeInterval(-300) && now < value.updated.addingTimeInterval(3600) ? value : nil
         }

@@ -116,6 +116,7 @@ struct WidgetCapacityReading {
         case "incomplete": return "Calendar data incomplete"
         case "choose": return "Choose calendars in Taskfold"
         case "unavailable": return "Calendar access unavailable"
+        case "settings": return "Update Taskfold to read working hours"
         default: return "Open Taskfold to refresh"
         }
     }
@@ -372,8 +373,9 @@ struct WidgetSnapshot: Codable {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         let selected = calendar.date(byAdding: .day, value: day.offset, to: date) ?? date
         let key = Self.day(selected, calendar: calendar)
-        guard !account.isEmpty, let capacity, capacity.version == 1, capacity.timeZone == calendar.timeZone.identifier,
-              let value = capacity.days[key], value.valid else { return WidgetCapacityReading(day: nil, state: "refresh", dayKey: key) }
+        guard !account.isEmpty, let capacity, capacity.version == 1, capacity.timeZone == calendar.timeZone.identifier else { return WidgetCapacityReading(day: nil, state: "refresh", dayKey: key) }
+        if capacity.calendarState == "settings" { return WidgetCapacityReading(day: nil, state: "settings", dayKey: key) }
+        guard let value = capacity.days[key], value.valid else { return WidgetCapacityReading(day: nil, state: "refresh", dayKey: key) }
         var state = capacity.calendarState
         if !["ready", "off", "incomplete", "choose", "unavailable", "refresh"].contains(state) { state = "refresh" }
         if state == "ready" || state == "incomplete" {
@@ -1046,8 +1048,8 @@ struct CapacityWidgetView: View {
                 Text(reading.calendarNote).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.7)
             } else {
                 Spacer(minLength: 0)
-                Text(entry.snapshot.updated == 0 ? "Make room for your day" : "Refresh your day").font(.headline).lineLimit(2)
-                Text("Open Taskfold to load working hours and your plan.").font(.caption2).foregroundStyle(.secondary).lineLimit(3)
+                Text(reading.state == "settings" ? "Capacity unavailable" : entry.snapshot.updated == 0 ? "Make room for your day" : "Refresh your day").font(.headline).lineLimit(2)
+                Text(reading.state == "settings" ? "Update Taskfold to read your working hours." : "Open Taskfold to load working hours and your plan.").font(.caption2).foregroundStyle(.secondary).lineLimit(3)
                 Spacer(minLength: 0)
             }
             WidgetFooter(entry: TodayEntry(date: entry.date, snapshot: entry.snapshot))

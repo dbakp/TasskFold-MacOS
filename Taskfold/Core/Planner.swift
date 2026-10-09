@@ -113,9 +113,9 @@ enum TaskPlanner {
         if let start, let end { minutes += end.timeIntervalSince(start) }
         return Int((minutes / 60).rounded())
     }
-    static func capacity(_ tasks: [Record], events: [PlannerEvent], on day: Date, hours: WorkingHours, calendar: Calendar = .current) -> PlannerCapacity {
+    static func capacity(_ tasks: [Record], events: [PlannerEvent], on day: Date, hours: WorkingHours?, calendar: Calendar = .current) -> PlannerCapacity {
         let blocks = blocks(tasks, on: day, calendar: calendar), loose = allDay(tasks, on: day, calendar: calendar)
-        let window = hours.interval(on: day, calendar: calendar)
+        let window = hours?.interval(on: day, calendar: calendar)
         return PlannerCapacity(workingMinutes: Int((window?.duration ?? 0) / 60), busyMinutes: window.map { unionMinutes(events.map(\.interval), clippedTo: $0) } ?? 0,
             estimatedMinutes: Int(blocks.filter { $0.end != nil }.reduce(0) { $0 + $1.length }.rounded()) + loose.compactMap(\.durationMinutes).reduce(0, +),
             unknownTasks: blocks.filter { $0.end == nil }.count + loose.filter { $0.durationMinutes == nil }.count)

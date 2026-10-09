@@ -76,7 +76,7 @@ struct PlannerSettingsView: View {
                     if let workspace, store.setWorkingHours(WorkingHours(start: start, end: end, weekdays: weekdays), workspace: workspace) { dismiss() }
                 }.disabled(start >= end || !editable).accessibilityIdentifier("plannerSaveSettings") }
             }
-            .onAppear { guard !loaded else { return }; loaded = true; workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); let hours = store.workingHours; start = hours.start; end = hours.end; weekdays = hours.weekdays }
+            .onAppear { guard !loaded else { return }; loaded = true; workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); let hours = store.workingHours ?? WorkingHours(); start = hours.start; end = hours.end; weekdays = hours.weekdays }
         }
         #if os(macOS)
         .frame(minWidth: 480, minHeight: 620)

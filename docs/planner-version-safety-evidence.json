@@ -68,5 +68,6 @@
     "Taskfold/Core/Store.swift": "c31b254f97d801b1bee510faa9511c708a472674d16fd4cbff2574f8c139140c",
     "Taskfold/Views/PlannerSettings.swift": "e8bd57ec30d24a1486d98a02134f790a6cf59694e51fbe68617a7fbc09a2858e",
     "TaskfoldTests/PlannerTests.swift": "5af746271ac60313efc373a2dc30b8ec0a32a2ae7c1e9132a4f3e1ff41d1133e"
-  }
+  },
+  "capacityFallbackFollowUp": "Resolved by capacity-version-safety-evidence.json; earlier limitation retained as historical checkpoint."
 }
