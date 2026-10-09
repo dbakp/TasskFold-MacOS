@@ -204,5 +204,30 @@
       "Physical devices",
       "Mac widget host"
     ]
+  },
+  "inboxIndependentInstances": {
+    "date": "2026-10-09",
+    "host": "Isolated iPhone 17 Pro Simulator, iOS 26.5",
+    "family": "systemSmall",
+    "configurationResult": "Both configured at five; second changed to all six without changing first",
+    "configurationBundle": "/tmp/taskfold-inbox-independent-v1.xcresult",
+    "configurationRunStatus": "Failed only final post-route child accessibility assertion; configuration and both route assertions passed",
+    "resumeBundle": "/tmp/taskfold-inbox-independent-resume-v5.xcresult",
+    "resumePassedTests": 1,
+    "resumeSkippedTests": 0,
+    "appRuntimeWarnings": 0,
+    "hostRestartPreservedConfiguration": true,
+    "routing": "five left / six left verified through native app",
+    "selectionMethod": "Known fixture left-column widget containers and normalized review-region taps after SpringBoard ceased exposing child text",
+    "retainedTaskCount": 8,
+    "pendingMutations": 0,
+    "cleanup": "Second Inbox widget removed; existing first retained",
+    "limitations": [
+      "Full configuration test not rerun from scratch after refactoring",
+      "Physical/Mac hosts",
+      "Cloud/account changes",
+      "Other families",
+      "Widget VoiceOver/accessibility acceptance"
+    ]
   }
 }
