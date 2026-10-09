@@ -20,6 +20,18 @@ The final installed screenshot shows both ordinary names in full. Final iOS Debu
 
 ## Remaining acceptance and retained state
 
-Interactive completion, live privacy changes, independent instances, other sizes/configured families, rename/delete/account refresh, iPad/physical devices, Mac hosts and distribution remain open. One passing project selection does not prove saved-filter/label configuration or complete P0 acceptance.
+Cold-launch/recurring completion, privacy on other families/hosts, independent instances, other sizes/configured families, rename/delete/account refresh, iPad/physical devices, Mac hosts and distribution remain open. One passing project selection does not prove saved-filter/label configuration or complete P0 acceptance.
 
 The isolated iPhone retains its configured fixture widget for follow-up. Seven obsolete test apps and their seven runners were uninstalled from that test device; only the current test app/runner pair was kept. This cleared duplicate Taskfold gallery entries and left about 96 GiB free. No real account data or installed Mac app was changed.
+
+## Actual completion — 9 October follow-up
+
+`testInstalledMyListCompletionPersistsAndKeepsOtherTasks()` now passes against the real Home Screen button on the isolated iPhone. With Taskfold backgrounded, tapping Complete updates the widget to All clear without foregrounding the app. The app then shows the selected task as completed and retains an unrelated open Inbox task; completion survives termination and relaunch. One actual test passes with zero failures/skips or reported result runtime warnings. The actual empty-state screenshot was inspected and is retained in the iOS repository. This proves the warm/background local fixture path; killed-app execution, cloud sync, recurring completion, account switching and Mac/physical hosts remain separate.
+
+The first attempt stopped before tapping because a 44-point hit target measured 43.99999999999997 points. The test now allows a 0.001-point floating-point tolerance. Production completion code did not change. Both tests compile in the final iOS Debug test build; the app, widget, test bundle and runner were explicitly re-signed and verified before execution. A stable isolated UI-build workspace now avoids changing every source path for a test-only edit.
+
+## Live privacy — 9 October follow-up
+
+`testInstalledMyListPrivacyHidesAndRestoresNames()` passes once with zero failures/skips or reported result runtime warnings. The actual system switch is asserted on before closing configuration; the installed widget displays My list and Private task, and neither original task nor list name appears in its accessibility descendants. Switching off restores both names. All four actual screenshots (both switch states and both widget states) were inspected and retained in the iOS repository. The test leaves privacy off.
+
+The first attempt tapped the center of the system switch's whole accessibility row without verifying its value and left names visible. The corrected test taps the control at the row's right edge and requires the requested value before dismissal. No production privacy change was necessary. SpringBoard animation-idle waits still consume about a minute per menu operation; this passing functional run is not a performance claim. On a fresh test device, run the existing installed configuration test before these two follow-up checks.

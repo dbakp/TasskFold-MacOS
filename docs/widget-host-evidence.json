@@ -51,15 +51,58 @@
     "retained": "com.dbakp.taskfold.assigneepatterntests"
   },
   "remaining": [
-    "Interactive completion",
-    "privacy toggles",
+    "Cold-launch completion, account switching and recurring completion on installed hosts",
     "multiple instances and sizes",
     "other configured widget families",
     "iPad and physical devices",
     "Mac widget host",
-    "full P0 acceptance"
+    "full P0 acceptance",
+    "Privacy across other widget families and hosts"
   ],
   "ownedFinalInputs": {
-    "TaskfoldWidgets/TaskfoldWidgets.swift": "6bb75f2cdb3333f0453f082fc068b608f98d1c5f38182ad4ad74269c7e37fdf1"
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "6bb75f2cdb3333f0453f082fc068b608f98d1c5f38182ad4ad74269c7e37fdf1",
+    "Scripts/sign_simulator_test_products.py": "d5bfc56ef475d06d48f247031ef6ee6b0f79c4720fb62705f67e529a8fcb8d7d",
+    "TaskfoldUITests/TaskfoldUITests.swift": "eb7af8e899956d3b2d3d80518c642c93ff192a426397a945ae173f8ebbcc5fe5"
+  },
+  "interactiveCompletion": {
+    "test": "TaskfoldUITests/testInstalledMyListCompletionPersistsAndKeepsOtherTasks()",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": [],
+    "scope": "Actual installed small My list button, app backgrounded; widget updates without foregrounding app; completed task survives app relaunch; unrelated Inbox task remains open. Local isolated fixture, not cloud or killed-app execution.",
+    "capture": "widget-host-previews/my-list-completed.png",
+    "captureSHA256": "74833a7d453aa6c85635623adabc69fbb7a1a3477cfe7aa35392461b3f2ec972",
+    "visuallyInspected": true,
+    "testSourceSHA256": "af352f64d37304134900e7dd93bad331659962c65909f1466920e934bf95a729",
+    "earlierAttempt": "Stopped before tap by a floating-point assertion: 43.99999999999997 versus 44 points. Corrected with 0.001-point tolerance."
+  },
+  "livePrivacy": {
+    "test": "TaskfoldUITests/testInstalledMyListPrivacyHidesAndRestoresNames()",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": [],
+    "scope": "Actual system switch verified on/off, task and list names hidden in installed widget including accessibility labels, then restored. One isolated small My list instance on iPhone Simulator.",
+    "capturesInIOSRepository": {
+      "my-list-private": {
+        "sha256": "1a00572087591f6ed9cfe38adebad615ebb8b8df3c19276bad801b2df29be920",
+        "visuallyInspected": true
+      },
+      "my-list-restored": {
+        "sha256": "b4d6eb211f6f8456ee18c86f678d21554b9ec8719f50a06e84e17596c7504280",
+        "visuallyInspected": true
+      },
+      "privacy-enabled": {
+        "sha256": "676cdadc6494119c1670bdf177ecf6bb2bc5a6cd8071182592f7d2ab3bc473ce",
+        "visuallyInspected": true
+      },
+      "privacy-disabled": {
+        "sha256": "2e8d6008c06ac268deb6cffcbe7b6b8c057e527264e493878dc785e3a9e19d31",
+        "visuallyInspected": true
+      }
+    },
+    "testSourceSHA256": "2bea0b08e99e33c38d05a00ccb0c04d7ea6ff8a5ad19833e2f68454f117879ca",
+    "earlierAttempt": "Failed because center tap did not change the system switch. Final test taps the switch control and asserts its value before dismissing."
   }
 }

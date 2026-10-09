@@ -717,3 +717,9 @@ A controlled iOS transport outage now has native proof of a durable queued edit 
 ## 9 October — installed My list host path and title wrapping
 
 The isolated iOS small My list widget now passes actual project configuration, scoped contents and native task routing with verified development-team signatures. Actual host captures motivated compact wrapping headings and three-line task titles in both independently owned widgets; final iOS and Mac Debug app/widget builds pass. [Exact evidence, Simulator signing prerequisite and remaining gates](WIDGET_HOST_ACCEPTANCE.md). Mac host runtime, physical devices, interactive completion/privacy and full P0 remain open.
+
+## 9 October — release gates clarified and actual iOS completion
+
+The current release-gate summary at the top of [P0_IMPLEMENTATION.md](P0_IMPLEMENTATION.md) distinguishes disabled remote delivery from remaining end-to-end acceptance. It removes stale signing/offline-blocker wording while preserving dated evidence. Actual iOS small My list completion now updates the Home Screen without foregrounding the app, survives relaunch and retains an unrelated open task. This is isolated local, warm/background evidence; no Mac runtime or physical/cold-launch claim. Mac production code is unchanged in this checkpoint; no redundant native/Core rebuild is needed for the documentation update.
+
+The actual system privacy toggle also passes on/off verification, hiding both task/list names and their accessibility labels before restoring them. These are iOS host results; Mac host acceptance remains open.
