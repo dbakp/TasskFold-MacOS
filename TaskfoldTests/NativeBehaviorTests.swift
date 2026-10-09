@@ -223,6 +223,18 @@ final class ProfileAvatarTests: XCTestCase {
 /// Companion to the two-Simulator continuity walk. This exercises the Mac-owned
 /// transport and decoding without opening the installed Mac app or its Keychain.
 final class NativeContinuityTests: XCTestCase {
+    @MainActor func testMacTransportCannotReadRevokedSharedProject() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_REVOCATION_FIXTURE"] else { throw XCTSkip("Disposable revoked-access fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let projects = try await backend.rows("projects"), tasks = try await backend.rows("tasks")
+        XCTAssertFalse(projects.contains { $0.id == fixture["projectID"] })
+        XCTAssertFalse(tasks.contains { $0.id == fixture["taskID"] })
+    }
     @MainActor private func continuityTask(environment: String) async throws -> (Record, String) {
         guard let path = ProcessInfo.processInfo.environment[environment] else {
             throw XCTSkip("Disposable iOS continuity fixture not supplied")

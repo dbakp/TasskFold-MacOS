@@ -818,6 +818,34 @@ final class Store {
         let changes = historyChanges(entry.redo), applied = EditHistory(changes: changes, snapshot: snapshot)
         if commit(changes, remember: false) { undoStack.append(applied) } else { redoStack.append(entry) }
     }
+    /// A denied queued task must not block the refresh that removes revoked shared work.
+    /// Keep its complete local snapshot in the encrypted vault before changing the live cache.
+    private func recoverUnavailableProject(_ mutation: Mutation, generation: UUID, account: String) async -> Bool {
+        guard mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
+              generation == accountGeneration, snapshot.pending.contains(mutation) else { return false }
+        let reviewed = snapshot
+        let projectID = record("tasks", id: mutation.recordID)?.string("project_id") ?? mutation.baseline?["project_id"]?.text ?? ""
+        guard !projectID.isEmpty else { return false }
+        do {
+            var remote: [String: [Record]] = [:]
+            for table in ["projects", "tasks", "sections", "labels", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", ReminderSnooze.table, "focus_sessions", "task_activity_epoch", "task_activity"] {
+                remote[table] = try await backend.rows(table)
+                guard generation == accountGeneration, snapshot == reviewed else { return false }
+                if table == "projects", remote[table]!.contains(where: { $0.id.lowercased() == projectID.lowercased() }) { return false }
+                if table == "tasks", remote[table]!.contains(where: { $0.id.lowercased() == mutation.recordID.lowercased() }) { return false }
+            }
+            guard let recovered = reviewed.removingUnavailableProject(projectID, blockedTaskID: mutation.recordID, remote: remote), recovered.pending.count < reviewed.pending.count else { return false }
+            _ = try await makeRecoveryBackup(kind: "Access removed")
+            guard generation == accountGeneration, account == userID, snapshot == reviewed else { return false }
+            snapshot = recovered
+            do { try persist() } catch { snapshot = reviewed; throw error }
+            undoStack = []; redoStack = []; syncConflict = nil; lastSync = Date()
+            notice = "A shared project is no longer available. Your unsynced changes were saved in Backups & restore."
+            await reschedule()
+            if !snapshot.pending.isEmpty { Task { await self.sync() } }
+            return true
+        } catch { return false }
+    }
     func sync() async {
         consumeWidgetCompletions()
         guard signedIn, !localMode, online, !syncing, syncConflict == nil, focusSyncConflict == nil else { return }
@@ -845,6 +873,7 @@ final class Store {
             googleAvatarURL = backend.session?.user.googleAvatarURL
             await reschedule()
         } catch {
+            if let mutation = sending, await recoverUnavailableProject(mutation, generation: generation, account: account) { return }
             if generation == accountGeneration {
                 notice = SyncStatus.failureMessage(error)
                 if error.localizedDescription.contains("TASKFOLD_FOCUS_CONFLICT:"), let mutation = sending,

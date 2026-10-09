@@ -342,6 +342,29 @@ struct Snapshot: Codable, Equatable, Sendable {
     }
 }
 
+/// Only use after a complete authenticated refresh proves the project and blocked task
+/// are no longer visible. The caller must preserve the original snapshot in recovery first.
+extension Snapshot {
+    func removingUnavailableProject(_ projectID: String, blockedTaskID: String, remote: [String: [Record]]) -> Snapshot? {
+        guard !projectID.isEmpty, let projects = remote["projects"], let tasks = remote["tasks"],
+              !projects.contains(where: { $0.id.lowercased() == projectID.lowercased() }),
+              !tasks.contains(where: { $0.id.lowercased() == blockedTaskID.lowercased() || $0.string("project_id").lowercased() == projectID.lowercased() }) else { return nil }
+        let project = projectID.lowercased()
+        var removed: [String: Set<String>] = ["projects": [project], "tasks": [blockedTaskID.lowercased()]]
+        for table in ["tasks", "sections", "project_collaborators"] {
+            for row in tables[table] ?? [] where row.string("project_id").lowercased() == project { removed[table, default: []].insert(row.id.lowercased()) }
+            for change in pending where change.table == table && (change.fields["project_id"]?.text.lowercased() == project || change.baseline?["project_id"]?.text.lowercased() == project) {
+                removed[table, default: []].insert(change.recordID.lowercased())
+            }
+        }
+        var recovered = self
+        recovered.pending.removeAll { removed[$0.table]?.contains($0.recordID.lowercased()) == true }
+        recovered.tables.removeValue(forKey: "project_members:" + projectID)
+        recovered.mergeRemote(remote)
+        return recovered
+    }
+}
+
 extension Snapshot {
     private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion }
     init(from decoder: Decoder) throws {

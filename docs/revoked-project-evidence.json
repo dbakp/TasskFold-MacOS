@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-09",
+  "scenario": "Offline shared task title edit, membership revoked, reconnect and relaunch",
+  "before": {
+    "result": "failed",
+    "bundle": "/tmp/taskfold-revocation-denied-v1.xcresult",
+    "failure": "Shared project remained visible after queued edit was denied"
+  },
+  "after": {
+    "result": "passed",
+    "bundle": "/tmp/taskfold-revocation-recovered-v2.xcresult",
+    "uiTests": 1,
+    "runtimeWarnings": 0,
+    "recoveryPreviewOpened": true,
+    "cacheAndWidgetContentAbsent": true,
+    "ownerTaskTitle": "Shared original",
+    "memberships": 0
+  },
+  "checks": {
+    "iosCoreTests": 3,
+    "macCoreTests": 3,
+    "macLiveTransportTests": 1,
+    "iosBuild": "/tmp/taskfold-revocation-ios-build-v2.log",
+    "macBuild": "/tmp/taskfold-revocation-mac-build-v2.log",
+    "macTransport": "/tmp/taskfold-revocation-mac-live-v2.log"
+  },
+  "cleanup": {
+    "users": 0,
+    "sessions": 0,
+    "profiles": 0,
+    "tasks": 0,
+    "projects": 0,
+    "memberships": 0,
+    "nativeFixtureFilesRemoved": true
+  },
+  "limitations": [
+    "No Mac GUI execution",
+    "No physical-device or installed widget-host check",
+    "Existing task PATCH regression; standalone POST, organization edits and locally moved-out tasks not covered",
+    "Recovery preview opened but not applied"
+  ]
+}
