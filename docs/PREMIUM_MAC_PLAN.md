@@ -788,3 +788,8 @@ Five distinct native iOS phases and one Mac transport test pass: a daily complet
 ## 9 October — installed Inbox batch configuration
 
 One isolated iPhone Simulator host test passes five-of-six and all-six labels, actual system configuration and matching native review routes. Screenshots inspected; all eight fixture tasks retained and no pending mutations. Final iOS Debug build/signatures verified; no production source change or Mac execution. See widget-host-evidence.json and WIDGET_HOST_ACCEPTANCE.md for scope and earlier test failures.
+
+
+## 9 October — offline recovery restore continuity
+
+Seven native iOS cases and one Mac transport test pass for backup, tablet edit, offline recovery restore/restart and reconnection to both clients with original task identity and empty task queues. Screenshots inspected; disposable fixture and device recovery data cleaned up. No production source change or Mac GUI execution. See NATIVE_CONTINUITY.md and restore-continuity-evidence.json for exact scope and remaining gates.
