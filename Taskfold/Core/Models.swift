@@ -342,24 +342,53 @@ struct Snapshot: Codable, Equatable, Sendable {
     }
 }
 
-/// Only use after a complete authenticated refresh proves the project and blocked task
-/// are no longer visible. The caller must preserve the original snapshot in recovery first.
+/// Recovery requires authenticated absence, and the caller must preserve the original
+/// snapshot in the encrypted vault before replacing the active workspace.
 extension Snapshot {
-    func removingUnavailableProject(_ projectID: String, blockedTaskID: String, remote: [String: [Record]]) -> Snapshot? {
-        guard !projectID.isEmpty, let projects = remote["projects"], let tasks = remote["tasks"],
-              !projects.contains(where: { $0.id.lowercased() == projectID.lowercased() }),
-              !tasks.contains(where: { $0.id.lowercased() == blockedTaskID.lowercased() || $0.string("project_id").lowercased() == projectID.lowercased() }) else { return nil }
-        let project = projectID.lowercased()
-        var removed: [String: Set<String>] = ["projects": [project], "tasks": [blockedTaskID.lowercased()]]
-        for table in ["tasks", "sections", "project_collaborators"] {
+    func recoveryProjectIDs(for mutation: Mutation) -> [String] {
+        guard pending.contains(mutation), ["tasks", "sections", "projects", "project_collaborators"].contains(mutation.table),
+              ["POST", "PATCH", "DELETE"].contains(mutation.method) else { return [] }
+        if mutation.table == "projects", mutation.method == "POST" { return [] }
+        let row = tables[mutation.table]?.first { $0.id.lowercased() == mutation.recordID.lowercased() }
+        let related = pending.filter { $0.table == mutation.table && $0.recordID.lowercased() == mutation.recordID.lowercased() }
+        let candidates = mutation.table == "projects" ? [mutation.recordID] :
+            related.flatMap { [$0.baseline?["project_id"]?.text ?? "", $0.fields["project_id"]?.text ?? ""] } + [row?.string("project_id") ?? ""]
+        var result: [String] = []
+        for id in candidates.map({ $0.lowercased() }) where !id.isEmpty && !result.contains(id) {
+            // An unacknowledged local project is not evidence of revoked access.
+            guard !pending.contains(where: { $0.table == "projects" && $0.method == "POST" && $0.recordID.lowercased() == id }) else { continue }
+            result.append(id)
+        }
+        return result
+    }
+    func recoveringUnavailableProject(for mutation: Mutation, remote: [String: [Record]]) -> Snapshot? {
+        guard let blockedRows = remote[mutation.table],
+              !blockedRows.contains(where: { $0.id.lowercased() == mutation.recordID.lowercased() }) else { return nil }
+        for project in recoveryProjectIDs(for: mutation) {
+            if let result = removingUnavailableProject(project, blockedRecord: mutation, remote: remote) { return result }
+        }
+        return nil
+    }
+    private func removingUnavailableProject(_ project: String, blockedRecord: Mutation, remote: [String: [Record]]) -> Snapshot? {
+        let projectTables = ["tasks", "sections", "project_collaborators"]
+        guard let projects = remote["projects"], !projects.contains(where: { $0.id.lowercased() == project }),
+              projectTables.allSatisfy({ table in
+                  guard let rows = remote[table] else { return false }
+                  return !rows.contains { $0.string("project_id").lowercased() == project }
+              }) else { return nil }
+        var removed: [String: Set<String>] = ["projects": [project]]
+        removed[blockedRecord.table, default: []].insert(blockedRecord.recordID.lowercased())
+        for table in projectTables {
             for row in tables[table] ?? [] where row.string("project_id").lowercased() == project { removed[table, default: []].insert(row.id.lowercased()) }
             for change in pending where change.table == table && (change.fields["project_id"]?.text.lowercased() == project || change.baseline?["project_id"]?.text.lowercased() == project) {
                 removed[table, default: []].insert(change.recordID.lowercased())
             }
+            // A row moved elsewhere on the server still needs normal conflict handling.
+            guard !(remote[table] ?? []).contains(where: { removed[table]?.contains($0.id.lowercased()) == true }) else { return nil }
         }
         var recovered = self
         recovered.pending.removeAll { removed[$0.table]?.contains($0.recordID.lowercased()) == true }
-        recovered.tables.removeValue(forKey: "project_members:" + projectID)
+        for key in recovered.tables.keys.filter({ $0.lowercased() == "project_members:" + project }) { recovered.tables.removeValue(forKey: key) }
         recovered.mergeRemote(remote)
         return recovered
     }

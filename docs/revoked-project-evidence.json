@@ -38,5 +38,27 @@
     "No physical-device or installed widget-host check",
     "Existing task PATCH regression; standalone POST, organization edits and locally moved-out tasks not covered",
     "Recovery preview opened but not applied"
-  ]
+  ],
+  "queueRecoveryFollowup": {
+    "date": "2026-10-09",
+    "iosCoreTests": 6,
+    "macCoreTests": 6,
+    "logs": [
+      "/tmp/taskfold-revocation-general-ios-core-v2.log",
+      "/tmp/taskfold-revocation-general-mac-core-v2.log"
+    ],
+    "coverage": [
+      "Pending shared task/section creation",
+      "Project/section/collaborator edits",
+      "Title edit followed by local move out of project",
+      "Unacknowledged new project preserved",
+      "Accessible moved records and partial reads prevent recovery"
+    ],
+    "nativeScope": "No additional native/server run; previous live scenario covers existing-task title edit only",
+    "builds": {
+      "ios": "/tmp/taskfold-revocation-general-ios-build-v1.log",
+      "mac": "/tmp/taskfold-revocation-general-mac-build-v1.log",
+      "result": "passed"
+    }
+  }
 }

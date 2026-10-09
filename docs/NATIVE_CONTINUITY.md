@@ -155,3 +155,12 @@ A live disposable owner/member scenario exposed a production failure: a denied q
 The original iPhone regression failed, then passed with the fix: reconnect removed the shared project/task; relaunch kept them absent; Backups & restore opened the Access removed copy in the native restore preview. Independent cache and App Group widget-payload inspection found no revoked content. The owner's server task remained Shared original with no membership. Mac authenticated transport also returned no project/task. Both repositories pass three focused queue/recovery tests and their Debug arm64 app builds. Both disposable accounts, sessions and fixture rows were deleted and verified absent; native fixture cache/vault and temporary credentials were removed. See revoked-project-evidence.json.
 
 Scope: the installed regression covers an existing shared task title edit. Standalone queued task creation, project/section edits, locally moved-out tasks and other membership transitions remain acceptance work. Mac transport/build evidence does not establish the Mac GUI. The restore preview was opened, not applied. One empty-list screenshot was captured during navigation; it is functional evidence, not final visual acceptance.
+
+
+## 9 October — generalize revoked-project queue recovery
+
+The recovery decision now covers pending shared-task creation, section creation/editing, project edits and collaborator changes in addition to existing task edits. It derives project identity from the full queued history of the blocked record, so a title edit followed by an offline move to Inbox still retains the original project context. New local projects with unacknowledged POSTs are excluded. Authenticated reads must include all project-dependent tables; any still-visible affected record prevents recovery. The existing encrypted-backup, account-generation, concurrent-edit and persistence guards remain in place.
+
+Six focused tests pass independently in each repository: existing-task recovery with unrelated work retained; missing/contradictory evidence; task/section/project/collaborator mutation cases; title edit followed by move-out; a genuinely new offline project; and remotely moved visible records/partial reads. These are model tests; the preceding native/server checkpoint remains evidence for the existing-task scenario only. Broader native membership flows remain open.
+
+Both Debug arm64 app builds pass for this follow-up (iOS build-for-testing and macOS build). No Mac GUI was launched.
