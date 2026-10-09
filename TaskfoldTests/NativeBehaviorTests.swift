@@ -219,3 +219,29 @@ final class ProfileAvatarTests: XCTestCase {
         for url in ["", "file:///private/photo", "javascript:alert(1)", "http://example.com/photo", "https:"] { XCTAssertNil(ProfileAvatar.url(url)) }
     }
 }
+
+/// Companion to the two-Simulator continuity walk. This exercises the Mac-owned
+/// transport and decoding without opening the installed Mac app or its Keychain.
+final class NativeContinuityTests: XCTestCase {
+    @MainActor func testMacTransportReadsTaskCreatedAndEditedOnIOS() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_CONTINUITY_FIXTURE"] else {
+            throw XCTSkip("Disposable iOS continuity fixture not supplied")
+        }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        XCTAssertNotNil(UUID(uuidString: owner))
+        guard fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else {
+            throw XCTSkip("Requires the disposable continuity account namespace")
+        }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let rows = try await backend.rows("tasks")
+        XCTAssertEqual(rows.count, 1, "The fixture must contain only the task created through iOS")
+        let task = try XCTUnwrap(rows.first)
+        XCTAssertEqual(task.title, "Continuity " + String(owner.prefix(8)) + " revised")
+        XCTAssertEqual(task.string("user_id"), owner)
+        XCTAssertFalse(task.completed)
+        XCTAssertFalse(task.string("task_generation").isEmpty)
+    }
+}

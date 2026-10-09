@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-09",
+  "scope": "Online iPhone/iPad Simulator UI round trip plus read-only Mac-owned transport, not Mac GUI acceptance",
+  "login": {
+    "phone": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    "tablet": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    }
+  },
+  "roundTrip": [
+    {
+      "phase": "phone-create",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "b846dba4-b920-4305-8455-163a4b3f6203",
+      "serverTitle": "Continuity e1e7f486"
+    },
+    {
+      "phase": "tablet-edit",
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "testPassed": true,
+      "serverTaskID": "b846dba4-b920-4305-8455-163a4b3f6203",
+      "serverTitle": "Continuity e1e7f486 revised"
+    },
+    {
+      "phase": "phone-observe",
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "testPassed": true,
+      "serverTaskID": "b846dba4-b920-4305-8455-163a4b3f6203",
+      "serverTitle": "Continuity e1e7f486 revised"
+    }
+  ],
+  "macTransport": {
+    "tests": 1,
+    "failures": 0,
+    "skips": 0,
+    "logSHA256": "a5729a875ca9b9f6d0ff3511292a1173ea94d0de0d3b10f9dba3561566710477"
+  },
+  "cleanup": {
+    "users": 0,
+    "sessions": 0,
+    "profiles": 0,
+    "tasks": 0,
+    "privateCredentialFileRemoved": true
+  },
+  "screenshots": {
+    "phone-create": {
+      "sha256": "daaf0ab2e20db60908d5ead6e42260ea474b1c6232e32713a7d3a29a2aeb7859",
+      "visuallyInspected": true
+    },
+    "tablet-edit": {
+      "sha256": "b41679611597632f90a4580d99b0e6a0a250df4702a0239c4ca3ba182efde8cc",
+      "visuallyInspected": true
+    },
+    "phone-observe": {
+      "sha256": "c7fbb0346bb42db90acce50a9f32c0ff069fc46628a264d1d58554f138b4cb1c",
+      "visuallyInspected": true
+    }
+  },
+  "ownedTestSHA256": "3dfafc00cefa4e3ce457401bf7f4bebeb83b09924055c528a32646adfdb072e4"
+}
