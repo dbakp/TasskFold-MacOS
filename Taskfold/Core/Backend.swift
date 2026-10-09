@@ -11,6 +11,26 @@ struct AppFailure: LocalizedError {
     var errorDescription: String? { message }
 }
 
+/// Explain transport interruptions without presenting internal networking codes.
+/// This describes already-persisted sync work, not an unsaved editor draft.
+enum SyncStatus {
+    static func failureMessage(_ error: Error) -> String {
+        let failure = error as NSError
+        if failure.domain == NSURLErrorDomain {
+            switch failure.code {
+            case URLError.notConnectedToInternet.rawValue:
+                return "You're offline. Changes saved on this device will sync when you reconnect."
+            case URLError.networkConnectionLost.rawValue:
+                return "The connection was interrupted. Your saved changes are still on this device. Try syncing again."
+            case URLError.timedOut.rawValue:
+                return "Sync took too long. Your saved changes are still on this device. Try again."
+            default: break
+            }
+        }
+        return "Sync paused: \(error.localizedDescription)"
+    }
+}
+
 enum SecureSession {
     static let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
         kSecAttrService as String: "com.taskfold.ios.session", kSecAttrAccount as String: "supabase"]

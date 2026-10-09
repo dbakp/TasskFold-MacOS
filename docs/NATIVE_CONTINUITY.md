@@ -34,3 +34,19 @@ TASKFOLD_CONTINUITY_FIXTURE=/private/tmp/taskfold-live-verification.json swift t
 ```
 
 Require one executed passing test with zero skips. Without the opt-in fixture the test skips; that is not acceptance evidence. The private JSON has `userID`, `email`, `password`, `url`, and public `key`. Only the disposable continuity namespace is accepted. This test reads the live task and does not seed or mutate it. The iOS UI driver remains in the independent iOS repository; this repository has no build dependency on it.
+
+## Controlled outage and conflict recovery — 9 October
+
+A second disposable account completed two native login/relaunch cases, then seven ordered phone/tablet UI cases: the original online round trip, an offline phone title edit, a competing tablet title/notes edit, review deferral/relaunch and Keep my edit, and receipt of the reviewed title on the tablet. Every case passed with zero skips/failures/reported runtime warnings. Authenticated reads checked the same single server record between phases. After the offline process relaunched, its on-disk queue contained the expected edit and baseline while the server still held the earlier title. After review, the chosen phone title and independent tablet notes were present on the server and visible on both devices.
+
+The outage is deliberate fault injection: only the isolated Debug Simulator bundle, with a loaded disposable continuity account and `--continuity-offline`, gets a URLSession whose URLProtocol fails HTTP with `notConnectedToInternet`. It leaves the normal Store, cache, queue and conflict machinery in use. Removing the argument on relaunch restores normal HTTP. The hook is excluded from Release and physical-device builds and does not change Mac production transport. This is not an OS network-disconnection or physical reconnect test.
+
+The first offline screenshot exposed raw `NSURLErrorDomain -1009` feedback and “1 changes”. Both apps now explain offline, interrupted-connection and timeout failures in plain language and use a singular count for one pending change. Unrelated errors retain their explanation. Two focused Core tests pass in each repo; the Mac run also passes its live read-only check of the reviewed title and preserved notes (three total, zero skips). Both final Debug native app/widget builds pass. The signed final iOS build passes a focused offline feedback/relaunch case, again confirming an unchanged server record and the pending local edit; its actual screenshot is inspected. The preceding seven-case run was before this feedback polish, not a claim that it was rerun afterward.
+
+The iOS repository retains four inspected captures: before/after offline feedback, the real conflict review and the tablet's resulting task details. The review comparison and actions are readable; explanatory text below the comparison requires scrolling. No full-surface or VoiceOver acceptance is inferred.
+
+The disposable account's sessions were deleted before the account. Subsequent queries found zero account/session/profile/task rows, the credentials and scoped cache were removed, and the isolated clients' session reset ran. See `offline-continuity-evidence.json` for the scoped receipts and final owned input hashes.
+
+Still open: the paired native Use synced choice, multiple later queued edits, rich task and organization data, actual network loss/recovery on physical devices, Mac GUI, membership revocation, restore/mixed-version acceptance and the other full P0 gates.
+
+After the iOS conflict run and before its cleanup, execute `TASKFOLD_OFFLINE_CONTINUITY_FIXTURE=/private/tmp/taskfold-live-verification.json swift test --filter NativeContinuityTests/testMacTransportReadsReviewedOfflineEdit`. Require one actual passing test and no skip. This reads the real reviewed task and notes through Mac-owned transport without launching the Mac app.

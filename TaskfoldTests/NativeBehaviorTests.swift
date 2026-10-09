@@ -223,8 +223,8 @@ final class ProfileAvatarTests: XCTestCase {
 /// Companion to the two-Simulator continuity walk. This exercises the Mac-owned
 /// transport and decoding without opening the installed Mac app or its Keychain.
 final class NativeContinuityTests: XCTestCase {
-    @MainActor func testMacTransportReadsTaskCreatedAndEditedOnIOS() async throws {
-        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_CONTINUITY_FIXTURE"] else {
+    @MainActor private func continuityTask(environment: String) async throws -> (Record, String) {
+        guard let path = ProcessInfo.processInfo.environment[environment] else {
             throw XCTSkip("Disposable iOS continuity fixture not supplied")
         }
         let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
@@ -239,9 +239,38 @@ final class NativeContinuityTests: XCTestCase {
         let rows = try await backend.rows("tasks")
         XCTAssertEqual(rows.count, 1, "The fixture must contain only the task created through iOS")
         let task = try XCTUnwrap(rows.first)
-        XCTAssertEqual(task.title, "Continuity " + String(owner.prefix(8)) + " revised")
         XCTAssertEqual(task.string("user_id"), owner)
         XCTAssertFalse(task.completed)
         XCTAssertFalse(task.string("task_generation").isEmpty)
+        return (task, owner)
+    }
+    @MainActor func testMacTransportReadsTaskCreatedAndEditedOnIOS() async throws {
+        let (task, owner) = try await continuityTask(environment: "TASKFOLD_CONTINUITY_FIXTURE")
+        XCTAssertEqual(task.title, "Continuity " + String(owner.prefix(8)) + " revised")
+    }
+    @MainActor func testMacTransportReadsReviewedOfflineEdit() async throws {
+        let (task, _) = try await continuityTask(environment: "TASKFOLD_OFFLINE_CONTINUITY_FIXTURE")
+        XCTAssertEqual(task.title, "Offline device edit")
+        XCTAssertEqual(task.string("description"), "Independent tablet notes")
+    }
+}
+
+
+final class SyncStatusTests: XCTestCase {
+    func testTransportInterruptionsExplainSavedWorkWithoutRawCodes() {
+        for code in [URLError.notConnectedToInternet, .networkConnectionLost, .timedOut] {
+            // URLSession can bridge its failures to NSError, without a localized description.
+            let error = NSError(domain: NSURLErrorDomain, code: code.rawValue)
+            let message = SyncStatus.failureMessage(error)
+            XCTAssertTrue(message.contains("saved"))
+            XCTAssertFalse(message.contains("NSURLErrorDomain"))
+            XCTAssertFalse(message.contains(String(code.rawValue)))
+        }
+        XCTAssertTrue(SyncStatus.failureMessage(URLError(.notConnectedToInternet)).contains("reconnect"))
+    }
+    func testUnrelatedFailuresKeepTheirExplanation() {
+        XCTAssertEqual(SyncStatus.failureMessage(AppFailure(message: "Sign in to sync your tasks.")), "Sync paused: Sign in to sync your tasks.")
+        let error = NSError(domain: "Storage", code: URLError.notConnectedToInternet.rawValue, userInfo: [NSLocalizedDescriptionKey: "Could not save changes"])
+        XCTAssertEqual(SyncStatus.failureMessage(error), "Sync paused: Could not save changes")
     }
 }

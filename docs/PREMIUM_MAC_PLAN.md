@@ -709,3 +709,7 @@ Owned Core: 583 tests per app/configuration, four optional integration skips, ze
 ## 9 October — authenticated native continuity
 
 The actual iOS phone/tablet login, relaunch and online task-edit round trip now passes with authenticated server checks; the Mac-owned transport independently reads the same edited record in a passing focused live test. The prior login failure was missing Simulator signing entitlements, not a server rejection. Disposable sessions/account/data were removed and verified absent. [Evidence and exact limits](NATIVE_CONTINUITY.md). Mac GUI, offline/concurrent/rich-data workflows and full P0 acceptance remain open.
+
+## 9 October — offline queue and real conflict review
+
+A controlled iOS transport outage now has native proof of a durable queued edit across relaunch, real overlapping server edit, deferral/relaunch and Keep my edit preserving independent tablet notes. Mac-owned transport reads the resulting title/notes. Both apps have clearer network-failure messages and correct singular pending counts, with focused Core checks, final iOS feedback UI verification and Debug app/widget builds passing. [Scope, evidence and remaining gates](NATIVE_CONTINUITY.md). Physical reconnection, Use synced/multiple pending edits, Mac GUI and full P0 acceptance remain open.

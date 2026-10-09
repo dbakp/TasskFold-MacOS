@@ -182,5 +182,5 @@ struct SyncFooter: View {
         .sheet(isPresented: $reviewing) { if let conflict = store.syncConflict { ConflictReview(conflict: conflict) } }
     }
     private var symbol: String { store.localMode ? "internaldrive" : !store.online ? "wifi.slash" : store.syncing ? "arrow.triangle.2.circlepath" : store.notice != nil ? "exclamationmark.icloud" : "checkmark.icloud" }
-    private var status: String { store.localMode ? "Saved on this Mac" : !store.online ? "Offline · saved on this Mac" : store.syncing ? "Syncing…" : store.pendingCount > 0 ? "\(store.pendingCount) changes waiting" : store.lastSync.map { "Synced \($0.formatted(date: .omitted, time: .shortened))" } ?? "Up to date" }
+    private var status: String { store.localMode ? "Saved on this Mac" : !store.online ? "Offline · saved on this Mac" : store.syncing ? "Syncing…" : store.pendingCount > 0 ? "\(store.pendingCount) \(store.pendingCount == 1 ? "change" : "changes") waiting" : store.lastSync.map { "Synced \($0.formatted(date: .omitted, time: .shortened))" } ?? "Up to date" }
 }

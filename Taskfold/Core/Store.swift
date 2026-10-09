@@ -839,7 +839,7 @@ final class Store {
             await reschedule()
         } catch {
             if generation == accountGeneration {
-                notice = "Sync paused: \(error.localizedDescription)"
+                notice = SyncStatus.failureMessage(error)
                 if error.localizedDescription.contains("TASKFOLD_FOCUS_CONFLICT:"), let mutation = sending,
                    mutation.table == FocusSessionChange.table,
                    let data = try? await backend.request("/rest/v1/focus_sessions?id=eq.current&select=*"),
