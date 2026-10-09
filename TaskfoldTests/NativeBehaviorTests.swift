@@ -272,6 +272,20 @@ final class NativeContinuityTests: XCTestCase {
         let (task, owner) = try await continuityTask(environment: "TASKFOLD_RESTORE_CONTINUITY_FIXTURE")
         XCTAssertEqual(task.title, "Continuity " + String(owner.prefix(8)))
     }
+    @MainActor func testMacTransportReadsWorkingWeekEditedOfflineOnIOS() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_SETTINGS_CONTINUITY_FIXTURE"] else { throw XCTSkip("Disposable planner settings fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let preferences = try await backend.rows("view_preferences")
+        let planner = try XCTUnwrap(preferences.first { $0.id == "planner" })
+        XCTAssertEqual(planner.string("user_id"), owner)
+        let hours = try WorkingHours(document: planner["working_hours"])
+        XCTAssertEqual(hours, WorkingHours(weekdays: Set(1...7)))
+    }
     @MainActor func testMacTransportReadsSyncedChoiceAndLaterEstimate() async throws {
         let (task, _) = try await continuityTask(environment: "TASKFOLD_USE_SYNCED_FIXTURE")
         XCTAssertEqual(task.title, "Remote device edit")

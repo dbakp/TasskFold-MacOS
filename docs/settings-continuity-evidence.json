@@ -1,0 +1,143 @@
+{
+  "date": "2026-10-09",
+  "scope": "Account-owned working weekdays: phone enables Sunday, tablet receives then enables Saturday offline, persists across restart, reconnects and phone receives. Times retained at 09:00\u201317:00.",
+  "ios": {
+    "passedTests": 6,
+    "failedTestsInAcceptedCohort": 0,
+    "skippedTests": 0,
+    "reportedRuntimeWarnings": 0,
+    "acceptedResults": [
+      "/tmp/taskfold-settings-continuity-v1/phone-login.xcresult",
+      "/tmp/taskfold-settings-continuity-v1/tablet-login.xcresult",
+      "/tmp/taskfold-settings-continuity-v2/phone-settings.xcresult",
+      "/tmp/taskfold-settings-continuity-v2/tablet-offline.xcresult",
+      "/tmp/taskfold-settings-continuity-v3/tablet-reconnect.xcresult",
+      "/tmp/taskfold-settings-continuity-v3/phone-receives.xcresult"
+    ],
+    "build": "/tmp/taskfold-settings-continuity-build-v3.log",
+    "signatures": "/tmp/taskfold-settings-continuity-signatures-v3.json",
+    "finalReceipts": [
+      {
+        "phase": "tablet-reconnect",
+        "passed": true,
+        "serverPreferences": [
+          {
+            "id": "planner",
+            "user_id": "c773c416-c61a-49aa-9097-78cf8330e548",
+            "working_hours": {
+              "end": 1020,
+              "days": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "start": 540,
+              "version": 1
+            }
+          }
+        ],
+        "durablePlannerQueueEmpty": true
+      },
+      {
+        "phase": "phone-receives",
+        "passed": true,
+        "serverPreferences": [
+          {
+            "id": "planner",
+            "user_id": "c773c416-c61a-49aa-9097-78cf8330e548",
+            "working_hours": {
+              "end": 1020,
+              "days": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "start": 540,
+              "version": 1
+            }
+          }
+        ],
+        "durablePlannerQueueEmpty": true
+      }
+    ],
+    "offlineStateVerifiedBeforeResume": {
+      "serverDays": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "tabletDays": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "queuedPlannerChanges": 1,
+      "method": "PATCH",
+      "changedFields": [
+        "working_hours"
+      ],
+      "baselinePresent": false
+    }
+  },
+  "earlierFailures": [
+    "Initial native phone case looked for planner settings in Week mode; final helper selects Day through native controls.",
+    "Offline native case passed, but driver incorrectly expected a task-style baseline. Settings use a PATCH without that baseline. Corrected checker and resume preflight verified durable cache/queue and unchanged server before reconnecting."
+  ],
+  "mac": {
+    "test": "NativeContinuityTests/testMacTransportReadsWorkingWeekEditedOfflineOnIOS",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "build": "/tmp/taskfold-settings-continuity-mac-build-v1.log",
+    "log": "/tmp/taskfold-settings-continuity-mac-test-v1.log",
+    "guiExecuted": false
+  },
+  "capturesInIOSRepository": {
+    "settings-phone-six-days": {
+      "sha256": "b5cef76052414734fe290071449dea00231542efa5f7831d1ffc4e6c0553542a",
+      "visuallyInspected": true
+    },
+    "settings-tablet-offline": {
+      "sha256": "d65c04a9b768e5478e22d431cee73e3c1b82b3bb6ea826888f9825cd8ae084c9",
+      "visuallyInspected": true
+    },
+    "settings-phone-synced": {
+      "sha256": "8053d67b7f5d34e29acad5bf6a60c0c87730e3eacd108c79a927050d9b5a5ee4",
+      "visuallyInspected": true
+    }
+  },
+  "cleanup": {
+    "account": "c773c416-c61a-49aa-9097-78cf8330e548",
+    "sessionsRevokedBeforeAccountDeletion": true,
+    "remainingUsers": 0,
+    "remainingSessions": 0,
+    "remainingProfiles": 0,
+    "remainingTasks": 0,
+    "remainingPreferences": 0,
+    "deviceSessionsReset": true,
+    "scopedCachesAndVaultsRemoved": true,
+    "privateCredentialsRemoved": true
+  },
+  "remaining": [
+    "Other account settings and organization",
+    "Concurrent planner edits and account switching",
+    "Mixed versions",
+    "Actual Mac user interface",
+    "Physical devices and actual network outage"
+  ]
+}

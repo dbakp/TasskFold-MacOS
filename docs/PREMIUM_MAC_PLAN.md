@@ -793,3 +793,8 @@ One isolated iPhone Simulator host test passes five-of-six and all-six labels, a
 ## 9 October — offline recovery restore continuity
 
 Seven native iOS cases and one Mac transport test pass for backup, tablet edit, offline recovery restore/restart and reconnection to both clients with original task identity and empty task queues. Screenshots inspected; disposable fixture and device recovery data cleaned up. No production source change or Mac GUI execution. See NATIVE_CONTINUITY.md and restore-continuity-evidence.json for exact scope and remaining gates.
+
+
+## 9 October — working-week settings continuity
+
+Six accepted native iOS cases and one Mac transport test pass working-week changes across phone/tablet, including offline persistence, reconnection and unchanged clock hours. Test navigation/driver assumption failures are recorded; no production changes. Screenshots inspected and disposable fixture cleaned. See NATIVE_CONTINUITY.md and settings-continuity-evidence.json. Mac GUI and broader settings acceptance remain open.
