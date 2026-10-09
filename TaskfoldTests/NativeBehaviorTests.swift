@@ -240,6 +240,24 @@ final class NativeContinuityTests: XCTestCase {
         XCTAssertEqual(task.title, "Personal work survives")
         XCTAssertTrue(task.string("project_id").isEmpty)
     }
+    @MainActor func testMacTransportReadsPinnedNoteAndEndedFocusAfterOfflineTabletEdit() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_NOTE_FOCUS_FIXTURE"] else { throw XCTSkip("Disposable note/Focus fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let tasks = try await backend.rows("tasks"), pins = try await backend.rows("view_orders"), sessions = try await backend.rows("focus_sessions")
+        XCTAssertEqual(tasks.count, 1); XCTAssertEqual(sessions.count, 1)
+        let task = try XCTUnwrap(tasks.first), row = try XCTUnwrap(sessions.first)
+        XCTAssertEqual(task.id, fixture["taskID"]); XCTAssertEqual(task.title, "Continuity reference"); XCTAssertFalse(task.completed)
+        XCTAssertTrue(task.string("description").contains("Keep these instructions")); XCTAssertTrue(task.string("description").contains("Tablet offline addition."))
+        XCTAssertTrue(PinnedNotes.contains(task.id, pins: pins, account: owner))
+        let session = try FocusSession(document: row["state"])
+        XCTAssertEqual(session.id, fixture["sessionID"]); XCTAssertEqual(session.taskID, task.id); XCTAssertEqual(session.status, .stopped)
+        XCTAssertEqual(session.durationSeconds, 1500); XCTAssertGreaterThan(session.elapsedMilliseconds, 0)
+    }
     @MainActor private func continuityTask(environment: String) async throws -> (Record, String) {
         guard let path = ProcessInfo.processInfo.environment[environment] else {
             throw XCTSkip("Disposable iOS continuity fixture not supplied")

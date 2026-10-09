@@ -173,3 +173,12 @@ A fresh disposable owner/member fixture passed a native offline creation workflo
 Three actual iPhone UI tests passed (login, offline creation, reconnect/recovery), with no skips or reported runtime warnings. The first preparation attempt used the wrong project creation selector and stopped with zero pending edits; the corrected test uses floatingAdd → New task. The server retained only the unchanged owner task and the member's personal task. Two Mac transport tests independently confirmed denied shared reads and the personal task. Final native cache and App Group payload contained only the personal task. The two retained screenshots were inspected. No production code changed in this checkpoint. Both accounts, sessions, profiles and fixture rows were deleted and verified absent; native cache/vault and private credentials were removed.
 
 This adds actual native evidence for a queued shared POST followed by unrelated work. Organization edits, local moves, further membership transitions, Mac GUI and physical hosts remain separate acceptance work. See revoked-project-evidence.json.
+
+
+## 9 October — paired pinned-note and Focus continuity
+
+Seven native phone/tablet UI phases passed: login on each device; phone creation of a pinned note and 25-minute Focus session; tablet offline note editing and timer pause across relaunch; reconnect; phone receipt, resume and end; and tablet receipt of the ended session across relaunch. Independent server and cache checks retained the original task/session identities, the complete edited note and empty final queues. Ending Focus left the task open. The offline checkpoint retained exactly two pending mutations while the server remained unchanged.
+
+One Mac authenticated transport test passed against the same final state. This is data-layer evidence, not Mac GUI acceptance. Four inspected screenshots are retained in the iOS native-continuity-previews folder. All disposable backend account/session/profile/task/view/Focus rows were verified absent after cleanup; temporary credentials and scoped device cache/vault files were removed. See note-focus-continuity-evidence.json.
+
+No production source changed. This closes the paired note/timer checkpoint, not the remaining organization/rich-task-field handoff, installed widgets, physical notification delivery, reboot, or Mac runtime requirements.

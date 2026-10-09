@@ -851,3 +851,12 @@ This establishes local small-widget batch independence and matching routes, incl
 ## 9 October — bounded P0 acceptance audit
 
 Reconciled the original acceptance conditions with current retained evidence in [P0_RELEASE_STATUS.md](P0_RELEASE_STATUS.md). The current checklist separates implemented capabilities, locally verifiable native gaps, external release prerequisites and later backlog work. Rich workspace handoff (especially pinned notes and Focus session) is the next missing device-switching workflow; no production source changed. Existing Mac GUI/install restrictions remain in force.
+
+
+## 9 October — paired pinned-note and Focus continuity
+
+Seven native phone/tablet UI phases passed: login on each device; phone creation of a pinned note and 25-minute Focus session; tablet offline note editing and timer pause across relaunch; reconnect; phone receipt, resume and end; and tablet receipt of the ended session across relaunch. Independent server and cache checks retained the original task/session identities, the complete edited note and empty final queues. Ending Focus left the task open. The offline checkpoint retained exactly two pending mutations while the server remained unchanged.
+
+One Mac authenticated transport test passed against the same final state. This is data-layer evidence, not Mac GUI acceptance. Four inspected screenshots are retained in the iOS native-continuity-previews folder. All disposable backend account/session/profile/task/view/Focus rows were verified absent after cleanup; temporary credentials and scoped device cache/vault files were removed. See note-focus-continuity-evidence.json.
+
+No production source changed. This closes the paired note/timer checkpoint, not the remaining organization/rich-task-field handoff, installed widgets, physical notification delivery, reboot, or Mac runtime requirements.
