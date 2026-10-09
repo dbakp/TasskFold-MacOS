@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-09",
+  "scope": "Native phone/tablet organized workspace offline handoff plus Mac authenticated transport",
+  "freshFullSetupRunPassed": false,
+  "passingResults": [
+    "/tmp/taskfold-workspace-handoff-v1/phone-login.xcresult",
+    "/tmp/taskfold-workspace-handoff-v1/tablet-login.xcresult",
+    "/tmp/taskfold-workspace-handoff-v3/phone-configure.xcresult",
+    "/tmp/taskfold-workspace-handoff-v3/tablet-offline.xcresult",
+    "/tmp/taskfold-workspace-handoff-v3/tablet-reconnect.xcresult",
+    "/tmp/taskfold-workspace-handoff-v5/phone-receive.xcresult",
+    "/tmp/taskfold-workspace-metadata-v1.xcresult"
+  ],
+  "checkpoints": [
+    {
+      "phase": "phone-configure",
+      "passed": true,
+      "taskID": "e8fd73ec-0e26-45cf-b0fb-0d3049411c0a",
+      "pendingCount": 0
+    },
+    {
+      "phase": "tablet-offline",
+      "passed": true,
+      "taskID": "e8fd73ec-0e26-45cf-b0fb-0d3049411c0a",
+      "pendingCount": 1
+    },
+    {
+      "phase": "tablet-reconnect",
+      "passed": true,
+      "taskID": "e8fd73ec-0e26-45cf-b0fb-0d3049411c0a",
+      "pendingCount": 0
+    },
+    {
+      "phase": "phone-receive",
+      "passed": true,
+      "taskID": "e8fd73ec-0e26-45cf-b0fb-0d3049411c0a",
+      "pendingCount": 0
+    }
+  ],
+  "macTransport": {
+    "passed": 1,
+    "log": "/tmp/taskfold-workspace-handoff-mac-live-v1.log"
+  },
+  "iosBuild": "/tmp/taskfold-workspace-handoff-build-v5.log",
+  "verifiedFields": [
+    "project/section/label/task identities and relationships",
+    "favorite",
+    "board layout",
+    "planned date and time",
+    "independent deadline",
+    "estimate 25 to 26 minutes",
+    "offline description",
+    "two explicit relative reminders plus default planned reminder",
+    "empty final phone/tablet queues"
+  ],
+  "failedAttempts": [
+    "v1 phone-create: Browse preserved project navigation",
+    "v2 configuration UI passed but server check caught skipped board toggle",
+    "v3/v4 phone-receive: XCTest off-screen board hit-point error; corrected by scrolling using bounds"
+  ],
+  "visualFix": "iOS metadata wraps whole items; Mac already has ViewThatFits fallback",
+  "fixtureRetention": "Disposable workspace and private credentials retained for next native file export/restore; delete account and scoped device data afterward",
+  "limitations": [
+    "Not actual Mac GUI",
+    "No ordering mutation or account switch",
+    "No notification delivery",
+    "No physical device",
+    "No fresh complete setup rerun"
+  ]
+}

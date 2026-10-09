@@ -258,6 +258,29 @@ final class NativeContinuityTests: XCTestCase {
         XCTAssertEqual(session.id, fixture["sessionID"]); XCTAssertEqual(session.taskID, task.id); XCTAssertEqual(session.status, .stopped)
         XCTAssertEqual(session.durationSeconds, 1500); XCTAssertGreaterThan(session.elapsedMilliseconds, 0)
     }
+    @MainActor func testMacTransportReadsOrganizedWorkspaceAfterOfflineTabletEdit() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_WORKSPACE_HANDOFF_FIXTURE"] else { throw XCTSkip("Disposable workspace fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        var rows: [String: [Record]] = [:]
+        for table in ["projects", "sections", "labels", "tasks", "favorites", "view_preferences"] {
+            rows[table] = try await backend.rows(table); XCTAssertEqual(rows[table]?.count, 1, table)
+        }
+        let task = try XCTUnwrap(rows["tasks"]?.first), project = try XCTUnwrap(rows["projects"]?.first), section = try XCTUnwrap(rows["sections"]?.first), label = try XCTUnwrap(rows["labels"]?.first)
+        XCTAssertEqual(task.id, fixture["taskID"]); XCTAssertEqual(project.id, fixture["projectID"]); XCTAssertEqual(section.id, fixture["sectionID"]); XCTAssertEqual(label.id, fixture["labelID"])
+        XCTAssertEqual(project.name, "Handoff studio"); XCTAssertEqual(section.name, "Next steps"); XCTAssertEqual(label.name, "Launch notes")
+        XCTAssertEqual(task.string("project_id"), project.id); XCTAssertEqual(task.string("section_id"), section.id); XCTAssertEqual(section.string("project_id"), project.id)
+        XCTAssertTrue(task["labels"].list.contains(.string(label.id)))
+        XCTAssertEqual(task.title, "Prepare handoff"); XCTAssertFalse(task.completed); XCTAssertEqual(task.string("description"), "Tablet offline handoff notes")
+        XCTAssertEqual(task.string("due_date"), "2028-01-04"); XCTAssertTrue(task.string("due_time").hasPrefix("09:00")); XCTAssertEqual(task.string("deadline_date"), "2028-01-05"); XCTAssertEqual(task.durationMinutes, 26)
+        XCTAssertEqual(task["reminder_specs"].list.compactMap { ReminderSpec(row: $0)?.offset }.sorted(), [-30, -15, 0])
+        XCTAssertEqual(rows["favorites"]?.first?.id, "project:" + project.id)
+        XCTAssertEqual(rows["view_preferences"]?.first?.id, "project:" + project.id); XCTAssertEqual(rows["view_preferences"]?.first?.string("layout"), "board")
+    }
     @MainActor private func continuityTask(environment: String) async throws -> (Record, String) {
         guard let path = ProcessInfo.processInfo.environment[environment] else {
             throw XCTSkip("Disposable iOS continuity fixture not supplied")
