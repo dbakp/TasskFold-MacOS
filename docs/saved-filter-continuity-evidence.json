@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-09",
+  "scope": "Actual signed-in phone/tablet Simulator saved-filter create/edit/relaunch; read-only Mac transport and evaluator, not Mac GUI",
+  "phases": [
+    {
+      "phase": "phone-login",
+      "passed": true
+    },
+    {
+      "phase": "tablet-login",
+      "passed": true
+    },
+    {
+      "phase": "phone-create",
+      "passed": true,
+      "serverView": {
+        "id": "4a1147d2-cda3-4727-86c7-8f9f7a3b44f2",
+        "name": "Across devices",
+        "query_ast": {
+          "root": {
+            "op": "predicate",
+            "field": "search",
+            "value": "Continuity"
+          },
+          "version": 1
+        }
+      },
+      "serverTaskIDs": [
+        "309f45f9-5f56-438d-837a-b7bb9b920b6f",
+        "3150a352-0f4d-49f8-a3eb-265dae359a32"
+      ],
+      "durableQueueEmpty": true
+    },
+    {
+      "phase": "tablet-edit",
+      "passed": true,
+      "serverView": {
+        "id": "4a1147d2-cda3-4727-86c7-8f9f7a3b44f2",
+        "name": "All undated work",
+        "query_ast": {
+          "root": {
+            "op": "predicate",
+            "field": "no_date",
+            "value": ""
+          },
+          "version": 1
+        }
+      },
+      "serverTaskIDs": [
+        "309f45f9-5f56-438d-837a-b7bb9b920b6f",
+        "3150a352-0f4d-49f8-a3eb-265dae359a32"
+      ],
+      "durableQueueEmpty": true
+    },
+    {
+      "phase": "phone-relaunch",
+      "passed": true,
+      "serverView": {
+        "id": "4a1147d2-cda3-4727-86c7-8f9f7a3b44f2",
+        "name": "All undated work",
+        "query_ast": {
+          "root": {
+            "op": "predicate",
+            "field": "no_date",
+            "value": ""
+          },
+          "version": 1
+        }
+      },
+      "serverTaskIDs": [
+        "309f45f9-5f56-438d-837a-b7bb9b920b6f",
+        "3150a352-0f4d-49f8-a3eb-265dae359a32"
+      ],
+      "durableQueueEmpty": true
+    }
+  ],
+  "allUIResults": {
+    "passes": 5,
+    "failures": 0,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0
+  },
+  "macTest": {
+    "name": "NativeContinuityTests/testMacTransportReadsSavedFilterEditedOnIOS",
+    "passes": 1,
+    "failures": 0,
+    "skips": 0,
+    "logSHA256": "1408e2340f287765d3d54d36d13cf5f272bc6a3905f1ddbc68b6e3d3eefd79d1"
+  },
+  "cleanup": {
+    "users": 0,
+    "sessions": 0,
+    "profiles": 0,
+    "tasks": 0,
+    "saved_views": 0,
+    "scopedDeviceCachesRemoved": true,
+    "isolatedClientSessionsReset": true,
+    "privateCredentialsRemoved": true
+  },
+  "capturesInIOSRepository": {
+    "docs/native-continuity-previews/filter-phone-create.png": {
+      "sha256": "13485c0133e2fd71150d34b4b06bf189196628975b89de151f4a332917057f67",
+      "visuallyInspected": true
+    },
+    "docs/native-continuity-previews/filter-tablet-edit.png": {
+      "sha256": "b781db9543a06ce5e04e47927e4e2f6a9fc3d8d16877202614139035b41a0d53",
+      "visuallyInspected": true
+    },
+    "docs/native-continuity-previews/filter-phone-relaunch.png": {
+      "sha256": "7eedd4abc70b1daa0af8e35188a84164c837622d5b82932afa0e9d68261489ac",
+      "visuallyInspected": true
+    }
+  },
+  "remaining": [
+    "Saved-filter offline conflicts and mixed-version preservation",
+    "Organization/settings/restore/membership continuity",
+    "Mac GUI and physical devices",
+    "Full P0 acceptance"
+  ],
+  "ownTestSourceHashes": {
+    "TaskfoldTests/NativeBehaviorTests.swift": "6d34c945455a62b8b10803fce53a0b4d27a1c3b6d053a47a8e839d1bb164f74e"
+  }
+}

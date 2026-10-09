@@ -244,6 +244,22 @@ final class NativeContinuityTests: XCTestCase {
         XCTAssertFalse(task.string("task_generation").isEmpty)
         return (task, owner)
     }
+    @MainActor func testMacTransportReadsSavedFilterEditedOnIOS() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_FILTER_CONTINUITY_FIXTURE"] else { throw XCTSkip("Disposable saved-filter fixture not supplied") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: owner) != nil, fixture["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable continuity account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixture["url"]), "Key": try XCTUnwrap(fixture["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(fixture["email"]), password: try XCTUnwrap(fixture["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        let views = try await backend.rows("saved_views"), tasks = try await backend.rows("tasks")
+        XCTAssertEqual(views.count, 1); XCTAssertEqual(tasks.count, 2)
+        let view = try XCTUnwrap(views.first); XCTAssertEqual(view.name, "All undated work"); XCTAssertEqual(view.string("user_id"), owner)
+        let rule = try FilterRule(document: view["query_ast"]); XCTAssertEqual(rule, .predicate("no_date", ""))
+        let matches = tasks.filter { rule.matches($0, today: "2026-10-09", userID: owner, labels: [], timeZone: "UTC") }
+        XCTAssertEqual(Set(matches.map(\.title)), Set(["Continuity alpha", "Other item"]))
+        XCTAssertTrue(matches.allSatisfy { !$0.completed && $0.string("user_id") == owner })
+    }
     @MainActor func testMacTransportReadsTaskCreatedAndEditedOnIOS() async throws {
         let (task, owner) = try await continuityTask(environment: "TASKFOLD_CONTINUITY_FIXTURE")
         XCTAssertEqual(task.title, "Continuity " + String(owner.prefix(8)) + " revised")

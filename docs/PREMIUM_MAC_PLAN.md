@@ -748,3 +748,8 @@ One isolated iPhone Simulator flow now passes actual completion from a terminate
 ## 9 October — recurring widget completion
 
 My list shows planned dates in both apps. One real iPhone Simulator cold-completion flow advances a daily task once, retains its repeat rule and survives relaunch; saved-state inspection confirms no extra occurrence or unrelated change. Final iOS/Mac Debug builds pass; Mac runtime remains unverified. [Evidence](WIDGET_HOST_ACCEPTANCE.md). Full P0 remains active.
+
+
+## 9 October — real saved-filter continuity
+
+Two signed-in iOS clients pass saved-filter create, rename/query edit and relaunch, with stable server IDs and drained queues. The Mac transport/evaluator reads the same result in one passing live test. All fixture account/session/data/cache/credentials were removed. [Exact evidence and remaining scope](NATIVE_CONTINUITY.md). No Mac runtime or full P0 claim.
