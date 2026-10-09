@@ -846,3 +846,8 @@ After restarting the isolated Simulator, the configurations still rendered indep
 Evidence: /tmp/taskfold-inbox-independent-v1.xcresult records successful configuration/routes before its final accessibility assertion failure; /tmp/taskfold-inbox-independent-resume-v5.xcresult contains one passing resumed route/cleanup test, with no skips or reported app runtime warnings. v2/v3/v4 resume attempts diagnosed missing child accessibility elements. SpringBoard animation waits were roughly 60 seconds per edit-menu action. The final iOS build-for-testing passed; production source was unchanged. The committed tests separate configuration from resumed routes rather than claiming a fresh all-green gallery run.
 
 This establishes local small-widget batch independence and matching routes, including retained settings after host restart. It does not establish physical/Mac hosts, cloud/account switching, all widget families, or VoiceOver behavior.
+
+
+## 9 October — bounded P0 acceptance audit
+
+Reconciled the original acceptance conditions with current retained evidence in [P0_RELEASE_STATUS.md](P0_RELEASE_STATUS.md). The current checklist separates implemented capabilities, locally verifiable native gaps, external release prerequisites and later backlog work. Rich workspace handoff (especially pinned notes and Focus session) is the next missing device-switching workflow; no production source changed. Existing Mac GUI/install restrictions remain in force.
