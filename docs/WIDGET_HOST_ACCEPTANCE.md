@@ -20,7 +20,7 @@ The final installed screenshot shows both ordinary names in full. Final iOS Debu
 
 ## Remaining acceptance and retained state
 
-Cold-launch/recurring completion, privacy on other families/hosts, independent instances, other sizes/configured families, rename/delete/account refresh, iPad/physical devices, Mac hosts and distribution remain open. One passing project selection does not prove saved-filter/label configuration or complete P0 acceptance.
+Cloud/physical cold-launch and recurring completion, privacy on other families/hosts, independent instances, other sizes/configured families, rename/delete/account refresh, iPad/physical devices, Mac hosts and distribution remain open. One passing project selection does not prove saved-filter/label configuration or complete P0 acceptance.
 
 The isolated iPhone retains its configured fixture widget for follow-up. Seven obsolete test apps and their seven runners were uninstalled from that test device; only the current test app/runner pair was kept. This cleared duplicate Taskfold gallery entries and left about 96 GiB free. No real account data or installed Mac app was changed.
 
@@ -35,3 +35,12 @@ The first attempt stopped before tapping because a 44-point hit target measured 
 `testInstalledMyListPrivacyHidesAndRestoresNames()` passes once with zero failures/skips or reported result runtime warnings. The actual system switch is asserted on before closing configuration; the installed widget displays My list and Private task, and neither original task nor list name appears in its accessibility descendants. Switching off restores both names. All four actual screenshots (both switch states and both widget states) were inspected and retained in the iOS repository. The test leaves privacy off.
 
 The first attempt tapped the center of the system switch's whole accessibility row without verifying its value and left names visible. The corrected test taps the control at the row's right edge and requires the requested value before dismissal. No production privacy change was necessary. SpringBoard animation-idle waits still consume about a minute per menu operation; this passing functional run is not a performance claim. On a fresh test device, run the existing installed configuration test before these two follow-up checks.
+
+
+## Terminated-app completion — 9 October
+
+The actual small My list completion now passes after XCTest terminates Taskfold and asserts `.notRunning` before tapping the Home Screen button. The widget reaches All clear without foregrounding Taskfold. The completed task appears in Completed, survives another termination/relaunch, and an unrelated Inbox task remains open. One actual iPhone Simulator test passes with zero failures/skips/reported runtime warnings; the retained screenshot was inspected. The final saved fixture has a completion receipt and no pending mutations.
+
+The first run exposed a fixture issue: system-launched intents have no XCTest launch arguments, so the app selected the separate local workspace instead of ui-testing. The final harness retains the disposable account only for the exact isolated bundle in Debug Simulator builds. It does not alter Release or physical-device behavior, widget action execution or persistence. Ordinary UI/live-auth test launches reset its marker, which was independently verified false after the final run. Both the failed and passing results remain recorded in `widget-host-evidence.json`. No Mac code/runtime change or real account was involved.
+
+This closes one local terminated-app iPhone Simulator path. Recurring/cloud completion, physical devices, multiple configurations and Mac widget hosts remain open.

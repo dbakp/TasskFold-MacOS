@@ -738,3 +738,8 @@ The paired iOS flow now accepts a competing server title without losing a later 
 ## 9 October — real calendar integration and permission guidance
 
 Both apps provide a Settings shortcut and visible permission-recovery instructions. Two final isolated iPhone tests pass against actual EventKit: system denial/Settings opening and local calendar selection/private titles/named titles/relaunch/disconnect. All five retained screenshots were inspected. Final iOS and Mac Debug arm64 app/widget builds pass; Mac runtime remains restricted. The iOS Settings URL opens the Settings root in this Simulator, so successful re-enabling of denied permission remains unverified. The unsuccessful Settings.bundle experiment was removed. Fixture calendar/event counts are zero and scoped permissions were reset. [Exact scope and evidence](CALENDAR_INTEGRATION.md). Physical/external-provider/Mac calendar acceptance and full P0 remain open.
+
+
+## 9 October — installed widget cold completion
+
+One isolated iPhone Simulator flow now passes actual completion from a terminated app, no foreground transition, unrelated-task preservation and persistence after another relaunch. The Debug Simulator harness preserves its disposable workspace across system launches; production behavior is unchanged. [Evidence and remaining limits](WIDGET_HOST_ACCEPTANCE.md). No Mac runtime or full P0 claim.

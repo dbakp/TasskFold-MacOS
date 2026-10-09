@@ -51,7 +51,7 @@
     "retained": "com.dbakp.taskfold.assigneepatterntests"
   },
   "remaining": [
-    "Cold-launch completion, account switching and recurring completion on installed hosts",
+    "Cloud/physical cold-launch completion, account switching and recurring completion on installed hosts",
     "multiple instances and sizes",
     "other configured widget families",
     "iPad and physical devices",
@@ -104,5 +104,28 @@
     },
     "testSourceSHA256": "2bea0b08e99e33c38d05a00ccb0c04d7ea6ff8a5ad19833e2f68454f117879ca",
     "earlierAttempt": "Failed because center tap did not change the system switch. Final test taps the switch control and asserts its value before dismissing."
+  },
+  "coldCompletion": {
+    "test": "TaskfoldUITests/testInstalledMyListColdCompletionPersistsAndKeepsOtherTasks()",
+    "result": "/tmp/taskfold-cold-widget-v2.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedRuntimeWarnings": 0,
+    "scope": "Actual small My list completion after asserting the app was not running; no foreground transition; completed task survives another app relaunch and unrelated Inbox task remains open. One isolated local workspace on iPhone Simulator.",
+    "initialFailure": "/tmp/taskfold-cold-widget-v1.xcresult: system-launched app lacked --uitesting, selected local rather than ui-testing; observed projection account local with four sample tasks.",
+    "fixtureCorrection": "Exact isolated bundle in DEBUG Simulator only retains its disposable workspace for system launches. Marker resets on ordinary UI/live-auth test launch; verified false after final test. No production completion change.",
+    "capture": "widget-host-previews/my-list-cold-completed.png",
+    "captureSHA256": "dcc8754a330fc39d2d58e016495203db774623f928f1d09ed0ed04c5cca7ebd6",
+    "visuallyInspected": true,
+    "sourceHashes": {
+      "Taskfold/Core/Store.swift": "51b38cce066a6b5f350b43020fe3d9c2115f5d9c23bf847832eded032cf88d68",
+      "Taskfold/Core/WidgetActions.swift": "555fde1c881fce208a4a90be42584e5b4d9dd8fcbd78f4a70802c78711d36ea2",
+      "TaskfoldUITests/TaskfoldUITests.swift": "136dbe6248346baff16d2b4445ab6ebda91ca57b93e795009850788b9f49bda2"
+    },
+    "build": "/tmp/taskfold-cold-widget-build-v2.log",
+    "signatures": "/tmp/taskfold-cold-widget-signatures-v2.json",
+    "fixturePendingMutationsAfterRelaunch": 0,
+    "completionReceiptPresent": true
   }
 }
