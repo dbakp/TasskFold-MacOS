@@ -727,3 +727,7 @@ The actual system privacy toggle also passes on/off verification, hiding both ta
 ## 9 October — Mac release artifact integrity and public widget path
 
 Development/public DMGs now have distinct names, and release verification checks the actual read-only mounted payload plus DMG hash, mode and source fingerprint. Public packaging has an archive/export/notarization path requiring existing Developer ID credentials and profiles; it validates the widget, team/App Group, hardened runtime and tickets. Four packaging checks pass, using real disposable signatures/DMGs plus a forced build failure that restores the project and scheme; negative signing preflight also passes. Only an Apple Development identity is installed, so public export/notarization/install remains unproved. No Mac runtime, upload or publication occurred. [Workflow and precise evidence](MAC_RELEASE.md).
+
+## 9 October — Use synced with later offline work
+
+The paired iOS flow now accepts a competing server title without losing a later queued estimate on the same task or independent tablet notes. Both clients drain their durable task queues; the Mac-owned transport reads the same result in a passing focused live test. No Mac GUI/runtime or production code change. Fixture account/sessions/data and private device caches were removed. [Exact evidence and limits](NATIVE_CONTINUITY.md). Broader queues, rich workspace/restore/revocation/mixed-version and full P0 remain open.

@@ -248,6 +248,12 @@ final class NativeContinuityTests: XCTestCase {
         let (task, owner) = try await continuityTask(environment: "TASKFOLD_CONTINUITY_FIXTURE")
         XCTAssertEqual(task.title, "Continuity " + String(owner.prefix(8)) + " revised")
     }
+    @MainActor func testMacTransportReadsSyncedChoiceAndLaterEstimate() async throws {
+        let (task, _) = try await continuityTask(environment: "TASKFOLD_USE_SYNCED_FIXTURE")
+        XCTAssertEqual(task.title, "Remote device edit")
+        XCTAssertEqual(task.string("description"), "Independent tablet notes")
+        XCTAssertEqual(task.durationMinutes, 30)
+    }
     @MainActor func testMacTransportReadsReviewedOfflineEdit() async throws {
         let (task, _) = try await continuityTask(environment: "TASKFOLD_OFFLINE_CONTINUITY_FIXTURE")
         XCTAssertEqual(task.title, "Offline device edit")
