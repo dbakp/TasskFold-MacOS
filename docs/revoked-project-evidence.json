@@ -60,5 +60,32 @@
       "mac": "/tmp/taskfold-revocation-general-mac-build-v1.log",
       "result": "passed"
     }
+  },
+  "nativeCreationFollowup": {
+    "date": "2026-10-09",
+    "uiTests": 3,
+    "results": [
+      "/tmp/taskfold-revocation-creation-v1/login.xcresult",
+      "/tmp/taskfold-revocation-creation-offline-v2.xcresult",
+      "/tmp/taskfold-revocation-creation-reconnect-v2.xcresult"
+    ],
+    "macTransportTests": 2,
+    "macLog": "/tmp/taskfold-revocation-creation-mac-live-v2.log",
+    "orderedOfflinePostsVerified": true,
+    "personalIdentityPreserved": true,
+    "queueDrained": true,
+    "ownerTaskUnchanged": true,
+    "revokedContentAbsentFromCacheAndWidgetPayload": true,
+    "recoveryPreviewOpened": true,
+    "recoveryApplied": false,
+    "cleanup": {
+      "users": 0,
+      "sessions": 0,
+      "profiles": 0,
+      "tasks": 0,
+      "projects": 0,
+      "memberships": 0,
+      "nativeFilesRemoved": true
+    }
   }
 }

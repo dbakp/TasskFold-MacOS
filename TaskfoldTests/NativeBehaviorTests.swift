@@ -235,6 +235,11 @@ final class NativeContinuityTests: XCTestCase {
         XCTAssertFalse(projects.contains { $0.id == fixture["projectID"] })
         XCTAssertFalse(tasks.contains { $0.id == fixture["taskID"] })
     }
+    @MainActor func testMacTransportReadsPersonalTaskAfterSharedCreationRecovery() async throws {
+        let (task, _) = try await continuityTask(environment: "TASKFOLD_REVOCATION_CREATION_FIXTURE")
+        XCTAssertEqual(task.title, "Personal work survives")
+        XCTAssertTrue(task.string("project_id").isEmpty)
+    }
     @MainActor private func continuityTask(environment: String) async throws -> (Record, String) {
         guard let path = ProcessInfo.processInfo.environment[environment] else {
             throw XCTSkip("Disposable iOS continuity fixture not supplied")

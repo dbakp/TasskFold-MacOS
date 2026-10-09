@@ -826,3 +826,12 @@ Scope: the installed regression covers an existing shared task title edit. Stand
 
 
 9 October: revoked-project queue recovery now handles task/section creation, organization edits and move-out history. Six focused tests pass in each owning repo. Missing authenticated evidence, a visible affected record or an unacknowledged new local project preserves the queue. Native coverage remains the earlier existing-task title-edit workflow; see docs/NATIVE_CONTINUITY.md and revoked-project-evidence.json.
+
+
+## 9 October — shared task creation recovery does not block personal work
+
+A fresh disposable owner/member fixture passed a native offline creation workflow. The member created a shared task through the project creation menu, then a personal Inbox task. Both survived an offline relaunch. Independent cache inspection confirmed exactly two ordered task POSTs, shared first and personal second. After membership revocation, the shared POST was denied, encrypted recovery was created, inaccessible content disappeared across reconnect/relaunch, and the personal task synchronized with its original identity. The durable queue drained. The native recovery preview contained the missing project and both shared tasks while keeping the personal task. It was reviewed, not applied.
+
+Three actual iPhone UI tests passed (login, offline creation, reconnect/recovery), with no skips or reported runtime warnings. The first preparation attempt used the wrong project creation selector and stopped with zero pending edits; the corrected test uses floatingAdd → New task. The server retained only the unchanged owner task and the member's personal task. Two Mac transport tests independently confirmed denied shared reads and the personal task. Final native cache and App Group payload contained only the personal task. The two retained screenshots were inspected. No production code changed in this checkpoint. Both accounts, sessions, profiles and fixture rows were deleted and verified absent; native cache/vault and private credentials were removed.
+
+This adds actual native evidence for a queued shared POST followed by unrelated work. Organization edits, local moves, further membership transitions, Mac GUI and physical hosts remain separate acceptance work. See revoked-project-evidence.json.

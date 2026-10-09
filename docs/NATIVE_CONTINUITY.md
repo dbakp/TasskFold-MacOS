@@ -164,3 +164,12 @@ The recovery decision now covers pending shared-task creation, section creation/
 Six focused tests pass independently in each repository: existing-task recovery with unrelated work retained; missing/contradictory evidence; task/section/project/collaborator mutation cases; title edit followed by move-out; a genuinely new offline project; and remotely moved visible records/partial reads. These are model tests; the preceding native/server checkpoint remains evidence for the existing-task scenario only. Broader native membership flows remain open.
 
 Both Debug arm64 app builds pass for this follow-up (iOS build-for-testing and macOS build). No Mac GUI was launched.
+
+
+## 9 October — shared task creation recovery does not block personal work
+
+A fresh disposable owner/member fixture passed a native offline creation workflow. The member created a shared task through the project creation menu, then a personal Inbox task. Both survived an offline relaunch. Independent cache inspection confirmed exactly two ordered task POSTs, shared first and personal second. After membership revocation, the shared POST was denied, encrypted recovery was created, inaccessible content disappeared across reconnect/relaunch, and the personal task synchronized with its original identity. The durable queue drained. The native recovery preview contained the missing project and both shared tasks while keeping the personal task. It was reviewed, not applied.
+
+Three actual iPhone UI tests passed (login, offline creation, reconnect/recovery), with no skips or reported runtime warnings. The first preparation attempt used the wrong project creation selector and stopped with zero pending edits; the corrected test uses floatingAdd → New task. The server retained only the unchanged owner task and the member's personal task. Two Mac transport tests independently confirmed denied shared reads and the personal task. Final native cache and App Group payload contained only the personal task. The two retained screenshots were inspected. No production code changed in this checkpoint. Both accounts, sessions, profiles and fixture rows were deleted and verified absent; native cache/vault and private credentials were removed.
+
+This adds actual native evidence for a queued shared POST followed by unrelated work. Organization edits, local moves, further membership transitions, Mac GUI and physical hosts remain separate acceptance work. See revoked-project-evidence.json.
