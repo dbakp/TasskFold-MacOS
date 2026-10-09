@@ -1,0 +1,676 @@
+{
+  "date": "2026-10-09",
+  "platform": "mac",
+  "baseCommit": "0eebdf168de3f993bc4bb7aef885b7821cd77077",
+  "contract": "READABLE_CAPTURE.md",
+  "ownNativeBuilds": {
+    "mac-debug": {
+      "exitCode": 0,
+      "seconds": 37.93,
+      "log": "/tmp/taskfold-readable-capture-v1-mac-debug-native.log",
+      "logSHA256": "6d6e19a8b4044cc50a54f2a856fd3bcc4ca2136c8e8474e97c5c4877574f800e",
+      "source": "/tmp/taskfold-readable-capture-v1-mac-native-source",
+      "cache": "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build",
+      "arguments": [
+        "xcodebuild",
+        "-project",
+        "Taskfold.xcodeproj",
+        "-scheme",
+        "Taskfold",
+        "-configuration",
+        "Debug",
+        "-destination",
+        "generic/platform=macOS",
+        "-derivedDataPath",
+        "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build",
+        "-jobs",
+        "2",
+        "CODE_SIGNING_ALLOWED=NO",
+        "ARCHS=arm64",
+        "ONLY_ACTIVE_ARCH=YES",
+        "build-for-testing"
+      ]
+    },
+    "mac-release": {
+      "exitCode": 0,
+      "seconds": 164.8,
+      "log": "/tmp/taskfold-readable-capture-v1-mac-release-native.log",
+      "logSHA256": "b32b250ca2d9bd0e35c5bc0b3d5ed1bc23449d9a0d1447009b2abf8400adbefb",
+      "source": "/tmp/taskfold-readable-capture-v1-mac-native-source",
+      "cache": "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build",
+      "arguments": [
+        "xcodebuild",
+        "-project",
+        "Taskfold.xcodeproj",
+        "-scheme",
+        "Taskfold",
+        "-configuration",
+        "Release",
+        "-destination",
+        "generic/platform=macOS",
+        "-derivedDataPath",
+        "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build",
+        "-jobs",
+        "2",
+        "CODE_SIGNING_ALLOWED=NO",
+        "ARCHS=arm64 x86_64",
+        "ONLY_ACTIVE_ARCH=NO",
+        "build"
+      ]
+    }
+  },
+  "unchangedOwnCoreChecks": {
+    "mac-debug-core": {
+      "exitCode": 0,
+      "seconds": 12.08,
+      "log": "/tmp/taskfold-compound-dates-v6-mac-debug-core.log",
+      "logSHA256": "49ae797a07986391012e59c710c0094dc7eb385c12315e1cf307ec872a87539b",
+      "source": "/tmp/taskfold-authority-mac-commit-polish",
+      "cache": "/tmp/taskfold-assignee-pattern-final-v5-mac-core-debug",
+      "arguments": [
+        "swift",
+        "test",
+        "--scratch-path",
+        "/tmp/taskfold-assignee-pattern-final-v5-mac-core-debug",
+        "-c",
+        "debug",
+        "--jobs",
+        "2"
+      ],
+      "tests": 577,
+      "skips": 4,
+      "failures": 0
+    },
+    "mac-release-core": {
+      "exitCode": 0,
+      "seconds": 37.9,
+      "log": "/tmp/taskfold-compound-dates-v6-mac-release-core.log",
+      "logSHA256": "b7832fe55c4b2f41c023e57be2385c738cc8706d57623b15d8a976d0a602fa88",
+      "source": "/tmp/taskfold-authority-mac-commit-polish",
+      "cache": "/tmp/taskfold-assignee-pattern-final-v6-mac-core-release",
+      "arguments": [
+        "swift",
+        "test",
+        "--scratch-path",
+        "/tmp/taskfold-assignee-pattern-final-v6-mac-core-release",
+        "-c",
+        "release",
+        "--jobs",
+        "2"
+      ],
+      "tests": 577,
+      "skips": 4,
+      "failures": 0
+    }
+  },
+  "coreScope": "Historical completed Debug/optimized results remain bound to identical current own Core package inputs; no new Core run claimed.",
+  "buildInputBinding": "Current own inputs match frozen build sources exactly; only the six iOS Debug product bundle identifiers use the isolated assigneepatterntests prefix. Own Release and Mac bundle identifiers unchanged. No sibling build dependency.",
+  "installedIsolatediOSProducts": {
+    "phone": {
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "bundleID": "com.dbakp.taskfold.assigneepatterntests",
+      "installedAppFiles": {
+        "Taskfold": "86386b2fbb5059c53b7a61c125ba93789444133a5b9dccd8df8553d38b3d823c",
+        "Taskfold.debug.dylib": "cb5e2fe7b465190a9ab62258005a5830d2adc319193cfa5902bc05786deb2e85",
+        "PlugIns/TaskfoldWidgets.appex/TaskfoldWidgets": "082363b00cb7f0f27ba23594eba4d02702baceee363919cd5e5ff8cf227b6a08"
+      }
+    },
+    "tablet": {
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "bundleID": "com.dbakp.taskfold.assigneepatterntests",
+      "installedAppFiles": {
+        "Taskfold": "86386b2fbb5059c53b7a61c125ba93789444133a5b9dccd8df8553d38b3d823c",
+        "Taskfold.debug.dylib": "cb5e2fe7b465190a9ab62258005a5830d2adc319193cfa5902bc05786deb2e85",
+        "PlugIns/TaskfoldWidgets.appex/TaskfoldWidgets": "082363b00cb7f0f27ba23594eba4d02702baceee363919cd5e5ff8cf227b6a08"
+      }
+    }
+  },
+  "nativeInputManifest": "readable-capture-native-inputs-sha256.json",
+  "coreInputManifest": "readable-capture-core-inputs-sha256.json",
+  "products": {
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": {
+      "SHA256": "b76445f407036d19c2ab6665b4bd32374ca39dd62f2b0466075a8cf24648c2ea",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold": {
+      "SHA256": "744dcea64df9d5dc44a40a50bc554a4a326cbd8a80c7f7ce4b85631ad86cbbc5",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets": {
+      "SHA256": "ebcde180025896bedd60b9f526c3437a69e92c4b82005cfdf86a5a3b8088fec4",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets.debug.dylib": {
+      "SHA256": "86c6c654b1e2e7da31e5be50e6b372aa23343b9b085d461f0052d7a64854c233",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": {
+      "SHA256": "142134a5e84bc5603a85cc01f86e5f4c2bf0fc130352cef0e079a3dbc0cf85c7",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets": {
+      "SHA256": "955b9327c4d86b469ef55dfaac3c2e437f80165b4a9f4975ef29d1392f2ce27c",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-debug-build/Build/Products/Debug/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets.debug.dylib": {
+      "SHA256": "9fc0b1602bda86514303e93d07bc88ee9f2b65fdccf7aee8e23e88a548e4ca8f",
+      "architectures": [
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build/Build/Products/Release/Taskfold.app/Contents/MacOS/Taskfold": {
+      "SHA256": "95d169a283172b6a2a7cb1363ae760c57e9268b87b7e9e485fe4d808fee3baf5",
+      "architectures": [
+        "x86_64",
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build/Build/Products/Release/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets": {
+      "SHA256": "14f3b04be10c6e44b3918973ef2acccb64cf987101a1405368db07d63e2c032e",
+      "architectures": [
+        "x86_64",
+        "arm64"
+      ]
+    },
+    "/tmp/taskfold-assignee-pattern-final-v6-mac-release-build/Build/Products/Release/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets": {
+      "SHA256": "6a46222a5304b90e092cefb371d5235f22811a6e8669d45e6039b5c0f694b062",
+      "architectures": [
+        "x86_64",
+        "arm64"
+      ]
+    }
+  },
+  "iOSSimulatorFlows": {
+    "phone-readable": {
+      "exitCode": 0,
+      "seconds": 157.27,
+      "log": "/tmp/taskfold-readable-capture-v32-phone-readable.log",
+      "logSHA256": "c29bc339197e7cb7a63be47ec5e5242c7434f49c6ea2dc451327e456e7bcb651",
+      "resultBundle": "/tmp/taskfold-readable-capture-v32-phone-readable.xcresult",
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "arguments": [
+        "xcodebuild",
+        "test-without-building",
+        "-xctestrun",
+        "/tmp/taskfold-assignee-pattern-final-v6-ios-debug-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+        "-destination",
+        "platform=iOS Simulator,id=5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "-parallel-testing-enabled",
+        "NO",
+        "-collect-test-diagnostics",
+        "never",
+        "-resultBundlePath",
+        "/tmp/taskfold-readable-capture-v32-phone-readable.xcresult",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testCaptureWrappedPreviewsDeclineAndRelaunch()",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testCaptureWrappedPreviewsDarkLargestDeclineAndRelaunch()"
+      ],
+      "summary": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+              "deviceName": "Taskfold assignment iPhone",
+              "modelName": "iPhone 17 Pro",
+              "osBuildNumber": "23F77",
+              "osVersion": "26.5",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 2,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1791523222.736,
+        "passedTests": 2,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1791523066.819,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 2
+      }
+    },
+    "tablet-readable": {
+      "exitCode": 0,
+      "seconds": 132.58,
+      "log": "/tmp/taskfold-readable-capture-v32-tablet-readable.log",
+      "logSHA256": "1d57156c98abb08b730258aa67a58e214216883a353a2c3fb9a6582c0258b326",
+      "resultBundle": "/tmp/taskfold-readable-capture-v32-tablet-readable.xcresult",
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "arguments": [
+        "xcodebuild",
+        "test-without-building",
+        "-xctestrun",
+        "/tmp/taskfold-assignee-pattern-final-v6-ios-debug-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+        "-destination",
+        "platform=iOS Simulator,id=8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "-parallel-testing-enabled",
+        "NO",
+        "-collect-test-diagnostics",
+        "never",
+        "-resultBundlePath",
+        "/tmp/taskfold-readable-capture-v32-tablet-readable.xcresult",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testCaptureWrappedPreviewsDeclineAndRelaunch()",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testCaptureWrappedPreviewsDarkLargestDeclineAndRelaunch()"
+      ],
+      "summary": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+              "deviceName": "Taskfold assignment iPad",
+              "modelName": "iPad Pro 11-inch (M5)",
+              "osBuildNumber": "23F77",
+              "osVersion": "26.5",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 2,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1791523355.568,
+        "passedTests": 2,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1791523225.383,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 2
+      }
+    },
+    "phone-compound": {
+      "exitCode": 0,
+      "seconds": 236.01,
+      "log": "/tmp/taskfold-readable-capture-v34-phone-compound.log",
+      "logSHA256": "69d642fd366cbee141fb9aac53a61a57ace9d7b9d0e4df1f71c95ee8e20c2321",
+      "resultBundle": "/tmp/taskfold-readable-capture-v34-phone-compound.xcresult",
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "arguments": [
+        "xcodebuild",
+        "test-without-building",
+        "-xctestrun",
+        "/tmp/taskfold-assignee-pattern-final-v6-ios-debug-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+        "-destination",
+        "platform=iOS Simulator,id=5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "-parallel-testing-enabled",
+        "NO",
+        "-collect-test-diagnostics",
+        "never",
+        "-resultBundlePath",
+        "/tmp/taskfold-readable-capture-v34-phone-compound.xcresult",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testCompoundDateCaptureFilterAndRelaunch()",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testCompoundDateDarkLargestCaptureFilterAndRelaunch()"
+      ],
+      "summary": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+              "deviceName": "Taskfold assignment iPhone",
+              "modelName": "iPhone 17 Pro",
+              "osBuildNumber": "23F77",
+              "osVersion": "26.5",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 2,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1791523793.074,
+        "passedTests": 2,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1791523558.218,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 2
+      }
+    },
+    "tablet-compound": {
+      "exitCode": 0,
+      "seconds": 586.66,
+      "log": "/tmp/taskfold-readable-capture-v34-tablet-compound.log",
+      "logSHA256": "77a31a7452d465b6d8bd7d01e517e9b8d7458a1cbbce3a0020a35e86fff40682",
+      "resultBundle": "/tmp/taskfold-readable-capture-v34-tablet-compound.xcresult",
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "arguments": [
+        "xcodebuild",
+        "test-without-building",
+        "-xctestrun",
+        "/tmp/taskfold-assignee-pattern-final-v6-ios-debug-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+        "-destination",
+        "platform=iOS Simulator,id=8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "-parallel-testing-enabled",
+        "NO",
+        "-collect-test-diagnostics",
+        "never",
+        "-resultBundlePath",
+        "/tmp/taskfold-readable-capture-v34-tablet-compound.xcresult",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testCompoundDateCaptureFilterAndRelaunch()",
+        "-only-testing:TaskfoldUITests/TaskfoldUITests/testCompoundDateDarkLargestCaptureFilterAndRelaunch()"
+      ],
+      "summary": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+              "deviceName": "Taskfold assignment iPad",
+              "modelName": "iPad Pro 11-inch (M5)",
+              "osBuildNumber": "23F77",
+              "osVersion": "26.5",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 2,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1791524379.98,
+        "passedTests": 2,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1791523795.512,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 2
+      }
+    }
+  },
+  "fixturePersistence": {
+    "phone": {
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "bundleID": "com.dbakp.taskfold.assigneepatterntests",
+      "cacheSHA256": "8a49e47c633eff83f74a985aa2cb1778448ac077b38a5bc818eea3e9055816be",
+      "tasks": [
+        {
+          "id": "b33af4a8-b5ab-487f-9d4c-ff6efa06507a",
+          "title": "Readable capture 09E406 1 week after next week",
+          "due_date": null,
+          "due_time": null,
+          "scheduled_at": null,
+          "deadline_date": "2026-10-08",
+          "duration_minutes": 25,
+          "priority": 2,
+          "completed": false
+        },
+        {
+          "id": "cce303ca-fc97-4851-9194-cf43a03be683",
+          "title": "Readable capture ED7626 1 week after next week",
+          "due_date": null,
+          "due_time": null,
+          "scheduled_at": null,
+          "deadline_date": "2026-10-08",
+          "duration_minutes": 25,
+          "priority": 2,
+          "completed": false
+        }
+      ],
+      "scope": "Exact isolated cache after the final compact/full-editor light-standard decline, save and relaunch. Declined plan remains literal with no date/instant; independent deadline, estimate and priority remain. Not cloud/paired-account acceptance."
+    },
+    "tablet": {
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "bundleID": "com.dbakp.taskfold.assigneepatterntests",
+      "cacheSHA256": "4d1e99245c0ccbd293fc989cbf79059085675d176fa1326bcb4041d5fe1b9851",
+      "tasks": [
+        {
+          "id": "855384dd-f414-4871-9337-3f613f2f77d8",
+          "title": "Readable capture D356AD 1 week after next week",
+          "due_date": null,
+          "due_time": null,
+          "scheduled_at": null,
+          "deadline_date": "2026-10-08",
+          "duration_minutes": 25,
+          "priority": 2,
+          "completed": false
+        },
+        {
+          "id": "af0d267f-13f4-4626-bd0b-f824f9c331b4",
+          "title": "Readable capture 0DD477 1 week after next week",
+          "due_date": null,
+          "due_time": null,
+          "scheduled_at": null,
+          "deadline_date": "2026-10-08",
+          "duration_minutes": 25,
+          "priority": 2,
+          "completed": false
+        }
+      ],
+      "scope": "Exact isolated cache after the final compact/full-editor light-standard decline, save and relaunch. Declined plan remains literal with no date/instant; independent deadline, estimate and priority remain. Not cloud/paired-account acceptance."
+    }
+  },
+  "compoundPersistence": {
+    "phone": {
+      "deviceID": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "cacheSHA256": "fbd4124111acb92ff9e6bca1bedf662f9dc6d95613a438c1c1bb0a2fedfefaba",
+      "task": {
+        "id": "500b284e-1488-47e3-9357-239602a42d32",
+        "title": "Date phrase proof 9D4399",
+        "due_date": "2026-10-23",
+        "deadline_date": "2026-10-09",
+        "due_time": null,
+        "scheduled_at": null,
+        "completed": false
+      },
+      "preferences": {
+        "user_id": "ui-testing",
+        "id": "dates",
+        "date_preferences": {
+          "weekend": 1,
+          "version": 1,
+          "next_week": 2
+        }
+      },
+      "queries": [
+        {
+          "user_id": "ui-testing",
+          "name": "Next week choices",
+          "id": "date-pref-week",
+          "query_ast": {
+            "root": {
+              "field": "planned_on",
+              "value": "1 week after next week",
+              "op": "predicate"
+            },
+            "version": 1
+          },
+          "layout": "list",
+          "sort_by": "title"
+        },
+        {
+          "user_id": "ui-testing",
+          "id": "date-pref-weekend",
+          "name": "Weekend choices",
+          "query_ast": {
+            "version": 1,
+            "root": {
+              "op": "predicate",
+              "value": "1 week after this weekend",
+              "field": "planned_on"
+            }
+          },
+          "layout": "list",
+          "sort_by": "title"
+        }
+      ],
+      "scope": "Exact isolated cache after final 9 October compound walk and relaunch. Friday next-week anchor plus one week saves 23 October, Sunday weekend minus two days saves 9 October. Later Monday preference changes relative membership without moving the accepted concrete plan. Not cloud/paired-account acceptance."
+    },
+    "tablet": {
+      "deviceID": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "cacheSHA256": "f3c15e1cf57121409e7d7073e465383146ad35a856cb4f40aa7d95feec74da99",
+      "task": {
+        "id": "062dbb4d-235c-4b93-93a4-8f1ffa38ebd5",
+        "title": "Date phrase proof 8090E3",
+        "due_date": "2026-10-23",
+        "deadline_date": "2026-10-09",
+        "due_time": null,
+        "scheduled_at": null,
+        "completed": false
+      },
+      "preferences": {
+        "user_id": "ui-testing",
+        "date_preferences": {
+          "weekend": 1,
+          "next_week": 2,
+          "version": 1
+        },
+        "id": "dates"
+      },
+      "queries": [
+        {
+          "user_id": "ui-testing",
+          "layout": "list",
+          "id": "date-pref-week",
+          "name": "Next week choices",
+          "query_ast": {
+            "version": 1,
+            "root": {
+              "value": "1 week after next week",
+              "op": "predicate",
+              "field": "planned_on"
+            }
+          },
+          "sort_by": "title"
+        },
+        {
+          "user_id": "ui-testing",
+          "layout": "list",
+          "name": "Weekend choices",
+          "id": "date-pref-weekend",
+          "sort_by": "title",
+          "query_ast": {
+            "root": {
+              "field": "planned_on",
+              "op": "predicate",
+              "value": "1 week after this weekend"
+            },
+            "version": 1
+          }
+        }
+      ],
+      "scope": "Exact isolated cache after final 9 October compound walk and relaunch. Friday next-week anchor plus one week saves 23 October, Sunday weekend minus two days saves 9 October. Later Monday preference changes relative membership without moving the accepted concrete plan. Not cloud/paired-account acceptance."
+    }
+  },
+  "resultChecker": {
+    "path": "Scripts/verify_ui_result.py",
+    "SHA256": "48af0dfe0f2127898e880af92425a04ea8fff86f7e7809e9a09700f1d7104d26",
+    "positiveZeroAndFailureControls": [
+      {
+        "platform": "ios",
+        "case": "actual passing cases",
+        "exitCode": 0,
+        "stdout": "Verified 2 actual passing UI tests; no runtime warnings.",
+        "stderr": ""
+      },
+      {
+        "platform": "ios",
+        "case": "zero selected cases",
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": "UI verification rejected: totalTestCount: expected 2, observed 0; passedTests: expected 2, observed 0; result: 'unknown'"
+      },
+      {
+        "platform": "ios",
+        "case": "failed cases",
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": "UI verification rejected: passedTests: expected 2, observed 0; failedTests: expected 0, observed 2; result: 'Failed'"
+      },
+      {
+        "platform": "mac",
+        "case": "actual passing cases",
+        "exitCode": 0,
+        "stdout": "Verified 2 actual passing UI tests; no runtime warnings.",
+        "stderr": ""
+      },
+      {
+        "platform": "mac",
+        "case": "zero selected cases",
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": "UI verification rejected: totalTestCount: expected 2, observed 0; passedTests: expected 2, observed 0; result: 'unknown'"
+      },
+      {
+        "platform": "mac",
+        "case": "failed cases",
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": "UI verification rejected: passedTests: expected 2, observed 0; failedTests: expected 0, observed 2; result: 'Failed'"
+      }
+    ]
+  },
+  "visualReview": "readable-capture-visual-review.json",
+  "earlierDiagnostics": "Distinct v1-v28 logs, result bundles and frozen sources retained. Initial new selectors selected zero cases despite exit 0; exact enumerated method selectors execute two cases. Earlier failures exposed compact-to-editor hit testing, premature keyboard assertions, unmounted relaunch rows and an incorrect iPad viewport. Frame warnings in v16/v20/v24/v28 remain historical and are not erased by functional passing counts.",
+  "remaining": "Full P0 remains unfinished: richer grammar and calendar week start; actual native paired/offline/revocation/restore and real Todoist provider import; restricted Mac runtime; full-surface VoiceOver; provisioned/physical widgets, delivery and distribution.",
+  "storage": "One reusable build location per platform/configuration; heavy builds/tests sequential. No new SDK/compiler cache clones.",
+  "tabletWaitDiagnostics": {
+    "log": "/tmp/taskfold-readable-capture-v34-tablet-compound.log",
+    "SHA256": "77a31a7452d465b6d8bd7d01e517e9b8d7458a1cbbce3a0020a35e86fff40682",
+    "animationWaitTimeoutCount": 6,
+    "remoteHierarchyFailureCount": 146,
+    "mainThreadSample": "/tmp/taskfold-readable-capture-v34-tablet-main-thread-sample.txt",
+    "mainThreadSampleSHA256": "3029def71477635d8035451a751eae3e6efa79c1e19304f1c1588ec3dc8153f8",
+    "scope": "The standard iPad case passed after repeated XCTest animation-idle waits. Its task save was observed in the isolated cache during the delay; the sampled app main thread was waiting in the UIKit run loop. Cause remains unproved. Functional passing counts are not clean performance/latency acceptance."
+  }
+}

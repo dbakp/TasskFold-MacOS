@@ -110,9 +110,7 @@ struct TaskInspectorForm: View {
                     .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: Workspace.subtaskPath(taskID) == nil ? [] : ["project_id", "section_id"], onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
                 if let suggestions {
                     VStack(alignment: .leading, spacing: 4) {
-                        ScrollView(.horizontal) {
-                            QuickEntryChips(tokens: suggestions.tokens, decline: { token in _ = declined.insert(token.group) }, returnFocus: { titleFocused = true }).padding(.vertical, 2)
-                        }.scrollIndicators(.hidden).scrollClipDisabled()
+                        QuickEntryChips(tokens: suggestions.tokens, decline: { token in _ = declined.insert(token.group) }, returnFocus: { titleFocused = true }).padding(.vertical, 2)
                         if !suggestions.tokens.isEmpty { Text("Return applies these · ✕ keeps the words in the title").font(.caption2).foregroundStyle(.tertiary) }
                         if suggestions.updates["reminder_specs"] != nil && !store.remindersEnabled {
                             Text("Reminders are off on this device. Enable delivery in Reminders below.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickReminderDeliveryOff")

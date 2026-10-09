@@ -471,9 +471,7 @@ struct TaskCapturePanel: View {
                 .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.taskfold.opacity(focused ? 0.6 : 0.2), lineWidth: 1))
                 .referenceCompletions(text: $text, selection: $titleSelection, choices: $choices, declined: $declined, context: context, focused: focused, task: task, onChoose: { focused = true }, submit: submitInWorkspace, submitsFromKeyboard: true)
             if !parsed.tokens.isEmpty {
-                ScrollView(.horizontal) {
-                    QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: { focused = true })
-                }.scrollIndicators(.hidden)
+                QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: { focused = true })
             }
             if let rule = parsed.updates["recurrence_pattern"] {
                 Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
