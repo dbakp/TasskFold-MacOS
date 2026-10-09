@@ -125,7 +125,20 @@ struct ConflictReview: View {
     private var deleting: Bool { conflict.mutation.method == "DELETE" }
     private var keys: [String] {
         let fields = deleting ? conflict.remote.fields : conflict.mutation.fields
-        return fields.keys.filter { $0 != "completion_version" && (!deleting || !["id", "user_id", "source_metadata", "created_at", "notification_sent_at"].contains($0)) }.sorted()
+        let visible = fields.keys.filter { $0 != "completion_version" && (!deleting || !["id", "user_id", "source_metadata", "created_at", "notification_sent_at"].contains($0)) }
+        guard deleting else { return visible.sorted() }
+        let contentOrder = ["description", "title", "comments", "subtasks", "due_date", "due_time", "deadline_date", "duration_minutes", "priority"]
+        return visible.sorted { lhs, rhs in
+            let leftChanged = changedSinceDeletion(lhs), rightChanged = changedSinceDeletion(rhs)
+            if leftChanged != rightChanged { return leftChanged }
+            let leftRank = contentOrder.firstIndex(of: lhs) ?? contentOrder.count
+            let rightRank = contentOrder.firstIndex(of: rhs) ?? contentOrder.count
+            return leftRank == rightRank ? lhs < rhs : leftRank < rightRank
+        }
+    }
+    private func changedSinceDeletion(_ key: String) -> Bool {
+        guard deleting, let baseline = conflict.mutation.baseline else { return false }
+        return (baseline[key] ?? .null) != conflict.remote[key]
     }
     var body: some View {
         NavigationStack {
@@ -142,7 +155,7 @@ struct ConflictReview: View {
                             Text(summary(conflict.mutation.fields[key] ?? .null, key: key)).textSelection(.enabled)
                         } }
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Synced version").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                            Text(changedSinceDeletion(key) ? "Changed since deletion" : "Synced version").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
                             Text(summary(conflict.remote[key], key: key)).textSelection(.enabled)
                         }
                     }
@@ -160,7 +173,7 @@ struct ConflictReview: View {
                     if !current { Text("This edit is no longer waiting for review. Close this screen and reopen the current review.").foregroundStyle(.secondary) }
                 }
             }.formStyle(.grouped)
-            .navigationTitle("Review sync edit")
+            .navigationTitle(deleting ? "Review task deletion" : "Review sync edit")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

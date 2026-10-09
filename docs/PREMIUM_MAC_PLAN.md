@@ -768,3 +768,8 @@ The isolated iPhone Simulator passes actual denial, manual Settings navigation, 
 ## 9 October — offline deletion conflict preservation
 
 Nine isolated native iOS cases and one live Mac transport check pass. Keep task preserves the concurrent title and notes, stable task identity, durable cache agreement and empty queues. Fixture cleanup verified; no production changes or Mac GUI execution. Deletion review currently buries changed contents behind alphabetical empty fields; that UI issue remains open. See docs/NATIVE_CONTINUITY.md (NATIVE_CONTINUITY.md in Mac docs) and offline-deletion-continuity-evidence.json.
+
+
+## 9 October — changed contents first in deletion review
+
+Both apps prioritize and identify fields changed since deletion. Two final iPhone UI cases pass Keep/Delete and relaunch, asserting changed notes are immediately visible. Both native Debug builds pass; Mac compile only. See deletion-review-evidence.json and the latest NATIVE_CONTINUITY.md entry.

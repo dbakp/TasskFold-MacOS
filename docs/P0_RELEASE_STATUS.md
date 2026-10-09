@@ -10,7 +10,7 @@ Current checkpoint: 9 October 2026. This is the execution order for the remainin
 | Remote reminders | Native authority handoff, registry, queue and disabled provider worker are implemented. | Real signed registration, APNs acceptance, closed-app delivery/actions and local/remote handoff on physical devices. | APNs signing configuration location requested; no physical iPhone/iPad is currently available to developer tools. Do not enable rollout based on fixture success. |
 | Calendar integration | Actual iOS EventKit permission, selected local event, privacy, relaunch, disconnect and denied-permission recovery through Settings pass. | External calendar provider and Mac/physical behavior. | Mac GUI permission and physical/provider access. The Simulator currently opens Settings at its root. |
 | Public Mac distribution | Packaging integrity checks and Developer ID pipeline implemented. | Signed app/widget export, notarization, installation and actual host access. | Developer ID identity, profiles and notarization credentials. |
-| Remaining requested parity/usability | Detailed implementation contracts and native/Core evidence exist. | Prioritize changed contents in deletion review (empty alphabetical fields currently appear first). Complete outstanding grammar/hierarchy and full-surface accessibility acceptance after data/delivery gates; retain original scope. | Some final checks require Mac runtime and real devices. |
+| Remaining requested parity/usability | Detailed implementation contracts and native/Core evidence exist. | Complete outstanding grammar/hierarchy and full-surface accessibility acceptance after data/delivery gates; retain original scope. | Some final checks require Mac runtime and real devices. |
 
 ## Live remote-reminder checkpoint
 

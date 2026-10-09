@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-09",
+  "uiResult": "/tmp/taskfold-deletion-review-v2.xcresult",
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "reportedRuntimeWarnings": 0,
+  "scope": "Isolated iPhone fixture: visible changed notes, deletion-specific title, Keep/Delete resolution and relaunch",
+  "earlierResult": "/tmp/taskfold-deletion-review-v1.xcresult",
+  "earlierFailure": "Delete test tapped the underlying review button before sheet dismissal completed; explicit hittability/disappearance waits now cover transitions",
+  "iosBuild": "/tmp/taskfold-deletion-review-build-v2.log",
+  "macBuild": "/tmp/taskfold-deletion-review-mac-build-v1.log",
+  "signatureReceipt": "/tmp/taskfold-deletion-review-signatures-v2.json",
+  "screenshotRepository": "TaskFold-iOS",
+  "screenshot": "docs/native-continuity-previews/deletion-review-changed-first.png",
+  "screenshotSHA256": "80d4dde6327090a9801d7c96a8cf60877cc1b0900b3ca0cbca0746c8d958195c",
+  "ownSourceHashes": {
+    "Taskfold/Collaboration.swift": "d262c22ee070b8c523b8c71f0efa2e57251a2aaab12d8fe6b392cd22ace71ea5"
+  },
+  "limitations": [
+    "Mac compile only; no Mac GUI",
+    "Fixture Delete resolution is not live concurrent destructive-choice acceptance",
+    "Full P0 remains open"
+  ]
+}
