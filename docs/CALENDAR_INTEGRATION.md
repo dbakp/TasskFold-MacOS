@@ -14,7 +14,7 @@ Both native apps now expose a Settings shortcut alongside visible instructions f
 
 ## Direct-link limitation
 
-The iOS Simulator opens the supported Settings URL at the Settings home screen, rather than Taskfold’s page. An attempted Settings.bundle did not change this and was removed. Both failed route assertions are retained in the local results. The final test verifies the visible manual path and that Settings opens; it does **not** claim that denied permission was successfully re-enabled. End-to-end recovery through system settings remains open, as do physical-device, external-provider and Mac runtime acceptance. No installed Mac app was launched or modified.
+The iOS Simulator opens the supported Settings URL at the Settings home screen, rather than Taskfold’s page. An attempted Settings.bundle did not change this and was removed. Both failed route assertions are retained in the local results. The extended recovery test now follows Apps → Taskfold → Calendars → Full Access, confirms the system alert, returns to Taskfold after the permission-related restart, reconnects and disconnects successfully. The normal session survives; fixture-reset arguments are removed before the permission flow. Physical-device, external-provider and Mac runtime acceptance remain open. No installed Mac app was launched or modified.
 
 ## Reproduce safely
 

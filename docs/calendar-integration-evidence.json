@@ -14,6 +14,14 @@
       "passed": 1,
       "reportedRuntimeWarnings": 0,
       "scope": "Actual local calendar selection, private/title display, relaunch, disconnect"
+    },
+    {
+      "path": "/tmp/taskfold-calendar-recovery-v5.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "scope": "Real denial \u2192 manual Settings path \u2192 Full Access system confirmation \u2192 normal app session \u2192 reconnect \u2192 disconnect"
     }
   ],
   "builds": {
@@ -31,7 +39,7 @@
   },
   "scopedCalendarPermissionsReset": true,
   "limitations": [
-    "Settings shortcut opens root in Simulator; manual recovery not exercised",
+    "Settings shortcut opens root in Simulator; manual recovery now passes",
     "No physical devices, external calendar provider accounts or Mac runtime",
     "Full P0 remains open"
   ],
@@ -40,11 +48,27 @@
     "docs/calendar-previews/named-event-relaunch.png": "d3cb4f5dcc3c48f484cfd72a6e33397001c1c9fd4b50ed02aab3d50d92d3cdcf",
     "docs/calendar-previews/private-event.png": "75c176af543d8285151687ee22e21251d5273d1bbb7b6ddf78f9f064005cccf5",
     "docs/calendar-previews/settings-root.png": "874d98958fbb6795c9beb56abcf8abb3668aa9241f5be63a3dcd7071805c9f76",
-    "docs/calendar-previews/system-prompt.png": "bf3bc338540ec0f69334cdda88d2c8e39fcc0d6e85057ebfcda064f3419533e8"
+    "docs/calendar-previews/system-prompt.png": "bf3bc338540ec0f69334cdda88d2c8e39fcc0d6e85057ebfcda064f3419533e8",
+    "docs/calendar-previews/permission-full-access.png": "6dbe0f8dd964782618c991fc046544fcd65830514ec82337d0764071c2554da5",
+    "docs/calendar-previews/permission-recovered.png": "c0f298ad1f6cea488fc90bd476c070f36f9ccadd20b24e64192f5a1abb2fa978"
   },
   "ownSourceHashes": {
     "Taskfold/Views/PlannerSettings.swift": "38cf553621aa3613ae7734e5412516132aee6b54670ed04a0cebc30d7088688a",
     "Taskfold/Core/CalendarEvents.swift": "6abce87bbb70660adbf928e61e5a3f17b92d64e96bcb40e5560b9d08b23717fa"
   },
-  "screenshotsRepository": "TaskFold-iOS"
+  "screenshotsRepository": "TaskFold-iOS",
+  "recoveryVerification": {
+    "build": "/tmp/taskfold-calendar-recovery-build-v5.log",
+    "signatures": "/tmp/taskfold-calendar-recovery-signatures-v5.json",
+    "testSourceSHA256": "c165a5648a5934822c8639c666a4f8a0d2b8e6e6d133b1ea383fcd1d2ee4c3e6",
+    "localConnectedPreferenceAfterTest": false,
+    "appCalendarPermissionReset": true,
+    "failedAttempts": {
+      "v1": "System Full Access confirmation not handled",
+      "v2": "Permission restart reused fixture-reset arguments",
+      "v3": "Connected calendar rows pushed Disconnect below lazy Form viewport",
+      "v4": "Previous failed test left local workspace connected"
+    },
+    "productionCodeChanged": false
+  }
 }

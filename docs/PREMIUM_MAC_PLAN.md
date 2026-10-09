@@ -758,3 +758,8 @@ Two signed-in iOS clients pass saved-filter create, rename/query edit and relaun
 ## 9 October — synced deletion and accurate empty-filter wording
 
 Native tablet deletion propagates to phone and survives relaunch, preserving the unrelated task and saved filter. Both caches and server IDs agree; the Mac transport reads the same state. Empty saved filters now say No matching tasks in both apps. Five initial and two final iOS checks, one Mac transport check and final native Debug builds pass. Fixture cleanup verified. [Evidence and remaining gates](NATIVE_CONTINUITY.md).
+
+
+## 9 October — calendar permission recovery
+
+The isolated iPhone Simulator passes actual denial, manual Settings navigation, Full Access confirmation, return/reconnect and disconnect, with zero failures/skips/reported runtime warnings. Screenshots were inspected; the local connected preference is cleared and scoped app permission reset. Test setup now tolerates a previous interrupted connection and removes fixture-reset arguments before permission-related process restart. No production code change or Mac runtime execution. See calendar-integration-evidence.json for exact evidence; physical/provider/Mac acceptance remains open.
