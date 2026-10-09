@@ -284,11 +284,12 @@ struct TaskListView: View {
             if store.notice != nil && store.online { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link) }
         }.font(.callout).foregroundStyle(.secondary).selectionDisabled().listRowSeparator(.hidden)
     }
+    private var isSavedFilterScope: Bool { if case .saved = scope { return true }; return false }
     private var emptyState: some View {
         ContentUnavailableView {
-            Label(workspace.search.isEmpty ? "All clear" : "No matching tasks", systemImage: workspace.search.isEmpty ? "checkmark.seal" : "magnifyingglass")
+            Label(workspace.search.isEmpty && !isSavedFilterScope ? "All clear" : "No matching tasks", systemImage: workspace.search.isEmpty && !isSavedFilterScope ? "checkmark.seal" : "magnifyingglass")
         } description: {
-            Text(workspace.search.isEmpty ? "Press ⌘N to add something new." : "Try a different search or filter.")
+            Text(isSavedFilterScope ? "Edit the filter or add a task that matches." : workspace.search.isEmpty ? "Press ⌘N to add something new." : "Try a different search or filter.")
         }
         .selectionDisabled().listRowSeparator(.hidden).frame(minHeight: 260)
     }

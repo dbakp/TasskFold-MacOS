@@ -753,3 +753,8 @@ My list shows planned dates in both apps. One real iPhone Simulator cold-complet
 ## 9 October — real saved-filter continuity
 
 Two signed-in iOS clients pass saved-filter create, rename/query edit and relaunch, with stable server IDs and drained queues. The Mac transport/evaluator reads the same result in one passing live test. All fixture account/session/data/cache/credentials were removed. [Exact evidence and remaining scope](NATIVE_CONTINUITY.md). No Mac runtime or full P0 claim.
+
+
+## 9 October — synced deletion and accurate empty-filter wording
+
+Native tablet deletion propagates to phone and survives relaunch, preserving the unrelated task and saved filter. Both caches and server IDs agree; the Mac transport reads the same state. Empty saved filters now say No matching tasks in both apps. Five initial and two final iOS checks, one Mac transport check and final native Debug builds pass. Fixture cleanup verified. [Evidence and remaining gates](NATIVE_CONTINUITY.md).
