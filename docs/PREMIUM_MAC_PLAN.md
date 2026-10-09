@@ -893,3 +893,12 @@ One resumed configuration/routing UI test passed with zero failures/skips/report
 SpringBoard exposes widget containers without their child text and repeatedly waits about 60 seconds for menu animations. An isolated reboot preserved the widgets but did not remove this host limitation. Routing uses the inspected container positions; screenshots establish rendered contents, not VoiceOver coverage. The test's immediate final screenshot caught a Home animation and is excluded; a later settled simctl capture is retained. See widget-host-evidence.json / independentMyList.
 
 Both My list fixtures remain installed for the next rename/deletion/account checks. The old Inbox reset fixture was removed. Launch with --uitesting without --widget-list-fixture to preserve Widget Inbox. Other sizes, physical/cloud hosts, Mac interaction and account isolation remain open.
+
+
+## 9 October — installed My list rename, deletion and workspace exit
+
+Three native iPhone Simulator UI cases pass with no skips or reported app runtime warnings. Renaming the selected project updates the installed widget heading and preserves its exact task route. Deleting that project moves both original open tasks into Inbox, surviving app relaunch with an empty queue; the saved Inbox widget updates its count from one to two. WidgetKit clears the removed project entity: that widget shows Choose your list and opens All tasks. This is actual host behavior, not a claim that the retained-missing-entity List unavailable branch ran.
+
+Leaving the local workspace returns to authentication, including after relaunch without test arguments. Both installed widgets remove private list/task names; tapping one returns to sign-in. Independent App Group inspection finds only an empty account and task list in widget.json. Three settled Simulator screenshots were inspected and retained in the iOS repository. The initial rename attempt failed before mutation on an ambiguous Edit selector; the explicit project edit path resolved it. Final build-for-testing and real team-signature verification pass.
+
+No production source changed. These results close the local small-widget rename/deletion/workspace-exit checks, not cloud account A-to-B isolation, other sizes, physical hosts, VoiceOver or Mac GUI acceptance. Both repositories retain the scoped evidence in widget-host-evidence.json / myListLifecycle. The phone is signed out with two empty My list widgets retained; no provider accounts were created.

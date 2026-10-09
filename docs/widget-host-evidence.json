@@ -284,5 +284,52 @@
       "Physical/cloud/Mac hosts",
       "VoiceOver"
     ]
+  },
+  "myListLifecycle": {
+    "date": "2026-10-09",
+    "scope": "Two installed small My list widgets on isolated iPhone Simulator; local workspace lifecycle only",
+    "build": "/tmp/taskfold-list-lifecycle-build-v3.log",
+    "signatures": "/tmp/taskfold-list-lifecycle-sign-v3.json",
+    "results": {
+      "rename": "/tmp/taskfold-list-rename-v3.xcresult",
+      "delete": "/tmp/taskfold-list-delete-v3.xcresult",
+      "leave": "/tmp/taskfold-list-leave-v3.xcresult"
+    },
+    "passedTests": 3,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedAppRuntimeWarnings": [],
+    "rename": "Native project rename appeared in the existing widget; tapping its task opened Sketch widget concept. Cache retained original project/task IDs and zero pending mutations.",
+    "deletion": "Native project deletion preserved both original tasks as open Inbox tasks through relaunch. Existing project widget changed to Choose your list and opened All tasks. Saved Inbox widget refreshed from one to two tasks.",
+    "leaveWorkspace": "Native Leave local workspace returned to authentication, including after relaunch without test launch arguments. Widget tap returned to authentication. Both installed widgets removed private task/list names.",
+    "signedOutWidgetPayload": {
+      "account": "",
+      "version": 2,
+      "updated": 0,
+      "tasks": []
+    },
+    "capturesInIOSRepository": {
+      "list-renamed-settled.png": {
+        "sha256": "055a40989a3844be0c2614579828d8b7086a16ffc6884c87cce044403646e3ca",
+        "visuallyInspected": true
+      },
+      "list-deleted-settled.png": {
+        "sha256": "53449c7e9b00495ece75a094a91376003b141cdfffce804de4188ffc1d5183ca",
+        "visuallyInspected": true
+      },
+      "list-signedout-settled.png": {
+        "sha256": "bde0cb3782209f26e0f56e871ded36dd390522855dcd455510a4154a5c27bce6",
+        "visuallyInspected": true
+      }
+    },
+    "initialAttempt": "/tmp/taskfold-list-rename-v1.xcresult failed before mutation because the test matched two Edit buttons. Corrected to explicit Task options \u2192 projectOptions \u2192 Edit project; final three cases all pass.",
+    "renderingNote": "WidgetKit cleared the deleted entity selection and rendered Choose your list, rather than the retained-missing-entity List unavailable state. Actual installed behavior is recorded without claiming the latter branch was exercised.",
+    "finalFixture": "Phone is signed out. Two empty My list widget instances remain installed. Local test cache is retained separately by normal sign-out behavior; it is not published to widgets.",
+    "remaining": [
+      "Cloud account A to B isolation",
+      "Other widget sizes/surfaces",
+      "Physical and Mac native host checks",
+      "VoiceOver"
+    ]
   }
 }
