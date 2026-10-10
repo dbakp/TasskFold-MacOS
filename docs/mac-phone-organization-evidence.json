@@ -1,0 +1,243 @@
+{
+  "date": "2026-10-10",
+  "scope": "Native Mac creation of project/section/label/filter and assignment of the original task; authenticated iPhone receipt; native process relaunch on each platform. No organization/task writes through API or SQL.",
+  "baseCommits": {
+    "macOS": "a4230fc80d2a400949dc82961c0c114458ae6550",
+    "iOS": "845ab1864e053f3170e2a49fa8c3b2bb7dedda5f"
+  },
+  "bundleIDs": {
+    "macOS": "com.dbakp.taskfold.mac.p0uitests",
+    "iOS": "com.dbakp.taskfold.assigneepatterntests"
+  },
+  "phoneSimulator": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+  "nativeCreation": {
+    "project": "Continuity Studio",
+    "section": "Ready",
+    "label": "handoff",
+    "filter": "Handoff priorities",
+    "typedExpression": "@handoff AND p1",
+    "filterStoresStableLabelID": true
+  },
+  "serverRead": {
+    "tasks": [
+      {
+        "id": "101fbaab-af99-480c-97a6-4876bc3e7389",
+        "title": "Continuity 9a8bfc3d revised",
+        "labels": [
+          "17627e58-f333-4588-ae69-aa674ea07a85"
+        ],
+        "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "comments": [],
+        "due_date": "2026-10-10",
+        "due_time": null,
+        "priority": 1,
+        "subtasks": [],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-10T15:07:49+00:00",
+        "project_id": "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+        "section_id": "57caee28-4118-4012-a256-936eafbc9c97",
+        "assigned_to": null,
+        "attachments": [],
+        "description": "\nPhone added a durable handoff note.Created in the native Mac app for device-switch verification.",
+        "completed_at": null,
+        "is_recurring": false,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [],
+        "source_metadata": {},
+        "task_generation": "09d00dda-e8fe-4eef-998a-f4901206d1cb",
+        "duration_minutes": 25,
+        "completion_version": 0,
+        "recurrence_pattern": null,
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      }
+    ],
+    "labels": [
+      {
+        "id": "17627e58-f333-4588-ae69-aa674ea07a85",
+        "name": "handoff",
+        "color": "#14b8a6",
+        "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "created_at": "2026-10-10T19:17:42.384679+00:00"
+      }
+    ],
+    "projects": [
+      {
+        "id": "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+        "name": "Continuity Studio",
+        "color": "#3b82f6",
+        "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "created_at": "2026-10-10T19:17:12.920972+00:00",
+        "description": null,
+        "order_index": 0,
+        "source_metadata": {}
+      }
+    ],
+    "sections": [
+      {
+        "id": "57caee28-4118-4012-a256-936eafbc9c97",
+        "name": "Ready",
+        "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "created_at": "2026-10-10T19:17:25.696879+00:00",
+        "project_id": "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+        "order_index": 0
+      }
+    ],
+    "saved_views": [
+      {
+        "id": "7311ec43-0134-4dc1-8a8b-3d94fd3383e4",
+        "name": "Handoff priorities",
+        "layout": "list",
+        "sort_by": "manual",
+        "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "grouping": "none",
+        "query_ast": {
+          "root": {
+            "op": "and",
+            "children": [
+              {
+                "op": "predicate",
+                "field": "label",
+                "value": "17627e58-f333-4588-ae69-aa674ea07a85"
+              },
+              {
+                "op": "predicate",
+                "field": "priority",
+                "value": "1"
+              }
+            ]
+          },
+          "version": 1
+        },
+        "created_at": "2026-10-10T19:18:39.503971+00:00",
+        "updated_at": "2026-10-10T19:18:39.503971+00:00",
+        "order_index": 0,
+        "include_completed": false
+      }
+    ]
+  },
+  "cacheComparison": {
+    "macPendingCount": 0,
+    "phonePendingCount": 0,
+    "tables": {
+      "tasks": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "b61dc345f306f9073f110b483ab1afa0058ec235f9eccae2dbbf26de3a42fbd3"
+      },
+      "projects": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "f35083277e76e55d7fcd8a968ac902e641bceb50a5fb5082a3de31c9edd2098c"
+      },
+      "sections": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "fea94c190fd5f76603f7bbe65980245a1b68804ca99d7a4d722dfa804f5f36db"
+      },
+      "labels": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "ad81a7990abd541c8f83d9ce53cfbd350b7920d8d27487c183b7574d93c63ebe"
+      },
+      "saved_views": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "ef1e5ee081e5c89210aaf13238e4ae5504eb648f15fe6b0cf65930281e184d0c"
+      },
+      "view_orders": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "12c4325c49c4b8ec23f150b52acacfc9b9a2b55f3ff3302c7e5a75e4ab9487fc"
+      },
+      "focus_sessions": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "333180b5896c968e2ddc2861bb39b612b14ecc020afe0694d1b36d978b3c3866"
+      }
+    },
+    "allFiveServerTablesMatchBothCaches": true,
+    "onlyChangedTaskFieldsSinceNoteFocusCheckpoint": [
+      "project_id",
+      "section_id",
+      "labels"
+    ],
+    "originalTaskIDRetained": true,
+    "originalNotesPinFocusRetained": true
+  },
+  "nativeResults": [
+    {
+      "resultBundle": "mac-organization-v3.xcresult",
+      "case": "TaskfoldMacUITests/testLiveOrganizationAndFilterPersistAfterMacRelaunch()",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "logSHA256": "19bf1f32d8c7a723cd4e3affb519488e8dc552d970971476297c2612a9892e18"
+    },
+    {
+      "resultBundle": "phone-mac-organization-v3.xcresult",
+      "case": "TaskfoldUITests/testLiveMacOrganizationAndFilterReceiveAfterPhoneRelaunch()",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "logSHA256": "0e51e308d5f4cfddbe0925c19b6a3306739ee1efab1402b8ef06f4c03f7c28f8"
+    }
+  ],
+  "signing": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "attemptHistory": [
+    "Mac v1 used visible Section label unavailable to XCTest; v2 mistakenly expected the combined row description on the estimate element. Corrected native value queries and inspector label presence; v3 passed.",
+    "Phone v1 unsigned build lost access to its existing session. Rebuilding with normal Simulator signing/embedded entitlements restored the same session without sign-in or data changes.",
+    "Phone v2 reached the project and Ready section but searched for a label directly in Browse. Interrupted after locating the test navigation error; labels are under Browse → Labels. Corrected v3 passed."
+  ],
+  "inspectedScreenshots": [
+    {
+      "path": "docs/usability-previews/handoff-mac-organized-relaunch.png",
+      "sha256": "c4f709817ee52a4340c688ab43ea986c7a365559ad0502e769f1b97a439876a2",
+      "findings": "Original task visible; text, metadata and native actions remain within the inspected viewport."
+    },
+    {
+      "path": "docs/usability-previews/handoff-mac-filter-relaunch.png",
+      "sha256": "769258d2e472acfcc49eb7f342b8f128834758701b5483925411de7d6a9b167f",
+      "findings": "Original task visible; text, metadata and native actions remain within the inspected viewport."
+    },
+    {
+      "path": "docs/usability-previews/handoff-phone-organized-relaunch.png",
+      "sha256": "1e6a3c584bdcb4c939a439b2f6c89094538ccb3e8a88a738e8abffa4fc446d47",
+      "findings": "Original task visible; text, metadata and native actions remain within the inspected viewport."
+    },
+    {
+      "path": "docs/usability-previews/handoff-phone-filter-relaunch.png",
+      "sha256": "c48fde0ff7c76c9eba4461fd4b888eaecb3f7ee9200011a41541166bbaa1c68a",
+      "findings": "Original task visible; text, metadata and native actions remain within the inspected viewport."
+    }
+  ],
+  "remainingScope": [
+    "Phone-to-Mac organization edits and native offline/concurrent organization changes",
+    "Native Mac richer planning/recurrence and account-switch races",
+    "Installed Desktop widget hosts, remaining sizes/privacy, VoiceOver",
+    "Real Todoist/provider credentials, signed physical reminder/APNs delivery, release signing/notarization"
+  ]
+}

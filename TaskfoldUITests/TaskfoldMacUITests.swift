@@ -1534,4 +1534,31 @@ extension TaskfoldMacUITests {
             if pass == 0 { app.terminate(); app.launch() }
         }
     }
+
+    /// Checks the native-created cloud organization without rebuilding or seeding data.
+    @MainActor func testLiveOrganizationAndFilterPersistAfterMacRelaunch() throws {
+        let fixtureURL = URL(fileURLWithPath: "/private/tmp/taskfold-live-verification.json")
+        guard FileManager.default.fileExists(atPath: fixtureURL.path) else { throw XCTSkip("Disposable continuity account not configured") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: fixtureURL))
+        guard fixture["userID"] == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152" else { throw XCTSkip("Dedicated organization fixture required") }
+        let app = XCUIApplication(); app.launchArguments = []; app.launch(); defer { app.terminate() }
+        for pass in 0..<2 {
+            let project = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", "Continuity Studio", "Continuity Studio")).firstMatch
+            XCTAssertTrue(project.waitForExistence(timeout: 15)); project.click()
+            let row = app.descendants(matching: .any)["title-101fbaab-af99-480c-97a6-4876bc3e7389"].firstMatch
+            XCTAssertTrue(row.waitForExistence(timeout: 10)); row.click()
+            let section = app.popUpButtons.matching(NSPredicate(format: "value == %@", "Ready")).firstMatch
+            XCTAssertTrue(section.waitForExistence(timeout: 5)); XCTAssertEqual(section.value as? String, "Ready")
+            XCTAssertTrue(app.popUpButtons.matching(NSPredicate(format: "value == %@", "Continuity Studio")).firstMatch.exists)
+            XCTAssertTrue(app.scrollViews["inspector"].staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", "handoff", "handoff")).firstMatch.exists)
+            XCTAssertEqual((app.descendants(matching: .any)["pinTaskNotes"].firstMatch.value as? NSNumber)?.intValue, 1)
+            XCTAssertEqual(app.descendants(matching: .any)["taskDescription"].firstMatch.value as? String, "\nPhone added a durable handoff note.Created in the native Mac app for device-switch verification.")
+            retainWindow(app, name: "Native Mac project section label and notes — pass \(pass)")
+            let filter = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", "Handoff priorities", "Handoff priorities")).firstMatch
+            XCTAssertTrue(filter.exists); filter.click()
+            XCTAssertTrue(row.waitForExistence(timeout: 10))
+            retainWindow(app, name: "Native Mac label priority filter — pass \(pass)")
+            if pass == 0 { app.terminate(); app.launch() }
+        }
+    }
 }
