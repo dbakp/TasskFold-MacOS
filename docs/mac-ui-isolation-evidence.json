@@ -1,0 +1,69 @@
+{
+  "sourceRepository": "/private/tmp/taskfold-authority-mac-commit-polish",
+  "workspace": "/private/tmp/taskfold-isolated-mac-ui-workspace",
+  "bundleID": "com.dbakp.taskfold.mac.p0uitests",
+  "sandbox": true,
+  "productionURLAndFileRegistrationsRemoved": true,
+  "embeddedWidgetExtension": false,
+  "namespaceOnlySourceChanges": {
+    "Taskfold/Core/Backups.swift": {
+      "originalSHA256": "5bc30bf8c4a8b61b5746e870d89e34739393b89e642d5a4c9719519a9d4d8c8f",
+      "isolatedSHA256": "43a3f30c9136d94c8ff86e7755d562f7fba0e5fe4322ad53a6375979296cb22e"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "originalSHA256": "d879c72fc47bf2b407568b82d44a21dd445a9ec339903015a8d6c30bd9ebc2d5",
+      "isolatedSHA256": "989061008959c5246270a4995482539ff498f5feb33a4307156a48fe2830cfc9"
+    },
+    "Taskfold/Core/Store.swift": {
+      "originalSHA256": "fed42d0335cae291b6f1815ca308137acd363ae7a35a78ec1dec6df324791c32",
+      "isolatedSHA256": "75d26c0f072998047ced421d70962d65838d0b973b7ac16577a833e7681b62f0"
+    },
+    "Taskfold/Core/WidgetActions.swift": {
+      "originalSHA256": "555fde1c881fce208a4a90be42584e5b4d9dd8fcbd78f4a70802c78711d36ea2",
+      "isolatedSHA256": "51c16efddccea42e160eda283d6eb6d1ac16a3aeabac30e8cee9db611b5ebe15"
+    }
+  },
+  "replacements": {
+    "com.taskfold.ios.session": "com.taskfold.mac.p0uitests.session",
+    "com.taskfold.recovery.v1": "com.taskfold.mac.p0uitests.recovery.v1",
+    "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.mac.p0uitests"
+  },
+  "launchArguments": [
+    "--uitesting",
+    "--widget-action-testing"
+  ],
+  "limitations": [
+    "Preparation only; no launch/install/runtime acceptance.",
+    "Unique keychain services; no production credential migration.",
+    "No Desktop-widget, signed-distribution or provider acceptance.",
+    "Xcode adds its normal test-injection read-only-file and mach-lookup exceptions; this is not a shipping/distribution entitlement check.",
+    "No Mac keyboard/VoiceOver/Files/provider/cloud handoff or installed Desktop-widget acceptance until actual workflows pass."
+  ],
+  "build": "build-for-testing succeeded; no launch",
+  "productPath": "/tmp/taskfold-isolated-mac-ui-build/Build/Products/Debug/Taskfold.app",
+  "verifiedEntitlements": {
+    "com.apple.security.app-sandbox": true,
+    "com.apple.security.files.user-selected.read-write": true,
+    "com.apple.security.get-task-allow": true,
+    "com.apple.security.network.client": true,
+    "com.apple.security.personal-information.calendars": true,
+    "com.apple.security.temporary-exception.files.absolute-path.read-only": [
+      "/"
+    ],
+    "com.apple.security.temporary-exception.mach-lookup.global-name": [
+      "com.apple.testmanagerd",
+      "com.apple.dt.testmanagerd.runner",
+      "com.apple.coresymbolicationd"
+    ]
+  },
+  "codeSignatureVerified": true,
+  "sourceChangesVerifiedAsNamespaceOnly": true,
+  "installedAppPath": "/Applications/Taskfold.app",
+  "installedExecutableSHA256": "ebda65a2afbc73c2bd33969191150337b876b0c64d12f047cdbdb830ad229b62",
+  "productExecutableSHA256": "b5c6e8f104f418ffd593bb13e364165f65fd8f2ab1b559140af4177f980af315",
+  "dateUTC": "2026-10-10T13:33:26.365312+00:00",
+  "nativeUIAvailability": "Resumed cua.getState now lists native apps with no locked-Mac error. Taskfold is not running.",
+  "allCopiedAppSwiftSourcesVerified": true,
+  "scriptSHA256": "b02023232abd532f3502a84034ccfdc7e7c681f1298d3180ae55b0fcae84ea67",
+  "runtimeAcceptance": "Not run; existing Mac-launch permission remains outstanding. No application launched, installed or replaced."
+}

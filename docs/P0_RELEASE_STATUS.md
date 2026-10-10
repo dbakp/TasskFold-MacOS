@@ -49,6 +49,10 @@ Read-only backend checkpoint on 9 October: native reminder cron inactive, genera
 
 Read-only recheck after photo handoff: native UI automation reports the Mac locked, all four paired physical devices are offline, and the signing keychain exposes one Apple Development identity but no Developer ID Application or Apple Distribution identity. An unlock request is pending. These observations explain why the remaining native/physical/distribution acceptance cannot be collected in the current environment; they are not app defects or acceptance passes. Existing Mac-launch/provider/signing requests remain required. See [release-environment-check.json](release-environment-check.json). No Mac app was launched/replaced/installed and no delivery/provider configuration changed.
 
+### Resumed Mac UI preparation
+
+Native UI automation now reports the Mac unlocked. The prepared production-identity debug app was not launched. A separate `com.dbakp.taskfold.mac.p0uitests` app and runner now build, with a unique sandbox/credential namespace, private widget-action fixture route, no production URL/file registrations, and no embedded widget extension. Every copied app Swift source matches this repo except the recorded namespace substitutions. Signature and manifest checks pass; no launch/install or runtime acceptance is claimed. Existing Mac-launch permission remains outstanding. See [mac-ui-isolation-evidence.json](mac-ui-isolation-evidence.json). The earlier physical/signing checks above remain dated observations.
+
 ## Scope and stopping rules
 
 The original Phase 1 explicitly starts with a documented filter subset; the backlog also describes fuller Todoist syntax. Preserve that backlog without making every additional parser form a substitute for data/delivery acceptance. Subprojects/archive/templates, external calendar mirroring, goals/Karma, location/urgent reminders, advanced teams and wearables retain their original later-phase priority. The explicitly requested productive widgets and all P0 feature families remain in scope.

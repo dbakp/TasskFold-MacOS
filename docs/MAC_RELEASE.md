@@ -23,3 +23,10 @@ Four integration tests in `Scripts/test_release_artifact.py` pass with actual di
 The public archive/export/notarization path remains **unexecuted** without a Developer ID identity, suitable profiles and notarization credentials. These checks do not prove real Taskfold installation, App Group access, widget hosting or public distribution. No installed Mac app was launched or modified, no certificate was created, no notarization upload occurred and no release was published. The iOS repository needs no code change for this Mac-only packaging work.
 
 Apple references: [Developer ID distribution](https://help.apple.com/xcode/mac/current/en.lproj/dev033e997ca.html), [notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow), [distribution signing and hardened runtime](https://developer.apple.com/documentation/xcode/creating-distribution-signed-code-for-the-mac/). Export option keys were also checked against the installed Xcode's `xcodebuild -help`.
+
+
+## Separate local UI-test preparation
+
+`python3 Scripts/prepare_isolated_mac_ui.py --output /tmp/taskfold-isolated-mac-ui-workspace` copies only this repository into a fresh temporary workspace and generates a test-only project. It refuses existing destinations. Build that copied project with Debug `build-for-testing`, a temporary DerivedData path, and ad-hoc signing. Use the receipt's `--uitesting --widget-action-testing` arguments for local fixtures. Preparation/building does not launch an app.
+
+The app identity is `com.dbakp.taskfold.mac.p0uitests`; authentication/recovery services and widget namespace are separate from the installed app. Production URL/file associations and the widget extension are omitted. The receipt lists every namespace substitution and source hash. This workspace is for native UI acceptance only; it cannot establish Desktop-widget, release-signing, notarization or physical/provider acceptance. Do not ship it or replace `/Applications/Taskfold.app` with it. Native launch still requires the existing outstanding permission.

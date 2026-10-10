@@ -1060,3 +1060,6 @@ The final picker finished loading its Photos/Collections privacy notice; selecti
 
 
 10 October: Read-only release-environment recheck confirms locked Mac UI, zero online physical iOS devices (four paired devices offline), one Apple Development identity and no Developer ID Application/Apple Distribution identities. Unlock requested; prior native-launch/provider/provisioning inputs remain pending. Existing Simulator and transport passes retained; no substitute fixture matrix or production change. See `release-environment-check.json` in docs. Full goal remains unfinished.
+
+
+10 October resumed: Mac is unlocked according to native UI automation. Prepared a separate Mac UI-test app/runner with unique bundle, sandbox, session/recovery keychain services and widget namespace. Production URL/file registrations and widget extension are excluded. Copied app sources differ only by verified namespace strings; production checkout/app untouched. Debug build-for-testing, signature and manifest checks pass. Existing Mac-launch permission remains outstanding; no GUI/runtime, Desktop-widget, provider or distribution acceptance. See `mac-ui-isolation-evidence.json` in docs.
