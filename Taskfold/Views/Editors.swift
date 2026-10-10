@@ -255,6 +255,7 @@ struct TodoistImportView: View {
             }
             if flow.preview != nil {
                 Section {
+                    if let message = flow.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistImportError") }
                     Button("Import into Taskfold") { run(previewOnly: false) }.disabled(flow.busy).accessibilityIdentifier("todoistImport")
                 } footer: { Text("Source IDs prevent duplicates when you retry this account. Existing imported tasks keep your Taskfold edits.") }
             }
@@ -266,7 +267,7 @@ struct TodoistImportView: View {
                 }
             }
             if flow.busy { HStack { ProgressView(); Text(flow.active?.previewOnly == true ? "Preparing preview…" : "Importing your tasks…") }.accessibilityIdentifier("todoistImportBusy") }
-            if let message = flow.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistImportError") }
+            if flow.preview == nil, let message = flow.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistImportError") }
         }.formStyle(.grouped).accessibilityIdentifier("todoistImportForm")
         .onChange(of: store.workspaceGeneration) { _, _ in flow.reset() }
         .onDisappear { if flow.active?.previewOnly != false { flow.reset() } }

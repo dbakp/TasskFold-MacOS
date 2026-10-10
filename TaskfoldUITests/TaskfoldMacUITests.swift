@@ -53,7 +53,15 @@ final class TaskfoldMacUITests: XCTestCase {
         for _ in 0..<8 where !importer.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400) }
         XCTAssertTrue(app.staticTexts["todoistWarning-1"].exists); importer.click()
         XCTAssertTrue(app.staticTexts["todoistImportError"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["todoistImportError"].label.contains("connection was lost")); XCTAssertTrue(importer.isEnabled); importer.click()
+        let failure = app.staticTexts["todoistImportError"]
+        let failedSave = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "connection was lost", "connection was lost"), object: failure)
+        XCTAssertEqual(XCTWaiter.wait(for: [failedSave], timeout: 5), .completed,
+                       "Import must explain its save failure: label=\(failure.label), value=\(String(describing: failure.value))")
+        XCTAssertTrue(failure.isHittable, "The failure explanation should be visible next to its retry action")
+        let capture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        capture.name = "Todoist failed-save retry"; capture.lifetime = .keepAlways; add(capture)
+        XCTAssertTrue(importer.isEnabled, "A failed save must leave the approved import retry enabled")
+        importer.click()
         XCTAssertTrue(app.descendants(matching: .any)["todoistReceipt-tasksSkipped"].waitForExistence(timeout: 5)); XCTAssertFalse(importer.exists)
     }
 

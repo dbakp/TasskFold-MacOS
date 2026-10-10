@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-10",
+  "sourceCommit": "b1cfa01649141f8eb54874371b061a4bea3568b1",
+  "bundleID": "com.dbakp.taskfold.mac.p0uitests",
+  "scope": "Isolated native macOS XCTest execution; fixture data only",
+  "runs": [
+    {
+      "resultBundle": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-inspector-native-recovery-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "tests": [
+        "testQuickCaptureImmediatelyRefreshesSelectedInspector()"
+      ]
+    },
+    {
+      "resultBundle": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-critical-flows-v1.xcresult",
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "passingTests": [
+        "testBackupFilePickerCancelAndReopenFromSettings()",
+        "testKeyboardCompletionAndUndo()"
+      ],
+      "failingTest": "testTodoistImportPreviewFailureAndSafeRetry()",
+      "failure": "Mac accessibility label was empty; same text is exposed as value. Corrected test reads either attribute."
+    },
+    {
+      "resultBundle": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-import-placement-v4.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "tests": [
+        "testTodoistImportPreviewFailureAndSafeRetry()"
+      ],
+      "scope": "Fixture preview, visible failed-save explanation, enabled retry and validated skipped-task receipt; no provider or task mutation"
+    }
+  ],
+  "visualReview": "Selected title/actions readable with matching inspector. Revised importer capture shows full wrapped connection-loss explanation and enabled retry button together; receipt confirmed by native test.",
+  "productionAppChanged": false,
+  "open": [
+    "Native profile draft/account-switch acceptance",
+    "Rich Mac/iOS cloud handoff",
+    "Installed Mac widget hosts and VoiceOver",
+    "External provider, APNs and distribution gates",
+    "Native iOS verification of revised error placement"
+  ],
+  "change": "Both independently owned import views place save errors immediately above the retry button. Preview failures retain their existing fallback.",
+  "screenshots": {
+    "mac-keyboard-selection.png": "a6e3fa39979e739fcc06b87e7ba9d6c3a5a623716e61af8458fa72f80e1ec2dc",
+    "mac-todoist-visible-retry.png": "a413e5328a702c49039fe8786fa29892dfedd4c57c5dc203a91d3b3d0ecaff1b"
+  },
+  "builds": {
+    "macBuildForTesting": "Passed: mac-import-placement-build.log",
+    "iosAppAndWidgets": "Passed: ios-import-placement-build.log; generic iOS Simulator, signing disabled, build only"
+  }
+}

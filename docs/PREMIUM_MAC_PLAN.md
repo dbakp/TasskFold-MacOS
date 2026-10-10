@@ -1103,3 +1103,7 @@ Source inspection found an unguarded asynchronous avatar result in both apps. Bo
 ### 10 October — native phone profile photo acceptance
 
 Three actual iPhone cases now verify picker Cancel/draft preservation, synthetic Storage upload/relaunch and profile removal/relaunch against the corrected code. Four captures were inspected, the fixture JPEG removed through authenticated Storage, the cleanup-only session revoked and original task data retained with an empty queue. See `profile-photo-native-evidence.json`. The Mac runtime and native in-flight account switch remain separate; the desktop is still locked.
+
+## Native regression execution — 10 October 2026
+
+Rebuilt the isolated test app from `b1cfa01`; the native XCTest runner now works. The two-capture inspector regression passes with no failures/skips/runtime warnings. Restore picker cancel/reopen and selected-row keyboard completion/Undo pass in a three-case run; the original Todoist label-only assertion failed because Mac exposes the message as an accessibility value. The corrected assertion and visible error/retry workflow now pass separately with no runtime warnings. Both app-owned views move the save error above retry; the final Mac capture shows both together. Inspected the selected-row capture: readable selected title/actions and populated matching inspector. See `native-mac-regression-evidence.json`. Production installation is untouched; the independent iOS repo receives the scoped acceptance notes, with no Mac build dependency.
