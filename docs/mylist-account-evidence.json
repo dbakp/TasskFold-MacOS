@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-10",
+  "status": "partial; full account lifecycle acceptance remains open",
+  "productionChanges": false,
+  "ios": {
+    "device": "isolated iPhone 17 Pro Simulator, iOS 26.5",
+    "accepted": [
+      {
+        "case": "testNativeLoginOpensWorkspaceAndPersistsSession",
+        "result": "/tmp/taskfold-mylist-account-native-v1/login.xcresult",
+        "passed": 1,
+        "skipped": 0,
+        "failed": 0
+      },
+      {
+        "case": "testLiveMyListInstallAccountSelectionAndRoute",
+        "result": "/tmp/taskfold-mylist-account-native-v1/installed.xcresult",
+        "passed": 1,
+        "skipped": 0,
+        "failed": 0,
+        "scope": "Native gallery installs small My list; selects cloud project A; opens exact task A. Initial screenshot was a placeholder and is not visual acceptance."
+      },
+      {
+        "case": "testLiveMyListReturningAccountRestoresOriginalSelection",
+        "result": "/tmp/taskfold-mylist-account-recover-a-v2.xcresult",
+        "passed": 1,
+        "skipped": 0,
+        "failed": 0,
+        "scope": "B to A native authentication; original installed A selection retained without reconfiguration; exact A task route; settled screenshot inspected."
+      }
+    ],
+    "foreignAccount": {
+      "accepted": false,
+      "attempts": [
+        "/tmp/taskfold-mylist-account-native-v1/foreign.xcresult",
+        "/tmp/taskfold-mylist-account-native-v2/foreign.xcresult",
+        "/tmp/taskfold-mylist-account-b-diagnostic-v3.xcresult"
+      ],
+      "failure": "Browse tap after sign-in; widget assertions never reached. Video frame at 25 seconds shows system Save Password prompt covering app. SpringBoard-only Not Now query did not dismiss it. Diagnostic v3 starts from B and is not an A-to-B acceptance run.",
+      "partialEvidence": "Separate App Group inspection found only account B task/list; private server workspaces unchanged. This is not installed widget rendering or routing acceptance."
+    },
+    "logout": "New installed My list-specific logout case not run; historical general account isolation evidence remains separate."
+  },
+  "mac": {
+    "case": "MyListAccountIntegrationTests.testAuthenticatedAccountSwitchRejectsForeignListAndRestoresOriginalKey",
+    "log": "/tmp/taskfold-mylist-account-mac-live-v1.log",
+    "passed": 1,
+    "skipped": 0,
+    "failed": 0,
+    "scope": "Actual authenticated owner-scoped reads A/B/A, Mac-owned projection rejects foreign list and restores original A key/task. No Mac GUI or Keychain access."
+  },
+  "cleanup": {
+    "globalRefreshSessionsRevoked": true,
+    "databaseRemaining": {
+      "users": 0,
+      "sessions": 0,
+      "tasks": 0,
+      "projects": 0
+    },
+    "privateCredentialFilesRemoved": true,
+    "disposableAccountCachesRemoved": true,
+    "nativeProcessesTerminal": true
+  },
+  "remaining": [
+    "Handle system password-saving interruption in isolated native test before claiming foreign-account widget route or final logout.",
+    "Remaining widget sizes/surfaces and physical/Mac hosts.",
+    "Existing P0 external gates and VoiceOver/keyboard journeys remain open."
+  ],
+  "reproduction": {
+    "iosRunner": "Scripts/test_mylist_account_isolation.py --help; requires freshly provisioned disposable private fixtures and isolated signed Simulator products. Caller must revoke/delete fixtures afterwards.",
+    "mac": "TASKFOLD_MYLIST_ACCOUNT_FIXTURES=<private fixture JSON> swift test --filter MyListAccountIntegrationTests. No fixture means explicit skip, never a pass."
+  },
+  "sourceSHA256": {
+    "iosUI": "ad724350e0e9d546a8976a412878087d31ce1db4dd9da7f19daae1c15d5dc182",
+    "iosRunner": "f5a8891e344e7511b2d5eb18419bed8a0ecc2ab6c8518b8685c971c95f7ed02f",
+    "macIntegration": "7efdd60c738d7b73642ddfd2a8459daabd574978f23a7f6851c4d0d6b1088c3a"
+  }
+}
