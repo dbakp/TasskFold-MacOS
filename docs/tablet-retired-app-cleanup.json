@@ -1,0 +1,63 @@
+{
+  "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+  "removed": [
+    {
+      "bundle": "com.dbakp.taskfold.assignmenttests",
+      "fileBytes": 64130660
+    },
+    {
+      "bundle": "com.dbakp.taskfold.assignmenttests.uitests.xctrunner",
+      "fileBytes": 7614968
+    },
+    {
+      "bundle": "com.dbakp.taskfold.clocktests",
+      "fileBytes": 64633660
+    },
+    {
+      "bundle": "com.dbakp.taskfold.clocktests.uitests.xctrunner",
+      "fileBytes": 7870124
+    },
+    {
+      "bundle": "com.dbakp.taskfold.clockwindowtests",
+      "fileBytes": 64932654
+    },
+    {
+      "bundle": "com.dbakp.taskfold.clockwindowtests.uitests.xctrunner",
+      "fileBytes": 7951930
+    },
+    {
+      "bundle": "com.dbakp.taskfold.datephrasetests",
+      "fileBytes": 65189103
+    },
+    {
+      "bundle": "com.dbakp.taskfold.datephrasetests.uitests.xctrunner",
+      "fileBytes": 8028600
+    },
+    {
+      "bundle": "com.dbakp.taskfold.importtests",
+      "fileBytes": 64608665
+    },
+    {
+      "bundle": "com.dbakp.taskfold.importtests.uitests.xctrunner",
+      "fileBytes": 7807218
+    },
+    {
+      "bundle": "com.dbakp.taskfold.naturalclocktests",
+      "fileBytes": 64763729
+    },
+    {
+      "bundle": "com.dbakp.taskfold.naturalclocktests.uitests.xctrunner",
+      "fileBytes": 7875356
+    },
+    {
+      "bundle": "com.dbakp.taskfold.querytests",
+      "fileBytes": 64360963
+    },
+    {
+      "bundle": "com.dbakp.taskfold.querytests.uitests.xctrunner",
+      "fileBytes": 7684612
+    }
+  ],
+  "totalFileBytes": 507452242,
+  "scope": "Retired isolated DEBUG test apps/runners only. All app snapshots ui-testing owner with empty pending queues. Current assigneepatterntests app/runner retained."
+}

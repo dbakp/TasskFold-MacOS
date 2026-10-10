@@ -901,14 +901,22 @@ struct ListWidgetView: View {
     private var tasks: [WidgetTask] { entry.snapshot.listTasks(entry.listID, at: entry.date) }
     private var status: WidgetListStatus { entry.snapshot.listStatus(entry.listID, at: entry.date) }
     private var tint: Color { entry.palette.color(fallback: mint) }
+    private var listHeader: some View {
+        HStack {
+            Label(entry.hideTitles ? "My list" : target?.name ?? "My list", systemImage: "list.bullet.rectangle")
+                .font(family == .systemSmall ? .caption.weight(.semibold) : .headline)
+                .lineLimit(family == .systemSmall ? 2 : 1).fixedSize(horizontal: false, vertical: true).privacySensitive()
+            Spacer(minLength: 0)
+            if status == .ready { Text("\(tasks.count)").font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(tint) }
+        }
+        .contentShape(Rectangle())
+    }
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Label(entry.hideTitles ? "My list" : target?.name ?? "My list", systemImage: "list.bullet.rectangle")
-                    .font(family == .systemSmall ? .caption.weight(.semibold) : .headline)
-                    .lineLimit(family == .systemSmall ? 2 : 1).fixedSize(horizontal: false, vertical: true).privacySensitive()
-                Spacer(minLength: 0)
-                if status == .ready { Text("\(tasks.count)").font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(tint) }
+            if family != .systemSmall, status == .ready, let url = target?.url {
+                Link(destination: url) { listHeader }.buttonStyle(.plain)
+            } else {
+                listHeader
             }
             if status != .ready { Spacer(minLength: 0); WidgetListEmpty(status: status) }
             else if tasks.isEmpty {

@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-10",
+  "scope": "Terminal superseded or failed iPad My list test bundles only. Summaries retained in both repos, inspected final captures retained in iOS repo. Final passing route-v3 and cold-v3 bundles and active build caches retained.",
+  "removed": [
+    {
+      "path": "/tmp/taskfold-tablet-mylist-host-v1.xcresult",
+      "logicalFileBytes": 6181573,
+      "retainedSummary": "tablet-mylist-reports/host-v1.json"
+    },
+    {
+      "path": "/tmp/taskfold-tablet-mylist-host-v2.xcresult",
+      "logicalFileBytes": 87881982,
+      "retainedSummary": "tablet-mylist-reports/host-v2.json"
+    },
+    {
+      "path": "/tmp/taskfold-tablet-mylist-host-v3.xcresult",
+      "logicalFileBytes": 411662520,
+      "retainedSummary": "tablet-mylist-reports/host-v3.json"
+    },
+    {
+      "path": "/tmp/taskfold-tablet-mylist-route-v1.xcresult",
+      "logicalFileBytes": 37048710,
+      "retainedSummary": "tablet-mylist-reports/route-v1.json"
+    },
+    {
+      "path": "/tmp/taskfold-tablet-mylist-route-v2.xcresult",
+      "logicalFileBytes": 37857465,
+      "retainedSummary": "tablet-mylist-reports/route-v2.json"
+    },
+    {
+      "path": "/tmp/taskfold-tablet-mylist-route-v4.xcresult",
+      "logicalFileBytes": 138274184,
+      "retainedSummary": "tablet-mylist-reports/route-v4.json"
+    },
+    {
+      "path": "/tmp/taskfold-tablet-mylist-cold-v1.xcresult",
+      "logicalFileBytes": 19671951,
+      "retainedSummary": "tablet-mylist-reports/cold-v1.json"
+    },
+    {
+      "path": "/tmp/taskfold-tablet-mylist-cold-v2.xcresult",
+      "logicalFileBytes": 646730,
+      "retainedSummary": "tablet-mylist-reports/cold-v2.json"
+    },
+    {
+      "path": "/tmp/taskfold-tablet-mylist-final-v1.xcresult",
+      "logicalFileBytes": 36098388,
+      "retainedSummary": "tablet-mylist-reports/final-v1.json"
+    }
+  ],
+  "totalLogicalFileBytes": 775323503
+}

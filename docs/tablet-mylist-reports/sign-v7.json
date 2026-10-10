@@ -1,0 +1,18 @@
+{
+  "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+    "team": "3UZ4C73FM2",
+    "strictSignatureVerified": true
+  },
+  "Taskfold.app": {
+    "team": "3UZ4C73FM2",
+    "strictSignatureVerified": true
+  },
+  "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+    "team": "3UZ4C73FM2",
+    "strictSignatureVerified": true
+  },
+  "TaskfoldUITests-Runner.app": {
+    "team": "3UZ4C73FM2",
+    "strictSignatureVerified": true
+  }
+}

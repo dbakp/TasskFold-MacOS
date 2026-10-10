@@ -1,0 +1,52 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "deviceName" : "Taskfold assignment iPad",
+        "modelName" : "iPad Pro 11-inch (M5)",
+        "osBuildNumber" : "23F77",
+        "osVersion" : "26.5",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1791615997.317,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1791615971.267,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "XCTAssertTrue failed - Attributes: Application, 0x112d3f480, pid: 84195, label: 'Taskfold'\nElement subtree:\n →Application, 0x112d3f480, pid: 84195, label: 'Taskfold'\n    Window (Main), 0x112cc8640, {{0.0, 0.0}, {834.0, 1210.0}}\n      Other, 0x112cc8780, {{0.0, 0.0}, {834.0, 1210.0}}\n        Other, 0x112cc88c0, {{0.0, 0.0}, {834.0, 1210.0}}\n          Other, 0x112cc8a00, {{0.0, 0.0}, {834.0, 1210.0}}\n            Other, 0x112cc8dc0, {{0.0, 0.0}, {834.0, 1210.0}}\n              Other, 0x112cc8f00, {{0.0, 0.0}, {834.0, 1210.0}}\n                Other, 0x112cc9040, {{0.0, 0.0}, {834.0, 1210.0}}, identifier: 'nativeWorkspace'\n                  Other, 0x112cc9180, {{0.0, 0.0}, {834.0, 1210.0}}\n                    Other, 0x112cc92c0, {{0.0, 32.0}, {834.0, 44.0}}\n                      Button, 0x112cc8000, {{159.5, 36.0}, {56.0, 36.0}}, identifier: 'ToggleSideBar', label: 'Toggle sidebar'\n                      Button, 0x112cc8140, {{215.5, 36.0}, {79.0, 36.0}}, identifier: 'sun.max', label: 'Today'\n                        Button, 0x112cc8280, {{215.5, 36.0}, {79.0, 36.0}}, identifier: 'sun.max', label: 'Today'\n                      Button, 0x112cc8500, {{294.5, 36.0}, {75.0, 36.0}}, identifier: 'tray', label: 'Inbox', Selected\n                        Button, 0x112cc83c0, {{294.5, 36.0}, {75.0, 36.0}}, identifier: 'tray', label: 'Inbox', Selected\n                      Button, 0x112cc9400, {{369.5, 36.0}, {112.5, 36.0}}, identifier: 'calendar.day.timeline.left', label: 'Upcoming'\n                        Button, 0x112cc9540, {{369.5, 36.0}, {112.5, 36.0}}, identifier: 'calendar.day.timeline.left', label: 'Upcoming'\n                      Button, 0x112ccad00, {{482.0, 36.0}, {102.5, 36.0}}, identifier: 'calendar', label: 'Calendar'\n                        Button, 0x112cc9680, {{482.0, 36.0}, {102.5, 36.0}}, identifier: 'calendar', label: 'Calendar'\n                      Button, 0x112cc97c0, {{584.5, 36.0}, {90.0, 36.0}}, identifier: 'square.grid.2x2', label: 'Browse'\n                        Button, 0x112cc9900, {{584.5, 36.0}, {90.0, 36.0}}, identifier: 'square.grid.2x2', label: 'Browse'\n                  Other, 0x112cc9b80, {{0.0, 0.0}, {834.0, 1210.0}}\n                    Other, 0x112ccabc0, {{0.0, 0.0}, {834.0, 1210.0}}\n                      Other, 0x112cca940, {{0.0, 0.0}, {834.0, 1210.0}}\n                        Other, 0x112ccaa80, {{0.0, 0.0}, {834.0, 1210.0}}\n                          Other, 0x112cca6c0, {{0.0, 0.0}, {834.0, 1210.0}}\n                            Other, 0x112cca800, {{0.0, 0.0}, {834.0, 1210.0}}\n                              NavigationBar, 0x112cca440, {{0.0, 32.0}, {834.0, 106.0}}, identifier: 'Inbox'\n                                Other, 0x112cca580, {{14.0, 39.0}, {36.0, 30.0}}, identifier: 'openSettings', label: 'Settings and account'\n                                  Other, 0x112cca1c0, {{14.0, 39.0}, {36.0, 30.0}}\n                                    Button, 0x112cca300, {{17.0, 39.0}, {30.0, 30.0}}, identifier: 'openSettings', label: 'Settings and account'\n                                Other, 0x112cc9cc0, {{728.0, 36.0}, {36.0, 36.0}}, label: 'Task options'\n                                  Other, 0x112cca080, {{728.0, 36.0}, {36.0, 36.0}}\n                                    Button, 0x112cc9f40, {{732.0, 36.0}, {28.0, 36.0}}, label: 'Task options'\n                                      Button, 0x112cc9e00, {{732.0, 36.0}, {28.0, 36.0}}\n                                        Image, 0x112cc9a40, {{736.0, 52.0}, {20.0, 4.5}}, identifier: 'ellipsis', label: 'More'\n                                Button, 0x112ccae40, {{784.0, 36.0}, {36.0, 36.0}}, label: 'Search'\n                                StaticText, 0x112ccaf80, {{20.0, 89.5}, {87.0, 41.0}}, label: 'Inbox'\n                              Other, 0x112ccb0c0, {{0.0, 0.0}, {834.0, 1210.0}}\n                                Other, 0x112ccb200, {{0.0, 0.0}, {834.0, 1210.0}}\n                                  Other, 0x112ccb340, {{0.0, 0.0}, {834.0, 1210.0}}\n                                    Other, 0x112ccb5c0, {{0.0, 0.0}, {834.0, 1210.0}}\n                                      CollectionView, 0x112ccbc00, {{0.0, 0.0}, {834.0, 1210.0}}\n                                        Other, 0x112ccbd40, {{-20.0, -2282.0}, {874.0, 2644.0}}\n                                        Other, 0x112ccbe80, {{0.0, 0.0}, {834.0, 1210.0}}\n                                        Other, 0x112ccbac0, {{0.0, 0.0}, {834.0, 1210.0}}\n                                        Cell, 0x112ccb700, {{20.0, 138.0}, {794.0, 206.5}}\n                                          Other, 0x112ccb980, {{20.0, 138.0}, {794.0, 206.5}}\n                                            Other, 0x112ccb840, {{20.0, 138.0}, {794.0, 206.5}}\n                                              Other, 0x112ccb480, {{20.0, 138.0}, {794.0, 206.5}}\n                                          Other, 0x112cc8c80, {{20.0, 138.0}, {794.0, 206.5}}\n                                            Other, 0x112e47480, {{20.0, 138.0}, {794.0, 206.5}}\n                                              Other, 0x112e475c0, {{20.0, 138.0}, {794.0, 206.5}}\n                                                Image, 0x112e47700, {{389.5, 172.5}, {55.0, 55.0}}, identifier: 'checkmark.seal', label: 'Verified', Selected\n                                                StaticText, 0x112e47840, {{375.8, 172.5}, {82.5, 100.0}}, label: 'All clear'\n                                                StaticText, 0x112e47c00, {{285.2, 275.5}, {263.5, 18.0}}, label: 'Tap + to make room for your next idea.'\n                                        Other, 0x112e47d40, {{-20.0, 362.0}, {874.0, 2504.0}}\n                                        Cell, 0x112e47e80, {{20.0, 362.0}, {794.0, 64.0}}\n                                          Other, 0x112e46e40, {{20.0, 362.0}, {794.0, 64.0}}\n                                          Other, 0x112e46f80, {{20.0, 362.0}, {794.0, 64.0}}\n                                            Other, 0x112e470c0, {{20.0, 362.0}, {794.0, 64.0}}\n                                              Other, 0x112e47340, {{20.0, 362.0}, {794.0, 64.0}}\n                                                Button, 0x112e47200, {{20.0, 362.0}, {794.0, 64.0}}, identifier: 'sectionHeader-inbox:group:0:unsectioned', label: 'Tasks, 0', value: Expanded\n                                                  Image, 0x112e45e00, {{39.2, 391.2}, {13.5, 8.0}}, identifier: 'chevron.right', label: 'Forward'\n                                                  StaticText, 0x112e45f40, {{60.0, 385.0}, {41.0, 18.0}}, label: 'Tasks'\n                                                  StaticText, 0x112e46080, {{109.0, 385.0}, {10.0, 18.0}}, label: '0'\n                                        Other, 0x112e461c0, {{801.0, 86.0}, {30.0, 1020.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %\n                                          Other, 0x112e46300, {{828.0, 1057.0}, {3.0, 46.0}}\n                                        Other, 0x112e46440, {{801.0, 86.0}, {30.0, 1020.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %\n                                          Other, 0x112e46580, {{828.0, 1057.0}, {3.0, 46.0}}\n                                      Button, 0x112e466c0, {{735.0, 1098.0}, {74.0, 74.0}}, identifier: 'floatingAdd', label: 'Add task'\n                              Other, 0x112e46800, {{0.0, 0.0}, {834.0, 1210.0}}\n                                Other, 0x112e46940, {{0.0, 0.0}, {834.0, 1210.0}}\nPath to element:\n →Application, 0x112d3f480, pid: 84195, label: 'Taskfold'\nQuery chain:\n →Find: Target Application 'com.dbakp.taskfold.assigneepatterntests'\n  Output: {\n    Application, 0x112e46a80, pid: 84195, label: 'Taskfold'\n  }\n",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "TaskfoldUITests/testInstalledTabletExistingMyListColdTaskRoutes()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testInstalledTabletExistingMyListColdTaskRoutes",
+      "testName" : "testInstalledTabletExistingMyListColdTaskRoutes()"
+    }
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 1
+}
