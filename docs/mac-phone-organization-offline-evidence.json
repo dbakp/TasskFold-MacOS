@@ -1,0 +1,368 @@
+{
+  "date": "2026-10-10",
+  "scope": "Native phone offline project/section/label renames and relaunch → reconnect → native Mac receipt and relaunch, retaining original task relationships and the Mac-created saved filter.",
+  "baseCommits": {
+    "macOS": "e65290f4f9ebbe5d5a99008d942f489024fe620a",
+    "iOS": "d9585764eceb135d158f46895a5cc0bf229faec5"
+  },
+  "bundleIDs": {
+    "macOS": "com.dbakp.taskfold.mac.p0uitests",
+    "iOS": "com.dbakp.taskfold.assigneepatterntests"
+  },
+  "offlineMechanism": "Existing DEBUG Simulator-only app-owned disconnected URLSession, restricted to isolated bundle and disposable continuity email namespace; no OS network changes. Normal cached account and native views are used; no data seeding/API writes.",
+  "offlineProof": {
+    "queuedMutationCount": 11,
+    "pendingTables": [
+      "labels",
+      "projects",
+      "sections"
+    ],
+    "sectionEditorEmitsEachKeystroke": true,
+    "phoneRelaunchRetainsAllThreeNames": true,
+    "onlineMacAndServerRetainExactOriginalFiveTablesUntilReconnect": true,
+    "serverDuringOffline": {
+      "tasks": [
+        {
+          "id": "101fbaab-af99-480c-97a6-4876bc3e7389",
+          "title": "Continuity 9a8bfc3d revised",
+          "labels": [
+            "17627e58-f333-4588-ae69-aa674ea07a85"
+          ],
+          "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "comments": [],
+          "due_date": "2026-10-10",
+          "due_time": null,
+          "priority": 1,
+          "subtasks": [],
+          "completed": false,
+          "reminders": [],
+          "time_zone": null,
+          "created_at": "2026-10-10T15:07:49+00:00",
+          "project_id": "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+          "section_id": "57caee28-4118-4012-a256-936eafbc9c97",
+          "assigned_to": null,
+          "attachments": [],
+          "description": "\nPhone added a durable handoff note.Created in the native Mac app for device-switch verification.",
+          "completed_at": null,
+          "is_recurring": false,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "reminder_specs": [],
+          "source_metadata": {},
+          "task_generation": "09d00dda-e8fe-4eef-998a-f4901206d1cb",
+          "duration_minutes": 25,
+          "completion_version": 0,
+          "recurrence_pattern": null,
+          "recurrence_end_date": null,
+          "notification_sent_at": null,
+          "recurrence_parent_id": null
+        }
+      ],
+      "labels": [
+        {
+          "id": "17627e58-f333-4588-ae69-aa674ea07a85",
+          "name": "handoff",
+          "color": "#14b8a6",
+          "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "created_at": "2026-10-10T19:17:42.384679+00:00"
+        }
+      ],
+      "projects": [
+        {
+          "id": "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+          "name": "Continuity Studio",
+          "color": "#3b82f6",
+          "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "created_at": "2026-10-10T19:17:12.920972+00:00",
+          "description": null,
+          "order_index": 0,
+          "source_metadata": {}
+        }
+      ],
+      "sections": [
+        {
+          "id": "57caee28-4118-4012-a256-936eafbc9c97",
+          "name": "Ready",
+          "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "created_at": "2026-10-10T19:17:25.696879+00:00",
+          "project_id": "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+          "order_index": 0
+        }
+      ],
+      "saved_views": [
+        {
+          "id": "7311ec43-0134-4dc1-8a8b-3d94fd3383e4",
+          "name": "Handoff priorities",
+          "layout": "list",
+          "sort_by": "manual",
+          "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "grouping": "none",
+          "query_ast": {
+            "root": {
+              "op": "and",
+              "children": [
+                {
+                  "op": "predicate",
+                  "field": "label",
+                  "value": "17627e58-f333-4588-ae69-aa674ea07a85"
+                },
+                {
+                  "op": "predicate",
+                  "field": "priority",
+                  "value": "1"
+                }
+              ]
+            },
+            "version": 1
+          },
+          "created_at": "2026-10-10T19:18:39.503971+00:00",
+          "updated_at": "2026-10-10T19:18:39.503971+00:00",
+          "order_index": 0,
+          "include_completed": false
+        }
+      ]
+    }
+  },
+  "renames": {
+    "projects": {
+      "id": "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+      "before": "Continuity Studio",
+      "after": "Continuity Studio revised",
+      "allOtherFieldsUnchanged": true
+    },
+    "sections": {
+      "id": "57caee28-4118-4012-a256-936eafbc9c97",
+      "before": "Ready",
+      "after": "Ready on phone",
+      "allOtherFieldsUnchanged": true
+    },
+    "labels": {
+      "id": "17627e58-f333-4588-ae69-aa674ea07a85",
+      "before": "handoff",
+      "after": "handoff-ready",
+      "allOtherFieldsUnchanged": true
+    }
+  },
+  "finalProof": {
+    "macPendingCount": 0,
+    "phonePendingCount": 0,
+    "allFiveServerTablesMatchBothCaches": true,
+    "originalTaskFilterPinFocusRecordsEntirelyUnchanged": true,
+    "originalOrganizationIDsAndRelationshipsRetained": true,
+    "filterASTEntirelyUnchanged": true,
+    "tables": {
+      "tasks": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "b61dc345f306f9073f110b483ab1afa0058ec235f9eccae2dbbf26de3a42fbd3"
+      },
+      "projects": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "d46af7d58f75eb64c0724c27f1e9b9ffb0aa57cae6311276a6d3d2c84abc1883"
+      },
+      "sections": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "e7277cb09509ff0d92a1a15b2fe81829a13530bdf1a961f99e9f69c0edfb7984"
+      },
+      "labels": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "4682888c4b8c40c01728cd16af583bba8bf02c2e624797eb567ad9889477afff"
+      },
+      "saved_views": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "ef1e5ee081e5c89210aaf13238e4ae5504eb648f15fe6b0cf65930281e184d0c"
+      },
+      "view_orders": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "12c4325c49c4b8ec23f150b52acacfc9b9a2b55f3ff3302c7e5a75e4ab9487fc"
+      },
+      "focus_sessions": {
+        "count": 1,
+        "exactMacPhoneEquality": true,
+        "canonicalSHA256": "333180b5896c968e2ddc2861bb39b612b14ecc020afe0694d1b36d978b3c3866"
+      }
+    },
+    "serverAfterReconnect": {
+      "tasks": [
+        {
+          "id": "101fbaab-af99-480c-97a6-4876bc3e7389",
+          "title": "Continuity 9a8bfc3d revised",
+          "labels": [
+            "17627e58-f333-4588-ae69-aa674ea07a85"
+          ],
+          "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "comments": [],
+          "due_date": "2026-10-10",
+          "due_time": null,
+          "priority": 1,
+          "subtasks": [],
+          "completed": false,
+          "reminders": [],
+          "time_zone": null,
+          "created_at": "2026-10-10T15:07:49+00:00",
+          "project_id": "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+          "section_id": "57caee28-4118-4012-a256-936eafbc9c97",
+          "assigned_to": null,
+          "attachments": [],
+          "description": "\nPhone added a durable handoff note.Created in the native Mac app for device-switch verification.",
+          "completed_at": null,
+          "is_recurring": false,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "reminder_specs": [],
+          "source_metadata": {},
+          "task_generation": "09d00dda-e8fe-4eef-998a-f4901206d1cb",
+          "duration_minutes": 25,
+          "completion_version": 0,
+          "recurrence_pattern": null,
+          "recurrence_end_date": null,
+          "notification_sent_at": null,
+          "recurrence_parent_id": null
+        }
+      ],
+      "labels": [
+        {
+          "id": "17627e58-f333-4588-ae69-aa674ea07a85",
+          "name": "handoff-ready",
+          "color": "#14b8a6",
+          "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "created_at": "2026-10-10T19:17:42.384679+00:00"
+        }
+      ],
+      "projects": [
+        {
+          "id": "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+          "name": "Continuity Studio revised",
+          "color": "#3b82f6",
+          "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "created_at": "2026-10-10T19:17:12.920972+00:00",
+          "description": null,
+          "order_index": 0,
+          "source_metadata": {}
+        }
+      ],
+      "sections": [
+        {
+          "id": "57caee28-4118-4012-a256-936eafbc9c97",
+          "name": "Ready on phone",
+          "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "created_at": "2026-10-10T19:17:25.696879+00:00",
+          "project_id": "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+          "order_index": 0
+        }
+      ],
+      "saved_views": [
+        {
+          "id": "7311ec43-0134-4dc1-8a8b-3d94fd3383e4",
+          "name": "Handoff priorities",
+          "layout": "list",
+          "sort_by": "manual",
+          "user_id": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "grouping": "none",
+          "query_ast": {
+            "root": {
+              "op": "and",
+              "children": [
+                {
+                  "op": "predicate",
+                  "field": "label",
+                  "value": "17627e58-f333-4588-ae69-aa674ea07a85"
+                },
+                {
+                  "op": "predicate",
+                  "field": "priority",
+                  "value": "1"
+                }
+              ]
+            },
+            "version": 1
+          },
+          "created_at": "2026-10-10T19:18:39.503971+00:00",
+          "updated_at": "2026-10-10T19:18:39.503971+00:00",
+          "order_index": 0,
+          "include_completed": false
+        }
+      ]
+    }
+  },
+  "nativeResults": [
+    {
+      "resultBundle": "phone-offline-organization-v1.xcresult",
+      "case": "TaskfoldUITests/testLiveMacOrganizationRenameOfflineOnPhone()",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "logSHA256": "5239dd177109e22079d7d9aad4778597ac557d6a90deb711c0438855a0029f26"
+    },
+    {
+      "resultBundle": "phone-organization-reconnect-v1.xcresult",
+      "case": "TaskfoldUITests/testLiveMacOrganizationPhoneReconnect()",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "logSHA256": "8f51b4e945041315cd9f970d1a575d22b3314c6aae3e078cb75687f071787165"
+    },
+    {
+      "resultBundle": "mac-organization-return-v1.xcresult",
+      "case": "TaskfoldMacUITests/testLivePhoneOfflineOrganizationRenameReturnsToMac()",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "logSHA256": "b2314aaf3327513752c96898fd9d7ea3f72c1cc69c56dc019f0d22cfc03e8dcc"
+    }
+  ],
+  "signing": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "inspectedScreenshots": [
+    {
+      "path": "docs/usability-previews/handoff-phone-offline-rename-relaunch.png",
+      "sha256": "b33a96a7c2b3ccc6e1b244cbc7005f7beffc2b882e9f02686867d20bb6351aa9"
+    },
+    {
+      "path": "docs/usability-previews/handoff-phone-rename-reconnected.png",
+      "sha256": "38086ba4e78afe66271b8b4f74380e53a984c1ee6ca426e5d6433dcc5a0f52f4"
+    },
+    {
+      "path": "docs/usability-previews/handoff-mac-rename-return-relaunch.png",
+      "sha256": "ce7f569d90c8507c7e0951e3ef56cdd53e08d89712132da908a1645e131466a2"
+    },
+    {
+      "path": "docs/usability-previews/handoff-mac-renamed-label-filter.png",
+      "sha256": "a6ac3891a716e9176213400b8be4f215cf79409d13a7d268df009849a01dc334"
+    }
+  ],
+  "visualFindings": [
+    "Offline banner explains local persistence and shows 11 queued mutations; task remains readable below it.",
+    "Reconnect removes the offline banner; renamed project metadata wraps as a readable unit.",
+    "Mac project/section/label names and original notes/pin are retained; sidebar truncates the long project name normally while the full name is visible in its header and inspector.",
+    "Original saved filter still shows the same task after the label rename on both platforms."
+  ],
+  "limitations": [
+    "One authenticated owner, one project/section/label/task/filter; transport disconnection only on iPhone Simulator.",
+    "Concurrent native organization edits, broader planning/recurrence/account-switch paths, installed Desktop widget hosts/VoiceOver and external-provider/physical-delivery/distribution gates remain outside this checkpoint."
+  ]
+}

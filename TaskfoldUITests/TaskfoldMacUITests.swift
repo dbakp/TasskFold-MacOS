@@ -1561,4 +1561,29 @@ extension TaskfoldMacUITests {
             if pass == 0 { app.terminate(); app.launch() }
         }
     }
+
+    @MainActor func testLivePhoneOfflineOrganizationRenameReturnsToMac() throws {
+        let fixtureURL = URL(fileURLWithPath: "/private/tmp/taskfold-live-verification.json")
+        guard FileManager.default.fileExists(atPath: fixtureURL.path) else { throw XCTSkip("Disposable continuity account not configured") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: fixtureURL))
+        guard fixture["userID"] == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152" else { throw XCTSkip("Dedicated organization fixture required") }
+        let app = XCUIApplication(); app.launchArguments = []; app.launch(); defer { app.terminate() }
+        for pass in 0..<2 {
+            let project = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", "Continuity Studio revised", "Continuity Studio revised")).firstMatch
+            XCTAssertTrue(project.waitForExistence(timeout: 20)); project.click()
+            let row = app.descendants(matching: .any)["title-101fbaab-af99-480c-97a6-4876bc3e7389"].firstMatch
+            XCTAssertTrue(row.waitForExistence(timeout: 10)); row.click()
+            XCTAssertTrue(app.popUpButtons.matching(NSPredicate(format: "value == %@", "Ready on phone")).firstMatch.waitForExistence(timeout: 5))
+            XCTAssertTrue(app.popUpButtons.matching(NSPredicate(format: "value == %@", "Continuity Studio revised")).firstMatch.exists)
+            XCTAssertEqual(app.descendants(matching: .any)["taskDescription"].firstMatch.value as? String, "\nPhone added a durable handoff note.Created in the native Mac app for device-switch verification.")
+            XCTAssertEqual((app.descendants(matching: .any)["pinTaskNotes"].firstMatch.value as? NSNumber)?.intValue, 1)
+            retainWindow(app, name: "Phone offline project and section renames received on Mac — pass \(pass)")
+            let label = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", "handoff-ready", "handoff-ready")).firstMatch
+            XCTAssertTrue(label.exists); label.click(); XCTAssertTrue(row.waitForExistence(timeout: 5))
+            let filter = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", "Handoff priorities", "Handoff priorities")).firstMatch
+            XCTAssertTrue(filter.exists); filter.click(); XCTAssertTrue(row.waitForExistence(timeout: 5))
+            retainWindow(app, name: "Mac filter retains original task after phone label rename — pass \(pass)")
+            if pass == 0 { app.terminate(); app.launch() }
+        }
+    }
 }

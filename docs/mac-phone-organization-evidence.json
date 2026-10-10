@@ -235,7 +235,7 @@
     }
   ],
   "remainingScope": [
-    "Phone-to-Mac organization edits and native offline/concurrent organization changes",
+    "Native phone reverse renames/offline/relaunch/reconnect now pass; see mac-phone-organization-offline-evidence.json. Concurrent native organization variants remain open.",
     "Native Mac richer planning/recurrence and account-switch races",
     "Installed Desktop widget hosts, remaining sizes/privacy, VoiceOver",
     "Real Todoist/provider credentials, signed physical reminder/APNs delivery, release signing/notarization"
