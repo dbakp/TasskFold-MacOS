@@ -949,3 +949,10 @@ Evidence is composed. The first post-configuration capacity tap failed; fresh se
 The native privacy checkpoint also passes without skips or reported app runtime warnings. Inspected hidden/restored captures confirm Studio’s name is hidden while pulse counts remain visible, and capacity details are concealed; both routes retain their updated fixture and both switches restore to false.
 
 Final iOS build-for-testing/team signatures and Mac app/widget build pass. A final installed iPhone checkpoint passes after the singular-copy correction; its inspected capture shows 3/6, “1 needs attention”, Tomorrow 6h 25m and both capacity explanations without clipping. Four scoped native checkpoints pass without skips or reported app runtime warnings. The layout/privacy checkpoint is local only; no provider account was created and no Mac GUI was launched.
+
+
+## Concurrent recurrence checkpoint — 10 October 2026
+
+Fixed a real duplicate-successor risk when two clients complete the same recurring task. Both review choices now remove an unaccepted local successor insertion after the synced original is completed, retain a confirmed synced occurrence, and preserve later local edits as independent work. Completion review shows seconds and time zone.
+
+Validation: 26 focused Core tests per repository; one authenticated Mac transport test covering different completion days, both review choices and repeated requests; nine composed phone/tablet native checkpoints covering offline completion/relaunch, competing completion review, one unchanged next occurrence, empty queues and sign-out isolation. The first five checkpoints are v1; the last four are v6. Two failed review attempts used the wrong test identifier and performed no resolution; this is not an uninterrupted fresh run. Final app/widget builds pass. See `docs/recurrence-continuity-evidence.json` / `concurrentCompletion` for receipts, inspected captures, cleanup and limits. The disposable account, sessions, tasks/activity and two owner caches were removed. Mac GUI, physical devices and full release acceptance remain open.

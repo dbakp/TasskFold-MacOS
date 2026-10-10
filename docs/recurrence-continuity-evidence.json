@@ -149,9 +149,611 @@
     "TaskfoldTests/NativeBehaviorTests.swift": "142d3277b19f5814d501f8ff2b757720a53acc01b2219d93671edb237153de96"
   },
   "limitations": [
-    "Single daily completion; concurrent completion/other rule families not inferred",
+    "Original 9 October checkpoint covers a single daily completion; newer concurrent evidence is scoped in concurrentCompletion.",
     "Mac transport only, no GUI",
     "Tablet screenshot is a partial scroll viewport",
     "Full P0 remains open"
-  ]
+  ],
+  "concurrentCompletion": {
+    "date": "2026-10-10",
+    "defect": "Resolving competing completions retained an unaccepted local next occurrence; different repeat-from-completion dates could create two successors.",
+    "fix": "Both review choices cancel unaccepted local successor insertion when the synced original is already completed. Confirmed synced successors remain intact; later local edits are preserved as independent work. Completion review compares timestamps with seconds and time zone.",
+    "regressionBefore": "/tmp/taskfold-concurrent-recurrence-regression-before.log",
+    "coreTests": {
+      "iOS": 26,
+      "macOS": 26
+    },
+    "liveMacTests": 1,
+    "liveMacLog": "/tmp/taskfold-concurrent-recurrence-mac-live-v1.log",
+    "nativeCheckpoints": [
+      {
+        "phase": "phone-login",
+        "passed": true,
+        "serverTasks": [],
+        "pendingCount": 0
+      },
+      {
+        "phase": "tablet-login",
+        "passed": true,
+        "serverTasks": [],
+        "pendingCount": 0
+      },
+      {
+        "phase": "phone-create",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": false,
+            "priority": 4,
+            "due_date": "2028-01-03",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:17:31+00:00",
+            "completed_at": null,
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 3,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": null,
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {},
+            "scheduled_at": null,
+            "completion_version": 0,
+            "task_generation": "05cd5c54-08c7-4899-ae53-05afd1005f44"
+          }
+        ],
+        "pendingCount": 0
+      },
+      {
+        "phase": "tablet-offline",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": false,
+            "priority": 4,
+            "due_date": "2028-01-03",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:17:31+00:00",
+            "completed_at": null,
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 3,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": null,
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {},
+            "scheduled_at": null,
+            "completion_version": 0,
+            "task_generation": "05cd5c54-08c7-4899-ae53-05afd1005f44"
+          }
+        ],
+        "pendingCount": 2
+      },
+      {
+        "phase": "phone-complete",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "59c7c3ee-56c4-5feb-a3b1-2c532c496849",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": false,
+            "priority": 4,
+            "due_date": "2028-01-04",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:19:09+00:00",
+            "completed_at": null,
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 2,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {
+              "taskfold_recurrence_v1": {
+                "action_id": "1b31768b-f250-4488-a4be-0613e285e1f9"
+              }
+            },
+            "scheduled_at": null,
+            "completion_version": 0,
+            "task_generation": "41f6927f-73d4-4605-9cfb-31890a696c06"
+          },
+          {
+            "id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": true,
+            "priority": 4,
+            "due_date": "2028-01-03",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:17:31+00:00",
+            "completed_at": "2026-10-10T03:19:09+00:00",
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 3,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": null,
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {},
+            "scheduled_at": null,
+            "completion_version": 1,
+            "task_generation": "05cd5c54-08c7-4899-ae53-05afd1005f44"
+          }
+        ],
+        "pendingCount": 0
+      },
+      {
+        "phase": "tablet-review",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "59c7c3ee-56c4-5feb-a3b1-2c532c496849",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": false,
+            "priority": 4,
+            "due_date": "2028-01-04",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:19:09+00:00",
+            "completed_at": null,
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 2,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {
+              "taskfold_recurrence_v1": {
+                "action_id": "1b31768b-f250-4488-a4be-0613e285e1f9"
+              }
+            },
+            "scheduled_at": null,
+            "completion_version": 0,
+            "task_generation": "41f6927f-73d4-4605-9cfb-31890a696c06"
+          },
+          {
+            "id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": true,
+            "priority": 4,
+            "due_date": "2028-01-03",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:17:31+00:00",
+            "completed_at": "2026-10-10T03:19:09+00:00",
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 3,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": null,
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {},
+            "scheduled_at": null,
+            "completion_version": 1,
+            "task_generation": "05cd5c54-08c7-4899-ae53-05afd1005f44"
+          }
+        ],
+        "pendingCount": 0
+      },
+      {
+        "phase": "phone-receive",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "59c7c3ee-56c4-5feb-a3b1-2c532c496849",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": false,
+            "priority": 4,
+            "due_date": "2028-01-04",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:19:09+00:00",
+            "completed_at": null,
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 2,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {
+              "taskfold_recurrence_v1": {
+                "action_id": "1b31768b-f250-4488-a4be-0613e285e1f9"
+              }
+            },
+            "scheduled_at": null,
+            "completion_version": 0,
+            "task_generation": "41f6927f-73d4-4605-9cfb-31890a696c06"
+          },
+          {
+            "id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": true,
+            "priority": 4,
+            "due_date": "2028-01-03",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:17:31+00:00",
+            "completed_at": "2026-10-10T03:19:09+00:00",
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 3,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": null,
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {},
+            "scheduled_at": null,
+            "completion_version": 1,
+            "task_generation": "05cd5c54-08c7-4899-ae53-05afd1005f44"
+          }
+        ],
+        "pendingCount": 0
+      },
+      {
+        "phase": "phone-signout",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "59c7c3ee-56c4-5feb-a3b1-2c532c496849",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": false,
+            "priority": 4,
+            "due_date": "2028-01-04",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:19:09+00:00",
+            "completed_at": null,
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 2,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {
+              "taskfold_recurrence_v1": {
+                "action_id": "1b31768b-f250-4488-a4be-0613e285e1f9"
+              }
+            },
+            "scheduled_at": null,
+            "completion_version": 0,
+            "task_generation": "41f6927f-73d4-4605-9cfb-31890a696c06"
+          },
+          {
+            "id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": true,
+            "priority": 4,
+            "due_date": "2028-01-03",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:17:31+00:00",
+            "completed_at": "2026-10-10T03:19:09+00:00",
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 3,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": null,
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {},
+            "scheduled_at": null,
+            "completion_version": 1,
+            "task_generation": "05cd5c54-08c7-4899-ae53-05afd1005f44"
+          }
+        ],
+        "pendingCount": 0
+      },
+      {
+        "phase": "tablet-signout",
+        "passed": true,
+        "serverTasks": [
+          {
+            "id": "59c7c3ee-56c4-5feb-a3b1-2c532c496849",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": false,
+            "priority": 4,
+            "due_date": "2028-01-04",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:19:09+00:00",
+            "completed_at": null,
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 2,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {
+              "taskfold_recurrence_v1": {
+                "action_id": "1b31768b-f250-4488-a4be-0613e285e1f9"
+              }
+            },
+            "scheduled_at": null,
+            "completion_version": 0,
+            "task_generation": "41f6927f-73d4-4605-9cfb-31890a696c06"
+          },
+          {
+            "id": "93808c12-a46b-4394-bc70-1a8a8d4f45f3",
+            "user_id": "b9030081-1174-4d75-a2fc-322f69686f63",
+            "title": "Continuity routine",
+            "description": "",
+            "completed": true,
+            "priority": 4,
+            "due_date": "2028-01-03",
+            "due_time": null,
+            "project_id": null,
+            "section_id": null,
+            "labels": [],
+            "subtasks": [],
+            "reminders": [],
+            "attachments": [],
+            "comments": [],
+            "created_at": "2026-10-10T03:17:31+00:00",
+            "completed_at": "2026-10-10T03:19:09+00:00",
+            "recurrence_pattern": {
+              "type": "daily",
+              "count": 3,
+              "endDate": "2028-01-05",
+              "interval": 1
+            },
+            "is_recurring": true,
+            "recurrence_parent_id": null,
+            "recurrence_end_date": null,
+            "notification_sent_at": null,
+            "assigned_to": null,
+            "deadline_date": null,
+            "duration_minutes": 25,
+            "time_zone": null,
+            "reminder_specs": [],
+            "source_metadata": {},
+            "scheduled_at": null,
+            "completion_version": 1,
+            "task_generation": "05cd5c54-08c7-4899-ae53-05afd1005f44"
+          }
+        ],
+        "pendingCount": 0
+      }
+    ],
+    "nativeResults": {
+      "firstFive": "/tmp/taskfold-concurrent-recurrence-native-v1",
+      "finalFour": "/tmp/taskfold-concurrent-recurrence-native-v6",
+      "passed": 9,
+      "skips": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    "failedAttempts": [
+      "v1 and v5 tablet-review used incorrect test identifier useSyncedEdit. Corrected to existing useSharedEdit; neither failed attempt executed resolution. Accepted evidence is composed checkpoints, not one uninterrupted fresh run."
+    ],
+    "assertions": [
+      "Native daily Jan 3 original completed once, Jan 4 next open, 25 minutes, count 3 to 2, end Jan 5 unchanged",
+      "Offline completion survives relaunch; reconnect/review preserves exact server winning rows, identities and metadata; queues drain",
+      "Mac authenticated transport checks both choices with different completion days and repeated requests; exactly one unchanged successor",
+      "Core tests preserve later local edits as independent work and confirmed synced successors"
+    ],
+    "builds": [
+      "/tmp/taskfold-concurrent-recurrence-ios-build-v6.log",
+      "/tmp/taskfold-concurrent-recurrence-mac-build-v2.log"
+    ],
+    "signatureReceipt": "/tmp/taskfold-concurrent-recurrence-sign-v6.json",
+    "cleanup": {
+      "users": 0,
+      "sessions": 0,
+      "identities": 0,
+      "profiles": 0,
+      "tasks": 0,
+      "savedViews": 0,
+      "activity": 0,
+      "nativeSignoutsPassed": true,
+      "scopedCacheFilesRemoved": 2,
+      "privateCredentialsRemoved": true
+    },
+    "screenshotsRepository": "TaskFold-iOS",
+    "screenshots": {
+      "docs/native-continuity-previews/concurrent-recurrence-offline.png": "e1448385018314c56a844cf7448953968f4ce37f63ccb9333ac4ad682819eec3",
+      "docs/native-continuity-previews/concurrent-recurrence-review.png": "b7635f497dcc41f86a1477c96083676261e9fbaa3e05e2f1d8d8e4fca6922af9",
+      "docs/native-continuity-previews/concurrent-recurrence-next.png": "8dfba0494499bd773735a1f769999a11e1fd052eebf494a74061dd60a19bc5ae"
+    },
+    "limitations": [
+      "Mac authenticated transport and build only; no Mac GUI acceptance",
+      "Native daily scenario plus transport different-day from-completion; other rule families and physical devices not inferred",
+      "Review screenshot is an initial scroll viewport; no VoiceOver or full form acceptance inferred",
+      "Full P0 release remains open"
+    ],
+    "ownSourceHashes": {
+      "Taskfold/Core/Models.swift": "170a642c2b5fb68aaad2f94c28f72dac1916a583fc2e7902705d2b6ef8ddca61",
+      "TaskfoldTests/CompletionRevisionTests.swift": "093eea8c74f6231742a418267728b7683b95a4ba8148406ebab5bcee7b9ae1ae",
+      "TaskfoldTests/ConcurrentRecurrenceIntegrationTests.swift": "d02aedee65df62ed23f40fc6610f7aa80c99d279c00e07b6ddef67ddf81e988a",
+      "Taskfold/Collaboration.swift": "1a3ace5249ffb38a7e27e77be877656f43cb9026e558043aa20ca37c2749c303"
+    }
+  }
 }

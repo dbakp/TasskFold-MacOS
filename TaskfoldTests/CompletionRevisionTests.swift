@@ -101,7 +101,7 @@ final class CompletionRevisionTests: XCTestCase {
         XCTAssertEqual(durable.tables["tasks"]?.last?["recurrence_parent_id"], .null)
         XCTAssertEqual(durable.tables["tasks"]?.last?["source_metadata"].object["future"], .string("Keep me"))
     }
-    func testKeepMyCompletionRebasesRevisionAndRemoteCompletedChoiceKeepsCreateOnlySuccessor() throws {
+    func testKeepMyCompletionRebasesRevisionAndUseSyncedCancelsUnacceptedSuccessor() throws {
         let (snapshot, changes) = queued(); let remote = root(version: 2)
         let keep = try XCTUnwrap(SyncConflict(mutation: changes[0], remote: remote).resolving(snapshot, keepLocal: true))
         XCTAssertEqual(keep.pending[0].baseline?["completion_version"], .number(2))
@@ -109,7 +109,7 @@ final class CompletionRevisionTests: XCTestCase {
         XCTAssertEqual(keep.pending[1], changes[1])
         var done = remote; done["completed"] = .bool(true); done["completed_at"] = .string("2026-10-06T13:00:00Z")
         let use = try XCTUnwrap(SyncConflict(mutation: changes[0], remote: done).resolving(snapshot, keepLocal: false))
-        XCTAssertEqual(use.pending, [changes[1]])
+        XCTAssertTrue(use.pending.isEmpty)
     }
     func testRemoteUnseenCompletionCycleInvalidatesWidgetTokenEvenWhenVisibleStateMatches() throws {
         var snapshot = Snapshot(); snapshot.tables["tasks"] = [root()]; WidgetCompletion.prepare(&snapshot)
@@ -154,5 +154,74 @@ final class CompletionRevisionTests: XCTestCase {
             catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:")) }
         }
         XCTAssertFalse(called)
+    }
+}
+
+
+extension CompletionRevisionTests {
+    func testUseSyncedCompletionDropsDifferentDayUneditedLocalSuccessor() throws {
+        var original = root(); original["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1), "fromCompletion": .bool(true)])
+        let local = TaskCompletion.complete(original, tasks: [original], at: now)
+        let remote = TaskCompletion.complete(original, tasks: [original], at: now.addingTimeInterval(86400))
+        XCTAssertNotEqual(local[1].recordID, remote[1].recordID)
+        var snapshot = Snapshot(tables: ["tasks": [original]], pending: local)
+        for change in local { snapshot.apply(change) }
+        let confirmed = TaskCompletionRevision.applying(remote[0].fields, to: original)
+        let winner = Record(remote[1].fields); snapshot.tables["tasks", default: []].append(winner)
+        let result = try XCTUnwrap(SyncConflict(mutation: local[0], remote: confirmed).resolving(snapshot, keepLocal: false))
+        let durable = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(result))
+        XCTAssertTrue(durable.pending.isEmpty)
+        XCTAssertEqual(Set(durable.tables["tasks", default: []].map(\.id)), [original.id, winner.id])
+        XCTAssertEqual(durable.tables["tasks"]?.first { $0.id == winner.id }, winner)
+        XCTAssertEqual(durable.tables["tasks"]?.first { $0.id == original.id }, confirmed)
+    }
+}
+
+
+extension CompletionRevisionTests {
+    func testKeepMyCompletionTimestampRetainsSyncedSuccessorAcrossDifferentDays() throws {
+        var original = root(); original["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1), "fromCompletion": .bool(true)])
+        let local = TaskCompletion.complete(original, tasks: [original], at: now)
+        let remote = TaskCompletion.complete(original, tasks: [original], at: now.addingTimeInterval(86400))
+        var snapshot = Snapshot(tables: ["tasks": [original]], pending: local)
+        for change in local { snapshot.apply(change) }
+        let winner = Record(remote[1].fields); snapshot.tables["tasks", default: []].append(winner)
+        let confirmed = TaskCompletionRevision.applying(remote[0].fields, to: original)
+        let result = try XCTUnwrap(SyncConflict(mutation: local[0], remote: confirmed).resolving(snapshot, keepLocal: true))
+        XCTAssertEqual(result.pending.count, 1); XCTAssertEqual(result.pending.first?.fields["completed_at"], local[0].fields["completed_at"])
+        XCTAssertEqual(result.pending.first?.baseline?["completion_version"], confirmed["completion_version"])
+        XCTAssertEqual(Set(result.tables["tasks", default: []].map(\.id)), [original.id, winner.id])
+        XCTAssertEqual(result.tables["tasks"]?.first { $0.id == winner.id }, winner)
+    }
+    func testAlreadyCachedSyncedSuccessorIsNeverRemovedOrDetachedDuringReview() throws {
+        let (snapshot, changes) = queued()
+        var winner = Record(changes[1].fields); winner["task_generation"] = .string("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"); winner["title"] = .string("Synced next task")
+        var cached = snapshot; cached.tables["tasks"] = [snapshot.tables["tasks"]!.first!, winner]
+        var done = root(version: 1); done["completed"] = .bool(true); done["completed_at"] = .string("2026-10-06T13:00:00Z")
+        for keepLocal in [false, true] {
+            let result = try XCTUnwrap(SyncConflict(mutation: changes[0], remote: done).resolving(cached, keepLocal: keepLocal))
+            XCTAssertFalse(result.pending.contains { $0.method == "POST" })
+            XCTAssertEqual(result.tables["tasks"]?.first { $0.id == winner.id }, winner)
+        }
+    }
+    func testEditedDifferentDaySuccessorRemainsIndependentForBothReviewChoices() throws {
+        var original = root(); original["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1), "fromCompletion": .bool(true)])
+        let local = TaskCompletion.complete(original, tasks: [original], at: now)
+        let remote = TaskCompletion.complete(original, tasks: [original], at: now.addingTimeInterval(86400))
+        var snapshot = Snapshot(tables: ["tasks": [original]], pending: local)
+        for change in local { snapshot.apply(change) }
+        let edit = Mutation(table: "tasks", recordID: local[1].recordID, method: "PATCH", fields: ["description": .string("Keep this draft")], baseline: ["description": local[1].fields["description"] ?? .null, "task_generation": local[1].fields["task_generation"]!])
+        snapshot.pending.append(edit); snapshot.apply(edit)
+        let confirmed = TaskCompletionRevision.applying(remote[0].fields, to: original)
+        for keepLocal in [false, true] {
+            let result = try XCTUnwrap(SyncConflict(mutation: local[0], remote: confirmed).resolving(snapshot, keepLocal: keepLocal))
+            let durable = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(result))
+            XCTAssertTrue(durable.pending.contains { $0.id == edit.id })
+            let creation = try XCTUnwrap(durable.pending.first { $0.method == "POST" })
+            XCTAssertEqual(creation.recordID, local[1].recordID); XCTAssertEqual(creation.fields["recurrence_parent_id"], .null)
+            XCTAssertNil(creation.fields["source_metadata"]?.object["taskfold_recurrence_v1"])
+            let draft = try XCTUnwrap(durable.tables["tasks"]?.first { $0.id == local[1].recordID })
+            XCTAssertEqual(draft.string("description"), "Keep this draft"); XCTAssertEqual(draft["recurrence_parent_id"], .null)
+        }
     }
 }

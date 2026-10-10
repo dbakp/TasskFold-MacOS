@@ -123,10 +123,14 @@ struct ConflictReview: View {
     @State private var message: String?
     private var current: Bool { store.syncConflict?.id == conflict.id && store.snapshot.pending.contains(conflict.mutation) }
     private var deleting: Bool { conflict.mutation.method == "DELETE" }
+    private var bothCompleted: Bool { !deleting && conflict.remote.completed && conflict.mutation.fields["completed"] == .bool(true) && conflict.mutation.fields["completed_at"] != nil }
     private var keys: [String] {
         let fields = deleting ? conflict.remote.fields : conflict.mutation.fields
         let visible = fields.keys.filter { $0 != "completion_version" && (!deleting || !["id", "user_id", "source_metadata", "created_at", "notification_sent_at"].contains($0)) }
-        guard deleting else { return visible.sorted() }
+        guard deleting else {
+            if bothCompleted, visible.contains("completed_at") { return ["completed_at"] + visible.filter { $0 != "completed_at" }.sorted() }
+            return visible.sorted()
+        }
         let contentOrder = ["description", "title", "comments", "subtasks", "due_date", "due_time", "deadline_date", "duration_minutes", "priority"]
         return visible.sorted { lhs, rhs in
             let leftChanged = changedSinceDeletion(lhs), rightChanged = changedSinceDeletion(rhs)
@@ -146,7 +150,7 @@ struct ConflictReview: View {
                 Section {
                     Label("Your work is saved", systemImage: "checkmark.icloud").font(.headline).foregroundStyle(Color.taskfold)
                     Text(conflict.remote.title).font(.headline)
-                    Text(deleting ? "This task changed before it could be deleted. Review its current contents before choosing how to continue." : "Changes from another device overlap with this edit. Compare the values below, then choose how to continue.").foregroundStyle(.secondary)
+                    Text(deleting ? "This task changed before it could be deleted. Review its current contents before choosing how to continue." : bothCompleted ? "Both devices completed this task. Compare the completion times below, then choose which time to keep." : "Changes from another device overlap with this edit. Compare the values below, then choose how to continue.").foregroundStyle(.secondary)
                 }
                 ForEach(keys, id: \.self) { key in
                     Section(fieldName(key)) {
@@ -163,6 +167,8 @@ struct ConflictReview: View {
                 Section {
                     if deleting {
                         Text("Keep task cancels this queued deletion and restores the synced task. Delete task removes the contents shown here; if another device changes them again, you will be asked to review again. Later offline edits and other tasks are kept.").font(.callout).foregroundStyle(.secondary)
+                    } else if bothCompleted {
+                        Text("Keep my edit keeps your completion time. Use synced keeps the other device’s completion time. Either choice removes an unedited next occurrence created only on this device. Later edits to that occurrence are kept as an independent task. Existing synced tasks and later offline work are kept.").font(.callout).foregroundStyle(.secondary)
                     } else if TaskCompletionRevision.touches(conflict.mutation.fields) {
                         Text((conflict.mutation.baseline?["completion_version"] == nil ? "This older completion needs review. " : "Completion changed on another device. ") + "Keep my edit applies the completion shown above. Use synced version keeps the synced task and removes an unedited next occurrence created by this completion. Any later edits to that occurrence are kept as an independent task. Later offline work is retained.").font(.callout).foregroundStyle(.secondary)
                     } else if conflict.mutation.fields.keys.contains(where: { conflict.mutation.baseline?[$0] == nil }) {
@@ -209,7 +215,7 @@ struct ConflictReview: View {
     }
     private func summary(_ value: JSON, key: String = "") -> String {
         if key == "completed", case .bool(let flag) = value { return flag ? "Completed" : "Open" }
-        if key == "completed_at", let date = TaskPlanning.instant(value.text) { return date.formatted(date: .abbreviated, time: .shortened) }
+        if key == "completed_at", let date = TaskPlanning.instant(value.text) { return date.formatted(.dateTime.year().month(.abbreviated).day().hour().minute().second().timeZone(.specificName(.short))) }
         if value == .null { return "None" }
         if key == "duration_minutes", case .number(let minutes) = value { return "\(Int(minutes)) minutes" }
         if key == "priority", case .number(let number) = value { return "P\(Int(number))" }

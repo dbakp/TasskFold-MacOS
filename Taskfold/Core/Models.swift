@@ -229,9 +229,14 @@ struct SyncConflict: Identifiable {
                     }
                 }
             }
+            // The synced completion already owns the next occurrence. Keeping a
+            // different completion timestamp must not enqueue a second next day.
+            if remote.completed, mutation.fields["completed"] == .bool(true) {
+                cancelUnacceptedSuccessors(in: &result)
+            }
         } else {
             result.pending.remove(at: index)
-            if !remote.completed, mutation.fields["completed"] == .bool(true) {
+            if mutation.fields["completed"] == .bool(true) {
                 cancelUnacceptedSuccessors(in: &result)
             }
         }
@@ -265,7 +270,12 @@ struct SyncConflict: Identifiable {
         for creation in creations {
             let later = result.pending.filter { $0.table == "tasks" && $0.recordID.lowercased() == creation.recordID.lowercased() && $0.id != creation.id }
             let current = result.tables["tasks"]?.first { $0.id.lowercased() == creation.recordID.lowercased() }
-            if later.isEmpty && (current == nil || current == Record(creation.fields)) {
+            if let current, !current.string("task_generation").isEmpty,
+               current["task_generation"] != creation.fields["task_generation"] {
+                // A confirmed occurrence from another action is already cached.
+                // Cancel only our insert; retain that row and any later edits for review.
+                result.pending.removeAll { $0.id == creation.id }
+            } else if later.isEmpty && (current == nil || current == Record(creation.fields)) {
                 result.pending.removeAll { $0.id == creation.id }
                 result.tables["tasks"]?.removeAll { $0.id.lowercased() == creation.recordID.lowercased() }
             } else {
