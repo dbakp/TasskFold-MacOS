@@ -1099,3 +1099,7 @@ The installed iPhone Today inline accessory now has a saved native host and pass
 ### 10 October — profile photo account-switch boundary
 
 Source inspection found an unguarded asynchronous avatar result in both apps. Both pickers now capture workspace ownership before presentation; image/upload results and errors cannot cross the captured workspace. The uploader requires the original account and rejects session changes across refresh and response. Both own AccountTransport suites pass 18 cases, including four new upload race/success cases. See `profile-photo-ownership.md` for build results and exact limits. Native selection/account-switch UI acceptance remains open while the Mac is locked.
+
+### 10 October — native phone profile photo acceptance
+
+Three actual iPhone cases now verify picker Cancel/draft preservation, synthetic Storage upload/relaunch and profile removal/relaunch against the corrected code. Four captures were inspected, the fixture JPEG removed through authenticated Storage, the cleanup-only session revoked and original task data retained with an empty queue. See `profile-photo-native-evidence.json`. The Mac runtime and native in-flight account switch remain separate; the desktop is still locked.

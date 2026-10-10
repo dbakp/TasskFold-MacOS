@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-10",
+  "scope": "Native iPhone profile picker cancellation, real disposable upload, removal and relaunch; not native account-switch/Mac acceptance",
+  "sourceBaseIOS": "c706995eac1b34be353ea6fa3578c1add0c30d09",
+  "sourceBaseMac": "6527002e8e8fe6f777528b3aefc757d2ce432473",
+  "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+  "build": "/tmp/taskfold-profile-picker-native-v1-build.log: TEST BUILD SUCCEEDED",
+  "signatures": "/tmp/taskfold-profile-picker-native-v1-signing.json",
+  "cases": [
+    {
+      "name": "testLiveProfilePhotoPickerCancelPreservesUnsavedName()",
+      "resultBundle": "/tmp/taskfold-profile-picker-native-v1.xcresult"
+    },
+    {
+      "name": "testLiveProfilePhotoNativeSelectionUploadAndRelaunch()",
+      "resultBundle": "/tmp/taskfold-profile-photo-native-upload-v1.xcresult"
+    },
+    {
+      "name": "testLiveProfilePhotoRemoveAndRelaunch()",
+      "resultBundle": "/tmp/taskfold-profile-photo-native-remove-v1.xcresult"
+    }
+  ],
+  "passedTests": 3,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "runtimeWarnings": 0,
+  "checks": [
+    "Picker Cancel preserves unsaved name and restores enabled Change photo; relaunch discards unsubmitted draft",
+    "Native synthetic image selection uploads with disposable owner; profile and checker avatar survive relaunch",
+    "Native Remove photo persists after relaunch; profile avatar and display name finish null",
+    "Original task and every non-profile table remain unchanged; zero pending phone edits"
+  ],
+  "storage": {
+    "bucket": "avatars",
+    "object": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152/D015FD55-13AD-4BC6-BCD6-E530B3EFB0F8.jpg",
+    "owner": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+    "mime": "image/jpeg",
+    "bytes": 62099,
+    "syntheticCheckerVisuallyVerified": true,
+    "exactObjectRemovedThroughAuthenticatedStorageAPI": true,
+    "cleanupOnlyAuthSessionRevoked": true,
+    "remainingFixtureAvatarObjectCount": 0
+  },
+  "captures": [
+    {
+      "path": "usability-previews/profile-photo-cancel-draft.png",
+      "sha256": "681942304d4c0e2651374c85f88f87236216549792edfc54a6d41aec0fe514e5"
+    },
+    {
+      "path": "usability-previews/profile-photo-upload.png",
+      "sha256": "2cc7e915c80c3e533e8902576d1ace21e46418ceeca5803590586fe62ab785ec"
+    },
+    {
+      "path": "usability-previews/profile-photo-relaunch.png",
+      "sha256": "fc42d871855c8d1d30681dfd5d34f5ecede4cebb1dfb7b7c1c3dda9055b039ff"
+    },
+    {
+      "path": "usability-previews/profile-photo-removed.png",
+      "sha256": "bd32ebae2a688de431db573550224f3eb10103afe16f2d17fedcdc6f809f0012"
+    }
+  ],
+  "visualReview": "All four actual captures individually inspected. Unsaved draft and photo actions readable; uploaded four-color checker visible before/after relaunch; initials restored after removal. Keyboard and long fixture email increase scrolling. No clipping prevents tested actions.",
+  "limits": [
+    "No native account switch during in-flight upload; deterministic held-response/refresh cases retain that scope",
+    "No Mac native photo picker/return-leg verification; desktop still locked",
+    "No tablet/largest-text/VoiceOver profile-photo acceptance"
+  ],
+  "fixtureState": "Main private disposable account retained for unfinished Mac handoff; test avatar object removed and cleanup-only session revoked."
+}

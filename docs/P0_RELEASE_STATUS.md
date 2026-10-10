@@ -78,3 +78,7 @@ A task captured in the native isolated Mac app, including its native notes edit,
 ### 10 October — profile photo ownership correction
 
 Both photo picker/upload paths now retain their initiating workspace/account rather than applying a late result to the current profile. Four new deterministic upload-boundary cases pass within each own 18-case AccountTransport suite, and both Debug app/widget builds pass. No real image, schema or provider mutation was made; the disposable profile still has a null avatar. Native photo-selection/account-switch acceptance remains open. See `profile-photo-ownership.md`. The Mac desktop remains locked, with the native return leg and prior inspector/profile UI checks still pending.
+
+### 10 October — native profile photo workflow accepted on phone
+
+Corrected native picker cancellation/draft preservation, actual synthetic profile upload/relaunch and native removal/relaunch now pass in three iPhone Simulator cases, with zero failures/skips/runtime warnings and four inspected captures. Original task/non-profile data are unchanged and pending edits are zero. The exact test Storage object was removed, its cleanup-only Auth session revoked, and the profile restored to null avatar/name. See `profile-photo-native-evidence.json`. Native account-switch-during-upload and Mac photo/return-leg acceptance remain open; the desktop is still locked.
