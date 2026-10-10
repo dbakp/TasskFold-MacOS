@@ -1,0 +1,41 @@
+{
+  "checkedAtUTC": "2026-10-10T09:12:37.614381+00:00",
+  "scope": "Read-only availability check for outstanding native/physical/distribution acceptance. No app launched or installed, no signing or provider state changed.",
+  "priorCheckpoint": {
+    "ios": "734c8a92b32525500ad017f9636e129c579f45cf",
+    "mac": "a322a2a9faf2b6fe63d04a087cac95bc978b3bdb",
+    "scope": "Six native cloud-photo phases and Mac transport passed; cleanup complete."
+  },
+  "nativeUI": {
+    "tool": "cua.getState",
+    "enabledNativeApps": 0,
+    "error": "The Mac is locked and automatic unlock could not unlock it. Ask the user to unlock the Mac manually before continuing.",
+    "nextAction": "User unlock requested. Existing Mac-launch restriction remains; unlocking alone does not authorize installation/replacement."
+  },
+  "physicalDevices": {
+    "command": "xcrun xctrace list devices",
+    "exitCode": 0,
+    "availablePhysicalIOSDevices": 0,
+    "pairedDevicesOffline": {
+      "iPhone": 2,
+      "iPad": 1,
+      "AppleWatch": 1
+    },
+    "simulators": "Existing isolated phone/tablet available; their passing receipts do not establish physical acceptance.",
+    "nextAction": "Connect/unlock an intended provisioned test device and supply the existing required signing/delivery configuration before physical testing."
+  },
+  "signing": {
+    "command": "security find-identity -v -p codesigning",
+    "exitCode": 0,
+    "appleDevelopmentIdentities": 1,
+    "developerIDApplicationIdentities": 0,
+    "appleDistributionIdentities": 0,
+    "nextAction": "Developer ID/notarization and provisioned distribution inputs are still required. Identity counts do not prove profile validity, APNs configuration or notarization access."
+  },
+  "otherPendingInputs": [
+    "Disposable Todoist provider-account access for genuine import/retry",
+    "Suitable external calendar/file provider test accounts",
+    "Existing permission to launch isolated Mac test app; no installed app replacement"
+  ],
+  "goal": "Not complete. No additional parser/fixture matrix is substituted for these dependencies."
+}

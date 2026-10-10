@@ -45,6 +45,10 @@ The paired note/Focus and organized rich-task checkpoints now pass. Paired cloud
 
 Read-only backend checkpoint on 9 October: native reminder cron inactive, general authority rollout disabled, zero unexpired pilot accounts. No provider secret value or real APNs delivery was verified. Keep delivery gated until the complete provider/device/operations acceptance passes.
 
+## Current environment check — 10 October
+
+Read-only recheck after photo handoff: native UI automation reports the Mac locked, all four paired physical devices are offline, and the signing keychain exposes one Apple Development identity but no Developer ID Application or Apple Distribution identity. An unlock request is pending. These observations explain why the remaining native/physical/distribution acceptance cannot be collected in the current environment; they are not app defects or acceptance passes. Existing Mac-launch/provider/signing requests remain required. See [release-environment-check.json](release-environment-check.json). No Mac app was launched/replaced/installed and no delivery/provider configuration changed.
+
 ## Scope and stopping rules
 
 The original Phase 1 explicitly starts with a documented filter subset; the backlog also describes fuller Todoist syntax. Preserve that backlog without making every additional parser form a substitute for data/delivery acceptance. Subprojects/archive/templates, external calendar mirroring, goals/Karma, location/urgent reminders, advanced teams and wearables retain their original later-phase priority. The explicitly requested productive widgets and all P0 feature families remain in scope.
