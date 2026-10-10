@@ -28,3 +28,9 @@ Use the isolated DEBUG Simulator test bundle. Copy its xctestrun beside the orig
 The earlier interleaved largest audit encountered an XCTest hierarchy/type mismatch. Fresh-process viewport setup completed all eight viewports. Build v5 only improves diagnostic attachment logging; the production source, screen setup, audit types and assertions match the final v4 runtime checks.
 
 Full VoiceOver/keyboard journeys, physical devices and Mac runtime remain required. The Mac change is build-verified only. No real account/task data or Mac GUI was used, and no synchronization or persistence contract changed. The diagnostic reseeds local fixtures; its final phone task is Accessible launch brief with an open subtask, while the tablet retains its local keyboard-check capture.
+
+## Saved-preview touch activation checkpoint
+
+Three native functional cases pass on 10 October: phone normal/light and accessibility XXXL/dark, tablet accessibility XXXL/dark. Each creates a task with a 25-minute estimate and longer instructions, saves, terminates/relaunches, taps the description preview, verifies the entire editor value, saves, taps the estimate, verifies the entire value again, and checks the task remains open. Result bundles report zero skips, failures or runtime warnings. See `preview-details-evidence.json`.
+
+The one-line description preview remains intentional. Largest-text phone/tablet captures were inspected: the preview uses an ellipsis and the estimate remains readable; the editor wraps instructions. The phone screenshot is a viewport, not proof that all instructions fit in a single frame. These checks establish touch activation and retained text only. They do not clear audit warnings or establish VoiceOver/keyboard acceptance. Mac runtime remains unverified; no production behavior changed.
