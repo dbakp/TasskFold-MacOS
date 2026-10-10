@@ -845,7 +845,7 @@ struct WindowWidgetView: View {
                     Link(destination: task.url) {
                         HStack(spacing: 8) {
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(entry.hideTitles ? "Task names hidden" : task.title).font(family == .systemSmall ? .subheadline.weight(.semibold) : .caption.weight(.medium)).lineLimit(family == .systemSmall ? 2 : 1).privacySensitive()
+                                Text(entry.hideTitles ? "Task names hidden" : task.title).font(family == .systemSmall ? .subheadline.weight(.semibold) : .caption.weight(.medium)).lineLimit(family == .systemSmall ? 2 : 1).fixedSize(horizontal: false, vertical: family == .systemSmall).privacySensitive()
                                 if family != .systemSmall && !entry.hideTitles { Text(task.project.isEmpty ? "Inbox" : task.project).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).privacySensitive() }
                             }
                             Spacer(minLength: 0)

@@ -44,7 +44,10 @@ struct RootView: View {
         }
         .sheet(item: $pinnedNote) { PinnedNotesView(request: $0) }
         .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
-        .onChange(of: store.workspaceGeneration) { _, _ in inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil }
+        .onChange(of: store.workspaceGeneration) { _, _ in
+            workspace.clearNavigationMemory(); workspace.section = .today
+            inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil
+        }
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
             BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.ids.sorted().compactMap { workspace.taskRecord($0) } : []) { day in
                 try workspace.setDeadlines(request, day: day)

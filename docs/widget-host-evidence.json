@@ -449,5 +449,11 @@
       "Mac native runtime",
       "Cloud account switching"
     ]
+  },
+  "accountIsolation": {
+    "evidence": "account-isolation-evidence.json",
+    "scope": "Small planning widgets, cloud A \u2192 B \u2192 A, offline queue ownership and final logout on isolated iPhone Simulator",
+    "passedUITests": 7,
+    "remaining": "My list-specific cloud selection, other widgets/sizes/hosts and physical/Mac acceptance"
   }
 }

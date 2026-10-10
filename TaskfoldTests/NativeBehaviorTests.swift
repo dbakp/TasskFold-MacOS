@@ -434,3 +434,34 @@ final class SyncStatusTests: XCTestCase {
         XCTAssertEqual(SyncStatus.failureMessage(error), "Sync paused: Could not save changes")
     }
 }
+
+extension NativeBehaviorTests {
+    @MainActor func testMacTransportSeparatesAccountsAfterNativeOfflineSwitch() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_ACCOUNT_ISOLATION_FIXTURES"] else { throw XCTSkip("Disposable account-switch fixtures not supplied") }
+        let fixtures = try JSONDecoder().decode([[String: String]].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        XCTAssertEqual(fixtures.count, 2)
+        for f in fixtures {
+            let owner = try XCTUnwrap(f["userID"])
+            guard UUID(uuidString: owner) != nil, f["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable accounts") }
+        }
+        XCTAssertNotEqual(fixtures[0]["userID"], fixtures[1]["userID"])
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(fixtures[0]["url"]), "Key": try XCTUnwrap(fixtures[0]["key"])], session: nil, persistSession: { _ in })
+        for index in [0, 1, 0] {
+            let f = fixtures[index], owner = try XCTUnwrap(f["userID"])
+            let signedIn = try await backend.signIn(email: try XCTUnwrap(f["email"]), password: try XCTUnwrap(f["password"]), signup: false)
+            XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+            for table in ["tasks", "projects", "saved_views", "favorites"] {
+                let rows = try await backend.rows(table)
+                XCTAssertEqual(rows.count, 1); XCTAssertTrue(rows.allSatisfy { $0.string("user_id") == owner })
+                if table == "tasks" {
+                    let task = try XCTUnwrap(rows.first)
+                    XCTAssertEqual(task.id, f["taskID"]); XCTAssertFalse(task.completed)
+                    XCTAssertEqual(task.title, index == 0 ? "Workspace A private task revised offline" : "Workspace B private task")
+                }
+                if table == "projects" { XCTAssertEqual(rows.first?.id, f["projectID"]) }
+                if table == "saved_views" { XCTAssertEqual(rows.first?.id, f["viewID"]) }
+                if table == "favorites" { XCTAssertEqual(rows.first?.id, "project:" + (try XCTUnwrap(f["projectID"]))) }
+            }
+        }
+    }
+}
