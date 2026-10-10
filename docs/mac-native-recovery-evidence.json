@@ -9,7 +9,16 @@
     "Select native export and reach review sheet",
     "Keep current edits previews Add 0 / Update 0 / Keep 2, Restore disabled",
     "Use backup values previews Add 0 / Update 2 / Keep 0, one task and one Focus session",
-    "Apply enters encrypted safety-copy step before changing workspace"
+    "Apply enters encrypted safety-copy step before changing workspace",
+    "Native success alert: Restored 2 records",
+    "Restored original notes with planned 11 Oct 09:00, independent 10 Oct deadline, P1 and 25-minute estimate",
+    "Restored planned/default and -10/+10-minute reminder specifications",
+    "Open encrypted Before restore copy through native menu and restore the edited-after-export notes",
+    "Reimport same portable file: Keep current edits Add 0 / Update 0 / Keep 2; Use backup values Add 0 / Update 2 / Keep 0; apply completes",
+    "Quit/relaunch: original exported notes/planning remain in Inbox",
+    "Encrypted recovery copy opens in native preview after relaunch",
+    "Native picker cancellation/reopen/cancellation returns to Settings",
+    "Native Focus sheet retains Session ended, correct task and 24:52 remaining"
   ],
   "export": {
     "path": "/tmp/taskfold-mac-native-recovery-v1.json",
@@ -27,25 +36,55 @@
       "three reminder specs including default"
     ]
   },
-  "pending": {
+  "verification": {
+    "appBuild": "/tmp/taskfold-mac-recovery-presentation-build-v2.log: TEST BUILD SUCCEEDED",
+    "newRegression": "testBackupFilePickerCancelAndReopenFromSettings",
+    "uiTestSourceTypecheck": "/tmp/taskfold-mac-recovery-ui-typecheck-v2.log: exit 0, empty diagnostics",
+    "xctestExecution": "Not run; prior runner initialization timed out",
+    "manualRegression": "Native CUA completes cancel/reopen/cancel; XCTest case remains typechecked but not executed",
+    "noNewProductionChange": "Existing picker implementation verified; prior source/build receipts reused. No redundant Core/build matrix."
+  },
+  "notAccepted": [
+    "External file-provider transfer",
+    "Mac cross-account/cloud restore workflow",
+    "Full rich-workspace native Mac handoff",
+    "XCTest runner execution/distribution acceptance"
+  ],
+  "status": "Completed isolated local restore workflow; broader native cloud/provider acceptance remains open",
+  "historicalKeychainWait": {
     "stage": "Saving recovery copy",
     "nativeProcessAtObservation": 41165,
     "cause": "Sampled Store.makeRecoveryBackup -> BackupVault.save -> deviceKey -> SecItemCopyMatching waiting; SecurityAgent running",
     "systemToolLimitation": "CUA refuses com.apple.SecurityAgent for safety reasons",
     "userHandoffRequested": true,
-    "workspaceUnchanged": true
+    "workspaceUnchanged": true,
+    "resolved": "Next native observation shows Restore complete; system prompt was not automated or bypassed"
   },
-  "verification": {
-    "appBuild": "/tmp/taskfold-mac-recovery-presentation-build-v2.log: TEST BUILD SUCCEEDED",
-    "newRegression": "testBackupFilePickerCancelAndReopenFromSettings",
-    "uiTestSourceTypecheck": "/tmp/taskfold-mac-recovery-ui-typecheck-v2.log: exit 0, empty diagnostics",
-    "xctestExecution": "Not run; prior runner initialization timed out"
-  },
-  "notAccepted": [
-    "Completed restore",
-    "Repeated-import safety in Mac native UI",
-    "Native encrypted copy reopen",
-    "External file-provider transfer",
-    "Full rich-workspace Mac handoff"
-  ]
+  "finalData": {
+    "taskCount": 1,
+    "focusRowCount": 1,
+    "pendingCount": 0,
+    "taskID": "a8cebf4a-753c-42b8-b083-8f666a24ec0c",
+    "taskFieldsMatchingExport": [
+      "title",
+      "description",
+      "priority",
+      "due_date",
+      "due_time",
+      "deadline_date",
+      "duration_minutes",
+      "reminder_specs"
+    ],
+    "reminderOffsets": [
+      0,
+      -10,
+      10
+    ],
+    "focusSourceSessionID": "37294982-e9da-42e8-996b-f8b31e8e5dec",
+    "focusRestoredSessionID": "8a23dccc-4ae6-8721-ab8c-617b81b84d37",
+    "focusIdentityContract": "Portable restore intentionally maps session ID deterministically using backup/account. Other checkpoint fields match export; current row ID and task association retained.",
+    "encryptedCopyCount": 4,
+    "repeatRelaunchPickerSnapshotUnchanged": true,
+    "canonicalWorkspaceSHA256": "067c482b73eee68446d541c79da888ace02fe2f013811dcebc3c79a2b3f62caf"
+  }
 }
