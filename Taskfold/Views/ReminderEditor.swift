@@ -368,12 +368,13 @@ struct ReminderAutomaticPreview: View {
     @Environment(Store.self) private var store
     let task: Record
     var previous: Record? = nil
+    var showDeliveryGuidance = true
     var body: some View {
         let resolved = store.applyingReminderDefault(task, previous: previous)
         if resolved["reminder_specs"] != task["reminder_specs"] {
             Text("Default reminder: " + ReminderAutomatic.label(store.reminderAutomaticMinutes))
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("automaticReminderPreview")
-            if store.reminderAutomaticMinutes != -1 && !store.remindersEnabled {
+            if showDeliveryGuidance && store.reminderAutomaticMinutes != -1 && !store.remindersEnabled {
                 Text("Delivery is off on this device. Enable it in Reminders.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
         }

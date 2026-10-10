@@ -477,7 +477,7 @@ struct TaskCapturePanel: View {
             if let rule = parsed.updates["recurrence_pattern"] {
                 Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
             }
-            ReminderAutomaticPreview(task: parsed.applying(to: task))
+            ReminderAutomaticPreview(task: parsed.applying(to: task), showDeliveryGuidance: parsed.updates["reminder_specs"] == nil)
             ForEach(parsed.warnings, id: \.self) { warning in Text(warning).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickEntryWarning") }
             if parsed.updates["reminder_specs"] != nil && !store.remindersEnabled {
                 Text("Reminders are off on this device. Enable delivery in the task’s Reminders after saving.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickReminderDeliveryOff")
