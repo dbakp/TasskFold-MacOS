@@ -1278,6 +1278,16 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertLessThan(Double(different) / Double(max(ink, 1)), 0.08, "Returning should preserve the rendered list position", file: file, line: line)
     }
 
+    private func renderedText(_ element: XCUIElement) -> String {
+        if let value = element.value as? String, !value.isEmpty { return value }
+        return element.label
+    }
+
+    private func retainWindow(_ app: XCUIApplication, name: String) {
+        let capture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        capture.name = name; capture.lifetime = .keepAlways; add(capture)
+    }
+
     private func waitForDisappearance(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
         let predicate = NSPredicate(format: "exists == false")
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
@@ -1285,18 +1295,25 @@ final class TaskfoldMacUITests: XCTestCase {
     }
     @MainActor func testPinnedNoteReadEditUnpinUndoAndRelaunch() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--pinned-notes-seed", "--widget-action-testing", "--pinned-notes-testing"]; app.launch()
-        XCTAssertTrue(app.staticTexts["noteProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["noteProjection"].label, "Notes: 2 · Private: hidden")
+        XCTAssertTrue(app.staticTexts["noteProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(renderedText(app.staticTexts["noteProjection"]), "Notes: 2 · Private: hidden")
         app.buttons["openPinnedNotes"].click(); XCTAssertTrue(app.buttons["pinnedNote-note-first"].waitForExistence(timeout: 5)); app.buttons["pinnedNote-note-first"].click()
-        XCTAssertTrue(app.staticTexts["pinnedNoteText"].waitForExistence(timeout: 5)); XCTAssertTrue(app.staticTexts["pinnedNoteText"].label.contains("Final instruction"))
+        XCTAssertTrue(app.staticTexts["pinnedNoteText"].waitForExistence(timeout: 5)); XCTAssertTrue(renderedText(app.staticTexts["pinnedNoteText"]).contains("Final instruction"))
         app.buttons["editPinnedNote"].click()
         let input = app.descendants(matching: .any).matching(identifier: "taskDescription").firstMatch
         XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("\nEdited on Mac.")
-        app.buttons["Done"].click(); XCTAssertTrue(app.staticTexts["pinnedNoteText"].label.contains("Edited on Mac."))
+        XCTAssertTrue(app.buttons["Done"].exists, "Return in notes must insert a line break rather than close the editor")
+        XCTAssertTrue((input.value as? String ?? "").contains("\nEdited on Mac."))
+        app.buttons["Done"].click(); XCTAssertTrue(renderedText(app.staticTexts["pinnedNoteText"]).contains("Edited on Mac."))
+        retainWindow(app, name: "Pinned note edited on Mac")
         app.buttons["unpinNote"].click(); app.buttons["closePinnedNotes"].click()
-        XCTAssertEqual(app.staticTexts["noteProjection"].label, "Notes: 1 · Private: hidden")
-        app.typeKey("z", modifierFlags: .command); XCTAssertEqual(app.staticTexts["noteProjection"].label, "Notes: 2 · Private: hidden")
+        XCTAssertEqual(renderedText(app.staticTexts["noteProjection"]), "Notes: 1 · Private: hidden")
+        app.typeKey("z", modifierFlags: .command); XCTAssertEqual(renderedText(app.staticTexts["noteProjection"]), "Notes: 2 · Private: hidden")
         app.terminate(); app.launchArguments.removeAll { $0 == "--pinned-notes-seed" }; app.launch()
-        XCTAssertTrue(app.staticTexts["noteProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["noteProjection"].label, "Notes: 2 · Private: hidden")
+        XCTAssertTrue(app.staticTexts["noteProjection"].waitForExistence(timeout: 10)); XCTAssertEqual(renderedText(app.staticTexts["noteProjection"]), "Notes: 2 · Private: hidden")
+        app.buttons["openPinnedNotes"].click(); app.buttons["pinnedNote-note-first"].click()
+        XCTAssertTrue(app.staticTexts["pinnedNoteText"].waitForExistence(timeout: 5))
+        XCTAssertTrue(renderedText(app.staticTexts["pinnedNoteText"]).contains("Edited on Mac."))
+        retainWindow(app, name: "Pinned note edit survives Mac relaunch")
         app.terminate()
     }
 
@@ -1307,19 +1324,20 @@ extension TaskfoldMacUITests {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--project-pulse-seed"]; app.launch()
         XCTAssertTrue(app.buttons["openProjectPulse"].waitForExistence(timeout: 10)); app.buttons["openProjectPulse"].click()
         let picker = app.descendants(matching: .any).matching(identifier: "pulseProjectPicker").firstMatch
-        XCTAssertTrue(picker.waitForExistence(timeout: 5)); picker.click(); app.menuItems["Studio"].click()
-        XCTAssertTrue(app.staticTexts["pulseProgress"].waitForExistence(timeout: 5)); XCTAssertEqual(app.staticTexts["pulseProgress"].label, "1 of 3 completed")
+        XCTAssertTrue(picker.waitForExistence(timeout: 5)); picker.click(); picker.menuItems["Studio"].click()
+        XCTAssertTrue(app.staticTexts["pulseProgress"].waitForExistence(timeout: 5)); XCTAssertEqual(renderedText(app.staticTexts["pulseProgress"]), "1 of 3 completed")
         let counts = app.staticTexts["pulseActivityCounts"]
         for _ in 0..<8 where !counts.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
-        XCTAssertEqual(counts.label, "2 completion events · 1 reopen event")
-        XCTAssertTrue(app.staticTexts["pulseHistoryCoverage"].label.contains("Earlier work has no recorded timeline."))
+        XCTAssertEqual(renderedText(counts), "2 completion events · 1 reopen event")
+        XCTAssertTrue(renderedText(app.staticTexts["pulseHistoryCoverage"]).contains("Earlier work has no recorded timeline."))
+        retainWindow(app, name: "Project pulse history on Mac")
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
         XCTAssertTrue(app.buttons["openProjectPulse"].waitForExistence(timeout: 10)); app.buttons["openProjectPulse"].click()
         let again = app.descendants(matching: .any).matching(identifier: "pulseProjectPicker").firstMatch
-        again.click(); app.menuItems["Studio"].click()
-        XCTAssertEqual(app.staticTexts["pulseProgress"].label, "1 of 3 completed")
+        again.click(); again.menuItems["Studio"].click()
+        XCTAssertEqual(renderedText(app.staticTexts["pulseProgress"]), "1 of 3 completed")
         for _ in 0..<8 where !counts.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
-        XCTAssertEqual(counts.label, "2 completion events · 1 reopen event"); app.terminate()
+        XCTAssertEqual(renderedText(counts), "2 completion events · 1 reopen event"); app.terminate()
     }
 }
 
@@ -1386,9 +1404,10 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(home.waitForExistence(timeout: 5)); XCTAssertTrue(studio.exists); XCTAssertTrue(home.label.contains("Home")); XCTAssertTrue(studio.label.contains("Client launch"))
         home.click(); app.buttons["focusTaskPicker"].click(); app.buttons["cancelFocusTaskChoice"].click()
         XCTAssertTrue(app.buttons["focusTaskPicker"].label.contains("Home")); app.buttons["startFocus"].click()
-        XCTAssertTrue(app.staticTexts["focusStatus"].waitForExistence(timeout: 5)); XCTAssertEqual(app.staticTexts["focusTaskContext"].label, "Home"); app.buttons["pauseResumeFocus"].click()
+        XCTAssertTrue(app.staticTexts["focusStatus"].waitForExistence(timeout: 5)); XCTAssertEqual(renderedText(app.staticTexts["focusTaskContext"]), "Home"); app.buttons["pauseResumeFocus"].click()
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); app.buttons["openFocusSession"].click()
-        XCTAssertEqual(app.staticTexts["focusStatus"].label, "Paused"); XCTAssertEqual(app.staticTexts["focusTaskContext"].label, "Home")
+        XCTAssertEqual(renderedText(app.staticTexts["focusStatus"]), "Paused"); XCTAssertEqual(renderedText(app.staticTexts["focusTaskContext"]), "Home")
+        retainWindow(app, name: "Focus paused context after Mac relaunch")
     }
 }
 

@@ -122,7 +122,15 @@ struct TaskInspectorForm: View {
                     }
                     .transition(.opacity)
                 }
-                TextField("Notes", text: text("description"), prompt: Text("Notes"), axis: .vertical).labelsHidden().multilineTextAlignment(.leading).textFieldStyle(.plain).lineLimit(2...10).foregroundStyle(.secondary).accessibilityIdentifier("taskDescription")
+                TextEditor(text: text("description"))
+                    .font(.body).foregroundStyle(.secondary).scrollContentBackground(.hidden)
+                    .frame(minHeight: 52, maxHeight: 180)
+                    .overlay(alignment: .topLeading) {
+                        if draft.string("description").isEmpty {
+                            Text("Notes").foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5).allowsHitTesting(false)
+                        }
+                    }
+                    .accessibilityLabel("Notes").accessibilityIdentifier("taskDescription")
                 if store.record("tasks", id: taskID) != nil {
                     Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
                     Text("Pin only text you want visible on your desktop or Home Screen. Choose it in the Pinned note widget; hide its details for privacy.").font(.caption).foregroundStyle(.secondary)
