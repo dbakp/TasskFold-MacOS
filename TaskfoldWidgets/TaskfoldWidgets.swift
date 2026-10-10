@@ -1426,7 +1426,7 @@ struct FocusSessionWidgetView: View {
     }
     @ViewBuilder private var taskContent: some View {
         if status == .refresh || status == .idle {
-            Text(status == .idle ? "Give one task a little time." : "Open Taskfold to update your session.").font(.subheadline.weight(.medium)).lineLimit(3)
+            Text(status == .idle ? "Give one task a little time." : "Open Taskfold to update your session.").font(.subheadline.weight(.medium)).lineLimit(3).fixedSize(horizontal: false, vertical: true)
         } else if entry.hideTitle {
             Text("A little time, just for you").font(.subheadline.weight(.medium)).lineLimit(2)
         } else {

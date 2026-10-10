@@ -909,5 +909,14 @@
     },
     "iPadFollowup": "tablet-note-focus-widget-evidence.json",
     "iPadPrivacyAndExpiryFollowup": "tablet-note-focus-widget-evidence.json / privacyAndNaturalExpiry"
+  },
+  "noteAndFocusCloudAccountLifecycle": {
+    "evidence": "docs/note-focus-account-widget-evidence.json",
+    "nativeScenarios": 6,
+    "actualPassingExecutions": 10,
+    "failures": 0,
+    "skips": 0,
+    "runtimeWarnings": 0,
+    "nativeMacAcceptance": false
   }
 }

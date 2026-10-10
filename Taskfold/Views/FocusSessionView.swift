@@ -168,7 +168,13 @@ struct FocusSessionView: View {
                 .font(.headline).foregroundStyle(.secondary).accessibilityIdentifier("focusStatus")
             Text(task?.title ?? "Task unavailable").font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusTaskTitle")
             if let task { Text(taskContext(task)).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusTaskContext") }
-            Text(clock(session.remaining(at: now))).font(.system(.largeTitle, design: .rounded).monospacedDigit().weight(.semibold)).accessibilityIdentifier("focusRemaining")
+            VStack(alignment: .leading, spacing: 4) {
+                Text(session.status == .stopped ? "Time spent" : "Time remaining")
+                    .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("focusClockMeaning")
+                // Ended widgets show whole seconds spent; retain that meaning in the full session.
+                Text(clock(session.status == .stopped ? TimeInterval(session.elapsed(at: now) / 1000) : session.remaining(at: now)))
+                    .font(.system(.largeTitle, design: .rounded).monospacedDigit().weight(.semibold)).accessibilityIdentifier("focusRemaining")
+            }
             ProgressView(value: Double(session.elapsed(at: now)), total: Double(session.durationSeconds * 1000)).tint(.accentColor)
             if task == nil || task?.completed == true {
                 Text(task == nil ? "The task was removed or is no longer available. You can end the session and choose another task." : "This task is completed. You can end the session and choose another task.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
