@@ -331,5 +331,123 @@
       "Physical and Mac native host checks",
       "VoiceOver"
     ]
+  },
+  "planningWidgets": {
+    "date": "2026-10-09",
+    "scope": "Installed small Deadline radar and A small window on isolated iPhone Simulator",
+    "passedResults": [
+      "/tmp/taskfold-deadline-resume-v2.xcresult",
+      "/tmp/taskfold-window-host-v3.xcresult",
+      "/tmp/taskfold-deadline-wrap-v3.xcresult"
+    ],
+    "passedTests": 3,
+    "skippedTests": 0,
+    "reportedAppRuntimeWarnings": [],
+    "initialResults": {
+      "/tmp/taskfold-deadline-host-v1.xcresult": "Created tasks natively, installed Deadline radar, verified missed-task route and completed it. Next route opened approval correctly, but test expected Today approval; quick entry had interpreted Today as the date. Corrected expectation and resumed without repeating gallery setup.",
+      "/tmp/taskfold-window-host-v2.xcresult": "Installed small-window widget, then failed because the test queried 45 minutes as static text rather than its actual menu button. Corrected native selector and reused installation."
+    },
+    "deadline": "Missed cutoff ranks first. Native completion refreshes to today\u2019s cutoff; route survives app relaunch. A subsequent missed task with a longer title becomes first and opens its correct editor.",
+    "smallWindow": {
+      "minutes": 45,
+      "scope": "All open tasks",
+      "list": "Client Work",
+      "visibleTask": "Future outline",
+      "taskEstimateMinutes": 40,
+      "taskPlannedDate": "2026-10-12",
+      "taskDeadline": "2026-10-13",
+      "routing": "Exact task editor opens before and after app relaunch; unrelated Inbox task excluded."
+    },
+    "productionFix": "Small Deadline radar uses a shorter look-ahead caption and preserves the intended two-line task title height. Both repos own the same changes. Actual before/after renders inspected.",
+    "builds": {
+      "ios": "/tmp/taskfold-planning-host-build-v3.log",
+      "macOS": "/tmp/taskfold-planning-host-mac-build-v3.log",
+      "iosTeamSignatures": "/tmp/taskfold-planning-host-sign-v3.json"
+    },
+    "finalCache": {
+      "tasks": [
+        {
+          "id": "cbf25929-6649-493e-a52a-62b109a4ab8f",
+          "title": "Missed proposal",
+          "due_date": null,
+          "deadline_date": "2026-10-08",
+          "duration_minutes": 25,
+          "project_id": "qe-work",
+          "completed": true
+        },
+        {
+          "id": "e15e92d7-bbe9-44da-a532-674597197d83",
+          "title": "approval",
+          "due_date": "2026-10-09",
+          "deadline_date": "2026-10-09",
+          "duration_minutes": 5,
+          "project_id": null,
+          "completed": false
+        },
+        {
+          "id": "cd8cbbde-0821-41c5-b548-164e3fb389af",
+          "title": "Future outline",
+          "due_date": "2026-10-12",
+          "deadline_date": "2026-10-13",
+          "duration_minutes": 40,
+          "project_id": "qe-work",
+          "completed": false
+        },
+        {
+          "id": "7b2a9a2f-e8d7-428e-a4f8-5dfffc4250a9",
+          "title": "Unestimated idea",
+          "due_date": null,
+          "deadline_date": null,
+          "duration_minutes": null,
+          "project_id": null,
+          "completed": false
+        },
+        {
+          "id": "d1fb10e6-aefd-44c8-a960-4c4fa86af2b9",
+          "title": "Submit client proposal",
+          "due_date": null,
+          "deadline_date": "2026-10-08",
+          "duration_minutes": null,
+          "project_id": null,
+          "completed": false
+        }
+      ],
+      "pendingMutations": 0
+    },
+    "capturesInIOSRepository": {
+      "deadline-missed-before.png": {
+        "sha256": "c973904386d4b4b12c2756c755be9cb1cdd02b80723522f596b504b221eeb32a",
+        "visuallyInspected": true
+      },
+      "deadline-caption-before.png": {
+        "sha256": "0b0f94b9eb1d2b626ec35c745b841ea9a4ee2fde2287867b23c8029a9ad8d7f1",
+        "visuallyInspected": true
+      },
+      "deadline-caption-after.png": {
+        "sha256": "e716af22e25ef076cf7cb16623f0d4aa485adced1f8ec66bd8b407dfe2d8dc74",
+        "visuallyInspected": true
+      },
+      "window-configured-45.png": {
+        "sha256": "9c0194b10d1a89db93f57b2fef09df4d7b91f32ac6ba0b2896950b9facd6df11",
+        "visuallyInspected": true
+      },
+      "window-45-settled.png": {
+        "sha256": "71e41f6d850ea5e00e55fcbe22d546813dd524c8c5f42e915ce0bd1a2ebe3244",
+        "visuallyInspected": true
+      },
+      "deadline-wrap-after.png": {
+        "sha256": "65084c31b06c8e7a8560a32cfa1d55e5468247c46a970519ca74a077456afc7e",
+        "visuallyInspected": true
+      }
+    },
+    "widgetSourceSHA256InBothRepos": "384e623f01ff51a454fac559d1afb138e0c5731f15f502da28619f2a4f4abed5",
+    "hostLimitations": "SpringBoard still lacks widget child text and incurs 60-second menu idle waits. Render acceptance uses inspected screenshots, while task-link outcomes are asserted natively. This does not prove VoiceOver. Wallpaper entry avoided the extra app-icon menu on the second installation.",
+    "retainedFixture": "Two small widgets are side by side, Small window left and Deadline radar right; local workspace has five tasks, one completed. No provider account created.",
+    "remaining": [
+      "Other supported widget sizes/surfaces",
+      "Physical hosts",
+      "Mac native runtime",
+      "Cloud account switching"
+    ]
   }
 }

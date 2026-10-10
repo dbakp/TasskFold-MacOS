@@ -784,12 +784,12 @@ struct DeadlineWidgetView: View {
                 Spacer(minLength: 0)
                 PlanningWidgetEmpty(snapshot: entry.snapshot, title: "Room to breathe", message: "No missed deadlines or cutoffs in the next \(entry.window.days) days.", symbol: "checkmark.seal", compact: family == .systemSmall)
             } else {
-                Text(missed > 0 ? "\(missed) missed · next \(entry.window.days) days" : "Hard cutoffs · next \(entry.window.days) days").font(.caption2).foregroundStyle(missed > 0 ? tint : .secondary).lineLimit(1)
+                Text(family == .systemSmall ? (missed > 0 ? "\(missed) missed · \(entry.window.days) days" : "Next \(entry.window.days) days") : (missed > 0 ? "\(missed) missed · next \(entry.window.days) days" : "Hard cutoffs · next \(entry.window.days) days")).font(.caption2).foregroundStyle(missed > 0 ? tint : .secondary).lineLimit(1)
                 ForEach(tasks.prefix(family == .systemSmall ? 1 : 3)) { task in
                     Link(destination: task.url) {
                         if family == .systemSmall {
                             VStack(alignment: .leading, spacing: 5) {
-                                Text(entry.hideTitles ? "Task names hidden" : task.title).font(.headline).lineLimit(2).privacySensitive()
+                                Text(entry.hideTitles ? "Task names hidden" : task.title).font(.headline).lineLimit(2).fixedSize(horizontal: false, vertical: true).privacySensitive()
                                 deadlineBadge(task)
                             }
                         } else {
