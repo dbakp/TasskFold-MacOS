@@ -1029,3 +1029,10 @@ The unfiltered native accessibility diagnostic remains failing: ten normal-text 
 
 
 10 October: Installed iPad portrait medium/large My list checkpoint passes. Both repos now own explicit ready-list header links; small behavior and stored contracts remain unchanged. One actual header-route case passes across both sizes and relaunch; one actual terminated-app task-route case passes across both sizes, each zero skips/failures/reported runtime warnings. Inspected Home Screen shows complete two-row/five-row layouts; project and verified task-editor captures retained in the iOS repo. All stored fixture tables equal their pre-route baseline; six tasks, zero pending. Both builds pass; Mac GUI was not launched. Prior harness failures and scoped limits are retained in `docs/tablet-mylist-evidence.json`. Removed 14 retired isolated iPad test app/runner bundles after verifying fixture-only ownership and empty queues (507,452,242 logical file bytes); current installed pair retained. Full P0, VoiceOver/keyboard, physical and Mac runtime gates remain open.
+
+
+## Editor Reminders and photo-picker return — 10 October 2026
+
+One final native iPhone case completes both normal/light and XXXL/dark modes with zero skips/failures/reported runtime warnings. It opens Reminders and returns, opens/cancels the actual Photos picker, then saves/relaunches and verifies the complete title/instructions. Both action rows are at least 44 points. Pre-fix functional coverage passed but its inspected largest-text capture exposed “Re-” / “minders”; iOS now uses a text-only Reminders label at accessibility sizes. Final inspected capture shows the complete word on one line; normal sizes keep the bell. Choose a photo wraps completely. The final task remains open, has zero attachments and no queued changes. See `editor-picker-evidence.json`.
+
+The final picker finished loading its Photos/Collections privacy notice; selection/import was not exercised. Mac desktop source was reviewed only, with no code or runtime change. This is touch/draft-preservation evidence, not a cleared unfiltered audit, VoiceOver/keyboard, photo import, external-provider or Mac acceptance result.
