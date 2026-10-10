@@ -58,8 +58,48 @@
   "limits": [
     "Title still ellipsizes after two lines when necessary",
     "System passcode/privacy redaction runtime not tested; modifier is source/build verified only",
-    "Inline accessory and other appearances/hosts remain unverified",
+    "Other appearances/hosts remain unverified; inline Today accepted in inlineToday checkpoint",
     "No Mac Desktop widget host acceptance; the accessory branch is iOS-specific",
     "No VoiceOver, physical device, APNs or distribution acceptance"
-  ]
+  ],
+  "inlineToday": {
+    "date": "2026-10-10",
+    "scope": "Saved iPhone inline Today accessory and terminated-app Today route using disposable signed-in Mac handoff account",
+    "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "os": "iOS 26.5",
+    "resultBundle": "/tmp/taskfold-inline-native-route-v1.xcresult",
+    "case": "testInstalledLockScreenInlineTodayRoutesAfterTermination()",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": 0,
+    "build": "/tmp/taskfold-inline-native-route-v1-build.log: TEST BUILD SUCCEEDED",
+    "signatures": "/tmp/taskfold-inline-native-route-v1-signing.json",
+    "checks": [
+      "Saved native inline choice renders Taskfold \u00b7 1 due above clock",
+      "App state asserted notRunning before tap",
+      "Inline tap opens native Today containing original Mac-created task",
+      "Entire decoded account workspace unchanged after native gallery/save and cold route; pending zero"
+    ],
+    "canonicalWorkspaceSHA256": "f0a37c0cd0ba894151b864824c3c15298c30705145d68cf0517b428a091dca3e",
+    "taskID": "101fbaab-af99-480c-97a6-4876bc3e7389",
+    "captures": [
+      {
+        "path": "usability-previews/lockscreen-inline-saved.png",
+        "sha256": "4e304016a03d1ce0e6d687b0cebe60813808986a27091573a6aca500baeb5cc0"
+      },
+      {
+        "path": "usability-previews/lockscreen-inline-today-route.png",
+        "sha256": "178cc07c915fb0854268df118932bc78569e75d9dccd631362968f0aa17b8a64"
+      }
+    ],
+    "visualReview": "Saved host count is complete and readable; Today shows revised original title, note excerpt and 25-minute estimate. Full description remains available in the editor; list deliberately uses a one-line excerpt.",
+    "preparation": "Native gallery v1 and choose/save v2 are preparation diagnostics, not final routing acceptance. Initial choose v1 test helper had a coordinate type error, corrected before execution.",
+    "limits": [
+      "No system passcode/redaction, VoiceOver, physical or Mac Desktop-host acceptance",
+      "Mac native return leg and richer handoff remain open while desktop locked",
+      "Other widget sizes/appearances/account lifecycles retain their existing scope"
+    ],
+    "fixtureState": "Private disposable cloud fixture retained for unfinished Mac return leg; no credentials committed."
+  }
 }

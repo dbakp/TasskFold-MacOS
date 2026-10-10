@@ -1091,3 +1091,7 @@ Native cloud sign-in exposed a stale local display-name draft; quick capture als
 ### 10 October — native Mac task received and revised on phone
 
 The native Mac-created task and description reach the isolated signed-in iPhone Simulator. A focused UI test receives both, edits the title, relaunches and verifies notes preservation; one case passes without runtime warnings. Server and cache preserve the original ID, P1, estimate/date and notes, with an empty phone queue. The actual editor capture was inspected. `mac-phone-handoff-evidence.json` records the limited checkpoint. Mac return-leg and richer native handoff remain open while the desktop is locked.
+
+### 10 October — inline Lock Screen Today acceptance
+
+The installed iPhone Today inline accessory now has a saved native host and passing terminated-app Today route, with two inspected captures and an unchanged decoded account workspace/empty queue. See `lockscreen-widget-evidence.json` / `inlineToday`. Both owned widget sources remain identical; no new Mac runtime or Desktop-host acceptance is claimed. The Mac desktop is still locked and its native return leg remains open.
