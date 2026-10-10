@@ -3,6 +3,9 @@ import UniformTypeIdentifiers
 #if canImport(UIKit)
 import UIKit
 #endif
+#if os(macOS)
+import AppKit
+#endif
 
 struct WorkspaceDocument: FileDocument {
     static var readableContentTypes: [UTType] { [.json] }
@@ -47,6 +50,10 @@ private final class BackupUI {
     @State private var ui = BackupUI()
     func body(content: Content) -> some View {
         @Bindable var ui = ui
+        // macOS presentation bindings may evaluate outside this body's
+        // observation scope. Read their state here so button actions refresh it.
+        let review = ui.review
+        let message = ui.message
         content.environment(ui)
             .fileExporter(isPresented: $ui.exporting, document: ui.document, contentType: .json, defaultFilename: "Taskfold-backup-" + Dates.day(Date())) { result in
                 if case .failure(let error) = result { ui.show(error) }
@@ -64,15 +71,11 @@ private final class BackupUI {
                     if ui.pickerClosed, let url = ui.selectedFile { ui.selectedFile = nil; ui.didSelectFile?(url) }
                 }
             }
-            #else
-            .fileImporter(isPresented: $ui.importing, allowedContentTypes: [.json]) { result in
-                do { ui.didSelectFile?(try result.get()) } catch { ui.show(error) }
-            }
             #endif
-            .sheet(item: $ui.review, onDismiss: { ui.didCloseReview?() }) { request in
+            .sheet(item: Binding(get: { review }, set: { ui.review = $0 }), onDismiss: { ui.didCloseReview?() }) { request in
                 RestoreReview(request: request).presentationDetents([.large])
             }
-            .alert("Backups & restore", isPresented: Binding(get: { ui.message != nil }, set: { if !$0 { ui.message = nil } })) {
+            .alert("Backups & restore", isPresented: Binding(get: { message != nil }, set: { if !$0 { ui.message = nil } })) {
                 Button("OK") { ui.message = nil }
             } message: { Text(ui.message ?? "") }
     }
@@ -98,7 +101,7 @@ struct BackupTools: View {
                 let backup = WorkspaceBackup.make(store.snapshot, account: store.userID)
                 export(backup)
             }.accessibilityIdentifier("backupExport")
-            Button("Restore from file", systemImage: "arrow.counterclockwise") { ui.pickerClosed = false; ui.intendedWorkspace = store.workspaceGeneration; importing = true }.accessibilityIdentifier("backupImport")
+            Button("Restore from file", systemImage: "arrow.counterclockwise", action: chooseRestoreFile).accessibilityIdentifier("backupImport")
             Toggle("Daily recovery copies", isOn: Binding(get: { daily }, set: { daily = $0 })).accessibilityIdentifier("dailyBackups")
             if let warning = store.backupWarning { Text(warning).font(.callout).foregroundStyle(.secondary) }
         } header: { Text("Backups & restore") } footer: {
@@ -132,6 +135,28 @@ struct BackupTools: View {
                 }
             }
         }
+    }
+    private func chooseRestoreFile() {
+        ui.pickerClosed = false
+        ui.intendedWorkspace = store.workspaceGeneration
+        #if os(macOS)
+        guard let window = NSApp.keyWindow else {
+            ui.show(BackupFailure(message: "Open Backups & restore again to choose a file."))
+            return
+        }
+        // SwiftUI's fileImporter can fail to present from a Settings form.
+        // Attach the native panel to the window that owns this action instead.
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.beginSheetModal(for: window) { response in
+            guard response == .OK, let url = panel.url else { return }
+            ui.didSelectFile?(url)
+        }
+        #else
+        importing = true
+        #endif
     }
     private static func readFile(_ url: URL, store: Store, ui: BackupUI) {
         let generation = ui.intendedWorkspace ?? store.workspaceGeneration

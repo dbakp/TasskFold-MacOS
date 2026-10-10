@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-10",
+  "method": "Native Codex CUA on isolated com.dbakp.taskfold.mac.p0uitests",
+  "defect": "Restore from file did not present the SwiftUI fileImporter from Mac Settings.",
+  "fix": "Use NSOpenPanel attached to the Settings key window; retain generation validation and shared restore parsing. Observe preview/error presentation state in body.",
+  "passed": [
+    "Native Export dialog saves readable portable JSON in temporary storage",
+    "Native Open panel presents from Restore from file",
+    "Select native export and reach review sheet",
+    "Keep current edits previews Add 0 / Update 0 / Keep 2, Restore disabled",
+    "Use backup values previews Add 0 / Update 2 / Keep 0, one task and one Focus session",
+    "Apply enters encrypted safety-copy step before changing workspace"
+  ],
+  "export": {
+    "path": "/tmp/taskfold-mac-native-recovery-v1.json",
+    "bytes": 15347,
+    "sha256": "782fd159ad45063bc8eac46706103165fe275992d1426b89b9b608c27c73f650",
+    "taskCount": 1,
+    "taskID": "a8cebf4a-753c-42b8-b083-8f666a24ec0c",
+    "preservedFields": [
+      "title",
+      "notes",
+      "planned date/time",
+      "independent deadline",
+      "priority",
+      "estimate",
+      "three reminder specs including default"
+    ]
+  },
+  "pending": {
+    "stage": "Saving recovery copy",
+    "nativeProcessAtObservation": 41165,
+    "cause": "Sampled Store.makeRecoveryBackup -> BackupVault.save -> deviceKey -> SecItemCopyMatching waiting; SecurityAgent running",
+    "systemToolLimitation": "CUA refuses com.apple.SecurityAgent for safety reasons",
+    "userHandoffRequested": true,
+    "workspaceUnchanged": true
+  },
+  "verification": {
+    "appBuild": "/tmp/taskfold-mac-recovery-presentation-build-v2.log: TEST BUILD SUCCEEDED",
+    "newRegression": "testBackupFilePickerCancelAndReopenFromSettings",
+    "uiTestSourceTypecheck": "/tmp/taskfold-mac-recovery-ui-typecheck-v2.log: exit 0, empty diagnostics",
+    "xctestExecution": "Not run; prior runner initialization timed out"
+  },
+  "notAccepted": [
+    "Completed restore",
+    "Repeated-import safety in Mac native UI",
+    "Native encrypted copy reopen",
+    "External file-provider transfer",
+    "Full rich-workspace Mac handoff"
+  ]
+}

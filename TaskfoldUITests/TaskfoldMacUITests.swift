@@ -2,6 +2,26 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testBackupFilePickerCancelAndReopenFromSettings() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--widget-action-testing"]
+        app.launch()
+        defer { app.terminate() }
+        app.typeKey(",", modifierFlags: .command)
+        let account = app.buttons["Account"].firstMatch
+        XCTAssertTrue(account.waitForExistence(timeout: 5))
+        account.click()
+        let restore = app.buttons["backupImport"]
+        XCTAssertTrue(restore.waitForExistence(timeout: 5))
+        for _ in 0..<2 {
+            restore.click()
+            let open = app.sheets.buttons["Open"].firstMatch
+            XCTAssertTrue(open.waitForExistence(timeout: 5), "Restore must present a native file picker from Settings")
+            app.sheets.buttons["Cancel"].firstMatch.click()
+            XCTAssertTrue(restore.waitForExistence(timeout: 5))
+        }
+    }
+
     @MainActor func testTodoistImportPreviewFailureAndSafeRetry() throws {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--todoist-import-testing"]; app.launch(); defer { app.terminate() }
         app.menuBars.menuBarItems["Account"].click(); app.menuItems["Import from Todoist…"].click()
