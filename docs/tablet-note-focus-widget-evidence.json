@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-10",
+  "scope": "Installed small Pinned note and medium Focus session on isolated iPad Pro 11-inch (M5), iOS 26.5 Simulator, portrait; local disposable workspace",
+  "results": [
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-install-v1.xcresult",
+      "test": "testInstalledPinnedNoteAndMediumFocusConfigureAndOpen",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 664.81
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-refresh-v4.xcresult",
+      "test": "testInstalledPinnedNoteNativeEditAndMediumFocusRelaunch",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 63.572
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-cold-v1.xcresult",
+      "test": "testInstalledNoteAndFocusColdRoutesAfterHostReboot",
+      "passed": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 0,
+      "durationSeconds": 33.009
+    }
+  ],
+  "actualPassed": 3,
+  "failures": 0,
+  "skips": 0,
+  "runtimeWarnings": 0,
+  "sourceChanges": "iOS native tests select medium/small widgets by width, explicitly force local mode before fixture initialization, and replace the title through the iPad native Select All menu. No product source change was required by these walks. Each repository remains independently owned.",
+  "assertions": [
+    "Native notes save/pin and Focus start on the same task",
+    "Actual gallery installation, selected note configuration and full reader route including final instruction",
+    "Medium Focus geometry, exact current task/session route and native pause",
+    "Native note edit/rename/save; app relaunch preserves complete instructions, selected note and paused session",
+    "Inspected settled Home Screen shows Fresh client brief in both widgets, Paused 14:50, then running 14:43 after native resume",
+    "Simulator reboot retains both widget configurations; each opens exact original note/session from a terminated app",
+    "Saved workspace and account/note/Focus published payload exactly unchanged across reboot and cold routes"
+  ],
+  "stateReceipt": {
+    "entireWorkspaceExactlyUnchanged": true,
+    "accountNotesAndFocusPayloadExactlyUnchanged": true,
+    "otherChangedPayloadKeys": [
+      "capacity",
+      "updated"
+    ],
+    "workspaceSHA256": "462dbc9f32c540e7247a6ce23f2e83e9170b9bb6762ffdff5da38a07a60a7f41",
+    "noteFocusPayloadSHA256": "e557c3f00c0a8bda381d10f972daa29a6513d397340ddf0d0169362a19ae7971",
+    "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+    "pinID": "WyJ1aS10ZXN0aW5nIiwibm90ZSIsImFhYWFhYWFhLWFhYWEtNGFhYS04YWFhLWFhYWFhYWFhYWEzMSJd",
+    "focusSessionID": "08e876f3-7c1a-4b84-8eb8-1bcee7929418"
+  },
+  "publicationChanges": "Only top-level updated and capacity.calendarUpdated timestamps changed across cold routes; no full widget payload equality claim.",
+  "builds": [
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-build-v1.log",
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-build-v3.log"
+  ],
+  "signatureReceipts": [
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-signing-v1.json",
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-signing-v3.json"
+  ],
+  "composition": "Initial installation passed on v1; final title-selection helper compiled in v3, then refresh v4 and cold v1 passed without another source change or rebuild. Configuration was retained between phases.",
+  "earlierAttempts": [
+    {
+      "result": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-refresh-v1.xcresult",
+      "outcome": "Failed before Save: combined delete/type burst yielded Focus instead of replacement; recording inspected. Keyboard/input race inferred, not a proven product defect."
+    },
+    {
+      "result": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-refresh-v2.xcresult",
+      "outcome": "Failed before Save at an inappropriate onscreen-keyboard precondition while Simulator used hardware keyboard; removed."
+    },
+    {
+      "result": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-refresh-v3.xcresult",
+      "outcome": "Failed before editing because Home Screen note tap did not open app after rebuild. Same source/products passed refresh v4 without rebuilding; transient host failure retained."
+    }
+  ],
+  "fixture": "DEBUG Simulator exact-bundle cold-launch marker verified true before accepted reboot and reset false afterward. First preparation read occurred before preferences flushed; receipt collection and reboot were repeated after verified marker. No cloud login, real account or task mutation.",
+  "hostLimitations": "SpringBoard container-only widget accessibility; inspected captures establish rendering. Repeated 60-second animation acknowledgement waits and stale remote-process hierarchy logs are not app performance proof.",
+  "remaining": [
+    "iPad privacy/other sizes and configurations, long outages and natural expiry",
+    "Cloud account lifecycle for these installed widgets",
+    "Physical and Mac Desktop widget hosts",
+    "VoiceOver and full P0/provider/distribution acceptance"
+  ],
+  "screenshots": {
+    "docs/widget-host-previews/tablet-note-cold-reader.png": "7db711bb3735493fe4f4fb3523baf9d61b3a83921204ff8275ef97211d249dd4",
+    "docs/widget-host-previews/tablet-note-focus-cold-session.png": "7e5489d74ee8b29b9ee389af57bce7308be2fba59ba012f4a629379f31f99c75",
+    "docs/widget-host-previews/tablet-note-focus-installed.png": "49157635054cacb3a07ab99944e4df0a62dfde63d1567a106ab74b08b1db1823",
+    "docs/widget-host-previews/tablet-note-focus-paused.png": "c21455261505a7bc1b981c92e71ea6b9b867714243c1149081948ce988139389",
+    "docs/widget-host-previews/tablet-note-focus-resumed.png": "16d81e22e99f4650ee976d452e5847f5136b4b50e1ad6e942c146c1b17e92ef9",
+    "docs/widget-host-previews/tablet-note-full-reader.png": "64b0b02b12b3629dad6107b1c56ddac23e8031e52761bb80da66cc24b5cf53be"
+  },
+  "ownSourceHashes": {
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "3af2f7a17e50ae80abdfa521cd711393782de35354e1f53d6d963798df74a296"
+  }
+}
