@@ -81,14 +81,16 @@
     "reason": "Rebuilt ad-hoc isolated app waits inside SecureSession.read \u2192 SecItemCopyMatching; SecurityAgent is live. Fresh sample confirms same wait after runner interruption.",
     "samples": [
       "copy-fixes-mac-launch-sample.txt",
-      "copy-fixes-mac-current-launch-sample.txt"
+      "copy-fixes-mac-current-launch-sample.txt",
+      "mac-keychain-availability-final.txt"
     ],
     "keychainService": "com.taskfold.mac.p0uitests.session",
     "userAction": "Approve the macOS Keychain prompt for the isolated test session. No system prompt or Keychain ACL was automated/bypassed.",
     "preparedCases": [
       "testLiveResolvedPlanningSuggestionOnMac",
       "testLivePhonePlanningCompletionReturnsToMac"
-    ]
+    ],
+    "currentLaunch": "Isolated app PID 13936 remains launched; fresh sample still waits at SecureSession.read / SecItemCopyMatching with SecurityAgent active. User approval has not been observed."
   },
   "historicalPhoneRuns": [
     {
@@ -127,7 +129,6 @@
   "visualFinding": "Initial long quoted capture partly hides the suggestion beneath its controls; scrolling reveals the complete label and detail. The scrolled capture is an inspected frame from the failed v3 bounds-check recording, not a passing-test claim. Native selection passes in v4. Automatic suggestion reveal remains a polish follow-up, not an added release gate.",
   "remainingScope": [
     "Mac native acceptance after Keychain approval",
-    "Updated largest-text local availability case compiles but was not rerun here",
     "Provider delivery/handoff, other existing P0 and release gates remain scoped by P0_RELEASE_STATUS.md"
   ],
   "sourceSHA256": {
@@ -135,5 +136,13 @@
     "Taskfold/Core/Store.swift": "f10f36598daee7e96bd0272f292a78a0ab6a5bae2a92ab16e9c6299f5202dfd4",
     "Taskfold/Views/ReminderEditor.swift": "19eb93db019074936561addbbf33fda7a053b6bbfc384b1d0e420a6a8605c4a0",
     "TaskfoldTests/QuickPlanningCompletionTests.swift": "fa729800f0546e2d98ee5f7a2167c865916cea06e2fc95bfd65b4ca5e48272e3"
+  },
+  "largestTextFollowup": {
+    "resultBundle": "ios-import-availability-v2.xcresult",
+    "case": "testRemoteReminderAvailabilityKeepsLocalControlsReachableAtLargestText",
+    "result": "Passed",
+    "scope": "Local fixture, dark AccessibilityXXXL; full sign-in availability message reached after scrolling, no cloud registration retry, local controls and saving remain reachable. See ios-import-availability-evidence.json for complete run and data isolation.",
+    "cleanRuntimeRunAccepted": false,
+    "note": "Reminder case has no warning; combined run includes two import-opening invalid-frame warnings and is functional-only."
   }
 }

@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-10",
+  "scope": "iPhone Simulator local response fixtures; no real Todoist provider request or import.",
+  "resultBundle": "ios-import-availability-v2.xcresult",
+  "buildLog": "ios-import-availability-build-v2.log",
+  "signingReceipt": "ios-import-availability-signing-v2.json",
+  "passed": 3,
+  "failed": 0,
+  "skipped": 0,
+  "cleanRuntimeAccepted": false,
+  "runtimeWarnings": [
+    {
+      "message": "Invalid frame dimension (negative or non-finite).",
+      "cases": [
+        "testTodoistImportDarkLargestPreviewValidationAndRetry",
+        "testTodoistImportPreviewValidationAndRetry"
+      ],
+      "observedAt": "Opening import from Browse; no symbolicated source location in result. Cause remains unverified."
+    }
+  ],
+  "cases": [
+    "testTodoistImportPreviewValidationAndRetry",
+    "testTodoistImportDarkLargestPreviewValidationAndRetry",
+    "testRemoteReminderAvailabilityKeepsLocalControlsReachableAtLargestText"
+  ],
+  "functionalCoverage": [
+    "Short token disabled; rejected/malformed preview safely rejected; counts and warnings precede action.",
+    "Failed save retains preview, explanation precedes retry; native retry confirms skipped-ID receipt; reopening clears token.",
+    "Dark AccessibilityXXXL local sign-in message fully visible after scrolling; no remote enrollment retry; local delivery controls and save reachable."
+  ],
+  "visualLimits": "Retained-error screenshots show the explanation above the action, but retry is partially below the visible area / tab bar. Native tap proceeds; these captures do not establish full simultaneous visibility. At largest text further scrolling is required.",
+  "isolation": {
+    "launchArguments": [
+      "--uitesting",
+      "-localMode",
+      "YES"
+    ],
+    "reason": "Force local ownership before fixture setup. --uitesting alone is too late to protect initial loading of an existing cloud cache.",
+    "fixtureBehavior": "Existing debug startLocal persists localMode=true; normal relaunch enters local workspace. Relaunch with -localMode NO restores the existing authenticated cloud workspace without sign-in or clearing its session.",
+    "cloudBaseline": "copy-fixes-phone-cache.json",
+    "cloudAfter": "ios-import-availability-cloud-cache.json",
+    "sevenCloudTablesExactlyUnchanged": [
+      "tasks",
+      "projects",
+      "sections",
+      "labels",
+      "saved_views",
+      "view_orders",
+      "focus_sessions"
+    ],
+    "cloudTaskCount": 3,
+    "cloudPendingCount": 0,
+    "cloudReceipt": "Inspected native Today screenshot retains Continuity task/project and account initials after -localMode NO launch."
+  },
+  "historicalRun": {
+    "bundle": "ios-import-availability-v1.xcresult",
+    "passed": 1,
+    "failed": 2,
+    "reasons": [
+      "Reminder scrolling stopped on partial visibility, failing full-frame assertion.",
+      "Largest import waited for offscreen retry enabled state after inserting error. Corrected to wait for the actual error then scroll."
+    ]
+  },
+  "remaining": [
+    "Symbolicate/resolve import-opening invalid-frame warnings before clean-runtime acceptance.",
+    "Full visible retry/action framing at largest text, beyond partial hittability.",
+    "Real Todoist provider import and existing P0 release gates.",
+    "Mac prepared copy checks still await private-session Keychain approval."
+  ],
+  "inspectedCaptures": [
+    {
+      "path": "docs/usability-previews/phone-import-retry-normal.png",
+      "provenance": "ios-import-availability-v2-attachments/6F19E278-EBFD-4757-A06B-802279975A61.png",
+      "sha256": "0106f0d7ecf6f8ee9f346ea2c80bd9baf8e927b36a85d297b87ebb8d51a5d482"
+    },
+    {
+      "path": "docs/usability-previews/phone-import-retry-largest.png",
+      "provenance": "ios-import-availability-v2-attachments/67D2AECA-FED2-4583-A494-E7951B3656BE.png",
+      "sha256": "b7da1a860f717603f40b9f9d2a0a42f88158859324f567e6a126eb8b43026fe4"
+    },
+    {
+      "path": "docs/usability-previews/phone-remote-signin-largest.png",
+      "provenance": "ios-import-availability-v2-attachments/7D638372-F3A5-4121-89E1-1E7CB91F3B7B.png",
+      "sha256": "c803edd5a1adb2888f0309dd1cab73f0927225455d77fed88d2671b61b368bc9"
+    },
+    {
+      "path": "docs/usability-previews/phone-cloud-after-local-fixtures.png",
+      "provenance": "ios-cloud-after-local-fixtures.png",
+      "sha256": "f5a15463413d6b7c121c43598e44fae163824c649f4c47527d558df56eae18de"
+    }
+  ]
+}
