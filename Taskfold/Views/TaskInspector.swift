@@ -182,6 +182,8 @@ struct TaskInspectorForm: View {
                 if let minutes = draft.durationMinutes {
                     Stepper("Estimate · \(minutes) min", value: Binding(get: { draft.durationMinutes ?? 30 }, set: { draft["duration_minutes"] = .number(Double($0)) }), in: 1...10080)
                         .accessibilityIdentifier("taskDuration")
+                        .accessibilityLabel("Time estimate in minutes")
+                        .accessibilityValue("\(minutes)")
                 }
                 if !draft.string("due_time").isEmpty {
                     Picker("Time zone", selection: text("time_zone")) {

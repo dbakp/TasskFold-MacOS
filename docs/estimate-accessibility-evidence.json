@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-10",
+  "scope": "Estimate control semantics and actual increment/decrement, save/relaunch. Phone light/normal and dark/accessibility XXXL; tablet dark/accessibility XXXL.",
+  "productionSourceSHA256": {
+    "ios/Taskfold/Views/TaskEditor.swift": "829e3be22b703cbd8058cc3a09fc9363c6a8e72aea07c90e63140c1c9747cab2",
+    "mac/Taskfold/Views/TaskInspector.swift": "6d722e77eb4ce157ee4941a7a64ff196c41d6acf5b85b62446753cb20a0e607b"
+  },
+  "testSourceSHA256": "6f60c5e0811ec41ca47385e49baaf4fee2284f567060fb0b99f1267e3688fe1e",
+  "builds": {
+    "ios": "/tmp/taskfold-estimate-control-build-v2.log",
+    "mac": "/tmp/taskfold-estimate-control-mac-build-v1.log"
+  },
+  "signatures": "/tmp/taskfold-estimate-control-sign-v2.json",
+  "results": [
+    {
+      "device": "phone",
+      "resultBundle": "/tmp/taskfold-estimate-control-phone-v2.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "snapshotSHA256": "103ec03723599a0486fe1def74fbb51896c9b5e4ed3a975576da2dc642d09cf7",
+      "retainedTask": {
+        "id": "8f3c76cc-a4d7-40bf-883a-44b94580b789",
+        "title": "Estimate control 062D30",
+        "user_id": "ui-testing",
+        "duration_minutes": 26,
+        "completed": false
+      }
+    },
+    {
+      "device": "tablet",
+      "resultBundle": "/tmp/taskfold-estimate-control-tablet-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "snapshotSHA256": "6b19b797e9ed6b5e8eae328131b95cbc2f229917ece817fb7b50448925cf37f9",
+      "retainedTask": {
+        "id": "024e976a-7ff7-49f6-bfab-455e900a9b24",
+        "title": "Estimate control AACDE5",
+        "user_id": "ui-testing",
+        "duration_minutes": 26,
+        "completed": false
+      }
+    }
+  ],
+  "captures": [
+    {
+      "repository": "TaskFold-iOS",
+      "path": "docs/usability-previews/estimate-phone-largest.png",
+      "sha256": "0a43a16eb49fc09c24379298a62a5db656802cd2e81413fd762b6924b3ec1bb8",
+      "inspected": true
+    },
+    {
+      "repository": "TaskFold-iOS",
+      "path": "docs/usability-previews/estimate-phone-normal.png",
+      "sha256": "f6605447ea06e81b923043f69410f5d5a149e3dd9f78d29c6a5ccfc3a11ee75c",
+      "inspected": true
+    },
+    {
+      "repository": "TaskFold-iOS",
+      "path": "docs/usability-previews/estimate-tablet-largest.png",
+      "sha256": "e82e19b030876ac3834a42309e705be8d9a498dbeb2b444b66d980ed4752df22",
+      "inspected": true
+    }
+  ],
+  "assertions": [
+    "Estimate accessible description includes Time estimate in minutes; numeric value starts at 25",
+    "Largest-text increase/decrease names include the current estimate and both targets are at least 44 by 44 points",
+    "Actual taps change 25 to 26 to 25 to 26",
+    "Saved row shows 26 min after termination/relaunch; reopened reachable editor value remains 26"
+  ],
+  "composition": "Tablet v1 passed with identical production source and a stricter exact estimate-description assertion. Phone v1 had one largest-text pass and one normal-text failure because the native label includes its visible title as well as the added description. Phone v2 requires the description while preserving that native prefix; both cases pass. No tablet rerun was needed for this test-only assertion change.",
+  "limitations": [
+    "No full VoiceOver, keyboard or physical-device acceptance",
+    "Mac app build passes; no Mac GUI launched or runtime accessibility verified",
+    "Local isolated ui-testing fixtures only; no new cloud or mixed-version evidence"
+  ],
+  "finalState": "Both isolated apps terminated, with one open 26-minute local fixture task per device; no live account used."
+}
