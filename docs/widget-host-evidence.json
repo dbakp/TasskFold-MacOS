@@ -455,5 +455,172 @@
     "scope": "Small planning widgets, cloud A \u2192 B \u2192 A, offline queue ownership and final logout on isolated iPhone Simulator",
     "passedUITests": 7,
     "remaining": "My list-specific cloud selection, other widgets/sizes/hosts and physical/Mac acceptance"
+  },
+  "productivityWidgets": {
+    "date": "2026-10-10",
+    "scope": "Installed small Day capacity and Project pulse in one isolated local iPhone Simulator workspace; Mac owns matching source and builds independently, with no Mac GUI claim.",
+    "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "bundle": "com.dbakp.taskfold.assigneepatterntests",
+    "workspace": "ui-testing",
+    "configuration": {
+      "capacity": "Tomorrow",
+      "projectPulse": "Studio",
+      "projectID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+      "calendar": "off",
+      "workingMinutes": 480
+    },
+    "before": {
+      "totalTasks": 6,
+      "completedTasks": 1,
+      "estimatedMinutes": 90,
+      "unestimatedTasks": 1,
+      "overdueOutsidePlan": 1,
+      "completionEvents": 2,
+      "reopenEvents": 1,
+      "attentionCount": 2
+    },
+    "after": {
+      "totalTasks": 6,
+      "completedTasks": 3,
+      "estimatedMinutes": 95,
+      "unestimatedTasks": 0,
+      "overdueOutsidePlan": 1,
+      "completionEvents": 4,
+      "reopenEvents": 1,
+      "attentionCount": 1,
+      "remainingMinutes": 385,
+      "pendingMutations": 0
+    },
+    "completedNativeChecks": [
+      {
+        "test": "testInstalledProductivityResumeCapacityAndConfigurePulse()",
+        "result": "/tmp/taskfold-productive-host-resume-v3.xcresult",
+        "passed": 1,
+        "skipped": 0,
+        "runtimeWarnings": []
+      },
+      {
+        "test": "testInstalledProductivityRefreshResumeAfterNativeChanges()",
+        "result": "/tmp/taskfold-productive-host-refresh-resume-v4.xcresult",
+        "passed": 1,
+        "skipped": 0,
+        "runtimeWarnings": []
+      },
+      {
+        "test": "testInstalledCapacityAndPulsePrivacyPreservesRoutes()",
+        "result": "/tmp/taskfold-productive-host-privacy-v4.xcresult",
+        "passed": 1,
+        "skipped": 0,
+        "runtimeWarnings": []
+      },
+      {
+        "test": "testInstalledProductivityRefreshResumeAfterNativeChanges()",
+        "result": "/tmp/taskfold-productive-host-final-v5.xcresult",
+        "passed": 1,
+        "skipped": 0,
+        "runtimeWarnings": [],
+        "purpose": "Final installed rendering and exact routes after singular-copy correction"
+      }
+    ],
+    "composition": "Initial setup created three native tasks and configured Tomorrow, then its first post-configuration tap failed. A settled fresh tap passed; no production routing change was made and the initial cause remains unproven. Native estimate/completion edits then persisted, but the refresh test encountered a transient third SpringBoard widget icon that disappeared before sorting its frame. The query now excludes missing elements. A resumed checkpoint verified the changed counts, exact routes and relaunch. This is composed evidence, not an all-green setup-to-finish driver run.",
+    "layout": "Small capacity uses a short heading with explicit Today/Tomorrow, and reserves two-line height for the budget qualifier and estimate/overdue explanation. Project pulse uses singular needs for one attention item.",
+    "remaining": [
+      "Other supported sizes, iPad, physical and Mac hosts",
+      "Cloud/account switching for these two widget kinds",
+      "Full P0 acceptance"
+    ],
+    "capturesInIOSRepository": {
+      "capacity-no-workday-readable.png": {
+        "sha256": "e0625ceb0e4644c3bc3a4783c19c762ed012034af7edb64a9679b48645e34604",
+        "visuallyInspected": true,
+        "stage": "Before final qualifier/singular-copy fixes; retained to document the observed clipping"
+      },
+      "productive-widgets-configured.png": {
+        "sha256": "5cb93a04de0a245e83bc7c49de8140fe0aec5bec414653fb6f336b4adc04f7c2",
+        "visuallyInspected": true,
+        "stage": "Before final qualifier/singular-copy fixes; retained to document the observed clipping"
+      },
+      "productive-widgets-privacy.png": {
+        "sha256": "bb8ae32b5784249a631c9fbb19fd22c7d5d0d4c72e9af19caaaa9c781666caf8",
+        "visuallyInspected": true,
+        "stage": "Both native privacy settings enabled; before singular-copy correction"
+      },
+      "productive-widgets-final.png": {
+        "sha256": "f31e30fd6fec8caa367c9c1512787024c5b819269ab0c30fb49efa51379ab302",
+        "visuallyInspected": true,
+        "stage": "Final owned source: 3/6, 1 needs attention, Tomorrow 6h25m, two-line qualifiers, calendar excluded"
+      }
+    },
+    "independentCacheInspection": {
+      "tasks": [
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa72",
+          "title": "Finish a useful draft",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": true,
+          "due_date": null,
+          "deadline_date": null,
+          "duration_minutes": null
+        },
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa73",
+          "title": "Review the launch checklist",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": true,
+          "due_date": null,
+          "deadline_date": "2026-10-10",
+          "duration_minutes": null
+        },
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa74",
+          "title": "A task without urgency",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": false,
+          "due_date": null,
+          "deadline_date": null,
+          "duration_minutes": null
+        },
+        {
+          "id": "f9bbd20b-93cf-48f0-9aa8-a0cb54e682a6",
+          "title": "Shape studio storyboard",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": false,
+          "due_date": "2026-10-11",
+          "deadline_date": null,
+          "duration_minutes": 95
+        },
+        {
+          "id": "98f5f6f9-9a91-4df7-a2d8-92b3001ad58d",
+          "title": "Collect reference images",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": true,
+          "due_date": "2026-10-11",
+          "deadline_date": null,
+          "duration_minutes": null
+        },
+        {
+          "id": "b54d011f-1b7c-44e8-8477-c0de26f5dd5e",
+          "title": "Overdue sketch",
+          "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+          "completed": false,
+          "due_date": "2026-10-09",
+          "deadline_date": null,
+          "duration_minutes": null
+        }
+      ],
+      "pendingMutations": 0
+    },
+    "hostLimitations": "SpringBoard supplies container frames but not widget child text. Native configuration menus repeatedly wait 60 seconds for animation acknowledgement and report stale remote accessibility-process warnings. Use inspected pixels plus native outcomes; this does not establish VoiceOver coverage.",
+    "privacy": "Native project-name and capacity-detail privacy switches work independently. Both exact routes still open the updated fixture; both settings restore to false. Inspected hidden/restored pixels confirm Studio is concealed and capacity details are concealed. Pulse progress/attention counts intentionally remain visible when names are hidden. Small pulse does not render task titles, so task-title privacy in larger sizes remains unverified.",
+    "finalBuilds": {
+      "iOS": "/tmp/taskfold-productive-host-build-v5.log",
+      "macOS": "/tmp/taskfold-productive-mac-build-v3.log",
+      "bothPassed": true,
+      "simulatorRealTeamSignaturesVerified": "/tmp/taskfold-productive-host-sign-v5.json",
+      "macGUI": "Not launched"
+    },
+    "finalOwnedInputs": {
+      "TaskfoldWidgets/TaskfoldWidgets.swift": "27f66bf94ad1596d4cb382ff2b66e266a7502abb93291b9e53630ca824a1518e"
+    }
   }
 }

@@ -1018,9 +1018,9 @@ struct CapacityWidgetView: View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 5) {
                 Image(systemName: "chart.bar.xaxis").foregroundStyle(tint)
-                Text(family == .systemSmall && entry.day == .tomorrow ? "Tomorrow’s capacity" : "Day capacity").font(.caption.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(family == .systemSmall ? "Capacity" : "Day capacity").font(.caption.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
                 Spacer(minLength: 2)
-                if family != .systemSmall { Text(entry.day == .today ? "Today" : "Tomorrow").font(.caption2).foregroundStyle(.secondary) }
+                Text(entry.day == .today ? "Today" : "Tomorrow").font(family == .systemSmall ? .system(size: 9) : .caption2).foregroundStyle(.secondary).lineLimit(1)
             }
             if entry.hideDetails {
                 Spacer(minLength: 0)
@@ -1032,7 +1032,7 @@ struct CapacityWidgetView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(headline(day)).font(.system(size: family == .systemSmall ? 34 : 36, weight: .semibold, design: .rounded)).monospacedDigit().minimumScaleFactor(0.55).lineLimit(1)
                             .foregroundStyle(reading.canCalculateRoom && day.afterKnownWork < 0 && day.working > 0 ? brand : .primary)
-                        Text(qualifier(day)).font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+                        Text(qualifier(day)).font(.caption2).foregroundStyle(.secondary).lineLimit(2).fixedSize(horizontal: false, vertical: family == .systemSmall)
                     }.frame(maxWidth: .infinity, alignment: .leading).privacySensitive()
                     if family != .systemSmall {
                         VStack(alignment: .leading, spacing: 4) {
@@ -1043,7 +1043,7 @@ struct CapacityWidgetView: View {
                     }
                 }
                 capacityBar(day).padding(.vertical, 2)
-                Text(caution(day)).font(.caption2).foregroundStyle(.secondary).lineLimit(family == .systemSmall ? 2 : 1).minimumScaleFactor(0.8).privacySensitive()
+                Text(caution(day)).font(.caption2).foregroundStyle(.secondary).lineLimit(family == .systemSmall ? 2 : 1).minimumScaleFactor(0.8).fixedSize(horizontal: false, vertical: family == .systemSmall).privacySensitive()
                 Spacer(minLength: 0)
                 Text(reading.calendarNote).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.7)
             } else {
@@ -1522,7 +1522,7 @@ struct PulseWidgetView: View {
             }
             if let project, let day {
                 Text(entry.hideNames ? "Your chosen project" : project.name).font((small ? Font.caption : Font.subheadline).weight(.semibold)).lineLimit(small ? 2 : 1).privacySensitive()
-                if small { progress(project); Text("\(day.attentionCount) need attention").font(.system(size: 10, weight: .medium)).foregroundStyle(day.attentionCount > 0 ? tint : .secondary).lineLimit(1) }
+                if small { progress(project); Text("\(day.attentionCount) \(day.attentionCount == 1 ? "needs" : "need") attention").font(.system(size: 10, weight: .medium)).foregroundStyle(day.attentionCount > 0 ? tint : .secondary).lineLimit(1) }
                 else {
                     HStack(alignment: .top, spacing: 20) {
                         progress(project).frame(width: large ? 124 : 115, alignment: .leading)
@@ -1577,7 +1577,7 @@ struct PulseWidgetView: View {
     }
     private func attention(_ day: PulseDay, limit: Int) -> some View {
         VStack(alignment: .leading, spacing: large ? 8 : 3) {
-            Text("\(day.attentionCount) need attention").font(.system(size: large ? 11 : 9, weight: .semibold)).foregroundStyle(day.attentionCount > 0 ? tint : .secondary).lineLimit(1)
+            Text("\(day.attentionCount) \(day.attentionCount == 1 ? "needs" : "need") attention").font(.system(size: large ? 11 : 9, weight: .semibold)).foregroundStyle(day.attentionCount > 0 ? tint : .secondary).lineLimit(1)
             if !entry.hideNames {
                 ForEach(day.attention.prefix(limit)) { task in
                     HStack(alignment: .top, spacing: 6) { Circle().fill(tint).frame(width: 4, height: 4).padding(.top, 4); Text(task.title).font(.system(size: large ? 12 : 10, weight: .medium)).lineLimit(large ? 2 : 1).privacySensitive() }
