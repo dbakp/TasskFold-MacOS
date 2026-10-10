@@ -8,7 +8,7 @@
 - Enter a 25-minute capture with the keyboard visible, dismiss it, assert the actual keyboard disappears and Save/More options remain hittable, expand/save/relaunch and verify the task and estimate: phone normal/light and largest/dark, tablet largest/dark.
 - Inspected large-text captures show the keyboard absent, capture controls readable, saved subtask titles wrapping and independent completion states.
 
-## Diagnostic results and triage
+## 10 October diagnostic results and triage
 
 Each of four viewports starts in a fresh app/fixture: Quick capture, editor overview, editor subtask actions and saved task list. The audit checks sufficient descriptions, hit regions and clipped text. These are visible viewport checks, not coverage of every offscreen editor control. It reports zero insufficient-description findings in both modes. The two diagnostic test cases **fail** their unfiltered final assertions; neither is accepted release evidence.
 
@@ -62,3 +62,10 @@ The final picker finished loading its Photos/Collections privacy notice; selecti
 
 
 10 October: Both apps now name task-row subtask progress, comments and attachments descriptively for accessibility; visuals and stored fields are unchanged. Two native iPhone cases pass with zero skips/failures/reported runtime warnings: the saved photo row exposes “1 attachment” and its preview/return still works; largest/dark subtask progress exposes “1 of 2 subtasks completed” after relaunch, then “2 of 2” after independent completion. Saved parent remains open, both subtasks completed, pending queue empty. Both apps build. Comment-count semantics are source/build verified only; Mac GUI, full VoiceOver/keyboard and the unresolved unfiltered audit remain open. See `metadata-accessibility-evidence.json`.
+
+
+### 11 October — refreshed unfiltered accessibility diagnosis
+
+The current normal/light capture/editor audit completes all four viewports and still fails its unfiltered assertion: eight findings (three unidentified capture clipping reports, three saved-row hit-region reports, and description/search clipping). Editor overview and editor subtask/action viewports report no findings. Four captures are inspected; the normal capture visibly leaves the Inbox chip partly outside its horizontally scrolling controls. Adaptive control visibility is the next concrete fix within the existing critical usability work. The untargeted audit nodes cannot be assigned to that chip conclusively. Intentional description truncation and native search findings remain unresolved pending semantic/VoiceOver inspection.
+
+Largest-text refresh is incomplete: the first run audits three viewports with zero findings but saves an incomplete ~25 token during saved-list setup; the second stops at a new complete-input assertion. Their causes are not established, and neither is acceptance. The diagnostic now verifies complete input and settled touch geometry, explicitly selects the disposable local workspace, retains per-viewport hierarchies, and continues to reject every reported finding without whitelists. No production source was changed. The original cloud task and selected cold note/Focus routes pass a separate cleanup case with no reported runtime warnings; full original cloud/widget data and Mac cache remain unchanged. Duplicate diagnostic exports were pruned with hash receipts while all native results remain retained. See `accessibility-current-evidence.json` and `accessibility-audit-reports/current-normal.txt`. Full accessibility and broader P0 acceptance remain open.
