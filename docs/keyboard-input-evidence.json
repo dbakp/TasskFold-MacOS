@@ -1,0 +1,165 @@
+{
+  "date": "2026-10-10",
+  "productionChanged": false,
+  "conclusion": "The Simulator input path fails native Command-A select-all, and injected Command-S appended a literal S. These failures cannot establish an app-side hardware shortcut defect. Full keyboard acceptance remains open.",
+  "functional": {
+    "bundle": "/tmp/taskfold-keyboard-save-phone-v6.xcresult",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+            "deviceName": "Taskfold assignment iPhone",
+            "modelName": "iPhone 17 Pro",
+            "osBuildNumber": "23F77",
+            "osVersion": "26.5",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1791610780.807,
+      "passedTests": 2,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1791610709.109,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 2
+    },
+    "scope": "Existing dark/largest quick-capture keyboard dismissal and saved-preview details flows pass after restoring accepted production code."
+  },
+  "modifierPreflight": {
+    "bundle": "/tmp/taskfold-keyboard-save-tablet-v7.xcresult",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+            "deviceName": "Taskfold assignment iPad",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "23F77",
+            "osVersion": "26.5",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 1,
+          "passedTests": 0,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "finishTime": 1791610862.894,
+      "passedTests": 0,
+      "result": "Failed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1791610836.019,
+      "statistics": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertTrue failed - Hardware modifier preflight failed; app Save shortcuts cannot be evaluated with this input path",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest",
+          "testName": "testCommandSSavesFocusedTaskDetailsDarkLargest()"
+        }
+      ],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "report": "keyboard-audit-reports/modifier-preflight.txt",
+    "reportSHA256": "ca51a70d721ae4f3b87b12e12da89b0f14d98add289e2f1108bcfe97f4ec3c1b",
+    "reachedSaveAssertion": false
+  },
+  "priorUnreliableSaveProbe": {
+    "bundle": "/tmp/taskfold-keyboard-save-tablet-v6.xcresult",
+    "summary": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+            "deviceName": "Taskfold assignment iPad",
+            "modelName": "iPad Pro 11-inch (M5)",
+            "osBuildNumber": "23F77",
+            "osVersion": "26.5",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 1,
+          "passedTests": 0,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "finishTime": 1791610740.965,
+      "passedTests": 0,
+      "result": "Failed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1791610709.109,
+      "statistics": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertTrue failed - Command\u2013S must save from the focused description field",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testCommandSSavesFocusedTaskDetailsDarkLargest",
+          "testName": "testCommandSSavesFocusedTaskDetailsDarkLargest()"
+        }
+      ],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 1
+    },
+    "observation": "Description after key: Optional(Keep these instructions when saving from the keyboard.S); Save button enabled: true"
+  },
+  "buildLog": "/tmp/taskfold-keyboard-save-build-v7.log",
+  "signingReceipt": "/tmp/taskfold-keyboard-save-sign-v7.json",
+  "productionSourceSHA256": "752e93fced6646316a9c3ebfa29ecfa1f3afdcd0f6d5f43e0ca754636525a86d",
+  "finalTestSourceSHA256": "df708572998b027540e345ce964bbd9cd6f68a1c1b35f760240a442c77772a60",
+  "composition": "Final v7 changes only the opt-in diagnostic preflight. Production code and the two passing v6 functional test methods are unchanged.",
+  "reproduction": "Copy the isolated xctestrun beside its original in Build/Products. Set TaskfoldUITests.EnvironmentVariables.TASKFOLD_RUN_KEYBOARD_AUDIT=1 and select testCommandSSavesFocusedTaskDetailsDarkLargest(). Require modifier preflight before interpreting Save routing. Default skip is not acceptance.",
+  "storageCleanup": {
+    "removedTerminalPrototypeBundles": 7,
+    "fileBytesReclaimed": 168926623,
+    "summariesRetained": "keyboard-audit-reports/discarded-prototype-summaries.json"
+  },
+  "limitations": [
+    "No physical hardware keyboard, Full Keyboard Access tab journey or VoiceOver acceptance.",
+    "No particular Save accelerator is added as a new P0 release gate. This optional candidate probe does not prove keyboard-only Save is unavailable.",
+    "Mac inspector autosave and Return capture handlers were source-inspected only. No Mac GUI was launched.",
+    "All prototype app implementations were removed. No synchronization, schema or deployment change."
+  ]
+}
