@@ -557,6 +557,7 @@ struct QuickReferenceCompletionModifier: ViewModifier {
     var onChoose: () -> Void = {}
     var submit: () -> Void = {}
     var submitsFromKeyboard = false
+    @State private var optionListHeight: CGFloat = 44
     @State private var highlighted = 0
     @State private var dismissedText: String?
     private var completion: QuickEntryCompletion {
@@ -595,7 +596,8 @@ struct QuickReferenceCompletionModifier: ViewModifier {
                                         QuickReferenceOptionRow(option: option, highlighted: menu.options.firstIndex(of: option) == highlighted) { choose(option) }.id(option.id)
                                     }
                                 }
-                            }.frame(maxHeight: 190).scrollIndicators(.visible).accessibilityIdentifier("referenceSuggestionList")
+                                .onGeometryChange(for: CGFloat.self) { ceil($0.size.height) } action: { optionListHeight = $0 }
+                            }.frame(height: min(190, max(44, optionListHeight))).scrollIndicators(.visible).accessibilityIdentifier("referenceSuggestionList")
                                 .onChange(of: highlighted) { _, value in
                                     if menu.options.indices.contains(value) { proxy.scrollTo(menu.options[value].id, anchor: .center) }
                                 }

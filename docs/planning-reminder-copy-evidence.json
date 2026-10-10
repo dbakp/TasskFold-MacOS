@@ -144,5 +144,10 @@
     "scope": "Local fixture, dark AccessibilityXXXL; full sign-in availability message reached after scrolling, no cloud registration retry, local controls and saving remain reachable. See ios-import-availability-evidence.json for complete run and data isolation.",
     "cleanRuntimeRunAccepted": false,
     "note": "Reminder case has no warning; combined run includes two import-opening invalid-frame warnings and is functional-only."
+  },
+  "visualFindingFollowUp": {
+    "date": "2026-10-11",
+    "evidence": "capture-suggestion-visibility-evidence.json",
+    "status": "Phone normal/light and largest/dark option visibility and selection accepted without manual scrolling. Mac list sizing compiled; native inspection pending."
   }
 }
