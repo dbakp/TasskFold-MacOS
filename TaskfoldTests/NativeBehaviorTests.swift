@@ -465,3 +465,45 @@ extension NativeBehaviorTests {
         }
     }
 }
+
+extension NativeBehaviorTests {
+    func testOrganizationDragPreservesMetadataAndRoundTripsQueueAndUndo() throws {
+        for table in ["projects", "sections", "saved_views", "favorites"] {
+            let original = ["a", "b", "c"].enumerated().map { index, id in
+                Record(["id": .string(id), "user_id": .string("owner"), "name": .string("Item " + id), "order_index": .number(Double(index)), "project_id": .string("project"), "future_field": .object(["keep": .bool(true)])])
+            }
+            var snapshot = Snapshot(); snapshot.tables[table] = original
+            let changes = try OrganizationOrder.changes(table: table, rows: original, ids: ["c", "a", "b"])
+            let history = EditHistory(changes: changes, snapshot: snapshot)
+            for change in changes {
+                XCTAssertEqual(change.method, "PATCH"); XCTAssertEqual(Set(change.fields.keys), ["order_index"])
+                snapshot.apply(change); snapshot.pending.append(change)
+            }
+            let restored = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+            XCTAssertEqual(OrganizationOrder.sorted(restored.tables[table] ?? []).map(\.id), ["c", "a", "b"])
+            XCTAssertEqual(restored.pending, changes)
+            for row in restored.tables[table] ?? [] {
+                let before = try XCTUnwrap(original.first { $0.id == row.id })
+                XCTAssertEqual(row.fields.filter { $0.key != "order_index" }, before.fields.filter { $0.key != "order_index" })
+            }
+            for change in history.undo { snapshot.apply(change) }
+            XCTAssertEqual(snapshot.tables[table], original)
+            for change in history.redo { snapshot.apply(change) }
+            XCTAssertEqual(OrganizationOrder.sorted(snapshot.tables[table] ?? []).map(\.id), ["c", "a", "b"])
+            XCTAssertTrue(try OrganizationOrder.changes(table: table, rows: snapshot.tables[table] ?? [], ids: ["c", "a", "b"]).isEmpty)
+        }
+    }
+    func testOrganizationRejectsStaleDuplicateAndOutOfScopeDrags() throws {
+        let rows = ["a", "b"].map { Record(["id": .string($0)]) }
+        for ids in [["a"], ["a", "a"], ["a", "missing"], ["a", "b", "other-project-section"]] {
+            XCTAssertThrowsError(try OrganizationOrder.changes(table: "sections", rows: rows, ids: ids))
+        }
+        XCTAssertThrowsError(try OrganizationOrder.changes(table: "tasks", rows: rows, ids: ["b", "a"]))
+        XCTAssertThrowsError(try OrganizationOrder.changes(table: "favorites", rows: [rows[0], rows[0]], ids: ["a", "b"]))
+    }
+    func testOrganizationTiedOrderIsIndependentOfServerRowSequence() {
+        let rows = ["c", "a", "b"].map { Record(["id": .string($0), "order_index": .number(0)]) }
+        XCTAssertEqual(OrganizationOrder.sorted(rows).map(\.id), ["a", "b", "c"])
+        XCTAssertEqual(OrganizationOrder.sorted(rows.reversed()).map(\.id), ["a", "b", "c"])
+    }
+}

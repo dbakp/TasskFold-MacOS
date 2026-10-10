@@ -45,13 +45,16 @@ struct SidebarView: View {
                                 else { HStack { Label(store.title(for: scope), systemImage: "exclamationmark.circle").foregroundStyle(.secondary); Spacer(); Button { store.toggleFavorite(scope) } label: { Image(systemName: "star.slash") }.buttonStyle(.borderless).accessibilityLabel("Remove unavailable favorite") } }
                             }.contextMenu { Button("Remove favorite") { store.toggleFavorite(scope) } }
                         }
-                    }.onMove { source, destination in var ids = store.favorites.map(\.id); ids.move(fromOffsets: source, toOffset: destination); store.reorderFavorites(ids) }
+                    }.onMove { source, destination in var ids = store.favorites.map(\.id); ids.move(fromOffsets: source, toOffset: destination); workspace.run("Reorder Favorites") { store.reorderFavorites(ids) } }
                 }
             }
             Section("Filters") {
                 ForEach(store.savedViews) { view in
                     Label(view.name, systemImage: "line.3.horizontal.decrease.circle").tag(SidebarItem.saved(view.id))
                         .contextMenu { Button("Edit Filter…") { filterEditor = view }; Button(store.isFavorite(.saved(view.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.saved(view.id)) } }
+                }.onMove { source, destination in
+                    var ids = store.savedViews.map(\.id); ids.move(fromOffsets: source, toOffset: destination)
+                    workspace.run("Reorder Filters") { store.reorderOrganization("saved_views", ids: ids) }
                 }
                 Button("New Filter", systemImage: "plus") { filterEditor = store.newSavedView() }.accessibilityIdentifier("newSavedView")
             }
@@ -76,7 +79,7 @@ struct SidebarView: View {
                 }
                 .onMove { source, destination in
                     var projects = store.projects; projects.move(fromOffsets: source, toOffset: destination)
-                    workspace.run("Reorder Projects") { for (index, var project) in projects.enumerated() { project["order_index"] = .number(Double(index)); store.save("projects", project) } }
+                    workspace.run("Reorder Projects") { store.reorderOrganization("projects", ids: projects.map(\.id)) }
                 }
                 Button { newProject() } label: { Label("New Project", systemImage: "plus").foregroundStyle(.secondary) }
                     .buttonStyle(.plain).accessibilityIdentifier("newProject")

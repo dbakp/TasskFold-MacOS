@@ -66,7 +66,7 @@ struct SectionsEditor: View {
     @Environment(\.dismiss) private var dismiss
     let projectID: String
     @State private var name = ""
-    private var sections: [Record] { store.rows("sections").filter { $0.string("project_id") == projectID }.sorted { $0["order_index"].integer < $1["order_index"].integer } }
+    private var sections: [Record] { OrganizationOrder.sorted(store.rows("sections").filter { $0.string("project_id") == projectID }) }
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Sections").font(.headline)
@@ -77,7 +77,7 @@ struct SectionsEditor: View {
                         Button { workspace.run("Delete Section") { store.remove("sections", section.id) } } label: { Image(systemName: "minus.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Delete \(section.name)")
                     }
                 }
-                .onMove { source, destination in var list = sections; list.move(fromOffsets: source, toOffset: destination); workspace.run("Reorder Sections") { for (i, var row) in list.enumerated() { row["order_index"] = .number(Double(i)); store.save("sections", row) } } }
+                .onMove { source, destination in var list = sections; list.move(fromOffsets: source, toOffset: destination); workspace.run("Reorder Sections") { store.reorderOrganization("sections", ids: list.map(\.id), projectID: projectID) } }
                 if sections.isEmpty { Text("No sections yet.").foregroundStyle(.secondary) }
             }.frame(minHeight: 160)
             HStack {

@@ -244,8 +244,8 @@ final class Store {
     var email: String { backend.session?.user.email ?? "On this iPhone" }
     var tasks: [Record] { _ = taskRevision; return taskCache.tasks }
     var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { project in projectMembers(project.id).map { person in var scoped = person; scoped["project_id"] = .string(project.id); return scoped } }, datePreferences: datePhrasePreferences) }
-    var savedViews: [Record] { rows("saved_views").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
-    var favorites: [Record] { rows("favorites").sorted { $0["order_index"].integer == $1["order_index"].integer ? $0.id < $1.id : $0["order_index"].integer < $1["order_index"].integer } }
+    var savedViews: [Record] { OrganizationOrder.sorted(rows("saved_views")) }
+    var favorites: [Record] { OrganizationOrder.sorted(rows("favorites")) }
     var workingHours: WorkingHours? { workingHoursDocument == .null ? WorkingHours() : try? WorkingHours(document: workingHoursDocument) }
     var workingHoursDocument: JSON { record("view_preferences", id: "planner")?["working_hours"] ?? .null }
     var workingHoursEditable: Bool { workspaceCacheReadable && (signedIn || localMode) && WorkingHours.editable(workingHoursDocument) }
@@ -393,14 +393,16 @@ final class Store {
         if isFavorite(scope) { remove("favorites", scope.preferenceKey) }
         else { _ = save("favorites", Record(["id": .string(scope.preferenceKey), "user_id": .string(userID), "order_index": .number(Double((favorites.map { $0["order_index"].integer }.max() ?? -1) + 1))])) }
     }
-    func reorderFavorites(_ keys: [String]) {
-        let changes = keys.enumerated().compactMap { index, id -> Mutation? in
-            guard record("favorites", id: id) != nil else { return nil }
-            return Mutation(table: "favorites", recordID: id, method: "PATCH", fields: ["order_index": .number(Double(index))])
-        }
-        _ = commit(changes)
+    func reorderFavorites(_ keys: [String]) { _ = reorderOrganization("favorites", ids: keys) }
+    @discardableResult
+    func reorderOrganization(_ table: String, ids: [String], projectID: String? = nil) -> Bool {
+        let current = rows(table).filter { table != "sections" || $0.string("project_id") == projectID }
+        do {
+            let changes = try OrganizationOrder.changes(table: table, rows: current, ids: ids)
+            return changes.isEmpty || commit(changes)
+        } catch { self.error = error.localizedDescription; return false }
     }
-    var projects: [Record] { rows("projects").sorted { $0["order_index"].integer < $1["order_index"].integer } }
+    var projects: [Record] { OrganizationOrder.sorted(rows("projects")) }
     var labels: [Record] { rows("labels").sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
     func quickEntryContext(project: String = "") -> QuickEntryContext {
         QuickEntryContext(projects: projects, sections: rows("sections"), labels: labels,

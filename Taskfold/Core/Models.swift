@@ -1610,3 +1610,28 @@ extension Snapshot {
     }
 }
 #endif
+
+/// A native drag is one local edit. Only order fields enter the offline queue.
+enum OrganizationOrder {
+    struct StaleList: LocalizedError {
+        var errorDescription: String? { "This list changed. Reopen it before rearranging items." }
+    }
+    static func sorted(_ rows: [Record]) -> [Record] {
+        rows.sorted {
+            let left = $0["order_index"].integer, right = $1["order_index"].integer
+            return left == right ? $0.id < $1.id : left < right
+        }
+    }
+    static func changes(table: String, rows: [Record], ids: [String]) throws -> [Mutation] {
+        let allowed: Set<String> = ["projects", "sections", "saved_views", "favorites"]
+        guard allowed.contains(table), Set(ids).count == ids.count,
+              Set(rows.map(\.id)).count == rows.count,
+              rows.count == ids.count, Set(rows.map(\.id)) == Set(ids) else { throw StaleList() }
+        let existing = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0) })
+        return ids.enumerated().compactMap { index, id in
+            let order = JSON.number(Double(index))
+            guard existing[id]?["order_index"] != order else { return nil }
+            return Mutation(table: table, recordID: id, method: "PATCH", fields: ["order_index": order])
+        }
+    }
+}

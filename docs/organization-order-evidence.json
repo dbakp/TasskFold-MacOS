@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-10",
+  "scope": "Native iPhone local saved-filter drag/relaunch and independently owned ordering contracts in both repos; cloud ordering and Mac GUI remain unverified.",
+  "changes": [
+    "Saved-filter drag controls in iOS Browse and Mac sidebar",
+    "Project/section/filter/favorite ordering uses one local commit and undo entry per drag, patching only changed order fields",
+    "Reject stale, duplicate, incomplete and out-of-scope row lists",
+    "Deterministic ID tie-break for project/section/filter/favorite order across independently fetched row sequences",
+    "Mac native undo bridge now includes favorite drags"
+  ],
+  "coreTests": {
+    "perRepository": 3,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "logs": [
+      "/tmp/taskfold-organization-ios-core-v1.log",
+      "/tmp/taskfold-organization-mac-core-v1.log"
+    ],
+    "coverage": [
+      "All four tables preserve unrelated and future fields through reorder, queue serialization and whole-move undo/redo",
+      "Stale/duplicate/out-of-scope row sets rejected",
+      "Tied positions independent of server row sequence"
+    ]
+  },
+  "nativeUI": {
+    "result": "/tmp/taskfold-organization-native-v1.xcresult",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "reportedAppRuntimeWarnings": 0,
+    "outcome": "Create First queue and Second queue through native editor; drag Second above First; relaunch; retained order and exact Second queue navigation",
+    "independentCache": {
+      "savedFilterOrder": [
+        "Second queue",
+        "First queue"
+      ],
+      "orderIndices": [
+        0,
+        1
+      ],
+      "pendingCount": 0
+    }
+  },
+  "captureInIOSRepository": {
+    "path": "native-continuity-previews/saved-filters-reordered.png",
+    "sha256": "e0754587834c7c1a1306c68311629d334c57b109144dac8d0cb94ca153dca303",
+    "visuallyInspected": true
+  },
+  "builds": {
+    "ios": "/tmp/taskfold-organization-ios-build-v2.log",
+    "iosSignatureReceipt": "/tmp/taskfold-organization-ios-sign-v2.json",
+    "mac": "/tmp/taskfold-organization-mac-build-v1.log"
+  },
+  "limitations": [
+    "One commit provides atomic local persistence, not an atomic multi-row server transaction",
+    "No live cloud organization-order handoff in this checkpoint",
+    "No Mac app launch or widget-host acceptance",
+    "No native injected disk-failure test; rollback uses existing Store.commit persistence transaction"
+  ],
+  "fixtures": "Only isolated ui-testing local workspace; no provider accounts or real user data."
+}
