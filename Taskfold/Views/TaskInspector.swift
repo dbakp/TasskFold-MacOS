@@ -223,19 +223,25 @@ struct TaskInspectorForm: View {
             if workspace.taskDepth(taskID) < 2 {
             Section("Subtasks") {
                 ForEach(Array(draft["subtasks"].list.enumerated()), id: \.offset) { index, value in
+                    let title = value.object["title"]?.text ?? ""
+                    let completed = value.object["completed"]?.flag == true
+                    let accessibleTitle = title.isEmpty ? "untitled subtask" : title
                     HStack {
                         Button { var list = draft["subtasks"].list; var item = value.object; item["completed"] = .bool(!(item["completed"]?.flag ?? false)); list[index] = .object(item); draft["subtasks"] = .array(list) } label: {
                             Image(systemName: value.object["completed"]?.flag == true ? "checkmark.circle.fill" : "circle").foregroundStyle(value.object["completed"]?.flag == true ? Color.taskfold : .secondary)
-                        }.buttonStyle(.borderless).accessibilityLabel("Toggle subtask")
-                        TextField("Subtask", text: Binding(get: { draft["subtasks"].list[index].object["title"]?.text ?? "" }, set: { title in var list = draft["subtasks"].list; var item = list[index].object; item["title"] = .string(title); list[index] = .object(item); draft["subtasks"] = .array(list) }), prompt: Text("Subtask"))
+                        }.buttonStyle(.borderless)
+                            .accessibilityLabel((completed ? "Reopen " : "Complete ") + accessibleTitle)
+                            .accessibilityValue(completed ? "Completed" : "Not completed")
+                            .accessibilityIdentifier("subtaskCompletion-\(index)")
+                        TextField("Subtask", text: Binding(get: { draft["subtasks"].list[index].object["title"]?.text ?? "" }, set: { title in var list = draft["subtasks"].list; var item = list[index].object; item["title"] = .string(title); list[index] = .object(item); draft["subtasks"] = .array(list) }), prompt: Text("Subtask"), axis: .vertical)
                             .labelsHidden().textFieldStyle(.plain)
                         Button {
                             saveNow()
                             workspace.expandedTasks.insert(taskID)
                             workspace.open(workspace.childID(parent: taskID, value: value, index: index))
                         } label: { Image(systemName: "sidebar.trailing") }
-                            .buttonStyle(.borderless).accessibilityLabel("Open subtask details")
-                        Button { var list = draft["subtasks"].list; list.remove(at: index); draft["subtasks"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove subtask")
+                            .buttonStyle(.borderless).accessibilityLabel("Open details for " + accessibleTitle)
+                        Button { var list = draft["subtasks"].list; list.remove(at: index); draft["subtasks"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove " + accessibleTitle)
                     }
                 }
                 HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).accessibilityIdentifier("addSubtask").labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).disabled(subtask.trimmingCharacters(in: .whitespaces).isEmpty) }
