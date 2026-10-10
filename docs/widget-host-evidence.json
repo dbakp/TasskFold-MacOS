@@ -760,9 +760,8 @@
     },
     "retainedFixture": "Phone retains medium Focus above small Pinned note, selected original task aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31 named Fresh client brief. Timer running, local ui-testing workspace only. Previous capacity/pulse fixtures removed.",
     "remaining": [
-      "Privacy switches for this pair",
       "Note medium/large and other instances",
-      "Cloud account switch, long outage and expiry behavior for this pair",
+      "Cloud account switch, long outages and other-host expiry behavior",
       "iPad, physical and Mac widget hosts",
       "VoiceOver and full P0 acceptance"
     ],
@@ -832,6 +831,81 @@
         "Taskfold/Core/Store.swift": "fed42d0335cae291b6f1815ca308137acd363ae7a35a78ec1dec6df324791c32",
         "TaskfoldWidgets/TaskfoldWidgets.swift": "8f22de49c130bafa211f04d033067b949087492118ffce5b71e1269e7c728131"
       }
+    },
+    "privacyAndNaturalExpiry": {
+      "date": "2026-10-10",
+      "scope": "Actual privacy configuration and natural expiry of retained small Pinned note / medium Focus pair on isolated iPhone Simulator",
+      "results": [
+        {
+          "path": "/tmp/taskfold-note-focus-privacy-v1.xcresult",
+          "test": "testInstalledNoteAndMediumFocusPrivacyPreservesWorkAndRoutes",
+          "actualPassed": 1
+        },
+        {
+          "path": "/tmp/taskfold-note-focus-elapsed-v2.xcresult",
+          "test": "testInstalledElapsedMediumFocusOpensFinishedSessionAndKeepsTaskOpen",
+          "actualPassed": 1
+        }
+      ],
+      "failures": 0,
+      "skips": 0,
+      "reportedRuntimeWarnings": 0,
+      "assertions": [
+        "Actual Hide task title and Hide title and text switch values asserted on, then off",
+        "Inspected private host frame hides original task title and note text; Focus clock remains visible",
+        "Both private widgets open the original selected note/session, preserving full instructions",
+        "Restored host frame displays selected title and note preview",
+        "Natural timer expiry reaches Time well spent at 00:00 in installed medium widget",
+        "Finished widget opens original native session at 00:00; exactly one original open task remains in Inbox"
+      ],
+      "privacySnapshotSHA256": "ad78a950f5f5982ff6094d3385ee6d923f1ec99e20fe12fb9e3ae6f920dc67d9",
+      "privacyPayloadSHA256": "9d144d58c05b512ea360c4e8d52df662ec7668ec616e09e4b35a7838887a0b24",
+      "beforePrivacyUnix": 1791605521.277062,
+      "afterPrivacyUnix": 1791606161.6631029,
+      "hiddenStateComparison": {
+        "hiddenRoutesCheckedUnix": 1791605913.051627,
+        "payloadUnchanged": true,
+        "savedWorkspaceUnchanged": true
+      },
+      "elapsedStateComparison": {
+        "afterElapsedRouteUnix": 1791606328.628017,
+        "payloadUnchanged": true,
+        "savedWorkspaceUnchanged": true,
+        "originalTaskOpen": true
+      },
+      "completeSavedWorkspaceUnchanged": true,
+      "completeNotesAndFocusPayloadUnchanged": true,
+      "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+      "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+      "privacyRestoredOff": true,
+      "coldFixtureMarkerRemainsFalse": true,
+      "productionSourceChanged": false,
+      "builds": [
+        "/tmp/taskfold-note-focus-privacy-build-v1.log",
+        "/tmp/taskfold-note-focus-privacy-build-v2.log"
+      ],
+      "signatures": [
+        "/tmp/taskfold-note-focus-privacy-sign-v1.json",
+        "/tmp/taskfold-note-focus-privacy-sign-v2.json"
+      ],
+      "screenshotsRepository": "TaskFold-iOS",
+      "screenshots": {
+        "docs/widget-host-previews/note-focus-private.png": "5feec94e723789e631e9d2de2fb16fefed1d1d890a8753855efb3900f035c902",
+        "docs/widget-host-previews/note-focus-restored-finished.png": "532e8af7b18b611a4517934b7c29bb69e0746d066f082f30c1e06f1324b55aba",
+        "docs/widget-host-previews/focus-finished-native.png": "ffbd1e9883d5fd1b0a0e7cd264f069cdc5babd8632bbe1cffe3ef1939b54d2be"
+      },
+      "hostOverhead": "Privacy test took 554 seconds, mostly repeated 60-second SpringBoard animation acknowledgement waits. Native finished-session test took 18 seconds. Host stale hierarchy warnings are not treated as app performance or VoiceOver evidence.",
+      "retainedFixture": "Same original note/task/session, privacy off in both widgets, timer naturally elapsed, task still open, isolated app terminated. No real/cloud data used.",
+      "limitations": [
+        "Private rendering verified by inspected pixels plus asserted configuration values; SpringBoard child text is not reliable, so no VoiceOver claim",
+        "One installed small note and medium Focus instance only; other sizes, hosts and cloud-account lifecycle remain open",
+        "Natural expiry of this session only; long outages, notifications and physical/Mac hosts not inferred",
+        "Final test build adds the expiry check; the passing privacy case is unchanged between builds; no full setup repetition claimed"
+      ],
+      "ownSourceHashes": {
+        "TaskfoldWidgets/TaskfoldWidgets.swift": "8f22de49c130bafa211f04d033067b949087492118ffce5b71e1269e7c728131"
+      },
+      "noteAndFocusViewBlockSHA256": "9dccd94484b6b403eee78586f24b7e19b42cd2aee277403102308f40fbe7a110"
     }
   }
 }
