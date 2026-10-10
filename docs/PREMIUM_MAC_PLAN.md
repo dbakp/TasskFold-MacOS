@@ -1063,3 +1063,7 @@ The final picker finished loading its Photos/Collections privacy notice; selecti
 
 
 10 October resumed: Mac is unlocked according to native UI automation. Prepared a separate Mac UI-test app/runner with unique bundle, sandbox, session/recovery keychain services and widget namespace. Production URL/file registrations and widget extension are excluded. Copied app sources differ only by verified namespace strings; production checkout/app untouched. Debug build-for-testing, signature and manifest checks pass. Existing Mac-launch permission remains outstanding; no GUI/runtime, Desktop-widget, provider or distribution acceptance. See `mac-ui-isolation-evidence.json` in docs.
+
+### 10 October — authorized isolated native Mac checkpoint
+
+Launch authorization is resolved. Capture, search/inspector editing, completion/reopen, native Edit Undo, persistence and Focus pause/relaunch/resume/end now have native CUA evidence; see `mac-native-runtime-evidence.json`. XCTest initialization timed out before cases, so the compiled suite is still unexecuted. The isolated debug bundle now uses private widget storage without fixture overlays. Direct row selection, keyboard Undo, full P0 native handoff and installed Desktop/distribution checks remain open. The user accepts Xcode Simulators for ordinary iPhone/iPad testing.

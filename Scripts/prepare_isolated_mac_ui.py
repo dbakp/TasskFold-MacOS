@@ -67,7 +67,7 @@ def main():
     receipt = {'sourceRepository': str(source), 'workspace': str(output), 'bundleID': 'com.dbakp.taskfold.mac.p0uitests',
                'sandbox': True, 'productionURLAndFileRegistrationsRemoved': True, 'embeddedWidgetExtension': False,
                'namespaceOnlySourceChanges': changes, 'replacements': replacements,
-               'launchArguments': ['--uitesting', '--widget-action-testing'],
+               'launchArguments': ['--uitesting'],
                'limitations': ['Preparation only; no launch/install/runtime acceptance.', 'Unique keychain services; no production credential migration.', 'No Desktop-widget, signed-distribution or provider acceptance.']}
     (output / 'isolation-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
     print(json.dumps(receipt, indent=2))

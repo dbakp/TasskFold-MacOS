@@ -37,8 +37,8 @@ The paired note/Focus and organized rich-task checkpoints now pass. Paired cloud
 
 ## External release gates
 
-- [ ] **Mac runtime:** permission to launch the Mac app remains outstanding. Do not launch, replace or install `/Applications/Taskfold.app`. Transport tests and builds may continue, but cannot close this gate.
-- [ ] **Physical delivery and widget hosts:** a provisioned iPhone/iPad and the APNs signing configuration are required. Their earlier requests remain unanswered. Do not enable delivery based on Simulator receipts.
+- [ ] **Mac runtime:** the user authorized the isolated test app on 10 October; native checks are underway. Do not replace or install `/Applications/Taskfold.app`. Launch permission is resolved; full native workflow acceptance remains open.
+- [ ] **Remote delivery:** the user explicitly accepts Xcode Simulators for iPhone/iPad application testing. Physical devices are not a prerequisite for continuing those workflows. Actual APNs delivery and distribution remain unverified and require their own signing/provider evidence. Do not enable remote delivery based on Simulator receipts.
 - [ ] **Provider migration:** disposable Todoist provider-account access is required for a genuine import/retry. Fixture responses cannot close this gate.
 - [ ] **Mac distribution:** Developer ID identity, profiles and notarization inputs are required. Apple Development Simulator signing does not substitute for them.
 - [ ] **External calendars/files:** actual provider-backed calendar and file workflows need suitable test-account/provider access where the Simulator cannot supply it.
@@ -58,3 +58,7 @@ Native UI automation now reports the Mac unlocked. The prepared production-ident
 The original Phase 1 explicitly starts with a documented filter subset; the backlog also describes fuller Todoist syntax. Preserve that backlog without making every additional parser form a substitute for data/delivery acceptance. Subprojects/archive/templates, external calendar mirroring, goals/Karma, location/urgent reminders, advanced teams and wearables retain their original later-phase priority. The explicitly requested productive widgets and all P0 feature families remain in scope.
 
 A new defect found in a required workflow is work to fix. An unavailable credential/device is an external dependency to record, not a reason to manufacture more fixture tests. A passed narrow check remains narrow. Mark the full objective complete only after all applicable rows and external gates have authoritative evidence. Continue committing and pushing completed changes separately to both repositories.
+
+### Authorized isolated Mac runtime — 10 October
+
+The user explicitly approved launching the isolated Mac test app. Native Codex interaction verified keyboard capture, parsed priority/estimate, search → inspector, notes editing, completion/reopen, Edit → Undo, retained task content after quit/relaunch, and Focus start/pause/relaunch/resume/end with the same paused remaining time. Direct row selection and injected keyboard Undo are not accepted by this checkpoint. The XCTest runner failed before executing cases with “Timed out while enabling automation mode”; this is not a passing test run. The first attempt was interrupted; the second terminated with exit 65. A debug-only private-storage route now supports the isolated bundle without displaying widget-fixture controls; that route does not establish installed widget or distribution acceptance. See `mac-native-runtime-evidence.json`. iPhone/iPad testing continues on Xcode Simulators as requested.

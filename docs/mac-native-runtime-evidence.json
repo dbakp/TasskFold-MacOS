@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-10",
+  "authorization": "User: Yes, launch the isolated mac test app",
+  "bundleID": "com.dbakp.taskfold.mac.p0uitests",
+  "method": "Native Codex CUA accessibility interaction; not XCTest",
+  "passed": [
+    "Command-N capture parses p1 and ~25m with clean title",
+    "Search opens saved task inspector",
+    "Notes edit, complete, reopen",
+    "Native Edit menu Undo restores completed task",
+    "Task title, notes, priority and 25-minute estimate survive quit/relaunch",
+    "Focus select/start/pause; quit/relaunch retains Paused 24:57; resume/end",
+    "Rebuilt isolated bundle uses private widget disk with no overlay or App Group permission error"
+  ],
+  "unverified": [
+    "Direct row selection inspector behavior",
+    "Injected Command-Z behavior",
+    "Full Mac P0 suite",
+    "Native cloud iOS-Mac handoff",
+    "Installed Desktop widgets",
+    "Distribution signing and notarization"
+  ],
+  "xctest": {
+    "firstAttempt": "Interrupted before cases",
+    "secondAttempt": "Failed before cases: Timed out while enabling automation mode",
+    "exitCode": 65,
+    "result": "/tmp/taskfold-isolated-mac-native-p0-v2.xcresult"
+  },
+  "build": "/tmp/taskfold-isolated-mac-ui-build-v2.log: TEST BUILD SUCCEEDED",
+  "signatureVerification": "codesign --verify --deep --strict exited 0",
+  "privateSnapshotSHA256": "f2244a5888d59e1e30635216bc5013a58f6a37d985e51694ab89cac86152e04c",
+  "installedAppExecutableSHA256": "ebda65a2afbc73c2bd33969191150337b876b0c64d12f047cdbdb830ad229b62",
+  "iOSPolicy": "User accepts Xcode Simulators for iPhone/iPad workflows; APNs/distribution remain unverified"
+}
