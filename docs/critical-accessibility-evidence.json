@@ -1,0 +1,232 @@
+{
+  "date": "2026-10-10",
+  "scope": "iOS subtask-add hit target, native keyboard dismissal and scoped accessibility diagnostics; Mac subtask-add description build only.",
+  "functionalResults": [
+    {
+      "resultBundle": "/tmp/taskfold-subtask-target-phone-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    {
+      "resultBundle": "/tmp/taskfold-subtask-target-tablet-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    {
+      "resultBundle": "/tmp/taskfold-capture-keyboard-phone-v1.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    {
+      "resultBundle": "/tmp/taskfold-capture-keyboard-tablet-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    }
+  ],
+  "diagnostic": {
+    "resultBundle": "/tmp/taskfold-critical-accessibility-phone-v4.xcresult",
+    "testCases": 2,
+    "passed": 0,
+    "failed": 2,
+    "skipped": 0,
+    "reportedRuntimeWarnings": 0,
+    "completedViewportsPerMode": [
+      "Quick capture",
+      "Editor overview",
+      "Editor subtask actions",
+      "Saved task list"
+    ],
+    "method": "Fresh app/fixture for each viewport. Audit sufficientElementDescription, hitRegion and textClipped; no issue whitelist. Final assertions reject all findings.",
+    "modes": [
+      {
+        "mode": "normal",
+        "reportedFindings": 10,
+        "sufficientDescriptionFindings": 0,
+        "hitRegionFindings": 3,
+        "clippingFindings": 7,
+        "rawReport": "docs/accessibility-audit-reports/normal.txt",
+        "rawReportSHA256": "3650828c7042a33ef2686ce4aabe7e4e433c584c4ef5b846d4a11ddc9a0e547f",
+        "findings": [
+          {
+            "screen": "Quick capture",
+            "auditType": "131072",
+            "finding": "Text clipped",
+            "detail": "Text of this element may be clipped at larger Dynamic Type sizes.",
+            "element": "No associated element"
+          },
+          {
+            "screen": "Quick capture",
+            "auditType": "131072",
+            "finding": "Text clipped",
+            "detail": "Text of this element may be clipped at larger Dynamic Type sizes.",
+            "element": "No associated element"
+          },
+          {
+            "screen": "Quick capture",
+            "auditType": "131072",
+            "finding": "Text clipped",
+            "detail": "Text of this element may be clipped at larger Dynamic Type sizes.",
+            "element": "No associated element"
+          },
+          {
+            "screen": "Editor subtask actions",
+            "auditType": "131072",
+            "finding": "Text clipped",
+            "detail": "Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes.",
+            "element": "Attributes: StaticText, 0x112c5e440, {{34.0, 165.7}, {119.0, 22.0}}, label: 'Reminders'"
+          },
+          {
+            "screen": "Editor subtask actions",
+            "auditType": "131072",
+            "finding": "Text clipped",
+            "detail": "Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes.",
+            "element": "Attributes: StaticText, 0x112c67c00, {{31.3, 621.8}, {161.0, 20.3}}, label: 'Choose a photo'"
+          },
+          {
+            "screen": "Saved task list",
+            "auditType": "4",
+            "finding": "Hit area is too small",
+            "detail": "The size of this SwiftUI.AccessibilityNode is too small for user to interact.",
+            "element": "Attributes: StaticText, 0x1129d2a80, {{88.0, 342.5}, {281.7, 18.0}}, label: 'Read the proposal before sending the estimate.'"
+          },
+          {
+            "screen": "Saved task list",
+            "auditType": "4",
+            "finding": "Hit area is too small",
+            "detail": "The size of this SwiftUI.AccessibilityNode is too small for user to interact.",
+            "element": "No associated element"
+          },
+          {
+            "screen": "Saved task list",
+            "auditType": "4",
+            "finding": "Hit area is too small",
+            "detail": "The size of this SwiftUI.AccessibilityNode is too small for user to interact.",
+            "element": "No associated element"
+          },
+          {
+            "screen": "Saved task list",
+            "auditType": "131072",
+            "finding": "Text clipped",
+            "detail": "Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes.",
+            "element": "Attributes: StaticText, 0x1129d2a80, {{88.0, 342.5}, {281.7, 18.0}}, label: 'Read the proposal before sending the estimate.'"
+          },
+          {
+            "screen": "Saved task list",
+            "auditType": "131072",
+            "finding": "Text clipped",
+            "detail": "Text of this UISearchBarTextField may be clipped at larger Dynamic Type sizes.",
+            "element": "Attributes: SearchField, 0x1029a7480, {{16.0, 169.0}, {370.0, 44.0}}, label: 'Search inbox', placeholderValue: 'Search inbox'"
+          }
+        ]
+      },
+      {
+        "mode": "largest",
+        "reportedFindings": 3,
+        "sufficientDescriptionFindings": 0,
+        "hitRegionFindings": 0,
+        "clippingFindings": 3,
+        "rawReport": "docs/accessibility-audit-reports/largest.txt",
+        "rawReportSHA256": "b0d6d1478b18e18b0ae7098b3fdfd1936b12f91c957aee19d65df67345a7b7a4",
+        "findings": [
+          {
+            "screen": "Quick capture",
+            "auditType": "131072",
+            "finding": "Text clipped",
+            "detail": "Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes.",
+            "element": "Attributes: StaticText, 0x112c3f0c0, {{76.8, 427.8}, {127.1, 49.3}}, identifier: 'quickPreview-duration_minutes', label: '25 min'"
+          },
+          {
+            "screen": "Saved task list",
+            "auditType": "131072",
+            "finding": "Text clipped",
+            "detail": "Text of this UISearchBarTextField may be clipped at larger Dynamic Type sizes.",
+            "element": "Attributes: SearchField, 0x11283d180, {{16.0, 190.0}, {370.0, 124.0}}, label: 'Search inbox', placeholderValue: 'Search inbox'"
+          },
+          {
+            "screen": "Saved task list",
+            "auditType": "131072",
+            "finding": "Text clipped",
+            "detail": "Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes.",
+            "element": "Attributes: StaticText, 0x1129d3480, {{88.0, 664.0}, {266.7, 58.7}}, label: 'Read the proposal before sending the estimate.'"
+          }
+        ]
+      }
+    ]
+  },
+  "productionSHA256": {
+    "ios/Taskfold/Views/TaskEditor.swift": "752e93fced6646316a9c3ebfa29ecfa1f3afdcd0f6d5f43e0ca754636525a86d",
+    "ios/Taskfold/Views/QuickAdd.swift": "16a0f7fff2a3a3e60739b063c06906b40166a26d31246af34ad923ec1ad430c8",
+    "mac/Taskfold/Views/TaskInspector.swift": "e690d7a69caf78f82b53635ffa139895457f35de28df30efd5082a2bc5515d45"
+  },
+  "builds": {
+    "ios": "/tmp/taskfold-critical-accessibility-build-v5.log",
+    "mac": "/tmp/taskfold-critical-accessibility-mac-build-v1.log"
+  },
+  "signatures": "/tmp/taskfold-critical-accessibility-sign-v5.json",
+  "composition": "Subtask functional cases ran on build v2 with the same final TaskEditor subtask code. Keyboard functional cases and final diagnostics ran on build v4 with final production code. Build v5 changes only diagnostic attachment logging, leaving its screens, audit types and assertions unchanged; no repeated runtime matrix for logging. Earlier normal v1 had 11 findings; v2 had 10 after the subtask target fix. An interleaved largest audit was interrupted by an XCTest hierarchy/type mismatch; fresh-process v4 completes all eight viewports and retains both failing reports.",
+  "captures": [
+    {
+      "repository": "TaskFold-iOS",
+      "path": "docs/usability-previews/subtask-add-phone-largest.png",
+      "sha256": "a172f057e349f66c179829743896745a9c52ba819d002094c6393dd056641234",
+      "inspected": true
+    },
+    {
+      "repository": "TaskFold-iOS",
+      "path": "docs/usability-previews/subtask-add-tablet-largest.png",
+      "sha256": "a76196714a62e5693f3c52629dd3015fbe59ae1bd0e79a1ac9da1bddfb0f6800",
+      "inspected": true
+    },
+    {
+      "repository": "TaskFold-iOS",
+      "path": "docs/usability-previews/capture-keyboard-dismissed-largest.png",
+      "sha256": "fa0258ba5eff8c7c6234259d8ca76803b18e340f0e777fed7b8df15dddb4e279",
+      "inspected": true
+    },
+    {
+      "repository": "TaskFold-iOS",
+      "path": "docs/usability-previews/audit-task-list-largest.png",
+      "sha256": "19aa96d7e21145bab8229b2cfacac4c4b1d84d83217ea0f3b4f02d0801afadde",
+      "inspected": true
+    },
+    {
+      "repository": "TaskFold-iOS",
+      "path": "docs/usability-previews/audit-editor-largest.png",
+      "sha256": "161e3d814f5493bf515eb6403d5996cf5bfa801830b77392e5953800e2b8bae4",
+      "inspected": true
+    }
+  ],
+  "retainedFixtures": [
+    {
+      "device": "phone",
+      "snapshotSHA256": "6f93f1883d4722b1bf9054270ba7eed6978e0d84daef4047e5ec9c65908493d9",
+      "taskID": "b42274f3-9965-4f37-9bcc-06b5c778b516",
+      "title": "Accessible launch brief",
+      "durationMinutes": 25,
+      "completed": false
+    },
+    {
+      "device": "tablet",
+      "snapshotSHA256": "01327704e19a71ee82b0a7360dfdbfe5e2e69e1e5f8cfcf856ee918fac7a6e6f",
+      "taskID": "abe71d27-8b05-4da9-92b1-241a4e3d94b1",
+      "title": "Quiet capture 282C68",
+      "durationMinutes": 25,
+      "completed": false
+    }
+  ],
+  "limitations": [
+    "Diagnostic failures remain unaccepted; screenshots do not establish VoiceOver behavior",
+    "No full keyboard, contrast, physical-device, cloud or Mac runtime acceptance",
+    "Untargeted audit findings are not dismissed; row-fragment hit-area and clipping warnings need targeted triage"
+  ],
+  "reproduction": "Copy the isolated xctestrun beside its original in Build/Products and set TaskfoldUITests.EnvironmentVariables.TASKFOLD_RUN_ACCESSIBILITY_AUDIT to 1. Select the two CriticalCaptureAndEditorAccessibilityAudit methods. Without this explicit opt-in they skip; a skip is not a pass.",
+  "testSourceSHA256": "f300752763b0bf9661a3bab7c1cecb6d55c6ed21dd61507215d0792d639ba6ed"
+}
