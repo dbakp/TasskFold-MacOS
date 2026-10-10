@@ -1,0 +1,219 @@
+{
+  "date": "2026-10-11",
+  "scope": "Source parity, project path independence and Mac inspector pending-pin save recovery. Not native or full P0 acceptance.",
+  "baseCommits": {
+    "TaskFold-iOS": "95cd4a36a33415744f011a9fc870a5e18dffe61c",
+    "TasskFold-MacOS": "f9403051a5befdb72926ad95445118054216907d"
+  },
+  "commonCoreFiles": 23,
+  "identicalCoreFiles": 20,
+  "coreFiles": [
+    {
+      "path": "Taskfold/Core/Backend.swift",
+      "iosSHA256": "7ee73938ca545d925b1c7df549aea3ba8b899e274c324a1c9dda8748f8c4a6e4",
+      "macSHA256": "3d108e13e65cc728b0fc33e77fc2a1f3fca80fd5c91bf738a4da59ce4a7cc4cd"
+    },
+    {
+      "path": "Taskfold/Core/Backups.swift",
+      "iosSHA256": "5bc30bf8c4a8b61b5746e870d89e34739393b89e642d5a4c9719519a9d4d8c8f",
+      "macSHA256": "5bc30bf8c4a8b61b5746e870d89e34739393b89e642d5a4c9719519a9d4d8c8f"
+    },
+    {
+      "path": "Taskfold/Core/CalendarEvents.swift",
+      "iosSHA256": "6abce87bbb70660adbf928e61e5a3f17b92d64e96bcb40e5560b9d08b23717fa",
+      "macSHA256": "6abce87bbb70660adbf928e61e5a3f17b92d64e96bcb40e5560b9d08b23717fa"
+    },
+    {
+      "path": "Taskfold/Core/Filters.swift",
+      "iosSHA256": "9be0ebd704f1a7de47cdfc5f8e17fcb8e046b27ffe967f398b649546def3ab3b",
+      "macSHA256": "9be0ebd704f1a7de47cdfc5f8e17fcb8e046b27ffe967f398b649546def3ab3b"
+    },
+    {
+      "path": "Taskfold/Core/FocusSession.swift",
+      "iosSHA256": "b1b2a4405fa036fe297f9b9c27273fe9e1b7880c06481e2b3644fe7578b15e62",
+      "macSHA256": "b1b2a4405fa036fe297f9b9c27273fe9e1b7880c06481e2b3644fe7578b15e62"
+    },
+    {
+      "path": "Taskfold/Core/FocusWidget.swift",
+      "iosSHA256": "f89f11f4594a1669402e79dfb525ae79e206664ccf69477662be800a24862101",
+      "macSHA256": "f89f11f4594a1669402e79dfb525ae79e206664ccf69477662be800a24862101"
+    },
+    {
+      "path": "Taskfold/Core/InboxReview.swift",
+      "iosSHA256": "6f073a7ae9e697f14d905083860768fb746bcbd53d82aca52ea8482d4e183bcd",
+      "macSHA256": "6f073a7ae9e697f14d905083860768fb746bcbd53d82aca52ea8482d4e183bcd"
+    },
+    {
+      "path": "Taskfold/Core/Intents.swift",
+      "iosSHA256": "42043dbe81c0d53b3e50938dfc5102e24f9ab76e4af3a36f289f00386c423240",
+      "macSHA256": "42043dbe81c0d53b3e50938dfc5102e24f9ab76e4af3a36f289f00386c423240"
+    },
+    {
+      "path": "Taskfold/Core/Models.swift",
+      "iosSHA256": "9dfc2114cb7bbd35e5209f6668444ae26489713cc7a679168bf4507328e2231d",
+      "macSHA256": "9dfc2114cb7bbd35e5209f6668444ae26489713cc7a679168bf4507328e2231d"
+    },
+    {
+      "path": "Taskfold/Core/PinnedNotes.swift",
+      "iosSHA256": "498f1bdf7c22682f4e9d423fe0c3afd4f93cf2eb0b9093d9e6a6e33010c2cf7e",
+      "macSHA256": "498f1bdf7c22682f4e9d423fe0c3afd4f93cf2eb0b9093d9e6a6e33010c2cf7e"
+    },
+    {
+      "path": "Taskfold/Core/Planner.swift",
+      "iosSHA256": "4aa5c2c5008379d89a92f7d48dec21949d36225ad7552e3413a112ed0df943ae",
+      "macSHA256": "4aa5c2c5008379d89a92f7d48dec21949d36225ad7552e3413a112ed0df943ae"
+    },
+    {
+      "path": "Taskfold/Core/ProjectPulseWidget.swift",
+      "iosSHA256": "5cff18a7008e95a29d0bbee1e07aacab2cd34d87dc874493557daa27bf0e57a9",
+      "macSHA256": "5cff18a7008e95a29d0bbee1e07aacab2cd34d87dc874493557daa27bf0e57a9"
+    },
+    {
+      "path": "Taskfold/Core/QuickPlanningCompletion.swift",
+      "iosSHA256": "0227510a4c5b0b4c9d01d349e5f7317c1dad48df21f7b3dc5241c843cd59f0b0",
+      "macSHA256": "0227510a4c5b0b4c9d01d349e5f7317c1dad48df21f7b3dc5241c843cd59f0b0"
+    },
+    {
+      "path": "Taskfold/Core/QuickReferenceCompletion.swift",
+      "iosSHA256": "ad5746e08c8a560514cdc3184387866c4be08a2c353d5ccd9be6b23fae291fdf",
+      "macSHA256": "ad5746e08c8a560514cdc3184387866c4be08a2c353d5ccd9be6b23fae291fdf"
+    },
+    {
+      "path": "Taskfold/Core/Recurrence.swift",
+      "iosSHA256": "f9b53a0e1452161922dc79e01828312afeba68161357c3ac84b91c042649b1b9",
+      "macSHA256": "f9b53a0e1452161922dc79e01828312afeba68161357c3ac84b91c042649b1b9"
+    },
+    {
+      "path": "Taskfold/Core/ReminderDevices.swift",
+      "iosSHA256": "f1be43ad21f196794ddbda51f50005364c226ba5227ece4d825efb93567d9565",
+      "macSHA256": "f1be43ad21f196794ddbda51f50005364c226ba5227ece4d825efb93567d9565"
+    },
+    {
+      "path": "Taskfold/Core/Reminders.swift",
+      "iosSHA256": "b288f26c0cdcd482a86de666f4711525f6083ffa22c6dc8800dfe0f5921423bf",
+      "macSHA256": "b288f26c0cdcd482a86de666f4711525f6083ffa22c6dc8800dfe0f5921423bf"
+    },
+    {
+      "path": "Taskfold/Core/Store.swift",
+      "iosSHA256": "c62f8a2e48aeb723db5aa857398961e6c76c327634ca9cf7e486fddf7c47234f",
+      "macSHA256": "f10f36598daee7e96bd0272f292a78a0ab6a5bae2a92ab16e9c6299f5202dfd4"
+    },
+    {
+      "path": "Taskfold/Core/TaskActivity.swift",
+      "iosSHA256": "8e36517cae89848d0e233b029b78644670481809ec848ff77b55c8ad18fe18b5",
+      "macSHA256": "8e36517cae89848d0e233b029b78644670481809ec848ff77b55c8ad18fe18b5"
+    },
+    {
+      "path": "Taskfold/Core/TodoistImport.swift",
+      "iosSHA256": "ea67b05b2b466e3767bf19a93049cc87b1972cdb06f3c13030b8a8762d9e512f",
+      "macSHA256": "ea67b05b2b466e3767bf19a93049cc87b1972cdb06f3c13030b8a8762d9e512f"
+    },
+    {
+      "path": "Taskfold/Core/WidgetActionTestPanel.swift",
+      "iosSHA256": "1f9c69860c8d6d7fcbd55298827c27888380b425d7e9cd6fc83eaaf8f8c0b3fd",
+      "macSHA256": "befabca3351b4f7b478cc354b34701ac19ac81711ce113524dd3c26b3940929e"
+    },
+    {
+      "path": "Taskfold/Core/WidgetActions.swift",
+      "iosSHA256": "555fde1c881fce208a4a90be42584e5b4d9dd8fcbd78f4a70802c78711d36ea2",
+      "macSHA256": "555fde1c881fce208a4a90be42584e5b4d9dd8fcbd78f4a70802c78711d36ea2"
+    },
+    {
+      "path": "Taskfold/Core/WidgetCompletion.swift",
+      "iosSHA256": "654fc7f9e350b9ab9bfe8f245e754b62de15c0c435b2b10b0ad34ee9b513f310",
+      "macSHA256": "654fc7f9e350b9ab9bfe8f245e754b62de15c0c435b2b10b0ad34ee9b513f310"
+    }
+  ],
+  "reviewedDifferences": {
+    "Backend.swift": "Only Debug Simulator disconnected transport for isolated native continuity tests.",
+    "Store.swift": "Only Debug isolated cold-launch identities/reset and private Mac projection fallback.",
+    "WidgetActionTestPanel.swift": "Entire file Debug-only; iOS adds OS notification snooze inspection."
+  },
+  "platformOnlyFiles": {
+    "iOS": [
+      "LiveActivity.swift",
+      "LiveActivityManager.swift"
+    ],
+    "macOS": []
+  },
+  "widgetSourceSHA256": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632",
+  "widgetSourcesIdentical": true,
+  "xcodeProjectPathAudit": [
+    {
+      "repository": "TaskFold-iOS",
+      "projectSHA256": "2480843f89a9971201f3830ae3b0c39668212f90abdc5c9dc125545276a783aa",
+      "fileAndGroupPathReferences": 58,
+      "externalOrSiblingPathCandidates": 0
+    },
+    {
+      "repository": "TasskFold-MacOS",
+      "projectSHA256": "e8a2ca9d8391c5cf9fc9669ce1732a405fff29714a07f7719729ddac938ed6c7",
+      "fileAndGroupPathReferences": 74,
+      "externalOrSiblingPathCandidates": 0
+    }
+  ],
+  "projectAuditLimit": "This inspects Xcode file/group paths, not every possible dynamic release-script dependency. Package target paths and the Mac project generator/release build entry points were also read; no sibling build input was found.",
+  "editorReview": {
+    "files": {
+      "iOS": "Taskfold/Views/TaskEditor.swift",
+      "macOS": "Taskfold/Views/TaskInspector.swift"
+    },
+    "fieldsReviewed": [
+      "title",
+      "description",
+      "note pin",
+      "planned date/time",
+      "deadline",
+      "estimate",
+      "time zone",
+      "priority",
+      "assignment",
+      "project/section",
+      "repeat",
+      "reminders",
+      "labels",
+      "subtasks",
+      "comments",
+      "attachments"
+    ],
+    "limit": "Source presence and save handling only; no new native interactions."
+  },
+  "fix": {
+    "platform": "macOS",
+    "file": "Taskfold/Views/TaskInspector.swift",
+    "before": "Pending notePin cleared even when saveTaskWithNotePin returns false. A later save can omit the requested pin.",
+    "after": "Clear pending notePin only when the save succeeds; failed saves retain draft and requested selection for the next save.",
+    "iosAssessment": "TaskEditor retains noteSelection after a failed save and only dismisses on success; no equivalent source change needed.",
+    "inspectorSHA256": "172779e10aaaba7c1a152c58a6e44c7b2119006e61869447586889d71404306e"
+  },
+  "validation": {
+    "macIsolatedDebugBuild": "passed",
+    "focusedSuites": [
+      "PinnedNotesTests",
+      "BackupTests"
+    ],
+    "perRepositoryTests": 50,
+    "failures": 0,
+    "logs": [
+      {
+        "path": "pin-save-retention-mac-build-v1.log",
+        "sha256": "1bfdc6274fdfaa2252d4cfd78314e48020742a04b4e0ecdb4fc521c8b7ad04ac"
+      },
+      {
+        "path": "pin-save-retention-ios-core-v1.log",
+        "sha256": "9e5682d9f508afa8cc62feebb160d853c8cc882dd21eb576fd1c28c32d072647"
+      },
+      {
+        "path": "pin-save-retention-mac-core-v1.log",
+        "sha256": "5e1537a9f1935bcdaa99bc215f9006d0ce7d5ea0ce255df60b1b2687f0b50d74"
+      }
+    ],
+    "limits": "Existing Core suites cover pin semantics and backup behavior, not the inspector failure branch. Native failed-write/retry interaction remains unverified while desktop is locked."
+  },
+  "dataPreservation": {
+    "originalMacCloudCacheSHA256": "fa5afd731333a5aa33977d5bf2f199c66d32f9fc114a3a48e77032de95b3c831",
+    "matchesRetainedBaseline": true,
+    "nativeDataMutationsThisCheckpoint": false
+  },
+  "remaining": "Existing P0_RELEASE_STATUS.md remains authoritative. This checkpoint does not close provider, native Mac, accessibility, APNs or distribution acceptance."
+}

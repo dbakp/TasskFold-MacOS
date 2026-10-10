@@ -408,7 +408,7 @@ struct TaskInspectorForm: View {
         var saved = false
         if let notePin {
             workspace.run("Edit Pinned Note") { saved = store.saveTaskWithNotePin(merged, pin: notePin, baseline: original) }
-            self.notePin = nil
+            if saved { self.notePin = nil }
         } else { saved = workspace.save("tasks", merged, name: "Edit Task", baseline: original) }
         if saved { original = merged; draft = merged }
     }
