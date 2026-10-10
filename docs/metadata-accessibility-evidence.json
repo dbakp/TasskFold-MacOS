@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-10",
+  "change": "Both apps give subtask progress, comment counts and attachment counts descriptive accessibility labels, preserving visual layout and stored contracts.",
+  "ios": {
+    "resultBundle": "/tmp/taskfold-metadata-accessibility-phone-v1.xcresult",
+    "passedTests": 2,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": 0,
+    "verified": [
+      "Native saved photo row exposes Image labeled 1 attachment; selection/save/relaunch/Quick Look/return still pass at normal/light",
+      "Largest/dark task row exposes 1 of 2 subtasks completed after relaunch and 2 of 2 subtasks completed after independently completing the second subtask",
+      "Final native cache retains two completed subtasks, open parent and zero pending changes"
+    ]
+  },
+  "mac": "Native app build passes on independently owned source; GUI not launched.",
+  "builds": [
+    "iOS build-for-testing passed",
+    "macOS Debug app build passed; code signing disabled"
+  ],
+  "limits": [
+    "Comment-count labels source/build verified only; no native comment workflow was added.",
+    "No full VoiceOver/keyboard acceptance or unfiltered audit rerun; prior unresolved findings remain open.",
+    "Mac native runtime and physical hosts remain unverified.",
+    "No synchronization fields changed; existing continuity evidence reused."
+  ],
+  "sources": {
+    "Taskfold/TaskfoldApp.swift": "26e54ec61c315a80c74c8d1ff7ca109f27780d217a9d296d31e29d07515f6274",
+    "TaskfoldUITests/TaskfoldUITests.swift": "43566289e77c558042b2f8e08932a1c274089f76c895b8fea9c6e331f89953ed",
+    "Taskfold/Views/TaskRowView.swift": "4f13ddd8fd462fcb19df82f22e52eb8c0e72d9b1e0e4c8de443ec6d730ffc82e"
+  },
+  "data": {
+    "taskID": "9b2cb668-1207-4f91-9607-0175c3f9c0da",
+    "parentCompleted": false,
+    "subtaskCount": 2,
+    "completedSubtaskCount": 2,
+    "pendingCount": 0
+  }
+}

@@ -164,9 +164,19 @@ struct TaskRowView: View {
             Text(store.record("labels", id: name)?.name ?? name).lineLimit(wrapping ? nil : 1).fixedSize(horizontal: !wrapping, vertical: true).padding(.horizontal, 6).padding(.vertical, 1)
                 .background(Color.secondary.opacity(0.12), in: .capsule)
         }
-        if !task["subtasks"].list.isEmpty { Label("\(task["subtasks"].list.filter { $0.object["completed"]?.flag == true }.count)/\(task["subtasks"].list.count)", systemImage: "checklist") }
-        if !task["comments"].list.isEmpty { Label("\(task["comments"].list.count)", systemImage: "text.bubble") }
-        if !task["attachments"].list.isEmpty { Image(systemName: "paperclip") }
+        if !task["subtasks"].list.isEmpty {
+            Label("\(task["subtasks"].list.filter { $0.object["completed"]?.flag == true }.count)/\(task["subtasks"].list.count)", systemImage: "checklist")
+                .accessibilityLabel("\(task["subtasks"].list.filter { $0.object["completed"]?.flag == true }.count) of \(task["subtasks"].list.count) subtasks completed")
+                .accessibilityIdentifier("subtaskSummary-" + task.id)
+        }
+        if !task["comments"].list.isEmpty {
+            Label("\(task["comments"].list.count)", systemImage: "text.bubble")
+                .accessibilityLabel(task["comments"].list.count == 1 ? "1 comment" : "\(task["comments"].list.count) comments")
+        }
+        if !task["attachments"].list.isEmpty {
+            Image(systemName: "paperclip")
+                .accessibilityLabel(task["attachments"].list.count == 1 ? "1 attachment" : "\(task["attachments"].list.count) attachments")
+        }
     }
 
     private var accessibilitySummary: String {
