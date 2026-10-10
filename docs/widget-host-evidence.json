@@ -762,7 +762,7 @@
     "remaining": [
       "Note medium/large and other instances",
       "Cloud account switch, long outages and other-host expiry behavior",
-      "iPad privacy/other sizes, physical and Mac widget hosts",
+      "Other iPad sizes, physical and Mac widget hosts",
       "VoiceOver and full P0 acceptance"
     ],
     "ownSourceHashes": {
@@ -907,6 +907,7 @@
       },
       "noteAndFocusViewBlockSHA256": "9dccd94484b6b403eee78586f24b7e19b42cd2aee277403102308f40fbe7a110"
     },
-    "iPadFollowup": "tablet-note-focus-widget-evidence.json"
+    "iPadFollowup": "tablet-note-focus-widget-evidence.json",
+    "iPadPrivacyAndExpiryFollowup": "tablet-note-focus-widget-evidence.json / privacyAndNaturalExpiry"
   }
 }

@@ -84,7 +84,7 @@
   "fixture": "DEBUG Simulator exact-bundle cold-launch marker verified true before accepted reboot and reset false afterward. First preparation read occurred before preferences flushed; receipt collection and reboot were repeated after verified marker. No cloud login, real account or task mutation.",
   "hostLimitations": "SpringBoard container-only widget accessibility; inspected captures establish rendering. Repeated 60-second animation acknowledgement waits and stale remote-process hierarchy logs are not app performance proof.",
   "remaining": [
-    "iPad privacy/other sizes and configurations, long outages and natural expiry",
+    "Other iPad sizes/configurations and long outages",
     "Cloud account lifecycle for these installed widgets",
     "Physical and Mac Desktop widget hosts",
     "VoiceOver and full P0/provider/distribution acceptance"
@@ -99,5 +99,69 @@
   },
   "ownSourceHashes": {
     "TaskfoldWidgets/TaskfoldWidgets.swift": "3af2f7a17e50ae80abdfa521cd711393782de35354e1f53d6d963798df74a296"
+  },
+  "privacyAndNaturalExpiry": {
+    "date": "2026-10-10",
+    "scope": "Actual installed small Pinned note and medium Focus privacy switches on/off, original private routes, restored rendering and natural expiry on the retained isolated iPad Simulator",
+    "results": [
+      {
+        "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-privacy-v1.xcresult",
+        "test": "testInstalledNoteAndMediumFocusPrivacyPreservesWorkAndRoutes",
+        "passed": 1,
+        "failures": 0,
+        "skips": 0,
+        "runtimeWarnings": 0,
+        "durationSeconds": 562.624
+      },
+      {
+        "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-expiry-v1.xcresult",
+        "test": "testInstalledElapsedMediumFocusOpensFinishedSessionAndKeepsTaskOpen",
+        "passed": 1,
+        "failures": 0,
+        "skips": 0,
+        "runtimeWarnings": 0,
+        "durationSeconds": 21.795
+      }
+    ],
+    "actualPassed": 2,
+    "failures": 0,
+    "skips": 0,
+    "runtimeWarnings": 0,
+    "assertions": [
+      "Actual Hide task title and Hide title and text switches verified on, then off",
+      "Inspected hidden Home Screen shows generic copy only, no original title or note text; Focus countdown remains visible",
+      "Both private widgets open original selected note/session and preserve complete edited instructions",
+      "Inspected restored Home Screen shows Fresh client brief, original note preview and naturally expired Focus at 00:00 / Time well spent",
+      "Expired widget opens original native session at 00:00 / Time well spent",
+      "Exactly one original task remains open; no queued changes",
+      "Entire local workspace matches retained pre-reboot baseline; account/notes/Focus payload exactly equals pre-privacy baseline",
+      "Original signed-in phone cloud cache exactly equals profile-switch-first-cache.json"
+    ],
+    "sourceChanges": "Native iOS tests explicitly force local mode before fixture initialization and identify medium/small widgets by width. No product-source change required.",
+    "build": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-privacy-build-v1.log",
+    "signatureReceipt": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/tablet-note-focus-privacy-signing-v1.json",
+    "state": {
+      "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+      "sessionID": "08e876f3-7c1a-4b84-8eb8-1bcee7929418",
+      "taskCount": 1,
+      "taskCompleted": false,
+      "pendingChanges": 0,
+      "privacyRestored": true,
+      "expiry": "Natural wall-clock expiry of the same retained 1500-second session; no clock override, task completion or replacement session."
+    },
+    "limitations": [
+      "Local disposable account and these installed iPad sizes only; no cloud account lifecycle, long outage, other sizes, Desktop/physical host or VoiceOver acceptance inferred",
+      "System privacy redaction is distinct from these user-configured hiding switches and remains unverified",
+      "Mac process sample still waits in SecureSession.read / SecItemCopyMatching; native computer use reports locked Mac. No system prompt automated or bypassed.",
+      "Existing broad accessibility audit warnings remain unresolved; no new audit or VoiceOver test was executed in this follow-up."
+    ],
+    "screenshots": {
+      "docs/widget-host-previews/tablet-note-focus-private.png": "5123cf388c3e5d51ce43460804a427d2f271ede807a75ee3e3f5151df918dee0",
+      "docs/widget-host-previews/tablet-note-focus-restored-expired.png": "6938f0859150de326c77dbfcaa91832e9e6784e8b135f5e71812c8238c393e43",
+      "docs/widget-host-previews/tablet-focus-finished-session.png": "793b13eac75c7fca6c6a85bb3eb6aef797c6dc65e66a68006762fa7d9a4b34db"
+    },
+    "ownSourceHashes": {
+      "TaskfoldWidgets/TaskfoldWidgets.swift": "3af2f7a17e50ae80abdfa521cd711393782de35354e1f53d6d963798df74a296"
+    }
   }
 }
