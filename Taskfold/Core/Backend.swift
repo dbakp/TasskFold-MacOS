@@ -55,6 +55,33 @@ enum SecureSession {
     }
 }
 
+
+#if DEBUG
+/// Holds only a disposable account's completed upload for a native account-switch walk.
+/// The real request has already used its original owner/path/JWT; no response is fabricated.
+private enum ProfileUploadResponseTestHold {
+    static func wait(account: String, email: String?, objectPath: String) async throws {
+        let bundle = Bundle.main.bundleIdentifier
+        guard bundle == "com.dbakp.taskfold.assigneepatterntests" || bundle == "com.dbakp.taskfold.mac.p0uitests",
+              ProcessInfo.processInfo.arguments.contains("--profile-upload-response-hold"),
+              email == "taskfold-continuity-" + account + "@example.invalid",
+              let path = ProcessInfo.processInfo.environment["TASKFOLD_PROFILE_RESPONSE_HOLD"],
+              path.hasPrefix("/private/tmp/taskfold-profile-upload-"),
+              UUID(uuidString: String(path.dropFirst("/private/tmp/taskfold-profile-upload-".count))) != nil else { return }
+        let ready = URL(fileURLWithPath: path + ".ready")
+        let release = URL(fileURLWithPath: path + ".release")
+        let finished = URL(fileURLWithPath: path + ".finished")
+        try Data(objectPath.utf8).write(to: ready, options: .atomic)
+        defer { try? Data().write(to: finished, options: .atomic) }
+        let deadline = ContinuousClock.now.advanced(by: .seconds(180))
+        while !FileManager.default.fileExists(atPath: release.path) {
+            guard ContinuousClock.now < deadline else { throw CancellationError() }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+    }
+}
+#endif
+
 @MainActor
 final class Backend: NSObject {
     var session: Session?
@@ -346,6 +373,9 @@ final class Backend: NSObject {
         request.setValue("Bearer \(session.access_token)", forHTTPHeaderField: "Authorization")
         request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
         let (_, response) = try await http.data(for: request)
+        #if DEBUG
+        try await ProfileUploadResponseTestHold.wait(account: session.user.id, email: session.user.email, objectPath: path)
+        #endif
         guard generation == sessionGeneration, self.session?.user.id == expectedAccount else { throw CancellationError() }
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { throw AppFailure(message: "Your photo could not be uploaded. Please try again.") }
         return baseURL + "/storage/v1/object/public/avatars/" + path

@@ -65,5 +65,6 @@
     "No Mac native photo picker/return-leg verification; desktop still locked",
     "No tablet/largest-text/VoiceOver profile-photo acceptance"
   ],
-  "fixtureState": "Main private disposable account retained for unfinished Mac handoff; test avatar object removed and cleanup-only session revoked."
+  "fixtureState": "Main private disposable account retained for unfinished Mac handoff; test avatar object removed and cleanup-only session revoked.",
+  "accountSwitchFollowup": "profile-account-switch-native-evidence.json now accepts the real phone held-upload response across A\u2192B\u2192A with dirty drafts, relaunch and exact data/cleanup proof. Native Mac remains open."
 }
