@@ -1,0 +1,19 @@
+Building for debugging...
+[Pre-planning 1 / 154]
+[Planning deferred tasks]
+[2 / 10]
+[3 / 10] WidgetModel
+[4 / 11] WidgetModel
+[8 / 14] WidgetModel
+Build complete! (1,93 secs)
+Test Suite 'Selected tests' started at 2026-10-10 10:25:31.618.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-10 10:25:31.620.
+Test Suite 'WidgetTests' started at 2026-10-10 10:25:31.620.
+Test Case '-[TaskfoldCoreTests.WidgetTests testFocusRespectsScheduledWorkAndExcludesFuturePriorities]' started.
+Test Case '-[TaskfoldCoreTests.WidgetTests testFocusRespectsScheduledWorkAndExcludesFuturePriorities]' passed (0.003 seconds).
+Test Suite 'WidgetTests' passed at 2026-10-10 10:25:31.623.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-10 10:25:31.623.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'Selected tests' passed at 2026-10-10 10:25:31.623.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.003 (0.005) seconds
