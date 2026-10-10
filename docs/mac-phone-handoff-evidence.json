@@ -1,6 +1,6 @@
 {
   "date": "2026-10-10",
-  "scope": "Native Mac-created task received and edited in native iPhone Simulator; Mac return leg pending",
+  "scope": "Native Mac-created task received and edited on iPhone, then received back on native Mac",
   "macSourceCommit": "eed4f2f81db0ba3bc30425cefbcde87fa8a44836",
   "iosBaseCommit": "2547109356050a3af7439809970415c277c90590",
   "nativeMacOriginalCreation": true,
@@ -31,9 +31,10 @@
   "screenshotSHA256": "0ea239f964884f762f38c6f5057f96a54416bab47d52b07ba58268670475606c",
   "visualReview": "Title and full description wrap readably. Planned date, 25-minute estimate and Priority 1 visible; Time and Deadline off. Lower editor sections outside viewport.",
   "open": [
-    "Mac native receive/edit verification after desktop unlock",
-    "Rich Mac organization/planning/Focus handoff",
-    "Native confirmation of prior profile and inspector fixes"
+    "Native Mac project/section/label/filter organization and broader planning handoff",
+    "Native cross-account dirty-profile/photo acceptance"
   ],
-  "fixtureState": "Disposable fixture retained privately for unfinished Mac return leg; no credentials in committed evidence."
+  "fixtureState": "Existing disposable fixture retained privately for remaining native organization/planning work; no credentials committed.",
+  "nativeMacReturnVerified": true,
+  "returnLegEvidence": "mac-phone-note-focus-evidence.json"
 }

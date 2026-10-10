@@ -1446,3 +1446,92 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(week.waitForExistence(timeout:8));XCTAssertTrue(week.value as? String=="Friday");XCTAssertTrue(weekend.value as? String=="Sunday")
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testLiveLocalToCloudProfileAndPhoneEditReceive() throws {
+        let fixtureURL = URL(fileURLWithPath: "/private/tmp/taskfold-live-verification.json")
+        guard FileManager.default.fileExists(atPath: fixtureURL.path) else { throw XCTSkip("Disposable continuity account not configured") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: fixtureURL))
+        let account = try XCTUnwrap(fixture["userID"])
+        guard UUID(uuidString: account) != nil,
+              fixture["email"] == "taskfold-continuity-" + account + "@example.invalid" else {
+            throw XCTSkip("Native cloud walk requires the disposable account namespace")
+        }
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--live-auth-ui-test"]
+        app.launch(); defer { app.terminate() }
+        app.typeKey(",", modifierFlags: .command)
+        XCTAssertTrue(app.buttons["Account"].firstMatch.waitForExistence(timeout: 8))
+        app.buttons["Account"].firstMatch.click()
+        let login = app.buttons["accountSignIn"]
+        XCTAssertTrue(login.waitForExistence(timeout: 5)); login.click()
+        let email = app.textFields["authEmail"], password = app.secureTextFields["authPassword"]
+        XCTAssertTrue(email.waitForExistence(timeout: 5))
+        email.click(); email.typeText(try XCTUnwrap(fixture["email"]))
+        password.click(); password.typeText(try XCTUnwrap(fixture["password"]))
+        app.buttons["nativeSignIn"].click()
+        XCTAssertTrue(app.buttons["Save Profile"].waitForExistence(timeout: 25), "Cloud account must replace the local Account form")
+        let name = app.windows["Account"].textFields.firstMatch
+        XCTAssertTrue(name.exists, "Account form must expose its profile-name field")
+        XCTAssertEqual(name.value as? String, "Native Handoff Test", "Untouched profile draft must follow the signed-in account")
+        retainWindow(app, name: "Local to cloud profile draft on Mac")
+        app.typeKey("w", modifierFlags: .command)
+        app.typeKey("2", modifierFlags: .command)
+        let title = "Continuity 9a8bfc3d revised"
+        let row = app.descendants(matching: .any)["title-101fbaab-af99-480c-97a6-4876bc3e7389"].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 15)); row.click()
+        let editor = app.descendants(matching: .any)["taskTitle"].firstMatch
+        XCTAssertTrue(editor.waitForExistence(timeout: 5)); XCTAssertEqual(editor.value as? String, title)
+        let notes = app.descendants(matching: .any)["taskDescription"].firstMatch
+        XCTAssertEqual(notes.value as? String, "Created in the native Mac app for device-switch verification.")
+        retainWindow(app, name: "Phone edit received in native Mac inspector")
+        let pin = app.descendants(matching: .any)["pinTaskNotes"].firstMatch
+        XCTAssertEqual((pin.value as? NSNumber)?.intValue, 0, "Disposable task should begin unpinned; observed \(String(describing: pin.value))")
+        pin.click(); XCTAssertEqual((pin.value as? NSNumber)?.intValue, 1)
+        app.buttons["openFocusSession"].click()
+        app.buttons["focusTaskPicker"].click()
+        let search = app.descendants(matching: .any)["focusTaskSearch"].firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5)); search.click(); search.typeText("Continuity")
+        let choice = app.buttons["focusTaskChoice-101fbaab-af99-480c-97a6-4876bc3e7389"]
+        XCTAssertTrue(choice.waitForExistence(timeout: 5)); choice.click()
+        app.buttons["startFocus"].click(); app.buttons["pauseResumeFocus"].click()
+        XCTAssertEqual(renderedText(app.staticTexts["focusStatus"]), "Paused")
+        retainWindow(app, name: "Cloud task pinned and Focus paused on Mac")
+        app.buttons["closeFocusSession"].click()
+        app.typeKey("r", modifierFlags: .command)
+    }
+}
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testLivePhoneNoteAndEndedFocusReturnToMac() throws {
+        let fixtureURL = URL(fileURLWithPath: "/private/tmp/taskfold-live-verification.json")
+        guard FileManager.default.fileExists(atPath: fixtureURL.path) else { throw XCTSkip("Disposable continuity account not configured") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: fixtureURL))
+        guard fixture["userID"] == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+              fixture["email"] == "taskfold-continuity-9a8bfc3d-42ec-4c89-8f1d-c830b2215152@example.invalid" else { throw XCTSkip("Disposable fixture required") }
+        let app = XCUIApplication(); app.launchArguments = []; app.launch(); defer { app.terminate() }
+        for pass in 0..<2 {
+            app.typeKey("2", modifierFlags: .command)
+            let row = app.descendants(matching: .any)["title-101fbaab-af99-480c-97a6-4876bc3e7389"].firstMatch
+            XCTAssertTrue(row.waitForExistence(timeout: 20)); row.click()
+            let notes = app.descendants(matching: .any)["taskDescription"].firstMatch
+            XCTAssertTrue(notes.waitForExistence(timeout: 5))
+            let received = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value CONTAINS %@", "Phone added a durable handoff note."), object: notes)
+            XCTAssertEqual(XCTWaiter.wait(for: [received], timeout: 20), .completed)
+            XCTAssertTrue((notes.value as? String ?? "").contains("Created in the native Mac app for device-switch verification."))
+            XCTAssertEqual((app.descendants(matching: .any)["pinTaskNotes"].firstMatch.value as? NSNumber)?.intValue, 1)
+            retainWindow(app, name: "Phone note and Mac pin retained — pass \(pass)")
+            app.buttons["openFocusSession"].click()
+            let status = app.staticTexts["focusStatus"]
+            XCTAssertTrue(status.waitForExistence(timeout: 5))
+            let ended = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@ OR label == %@", "Session ended", "Session ended"), object: status)
+            XCTAssertEqual(XCTWaiter.wait(for: [ended], timeout: 20), .completed)
+            XCTAssertEqual(renderedText(app.staticTexts["focusTaskTitle"]), "Continuity 9a8bfc3d revised")
+            retainWindow(app, name: "Phone-ended Focus received on Mac — pass \(pass)")
+            app.buttons["closeFocusSession"].click()
+            if pass == 0 { app.terminate(); app.launch() }
+        }
+    }
+}
