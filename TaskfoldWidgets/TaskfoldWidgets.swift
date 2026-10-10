@@ -541,7 +541,7 @@ struct TodayWidgetView: View {
                 }
             }
             Spacer(minLength: 0)
-            HStack { WidgetFooter(entry: entry); Spacer(); if tasks.count > limit { Text("+\(tasks.count - limit)").font(.caption2).foregroundStyle(.secondary) }; Link(destination: URL(string: "taskfold://add")!) { Image(systemName: "plus.circle.fill").foregroundStyle(brand) }.accessibilityLabel("Add task") }
+            HStack { WidgetFooter(entry: entry); Spacer(); if tasks.count > limit { Text("+\(tasks.count - limit)").font(.caption2).foregroundStyle(.secondary) }; Link(destination: URL(string: "taskfold://add")!) { Image(systemName: "plus.circle.fill").foregroundStyle(brand) }.accessibilityLabel("Capture task in Inbox") }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: brand) }
         .widgetURL(URL(string: "taskfold://today"))
@@ -629,7 +629,7 @@ struct WeekWidget: Widget {
     var body: some WidgetConfiguration { StaticConfiguration(kind: "TaskfoldWeek", provider: TodayProvider()) { WeekWidgetView(entry: $0) }.configurationDisplayName("Week ahead").description("See scheduled task counts for the next seven days. Tap to review your week.").supportedFamilies([.systemMedium]) }
 }
 struct CaptureWidget: Widget {
-    var body: some WidgetConfiguration { StaticConfiguration(kind: "TaskfoldCapture", provider: TodayProvider()) { CaptureWidgetView(entry: $0) }.configurationDisplayName("Quick capture").description("Capture a thought before it gets away.").supportedFamilies([.systemSmall]) }
+    var body: some WidgetConfiguration { StaticConfiguration(kind: "TaskfoldCapture", provider: TodayProvider()) { CaptureWidgetView(entry: $0) }.configurationDisplayName("Quick capture").description("Capture a thought in Inbox without assigning a date.").supportedFamilies([.systemSmall]) }
 }
 
 extension WindowBudget: AppEnum {
