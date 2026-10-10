@@ -507,3 +507,32 @@ extension NativeBehaviorTests {
         XCTAssertEqual(OrganizationOrder.sorted(rows.reversed()).map(\.id), ["a", "b", "c"])
     }
 }
+
+extension NativeBehaviorTests {
+    @MainActor func testMacReadsOrganizationOrderingAfterNativeOfflineHandoff() async throws {
+        guard let path = ProcessInfo.processInfo.environment["TASKFOLD_ORGANIZATION_ORDER_FIXTURE"] else { throw XCTSkip("Disposable ordering fixture not supplied") }
+        let f = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+        let owner = try XCTUnwrap(f["userID"])
+        guard UUID(uuidString: owner) != nil, f["email"] == "taskfold-continuity-" + owner + "@example.invalid" else { throw XCTSkip("Requires disposable account") }
+        let backend = Backend(configuration: ["URL": try XCTUnwrap(f["url"]), "Key": try XCTUnwrap(f["key"])], session: nil, persistSession: { _ in })
+        let signedIn = try await backend.signIn(email: try XCTUnwrap(f["email"]), password: try XCTUnwrap(f["password"]), signup: false)
+        XCTAssertTrue(signedIn); XCTAssertEqual(backend.session?.user.id, owner)
+        for (table, key) in [("projects", "Project"), ("sections", "Section"), ("saved_views", "View"), ("favorites", "Project")] {
+            let rows = OrganizationOrder.sorted(try await backend.rows(table))
+            let ids = try ["first", "second"].map { try XCTUnwrap(f[$0 + key + "ID"]) }
+            XCTAssertEqual(rows.map(\.id), table == "favorites" ? ids.map { "project:" + $0 } : ids)
+            XCTAssertEqual(rows.map { $0["order_index"].integer }, [0, 1])
+            XCTAssertTrue(rows.allSatisfy { $0.string("user_id") == owner })
+            if table == "sections" {
+                XCTAssertTrue(rows.allSatisfy { $0.string("project_id") == f["firstProjectID"] })
+                XCTAssertEqual(rows.map(\.name), ["First step", "Second step"])
+            }
+            if table == "projects" { XCTAssertEqual(rows.map { $0.string("description") }, ["Original studio description", "Original garden description"]) }
+            if table == "saved_views" {
+                XCTAssertEqual(rows.map(\.name), ["First queue", "Second queue"])
+                XCTAssertTrue(rows.allSatisfy { $0["query_ast"] == FilterRule.predicate("inbox", "").document && $0.string("layout") == "list" })
+            }
+        }
+        let tasks = try await backend.rows("tasks"); XCTAssertTrue(tasks.isEmpty)
+    }
+}

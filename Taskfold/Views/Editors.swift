@@ -73,7 +73,7 @@ struct SectionsEditor: View {
             List {
                 ForEach(sections) { section in
                     HStack {
-                        TextField("Section name", text: Binding(get: { store.record("sections", id: section.id)?.name ?? section.name }, set: { var changed = section; changed["name"] = .string($0); workspace.save("sections", changed, name: "Rename Section") })).textFieldStyle(.plain)
+                        TextField("Section name", text: Binding(get: { store.record("sections", id: section.id)?.name ?? section.name }, set: { var changed = section; changed["name"] = .string($0); workspace.save("sections", changed, name: "Rename Section") })).textFieldStyle(.plain).accessibilityIdentifier("section-" + section.id)
                         Button { workspace.run("Delete Section") { store.remove("sections", section.id) } } label: { Image(systemName: "minus.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Delete \(section.name)")
                     }
                 }

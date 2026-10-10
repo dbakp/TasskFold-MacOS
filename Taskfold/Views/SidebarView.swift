@@ -43,7 +43,7 @@ struct SidebarView: View {
                             Group {
                                 if store.available(scope) { Label(store.title(for: scope), systemImage: "star.fill").tag(SidebarItem(key: favorite.id)) }
                                 else { HStack { Label(store.title(for: scope), systemImage: "exclamationmark.circle").foregroundStyle(.secondary); Spacer(); Button { store.toggleFavorite(scope) } label: { Image(systemName: "star.slash") }.buttonStyle(.borderless).accessibilityLabel("Remove unavailable favorite") } }
-                            }.contextMenu { Button("Remove favorite") { store.toggleFavorite(scope) } }
+                            }.contextMenu { Button("Remove favorite") { store.toggleFavorite(scope) } }.accessibilityIdentifier("favorite-" + favorite.id)
                         }
                     }.onMove { source, destination in var ids = store.favorites.map(\.id); ids.move(fromOffsets: source, toOffset: destination); workspace.run("Reorder Favorites") { store.reorderFavorites(ids) } }
                 }
@@ -51,7 +51,7 @@ struct SidebarView: View {
             Section("Filters") {
                 ForEach(store.savedViews) { view in
                     Label(view.name, systemImage: "line.3.horizontal.decrease.circle").tag(SidebarItem.saved(view.id))
-                        .contextMenu { Button("Edit Filter…") { filterEditor = view }; Button(store.isFavorite(.saved(view.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.saved(view.id)) } }
+                        .contextMenu { Button("Edit Filter…") { filterEditor = view }; Button(store.isFavorite(.saved(view.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.saved(view.id)) } }.accessibilityIdentifier("filter-" + view.id)
                 }.onMove { source, destination in
                     var ids = store.savedViews.map(\.id); ids.move(fromOffsets: source, toOffset: destination)
                     workspace.run("Reorder Filters") { store.reorderOrganization("saved_views", ids: ids) }
@@ -75,7 +75,7 @@ struct SidebarView: View {
                         Button(store.isFavorite(.project(project.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.project(project.id)) }
                         Button("Delete Project…", role: .destructive) { projectEditor = project }
                     }
-                    .accessibilityLabel(project.name)
+                    .accessibilityLabel(project.name).accessibilityIdentifier("project-" + project.id)
                 }
                 .onMove { source, destination in
                     var projects = store.projects; projects.move(fromOffsets: source, toOffset: destination)

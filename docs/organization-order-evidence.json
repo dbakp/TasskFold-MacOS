@@ -1,6 +1,6 @@
 {
   "date": "2026-10-10",
-  "scope": "Native iPhone local saved-filter drag/relaunch and independently owned ordering contracts in both repos; cloud ordering and Mac GUI remain unverified.",
+  "scope": "Local native reorder controls plus live paired cloud order/offline/relaunch/reconnect round trip; Mac model/transport verified, Mac GUI unverified.",
   "changes": [
     "Saved-filter drag controls in iOS Browse and Mac sidebar",
     "Project/section/filter/favorite ordering uses one local commit and undo entry per drag, patching only changed order fields",
@@ -53,9 +53,140 @@
   },
   "limitations": [
     "One commit provides atomic local persistence, not an atomic multi-row server transaction",
-    "No live cloud organization-order handoff in this checkpoint",
     "No Mac app launch or widget-host acceptance",
     "No native injected disk-failure test; rollback uses existing Store.commit persistence transaction"
   ],
-  "fixtures": "Only isolated ui-testing local workspace; no provider accounts or real user data."
+  "fixtures": "Only isolated ui-testing local workspace; no provider accounts or real user data.",
+  "cloudContinuity": {
+    "date": "2026-10-10",
+    "scope": "Native phone \u2192 tablet organization order, offline tablet drags/relaunch \u2192 reconnect \u2192 phone return; two projects/sections/filters/favorites. Mac authenticated transport reads final data. Seeded disposable fixture; all reorder actions use native UI.",
+    "passingUIResults": {
+      "/tmp/taskfold-organization-cloud-v1": [
+        "phone-login",
+        "tablet-login"
+      ],
+      "/tmp/taskfold-organization-cloud-v2": [
+        "phone-reorder",
+        "tablet-receive"
+      ],
+      "/tmp/taskfold-organization-cloud-v3": [
+        "tablet-offline",
+        "tablet-reconnect",
+        "phone-receive",
+        "phone-signout",
+        "tablet-signout"
+      ]
+    },
+    "passedUITests": 9,
+    "skippedTests": 0,
+    "reportedAppRuntimeWarnings": 0,
+    "checkpoints": [
+      {
+        "phase": "phone-reorder",
+        "passed": true,
+        "pendingCount": 0,
+        "serverReversed": true,
+        "identitiesAndMetadataPreserved": true
+      },
+      {
+        "phase": "tablet-receive",
+        "passed": true,
+        "pendingCount": 0,
+        "serverReversed": true,
+        "identitiesAndMetadataPreserved": true
+      },
+      {
+        "phase": "tablet-offline",
+        "passed": true,
+        "pendingCount": 8,
+        "serverReversed": true,
+        "identitiesAndMetadataPreserved": true
+      },
+      {
+        "phase": "tablet-reconnect",
+        "passed": true,
+        "pendingCount": 0,
+        "serverReversed": false,
+        "identitiesAndMetadataPreserved": true
+      },
+      {
+        "phase": "phone-receive",
+        "passed": true,
+        "pendingCount": 0,
+        "serverReversed": false,
+        "identitiesAndMetadataPreserved": true
+      },
+      {
+        "phase": "phone-signout",
+        "passed": true,
+        "pendingCount": 0,
+        "serverReversed": false,
+        "identitiesAndMetadataPreserved": true
+      },
+      {
+        "phase": "tablet-signout",
+        "passed": true,
+        "pendingCount": 0,
+        "serverReversed": false,
+        "identitiesAndMetadataPreserved": true
+      }
+    ],
+    "offlineBoundary": "Exactly eight PATCH mutations contain only order_index. Tablet cache retains new order after relaunch while authenticated server reads retain the phone order. Reconnect drains queue; phone receives the returned order with all original IDs and non-order metadata unchanged.",
+    "macTransport": {
+      "log": "/tmp/taskfold-organization-cloud-mac-live-v3.log",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "nativeGUI": false
+    },
+    "builds": {
+      "ios": "/tmp/taskfold-organization-cloud-build-v3.log",
+      "iosSignatures": "/tmp/taskfold-organization-cloud-sign-v3.json",
+      "mac": "/tmp/taskfold-organization-cloud-mac-build-v1.log",
+      "passed": true
+    },
+    "earlierAttempts": "Composed checkpoints, not a fresh all-green nine-phase driver. The first phone drag opened the row context menu because the button frame excluded the handle. The first tablet drag used a percentage that landed left of the handle on a wide row and scrolled instead. Actual recordings were inspected; server/cache inspection confirmed no reorder/pending work at either failure. Corrected gestures use the cell trailing edge. Resumed from phone-reorder, then tablet-offline, retaining completed phases and the original server baseline. No backend reordering was used to make tests pass.",
+    "productionChange": "Stable row accessibility identifiers distinguish favorite, project, filter and section entries in each independently owned app. Ordering behavior itself was committed previously.",
+    "capturesInIOSRepository": {
+      "organization-phone-sections.png": {
+        "path": "native-continuity-previews/organization-phone-sections.png",
+        "sha256": "43eaf5dddabfff395cbe5a7d7ac24ad54b5f532b3e2e965241ddec633997c371",
+        "visuallyInspected": true
+      },
+      "organization-tablet-offline.png": {
+        "path": "native-continuity-previews/organization-tablet-offline.png",
+        "sha256": "01920c1079a3b346dd187a258a70fa3dedde000e4acc759867db343dc18fbb3e",
+        "visuallyInspected": true
+      },
+      "organization-phone-returned.png": {
+        "path": "native-continuity-previews/organization-phone-returned.png",
+        "sha256": "d9818a4ff9d9f423b3af17ca7434c3d7666ce7e338279d84d03cecaf91e7a751",
+        "visuallyInspected": true
+      }
+    },
+    "cleanup": {
+      "disposableAccountsDeleted": 1,
+      "verifiedRemaining": {
+        "users": 0,
+        "sessions": 0,
+        "identities": 0,
+        "profiles": 0,
+        "projects": 0,
+        "sections": 0,
+        "saved_views": 0,
+        "favorites": 0,
+        "tasks": 0,
+        "labels": 0
+      },
+      "scopedCachesAndVaultsRemoved": 4,
+      "privateCredentialFilesRemoved": 1,
+      "bothWidgetAccountsEmpty": true
+    },
+    "remaining": [
+      "Native Mac ordering/undo and host acceptance",
+      "Physical devices",
+      "Other installed widget families/sizes and critical accessibility journeys",
+      "Concurrent recurrence retry acceptance and external provider/delivery/distribution gates"
+    ]
+  }
 }
