@@ -762,13 +762,76 @@
     "remaining": [
       "Privacy switches for this pair",
       "Note medium/large and other instances",
-      "Reboot, killed-app, cloud account switch and expiry behavior for this pair",
+      "Cloud account switch, long outage and expiry behavior for this pair",
       "iPad, physical and Mac widget hosts",
       "VoiceOver and full P0 acceptance"
     ],
     "ownSourceHashes": {
       "TaskfoldWidgets/TaskfoldWidgets.swift": "8f22de49c130bafa211f04d033067b949087492118ffce5b71e1269e7c728131"
     },
-    "noteAndFocusViewBlockSHA256": "9dccd94484b6b403eee78586f24b7e19b42cd2aee277403102308f40fbe7a110"
+    "noteAndFocusViewBlockSHA256": "9dccd94484b6b403eee78586f24b7e19b42cd2aee277403102308f40fbe7a110",
+    "rebootColdRoutes": {
+      "date": "2026-10-10",
+      "scope": "Existing configured small Pinned note and medium Focus session; isolated iPhone Simulator reboot plus independent terminated-app route for each widget",
+      "result": "/tmp/taskfold-note-focus-reboot-v1.xcresult",
+      "test": "testInstalledNoteAndFocusColdRoutesAfterHostReboot",
+      "actualPassed": 1,
+      "failures": 0,
+      "skips": 0,
+      "reportedRuntimeWarnings": 0,
+      "bootStatus": "/tmp/taskfold-note-focus-reboot-bootstatus.log",
+      "rebootTerminalSuccess": true,
+      "beforeRebootUnix": 1791605225.219462,
+      "afterColdRoutesUnix": 1791605312.0476842,
+      "appNotRunningAssertedBeforeEachRoute": true,
+      "assertions": [
+        "Both installed widget configurations and their medium/small geometry survive reboot",
+        "Pinned note cold route opens original renamed task, inserted note text and original final instruction",
+        "Focus cold route opens same running session and renamed task",
+        "Entire saved workspace and complete published account/notes/Focus payload remain equal to pre-reboot values"
+      ],
+      "unchangedSnapshotSHA256": "ad78a950f5f5982ff6094d3385ee6d923f1ec99e20fe12fb9e3ae6f920dc67d9",
+      "unchangedPayloadSHA256": "9d144d58c05b512ea360c4e8d52df662ec7668ec616e09e4b35a7838887a0b24",
+      "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+      "pinID": "WyJ1aS10ZXN0aW5nIiwibm90ZSIsImFhYWFhYWFhLWFhYWEtNGFhYS04YWFhLWFhYWFhYWFhYWEzMSJd",
+      "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+      "runningClock": {
+        "taskState": "open",
+        "status": "running",
+        "startedAt": 1791604194167,
+        "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+        "changedAt": 1791604929754,
+        "title": "Fresh client brief",
+        "durationSeconds": 1500,
+        "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+        "elapsedMilliseconds": 572720,
+        "runningSince": 1791604929754
+      },
+      "visualClockObservations": {
+        "rebootedHost": "9:51",
+        "coldOpenedSession": "09:41"
+      },
+      "screenshotsRepository": "TaskFold-iOS",
+      "screenshots": {
+        "docs/widget-host-previews/note-focus-reboot-host.png": "524ba4d0d66b5dd2fd2fb2011c0a90843a76730bd6a9c09d33ad50c7b7ec7826",
+        "docs/widget-host-previews/note-focus-reboot-reader.png": "ec595992a2dceae6f5f825c9c58f35594d9a8c0439d14f86861c50542c97301e",
+        "docs/widget-host-previews/note-focus-reboot-focus.png": "da5332025b587fa95861cd60e60b21d8b7c58b8a120f41cd8b53c264de3d0216"
+      },
+      "build": "/tmp/taskfold-note-focus-reboot-build-v1.log",
+      "signatureReceipt": "/tmp/taskfold-note-focus-reboot-sign-v1.json",
+      "fixture": "Existing DEBUG Simulator exact-bundle widget-cold-launch marker binds system launches without XCTest arguments to ui-testing. Marker verified true before reboot and reset false afterward; no production behavior changed.",
+      "coldFixtureMarkerReset": true,
+      "productionChanges": false,
+      "limitations": [
+        "Local DEBUG Simulator account only; no cloud, account switching or physical reboot inference",
+        "No Mac GUI or Mac widget host run",
+        "Timer remained running during this short reboot; long outages and expiry not covered",
+        "No privacy/VoiceOver acceptance inferred"
+      ],
+      "ownSourceHashes": {
+        "Taskfold/Core/Store.swift": "fed42d0335cae291b6f1815ca308137acd363ae7a35a78ec1dec6df324791c32",
+        "TaskfoldWidgets/TaskfoldWidgets.swift": "8f22de49c130bafa211f04d033067b949087492118ffce5b71e1269e7c728131"
+      }
+    }
   }
 }
