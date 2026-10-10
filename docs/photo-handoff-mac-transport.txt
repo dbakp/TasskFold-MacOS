@@ -1,0 +1,12 @@
+Test Suite 'Selected tests' started at 2026-10-10 11:03:05.871.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-10 11:03:05.873.
+Test Suite 'PhotoHandoffIntegrationTests' started at 2026-10-10 11:03:05.873.
+Test Case '-[TaskfoldCoreTests.PhotoHandoffIntegrationTests testMacReadsCloudPhotoAndOfflineDeviceSnapshotsWithoutIdentityOrByteLoss]' started.
+Test Case '-[TaskfoldCoreTests.PhotoHandoffIntegrationTests testMacReadsCloudPhotoAndOfflineDeviceSnapshotsWithoutIdentityOrByteLoss]' passed (0.608 seconds).
+Test Suite 'PhotoHandoffIntegrationTests' passed at 2026-10-10 11:03:06.482.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.608 (0.609) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-10 11:03:06.482.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.608 (0.609) seconds
+Test Suite 'Selected tests' passed at 2026-10-10 11:03:06.482.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.608 (0.611) seconds
+CLOUD_PHOTO_SHA256 a0de969ebf719436c877b171aa31c35724597bdf9eeef51bc695d1e6bcd0c0b2

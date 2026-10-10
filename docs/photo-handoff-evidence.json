@@ -1,0 +1,126 @@
+{
+  "date": "2026-10-10",
+  "scope": "Actual native phone \u2192 tablet offline edit/relaunch \u2192 reconnect \u2192 phone offline photo preview, real authenticated cloud and Mac-owned transport. No production change.",
+  "native": {
+    "resultRoot": "/tmp/taskfold-photo-handoff-native-v1",
+    "passedTests": 6,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": 0,
+    "checkpoints": [
+      {
+        "phase": "phone-login",
+        "passed": true
+      },
+      {
+        "phase": "tablet-login",
+        "passed": true
+      },
+      {
+        "phase": "phone-create",
+        "passed": true,
+        "taskID": "028d6ca2-dd41-4e8a-9881-f44bc39de771",
+        "attachmentID": "269bf46e-aad9-42a7-a26c-163be970d498",
+        "imageSHA256": "a0de969ebf719436c877b171aa31c35724597bdf9eeef51bc695d1e6bcd0c0b2",
+        "pendingCount": 0,
+        "serverEdited": false
+      },
+      {
+        "phase": "tablet-offline",
+        "passed": true,
+        "taskID": "028d6ca2-dd41-4e8a-9881-f44bc39de771",
+        "attachmentID": "269bf46e-aad9-42a7-a26c-163be970d498",
+        "imageSHA256": "a0de969ebf719436c877b171aa31c35724597bdf9eeef51bc695d1e6bcd0c0b2",
+        "pendingCount": 1,
+        "serverEdited": false
+      },
+      {
+        "phase": "tablet-reconnect",
+        "passed": true,
+        "taskID": "028d6ca2-dd41-4e8a-9881-f44bc39de771",
+        "attachmentID": "269bf46e-aad9-42a7-a26c-163be970d498",
+        "imageSHA256": "a0de969ebf719436c877b171aa31c35724597bdf9eeef51bc695d1e6bcd0c0b2",
+        "pendingCount": 0,
+        "serverEdited": true
+      },
+      {
+        "phase": "phone-final",
+        "passed": true,
+        "taskID": "028d6ca2-dd41-4e8a-9881-f44bc39de771",
+        "attachmentID": "269bf46e-aad9-42a7-a26c-163be970d498",
+        "imageSHA256": "a0de969ebf719436c877b171aa31c35724597bdf9eeef51bc695d1e6bcd0c0b2",
+        "pendingCount": 0,
+        "serverEdited": true
+      }
+    ],
+    "inspectedCaptures": [
+      "usability-previews/photo-handoff-tablet-offline.png",
+      "usability-previews/photo-handoff-phone-offline.png"
+    ],
+    "rendering": "Both final offline Quick Look captures show the exact red/green/blue/yellow checker quadrants. Both native image canvases measure 64\u00d764 points; preview closes back to saved attachment."
+  },
+  "integrity": {
+    "taskID": "028d6ca2-dd41-4e8a-9881-f44bc39de771",
+    "attachmentID": "269bf46e-aad9-42a7-a26c-163be970d498",
+    "imageBytes": 166,
+    "imageSHA256": "a0de969ebf719436c877b171aa31c35724597bdf9eeef51bc695d1e6bcd0c0b2",
+    "assertions": [
+      "Phone creation reaches server and local cache with zero pending changes",
+      "Tablet offline edit survives relaunch with one durable task mutation; server remains unedited during outage",
+      "Tablet reconnect drains queue and publishes instructions",
+      "Phone receives instructions, restarts offline, previews original image and returns to attachment",
+      "Full attachment object and original task/attachment identities match at every server/device checkpoint"
+    ]
+  },
+  "mac": {
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "case": "PhotoHandoffIntegrationTests.testMacReadsCloudPhotoAndOfflineDeviceSnapshotsWithoutIdentityOrByteLoss",
+    "report": "photo-handoff-mac-transport.txt",
+    "scope": "Own Backend authenticates and reads final cloud task; own Snapshot decoder checks four actual native stage caches, exact attachment and queued offline edit. No GUI launch."
+  },
+  "cleanup": {
+    "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705": {
+      "sessionClearedThroughIsolatedDebugLaunch": true,
+      "accountCacheAndBackupFilesRemoved": true,
+      "beforeByteSHA256": "0c6336590e7eff6e0216e7a00168a96e02914b9924fad772053948ac9021162c",
+      "afterByteSHA256": "3bb9193f610d48bbaa8399a317b9187e3bd11b6e8a578c5a5805f1cd589c8db3",
+      "taskCount": 4,
+      "pendingCount": 0,
+      "widgetAccount": "ui-testing",
+      "restorationSemanticCheck": "Tablet full snapshot equal before/after restore; phone full snapshot equal on final restoration and task ID/title/completion/priority/date fields match prior committed receipt. Initial phone restore re-encoded snapshot; initial full semantic baseline was not retained."
+    },
+    "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969": {
+      "sessionClearedThroughIsolatedDebugLaunch": true,
+      "accountCacheAndBackupFilesRemoved": true,
+      "beforeByteSHA256": "aeaf79bb53b344924349db81bd587dc826224cd1ddbc99f138cfd27218556e16",
+      "afterByteSHA256": "6a25c07836fbb07972b326d4ed6262c5fa6bc5b3b3798f5c52b1a5763bd164fe",
+      "taskCount": 6,
+      "pendingCount": 0,
+      "widgetAccount": "ui-testing",
+      "restorationSemanticCheck": "Tablet full snapshot equal before/after restore; phone full snapshot equal on final restoration and task ID/title/completion/priority/date fields match prior committed receipt. Initial phone restore re-encoded snapshot; initial full semantic baseline was not retained."
+    },
+    "temporaryCredentialFileRemoved": true,
+    "backendCounts": {
+      "users": 0,
+      "sessions": 0,
+      "refresh_tokens": 0,
+      "tasks": 0,
+      "profiles": 0
+    },
+    "diagnostic": "Initial byte-hash equality check failed after local load rewrote JSON. Store.load calls persist with unsorted JSONEncoder; final restoration compares decoded snapshots. No byte-identical restoration claim."
+  },
+  "build": "iOS build-for-testing and real team signatures pass; Mac own Core test build and exact live case pass. Existing native app builds reused because production unchanged.",
+  "sourceSHA256": {
+    "taskfold-authority-ios-commit-polish/TaskfoldUITests/TaskfoldUITests.swift": "6e453db963f53fc40801e1c0db13d603d5d1537e9fd8e67049524b1554da8bed",
+    "taskfold-authority-ios-commit-polish/Scripts/test_photo_handoff.py": "44ec6ded9a2134e22fd4b145e1c58b0921b93b8ca21583994bcffb03d35f24b5",
+    "taskfold-authority-mac-commit-polish/TaskfoldTests/PhotoHandoffIntegrationTests.swift": "1c15ef2feae13addebce3b28681cb6832af891a13ea98528c35c0518c0b18ec2"
+  },
+  "limits": [
+    "Isolated iPhone/iPad Simulators, normal portrait. Native Mac image/attachment UI and physical-device acceptance remain open.",
+    "Synthetic 166-byte PNG embedded in task data; no external file-provider or large/remote-file transfer acceptance.",
+    "No VoiceOver, keyboard, notification delivery, installed-host or account-switch acceptance added by this workflow.",
+    "Initial local phone cleanup used byte hashes and failed after JSON was re-encoded. Preserved task fields match prior receipt; final restore compares decoded snapshots. No full initial phone semantic-baseline or byte-identical claim."
+  ]
+}
