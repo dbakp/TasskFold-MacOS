@@ -927,5 +927,10 @@
     "skipped": 0,
     "runtimeWarnings": 0,
     "scope": "Installed small ended clock, simultaneous medium instance, exact terminated-app session route and temporary-instance removal; original work unchanged."
+  },
+  "mediumInboxHost": {
+    "evidence": "medium-inbox-host-evidence.json",
+    "nativeCases": 2,
+    "scope": "Installed medium Inbox five/all-six rendering and matching cold routes; final original cloud note/Focus cold routes and unchanged work. Simulator only; Mac host remains open."
   }
 }

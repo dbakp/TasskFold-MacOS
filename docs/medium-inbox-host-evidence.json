@@ -1,0 +1,115 @@
+{
+  "date": "2026-10-11",
+  "scope": "Installed iPhone medium Inbox reset: six total, default five-task review, configured all-six review, terminated-app routes and complete cleanup back to original cloud note/Focus widgets.",
+  "productChanges": "No production widget, persistence, reminder, authentication or Mac implementation changes. Both apps already independently own the clarified Review 5 of 6 / Review all 6 copy.",
+  "fixtureChanges": "iOS Debug, exact isolated Simulator bundle only: persisted widget-cold-launch flag now also forces local mode, keeping system launches in ui-testing. Explicit reset clears that flag and the persisted local-mode preference before normal cached cloud launch. Native tests verify local batches and then both original cloud cold routes.",
+  "nativeResults": [
+    {
+      "resultBundle": "medium-inbox-phone-v4.xcresult",
+      "case": "testInstalledMediumInboxTotalBatchAndColdRoutes",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "build": "medium-inbox-build-v5.log",
+      "signing": "medium-inbox-signing-v5.json",
+      "coverage": "Gallery installation, medium family beside original note/Focus instances, five-task cold review, actual configuration to all tasks, six-task cold review, settled all-six host, removal of only temporary widget, original cloud task and warm note/Focus routes.",
+      "sourceSHA256": {
+        "TaskFold-iOS/Taskfold/Core/Store.swift": "beedbc5e2313259dbed88728915f26c79f9903da0ba2d21c6012fd5111209a36",
+        "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "b17bac66226560bada5a0c686b9a6c00bca2fc5938c40355ff0463e4f010419d"
+      }
+    },
+    {
+      "resultBundle": "medium-inbox-cloud-reset-v1.xcresult",
+      "case": "testLiveCloudWidgetsColdRoutesAfterLocalFixtureReset",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "build": "medium-inbox-build-v6.log",
+      "signing": "medium-inbox-signing-v6.json",
+      "coverage": "Final persistent fixture reset, original cloud Today task, terminated-app exact selected-note route with full original text, terminated-app original ended Focus with Time spent / 00:03, original host retained."
+    }
+  ],
+  "visualInspection": "Seven retained captures inspected individually. Medium host has readable 6 / open in Inbox, two task names and Review 5 of 6; settled all configuration shows Review all 6. Native reviews show exactly five/six left. Original note, ended Focus and host are restored. The configuration-flip screenshot is transitional and excluded from settled-render acceptance.",
+  "hostDiagnostics": "The full widget run includes four 60-second missing-animation-notification waits and ignored remote DragUI hierarchy diagnostics. XCTest ultimately passes with zero reported runtime warnings. The focused final reset run passes separately. These are composed checkpoints, not a single two-case result bundle.",
+  "dataProof": {
+    "phoneCompleteCacheEqualsBaseline": true,
+    "baseline": "profile-switch-first-cache.json",
+    "afterSHA256": "00015275fb6a7124c20e7fd39137e1660750ecba2da18098d5056355f34c135a",
+    "originalWidgetFieldsUnchanged": [
+      "account",
+      "focusSession",
+      "notes",
+      "pendingSync"
+    ],
+    "originalWidgetAccount": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+    "pendingSync": 0,
+    "persistentLocalMode": false,
+    "coldLaunchFixtureEnabled": false,
+    "originalMacCacheUnchanged": true,
+    "originalMacCacheSHA256": "fa5afd731333a5aa33977d5bf2f199c66d32f9fc114a3a48e77032de95b3c831",
+    "checkedAfterBothNativeRunsCompleted": true
+  },
+  "earlierAttempts": {
+    "failed": [
+      "medium-inbox-phone-v1.xcresult",
+      "medium-inbox-phone-v2.xcresult"
+    ],
+    "explanation": "v1 omitted explicit Inbox navigation and stopped before widget installation; retained hierarchy shows Today despite a seeded local cache. v2 installed and rendered the medium widget but its terminated-app launch used ordinary local rather than ui-testing identity; the observed widget payload account was local. No original cloud task was edited.",
+    "supersededPassing": "medium-inbox-phone-v3.xcresult passed the five/all-six routes but had weak cleanup assertions and transitional captures. v4 adds settled rendering and exact original cloud warm routes; final reset-v1 verifies persistent cleanup and original cloud cold routes.",
+    "interruptedBuild": "medium-inbox-build-v1.log: intentionally terminated after detecting unnecessary Intel Simulator compilation. Later builds use arm64 only; unused Intel intermediates were pruned."
+  },
+  "sourceSHA256": {
+    "TaskFold-iOS/Taskfold/Core/Store.swift": "c62f8a2e48aeb723db5aa857398961e6c76c327634ca9cf7e486fddf7c47234f",
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "6a68867212221ea3612e14cfaae74532cc0b619f081ab8cbd4694be709d282a1"
+  },
+  "storageCleanup": {
+    "reason": "Unused Intel Simulator intermediate slices from interrupted build-v1; final build-v2 targets arm64. Retain signed products, active arm64 intermediates and all native results.",
+    "removed": [
+      {
+        "path": "BuildCache/ios-live-ui/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/x86_64",
+        "allocatedKiB": 45140
+      },
+      {
+        "path": "BuildCache/ios-live-ui/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/TaskfoldWidgets.build/Objects-normal/x86_64",
+        "allocatedKiB": 9056
+      }
+    ],
+    "allocatedMiBPruned": 52.9,
+    "duplicateExportsPruned": [
+      {
+        "path": "medium-inbox-phone-v1-failure",
+        "allocatedKiB": 4
+      },
+      {
+        "path": "medium-inbox-phone-v1-diagnostics",
+        "allocatedKiB": 4132
+      },
+      {
+        "path": "medium-inbox-phone-v2-failure",
+        "allocatedKiB": 3444
+      },
+      {
+        "path": "medium-inbox-phone-v2-text",
+        "allocatedKiB": 48
+      },
+      {
+        "path": "medium-inbox-phone-v3-captures",
+        "allocatedKiB": 6488
+      }
+    ],
+    "totalAllocatedMiBPruned": 66.7,
+    "retained": "All native result bundles, logs, signing/source/data proofs, final exported captures and active arm64/Mac build caches. Exported failure attachments remain recoverable from their retained xcresults."
+  },
+  "limits": "One medium iPhone Simulator Inbox instance, normal text/light app. No fresh native Mac/iPad/VoiceOver, provider, notification or distribution acceptance. Desktop remains locked. Full P0 objective remains open.",
+  "captures": {
+    "docs/usability-previews/phone-medium-inbox-five.png": "ce55e191fff0f25c21ed23887bfd18c458ca446b891303dbd84876f1ac633f39",
+    "docs/usability-previews/phone-medium-inbox-five-review.png": "b2ca20de92e5635e5f4565226752aca6db680d35790d981a87dc42c95c34ce30",
+    "docs/usability-previews/phone-medium-inbox-all.png": "ab415d3e5c48f0b88122d40667c094206e74daedcd5e22259198361d364b2408",
+    "docs/usability-previews/phone-medium-inbox-all-review.png": "33cabef68a468092106aa0288101007285676ba94a6001269b6800bd584e7f65",
+    "docs/usability-previews/phone-medium-inbox-cleanup-note.png": "dad2c1cbf8eaa406180b329fcc2c021d0f51915593f6ddeddbed84cddb47fff0",
+    "docs/usability-previews/phone-medium-inbox-cleanup-focus.png": "e461e55a11e264635b2cfca023fca05f506d9e86cf56f49e8b56b4f412361cf4",
+    "docs/usability-previews/phone-medium-inbox-cleanup-host.png": "46ae1b8b6e77fca3c844a2af1de18918ba9f48ac4ca16995ef1a128c64808f42"
+  }
+}
