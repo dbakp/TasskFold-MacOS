@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-10",
+  "scope": "Native Mac-created task received and edited in native iPhone Simulator; Mac return leg pending",
+  "macSourceCommit": "eed4f2f81db0ba3bc30425cefbcde87fa8a44836",
+  "iosBaseCommit": "2547109356050a3af7439809970415c277c90590",
+  "nativeMacOriginalCreation": true,
+  "nativeMacNotesSavedAndServerVerified": true,
+  "test": "testLiveMacHandoffReceivesNotesAndEditsTitleOnPhone()",
+  "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+  "resultBundle": "/tmp/taskfold-mac-phone-handoff-v3.xcresult",
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "iosBuildForTesting": "/tmp/taskfold-mac-phone-handoff-v3-build.log",
+  "signingReceipt": "/tmp/taskfold-mac-phone-handoff-v3-signing.json",
+  "phoneRelaunchRetainsTitleAndNotes": true,
+  "scopedServerReadMatchesPhoneCache": {
+    "id": "101fbaab-af99-480c-97a6-4876bc3e7389",
+    "title": "Continuity 9a8bfc3d revised",
+    "description": "Created in the native Mac app for device-switch verification.",
+    "due_date": "2026-10-10",
+    "due_time": null,
+    "deadline_date": null,
+    "priority": 1,
+    "duration_minutes": 25
+  },
+  "phonePendingCount": 0,
+  "phoneTaskCount": 1,
+  "screenshot": "usability-previews/mac-phone-handoff-relaunch.png",
+  "screenshotSHA256": "0ea239f964884f762f38c6f5057f96a54416bab47d52b07ba58268670475606c",
+  "visualReview": "Title and full description wrap readably. Planned date, 25-minute estimate and Priority 1 visible; Time and Deadline off. Lower editor sections outside viewport.",
+  "open": [
+    "Mac native receive/edit verification after desktop unlock",
+    "Rich Mac organization/planning/Focus handoff",
+    "Native confirmation of prior profile and inspector fixes"
+  ],
+  "fixtureState": "Disposable fixture retained privately for unfinished Mac return leg; no credentials in committed evidence."
+}

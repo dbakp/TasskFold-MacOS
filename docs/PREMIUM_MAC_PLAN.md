@@ -1087,3 +1087,7 @@ The desktop is accessible and the earlier recovery-key wait has resolved. Native
 ### 10 October — account draft and quick-capture inspector follow-up
 
 Native cloud sign-in exposed a stale local display-name draft; quick capture also left an already-open inspector blank until scope navigation. Account-owned name drafts now refresh safely in both repos, with three passing focused Core regressions per repo and passing Debug app builds. The Mac inspector content now follows selected IDs and has a two-capture native UI regression. Corrected native UI behavior and the richer Mac–iPhone handoff remain unverified because the desktop is locked; see `profile-draft-inspector-evidence.md`.
+
+### 10 October — native Mac task received and revised on phone
+
+The native Mac-created task and description reach the isolated signed-in iPhone Simulator. A focused UI test receives both, edits the title, relaunches and verifies notes preservation; one case passes without runtime warnings. Server and cache preserve the original ID, P1, estimate/date and notes, with an empty phone queue. The actual editor capture was inspected. `mac-phone-handoff-evidence.json` records the limited checkpoint. Mac return-leg and richer native handoff remain open while the desktop is locked.
