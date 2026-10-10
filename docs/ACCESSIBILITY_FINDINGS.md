@@ -42,3 +42,10 @@ The one-line description preview remains intentional. Largest-text phone/tablet 
 These observations establish that this Simulator input path is unsuitable for accepting hardware modifier behavior; they do not establish an app-side shortcut defect. The test is opt-in via `TASKFOLD_RUN_KEYBOARD_AUDIT=1`; default skips are not acceptance. Full Keyboard Access tab navigation, a physical keyboard and VoiceOver remain unverified. A particular optional Save accelerator is not a new P0 release gate.
 
 All experimental toolbar/content/native-host implementations were removed. Production code is unchanged. The existing largest/dark phone capture-dismissal and saved-preview detail workflows both pass on the restored implementation with zero skips/failures/reported runtime warnings. Final build v7 only adds the diagnostic preflight. Mac inspector autosave and Return capture were source-inspected only. Seven terminal prototype result bundles were pruned after retaining their summaries (168,926,623 file bytes); final baseline and preflight bundles remain available.
+
+
+## Subtask draft readability
+
+10 October: Inspection of the retained editor capture exposed a separate composing issue: the single-line new-subtask field truncated even “Send the estimate” at accessibility XXXL. The iOS draft field now grows to four lines at accessibility sizes, with the 44-point add action aligned to its top. Two final native phone/tablet workflows pass with longer titles, independent completion and save/relaunch; saved snapshots retain both complete titles. Inspected captures show complete wrapped drafts on both devices. Normal entry keeps its single-line layout. The first tablet geometry assertion failed because a short title fitted on one line; the final fixture uses titles long enough to wrap in both widths. See `subtask-draft-evidence.json`.
+
+Mac saved-subtask editing already wraps; its desktop entry retains Return-to-add. No new data fields or synchronization changes. These results do not clear the unfiltered audit or establish VoiceOver, keyboard-submit or Mac runtime acceptance.

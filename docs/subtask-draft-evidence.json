@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-10",
+  "scope": "iOS accessibility-size new-subtask draft wrapping, adding, independent completion and persisted values on phone/tablet",
+  "change": "Accessibility-size draft input grows from one to four lines; its add button remains 44 points and top aligned. Normal-size entry keeps its single-line field and centered button. Whitespace-only drafts, including newlines, keep Add disabled. Serialized subtask fields are unchanged.",
+  "cause": "Retained audit-editor-largest.png showed unsaved Send the estimate truncated in the single-line input even though saved titles wrapped.",
+  "results": [
+    {
+      "device": "phone",
+      "resultBundle": "/tmp/taskfold-subtask-draft-phone-v2.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "checks": [
+        "draft value complete and height grows after keyboard dismissal",
+        "add target at least 44 by 44 points",
+        "two named subtasks; only first completed before save",
+        "relaunch retains names and independent state; second completion saved"
+      ]
+    },
+    {
+      "device": "tablet",
+      "resultBundle": "/tmp/taskfold-subtask-draft-tablet-v2.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "checks": [
+        "draft value complete and height grows after keyboard dismissal",
+        "add target at least 44 by 44 points",
+        "two named subtasks; only first completed before save",
+        "relaunch retains names and independent state; second completion saved"
+      ]
+    }
+  ],
+  "savedData": [
+    {
+      "device": "phone",
+      "snapshotSHA256": "b38296ffcf3458e1dca8190033e5ef7ca56c023bc830151155a1b806851aa3be",
+      "taskID": "f130f286-0c26-479f-8171-3cc72f9163ca",
+      "taskTitle": "Accessible checklist B4E318",
+      "subtasks": [
+        {
+          "id": "221fb757-954f-40dd-84ad-852f23d207bf",
+          "completed": true,
+          "title": "Read the proposal carefully"
+        },
+        {
+          "id": "b923d013-6a48-41a2-b0f6-5afced1542a6",
+          "title": "Send the estimate for review",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "device": "tablet",
+      "snapshotSHA256": "10ae32b3312f1d5187f0a5474a460c712936c16c21642abd9beb8ccae5149104",
+      "taskID": "349364dc-85e0-4c99-a558-966838a81da4",
+      "taskTitle": "Accessible checklist 3975D9",
+      "subtasks": [
+        {
+          "id": "26d2080b-49ee-4d9e-9e22-e573822ce824",
+          "completed": true,
+          "title": "Read the proposal carefully"
+        },
+        {
+          "id": "1b095cdd-771f-4f51-bb86-5561f60d765b",
+          "completed": true,
+          "title": "Send the estimate for review"
+        }
+      ]
+    }
+  ],
+  "build": "/tmp/taskfold-subtask-draft-build-v2.log",
+  "signatures": "subtask-draft-reports/sign-v2.json",
+  "mac": "Source-inspected TaskInspector.swift: saved subtask fields already use axis: vertical; desktop new-subtask input retains native Return-to-add. No Mac source change or GUI launch. No new stored field, data-contract or synchronization behavior.",
+  "attempts": [
+    {
+      "result": "/tmp/taskfold-subtask-draft-phone-v1.xcresult",
+      "outcome": "one actual pass with original shorter titles"
+    },
+    {
+      "result": "/tmp/taskfold-subtask-draft-tablet-v1.xcresult",
+      "outcome": "failed geometry assertion: a short title correctly fit on one line in the wider sheet. Final test uses longer titles that wrap on both devices; production code unchanged between v1 and v2."
+    }
+  ],
+  "limitations": [
+    "Unfiltered accessibility diagnostic not rerun or cleared.",
+    "No VoiceOver, keyboard-submit, physical-device, native Mac runtime or new cloud-handoff acceptance.",
+    "Four-line visible draft limit retains scrolling for longer text."
+  ],
+  "sourceSHA256": {
+    "iosEditor": "b5b09e5a93dda8423df8082943445e41cb2867973a3a6f9d44e764499030b656",
+    "iosUI": "fb6c726fbb80b4944c7f54b8c6a55650fddf317e4657e14c15edbb2873a29ee6",
+    "macInspector": "e690d7a69caf78f82b53635ffa139895457f35de28df30efd5082a2bc5515d45"
+  }
+}
