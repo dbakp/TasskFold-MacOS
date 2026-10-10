@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-11",
+  "scope": "Installed medium Deadline radar on isolated iPhone Simulator; no new native Mac acceptance.",
+  "baseCommits": {
+    "TaskFold-iOS": "b0bc559177925da9cfefa45598179d9d6edb8092",
+    "TasskFold-MacOS": "3c6874bc1e222d1c52281e188f043485d1848022"
+  },
+  "productChanges": false,
+  "testSource": "TaskfoldUITests/TaskfoldUITests.swift",
+  "testCase": "testInstalledMediumDeadlineRankingColdRouteAndCompletionRefresh",
+  "nativeResult": "medium-deadline-phone-v2.xcresult",
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "reportedRuntimeWarnings": 0,
+  "build": "medium-deadline-build-v3.log",
+  "signing": "medium-deadline-signing-v3.json",
+  "sourceInputHashes": {
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "f52a2c338d712cd14f8a0d702da17745f2ef34ccc10edd63882d755532e0137f",
+    "ios-live-stage/TaskfoldUITests/TaskfoldUITests.swift": "f52a2c338d712cd14f8a0d702da17745f2ef34ccc10edd63882d755532e0137f",
+    "TaskFold-iOS/Taskfold/Core/Store.swift": "c62f8a2e48aeb723db5aa857398961e6c76c327634ca9cf7e486fddf7c47234f",
+    "ios-live-stage/Taskfold/Core/Store.swift": "c62f8a2e48aeb723db5aa857398961e6c76c327634ca9cf7e486fddf7c47234f",
+    "TaskFold-iOS/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632",
+    "ios-live-stage/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632"
+  },
+  "accepted": [
+    "Native capture saves three independent missed/today/future deadlines in disposable local workspace.",
+    "Actual gallery installs medium Deadline radar beside original note and Focus widgets.",
+    "Inspected installed three-row layout shows total 3, one missed cutoff and complete chosen task titles/date badges.",
+    "Terminated-app header/default route opens the missed task with its independent deadline.",
+    "Native completion removes only that task; terminated-app route advances to today.",
+    "Inspected refreshed layout shows total 2 and the two remaining deadline rows.",
+    "Only temporary radar widget removed; original cloud Today task, selected full note and ended Focus routes restored."
+  ],
+  "dataPreservation": {
+    "fullCloudCacheParsedEqual": true,
+    "originalWidgetFieldsEqual": {
+      "account": true,
+      "focusSession": true,
+      "notes": true,
+      "pendingSync": true
+    },
+    "pendingSync": 0,
+    "cloudCacheSHA256": "e19216a650b9c30ac156cbfc0750f5adcfa54092bd44df35448d5537649279a2",
+    "localMode": false,
+    "widgetColdLaunchFixture": false,
+    "localTasks": 3,
+    "completedLocalTasks": 1,
+    "originalMacCloudCacheMatchesBaseline": true
+  },
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-medium-deadline-three.png",
+      "sha256": "9a4848fdfed9d72e29e61c851ecfc9e315a04a9c139fbc433bece2294b252bea",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-deadline-two.png",
+      "sha256": "0b7d9e22b07720b5c165e00357249b922a310525b07b6bc8f20d92ab95ba5e53",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-deadline-missed-route.png",
+      "sha256": "9b99844854ee41efea6ff45308747453dd31a80af9d2f9877e36e0fccb28c7ba",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-deadline-today-route.png",
+      "sha256": "e03ed80a9d84ddfa37656832ffdc361d5e6344ccae935727760ab23532011fde",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-deadline-cleanup-host.png",
+      "sha256": "bbd602459253ad7b4929c2bb0dd7eee29f2ccfcbe4253a68d73d081654708b4b",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-deadline-cleanup-focus.png",
+      "sha256": "b110c3e1bb3ccd9b746736e7e6c5e983816c4d7c5226f171c72c7ba98c1bd1ce",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-medium-deadline-cleanup-note.png",
+      "sha256": "c56fdd0b2bf7bd1038c849b22c4e97854ab596ff740f2caf2d5a6c893b16b9cf",
+      "inspected": true
+    }
+  ],
+  "diagnostics": [
+    "Final run has two 60-second SpringBoard animation-notification waits during widget removal and ignored remote-element hierarchy diagnostics. Native summary reports zero runtime warnings.",
+    "Initial v1 native run failed before widget installation: second capture sheet still open and Add task label ambiguous. Final test dismisses the keyboard, uses floatingAdd and waits for each save to close before continuing. The v1 failure remains retained.",
+    "Build v1 ran unchanged test products after baseline preparation failed on an incorrect simctl group argument; no native test ran from it. Corrected prep used build v2 for initial native v1, then build v3 for final native v2."
+  ],
+  "storageCleanup": {
+    "allocatedBytesRemoved": 12996608,
+    "proof": "medium-deadline-pruned-manifest.json",
+    "retained": "Both native results, all logs/signing/input/data receipts and final capture exports."
+  },
+  "remaining": "Existing P0 checklist: other named widget hosts/conditions, native Mac workflows, VoiceOver/keyboard, real Todoist provider and notification/distribution acceptance remain open."
+}

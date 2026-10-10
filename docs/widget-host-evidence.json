@@ -932,5 +932,9 @@
     "evidence": "medium-inbox-host-evidence.json",
     "nativeCases": 2,
     "scope": "Installed medium Inbox five/all-six rendering and matching cold routes; final original cloud note/Focus cold routes and unchanged work. Simulator only; Mac host remains open."
+  },
+  "mediumDeadlineHost": {
+    "evidence": "medium-deadline-host-evidence.json",
+    "scope": "Installed isolated iPhone medium Deadline radar rendering, cold routes, completion refresh and preserved original cloud widget return."
   }
 }
