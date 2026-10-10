@@ -1,0 +1,132 @@
+{
+  "date": "2026-10-10",
+  "scope": "Native iOS capture/details, persisted completion, undo, relaunch and dated-row touch targets. Phone light/roomy and iPad dark/largest accessibility text/compact.",
+  "build": "/tmp/taskfold-completion-target-build-v6.log",
+  "signatures": "/tmp/taskfold-completion-target-sign-v6.json",
+  "sourceSHA256": {
+    "Taskfold/TaskfoldApp.swift": "1250cc8af8e3f2651be33b093b7be7730d014e3ab46a837fa12d8bec98733d0b",
+    "TaskfoldUITests/TaskfoldUITests.swift": "cb962cf6bc537f867f5a52a2fbf5e9b16a6288eec87f30f266927414a1f9c68d"
+  },
+  "results": [
+    {
+      "device": "phone",
+      "resultBundle": "/tmp/taskfold-completion-target-phone-v6.xcresult",
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0,
+      "reportedRuntimeWarnings": 0,
+      "snapshotSHA256": "0fbd28ae92857ac17409640c43c38f1d2ed139277c62dadc90b47dd7ad0bfabe",
+      "retainedTask": {
+        "comments": [],
+        "title": "Client handoff E0A298",
+        "subtasks": [],
+        "attachments": [],
+        "id": "ae4f181e-6c15-471b-bd95-17b00ceb2fab",
+        "is_recurring": false,
+        "project_id": null,
+        "description": "Keep both design directions. Send the estimate before booking the studio.",
+        "due_time": "10:30",
+        "user_id": "ui-testing",
+        "reminders": [],
+        "reminder_specs": [
+          {
+            "offset_minutes": 0,
+            "enabled": true,
+            "anchor": "planned",
+            "id": "00000000-0000-4000-8000-000000000001",
+            "kind": "relative",
+            "channels": [
+              "local"
+            ],
+            "version": 1
+          }
+        ],
+        "completed": false,
+        "section_id": null,
+        "labels": [],
+        "created_at": "2026-10-10T04:42:13Z",
+        "completion_version": 2,
+        "due_date": "2026-10-11",
+        "duration_minutes": 25,
+        "priority": 2,
+        "scheduled_at": null,
+        "task_generation": "2e3abf72-ee07-46ab-8cf3-b2cf8d933790",
+        "completed_at": null
+      }
+    },
+    {
+      "device": "tablet",
+      "resultBundle": "/tmp/taskfold-completion-target-tablet-v6.xcresult",
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0,
+      "reportedRuntimeWarnings": 0,
+      "snapshotSHA256": "d1ce9415e1b603550bf715168466c3b1b6c1ba4853b304418ce17fd274edc70b",
+      "retainedTask": {
+        "created_at": "2026-10-10T04:42:15Z",
+        "scheduled_at": null,
+        "due_time": "10:30",
+        "title": "Client handoff A095D1",
+        "project_id": null,
+        "id": "22a309e3-ee43-47ac-916a-346e33cfbb70",
+        "description": "Keep both design directions. Send the estimate before booking the studio.",
+        "section_id": null,
+        "labels": [],
+        "reminder_specs": [
+          {
+            "offset_minutes": 0,
+            "anchor": "planned",
+            "version": 1,
+            "id": "00000000-0000-4000-8000-000000000001",
+            "kind": "relative",
+            "enabled": true,
+            "channels": [
+              "local"
+            ]
+          }
+        ],
+        "subtasks": [],
+        "completed_at": null,
+        "duration_minutes": 25,
+        "due_date": "2026-10-11",
+        "task_generation": "b1ff0c6b-8104-49c2-accd-a2fa588ac730",
+        "reminders": [],
+        "completed": false,
+        "user_id": "ui-testing",
+        "priority": 2,
+        "comments": [],
+        "completion_version": 2,
+        "is_recurring": false,
+        "attachments": []
+      }
+    }
+  ],
+  "captures": [
+    {
+      "path": "docs/usability-previews/completion-undo-phone.png",
+      "sha256": "f0cb7b98bb49a792c89582dcf9ac34062c333c92dc9fcd006682e5957a10334e",
+      "inspected": true,
+      "repository": "TaskFold-iOS"
+    },
+    {
+      "path": "docs/usability-previews/completion-undo-tablet.png",
+      "sha256": "53e6300d274ba8251fae0d3f17ebd046bfbf8dc0f42993618c18f7cf73a57117",
+      "inspected": true,
+      "repository": "TaskFold-iOS"
+    },
+    {
+      "path": "docs/usability-previews/completion-undo-instructions.png",
+      "sha256": "3d60e038edaca101dec0cb4e1f8c2a2a10709ab2aa23d5a3428b25e42ab3762b",
+      "inspected": true,
+      "repository": "TaskFold-iOS"
+    }
+  ],
+  "earlierAttempts": "Phone v1 and tablet v4 passed on earlier inputs. Tablet v1-v3 failed editor-estimate locators; phone v4 selected the Duration icon rather than its numeric text. Final v6 checks visible 25 min task-row text and saved data. These earlier failures are not accepted evidence.",
+  "limitations": [
+    "Simulator only; no physical or Mac native runtime acceptance",
+    "No cloud sync or mixed-version claim from local fixtures",
+    "No VoiceOver or keyboard acceptance; editor-estimate control accessibility is not established",
+    "Original task identity is not independently captured before completion; exactly one open task and completion_version=2 are verified afterward"
+  ],
+  "finalFixtureState": "Apps terminated; one local ui-testing planned task per device, open after undo. No live accounts. Previous note/Focus local fixture replaced."
+}
