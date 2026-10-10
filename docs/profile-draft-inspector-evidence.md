@@ -1,0 +1,7 @@
+# Profile drafts and quick-capture inspector — 10 October 2026
+
+Native Mac sign-in exposed an Account settings draft retaining “Local Workspace” after the cloud account loaded. Both independently owned apps now bind the profile-name draft to account ID and workspace generation. Untouched drafts follow a loaded/refreshed name; unsaved typing survives same-workspace sync. Save rejects a draft from another workspace. Three focused Core tests pass independently in each repo, covering account switch, same-account new generation, and background refresh while typing. Both Debug application builds pass.
+
+The Mac native walk also reproduced quick capture selecting a task while an already-present inspector displayed “No Task Selected”; navigating away and back populated it. The Mac inspector now reads selection during body evaluation and keys its content by the selected IDs. A native UI regression captures two tasks consecutively and requires the selected editor to update without navigation/reselection. The Mac build-for-testing passes, including this regression. The case has not executed; this is separate from runtime acceptance.
+
+The Mac remained locked during this follow-up. Neither corrected UI behavior nor rich Mac-to-iPhone cloud handoff has a completed native acceptance receipt yet. These checks remain open. The isolated running app has not been rebuilt or replaced during this locked session. No production account data was used.

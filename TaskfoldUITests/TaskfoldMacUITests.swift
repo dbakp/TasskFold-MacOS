@@ -2,6 +2,26 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testQuickCaptureImmediatelyRefreshesSelectedInspector() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--quick-entry-fixture"]
+        app.launch()
+        defer { app.terminate() }
+        for title in ["Inspector first capture", "Inspector second capture"] {
+            app.typeKey("n", modifierFlags: .command)
+            let input = app.textFields["quickAdd"]
+            XCTAssertTrue(input.waitForExistence(timeout: 5))
+            input.click(); input.typeText(title)
+            app.buttons["Add Task"].click()
+            let editor = app.descendants(matching: .any)["taskTitle"].firstMatch
+            XCTAssertTrue(editor.waitForExistence(timeout: 5))
+            let updated = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", title), object: editor)
+            XCTAssertEqual(XCTWaiter.wait(for: [updated], timeout: 5), .completed,
+                           "New capture must show its inspector without navigating or reselecting")
+            XCTAssertFalse(app.staticTexts["No Task Selected"].exists)
+        }
+    }
+
     @MainActor func testBackupFilePickerCancelAndReopenFromSettings() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--widget-action-testing"]

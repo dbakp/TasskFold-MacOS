@@ -467,6 +467,7 @@ struct WorkspaceView: View {
         // Read during body evaluation so selection invalidates the inspector's
         // presentation. A read only inside Binding.get can leave it stale.
         let inspectorVisible = workspace.inspectorVisible
+        let inspectorSelection = workspace.actionSelection
         GeometryReader { window in
             NavigationSplitView(columnVisibility: $columns) {
                 SidebarView()
@@ -486,6 +487,7 @@ struct WorkspaceView: View {
                     if !workspace.actionSelection.isEmpty { workspace.inspectorShown = shown }
                 })) {
                     TaskInspector()
+                        .id(inspectorSelection)
                         .inspectorColumnWidth(min: 270, ideal: 310, max: 460)
                 }
             }

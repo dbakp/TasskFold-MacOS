@@ -1083,3 +1083,7 @@ Both owned widget sources retain the improved Today accessory title wrapping, sh
 ### 10 October — native Mac recovery accepted locally
 
 The desktop is accessible and the earlier recovery-key wait has resolved. Native portable restore, encrypted Before restore recovery of the later edit, repeated import without duplicates, quit/relaunch persistence, encrypted-copy reopen after relaunch, and picker cancel/reopen now pass through CUA. The original task/planning/reminder values are preserved; the Focus checkpoint retains its values under the intentional portable session-ID mapping. Final cache: one task, one Focus row, zero pending mutations. The native Focus sheet shows the restored ended session with 24:52 remaining. See `mac-native-recovery-evidence.json`. This verifies the existing implementation; no new source/build matrix or passing XCTest runner is claimed. Cloud/cross-account/provider workflows remain open.
+
+### 10 October — account draft and quick-capture inspector follow-up
+
+Native cloud sign-in exposed a stale local display-name draft; quick capture also left an already-open inspector blank until scope navigation. Account-owned name drafts now refresh safely in both repos, with three passing focused Core regressions per repo and passing Debug app builds. The Mac inspector content now follows selected IDs and has a two-capture native UI regression. Corrected native UI behavior and the richer Mac–iPhone handoff remain unverified because the desktop is locked; see `profile-draft-inspector-evidence.md`.

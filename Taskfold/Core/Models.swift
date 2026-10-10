@@ -1645,3 +1645,21 @@ enum OrganizationOrder {
         }
     }
 }
+
+/// Keeps an editable name with its workspace; background sync must not erase typing.
+struct ProfileNameDraft: Equatable {
+    private(set) var workspace: WorkspaceBinding?
+    private(set) var sourceName = ""
+    var text = ""
+
+    mutating func refresh(account: String, generation: UUID, name: String) {
+        let next = WorkspaceBinding(account: account, generation: generation)
+        if workspace != next || text == sourceName { text = name }
+        workspace = next
+        sourceName = name
+    }
+
+    func matches(account: String, generation: UUID) -> Bool {
+        workspace?.matches(account: account, generation: generation) == true
+    }
+}

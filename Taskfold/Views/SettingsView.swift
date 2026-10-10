@@ -57,7 +57,7 @@ struct AccountSettings: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @State private var showLogin = false
-    @State private var displayName = ""
+    @State private var profileDraft = ProfileNameDraft()
     @State private var confirmSignOut = false
     @State private var importingAvatar = false
     @State private var uploading = false
@@ -81,7 +81,7 @@ struct AccountSettings: View {
                         Button(uploading ? "Uploading…" : "Change Photo…") { importingAvatar = true }.disabled(uploading)
                         if !store.profile.string("avatar_url").isEmpty { Button("Remove Photo") { var profile = store.profile; profile["avatar_url"] = .null; store.save("profiles", profile) } }
                     }
-                    TextField("Display name", text: $displayName).onSubmit(saveProfile)
+                    TextField("Display name", text: $profileDraft.text).onSubmit(saveProfile)
                     Button("Save Profile", action: saveProfile)
                 }
             }
@@ -114,7 +114,9 @@ struct AccountSettings: View {
         }
         .modifier(BackupPresentation())
         .formStyle(.grouped)
-        .onAppear { displayName = store.accountName; consumeSignInRequest() }
+        .onAppear { refreshProfileDraft(); consumeSignInRequest() }
+        .onChange(of: store.workspaceGeneration) { _, _ in refreshProfileDraft() }
+        .onChange(of: store.accountName) { _, _ in refreshProfileDraft() }
         .onChange(of: workspace.signInRequested) { _, _ in consumeSignInRequest() }
         .onChange(of: store.localMode) { _, local in if !local && store.signedIn { showLogin = false } }
         .onChange(of: store.signedIn) { _, signedIn in if signedIn && !store.localMode { showLogin = false } }
@@ -165,10 +167,17 @@ struct AccountSettings: View {
         workspace.signInRequested = false
         showLogin = true
     }
+    private func refreshProfileDraft() {
+        profileDraft.refresh(account: store.userID, generation: store.workspaceGeneration, name: store.accountName)
+    }
     private func saveProfile() {
+        guard store.signedIn, !store.localMode, profileDraft.matches(account: store.userID, generation: store.workspaceGeneration) else {
+            refreshProfileDraft()
+            return
+        }
         var profile = store.profile
         if profile.id.isEmpty { profile["id"] = .string(store.userID); profile["user_id"] = .string(store.userID) }
-        profile["display_name"] = .string(displayName); profile["updated_at"] = .string(Dates.timestamp())
+        profile["display_name"] = .string(profileDraft.text); profile["updated_at"] = .string(Dates.timestamp())
         store.save("profiles", profile)
     }
 }
