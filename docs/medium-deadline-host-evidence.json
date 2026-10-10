@@ -95,5 +95,9 @@
     "proof": "medium-deadline-pruned-manifest.json",
     "retained": "Both native results, all logs/signing/input/data receipts and final capture exports."
   },
-  "remaining": "Existing P0 checklist: other named widget hosts/conditions, native Mac workflows, VoiceOver/keyboard, real Todoist provider and notification/distribution acceptance remain open."
+  "remaining": "Existing P0 checklist: other named widget hosts/conditions, native Mac workflows, VoiceOver/keyboard, real Todoist provider and notification/distribution acceptance remain open.",
+  "keyboardOpenCaptureFollowup": {
+    "evidence": "repeated-capture-evidence.json",
+    "scope": "The earlier setup failure is not reproduced in three consecutive keyboard-open native captures; no cause or full intermittent-failure resolution is inferred."
+  }
 }
