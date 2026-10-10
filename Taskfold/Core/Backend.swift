@@ -333,8 +333,11 @@ final class Backend: NSObject {
         }
         return nil
     }
-    func uploadAvatar(_ data: Data) async throws -> String {
+    func uploadAvatar(_ data: Data, expectedAccount: String) async throws -> String {
+        let generation = sessionGeneration
+        guard !expectedAccount.isEmpty, session?.user.id == expectedAccount else { throw CancellationError() }
         try await refreshIfNeeded()
+        guard generation == sessionGeneration, session?.user.id == expectedAccount else { throw CancellationError() }
         guard let session else { throw AppFailure(message: "Sign in to change your photo.") }
         let path = "\(session.user.id)/\(UUID().uuidString).jpg"
         guard let url = URL(string: baseURL + "/storage/v1/object/avatars/" + path) else { throw AppFailure(message: "Invalid storage URL.") }
@@ -343,6 +346,7 @@ final class Backend: NSObject {
         request.setValue("Bearer \(session.access_token)", forHTTPHeaderField: "Authorization")
         request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
         let (_, response) = try await http.data(for: request)
+        guard generation == sessionGeneration, self.session?.user.id == expectedAccount else { throw CancellationError() }
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { throw AppFailure(message: "Your photo could not be uploaded. Please try again.") }
         return baseURL + "/storage/v1/object/public/avatars/" + path
     }

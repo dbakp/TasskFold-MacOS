@@ -61,6 +61,8 @@ struct AccountSettings: View {
     @State private var confirmSignOut = false
     @State private var importingAvatar = false
     @State private var uploading = false
+    @State private var avatarWorkspace: WorkspaceBinding?
+    @State private var avatarUploadID = UUID()
     @State private var changingEmail = false
     @State private var changingPassword = false
     @State private var deletingAccount = false
@@ -78,7 +80,7 @@ struct AccountSettings: View {
                 if store.signedIn && !store.localMode {
                     HStack(spacing: 14) {
                         PersonAvatar(person: store.accountIdentity, size: 48)
-                        Button(uploading ? "Uploading…" : "Change Photo…") { importingAvatar = true }.disabled(uploading)
+                        Button(uploading ? "Uploading…" : "Change Photo…") { avatarWorkspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); importingAvatar = true }.disabled(uploading)
                         if !store.profile.string("avatar_url").isEmpty { Button("Remove Photo") { var profile = store.profile; profile["avatar_url"] = .null; store.save("profiles", profile) } }
                     }
                     TextField("Display name", text: $profileDraft.text).onSubmit(saveProfile)
@@ -115,7 +117,7 @@ struct AccountSettings: View {
         .modifier(BackupPresentation())
         .formStyle(.grouped)
         .onAppear { refreshProfileDraft(); consumeSignInRequest() }
-        .onChange(of: store.workspaceGeneration) { _, _ in refreshProfileDraft() }
+        .onChange(of: store.workspaceGeneration) { _, _ in refreshProfileDraft(); avatarWorkspace = nil; avatarUploadID = UUID(); uploading = false; importingAvatar = false }
         .onChange(of: store.accountName) { _, _ in refreshProfileDraft() }
         .onChange(of: workspace.signInRequested) { _, _ in consumeSignInRequest() }
         .onChange(of: store.localMode) { _, local in if !local && store.signedIn { showLogin = false } }
@@ -130,9 +132,11 @@ struct AccountSettings: View {
             }.frame(width: 820, height: 550)
         }
         .fileImporter(isPresented: $importingAvatar, allowedContentTypes: [.image]) { result in
+            guard let owner = avatarWorkspace, store.signedIn, !store.localMode, owner.matches(account: store.userID, generation: store.workspaceGeneration) else { return }
+            let operation = UUID(); avatarUploadID = operation
             uploading = true
             Task {
-                defer { uploading = false }
+                defer { if avatarUploadID == operation { uploading = false } }
                 do {
                     let url = try result.get(); let access = url.startAccessingSecurityScopedResource(); defer { if access { url.stopAccessingSecurityScopedResource() } }
                     guard let image = NSImage(contentsOf: url) else { throw AppFailure(message: "Could not read this photo.") }
@@ -143,11 +147,17 @@ struct AccountSettings: View {
                         return true
                     }
                     guard let tiff = rendered.tiffRepresentation, let bitmap = NSBitmapImageRep(data: tiff), let jpeg = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.85]) else { throw AppFailure(message: "Could not prepare this photo.") }
-                    let avatarURL = try await store.backend.uploadAvatar(jpeg)
+                    guard owner.matches(account: store.userID, generation: store.workspaceGeneration) else { return }
+                    let avatarURL = try await store.backend.uploadAvatar(jpeg, expectedAccount: owner.account)
+                    guard owner.matches(account: store.userID, generation: store.workspaceGeneration) else { return }
                     var profile = store.profile; profile["avatar_url"] = .string(avatarURL)
                     if profile.id.isEmpty { profile["id"] = .string(store.userID); profile["user_id"] = .string(store.userID) }
                     store.save("profiles", profile)
-                } catch { store.error = error.localizedDescription }
+                } catch is CancellationError {
+                    // Account changes discard this workspace-owned operation.
+                } catch {
+                    if owner.matches(account: store.userID, generation: store.workspaceGeneration) { store.error = error.localizedDescription }
+                }
             }
         }
         .confirmationDialog(store.localMode ? "Leave this workspace?" : "Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {

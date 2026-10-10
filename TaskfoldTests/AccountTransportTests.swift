@@ -304,3 +304,77 @@ extension AccountTransportTests {
         XCTAssertEqual(calls, 3)
     }
 }
+
+extension AccountTransportTests {
+    @MainActor func testAvatarResponseAfterAccountSwitchOrReentryIsDiscarded() async throws {
+        for destination in [other, owner] {
+            let api = backend(try signed(owner)), gate = HTTPGate()
+            let started = expectation(description: "Avatar upload held")
+            let next = try JSONEncoder().encode(signed(destination, token: "new-login"))
+            ScopedHTTP.handler = { request, transport in
+                if request.url?.path == "/auth/v1/token" { transport.finish(200, next) }
+                else {
+                    XCTAssertTrue(request.url!.path.hasPrefix("/storage/v1/object/avatars/" + self.owner + "/"))
+                    XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer old")
+                    gate.hold(transport); started.fulfill()
+                }
+            }
+            defer { ScopedHTTP.handler = nil }
+            let upload = Task { @MainActor in try await api.uploadAvatar(Data([1, 2, 3]), expectedAccount: self.owner) }
+            await fulfillment(of: [started], timeout: 3)
+            _ = try await api.signIn(email: "fixture@example.invalid", password: "fixture", signup: false)
+            gate.release(200, Data())
+            do { _ = try await upload.value; XCTFail("A stale upload returned a profile URL") }
+            catch { XCTAssertTrue(error is CancellationError) }
+            XCTAssertEqual(gate.count, 1)
+            XCTAssertEqual(api.session?.user.id, destination)
+        }
+    }
+    @MainActor func testAvatarRejectsStalePickerOwnerBeforeHTTP() async throws {
+        let api = backend(try signed(other)); var calls = 0
+        ScopedHTTP.handler = { _, transport in calls += 1; transport.finish(200, Data()) }
+        defer { ScopedHTTP.handler = nil }
+        do { _ = try await api.uploadAvatar(Data([1]), expectedAccount: owner); XCTFail("Stale picker used new credentials") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(calls, 0)
+    }
+    @MainActor func testAvatarUploadReturnsOriginalOwnersURLOnSuccess() async throws {
+        let api = backend(try signed(owner)); var calls = 0
+        ScopedHTTP.handler = { request, transport in
+            calls += 1
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), "image/jpeg")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer old")
+            XCTAssertTrue(request.url!.path.hasPrefix("/storage/v1/object/avatars/" + self.owner + "/"))
+            transport.finish(200, Data())
+        }
+        defer { ScopedHTTP.handler = nil }
+        let url = try await api.uploadAvatar(Data([1, 2, 3]), expectedAccount: owner)
+        XCTAssertTrue(url.hasPrefix("https://native-scope.test/storage/v1/object/public/avatars/" + owner + "/"))
+        XCTAssertTrue(url.hasSuffix(".jpg")); XCTAssertEqual(calls, 1)
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testAvatarCannotStartStorageAfterAccountChangesDuringRefresh() async throws {
+        var expired = try signed(owner); expired.expires_at = 0
+        let api = backend(expired), gate = HTTPGate()
+        let started = expectation(description: "Avatar token refresh held")
+        let next = try JSONEncoder().encode(signed(other, token: "new-login"))
+        let old = try JSONEncoder().encode(signed(owner, token: "refreshed-old"))
+        var storageCalls = 0
+        ScopedHTTP.handler = { request, transport in
+            if request.url?.query?.contains("refresh_token") == true { gate.hold(transport); started.fulfill() }
+            else if request.url?.path == "/auth/v1/token" { transport.finish(200, next) }
+            else { storageCalls += 1; transport.finish(200, Data()) }
+        }
+        defer { ScopedHTTP.handler = nil }
+        let upload = Task { @MainActor in try await api.uploadAvatar(Data([1]), expectedAccount: self.owner) }
+        await fulfillment(of: [started], timeout: 3)
+        _ = try await api.signIn(email: "fixture@example.invalid", password: "fixture", signup: false)
+        gate.release(200, old)
+        do { _ = try await upload.value; XCTFail("Old picker crossed a refresh/account boundary") }
+        catch { /* Both cancellation forms leave the new account intact. */ }
+        XCTAssertEqual(storageCalls, 0); XCTAssertEqual(api.session?.user.id, other)
+    }
+}

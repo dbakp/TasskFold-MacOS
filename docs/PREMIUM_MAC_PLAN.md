@@ -1095,3 +1095,7 @@ The native Mac-created task and description reach the isolated signed-in iPhone 
 ### 10 October — inline Lock Screen Today acceptance
 
 The installed iPhone Today inline accessory now has a saved native host and passing terminated-app Today route, with two inspected captures and an unchanged decoded account workspace/empty queue. See `lockscreen-widget-evidence.json` / `inlineToday`. Both owned widget sources remain identical; no new Mac runtime or Desktop-host acceptance is claimed. The Mac desktop is still locked and its native return leg remains open.
+
+### 10 October — profile photo account-switch boundary
+
+Source inspection found an unguarded asynchronous avatar result in both apps. Both pickers now capture workspace ownership before presentation; image/upload results and errors cannot cross the captured workspace. The uploader requires the original account and rejects session changes across refresh and response. Both own AccountTransport suites pass 18 cases, including four new upload race/success cases. See `profile-photo-ownership.md` for build results and exact limits. Native selection/account-switch UI acceptance remains open while the Mac is locked.
