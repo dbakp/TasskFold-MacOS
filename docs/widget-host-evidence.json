@@ -918,5 +918,14 @@
     "skips": 0,
     "runtimeWarnings": 0,
     "nativeMacAcceptance": false
+  },
+  "smallFocusSessionHost": {
+    "evidence": "small-focus-session-host-evidence.json",
+    "resultBundle": "small-focus-host-native-v4.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "scope": "Installed small ended clock, simultaneous medium instance, exact terminated-app session route and temporary-instance removal; original work unchanged."
   }
 }
