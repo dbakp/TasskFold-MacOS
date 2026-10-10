@@ -505,7 +505,7 @@ struct TodayWidgetView: View {
             ZStack { AccessoryWidgetBackground(); VStack(spacing: 0) { Text("\(tasks.count)").font(.title2.bold()).monospacedDigit(); Text("due").font(.caption2) } }
                 .widgetURL(URL(string: "taskfold://today"))
         case .accessoryRectangular:
-            VStack(alignment: .leading, spacing: 2) { Text(tasks.first?.title ?? "All clear").font(.headline).lineLimit(1); Text("\(tasks.count) due · including overdue").font(.caption2).lineLimit(1) }
+            VStack(alignment: .leading, spacing: 2) { Text(tasks.first?.title ?? "All clear").font(.headline).lineLimit(2).fixedSize(horizontal: false, vertical: true).privacySensitive(tasks.first != nil); Text("\(tasks.count) due · incl. overdue").font(.caption2).lineLimit(1) }
                 .widgetURL(tasks.first?.url ?? URL(string: "taskfold://today"))
         case .accessoryInline:
             Text("Taskfold · \(tasks.count) due").widgetURL(URL(string: "taskfold://today"))

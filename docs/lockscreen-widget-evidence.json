@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-10",
+  "scope": "Actual saved iPhone Simulator Lock Screen Today circular/rectangular pair and two terminated-app routes; not full host/privacy acceptance.",
+  "native": {
+    "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+    "os": "iOS 26.5",
+    "bundle": "com.dbakp.taskfold.assigneepatterntests",
+    "resultBundle": "/tmp/taskfold-lockscreen-native-routes-v1.xcresult",
+    "case": "testInstalledLockScreenTodayWidgetsRouteTaskAndTodayAfterTermination",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "runtimeWarnings": 0,
+    "checks": [
+      "Create one planned Today P1 / 15-minute task through native capture",
+      "Native wallpaper editor offers and saves circular and rectangular Today accessories",
+      "Saved host renders one due in both accessories, two title lines and complete shortened subtitle",
+      "Terminated-app rectangular tap opens exact saved task with planned date, priority and estimate retained",
+      "Terminated-app circular tap opens Today containing that task",
+      "Entire decoded workspace is unchanged across both routes; pending queue remains empty"
+    ],
+    "captures": [
+      "usability-previews/lockscreen-today-saved.png",
+      "usability-previews/lockscreen-today-task-route.png",
+      "usability-previews/lockscreen-today-list-route.png"
+    ]
+  },
+  "fixture": {
+    "taskID": "0dc9a05f-0e3a-4da0-af2d-d56df599b4f8",
+    "title": "Lock Screen acceptance review",
+    "dueDate": "2026-10-10",
+    "priority": 1,
+    "estimateMinutes": 15,
+    "pendingCount": 0,
+    "originalFourTaskIDsRetained": true,
+    "decodedWorkspaceUnchangedAcrossRoutes": true,
+    "canonicalWorkspaceSHA256": "9e0805143b0b1b2ba5ba9d002d7d136262d6c0a6485b417d8f315b14fcef6a70",
+    "retainedState": "App terminated; saved Lock Screen pair and open named task retained for the regression test"
+  },
+  "fixes": [
+    "Rectangular title allows two lines with intrinsic vertical sizing",
+    "Shorten count subtitle to due \u00b7 incl. overdue so it fits",
+    "Mark real task title privacySensitive for system redaction; All clear remains non-sensitive"
+  ],
+  "privacyReference": "https://developer.apple.com/documentation/WidgetKit/Creating-a-Widget-Extension",
+  "verification": {
+    "iosBuild": "/tmp/taskfold-lockscreen-native-routes-v1-build.log: TEST BUILD SUCCEEDED",
+    "macBuild": "/tmp/taskfold-lockscreen-final-mac-build.log: BUILD SUCCEEDED",
+    "signatures": "/tmp/taskfold-lockscreen-native-routes-v1-signing.json: app, widget, test and runner real team signatures verified",
+    "widgetSourceSHA256": "3af2f7a17e50ae80abdfa521cd711393782de35354e1f53d6d963798df74a296",
+    "sourceComparison": "All 46 staged app Swift files match authoritative iOS source; widget source matches both repos exactly; XCTest files match ignoring whitespace"
+  },
+  "retainedFailures": {
+    "resultBundle": "/tmp/taskfold-lockscreen-entry-native-v7.xcresult",
+    "cause": "Diagnostic checked Done before gallery dismissal completed; explicit Sheet Grabber wait corrected in v8 preparation",
+    "preparationResult": "/tmp/taskfold-lockscreen-entry-native-v8.xcresult: saves actual pair; diagnostic pass does not substitute for final routing test"
+  },
+  "limits": [
+    "Title still ellipsizes after two lines when necessary",
+    "System passcode/privacy redaction runtime not tested; modifier is source/build verified only",
+    "Inline accessory and other appearances/hosts remain unverified",
+    "No Mac Desktop widget host acceptance; the accessory branch is iOS-specific",
+    "No VoiceOver, physical device, APNs or distribution acceptance"
+  ]
+}
