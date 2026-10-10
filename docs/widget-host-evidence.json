@@ -622,5 +622,153 @@
     "finalOwnedInputs": {
       "TaskfoldWidgets/TaskfoldWidgets.swift": "27f66bf94ad1596d4cb382ff2b66e266a7502abb93291b9e53630ca824a1518e"
     }
+  },
+  "noteAndFocusHosts": {
+    "date": "2026-10-10",
+    "scope": "Installed small Pinned note and medium Focus session on isolated iPhone Simulator, one task shared by both widgets",
+    "results": [
+      {
+        "path": "/tmp/taskfold-note-focus-host-config-v1.xcresult",
+        "selector": "testInstalledPinnedNoteAndMediumFocusConfigureAndOpen",
+        "purpose": "Native task notes/pin/timer setup, gallery installation, note entity selection, full reader route, medium size geometry, current session route and pause"
+      },
+      {
+        "path": "/tmp/taskfold-note-focus-host-refresh-v3.xcresult",
+        "selector": "testInstalledPinnedNoteNativeEditAndMediumFocusRelaunch",
+        "purpose": "Native note edit/task rename, save/relaunch, visible refresh and full reader persistence, paused session and resume"
+      }
+    ],
+    "actualPassed": 2,
+    "failures": 0,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0,
+    "fix": "Both owned note widget views reserve the intended title height and use smaller small-widget spacing. Before the fix, installed small title squeezed to one truncated line; final renamed title fits two lines.",
+    "visualEvidence": [
+      "Full native reader contains the original final instruction beyond widget preview",
+      "Settled host frame shows Fresh client brief in both widgets, updated note preview, Paused 15:28 and Resume in app",
+      "Following settled frame shows same renamed task, running 15:20 and Open session"
+    ],
+    "originalState": {
+      "account": "ui-testing",
+      "notes": [
+        {
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+          "title": "Focus on the next useful step",
+          "truncated": false,
+          "completed": false,
+          "id": "WyJ1aS10ZXN0aW5nIiwibm90ZSIsImFhYWFhYWFhLWFhYWEtNGFhYS04YWFhLWFhYWFhYWFhYWEzMSJd",
+          "text": "Start with the client brief.\nSketch two directions.\nFinal instruction: keep the original details."
+        }
+      ],
+      "focusSession": {
+        "clock": {
+          "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+          "status": "running",
+          "startedAt": 1791604194167,
+          "changedAt": 1791604194167,
+          "elapsedMilliseconds": 0,
+          "title": "Focus on the next useful step",
+          "runningSince": 1791604194167,
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+          "taskState": "open",
+          "durationSeconds": 1500
+        },
+        "version": 1,
+        "account": "ui-testing",
+        "conflict": false
+      }
+    },
+    "configuredState": {
+      "account": "ui-testing",
+      "notes": [
+        {
+          "truncated": false,
+          "completed": false,
+          "id": "WyJ1aS10ZXN0aW5nIiwibm90ZSIsImFhYWFhYWFhLWFhYWEtNGFhYS04YWFhLWFhYWFhYWFhYWEzMSJd",
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+          "title": "Focus on the next useful step",
+          "text": "Start with the client brief.\nSketch two directions.\nFinal instruction: keep the original details."
+        }
+      ],
+      "focusSession": {
+        "account": "ui-testing",
+        "conflict": false,
+        "clock": {
+          "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+          "changedAt": 1791604766887,
+          "durationSeconds": 1500,
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+          "startedAt": 1791604194167,
+          "taskState": "open",
+          "title": "Focus on the next useful step",
+          "elapsedMilliseconds": 572720,
+          "status": "paused"
+        },
+        "version": 1
+      }
+    },
+    "finalState": {
+      "account": "ui-testing",
+      "notes": [
+        {
+          "truncated": false,
+          "completed": false,
+          "id": "WyJ1aS10ZXN0aW5nIiwibm90ZSIsImFhYWFhYWFhLWFhYWEtNGFhYS04YWFhLWFhYWFhYWFhYWEzMSJd",
+          "text": "\nUpdated in the native reader.Start with the client brief.\nSketch two directions.\nFinal instruction: keep the original details.",
+          "title": "Fresh client brief",
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31"
+        }
+      ],
+      "focusSession": {
+        "version": 1,
+        "clock": {
+          "startedAt": 1791604194167,
+          "durationSeconds": 1500,
+          "title": "Fresh client brief",
+          "status": "running",
+          "taskID": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31",
+          "elapsedMilliseconds": 572720,
+          "runningSince": 1791604929754,
+          "sessionID": "543c5f1c-0c63-4c49-aa51-d064f3d8e46c",
+          "taskState": "open",
+          "changedAt": 1791604929754
+        },
+        "account": "ui-testing",
+        "conflict": false
+      }
+    },
+    "stateAssertions": [
+      "Original pin ID, task ID and Focus session ID are unchanged",
+      "Full original note text remains as a substring after native editing",
+      "Renamed title and inserted note text are present",
+      "Timer duration remains 1500 seconds, final state running and original task still open"
+    ],
+    "composition": "Configuration v1 passed before the note layout fix. Final v3 refresh reused its exact installed configurations after the view-only fix. No claim that the entire setup was repeated in one fresh final-source run.",
+    "initialCaptureLimit": "Immediate post-pause v1 screenshot retained the previous running frame. It is not used as paused-render proof. Final settled paused and resumed frames were inspected.",
+    "hostLimitations": "SpringBoard supplies widget container frames without reliable child text. Repeated 60-second animation acknowledgement waits and stale remote-process hierarchy warnings occur in host automation; not a functional app performance measurement. Configuration test took 610 seconds.",
+    "builds": {
+      "iOS": "/tmp/taskfold-note-focus-host-build-v3.log",
+      "macOS": "/tmp/taskfold-note-focus-host-mac-build-v1.log"
+    },
+    "signatureReceipt": "/tmp/taskfold-note-focus-host-sign-v3.json",
+    "catalogVerification": "/tmp/taskfold-note-focus-host-catalog-v3.log",
+    "screenshotsRepository": "TaskFold-iOS",
+    "screenshots": {
+      "docs/widget-host-previews/note-full-reader.png": "5f0767debbbf2d5483f71038369568880d166780f945261374c743066143c9f9",
+      "docs/widget-host-previews/note-focus-paused.png": "3d3d15d65154ac953722377b72d75fb1d156c255c5fc791e0b53bad3f5ed4159",
+      "docs/widget-host-previews/note-focus-resumed.png": "91bde658b046ba0cd8f31426e07cd33bed11c6482c8eb4ad403d7730b30b8cd2"
+    },
+    "retainedFixture": "Phone retains medium Focus above small Pinned note, selected original task aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa31 named Fresh client brief. Timer running, local ui-testing workspace only. Previous capacity/pulse fixtures removed.",
+    "remaining": [
+      "Privacy switches for this pair",
+      "Note medium/large and other instances",
+      "Reboot, killed-app, cloud account switch and expiry behavior for this pair",
+      "iPad, physical and Mac widget hosts",
+      "VoiceOver and full P0 acceptance"
+    ],
+    "ownSourceHashes": {
+      "TaskfoldWidgets/TaskfoldWidgets.swift": "8f22de49c130bafa211f04d033067b949087492118ffce5b71e1269e7c728131"
+    },
+    "noteAndFocusViewBlockSHA256": "9dccd94484b6b403eee78586f24b7e19b42cd2aee277403102308f40fbe7a110"
   }
 }

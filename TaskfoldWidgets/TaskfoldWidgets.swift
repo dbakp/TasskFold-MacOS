@@ -1264,7 +1264,7 @@ struct NoteWidgetView: View {
     private var status: WidgetNoteStatus { entry.snapshot.noteStatus(entry.noteID, at: entry.date) }
     private var note: WidgetNote? { status == .ready ? entry.snapshot.note(entry.noteID) : nil }
     var body: some View {
-        VStack(alignment: .leading, spacing: family == .systemLarge ? 12 : 8) {
+        VStack(alignment: .leading, spacing: family == .systemSmall ? 4 : family == .systemLarge ? 12 : 8) {
             HStack {
                 Label("PINNED NOTE", systemImage: "pin.fill").font(.system(size: 10, weight: .semibold, design: .rounded)).tracking(1).foregroundStyle(tint)
                 Spacer(minLength: 0)
@@ -1276,7 +1276,7 @@ struct NoteWidgetView: View {
                 Text("Open Taskfold to read it.").font(.caption).foregroundStyle(.secondary).lineLimit(2)
                 Spacer(minLength: 0)
             } else if let note {
-                Text(note.title.isEmpty ? "Your pinned note" : note.title).font(.system(.headline, design: .rounded)).lineLimit(family == .systemSmall ? 2 : 1).privacySensitive()
+                Text(note.title.isEmpty ? "Your pinned note" : note.title).font(.system(.headline, design: .rounded)).lineLimit(family == .systemSmall ? 2 : 1).fixedSize(horizontal: false, vertical: true).privacySensitive()
                 if note.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Text(note.truncated ? "Open Taskfold to read the full note." : "Add note text in task details.").font(.callout).foregroundStyle(.secondary).lineLimit(3)
                 } else {
