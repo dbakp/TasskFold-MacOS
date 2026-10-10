@@ -464,6 +464,9 @@ struct WorkspaceView: View {
     @State private var columns = NavigationSplitViewVisibility.all
     var body: some View {
         @Bindable var workspace = workspace
+        // Read during body evaluation so selection invalidates the inspector's
+        // presentation. A read only inside Binding.get can leave it stale.
+        let inspectorVisible = workspace.inspectorVisible
         GeometryReader { window in
             NavigationSplitView(columnVisibility: $columns) {
                 SidebarView()
@@ -478,7 +481,7 @@ struct WorkspaceView: View {
                     else { TaskListView(scope: workspace.scope, preferenceKey: workspace.section.key) }
                 }
                 .id(workspace.section)
-                .inspector(isPresented: Binding(get: { workspace.inspectorVisible }, set: { shown in
+                .inspector(isPresented: Binding(get: { inspectorVisible }, set: { shown in
                     // Automatic hiding for an empty selection is not a user preference change.
                     if !workspace.actionSelection.isEmpty { workspace.inspectorShown = shown }
                 })) {
