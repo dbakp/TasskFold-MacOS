@@ -62,8 +62,6 @@
     ]
   },
   "remaining": [
-    "Symbolicate/resolve import-opening invalid-frame warnings before clean-runtime acceptance.",
-    "Full visible retry/action framing at largest text, beyond partial hittability.",
     "Real Todoist provider import and existing P0 release gates.",
     "Mac prepared copy checks still await private-session Keychain approval."
   ],
@@ -88,5 +86,6 @@
       "provenance": "ios-cloud-after-local-fixtures.png",
       "sha256": "f5a15463413d6b7c121c43598e44fae163824c649f4c47527d558df56eae18de"
     }
-  ]
+  ],
+  "followupResolution": "ios-import-action-evidence.json: both iPhone import cases now pass clean-runtime acceptance and full retry-action framing; historical warning/captures here remain unchanged."
 }

@@ -57,5 +57,5 @@
     "macBuildForTesting": "Passed: mac-import-placement-build.log",
     "iosAppAndWidgets": "Passed: ios-import-placement-build.log; generic iOS Simulator, signing disabled, build only"
   },
-  "iosImportFollowup": "ios-import-availability-evidence.json: three functional passes; import-opening frame warnings and complete retry framing remain open. Real provider import remains unverified."
+  "iosImportFollowup": "ios-import-action-evidence.json: normal and largest native fixture import recovery now pass with no runtime warnings and a fully visible retry action. Real provider import remains open."
 }

@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-10",
+  "scope": "Improve Todoist import recovery clarity independently on Mac/iOS; iPhone navigation and keyboard dismissal layout. No import authority/data contract changes.",
+  "changes": [
+    "Both app-owned views identify failed-save action as Retry import and show Importing\u2026 during the request.",
+    "iPhone uses inline navigation title and hides the tab bar in the import form, retaining Back navigation.",
+    "iPhone dismisses token keyboard with native navigation-bar Done, avoiding the keyboard toolbar runtime-issue path.",
+    "Native iPhone retry check now requires the full action above the home indicator, in addition to error-before-action order and actual retry receipt."
+  ],
+  "builds": {
+    "macOS": "mac-import-action-build-v1.log: BUILD SUCCEEDED; independent unsigned Mac build only.",
+    "iOS": "ios-import-action-build-v3.log: TEST BUILD SUCCEEDED; owned Simulator products signed in ios-import-action-signing-v3.json."
+  },
+  "diagnosticRuns": [
+    {
+      "resultBundle": "ios-import-action-v1.xcresult",
+      "passed": 1,
+      "failed": 1,
+      "runtimeWarningCount": 2,
+      "finding": "Single keyboard-toolbar item still warned on opening; normal-size full-action check passed. Largest case failed on the first partially implemented scrolling helper querying a missing error snapshot."
+    },
+    {
+      "resultBundle": "ios-import-action-v2.xcresult",
+      "accepted": false,
+      "result": "Deliberately interrupted after confirming keyboard-toolbar warning moved to token focus. No acceptance claimed.",
+      "finding": "Conditional keyboard toolbar stopped opening-time warning but emitted it when the token field focused. Replaced keyboard toolbar with navigation-bar Done for final implementation. Very small scrolling deltas also did not reliably move rows; final helper applies a minimum gesture distance and requests full visibility only for the import action."
+    }
+  ],
+  "macNative": "Latest label is build-verified only. Existing isolated Mac app PID 13936 remains on the earlier build, waiting for private-session Keychain approval; no prompt bypass or production installation.",
+  "sourceSHA256": {
+    "Taskfold/Views/Editors.swift": "f926fed13d97567d35412f389bfc588d01f3f1880f2fdb1e2099175d3bf5ea4c"
+  },
+  "phoneNative": {
+    "resultBundle": "ios-import-action-v3.xcresult",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "strictVerifier": "Scripts/verify_ui_result.py --expected-tests 2: passed",
+    "cases": [
+      "testTodoistImportPreviewValidationAndRetry",
+      "testTodoistImportDarkLargestPreviewValidationAndRetry"
+    ],
+    "scope": "Full fixture validation/preview/failure/retry/confirmed skipped-ID receipt, keyboard dismissal, Back/reopen and token clearing; no provider request or task import."
+  },
+  "dataProof": {
+    "baseline": "ios-import-availability-cloud-cache.json",
+    "after": "ios-import-action-cloud-cache.json",
+    "sevenTablesExactlyUnchanged": [
+      "tasks",
+      "projects",
+      "sections",
+      "labels",
+      "saved_views",
+      "view_orders",
+      "focus_sessions"
+    ],
+    "tableSHA256": {
+      "tasks": "9ddf44d634952a590108f2833c785889447e141ab89ce1f2f609e450b75b29b1",
+      "projects": "d46af7d58f75eb64c0724c27f1e9b9ffb0aa57cae6311276a6d3d2c84abc1883",
+      "sections": "e7277cb09509ff0d92a1a15b2fe81829a13530bdf1a961f99e9f69c0edfb7984",
+      "labels": "4682888c4b8c40c01728cd16af583bba8bf02c2e624797eb567ad9889477afff",
+      "saved_views": "ef1e5ee081e5c89210aaf13238e4ae5504eb648f15fe6b0cf65930281e184d0c",
+      "view_orders": "12c4325c49c4b8ec23f150b52acacfc9b9a2b55f3ff3302c7e5a75e4ab9487fc",
+      "focus_sessions": "333180b5896c968e2ddc2861bb39b612b14ecc020afe0694d1b36d978b3c3866"
+    },
+    "taskCount": 3,
+    "pendingCount": 0,
+    "session": "Existing cached cloud session relaunched with -localMode NO after fixture; no new login or session clear."
+  },
+  "visualReview": "Both retained retry captures show the full failed-save fixture explanation followed by a fully visible Retry import action; no tab-bar overlap. No promise is made for arbitrary-length provider diagnostics.",
+  "inspectedCaptures": [
+    {
+      "path": "docs/usability-previews/phone-import-action-normal.png",
+      "provenance": "ios-import-action-v3-attachments/8061BFB1-BD33-4DDD-BB35-70097B309A00.png",
+      "sha256": "9a7513da6fd44343c113a18e80472fab11194ee0d8db4b59a52bab8a579e4964"
+    },
+    {
+      "path": "docs/usability-previews/phone-import-action-largest.png",
+      "provenance": "ios-import-action-v3-attachments/6A45CEDD-069D-4BA9-8395-737B53740A2C.png",
+      "sha256": "0283a08115e7e98fe685f068a66ca5f686b998b2b4dd161be74cfbd48d01ce93"
+    }
+  ],
+  "macLaunchSample": "mac-keychain-import-action.txt: SecureSession.read / SecItemCopyMatching remains pending.",
+  "remaining": [
+    "Native Mac latest-label acceptance after Keychain approval.",
+    "Real provider import, other account-switch/restore/widget/accessibility acceptance and external release gates in P0_RELEASE_STATUS.md."
+  ]
+}

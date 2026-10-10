@@ -256,7 +256,7 @@ struct TodoistImportView: View {
             if flow.preview != nil {
                 Section {
                     if let message = flow.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistImportError") }
-                    Button("Import into Taskfold") { run(previewOnly: false) }.disabled(flow.busy).accessibilityIdentifier("todoistImport")
+                    Button(flow.busy ? "Importing…" : flow.message == nil ? "Import into Taskfold" : "Retry import") { run(previewOnly: false) }.disabled(flow.busy).accessibilityIdentifier("todoistImport")
                 } footer: { Text("Source IDs prevent duplicates when you retry this account. Existing imported tasks keep your Taskfold edits.") }
             }
             if let result = flow.result {
