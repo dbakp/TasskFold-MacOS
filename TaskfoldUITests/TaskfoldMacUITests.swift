@@ -1586,4 +1586,84 @@ extension TaskfoldMacUITests {
             if pass == 0 { app.terminate(); app.launch() }
         }
     }
+
+    @MainActor func testLiveRichPlanningCaptureOnMac() throws {
+        let fixtureURL = URL(fileURLWithPath: "/private/tmp/taskfold-live-verification.json")
+        guard FileManager.default.fileExists(atPath: fixtureURL.path) else { throw XCTSkip("Disposable continuity account not configured") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: fixtureURL))
+        guard fixture["userID"] == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152" else { throw XCTSkip("Dedicated planning fixture required") }
+        let app = XCUIApplication(); app.launchArguments = []; app.launch(); defer { app.terminate() }
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]
+        XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click()
+        input.typeText(#"Planning 9a8bfc3d #"Continuity Studio revised" /"Ready on phone" @"handoff-ready" p1 every day from 3 January 2028 until 5 January 2028 for 3 occurrences at 09:00 ~45m {6 January 2028} !15mb !30mb"#)
+        for field in ["project_id", "section_id", "labels", "priority", "recurrence", "due_time", "duration_minutes", "deadline_date"] {
+            XCTAssertTrue(app.buttons["decline-" + field].waitForExistence(timeout: 5), "Missing capture chip: \(field)")
+        }
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "decline-reminder_specs:")).count, 2)
+        let summary = renderedText(app.staticTexts["quickRepeatSummary"])
+        for phrase in ["Every day", "2028-01-05", "3 left"] { XCTAssertTrue(summary.contains(phrase), summary) }
+        retainWindow(app, name: "Native Mac rich planning capture preview")
+        app.buttons["Add Task"].click()
+        let complete = app.buttons["Complete Planning 9a8bfc3d"]
+        XCTAssertTrue(complete.waitForExistence(timeout: 10))
+        let taskID = String(complete.identifier.dropFirst("complete-".count))
+        XCTAssertNotNil(UUID(uuidString: taskID))
+        for pass in 0..<2 {
+            let row = app.descendants(matching: .any)["title-" + taskID].firstMatch
+            XCTAssertTrue(row.waitForExistence(timeout: 10)); row.click()
+            let estimate = app.descendants(matching: .any)["taskDuration"].firstMatch.value
+            XCTAssertEqual((estimate as? String) ?? (estimate as? NSNumber)?.stringValue, "45")
+            XCTAssertTrue(app.descendants(matching: .any)["taskDeadline"].firstMatch.exists)
+            XCTAssertTrue(app.popUpButtons.matching(NSPredicate(format: "value == %@", "Ready on phone")).firstMatch.exists)
+            retainWindow(app, name: "Native Mac rich planning inspector — pass \(pass)")
+            let reminders = app.buttons["taskReminders"]
+            for _ in 0..<8 where !reminders.isHittable { app.scrollViews["inspector"].swipeUp() }
+            XCTAssertTrue(reminders.isHittable); reminders.click()
+            XCTAssertTrue(app.buttons["15 min before"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["30 min before"].exists)
+            retainWindow(app, name: "Native Mac multiple planning reminders — pass \(pass)")
+            app.buttons["Done"].click()
+            if pass == 0 { app.terminate(); app.launch() }
+        }
+    }
+
+    @MainActor private func inspectReturnedPlanningOccurrence(_ app: XCUIApplication, id: String, remaining: Int) {
+        let row = app.descendants(matching: .any)["title-" + id].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 15)); row.click()
+        let estimate = app.descendants(matching: .any)["taskDuration"].firstMatch.value
+        XCTAssertEqual((estimate as? String) ?? (estimate as? NSNumber)?.stringValue, "45")
+        XCTAssertEqual(app.descendants(matching: .any)["taskDeadline"].firstMatch.exists, remaining == 3)
+        let rule = app.descendants(matching: .any)["taskRepeat"].firstMatch
+        for _ in 0..<8 where !rule.isHittable { app.scrollViews["inspector"].swipeUp() }
+        XCTAssertTrue(rule.isHittable)
+        for phrase in ["Every day", "2028-01-05", "\(remaining) left"] { XCTAssertTrue(rule.label.contains(phrase), rule.label) }
+        retainWindow(app, name: "Phone completion returned to Mac — \(remaining) left")
+        let reminders = app.buttons["taskReminders"]
+        for _ in 0..<8 where !reminders.isHittable { app.scrollViews["inspector"].swipeUp() }
+        XCTAssertTrue(reminders.isHittable); reminders.click()
+        XCTAssertTrue(app.buttons["15 min before"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["30 min before"].exists)
+        retainWindow(app, name: "Returned occurrence retains multiple reminders — \(remaining) left")
+        app.buttons["Done"].click()
+    }
+
+    @MainActor func testLivePhonePlanningCompletionReturnsToMac() throws {
+        let fixtureURL = URL(fileURLWithPath: "/private/tmp/taskfold-live-verification.json")
+        guard FileManager.default.fileExists(atPath: fixtureURL.path) else { throw XCTSkip("Disposable continuity account not configured") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: fixtureURL))
+        guard fixture["userID"] == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152" else { throw XCTSkip("Dedicated planning fixture required") }
+        let original = try XCTUnwrap(fixture["planningTaskID"]), successor = try XCTUnwrap(fixture["planningSuccessorID"])
+        XCTAssertNotNil(UUID(uuidString: original)); XCTAssertNotNil(UUID(uuidString: successor)); XCTAssertNotEqual(original, successor)
+        let app = XCUIApplication(); app.launchArguments = []; app.launch(); defer { app.terminate() }
+        for pass in 0..<2 {
+            let project = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", "Continuity Studio revised", "Continuity Studio revised")).firstMatch
+            XCTAssertTrue(project.waitForExistence(timeout: 15)); project.click()
+            XCTAssertEqual(app.buttons.matching(identifier: "Complete Planning 9a8bfc3d").count, 1)
+            inspectReturnedPlanningOccurrence(app, id: successor, remaining: 2)
+            let completed = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", "Completed", "Completed")).firstMatch
+            XCTAssertTrue(completed.exists); completed.click()
+            XCTAssertTrue(app.buttons["Reopen Planning 9a8bfc3d"].waitForExistence(timeout: 10))
+            inspectReturnedPlanningOccurrence(app, id: original, remaining: 3)
+            if pass == 0 { app.terminate(); app.launch() }
+        }
+    }
 }

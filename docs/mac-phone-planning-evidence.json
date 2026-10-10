@@ -1,0 +1,160 @@
+{
+  "date": "2026-10-10",
+  "scope": "Native Mac rich quick capture and relaunch \u2192 signed-in phone receive/relaunch/completion \u2192 successor phone relaunch \u2192 native Mac original/successor receipt and relaunch.",
+  "baseCommits": {
+    "macOS": "c544fbd72f5296d06ecca85bcb9c301aff3a395a",
+    "iOS": "d8b444b9588fdcfa6608dbc95d8a1d786252a5cf"
+  },
+  "fixture": "Disposable continuity account; normal existing authentication; isolated app namespaces. All task creation and completion used native UI. SQL only read scoped fixture tasks. No provider/schema changes.",
+  "originalTaskID": "d37f1149-5604-412e-9956-c243a5b00c8d",
+  "successorID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+  "captured": {
+    "title": "Planning 9a8bfc3d",
+    "plannedDate": "2028-01-03",
+    "plannedTime": "09:00:00",
+    "deadline": "2028-01-06",
+    "estimateMinutes": 45,
+    "priority": 1,
+    "project": "Continuity Studio revised",
+    "section": "Ready on phone",
+    "label": "handoff-ready",
+    "repeatRule": {
+      "type": "daily",
+      "interval": 1,
+      "count": 3,
+      "endDate": "2028-01-05"
+    },
+    "reminderOffsetsMinutes": [
+      -15,
+      -30,
+      0
+    ]
+  },
+  "successor": {
+    "activeCount": 1,
+    "plannedDate": "2028-01-04",
+    "remainingOccurrences": 2,
+    "endDate": "2028-01-05",
+    "deadline": null,
+    "preservedFields": [
+      "title",
+      "description",
+      "due_time",
+      "duration_minutes",
+      "priority",
+      "project_id",
+      "section_id",
+      "labels",
+      "reminder_specs"
+    ]
+  },
+  "deadlineContract": "A one-off hard deadline stays on the completed original and is intentionally cleared from the repeat successor; docs/RECURRENCE.md and each Models.swift specify this behavior.",
+  "originalChangedKeys": [
+    "completed",
+    "completed_at",
+    "completion_version"
+  ],
+  "unchanged": [
+    "Entire earlier continuity task",
+    "projects",
+    "sections",
+    "labels",
+    "saved_views",
+    "view_orders including pinned note",
+    "focus_sessions"
+  ],
+  "pending": {
+    "macOS": 0,
+    "iOS": 0
+  },
+  "cacheTableSHA256": {
+    "tasks": "9ddf44d634952a590108f2833c785889447e141ab89ce1f2f609e450b75b29b1",
+    "projects": "d46af7d58f75eb64c0724c27f1e9b9ffb0aa57cae6311276a6d3d2c84abc1883",
+    "sections": "e7277cb09509ff0d92a1a15b2fe81829a13530bdf1a961f99e9f69c0edfb7984",
+    "labels": "4682888c4b8c40c01728cd16af583bba8bf02c2e624797eb567ad9889477afff",
+    "saved_views": "ef1e5ee081e5c89210aaf13238e4ae5504eb648f15fe6b0cf65930281e184d0c",
+    "view_orders": "12c4325c49c4b8ec23f150b52acacfc9b9a2b55f3ff3302c7e5a75e4ab9487fc",
+    "focus_sessions": "333180b5896c968e2ddc2861bb39b612b14ecc020afe0694d1b36d978b3c3866"
+  },
+  "serverProof": "Exact three task rows match phone and Mac caches. One completed Planning original and one active successor; previous Continuity task unchanged.",
+  "nativeTests": [
+    {
+      "result": "mac-rich-planning-v1.xcresult",
+      "case": "testLiveRichPlanningCaptureOnMac",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0
+    },
+    {
+      "result": "phone-planning-successor-v1.xcresult",
+      "case": "testLivePlanningSuccessorRetainedOnPhone",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0
+    },
+    {
+      "result": "mac-planning-return-v2.xcresult",
+      "case": "testLivePhonePlanningCompletionReturnsToMac",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0
+    }
+  ],
+  "historicalFailures": [
+    {
+      "result": "phone-rich-planning-v1.xcresult",
+      "reason": "Original receipt and relaunch plus one native completion executed; final successor inspection wrongly expected original one-off deadline. Corrected expectation to documented clearing behavior. No second completion was performed. This run remains failed and is not counted as clean passing coverage."
+    },
+    {
+      "result": "mac-planning-return-v1.xcresult",
+      "reason": "Test clicked the disclosure label and expected expanded fields; macOS kept the triangle collapsed. Corrected read-only inspection to assert the visible rule summary on its accessibility label. No repeat settings were changed."
+    }
+  ],
+  "inspectedCaptures": [
+    {
+      "path": "docs/usability-previews/mac-planning-capture-preview.png",
+      "sha256": "8db9cd9351a5575ed224e67f2359712e3e47b97a9920888422ea44f794495918"
+    },
+    {
+      "path": "docs/usability-previews/mac-planning-captured-relaunch.png",
+      "sha256": "d3eb4ca3fb72e74e443969d38f64a028a723f1450d16853c26daf0124135c73a"
+    },
+    {
+      "path": "docs/usability-previews/phone-planning-original-fields.png",
+      "sha256": "f1fb03a45f8eabe074a55f1cd553137625eda9684bb713beea780f73774f2eea"
+    },
+    {
+      "path": "docs/usability-previews/phone-planning-original-repeat.png",
+      "sha256": "9915fceccc6bcaf9f527814df4318659602fb4f86dedad08510aff975e5e7aca"
+    },
+    {
+      "path": "docs/usability-previews/phone-planning-successor-repeat.png",
+      "sha256": "7b234c5a86d9fb6b8ababe18999a0de6826cc527f2b8b08d98773c104a3469a0"
+    },
+    {
+      "path": "docs/usability-previews/phone-planning-successor-reminders.png",
+      "sha256": "fa21109837bf61efcfe45594c188154d34b23f32626059c3fe9ca3f9e5bc2ed9"
+    },
+    {
+      "path": "docs/usability-previews/mac-planning-successor-relaunch.png",
+      "sha256": "2085dcc50e64917e746bd71da9dda4e553f55f5181b58189afa853778778b1a6"
+    },
+    {
+      "path": "docs/usability-previews/mac-planning-successor-reminders.png",
+      "sha256": "6515a290ea8b4d6dfbb0550b037b46e16b5fe1fcfc6a0e13fd0bb8ca8eea5fb5"
+    }
+  ],
+  "usabilityFollowUps": [
+    "Mac quick-capture reminder suggestion subtitle warns the quoted section stays literal although the resolved section chip is present and the native save selects that section correctly. Reproduce and correct suggestion context in both independent apps.",
+    "Reminders screen repeats remote-unavailable status and says scheduled reminders continue even with device delivery off. Consolidate copy and reflect actual delivery state on both platforms."
+  ],
+  "remainingScope": [
+    "Other recurrence variants/concurrent native Mac edits and mixed versions",
+    "Actual reminder delivery/operational rollout",
+    "Native cloud/cross-account restore",
+    "Remaining widget hosts/sizes/privacy/VoiceOver and external provider/release gates"
+  ]
+}
