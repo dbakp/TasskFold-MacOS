@@ -1,13 +1,13 @@
-[23 / 25] TaskfoldCoreTests-product
-Build complete! (3,62 secs)
-Test Suite 'Selected tests' started at 2026-10-10 07:49:32.964.
-Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-10 07:49:32.966.
-Test Suite 'MyListAccountIntegrationTests' started at 2026-10-10 07:49:32.966.
+[1 / 2]
+Build complete! (0,38 secs)
+Test Suite 'Selected tests' started at 2026-10-10 08:16:23.073.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-10 08:16:23.076.
+Test Suite 'MyListAccountIntegrationTests' started at 2026-10-10 08:16:23.076.
 Test Case '-[TaskfoldCoreTests.MyListAccountIntegrationTests testAuthenticatedAccountSwitchRejectsForeignListAndRestoresOriginalKey]' started.
-Test Case '-[TaskfoldCoreTests.MyListAccountIntegrationTests testAuthenticatedAccountSwitchRejectsForeignListAndRestoresOriginalKey]' passed (1.389 seconds).
-Test Suite 'MyListAccountIntegrationTests' passed at 2026-10-10 07:49:34.355.
-	 Executed 1 test, with 0 failures (0 unexpected) in 1.389 (1.389) seconds
-Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-10 07:49:34.355.
-	 Executed 1 test, with 0 failures (0 unexpected) in 1.389 (1.389) seconds
-Test Suite 'Selected tests' passed at 2026-10-10 07:49:34.355.
-	 Executed 1 test, with 0 failures (0 unexpected) in 1.389 (1.391) seconds
+Test Case '-[TaskfoldCoreTests.MyListAccountIntegrationTests testAuthenticatedAccountSwitchRejectsForeignListAndRestoresOriginalKey]' passed (1.533 seconds).
+Test Suite 'MyListAccountIntegrationTests' passed at 2026-10-10 08:16:24.610.
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.533 (1.534) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-10 08:16:24.610.
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.533 (1.534) seconds
+Test Suite 'Selected tests' passed at 2026-10-10 08:16:24.610.
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.533 (1.537) seconds

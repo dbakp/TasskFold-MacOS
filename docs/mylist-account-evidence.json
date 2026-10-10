@@ -1,6 +1,6 @@
 {
   "date": "2026-10-10",
-  "status": "partial; full account lifecycle acceptance remains open",
+  "status": "Installed small iPhone Simulator cloud project selection: A \u2192 B \u2192 A \u2192 logout accepted; other hosts/sizes remain open",
   "productionChanges": false,
   "ios": {
     "device": "isolated iPhone 17 Pro Simulator, iOS 26.5",
@@ -30,20 +30,56 @@
       }
     ],
     "foreignAccount": {
-      "accepted": false,
+      "accepted": true,
       "attempts": [
         "/tmp/taskfold-mylist-account-native-v1/foreign.xcresult",
         "/tmp/taskfold-mylist-account-native-v2/foreign.xcresult",
         "/tmp/taskfold-mylist-account-b-diagnostic-v3.xcresult"
       ],
-      "failure": "Browse tap after sign-in; widget assertions never reached. Video frame at 25 seconds shows system Save Password prompt covering app. SpringBoard-only Not Now query did not dismiss it. Diagnostic v3 starts from B and is not an A-to-B acceptance run.",
-      "partialEvidence": "Separate App Group inspection found only account B task/list; private server workspaces unchanged. This is not installed widget rendering or routing acceptance."
+      "historicalFailure": "Browse tap after sign-in; widget assertions never reached. Video frame at 25 seconds shows system Save Password prompt covering app. SpringBoard-only Not Now query did not dismiss it. Diagnostic v3 starts from B and is not an A-to-B acceptance run.",
+      "historicalPartialEvidence": "Separate App Group inspection found only account B task/list; private server workspaces unchanged. This is not installed widget rendering or routing acceptance.",
+      "resolution": "Native XCTest queries Not Now in com.apple.SafariViewService before SpringBoard fallback. v6 logs confirm actual service button tap; Browse, installed foreign-selection fallback and exact B task ownership assertions then pass. Generic XCTest interruption monitor v5 did not handle the prompt and was removed.",
+      "result": "/tmp/taskfold-mylist-account-native-v6/foreign.xcresult",
+      "visual": "Shows generic My list / Choose your list, no A names. Native widget tap opens B All tasks containing only B task."
     },
-    "logout": "New installed My list-specific logout case not run; historical general account isolation evidence remains separate."
+    "logout": "v6 native sign-out, termination, relaunch to authentication, installed widget screenshot with no private names; shared account empty, zero tasks/lists.",
+    "finalSequence": [
+      {
+        "phase": "foreign",
+        "passed": true,
+        "account": "1e971d73-a5ff-4125-9795-53945c5f08b0",
+        "taskCount": 1,
+        "listCount": 1,
+        "bothServerWorkspacesUnchanged": true
+      },
+      {
+        "phase": "returned",
+        "passed": true,
+        "account": "a1703a6f-1da6-4fb2-8841-967f1a2c9b7c",
+        "taskCount": 1,
+        "listCount": 1,
+        "bothServerWorkspacesUnchanged": true
+      },
+      {
+        "phase": "signedout",
+        "passed": true,
+        "account": "",
+        "taskCount": 0,
+        "listCount": 0,
+        "bothServerWorkspacesUnchanged": true
+      }
+    ],
+    "fixtureReuse": "Recreated the two deleted disposable accounts/project/task IDs with fresh passwords to preserve the existing installed widget selection. No widget reconfiguration during v6 A/B/A/logout. Both fresh server workspaces verified unchanged after every phase.",
+    "buildLog": "/tmp/taskfold-mylist-account-build-v6.log",
+    "signReceipt": "mylist-account-reports/sign-v6.json",
+    "setupResults": [
+      "/tmp/taskfold-mylist-account-login-v5.xcresult",
+      "/tmp/taskfold-mylist-account-recover-a-v6.xcresult"
+    ]
   },
   "mac": {
     "case": "MyListAccountIntegrationTests.testAuthenticatedAccountSwitchRejectsForeignListAndRestoresOriginalKey",
-    "log": "/tmp/taskfold-mylist-account-mac-live-v1.log",
+    "log": "/tmp/taskfold-mylist-account-mac-live-v5.log",
     "passed": 1,
     "skipped": 0,
     "failed": 0,
@@ -62,8 +98,8 @@
     "nativeProcessesTerminal": true
   },
   "remaining": [
-    "Handle system password-saving interruption in isolated native test before claiming foreign-account widget route or final logout.",
-    "Remaining widget sizes/surfaces and physical/Mac hosts.",
+    "Remaining widget sizes/surfaces and physical/iPad/Mac hosts.",
+    "Other widget families retain their documented cloud-account lifecycle scope.",
     "Existing P0 external gates and VoiceOver/keyboard journeys remain open."
   ],
   "reproduction": {
@@ -71,7 +107,7 @@
     "mac": "TASKFOLD_MYLIST_ACCOUNT_FIXTURES=<private fixture JSON> swift test --filter MyListAccountIntegrationTests. No fixture means explicit skip, never a pass."
   },
   "sourceSHA256": {
-    "iosUI": "ad724350e0e9d546a8976a412878087d31ce1db4dd9da7f19daae1c15d5dc182",
+    "iosUI": "0e829cb0628a860e812d5e88ae93596b922d64b44515ba0c0a184fa5360c3b06",
     "iosRunner": "f5a8891e344e7511b2d5eb18419bed8a0ecc2ab6c8518b8685c971c95f7ed02f",
     "macIntegration": "7efdd60c738d7b73642ddfd2a8459daabd574978f23a7f6851c4d0d6b1088c3a"
   }
