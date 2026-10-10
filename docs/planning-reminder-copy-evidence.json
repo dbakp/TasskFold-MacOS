@@ -1,0 +1,139 @@
+{
+  "date": "2026-10-10",
+  "scope": "Correct the resolved-section warning in planning suggestions and duplicate/misleading remote-unavailable copy, independently in iOS and macOS.",
+  "baseCommits": {
+    "macOS": "7629799",
+    "iOS": "2d45583"
+  },
+  "changes": [
+    "Planning preview now receives the full QuickEntryContext used by reference resolution, including projects, sections, explicit directory choices and date preferences.",
+    "Remote-unavailable status is shown once; eligible/pending remote choices still retain their toggle, handoff explanation, status and retry.",
+    "Store diagnostic strings no longer promise continuing local delivery independently of the device delivery preference."
+  ],
+  "coreRegression": {
+    "beforeLog": "planning-context-before.log",
+    "before": "Mac regression failed with the false section warning on an already resolved section.",
+    "after": {
+      "macOS": {
+        "log": "planning-context-mac-after.log",
+        "passed": 81,
+        "failed": 0
+      },
+      "iOS": {
+        "log": "planning-context-ios-after.log",
+        "passed": 81,
+        "failed": 0
+      }
+    },
+    "coverage": "Planning/ref completion, natural dates/clocks and strict planned clocks; resolved section matches Save, unresolved section still warns, missing date preferences remain honored."
+  },
+  "builds": {
+    "macOS": {
+      "log": "copy-fixes-mac-build-v1.log",
+      "result": "TEST BUILD SUCCEEDED"
+    },
+    "iOS": {
+      "log": "copy-fixes-phone-build-v5.log",
+      "result": "TEST BUILD SUCCEEDED",
+      "signingReceipt": "copy-fixes-phone-signing-v4.json"
+    }
+  },
+  "phoneNative": {
+    "resultBundle": "copy-fixes-phone-v4.xcresult",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "cases": [
+      "testLiveResolvedPlanningSuggestionOnPhone",
+      "testLivePlanningSuccessorRetainedOnPhone"
+    ],
+    "scope": "Native reminder option selection closes menu and preserves resolved section/reminder chip; existing successor and single remote status with delivery off survive relaunch. Preview is closed without saving."
+  },
+  "dataProof": {
+    "baseline": "phone-planning-successor-cache.json",
+    "after": "copy-fixes-phone-cache.json",
+    "sevenTablesExactlyUnchanged": [
+      "tasks",
+      "projects",
+      "sections",
+      "labels",
+      "saved_views",
+      "view_orders",
+      "focus_sessions"
+    ],
+    "taskCount": 3,
+    "pendingCount": 0,
+    "tableSHA256": {
+      "tasks": "9ddf44d634952a590108f2833c785889447e141ab89ce1f2f609e450b75b29b1",
+      "projects": "d46af7d58f75eb64c0724c27f1e9b9ffb0aa57cae6311276a6d3d2c84abc1883",
+      "sections": "e7277cb09509ff0d92a1a15b2fe81829a13530bdf1a961f99e9f69c0edfb7984",
+      "labels": "4682888c4b8c40c01728cd16af583bba8bf02c2e624797eb567ad9889477afff",
+      "saved_views": "ef1e5ee081e5c89210aaf13238e4ae5504eb648f15fe6b0cf65930281e184d0c",
+      "view_orders": "12c4325c49c4b8ec23f150b52acacfc9b9a2b55f3ff3302c7e5a75e4ab9487fc",
+      "focus_sessions": "333180b5896c968e2ddc2861bb39b612b14ecc020afe0694d1b36d978b3c3866"
+    }
+  },
+  "macNative": {
+    "accepted": false,
+    "log": "copy-fixes-mac-v1.log",
+    "result": "INTERRUPTED before a case completed; incomplete xcresult is not readable acceptance evidence.",
+    "reason": "Rebuilt ad-hoc isolated app waits inside SecureSession.read \u2192 SecItemCopyMatching; SecurityAgent is live. Fresh sample confirms same wait after runner interruption.",
+    "samples": [
+      "copy-fixes-mac-launch-sample.txt",
+      "copy-fixes-mac-current-launch-sample.txt"
+    ],
+    "keychainService": "com.taskfold.mac.p0uitests.session",
+    "userAction": "Approve the macOS Keychain prompt for the isolated test session. No system prompt or Keychain ACL was automated/bypassed.",
+    "preparedCases": [
+      "testLiveResolvedPlanningSuggestionOnMac",
+      "testLivePhonePlanningCompletionReturnsToMac"
+    ]
+  },
+  "historicalPhoneRuns": [
+    {
+      "bundle": "copy-fixes-phone-v1.xcresult",
+      "result": "Failed",
+      "reason": "Both changed texts reached; test then attempted nonexistent Cancel button in quick capture. Reminder/relaunch case passed."
+    },
+    {
+      "bundle": "copy-fixes-phone-v2.xcresult",
+      "result": "Failed",
+      "reason": "Preview scroll test overshot its target. Reminder/relaunch case passed."
+    },
+    {
+      "bundle": "copy-fixes-phone-v3.xcresult",
+      "result": "Failed",
+      "reason": "Bounds assertion failed despite recorded full suggestion being visible; used native option selection for final behavioral check. Reminder/relaunch case passed."
+    }
+  ],
+  "inspectedCaptures": [
+    {
+      "path": "docs/usability-previews/phone-resolved-reminder-initial.png",
+      "sha256": "85da1f0c8f9cec4f84eb91789b12d85ae4aa4c63323c19974a870eb521fc81f4",
+      "provenance": "copy-fixes-phone-v4-attachments/709E446B-5BEF-4CF6-8260-52814AB8F8E4.png"
+    },
+    {
+      "path": "docs/usability-previews/phone-resolved-reminder-scrolled.png",
+      "sha256": "474fc70e89c8272643814482e227e294e64f37a63d6253d0d125ef2e291d4adf",
+      "provenance": "copy-fixes-phone-v3-before-failure.png"
+    },
+    {
+      "path": "docs/usability-previews/phone-single-remote-status.png",
+      "sha256": "b80b7a869629a518d5d4539d0d16ccac9c99317b898187b347a48da016e520b1",
+      "provenance": "copy-fixes-phone-v4-attachments/B17FBA37-E1EE-4BDF-BFD4-0B82CA23FEC4.png"
+    }
+  ],
+  "visualFinding": "Initial long quoted capture partly hides the suggestion beneath its controls; scrolling reveals the complete label and detail. The scrolled capture is an inspected frame from the failed v3 bounds-check recording, not a passing-test claim. Native selection passes in v4. Automatic suggestion reveal remains a polish follow-up, not an added release gate.",
+  "remainingScope": [
+    "Mac native acceptance after Keychain approval",
+    "Updated largest-text local availability case compiles but was not rerun here",
+    "Provider delivery/handoff, other existing P0 and release gates remain scoped by P0_RELEASE_STATUS.md"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/QuickPlanningCompletion.swift": "0227510a4c5b0b4c9d01d349e5f7317c1dad48df21f7b3dc5241c843cd59f0b0",
+    "Taskfold/Core/Store.swift": "f10f36598daee7e96bd0272f292a78a0ab6a5bae2a92ab16e9c6299f5202dfd4",
+    "Taskfold/Views/ReminderEditor.swift": "19eb93db019074936561addbbf33fda7a053b6bbfc384b1d0e420a6a8605c4a0",
+    "TaskfoldTests/QuickPlanningCompletionTests.swift": "fa729800f0546e2d98ee5f7a2167c865916cea06e2fc95bfd65b4ca5e48272e3"
+  }
+}

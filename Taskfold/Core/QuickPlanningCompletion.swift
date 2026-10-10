@@ -9,7 +9,7 @@ struct QuickPlanningCompletion {
     var options: [Option] = []
     var prompt = ""
     var literalGroups = Set<String>()
-    init(_ input: String, caretUTF16: Int? = nil, now: Date = Date(), calendar: Calendar = .current, task: Record = Record(), disabled: Set<String> = [], datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) {
+    init(_ input: String, caretUTF16: Int? = nil, now: Date = Date(), calendar: Calendar = .current, task: Record = Record(), disabled: Set<String> = [], context: QuickEntryContext = QuickEntryContext()) {
         source = input
         let caret = caretUTF16 ?? input.utf16.count
         guard caret >= 0, let prefixRange = Range(NSRange(location: 0, length: caret), in: input) else { return }
@@ -72,7 +72,7 @@ struct QuickPlanningCompletion {
         // Never replace a fragment inside a longer already recognised phrase. In
         // particular keep an existing repeat limit or a reminder clock intact.
         let before = String(input[..<start]), after = String(input[end...])
-        let full = QuickEntry(input, now: now, calendar: calendar, context: QuickEntryContext(datePreferences: datePreferences), task: task)
+        let full = QuickEntry(input, now: now, calendar: calendar, context: context, task: task)
         if full.tokens.contains(where: { token in
             let same = token.group == group || (group == "reminder_specs" && token.group.hasPrefix("reminder_specs:"))
             return same && token.text.lowercased().hasPrefix(whole.lowercased()) && token.text.count > whole.count
@@ -80,7 +80,7 @@ struct QuickPlanningCompletion {
         let query = fragment.trimmingCharacters(in: .whitespaces)
         var seen = Set<String>()
         for phrase in candidates where phrase.hasPrefix(query) && seen.insert(phrase).inserted {
-            let parsed = QuickEntry(before + phrase + " " + after, now: now, calendar: calendar, context: QuickEntryContext(datePreferences: datePreferences), task: task)
+            let parsed = QuickEntry(before + phrase + " " + after, now: now, calendar: calendar, context: context, task: task)
             guard let token = parsed.tokens.first(where: { $0.text.lowercased() == phrase && ($0.group == group || (group == "reminder_specs" && $0.group.hasPrefix("reminder_specs:"))) }) else { continue }
             let name = group == "reminder_specs" ? token.label : group == "due_date" ? token.label : group == "due_time" ? token.label : Recurrence.summary(Record(parsed.updates["recurrence_pattern"]?.object ?? [:]))
             var detail = phrase
@@ -121,7 +121,7 @@ struct QuickEntryCompletion {
     var literalGroups: Set<String> { reference.range != nil ? reference.literalGroups : planning.literalGroups }
     init(_ input: String, caretUTF16: Int? = nil, now: Date = Date(), calendar: Calendar = .current, context: QuickEntryContext = QuickEntryContext(), task: Record = Record(), disabled: Set<String> = []) {
         reference = QuickReferenceCompletion(input, caretUTF16: caretUTF16, context: context, disabled: disabled)
-        planning = QuickPlanningCompletion(input, caretUTF16: caretUTF16, now: now, calendar: calendar, task: task, disabled: disabled, datePreferences: context.datePreferences)
+        planning = QuickPlanningCompletion(input, caretUTF16: caretUTF16, now: now, calendar: calendar, task: task, disabled: disabled, context: context)
     }
     func choosing(_ option: Option, in input: String) -> (text: String, caretUTF16: Int)? {
         reference.range != nil ? reference.choosing(option, in: input) : planning.choosing(option, in: input)

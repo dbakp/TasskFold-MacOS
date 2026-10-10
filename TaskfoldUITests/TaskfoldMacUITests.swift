@@ -1627,6 +1627,24 @@ extension TaskfoldMacUITests {
         }
     }
 
+    @MainActor func testLiveResolvedPlanningSuggestionOnMac() throws {
+        let fixtureURL = URL(fileURLWithPath: "/private/tmp/taskfold-live-verification.json")
+        guard FileManager.default.fileExists(atPath: fixtureURL.path) else { throw XCTSkip("Disposable continuity account not configured") }
+        let fixture = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: fixtureURL))
+        guard fixture["userID"] == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152" else { throw XCTSkip("Dedicated planning fixture required") }
+        let app = XCUIApplication(); app.launchArguments = []; app.launch(); defer { app.terminate() }
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]
+        XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click()
+        input.typeText(#"Preview #"Continuity Studio revised" /"Ready on phone" tomorrow at 09:00 !30mb"#)
+        let option = app.buttons["referenceSuggestion-reminder_specs:planning:!30mb"]
+        XCTAssertTrue(option.waitForExistence(timeout: 5))
+        XCTAssertFalse(option.label.contains("Choose a section"), option.label)
+        XCTAssertTrue(app.buttons["decline-section_id"].exists)
+        retainWindow(app, name: "Resolved section reminder preview on Mac")
+        app.typeKey(.escape, modifierFlags: [])
+    }
+
     @MainActor private func inspectReturnedPlanningOccurrence(_ app: XCUIApplication, id: String, remaining: Int) {
         let row = app.descendants(matching: .any)["title-" + id].firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 15)); row.click()
@@ -1643,6 +1661,10 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(reminders.isHittable); reminders.click()
         XCTAssertTrue(app.buttons["15 min before"].waitForExistence(timeout: 5)); XCTAssertTrue(app.buttons["30 min before"].exists)
         retainWindow(app, name: "Returned occurrence retains multiple reminders — \(remaining) left")
+        let availability = app.staticTexts["remoteReminderAvailability"]
+        XCTAssertTrue(availability.exists)
+        XCTAssertFalse(renderedText(availability).contains("continue on this device"), renderedText(availability))
+        XCTAssertFalse(app.staticTexts["remoteReminderStatus"].exists, "Unavailable remote status must appear once")
         app.buttons["Done"].click()
     }
 

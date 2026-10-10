@@ -130,7 +130,7 @@ final class Store {
     private var reminderPreferenceRevision = 0
     @ObservationIgnored private var reminderDeviceLifecycle: ReminderDeviceLifecycle?
     @ObservationIgnored private lazy var reminderAppIdentity = ReminderAppIdentity.signed()
-    var remoteReminderStatus = "Remote reminders are not available yet. Reminders stay on this device."
+    var remoteReminderStatus = "Remote reminders are not available yet."
     var remoteReminderBusy = false
     private var reminderAuthority: ReminderDeliveryAuthority?
     private var reminderAuthorityRead = false
@@ -1118,7 +1118,7 @@ final class Store {
         if remoteReminderTestWorkspace { await refreshReminderAuthorityFixture(force: force); return }
         #endif
         guard !isolatedReminderDeviceFixture else {
-            remoteReminderStatus = "Remote reminders are not available in this workspace. Reminders stay on this device."; return
+            remoteReminderStatus = "Remote reminders are not available in this workspace."; return
         }
         let generation = accountGeneration, incarnation = backend.reminderSessionIncarnation, account = userID
         remoteReminderAvailable = false
@@ -1156,19 +1156,19 @@ final class Store {
                 NSApplication.shared.registerForRemoteNotifications()
                 #endif
             } else if lifecycle == nil || context == nil && lifecycle?.busy != true && lifecycle?.retirementPending != true {
-                remoteReminderStatus = localMode || !signedIn ? "Sign in to prepare remote reminders. Current reminders stay on this device." :
-                    eligible && reminderAppIdentity == nil ? "Remote setup is unavailable in this build. Reminders continue on this device." :
-                    "Remote reminders are not available yet. Reminders stay on this device."
+                remoteReminderStatus = localMode || !signedIn ? "Sign in to prepare remote reminders." :
+                    eligible && reminderAppIdentity == nil ? "Remote setup is unavailable in this build." :
+                    "Remote reminders are not available yet."
             }
         } catch {
-            remoteReminderStatus = remoteReminderHoldingOriginals ? "Task reminders are waiting for confirmed delivery. Check remote setup to retry." : "Device registration could not be saved securely. Reminders continue on this device."; remoteReminderBusy = false
+            remoteReminderStatus = remoteReminderHoldingOriginals ? "Task reminders are waiting for confirmed delivery. Check remote setup to retry." : "Device registration could not be saved securely. Check remote setup to retry."; remoteReminderBusy = false
         }
     }
     func receivedRemoteReminderToken(_ token: Data) async {
         guard !isolatedReminderDeviceFixture else { return }
         await refreshRemoteReminderRegistration()
         do { try reminderDeviceLifecycle?.receivedToken(token) }
-        catch { remoteReminderStatus = remoteReminderHoldingOriginals ? "Task reminders are waiting for confirmed delivery. Check remote setup to retry." : "Device registration could not be saved securely. Reminders continue on this device."; remoteReminderBusy = false }
+        catch { remoteReminderStatus = remoteReminderHoldingOriginals ? "Task reminders are waiting for confirmed delivery. Check remote setup to retry." : "Device registration could not be saved securely. Check remote setup to retry."; remoteReminderBusy = false }
     }
     func failedRemoteReminderToken() {
         guard !isolatedReminderDeviceFixture else { return }

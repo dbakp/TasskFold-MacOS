@@ -252,24 +252,26 @@ struct ReminderSystemSettingsButton: View {
 /// choice that still needs a confirmed handoff. Pending delivery remains explicit.
 struct RemoteReminderRegistrationView: View {
     @Environment(Store.self) private var store
+    private var offersRemoteChoice: Bool { store.remoteReminderAvailable || store.remoteReminderSelected || store.remoteReminderNeedsConfirmation }
+    private var hasRemoteAccount: Bool { store.signedIn && (!store.localMode || store.remoteReminderTestWorkspace) }
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if store.remoteReminderAvailable || store.remoteReminderSelected || store.remoteReminderNeedsConfirmation {
+            if offersRemoteChoice {
                 Toggle("Remote delivery", isOn: Binding(get: { store.remoteReminderSelected }, set: { store.chooseRemoteReminders($0) }))
                     .frame(minHeight: 44).accessibilityLabel("Remote task reminders on this device").accessibilityIdentifier("remoteReminderDelivery")
             }
-            Text(store.remoteReminderAvailable || store.remoteReminderSelected || store.remoteReminderNeedsConfirmation ? "For this device. Focus and snoozes stay local. Switching back waits for confirmation." : "Remote reminders are not available yet. Scheduled reminders continue on this device.")
+            Text(offersRemoteChoice ? "For this device. Focus and snoozes stay local. Switching back waits for confirmation." : hasRemoteAccount ? store.remoteReminderStatus : "Sign in to prepare remote reminders.")
                 .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("remoteReminderAvailability")
-            if store.signedIn && (!store.localMode || store.remoteReminderTestWorkspace) {
-                Text(store.remoteReminderStatus).font(.footnote).foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("remoteReminderStatus")
+            if hasRemoteAccount {
+                if offersRemoteChoice {
+                    Text(store.remoteReminderStatus).font(.footnote).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("remoteReminderStatus")
+                }
                 Button { Task { await store.refreshRemoteReminderRegistration(force: true) } } label: {
                     Label(store.remoteReminderBusy ? "Checking setup…" : "Check remote setup", systemImage: "arrow.clockwise")
                         .frame(minHeight: 44)
                 }.disabled(store.remoteReminderBusy).accessibilityIdentifier("remoteReminderRetry")
-            } else {
-                Text("Sign in to connect this device to your account.").font(.footnote).foregroundStyle(.secondary)
             }
         }
     }

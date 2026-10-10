@@ -156,5 +156,6 @@
     "Actual reminder delivery/operational rollout",
     "Native cloud/cross-account restore",
     "Remaining widget hosts/sizes/privacy/VoiceOver and external provider/release gates"
-  ]
+  ],
+  "usabilityFollowUpResolution": "Both findings are corrected in each own codebase; phone native acceptance and Mac pending-Keychain status are scoped in planning-reminder-copy-evidence.json."
 }
