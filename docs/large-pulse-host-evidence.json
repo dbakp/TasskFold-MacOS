@@ -1,0 +1,153 @@
+{
+  "date": "2026-10-11",
+  "scope": "Installed large Project pulse on isolated iPhone Simulator: three attention titles, recorded-history coverage, native configuration/privacy, terminated-app routes, completion/relaunch refresh and original cloud-widget cleanup. No native Mac acceptance.",
+  "baseCommits": {
+    "TaskFold-iOS": "99c5e6e",
+    "TasskFold-MacOS": "111cd53"
+  },
+  "productChanges": false,
+  "build": "large-pulse-build-v6.log",
+  "signing": "large-pulse-signing-v6.json",
+  "sourceHashes": {
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "67bd2a1977e06af8a5c789dfd1ebf23ad32f9724b51ca13802b38b2f9a5023b8",
+    "ios-live-stage/TaskfoldUITests/TaskfoldUITests.swift": "67bd2a1977e06af8a5c789dfd1ebf23ad32f9724b51ca13802b38b2f9a5023b8",
+    "TaskFold-iOS/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632",
+    "TasskFold-MacOS/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632",
+    "ios-live-stage/TaskfoldWidgets/TaskfoldWidgets.swift": "2162ac3ae18790b1d9bf4b469746ea33db00cdd0f29858aa9c5b5068ff982632"
+  },
+  "nativeRun": {
+    "resultBundle": "large-pulse-phone-v6.xcresult",
+    "testCase": "testInstalledLargePulseAttentionPrivacyAndRefresh",
+    "summary": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    }
+  },
+  "accepted": [
+    "Native capture adds two overdue Studio tasks to the three-task pulse fixture. Actual large gallery installation uses a separate Home page while preserving the original selected note/medium Focus pair and older small Focus instance.",
+    "Native project selection and terminated-app header route open Studio with 1 of 5 completed, 2 completion events and 1 reopen event. The app explains earlier work has no recorded timeline.",
+    "Inspected large host shows all three complete attention titles, separate current progress and last-seven-day events, date window, 5 added / 0 moved in / 0 moved out, and complete history-coverage explanation.",
+    "Native privacy switch changes to 1 and back to 0. Inspected private host conceals project and all attention names, retains counts/history and lock icon, and its terminated-app route still opens the selected Studio project.",
+    "Native completion of Reconcile the venue budget survives process relaunch and widget cold route: 2 of 5 completed, 3 completion events and 1 reopen event. Inspected refreshed host retains exactly the two remaining attention titles and full coverage text.",
+    "Only the temporary large instance is removed. Original cloud Today task, complete selected note and ended Focus cold routes pass. Final inspected first-page Home retains the original selected widgets."
+  ],
+  "dataPreservation": {
+    "fullOriginalCloudCacheParsedEqual": true,
+    "originalWidgetFieldsEqual": {
+      "account": true,
+      "focusSession": true,
+      "notes": true,
+      "pendingSync": true
+    },
+    "pendingSync": 0,
+    "localMode": false,
+    "widgetColdLaunchFixture": false,
+    "originalMacCloudCacheUnchanged": true,
+    "localTasks": 5,
+    "completedLocalTasks": [
+      "Finish a useful draft",
+      "Reconcile the venue budget"
+    ],
+    "localPending": 0
+  },
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-large-pulse-cleanup-host.png",
+      "sha256": "16109065349558ba302544ad9535af5c844ca19401192a0a2eac7c1dce4789d9",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-large-pulse-config.png",
+      "sha256": "3c3c389ee991516b7bd722d7740c817a2f535e229a47f41fd627cb113e320996",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-large-pulse-initial.png",
+      "sha256": "e81c94ac8ffbe80ca5b9d3477b4f46d08357eb1105d6c697e6d2c9d480bb0dbf",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-large-pulse-private.png",
+      "sha256": "28cd58a430e9830bfd877a6e78eab9c82d9682021d69143ca13b47fe521c1980",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-large-pulse-refreshed.png",
+      "sha256": "f13473e2d845b7572661f71a4cfc3dfd7a4e679c5ebc38036c319db85ea3f530",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-large-pulse-setup-v4.png",
+      "sha256": "eed137ccdd96ac6c11f3abc56383cab78c4e71911f73e114acd95e3690bad162",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-large-pulse-setup-v5.png",
+      "sha256": "121e922307a7a9fdad81cac12381546e8190fe1a4bc8ea33241cc2d6c52eb152",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-large-pulse-updated-route.png",
+      "sha256": "227d5bd675983175d7ce6254b06420e9dbda0443b119149e5eeef026ff12c7ab",
+      "inspected": true
+    }
+  ],
+  "setupAttempts": [
+    {
+      "bundle": "large-pulse-phone-v1.xcresult",
+      "result": "Failed",
+      "reason": "Overstrict test guard expected no Taskfold widget on second Home page; older small Focus was already present."
+    },
+    {
+      "bundle": "large-pulse-phone-v2.xcresult",
+      "result": "Failed",
+      "reason": "Same guard; screenshot confirms explicit swipe worked. Corrected guard preserves older small Focus and isolates original first-page note/medium Focus."
+    },
+    {
+      "bundle": "large-pulse-phone-v3.xcresult",
+      "result": "Failed",
+      "reason": "Project plus opens a New task/New section menu. Test omitted New task selection; no product defect established."
+    },
+    {
+      "bundle": "large-pulse-phone-v4.xcresult",
+      "result": "Failed",
+      "reason": "Second capture Save touch used an invalid hit point during changing sheet geometry. Inspected retained video frame shows draft and visible Save."
+    },
+    {
+      "bundle": "large-pulse-phone-v5.xcresult",
+      "result": "Failed",
+      "reason": "Hide-keyboard touch opened project picker during resizing; hierarchy also retains keyboard outside screen. Inspected frame retained. Final test waits for settled control frames and absence of an intersecting keyboard."
+    }
+  ],
+  "diagnostics": {
+    "springBoardAnimationNotificationWaits": 8,
+    "remoteHierarchyDiagnosticsRetained": true,
+    "configurationCapture": "Studio is selected; bottom of system picker remains visible during dismissal. Cold route verifies selected project.",
+    "resultExtraction": "First concurrent summary/verifier read collided while xcresulttool initialized its database. Sequential verifier rerun succeeds; no native test was rerun."
+  },
+  "macEnvironment": {
+    "isolatedBundle": "com.dbakp.taskfold.mac.p0localuitests",
+    "displayName": "Taskfold P0 Local Test",
+    "latestBuildRelaunched": true,
+    "runningPIDAtCheck": 64837,
+    "nativeObservation": "getApp returns cgWindowNotFound; subsequent getState explicitly reports locked Mac. No native interaction or screenshot acceptance claimed."
+  },
+  "remaining": [
+    "Desktop/other named widget hosts and system privacy conditions.",
+    "Native Mac ordering/account/restore and latest completion/Undo/notes interaction require an accessible desktop.",
+    "Unfiltered accessibility findings, VoiceOver/keyboard, actual Todoist provider, external calendar/files and notification/distribution gates."
+  ],
+  "storage": {
+    "setupDuplicateExportsAllocatedBytesPruned": 79466496,
+    "finalDuplicateExportsAllocatedBytesPruned": 16007168,
+    "manifests": [
+      "large-pulse-setup-pruned-manifest.json",
+      "large-pulse-final-pruned-manifest.json"
+    ],
+    "nativeBundlesRetained": true
+  }
+}

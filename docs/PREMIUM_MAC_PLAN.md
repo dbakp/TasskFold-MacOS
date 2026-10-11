@@ -1252,3 +1252,10 @@ Mac list completion now synchronously commits before success feedback and regist
 ### 11 October — medium Project pulse host checkpoint
 
 The independent widget sources remain identical. The installed iPhone medium pulse now passes project selection, private-name configuration, cold routes, completion/relaunch refresh and original cloud-widget cleanup with six inspected captures; `medium-pulse-host-evidence.json`. No Mac production change was required. Native Mac widget/runtime acceptance remains open with the desktop locked; large pulse and other named P0 gates are unchanged.
+
+
+### 11 October — large Project pulse host checkpoint
+
+The installed isolated iPhone large widget now passes native Studio selection, three complete attention titles, explicit recorded-history coverage, name privacy, cold routes and completion/relaunch refresh. Current progress advances from 1/5 to 2/5 while recorded completions advance from two to three; the two remaining attention titles stay visible. Six final captures and two setup-failure frames are inspected and retained in both repos; `large-pulse-host-evidence.json`. Five setup failures remain disclosed rather than counted as passing. The final case passes without failures/skips/reported runtime warnings, with eight SpringBoard animation waits retained.
+
+Original cloud cache and widget account/note/Focus/pending fields equal their baselines, queues are empty, local/cold-fixture preferences are off and the original Mac cloud cache is unchanged. No production code changed and the independent widget sources remain identical. The latest isolated local Mac app was relaunched, but computer use explicitly reports a locked desktop; current native Mac interaction remains unaccepted. Desktop widgets, remaining usability/provider and distribution gates stay open.
