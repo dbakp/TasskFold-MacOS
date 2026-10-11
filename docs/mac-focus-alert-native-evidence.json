@@ -37,5 +37,13 @@
     "accepted": false,
     "reason": "Two builds registered the same isolated bundle. macOS launched the newer build without fixture arguments; the old ui-testing receipt did not open another workspace.",
     "correction": "Stopped both obsolete instances, launched only the newer build with the isolated fixture, and delivered a fresh real finish alert at 11:57:38.102. A new human click is pending."
+  },
+  "latestExistingAppInspection": {
+    "date": "2026-10-11",
+    "pid": 19758,
+    "window": "Inbox \u2013 1 task",
+    "task": "Focus on the next useful step",
+    "finishedSheetVisible": false,
+    "action": "Inspected existing focusRetest handle after unlock reply, without restarting app. Fresh notification Open remains unverified."
   }
 }

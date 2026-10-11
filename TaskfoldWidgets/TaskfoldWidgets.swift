@@ -1285,10 +1285,13 @@ struct NoteWidgetView: View {
                 Spacer(minLength: 0)
             } else if let note {
                 Text(note.title.isEmpty ? "Your pinned note" : note.title).font(.system(.headline, design: .rounded)).lineLimit(family == .systemSmall ? 2 : 1).fixedSize(horizontal: false, vertical: true).privacySensitive()
-                if note.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                // Preview space is scarce; keep blank edges in the full reader,
+                // while using the widget's lines for the actual instructions.
+                let preview = note.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                if preview.isEmpty {
                     Text(note.truncated ? "Open Taskfold to read the full note." : "Add note text in task details.").font(.callout).foregroundStyle(.secondary).lineLimit(3)
                 } else {
-                    Text(note.text).font(.system(family == .systemSmall ? .caption : family == .systemLarge ? .callout : .subheadline, design: .rounded)).lineSpacing(family == .systemLarge ? 3 : 2).lineLimit(family == .systemSmall ? 3 : family == .systemLarge ? 12 : 4).frame(maxWidth: .infinity, alignment: .leading).privacySensitive()
+                    Text(preview).font(.system(family == .systemSmall ? .caption : family == .systemLarge ? .callout : .subheadline, design: .rounded)).lineSpacing(family == .systemLarge ? 3 : 2).lineLimit(family == .systemSmall ? 3 : family == .systemLarge ? 12 : 2).fixedSize(horizontal: false, vertical: family != .systemLarge).frame(maxWidth: .infinity, alignment: .leading).privacySensitive()
                 }
                 Spacer(minLength: 0)
             } else {

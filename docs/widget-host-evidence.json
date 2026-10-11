@@ -936,5 +936,12 @@
   "mediumDeadlineHost": {
     "evidence": "medium-deadline-host-evidence.json",
     "scope": "Installed isolated iPhone medium Deadline radar rendering, cold routes, completion refresh and preserved original cloud widget return."
+  },
+  "mediumNoteHost": {
+    "evidence": "medium-note-host-evidence.json",
+    "installedPhoneMediumAccepted": true,
+    "previewWhitespaceOnlyFix": true,
+    "desktopAccepted": false,
+    "fullP0Accepted": false
   }
 }

@@ -1,0 +1,111 @@
+{
+  "date": "2026-10-11",
+  "scope": "Installed medium Pinned note in synthetic cloud A on isolated iPhone 17 Pro / iOS 26.5 Simulator; no real Todoist or task mutations",
+  "behaviorChange": "Trim only preview whitespace, preserve full stored note; reserve two medium preview lines and keep small/medium text height while preserving the Read full note footer. Large retains flexible height.",
+  "independentlyOwnedWidgetSourceSHA256": {
+    "TaskFold-iOS": "9fffcc9f761c16c8180e7d60874c60aa6271e3b54a6407db063af96af4114588",
+    "TasskFold-MacOS": "9fffcc9f761c16c8180e7d60874c60aa6271e3b54a6407db063af96af4114588"
+  },
+  "nativeRuns": [
+    {
+      "xcresult": "medium-note-phone-v1.xcresult",
+      "test": "testInstalledMediumCloudPinnedNotePrivacyAndColdRoute",
+      "durationSeconds": 659.678,
+      "summary": {
+        "result": "Passed",
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "privacyBranchExecuted": true,
+      "animationIdleDiagnostics": 8,
+      "remoteAXDiagnosticsPresent": true,
+      "strictResultVerifierPassed": true
+    },
+    {
+      "xcresult": "medium-note-phone-v2.xcresult",
+      "test": "testInstalledMediumCloudPinnedNotePreviewAfterBlankLineFix",
+      "durationSeconds": 389.891,
+      "summary": {
+        "result": "Passed",
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "privacyBranchExecuted": false,
+      "animationIdleDiagnostics": 4,
+      "remoteAXDiagnosticsPresent": true,
+      "strictResultVerifierPassed": true
+    }
+  ],
+  "accepted": [
+    "Native gallery installation and task selection beside original small note and medium ended Focus",
+    "Private title/text configuration hides the medium note while retaining exact full-reader cold route (v1)",
+    "Corrected small/medium public rendering and full exact raw note from terminated app (v2)",
+    "Normal app relaunch and second exact cold route",
+    "Remove only temporary medium widget; original note and ended Focus retain exact routes"
+  ],
+  "sourceProvenance": {
+    "initialTest": {
+      "sha256": "7b6194208f08c1c8e4b1f56e1c934d52ab25212c93e7840bb7b1737c08330688"
+    },
+    "nativeCorrectedWidget": {
+      "sha256": "16b3111c9e27db17d7f4e7f895a93ec492bc74a4af5b2b266db4f14a3798a829",
+      "fixedVerticalSizing": "true for all families in native v2 build"
+    },
+    "finalDifference": "After native v2 ended, fixedSize vertical true was restricted to family != systemLarge. The executed small/medium branch is identical. No native large acceptance inferred.",
+    "finalIOSBuild": "medium-note-ios-final-build-v4.log: TEST BUILD SUCCEEDED",
+    "finalStrictRealTeamSigning": "medium-note-ios-final-signing-v4.json"
+  },
+  "mac": {
+    "typecheck": "medium-note-mac-widget-typecheck-v1.log: actual final owned WidgetKit/SwiftUI/AppIntents sources, exit 0",
+    "appOnlyBuild": "medium-note-mac-build-v1.log does not compile the widget extension",
+    "signedWidgetBuild": "v2/v3 signing-setting errors; v4 fails because automatic signing has no Mac App Development profiles for the app/widget. No signing portal changes.",
+    "installedDesktopAccepted": false
+  },
+  "preservation": {
+    "sharedTableCount": 14,
+    "devices": {
+      "primary": {
+        "changedSharedTables": [],
+        "pendingCount": 0,
+        "taskCount": 3
+      },
+      "secondary": {
+        "changedSharedTables": [],
+        "pendingCount": 0,
+        "taskCount": 3
+      },
+      "mac": {
+        "changedSharedTables": [],
+        "pendingCount": 0,
+        "taskCount": 3
+      }
+    }
+  },
+  "inspectedPreviews": [
+    "docs/medium-note-previews/before-blank-line.png",
+    "docs/medium-note-previews/private-medium.png",
+    "docs/medium-note-previews/private-full-reader.png",
+    "docs/medium-note-previews/corrected-public.png",
+    "docs/medium-note-previews/corrected-relaunch.png",
+    "docs/medium-note-previews/original-pair-restored.png",
+    "docs/medium-note-previews/corrected-full-reader.png"
+  ],
+  "diagnostics": "Result summaries report zero runtime warnings, but native logs include animation-idle waits and remote AX failures. ps identified remote processes 33879 (v1) and 35486 (v2) as Simulator DragUI druid, not Taskfold. These runs are not described as clean logs.",
+  "stillOpen": [
+    "Large note/iPad medium note/Desktop host acceptance",
+    "System redaction and actual VoiceOver",
+    "Mac notification Open still shows Inbox after latest inspection; existing fixture left running",
+    "Mac isolated projection runtime clearance pending existing Keychain prompt",
+    "Other P0 gates in P0_RELEASE_STATUS.md"
+  ],
+  "fullP0Accepted": false,
+  "cleanup": {
+    "removedMiB": 26.6,
+    "manifest": "medium-note-pruned-manifest.json",
+    "retained": "Both full medium-note xcresult bundles, all build/test logs, selected inspected PNGs in iOS repo, signing/source/preservation receipts and active app products"
+  }
+}
