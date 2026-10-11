@@ -1,0 +1,224 @@
+{
+  "date": "2026-10-11",
+  "scope": "Current signed native iPhone capture/editor audit after the 48-point estimate-chip layout change; no Mac runtime or VoiceOver inference.",
+  "productChanges": false,
+  "harnessChanges": [
+    "Specify normal text explicitly, avoiding a previously persisted largest-text preference.",
+    "Enter the title one character at a time to allow native sheet resizing between keystrokes; assert the complete value."
+  ],
+  "build": "accessibility-final-build-v1.log: TEST BUILD SUCCEEDED",
+  "signing": "accessibility-final-signing-v1.json",
+  "audit": {
+    "resultBundle": "accessibility-final-native-v1.xcresult",
+    "executed": 2,
+    "passed": 0,
+    "failed": 2,
+    "skipped": 0,
+    "reportedRuntimeWarnings": [],
+    "allFourViewportsCompletedInBothConfigurations": true,
+    "categories": [
+      "sufficientElementDescription",
+      "hitRegion",
+      "textClipped"
+    ],
+    "suppressionOrWhitelist": false,
+    "normal": [
+      "Saved list: Search inbox",
+      "Saved list: deliberate one-line notes preview"
+    ],
+    "darkLargest": [
+      "Quick capture: 25 min estimate chip",
+      "Saved list: Search inbox"
+    ]
+  },
+  "visualReview": {
+    "allEightCapturesInspected": true,
+    "observations": [
+      "25 min and Search inbox are visibly complete in the inspected captures; this is not independent proof that their audit reports are false positives.",
+      "Normal notes end in an ellipsis; largest notes wrap beyond the current viewport. Editor overview exposes the complete instruction text.",
+      "Largest text requires vertical scrolling; one screenshot does not prove every control is reachable."
+    ],
+    "artifacts": [
+      {
+        "configuration": "normal",
+        "screen": "saved-task-list",
+        "kind": "hierarchy",
+        "file": "accessibility-final/normal-saved-task-list-hierarchy.txt"
+      },
+      {
+        "configuration": "normal",
+        "screen": "saved-task-list",
+        "kind": "findings",
+        "file": "accessibility-final/normal-saved-task-list-findings.txt"
+      },
+      {
+        "configuration": "normal",
+        "screen": "saved-task-list",
+        "kind": "capture",
+        "file": "accessibility-final/normal-saved-task-list-capture.png"
+      },
+      {
+        "configuration": "normal",
+        "screen": "editor-subtask-actions",
+        "kind": "hierarchy",
+        "file": "accessibility-final/normal-editor-subtask-actions-hierarchy.txt"
+      },
+      {
+        "configuration": "normal",
+        "screen": "editor-subtask-actions",
+        "kind": "findings",
+        "file": "accessibility-final/normal-editor-subtask-actions-findings.txt"
+      },
+      {
+        "configuration": "normal",
+        "screen": "editor-subtask-actions",
+        "kind": "capture",
+        "file": "accessibility-final/normal-editor-subtask-actions-capture.png"
+      },
+      {
+        "configuration": "normal",
+        "screen": "editor-overview",
+        "kind": "hierarchy",
+        "file": "accessibility-final/normal-editor-overview-hierarchy.txt"
+      },
+      {
+        "configuration": "normal",
+        "screen": "editor-overview",
+        "kind": "findings",
+        "file": "accessibility-final/normal-editor-overview-findings.txt"
+      },
+      {
+        "configuration": "normal",
+        "screen": "editor-overview",
+        "kind": "capture",
+        "file": "accessibility-final/normal-editor-overview-capture.png"
+      },
+      {
+        "configuration": "normal",
+        "screen": "quick-capture",
+        "kind": "hierarchy",
+        "file": "accessibility-final/normal-quick-capture-hierarchy.txt"
+      },
+      {
+        "configuration": "normal",
+        "screen": "quick-capture",
+        "kind": "findings",
+        "file": "accessibility-final/normal-quick-capture-findings.txt"
+      },
+      {
+        "configuration": "normal",
+        "screen": "quick-capture",
+        "kind": "capture",
+        "file": "accessibility-final/normal-quick-capture-capture.png"
+      },
+      {
+        "configuration": "largest",
+        "screen": "saved-task-list",
+        "kind": "hierarchy",
+        "file": "accessibility-final/largest-saved-task-list-hierarchy.txt"
+      },
+      {
+        "configuration": "largest",
+        "screen": "saved-task-list",
+        "kind": "findings",
+        "file": "accessibility-final/largest-saved-task-list-findings.txt"
+      },
+      {
+        "configuration": "largest",
+        "screen": "saved-task-list",
+        "kind": "capture",
+        "file": "accessibility-final/largest-saved-task-list-capture.png"
+      },
+      {
+        "configuration": "largest",
+        "screen": "editor-subtask-actions",
+        "kind": "hierarchy",
+        "file": "accessibility-final/largest-editor-subtask-actions-hierarchy.txt"
+      },
+      {
+        "configuration": "largest",
+        "screen": "editor-subtask-actions",
+        "kind": "findings",
+        "file": "accessibility-final/largest-editor-subtask-actions-findings.txt"
+      },
+      {
+        "configuration": "largest",
+        "screen": "editor-subtask-actions",
+        "kind": "capture",
+        "file": "accessibility-final/largest-editor-subtask-actions-capture.png"
+      },
+      {
+        "configuration": "largest",
+        "screen": "editor-overview",
+        "kind": "hierarchy",
+        "file": "accessibility-final/largest-editor-overview-hierarchy.txt"
+      },
+      {
+        "configuration": "largest",
+        "screen": "editor-overview",
+        "kind": "findings",
+        "file": "accessibility-final/largest-editor-overview-findings.txt"
+      },
+      {
+        "configuration": "largest",
+        "screen": "editor-overview",
+        "kind": "capture",
+        "file": "accessibility-final/largest-editor-overview-capture.png"
+      },
+      {
+        "configuration": "largest",
+        "screen": "quick-capture",
+        "kind": "hierarchy",
+        "file": "accessibility-final/largest-quick-capture-hierarchy.txt"
+      },
+      {
+        "configuration": "largest",
+        "screen": "quick-capture",
+        "kind": "findings",
+        "file": "accessibility-final/largest-quick-capture-findings.txt"
+      },
+      {
+        "configuration": "largest",
+        "screen": "quick-capture",
+        "kind": "capture",
+        "file": "accessibility-final/largest-quick-capture-capture.png"
+      }
+    ]
+  },
+  "consoleDiagnostics": [
+    "Apple UIAccessibilityLoaderWebShared duplicate implementation in WebCore/WebKit accessibility bundles at initial launch.",
+    "IDELaunchParametersSnapshot debugger version lookup failed/no debugger version messages."
+  ],
+  "cloudReturn": {
+    "case": "testAuthorizedAccessibilityAuditRestoresPrimaryCloudWorkspace",
+    "resultBundle": "accessibility-final-restore-v1.xcresult",
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "reportedRuntimeWarnings": [],
+    "normalProcessRelaunchVerified": true,
+    "preservation": {
+      "sharedTableCount": 14,
+      "allSharedTablesExactlyEqual": true,
+      "allRawTablesExactlyEqual": true,
+      "pendingBefore": 0,
+      "pendingAfter": 0,
+      "pendingExactlyEqual": true,
+      "localMode": false
+    }
+  },
+  "storage": {
+    "duplicateAttachmentExportPrunedBytes": 247890133,
+    "retained": [
+      "Original xcresult bundles and logs",
+      "Export manifest at acceptance root",
+      "Eight captures, full finding reports and viewport hierarchies in each independently owned repository"
+    ]
+  },
+  "nextAcceptance": [
+    "Resolve/classify the retained clipping findings with independent functional and assistive-technology evidence. Do not keep rerunning the same audit without a relevant change.",
+    "Native iOS Year-to-Month-to-task route and rendering at normal/largest text; current Year today-marker fix has only build evidence on iOS.",
+    "Actual VoiceOver output and wider P0 gates remain open."
+  ]
+}
