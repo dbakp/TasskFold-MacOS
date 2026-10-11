@@ -1,0 +1,113 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native Mac \u2192 iPhone \u2192 Mac saved-filter and favorite ordering, including both process relaunches; synthetic continuity account only.",
+  "baseCommits": {
+    "TaskFold-iOS": "09de3fbe9d2522a31351bf6ce8c0d9a67e3bfd3d",
+    "TasskFold-MacOS": "8b52f2f52062b1be4442ed911f3db5fffbe3a58e"
+  },
+  "nativePreparation": [
+    "Mac creates exactly two Planned today saved filters and favorites the two existing empty test projects.",
+    "Native Move Up puts Beta above Alpha independently in filters and favorites.",
+    "Normal Mac quit/relaunch retains both orders with zero queued edits."
+  ],
+  "phone": {
+    "case": "testAuthorizedMacFilterFavoriteOrderReceiptAndPhoneReturn",
+    "resultBundle": "native-filter-favorite-phone-v1.xcresult",
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "durationSeconds": 310.241,
+    "reportedRuntimeWarnings": [],
+    "animationIdleDiagnostics": 4,
+    "checks": [
+      "Exact favorite/filter identities receive Beta before Alpha and retain it across normal relaunch.",
+      "Native context menus move Alpha Up in each list; normal relaunch retains Alpha before Beta.",
+      "All three project positions remain original/Beta/Alpha; original Today task is still available."
+    ],
+    "build": "native-filter-favorite-ios-build-v1.log",
+    "signing": "native-filter-favorite-ios-signing-v1.json",
+    "buildWarnings": "Existing sendable-capture warning and missing test-target AppIntents metadata dependency remain."
+  },
+  "macReturn": {
+    "nativeAXObserved": true,
+    "order": {
+      "favorites": [
+        "Alpha",
+        "Beta"
+      ],
+      "savedFilters": [
+        "Handoff priorities",
+        "Alpha",
+        "Beta"
+      ]
+    },
+    "normalQuitRelaunchRetainedOrder": true,
+    "receivedWithoutSuccessfulManualRefresh": true,
+    "refreshLatencyMeasured": false,
+    "runtimeLimit": "Unentitled isolated test variant displays its widget-completion App Group permission error; no clean-runtime or installed Mac-widget acceptance inferred."
+  },
+  "preservation": {
+    "sharedTableCount": 14,
+    "allSharedRowsEqualAcrossMacAndPhone": true,
+    "allPreexistingRowsAndFieldsUnchanged": true,
+    "allPreparedContentAndRelationshipsPreserved": true,
+    "allowedPreparedRowChanges": {
+      "saved_views": [
+        "order_index",
+        "server updated_at on the two new filters"
+      ],
+      "favorites": [
+        "order_index"
+      ]
+    },
+    "projectOrderUnchanged": true,
+    "retainedSyntheticAdditions": {
+      "saved_views": 2,
+      "favorites": 2
+    },
+    "macPending": 0,
+    "phonePending": 0,
+    "fullP0Complete": false
+  },
+  "screenshots": [
+    {
+      "path": "native-continuity-previews/phone-filter-order-return.png",
+      "sourceAttachment": "0D87B4DD-C792-4EF5-A12A-7E82BC420E4A.png",
+      "inspected": true
+    },
+    {
+      "path": "native-continuity-previews/phone-favorite-order-return.png",
+      "sourceAttachment": "56EA74CB-1AC1-4461-A1F3-D344B6E19E96.png",
+      "inspected": true
+    },
+    {
+      "path": "native-continuity-previews/phone-filter-order-receipt-relaunched.png",
+      "sourceAttachment": "7BEEA50E-2808-4957-B58F-E66CA0547289.png",
+      "inspected": true
+    },
+    {
+      "path": "native-continuity-previews/phone-favorite-order-receipt-relaunched.png",
+      "sourceAttachment": "D1379EA8-CA97-4278-82AD-DCB1CB479AAF.png",
+      "inspected": true
+    },
+    {
+      "path": "native-continuity-previews/phone-filter-order-receipt.png",
+      "sourceAttachment": "D2EF3556-392D-4BCE-A43C-DE3EECE8F1B2.png",
+      "inspected": true
+    },
+    {
+      "path": "native-continuity-previews/phone-favorite-order-receipt.png",
+      "sourceAttachment": "F4A53A9F-85F8-4CA8-95CD-AEAD2E91CE58.png",
+      "inspected": true
+    }
+  ],
+  "productionCodeChanged": false,
+  "todoistRequestsMade": false,
+  "remaining": [
+    "Other concurrent organization lists and offline conflict variants.",
+    "Legacy active-client semantics.",
+    "Actual VoiceOver/keyboard, current clipping findings and full P0 release gates."
+  ],
+  "fullP0Complete": false
+}
