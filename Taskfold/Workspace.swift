@@ -269,7 +269,7 @@ final class Workspace {
         titleFocusRequest += 1
     }
 
-    /// Completing keeps the row for a moment so the check animation reads, then lets the list settle.
+    /// Persist completion before returning from the action, including an immediate app exit.
     func complete(_ task: Record) {
         if Self.subtaskPath(task.id) != nil {
             var changed = task
@@ -279,20 +279,13 @@ final class Workspace {
             if !task.completed { Feedback.complete() }
             return
         }
-        if task.completed || completing.contains(task.id) {
-            completing.remove(task.id)
-            run(task.completed ? "Reopen Task" : "Complete Task") { withAnimation(layout) { store.toggle(task) } }
-            if !task.completed { Feedback.complete(); confirm("Completed “\(task.title)”") }
-            return
+        completing.remove(task.id)
+        var saved = false
+        run(task.completed ? "Reopen Task" : "Complete Task") {
+            withAnimation(layout) { saved = store.commit(store.toggleChanges(task)) }
         }
-        withAnimation(Motion.respecting(reduceMotion, Motion.quick)) { _ = completing.insert(task.id) }
-        Feedback.complete()
-        confirm("Completed “\(task.title)”")
-        Task {
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 200 : 420))
-            guard completing.contains(task.id), let current = taskRecord(task.id), !current.completed else { completing.remove(task.id); return }
-            run("Complete Task") { withAnimation(layout) { store.toggle(current); completing.remove(task.id) } }
-        }
+        guard saved else { return }
+        if !task.completed { Feedback.complete(); confirm("Completed “\(task.title)”") }
     }
     func toggle(_ ids: Set<String>) {
         if ids.contains(where: { Self.subtaskPath($0) != nil }) {
