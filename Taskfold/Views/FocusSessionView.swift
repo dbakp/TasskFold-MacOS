@@ -116,6 +116,10 @@ struct FocusSessionView: View {
                 guard activeWorkspace else { return }
                 if enabled { Task { await store.enableFocusAlerts() } } else { store.disableFocusAlerts() }
             })).disabled(store.requestingFocusAlerts || store.requestingNotifications).frame(minHeight: 44).accessibilityIdentifier("focusAlerts")
+            if store.requestingFocusAlerts {
+                ProgressView("Requesting permission…")
+                    .accessibilityIdentifier("focusAlertPermissionProgress")
+            }
             Text(store.focusAlertStatus).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("focusAlertStatus")
             Text("Enable on each device where you want a finish alert. The alert opens your session; task completion is up to you.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             ReminderSystemSettingsButton()
