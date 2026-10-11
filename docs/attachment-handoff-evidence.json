@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-12",
+  "scope": "Authenticated native Mac file-picker attachment \u2192 dedicated iPhone Quick Look and normal relaunch \u2192 native phone notes edit retaining attachment \u2192 Mac foreground sync, normal quit/relaunch and Quick Look.",
+  "sourceBase": {
+    "macOS": "193b47c",
+    "iOS": "61f3924"
+  },
+  "native": {
+    "macBundle": "com.dbakp.taskfold.mac.p0signeduitests",
+    "phoneBundle": "com.dbakp.taskfold.calendaraccessibilitytests",
+    "macNativePicker": true,
+    "phonePreviewBeforeAndAfterRelaunch": true,
+    "phoneExactNotesSaved": true,
+    "macForegroundSyncReceivedNotes": true,
+    "macOriginalProcessExitedBeforeRelaunch": true,
+    "macRelaunchedNotesAndPreview": true,
+    "macXCTestClaimed": false
+  },
+  "attachment": {
+    "name": "Taskfold-P0-attachment-checker.png",
+    "bytes": 166,
+    "pixels": [
+      64,
+      64
+    ],
+    "sha256": "a0de969ebf719436c877b171aa31c35724597bdf9eeef51bc695d1e6bcd0c0b2",
+    "serverMetadataAndDataURLExactAfterPhoneEdit": true
+  },
+  "phoneTest": {
+    "resultBundle": "attachment-handoff-phone-v1.xcresult",
+    "test": "testLiveMacAttachmentReceiveAndReturnOnDedicatedPhone",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "durationSeconds": 82.059,
+    "strictVerifierPassed": true,
+    "signingReceipt": "attachment-handoff/signing-v1.json"
+  },
+  "preservation": {
+    "originalServerTasksUnchangedThroughout": true,
+    "all14NonActivityServerTablesEqualBaselineAfterCleanup": true,
+    "originalActivityRowsUnchanged": true,
+    "macPendingAfterCleanup": 0,
+    "protectedPrimaryPhoneFilesExact": 43,
+    "protectedPrimaryTabletFilesExact": 26
+  },
+  "cleanup": {
+    "nativeUndoableDeleteOfExactSyntheticTask": true,
+    "syntheticTaskAbsentFromServerAndMacCache": true,
+    "syntheticEmbeddedAttachmentRemovedWithTask": true,
+    "twoSyntheticActivityLedgerRowsRetained": [
+      "created",
+      "deleted"
+    ],
+    "reason": "The activity ledger is read-only to the owner. Retain truthful test history; no privileged ledger mutation or all-15-tables-equal claim.",
+    "helperAuthLogoutScope": "local"
+  },
+  "sourceProvenance": {
+    "iOS": {
+      "attachmentUIEqualsOwnedSource": true,
+      "sha256": "af8253f869c100a262dbb44a150a2901bb1ed278e1af99510d79f8eee354325e"
+    },
+    "macOS": {
+      "attachmentUIEqualsOwnedSource": true,
+      "sha256": "9e59522c8b24d8c6a3bbc002767379560aa314c9d6f1a9446445b9938aabb195"
+    }
+  },
+  "limits": [
+    "Single small embedded PNG; no external file-provider transfer acceptance.",
+    "Remaining concurrency/legacy-client variants stay open.",
+    "Earlier Mac NSTableView/AttributeGraph warnings and other P0 gates are not cleared by this journey."
+  ],
+  "screenshots": {
+    "mac-preview.png": "faa78bda143017611e9f0ff0b4d9c820ec6719761d773f4ac9d69fee3a78f751",
+    "mac-return-relaunched.png": "36d7bdc06e76e62fc72a4b413ab9c9c1470691256108d245d131b0696d052dad",
+    "phone-received.png": "08f18a7ec55a3d9e5212688bef960533ecc785fb52528dcb3981096d266362d5",
+    "phone-relaunched.png": "08f18a7ec55a3d9e5212688bef960533ecc785fb52528dcb3981096d266362d5"
+  }
+}
