@@ -21,5 +21,14 @@
     "existingFocusApp": "Inbox with its original one-task fixture; no finished-session sheet",
     "computerUseSurface": "Notification Center exposes only Calendar Month; screenshot confirms that widget"
   },
-  "fullP0Accepted": false
+  "fullP0Accepted": false,
+  "grammarFollowup": {
+    "date": "2026-10-11",
+    "bundle": "com.dbakp.taskfold.mac.p0grammaruitests",
+    "runtimeStorageErrorCleared": true,
+    "normalRelaunchClear": true,
+    "fullLocalCacheUnchanged": true,
+    "evidence": "widget-warning-recovery-evidence.json",
+    "boundary": "Original authenticated cloud variant remains pending; no broader cloud runtime clearance."
+  }
 }

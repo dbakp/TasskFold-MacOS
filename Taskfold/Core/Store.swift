@@ -565,7 +565,8 @@ final class Store {
         // projection in its own sandbox without requiring the widget fixture's UI overlay.
         let isolatedNativeBundles: Set<String> = [
             "com.dbakp.taskfold.mac.p0uitests", "com.dbakp.taskfold.mac.p0localuitests",
-            "com.dbakp.taskfold.mac.p0importa11ytests", "com.dbakp.taskfold.mac.p0focuscontrasttests"
+            "com.dbakp.taskfold.mac.p0importa11ytests", "com.dbakp.taskfold.mac.p0focuscontrasttests",
+            "com.dbakp.taskfold.mac.p0grammaruitests"
         ]
         if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") || isolatedNativeBundles.contains(Bundle.main.bundleIdentifier ?? "") {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "WidgetActionTests", directoryHint: .isDirectory))
@@ -603,6 +604,9 @@ final class Store {
         guard !consumingWidgetActions, workspaceCacheReadable, signedIn || localMode,
               let disk = try? widgetActionDisk() else { return }
         consumingWidgetActions = true; defer { consumingWidgetActions = false }
+        // A successful local retry returns before cloud sync can clear the banner.
+        // Clear only the notice owned by this widget attempt, preserving other warnings.
+        if let previous = widgetActionStatus, notice == previous { notice = nil }
         widgetActionStatus = nil
         do {
             for request in try disk.pending(account: userID) {
@@ -610,7 +614,7 @@ final class Store {
                 if !applied { widgetActionStatus = "A widget completion became out of date. Refresh the widget before trying again."; notice = widgetActionStatus }
                 try disk.acknowledge(request)
             }
-        } catch { widgetActionStatus = "A widget completion is waiting: " + error.localizedDescription; notice = widgetActionStatus }
+        } catch { widgetActionStatus = "Widget actions need attention: " + error.localizedDescription; notice = widgetActionStatus }
     }
     func startLocal() {
         let firstRun = !FileManager.default.fileExists(atPath: URL.applicationSupportDirectory.appending(path: "Taskfold/local.json").path)

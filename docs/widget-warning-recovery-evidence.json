@@ -1,0 +1,90 @@
+{
+  "date": "2026-10-11",
+  "scope": "Widget completion error recovery in independently owned Mac and iOS local workspaces; native Mac filesystem failure and native iPhone queued recurring completion.",
+  "defects": [
+    "Widget consumption reset its internal status but left the matching notice intact; local sync then returned before cloud cleanup could clear the stale banner.",
+    "The Mac grammar debug bundle was absent from the private widget-storage allowlist, producing an App Group storage error in an app-only test variant.",
+    "The catch message claimed a completion was waiting even when only checking an empty queue had failed; the local Mac status row also exposed a cloud-upload icon."
+  ],
+  "changes": [
+    "Each Store clears only a notice equal to its previous widget action status before retrying. Other notices are preserved by the equality guard; a new failure sets a fresh warning.",
+    "Both apps report Widget actions need attention for this error boundary.",
+    "Mac local status uses a generic warning icon; the decorative image is hidden from accessibility.",
+    "The exact grammar test bundle joins the existing DEBUG private storage allowlist; normal/Release App Group behavior is unchanged.",
+    "Each repository owns its own DEBUG queue/consume/recovery controls and native regression."
+  ],
+  "macNative": {
+    "beforeFix": "Old binary with private storage: startup under a reversible 0400 lock-file fault showed a warning; restoring original 0600 and invoking Retry left it visible.",
+    "afterFix": "The rebuilt app without the widget overlay correctly reported the same real lock-file failure. Restoring 0600 and invoking native sidebar Retry removed the banner and Retry link immediately. Normal Quit/relaunch remained clear.",
+    "fixture": "com.dbakp.taskfold.mac.p0grammaruitests",
+    "lockPermissionsRestored": true,
+    "appOnlyPrivateStorage": true,
+    "preservation": {
+      "allNineRawTablesUnchanged": true,
+      "allFiveTasksUnchanged": true,
+      "fullCacheEqual": true,
+      "pending": 0,
+      "lockPermissionsRestored": "0600",
+      "warningClearedWithoutRelaunch": true
+    },
+    "regressionCompiled": true,
+    "regressionExecuted": false,
+    "limit": "No new Mac XCTest runtime result; native CUA supplies the lock-failure/retry acceptance."
+  },
+  "phoneNative": {
+    "device": "iPhone 17 Pro Simulator, iOS 26.5",
+    "bundle": "com.dbakp.taskfold.assigneepatterntests",
+    "recovery": {
+      "test": "testWidgetQueueRecoveryClearsLocalWarningWithoutRelaunch",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "seconds": 19.334,
+      "result": "widget-retry-phone-v1.xcresult",
+      "behavior": "Queue a genuine recurring completion, fail durable save through the existing DEBUG fixture, acknowledge the actual save-error alert, then retry through Store.sync without relaunch. Warning clears; one completed original, one successor, empty queue and durable receipt survive relaunch."
+    },
+    "cloudReturn": {
+      "test": "testAuthorizedAccessibilityAuditRestoresPrimaryCloudWorkspace",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "seconds": 17.042,
+      "result": "widget-retry-phone-cloud-return-v1.xcresult"
+    },
+    "preservation": {
+      "originalCloudSharedTablesUnchanged": 14,
+      "originalCloudPending": 0,
+      "returnedToCloudMode": true,
+      "localCompletedOriginal": true,
+      "localRecurringSuccessors": 1,
+      "durableWidgetReceipts": 1,
+      "widgetQueue": 0,
+      "localPending": 0
+    },
+    "strictSimulatorSignaturesVerified": true
+  },
+  "builds": {
+    "mac": "widget-retry-mac-build-v2.log: TEST BUILD SUCCEEDED",
+    "ios": "widget-retry-phone-build-v3.log: TEST BUILD SUCCEEDED",
+    "macWarning": "AppIntents metadata extraction skipped in app-only variant; no AppIntents.framework dependency."
+  },
+  "artifactsOutsideRepositories": [
+    "widget-retry-mac-before-v1.json",
+    "widget-retry-mac-preservation-v1.json",
+    "widget-retry-phone-before-9a8bfc3d-42ec-4c89-8f1d-c830b2215152.json",
+    "widget-retry-phone-preservation-v1.json",
+    "widget-retry-phone-signing-v1.json",
+    "widget-retry-phone-v1-summary.json",
+    "widget-retry-phone-cloud-return-v1-summary.json"
+  ],
+  "limits": [
+    "Native Mac test exercised reading an empty queue under a real filesystem fault; the new queued recurring-save recovery regression executed on iPhone only.",
+    "No new installed-widget, physical device, VoiceOver or distribution acceptance is inferred.",
+    "Preservation of an unrelated notice is enforced by the source equality guard; it was not separately fault-injected in this native walk.",
+    "The existing authenticated Mac variant still awaits its Keychain prompt; grammar runtime does not clear that separate cloud gate.",
+    "No Todoist operations or cloud task edits were performed. Existing cloud and Focus Mac processes were left intact.",
+    "Full P0 remains active."
+  ]
+}

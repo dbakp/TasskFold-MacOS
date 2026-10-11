@@ -281,7 +281,7 @@ struct TaskListView: View {
 
     @ViewBuilder private var statusRow: some View {
         HStack(spacing: 8) {
-            Image(systemName: store.online ? "exclamationmark.icloud" : "wifi.slash").foregroundStyle(.orange)
+            Image(systemName: store.online ? (store.localMode ? "exclamationmark.triangle" : "exclamationmark.icloud") : "wifi.slash").foregroundStyle(.orange).accessibilityHidden(true)
             Text(!store.online ? "Offline · changes are saved on this Mac and sync later." : store.notice ?? "")
             Spacer()
             if store.notice != nil && store.online { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link) }

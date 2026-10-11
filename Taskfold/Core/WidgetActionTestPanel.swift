@@ -111,6 +111,7 @@ struct WidgetActionTestPanel: View {
                     Text("Queued: \(pending)").accessibilityIdentifier("widgetPendingCount")
                 }.font(.caption)
                 Text("Drafts: \(store.tasks.filter { $0.title == "Saved occurrence draft" }.count)").font(.caption).accessibilityIdentifier("widgetDraftCount")
+                Text(store.notice ?? "No widget warning").font(.caption).accessibilityIdentifier("widgetNoticeFixture")
                 HStack {
                     Button("Complete via intent") { perform(captured) }.accessibilityIdentifier("widgetCompleteFixture")
                     Button("Queue only") {
@@ -124,6 +125,13 @@ struct WidgetActionTestPanel: View {
                     Button("Other workspace") {
                         if var request = captured { request.account = "other-workspace"; perform(request) }
                     }.accessibilityIdentifier("widgetWrongAccountFixture")
+                }
+                HStack {
+                    Button("Consume queue") { store.consumeWidgetCompletions(); pending = store.widgetActionFixturePending() }.accessibilityIdentifier("widgetConsumeFixture")
+                    Button("Allow saves and retry") {
+                        store.widgetFixtureFailSave = false
+                        Task { await store.sync(); pending = store.widgetActionFixturePending() }
+                    }.accessibilityIdentifier("widgetRecoverFixture")
                 }
             }.buttonStyle(.bordered).controlSize(.regular).padding(8).background(.regularMaterial)
             .task(id: "\(store.taskRevision)-\(store.widgetFixtureReady)") {

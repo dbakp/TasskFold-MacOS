@@ -1860,3 +1860,22 @@ extension TaskfoldMacUITests {
         retainWindow(app, name: "Compact Month opens its selected day's tasks")
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testWidgetQueueRecoveryClearsLocalWarningWithoutRelaunch() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--widget-action-testing", "--widget-action-seed", "--widget-action-fail-save", "-localMode", "YES"]
+        app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["widgetQueueFixture"].waitForExistence(timeout: 10))
+        app.buttons["widgetQueueFixture"].click()
+        app.buttons["widgetConsumeFixture"].click()
+        let notice = app.staticTexts["widgetNoticeFixture"]
+        XCTAssertTrue(NSPredicate(format: "label CONTAINS %@", "Widget actions need attention:").evaluate(with: notice))
+        app.buttons["widgetRecoverFixture"].click()
+        let clear = NSPredicate(format: "label == %@", "No widget warning")
+        expectation(for: clear, evaluatedWith: notice)
+        waitForExpectations(timeout: 10)
+        XCTAssertTrue(NSPredicate(format: "value CONTAINS %@ OR label CONTAINS %@", "Original: completed", "Original: completed").evaluate(with: app.staticTexts["widgetRootState"]))
+    }
+}
