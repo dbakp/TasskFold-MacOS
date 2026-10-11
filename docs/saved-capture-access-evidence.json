@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-12",
+  "scope": "Named saved iPhone landscape captures at normal/light and accessibility XXXL/dark; functional access, exact editor title, Cancel and persistence. No production code change.",
+  "build": "ios-saved-capture-access-build-v1.log: TEST BUILD SUCCEEDED; signed app/widget/runner identities in saved-capture-access/signing.json",
+  "sourceSha256": {
+    "Taskfold/TaskfoldApp.swift": "5b8e4391e93b6edc87acfb5adb16c593ac65baf9c7b3bad55f9b67042f950176",
+    "TaskfoldUITests/TaskfoldUITests.swift": "23732e1c15cb33ac2c11f7f58c0acc0cffd0c8421b7f4c9b0eff02a019c6679b"
+  },
+  "native": {
+    "resultBundle": "ios-saved-capture-access-v1.xcresult",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Publishing changes from background threads is not allowed; make sure to publish values from the main thread (via operators like receive(on:)) on model updates."
+      }
+    ],
+    "strictVerifierAccepted": false,
+    "warningContext": "Largest-text case while opening quickProject menu; no source location in result. Not attributed to app or framework without a stack."
+  },
+  "repeat": {
+    "resultBundle": "ios-saved-capture-warning-recheck-v2.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "strictVerifierAccepted": true,
+    "scope": "Same largest case, unchanged build. Does not resolve the first run warning.",
+    "initialDriverFailure": "v1 repeat executed no tests: unquoted destination split at space, exit 70; corrected in v2."
+  },
+  "verified": [
+    "Saved named details target fits the actual scroll viewport between Today navigation and tab bar after bounded physical drags.",
+    "Native tap opens editor with exact captured title; Cancel returns with task still open.",
+    "Physical normal/largest row and editor captures inspected.",
+    "Normal initial case passed; largest initial and repeat functional assertions passed."
+  ],
+  "limits": [
+    "Background-thread publishing warning remains intermittent and unresolved. Combined initial run is not accepted as clean-runtime evidence.",
+    "Only named captures Landscape normal capture and Landscape accessible capture, not arbitrary long titles/notes or every list.",
+    "Keyboard-visible composer, four prior clipping findings and spoken VoiceOver remain open.",
+    "Largest first run crossed local midnight: saved 11 October task appears overdue; the 12 October repeat passed. No clock manipulation.",
+    "No Mac production change or Mac native capture acceptance."
+  ],
+  "protectedAccounts": {
+    "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969": {
+      "files": 26,
+      "exactFileSetAndHashes": true
+    },
+    "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705": {
+      "files": 43,
+      "exactFileSetAndHashes": true
+    }
+  },
+  "finalDisposableFixture": {
+    "tasks": 4,
+    "allOpen": true,
+    "pending": 0,
+    "originalIdsTitlesEstimatesPreserved": true,
+    "createdTaskTitle": "Landscape accessible capture",
+    "createdTaskID": "a7f3b44b-90ba-460e-ae99-5e194013df92",
+    "note": "Each case seeds the disposable fixture; final repeat is dated 12 October. No protected account reseeding."
+  },
+  "macVoiceOverAttempt": {
+    "initial": "off",
+    "enabledSettingObserved": true,
+    "app": "com.dbakp.taskfold.mac.p0focuscontrasttests",
+    "outcome": "No spoken-output acceptance; VoiceOver runtime inspection timed out. Task app hierarchy alone is insufficient.",
+    "restoredSettingObserved": "off",
+    "taskMutation": false
+  },
+  "macImportLaunch": "PID 16355 remains in _libsecinit_appsandbox; no native retry executed. Pending old dialog handoff remains unchanged.",
+  "capturesSha256": {
+    "largest-editor.png": "b12a5f087c5997c3d06b8d9a869756311683dc2665ce1f5978365ab95249f3b8",
+    "normal-editor.png": "841162e522c3ba709886ae6176c85cb7d32e0f3a4c16a8839c52e43661c2cb57",
+    "largest-row.png": "ac6f31ca27e8832793de429457af65ba46c7937eb58afe54852ffb77536f8e41",
+    "normal-row.png": "a5687889596e8b839dd2d993898678a9811fbb5193a140ea359b391c43498980"
+  }
+}
