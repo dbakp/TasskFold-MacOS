@@ -2,6 +2,30 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testNormalQuitRetainsLatestInspectorEdit() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--quick-entry-fixture", "--section=inbox"]
+        app.launch()
+        defer { app.terminate() }
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]
+        XCTAssertTrue(input.waitForExistence(timeout: 5))
+        let name = "Quit retains estimate change"
+        input.typeText(name + " ~25m")
+        app.buttons["Add Task"].click()
+        XCTAssertTrue(app.descendants(matching: .any)["taskDuration"].waitForExistence(timeout: 5))
+        app.switches["Time estimate"].click()
+        app.typeKey("q", modifierFlags: .command)
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 5), "Exercise normal Quit, not runner force termination")
+        app.launchArguments = ["--uitesting", "--section=inbox"]
+        app.launch()
+        let row = app.staticTexts[name].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5)); row.click()
+        app.typeKey(.return, modifierFlags: [])
+        XCTAssertEqual(app.textFields["taskTitle"].value as? String, name)
+        XCTAssertFalse(app.descendants(matching: .any)["taskDuration"].exists)
+    }
+
     @MainActor func testInspectorChipCanBeDeclinedBeforeApplyingTitle() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--quick-entry-fixture"]

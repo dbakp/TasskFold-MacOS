@@ -358,6 +358,15 @@ struct TaskInspectorForm: View {
             original = nextOriginal
             if merged != draft { draft = merged }
         }
+        .onReceive(NotificationCenter.default.publisher(for: TerminationSaveRequest.notification)) { notification in
+            guard let request = notification.object as? TerminationSaveRequest else { return }
+            saveTask?.cancel()
+            applySuggestions()
+            saveNow()
+            // Store commits synchronously to its durable cache. A failed save
+            // retains this draft and must keep the process alive for a retry.
+            if draft != original || notePin != nil { request.hasUnsavedEdits = true }
+        }
         .onDisappear { saveTask?.cancel(); titleFocused = false; applySuggestions(); saveNow() }
     }
     private func quickDate(_ title: String, _ date: Date) -> some View {

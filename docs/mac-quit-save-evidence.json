@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-11",
+  "scope": "Normal native Mac Quit with pending inspector edits, actual local cache save failure and retry. Isolated com.dbakp.taskfold.mac.p0grammaruitests app only; no cloud or real task data.",
+  "reproduction": {
+    "beforeFix": {
+      "action": "Estimate toggle on, Cmd-Q 83ms after click returned",
+      "diskEstimate": null,
+      "completeCacheUnchanged": true,
+      "receipt": "rapid-quit-mac-reproduction-v1.json"
+    },
+    "control": {
+      "action": "Toggle visibly observed on, then Quit; total click-to-Quit 1028ms, beyond the 600ms debounce",
+      "diskEstimate": 30,
+      "result": "Saved after the existing debounce"
+    },
+    "cause": "Inspector saves after a 600ms delay and on view disappearance; normal process termination had no pending-edit flush."
+  },
+  "implementation": "AppDelegate synchronously broadcasts a termination save request to open inspectors before returning terminateNow. Each inspector cancels its debounce, applies pending title suggestions and commits through the existing durable Store path. Any retained dirty draft or pin request marks the request unsaved and cancels termination; the existing save error remains visible for retry.",
+  "nativeChecks": [
+    "Final application code: change estimate 30 to off, Quit 57ms after click returned; process exits and durable record contains no estimate.",
+    "Temporarily remove write permissions only from this isolated app Taskfold cache directory (0755 to 0555). Change estimate off to on and request Quit. Process remains alive; native alert says the change could not be saved due to permission denial. Disk still contains no estimate.",
+    "Restore original 0755 permissions before continuing. Dismiss alert: inspector retains unsaved 30-minute draft. Retry Quit; process exits and disk contains 30.",
+    "Normal relaunch and exact inspector open confirm retained complete title, priority 2 and 30-minute estimate.",
+    "Restore original estimate off and Quit 59ms after click returned; final task records exactly equal the five-task baseline."
+  ],
+  "builds": [
+    "rapid-quit-mac-build-v1.log: TEST BUILD SUCCEEDED",
+    "rapid-quit-mac-build-v2.log: TEST BUILD SUCCEEDED"
+  ],
+  "finalSourceSHA256": {
+    "Taskfold/TaskfoldMacApp.swift": "937f5323f58fae51987f0d8b742c220811fe5ff0f49acd4b8def48a58a258a4c",
+    "Taskfold/Views/TaskInspector.swift": "9e59522c8b24d8c6a3bbc002767379560aa314c9d6f1a9446445b9938aabb195",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "119d4a8c60c90e65040d317b82eaaa1aac8f761c36595cd47a0182feea3762f8"
+  },
+  "regressionCase": {
+    "name": "testNormalQuitRetainsLatestInspectorEdit",
+    "status": "Compiled, not executed; uses actual Command-Q and relaunch. Native CUA observations and cache receipts establish the sub-600ms boundary, not an XCTest timing claim."
+  },
+  "preservation": {
+    "preexistingTablesCompared": 9,
+    "changedPreexistingTables": [],
+    "allFiveTaskRowsExactlyEqualBaseline": true,
+    "addedRows": {},
+    "pending": 0,
+    "cachePermissionsRestored": "0755",
+    "allNineTablesExactlyEqualBaseline": true
+  },
+  "platformSeparation": "Mac owns AppKit termination handling independently. iOS TaskEditor uses explicit Save and synchronous durable Store.saveTaskWithNotePin; this Mac debounce/Command-Q path is absent. No iOS application or persistent contract change.",
+  "limits": [
+    "Normal local process termination only; force kill, crash/power loss, multiple simultaneous windows and authenticated cloud handoff were not exercised.",
+    "App-only ad-hoc development build, no installed Mac widget or distribution signing acceptance.",
+    "No new XCTest runtime result or full P0/accessibility/notification clearance."
+  ],
+  "privateReceipts": [
+    "rapid-quit-mac-reproduction-v1.json",
+    "rapid-quit-mac-fixed-v1.json",
+    "rapid-quit-denied-save-v1.json",
+    "rapid-quit-retry-v1.json",
+    "rapid-quit-mac-before.json",
+    "rapid-quit-mac-after.json"
+  ]
+}

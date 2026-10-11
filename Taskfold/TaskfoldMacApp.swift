@@ -46,7 +46,19 @@ struct TaskfoldMacApp: App {
     }
 }
 
+/// Shared synchronously with every open inspector before macOS may terminate.
+@MainActor final class TerminationSaveRequest {
+    static let notification = Notification.Name("Taskfold.savePendingInspectorEdits")
+    var hasUnsavedEdits = false
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        let request = TerminationSaveRequest()
+        NotificationCenter.default.post(name: TerminationSaveRequest.notification, object: request)
+        return request.hasUnsavedEdits ? .terminateCancel : .terminateNow
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = self
         ReminderCategory.register(minutes: Store.shared.reminderSnoozeMinutes)
