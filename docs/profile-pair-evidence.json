@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native Mac profile name/synthetic photo received on dedicated iPhone, normal phone relaunch, native phone name/photo-removal return, Mac Sync Now and normal Mac process relaunch.",
+  "sourceBase": {
+    "iOS": "fce3add",
+    "macOS": "20ec0fc"
+  },
+  "native": {
+    "macBundle": "com.dbakp.taskfold.mac.p0importa11ytests",
+    "phoneBundle": "com.dbakp.taskfold.calendaraccessibilitytests",
+    "macSavedNameAndSelectedSyntheticFile": true,
+    "phoneRenderedCheckerBeforeAndAfterNormalRelaunch": true,
+    "phoneSavedExactReturnNameAndRemovedPhoto": true,
+    "returnSurvivesBothNormalProcessRelaunches": true,
+    "macExplicitSyncUsedForReturn": true
+  },
+  "phoneTest": {
+    "resultBundle": "profile-pair-phone-v2.xcresult",
+    "test": "testLiveMacProfileReceiveAndReturnOnDedicatedPhone",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "durationSeconds": 59.525,
+    "strictVerifierPassed": true,
+    "signingReceipt": "profile-pair/signing-v2.json"
+  },
+  "initialAttempt": {
+    "resultBundle": "profile-pair-phone-v1.xcresult",
+    "passed": 0,
+    "failed": 1,
+    "durationSeconds": 56.545,
+    "cause": "Test driver tapped mid-name and backward deletion left a trailing Oct. App saved actual input.",
+    "correction": "Native Select All and exact field assertion before Save; full focused case rerun."
+  },
+  "preservation": {
+    "nonProfileServerTablesExactlyEqualAtEachPhase": 14,
+    "all15ServerTablesExactlyEqualAfterCleanup": true,
+    "macNonProfileCacheTablesEqualAcrossReturn": 14,
+    "macPending": 0,
+    "macFinalProfileEqualsBaseline": true,
+    "dedicatedPhoneFinalProfileEqualsBaseline": true,
+    "dedicatedPhonePending": 0,
+    "protectedPrimaryDevices": [
+      {
+        "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "files": 43,
+        "exactBaseline": true
+      },
+      {
+        "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "files": 26,
+        "exactBaseline": true
+      }
+    ]
+  },
+  "cleanup": {
+    "profileExactlyRestored": true,
+    "nonProfileTablesUnchanged": 14,
+    "exactSyntheticObjectsDeleted": 2,
+    "objectsAbsentViaAuthenticatedStorageList": true,
+    "cleanupSessionScope": "local"
+  },
+  "sourceProvenance": {
+    "iOS": {
+      "profileUISHA256": "ea0ee178a39ca98411c8fdb84d4b8d82053a6bcc235ee481710798ecf6bcb2a1",
+      "stagedProfileUIEqualsOwnedSource": true,
+      "stagedUploadAvatarEqualsOwnedFunction": true
+    },
+    "macOS": {
+      "profileUISHA256": "416b1b287e056a3b82b765925d3df06ec26277c290add9273cb6e67cb59e2acc",
+      "stagedProfileUIEqualsOwnedSource": true,
+      "stagedUploadAvatarEqualsOwnedFunction": true,
+      "binarySHA256": "375cd0cc5bfce61f3cbd16e16b7857f13d05b7fb8e5140ffe0b7c30ad84a5774"
+    }
+  },
+  "diagnostics": {
+    "newMacRelaunchLogAttributeGraphWarnings": 0,
+    "originalMacProcessOutputWasDevNull": true,
+    "priorSevenAttributeGraphWarningsRemainUnresolved": true
+  },
+  "limitations": [
+    "No new production code or automated Mac XCTest pass is claimed.",
+    "Profile UI and upload function match owned sources; isolated stages are not claimed to be full current importer/recovery release builds.",
+    "This named sequential handoff does not cover concurrent profile edits, offline conflicts or every mixed-client variant.",
+    "Native Mac import retry, notification actions, installed Mac widgets, spoken VoiceOver, external-provider recovery, real APNs and distribution remain open."
+  ],
+  "captures": {
+    "mac-saved-v1.png": "65e2f3250b6c6ad92533fbf4775d9c67c8bee7da1ecfb6da2e71e635467cbde4",
+    "phone-received-1.png": "f6570cf078f6e37bcf2dc2912fe2e19d919161dbf24c39d5dcc6c53b4757e6c4",
+    "phone-received-0.png": "63ac8c4b45ff2a4d3b85ca8ab1c152c905b337fb88747b8af7dca0680df5ecfb",
+    "mac-return-v2.png": "f6ae0ed1a838c0d959eb4a6987eb643d6447d6ba33cba0b03e6d6f51514a0bcc",
+    "phone-return-saved.png": "679e1b53624f91dbe44faf24740ed98a76afafa98c585ed4c119fe2d50d54dfe",
+    "mac-return-relaunched-v2.png": "607688f78f7007a63feec7917897cc75ac97a5e30d0451ba6c66ed3203abf6ad",
+    "phone-return-relaunched.png": "a35583946f7d8485ba7bc4c9a64d6bb72d24f41be3bd780b5d35f734c87006a1"
+  }
+}

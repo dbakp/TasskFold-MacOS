@@ -8,7 +8,7 @@ This short view summarizes `P0_RELEASE_STATUS.md`; its dated entries and JSON ev
 | Productive widgets | Twelve kinds implemented; many installed iPhone/iPad configurations, cold/warm routes, completion, account switches and app privacy controls verified | Installed Mac hosts; remaining supported sizes/conditions; system privacy redaction |
 | Todoist import | Real read-only multi-page import and replay; native imported-workspace handoff; iPhone lost first-import and replay-response recovery | Native Mac discard/retry |
 | Recovery | Native portable export/restore, encrypted Mac safety copy, cloud and cross-account restore/replay/relaunch | External provider-backed file transfer and remaining failure boundaries |
-| Device continuity | Native Mac ↔ phone tasks/notes/planning/organization round trips, offline edits and relaunches | Remaining concurrency/legacy-client variants; authenticated native Mac attachment receipt; paired profile receipt |
+| Device continuity | Native Mac ↔ phone tasks/notes/planning/organization round trips, offline edits and relaunches; paired name/photo handoff | Remaining concurrency/legacy-client variants; authenticated native Mac attachment receipt |
 | Core usability | Capture/editor/subtasks/completion/Undo fixes; Mac calendar keyboard navigation; scoped phone/tablet normal and largest-text calendar routes | Spoken VoiceOver; four retained clipping reports (photo/note/chip, not four confirmed visible defects); remaining critical landscape/sidebar flows |
 | Notifications | Mac Focus authorization, scheduling, pause/resume and background banner evidence | Actual notification Open/action/terminated/account-change journeys; real APNs delivery and rollout proof |
 | Distribution | Independent repositories and development builds | Installed Mac widget provisioning; Developer ID/notarization and distribution signing |
@@ -25,3 +25,7 @@ Recent work includes actual user-visible calendar/accessibility fixes, native wo
 4. Close APNs and distribution gates with actual credentials/signing/delivery evidence. Revalidate current availability before describing any external prerequisite as blocked.
 
 Ordinary iPhone/iPad acceptance uses Xcode Simulators as requested. Actual remote delivery and distribution remain separate gates. Todoist source data must remain unchanged. Each repo owns its code and release inputs; completed work is committed and pushed separately.
+
+## Latest closed gate
+
+12 October: native Mac → iPhone → Mac profile name/photo handoff now passes, including both normal process relaunches. Exact server baseline and original profile are restored; primary phone/iPad data are unchanged. See `profile-pair-evidence.json`. No new production fix was needed.
