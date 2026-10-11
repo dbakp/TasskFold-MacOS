@@ -550,9 +550,13 @@ final class Store {
         if calendarContextFixtureEnabled || clockWindowFixtureEnabled || datePhraseFixtureEnabled || assigneePatternFixtureEnabled {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "CalendarContextTests", directoryHint: .isDirectory))
         }
-        // The isolated native test app has no App Group entitlement. Keep its
-        // projection private without requiring the widget fixture's UI overlay.
-        if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") || Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.p0uitests" {
+        // These isolated native test apps have no App Group entitlement. Keep each
+        // projection in its own sandbox without requiring the widget fixture's UI overlay.
+        let isolatedNativeBundles: Set<String> = [
+            "com.dbakp.taskfold.mac.p0uitests", "com.dbakp.taskfold.mac.p0localuitests",
+            "com.dbakp.taskfold.mac.p0importa11ytests", "com.dbakp.taskfold.mac.p0focuscontrasttests"
+        ]
+        if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") || isolatedNativeBundles.contains(Bundle.main.bundleIdentifier ?? "") {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "WidgetActionTests", directoryHint: .isDirectory))
         }
         #endif

@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-11",
+  "scope": "DEBUG-only private widget projection for isolated native Mac acceptance apps",
+  "cause": "The isolated variants have no App Group entitlement and three exact bundle IDs fell through the existing private projection route.",
+  "change": "Allowlist the local, import/accessibility and Focus variants alongside the original isolated native variant, under the existing DEBUG guard. Each uses WidgetActionTests beside its own sandbox cache.",
+  "productionBehaviorChanged": false,
+  "build": {
+    "result": "TEST BUILD SUCCEEDED",
+    "log": "mac-private-projection-build-v1.log",
+    "product": "BuildCache/mac-private-projection-products/Taskfold.app"
+  },
+  "native": {
+    "status": "pending Keychain approval",
+    "processLaunched": true,
+    "olderCloudVariantQuitNormally": true,
+    "runtimeErrorClearedVerified": false,
+    "dataPreservationVerified": false
+  },
+  "notificationOpen": {
+    "accepted": false,
+    "existingFocusApp": "Inbox with its original one-task fixture; no finished-session sheet",
+    "computerUseSurface": "Notification Center exposes only Calendar Month; screenshot confirms that widget"
+  },
+  "fullP0Accepted": false
+}
