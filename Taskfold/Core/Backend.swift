@@ -167,12 +167,16 @@ final class Backend: NSObject {
         // Never available in Release, ordinary bundles, other accounts or previews.
         // Later saves on this Backend instance use the real response normally.
         let isolatedBundle = Bundle.main.bundleIdentifier
+        let replayAccount = session?.user.id == "316d6706-449c-4ab8-8480-db12e7d92642"
+            && session?.user.email?.hasPrefix("taskfold-todoist-readonly-") == true
+            && (isolatedBundle == "com.dbakp.taskfold.providercontinuitytests" || isolatedBundle == "com.dbakp.taskfold.mac.p0localuitests")
+        let firstImportAccount = session?.user.id == "00befe6f-4ab3-4fe0-b346-3c262a298c24"
+            && session?.user.email == "taskfold-todoist-first-53c1dae7-7745-49e7-b473-7e509756047d@example.invalid"
+            && (isolatedBundle == "com.dbakp.taskfold.firstimporttests" || isolatedBundle == "com.dbakp.taskfold.mac.p0firstimporttests")
         if !discardedTodoistResponse, path == "/functions/v1/import-todoist", method == "POST",
            body?["preview"] == .bool(false),
-           isolatedBundle == "com.dbakp.taskfold.providercontinuitytests" || isolatedBundle == "com.dbakp.taskfold.mac.p0localuitests",
+           replayAccount || firstImportAccount,
            ProcessInfo.processInfo.arguments.contains("--todoist-discard-save-response"),
-           session?.user.id == "316d6706-449c-4ab8-8480-db12e7d92642",
-           session?.user.email?.hasPrefix("taskfold-todoist-readonly-") == true,
            let marker = ProcessInfo.processInfo.environment["TASKFOLD_IMPORT_RESPONSE_RECEIPT"],
            marker.hasPrefix("taskfold-import-response-"),
            UUID(uuidString: String(marker.dropFirst("taskfold-import-response-".count))) != nil {
