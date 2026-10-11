@@ -43,7 +43,7 @@ struct SidebarView: View {
                             Group {
                                 if store.available(scope) { Label(store.title(for: scope), systemImage: "star.fill").tag(SidebarItem(key: favorite.id)) }
                                 else { HStack { Label(store.title(for: scope), systemImage: "exclamationmark.circle").foregroundStyle(.secondary); Spacer(); Button { store.toggleFavorite(scope) } label: { Image(systemName: "star.slash") }.buttonStyle(.borderless).accessibilityLabel("Remove unavailable favorite") } }
-                            }.contextMenu { Button("Remove favorite") { store.toggleFavorite(scope) } }.accessibilityIdentifier("favorite-" + favorite.id)
+                            }.contextMenu { Button("Remove favorite") { store.toggleFavorite(scope) }; orderActions(table: "favorites", id: favorite.id, ids: store.favorites.map(\.id)) }.accessibilityIdentifier("favorite-" + favorite.id)
                         }
                     }.onMove { source, destination in var ids = store.favorites.map(\.id); ids.move(fromOffsets: source, toOffset: destination); workspace.run("Reorder Favorites") { store.reorderFavorites(ids) } }
                 }
@@ -51,7 +51,7 @@ struct SidebarView: View {
             Section("Filters") {
                 ForEach(store.savedViews) { view in
                     Label(view.name, systemImage: "line.3.horizontal.decrease.circle").tag(SidebarItem.saved(view.id))
-                        .contextMenu { Button("Edit Filter…") { filterEditor = view }; Button(store.isFavorite(.saved(view.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.saved(view.id)) } }.accessibilityIdentifier("filter-" + view.id)
+                        .contextMenu { Button("Edit Filter…") { filterEditor = view }; Button(store.isFavorite(.saved(view.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.saved(view.id)) }; orderActions(table: "saved_views", id: view.id, ids: store.savedViews.map(\.id)) }.accessibilityIdentifier("filter-" + view.id)
                 }.onMove { source, destination in
                     var ids = store.savedViews.map(\.id); ids.move(fromOffsets: source, toOffset: destination)
                     workspace.run("Reorder Filters") { store.reorderOrganization("saved_views", ids: ids) }
@@ -73,6 +73,7 @@ struct SidebarView: View {
                     .contextMenu {
                         Button("Edit Project…") { projectEditor = project }
                         Button(store.isFavorite(.project(project.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.project(project.id)) }
+                        orderActions(table: "projects", id: project.id, ids: store.projects.map(\.id))
                         Button("Delete Project…", role: .destructive) { projectEditor = project }
                     }
                     .accessibilityLabel(project.name).accessibilityIdentifier("project-" + project.id)
@@ -104,6 +105,22 @@ struct SidebarView: View {
         .onChange(of: workspace.newProjectRequest) { _, _ in newProject() }
         .toolbar { ToolbarItem(placement: .navigation) { EmptyView() } }
         }
+    }
+    @ViewBuilder private func orderActions(table: String, id: String, ids: [String]) -> some View {
+        if let index = ids.firstIndex(of: id) {
+            Divider()
+            Button("Move Up", systemImage: "arrow.up") { moveOrder(table: table, ids: ids, from: index, by: -1) }
+                .disabled(index == 0)
+            Button("Move Down", systemImage: "arrow.down") { moveOrder(table: table, ids: ids, from: index, by: 1) }
+                .disabled(index == ids.count - 1)
+        }
+    }
+    private func moveOrder(table: String, ids: [String], from index: Int, by offset: Int) {
+        let destination = index + offset
+        guard ids.indices.contains(index), ids.indices.contains(destination) else { return }
+        var reordered = ids
+        reordered.swapAt(index, destination)
+        workspace.run("Reorder") { store.reorderOrganization(table, ids: reordered) }
     }
     private func newProject() {
         projectEditor = Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": .string(""), "color": .string("#e31e4b"), "order_index": .number(Double(store.projects.count))])
