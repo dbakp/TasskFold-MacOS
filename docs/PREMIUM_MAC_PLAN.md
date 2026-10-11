@@ -1410,3 +1410,7 @@ The current Mac-owned sources build in a fresh local-only capture-grammar varian
 ### 11 October — pinned-note preview layout
 
 The Mac-owned widget now trims blank preview edges and uses two medium lines with a visible full-note action. Stored notes and reader text are preserved. The independent iOS implementation passes installed small/medium rendering and exact cold-reader routes; privacy was exercised in the initial medium workflow. Final owned Mac widget sources type-check. The app-only isolated build did not compile the extension; the actual signed widget build fails because automatic signing lacks Mac App Development profiles for the app/widget. Desktop acceptance remains open. Native v2 exercised identical small/medium sizing; the final source restricts fixed height to those families to retain large-layout flexibility. See `medium-note-host-evidence.json`.
+
+### 11 October — large-note phone host receipt
+
+The identical committed preview implementation now has an actual installed iPhone large-host receipt for the original short cloud note: public/private rendering, exact terminated-app reader routes, relaunch and temporary-widget cleanup pass. The original first-page note/Focus selections remain, and all 14 shared tables match across both phone workspaces and Mac with empty queues. Initial Home-page displacement/helper failure and successful recovery are disclosed. No additional Mac source change or Desktop acceptance is inferred; signed-widget profiles and other P0 gates remain open. See `large-note-host-evidence.json`.

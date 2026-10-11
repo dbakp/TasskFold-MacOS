@@ -96,7 +96,7 @@
   ],
   "diagnostics": "Result summaries report zero runtime warnings, but native logs include animation-idle waits and remote AX failures. ps identified remote processes 33879 (v1) and 35486 (v2) as Simulator DragUI druid, not Taskfold. These runs are not described as clean logs.",
   "stillOpen": [
-    "Large note/iPad medium note/Desktop host acceptance",
+    "Filled/overflowing large note content, iPad medium/large note and Desktop host acceptance",
     "System redaction and actual VoiceOver",
     "Mac notification Open still shows Inbox after latest inspection; existing fixture left running",
     "Mac isolated projection runtime clearance pending existing Keychain prompt",
@@ -107,5 +107,6 @@
     "removedMiB": 26.6,
     "manifest": "medium-note-pruned-manifest.json",
     "retained": "Both full medium-note xcresult bundles, all build/test logs, selected inspected PNGs in iOS repo, signing/source/preservation receipts and active app products"
-  }
+  },
+  "subsequentExactSourceLargeHostVerification": "large-note-host-evidence.json: installed iPhone large short-note rendering/privacy/cold routes/relaunch/cleanup now accepted; no broader large-content coverage inferred."
 }

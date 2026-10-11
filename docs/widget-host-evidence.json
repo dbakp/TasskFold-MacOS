@@ -943,5 +943,11 @@
     "previewWhitespaceOnlyFix": true,
     "desktopAccepted": false,
     "fullP0Accepted": false
+  },
+  "largeNoteHost": {
+    "evidence": "large-note-host-evidence.json",
+    "installedPhoneLargeAccepted": true,
+    "desktopAccepted": false,
+    "fullP0Accepted": false
   }
 }
