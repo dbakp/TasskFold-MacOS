@@ -242,16 +242,22 @@ struct TodoistImportView: View {
             if let preview = flow.preview {
                 Section("Ready to import") {
                     ForEach(TodoistImportFlow.countKeys, id: \.self) { key in
-                        LabeledContent(key.capitalized, value: "\(preview["counts"].object[key]?.integer ?? 0)").accessibilityIdentifier("todoistCount-" + key)
+                        LabeledContent(key.capitalized, value: "\(preview["counts"].object[key]?.integer ?? 0)")
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(key.capitalized)
+                            .accessibilityValue("\(preview["counts"].object[key]?.integer ?? 0)")
+                            .accessibilityIdentifier("todoistCount-" + key)
                     }
-                }
+                }.accessibilityElement(children: .contain)
             }
             if !flow.warnings.isEmpty {
                 Section("Before you leave Todoist") {
                     ForEach(Array(flow.warnings.enumerated()), id: \.offset) { index, warning in
-                        Text(warning).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistWarning-\(index)")
+                        Text(warning).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            .accessibilityElement(children: .ignore).accessibilityLabel(warning)
+                            .accessibilityIdentifier("todoistWarning-\(index)")
                     }
-                }
+                }.accessibilityElement(children: .contain)
             }
             if flow.preview != nil {
                 Section {
@@ -262,9 +268,13 @@ struct TodoistImportView: View {
             if let result = flow.result {
                 Section("Import complete") {
                     ForEach(TodoistImportFlow.resultKeys, id: \.self) { key in
-                        LabeledContent(TodoistImportFlow.resultTitle(key), value: "\(result[key].integer)").accessibilityIdentifier("todoistReceipt-" + key)
+                        LabeledContent(TodoistImportFlow.resultTitle(key), value: "\(result[key].integer)")
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(TodoistImportFlow.resultTitle(key))
+                            .accessibilityValue("\(result[key].integer)")
+                            .accessibilityIdentifier("todoistReceipt-" + key)
                     }
-                }
+                }.accessibilityElement(children: .contain)
             }
             if flow.busy { HStack { ProgressView(); Text(flow.active?.previewOnly == true ? "Preparing preview…" : "Importing your tasks…") }.accessibilityIdentifier("todoistImportBusy") }
             if flow.preview == nil, let message = flow.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistImportError") }

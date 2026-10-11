@@ -50,8 +50,14 @@ final class TaskfoldMacUITests: XCTestCase {
         app.buttons["todoistPreview"].click()
         let importer = app.buttons["todoistImport"]
         XCTAssertTrue(importer.waitForExistence(timeout: 5))
+        for (key, value) in [("projects", "2"), ("sections", "3"), ("labels", "2"), ("tasks", "4"), ("subtasks", "2"), ("comments", "3")] {
+            let count = app.descendants(matching: .any)["todoistCount-" + key].firstMatch
+            XCTAssertTrue(count.exists, "Each preview count must remain independently accessible")
+            XCTAssertEqual(count.label, key.capitalized)
+            XCTAssertEqual(count.value as? String, value)
+        }
         for _ in 0..<8 where !importer.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400) }
-        XCTAssertTrue(app.staticTexts["todoistWarning-1"].exists); importer.click()
+        XCTAssertTrue(app.descendants(matching: .any)["todoistWarning-1"].firstMatch.exists); importer.click()
         XCTAssertTrue(app.staticTexts["todoistImportError"].waitForExistence(timeout: 5))
         let failure = app.staticTexts["todoistImportError"]
         let failedSave = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "connection was lost", "connection was lost"), object: failure)
@@ -63,6 +69,14 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(importer.isEnabled, "A failed save must leave the approved import retry enabled")
         importer.click()
         XCTAssertTrue(app.descendants(matching: .any)["todoistReceipt-tasksSkipped"].waitForExistence(timeout: 5)); XCTAssertFalse(importer.exists)
+        for key in ["projectsImported", "sectionsImported", "labelsImported", "tasksImported", "subtasksImported", "commentsImported", "projectsSkipped", "sectionsSkipped", "labelsSkipped", "tasksSkipped"] {
+            let count = app.descendants(matching: .any)["todoistReceipt-" + key].firstMatch
+            XCTAssertTrue(count.exists, "Each receipt must retain its own label and value")
+            let skipped = key.hasSuffix("Skipped")
+            let noun = String(key.dropLast(skipped ? 7 : 8)).capitalized
+            XCTAssertEqual(count.label, noun + (skipped ? " already imported" : " imported"))
+            XCTAssertEqual(count.value as? String, skipped ? (key == "tasksSkipped" ? "4" : "2") : "0")
+        }
     }
 
 
