@@ -1832,3 +1832,31 @@ extension TaskfoldMacUITests {
         retainWindow(app, name: "Compact Calendar cards keep their own keyboard focus")
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testCompactMonthOpensSelectedDayTasks() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES"]
+        app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["Month"].waitForExistence(timeout: 10)); app.buttons["Month"].click()
+        let window = app.windows.firstMatch
+        if window.frame.width > 1080 {
+            let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1)).withOffset(CGVector(dx: -3, dy: -3))
+            corner.press(forDuration: 0.2, thenDragTo: corner.withOffset(CGVector(dx: 1080 - window.frame.width, dy: 0)))
+        }
+        XCTAssertFalse(app.otherElements["calendarDayPanel"].exists)
+        let formatter = DateFormatter(); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.dateFormat = "yyyy-MM-dd"
+        let today = formatter.string(from: Date())
+        let day = app.buttons["calendar-day-" + today]
+        XCTAssertTrue(day.waitForExistence(timeout: 5)); day.click()
+        XCTAssertTrue(app.buttons["Day"].isSelected)
+        XCTAssertTrue(app.otherElements["hourlyPlanner"].waitForExistence(timeout: 5))
+        app.buttons["plannerShowAllDay"].click()
+        let task = app.buttons["Prepare report"]
+        XCTAssertTrue(task.waitForExistence(timeout: 5)); task.click()
+        let title = app.textFields["taskTitle"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5)); XCTAssertEqual(title.value as? String, "Prepare report")
+        retainWindow(app, name: "Compact Month opens its selected day's tasks")
+    }
+}

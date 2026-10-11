@@ -370,7 +370,9 @@ struct CalendarView: View {
         let isSelected = calendar.isDate(day, inSameDayAs: selected)
         let isToday = calendar.isDate(day, inSameDayAs: today)
         let items = tasks(on: day).filter { !$0.completed }
-        return Button { select(day) } label: {
+        return Button {
+            if showsDayPanel { select(day) } else { openDay(day) }
+        } label: {
             VStack(alignment: .leading, spacing: 3) {
                 Text(day.formatted(.dateTime.day())).font(.callout.weight(isSelected || isToday ? .semibold : .regular)).monospacedDigit()
                     .foregroundStyle(dayNumberColor(selected: isSelected, today: isToday, inMonth: inMonth))
@@ -394,6 +396,15 @@ struct CalendarView: View {
         .accessibilityLabel(day.formatted(date: .complete, time: .omitted))
         .accessibilityValue(items.isEmpty ? "No tasks" : "\(items.count) tasks")
         .accessibilityIdentifier("calendar-day-\(Dates.day(day))")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint(showsDayPanel ? "Select to show this day's tasks." : "Open this day's planner and tasks.")
+        .accessibilityAction(named: Text("Open day")) { openDay(day) }
+    }
+
+    private func openDay(_ day: Date) {
+        select(day)
+        workspace.calendarMode = .day
+        calendarFocused = true
     }
 
     private func dayNumberColor(selected: Bool, today: Bool, inMonth: Bool) -> AnyShapeStyle {

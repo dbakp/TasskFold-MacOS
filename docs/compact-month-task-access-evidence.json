@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native compact Mac year/month/date/task drill-down and wide month selection; isolated local workspace.",
+  "bundle": "com.dbakp.taskfold.mac.p0grammaruitests",
+  "defect": "At 1080pt the month view hid the day panel, and date activation only selected the day. Neither the listed preview nor Return opened the tasks.",
+  "change": "When the adjacent day panel is unavailable, primary month-date activation opens that exact day in the existing hourly planner. Wide month activation continues selecting its day panel. All month dates expose selected state, an accurate hint, and a named Open day action.",
+  "nativeChecks": {
+    "compactWidthPoints": 1080,
+    "wideWidthPoints": 1380,
+    "yearToOctoberToOctober11Planner": true,
+    "exactTaskTitleAnd25MinuteEstimate": true,
+    "completionUpdatesAllDayCountAndEstimate": true,
+    "commandZRestoresTaskAndEstimate": true,
+    "emptyOctober12HasCorrectDateAndZeroTasks": true,
+    "returnToMonthRetainsSelectedDate": true,
+    "wideDateSelectionRemainsMonthAndShowsThreeTasks": true,
+    "namedOpenDayAction": true,
+    "normalQuitAndRelaunchRetainsTasks": true,
+    "relaunchCacheExactlyEqualsPostUndoCache": true,
+    "compactMonthScreenshotInspected": true
+  },
+  "preservation": {
+    "allFiveTaskBusinessFieldsUnchanged": true,
+    "onlyCompletionRevisionAdvanced": true,
+    "originalActivityRowsRetained": 26,
+    "expectedCompletionUndoRowsAdded": 2,
+    "unchangedRawTables": 7,
+    "totalRawTables": 9,
+    "pending": 0,
+    "noTasksAddedOrRemoved": true
+  },
+  "build": {
+    "log": "compact-month-mac-build-v1.log",
+    "result": "TEST BUILD SUCCEEDED",
+    "warning": "AppIntents metadata extraction skipped: no AppIntents.framework dependency in the isolated app-only build."
+  },
+  "regression": {
+    "name": "testCompactMonthOpensSelectedDayTasks",
+    "compiled": true,
+    "executed": false,
+    "reason": "The prior Mac automation initialization failure was not rerun unchanged; native CUA supplied acceptance."
+  },
+  "platformSeparation": "Mac code and test remain independently owned. iOS already keeps its day panel below the month/year overview and opens TaskEditor through its own TaskRow callbacks; no iOS product change or new runtime acceptance is inferred.",
+  "sourceSHA256": {
+    "Taskfold/Views/CalendarView.swift": "e972403a5fa531577c66e875bee0df5c1d27ec7c11b9b9adb622fe482a7e9ebc",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "71c9640ba1fa9e5b330f5f2d3970de6674387df1a149452b6d72337ee609ed0b"
+  },
+  "artifactsOutsideRepositories": [
+    "compact-month-mac-before-v1.json",
+    "compact-month-mac-after-v1.json",
+    "compact-month-mac-preservation-v1.json",
+    "compact-month-mac-build-v1.log"
+  ],
+  "limits": [
+    "Full month/year grid keyboard navigation and actual VoiceOver remain open.",
+    "Dark/accessibility-size variants, drag/drop, timed-card rendering and authenticated handoff were not rerun for this navigation-only change.",
+    "The existing synthetic widget completion warning remains; this fix does not resolve it.",
+    "No installed Mac widget, distribution or full P0 clearance is claimed.",
+    "No Todoist request or cloud data mutation; existing cloud and Focus processes remain untouched."
+  ]
+}
