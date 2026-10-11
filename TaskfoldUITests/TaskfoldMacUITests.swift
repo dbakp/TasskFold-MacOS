@@ -1879,3 +1879,38 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(NSPredicate(format: "value CONTAINS %@ OR label CONTAINS %@", "Original: completed", "Original: completed").evaluate(with: app.staticTexts["widgetRootState"]))
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testMonthGridKeyboardMovesDatesAcrossBoundary() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES"]
+        app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["Month"].waitForExistence(timeout: 10)); app.buttons["Month"].click()
+        let window = app.windows.firstMatch
+        if window.frame.width < 1380 {
+            let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1)).withOffset(CGVector(dx: -3, dy: -3))
+            corner.press(forDuration: 0.2, thenDragTo: corner.withOffset(CGVector(dx: 1380 - window.frame.width, dy: 0)))
+        }
+        XCTAssertTrue(app.otherElements["calendarDayPanel"].exists)
+        let calendar = Calendar.current
+        let start = try XCTUnwrap(calendar.dateInterval(of: .month, for: Date())?.start)
+        let next = try XCTUnwrap(calendar.date(byAdding: .month, value: 1, to: start))
+        let last = try XCTUnwrap(calendar.date(byAdding: .day, value: -1, to: next))
+        let formatter = DateFormatter(); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.dateFormat = "yyyy-MM-dd"
+        func day(_ date: Date) -> XCUIElement { app.buttons["calendar-day-" + formatter.string(from: date)] }
+        XCTAssertTrue(day(last).waitForExistence(timeout: 5)); day(last).click()
+        app.typeKey(.rightArrow, modifierFlags: [])
+        XCTAssertTrue(day(next).waitForExistence(timeout: 5)); XCTAssertTrue(day(next).isSelected)
+        app.typeKey(.leftArrow, modifierFlags: [])
+        XCTAssertTrue(day(last).waitForExistence(timeout: 5)); XCTAssertTrue(day(last).isSelected)
+        app.typeKey(.upArrow, modifierFlags: [])
+        let earlier = try XCTUnwrap(calendar.date(byAdding: .day, value: -7, to: last))
+        XCTAssertTrue(day(earlier).isSelected)
+        app.typeKey(.downArrow, modifierFlags: []); XCTAssertTrue(day(last).isSelected)
+        app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(app.buttons["Day"].isSelected)
+        XCTAssertTrue(app.otherElements["hourlyPlanner"].waitForExistence(timeout: 5))
+        retainWindow(app, name: "Month date keyboard movement opens exact day")
+    }
+}

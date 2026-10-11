@@ -20,6 +20,8 @@ struct CalendarView: View {
     @FocusState private var calendarFocused: Bool
     @FocusState private var taskListFocused: Bool
     @FocusState private var focusedCard: String?
+    @FocusState private var focusedGridDay: String?
+    @State private var gridNavigationActive = false
     @Namespace private var dayNamespace
 
     private var calendar: Calendar { Calendar.current }
@@ -137,8 +139,16 @@ struct CalendarView: View {
             // it in the sidebar keeps Calendar's active accent selection lit.
             calendarFocused = true
         }
+        .task(id: page) {
+            // Recreating a month grid removes its old focused cell. Keep arrow
+            // navigation in the calendar until the new date receives focus.
+            if mode == .month && gridNavigationActive { refocusCalendar() }
+        }
         .onChange(of: workspace.calendarDay) { _, _ in page = page(containing: selected, mode: mode) }
-        .onChange(of: workspace.calendarMode) { _, _ in withAnimation(layout) { page = page(containing: selected, mode: mode) } }
+        .onChange(of: workspace.calendarMode) { _, _ in
+            withAnimation(layout) { page = page(containing: selected, mode: mode) }
+            refocusCalendar()
+        }
         .sheet(isPresented: $quickAddVisible) {
             TaskCapturePanel(text: Binding(get: { quickAdd }, set: { quickAdd = $0 }), declined: $declinedGroups, choices: $referenceChoices, destination: selected.formatted(date: .abbreviated, time: .omitted), prompt: "What needs to get done?", context: workspace.quickEntryContext(project: workspace.captureTask(date: selected).string("project_id")), task: workspace.captureTask(date: selected)) {
                 if let id = workspace.add(quickAdd, date: selected, declined: declinedGroups, referenceChoices: referenceChoices) {
@@ -148,8 +158,19 @@ struct CalendarView: View {
         }
         .onChange(of: workspace.quickAddFocusRequest) { _, _ in if workspace.section == .calendar { quickAddVisible = true } }
         .onDisappear { quickAddVisible = false }
-        .onKeyPress(.leftArrow) { shift(-1); return .handled }
-        .onKeyPress(.rightArrow) { shift(1); return .handled }
+        .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .downArrow, .return, .escape], phases: .down) { press in
+            guard press.modifiers.intersection([.command, .option, .control, .shift]).isEmpty else { return .ignored }
+            // The native grid can retain focus at its collection rather than a cell.
+            if mode == .month && gridNavigationActive { return monthGridKey(press, day: selected) }
+            if mode == .month && press.key == .downArrow {
+                gridNavigationActive = true
+                focusedGridDay = Dates.day(selected)
+                return .handled
+            }
+            if press.key == .leftArrow { shift(-1); return .handled }
+            if press.key == .rightArrow { shift(1); return .handled }
+            return .ignored
+        }
         .onChange(of: page) { _, new in
             let start = start(of: new, mode: mode)
             switch mode {
@@ -370,10 +391,7 @@ struct CalendarView: View {
         let isSelected = calendar.isDate(day, inSameDayAs: selected)
         let isToday = calendar.isDate(day, inSameDayAs: today)
         let items = tasks(on: day).filter { !$0.completed }
-        return Button {
-            if showsDayPanel { select(day) } else { openDay(day) }
-        } label: {
-            VStack(alignment: .leading, spacing: 3) {
+        return VStack(alignment: .leading, spacing: 3) {
                 Text(day.formatted(.dateTime.day())).font(.callout.weight(isSelected || isToday ? .semibold : .regular)).monospacedDigit()
                     .foregroundStyle(dayNumberColor(selected: isSelected, today: isToday, inMonth: inMonth))
                     .frame(width: 24, height: 24)
@@ -390,18 +408,73 @@ struct CalendarView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(isSelected ? Color.taskfold.opacity(0.06) : Color.clear)
             .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
+        .onTapGesture { activateMonthDay(day) }
         .modifier(CalendarDayDrop(day: day))
+        .focusable()
+        .focused($focusedGridDay, equals: Dates.day(day))
+        .onChange(of: focusedGridDay) { _, value in
+            if value == Dates.day(day) { select(day) }
+        }
+        .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .downArrow, .space, .return, .escape], phases: .down) { press in
+            monthGridKey(press, day: day)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
         .accessibilityLabel(day.formatted(date: .complete, time: .omitted))
         .accessibilityValue(items.isEmpty ? "No tasks" : "\(items.count) tasks")
         .accessibilityIdentifier("calendar-day-\(Dates.day(day))")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityHint(showsDayPanel ? "Select to show this day's tasks." : "Open this day's planner and tasks.")
+        .accessibilityAction { activateMonthDay(day) }
+        .accessibilityHint("Use arrow keys to move by day or week. Press Return to open this day's planner.")
         .accessibilityAction(named: Text("Open day")) { openDay(day) }
     }
 
+    private func refocusCalendar() {
+        // A collection may have removed the focused child while the parent's
+        // focus binding still reads true. Make this a new focus request.
+        calendarFocused = false
+        Task { @MainActor in
+            await Task.yield()
+            if workspace.section == .calendar { calendarFocused = true }
+        }
+    }
+
+    private func activateMonthDay(_ day: Date) {
+        if showsDayPanel {
+            gridNavigationActive = true
+            select(day)
+            focusedGridDay = Dates.day(day)
+        } else { openDay(day) }
+    }
+
+    private func monthGridKey(_ press: KeyPress, day: Date) -> KeyPress.Result {
+        guard press.modifiers.intersection([.command, .option, .control, .shift]).isEmpty else { return .ignored }
+        if press.key == .return { openDay(day); return .handled }
+        if press.key == .space { activateMonthDay(day); return .handled }
+        if press.key == .escape {
+            gridNavigationActive = false
+            focusedGridDay = nil
+            refocusCalendar()
+            return .handled
+        }
+        let delta: Int
+        switch press.key {
+        case .leftArrow: delta = -1
+        case .rightArrow: delta = 1
+        case .upArrow: delta = -7
+        case .downArrow: delta = 7
+        default: return .ignored
+        }
+        guard let next = calendar.date(byAdding: .day, value: delta, to: day) else { return .ignored }
+        gridNavigationActive = true
+        select(next)
+        focusedGridDay = Dates.day(next)
+        return .handled
+    }
+
     private func openDay(_ day: Date) {
+        gridNavigationActive = false
+        focusedGridDay = nil
         select(day)
         workspace.calendarMode = .day
         calendarFocused = true
