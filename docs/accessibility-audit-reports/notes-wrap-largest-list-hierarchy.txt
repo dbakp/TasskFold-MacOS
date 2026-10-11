@@ -1,0 +1,119 @@
+Attributes: Application, 0x1192f2300, pid: 56663, label: 'Taskfold'
+Element subtree:
+ →Application, 0x1192f2300, pid: 56663, label: 'Taskfold'
+    Window (Main), 0x1192f2d00, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1192f3c00, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x1192f2800, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x1192f3ac0, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x1192f30c0, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x1192f3d40, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'nativeWorkspace'
+                Other, 0x1192f3200, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x1192f2940, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x1192f2bc0, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x1192f3340, {{0.0, 0.0}, {402.0, 874.0}}
+                        Other, 0x1192f3e80, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x1192f1540, {{0.0, 0.0}, {402.0, 874.0}}
+                            NavigationBar, 0x1192f1180, {{0.0, 62.0}, {402.0, 267.0}}, identifier: 'Inbox'
+                              Other, 0x1192f1400, {{20.0, 69.0}, {36.0, 30.0}}, identifier: 'openSettings', label: 'Settings and account'
+                                Other, 0x1192f0c80, {{20.0, 69.0}, {36.0, 30.0}}
+                                  Button, 0x1192f0dc0, {{23.0, 69.0}, {30.0, 30.0}}, identifier: 'openSettings', label: 'Settings and account'
+                              Other, 0x1192f0a00, {{346.0, 66.0}, {36.0, 36.0}}, label: 'Task options'
+                                Other, 0x1192f0b40, {{346.0, 66.0}, {36.0, 36.0}}
+                                  Button, 0x1192f08c0, {{347.3, 66.0}, {33.3, 36.0}}, label: 'Task options'
+                                    Button, 0x1192f0140, {{347.3, 66.0}, {33.3, 36.0}}
+                                      Image, 0x1192f0280, {{351.7, 81.3}, {24.7, 5.3}}, identifier: 'ellipsis', label: 'More'
+                              SearchField, 0x1192f2f80, {{16.0, 190.0}, {370.0, 124.0}}, label: 'Search inbox', placeholderValue: 'Search inbox'
+                                Image, 0x1192f2e40, {{28.0, 227.7}, {49.3, 48.0}}, identifier: 'magnifyingglass', label: 'Search'
+                              StaticText, 0x1192f3840, {{16.0, 223.0}, {151.7, 71.7}}, label: 'Inbox'
+                            Other, 0x1192f0780, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1192f0640, {{0.0, 0.0}, {402.0, 874.0}}
+                                Other, 0x1192f1040, {{0.0, 0.0}, {402.0, 874.0}}
+                                  Other, 0x1192f03c0, {{0.0, 0.0}, {402.0, 874.0}}
+                                    CollectionView, 0x1192f0f00, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x1192f1a40, {{-16.0, -1312.0}, {434.0, 4165.3}}
+                                      Other, 0x1192f2a80, {{0.0, 0.0}, {402.0, 874.0}}
+                                      Other, 0x1192f3480, {{0.0, 0.0}, {402.0, 874.0}}
+                                        Other, 0x1192f35c0, {{0.0, 726.2}, {402.0, 147.8}}
+                                          Image, 0x1192f3700, {{-120.0, 731.0}, {642.0, 286.0}}, identifier: 'AdditionalDimmingOverlay'
+                                          Other, 0x1192f0500, {{0.0, 726.2}, {402.0, 147.8}}
+                                            Other, 0x1192f0000, {{0.0, 726.2}, {402.0, 147.8}}
+                                          Other, 0x1192f1f40, {{0.0, 726.2}, {402.0, 147.8}}
+                                            Other, 0x1192f1cc0, {{0.0, 726.2}, {402.0, 147.8}}
+                                            Other, 0x1192f1e00, {{0.0, 726.2}, {402.0, 147.8}}
+                                      Cell, 0x1192f1b80, {{16.0, 436.0}, {370.0, 78.7}}
+                                        Other, 0x1192f12c0, {{16.0, 436.0}, {370.0, 78.7}}
+                                        Other, 0x1192f1900, {{16.0, 436.0}, {370.0, 78.7}}
+                                          Other, 0x1192f17c0, {{16.0, 436.0}, {370.0, 78.7}}
+                                            Other, 0x1192f1680, {{16.0, 436.0}, {370.0, 78.7}}
+                                              Button, 0x1192f2080, {{16.0, 436.0}, {370.0, 78.7}}, identifier: 'sectionHeader-inbox:group:0:unsectioned', label: 'Tasks, 1', value: Expanded
+                                                Image, 0x1192f2580, {{29.5, 465.8}, {43.0, 25.3}}, identifier: 'chevron.right', label: 'Forward'
+                                                StaticText, 0x1192f21c0, {{77.7, 446.0}, {124.3, 58.7}}, label: 'Tasks'
+                                                StaticText, 0x1192f26c0, {{210.0, 446.0}, {31.3, 58.7}}, label: '1'
+                                      Cell, 0x1192f2440, {{16.0, 514.7}, {370.0, 570.7}}
+                                        Other, 0x1175dd2c0, {{16.0, 514.7}, {370.0, 570.7}}
+                                          Other, 0x1175df340, {{16.0, 514.7}, {370.0, 570.7}}
+                                        Other, 0x1175df700, {{16.0, 514.7}, {370.0, 570.7}}
+                                          Other, 0x1175dc280, {{16.0, 514.7}, {370.0, 570.7}}
+                                            Other, 0x1175df480, {{16.0, 514.7}, {370.0, 570.7}}
+                                              Other, 0x1175dfd40, {{32.0, 529.7}, {338.0, 540.7}}, identifier: 'taskRow-8d50cab8-ba1b-4279-80fa-9d8ebcde8f70'
+                                                Button, 0x1175dea80, {{32.0, 529.7}, {44.0, 44.0}}, label: 'Complete Accessible launch brief'
+                                                  Image, 0x1175de800, {{32.0, 529.7}, {44.0, 44.0}}, identifier: 'checkmark', label: 'Selected', Selected
+                                                Button, 0x1175de6c0, {{88.0, 529.7}, {282.0, 540.7}}, identifier: 'taskDetails-8d50cab8-ba1b-4279-80fa-9d8ebcde8f70', label: 'Accessible launch brief, Read the proposal before sending the estimate., 25 min, 0 of 1 subtasks completed'
+                                                  StaticText, 0x1175ddb80, {{88.0, 533.7}, {263.0, 125.3}}, label: 'Accessible launch brief'
+                                                  StaticText, 0x1175dd900, {{88.0, 664.0}, {254.3, 290.7}}, identifier: 'taskNotesPreview-8d50cab8-ba1b-4279-80fa-9d8ebcde8f70', label: 'Read the proposal before sending the estimate.'
+                                                  StaticText, 0x1175dee40, {{93.3, 959.7}, {165.7, 51.3}}, identifier: 'duration-8d50cab8-ba1b-4279-80fa-9d8ebcde8f70', label: '25 min'
+                                                    Image, 0x1175de580, {{93.3, 965.7}, {25.3, 39.3}}, identifier: 'hourglass', label: 'Duration'
+                                                    StaticText, 0x1175ddf40, {{129.0, 959.7}, {130.0, 51.3}}, label: '25 min'
+                                                  StaticText, 0x1175dda40, {{93.3, 1015.0}, {118.7, 51.3}}, identifier: 'subtaskSummary-8d50cab8-ba1b-4279-80fa-9d8ebcde8f70', label: '0 of 1 subtasks completed'
+                                                    Image, 0x1175dcc80, {{93.3, 1019.3}, {48.3, 43.0}}, identifier: 'checklist', label: 'checklist'
+                                                    StaticText, 0x1175de440, {{152.0, 1015.0}, {60.0, 51.3}}, label: '0/1'
+                                      Other, 0x1175dfc00, {{369.0, 116.0}, {30.0, 591.0}}, label: 'Vertical scroll bar, 2 pages', value: 0 %
+                                        Other, 0x1175de080, {{396.0, 119.0}, {3.0, 331.7}}
+                                      Other, 0x1175df5c0, {{369.0, 116.0}, {30.0, 591.0}}, label: 'Vertical scroll bar, 2 pages', value: 0 %
+                                        Other, 0x1175de940, {{396.0, 119.0}, {3.0, 331.7}}
+                                    Button, 0x1175dca00, {{293.0, 699.0}, {74.0, 74.0}}, identifier: 'floatingAdd', label: 'Add task'
+                            Other, 0x1175debc0, {{0.0, 0.0}, {402.0, 874.0}}
+                              Other, 0x1175ddcc0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1175df840, {{0.0, 791.0}, {402.0, 83.0}}
+                  Other, 0x1175df980, {{0.0, 0.0}, {402.0, 874.0}}
+                    TabBar, 0x1175dc780, {{0.0, 791.0}, {402.0, 83.0}}, label: 'Tab Bar'
+                      Other, 0x1175dde00, {{21.0, 791.0}, {360.0, 62.0}}
+                        Other, 0x1175de1c0, {{21.0, 791.0}, {74.0, 54.0}}
+                        Other, 0x1175dfac0, {{21.0, 791.0}, {360.0, 62.0}}
+                          Button, 0x1175dc640, {{25.0, 795.0}, {74.0, 54.0}}, identifier: 'sun.max', label: 'Today'
+                            Image, 0x1175de300, {{48.0, 800.0}, {29.0, 29.3}}, identifier: 'sun.max.fill', label: 'brightness higher'
+                          Button, 0x1175dcb40, {{91.8, 795.0}, {74.0, 54.0}}, identifier: 'tray', label: 'Inbox', Selected
+                            Image, 0x1175dc140, {{112.8, 803.0}, {33.0, 23.7}}, identifier: 'tray.fill', label: 'inbox'
+                          Button, 0x1175dc3c0, {{158.7, 795.0}, {82.3, 54.0}}, identifier: 'calendar.day.timeline.left', label: 'Upcoming'
+                            Image, 0x1175dd7c0, {{182.7, 802.3}, {34.3, 25.3}}, identifier: 'calendar.day.timeline.left', label: 'calendar.day.timeline.left'
+                          Button, 0x1175dd680, {{233.8, 795.0}, {76.3, 54.0}}, identifier: 'calendar', label: 'Calendar'
+                            Image, 0x1175def80, {{257.8, 802.3}, {29.0, 25.0}}, identifier: 'calendar', label: 'calendar'
+                          Button, 0x1175ded00, {{303.0, 795.0}, {74.0, 54.0}}, identifier: 'square.grid.2x2', label: 'Browse'
+                            Image, 0x1175dc500, {{327.0, 802.3}, {27.0, 25.0}}, identifier: 'square.grid.2x2.fill', label: 'grid 2x2'
+                        Other, 0x1175dd400, {{91.8, 795.0}, {74.0, 54.0}}
+                          Other, 0x1175df200, {{91.8, 795.0}, {74.0, 54.0}}
+                            Other, 0x1175dd540, {{91.8, 795.0}, {74.0, 54.0}}
+                            Other, 0x1175dd040, {{91.8, 795.0}, {74.0, 54.0}}
+                              Other, 0x1175dd180, {{91.8, 795.0}, {74.0, 54.0}}
+                                Other, 0x1175df0c0, {{91.8, 795.0}, {74.0, 54.0}}
+                                  Other, 0x1175dc000, {{91.8, 795.0}, {74.0, 54.0}}
+                                Other, 0x1175dcf00, {{91.8, 795.0}, {74.0, 54.0}}
+                              Other, 0x1175dcdc0, {{91.8, 795.0}, {74.0, 54.0}}
+                  Other, 0x1175975c0, {{0.0, 791.0}, {402.0, 83.0}}
+                    Other, 0x1175970c0, {{0.0, 791.0}, {402.0, 83.0}}
+                      Other, 0x117594dc0, {{0.0, 791.0}, {402.0, 83.0}}
+                        Other, 0x117594140, {{0.0, 791.0}, {402.0, 83.0}}
+                          Other, 0x117597e80, {{0.0, 791.0}, {402.0, 83.0}}
+                            Other, 0x117596e40, {{0.0, 791.0}, {402.0, 83.0}}
+                        Other, 0x117597980, {{0.0, 791.0}, {402.0, 83.0}}
+                          Other, 0x117597340, {{0.0, 791.0}, {402.0, 83.0}}
+    Window, 0x117597200, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x117594500, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x117596a80, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x1192f2300, pid: 56663, label: 'Taskfold'
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.assigneepatterntests'
+  Output: {
+    Application, 0x117597480, pid: 56663, label: 'Taskfold'
+  }

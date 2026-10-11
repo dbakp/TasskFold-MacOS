@@ -5,6 +5,7 @@ import AppKit
 struct TaskRowView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage("mac.taskDensity") private var density = "roomy"
     let task: Record
     var compactDate = false
@@ -65,11 +66,12 @@ struct TaskRowView: View {
                 }
                 if !task.string("description").isEmpty {
                     if Linkify.links(in: task.string("description")).isEmpty {
-                        Text(task.string("description")).font(.callout).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).lineLimit(1)
+                        Text(task.string("description")).font(.callout).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary)
+                            .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1).fixedSize(horizontal: false, vertical: true)
                     } else {
                         LinkText(text: task.string("description"), font: .preferredFont(forTextStyle: .callout),
                                  color: NSColor(isSelected ? selectedForeground.opacity(0.9) : Color.secondary),
-                                 linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold), lineLimit: 1,
+                                 linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold), lineLimit: dynamicTypeSize.isAccessibilitySize ? 0 : 1,
                                  accessibilityIdentifier: "notes-\(task.id)")
                     }
                 }

@@ -1,0 +1,156 @@
+{
+  "date": "2026-10-11",
+  "baseCommits": {
+    "TaskFold-iOS": "1580b1ceafc1b1dd1024bcdda82e8f9d7d788aa4",
+    "TasskFold-MacOS": "622f01ffeda99debe4b4c15377231616c6240c57"
+  },
+  "change": "At accessibility Dynamic Type sizes, task-row notes wrap vertically instead of being limited to one line. Standard-size previews retain one line. Each repo owns the change. Mac linked notes use an unlimited line count and word wrapping in the native text container.",
+  "builds": {
+    "iOS": "notes-wrap-ios-build-v1.log",
+    "macOS": "notes-wrap-mac-build-v1.log",
+    "simulatorTeamSigning": "notes-wrap-signing-v1.json"
+  },
+  "sourceInputHashes": {
+    "TaskFold-iOS/Taskfold/TaskfoldApp.swift": "ac576a9fa54f520c7e17add2e65f94ece83c41c8a0bf90c92c3b1b1335faefad",
+    "ios-live-stage/Taskfold/TaskfoldApp.swift": "ac576a9fa54f520c7e17add2e65f94ece83c41c8a0bf90c92c3b1b1335faefad",
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "f45adb1ae3d7f91473c5e674b35f22b64c2037848e224d8865302fbcb29cf889",
+    "ios-live-stage/TaskfoldUITests/TaskfoldUITests.swift": "f45adb1ae3d7f91473c5e674b35f22b64c2037848e224d8865302fbcb29cf889",
+    "TasskFold-MacOS/Taskfold/Views/TaskRowView.swift": "f70ae0a6f24395501b4f1b87d22b07f1047790cee84c5cb19bfe275515b9dee4",
+    "/private/tmp/taskfold-isolated-mac-local-ui-workspace/Taskfold/Views/TaskRowView.swift": "f70ae0a6f24395501b4f1b87d22b07f1047790cee84c5cb19bfe275515b9dee4",
+    "TasskFold-MacOS/Taskfold/Views/Links.swift": "ffbffefa6aea8e7091459a21e6bda4144fe21a60b0ab1c26d896c6d9214a4ed9",
+    "/private/tmp/taskfold-isolated-mac-local-ui-workspace/Taskfold/Views/Links.swift": "ffbffefa6aea8e7091459a21e6bda4144fe21a60b0ab1c26d896c6d9214a4ed9"
+  },
+  "functionalRun": {
+    "resultBundle": "notes-wrap-phone-v1.xcresult",
+    "summary": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    },
+    "checks": [
+      "Normal/light and largest/dark native capture \u2192 notes/25-minute estimate \u2192 Save \u2192 process relaunch.",
+      "Standard-size notes remain one line; largest notes occupy multiple lines and the list scrolls to their tail and estimate. Long notes need scrolling; screenshots do not show the whole paragraph at once.",
+      "Full-sized accessible details action retains complete multi-sentence notes and estimate. Open complete editor from row and lower metadata area; exact title/notes preserved, task remains incomplete.",
+      "Both flows restore original cloud Today."
+    ]
+  },
+  "unfilteredAudits": {
+    "resultBundle": "notes-wrap-audit-v1.xcresult",
+    "summary": {
+      "totalTestCount": 2,
+      "passedTests": 0,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Failed"
+    },
+    "findings": {
+      "normal": {
+        "counts": {
+          "list": 2,
+          "editor-subtask": 1,
+          "editor-overview": 0,
+          "capture": 0
+        },
+        "total": 3,
+        "hitRegionFindings": 0,
+        "insufficientDescriptionFindings": 0
+      },
+      "largest": {
+        "counts": {
+          "list": 1,
+          "editor-subtask": 0,
+          "editor-overview": 0,
+          "capture": 1
+        },
+        "total": 2,
+        "hitRegionFindings": 0,
+        "insufficientDescriptionFindings": 0
+      }
+    },
+    "interpretation": "Both audits still fail. Largest notes clipping is absent after wrapping: 3 findings become 2 (capture estimate and native search). Normal retains photo, search and intentional one-line notes preview findings (3). No hit-region or insufficient-description findings. No finding suppressed or declared false; legible photo/estimate captures do not establish their warnings are false positives."
+  },
+  "cloudCleanup": {
+    "resultBundle": "notes-wrap-cloud-reset-v1.xcresult",
+    "summary": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    },
+    "checks": [
+      "Original selected full note and ended Focus cold routes restored.",
+      "Entire original cloud cache and original widget account/note/Focus/pending fields equal baselines. Local/cold-fixture preferences false, pending sync zero, original Mac cache unchanged."
+    ]
+  },
+  "dataPreservation": {
+    "fullOriginalCloudCacheParsedEqual": true,
+    "originalWidgetFieldsEqual": {
+      "account": true,
+      "focusSession": true,
+      "notes": true,
+      "pendingSync": true
+    },
+    "pendingSync": 0,
+    "localMode": false,
+    "widgetColdLaunchFixture": false,
+    "originalMacCloudCacheUnchanged": true,
+    "localTasks": 1,
+    "completedLocalTasks": [],
+    "localPending": 0
+  },
+  "captures": [
+    {
+      "path": "docs/usability-previews/notes-wrap-audit-largest-capture.png",
+      "sha256": "489fefcae37b9057ce262e8d778cc284bc3a436c8050e96656cd632c5fe54d48",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/notes-wrap-audit-largest-list.png",
+      "sha256": "823e79876031e8e8abf451e1029fb0c85c8e4bcc53a2dfbcd70c2c6f0a283e09",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/notes-wrap-audit-normal-list.png",
+      "sha256": "691365756ce3595d4530a364e04b2c2144df69a823fcfbc4db2476a6336751f2",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/notes-wrap-audit-normal-photo.png",
+      "sha256": "b991c2e50853346d68998286f0c2e617f532ba63fbe230df03afab0130262814",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-notes-wrap-largest-editor.png",
+      "sha256": "056c57d90c81a62b1c412359263d4a54970438ca305e0838fed18cadc2dcf1f3",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-notes-wrap-largest-list-tail.png",
+      "sha256": "5d06e3e5861281d6147bd94a70765fcd9f5793410dcea45d76d98061467c2d9f",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-notes-wrap-normal-editor.png",
+      "sha256": "87dfba2259f3fb084af38baccc64b209b660615acfdc4b70c49dbe5c4f561077",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-notes-wrap-normal-list.png",
+      "sha256": "1b2f2fb089d5088109415d1eeeecedb007f1fdc526de0992a1486d015407bd96",
+      "inspected": true
+    }
+  ],
+  "macNativeAcceptance": "Independent Mac build succeeds. Native changed-row/linked-note interaction remains unverified; latest computer use still reports locked desktop. Running local app may retain the prior binary in memory and needs relaunch for future native acceptance. No production application replaced.",
+  "storageCleanup": {
+    "allocatedBytesRemoved": 3579904,
+    "manifest": "notes-wrap-pruned-manifest.json",
+    "nativeBundlesRetained": true
+  },
+  "remaining": "Search/estimate/photo/standard-preview clipping findings, actual VoiceOver and hardware-keyboard journeys, linked-note native interaction, current Mac ordering/account/restore and widget hosts, real Todoist/provider calendar/file workflows, APNs and distribution evidence remain open. The full P0 objective remains active."
+}

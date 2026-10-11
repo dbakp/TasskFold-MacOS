@@ -121,7 +121,7 @@ struct LinkText: NSViewRepresentable {
     func updateNSView(_ view: LinkAwareTextView, context: Context) {
         view.workspace = workspace
         view.textContainer?.maximumNumberOfLines = lineLimit
-        view.textContainer?.lineBreakMode = .byTruncatingTail
+        view.textContainer?.lineBreakMode = lineLimit == 0 ? .byWordWrapping : .byTruncatingTail
         view.linkTextAttributes = [.foregroundColor: linkColor, .cursor: NSCursor.pointingHand]
         let content = attributed()
         view.textStorage?.setAttributedString(content)
