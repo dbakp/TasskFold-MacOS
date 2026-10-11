@@ -1,0 +1,178 @@
+{
+  "date": "2026-10-11",
+  "scope": "iPhone compact-height landscape calendar controls, Year/Month date selection, exact-task route, toolbar Add and relaunch; portrait Month/short-period regressions.",
+  "changes": [
+    "Compact-height non-Day calendars keep their natural heights in an outer vertical scroll surface, with shared task rows rather than a nested task-panel scroll view. Portrait/iPad retain their existing layout.",
+    "Accessibility date/Year lists use a 220-point compact-height viewport. Existing period paging and collapse remain.",
+    "Landscape Add moves from the floating overlay to a plain 44x44 toolbar button, preserving selected-date capture. The same explicit toolbar target also applies to Day. No persistence, sync, widget contract or sibling dependency changes."
+  ],
+  "build": "ios-phone-compact-calendar-build-v6.log succeeds; strict genuine Apple Development app/widget/runner signatures and dedicated Simulator identities verified in phone-compact-calendar/signing.json.",
+  "sourceSha256": {
+    "Taskfold/Views/CalendarView.swift": "a8d29f25ea4e884170a9059a4307540efa6d956ad3e958712eec808521fe6f73",
+    "TaskfoldUITests/TaskfoldUITests.swift": "58349613402bd165f81a8a9209640fdd25d22b5302c9cca46200e61ae6375c57"
+  },
+  "accepted": [
+    {
+      "resultBundle": "ios-phone-compact-calendar-native-v4.xcresult",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "testPhoneCompactMonthCalendarRouteDarkLargest",
+          "seconds": 220.353
+        },
+        {
+          "name": "testPhoneCompactYearCalendarRoute",
+          "seconds": 50.846
+        },
+        {
+          "name": "testPhoneCompactYearCalendarRouteDarkLargest",
+          "seconds": 139.97
+        }
+      ]
+    },
+    {
+      "resultBundle": "ios-phone-compact-calendar-add-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "testPhoneCompactCalendarToolbarAdd",
+          "seconds": 48.479
+        }
+      ]
+    },
+    {
+      "resultBundle": "ios-phone-compact-calendar-portrait-regression-v1.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "testMonthCalendarDayAndTaskRouteDarkLargest",
+          "seconds": 113.849
+        },
+        {
+          "name": "testShortCalendarPeriodsDateAndTaskRouteDarkLargest",
+          "seconds": 217.125
+        }
+      ]
+    }
+  ],
+  "acceptanceScope": "Six accepted case/device pairs cover nine workflows: three final landscape routes, two focused Add settings, and four portrait workflows (Month plus 3-day/5-day/Week). Final landscape v4 and focused Add use build v6. Portrait regression uses build v4; subsequent changes affect compact-height date viewport, toolbar Add and test driver, with regular-height Month/short-period rendering unchanged.",
+  "nativeAssertions": [
+    "Actual landscape window after launch and relaunch. All twelve Year targets fully inside visible content; largest targets also fully inside their date-list viewport; target sizes >=44x44.",
+    "Largest Month first/last dates fully visible and selected; Today task opens after collapse; exact title, Cancel, toolbar Add >=44x44, Today-dated draft and normal relaunch retaining original open tasks.",
+    "System period menu is scrolled within its visible collection. Outer calendar scrolling uses its margin, while inner date lists are scrolled within their own viewport."
+  ],
+  "intermediateFailures": [
+    "Original phone v1: all three orientation predicates fail, remaining 402x874 portrait. Original device preserved; cause unproven.",
+    "Fresh disposable phone rotates. Clean baseline v1 fails all three: largest menu above screen (y -101/-139), normal Year first row extends outside pager.",
+    "Compact native v1/v2: normal Year passes; largest tests fail on driver assumptions about visible system menu choices. Native hierarchy shows scrollable menu collection and offscreen Week item.",
+    "Compact native v3: all three date/task routes reach toolbar Add, then fail actual height 36 despite 44-point label frame. Plain button style plus outer 44-point frame resolves this; focused Add v1 and final full v4 pass."
+  ],
+  "preservation": {
+    "originalAccounts": [
+      {
+        "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "protectedFileCount": 26,
+        "fullProtectedFileSetAndHashesExact": true
+      },
+      {
+        "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "protectedFileCount": 43,
+        "fullProtectedFileSetAndHashesExact": true
+      }
+    ],
+    "isolatedLocalFixtures": [
+      {
+        "device": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+        "tasks": 3,
+        "idsTitlesEstimatesExact": true,
+        "allOpen": true,
+        "pending": 0
+      },
+      {
+        "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "tasks": 3,
+        "idsTitlesEstimatesExact": true,
+        "allOpen": true,
+        "pending": 0
+      },
+      {
+        "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "tasks": 3,
+        "idsTitlesEstimatesExact": true,
+        "allOpen": true,
+        "pending": 0
+      }
+    ],
+    "backendOrTodoistOperationsPerformed": 0
+  },
+  "visualInspection": {
+    "retainedFinalCaptures": [
+      "normal-year-january.png",
+      "normal-year-december.png",
+      "largest-year-january.png",
+      "largest-year-december.png",
+      "largest-month-first.png",
+      "largest-month-last.png",
+      "largest-exact-task.png",
+      "largest-add-draft.png"
+    ],
+    "findings": [
+      "Complete first/last normal Year cards and largest month rows are visible when scrolled; floating Add no longer covers cards. Adjacent partial rows and native translucent chrome are expected scroll states.",
+      "The largest landscape Add draft shows title/keyboard but a partly hidden date-control area. Date value is asserted semantically; full composer-control readability/reachability is not accepted.",
+      "The exact task title and native Save/Cancel controls are visible. These captures do not establish every editor section or input journey."
+    ]
+  },
+  "remaining": [
+    "Largest landscape composer controls and nested-scroll ergonomics",
+    "Landscape short-period/Day planner and normal Month journeys beyond prior evidence",
+    "iPad sidebar and remaining compact-window interactions",
+    "Spoken VoiceOver, retained clipping audit findings and broader P0_RELEASE_STATUS.md gates"
+  ],
+  "platformScope": "Mac owns a separate wide-window column/scroll layout and has no iOS verticalSizeClass stack. Mac receives acceptance documentation only; no new Mac native acceptance is claimed.",
+  "disposableDevice": {
+    "id": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+    "type": "iPhone 17 Pro iOS 26.5",
+    "name": "Taskfold phone calendar rotation disposable",
+    "lifecycle": "Retained for remaining landscape checks; shut down after acceptance."
+  },
+  "cleanup": {
+    "duplicateExportsRemoved": [
+      {
+        "directory": "ios-phone-calendar-landscape-attachments-v1",
+        "bytes": 41572700
+      },
+      {
+        "directory": "ios-phone-calendar-clean-landscape-attachments-v1",
+        "bytes": 30744451
+      },
+      {
+        "directory": "ios-phone-compact-calendar-attachments-v1",
+        "bytes": 24789105
+      },
+      {
+        "directory": "ios-phone-compact-calendar-attachments-v2",
+        "bytes": 27259759
+      },
+      {
+        "directory": "ios-phone-compact-calendar-attachments-v3",
+        "bytes": 113538483
+      },
+      {
+        "directory": "ios-phone-compact-calendar-attachments-v4",
+        "bytes": 12071498
+      },
+      {
+        "directory": "ios-phone-compact-calendar-add-attachments-v1",
+        "bytes": 2070962
+      }
+    ],
+    "bytesRemoved": 252046958,
+    "preserved": "Original xcresults/logs/signing receipts/export manifests and selected inspected repository captures retained."
+  }
+}
