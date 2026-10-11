@@ -178,3 +178,7 @@ The first attempt exposed a DEBUG test-harness issue: the sandbox denied the leg
 ### 11 October — restore count semantics
 
 Native Mac restore review merged 11 numbers under Add. Independently owned restore views now expose Add, Update, Keep and each table as separate labelled/value accessibility rows. Native Mac confirms Add 14 / Update 0 / Keep 0, then repeat Add 0 / Update 0 / Keep 14. One iPhone dark largest-text regression confirms Add 1 / Update 0 / Keep 1 / Tasks 1 and a reachable Restore action with a minimum 44-point height. Capture inspected; actual VoiceOver remains open. See `mac-cloud-restore-native-evidence.json`.
+
+### 11 October — restored Focus picker context
+
+Four native phone captures from `mac-cloud-restore-phone-evidence.json` confirm restored full note/task details and ended Focus state. The next-session picker context inherits a pale pink secondary foreground on its pink bordered-button surface in light appearance. Improve that context's contrast in both independently owned Focus views, preserving the accent background and picker behavior. This visual observation does not establish a measured contrast ratio or a VoiceOver pass.

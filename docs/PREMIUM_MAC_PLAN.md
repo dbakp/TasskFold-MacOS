@@ -1342,3 +1342,7 @@ The first attempt exposed a DEBUG test-harness issue: the sandbox denied the leg
 ### 11 October — cloud restore acceptance
 
 Native Mac export and cross-account cloud restore now pass with an encrypted safety copy, 14 additions, unchanged original/imported work, stable task references, duplicate-free repeat review and normal relaunch. Both apps independently fix merged restore accessibility counts. One dark largest-text iPhone regression passes with no failures/skips/reported runtime warnings. See `mac-cloud-restore-native-evidence.json` and the current P0 status. External provider transfer, actual VoiceOver and broader release gates remain open; seven Mac AttributeGraph warnings remain unresolved.
+
+### 11 October — restored workspace reaches the native iPhone app
+
+The Mac cloud restore now has actual native iPhone receipt of project/section, label, saved-filter membership, exact task notes/estimate, full pinned note and ended Focus, including normal relaunch and native original-account return. One case passes with zero failures/skips/reported runtime warnings. Both accounts' 14 shared tables remain unchanged on both devices and all queues are empty. Four captures were inspected; the pale next-session picker context needs a contrast follow-up in both apps. See `mac-cloud-restore-phone-evidence.json`. External provider transfer and the broader P0 gates remain open.
