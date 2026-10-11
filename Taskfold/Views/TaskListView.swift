@@ -659,7 +659,13 @@ struct QuickReferenceCompletionModifier: ViewModifier {
             for token in accepted.tokens where token.text.lowercased() == option.reference && token.group.hasPrefix("reminder_specs:") { declined.remove(token.group) }
         }
         text = result.text
-        if let caret = Range(NSRange(location: result.caretUTF16, length: 0), in: text)?.lowerBound { selection = TextSelection(insertionPoint: caret) }
+        // Native text storage updates after the binding. Apply the caret on the
+        // next main-loop turn so that update cannot restore the old insertion point.
+        DispatchQueue.main.async {
+            guard text == result.text,
+                  let caret = Range(NSRange(location: result.caretUTF16, length: 0), in: text)?.lowerBound else { return }
+            selection = TextSelection(insertionPoint: caret)
+        }
         onChoose()
     }
     private func symbol(_ group: String) -> String {
