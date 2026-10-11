@@ -89,6 +89,7 @@ private struct BoardColumn: View {
                         .selectionDisabled().listRowSeparator(.hidden)
                 }.focused($taskListFocused)
                 .environment(\.taskListFocused, taskListFocused)
+                .accessibilityIdentifier("boardTaskList")
                 .listStyle(.inset).scrollContentBackground(.hidden)
                 .contextMenu(forSelectionType: String.self) { ids in
                     if !ids.isEmpty {

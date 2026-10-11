@@ -436,6 +436,7 @@ struct CalendarView: View {
             }
             .focused($taskListFocused)
             .environment(\.taskListFocused, taskListFocused)
+            .accessibilityIdentifier("calendarTaskList")
             .listStyle(.inset)
             .contextMenu(forSelectionType: String.self) { ids in
                 if let id = ids.first, ids.count == 1 {
@@ -450,6 +451,7 @@ struct CalendarView: View {
         }
         .background(Color(nsColor: .controlBackgroundColor))
         .safeAreaInset(edge: .bottom) { if let confirmation = workspace.confirmation { ConfirmationBar(confirmation: confirmation).transition(.toast) } }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("calendarDayPanel")
     }
 }

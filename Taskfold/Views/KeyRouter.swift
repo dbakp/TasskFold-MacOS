@@ -19,7 +19,7 @@ struct KeyRouter: ViewModifier {
         guard !workspace.finderPresented, let window = event.window, window.isKeyWindow,
               window == NSApp.mainWindow, window.attachedSheet == nil,
               let table = window.firstResponder as? NSTableView,
-              table.accessibilityIdentifier() == "taskList",
+              ["taskList", "boardTaskList", "calendarTaskList"].contains(table.accessibilityIdentifier() ?? ""),
               event.modifierFlags.intersection([.command, .option, .control]).isEmpty else { return false }
         switch event.keyCode {
         case 49: // Space

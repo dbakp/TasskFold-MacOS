@@ -1423,3 +1423,10 @@ The local-only native walk found and fixed Space completing the selected task wh
 Mac bounded capture/deadline/estimate, three reminder shortcuts, independent rule validation and undated retention/removal now survive normal relaunches. Delivery is off in this isolated fixture. Both repos retain scoped evidence; the iOS app receives no AppKit implementation or new build dependency. See `mac-repeat-keyboard-native-evidence.json`. Broader keyboard/VoiceOver, board/calendar shortcuts, untested grammar variants and release gates remain open.
 
 A separate warm cloud Settings/inspector diagnostic adds no AttributeGraph warnings (six before and after), with all 14 imported tables unchanged and an empty queue. Original warning cause remains open; `mac-settings-cycle-diagnostic-evidence.json`. The existing Focus app still shows Inbox after the latest unlock; notification Open is not accepted.
+
+
+### 11 October — board/calendar task-table keyboard continuity
+
+Focused board and calendar task tables now join the main task list in the native shortcut router, preserving the inspector Space fix. Calendar day-panel accessibility containment keeps its table identifier distinct. Actual board and visible calendar day-table Space completion, Command-Z restoration, Return editing and Escape clearing pass; inspector Repeat keeps its own Space expansion. Calendar grid/card keyboard journeys remain open. Current owned/staged sources match and the final app-only build succeeds. See `mac-task-surface-keyboard-evidence.json`.
+
+A separate largest-text phone audit still reports estimate-chip and native-search clipping after an allocation-rounding experiment. That experiment is reverted in both repos; no layout fix or audit clearance is claimed. Original phone cloud return/relaunch passes with all 14 shared tables unchanged and an empty queue. Updated current counts are two normal/two largest. See `chip-rounding-audit-evidence.json`.
