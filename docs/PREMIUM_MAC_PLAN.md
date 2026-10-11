@@ -1561,3 +1561,11 @@ This does not accept all landscape usability: the largest Add capture partly hid
 Added `P0_PROGRESS.md` with a compact implemented/proven/remaining summary and bounded next execution order. `P0_RELEASE_STATUS.md` retains the detailed scoped evidence. Feature buildout is largely complete; notification delivery/actions, remaining native importer/provider boundaries, installed Mac widget/distribution gates and critical accessibility remain unaccepted. New iPhone capture verification is isolated from Mac code and real user data.
 
 Follow-up: two native iPhone landscape capture cases pass date/project changes, save and persisted-record relaunch checks. No product change was required. Largest Today landscape visible-row acceptance and keyboard-visible composer polish remain open. Both protected account file sets/hashes are unchanged; see `landscape-capture-evidence.json`.
+
+## 11 October — task Search and largest landscape reachability
+
+TaskScreen now exposes on-demand Search with one native text field across orientations, an explicit Close action, keyboard submission/dismissal and the existing recent-query storage/menu. This frees the short task viewport and avoids failed minimized-native Close/conditional-search rotation candidates. Dated query changes scroll to the first match. Mac retains its independent Finder search; no persistence, synchronization or sibling dependency changes.
+
+Four final native cases pass on one isolated iPhone: normal/light and largest/dark complete Today targets, exact editors/Cancel, relaunch, matching-result containment below Search, keyboard submission, Close/full-list return, recent reuse and portrait-query → landscape continuity; both landscape capture persistence regressions pass. Original 26/43 protected file sets/hashes remain exact; final local fixture retains three original open tasks, exact IDs/titles/estimates and no queued changes. See `landscape-today-evidence.json`, including failed candidates and their limits.
+
+This accepts the named task/query targets. The saved-capture screenshot still has a partly hidden long row: capture persistence is proven, general long-row visibility is not. iPad/other scopes, actual hardware keyboard/VoiceOver, retained audit findings and wider P0 gates remain open.

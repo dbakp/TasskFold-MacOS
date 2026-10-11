@@ -19,7 +19,7 @@ Recent work includes actual user-visible calendar/accessibility fixes, native wo
 
 ## Next execution order
 
-1. Landscape capture date/project changes and durable saving now pass normal/largest native cases (`landscape-capture-evidence.json`). Keyboard-visible presentation and largest landscape Today list reachability remain open; do not expand calendar combinations without a critical workflow need.
+1. Scoped landscape Today task/Search/rotation and capture checks now pass normal/largest native cases (`landscape-today-evidence.json`). General long-row visibility and keyboard-visible composer polish remain open. Move next to the import/notification gates rather than additional calendar combinations.
 2. Finish the remaining import retry boundary and real notification actions where current account/desktop access permits.
 3. Complete critical accessibility/attachment journeys, then the outstanding installed widget hosts.
 4. Close APNs and distribution gates with actual credentials/signing/delivery evidence. Revalidate current availability before describing any external prerequisite as blocked.

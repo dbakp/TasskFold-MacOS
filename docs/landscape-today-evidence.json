@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-11",
+  "scope": "iPhone normal/light and Accessibility XXXL/dark Today task reachability, on-demand Search, submitted-query recents, explicit Close, portrait-query/landscape continuity; landscape capture persistence regressions.",
+  "changes": [
+    "TaskScreen owns one on-demand native text-field presentation across orientations, with explicit 44-point Close that clears the filter and dismisses keyboard. Search is a toolbar action; Command-F is declared.",
+    "Search submission remembers the query and dismisses keyboard; recent-query menu preserves reuse/clear functionality.",
+    "Dated filtered results scroll to their first match when the query changes, avoiding the prior stale offset behind Search. No query text is stored in task records.",
+    "No persistence/sync contract or Mac production code changes. The Mac retains its independently owned Finder search."
+  ],
+  "build": "ios-landscape-today-build-v15.log: TEST BUILD SUCCEEDED; strict app/widget/runner team and Simulator identities verified in landscape-today/signing.json.",
+  "sourceSha256": {
+    "Taskfold/TaskfoldApp.swift": "5b8e4391e93b6edc87acfb5adb16c593ac65baf9c7b3bad55f9b67042f950176",
+    "TaskfoldUITests/TaskfoldUITests.swift": "b38348ba8c4a48f69a5ec8d89e75a6905999b817420a77ea30ea21b9244d1011"
+  },
+  "native": {
+    "resultBundle": "ios-landscape-today-native-v15.xcresult",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "testLandscapeCaptureControlsAndPersistence",
+        "seconds": 44.089
+      },
+      {
+        "name": "testLandscapeCaptureControlsAndPersistenceDarkLargest",
+        "seconds": 43.689
+      },
+      {
+        "name": "testLandscapeTodayTaskReachability",
+        "seconds": 55.116
+      },
+      {
+        "name": "testLandscapeTodayTaskReachabilityDarkLargest",
+        "seconds": 81.535
+      }
+    ],
+    "structuredRuntimeWarnings": 0,
+    "consoleDiagnostics": "Apple AX duplicate-class and debugger-version diagnostics retained; no blanket clean-console claim."
+  },
+  "verified": [
+    "Actual landscape window, complete task-details targets in visible viewport above tabs, exact editor title/Cancel for both Today fixture tasks, relaunch and reachability.",
+    "Search query submission leaves no keyboard, yields exact matching task and excludes unrelated task; complete matching target fits below Search and above tabs.",
+    "Explicit Close removes field and restores original tasks; recent submitted query can be selected and closed again.",
+    "Query typed in portrait remains visible with exact value after rotation to landscape; Close restores unfiltered list.",
+    "Calendar capture date Today\u2192Tomorrow\u2192Today, Inbox selection, Save and persisted task existence after relaunch without reseeding."
+  ],
+  "limits": [
+    "Capture persistence case checks record existence, not complete saved-row visibility. Its retained largest screenshot remains partly below tabs; general long-task list readability is not accepted.",
+    "Tests accept the named two fixture task targets and one query on iPhone iOS 26.5, not all task scopes/boards, iPad, older runtimes or empty search results.",
+    "Command-F is declared/build verified; hardware-keyboard and spoken VoiceOver are not accepted.",
+    "Four prior unfiltered clipping findings, keyboard-visible composer presentation, other widget/provider/delivery/distribution gates remain open."
+  ],
+  "intermediateEvidence": [
+    "v1 normal passes, largest task containment fails; v2 largest still fails after drag correction. Original baseline has 100-point Search and 144-point effective viewport.",
+    "v3 native minimized Search candidate passes task routes. v4 passes capture cases but Search test used Cancel rather than observed Close; v5\u2013v8 retain native Close failures. These are abandoned candidate limitations, not claims about every OS/device.",
+    "v10 explicit Close restores tasks and capture passes, but recent submission callback fails; corrected with direct callback and keyboard dismissal. v12 both scoped Search cases pass.",
+    "v13 conditional native-search portrait field disappears after rotation; replaced by a single app-owned presentation across orientations. v14 four cases pass, but screenshot review exposes partial largest query result not covered by earlier presence assertion.",
+    "v15 scrolls to first dated match and requires full result containment below field; all four final cases pass."
+  ],
+  "protectedAccounts": [
+    {
+      "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+      "fileCount": 26,
+      "fullFileSetAndHashesExact": true
+    },
+    {
+      "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+      "fileCount": 43,
+      "fullFileSetAndHashesExact": true
+    }
+  ],
+  "finalLocalFixture": {
+    "tasks": 3,
+    "originalIdsTitlesEstimatesExact": true,
+    "allOpen": true,
+    "pending": 0
+  },
+  "captures": [
+    "normal-task.png",
+    "largest-task.png",
+    "largest-second-task.png",
+    "normal-search-result.png",
+    "largest-search-result.png",
+    "largest-portrait-query-return.png",
+    "largest-capture-persistence-only.png",
+    "before-largest.png",
+    "native-search-close-stalled.png"
+  ],
+  "cleanup": {
+    "duplicateExportBytesPruned": 306918359,
+    "originalResultsAndLogsRetained": true,
+    "selectedInspectedCapturesRetained": 9
+  }
+}
