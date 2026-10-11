@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native real imported-workspace Mac to iPhone to Mac note handoff with independent process relaunches",
+  "authorization": {
+    "macUnlockedAndKeychainApprovedByUser": true,
+    "sourceTodoistReadOrWriteRequestsThisPhase": 0,
+    "providerTokenRequiredForHandoff": false,
+    "onlySyntheticDestinationTaskEdited": true
+  },
+  "nativeMac": {
+    "bundle": "com.dbakp.taskfold.mac.p0localuitests",
+    "savedSessionLoadedAfterApproval": true,
+    "nativeFullOriginalNotesAndEstimateReceived": true,
+    "outgoingNativeNotesEditSaved": true,
+    "quitAndRelaunchAfterOutgoingEdit": true,
+    "nativeFullPhoneReturnNotesAndEstimateReceived": true,
+    "quitAndRelaunchAfterReturn": true,
+    "finalReturnedNotesInNativeRow": true,
+    "estimateMinutes": 25,
+    "computerUseReboundToEachRelaunchedProcess": true
+  },
+  "nativePhone": {
+    "resultBundle": "imported-handoff-phone-v1.xcresult",
+    "actualPassed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "durationSeconds": 83.879,
+    "nativeSignInToImportedDestination": true,
+    "fullMacNotesReceivedExactly": true,
+    "nativeReturnNoteEditSaved": true,
+    "fullNotesAndEstimateRetainedAfterRelaunch": true,
+    "originalAccountRestoredThroughNativeSignInAndRelaunch": true
+  },
+  "cacheProof": {
+    "allImportedAndOtherRowsUnchanged": true,
+    "comparedImportedTables": 14,
+    "allPhoneAndMacImportedCacheTablesEqual": true,
+    "syntheticRawNotesExact": true,
+    "syntheticOtherChangedFields": [],
+    "syntheticEstimate25": true,
+    "originalMacAllCachedTablesEqual": true,
+    "originalPhoneAllCachedTablesEqual": true,
+    "pending": {
+      "importedMac": 0,
+      "importedPhone": 0,
+      "originalMac": 0,
+      "originalPhone": 0
+    }
+  },
+  "validation": {
+    "iosBuildForTesting": "passed",
+    "strictTeamAndSimulatorIdentitySigning": "passed",
+    "uiResultVerifier": "one actual passing test, no runtime warnings",
+    "macBinarySHA256": "6d5027b82a2435b55c0aa3a8c6c2ed2a1b270afc85f293ead6a76aca2716ecf3",
+    "iosUITestsSHA256": "017601b106db54808f68a5c74480f57de549e7bfebbfbcb563228a2f305dfbc6",
+    "allSixRefreshedMacViewInputsEqualOwnedSource": true
+  },
+  "observations": [
+    "CUA filtering sometimes retained stale row accessibility content/IDs; one reported element ID was invalid. Visual filtered title and full native inspector were checked before accepting synthetic task identity. This remains an automation/accessibility observation, not a proven data-filtering or VoiceOver defect.",
+    "A pre-rebind observation of a relaunched Mac app could refer to the old process. Acceptance uses explicit process rebinding, fresh native observations and exact final cache equality.",
+    "The final row renders the URL as a friendly link label; full raw URL/text equality is proven in the native inspector and canonical cache rather than treating rendered row text as raw storage."
+  ],
+  "limitations": [
+    "Actual lost-real-save-response recovery remains unverified.",
+    "No broader concurrent import/account/restore, VoiceOver, external calendar/file provider, physical APNs, Desktop widget-host or distribution acceptance is claimed.",
+    "No private source content, API key, credentials, raw cache or private screenshot is included."
+  ]
+}
