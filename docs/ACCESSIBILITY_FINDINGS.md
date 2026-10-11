@@ -29,7 +29,7 @@ Use the isolated DEBUG Simulator test bundle. Copy its xctestrun beside the orig
 
 The earlier interleaved largest audit encountered an XCTest hierarchy/type mismatch. Fresh-process viewport setup completed all eight viewports. Build v5 only improves diagnostic attachment logging; the production source, screen setup, audit types and assertions match the final v4 runtime checks.
 
-Full VoiceOver/keyboard journeys, physical devices and Mac runtime remain required. The Mac change is build-verified only. No real account/task data or Mac GUI was used, and no synchronization or persistence contract changed. The diagnostic reseeds local fixtures; its final phone task is Accessible launch brief with an open subtask, while the tablet retains its local keyboard-check capture.
+Full VoiceOver/keyboard journeys and Mac runtime remain required. The user accepts Xcode iPhone/iPad Simulators for ordinary native usability testing; signed physical APNs delivery remains a separate notification gate. The Mac change is build-verified only. No real account/task data or Mac GUI was used, and no synchronization or persistence contract changed. The diagnostic reseeds local fixtures; its final phone task is Accessible launch brief with an open subtask, while the tablet retains its local keyboard-check capture.
 
 ## Saved-preview touch activation checkpoint
 

@@ -1248,3 +1248,7 @@ The original selected note and ended Focus cold routes pass a separate cleanup c
 ### 11 October — durable completion before animation
 
 Mac list completion now synchronously commits before success feedback and registers its existing Undo immediately. The former 420 ms delay could lose completion on early process exit. The independent iOS action is corrected too; its installed medium capacity continuation verifies native completion/relaunch, exact Tomorrow route and subsequent completion/Undo. Mac isolated Debug build passes, but changed Mac interaction remains unverified with the desktop locked. See `medium-capacity-host-evidence.json`; native Mac and full P0 acceptance remain open.
+
+### 11 October — medium Project pulse host checkpoint
+
+The independent widget sources remain identical. The installed iPhone medium pulse now passes project selection, private-name configuration, cold routes, completion/relaunch refresh and original cloud-widget cleanup with six inspected captures; `medium-pulse-host-evidence.json`. No Mac production change was required. Native Mac widget/runtime acceptance remains open with the desktop locked; large pulse and other named P0 gates are unchanged.
