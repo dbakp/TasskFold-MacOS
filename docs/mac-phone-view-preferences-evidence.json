@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-11",
+  "baseCommits": {
+    "iOS": "60df90c",
+    "macOS": "f47c7ff"
+  },
+  "scope": "Native Mac favorite/board creation and relaunch, isolated second iPhone app receipt/relaunch and native list/favorite removal, native Mac return/relaunch. No production behavior changes.",
+  "bundles": {
+    "macOS": "com.dbakp.taskfold.mac.p0uitests",
+    "iOS": "com.dbakp.taskfold.providercontinuitytests"
+  },
+  "nativePhone": {
+    "selector": "TaskfoldUITests/TaskfoldUITests/testLiveMacFavoriteAndBoardRoundTrip",
+    "resultBundle": "mac-phone-view-phone-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "durationSeconds": 67.361,
+    "build": "mac-phone-view-build-v2.log",
+    "signing": "mac-phone-view-signing-v3.json",
+    "sourceSHA256": "7941b24bfac7cd8da0c8ce97896b152b97d10454b5c75f6f12037cb0ff59a23d"
+  },
+  "accepted": [
+    "Mac native View Options adds favorite and selects Board; original project ID, sections and tasks appear after Mac quit/relaunch.",
+    "Phone signs into existing disposable account through native auth in separate bundle/service/App Group. Exact stable-ID favorite routes to project; Board view is on and projectBoard exists before and after process relaunch.",
+    "Phone native view options removes favorite and switches Board view off. Relaunch retains unfavorited list with original active task.",
+    "Running Mac receives list and removed favorite; full quit/relaunch retains them.",
+    "Both caches match seven unchanged work tables, all preferences and empty favorites; pending queues empty. A default-valued project preference row remains after intentional layout changes."
+  ],
+  "dataProof": {
+    "tasks": {
+      "matchesBefore": true,
+      "matchesPhone": true
+    },
+    "projects": {
+      "matchesBefore": true,
+      "matchesPhone": true
+    },
+    "sections": {
+      "matchesBefore": true,
+      "matchesPhone": true
+    },
+    "labels": {
+      "matchesBefore": true,
+      "matchesPhone": true
+    },
+    "saved_views": {
+      "matchesBefore": true,
+      "matchesPhone": true
+    },
+    "view_orders": {
+      "matchesBefore": true,
+      "matchesPhone": true
+    },
+    "focus_sessions": {
+      "matchesBefore": true,
+      "matchesPhone": true
+    },
+    "macPending": 0,
+    "phonePending": 0,
+    "favoritesEmpty": true,
+    "allViewPreferencesEqual": true,
+    "finalProjectLayout": "list",
+    "newDefaultProjectPreferenceRow": true,
+    "secondarySimulatorBundle": "com.dbakp.taskfold.providercontinuitytests"
+  },
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-mac-view-preferences-initial.png",
+      "sha256": "e4bdd8b242561f6ea4e76e7f1da9446a49447f8b8e55c4b4682653b48d88611c",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-mac-view-preferences-relaunch.png",
+      "sha256": "be2cbf552e392d7cc2abb3bee2e7471c87dbb6f7fb892dcfe0674d403c61cf41",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-mac-view-preferences-return-list.png",
+      "sha256": "e47c9a796d0d1204e24f16c2b01574c13e20b110b31f55e119d4870e6f024d93",
+      "inspected": true
+    }
+  ],
+  "macRuntimeSourceScope": "Existing isolated Mac app is used. Store differs from owned source only by isolated App Group. TaskListView also predates focus, capture-suggestion height and reminder-guidance changes; its favorite/layout menu and persistence paths are unchanged. No claim of testing those newer unrelated paths.",
+  "setupNotes": [
+    "Initial secondary app was prepared for imported-account receipt. Interactive Simulator.app is absent from this Xcode installation; native XCTest runtime is available. Existing imported-account session read timed out; no session fixture was obtained. Changed workflow to the existing disposable continuity account rather than claim imported-account coverage.",
+    "First signing invocation used the older staged helper. Replaced it with the current independently owned helper plus secondary bundle namespace, then verified embedded Simulator identity/App Group and strict real-team signatures before the native run.",
+    "No Todoist calls or source changes in this workflow; no primary Simulator app session was cleared or primary bundle signed."
+  ],
+  "newFinding": {
+    "status": "open",
+    "id": "compact-leading-newline-note",
+    "finding": "Native Mac board and phone list captures show a blank compact description when raw stored notes begin with a newline. Both row implementations render raw notes with a one-line standard preview. Full note remains intact in both caches; fix the display preview without rewriting stored/editor text.",
+    "phoneCapture": "docs/usability-previews/phone-mac-view-preferences-return-list.png"
+  },
+  "remaining": [
+    "Real imported-account paired sync and iOS provider import",
+    "Native organization/favorite reorder and concurrent variants",
+    "Compact leading-newline note preview fix",
+    "VoiceOver, broader keyboard, Desktop widgets, physical/external-provider and distribution gates"
+  ]
+}
