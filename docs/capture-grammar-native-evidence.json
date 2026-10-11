@@ -1,0 +1,144 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native local-only recurrence/reminder capture and editor usability; no real Todoist or task data modified",
+  "applicationBehaviorChanged": false,
+  "testChanges": [
+    "Use the stable reminder task-details button ID after metadata removal instead of requiring a separate StaticText child. Assert the editor title is the expected fixture.",
+    "Verify the cleared planned date remains off after relaunch, with the independent repeating reminder still present. Verify deletion and another relaunch.",
+    "Wait for actual keyboard disappearance before photographing the long recurrence capture."
+  ],
+  "ios": {
+    "bundle": "com.dbakp.taskfold.assigneepatterntests",
+    "builds": [
+      "capture-grammar-ios-build-v1.log",
+      "capture-grammar-ios-build-v3.log"
+    ],
+    "buildResult": "TEST BUILD SUCCEEDED",
+    "strictRealTeamSignaturesVerified": [
+      "capture-grammar-ios-signing-v1.json",
+      "capture-grammar-ios-signing-v3.json"
+    ],
+    "initialRun": {
+      "bundle": "capture-grammar-phone-v1.xcresult",
+      "summary": {
+        "result": "Failed",
+        "totalTestCount": 3,
+        "passedTests": 2,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "failure": "The final task remained present as taskDetails-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa / Reminder review. The old helper required a separate StaticText child that the metadata-free accessible button no longer exposed. Captured AX hierarchy confirms the task remains in Inbox.",
+      "passingCases": [
+        "testNamedRepeatBoundariesDeadlineMoreCompletionAndRelaunch",
+        "testQuickReminderMultipleShortcutsMoreAndRelaunch"
+      ],
+      "durationsSeconds": {
+        "namedRepeat": 94.824,
+        "multipleReminders": 46.061
+      },
+      "visualLimit": "The initial repeat capture was taken during keyboard dismissal and is not accepted as settled rendering."
+    },
+    "correctedRun": {
+      "bundle": "capture-grammar-phone-v2.xcresult",
+      "summary": {
+        "result": "Passed",
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "runtimeWarnings": []
+      },
+      "cases": [
+        "testIndependentReminderEditorValidationCancelPersistenceAndDeletion",
+        "testNamedRepeatBoundariesDeadlineMoreCompletionAndRelaunch"
+      ],
+      "independentReminderDurationSeconds": 113.586,
+      "strictResultVerifierPassed": true
+    },
+    "acceptedBehavior": [
+      "Named start/until/count bounds, independent deadline and estimate survive editor save and relaunch. Completion decrements the remaining count and advances the planned date, which survives another relaunch.",
+      "Three quick reminder shortcuts (one relative, two fixed instants) survive More options, save and relaunch with their types intact.",
+      "Invalid completion-based reminder syntax is rejected; supported repeating rule saves/reopens. Clearing the task plan retains the independent reminder through relaunch; deleting that reminder also survives relaunch."
+    ],
+    "visualReview": {
+      "allFiveRetainedCapturesInspected": true,
+      "directory": "TaskFold-iOS/docs/capture-grammar-previews",
+      "details": "Corrected recurrence capture shows its complete four-line title, deadline/estimate/repeat chips and save action within the sheet after keyboard disappearance. The raw repeat-rule field is horizontally truncated when unfocused, with the complete parsed rule, occurrence count and next clock time shown below. The undated reminder screen wraps its full rule and explains that independent reminders work without a task plan. This is not VoiceOver or a clipping-audit pass."
+    },
+    "runtimeWarningScope": "Completed phone summaries report zero runtime warnings. Build logs retain the earlier changed-capture compiler warning and missing test AppIntents metadata warning; no clean-build warning claim."
+  },
+  "mac": {
+    "bundle": "com.dbakp.taskfold.mac.p0grammaruitests",
+    "build": "mac-grammar-build-v1.log",
+    "buildResult": "TEST BUILD SUCCEEDED",
+    "run": "mac-capture-grammar-native-v1.xcresult",
+    "summary": {
+      "result": "Failed",
+      "totalTestCount": 1,
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    "applicationCasesExecuted": 0,
+    "failure": "Runner failed to initialize for UI testing: Timed out while enabling automation mode. The one reported failure is runner initialization, not an executed application case.",
+    "selectedCases": [
+      "testNamedRepeatBoundariesCaptureInspectorAndRelaunch",
+      "testQuickReminderCaptureInspectorAndRelaunch",
+      "testIndependentReminderEditorValidationAutosaveAndRelaunch"
+    ],
+    "isolation": "New local-only bundle/session/recovery namespaces; current Mac-owned Swift sources with only isolated namespace substitutions. No existing session namespace reused.",
+    "nativeAcceptance": false,
+    "buildWarnings": "Existing unused withAnimation results, NSEvent Sendable unavailability and test AppIntents metadata warning remain."
+  },
+  "cloudReturn": {
+    "run": "capture-grammar-restore-v1.xcresult",
+    "strictResultVerifierPassed": true,
+    "preservation": {
+      "date": "2026-10-11",
+      "primaryCloudReturned": true,
+      "pending": 0,
+      "all14SharedTablesEqualPreviouslyAcceptedCloudBaseline": true,
+      "allOriginalTaskContentUnchanged": true,
+      "prediagnosticCacheRefreshedChanges": {
+        "projects": [
+          {
+            "id": "b14fc645-4382-4241-9d9e-21abb5bc877d",
+            "fields": [
+              "order_index"
+            ]
+          },
+          {
+            "id": "da3c355d-0bed-4649-b830-8b7af2e3f603",
+            "fields": [
+              "order_index"
+            ]
+          }
+        ]
+      },
+      "fetchedExistingRows": {
+        "saved_views": 2,
+        "favorites": 2
+      },
+      "changesBelongToPriorAcceptedOrderingHandoff": true,
+      "syntheticLocalFixtureOnly": true
+    },
+    "macAndSecondaryPhoneStillEqualAccepted14TableBaseline": true,
+    "macAndSecondaryPhonePending": 0
+  },
+  "inputsSHA256": {
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "4eef672e5a3f85508aa42599e8a1ff88d5a96057b2618dc72e46077460aab80c",
+    "TaskFold-iOS/Taskfold/Views/QuickAdd.swift": "945b773a45a7929a091a91edfe3a0ed13fc1d49d300b1efebd16f9a69b3c8878",
+    "TaskFold-iOS/Taskfold/Views/TaskEditor.swift": "6b62f76864d91813092cb02f78b33bb39436dfd3b0f843972d9c54206f4237f0",
+    "TasskFold-MacOS/TaskfoldUITests/TaskfoldMacUITests.swift": "efc0f17a86f417f3c02a2acbd3340c8a1025ea4daee470eacee22647f894b135"
+  },
+  "fullP0Accepted": false,
+  "remaining": [
+    "Mac native execution for these grammar variants",
+    "Broader capture grammar and external delivery variants",
+    "Actual notification actions/delivery",
+    "Retained accessibility findings and assistive-technology acceptance",
+    "Other current P0 checklist rows"
+  ]
+}
