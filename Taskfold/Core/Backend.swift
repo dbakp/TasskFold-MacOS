@@ -169,7 +169,7 @@ final class Backend: NSObject {
         let isolatedBundle = Bundle.main.bundleIdentifier
         let replayAccount = session?.user.id == "316d6706-449c-4ab8-8480-db12e7d92642"
             && session?.user.email?.hasPrefix("taskfold-todoist-readonly-") == true
-            && (isolatedBundle == "com.dbakp.taskfold.providercontinuitytests" || isolatedBundle == "com.dbakp.taskfold.mac.p0localuitests")
+            && (isolatedBundle == "com.dbakp.taskfold.providercontinuitytests" || isolatedBundle == "com.dbakp.taskfold.mac.p0localuitests" || isolatedBundle == "com.dbakp.taskfold.mac.p0signeduitests")
         let firstImportAccount = session?.user.id == "00befe6f-4ab3-4fe0-b346-3c262a298c24"
             && session?.user.email == "taskfold-todoist-first-53c1dae7-7745-49e7-b473-7e509756047d@example.invalid"
             && (isolatedBundle == "com.dbakp.taskfold.firstimporttests" || isolatedBundle == "com.dbakp.taskfold.mac.p0firstimporttests")

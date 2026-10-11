@@ -1,6 +1,6 @@
 {
   "checkedAtUTC": "2026-10-11T21:54:53.991798+00:00",
-  "status": "Built; native import retry not executed or accepted",
+  "status": "Superseded: native Mac replay response-loss/Retry now accepted in fresh development-signed current-source app",
   "build": "mac-import-loss-build-v2.log: BUILD SUCCEEDED",
   "failedCandidateBuild": "v1 lacked the latest Models mutation/order definitions in its old isolated stage; v2 copies current Models and succeeds",
   "sourceScope": "Current independently owned Mac Backend, TodoistImport, Editors and Models copied into the existing isolated stage. Backend session service retains its isolated test namespace. Other staged app sources are older; no full production-app acceptance claim.",
@@ -13,13 +13,13 @@
   "launch": {
     "firstPID": 16062,
     "firstCandidate": "Development-team signature verified, but macOS secinitd explicitly reported this identity absent from existing container ACL and prompted. Candidate stopped before app initialization.",
-    "currentPID": 16355,
+    "currentPID": null,
     "currentIdentity": "Restored pre-existing ad-hoc Debug identity; strict deep signature verified, sandbox entitlements retained",
-    "currentState": "Live; sampled at _libsecinit_appsandbox before Store initialization",
+    "currentState": "Retired with SIGTERM (143) after signed replacement accepted; reproducible mac-local-ui build cache pruned",
     "currentHandle": "exec session 50162",
     "osWaitEvidence": "/private/tmp/taskfold-mac-import-loss-launch-sample-v2.txt; mac-import-loss-sandbox-wait-v2.log",
     "nativeUIAccess": "Finder desktop accessible; app and CoreServicesUIAgent accessibility timed out",
-    "requiredUserAction": "Dismiss any old development-signed candidate data-access prompt with Don\u2019t Allow; do not enter credentials in chat. Request pending; current launch must be rechecked rather than restarted blindly.",
+    "requiredUserAction": null,
     "discardedSaveReceiptExists": false,
     "acceptedNativeWorkflows": 0,
     "finalWaitSample": "/private/tmp/taskfold-mac-import-loss-launch-sample-final-v1.txt"
@@ -58,5 +58,6 @@
     },
     "apnsSecretAvailability": "Not inspected; no claim of missing APNs secrets"
   },
-  "next": "Continue this live launch after the pending system dialog is cleared, then genuine Mac discard/Retry and full preservation checks. Notification Open/actions, APNs delivery and distribution remain separate open gates."
+  "next": "Native Mac notification actions and remaining P0 gates; use fresh signed acceptance workspace for app-only walks.",
+  "supersededBy": "mac-import-retry-native-evidence.json"
 }

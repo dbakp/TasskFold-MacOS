@@ -19,8 +19,12 @@ import subprocess
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--variant', choices=('p0uitests', 'p0signeduitests'), default='p0uitests',
+                        help='Use p0signeduitests for a fresh, stable development-signed acceptance container')
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
+    bundle = 'com.dbakp.taskfold.mac.' + args.variant
+    service = 'com.taskfold.mac.' + args.variant
     output = args.output.resolve()
     assert not output.exists(), 'Use a fresh task-owned workspace; never overwrite a checkout or installed app'
     assert str(output).startswith(('/private/tmp/', '/tmp/')), 'Prepare only in temporary task storage'
@@ -31,9 +35,9 @@ def main():
     shutil.copy2(source / 'Taskfold.xcodeproj/xcshareddata/xcschemes/Taskfold.xcscheme', output / 'Taskfold.xcodeproj/xcshareddata/xcschemes/Taskfold.xcscheme')
     # Namespaces only: preserve app behavior, synchronization contracts and test actions.
     changes = {}
-    replacements = {'com.taskfold.ios.session': 'com.taskfold.mac.p0uitests.session',
-                    'com.taskfold.recovery.v1': 'com.taskfold.mac.p0uitests.recovery.v1',
-                    'group.com.dbakp.taskfold': 'group.com.dbakp.taskfold.mac.p0uitests'}
+    replacements = {'com.taskfold.ios.session': service + '.session',
+                    'com.taskfold.recovery.v1': service + '.recovery.v1',
+                    'group.com.dbakp.taskfold': 'group.' + bundle}
     for path in (output / 'Taskfold').rglob('*.swift'):
         before = path.read_text(); after = before
         for old, new in replacements.items():
@@ -44,7 +48,7 @@ def main():
     assert 'Taskfold/Core/Backend.swift' in changes and 'Taskfold/Core/Backups.swift' in changes
     manifest = output / 'Taskfold/Info.plist'
     info = plistlib.loads(manifest.read_bytes())
-    info['CFBundleDisplayName'] = 'Taskfold P0 Test'
+    info['CFBundleDisplayName'] = 'Taskfold P0 Signed Test' if args.variant == 'p0signeduitests' else 'Taskfold P0 Test'
     for key in ('CFBundleURLTypes', 'CFBundleDocumentTypes', 'UTExportedTypeDeclarations', 'UTImportedTypeDeclarations'):
         info.pop(key, None)
     manifest.write_bytes(plistlib.dumps(info))
@@ -56,15 +60,15 @@ def main():
     env = dict(os.environ, TASKFOLD_WIDGETS='0')
     subprocess.run(['python3', str(output / 'Scripts/generate_project.py')], env=env, check=True, capture_output=True, text=True)
     project = output / 'Taskfold.xcodeproj/project.pbxproj'
-    text = project.read_text().replace('PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac;', 'PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.p0uitests;').replace('PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.uitests;', 'PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.p0uitests.runner;')
-    assert text.count('PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.p0uitests;') == 2
+    text = project.read_text().replace('PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac;', 'PRODUCT_BUNDLE_IDENTIFIER = ' + bundle + ';').replace('PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.uitests;', 'PRODUCT_BUNDLE_IDENTIFIER = ' + bundle + '.runner;')
+    assert text.count('PRODUCT_BUNDLE_IDENTIFIER = ' + bundle + ';') == 2
     assert 'TaskfoldWidgets.appex' not in text
     project.write_text(text)
     # A missing App Group must never fall back to the installed app's projection.
     for path in (output / 'Taskfold').rglob('*.swift'):
         body = path.read_text()
         assert '"com.taskfold.ios.session"' not in body and '"com.taskfold.recovery.v1"' not in body and '"group.com.dbakp.taskfold"' not in body
-    receipt = {'sourceRepository': str(source), 'workspace': str(output), 'bundleID': 'com.dbakp.taskfold.mac.p0uitests',
+    receipt = {'sourceRepository': str(source), 'workspace': str(output), 'bundleID': bundle,
                'sandbox': True, 'productionURLAndFileRegistrationsRemoved': True, 'embeddedWidgetExtension': False,
                'namespaceOnlySourceChanges': changes, 'replacements': replacements,
                'launchArguments': ['--uitesting'],
