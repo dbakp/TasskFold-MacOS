@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-11",
+  "scope": "iPhone normal/light quick capture controls adapt to width instead of partly hiding Inbox in a horizontal scroll strip.",
+  "productChange": {
+    "iOS": "ViewThatFits keeps the single row when all intrinsic controls fit; otherwise field chips wrap above the existing action buttons. Existing accessibility-size controls remain in the scrollable draft.",
+    "macOS": "TaskCapturePanel uses a separate destination header and parsed chips in a fixed 540-point sheet; no corresponding horizontal field-control strip. No Mac production change or new native Mac acceptance."
+  },
+  "baseCommits": {
+    "TaskFold-iOS": "67bb60e2eeb6147ea45753283803dca29e76bbef",
+    "TasskFold-MacOS": "241f116382af1257da286867aa283505a7a0a786"
+  },
+  "functionalTest": {
+    "resultBundle": "capture-controls-phone-v4.xcresult",
+    "summary": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    },
+    "checks": [
+      "With the keyboard open, Date, Inbox, More options and Save are hittable, entirely inside the app and above the keyboard; Priority is hittable.",
+      "Select Today in the native collection-view menu and assert the date control changes to Today; select Inbox in its menu.",
+      "Dismiss keyboard, verify fully visible controls, open More options and verify the cleaned title and Estimate \u00b7 25 min.",
+      "Save, terminate/relaunch, and verify the saved title and 25-minute estimate. All four final captures inspected; date also visible in editor and saved row."
+    ]
+  },
+  "repeatedSaveRegression": {
+    "resultBundle": "capture-controls-phone-v1.xcresult",
+    "case": "testRepeatedQuickCaptureSavesWithKeyboardOpen",
+    "passed": true,
+    "bundleSummary": {
+      "totalTestCount": 2,
+      "passedTests": 1,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Failed"
+    },
+    "interpretation": "Repeated-save case passed with the new production layout; the other case in that bundle failed on an ambiguous Today selector. The bundle as a whole failed."
+  },
+  "intermediateRuns": {
+    "capture-controls-phone-v2.xcresult": "Failed on the incorrect expectation that the editor label was exactly 25 min. Its menu taps did not establish a changed date.",
+    "capture-controls-phone-v3.xcresult": "Passed after correcting the editor label; superseded by v4 because menu selection did not prove the date changed.",
+    "capture-controls-build-v1.log": "Test source compile failed on unsupported lastMatch; corrected in subsequent builds."
+  },
+  "unfilteredAccessibilityAudit": {
+    "resultBundle": "capture-controls-audit-v1.xcresult",
+    "summary": {
+      "totalTestCount": 1,
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Failed"
+    },
+    "findingsByViewport": {
+      "Saved task list": 5,
+      "Editor subtask actions": 0,
+      "Editor overview": 0,
+      "Quick capture": 0
+    },
+    "previousNormalCaptureFindings": 3,
+    "remaining": "Saved task list: three hit-region findings (description plus two untargeted), description preview textClipped, native Search inbox textClipped. No findings suppressed; final assertion still fails on all five.",
+    "report": "docs/accessibility-audit-reports/capture-wrap-normal.txt"
+  },
+  "cloudCleanup": {
+    "resultBundle": "capture-controls-cloud-reset-v1.xcresult",
+    "summary": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    },
+    "checks": "Original cloud Today task, terminated-app original selected note route and ended Focus 00:03 route restored.",
+    "dataPreservation": {
+      "fullOriginalCloudCacheParsedEqual": true,
+      "originalWidgetFieldsEqual": [
+        "account",
+        "focusSession",
+        "notes",
+        "pendingSync"
+      ],
+      "pendingSync": 0,
+      "localMode": false,
+      "widgetColdLaunchFixture": false,
+      "originalMacCloudCacheUnchanged": true
+    }
+  },
+  "sourceInputHashes": {
+    "TaskFold-iOS/Taskfold/Views/QuickAdd.swift": "945b773a45a7929a091a91edfe3a0ed13fc1d49d300b1efebd16f9a69b3c8878",
+    "ios-live-stage/Taskfold/Views/QuickAdd.swift": "945b773a45a7929a091a91edfe3a0ed13fc1d49d300b1efebd16f9a69b3c8878",
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "62cc496bb8764bc300eafde3bcd2785868dc7ac73677604e7322e74cbc4e7c98",
+    "ios-live-stage/TaskfoldUITests/TaskfoldUITests.swift": "62cc496bb8764bc300eafde3bcd2785868dc7ac73677604e7322e74cbc4e7c98"
+  },
+  "receipts": [
+    {
+      "path": "capture-controls-build-v5.log",
+      "sha256": "63cc52c4b9bd66bd46c99cccebe23b357c1e981e49c8fa6e86a235d6f0cec1a2"
+    },
+    {
+      "path": "capture-controls-signing-v5.json",
+      "sha256": "2f270b3fef64de0d7df176b3ecdc4d30b41e621a6f83ca065b86070beac6e4e7"
+    },
+    {
+      "path": "capture-controls-phone-v4.log",
+      "sha256": "bb1e6d8e21738102cd3be29f70930ad9ba71e151304f36c958e2dd3fa14c8bfa"
+    },
+    {
+      "path": "capture-controls-audit-v1.log",
+      "sha256": "2b8cfeeb336dc2457fb8be994fabb7429a979b82e37c1210cdc399d6fe420d0c"
+    },
+    {
+      "path": "capture-controls-cloud-reset-v1.log",
+      "sha256": "1867deed5d3950ff137b77f786059dd435a95f4bda51c08fa7efe58bbcd76fcc"
+    },
+    {
+      "path": "capture-controls-data-proof.json",
+      "sha256": "d253d253437161e692f45a43b66ebab039fa544e57f8b185569c472e5b471ffb"
+    },
+    {
+      "path": "capture-controls-pruned-manifest.json",
+      "sha256": "4f7d0797bb45088cc78d45bfb6b6de142992bb1e9f9ae3fc479a000bf5b18e97"
+    }
+  ],
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-capture-controls-dismissed.png",
+      "sha256": "6e09d31d1db0e29591612cfeb06ff8e6099a151b24189f600081a0e6fbc336dc",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-capture-controls-editor.png",
+      "sha256": "b40db82ea91388dd94337ebf90cdfc8f8fc3e64d3d90e715901f156aff0ad227",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-capture-controls-keyboard.png",
+      "sha256": "04c1aadbef09fb8e7a15db2ad07c0155aa4c9d43e120906caf5ba0a7d05dce18",
+      "inspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-capture-controls-relaunch.png",
+      "sha256": "6ce8d47defbfef6161a256229db8962f84dd79b2e7482d3342a282b85e4c0c6d",
+      "inspected": true
+    }
+  ],
+  "remaining": "Full accessibility acceptance remains open; largest-text, iPad, native Mac and VoiceOver were not newly accepted in this checkpoint. Long selected project/section labels and narrower devices need relevant follow-up. Full P0_RELEASE_STATUS.md scope remains open."
+}
