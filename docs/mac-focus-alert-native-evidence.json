@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-11",
+  "scope": "Actual Mac Focus local notification authorization, scheduling, pause/resume cancellation and background banner delivery in isolated ui-testing workspace.",
+  "bundle": "com.dbakp.taskfold.mac.p0focuscontrasttests",
+  "binary": "BuildCache/mac-focus-contrast/Build/Products/Debug/Taskfold.app",
+  "nativeLog": "mac-focus-alert-native-v1.log",
+  "authorizationGranted": true,
+  "authorizationReceiptTime": "2026-10-11 11:33:19.847",
+  "nativePendingCounts": {
+    "started": 1,
+    "paused": 0,
+    "resumed": 1
+  },
+  "nativeStatusAfterFirstDelivery": "Time well spent / Time remaining 00:00",
+  "backgroundBannerDeliveryCount": 2,
+  "bannerDeliveryTimes": [
+    "2026-10-11 11:38:13.113",
+    "2026-10-11 11:40:54.110"
+  ],
+  "taskIDRetained": true,
+  "taskCompleted": false,
+  "pendingMutations": 0,
+  "openActionVerified": false,
+  "openActionHumanHandoffPending": true,
+  "limits": [
+    "Delivery recorded by actual macOS UserNotifications/usernoted pipeline; no simulated notification injection.",
+    "Computer use sees only the desktop calendar widget in Notification Center; its Fn modifier is unsupported, so a human click on the delivered alert was requested.",
+    "Notification Open routing is not yet accepted.",
+    "Native task reminder Complete/Snooze/Move to tomorrow, terminated-app delivery, physical/APNs and full notification acceptance remain open.",
+    "This tests the preceding binary; the newer permission-progress indicator compiles but its pending appearance remains uninspected."
+  ]
+}

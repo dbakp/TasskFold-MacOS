@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-11",
+  "scope": "Actual native Mac project-menu cloud reorder, iPhone receipt and reverse native-menu reorder, followed by Mac receipt and normal relaunch.",
+  "productionChange": false,
+  "mac": {
+    "bundle": "com.dbakp.taskfold.mac.p0importa11ytests",
+    "binary": "BuildCache/mac-selection-focus/Build/Products/Debug/Taskfold.app",
+    "reusedBuild": "mac-selection-focus-build-v2.log",
+    "sidebarSourceSHA256": "fc239de34fbb181f0b622b545939cc08471d465b4c629bbbcbdf6226997278c9",
+    "verified": [
+      "Native sign-in to synthetic continuity account",
+      "Create two empty synthetic projects",
+      "Move Beta above Alpha using native menu",
+      "Normal quit/relaunch retains Beta/Alpha",
+      "Command-R Sync Now receives phone Alpha/Beta return",
+      "Further normal quit/relaunch retains Alpha/Beta"
+    ],
+    "capturesInspectedInline": 1,
+    "newXCTestPassClaimed": false,
+    "automaticReturnRefreshClaimed": false
+  },
+  "ios": {
+    "build": "native-ordering-cloud-ios-build-v1.log",
+    "strictSigningReceipt": "native-ordering-cloud-ios-signing-v1.json",
+    "result": "native-ordering-cloud-ios-v1.xcresult",
+    "case": "testAuthorizedMacProjectOrderingReceiptAndPhoneReturn",
+    "actualPassingTests": 1,
+    "seconds": 184.771,
+    "failures": 0,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0,
+    "animationIdleDiagnosticWaits": 2,
+    "verified": [
+      "Beta/Alpha receipt with original project IDs",
+      "Normal relaunch retains Mac order",
+      "Native Alpha Move Up returns Alpha/Beta",
+      "Normal relaunch retains returned order",
+      "Original Today task still present"
+    ],
+    "capturesInspected": 3
+  },
+  "dataProof": {
+    "unchangedNonProjectTables": {
+      "reminder_preferences": true,
+      "project_collaborators": true,
+      "tasks": true,
+      "view_preferences": true,
+      "profiles": true,
+      "sections": true,
+      "view_orders": true,
+      "labels": true,
+      "focus_sessions": true,
+      "task_activity": true,
+      "favorites": true,
+      "task_activity_epoch": true,
+      "saved_views": true
+    },
+    "originalProjectExactlyUnchanged": true,
+    "allProjectRowsEqualBetweenMacAndPhone": true,
+    "projectOrder": [
+      "Continuity Studio revised",
+      "Cloud Ordering Alpha QA11Oct",
+      "Cloud Ordering Beta QA11Oct"
+    ],
+    "projectIdentities": [
+      "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+      "da3c355d-0bed-4649-b830-8b7af2e3f603",
+      "b14fc645-4382-4241-9d9e-21abb5bc877d"
+    ],
+    "macPending": 0,
+    "phonePending": 0,
+    "phoneCloudMode": true,
+    "retainedNewEmptySyntheticProjects": 2
+  },
+  "limits": [
+    "Sequential project ordering only; concurrent native ordering, saved-filter/favorite ordering handoff and offline conflict variants remain open.",
+    "Mac return used explicit Sync Now; no new automatic-refresh timing acceptance.",
+    "No VoiceOver/keyboard or full P0 acceptance.",
+    "Two empty synthetic projects are intentionally retained in the disposable account; no Todoist requests or real task changes."
+  ]
+}
