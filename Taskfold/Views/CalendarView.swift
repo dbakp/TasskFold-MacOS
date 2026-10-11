@@ -22,6 +22,7 @@ struct CalendarView: View {
     @FocusState private var focusedCard: String?
     @FocusState private var focusedGridDay: String?
     @State private var gridNavigationActive = false
+    @State private var yearNavigationActive = false
     @Namespace private var dayNamespace
 
     private var calendar: Calendar { Calendar.current }
@@ -142,10 +143,13 @@ struct CalendarView: View {
         .task(id: page) {
             // Recreating a month grid removes its old focused cell. Keep arrow
             // navigation in the calendar until the new date receives focus.
-            if mode == .month && gridNavigationActive { refocusCalendar() }
+            if (mode == .month && gridNavigationActive) || (mode == .year && yearNavigationActive) { refocusCalendar() }
         }
         .onChange(of: workspace.calendarDay) { _, _ in page = page(containing: selected, mode: mode) }
         .onChange(of: workspace.calendarMode) { _, _ in
+            gridNavigationActive = false
+            yearNavigationActive = false
+            focusedGridDay = nil
             withAnimation(layout) { page = page(containing: selected, mode: mode) }
             refocusCalendar()
         }
@@ -165,6 +169,11 @@ struct CalendarView: View {
             if mode == .month && press.key == .downArrow {
                 gridNavigationActive = true
                 focusedGridDay = Dates.day(selected)
+                return .handled
+            }
+            if mode == .year && yearNavigationActive { return yearGridKey(press) }
+            if mode == .year && press.key == .downArrow {
+                yearNavigationActive = true
                 return .handled
             }
             if press.key == .leftArrow { shift(-1); return .handled }
@@ -503,12 +512,8 @@ struct CalendarView: View {
         let cells = days(from: first, count: 42)
         let isCurrent = calendar.isDate(month, equalTo: today, toGranularity: .month)
         let total = cells.filter { calendar.isDate($0, equalTo: month, toGranularity: .month) }.reduce(0) { $0 + open(on: $1) }
-        return Button {
-            withAnimation(layout) {
-                workspace.calendarDay = isCurrent ? today : month
-                workspace.calendarMode = .month
-            }
-        } label: {
+        let isSelected = calendar.isDate(month, equalTo: selected, toGranularity: .month)
+        return Button { openMonth(month) } label: {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text(month.formatted(.dateTime.month(.wide))).font(.callout.weight(.semibold)).foregroundStyle(isCurrent ? Color.taskfold : .primary)
@@ -523,18 +528,51 @@ struct CalendarView: View {
                             .fill(count == 0 ? Color.primary.opacity(0.07) : Color.taskfold.opacity(min(1, 0.35 + Double(count) * 0.2)))
                             .aspectRatio(1, contentMode: .fit)
                             .opacity(inMonth ? 1 : 0)
-                            .overlay { if calendar.isDate(day, inSameDayAs: today) { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.taskfold, lineWidth: 1) } }
+                            .overlay { if inMonth && calendar.isDate(day, inSameDayAs: today) { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.taskfold, lineWidth: 1) } }
                     }
                 }
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .modifier(CardSurface(radius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.taskfold, lineWidth: isSelected ? 2 : 0))
             .contentShape(.rect)
         }
         .buttonStyle(PressableStyle())
         .accessibilityLabel(month.formatted(.dateTime.month(.wide).year()))
         .accessibilityValue(total == 0 ? "No tasks" : "\(total) tasks")
+        .accessibilityIdentifier("calendar-month-" + Dates.day(month))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint("Open this month's calendar. Press Down Arrow in Year view to navigate months with the arrow keys.")
+        .accessibilityAction(named: Text("Open month")) { openMonth(month) }
+    }
+
+    private func openMonth(_ month: Date) {
+        yearNavigationActive = false
+        withAnimation(layout) {
+            workspace.calendarDay = calendar.isDate(month, equalTo: today, toGranularity: .month) ? today : month
+            workspace.calendarMode = .month
+        }
+    }
+
+    private func yearGridKey(_ press: KeyPress) -> KeyPress.Result {
+        if press.key == .return { openMonth(startOfMonth(selected)); return .handled }
+        if press.key == .escape {
+            yearNavigationActive = false
+            refocusCalendar()
+            return .handled
+        }
+        let delta: Int
+        switch press.key {
+        case .leftArrow: delta = -1
+        case .rightArrow: delta = 1
+        case .upArrow: delta = -4
+        case .downArrow: delta = 4
+        default: return .ignored
+        }
+        guard let next = calendar.date(byAdding: .month, value: delta, to: startOfMonth(selected)) else { return .ignored }
+        select(next)
+        return .handled
     }
 
     // MARK: Selected day panel

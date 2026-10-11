@@ -1914,3 +1914,32 @@ extension TaskfoldMacUITests {
         retainWindow(app, name: "Month date keyboard movement opens exact day")
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testYearGridKeyboardSelectsMonthsAcrossYears() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES"]
+        app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["Year"].waitForExistence(timeout: 10)); app.buttons["Year"].click()
+        let calendar = Calendar.current
+        let current = try XCTUnwrap(calendar.dateInterval(of: .month, for: Date())?.start)
+        let formatter = DateFormatter(); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.dateFormat = "yyyy-MM-dd"
+        func month(_ date: Date) -> XCUIElement { app.buttons["calendar-month-" + formatter.string(from: date)] }
+        XCTAssertTrue(month(current).waitForExistence(timeout: 5)); XCTAssertTrue(month(current).isSelected)
+        app.typeKey(.downArrow, modifierFlags: [])
+        let next = try XCTUnwrap(calendar.date(byAdding: .month, value: 1, to: current))
+        app.typeKey(.rightArrow, modifierFlags: []); XCTAssertTrue(month(next).isSelected)
+        let rowDown = try XCTUnwrap(calendar.date(byAdding: .month, value: 4, to: next))
+        app.typeKey(.downArrow, modifierFlags: [])
+        XCTAssertTrue(month(rowDown).waitForExistence(timeout: 5)); XCTAssertTrue(month(rowDown).isSelected)
+        app.typeKey(.upArrow, modifierFlags: [])
+        XCTAssertTrue(month(next).waitForExistence(timeout: 5)); XCTAssertTrue(month(next).isSelected)
+        app.typeKey(.leftArrow, modifierFlags: []); XCTAssertTrue(month(current).isSelected)
+        app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(app.buttons["Month"].isSelected)
+        let today = app.buttons["calendar-day-" + formatter.string(from: Date())]
+        XCTAssertTrue(today.waitForExistence(timeout: 5)); XCTAssertTrue(today.isSelected)
+        retainWindow(app, name: "Year keyboard month selection opens populated current month")
+    }
+}
