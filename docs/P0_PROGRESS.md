@@ -20,7 +20,7 @@ Recent work includes actual user-visible calendar/accessibility fixes, native wo
 ## Next execution order
 
 1. Scoped landscape Today task/Search/rotation and capture checks now pass normal/largest native cases (`landscape-today-evidence.json`). General long-row visibility and keyboard-visible composer polish remain open. Move next to the import/notification gates rather than additional calendar combinations.
-2. Finish native Mac discard/retry (its running binary predates the hook), then real notification actions. iPhone first-import response-loss recovery now passes (`first-import-recovery-evidence.json`).
+2. Finish native Mac discard/retry: the isolated app is rebuilt, but its current launch is waiting in macOS sandbox initialization (`mac-import-retry-readiness.json`); dismissing the old signing-attempt system dialog was requested. Then verify real notification actions. iPhone first-import response-loss recovery now passes (`first-import-recovery-evidence.json`).
 3. Complete critical accessibility/attachment journeys, then the outstanding installed widget hosts.
 4. Close APNs and distribution gates with actual credentials/signing/delivery evidence. Revalidate current availability before describing any external prerequisite as blocked.
 

@@ -1,0 +1,62 @@
+{
+  "checkedAtUTC": "2026-10-11T21:54:53.991798+00:00",
+  "status": "Built; native import retry not executed or accepted",
+  "build": "mac-import-loss-build-v2.log: BUILD SUCCEEDED",
+  "failedCandidateBuild": "v1 lacked the latest Models mutation/order definitions in its old isolated stage; v2 copies current Models and succeeds",
+  "sourceScope": "Current independently owned Mac Backend, TodoistImport, Editors and Models copied into the existing isolated stage. Backend session service retains its isolated test namespace. Other staged app sources are older; no full production-app acceptance claim.",
+  "sourceSha256": {
+    "Taskfold/Core/Backend.swift": "228eb6b5e64ebfef42182a04c50a323f4d649fd3a3ac1423d79bedb5b5a912a7",
+    "Taskfold/Core/TodoistImport.swift": "16401db77be0ca0e747eab25187960993cfda71e991caed1a70a7f49abf3353d",
+    "Taskfold/Views/Editors.swift": "245b57063eb4b94855615fa02db8fb1d236729779b8b6e34d5eec22857bfd49c",
+    "Taskfold/Core/Models.swift": "df922353f53e98f128cc4e7434e7e624b1541577a6d7b4dd4acc78ee3b6365a4"
+  },
+  "launch": {
+    "firstPID": 16062,
+    "firstCandidate": "Development-team signature verified, but macOS secinitd explicitly reported this identity absent from existing container ACL and prompted. Candidate stopped before app initialization.",
+    "currentPID": 16355,
+    "currentIdentity": "Restored pre-existing ad-hoc Debug identity; strict deep signature verified, sandbox entitlements retained",
+    "currentState": "Live; sampled at _libsecinit_appsandbox before Store initialization",
+    "currentHandle": "exec session 50162",
+    "osWaitEvidence": "/private/tmp/taskfold-mac-import-loss-launch-sample-v2.txt; mac-import-loss-sandbox-wait-v2.log",
+    "nativeUIAccess": "Finder desktop accessible; app and CoreServicesUIAgent accessibility timed out",
+    "requiredUserAction": "Dismiss any old development-signed candidate data-access prompt with Don\u2019t Allow; do not enter credentials in chat. Request pending; current launch must be rechecked rather than restarted blindly.",
+    "discardedSaveReceiptExists": false,
+    "acceptedNativeWorkflows": 0,
+    "finalWaitSample": "/private/tmp/taskfold-mac-import-loss-launch-sample-final-v1.txt"
+  },
+  "preservation": {
+    "macCachedAccounts": {
+      "316d6706-449c-4ab8-8480-db12e7d92642": {
+        "completeSnapshotExact": true,
+        "tables": 15,
+        "tasks": 256,
+        "pending": 0
+      },
+      "9a8bfc3d-42ec-4c89-8f1d-c830b2215152": {
+        "completeSnapshotExact": true,
+        "tables": 14,
+        "tasks": 3,
+        "pending": 0
+      }
+    },
+    "importedAccountCompleteServerTablesExact": 15,
+    "transientTodoistTokenRemovedFromPrivateFixture": true,
+    "clipboardTokenCleared": true,
+    "todoistSourceRequestsThisTurn": "GET-only fingerprint preflight; no native importer request reached before initialization wait"
+  },
+  "externalGateRevalidation": {
+    "checkedAtUTC": "2026-10-11T21:52:06.347174Z",
+    "nativeReminderRolloutEnabled": false,
+    "activePilots": 0,
+    "nativeReminderSweepActive": false,
+    "existingWebDueTaskCronActive": true,
+    "configurationChanged": false,
+    "validLocalSigningIdentities": {
+      "AppleDevelopment": 1,
+      "DeveloperIDApplication": 0,
+      "AppleDistribution": 0
+    },
+    "apnsSecretAvailability": "Not inspected; no claim of missing APNs secrets"
+  },
+  "next": "Continue this live launch after the pending system dialog is cleared, then genuine Mac discard/Retry and full preservation checks. Notification Open/actions, APNs delivery and distribution remain separate open gates."
+}
