@@ -434,8 +434,18 @@ struct TaskInspectorForm: View {
         let value = attachment.string("url")
         if value.hasPrefix("data:"), let comma = value.firstIndex(of: ","), let data = Data(base64Encoded: String(value[value.index(after: comma)...])) {
             let safeName = URL(fileURLWithPath: attachment.string("name")).lastPathComponent
-            let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString)-\(safeName)")
-            do { try data.write(to: url, options: .atomic); preview = url } catch { store.error = error.localizedDescription }
+            // Isolate each preview without exposing its internal identifier as the filename.
+            let directory = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-attachment-\(UUID().uuidString)", isDirectory: true)
+            let name = safeName.isEmpty || safeName == "." || safeName == ".." ? "Attachment" : safeName
+            let url = directory.appendingPathComponent(name)
+            do {
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                try data.write(to: url, options: .atomic)
+                preview = url
+            } catch {
+                try? FileManager.default.removeItem(at: directory)
+                store.error = error.localizedDescription
+            }
         } else if let url = URL(string: value), url.scheme == "https" { NSWorkspace.shared.open(url) }
         else { store.error = "This attachment cannot be opened." }
     }

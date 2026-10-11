@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-11",
+  "scope": "Independently owned Mac/iOS embedded attachment preview filenames and scoped native import, relaunch, preview and removal workflows.",
+  "change": "Use a unique temporary directory containing the sanitized original filename instead of adding a UUID to that filename. Preserve attachment metadata, bytes, extension and HTTPS handling; remove the temporary directory on write failure.",
+  "sourceSHA256": {
+    "TasskFold-MacOS/Taskfold/Views/TaskInspector.swift": "8fcf5d4c1d4506e1eeb1545e931b49919990e61967f6fdfa0d3bcda48d95815c",
+    "TaskFold-iOS/Taskfold/Views/TaskEditor.swift": "af8253f869c100a262dbb44a150a2901bb1ed278e1af99510d79f8eee354325e",
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "4bd49732ca7ba5b664550dbfb110ad0f28c604bdd81bdc6fe4cd6dd515942e8c"
+  },
+  "mac": {
+    "bundle": "com.dbakp.taskfold.mac.p0grammaruitests",
+    "build": "attachment-name-mac-build-v1.log: TEST BUILD SUCCEEDED; app-only ad-hoc diagnostic build",
+    "execution": "Native CUA accessibility and inspected screenshots, not XCTest.",
+    "checks": [
+      "Cancel actual Attach a File picker without attachment/task changes.",
+      "Select repository-owned Taskfold-P0-attachment-checker.png in actual Open dialog and import exactly one file.",
+      "Saved attachment MIME image/png, size 166 and full bytes equal fixture.",
+      "Normal relaunch retains task and attachment; actual Quick Look shows four checker quadrants.",
+      "Before fix actual preview title exposed UUID prefix; after rebuild title is Taskfold-P0-attachment-checker.png.",
+      "Close preview, remove attachment through inspector, normal relaunch retains original task without attachment."
+    ],
+    "fixtureSHA256": "a0de969ebf719436c877b171aa31c35724597bdf9eeef51bc695d1e6bcd0c0b2",
+    "preservation": {
+      "allTablesExactlyRestored": true,
+      "changedTables": [],
+      "pending": 0
+    },
+    "observationLimit": "Initial Go To paste failed to replace the path; no unrelated file was opened. Explicit path-field setValue selected the exact fixture. Mac screenshots were inspected inline; no retained Mac PNG is claimed."
+  },
+  "iphone": {
+    "bundle": "com.dbakp.taskfold.assigneepatterntests",
+    "device": "iPhone 17 Pro, iOS 26.5 Simulator",
+    "build": "attachment-name-ios-build-v3.log: TEST BUILD SUCCEEDED",
+    "signing": "attachment-name-ios-signing-v3.json: strict real development team signatures and preserved app/group identities",
+    "test": "testNativePhotoSelectionPersistsAttachmentAfterRelaunch",
+    "resultBundle": "attachment-name-phone-v3.xcresult",
+    "result": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 78.593,
+      "runtimeWarnings": []
+    },
+    "checks": [
+      "Native Photos selection/save/relaunch and retained Photo.png attachment.",
+      "Quick Look navigation title Photo, actual checker image canvas 64 by 64, close/return.",
+      "Swipe Delete, Save and relaunch: task remains open, attachment metadata and editor attachment are absent."
+    ],
+    "captures": [
+      "docs/attachment-name-previews/phone-quick-look-filename.png",
+      "docs/attachment-name-previews/phone-task-retained-after-removal.png"
+    ],
+    "captureLimits": "Two final captures inspected. Removal capture shows retained task title at the top of the editor; XCTest and local cache establish absent attachment. Other exported captures are not claimed as visually inspected.",
+    "earlierRuns": [
+      "v1 passed 1 case in 62.495 seconds, native preview/return before removal assertions.",
+      "v2 failed after successful title/removal/save/relaunch because helper tapped an absent child static text. Final helper uses existing taskDetails button; no product change for that failure. Failed result bundle retained."
+    ],
+    "cloudReturn": {
+      "resultBundle": "attachment-name-cloud-return-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "preservation": {
+        "sharedTablesCompared": 14,
+        "changedTables": [],
+        "pending": 0,
+        "localPhotoTaskRetained": true,
+        "localPhotoAttachments": 0,
+        "localPending": 0
+      }
+    }
+  },
+  "focusNotificationRecheck": "After latest user unlock, existing Focus fixture still shows Inbox and no finished sheet. Actual notification Open remains unaccepted; no restart or manual Focus opening used as evidence.",
+  "limits": [
+    "Local PNG native Mac workflow only. Authenticated native Mac attachment handoff and external file providers remain open.",
+    "No new iPad, VoiceOver, signed Mac widget-host or distribution acceptance.",
+    "Original Todoist account not accessed or mutated by these local workflows.",
+    "Both repositories own their implementation; no cross-repository build dependency or data-contract change. Full P0 objective remains active."
+  ]
+}
