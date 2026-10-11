@@ -1,0 +1,140 @@
+{
+  "date": "2026-10-11",
+  "scope": "iOS 3-day/5-day/Week date readability and selection/task routes in portrait. Normal/light iPhone, accessibility XXXL/dark iPhone and iPad; shared Month largest-text regressions.",
+  "productChanges": [
+    "Accessibility-size short periods use full-width wrapping weekday/date/task-count rows, sharing the Month date-list implementation. Normal day strips retain their layout.",
+    "The date-list pager has 268 points, vertical scrolling keeps the calendar expanded, and selection/Today reveal the selected date. Today remains available for date lists even when already selected.",
+    "No persistence, synchronization, task contents or widget contracts changed. Mac has independent wide-window day/task columns rather than the iOS 92-point pager; no Mac production change or sibling dependency was introduced."
+  ],
+  "build": "build-for-testing v2 and v3 succeeded; v3 changes only the test reveal helper, leaving final production source identical to v2. Strict genuine Apple Development signatures and dedicated App Group verified; short-calendar/signing.json.",
+  "sourceSha256": {
+    "CalendarView.swift": "39c22638e163c3eb9aed5683d2e0425b3239aaa00dfdf37f3964c9454f8a42eb",
+    "TaskfoldUITests.swift": "5622ccbf9e8eb1397c5a4f7a66ab6dc877eb4a9c4b0dad267e0ebd5a13ecb039"
+  },
+  "acceptedNativeCases": [
+    {
+      "result": "ios-short-calendar-native-v2.xcresult",
+      "case": "testShortCalendarPeriodsDateAndTaskRoute",
+      "device": "iPhone",
+      "seconds": 87.13,
+      "scope": "All three normal/light periods; every complete date target >=44x44 inside pager/window, first/last selection, Today, original task, Cancel and normal relaunch."
+    },
+    {
+      "result": "ios-short-calendar-native-v2.xcresult",
+      "case": "testMonthCalendarDayAndTaskRouteDarkLargest",
+      "device": "iPhone",
+      "seconds": 111.264,
+      "scope": "Shared date-list Month regression."
+    },
+    {
+      "result": "ios-short-calendar-tablet-v1.xcresult",
+      "case": "testMonthCalendarDayAndTaskRouteDarkLargest",
+      "device": "iPad",
+      "seconds": 110.767,
+      "scope": "Shared date-list Month regression."
+    },
+    {
+      "result": "ios-short-calendar-native-v3.xcresult",
+      "case": "testShortCalendarPeriodsDateAndTaskRouteDarkLargest",
+      "device": "iPhone",
+      "seconds": 218.922,
+      "scope": "All three largest/dark periods; every one of fifteen date rows fully inside its scroll viewport/pager/window and >=44x44, first/last selected, Today returns full selected row without corrective scrolling, collapse, exact task, Cancel and normal relaunch."
+    },
+    {
+      "result": "ios-short-calendar-tablet-v2.xcresult",
+      "case": "testShortCalendarPeriodsDateAndTaskRouteDarkLargest",
+      "device": "iPad",
+      "seconds": 227.93,
+      "scope": "Same complete fifteen-row/selection/Today/task/relaunch checks on tablet."
+    }
+  ],
+  "acceptanceLimits": "Five accepted case/device pairs cover eleven workflows (nine short-period routes plus two Month regressions). v2 phone and v1 tablet bundles are overall FAILED: accepted normal/Month cases coexist with failed initial largest short-period cases. Those failures are superseded only by the named v3 phone/v2 tablet passes. No broad clean-runtime or spoken-accessibility claim.",
+  "intermediateResults": [
+    "Native v1 baseline largest phone fails: 120-point date target at y321..441 extends beyond pager y335..427. Inspected capture shows 11 clipped to 1 and following dates cut in half.",
+    "After the production fix, v2 normal phone and Month phone/tablet pass. Largest phone fails full-row containment while large drags alternate around the taller Wednesday row. Tablet fails resolving an earlier virtualized date after scrolling. These are retained failed evidence.",
+    "Final test-only correction uses smaller centered drags, direction from the last revealed date when a row is virtualized, and failure screenshot/hierarchy diagnostics. Full containment, target size, selected traits, Today, task and persistence assertions remain in place. Affected largest cases pass on both devices."
+  ],
+  "preservation": {
+    "originalAccounts": [
+      {
+        "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "protectedFileCount": 26,
+        "fullProtectedFileSetAndHashesExact": true
+      },
+      {
+        "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "protectedFileCount": 43,
+        "fullProtectedFileSetAndHashesExact": true
+      }
+    ],
+    "isolatedLocalFixtures": [
+      {
+        "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "tasks": 3,
+        "allOpen": true,
+        "idsTitlesEstimatesExact": true,
+        "pending": 0
+      },
+      {
+        "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "tasks": 3,
+        "allOpen": true,
+        "idsTitlesEstimatesExact": true,
+        "pending": 0
+      }
+    ],
+    "backendOrTodoistOperationsPerformed": 0,
+    "bundle": "com.dbakp.taskfold.calendaraccessibilitytests",
+    "appGroup": "group.com.dbakp.taskfold.calendaraccessibilitytests"
+  },
+  "visualInspection": {
+    "captures": [
+      "phone-largest-before.png",
+      "phone-normal-week.png",
+      "phone-largest-three-days.png",
+      "phone-largest-five-days-wednesday.png",
+      "phone-largest-week-today.png",
+      "phone-largest-exact-task.png",
+      "tablet-largest-five-days-wednesday.png",
+      "tablet-largest-week-today.png"
+    ],
+    "findings": [
+      "Complete Sunday 11 and its count replace the misleading clipped date. Wednesday 14 wraps fully on phone and stays on one line on iPad. Normal Week retains all seven complete dates.",
+      "Adjacent partial rows in date-list viewports are expected; native checks require the target row in full.",
+      "Expanded largest phone calendar leaves little visible task-list space; explicit collapse and exact-task route pass. Screenshots do not establish every list/FAB or animation state."
+    ]
+  },
+  "remaining": [
+    "Phone landscape calendar and remaining compact-height/calendar journeys",
+    "Day hourly-planner usability beyond existing evidence",
+    "Largest iPad sidebar readability and settled transitions",
+    "Full VoiceOver and broader keyboard journeys",
+    "Other P0_RELEASE_STATUS.md gates"
+  ],
+  "cleanup": {
+    "duplicateExportsRemoved": [
+      {
+        "directory": "ios-short-calendar-attachments-v1",
+        "bytes": 11005385
+      },
+      {
+        "directory": "ios-short-calendar-attachments-v2",
+        "bytes": 52813067
+      },
+      {
+        "directory": "ios-short-calendar-attachments-v3",
+        "bytes": 6984349
+      },
+      {
+        "directory": "ios-short-calendar-tablet-attachments-v1",
+        "bytes": 53873690
+      },
+      {
+        "directory": "ios-short-calendar-tablet-attachments-v2",
+        "bytes": 5592903
+      }
+    ],
+    "bytesRemoved": 130269394,
+    "preserved": "Original xcresults, logs, signing receipts, exported manifests and selected repository captures retained."
+  }
+}
