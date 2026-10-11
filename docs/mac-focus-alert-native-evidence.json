@@ -44,6 +44,6 @@
     "window": "Inbox \u2013 1 task",
     "task": "Focus on the next useful step",
     "finishedSheetVisible": false,
-    "action": "After latest user go/unlock reply, selected the existing mac-focus-alert-products app by exact path. Native accessibility shows Inbox and the fixture task, with no finished Focus sheet. Process was not restarted; notification Open remains unverified."
+    "action": "Rechecked the same PID 19758 after the latest user go/unlock reply. Native accessibility still shows Inbox with one fixture task and no finished Focus sheet. No process restart; notification Open remains unverified."
   }
 }

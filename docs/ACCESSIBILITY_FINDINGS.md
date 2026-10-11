@@ -217,3 +217,10 @@ Actual Mac keyboard acceptance exposed a functional caret defect after choosing 
 ### 11 October — native Mac chip keyboard continuation
 
 Capture and inspector now preserve the complete draft when returning from a chip. Native Space, backward/forward Delete, Escape and multi-chip isolation pass; inspector Tab reaches chips before applying values, and declined literal words survive save/relaunch. Two regression cases compile; execution evidence is native CUA, not a new XCTest pass. See `mac-chip-keyboard-evidence.json`. These are functional keyboard corrections, with no iOS clipping-audit suppression or full VoiceOver clearance. Rapid-quit autosave timing remains unaccepted after an early reset failed to survive immediate quit.
+
+
+### 11 October — compact Mac calendar card focus
+
+Native testing reproduced two defects: compact cards ignored Return/Space without the day-panel table, and their combined accessibility element inherited completion as its primary action. Mac cards now own focus, select on primary activation, expose separate inspector/completion actions, and support Return, Space, arrows and Escape. Native compact Week/3 Days/5 Days, completion/Undo, hidden-inspector reopening, capture text isolation, normal relaunch and wide-layout Return pass. All five task business records are preserved; one completion revision advances and four expected completion/Undo activity rows remain. The final app-only test build succeeds and a regression compiles; no new XCTest runtime pass is claimed. See `mac-calendar-card-keyboard-evidence.json`.
+
+The DEBUG local grammar fixture also avoids loading a cloud session at startup; normal/Release/authenticated launches retain their existing path. iOS receives documentation only and retains its independently owned implementation. Month/year grid navigation, full VoiceOver, existing clipping/widget warnings and wider P0 gates remain open. Existing Focus inspection after unlock still shows Inbox without a finished-session panel, so notification Open remains unverified.

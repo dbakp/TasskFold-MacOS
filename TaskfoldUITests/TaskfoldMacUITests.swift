@@ -1795,3 +1795,40 @@ extension TaskfoldMacUITests {
         }
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testCompactCalendarCardsOwnKeyboardFocus() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--planner-fixture", "-localMode", "YES"]
+        app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["Week"].waitForExistence(timeout: 10)); app.buttons["Week"].click()
+        let window = app.windows.firstMatch
+        if window.frame.width > 1080 {
+            let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1)).withOffset(CGVector(dx: -3, dy: -3))
+            corner.press(forDuration: 0.2, thenDragTo: corner.withOffset(CGVector(dx: 1080 - window.frame.width, dy: 0)))
+        }
+        XCTAssertFalse(app.otherElements["calendarDayPanel"].exists)
+        let report = app.buttons["calendar-card-planner-report"]
+        XCTAssertTrue(report.waitForExistence(timeout: 5)); report.click()
+        XCTAssertEqual(report.value as? String, "Open")
+        let title = app.textFields["taskTitle"]
+        if title.exists { app.typeKey("i", modifierFlags: [.command, .option]) }
+        report.click(); XCTAssertFalse(title.exists)
+        app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(title.waitForExistence(timeout: 5)); XCTAssertEqual(title.value as? String, "Prepare report")
+        app.typeKey("i", modifierFlags: [.command, .option])
+        report.click(); app.typeKey(" ", modifierFlags: [])
+        XCTAssertEqual(report.value as? String, "Completed")
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertEqual(report.value as? String, "Open")
+        let cards = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "calendar-card-"))
+        XCTAssertGreaterThanOrEqual(cards.count, 2)
+        let firstID = cards.element(boundBy: 0).identifier, secondID = cards.element(boundBy: 1).identifier
+        app.buttons[firstID].click(); app.typeKey(.downArrow, modifierFlags: [])
+        XCTAssertTrue(app.buttons[secondID].isSelected)
+        app.typeKey(.upArrow, modifierFlags: []); XCTAssertTrue(app.buttons[firstID].isSelected)
+        app.typeKey(.escape, modifierFlags: []); XCTAssertFalse(app.buttons[firstID].isSelected)
+        retainWindow(app, name: "Compact Calendar cards keep their own keyboard focus")
+    }
+}

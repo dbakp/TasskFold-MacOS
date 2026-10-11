@@ -157,7 +157,7 @@ final class Store {
     var lastSync: Date?
     var undoStack: [EditHistory] = []
     var redoStack: [EditHistory] = []
-    let backend = Backend()
+    let backend: Backend
     private let monitor = NWPathMonitor()
     private var accountGeneration = UUID()
     @ObservationIgnored private var consumingWidgetActions = false
@@ -419,6 +419,17 @@ final class Store {
         return folder.appending(path: "\(userID.isEmpty ? "signed-out" : userID).json")
     }
     init() {
+        #if DEBUG
+        // This local-only fixture must never read another app's stored cloud credentials.
+        // Keep authenticated test variants and every normal app launch on the existing path.
+        if Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.p0grammaruitests",
+           ProcessInfo.processInfo.arguments.contains("--uitesting"),
+           UserDefaults.standard.bool(forKey: "localMode") {
+            backend = Backend(session: nil)
+        } else { backend = Backend() }
+        #else
+        backend = Backend()
+        #endif
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test") {
             try? backend.clearSession()

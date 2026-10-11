@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native Mac calendar cards in compact Week, 3 Days and 5 Days layouts, with a wide-layout return check; independently owned Mac implementation.",
+  "bundle": "com.dbakp.taskfold.mac.p0grammaruitests",
+  "baselineDefect": [
+    "At 1080pt without the day-panel task table, selected cards ignored Return and Space.",
+    "The combined accessibility element inherited completion as its primary action; selecting a card could complete it. The synthetic completion was immediately undone."
+  ],
+  "implementation": [
+    "Cards own keyboard focus and selection. Return opens details, Space toggles completion, Up/Down moves within the day, and Escape clears selection and returns calendar focus. Modified shortcuts and key repeats are not intercepted.",
+    "Accessibility primary action selects; named Open in Inspector and Complete/Reopen actions are separate. Status, planned time and project remain in the accessible value.",
+    "Only the explicit DEBUG local grammar fixture starts with Backend(session:nil), avoiding an unrelated cloud Keychain read. Normal, Release and authenticated fixtures retain their existing startup path."
+  ],
+  "nativeAcceptance": {
+    "windowWidthsPoints": [
+      1080,
+      1380
+    ],
+    "compactDayPanelAbsent": true,
+    "primaryActionSelectsWithoutCompletion": true,
+    "returnReopensHiddenInspector": true,
+    "spaceCompletionAndCommandZUndo": true,
+    "upDownSelection": true,
+    "escapeClearsSelection": true,
+    "tabEntryToCards": true,
+    "threeDayReturn": true,
+    "fiveDayNamedInspectorAction": true,
+    "quickCaptureSpacesRemainText": true,
+    "normalRelaunchSavedTasksRetained": true,
+    "wideReturnOpensCorrectInspector": true,
+    "note": "Native actions used build v4. Final v6 additionally includes planned-time accessibility metadata; these all-day native cards have no clock value. Timed-card runtime is not claimed."
+  },
+  "dataPreservation": {
+    "allFiveTaskBusinessFieldsUnchanged": true,
+    "oneTaskOnlyCompletionRevisionAdvanced": true,
+    "allOriginalActivityRowsRetained": 22,
+    "expectedCompletionUndoActivityRowsAdded": 4,
+    "rawCacheTablesUnchanged": 7,
+    "rawCacheTablesTotal": 9,
+    "pending": 0,
+    "noTasksAddedOrRemoved": true
+  },
+  "builds": {
+    "final": "calendar-keyboard-mac-build-v6.log: TEST BUILD SUCCEEDED",
+    "earlierSuccessful": [
+      "v1 fixture startup isolation",
+      "v4 native acceptance binary",
+      "v5 strengthened test precondition"
+    ],
+    "earlierFailures": [
+      "v2 SwiftUI type-check timeout",
+      "v3 SwiftUI type-check timeout"
+    ],
+    "repair": "Extracted the unchanged card content and keyboard handler to reduce type-check complexity.",
+    "warning": "App-only AppIntents metadata extraction skipped because no AppIntents.framework dependency was present."
+  },
+  "regression": {
+    "name": "testCompactCalendarCardsOwnKeyboardFocus",
+    "compiled": true,
+    "executed": false,
+    "reason": "Existing Mac XCTest automation initialization failure was not rerun unchanged. Native CUA actions supply this acceptance."
+  },
+  "diagnostics": [
+    "Initial explicit local fixture startup blocked in SecureSession.read/SecItemCopyMatching; sampled before fixing DEBUG fixture isolation. Corrected local startup needed no Keychain prompt.",
+    "After normal Quit, a screen observation launched a bare fixture process without the required arguments. Its arguments and blocked stack were checked, that instance was stopped and the intended explicit fixture was relaunched. This does not establish a product Quit failure."
+  ],
+  "artifactsOutsideRepos": [
+    "calendar-keyboard-mac-before-v1.json",
+    "calendar-keyboard-mac-after-v1.json",
+    "calendar-keyboard-mac-preservation-v1.json",
+    "calendar-keyboard-mac-build-v1.log through calendar-keyboard-mac-build-v6.log"
+  ],
+  "platformSeparation": "Mac source and regression stay in the Mac repository. iOS retains its own TaskRow/editor implementation and receives evidence/status documentation only; no new iOS build or runtime acceptance is claimed.",
+  "limits": [
+    "Month/year grid keyboard journeys and full VoiceOver remain open.",
+    "Dark appearance, other accessibility settings and drag/drop were not rechecked in this scoped walk.",
+    "Existing local widget completion warning remains visible; this change does not resolve it.",
+    "No installed Mac widget or distribution acceptance is inferred.",
+    "Existing cloud and Focus test processes were not restarted or modified. Latest existing Focus inspection still shows Inbox without the finished-session sheet; notification Open remains unverified.",
+    "Full P0 remains open."
+  ]
+}

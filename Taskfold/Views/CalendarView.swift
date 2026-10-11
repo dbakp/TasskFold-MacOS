@@ -19,6 +19,7 @@ struct CalendarView: View {
     @State private var declinedGroups = Set<String>()
     @FocusState private var calendarFocused: Bool
     @FocusState private var taskListFocused: Bool
+    @FocusState private var focusedCard: String?
     @Namespace private var dayNamespace
 
     private var calendar: Calendar { Calendar.current }
@@ -254,7 +255,52 @@ struct CalendarView: View {
     }
     private func calendarCard(_ task: Record, day: Date) -> some View {
         let selectedTask = workspace.selection.contains(task.id)
-        return HStack(alignment: .firstTextBaseline, spacing: 8) {
+        let projectName = store.record("projects", id: task.string("project_id"))?.name ?? ""
+        let plannedTime = task.string("due_time").isEmpty ? "" : TaskRowView.timeText(TaskPlanner.clockValue(task))
+        let accessibilityValue = [task.completed ? "Completed" : "Open", plannedTime, projectName]
+            .filter { !$0.isEmpty }.joined(separator: ", ")
+        return calendarCardContent(task)
+        .padding(.horizontal, 8).padding(.vertical, density == "compact" ? 5 : 8)
+        .modifier(CardSurface(radius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.taskfold, lineWidth: selectedTask ? 1.5 : 0))
+        .contentShape(.rect)
+        .focusable()
+        .focusEffectDisabled()
+        .focused($focusedCard, equals: task.id)
+        .onChange(of: focusedCard) { _, id in
+            if id == task.id { select(day); workspace.selection = [task.id] }
+        }
+        .onTapGesture { focusCard(task, day: day) }
+        .onTapGesture(count: 2) { focusCard(task, day: day); workspace.open(task.id) }
+        .onKeyPress(keys: [.space, .return, .escape, .upArrow, .downArrow], phases: .down) { press in
+            calendarCardKey(press, task: task, day: day)
+        }
+        .onDrag {
+            workspace.drag.begin([task.id], order: [], priorities: [task.id: task.priority])
+            return taskItemProvider(for: [task])
+        } preview: { DragPreview(tasks: [task]) }
+        .contextMenu {
+            Button("Open in Inspector") { workspace.open(task.id) }
+            Button(task.completed ? "Reopen" : "Complete") { workspace.complete(task) }
+            Divider()
+            Button("Delete", role: .destructive) { workspace.delete([task.id]) }
+        }
+        .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .top)))
+        // Combining the check button made its completion action the card's default action.
+        // Keep selection as the primary action and expose the two task actions explicitly.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(task.title)
+        .accessibilityValue(accessibilityValue)
+        .accessibilityHint("Press Return to open details, or Space to complete or reopen.")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAddTraits(selectedTask ? .isSelected : [])
+        .accessibilityIdentifier("calendar-card-" + task.id)
+        .accessibilityAction { focusCard(task, day: day) }
+        .accessibilityAction(named: Text("Open in Inspector")) { workspace.open(task.id) }
+        .accessibilityAction(named: Text(task.completed ? "Reopen" : "Complete")) { workspace.complete(task) }
+    }
+    private func calendarCardContent(_ task: Record) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
             Button { workspace.complete(task) } label: { CheckMark(checked: task.completed || workspace.completing.contains(task.id), color: Color.priority(task.priority), emphasized: task.priority < 4, size: 16) }
                 .buttonStyle(GlyphStyle()).pointerStyle(.link)
                 .accessibilityLabel(task.completed ? "Reopen \(task.title)" : "Complete \(task.title)")
@@ -270,25 +316,26 @@ struct CalendarView: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 8).padding(.vertical, density == "compact" ? 5 : 8)
-        .modifier(CardSurface(radius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.taskfold, lineWidth: selectedTask ? 1.5 : 0))
-        .contentShape(.rect)
-        .onTapGesture { select(day); workspace.selection = [task.id] }
-        .onTapGesture(count: 2) { workspace.open(task.id) }
-        .onDrag {
-            workspace.drag.begin([task.id], order: [], priorities: [task.id: task.priority])
-            return taskItemProvider(for: [task])
-        } preview: { DragPreview(tasks: [task]) }
-        .contextMenu {
-            Button("Open in Inspector") { workspace.open(task.id) }
-            Button(task.completed ? "Reopen" : "Complete") { workspace.complete(task) }
-            Divider()
-            Button("Delete", role: .destructive) { workspace.delete([task.id]) }
+    }
+    private func calendarCardKey(_ press: KeyPress, task: Record, day: Date) -> KeyPress.Result {
+        guard focusedCard == task.id, press.modifiers.intersection([.command, .option, .control]).isEmpty else { return .ignored }
+        switch press.key {
+        case .space: workspace.complete(task)
+        case .return: workspace.open(task.id)
+        case .escape:
+            focusedCard = nil; workspace.finderTaskID = nil; workspace.selection = []; calendarFocused = true
+        case .upArrow, .downArrow:
+            let items = tasks(on: day)
+            if let index = items.firstIndex(where: { $0.id == task.id }) {
+                let next = index + (press.key == .upArrow ? -1 : 1)
+                if items.indices.contains(next) { focusCard(items[next], day: day) }
+            }
+        default: return .ignored
         }
-        .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .top)))
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(selectedTask ? .isSelected : [])
+        return .handled
+    }
+    private func focusCard(_ task: Record, day: Date) {
+        select(day); workspace.selection = [task.id]; focusedCard = task.id
     }
 
     // MARK: Month
