@@ -1440,3 +1440,10 @@ Native file import revealed internal UUIDs leading Quick Look titles. The Mac in
 ### 11 October — reliable caret after reference selection
 
 Native Down/Return reminder selection exposed the caret remaining inside the inserted token; continued typing removed the reminder. The Mac modifier now moves the insertion point after native text storage updates, guarded against a changed draft. Native keyboard selection/typing/save, normal relaunch and retained reminder/estimate pass. Mouse-selected quoted project completion also preserves following typing. iOS owns the same correction independently, with four normal/XXXL phone/tablet regressions passing and original cloud return preserving 14 shared tables. See `capture-suggestion-caret-evidence.json`. All preexisting Mac local records are unchanged; the named synthetic capture is retained. Cloud Mac attachment handoff still waits on its existing Keychain prompt; no restart, full accessibility or notification Open clearance is claimed.
+
+
+### 11 October — iPad long-note host acceptance and plan accuracy
+
+Installed iPad medium/large Pinned note now passes a scoped local long-note workflow: exact 1,855-character reader text from a terminated app, retained task after relaunch and removal of temporary instances. Four native captures were inspected; original local records are unchanged and the queue is empty. The final run explicitly resumes medium after three disclosed test-setup failures and freshly installs large; animation/AX diagnostics remain. See `tablet-long-note-host-evidence.json`. No Mac application code or build dependency changed.
+
+The P0 work summary now reflects previously accepted concurrent project ordering and filter/favorite handoffs. Existing Focus inspection after the latest go/unlock reply still shows Inbox, so actual notification Open is unverified. Native cloud Mac work still waits on the existing Keychain prompt; full P0, installed Mac widget and distribution gates remain open.

@@ -1,0 +1,104 @@
+{
+  "date": "2026-10-11",
+  "scope": "Installed medium and large Pinned note, isolated iPad Pro 11-inch M5 / iOS 26.5 Simulator, normal text size and light appearance, 1855-character synthetic local note.",
+  "applicationCodeChanged": false,
+  "nativeBuild": "tablet-long-note-build-v5.log: TEST BUILD SUCCEEDED",
+  "signingReceipt": "tablet-long-note-signing-v5.json: strict real team signatures and preserved Simulator app/group identities",
+  "sourceSHA256": {
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "7357a28d56d8a6f4406c529e1ff76f4cfdbf86365452b3af197a1a5fe6b3f3b0",
+    "TaskFold-iOS/TaskfoldWidgets/TaskfoldWidgets.swift": "9fffcc9f761c16c8180e7d60874c60aa6271e3b54a6407db063af96af4114588",
+    "TasskFold-MacOS/TaskfoldWidgets/TaskfoldWidgets.swift": "9fffcc9f761c16c8180e7d60874c60aa6271e3b54a6407db063af96af4114588"
+  },
+  "runs": [
+    {
+      "resultBundle": "tablet-long-note-host-v1.xcresult",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "animationIdleDiagnostics": 2,
+      "remoteAXDiagnosticsPresent": true
+    },
+    {
+      "resultBundle": "tablet-long-note-cleanup-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "animationIdleDiagnostics": 2,
+      "remoteAXDiagnosticsPresent": true
+    },
+    {
+      "resultBundle": "tablet-long-note-host-v2.xcresult",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "animationIdleDiagnostics": 2,
+      "remoteAXDiagnosticsPresent": true
+    },
+    {
+      "resultBundle": "tablet-long-note-host-v3.xcresult",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "animationIdleDiagnostics": 2,
+      "remoteAXDiagnosticsPresent": true
+    },
+    {
+      "resultBundle": "tablet-long-note-host-v4.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "animationIdleDiagnostics": 8,
+      "remoteAXDiagnosticsPresent": true,
+      "durationSeconds": 687.664
+    }
+  ],
+  "setupCorrections": [
+    "v1 edited the original Focus instance because it assumed the first medium widget was newly added. Failure hierarchy confirms Focus configuration; new instance identification now compares frames. Separate native cleanup passed.",
+    "v2 reached the correct Note picker, but no pin record had been saved. The test now reopens the saved task, scrolls to the pin switch, verifies native on state, and saves.",
+    "v3 selected the actual pinned note, but cold launch lacked the existing sticky ui-testing fixture flag. The final test sets that flag and clears it at the end; no production route change.",
+    "Final v4 is an explicit resume of the existing temporary medium instance. Medium installation occurred in v2; final configuration and both cold reader assertions occur in v4. Large installation is performed within v4.",
+    "A deliberate reboot after terminal cleanup did not clear stale remote accessibility diagnostics. No live test was restarted solely for an idle timeout."
+  ],
+  "accepted": [
+    "Actual medium/large family dimensions and native note selection.",
+    "Terminated app opens the selected title and exact original 1855-character description in both families.",
+    "Remove each temporary widget; original visible Taskfold widget count returns to two.",
+    "Final normal fixture launch retains the saved task and clears the sticky cold-launch test flag."
+  ],
+  "preservation": {
+    "preexistingTablesCompared": 8,
+    "changedPreexistingTables": [],
+    "originalTaskCount": 1,
+    "finalTaskCount": 2,
+    "syntheticTaskRetained": "7cb3c5a0-6e46-433e-bb61-25b23891f42d",
+    "fullDescriptionMatches": true,
+    "descriptionCharacters": 1855,
+    "descriptionSHA256": "a02fedeebf9e312aeb67ba72ab263e2c6df6a1d7fb971db94849e64ec9eb41c4",
+    "pending": 0,
+    "coldFixtureFlagCleared": true
+  },
+  "captures": [
+    "TaskFold-iOS/docs/tablet-long-note-previews/medium-installed.png",
+    "TaskFold-iOS/docs/tablet-long-note-previews/large-installed.png",
+    "TaskFold-iOS/docs/tablet-long-note-previews/medium-cold-reader.png",
+    "TaskFold-iOS/docs/tablet-long-note-previews/large-cold-reader.png"
+  ],
+  "limits": [
+    "Local fixture only; no new cloud handoff, privacy/appearance/VoiceOver acceptance.",
+    "Original widget count is preserved; their configuration and routing were not rechecked in this case.",
+    "SpringBoard animation-idle and stale remote-AX diagnostics remain disclosed alongside the result summary.",
+    "Mac installed widgets, physical devices, other state variants and the full P0 objective remain open."
+  ],
+  "captureInspection": "Four native PNGs inspected: medium excerpt uses two lines with ellipsis and Read full note; large shows steps 1\u20133 with ellipsis and Read full note. Both reader captures show original leading whitespace and the top scroll viewport; complete raw text is established by native exact-label assertions and persisted-cache comparison, not a screenshot of every paragraph. Scrolling to the final paragraph was not exercised.",
+  "duplicateExportPruning": {
+    "scope": "Duplicate attachment exports only; original failed xcresult retained. Inspected gallery capture, failure hierarchy and export manifest retained.",
+    "removedFiles": 82,
+    "logicalBytes": 249525867,
+    "allocatedBytes": 249683968
+  }
+}
