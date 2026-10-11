@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-11",
+  "scope": "Isolated iPad portrait Year viewport fix, iPad Month/Year largest-text routes and normal iPhone Year regression. No cloud or cross-device acceptance claim.",
+  "change": "Bound normal Year heatmaps to 70 points with flexible minimum zero; scale heading/card/pager height. Every normal month card must fit inside the actual pager and above the collapse handle.",
+  "build": "build-for-testing v4 succeeded; strict genuine Apple Development signatures and dedicated App Group verified; see tablet-calendar/signing.json.",
+  "accepted": [
+    "iPad normal Year v3: all twelve complete month cards inside pager, current month opens Month, exact task route, Cancel and normal relaunch. Production source identical to final v4; v4 only strengthens orientation test diagnostics.",
+    "iPad v5: normal Month, accessibility XXXL/dark Month and Year: 3 tests, 0 failures, 0 skips. Date/month viewport, selected state, Today return, collapsed date navigation, exact original task and relaunch checks pass.",
+    "iPhone v1 final v4 products: normal Year stronger viewport checks, exact task route and relaunch: 1 test, 0 failures, 0 skips."
+  ],
+  "intermediateResults": [
+    "v1 normal Year test green but inspected screenshot cropped first/last rows; old assertions were insufficient.",
+    "v2 stronger viewport tests fail: 109-point cards overflow the 344-point pager. Default flexible grid minimum ten caused overflow despite a 70-point frame.",
+    "v3 portrait Year passes after flexible minimum zero; requested landscape fails actual-orientation predicate.",
+    "v4 requested landscape still fails after actual window-frame check and home/foreground retry; window remains 834x1210. No landscape acceptance."
+  ],
+  "isolation": {
+    "bundle": "com.dbakp.taskfold.calendaraccessibilitytests",
+    "appGroup": "group.com.dbakp.taskfold.calendaraccessibilitytests",
+    "urlScheme": "taskfold-calendar-test",
+    "sourceAccountAndTodoistMutations": 0,
+    "productionBundleRejectedBySignerCLI": true,
+    "preservation": [
+      {
+        "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "protectedFileCount": 26,
+        "fullProtectedFileSetAndHashesExact": true
+      },
+      {
+        "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "protectedFileCount": 43,
+        "fullProtectedFileSetAndHashesExact": true
+      }
+    ],
+    "localFixtures": [
+      {
+        "device": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969",
+        "taskIdsTitlesEstimatesExact": true,
+        "allThreeTasksOpen": true,
+        "pending": 0
+      },
+      {
+        "device": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705",
+        "taskIdsTitlesEstimatesExact": true,
+        "allThreeTasksOpen": true,
+        "pending": 0
+      }
+    ]
+  },
+  "visualLimits": [
+    "Largest Year uses a scroll viewport: adjacent partial rows are expected; the target December row is entirely visible.",
+    "Collapsed Month screenshot contains an in-progress text animation; it does not establish static visual polish. Native navigation assertions pass.",
+    "Normal phone screenshot has the floating add control overlapping part of the second task row; this checkpoint accepts the calendar viewport and tested exact-task route, not every task-list visual."
+  ],
+  "platformSeparation": "Mac Year uses its own ScrollView and max-width layout, without the iOS fixed clipped pager. No Mac production code or shared dependency added.",
+  "remaining": [
+    "Actual iPad/phone landscape calendar acceptance",
+    "Full spoken VoiceOver and broader keyboard acceptance",
+    "Other calendar periods at largest text and broader critical usability",
+    "Other release gates remain in P0_RELEASE_STATUS.md"
+  ],
+  "originalResults": [
+    "ios-tablet-calendar-native-v1.xcresult",
+    "ios-tablet-calendar-native-v2.xcresult",
+    "ios-tablet-calendar-native-v3.xcresult",
+    "ios-tablet-calendar-native-v4.xcresult",
+    "ios-tablet-calendar-native-v5.xcresult",
+    "ios-tablet-calendar-phone-v1.xcresult"
+  ]
+}
