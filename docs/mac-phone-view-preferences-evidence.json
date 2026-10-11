@@ -92,7 +92,8 @@
     "status": "open",
     "id": "compact-leading-newline-note",
     "finding": "Native Mac board and phone list captures show a blank compact description when raw stored notes begin with a newline. Both row implementations render raw notes with a one-line standard preview. Full note remains intact in both caches; fix the display preview without rewriting stored/editor text.",
-    "phoneCapture": "docs/usability-previews/phone-mac-view-preferences-return-list.png"
+    "phoneCapture": "docs/usability-previews/phone-mac-view-preferences-return-list.png",
+    "resolvedBy": "note-preview-native-evidence.json"
   },
   "remaining": [
     "Real imported-account paired sync and iOS provider import",

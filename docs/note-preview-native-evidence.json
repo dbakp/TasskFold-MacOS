@@ -1,0 +1,158 @@
+{
+  "date": "2026-10-11",
+  "finding": "compact-leading-newline-note",
+  "status": "resolved in app task rows",
+  "change": "Trim whitespace/newlines only for displayed note previews. Preserve raw stored and editor text; omit whitespace-only preview. Keep standard one-line and accessibility-size wrapping behavior. No persistence or widget contract change.",
+  "sourceSHA256": {
+    "ios": "2a67d4d7a408da2e4d28b126135e0705bca89956e704b547f78abf3c466cdfe4",
+    "mac": "eb6f6cf27c5b86b42a4cba74ff53fc78cb2319aedda506dce014ac849996611b"
+  },
+  "builds": {
+    "ios": "note-preview-ios-build-v1.log: TEST BUILD SUCCEEDED",
+    "mac": "note-preview-mac-build-v1.log: TEST BUILD SUCCEEDED",
+    "iosSigning": "note-preview-ios-signing-v1.json: real-team signatures and embedded Simulator identity verified"
+  },
+  "nativePhone": {
+    "result": "note-preview-phone-v1.xcresult",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "tests": [
+      "testLinkedNotesDarkLargestOpenBrowserThenCompleteDetails",
+      "testLinkedNotesOpenBrowserThenCompleteDetails",
+      "testLiveLeadingNewlineNotePreviewKeepsOriginalText"
+    ],
+    "accepted": [
+      "Plain preview meaningful; original raw leading newline survives relaunch/editor Cancel.",
+      "Padded linked note survives save/relaunch; inline link opens in-app browser independently of task details at normal/light and largest/dark sizes.",
+      "Complete raw padded note remains exact in full editor."
+    ],
+    "visualLimits": "Largest accessibility note and editor extend below viewport and scroll; captures show visible portions. Synthetic .invalid URL intentionally reports unavailable."
+  },
+  "nativeMac": {
+    "bundle": "com.dbakp.taskfold.mac.p0importa11ytests",
+    "accepted": [
+      "Plain and linked previews visually readable on completed synthetic task.",
+      "Full raw padded plain and linked notes preserved after separate quit/relaunch checks.",
+      "Inline URL reaches UI-test link-opening monitor independently of selection.",
+      "25-minute estimate and completed state preserved; pending queue empty."
+    ],
+    "limits": [
+      "External browser launch intercepted by --uitesting; not accepted as actual browser delivery.",
+      "Manual native checks, not a passing Mac XCTest result.",
+      "VoiceOver and other list/board/calendar variants not newly accepted."
+    ]
+  },
+  "dataProof": {
+    "tables": {
+      "focus_sessions": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "labels": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "reminder_preferences": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "sections": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "projects": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "project_collaborators": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "project_members:aea110b0-fc43-49eb-86c6-b3ccd1cdaccc": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "view_preferences": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "saved_views": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "favorites": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "view_orders": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "task_activity": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "profiles": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "task_activity_epoch": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      },
+      "tasks": {
+        "macUnchanged": true,
+        "phoneUnchanged": true
+      }
+    },
+    "pending": {
+      "mac": 0,
+      "phone": 0
+    }
+  },
+  "captures": [
+    {
+      "path": "docs/usability-previews/phone-note-preview-plain-list.png",
+      "sha256": "041ebfb79a2cf0472878386732f92d72ed219bc080d90f05420da4a35fd74642",
+      "visuallyInspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-note-preview-plain-editor.png",
+      "sha256": "f8801da9338a9491d0882c887b5b60f2820ee04a506059ab695575783b8d0047",
+      "visuallyInspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-note-preview-normal-list.png",
+      "sha256": "77abad71060aa9877c78c4de89a780cf50255815706bc3a9638fd60ec6596852",
+      "visuallyInspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-note-preview-normal-browser.png",
+      "sha256": "0372ee435098351761c3ced54decab67398dc420063ace7a0d3bc434476e9c32",
+      "visuallyInspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-note-preview-normal-editor.png",
+      "sha256": "d03d457079c391a7e60e23d4667569db3ffa722b1812f4a0263faa3ff46363d8",
+      "visuallyInspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-note-preview-largest-list.png",
+      "sha256": "e92156c17b10a944ad6f009a12eb6d84b192e85154712bc6156b6ecdfe1d2ece",
+      "visuallyInspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-note-preview-largest-browser.png",
+      "sha256": "ff0be8f628450240814c891baf0620b3bcfd964e094f73e83f2464207c26b78e",
+      "visuallyInspected": true
+    },
+    {
+      "path": "docs/usability-previews/phone-note-preview-largest-editor.png",
+      "sha256": "e00f7586f1a96e5b5efc5ec5d01e5475efacd81a7120b28c18e64a8af0d047c9",
+      "visuallyInspected": true
+    }
+  ],
+  "remaining": "Real iOS Todoist provider import/paired imported-account sync, real lost-response recovery, broader accessibility/widget-host/provider/distribution gates remain open."
+}

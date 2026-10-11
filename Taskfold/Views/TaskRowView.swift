@@ -27,6 +27,8 @@ struct TaskRowView: View {
     // A key window can still have a gray list selection while its inspector has focus.
     private var selectedForeground: Color { appearsActive && listFocused ? Color(nsColor: .alternateSelectedControlTextColor) : Color(nsColor: .labelColor) }
     private var isSelected: Bool { workspace.selection.contains(task.id) }
+    // Trim only the display preview; editors and persistence retain the original text.
+    private var notePreview: String { task.string("description").trimmingCharacters(in: .whitespacesAndNewlines) }
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
     private var overdue: Bool { if let due = TaskPlanner.dayDate(task) { return due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
     private var dueToday: Bool { TaskPlanner.plannedDay(task) == Dates.day(Date()) }
@@ -77,12 +79,13 @@ struct TaskRowView: View {
                              strikethrough: checked, lineLimit: 2,
                              accessibilityIdentifier: "title-\(task.id)", accessibilityLabel: accessibilitySummary)
                 }
-                if !task.string("description").isEmpty {
-                    if Linkify.links(in: task.string("description")).isEmpty {
-                        Text(task.string("description")).font(.callout).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary)
+                if !notePreview.isEmpty {
+                    if Linkify.links(in: notePreview).isEmpty {
+                        Text(notePreview).font(.callout).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary)
                             .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1).fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("notes-\(task.id)")
                     } else {
-                        LinkText(text: task.string("description"), font: .preferredFont(forTextStyle: .callout),
+                        LinkText(text: notePreview, font: .preferredFont(forTextStyle: .callout),
                                  color: NSColor(isSelected ? selectedForeground.opacity(0.9) : Color.secondary),
                                  linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold), lineLimit: dynamicTypeSize.isAccessibilitySize ? 0 : 1,
                                  accessibilityIdentifier: "notes-\(task.id)")
