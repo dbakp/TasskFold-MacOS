@@ -18,6 +18,7 @@ struct CalendarView: View {
     @State private var quickAddVisible = false
     @State private var declinedGroups = Set<String>()
     @FocusState private var calendarFocused: Bool
+    @FocusState private var taskListFocused: Bool
     @Namespace private var dayNamespace
 
     private var calendar: Calendar { Calendar.current }
@@ -433,6 +434,8 @@ struct CalendarView: View {
 
                 DayEndRow(day: Dates.day(selected), isEmpty: items.isEmpty).selectionDisabled().listRowSeparator(.hidden)
             }
+            .focused($taskListFocused)
+            .environment(\.taskListFocused, taskListFocused)
             .listStyle(.inset)
             .contextMenu(forSelectionType: String.self) { ids in
                 if let id = ids.first, ids.count == 1 {

@@ -44,6 +44,7 @@ struct ProjectBoard: View {
 }
 
 private struct BoardColumn: View {
+    @FocusState private var taskListFocused: Bool
     @Environment(Workspace.self) private var workspace
     let column: ProjectColumn
     let order: [(day: String, ids: [String])]
@@ -86,7 +87,9 @@ private struct BoardColumn: View {
                     rows(regular)
                     DayEndRow(day: column.id, isEmpty: column.tasks.isEmpty, emptyText: "Drop a task here, or use +", releaseText: "Move to \(column.title)")
                         .selectionDisabled().listRowSeparator(.hidden)
-                }.listStyle(.inset).scrollContentBackground(.hidden)
+                }.focused($taskListFocused)
+                .environment(\.taskListFocused, taskListFocused)
+                .listStyle(.inset).scrollContentBackground(.hidden)
                 .contextMenu(forSelectionType: String.self) { ids in
                     if !ids.isEmpty {
                         Button("Complete / Reopen") { workspace.toggle(ids) }

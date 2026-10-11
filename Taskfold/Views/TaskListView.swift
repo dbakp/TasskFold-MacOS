@@ -36,6 +36,7 @@ struct TaskListView: View {
     @State private var quickAddVisible = false
     @State private var declinedGroups = Set<String>()
     @FocusState private var filterFocused: Bool
+    @FocusState private var taskListFocused: Bool
 
     init(scope: TaskScope, preferenceKey: String? = nil) {
         self.scope = scope
@@ -195,6 +196,8 @@ struct TaskListView: View {
                 }
             }
             .background(ListScrollMemory(key: preferenceKey, workspace: workspace, taskIDs: displayedTaskIDs, handle: nativeList))
+            .focused($taskListFocused)
+            .environment(\.taskListFocused, taskListFocused)
             .accessibilityIdentifier("taskList")
             .listStyle(.inset)
             .scrollContentBackground(.hidden)

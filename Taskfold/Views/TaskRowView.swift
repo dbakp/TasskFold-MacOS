@@ -1,6 +1,17 @@
 import SwiftUI
 import AppKit
 
+private struct TaskListFocusedKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var taskListFocused: Bool {
+        get { self[TaskListFocusedKey.self] }
+        set { self[TaskListFocusedKey.self] = newValue }
+    }
+}
+
 /// One task in the content list: check control, title, metadata, and a hover-revealed action.
 struct TaskRowView: View {
     @Environment(Store.self) private var store
@@ -11,8 +22,10 @@ struct TaskRowView: View {
     var compactDate = false
     @State private var hovering = false
     @State private var choosingDate = false
-    @Environment(\.controlActiveState) private var controlActiveState
-    private var selectedForeground: Color { controlActiveState == .inactive ? Color(nsColor: .labelColor) : Color(nsColor: .alternateSelectedControlTextColor) }
+    @Environment(\.appearsActive) private var appearsActive
+    @Environment(\.taskListFocused) private var listFocused
+    // A key window can still have a gray list selection while its inspector has focus.
+    private var selectedForeground: Color { appearsActive && listFocused ? Color(nsColor: .alternateSelectedControlTextColor) : Color(nsColor: .labelColor) }
     private var isSelected: Bool { workspace.selection.contains(task.id) }
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
     private var overdue: Bool { if let due = TaskPlanner.dayDate(task) { return due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }

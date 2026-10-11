@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-11",
+  "method": "Native CUA walkthrough; not XCTest or VoiceOver acceptance",
+  "baseCommits": {
+    "macOS": "6db93ed",
+    "iOS": "42d6871"
+  },
+  "change": "Mac task-row foreground follows explicit per-list FocusState plus window activity. Each project column and Calendar day list owns its focus state. No persistence or iOS code change.",
+  "builds": {
+    "v1": "mac-selection-focus-build-v1.log: succeeded; visual focused-list regression caught before commit",
+    "v2": "mac-selection-focus-build-v2.log: TEST BUILD SUCCEEDED"
+  },
+  "sourceHashes": {
+    "Taskfold/Views/TaskRowView.swift": "8eb7d07d0446db0ee91ea4e160d211d766281c88e0c81a11020188046a090095",
+    "Taskfold/Views/TaskListView.swift": "7c0db2f2e297d03de5b3f9139ba6d32f52b99ab3e2d4c870216fb49ec0d19465",
+    "Taskfold/Views/ProjectBoard.swift": "16d12f25e05d5a20c8b079e33727df8422cf3540b123417fb62a7044d78b0f43",
+    "Taskfold/Views/CalendarView.swift": "e3c8956df4e503c56819c012a4d8e239930e537596400297096ebac092aaf119"
+  },
+  "nativeAccepted": [
+    "Capture synthetic Today task with 25-minute estimate, enter exact raw linked note, quit and relaunch without reseeding; full note and estimate retained.",
+    "Inspect final native screenshots: white title/link/metadata/control on accent selection; dark text/control on gray selection while notes editor has focus.",
+    "Select Review copy; click actual link substring in other task. Confirmation says Would open example.invalid via monitor; Review copy remains selected and its inspector unchanged.",
+    "Click synthetic title; exact raw note, original title and 25-minute estimate present.",
+    "Click row check control; task disappears from Today and completion confirmation appears. After toast expires, native Command-Z restores task. Quit/relaunch retains restored task and all fields.",
+    "Complete from inspector; observe updated state, quit/relaunch; task absent from Today and present as completed in Completed. Select completed task and reinspect exact full note and estimate."
+  ],
+  "finalFixture": {
+    "taskId": "857bd47d-2f63-4ad7-8d7c-542e0ad628bd",
+    "completed": true,
+    "durationMinutes": 25,
+    "noteExact": true,
+    "completionVersion": 3,
+    "pending": 0
+  },
+  "privateAccountPreservation": {
+    "tasks": {
+      "existingRecordsUnchanged": true,
+      "addedRecords": 1
+    },
+    "projects": {
+      "existingRecordsUnchanged": true,
+      "addedRecords": 0
+    },
+    "sections": {
+      "existingRecordsUnchanged": true,
+      "addedRecords": 0
+    },
+    "labels": {
+      "existingRecordsUnchanged": true,
+      "addedRecords": 0
+    },
+    "synthetic": {
+      "title": "Mac linked handoff QA11Oct",
+      "notes": "https://example.invalid/review Read the complete handoff and confirm the final delivery date.",
+      "duration": 25,
+      "completed": false,
+      "id": "0c8fa48d-42b6-4e6d-9196-80e6e1c5642b"
+    },
+    "pending": 0
+  },
+  "limitations": [
+    "UI-test LinkOpener intercepts external opening; actual external browser launch remains unverified.",
+    "Actual VoiceOver and broader keyboard journeys remain open; only native Command-Z is accepted here.",
+    "Today list inspected natively; project board and Calendar focus wiring compile-verified only.",
+    "Screenshots inspected inline only; imported private-content screenshot not saved to Git.",
+    "Observation occurred before quitting; arbitrary forced-kill timing not accepted.",
+    "Initial full-tree refresh renumbered AX IDs; one stale click scrolled inspector. Initial half-scale coordinate clicked Inbox; corrected using full screenshot coordinates. Neither is counted as a successful link test.",
+    "Visible Undo toast expired before click; accepted Undo is native Command-Z.",
+    "Broader P0, provider, paired sync, widget host and distribution gates remain open."
+  ]
+}
