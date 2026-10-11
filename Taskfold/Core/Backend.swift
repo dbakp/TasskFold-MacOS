@@ -275,6 +275,17 @@ final class Backend: NSObject {
         guard change.table != TaskActivity.table, change.table != TaskActivity.epochTable else { throw AppFailure(message: "Activity history is read-only.") }
         let expectedOwner = expectedAccount ?? session?.user.id
         guard expectedOwner == session?.user.id else { throw CancellationError() }
+        if change.organizationOrder != nil || change.method == "ORDER" {
+            guard OrganizationOrder.valid(change), let command = change.organizationOrder else {
+                throw AppFailure(message: "This saved ordering command needs a supported app before syncing.")
+            }
+            let data = try await request("/rest/v1/rpc/taskfold_order_organization", method: "POST", body: [
+                "_table": .string(change.table), "_ids": .array(command.ids.map(JSON.string)),
+                "_project": command.projectID.map(JSON.string) ?? .null,
+                "_action": .string(change.id.uuidString.lowercased())], expectedAccount: expectedOwner)
+            let rows = try JSONDecoder().decode([Record].self, from: data)
+            return Record(["organization_order_rows": .array(rows.map { .object($0.fields) })])
+        }
         if change.table == FocusSessionChange.table {
             guard let account = session?.user.id, FocusSessionChange.valid(change, account: account), let baseline = change.baseline else {
                 throw AppFailure(message: "TASKFOLD_FOCUS_CONFLICT: Review this Focus session before replacing synced state.")

@@ -28,5 +28,14 @@
     "Notification Open routing is not yet accepted.",
     "Native task reminder Complete/Snooze/Move to tomorrow, terminated-app delivery, physical/APNs and full notification acceptance remain open.",
     "This tests the preceding binary; the newer permission-progress indicator compiles but its pending appearance remains uninspected."
-  ]
+  ],
+  "openClickAttempt": {
+    "time": "2026-10-11 11:54:04.095",
+    "macOSRecordedClick": true,
+    "macOSLaunchedBinary": "BuildCache/mac-focus-alert-products/Taskfold.app",
+    "receivingWorkspace": "local (empty), not the ui-testing session",
+    "accepted": false,
+    "reason": "Two builds registered the same isolated bundle. macOS launched the newer build without fixture arguments; the old ui-testing receipt did not open another workspace.",
+    "correction": "Stopped both obsolete instances, launched only the newer build with the isolated fixture, and delivered a fresh real finish alert at 11:57:38.102. A new human click is pending."
+  }
 }

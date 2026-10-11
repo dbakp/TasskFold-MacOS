@@ -536,3 +536,77 @@ extension NativeBehaviorTests {
         let tasks = try await backend.rows("tasks"); XCTAssertTrue(tasks.isEmpty)
     }
 }
+
+extension NativeBehaviorTests {
+    func testCompleteOrderReplaysUnchangedRowAfterConcurrentRemoteMove() throws {
+        let original = ["p", "a", "b"].enumerated().map { Record(["id": .string($0.element), "order_index": .number(Double($0.offset)), "name": .string($0.element)]) }
+        let changes = try OrganizationOrder.command(table: "projects", rows: original, ids: ["p", "b", "a"])
+        XCTAssertEqual(changes.count, 1)
+        let move = try XCTUnwrap(changes.first)
+        var cached = Snapshot(tables: ["projects": original], pending: changes)
+        cached.apply(move)
+        cached = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(cached))
+        var remote = Snapshot(tables: ["projects": original])
+        for change in try OrganizationOrder.command(table: "projects", rows: original, ids: ["a", "b", "p"]) { remote.apply(change) }
+        cached.mergeRemote(remote.tables)
+        XCTAssertEqual(OrganizationOrder.sorted(cached.tables["projects"]!).map(\.id), ["p", "b", "a"])
+        XCTAssertEqual(cached.pending[0].id, move.id, "A retry must retain the same identity")
+        let history = EditHistory(changes: changes, snapshot: Snapshot(tables: ["projects": original]))
+        for back in history.undo { cached.apply(back) }
+        XCTAssertEqual(cached.tables["projects"], original)
+        XCTAssertNotEqual(history.undo[0].id, move.id)
+        for forward in history.redo { cached.apply(forward) }
+        XCTAssertEqual(OrganizationOrder.sorted(cached.tables["projects"]!).map(\.id), ["p", "b", "a"])
+        // An earlier server acknowledgement must replay the next entire queued move.
+        let next = try OrganizationOrder.command(table: "projects", rows: cached.tables["projects"]!, ids: ["a", "p", "b"])[0]
+        cached.pending.append(next)
+        cached.acknowledge(move, saved: Record(["organization_order_rows": .array(remote.tables["projects"]!.map { .object($0.fields) })]))
+        XCTAssertEqual(OrganizationOrder.sorted(cached.tables["projects"]!).map(\.id), ["a", "p", "b"])
+        XCTAssertEqual(cached.pending, [next])
+    }
+    func testCompleteSectionOrderKeepsOtherProjectsAndRemoteAdditions() throws {
+        let original = ["a", "b"].enumerated().map { Record(["id": .string($0.element), "project_id": .string("p"), "order_index": .number(Double($0.offset))]) }
+        let change = try OrganizationOrder.command(table: "sections", rows: original, ids: ["b", "a"], projectID: "p")[0]
+        let other = Record(["id": .string("other"), "project_id": .string("q"), "order_index": .number(9)])
+        let added = Record(["id": .string("new"), "project_id": .string("p"), "order_index": .number(0)])
+        var snapshot = Snapshot(tables: ["sections": original + [other, added]], pending: [change])
+        snapshot.mergeRemote(["sections": [original[1], other, added]]) // a was deleted remotely
+        XCTAssertEqual(snapshot.tables["sections"]!.first { $0.id == "other" }, other)
+        XCTAssertEqual(OrganizationOrder.sorted(snapshot.tables["sections"]!.filter { $0.string("project_id") == "p" }).map(\.id), ["b", "new"])
+        XCTAssertFalse(snapshot.tables["sections"]!.contains { $0.id == "a" })
+        XCTAssertThrowsError(try OrganizationOrder.command(table: "sections", rows: original, ids: ["b", "a"], projectID: "q"))
+    }
+}
+
+extension AuthTransportTests {
+    @MainActor func testCompleteOrderingUsesOneScopedRPCAndRetainsRetryIdentityAfterLostResponse() async throws {
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [Stub.self]
+        let session = try JSONDecoder().decode(Session.self, from: Data(#"{"access_token":"test","refresh_token":"refresh","expires_in":3600,"user":{"id":"one"}}"#.utf8))
+        let rows = ["a", "b"].enumerated().map { Record(["id": .string($0.element), "order_index": .number(Double($0.offset))]) }
+        let change = try OrganizationOrder.command(table: "projects", rows: rows, ids: ["b", "a"])[0]
+        var payloads: [[String: JSON]] = []
+        Stub.handler = { request in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_order_organization")
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer test")
+            var body = request.httpBody ?? Data()
+            if let stream = request.httpBodyStream {
+                stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 1024)
+                while stream.hasBytesAvailable { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; body.append(contentsOf: bytes.prefix(count)) }
+            }
+            payloads.append(try JSONDecoder().decode([String: JSON].self, from: body))
+            if payloads.count == 1 { throw URLError(.networkConnectionLost) }
+            return (200, try JSONEncoder().encode(rows))
+        }
+        defer { Stub.handler = nil }
+        let backend = Backend(configuration: ["URL": "https://native-auth.test", "Key": "public"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
+        do { _ = try await backend.send(change, expectedAccount: "one"); XCTFail("Lost response should remain queued") } catch { }
+        _ = try await backend.send(change, expectedAccount: "one")
+        XCTAssertEqual(payloads.count, 2); XCTAssertEqual(payloads[0], payloads[1])
+        XCTAssertEqual(payloads[0]["_ids"], .array([.string("b"), .string("a")]))
+        XCTAssertEqual(payloads[0]["_action"], .string(change.id.uuidString.lowercased()))
+        XCTAssertEqual(Set(payloads[0].keys), ["_table", "_ids", "_project", "_action"])
+        do { _ = try await backend.send(change, expectedAccount: "other"); XCTFail("Stale account must not send ordering") } catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(payloads.count, 2)
+    }
+}

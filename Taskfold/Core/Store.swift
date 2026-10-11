@@ -398,7 +398,7 @@ final class Store {
     func reorderOrganization(_ table: String, ids: [String], projectID: String? = nil) -> Bool {
         let current = rows(table).filter { table != "sections" || $0.string("project_id") == projectID }
         do {
-            let changes = try OrganizationOrder.changes(table: table, rows: current, ids: ids)
+            let changes = try OrganizationOrder.command(table: table, rows: current, ids: ids, projectID: projectID)
             return changes.isEmpty || commit(changes)
         } catch { self.error = error.localizedDescription; return false }
     }
@@ -657,8 +657,17 @@ final class Store {
         guard changes.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
             error = "This Focus command needs a valid workspace and revision."; return false
         }
+        guard changes.filter({ $0.organizationOrder != nil || $0.method == "ORDER" }).allSatisfy(OrganizationOrder.valid) else {
+            error = "This ordering command is invalid."; return false
+        }
+        // Undo and redo are new commands; a persisted retry keeps its existing identity.
+        let orderingCommands = changes.map { change in
+            var change = change
+            if change.organizationOrder != nil { change.id = UUID() }
+            return change
+        }
         let old = snapshot
-        let changes = changes.flatMap { TaskAssignment.mutations($0, existing: record($0.table, id: $0.recordID)) }.map { change in
+        let changes = orderingCommands.flatMap { TaskAssignment.mutations($0, existing: record($0.table, id: $0.recordID)) }.map { change in
             var change = change
             if change.table == "tasks", change.method != "DELETE" {
                 change.fields = TaskPlanning.fields(change.fields, existing: record("tasks", id: change.recordID))

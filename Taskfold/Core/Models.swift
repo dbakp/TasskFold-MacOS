@@ -96,6 +96,8 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var insertOnly: Bool? = nil
     /// Semantic preference command; absent in older queues means snooze. Never a row field.
     var reminderPreferenceField: String? = nil
+    /// One complete ordering intent, persisted with its retry identity.
+    var organizationOrder: OrganizationOrder.Command? = nil
 }
 
 /// Undo/redo recreation is a new task incarnation; an exact queued retry retains its chosen ID.
@@ -313,6 +315,11 @@ struct Snapshot: Codable, Equatable, Sendable {
     var pending: [Mutation] = []
     var widgetCompletion = WidgetCompletionCache()
     mutating func apply(_ change: Mutation) {
+        if change.organizationOrder != nil || change.method == "ORDER" {
+            guard let command = change.organizationOrder, OrganizationOrder.valid(change) else { return }
+            tables[change.table] = command.applying(to: tables[change.table] ?? [])
+            return
+        }
         var rows = tables[change.table] ?? []
         // A fetched recreated task must remain visible while its older queued action needs review.
         if !TaskGeneration.permitsLocalAction(change, existing: rows.first(where: { $0.id == change.recordID })) { return }
@@ -334,6 +341,13 @@ struct Snapshot: Codable, Equatable, Sendable {
     /// Confirm the server revision before replaying work queued during the request.
     mutating func acknowledge(_ change: Mutation, saved: Record?) {
         pending.removeAll { $0.id == change.id }
+        if change.organizationOrder != nil {
+            if let saved, case .array(let values) = saved["organization_order_rows"] {
+                tables[change.table] = values.map { Record($0.object) }
+            }
+            for queued in pending where queued.table == change.table { apply(queued) }
+            return
+        }
         guard let saved else { return }
         var rows = tables[change.table] ?? []
         if let index = rows.firstIndex(where: { $0.id.lowercased() == change.recordID.lowercased() }) {
@@ -839,6 +853,13 @@ struct EditHistory {
         var current = snapshot
         var inverse: [Mutation] = []
         for change in changes {
+            if let command = change.organizationOrder, OrganizationOrder.valid(change) {
+                let rows = (current.tables[change.table] ?? []).filter { command.contains($0) }
+                var back = change; back.id = UUID()
+                back.organizationOrder = OrganizationOrder.Command(ids: OrganizationOrder.sorted(rows).map(\.id), projectID: command.projectID)
+                inverse.append(back); redo.append(change); current.apply(change)
+                continue
+            }
             if let old = current.tables[change.table]?.first(where: { $0.id == change.recordID }) {
                 let fields = change.method == "DELETE" ? old.fields : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old.fields[$0] ?? .null) })
                 inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(change.fields, to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil))
@@ -1621,8 +1642,39 @@ extension Snapshot {
 }
 #endif
 
-/// A native drag is one local edit. Only order fields enter the offline queue.
+/// A native drag persists one complete intent; row metadata never enters its command.
 enum OrganizationOrder {
+    struct Command: Codable, Equatable, Sendable {
+        var ids: [String]
+        var projectID: String?
+        func contains(_ row: Record) -> Bool { projectID == nil || row.string("project_id") == projectID }
+        /// Removed rows stay removed; additions not in the offline intent retain relative order at the end.
+        func applying(to rows: [Record]) -> [Record] {
+            let scoped = rows.filter { contains($0) }
+            let wanted = Set(ids)
+            let existing = Set(scoped.map(\.id))
+            let complete = ids.filter { existing.contains($0) } + OrganizationOrder.sorted(scoped).map(\.id).filter { !wanted.contains($0) }
+            let positions = Dictionary(uniqueKeysWithValues: complete.enumerated().map { ($0.element, $0.offset) })
+            return rows.map { row in
+                var row = row
+                if contains(row), let position = positions[row.id] { row["order_index"] = .number(Double(position)) }
+                return row
+            }
+        }
+    }
+    static func valid(_ change: Mutation) -> Bool {
+        guard let command = change.organizationOrder, change.method == "ORDER", change.fields.isEmpty,
+              ["projects", "sections", "saved_views", "favorites"].contains(change.table),
+              !command.ids.isEmpty, command.ids.count <= 10000, Set(command.ids).count == command.ids.count,
+              command.ids.allSatisfy({ !$0.isEmpty }), change.recordID == command.ids.first else { return false }
+        return change.table == "sections" ? command.projectID?.isEmpty == false : command.projectID == nil
+    }
+    static func command(table: String, rows: [Record], ids: [String], projectID: String? = nil) throws -> [Mutation] {
+        guard !(try changes(table: table, rows: rows, ids: ids)).isEmpty else { return [] }
+        let change = Mutation(table: table, recordID: ids[0], method: "ORDER", fields: [:], organizationOrder: Command(ids: ids, projectID: projectID))
+        guard valid(change), table != "sections" || rows.allSatisfy({ $0.string("project_id") == projectID }) else { throw StaleList() }
+        return [change]
+    }
     struct StaleList: LocalizedError {
         var errorDescription: String? { "This list changed. Reopen it before rearranging items." }
     }

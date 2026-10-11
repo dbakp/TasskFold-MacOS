@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-11",
+  "scope": "Complete offline organization reorder commands in independently owned Mac and iOS sources; native failing reproduction retained.",
+  "nativeBeforeFix": {
+    "offlinePhoneOrder": [
+      "original",
+      "beta",
+      "alpha"
+    ],
+    "concurrentMacOrder": [
+      "alpha",
+      "beta",
+      "original"
+    ],
+    "afterPhoneReconnect": [
+      "beta",
+      "original",
+      "alpha"
+    ],
+    "result": "FAILED: a mixed order neither device chose",
+    "offlinePreparation": "native-concurrent-order-offline-v1.xcresult: 1 passing test, 161.199 seconds, zero reported runtime warnings",
+    "failedReconnection": "native-concurrent-order-reconnect-v1.xcresult: 1 failed test, 24.452 seconds",
+    "resultCollection": "Xcode diagnostic collection stalled after the assertion; stopped only simctl diagnose to let Xcode finalize the failure bundle. No passing run claimed."
+  },
+  "fix": {
+    "queue": "One complete ORDER command, persisted with one UUID; no per-row ordering PATCHes for new moves.",
+    "server": "SECURITY INVOKER RPC locks readable rows in deterministic ID order, applies the complete order in one transaction, and records an account-scoped idempotency receipt.",
+    "retries": "An older acknowledged request retried after a newer reorder returns current rows without applying its old order again.",
+    "localReplay": "A pending move replays every requested position after remote refresh and earlier acknowledgement; removed items stay removed, observed additions append.",
+    "history": "Undo/Redo retain the complete before/after intent; commit assigns a fresh action identity, while persisted queue retries retain theirs.",
+    "sections": "Project-scoped changes preserve other projects; RPC returns the complete readable table.",
+    "compatibility": "Both apps need this release for the complete-command guarantee. Already queued legacy row PATCHes remain supported; older active clients still use their former ordering behavior."
+  },
+  "validation": {
+    "iosFullCore": {
+      "executed": 613,
+      "skipped": 6,
+      "failures": 0
+    },
+    "macFullCore": {
+      "executed": 633,
+      "skipped": 26,
+      "failures": 0
+    },
+    "newTransportRegression": "Passed independently in both repos; authenticated single RPC, identical retry payload after lost response, stale-account transport rejected. AuthTransportTests executed 5, skipped 1 existing live-fixture test, failures 0 per repo.",
+    "serverContract": "supabase/tests/atomic_organization_order.sql passed on TaskFold under actual authenticated roles; transaction rolled back, remaining fixture accounts 0. All four tables, old retry/new action, ID reuse rejection, metadata, account boundary and section scope covered.",
+    "iosBuild": "atomic-order-ios-build-v4.log: TEST BUILD SUCCEEDED; strict team app/widget/test/runner signing receipt atomic-order-ios-signing-v2.json",
+    "macBuild": "atomic-order-mac-build-v3.log: TEST BUILD SUCCEEDED; ad-hoc isolated app, not distribution signing.",
+    "migrationVersion": "20261011100214",
+    "migrationApplied": true,
+    "advisors": "No performance finding on the new receipt table. Security advisor notes authenticated GraphQL schema discovery for the receipt table; owner RLS and anonymous revocations are verified. Existing project-wide advisor warnings remain; this is not a clean security audit.",
+    "advisorReference": "https://supabase.com/docs/guides/database/database-linter?lint=0027_pg_graphql_authenticated_table_exposed",
+    "allSharedWorkPreserved": {
+      "tables": 14,
+      "tasks": 3,
+      "except": "Only project order_index may change; every original row and other field matches the pre-reproduction baseline."
+    },
+    "buildWarnings": "Existing UITest sendable-capture warning and missing test-target AppIntents metadata dependency remain; no clean compiler-warning claim."
+  },
+  "nativeAfterFix": {
+    "baselineReset": {
+      "result": "1 passing native phone UI test, 286.216 seconds, no reported runtime warnings",
+      "actualServerReceiptCount": 2,
+      "normalRelaunchRetainedOrder": true,
+      "menuIdleDiagnostics": 4
+    },
+    "concurrentRegressionAccepted": false,
+    "macBlock": "Rebuilt isolated Mac requests Keychain access. Human approval requested; no credentials bypass.",
+    "focusOpenSeparate": "The user click was recorded but macOS launched a duplicate test build into empty local workspace. Single-build fresh alert delivered; human click pending.",
+    "offlineRestart": {
+      "result": "1 passing native phone UI test; zero failures/skips/reported runtime warnings",
+      "queueCount": 1,
+      "method": "ORDER",
+      "completeProjectIDs": [
+        "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+        "b14fc645-4382-4241-9d9e-21abb5bc877d",
+        "da3c355d-0bed-4649-b830-8b7af2e3f603"
+      ],
+      "restartRetainedSameIntent": true,
+      "sharedRowsAndMetadataPreservedTables": 14,
+      "pendingByDesign": "Retained offline for the next native Mac move; do not drain before the concurrent regression.",
+      "durationSeconds": 164.84,
+      "menuIdleDiagnostics": 2,
+      "inspectedScreenshot": "native-continuity-previews/phone-complete-order-offline.png"
+    }
+  },
+  "fullP0Complete": false,
+  "ownedSourceSHA256": {
+    "Taskfold/Core/Models.swift": "df922353f53e98f128cc4e7434e7e624b1541577a6d7b4dd4acc78ee3b6365a4",
+    "Taskfold/Core/Backend.swift": "b9efd1d104323de482a4d363abc0c8c0ca298bb9bef3545d84f1142e655c5b25",
+    "Taskfold/Core/Store.swift": "6a624903e4bc92dd2b09fda973e88142089751d86f5e148aa36f08983fc4929b",
+    "supabase/migrations/20261011100214_atomic_organization_order.sql": "9d403db51e8980ffadcc63e59a1ac415d5ff736ab3eec1f4962eba04727f98e0"
+  }
+}
