@@ -54,7 +54,7 @@
   ],
   "platformSeparation": "Mac Year uses its own ScrollView and max-width layout, without the iOS fixed clipped pager. No Mac production code or shared dependency added.",
   "remaining": [
-    "Actual iPad/phone landscape calendar acceptance",
+    "iPhone landscape, normal iPad Month landscape and other calendar periods",
     "Full spoken VoiceOver and broader keyboard acceptance",
     "Other calendar periods at largest text and broader critical usability",
     "Other release gates remain in P0_RELEASE_STATUS.md"
@@ -66,5 +66,6 @@
     "ios-tablet-calendar-native-v4.xcresult",
     "ios-tablet-calendar-native-v5.xcresult",
     "ios-tablet-calendar-phone-v1.xcresult"
-  ]
+  ],
+  "landscapeFollowUp": "Three clean-iPad landscape scenarios pass in tablet-calendar-landscape-evidence.json; original-device rotation cause remains unproven."
 }
