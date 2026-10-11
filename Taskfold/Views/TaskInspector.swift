@@ -445,10 +445,29 @@ struct TaskInspectorForm: View {
 struct RecurrenceEditor: View {
     @Binding var task: Record
     @State private var expanded = false
+    @FocusState private var headerFocused: Bool
     var body: some View {
-        DisclosureGroup(isExpanded: $expanded) { RecurrenceFields(task: $task) } label: {
-            LabeledContent("Repeat", value: task["is_recurring"].flag ? Recurrence.summary(Recurrence.effective(task)) : "Never")
-        }.accessibilityIdentifier("taskRepeat")
+        let summary = task["is_recurring"].flag ? Recurrence.summary(Recurrence.effective(task)) : "Never"
+        VStack(alignment: .leading, spacing: 12) {
+            Button { expanded.toggle(); headerFocused = true } label: {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Image(systemName: expanded ? "chevron.down" : "chevron.right")
+                        .font(.caption.weight(.semibold)).foregroundStyle(.secondary).accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Repeat")
+                        Text(summary).font(.callout).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 0)
+                }.frame(maxWidth: .infinity, minHeight: 32, alignment: .leading).contentShape(Rectangle())
+            }.buttonStyle(.plain).focusable().focused($headerFocused)
+                .onKeyPress(.space) { expanded.toggle(); return .handled }
+                .accessibilityIdentifier("taskRepeat")
+                .accessibilityLabel("Repeat")
+                .accessibilityValue((expanded ? "Expanded. " : "Collapsed. ") + summary)
+                .accessibilityHint(expanded ? "Hide repeat settings" : "Show repeat settings")
+            if expanded { RecurrenceFields(task: $task) }
+        }
     }
 }
 

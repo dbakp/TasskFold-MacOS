@@ -1,0 +1,16 @@
+{
+  "comparedTables": 14,
+  "changedTables": [],
+  "pending": 0,
+  "warningCountBefore": 6,
+  "warningCountAfter": 6,
+  "scope": "Settings General/Account and inspector hide/show in existing imported-account app, no process restart; local General/Account/Appearance in existing Focus fixture produced no stderr warnings",
+  "date": "2026-10-11",
+  "status": "Not reproduced during warm navigation; original warning cause remains open",
+  "finalImportedWorkspacePreservation": {
+    "comparedTables": 14,
+    "changedTables": [],
+    "pending": 0
+  },
+  "limits": "No cold-start reproduction, no warning fix and no distribution acceptance inferred."
+}

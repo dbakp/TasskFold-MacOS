@@ -185,9 +185,16 @@ final class TaskfoldMacUITests: XCTestCase {
         let summary = app.staticTexts["quickRepeatSummary"]; XCTAssertTrue(summary.waitForExistence(timeout: 5))
         XCTAssertTrue(summary.label.contains("2028-01-05")); XCTAssertTrue(summary.label.contains("3 left"))
         app.buttons["Add Task"].click(); app.buttons["Inbox"].firstMatch.click(); XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
-        let link = app.disclosureTriangles["taskRepeat"]
+        let link = app.buttons["taskRepeat"]
         for _ in 0..<8 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
         XCTAssertTrue(link.isHittable); link.click(); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5))
+        XCTAssertTrue((link.value as? String)?.hasPrefix("Expanded.") == true)
+        app.typeKey(" ", modifierFlags: [])
+        XCTAssertTrue((link.value as? String)?.hasPrefix("Collapsed.") == true)
+        XCTAssertFalse(app.staticTexts["repeatRuleSummary"].exists)
+        XCTAssertEqual(app.textFields["taskTitle"].value as? String, name, "Space on Repeat must not complete the selected task")
+        app.typeKey(" ", modifierFlags: [])
+        XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("2028-01-05")); XCTAssertTrue(app.staticTexts["repeatRuleSummary"].label.contains("3 left"))
         app.terminate(); app.launchArguments = ["--uitesting"]; app.launch(); XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
         for _ in 0..<8 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }; if link.isHittable { link.click() }
@@ -204,7 +211,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["quickRepeatSummary"].label.contains("Last Friday"))
         app.buttons["Add Task"].click(); app.buttons["Inbox"].firstMatch.click()
         XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5)); app.staticTexts[name].click()
-        let link = app.disclosureTriangles["taskRepeat"]
+        let link = app.buttons["taskRepeat"]
         for _ in 0..<8 where !link.isHittable { app.scrollViews.element(boundBy: max(0, app.scrollViews.count - 1)).swipeUp() }
         XCTAssertTrue(link.isHittable); link.click()
         XCTAssertTrue(app.staticTexts["repeatRuleSummary"].waitForExistence(timeout: 5))

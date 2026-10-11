@@ -1414,3 +1414,12 @@ The Mac-owned widget now trims blank preview edges and uses two medium lines wit
 ### 11 October — large-note phone host receipt
 
 The identical committed preview implementation now has an actual installed iPhone large-host receipt for the original short cloud note: public/private rendering, exact terminated-app reader routes, relaunch and temporary-widget cleanup pass. The original first-page note/Focus selections remain, and all 14 shared tables match across both phone workspaces and Mac with empty queues. Initial Home-page displacement/helper failure and successful recovery are disclosed. No additional Mac source change or Desktop acceptance is inferred; signed-widget profiles and other P0 gates remain open. See `large-note-host-evidence.json`.
+
+
+### 11 October — focused Repeat activation and native grammar receipt
+
+The local-only native walk found and fixed Space completing the selected task while Repeat owned focus. The inspector now has a full-width focused button with explicit expanded/collapsed summary, and the AppKit monitor handles task shortcuts only for the focused task-list table. Repeat click/Space and preserved task identity pass; list Space creates one expected bounded successor, Command-Z restores it, Return edits and Escape clears selection. The earlier button-only/focus-only attempts failed and were undone on synthetic data. Updated application/XCTest sources compile; native CUA execution supplies the current acceptance, not a new XCTest result.
+
+Mac bounded capture/deadline/estimate, three reminder shortcuts, independent rule validation and undated retention/removal now survive normal relaunches. Delivery is off in this isolated fixture. Both repos retain scoped evidence; the iOS app receives no AppKit implementation or new build dependency. See `mac-repeat-keyboard-native-evidence.json`. Broader keyboard/VoiceOver, board/calendar shortcuts, untested grammar variants and release gates remain open.
+
+A separate warm cloud Settings/inspector diagnostic adds no AttributeGraph warnings (six before and after), with all 14 imported tables unchanged and an empty queue. Original warning cause remains open; `mac-settings-cycle-diagnostic-evidence.json`. The existing Focus app still shows Inbox after the latest unlock; notification Open is not accepted.
