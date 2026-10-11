@@ -64,8 +64,8 @@
       "normalRelaunchRetainedOrder": true,
       "menuIdleDiagnostics": 4
     },
-    "concurrentRegressionAccepted": false,
-    "macBlock": "Rebuilt isolated Mac requests Keychain access. Human approval requested; no credentials bypass.",
+    "concurrentRegressionAccepted": true,
+    "macBlock": "Resolved: user-approved Keychain read completed; native moves, cloud receipt and normal relaunch now verified.",
     "focusOpenSeparate": "The user click was recorded but macOS launched a duplicate test build into empty local workspace. Single-build fresh alert delivered; human click pending.",
     "offlineRestart": {
       "result": "1 passing native phone UI test; zero failures/skips/reported runtime warnings",
@@ -78,10 +78,49 @@
       ],
       "restartRetainedSameIntent": true,
       "sharedRowsAndMetadataPreservedTables": 14,
-      "pendingByDesign": "Retained offline for the next native Mac move; do not drain before the concurrent regression.",
+      "pendingByDesign": "Offline phase retained one complete ORDER command until native competing Mac moves; reconnect now drains it to zero.",
       "durationSeconds": 164.84,
       "menuIdleDiagnostics": 2,
       "inspectedScreenshot": "native-continuity-previews/phone-complete-order-offline.png"
+    },
+    "reconnect": {
+      "resultBundle": "atomic-order-native-reconnect-v1.xcresult",
+      "case": "testAuthorizedConcurrentProjectOrderReconnectKeepsCompleteMove",
+      "executed": 1,
+      "passed": 1,
+      "failures": 0,
+      "skipped": 0,
+      "durationSeconds": 25.856,
+      "reportedRuntimeWarnings": [],
+      "nativeSequence": [
+        "Phone previously retained original/Beta/Alpha offline with one ORDER command.",
+        "Mac native Move Down twice changes original/Alpha/Beta to Alpha/Beta/original; Mac pending queue drains to zero.",
+        "Phone reconnects and normally relaunches; actual project-control frame assertions confirm original/Beta/Alpha.",
+        "Mac Command-R Sync Now receives original/Beta/Alpha; normal quit/relaunch retains it."
+      ],
+      "preservation": {
+        "sharedTablesExactlyEqualAcrossMacAndPhone": 14,
+        "allOriginalRowsAndNonOrderFieldsPreserved": true,
+        "originalTaskCount": 3,
+        "finalProjectIDs": [
+          "aea110b0-fc43-49eb-86c6-b3ccd1cdaccc",
+          "b14fc645-4382-4241-9d9e-21abb5bc877d",
+          "da3c355d-0bed-4649-b830-8b7af2e3f603"
+        ],
+        "finalIndices": [
+          0,
+          1,
+          2
+        ],
+        "macPending": 0,
+        "phonePending": 0,
+        "macNativeSyncNowAndNormalRelaunchObserved": true,
+        "fullP0Complete": false
+      },
+      "macRuntimeLimitation": "Isolated Mac app lacks App Group entitlement and displays a widget-completion permission error. No widget or clean-runtime acceptance is inferred. Ordering data and queues verify independently.",
+      "screenshot": "native-continuity-previews/phone-complete-order-reconnected.png",
+      "screenshotScope": "Capture was taken before scrolling to project rows. It shows Browse, not the full project order. Order acceptance comes from actual native assertions, Mac AX inspection and exact persisted rows.",
+      "automaticRefreshLatencyAccepted": false
     }
   },
   "fullP0Complete": false,
