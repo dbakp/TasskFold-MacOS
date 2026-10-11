@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native macOS isolated local capture/inspector chip keyboard interaction; app-only diagnostic build. No real task data or cloud service used.",
+  "reproduction": [
+    "Capture: type Keyboard chips 11Oct ~25m, Tab to estimate, Space, type follow-up. Before fix the complete draft becomes only follow-up because field reactivation selects all.",
+    "Backward/forward Delete did not activate the focused chip through the existing onKeyPress delete handler.",
+    "Inspector: type ~25m in the new synthetic task title, Tab. Before fix the chip disappears, estimate is applied and focus advances to Notes before decline is possible."
+  ],
+  "implementation": [
+    "Capture and inspector restore a guarded insertion point after AppKit focus return.",
+    "Chips handle native onDeleteCommand and forward-delete key presses as well as Space/Escape.",
+    "Inspector observes chip focus and defers parsed-value application until focus leaves both the title and its chips."
+  ],
+  "nativeChecks": [
+    "Capture Space decline preserves literal ~25m and following typing; exact complete field verified.",
+    "Backward Delete declines a focused estimate and preserves following typing.",
+    "Multiple chips: backward Delete removes only focused Tomorrow; estimate and P2 remain. Escape returns to title without declining remaining chips. Forward Delete removes only estimate. Space removes final priority. Complete raw draft survives each suffix.",
+    "Inspector Tab reaches the visible estimate; backward Delete declines, following typing retains literal ~25m, leaving title saves with estimate off.",
+    "Normal title exit still applies a newly typed priority p2, retaining previously declined estimate words.",
+    "Normal quit/relaunch and exact inspector open retain full literal title, estimate off and priority 2.",
+    "Final implementation capture Space/continued-typing check passes again; temporary draft is explicitly cleared before closing."
+  ],
+  "builds": [
+    "chip-focus-return-mac-build-v1.log",
+    "chip-focus-return-mac-build-v2.log",
+    "chip-focus-return-mac-build-v3.log",
+    "chip-focus-return-mac-build-v4.log",
+    "chip-focus-return-mac-build-v5.log"
+  ],
+  "finalBuild": "TEST BUILD SUCCEEDED; application and two new UI regression cases compile. App-only ad-hoc variant, no widget/distribution signing acceptance.",
+  "sourceSHA256": {
+    "Taskfold/Views/TaskListView.swift": "2f2db26b30999a8141629cf53da26c3cb679f2d7eee5be1e18a4d4a28a758644",
+    "Taskfold/Views/QuickEntryChips.swift": "902215ed5d30735165c573ca53e95a56f15d88ba041674eca545722be7271769",
+    "Taskfold/Views/TaskInspector.swift": "132b3bc324a181b2eadcfb1e56a08dcd258ec04adb1439c23ae6e4331ab8caf0",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "d52b6c2faedf0124b1e1adca235ebc1ee62954fed96face31ea9a4c6be6a5299"
+  },
+  "execution": "Actual CUA native key input and accessibility observations. No new Mac XCTest execution/pass claimed; regression cases compile but remain unexecuted.",
+  "regressionCases": [
+    "testCaptureChipKeyboardReturnKeepsEntireDraft",
+    "testInspectorChipCanBeDeclinedBeforeApplyingTitle"
+  ],
+  "preservation": {
+    "preexistingTablesCompared": 9,
+    "changedPreexistingTables": [],
+    "preexistingTasks": 4,
+    "finalTasks": 5,
+    "pending": 0,
+    "retainedSyntheticTask": "f4b6cc30-407c-40d1-abb0-d4b5453023a7",
+    "title": "Inspector chip keyboard check ~25m retained",
+    "estimate": null,
+    "priority": 2
+  },
+  "platformSeparation": "Mac owns its AppKit focus and native Delete implementation. iOS capture/editor chip declines do not perform the Mac focus-return path; iOS application source and persistent contracts are unchanged. Both repos record status independently.",
+  "limits": [
+    "Unfiltered iOS clipping findings remain two normal/two largest; no audit suppression, layout clearance or VoiceOver acceptance.",
+    "Broader keyboard journeys, rapid-quit autosave timing and current P0/provider/distribution gaps remain open.",
+    "An early reset toggle was followed immediately by quit and did not persist; it was reset again and persistence verified before the final inspector workflow. Immediate-quit save timing is not accepted by this evidence.",
+    "No capture submitted except the single named synthetic inspector task; all preexisting saved rows are unchanged."
+  ]
+}

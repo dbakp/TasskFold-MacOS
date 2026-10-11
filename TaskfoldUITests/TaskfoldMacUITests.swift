@@ -2,6 +2,67 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testInspectorChipCanBeDeclinedBeforeApplyingTitle() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--quick-entry-fixture"]
+        app.launch()
+        defer { app.terminate() }
+        app.typeKey("n", modifierFlags: .command)
+        let capture = app.textFields["quickAdd"]
+        XCTAssertTrue(capture.waitForExistence(timeout: 5))
+        capture.typeText("Inspector keyboard regression")
+        app.buttons["Add Task"].click()
+        let title = app.textFields["taskTitle"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        title.click(); app.typeKey("a", modifierFlags: .command)
+        let raw = "Inspector keyboard regression ~25m"
+        title.typeText(raw)
+        let chip = app.buttons["decline-duration_minutes"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 5))
+        app.typeKey(.tab, modifierFlags: [])
+        XCTAssertTrue(chip.exists, "Tab must reach the chip before applying parsed values")
+        app.typeKey(.delete, modifierFlags: [])
+        let declined = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: chip)
+        XCTAssertEqual(XCTWaiter.wait(for: [declined], timeout: 5), .completed)
+        app.typeText(" retained")
+        XCTAssertEqual(title.value as? String, raw + " retained")
+        app.textViews["taskDescription"].click()
+        XCTAssertEqual(title.value as? String, raw + " retained")
+        XCTAssertFalse(app.descendants(matching: .any)["taskDuration"].exists)
+    }
+
+    @MainActor func testCaptureChipKeyboardReturnKeepsEntireDraft() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--quick-entry-fixture"]
+        app.launch()
+        defer { app.terminate() }
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]
+        XCTAssertTrue(input.waitForExistence(timeout: 5))
+        let actions: [(String, String, Bool)] = [
+            ("Space", " ", false),
+            ("Delete", XCUIKeyboardKey.delete.rawValue, false),
+            ("Escape", XCUIKeyboardKey.escape.rawValue, true)
+        ]
+        for (name, key, retainsChip) in actions {
+            input.click()
+            app.typeKey("a", modifierFlags: .command)
+            app.typeKey(.delete, modifierFlags: [])
+            let draft = "Keyboard \(name) preserves draft ~25m"
+            input.typeText(draft)
+            let chip = app.buttons["decline-duration_minutes"]
+            XCTAssertTrue(chip.waitForExistence(timeout: 5))
+            app.typeKey(.tab, modifierFlags: [])
+            app.typeKey(key, modifierFlags: [])
+            let chipState = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == %@", NSNumber(value: retainsChip)), object: chip)
+            XCTAssertEqual(XCTWaiter.wait(for: [chipState], timeout: 5), .completed, name)
+            app.typeText(" continued")
+            XCTAssertEqual(input.value as? String, draft + " continued", name)
+        }
+        input.click(); app.typeKey("a", modifierFlags: .command); app.typeKey(.delete, modifierFlags: [])
+        app.typeKey(.escape, modifierFlags: [])
+    }
+
     @MainActor func testQuickCaptureImmediatelyRefreshesSelectedInspector() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--quick-entry-fixture"]

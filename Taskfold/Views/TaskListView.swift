@@ -475,7 +475,7 @@ struct TaskCapturePanel: View {
                 .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.taskfold.opacity(focused ? 0.6 : 0.2), lineWidth: 1))
                 .referenceCompletions(text: $text, selection: $titleSelection, choices: $choices, declined: $declined, context: context, focused: focused, task: task, onChoose: { focused = true }, submit: submitInWorkspace, submitsFromKeyboard: true)
             if !parsed.tokens.isEmpty {
-                QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: { focused = true })
+                QuickEntryChips(tokens: parsed.tokens, compact: true, decline: { token in _ = declined.insert(token.group) }, returnFocus: resumeDraftFromChip)
             }
             if let rule = parsed.updates["recurrence_pattern"] {
                 Text("Repeat: " + Recurrence.summary(Record(rule.object))).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("quickRepeatSummary")
@@ -498,6 +498,17 @@ struct TaskCapturePanel: View {
         .onExitCommand { dismiss() }
         .onChange(of: text) { _, value in if value.isEmpty { declined = [] } }
     }
+    private func resumeDraftFromChip() {
+        let draft = text
+        focused = true
+        // AppKit selects the entire field when it becomes first responder again.
+        // Restore an insertion point after that update so typing keeps the draft.
+        DispatchQueue.main.async {
+            guard focused, text == draft else { return }
+            titleSelection = TextSelection(insertionPoint: text.endIndex)
+        }
+    }
+
     private func submitInWorkspace() {
         guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { store.error = "The workspace changed. Close this capture and open it in the current workspace."; return }
         submit()

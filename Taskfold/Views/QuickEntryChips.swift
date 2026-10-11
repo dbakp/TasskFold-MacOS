@@ -8,6 +8,7 @@ struct QuickEntryChips: View {
     var compact = false
     let decline: (QuickEntry.Token) -> Void
     var returnFocus: () -> Void = {}
+    var focusChanged: (Bool) -> Void = { _ in }
     @FocusState private var focusedChip: String?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -30,6 +31,8 @@ struct QuickEntryChips: View {
         .animation(reduceMotion ? .easeInOut(duration: 0.12) : Transitions.Ease.smoothOut(Transitions.Duration.quick), value: tokens.map(\.id))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("quickEntryChips")
+        .onChange(of: focusedChip) { _, value in focusChanged(value != nil) }
+        .onDisappear { focusChanged(false) }
     }
 
     private func chip(_ token: QuickEntry.Token) -> some View {
@@ -56,6 +59,8 @@ struct QuickEntryChips: View {
         .focusEffectDisabled()
         .onKeyPress(.space) { decline(token); returnFocus(); return .handled }
         .onKeyPress(.delete) { decline(token); returnFocus(); return .handled }
+        .onKeyPress(.deleteForward) { decline(token); returnFocus(); return .handled }
+        .onDeleteCommand { decline(token); returnFocus() }
         .onKeyPress(.escape) { returnFocus(); return .handled }
         .animation(Transitions.Ease.smoothOut(Transitions.Duration.quick), value: focused)
         .accessibilityElement(children: .contain)

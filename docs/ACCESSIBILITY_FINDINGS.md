@@ -212,3 +212,8 @@ The Mac task shortcut monitor now recognizes focused board/calendar tables as we
 ### 11 October — native suggestion caret correction
 
 Actual Mac keyboard acceptance exposed a functional caret defect after choosing a reminder: subsequent typing split the accepted token and removed the reminder. Both apps defer the computed insertion point until after the native text update, with a draft-equality guard. Mac keyboard and quoted-project mouse selection pass; four normal/XXXL phone/tablet cases preserve raw tokens, complete saved titles and estimate/reminder data after relaunch. Original phone cloud return and unchanged 14 shared tables pass. See `capture-suggestion-caret-evidence.json`. These are functional native checks; existing clipping findings and full VoiceOver acceptance remain unresolved.
+
+
+### 11 October — native Mac chip keyboard continuation
+
+Capture and inspector now preserve the complete draft when returning from a chip. Native Space, backward/forward Delete, Escape and multi-chip isolation pass; inspector Tab reaches chips before applying values, and declined literal words survive save/relaunch. Two regression cases compile; execution evidence is native CUA, not a new XCTest pass. See `mac-chip-keyboard-evidence.json`. These are functional keyboard corrections, with no iOS clipping-audit suppression or full VoiceOver clearance. Rapid-quit autosave timing remains unaccepted after an early reset failed to survive immediate quit.

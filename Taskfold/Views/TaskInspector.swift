@@ -81,6 +81,7 @@ struct TaskInspectorForm: View {
     @State private var titleSelection: TextSelection?
     @State private var referenceChoices: [String: String] = [:]
     @FocusState private var titleFocused: Bool
+    @State private var titleChipFocused = false
     /// Parsing runs while the title differs from the saved one; Return (or leaving the field) applies it.
     private var suggestions: QuickEntry? {
         guard draft.title != titleParsingBaseline else { return nil }
@@ -105,12 +106,12 @@ struct TaskInspectorForm: View {
                     .labelsHidden().multilineTextAlignment(.leading)
                     .font(.title3.weight(.semibold)).textFieldStyle(.plain).lineLimit(1...4)
                     .focused($titleFocused)
-                    .onChange(of: titleFocused) { _, focused in if !focused { applySuggestions(); saveNow() } }
+                    .onChange(of: titleFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
                     .accessibilityIdentifier("taskTitle")
                     .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: Workspace.subtaskPath(taskID) == nil ? [] : ["project_id", "section_id"], onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
                 if let suggestions {
                     VStack(alignment: .leading, spacing: 4) {
-                        QuickEntryChips(tokens: suggestions.tokens, decline: { token in _ = declined.insert(token.group) }, returnFocus: { titleFocused = true }).padding(.vertical, 2)
+                        QuickEntryChips(tokens: suggestions.tokens, decline: { token in _ = declined.insert(token.group) }, returnFocus: resumeTitleFromChip, focusChanged: { titleChipFocused = $0 }).padding(.vertical, 2)
                         if !suggestions.tokens.isEmpty { Text("Return applies these · ✕ keeps the words in the title").font(.caption2).foregroundStyle(.tertiary) }
                         if suggestions.updates["reminder_specs"] != nil && !store.remindersEnabled {
                             Text("Reminders are off on this device. Enable delivery in Reminders below.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("quickReminderDeliveryOff")
@@ -329,6 +330,7 @@ struct TaskInspectorForm: View {
         .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; load(); if draft.title.isEmpty { titleFocused = true } }
         .task(id: suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) { _ = try? await store.refreshProjectMembers(suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
+        .onChange(of: titleChipFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
         .sheet(isPresented: $showingReminders) {
             NavigationStack {
                 TaskReminderEditor(task: $draft).onAppear { draft = store.applyingReminderDefault(draft, previous: original) }
@@ -360,6 +362,23 @@ struct TaskInspectorForm: View {
     }
     private func quickDate(_ title: String, _ date: Date) -> some View {
         Button(title) { draft["due_date"] = .string(Dates.day(date)) }.buttonStyle(.bordered)
+    }
+    private func finishTitleWhenUnfocused() {
+        // Moving from the title to one of its chips is still editing the title.
+        // Wait for both focus bindings before applying the parsed values.
+        DispatchQueue.main.async {
+            guard !titleFocused, !titleChipFocused else { return }
+            applySuggestions()
+            saveNow()
+        }
+    }
+    private func resumeTitleFromChip() {
+        let title = draft.title
+        titleFocused = true
+        DispatchQueue.main.async {
+            guard titleFocused, draft.title == title else { return }
+            titleSelection = TextSelection(insertionPoint: draft.title.endIndex)
+        }
     }
     private func load() { if let current { draft = current; original = current; titleParsingBaseline = current.title } }
     /// Moves accepted quick-entry pieces out of the title into their fields, like the iOS editor's save.
