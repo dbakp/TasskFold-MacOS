@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native isolated Mac dirty profile draft/account switch and real uploaded response released after switching accounts",
+  "native": {
+    "initialImportedAccountDraftDiscardedOnOriginalAccountSignIn": true,
+    "originalOwnerRealUploadResponseHeld": true,
+    "uploadPendingStateObserved": true,
+    "signedOutBeforeResponseRelease": true,
+    "secondaryAccountNativeSignInWhileResponseHeld": true,
+    "secondaryUnsavedDraftCreatedBeforeRelease": true,
+    "secondaryAvatarAndDraftUnchangedAfterRelease": true,
+    "originalAccountReturnHasOriginalNameAndPlaceholder": true,
+    "bothUnsubmittedDraftsDiscardedAcrossAccountBoundary": true,
+    "originalAccountRetainedAfterNormalQuitAndRelaunch": true,
+    "initialImportedAccountRestoredThroughNativeSignIn": true
+  },
+  "cacheProof": {
+    "a": {
+      "allCachedTablesEqual": true,
+      "comparedTables": 14,
+      "pending": 0
+    },
+    "b": {
+      "allCachedTablesEqual": true,
+      "comparedTables": 14,
+      "pending": 0
+    },
+    "warnings": {
+      "mac-profile-switch-held-v1.log": 0,
+      "mac-profile-switch-held-v2.log": 0,
+      "mac-profile-switch-normal-relaunch-v2.log": 7
+    }
+  },
+  "storageCleanup": {
+    "heldResponseFinishedBeforeReturn": true,
+    "realUploadedImageIsExactSyntheticChecker": true,
+    "heldUploadSyntheticObjectRemoved": true,
+    "exactObjectAbsent": true,
+    "cleanupOnlySessionRevoked": true
+  },
+  "failedHarnessCleanup": {
+    "failedHarnessSyntheticUploadRemoved": true,
+    "cleanupSessionRevoked": true
+  },
+  "debugHarnessChange": {
+    "reason": "Sandboxed Mac app cannot write legacy /private/tmp response markers",
+    "newBasenameOption": "taskfold-profile-upload-UUID resolves inside app Application Support/Taskfold",
+    "legacySimulatorAbsolutePathRetained": true,
+    "sameAllowlistedBundlesAndDisposableAccountGuard": true,
+    "releaseCodeUnaffected": true,
+    "independentlyOwnedInBothRepos": true
+  },
+  "validation": {
+    "macBuildForTesting": "passed",
+    "iosBuildForTesting": "passed",
+    "iosStrictTeamAndEmbeddedSimulatorIdentitySigning": "passed",
+    "macBinarySHA256": "20f8c20cae6cc1a22f90caebce1b22c8f2631485f9733f3677c7e0e7e49f28c8",
+    "iosBackendSHA256": "86ee54b8bab702de3fb8f0e8d9359d3a842006bb4d954f19c078ea548c7ea0e2",
+    "macBackendSHA256": "45c79e06ef1afa6a16540fcd1ec3fd1918578c30e218409a75c7be0cdae35385",
+    "nativeMacXCTestClaimed": false,
+    "newIOSRuntimeCoverageClaimed": false
+  },
+  "observations": [
+    "The first native attempt failed when the DEBUG marker write was denied by the Mac sandbox, after the real upload completed. Its exact checker object was verified and cleaned up.",
+    "The rebuilt app required a new private Keychain approval, provided by the user. A duplicate process launched during observation timeout was stopped; acceptance used the explicitly launched guarded process.",
+    "Two signing verification invocations rejected the wrong product directory and then the primary app namespace before signing. The secondary-stage verifier subsequently passed all four products.",
+    "The held-response run reported no AttributeGraph warnings; the subsequent normal-launch process reported seven. Their cause remains unresolved."
+  ],
+  "limitations": [
+    "Cloud/cross-account restore remains open.",
+    "Paired native profile receipt, actual VoiceOver/keyboard, and broader P0/provider/widget-host/distribution acceptance are not claimed.",
+    "No private credentials, source task content, raw caches, source API token or screenshots are committed."
+  ]
+}

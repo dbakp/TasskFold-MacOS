@@ -65,12 +65,22 @@ private enum ProfileUploadResponseTestHold {
         guard bundle == "com.dbakp.taskfold.assigneepatterntests" || bundle == "com.dbakp.taskfold.mac.p0uitests",
               ProcessInfo.processInfo.arguments.contains("--profile-upload-response-hold"),
               email == "taskfold-continuity-" + account + "@example.invalid",
-              let path = ProcessInfo.processInfo.environment["TASKFOLD_PROFILE_RESPONSE_HOLD"],
-              path.hasPrefix("/private/tmp/taskfold-profile-upload-"),
-              UUID(uuidString: String(path.dropFirst("/private/tmp/taskfold-profile-upload-".count))) != nil else { return }
-        let ready = URL(fileURLWithPath: path + ".ready")
-        let release = URL(fileURLWithPath: path + ".release")
-        let finished = URL(fileURLWithPath: path + ".finished")
+              let path = ProcessInfo.processInfo.environment["TASKFOLD_PROFILE_RESPONSE_HOLD"] else { return }
+        let name = URL(fileURLWithPath: path).lastPathComponent
+        let prefix = "taskfold-profile-upload-"
+        guard name.hasPrefix(prefix), UUID(uuidString: String(name.dropFirst(prefix.count))) != nil,
+              path == name || path == "/private/tmp/" + name else { return }
+        // A basename uses the app's own sandbox; legacy absolute paths serve Simulator runners.
+        let marker: URL
+        if path == name {
+            guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
+            let directory = support.appendingPathComponent("Taskfold", isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            marker = directory.appendingPathComponent(name)
+        } else { marker = URL(fileURLWithPath: path) }
+        let ready = marker.appendingPathExtension("ready")
+        let release = marker.appendingPathExtension("release")
+        let finished = marker.appendingPathExtension("finished")
         try Data(objectPath.utf8).write(to: ready, options: .atomic)
         defer { try? Data().write(to: finished, options: .atomic) }
         let deadline = ContinuousClock.now.advanced(by: .seconds(180))
