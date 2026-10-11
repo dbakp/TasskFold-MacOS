@@ -229,6 +229,13 @@ struct RestoreReview: View {
     @State private var finished = false
     private var changed: Bool { request.generation != store.workspaceGeneration || request.account != store.userID || request.snapshot != store.snapshot }
     private var plan: Result<RestorePlan, Error> { Result { try request.backup.plan(current: request.snapshot, account: request.account, policy: policy) } }
+    private func countRow(_ label: String, value: Int, identifier: String) -> some View {
+        LabeledContent(label, value: "\(value)")
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(label)
+            .accessibilityValue("\(value)")
+            .accessibilityIdentifier(identifier)
+    }
     var body: some View {
         NavigationStack {
             Form {
@@ -241,13 +248,13 @@ struct RestoreReview: View {
                 switch plan {
                 case .success(let value):
                     Section("Changes") {
-                        LabeledContent("Add", value: "\(value.added)").accessibilityIdentifier("restoreAdded")
-                        LabeledContent("Update", value: "\(value.updated)").accessibilityIdentifier("restoreUpdated")
-                        LabeledContent("Keep", value: "\(value.kept)")
+                        countRow("Add", value: value.added, identifier: "restoreAdded")
+                        countRow("Update", value: value.updated, identifier: "restoreUpdated")
+                        countRow("Keep", value: value.kept, identifier: "restoreKept")
                         ForEach(WorkspaceBackup.workTables.filter { value.counts[$0] != nil }, id: \.self) { table in
-                            LabeledContent(["projects":"Projects", "labels":"Labels", "sections":"Sections", "tasks":"Tasks", "saved_views":"Saved filters", "favorites":"Favorites", "view_preferences":"View settings", "view_orders":"Task ordering", "focus_sessions":"Focus session", "reminder_preferences":"Reminder preferences"][table] ?? table, value: "\(value.counts[table] ?? 0)")
+                            countRow(["projects":"Projects", "labels":"Labels", "sections":"Sections", "tasks":"Tasks", "saved_views":"Saved filters", "favorites":"Favorites", "view_preferences":"View settings", "view_orders":"Task ordering", "focus_sessions":"Focus session", "reminder_preferences":"Reminder preferences"][table] ?? table, value: value.counts[table] ?? 0, identifier: "restoreCount-" + table)
                         }
-                    }
+                    }.accessibilityElement(children: .contain)
                     Section("Before you restore") {
                         Text("An encrypted recovery copy will be saved first. Existing work outside the backup stays in your workspace.")
                         ForEach(value.warnings, id: \.self) { Text($0).font(.callout).foregroundStyle(.secondary) }
