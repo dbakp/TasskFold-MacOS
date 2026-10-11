@@ -1457,3 +1457,8 @@ Fixed native focus return selecting and replacing the entire draft after a chip 
 ### 11 October — normal Quit preserves pending inspector work
 
 Fixed an actual edit-loss window before the inspector's 600ms autosave: AppDelegate requests synchronous durable saves from open inspectors and cancels termination when a dirty draft remains. Native rapid Quit, real local permission failure with retained draft, permission restoration, successful retry and normal relaunch pass. All five saved tasks and all nine complete tables are restored exactly to baseline. Both final builds pass and a normal-Quit regression compiles; no new XCTest runtime is claimed. See `mac-quit-save-evidence.json`. iOS retains its independently owned explicit Save behavior and receives status evidence only. Forced termination, multi-window and authenticated handoff of this change remain unverified; wider P0 gates stay open.
+
+
+### 11 October — import save uncertainty and genuine replay recovery
+
+Both own import flows explain an interrupted save as uncertain and keep its approved source retryable. Own Mac importer tests pass eight cases; the app-only Mac test build and Release Core build pass. The real iPhone walk discards one actual HTTP 200 replay response and verifies native safe retry, token clearing/relaunch, unchanged destination/source and original-account return; `import-lost-response-evidence.json`. Its complete imported cache equals the established Mac baseline, retaining native Mac edits. The DEBUG discard helper is independently owned and absent from Release. Native Mac discard/retry and a first import whose new records commit before response loss remain open; no new Mac runtime pass is claimed. Wider P0 and external gates remain open.

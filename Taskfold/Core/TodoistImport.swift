@@ -60,7 +60,13 @@ struct TodoistImportFlow {
     mutating func fail(_ error: Error, request: Request, workspace: UUID) {
         guard active?.id == request.id else { return }
         guard request.workspace == workspace else { reset(); return }
-        active = nil; message = error.localizedDescription
+        active = nil
+        let transport = error as NSError
+        if !request.previewOnly, transport.domain == NSURLErrorDomain,
+           [URLError.networkConnectionLost.rawValue, URLError.timedOut.rawValue,
+            URLError.notConnectedToInternet.rawValue].contains(transport.code) {
+            message = "Taskfold couldn’t confirm the import. It may already have saved. Retry this import safely: previously imported items and your Taskfold edits are preserved."
+        } else { message = error.localizedDescription }
         // A lost save response may have committed. Keep this exact approved source for retry.
     }
     mutating func reset() { token = ""; preview = nil; result = nil; previewWorkspace = nil; active = nil; message = nil }

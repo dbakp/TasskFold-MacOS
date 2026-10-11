@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-11",
+  "scope": "Actual accepted Todoist replay response deliberately discarded before client receipt, followed by native iPhone retry and original-account return",
+  "productionChange": "Both own import flows explain an interrupted save as uncertain and offer the retained approved source for safe retry; preview failures keep their original explanation.",
+  "injection": {
+    "debugOnly": true,
+    "exactIsolatedBundlesAndDisposableAccountRequired": true,
+    "explicitLaunchFlagAndUUIDReceiptRequired": true,
+    "realHTTPSResponseBeforeDiscard": true,
+    "httpStatus": 200,
+    "responseFixtureUsed": false,
+    "responseReceiptContainsOnlyStatusAndCounts": true,
+    "discardedResponse": {
+      "subtasksImported": 0,
+      "labelsImported": 0,
+      "commentsImported": 0,
+      "sectionsImported": 0,
+      "tasksSkipped": 252,
+      "tasksImported": 0,
+      "labelsSkipped": 5,
+      "realResponseDiscarded": true,
+      "projectsImported": 0,
+      "projectsSkipped": 23,
+      "httpStatus": 200,
+      "sectionsSkipped": 88
+    },
+    "firstImportIntoEmptyDestination": false,
+    "firstSuccessfulSaveResponsePerBackendInstanceOnly": true
+  },
+  "nativePhone": {
+    "bundle": "com.dbakp.taskfold.providercontinuitytests",
+    "resultBundle": "import-lost-response-phone-v1.xcresult",
+    "test": "testAuthorizedRealTodoistLostResponseRetryAndAccountReturn",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "durationSeconds": 202.402,
+    "actualUncertaintyMessageAndRetryButtonVerified": true,
+    "falseSuccessAbsentBeforeRetry": true,
+    "allSixPreviewAndTenReceiptCountsVerified": true,
+    "successClearsToken": true,
+    "emptyImporterAfterProcessRelaunch": true,
+    "nativeOriginalAccountSignInAndRelaunch": true,
+    "captureInIOSRepository": "docs/import-lost-response/retry.png"
+  },
+  "preservation": {
+    "sourceMethod": "GET only through existing current API check; no source mutation action",
+    "sourceFingerprints": {
+      "projects": {
+        "count": 24,
+        "sha256": "8ba2e39e3b67b7682a2475fc431e0e3387e5da148703eab9d6abc0b2d1ce5a3f"
+      },
+      "sections": {
+        "count": 88,
+        "sha256": "f0cff4d29f874c253c39d178e16ac40a83e130bd26296cab13c003b13481576d"
+      },
+      "labels": {
+        "count": 5,
+        "sha256": "e6e96dbc92493f67d26be605fb6d8c871483e7f05b0f1ab74d0de3d043ae4dda"
+      },
+      "tasks": {
+        "count": 276,
+        "sha256": "2ee8a4e4601b2f24eae790c72fdf8113333178a4400da3758bc8815f5c360ad7"
+      }
+    },
+    "sourceBeforeAfterExactlyEqual": true,
+    "sourceCommentsIndependentlyFingerprinted": false,
+    "destinationCompleteTablesExactlyEqual": 15,
+    "destinationSourceMappings": 368,
+    "originalAccountCachedTablesUnchanged": 14,
+    "importedAccountCachedTablesMatchEstablishedMacBaseline": 14,
+    "originalPending": 0,
+    "importedPending": 0,
+    "temporaryTokenClearedFromFixture": true,
+    "temporaryTokenDocumentDeleted": true,
+    "clipboardTokenReplaced": true,
+    "tokenSavedToRepository": false
+  },
+  "independentVerification": {
+    "iosFocusedCoreTests": 8,
+    "macFocusedCoreTests": 8,
+    "coreFailures": 0,
+    "iosNativeTestBuildSucceeded": true,
+    "macAppOnlyTestBuildSucceeded": true,
+    "releaseCoreBuildsSucceededBothRepos": true,
+    "debugResponseLossControlsAbsentFromBothReleaseObjects": true,
+    "strictPhoneAppWidgetRunnerSignaturesAndSimulatorIdentitiesVerified": true,
+    "macNativeDiscardAndRetryExecuted": false
+  },
+  "limits": [
+    "This deliberately drops a genuine HTTP 200 response locally after a replay. It is not a spontaneous wire outage or a first import whose new records committed before its response was lost.",
+    "The first-import response-loss boundary remains open; existing first-import and transactional fixture evidence remain separate.",
+    "The new native case ran on iPhone Simulator. No tablet or native Mac response-loss runtime pass is claimed.",
+    "Four complete source entity tables were fingerprinted; source comments were not separately fetched for a before/after fingerprint.",
+    "Full P0 acceptance, the existing Keychain wait, notification Open, accessibility, remaining widget hosts and external distribution/provider gates remain open."
+  ]
+}

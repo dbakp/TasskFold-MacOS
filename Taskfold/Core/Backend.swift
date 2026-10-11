@@ -95,6 +95,9 @@ private enum ProfileUploadResponseTestHold {
 @MainActor
 final class Backend: NSObject {
     var session: Session?
+    #if DEBUG
+    private var discardedTodoistResponse = false
+    #endif
     #if canImport(UIKit)
     private var authSession: ASWebAuthenticationSession?
     #endif
@@ -159,6 +162,32 @@ final class Backend: NSObject {
             let message = ["msg", "message", "error_description", "error"].map { error.string($0) }.first { !$0.isEmpty }
             throw AppFailure(message: message ?? "The server could not complete this request. Please try again.")
         }
+        #if DEBUG
+        // Lose one actual successful response in the authorized disposable provider walk.
+        // Never available in Release, ordinary bundles, other accounts or previews.
+        // Later saves on this Backend instance use the real response normally.
+        let isolatedBundle = Bundle.main.bundleIdentifier
+        if !discardedTodoistResponse, path == "/functions/v1/import-todoist", method == "POST",
+           body?["preview"] == .bool(false),
+           isolatedBundle == "com.dbakp.taskfold.providercontinuitytests" || isolatedBundle == "com.dbakp.taskfold.mac.p0localuitests",
+           ProcessInfo.processInfo.arguments.contains("--todoist-discard-save-response"),
+           session?.user.id == "316d6706-449c-4ab8-8480-db12e7d92642",
+           session?.user.email?.hasPrefix("taskfold-todoist-readonly-") == true,
+           let marker = ProcessInfo.processInfo.environment["TASKFOLD_IMPORT_RESPONSE_RECEIPT"],
+           marker.hasPrefix("taskfold-import-response-"),
+           UUID(uuidString: String(marker.dropFirst("taskfold-import-response-".count))) != nil {
+            let receipt = try JSONDecoder().decode(Record.self, from: data)
+            guard receipt["success"].flag else { return data }
+            var proof: [String: JSON] = ["httpStatus": .number(Double(http.statusCode)),
+                "realResponseDiscarded": .bool(true)]
+            for key in TodoistImportFlow.resultKeys { proof[key] = receipt[key] }
+            let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Taskfold", isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try JSONEncoder().encode(Record(proof)).write(to: directory.appendingPathComponent(marker + ".json"), options: .atomic)
+            discardedTodoistResponse = true
+            throw URLError(.networkConnectionLost)
+        }
+        #endif
         return data
     }
     func refreshIfNeeded(force: Bool = false) async throws {

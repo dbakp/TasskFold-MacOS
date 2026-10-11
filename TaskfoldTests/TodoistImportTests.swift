@@ -73,4 +73,29 @@ final class TodoistImportTests: XCTestCase {
         flow.updateToken(token); let previewRequest = try flow.begin(previewOnly: true, workspace: workspace); flow.reset()
         XCTAssertFalse(try flow.accept(preview(), request: previewRequest, workspace: workspace)); XCTAssertNil(flow.preview); XCTAssertFalse(flow.busy)
     }
+    func testInterruptedSaveExplainsUncertaintyAndPreservesExactRetrySource() throws {
+        for code in [URLError.networkConnectionLost, .timedOut, .notConnectedToInternet] {
+            let workspace = UUID(); var flow = try approved(workspace)
+            let save = try flow.begin(previewOnly: false, workspace: workspace)
+            flow.fail(URLError(code), request: save, workspace: workspace)
+            XCTAssertEqual(flow.message, "Taskfold couldn’t confirm the import. It may already have saved. Retry this import safely: previously imported items and your Taskfold edits are preserved.")
+            XCTAssertNil(flow.result); XCTAssertNotNil(flow.preview); XCTAssertFalse(flow.busy)
+            let retry = try flow.begin(previewOnly: false, workspace: workspace)
+            XCTAssertEqual(retry.body, save.body)
+            flow.fail(URLError(code), request: save, workspace: workspace)
+            XCTAssertTrue(flow.busy, "An old interruption must not cancel the retry")
+            XCTAssertNil(flow.message)
+            XCTAssertTrue(try flow.accept(receipt(), request: retry, workspace: workspace))
+            XCTAssertEqual(flow.token, "")
+        }
+    }
+    func testPreviewInterruptionDoesNotSuggestASavedImport() throws {
+        let workspace = UUID(); var flow = TodoistImportFlow(); flow.updateToken(token)
+        let request = try flow.begin(previewOnly: true, workspace: workspace)
+        let failure = URLError(.networkConnectionLost)
+        flow.fail(failure, request: request, workspace: workspace)
+        XCTAssertEqual(flow.message, failure.localizedDescription); XCTAssertNil(flow.preview)
+        XCTAssertThrowsError(try flow.begin(previewOnly: false, workspace: workspace))
+    }
+
 }
