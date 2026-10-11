@@ -129,8 +129,8 @@ struct FocusSessionView: View {
                 Button { choosingTask = true } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         VStack(alignment: .leading, spacing: 5) {
-                            Text(currentChoice?.title ?? "Choose a task").font(.body.weight(.medium)).fixedSize(horizontal: false, vertical: true)
-                            if let choice = currentChoice { Text(choice.context).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                            Text(currentChoice?.title ?? "Choose a task").font(.body.weight(.medium)).foregroundStyle(Color.primary).fixedSize(horizontal: false, vertical: true)
+                            if let choice = currentChoice { Text(choice.context).font(.subheadline).foregroundStyle(Color.primary.opacity(0.75)).fixedSize(horizontal: false, vertical: true) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
                         Image(systemName: "chevron.up.chevron.down").font(.caption).accessibilityHidden(true)
                     }.frame(minHeight: 44).contentShape(.rect)

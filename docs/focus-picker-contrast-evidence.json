@@ -1,0 +1,110 @@
+{
+  "date": "2026-10-11",
+  "issue": "Focus next-session task context inherited the bordered button accent, rendering pale pink text on its pink surface.",
+  "change": "Both independently owned Focus views use neutral appearance-aware title text and a 75%-opacity primary foreground for task context. The accent surface, chevron, typography and selection behavior are retained.",
+  "sources": {
+    "TaskFold-iOS": "65c6ba35a098489054112b19d6e453530b29602b1d778281a6ed1464624fab4f",
+    "TasskFold-MacOS": "65c6ba35a098489054112b19d6e453530b29602b1d778281a6ed1464624fab4f"
+  },
+  "mac": {
+    "build": "focus-contrast-mac-build-v1.log",
+    "nativeLocalFixtureBundle": "com.dbakp.taskfold.mac.p0focuscontrasttests",
+    "light": {
+      "selectedTitle": "Review the proposal",
+      "selectedContext": "Studio \u00b7 Client launch",
+      "screenshotInspected": true,
+      "startEnabled": true,
+      "cancellingHomeSearchRetainsStudio": true,
+      "normalQuitExit": 0,
+      "attributeGraphWarnings": 0
+    },
+    "dark": {
+      "selectedTitle": "Review the proposal",
+      "selectedContext": "Studio \u00b7 Client launch",
+      "screenshotInspected": true,
+      "normalQuitExit": 0,
+      "attributeGraphWarnings": 0,
+      "startEnabled": true
+    },
+    "originalAndDestinationCloudCachesExactlyUnchanged": true,
+    "noCloudKeychainPromptNeeded": true,
+    "newMacXCTestResultClaimed": false
+  },
+  "ios": {
+    "result": "focus-contrast-ios-v1.xcresult",
+    "build": "focus-contrast-ios-build-v1.log",
+    "signing": "focus-contrast-ios-signing-v1.json",
+    "strictSigningPassed": true,
+    "actualPassingTests": 2,
+    "failures": 0,
+    "skips": 0,
+    "reportedRuntimeWarnings": 0,
+    "tests": [
+      {
+        "name": "testFocusSearchDarkLargestDuplicateTitlesCancelAndRelaunch",
+        "seconds": 101.161
+      },
+      {
+        "name": "testFocusSearchDuplicateTitlesCancelAndRelaunch",
+        "seconds": 62.307
+      }
+    ],
+    "verified": [
+      "Duplicate titles disambiguated by project/section",
+      "Search cancellation retains selected task",
+      "Start, pause and normal relaunch retain session and chosen task"
+    ],
+    "inspectedPickerCaptures": [
+      "native-continuity-previews/focus-picker-neutral-light.png",
+      "native-continuity-previews/focus-picker-neutral-dark-largest.png"
+    ],
+    "originalCloudModeRestored": true,
+    "cloudPreservation": {
+      "a": {
+        "sharedTablesUnchanged": {
+          "focus_sessions": true,
+          "saved_views": true,
+          "tasks": true,
+          "labels": true,
+          "projects": true,
+          "favorites": true,
+          "task_activity_epoch": true,
+          "view_orders": true,
+          "sections": true,
+          "project_collaborators": true,
+          "reminder_preferences": true,
+          "profiles": true,
+          "task_activity": true,
+          "view_preferences": true
+        },
+        "queue": 0
+      },
+      "b": {
+        "sharedTablesUnchanged": {
+          "tasks": true,
+          "view_orders": true,
+          "view_preferences": true,
+          "task_activity_epoch": true,
+          "task_activity": true,
+          "projects": true,
+          "labels": true,
+          "favorites": true,
+          "project_collaborators": true,
+          "focus_sessions": true,
+          "saved_views": true,
+          "profiles": true,
+          "sections": true,
+          "reminder_preferences": true
+        },
+        "queue": 0
+      },
+      "localMode": false
+    }
+  },
+  "limits": [
+    "Focused picker readability and interaction evidence only; not full VoiceOver/contrast certification",
+    "Previously recorded Mac Settings AttributeGraph warnings and broader P0 gates remain open",
+    "Dark largest-text picker capture requires scrolling to lower controls; functional test reveals and activates Start. No claim that all controls fit simultaneously."
+  ],
+  "inspectedTargetedCaptures": 4
+}

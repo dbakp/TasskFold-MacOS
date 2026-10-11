@@ -181,4 +181,10 @@ Native Mac restore review merged 11 numbers under Add. Independently owned resto
 
 ### 11 October — restored Focus picker context
 
-Four native phone captures from `mac-cloud-restore-phone-evidence.json` confirm restored full note/task details and ended Focus state. The next-session picker context inherits a pale pink secondary foreground on its pink bordered-button surface in light appearance. Improve that context's contrast in both independently owned Focus views, preserving the accent background and picker behavior. This visual observation does not establish a measured contrast ratio or a VoiceOver pass.
+Four native phone captures from `mac-cloud-restore-phone-evidence.json` exposed pale next-session picker text on its rose button surface. Fixed in both independent apps and checked with native Mac light/dark selection and two passing iPhone light/dark-largest workflows; see `focus-picker-contrast-evidence.json` and the follow-up below. This does not establish a measured contrast ratio or full VoiceOver acceptance.
+
+### 11 October — Focus task picker readability fixed
+
+Both independently owned Focus views now give the selected task a neutral, appearance-aware title and context foreground, preventing inherited accent tint from washing out text on the rose button surface. Native Mac light/dark selection passes; cancelling a different task search retains the chosen Studio task. Two signed iPhone cases pass in light and dark largest text, including duplicate-title disambiguation, cancellation, start/pause and normal relaunch (zero failures/skips/reported runtime warnings). Four targeted captures were inspected; the two phone picker captures are retained in the iOS repo. At largest text, lower controls require scrolling and the test successfully reaches Start.
+
+Both builds and strict iOS signing checks pass. Both Mac cloud caches remain exactly unchanged; after returning the secondary phone to cloud mode, both accounts' 14 shared tables match baseline and both phone queues are empty. No Todoist requests were made. See `focus-picker-contrast-evidence.json`. This closes the observed pale picker-text finding only. Full VoiceOver/keyboard acceptance, existing clipping findings, seven earlier cloud Mac Settings AttributeGraph warnings and broader P0 gates remain open; no new Mac XCTest pass is claimed.
