@@ -1,0 +1,38 @@
+Saved task list | 131072 | Text clipped | Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes. | Attributes: StaticText, 0x108006a80, {{88.0, 417.0}, {254.3, 290.7}}, identifier: 'taskNotesPreview-2b8c178f-475c-4741-98f8-cb7c9eb66afe', label: 'Read the proposal before sending the estimate.'
+Element subtree:
+ →StaticText, 0x108006a80, {{88.0, 417.0}, {254.3, 290.7}}, identifier: 'taskNotesPreview-2b8c178f-475c-4741-98f8-cb7c9eb66afe', label: 'Read the proposal before sending the estimate.'
+Path to element:
+ →Application, 0x1082cde00, pid: 20786, label: 'Taskfold Calendar Test'
+  ↳Window (Main), 0x1082ce440, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x1082cdf40, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x1082cd7c0, {{0.0, 0.0}, {402.0, 874.0}}
+     ↳Other, 0x1082ce940, {{0.0, 0.0}, {402.0, 874.0}}
+      ↳Other, 0x1082cea80, {{0.0, 0.0}, {402.0, 874.0}}
+       ↳Other, 0x1082cfc00, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'nativeWorkspace'
+        ↳Other, 0x1082ce580, {{0.0, 0.0}, {402.0, 874.0}}
+         ↳Other, 0x1082cfe80, {{0.0, 0.0}, {402.0, 874.0}}
+          ↳Other, 0x1082ce6c0, {{0.0, 0.0}, {402.0, 874.0}}
+           ↳Other, 0x1082cc3c0, {{0.0, 0.0}, {402.0, 874.0}}
+            ↳Other, 0x1082cc500, {{0.0, 0.0}, {402.0, 874.0}}
+             ↳Other, 0x1082cd400, {{0.0, 0.0}, {402.0, 874.0}}
+              ↳Other, 0x108005b80, {{0.0, 0.0}, {402.0, 874.0}}
+               ↳Other, 0x1080075c0, {{0.0, 0.0}, {402.0, 874.0}}
+                ↳Other, 0x108005e00, {{0.0, 0.0}, {402.0, 874.0}}
+                 ↳Other, 0x108004b40, {{0.0, 0.0}, {402.0, 874.0}}
+                  ↳CollectionView, 0x108004780, {{0.0, 0.0}, {402.0, 874.0}}
+                   ↳Cell, 0x1080061c0, {{16.0, 267.7}, {370.0, 570.7}}
+                    ↳Other, 0x108006300, {{16.0, 267.7}, {370.0, 570.7}}
+                     ↳Other, 0x108006440, {{16.0, 267.7}, {370.0, 570.7}}
+                      ↳Other, 0x108004140, {{16.0, 267.7}, {370.0, 570.7}}
+                       ↳Other, 0x1080057c0, {{32.0, 282.7}, {338.0, 540.7}}, identifier: 'taskRow-2b8c178f-475c-4741-98f8-cb7c9eb66afe'
+                        ↳Button, 0x108004c80, {{88.0, 282.7}, {282.0, 540.7}}, identifier: 'taskDetails-2b8c178f-475c-4741-98f8-cb7c9eb66afe', label: 'Accessible launch brief, Read the proposal before sending the estimate., 25 min, 0 of 1 subtasks completed'
+                         ↳StaticText, 0x108006a80, {{88.0, 417.0}, {254.3, 290.7}}, identifier: 'taskNotesPreview-2b8c178f-475c-4741-98f8-cb7c9eb66afe', label: 'Read the proposal before sending the estimate.'
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.calendaraccessibilitytests'
+  Output: {
+    Application, 0x11595e1c0, pid: 20786, label: 'Taskfold Calendar Test'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 20786, elementOrHash.elementID: 4488062144.581
+    Output: {
+      StaticText, 0x1082ae300, {{88.0, 417.0}, {254.3, 290.7}}, identifier: 'taskNotesPreview-2b8c178f-475c-4741-98f8-cb7c9eb66afe', label: 'Read the proposal before sending the estimate.'
+    }

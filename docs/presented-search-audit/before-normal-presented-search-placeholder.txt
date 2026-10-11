@@ -1,0 +1,31 @@
+Presented search placeholder | 131072 | Text clipped | Text of this UITextField may be clipped at larger Dynamic Type sizes. | Attributes: TextField, 0x1148ac000, {{16.0, 181.0}, {266.0, 34.0}}, identifier: 'taskSearch', label: 'Search inbox', placeholderValue: 'Search inbox'
+Element subtree:
+ →TextField, 0x1148ac000, {{16.0, 181.0}, {266.0, 34.0}}, identifier: 'taskSearch', label: 'Search inbox', placeholderValue: 'Search inbox'
+Path to element:
+ →Application, 0x114881040, pid: 21163, label: 'Taskfold Calendar Test'
+  ↳Window (Main), 0x114881180, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x1148812c0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x114881400, {{0.0, 0.0}, {402.0, 874.0}}
+     ↳Other, 0x114881540, {{0.0, 0.0}, {402.0, 874.0}}
+      ↳Other, 0x114881680, {{0.0, 0.0}, {402.0, 874.0}}
+       ↳Other, 0x1148817c0, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'nativeWorkspace'
+        ↳Other, 0x114881900, {{0.0, 0.0}, {402.0, 874.0}}
+         ↳Other, 0x114881a40, {{0.0, 0.0}, {402.0, 874.0}}
+          ↳Other, 0x114881b80, {{0.0, 0.0}, {402.0, 874.0}}
+           ↳Other, 0x114881cc0, {{0.0, 0.0}, {402.0, 874.0}}
+            ↳Other, 0x114881e00, {{0.0, 0.0}, {402.0, 874.0}}
+             ↳Other, 0x114881f40, {{0.0, 0.0}, {402.0, 874.0}}
+              ↳Other, 0x114882d00, {{0.0, 0.0}, {402.0, 874.0}}
+               ↳Other, 0x114882e40, {{0.0, 0.0}, {402.0, 874.0}}
+                ↳Other, 0x114882f80, {{0.0, 0.0}, {402.0, 874.0}}
+                 ↳Other, 0x1148830c0, {{0.0, 0.0}, {402.0, 874.0}}
+                  ↳TextField, 0x1148ac000, {{16.0, 181.0}, {266.0, 34.0}}, identifier: 'taskSearch', label: 'Search inbox', placeholderValue: 'Search inbox'
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.calendaraccessibilitytests'
+  Output: {
+    Application, 0x114a8c780, pid: 21163, label: 'Taskfold Calendar Test'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 21163, elementOrHash.elementID: 4497719296.196
+    Output: {
+      TextField, 0x114a81040, {{16.0, 181.0}, {266.0, 34.0}}, identifier: 'taskSearch', label: 'Search inbox', placeholderValue: 'Search inbox'
+    }

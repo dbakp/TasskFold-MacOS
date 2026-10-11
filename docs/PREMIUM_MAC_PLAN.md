@@ -1585,3 +1585,7 @@ Read-only revalidation still shows native reminder rollout off, zero active pilo
 ### 12 October — bounded saved-capture evidence; P0 still open
 
 Two strengthened iPhone capture cases pass functional access/editor-title assertions; one intermittent runtime publishing warning is retained and a clean unchanged largest repeat does not erase it. Original phone/iPad file sets are unchanged. The authorized VoiceOver attempt restored the observed off state but established no spoken pass. Mac retry remains before initialization in sandbox setup. Current main checklist now correctly records iPhone first-import recovery as accepted. See `saved-capture-access-evidence.json` and `P0_PROGRESS.md`.
+
+### 12 October — iPhone presented Search accessibility correction
+
+The actual open iPhone Search field now uses a short visible placeholder and retains its scoped accessibility name. Two unfiltered native cases pass across four normal/largest placeholder/query viewports, no warnings/skips. The refreshed broad audit still fails four other reports; inspected captures do not establish four visible defects. Protected device data is unchanged. Mac Finder code and release inputs remain independently owned and unchanged; native notification Open/import launch gates remain open. See `presented-search-audit-evidence.json`.

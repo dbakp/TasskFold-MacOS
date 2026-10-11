@@ -1,0 +1,145 @@
+{
+  "date": "2026-10-12",
+  "scope": "Fresh iPhone portrait critical capture/editor/list audit and explicit presented Search placeholder/query audits at normal/light and accessibility XXXL/dark.",
+  "change": "Short visible Search placeholder; full scope retained in accessibilityLabel. Does not change query/filter/recents/Close behavior. iOS-specific UI; Mac retains its independently owned Finder.",
+  "sourceBase": "TaskFold-iOS 4212db8; TasskFold-MacOS a56ac19",
+  "sourceSha256": {
+    "Taskfold/TaskfoldApp.swift": "2cf292913a66ea63166965369de91c034b9c2f63b2bbca8dc79e0c5d9b71d8ee",
+    "Taskfold/Views/QuickAdd.swift": "7712e9812c6959a758a908867a3f8476a173bfaf5b0359c00fd1ab536039c1fd",
+    "Taskfold/Views/TaskEditor.swift": "af8253f869c100a262dbb44a150a2901bb1ed278e1af99510d79f8eee354325e",
+    "TaskfoldUITests/TaskfoldUITests.swift": "0a4068193bff8a4cf3916c5b2b9b11862cc78f8dc2bccf4a50ec745676c44e22"
+  },
+  "criticalAudit": {
+    "resultBundle": "accessibility-current-search-v1.xcresult",
+    "summary": {
+      "totalTestCount": 2,
+      "passedTests": 0,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Failed"
+    },
+    "findings": {
+      "normal": {
+        "Saved task list": [
+          "Saved task list | 131072 | Text clipped | Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes. | Attributes: StaticText, 0x108004f00, {{88.0, 276.5}, {281.7, 18.0}}, identifier: 'taskNotesPreview-f481b450-60d3-4aa2-b0af-a4ce7dac3277', label: 'Read the proposal before sending the estimate.'"
+        ],
+        "Editor subtask actions": [
+          "Editor subtask actions | 131072 | Text clipped | Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes. | Attributes: StaticText, 0x108203d40, {{31.3, 621.8}, {161.0, 20.3}}, label: 'Choose a photo'"
+        ],
+        "Editor overview": [],
+        "Quick capture": []
+      },
+      "largest": {
+        "Saved task list": [
+          "Saved task list | 131072 | Text clipped | Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes. | Attributes: StaticText, 0x108006a80, {{88.0, 417.0}, {254.3, 290.7}}, identifier: 'taskNotesPreview-2b8c178f-475c-4741-98f8-cb7c9eb66afe', label: 'Read the proposal before sending the estimate.'"
+        ],
+        "Editor subtask actions": [],
+        "Editor overview": [],
+        "Quick capture": [
+          "Quick capture | 131072 | Text clipped | Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes. | Attributes: StaticText, 0x1082af0c0, {{76.8, 428.1}, {127.1, 49.3}}, identifier: 'quickPreview-duration_minutes', label: '25 min'"
+        ]
+      }
+    },
+    "accepted": false,
+    "scope": "Eight fresh viewports; search is closed in saved lists. Before placeholder-only correction; other audited UI source unchanged."
+  },
+  "presentedSearchBefore": {
+    "resultBundle": "accessibility-presented-search-v1.xcresult",
+    "summary": {
+      "totalTestCount": 2,
+      "passedTests": 0,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Failed"
+    },
+    "findings": "Empty Search inbox placeholder textClipped in both modes; submitted query has no findings."
+  },
+  "presentedSearchAfter": {
+    "resultBundle": "accessibility-presented-search-v2.xcresult",
+    "summary": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "result": "Passed"
+    },
+    "strictVerifierAccepted": true,
+    "viewports": [
+      "normal empty placeholder",
+      "normal submitted Capacity query",
+      "largest empty placeholder",
+      "largest submitted Capacity query"
+    ],
+    "checks": [
+      "Native search open and empty submission dismiss keyboard.",
+      "Visible placeholder is Search; accessible label remains Search inbox.",
+      "Entered query is exact, Search and Close are hittable.",
+      "All sufficientElementDescription/hitRegion/textClipped findings collected; final assertion rejects every finding. No whitelist or suppressed warnings."
+    ]
+  },
+  "visualReview": [
+    "Normal note has intentional one-line ellipsis; full note remains in combined details label and previously tested editor.",
+    "Normal Choose a photo label is visibly complete in this capture.",
+    "Largest 25 min chip is visibly complete.",
+    "Largest note sentence wraps through its final period; lower metadata requires scrolling.",
+    "Final normal/largest Search and largest query captures inspected."
+  ],
+  "limits": [
+    "Four critical audit findings remain unfiltered: normal photo label/note preview, largest estimate chip/wrapped note. Their presence is not proof of four visible defects; no blanket false-positive dismissal.",
+    "Search scope accepted only for these portrait Inbox states on iOS 26.5. Previous landscape functional evidence retains its scope.",
+    "Spoken VoiceOver, keyboard, other critical flows and broad P0 release gates remain open.",
+    "Isolated stage matches all four audited UI/test source files; Backend/TodoistImport/WidgetActions/BackupTools have stage differences unrelated to these screens. No full current importer/recovery acceptance from this build.",
+    "Mac Control Center/Notification Center computer-use observations timed out; real Open remains unverified. Import PID 16355 remains live; no restart or new task mutation."
+  ],
+  "preservation": {
+    "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969": {
+      "files": 26,
+      "exactFileSetAndHashes": true
+    },
+    "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705": {
+      "files": 43,
+      "exactFileSetAndHashes": true
+    },
+    "finalDisposableFixture": {
+      "tasks": 3,
+      "allOpen": true,
+      "pending": 0,
+      "ids": [
+        "capacity-today",
+        "capacity-unknown",
+        "capacity-tomorrow"
+      ]
+    },
+    "testedUISourceMatches": true
+  },
+  "retainedFilesSha256": {
+    "normal-saved-task-list.txt": "4d6762db3a8b4c4c33887df67df31b7cc9b91b0c9d35a832d0c5a0ea8e5237f5",
+    "normal-editor-subtask-actions.txt": "055f9dc6a616b9f672e218939a07870c0ce1860911d342ceea98340e210e10a5",
+    "normal-editor-overview.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normal-quick-capture.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "largest-saved-task-list.txt": "ed6ca66a90c5a6ccf597f3fe0a2372107fb7153da4f3946e61152c2f1e22a511",
+    "largest-editor-subtask-actions.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "largest-editor-overview.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "largest-quick-capture.txt": "035b24ee00249f93f449b3e14cea96ffc9c519c65a83d1b9b41d81e7c9f6d218",
+    "normal-note-preview.png": "ad6bafca5a09b3daa3aec5f9d3532cebcd1b78d763bd64cb9f45429f3488af4e",
+    "normal-photo-label.png": "83c1d5a5a6279adb8526aa94d1ef70b13ed05feb77def67ad1f9847b53408de3",
+    "largest-note-preview.png": "7f41a97271b021b2fd4effebe0621a264ca39d5c7a8c3a7ae1749036541d0aff",
+    "largest-estimate-chip.png": "1658939945166438b5309f13ad8bd366ccc4a15cdf5772a6013c35dafb23ded2",
+    "before-largest-search-placeholder.png": "3b0285d1361ab2914fd63b6f5760e616794a321fc39a483f82c7eacc85dbbc2a",
+    "before-normal-presented-search-query.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "before-normal-presented-search-placeholder.txt": "fb0e34fbe9016f034685ead4415d21207c4763361632b4837d706d416661701d",
+    "before-largest-presented-search-query.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "before-largest-presented-search-placeholder.txt": "94d772b44822bd2346b70d22d1897f174c06e65ed172e82196eebe0a949b4fdf",
+    "normal-presented-search-query.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normal-presented-search-placeholder.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "largest-presented-search-query.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "largest-presented-search-placeholder.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normal-search-placeholder.png": "1d787e6f27898cd6c04a5413cd478f9b4049f378b9eb8e9f6451b4547cd2d97d",
+    "largest-search-placeholder.png": "4d23700cf16e9e0d1e97986523fe0865f948e22da3af3534b9c268d850f18fb8",
+    "largest-search-query.png": "d2648f070fa112488b5c62e38dc0700d7ce4ded8dbfb2d981e04ad91e17d867c",
+    "signing.json": "9a074250161c139b9bb78f981e3106d455663abf1db8ef2b9637ba8ae9953565"
+  }
+}
