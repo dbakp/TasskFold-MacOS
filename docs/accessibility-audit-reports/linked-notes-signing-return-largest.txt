@@ -1,0 +1,31 @@
+Application, 0x114595040, pid: 66280, label: 'Taskfold' <App element pid: 66280>
+  Window (Main), 0x114594b40, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4326851584.4>
+    Other, 0x114594c80, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4417569280.5>
+      Other, 0x114594dc0, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4416910464.6>
+        Other, 0x114594f00, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4326852608.7>
+          Other, 0x114595a40, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4328384576.8>
+            Other, 0x114595b80, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4417118528.9>
+              Other, 0x114595cc0, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4417119872.10>
+                Other, 0x114595e00, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4327126144.12>
+                  Other, 0x114595f40, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4327342080.14>
+                    Other, 0x114596080, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4328389952.15>
+                      ScrollView, 0x1145961c0, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'nativeAuthentication' <AX element pid: 66280, elementOrHash.elementID: 4326719488.16>
+                        Other, 0x114596300, {{0.0, 62.0}, {402.0, 740.3}} <AX element pid: 66280, elementOrHash.elementID: 4417584128.17>
+                          Image, 0x114596440, {{45.3, 152.3}, {45.3, 45.3}}, identifier: 'checkmark.rectangle.stack.fill', label: 'checkmark.rectangle.stack.fill', Selected <AX element pid: 66280, elementOrHash.elementID: 4328385024.19>
+                          StaticText, 0x114596580, {{28.0, 243.0}, {132.7, 40.7}}, label: 'Taskfold' <AX element pid: 66280, elementOrHash.elementID: 4328385472.20>
+                          StaticText, 0x1145966c0, {{28.0, 293.7}, {224.7, 24.0}}, label: 'A little clarity for your day.' <AX element pid: 66280, elementOrHash.elementID: 4328385920.21>
+                          SegmentedControl, 0x114596800, {{28.0, 345.7}, {346.0, 31.0}} <AX element pid: 66280, elementOrHash.elementID: 4418652416.22>
+                            Button, 0x1145812c0, {{28.0, 345.7}, {173.0, 32.0}}, label: 'Sign in', Selected <AX element pid: 66280, elementOrHash.elementID: 4418653184.30>
+                            Button, 0x114580500, {{201.0, 345.7}, {173.0, 32.0}}, label: 'Create account' <AX element pid: 66280, elementOrHash.elementID: 4418653952.31>
+                          TextField, 0x114580640, {{44.0, 408.7}, {314.0, 22.0}}, identifier: 'authEmail', placeholderValue: 'Email address' <AX element pid: 66280, elementOrHash.elementID: 4326919936.23>
+                          SecureTextField, 0x114580780, {{44.0, 478.7}, {314.0, 21.0}}, identifier: 'authPassword', placeholderValue: 'Password' <AX element pid: 66280, elementOrHash.elementID: 4326922496.24>
+                          Button, 0x104e3b340, {{28.0, 531.7}, {346.0, 66.3}}, identifier: 'nativeSignIn', label: 'Sign in', Disabled <AX element pid: 66280, elementOrHash.elementID: 4328387712.25>
+                          Button, 0x104e3b480, {{99.0, 614.0}, {204.0, 50.3}}, identifier: 'googleSignIn', label: 'Continue with Google' <AX element pid: 66280, elementOrHash.elementID: 4328388160.26>
+                          Button, 0x104e3b5c0, {{130.3, 692.3}, {141.7, 20.3}}, label: 'Use on this iPhone' <AX element pid: 66280, elementOrHash.elementID: 4328388608.27>
+                          StaticText, 0x104e3b700, {{28.0, 740.7}, {328.0, 33.7}}, label: 'Local tasks stay on this device. Sign in to access your existing Taskfold projects and sync across devices.' <AX element pid: 66280, elementOrHash.elementID: 4328389056.28>
+                        Other, 0x104e3b840, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Vertical scroll bar, 1 page', value: 0 % <AX element pid: 66280, elementOrHash.elementID: 4423813120.18>
+                          Other, 0x104e3b980, {{396.0, 102.7}, {3.0, 706.3}} <AX element pid: 66280, elementOrHash.elementID: 4328212224.29>
+                        Other, 0x104e3bac0, {{369.0, 62.0}, {30.0, 750.0}}, label: 'Vertical scroll bar, 1 page', value: 0 % <AX element pid: 66280, elementOrHash.elementID: 4423813120.18>
+                          Other, 0x104e3bc00, {{396.0, 102.7}, {3.0, 706.3}} <AX element pid: 66280, elementOrHash.elementID: 4328212224.29>
+              Other, 0x104e3bd40, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4417572352.11>
+                Other, 0x104e3be80, {{0.0, 0.0}, {402.0, 874.0}} <AX element pid: 66280, elementOrHash.elementID: 4417574400.13>
