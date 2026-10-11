@@ -1,0 +1,171 @@
+{
+  "date": "2026-10-11",
+  "scope": "Native isolated macOS real-provider preview, import, replay and normal-launch persistence",
+  "sourcePolicy": {
+    "existingUserTodoistAccount": true,
+    "existingTokenCopiedThroughNativeUI": true,
+    "tokenRegenerated": false,
+    "providerMutationActions": 0,
+    "tokenSavedToRepository": false,
+    "tokenClearedAfterEachSuccess": true,
+    "temporaryClipboardReplaced": true,
+    "sourceSnapshotHashNotCaptured": true
+  },
+  "destination": {
+    "freshDisposableTaskfoldAccount": true,
+    "emptyBefore": {
+      "projects": 0,
+      "sections": 0,
+      "labels": 0,
+      "tasks": 0,
+      "import_sources": 0
+    },
+    "nativeBundle": "com.dbakp.taskfold.mac.p0localuitests",
+    "fixtureResponseRoute": false,
+    "authenticatedCloudRoute": true
+  },
+  "deployment": {
+    "slug": "import-todoist",
+    "version": 41,
+    "artifactSHA256": "b6705250a7ccb409b4bc680c449e3ff1b88a0f19adb708f1b91a56e3cf4f4ca2",
+    "providerBaseURL": "https://api.todoist.com/api/v1/",
+    "providerRequests": "GET only, confirmed by deployed TodoistClient implementation",
+    "taskPageLimit": 200,
+    "activeTasksIncludingChildren": 276,
+    "pagination": "Live source exceeds the 200-task page limit; successful full snapshot covers multiple pages"
+  },
+  "preview": {
+    "projects": 23,
+    "sections": 88,
+    "labels": 5,
+    "tasks": 252,
+    "subtasks": 24,
+    "comments": 94
+  },
+  "firstReceipt": {
+    "projectsImported": 23,
+    "sectionsImported": 88,
+    "labelsImported": 5,
+    "tasksImported": 252,
+    "subtasksImported": 24,
+    "commentsImported": 94,
+    "projectsSkipped": 0,
+    "sectionsSkipped": 0,
+    "labelsSkipped": 0,
+    "tasksSkipped": 0
+  },
+  "replayReceipt": {
+    "projectsImported": 0,
+    "sectionsImported": 0,
+    "labelsImported": 0,
+    "tasksImported": 0,
+    "subtasksImported": 0,
+    "commentsImported": 0,
+    "projectsSkipped": 23,
+    "sectionsSkipped": 88,
+    "labelsSkipped": 5,
+    "tasksSkipped": 252
+  },
+  "database": {
+    "first": [
+      {
+        "entity": "tasks",
+        "count": 252,
+        "digest": "31c6fd37243e0178e9104efbd9177139"
+      },
+      {
+        "entity": "projects",
+        "count": 23,
+        "digest": "1abf03bd9a0b8016b01454d1a30452ea"
+      },
+      {
+        "entity": "sections",
+        "count": 88,
+        "digest": "1c0e7f3665b8bda31f3fef6678008051"
+      },
+      {
+        "entity": "labels",
+        "count": 5,
+        "digest": "540104e08b78931943c339aae5aebc72"
+      },
+      {
+        "entity": "import_sources",
+        "count": 368,
+        "digest": "9b5d360dec6252da312cbe6c2bb339ad"
+      }
+    ],
+    "replay": [
+      {
+        "entity": "tasks",
+        "count": 252,
+        "digest": "31c6fd37243e0178e9104efbd9177139"
+      },
+      {
+        "entity": "projects",
+        "count": 23,
+        "digest": "1abf03bd9a0b8016b01454d1a30452ea"
+      },
+      {
+        "entity": "sections",
+        "count": 88,
+        "digest": "1c0e7f3665b8bda31f3fef6678008051"
+      },
+      {
+        "entity": "labels",
+        "count": 5,
+        "digest": "540104e08b78931943c339aae5aebc72"
+      },
+      {
+        "entity": "import_sources",
+        "count": 368,
+        "digest": "9b5d360dec6252da312cbe6c2bb339ad"
+      }
+    ],
+    "allFiveTableFingerprintsIdentical": true,
+    "fingerprint": "Postgres MD5 of ordered complete JSONB rows, comparison only"
+  },
+  "normalLaunch": {
+    "quitAndRelaunch": true,
+    "retainedAuthenticatedDestination": true,
+    "authenticationFormAbsent": true,
+    "projects": 23,
+    "sections": 88,
+    "labels": 5,
+    "tasks": 252,
+    "subtasks": 24,
+    "comments": 94,
+    "pendingChanges": 0
+  },
+  "originalAccount": {
+    "comparedTables": [
+      "tasks",
+      "projects",
+      "sections",
+      "labels",
+      "saved_views",
+      "view_orders",
+      "focus_sessions"
+    ],
+    "allSevenEqualPriorCanonicalPhoneBaseline": true,
+    "pendingChanges": 0,
+    "wholeMacCacheHashEqualOlderMacBaseline": false,
+    "note": "The original running Mac cache caught up with the existing canonical phone baseline; whole-file byte equality is not claimed."
+  },
+  "ownedInputs": {
+    "sharedImportContractSHA256": "ea67b05b2b466e3767bf19a93049cc87b1972cdb06f3c13030b8a8762d9e512f",
+    "macEditorsSHA256": "f926fed13d97567d35412f389bfc588d01f3f1880f2fdb1e2099175d3bf5ea4c",
+    "bothMacInputsEqualRunningBuildStage": true,
+    "iosContractMatchesMac": true
+  },
+  "observations": [
+    "Native preview visually displays all six labeled counts and supported-data warnings.",
+    "Native Mac accessibility tree combines count/receipt values under the first row's label; actual VoiceOver navigation remains unaccepted.",
+    "Initial account creation was rejected for a test password over the backend's 72-character limit; a supported-length generated password succeeded."
+  ],
+  "limitations": [
+    "Real replay succeeded after a confirmed first import; a lost real save response was not injected. Earlier lost-response UI fixtures remain separate evidence.",
+    "No iOS real-provider native import or paired imported-account device sync was performed here.",
+    "No source task content, source account ID, email, API token, credential, raw cache or private screenshot is included in this evidence.",
+    "No backend deployment, schema change, production app replacement or full P0 release acceptance."
+  ]
+}
