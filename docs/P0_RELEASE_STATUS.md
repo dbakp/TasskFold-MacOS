@@ -1,5 +1,7 @@
 # Current P0 release acceptance
 
+For the concise current gate summary, see [P0 progress snapshot](P0_PROGRESS.md).
+
 Audited against the original widget collection and Todoist port plan; current native follow-ups reconciled 11 October 2026 using the scoped evidence below. Each evidence artifact records its own build and verification limits. This is the current execution checklist; dated implementation entries elsewhere are historical records, not a growing list of additional release requirements. The full requested objective remains active.
 
 ## Implemented versus accepted
@@ -540,3 +542,9 @@ A fresh disposable phone confirmed a compact-height defect: largest-text period 
 Three final landscape journeys pass: normal Year, largest Year and largest Month, including all twelve Year targets, Month first/last selection, original task, toolbar Add/date and relaunch. Focused normal/largest Add checks and portrait Month/three short-period regressions pass too. Six accepted native cases cover nine workflows; build/source limits and all failed intermediate runs remain explicit in `phone-compact-calendar-evidence.json`. Original iPad/phone protected file sets and hashes remain exact, and all three isolated fixtures retain three open tasks with exact IDs/titles/estimates and empty queues.
 
 This does not accept all landscape usability: the largest Add capture partly hides date controls while the keyboard is visible, and nested-scroll ergonomics need further user testing. Other landscape periods, Day, full VoiceOver, the retained clipping findings and broader P0 gates remain open. The original phone still did not rotate in its attempted run; no reset or unsupported diagnosis was applied.
+
+### 11 October — landscape capture workflow and concise gate summary
+
+`P0_PROGRESS.md` now provides a short current gate summary. Two native phone capture cases pass, normal/light and accessibility XXXL/dark: actual landscape, typed title, named keyboard dismissal, Today → Tomorrow → Today, Inbox selection, Save and relaunch without reseeding. At largest text, the date/project controls fit their scrolling viewport after keyboard dismissal. No product change was required for these actions. The final isolated cache contains exactly three original fixture tasks plus one open Today/Inbox capture, with no queued changes. The original tablet/phone protected file sets and hashes remain exact (26/43 files). See `landscape-capture-evidence.json`.
+
+Persistence is accepted through native element existence and cache verification. The largest final Today screenshot does not visibly show that row, so general largest-text landscape task-list readability/reachability remains open. Keyboard-visible composer clipping remains a presentation finding. This does not clear VoiceOver, the four audit findings or wider P0 gates. An initial test selector ambiguity is retained as a failed run; final scoped cases pass.

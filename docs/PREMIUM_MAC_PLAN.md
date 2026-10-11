@@ -1555,3 +1555,9 @@ A fresh disposable phone confirmed a compact-height defect: largest-text period 
 Three final landscape journeys pass: normal Year, largest Year and largest Month, including all twelve Year targets, Month first/last selection, original task, toolbar Add/date and relaunch. Focused normal/largest Add checks and portrait Month/three short-period regressions pass too. Six accepted native cases cover nine workflows; build/source limits and all failed intermediate runs remain explicit in `phone-compact-calendar-evidence.json`. Original iPad/phone protected file sets and hashes remain exact, and all three isolated fixtures retain three open tasks with exact IDs/titles/estimates and empty queues.
 
 This does not accept all landscape usability: the largest Add capture partly hides date controls while the keyboard is visible, and nested-scroll ergonomics need further user testing. Other landscape periods, Day, full VoiceOver, the retained clipping findings and broader P0 gates remain open. The original phone still did not rotate in its attempted run; no reset or unsupported diagnosis was applied.
+
+## 11 October — concise P0 gate tracking
+
+Added `P0_PROGRESS.md` with a compact implemented/proven/remaining summary and bounded next execution order. `P0_RELEASE_STATUS.md` retains the detailed scoped evidence. Feature buildout is largely complete; notification delivery/actions, remaining native importer/provider boundaries, installed Mac widget/distribution gates and critical accessibility remain unaccepted. New iPhone capture verification is isolated from Mac code and real user data.
+
+Follow-up: two native iPhone landscape capture cases pass date/project changes, save and persisted-record relaunch checks. No product change was required. Largest Today landscape visible-row acceptance and keyboard-visible composer polish remain open. Both protected account file sets/hashes are unchanged; see `landscape-capture-evidence.json`.
