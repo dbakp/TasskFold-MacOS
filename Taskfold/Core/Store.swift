@@ -442,7 +442,7 @@ final class Store {
         #endif
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test") {
-            try? backend.clearSession()
+            try? SecureSession.save(nil); backend.session = nil
             UserDefaults.standard.set(false, forKey: "localMode")
         }
         #endif
@@ -634,6 +634,7 @@ final class Store {
         } catch { widgetActionStatus = "Widget actions need attention: " + error.localizedDescription; notice = widgetActionStatus }
     }
     func startLocal() {
+        guard !signingOut else { return }
         let firstRun = !FileManager.default.fileExists(atPath: URL.applicationSupportDirectory.appending(path: "Taskfold/local.json").path)
         if !remoteReminderTestWorkspace {
             do { try prepareReminderDeviceRetirement() } catch { remoteReminderStatus = "Device unlinking could not be saved securely. Retry remote setup." }
@@ -669,6 +670,7 @@ final class Store {
         commit(changes, remember: false)
     }
     func authenticated() async {
+        // A newer authenticated session supersedes an in-flight sign-out.
         guard backend.session != nil else { return }
         googleAvatarURL = backend.session?.user.googleAvatarURL; avatarMetadataLoaded = false
         accountGeneration = UUID(); localMode = false; signedIn = true; syncConflict = nil; focusSyncConflict = nil
@@ -676,9 +678,19 @@ final class Store {
         UserDefaults.standard.set(false, forKey: "localMode")
         snapshot = Snapshot(); undoStack = []; redoStack = []; load(); Task { await refreshRemoteReminderRegistration(); await sync() }
     }
-    func signOut() {
+    private(set) var signingOut = false
+    func signOut() async {
+        guard !signingOut else { return }
+        signingOut = true; defer { signingOut = false }
+
         // The account-specific cache and unsent queue stay on disk for the next sign-in.
-        do { try persist(); try prepareReminderDeviceRetirement(); try backend.clearSession() } catch { self.error = error.localizedDescription; return }
+        do {
+            try persist(); try prepareReminderDeviceRetirement(); accountGeneration = UUID()
+            try await backend.clearSession()
+        } catch is CancellationError {
+            // A newer sign-in owns the session; do not clear its workspace or show an old error.
+            return
+        } catch { self.error = error.localizedDescription; return }
         googleAvatarURL = nil; avatarMetadataLoaded = false
         accountGeneration = UUID(); backend.session = nil; signedIn = false; localMode = false
         UserDefaults.standard.set(false, forKey: "localMode")
@@ -690,6 +702,7 @@ final class Store {
     }
     @discardableResult
     func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil) -> Bool {
+        guard !signingOut else { return false }
         guard changes.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable }) else { error = "Activity history is read-only."; return false }
         guard changes.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
             error = "This Focus command needs a valid workspace and revision."; return false

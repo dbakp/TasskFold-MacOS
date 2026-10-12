@@ -26,6 +26,13 @@ private final class HTTPGate: @unchecked Sendable {
     func release(_ status: Int, _ data: Data) { lock.lock(); let request = held; held = nil; lock.unlock(); request?.finish(status, data) }
 }
 
+private final class SessionDiskFixture: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored = "original"
+    var value: String { lock.lock(); defer { lock.unlock() }; return stored }
+    func save(_ value: String) { lock.lock(); stored = value; lock.unlock() }
+}
+
 final class AccountTransportTests: XCTestCase {
     let owner = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", other = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
     func signed(_ account: String, token: String = "old") throws -> Session {
@@ -162,7 +169,7 @@ extension AccountTransportTests {
         }
         defer { ScopedHTTP.handler=nil }
         let confirmed=try await api.sendReminderDevice(active); XCTAssertEqual(confirmed.state,"registered")
-        try api.clearSession()
+        try await api.clearSession()
         let cleared=try await api.sendReminderDevice(retired); XCTAssertEqual(cleared.state,"retired")
     }
     @MainActor func testDeviceBindingResponseAfterSameAccountReentryCannotBeAccepted() async throws {
@@ -377,4 +384,82 @@ extension AccountTransportTests {
         catch { /* Both cancellation forms leave the new account intact. */ }
         XCTAssertEqual(storageCalls, 0); XCTAssertEqual(api.session?.user.id, other)
     }
+    @MainActor func testSuspendedSessionAcceptanceCannotResurrectAfterSignOut() async throws {
+        let started = expectation(description: "Session write held")
+        var release: CheckedContinuation<Void, Never>?
+        let current = try signed(owner), next = try signed(other)
+        let api = Backend(configuration: [:], session: current, persistSession: { value in
+            if value != nil {
+                await withCheckedContinuation { release = $0; started.fulfill() }
+            }
+        })
+        let accepting = Task { try await api.accept(next) }
+        await fulfillment(of: [started], timeout: 3)
+        do { _ = try await api.request("/rest/v1/tasks"); XCTFail("A credential transition used the previous session") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        try await api.clearSession()
+        release?.resume()
+        do { try await accepting.value; XCTFail("A delayed sign-in revived the cleared session") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertNil(api.session)
+    }
+
+    @MainActor func testFailedSessionClearRetainsCurrentSession() async throws {
+        let current = try signed(owner)
+        let api = Backend(configuration: [:], session: current, persistSession: { _ in
+            throw AppFailure(message: "Test keychain unavailable")
+        })
+        do { try await api.clearSession(); XCTFail("Failed clearing must be reported") }
+        catch { XCTAssertEqual(error.localizedDescription, "Test keychain unavailable") }
+        XCTAssertEqual(api.session?.user.id, owner)
+    }
+
+    @MainActor func testSessionWritesRunOffMainAndClearFollowsHeldSave() async throws {
+        let started = expectation(description: "Save started off main")
+        let clear = expectation(description: "Clear finished off main")
+        let gate = DispatchSemaphore(value: 0)
+        let durable = SessionDiskFixture()
+        let save = Task {
+            try await SessionPersistence.perform {
+                XCTAssertFalse(Thread.isMainThread)
+                started.fulfill()
+                guard gate.wait(timeout: .now() + 5) == .success else { throw AppFailure(message: "Test gate timed out") }
+                durable.save("saved")
+            }
+        }
+        await fulfillment(of: [started], timeout: 3)
+        let remove = Task {
+            try await SessionPersistence.perform {
+                XCTAssertFalse(Thread.isMainThread)
+                durable.save("cleared")
+                clear.fulfill()
+            }
+        }
+        // This code still executes on the main actor while the credential write is held.
+        XCTAssertTrue(Thread.isMainThread)
+        gate.signal()
+        try await save.value; try await remove.value
+        await fulfillment(of: [clear], timeout: 3)
+        XCTAssertEqual(durable.value, "cleared")
+    }
+
+    @MainActor func testDelayedClearCannotEraseNewAcceptedSession() async throws {
+        let started = expectation(description: "Credential clear held")
+        var release: CheckedContinuation<Void, Never>?
+        let current = try signed(owner), next = try signed(other)
+        let api = Backend(configuration: [:], session: current, persistSession: { value in
+            if value == nil {
+                await withCheckedContinuation { release = $0; started.fulfill() }
+            }
+        })
+        let clearing = Task { try await api.clearSession() }
+        await fulfillment(of: [started], timeout: 3)
+        try await api.accept(next)
+        release?.resume()
+        do { try await clearing.value; XCTFail("An old sign-out erased a newer sign-in") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(api.session?.user.id, other)
+        XCTAssertEqual(api.session?.access_token, next.access_token)
+    }
+
 }

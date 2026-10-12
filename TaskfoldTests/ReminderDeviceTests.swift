@@ -436,7 +436,7 @@ final class ReminderDeliveryAuthorityTests: XCTestCase {
         let session = try JSONDecoder().decode(Session.self, from: sessionData)
         let backend = Backend(configuration: [:], session: session, persistSession: { _ in })
         let original = backend.reminderSessionIncarnation
-        try backend.clearSession(); backend.session = session
+        try await backend.clearSession(); backend.session = session
         var installation = fixture.persisted
         let command = try installation.reserve(account: context.account, binding: .init(platform:.ios,bundle:context.identity.bundle,environment:.development,
             token:"aa",time_zone:"UTC",permission:.authorized,enabled:false))

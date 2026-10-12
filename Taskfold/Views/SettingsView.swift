@@ -250,8 +250,14 @@ struct AccountSettings: View {
                 }
             }
         }
+        .disabled(store.signingOut)
+        .overlay {
+            if store.signingOut {
+                ProgressView("Signing out…").padding(20).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+            }
+        }
         .confirmationDialog(store.localMode ? "Leave this workspace?" : "Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
-            Button(store.localMode ? "Leave" : "Sign Out", role: .destructive) { store.signOut() }
+            Button(store.localMode ? "Leave" : "Sign Out", role: .destructive) { Task { await store.signOut() } }
         } message: { Text("Saved tasks and pending changes stay on this Mac for your next sign-in.") }
     }
     private func sendReset() {

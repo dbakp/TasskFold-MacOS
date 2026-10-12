@@ -24,6 +24,12 @@ struct RootView: View {
             }
             else { AuthView().transition(.opacity) }
         }
+        .disabled(store.signingOut)
+        .overlay {
+            if store.signingOut {
+                ProgressView("Signing out…").padding(20).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+            }
+        }
         .animation(Motion.respecting(reduceMotion, Motion.layout), value: store.signedIn)
         .onAppear { workspace.reduceMotion = reduceMotion; workspace.undoManager = undoManager; seed() }
         .onChange(of: store.userID) { _, _ in workspace.clearNavigationMemory(); workspace.section = .today }

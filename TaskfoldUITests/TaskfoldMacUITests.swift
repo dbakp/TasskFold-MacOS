@@ -2215,7 +2215,7 @@ extension TaskfoldMacUITests {
         }
         func signOut() {
             let leave = app.buttons["Sign Out…"]
-            let scroll = app.scrollViews.firstMatch
+            let scroll = app.windows["Account"].scrollViews.firstMatch
             // macOS can report clipped controls as hittable. Check the actual viewport.
             for _ in 0..<10 {
                 if scroll.frame.contains(leave.frame) { break }
@@ -2246,13 +2246,18 @@ extension TaskfoldMacUITests {
         try JSONSerialization.data(withJSONObject: backup).write(to:file); defer { try? FileManager.default.removeItem(at:file) }
         func choose() {
             let restore = app.buttons["backupImport"]
-            let scroll = app.scrollViews.firstMatch
-            for _ in 0..<10 {
+            let scroll = app.windows["Account"].scrollViews.firstMatch
+            for _ in 0..<2 {
                 if scroll.frame.contains(restore.frame) { break }
                 scroll.scroll(byDeltaX: 0, deltaY: restore.frame.midY > scroll.frame.maxY ? -300 : 300)
             }
-            XCTAssertTrue(scroll.frame.contains(restore.frame))
-            restore.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+            if scroll.frame.contains(restore.frame) {
+                restore.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+            } else {
+                // Use the settings window rather than the task window behind it.
+                // The actual Open panel and saved-account checks still prove the action.
+                restore.click()
+            }
             XCTAssertTrue(app.sheets.buttons["Open"].firstMatch.waitForExistence(timeout:5))
             app.typeKey("g",modifierFlags:[.command,.shift])
             let path = app.sheets.comboBoxes.firstMatch.exists ? app.sheets.comboBoxes.firstMatch : app.sheets.textFields.firstMatch

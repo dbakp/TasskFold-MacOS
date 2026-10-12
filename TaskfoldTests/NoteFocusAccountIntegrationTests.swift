@@ -67,7 +67,7 @@ final class NoteFocusAccountIntegrationTests: XCTestCase {
                 }
                 // Local revocation preserves the original native Mac/phone sessions.
                 _ = try await backend.request("/auth/v1/logout?scope=local", method: "POST")
-                try backend.clearSession()
+                try await backend.clearSession()
                 let signedOut = WidgetProjection.payload(tasks: tables["tasks"]!, projects: tables["projects"]!, account: "", now: now, notePins: tables["view_orders"]!, focusRecord: tables["focus_sessions"]!.first)
                 let empty = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(signedOut))
                 XCTAssertTrue(empty.availableNotes.isEmpty); XCTAssertTrue(empty.tasks.isEmpty)
@@ -75,7 +75,7 @@ final class NoteFocusAccountIntegrationTests: XCTestCase {
                 XCTAssertEqual(empty.notesURL.host, "all")
             } catch {
                 _ = try? await backend.request("/auth/v1/logout?scope=local", method: "POST")
-                try? backend.clearSession(); throw error
+                try? await backend.clearSession(); throw error
             }
         }
     }

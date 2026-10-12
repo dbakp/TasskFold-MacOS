@@ -109,7 +109,6 @@ extension Backend {
         let code = try OAuthCallback.code(from: callback)
         let data = try await request("/auth/v1/token?grant_type=pkce", method: "POST", body: ["auth_code": .string(code), "code_verifier": .string(verifier)], authenticated: false)
         let next = try JSONDecoder().decode(Session.self, from: data)
-        try SecureSession.save(next)
-        session = next
+        try await accept(next)
     }
 }

@@ -45,7 +45,23 @@ enum SyncStatus {
     }
 }
 
+enum SessionPersistence {
+    private static let writer = DispatchQueue(label: "com.taskfold.session-persistence", qos: .utility)
+    /// Await durability without holding the UI thread. One queue orders save and sign-out.
+    static func perform(_ operation: @escaping @Sendable () throws -> Void) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            writer.async {
+                do { try operation(); continuation.resume() }
+                catch { continuation.resume(throwing: error) }
+            }
+        }
+    }
+}
+
 enum SecureSession {
+    static func saveAsync(_ session: Session?) async throws {
+        try await SessionPersistence.perform { try save(session) }
+    }
     static let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
         kSecAttrService as String: "com.taskfold.ios.session", kSecAttrAccount as String: "supabase"]
     static func read() -> Session? {
@@ -56,7 +72,13 @@ enum SecureSession {
         return try? JSONDecoder().decode(Session.self, from: data)
     }
     static func save(_ session: Session?) throws {
-        guard let session else { SecItemDelete(query as CFDictionary); return }
+        guard let session else {
+            let status = SecItemDelete(query as CFDictionary)
+            guard status == errSecSuccess || status == errSecItemNotFound else {
+                throw AppFailure(message: "Could not securely clear your session (\(status)).")
+            }
+            return
+        }
         let data = try JSONEncoder().encode(session)
         let update = [kSecValueData as String: data]
         var status = SecItemUpdate(query as CFDictionary, update as CFDictionary)
@@ -126,8 +148,9 @@ final class Backend: NSObject {
     private var authSession: ASWebAuthenticationSession?
     #endif
     private let http: URLSession
-    private let saveSession: (Session?) throws -> Void
+    private let saveSession: (Session?) async throws -> Void
     private var sessionGeneration = UUID()
+    private var sessionTransition = false
     /// Changes on sign-in/sign-out, and stays stable across ordinary token refresh.
     var reminderSessionIncarnation: UUID { sessionGeneration }
     private var refreshTask: Task<Session, Error>?
@@ -135,7 +158,7 @@ final class Backend: NSObject {
     private let config: [String: String]
     init(configuration: [String: String]? = nil, http: URLSession = .shared,
          session: Session? = SecureSession.read(),
-         persistSession: @escaping (Session?) throws -> Void = SecureSession.save) {
+         persistSession: @escaping (Session?) async throws -> Void = SecureSession.saveAsync) {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--continuity-offline"),
            Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.p0signeduitests",
@@ -158,23 +181,30 @@ final class Backend: NSObject {
         else { config = [:] }
         super.init()
     }
-    func clearSession() throws {
-        sessionGeneration = UUID()
+    func clearSession() async throws {
+        let generation = UUID(); sessionGeneration = generation; sessionTransition = true
+        defer { if sessionGeneration == generation { sessionTransition = false } }
         refreshTask?.cancel(); refreshTask = nil; refreshID = nil
-        try saveSession(nil); session = nil
+        try await saveSession(nil)
+        guard sessionGeneration == generation else { throw CancellationError() }
+        session = nil
     }
-    private func accept(_ next: Session) throws {
-        try saveSession(next)
-        sessionGeneration = UUID(); refreshTask?.cancel(); refreshTask = nil; refreshID = nil
+    func accept(_ next: Session) async throws {
+        let generation = UUID(); sessionGeneration = generation; sessionTransition = true
+        defer { if sessionGeneration == generation { sessionTransition = false } }
+        refreshTask?.cancel(); refreshTask = nil; refreshID = nil
+        try await saveSession(next)
+        guard sessionGeneration == generation else { throw CancellationError() }
         session = next
     }
     var baseURL: String { config["URL"] ?? "" }
     func request(_ path: String, method: String = "GET", body: [String: JSON]? = nil,
                  authenticated: Bool = true, extra: [String: String] = [:], retryAuthentication: Bool = true,
                  expectedAccount: String? = nil) async throws -> Data {
+        guard !authenticated || !sessionTransition else { throw CancellationError() }
         let generation = sessionGeneration, owner = expectedAccount ?? session?.user.id
         if authenticated { try await refreshIfNeeded() }
-        if authenticated, generation != sessionGeneration || session?.user.id != owner { throw CancellationError() }
+        if authenticated, sessionTransition || generation != sessionGeneration || session?.user.id != owner { throw CancellationError() }
         guard let url = URL(string: baseURL + path), url.scheme == "https" else {
             throw AppFailure(message: "The Supabase configuration is missing.")
         }
@@ -245,7 +275,8 @@ final class Backend: NSObject {
                 body: ["refresh_token": .string(current.refresh_token)], authenticated: false)
             let next = try JSONDecoder().decode(Session.self, from: data)
             guard generation == self.sessionGeneration, self.session?.user.id == current.user.id, next.user.id == current.user.id else { throw CancellationError() }
-            try self.saveSession(next)
+            try await self.saveSession(next)
+            guard generation == self.sessionGeneration, self.session?.user.id == current.user.id else { throw CancellationError() }
             return next
         }
         refreshTask = task
@@ -261,7 +292,7 @@ final class Backend: NSObject {
         let user = try JSONDecoder().decode(Session.User.self, from: data)
         guard generation == sessionGeneration, var current = session, current.user.id == user.id else { throw CancellationError() }
         current.user = user
-        try accept(current)
+        try await accept(current)
     }
 
     func signIn(email: String, password: String, signup: Bool) async throws -> Bool {
@@ -271,7 +302,7 @@ final class Backend: NSObject {
             if signup { return false }
             throw AppFailure(message: "The sign-in response was incomplete. Please try again.")
         }
-        try accept(next)
+        try await accept(next)
         return true
     }
     /// Changes the signed-in user's email (Supabase sends a confirmation) or password.
@@ -310,7 +341,7 @@ final class Backend: NSObject {
         let code = try OAuthCallback.code(from: callback)
         let data = try await request("/auth/v1/token?grant_type=pkce", method: "POST", body: ["auth_code": .string(code), "code_verifier": .string(verifier)], authenticated: false)
         let next = try JSONDecoder().decode(Session.self, from: data)
-        try accept(next)
+        try await accept(next)
     }
     #endif
     #if canImport(UIKit)

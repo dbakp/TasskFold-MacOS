@@ -101,7 +101,7 @@ struct DeleteAccountSheet: View {
             defer { busy = false }
             do {
                 try await store.backend.deleteAccount()
-                store.signOut()
+                await store.signOut()
                 dismiss()
             } catch { message = error.localizedDescription }
         }
