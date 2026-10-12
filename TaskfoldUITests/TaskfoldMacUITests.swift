@@ -2183,4 +2183,85 @@ extension TaskfoldMacUITests {
         retainWindow(app, name: "Mac returned workspace preserved after backup wait and normal Quit")
     }
 
+    @MainActor func testBackupWaitCannotFollowAuthenticatedAccountSwitch() throws {
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else { throw XCTSkip("Dedicated backup app required") }
+
+        let config = try JSONDecoder().decode([String: [String: String]].self, from: Data(contentsOf: URL(fileURLWithPath: "/private/tmp/taskfold-backup-account-switch.json")))
+        let first = try XCTUnwrap(config["first"]), second = try XCTUnwrap(config["second"])
+        for account in [first, second] {
+            let id = try XCTUnwrap(account["userID"])
+            guard UUID(uuidString: id) != nil, account["email"]?.hasSuffix("@example.invalid") == true else { throw XCTSkip("Disposable accounts required") }
+        }
+        XCTAssertNotEqual(first["userID"], second["userID"])
+        let app = XCUIApplication(); defer { app.terminate() }
+        let defaults = ["-onboardingSeen", "YES", "-dailyBackups." + first["userID"]!, "NO", "-dailyBackups." + second["userID"]!, "NO"]
+        app.launchArguments = ["--live-auth-ui-test", "--backup-provider-wait-testing"] + defaults
+        app.launch()
+
+        func signIn(_ account: [String: String]) throws {
+            let email = app.textFields["authEmail"], secret = app.secureTextFields["authPassword"]
+            XCTAssertTrue(email.waitForExistence(timeout: 10)); email.click(); app.typeKey("a", modifierFlags: .command); email.typeText(try XCTUnwrap(account["email"]))
+            secret.click()
+            let clipboard = NSPasteboard.general
+            let saved = (clipboard.pasteboardItems ?? []).map { item in item.types.compactMap { type in item.data(forType:type).map { (type,$0) } } }
+            clipboard.clearContents(); clipboard.setString(try XCTUnwrap(account["password"]),forType:.string)
+            app.typeKey("v",modifierFlags:.command)
+            clipboard.clearContents(); clipboard.writeObjects(saved.map { values in let item = NSPasteboardItem(); for (type,data) in values { item.setData(data,forType:type) };return item })
+            app.buttons["nativeSignIn"].click()
+            XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 30))
+        }
+        func settings() {
+            app.typeKey(",", modifierFlags: .command); XCTAssertTrue(app.buttons["Account"].firstMatch.waitForExistence(timeout: 8)); app.buttons["Account"].firstMatch.click()
+        }
+        func signOut() {
+            let leave = app.buttons["Sign Out…"]
+            for _ in 0..<10 where !leave.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -500) }
+            XCTAssertTrue(leave.isHittable); leave.click()
+            let confirm = app.sheets.buttons["Sign Out"].firstMatch
+            XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.click()
+            app.windows["Account"].buttons["_XCUI:CloseWindow"].click()
+            XCTAssertTrue(app.textFields["authEmail"].waitForExistence(timeout: 10))
+        }
+        let folder = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold")
+        func cache(_ account: [String: String]) throws -> NSDictionary {
+            try JSONSerialization.jsonObject(with: Data(contentsOf: folder.appendingPathComponent(account["userID"]! + ".json"))) as! NSDictionary
+        }
+        func settled(_ account: [String: String]) throws -> NSDictionary {
+            let path = folder.appendingPathComponent(account["userID"]! + ".json")
+            let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _,_ in
+                guard let data = try? Data(contentsOf: path), let value = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let tables = value["tables"] as? [String: Any], let tasks = tables["tasks"] as? [[String: Any]], let pending = value["pending"] as? [Any] else { return false }
+                return !tasks.isEmpty && pending.isEmpty
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 30), .completed)
+            return try cache(account)
+        }
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("Taskfold-account-backup-" + UUID().uuidString + ".json")
+        let backup: [String: Any] = ["format":"com.taskfold.workspace", "version":1, "id":UUID().uuidString.lowercased(), "createdAt":ISO8601DateFormatter().string(from:Date()), "sourceAccount":"synthetic", "tables":["tasks":[["id":UUID().uuidString.lowercased(),"user_id":"synthetic","title":"Account-isolated backup proof","completed":false,"priority":4]]], "unsyncedChanges":0, "legacy":false]
+        try JSONSerialization.data(withJSONObject: backup).write(to:file); defer { try? FileManager.default.removeItem(at:file) }
+        func choose() {
+            let restore = app.buttons["backupImport"]
+            for _ in 0..<10 where !restore.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX:0,deltaY:400) }
+            restore.click(); XCTAssertTrue(app.sheets.buttons["Open"].firstMatch.waitForExistence(timeout:5))
+            app.typeKey("g",modifierFlags:[.command,.shift])
+            let path = app.sheets.comboBoxes.firstMatch.exists ? app.sheets.comboBoxes.firstMatch : app.sheets.textFields.firstMatch
+            XCTAssertTrue(path.waitForExistence(timeout:5)); path.click(); app.typeKey("a",modifierFlags:.command); path.typeText(file.path); app.typeKey(.return,modifierFlags:[])
+            let row = app.sheets.textFields.matching(NSPredicate(format:"value == %@",file.lastPathComponent)).firstMatch
+            XCTAssertTrue(row.waitForExistence(timeout:5)); row.click(); app.sheets.buttons["Open"].firstMatch.click()
+        }
+        try signIn(first); let beforeA = try settled(first); settings(); choose()
+        XCTAssertTrue(app.buttons["backupReadCancel"].waitForExistence(timeout:10)); retainWindow(app,name:"Mac held backup in account A")
+        signOut(); try signIn(second); let beforeB = try settled(second); settings()
+        XCTAssertFalse(app.buttons["backupReadCancel"].exists); XCTAssertFalse(app.descendants(matching:.any)["restoreAdded"].exists)
+        XCTAssertEqual(try cache(first),beforeA)
+        choose(); XCTAssertTrue(app.descendants(matching:.any)["restoreAdded"].firstMatch.waitForExistence(timeout:10),"Same-file retry must be independent in account B")
+        retainWindow(app,name:"Mac account B fresh backup review")
+        app.sheets.buttons["Cancel"].firstMatch.click(); XCTAssertEqual(try cache(second),beforeB); signOut()
+        try signIn(first); _ = try settled(first); XCTAssertEqual(try cache(first),beforeA); XCTAssertEqual(try cache(second),beforeB)
+        app.typeKey("q",modifierFlags:.command); XCTAssertTrue(app.wait(for:.notRunning,timeout:5))
+        app.launchArguments = defaults; app.launch(); XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout:15)); _ = try settled(first)
+        XCTAssertEqual(try cache(first),beforeA); XCTAssertEqual(try cache(second),beforeB)
+        retainWindow(app,name:"Mac account A work retained after backup switch and relaunch")
+        settings(); signOut()
+    }
+
 }

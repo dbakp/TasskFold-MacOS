@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native authenticated A \u2192 B \u2192 A backup navigation, same-file retry, cancelled review, whole saved workspace preservation and ordinary relaunch on iPhone. Mac same-page pending-read/sign-out walk prepared but not accepted.",
+  "productionCodeChanged": false,
+  "result": {
+    "iphone": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-backup-switch-native-v3.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    "mac": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-backup-switch-native-v1.xcresult",
+      "accepted": false,
+      "reason": "Mac locked; XCTest failed to activate the isolated app before any account-switch workflow. Runner and app ended. Current signed app and runner retained for unlock."
+    }
+  },
+  "accepted": [
+    "Two existing disposable confirmed accounts; real sign-in and sign-out, no admin credentials or account creation",
+    "A real selected-file coordination is held with the existing test-only NSFilePresenter",
+    "iPhone navigation to Account cancels the held read before sign-out; B has no inherited busy state or restore review",
+    "Same file independently opens review in B; Cancel leaves B whole persisted workspace unchanged",
+    "A return and normal relaunch preserve both entire saved workspace dictionaries exactly",
+    "Three journey captures inspected; no new product defect identified",
+    "All 14 queried backend tables per account unchanged (28 comparisons); baseline includes tasks, organization, profiles, preferences, Focus, reminders and activity"
+  ],
+  "earlierAttempts": {
+    "iphoneV1": "Save Password system prompt blocked settings; no backup workflow acceptance. Retained private diagnostics.",
+    "iphoneV2": "Waiting longer did not remove the same system prompt; video inspection identified SafariViewService. Not a Taskfold settings defect.",
+    "iphoneV3": "Uses real Not Now action in SafariViewService/SpringBoard after every sign-in; password entered via restored clipboard so credential typing is absent from diagnostics."
+  },
+  "verification": [
+    "Both independently owned build-for-testing configurations succeed",
+    "Mac strict deep signature verification succeeds",
+    "Final iPhone result accepted by verify_ui_result.py"
+  ],
+  "cleanup": {
+    "protectedExact": 100,
+    "mainAppsAndRunners": 0,
+    "prunedLogicalBytes": 421334524,
+    "retainedMacProducts": "mac-backup-switch-v1: current signed app and runner needed after unlock; not running"
+  },
+  "limitations": [
+    "iPhone normal navigation cancels before account changes; no claim of an authenticated callback changing accounts while the read view remains presented",
+    "Mac authenticated pending-read/sign-out remains open until manual unlock and runtime completion",
+    "Local presenter exercises actual file coordination, not actual remote file-provider failure",
+    "Daily recovery copies were visible as enabled in the final capture; command-line defaults are not evidence that backups were disabled",
+    "Full P0 acceptance remains incomplete; release signing deferred by user"
+  ],
+  "references": [
+    "https://supabase.com/changelog.md",
+    "https://supabase.com/docs/reference/swift/auth-signinwithpassword"
+  ],
+  "captures": {
+    "iphone-account-a-relaunch.png": "e13b6a5c62b2eebeb0ac8457faf0671e7e4b9fa41a3ae87a2c0c8434212c9837",
+    "iphone-account-b-review.png": "316ecf72471b351fc4f61d0d88bd98cb3444a658d1a60c50ae6450452d857484",
+    "iphone-held-read.png": "dd4c2a1287b60552a8244325f4ee96ea9f861058d5e9a1fab3b3beff148bb1d9"
+  }
+}
