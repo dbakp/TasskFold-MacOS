@@ -87,7 +87,13 @@ struct QuickEntryChipLayout: Layout {
         return (CGSize(width: usedWidth, height: y + rowHeight), points, sizes)
     }
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        rows(subviews, width: max(1, proposal.width ?? .greatestFiniteMagnitude)).0
+        let width = max(1, proposal.width ?? .greatestFiniteMagnitude)
+        var size = rows(subviews, width: width).0
+        // Preserve a finite offered row width. Returning only the occupied width
+        // lets placement wrap at a narrower width than measurement, leaving the
+        // extra row outside the reported height and over the following controls.
+        if let offered = proposal.width, offered.isFinite { size.width = max(1, offered) }
+        return size
     }
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         let (_, points, sizes) = rows(subviews, width: max(1, bounds.width))

@@ -1,4 +1,4 @@
-# P0 progress snapshot — 12 October 2026
+# P0 progress snapshot — 13 October 2026
 
 **Feature implementation is largely complete. Release acceptance is incomplete.**
 This short view summarizes `P0_RELEASE_STATUS.md`; its dated entries and JSON evidence remain authoritative for exact scope. A passing build is not native workflow acceptance. No percentage is assigned because remaining gates have very different risk and effort.
@@ -9,9 +9,9 @@ This short view summarizes `P0_RELEASE_STATUS.md`; its dated entries and JSON ev
 | Todoist import | Real read-only multi-page import and replay; native imported-workspace handoff; iPhone lost first-import and replay-response recovery; Mac lost replay-response Retry and relaunch | Named native import/retry gate closed; evidence retains exact scope |
 | Recovery | Native portable export/restore, encrypted Mac safety copy, cloud and cross-account restore/replay/relaunch; native Mac shared-access loss, encrypted recovery/apply and durable notice; independent native Mac/phone offline new-task recovery, phone offline section/task graph recovery and cross-app receipt (`section-access-recovery-evidence.json`) | Mac iCloud transfer/restore, Mac/iPhone Cancel/retry and local workspace exit/return pass; iPhone authenticated navigation/return and Mac same-page pending-read sign-out pass; session-write warning resolved; coordinated-read failure/retry/relaunch passes; external callback races and actual remote provider failures remain |
 | Device continuity | Native Mac ↔ phone tasks/notes/planning/organization round trips, offline edits and relaunches; paired name/photo and native Mac attachment handoffs; live Keep my edit title/independent-notes/later-priority return | Remaining concurrency/legacy-client variants |
-| Core usability | Capture/editor/subtasks/completion/Undo fixes; Mac calendar keyboard navigation; scoped phone/tablet normal and largest-text calendar routes; four clipping reports classified with scoped evidence | Spoken VoiceOver; remaining critical landscape/sidebar flows |
+| Core usability | Fresh-section capture action stability, exact Save/relaunch and normal/largest landscape keyboard regression pass (`capture-control-stability-evidence.json`); capture/editor/subtasks/completion/Undo fixes; Mac calendar keyboard navigation; scoped phone/tablet normal and largest-text calendar routes; four clipping reports classified with scoped evidence | Spoken VoiceOver; remaining critical landscape/sidebar flows |
 | Notifications | Mac Focus authorization, scheduling, pause/resume, background banner and terminated-app Notification Center delivery evidence; real iPhone Move to tomorrow/Complete and relaunch, including terminated-process Complete; native local/authenticated sign-out and actual Complete callback across A → B → A | Named Mac local/authenticated actions and delayed Complete isolation pass; real APNs delivery and rollout remain open |
-| Distribution | Independent repositories and development builds | Mac app provisioning blocked by current Personal Team’s Push Notifications limit; enrolled team, Developer ID/notarization and distribution signing |
+| Distribution | Independent repositories and development builds | Release signing user-deferred; current Personal Team’s Push Notifications limit, enrolled team, Developer ID/notarization and distribution signing |
 
 ## How to interpret recent activity
 
@@ -29,6 +29,8 @@ The named Todoist import/retry goal is closed. Completed work is committed and p
 Ordinary iPhone/iPad acceptance uses Xcode Simulators as requested. Actual remote delivery and distribution remain separate gates. Todoist source data must remain unchanged. Each repo owns its code and release inputs; completed work is committed and pushed separately.
 
 ## Latest closed gate
+
+13 October: reproduced and fixed the fresh-section capture failure. Seven scoped native iPhone executions pass, including three rapid repetitions, stationary controls, exact persistence and affected normal/largest landscape flows. Both owned layouts compile independently; no new native Mac claim. All 100 protected files are exact, main apps/test runners are closed, and about 1.3 GB of inactive build/export files were pruned. See `capture-control-stability-evidence.json`. Broader P0 and user-deferred signing remain open.
 
 12 October: native Mac → iPhone → Mac profile name/photo handoff now passes, including both normal process relaunches. Exact server baseline and original profile are restored; primary phone/iPad data are unchanged. See `profile-pair-evidence.json`. No new production fix was needed.
 

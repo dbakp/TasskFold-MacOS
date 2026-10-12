@@ -19,6 +19,8 @@ Storage is no longer a blocker: authorized cache pruning restored capacity (96 G
 
 ## Required outcomes
 
+The requirements below remain the original acceptance scope. Their status cells are an early implementation baseline, not the current backlog: use [P0_PROGRESS.md](P0_PROGRESS.md) and its linked evidence for current accepted journeys and remaining gates. Later dated entries supersede earlier runtime gaps; they do not add new P0 requirements.
+
 | Requirement | Required evidence | Current status |
 | --- | --- | --- |
 | Current Todoist API import with preview, pagination, labels/sections/child relationships, replay safety, supported planning fields and explicit warnings | Response fixtures, transactional integration tests, deployed endpoint smoke test, native preview/import walkthrough | In progress: API v1 importer currently observed active as v41; strict source-bound native preview/receipt validation and retry UI implemented. API/handler and rolled-back receipt fixtures pass. Native response-state walks are recorded in the current import review evidence; real provider-account persistence and Mac runtime remain |

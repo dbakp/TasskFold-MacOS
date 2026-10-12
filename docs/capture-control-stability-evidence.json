@@ -1,0 +1,248 @@
+{
+  "date": "2026-10-13",
+  "scope": "Stable iPhone quick-capture controls during fresh project/section metadata entry, Hide keyboard, More, Save and fixture-preserving process relaunch; normal/largest portrait and affected landscape journeys",
+  "status": "Named iOS capture regression accepted; broader P0 remains open",
+  "failure": "A fresh native journey reproduces literal project/section or duration tokens after More. Native failure recording shows overlapping controls and changing action coordinates; this is consistent with unintended preview-chip taps, rather than an established parser defect.",
+  "implementation": {
+    "bothRepos": "Each independently owned flow layout preserves a finite offered row width, so placement does not rewrap at a narrower occupied width than measurement. No sibling build dependency.",
+    "iOS": "Capture starts at a stable large detent with user-selectable medium, with no content/visibility/focus-driven detent updates. Its footer keeps its natural height while the draft scrolls. Live capture chips update without insertion/reflow animation; the full editor retains its existing animation.",
+    "macOS": "Owned chip layout receives the same width correction; this change has independent Debug and Release compilation but no new native Mac workflow acceptance.",
+    "data": "No parser, persistence, backend or data-contract changes."
+  },
+  "native": [
+    {
+      "bundle": "ios-capture-stability-clearance-v7.xcresult",
+      "result": "Passed",
+      "distinctTests": 2,
+      "executionsPassed": 2,
+      "executionsFailed": 0,
+      "executionsSkipped": 0,
+      "runtimeWarnings": [],
+      "failures": []
+    },
+    {
+      "bundle": "ios-capture-stability-repeat-v7.xcresult",
+      "result": "Passed",
+      "distinctTests": 1,
+      "executionsPassed": 3,
+      "executionsFailed": 0,
+      "executionsSkipped": 0,
+      "runtimeWarnings": [],
+      "failures": []
+    },
+    {
+      "bundle": "ios-capture-stability-landscape-v8.xcresult",
+      "result": "Passed",
+      "distinctTests": 2,
+      "executionsPassed": 2,
+      "executionsFailed": 0,
+      "executionsSkipped": 0,
+      "runtimeWarnings": [],
+      "failures": []
+    }
+  ],
+  "verified": [
+    "Three rapid fresh-project/new-section journeys without screenshots/frame queries/pauses between typing the entire title+metadata, Hide keyboard and More",
+    "Exactly one saved task with a clean title, exact project/section parent graph, Priority 2 and 45 minutes; whole saved workspace equality across process relaunch; section grouping and editor reopening",
+    "Separate geometry observer: More stays within one point of its position before metadata, visible preview viewport clears footer controls, controls clear More and the keyboard, actions remain hittable and at least 44 points",
+    "Existing dark XXXL reference-choice/keyboard clearance and saved label relaunch",
+    "Existing normal and XXXL dark landscape one-line input/caret, keyboard-visible Save and More, exact 25-minute estimate and relaunch"
+  ],
+  "fixture": "Disposable isolated iPhone 17 Pro / iOS 26.5 Simulator. Local ui-testing workspace only. Relaunch removes seed arguments while retaining isolated local test mode; no authenticated or production cold-launch claim.",
+  "reproductionHistory": [
+    {
+      "bundle": "ios-fresh-section-capture-v3.xcresult",
+      "result": "Failed",
+      "distinctTests": 1,
+      "executionCounts": [
+        {
+          "passedTests": 0,
+          "failedTests": 1,
+          "skippedTests": 0
+        }
+      ],
+      "runtimeWarnings": [],
+      "failures": [
+        "XCTAssertEqual failed: (\"Optional(\"Offline section task recovery proof #\\\"Section recovery QA 12 Oct\\\" /\\\"Offline launch section\\\"\")\") is not equal to (\"Optional(\"Offline section task recovery proof\")\")"
+      ],
+      "finding": "Fresh native project/section navigation reproduces literal references in More before Save. Original failure result and native recording retained."
+    },
+    {
+      "bundle": "ios-capture-stability-after-v1.xcresult",
+      "result": "Failed",
+      "distinctTests": 1,
+      "executionCounts": [
+        {
+          "passedTests": 0,
+          "failedTests": 1,
+          "skippedTests": 0
+        }
+      ],
+      "runtimeWarnings": [],
+      "failures": [
+        "XCTAssertEqual failed: (\"Optional(\"Offline section task recovery proof ~45m\")\") is not equal to (\"Optional(\"Offline section task recovery proof\")\")"
+      ],
+      "finding": "Keeping an expanded sheet from collapsing is insufficient: duration is declined."
+    },
+    {
+      "bundle": "ios-capture-stability-after-v2.xcresult",
+      "result": "Passed",
+      "distinctTests": 1,
+      "executionCounts": [
+        {
+          "passedTests": 1,
+          "failedTests": 0,
+          "skippedTests": 0
+        }
+      ],
+      "runtimeWarnings": [],
+      "failures": [],
+      "finding": "Disabling live preview animation yields one passing journey, insufficient to establish a fix."
+    },
+    {
+      "bundle": "ios-capture-stability-repeat-v2.xcresult",
+      "result": "Failed",
+      "distinctTests": 1,
+      "executionCounts": [
+        {
+          "passedTests": 2,
+          "failedTests": 1,
+          "skippedTests": 0
+        }
+      ],
+      "runtimeWarnings": [],
+      "failures": [
+        "XCTAssertTrue failed"
+      ],
+      "finding": "Repetition rejects that attempt: two passes, one unreachable More failure."
+    },
+    {
+      "bundle": "ios-capture-stability-final-v4.xcresult",
+      "result": "Failed",
+      "distinctTests": 3,
+      "executionCounts": [
+        {
+          "passedTests": 2,
+          "failedTests": 1,
+          "skippedTests": 0
+        }
+      ],
+      "runtimeWarnings": [],
+      "failures": [
+        "XCTAssertLessThanOrEqual failed: (\"355.0\") is greater than (\"347.0\")"
+      ],
+      "finding": "Width preservation and a noncompressing footer yield rapid and largest passes; geometry observer incorrectly compares the full clipped scroll child."
+    },
+    {
+      "bundle": "ios-capture-stability-repeat-v4.xcresult",
+      "result": "Failed",
+      "distinctTests": 1,
+      "executionCounts": [
+        {
+          "passedTests": 2,
+          "failedTests": 1,
+          "skippedTests": 0
+        }
+      ],
+      "runtimeWarnings": [],
+      "failures": [
+        "XCTAssertEqual failed: (\"Optional(\"Offline section task recovery proof ~45m\")\") is not equal to (\"Optional(\"Offline section task recovery proof\")\")"
+      ],
+      "finding": "Repetition still rejects this product attempt: two passes and one declined-duration failure."
+    },
+    {
+      "bundle": "ios-capture-stability-clearance-v5.xcresult",
+      "result": "Failed",
+      "distinctTests": 2,
+      "executionCounts": [
+        {
+          "passedTests": 1,
+          "failedTests": 1,
+          "skippedTests": 0
+        }
+      ],
+      "runtimeWarnings": [],
+      "failures": [
+        "XCTAssertEqualWithAccuracy failed: (\"467.0\") is not equal to (\"764.2189054726368\") +/- (\"1.0\")"
+      ],
+      "finding": "Focus-driven expansion still changes geometry. This first observer measures before keyboard acquisition, so its initial point is not a metadata-only comparison."
+    },
+    {
+      "bundle": "ios-capture-stability-clearance-v6.xcresult",
+      "result": "Failed",
+      "distinctTests": 2,
+      "executionCounts": [
+        {
+          "passedTests": 1,
+          "failedTests": 1,
+          "skippedTests": 0
+        }
+      ],
+      "runtimeWarnings": [],
+      "failures": [
+        "XCTAssertEqualWithAccuracy failed: (\"467.0\") is not equal to (\"139.98394680023193\") +/- (\"1.0\")"
+      ],
+      "finding": "Refined observer types the plain title first; More still moves from approximately y=140 to y=467 while metadata is entered. Content-driven detents are therefore removed in the accepted version."
+    }
+  ],
+  "driverSetup": "Earlier fresh v1 failed before capture because New project was virtualized; v2 reached successful Save but its driver expected Browse root after project navigation. Corrected native drivers use the existing reveal helper and preserve the project stack. Both original result bundles remain retained.",
+  "builds": {
+    "iOSDebug": {
+      "log": "taskfold-capture-stability-debug-v7.log",
+      "result": "Passed",
+      "compilerWarnings": 2,
+      "sha256": "bec9bda83708a6aeb2160b88f4cb424db56e9f2c5492168dae4e08660d1f8ff5"
+    },
+    "iOSFinalTestDriverBuild": {
+      "log": "taskfold-capture-stability-debug-v8.log",
+      "result": "Passed",
+      "compilerWarnings": 1,
+      "sha256": "769bbce95e780a6d1b729cfef0c4363b0f4177dea5c205e47e15c2d95e1662b2"
+    },
+    "iOSRelease": {
+      "log": "taskfold-capture-stability-release-v7.log",
+      "result": "Passed",
+      "compilerWarnings": 2,
+      "sha256": "12ff2096c5f815a06a104f873918d04c03933b31cb2c1c792acbe333a8586b18"
+    },
+    "macOSDebug": {
+      "log": "taskfold-chip-layout-mac-debug-v1.log",
+      "result": "Passed",
+      "compilerWarnings": 0,
+      "sha256": "070c82addf3ad422c246c1944cabe39432f65ee6e4bc6be67bd711fd03961a3d"
+    },
+    "macOSRelease": {
+      "log": "taskfold-chip-layout-mac-release-v1.log",
+      "result": "Passed",
+      "compilerWarnings": 8,
+      "sha256": "263238637878182abd38af8edffcd50aeffed3e349100771d8f5dc3ec2d014de"
+    },
+    "limits": "Isolated Simulator/unsigned Mac compilation is not distribution signing. Retained compiler warnings are outside the changed product files; incremental Debug builds are not a warning-free clean-build claim. Production Swift staged sources match their repo except the isolated WidgetActions App Group string."
+  },
+  "visual": "Four public captures individually inspected: failed overlap, accepted separated controls with scroll-clipped preview tail, saved section after relaunch, and largest reference target. Native normal/largest landscape keyboard captures also inspected; complete editing line/end caret and all actions clear the keyboard. No all-preview-content-visible claim.",
+  "cleanup": {
+    "protectedFilesUnchanged": 100,
+    "mainAppsAndRunnersOpen": 0,
+    "disposableAppAndRunnerUninstalled": true,
+    "disposableSimulatorShutdown": true,
+    "prunedBytes": 1309446817,
+    "freeGiB": 96.9,
+    "preserved": "All original native result bundles, current independently owned Debug products, encrypted recovery proof and installed system widget hosts"
+  },
+  "sourceSafety": "No Todoist or backend requests, no real tasks or settings changed, no primary phone/iPad files changed. Current system widget hosts preserved.",
+  "limitations": [
+    "Native acceptance here is iPhone Simulator only; no new iPad or native Mac workflow claim.",
+    "System-selected widget privacy, spoken VoiceOver, external-provider/conflict variants and remote push/distribution remain tracked in P0_PROGRESS.md. Release signing is user-deferred."
+  ],
+  "sourceHashes": {
+    "TaskFold-iOS/Taskfold/Views/QuickAdd.swift": "0ce4e3584f79946f1545e3e7c1c3ed28be57fbf304225180167c9aea039829d3",
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "f117c0b55b37fb8d11ab65828d454b3ea67be3103d699146d310826459761256",
+    "TasskFold-MacOS/Taskfold/Views/QuickEntryChips.swift": "97170b568966f46b51eb77001747fabe20185ea14f38852392bfa62789ac3144"
+  },
+  "captures": {
+    "captures/capture-stability/controls-before.png": "5621921d9a6cc09c3c4007f25fe6262fff37c080cb994eae74de2f7d16f3780d",
+    "captures/capture-stability/controls-after.png": "a9a85ec487ff8f21781aedd45f119d8573db28b8a18126421d9fd6eb854922e8",
+    "captures/capture-stability/largest-reference-controls.png": "c7fec41fdf9b8650f5356f768926b849ba1e200f7d6e5cca7fe8469c474ea861",
+    "captures/capture-stability/saved-section-after-relaunch.png": "4047b7637f5b75e532840dee4415a04f8a365f410a3e54dbd4362244dc94fb6e"
+  }
+}
