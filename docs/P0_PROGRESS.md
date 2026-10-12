@@ -19,10 +19,12 @@ Recent work includes actual user-visible calendar/accessibility fixes, native wo
 
 ## Next execution order
 
-1. Scoped landscape Today task/Search/rotation and capture checks now pass normal/largest native cases (`landscape-today-evidence.json`). The strengthened named saved-capture row checks also pass functional assertions, and the retained publishing warning is now attributed to background midnight delivery and fixed in both apps with a deterministic before/after regression (`background-calendar-evidence.json`). General long-row visibility remains open. Compact landscape keyboard-visible Save/More and editing-line access now pass after the bounded iPhone fix (`keyboard-capture-evidence.json`); other keyboard flows retain their existing scope. Presented Search now also passes unfiltered normal/largest placeholder/query audits after shortening its visible prompt (`presented-search-audit-evidence.json`). The refreshed four other reports remain retained. Move next to the import/notification gates rather than additional calendar combinations.
-2. Native Mac replay response-loss/Retry now passes in the fresh signed current-source app (`mac-import-retry-native-evidence.json`); its obsolete waiting launch is retired and needs no further approval. Move to real Mac notification actions. iPhone first-import response-loss recovery retains its accepted scope (`first-import-recovery-evidence.json`).
-3. Complete critical accessibility/attachment journeys, then the outstanding installed widget hosts.
-4. Close APNs and distribution gates with actual credentials/signing/delivery evidence. Revalidate current availability before describing any external prerequisite as blocked.
+1. Compact landscape task-editor insertion/visible input/caret, keyboard-visible Save and exact persisted values after relaunch now pass normal and largest text (`landscape-editor-evidence.json`). This named journey is closed; do not expand into another calendar/layout matrix.
+2. Verify installed Mac widgets in the isolated signed host, then the outstanding real notification Open/actions. The isolated app and extension now sign independently of the production Push entitlement blocker.
+3. Resolve the named accessibility, external file-provider and conflict/failure gaps above. Keep acceptance scoped to critical user journeys; additional combinations are not automatically P0 requirements.
+4. Close APNs and distribution with actual signing/provider/delivery evidence. The current Personal Team cannot provision the production Mac Push capability.
+
+The named Todoist import/retry goal is closed. Completed work is committed and pushed separately in each repo; the task-editor fix now has scoped native acceptance. Test-driver/signing work is tracked separately from product fixes and release acceptance.
 
 Ordinary iPhone/iPad acceptance uses Xcode Simulators as requested. Actual remote delivery and distribution remain separate gates. Todoist source data must remain unchanged. Each repo owns its code and release inputs; completed work is committed and pushed separately.
 
@@ -53,3 +55,5 @@ Ordinary iPhone/iPad acceptance uses Xcode Simulators as requested. Actual remot
 12 October: fixed native Mac Focus chooser keyboard selection: Up/Down and Return now choose the correct filtered task/context. Empty-result Return and Escape are safe; mouse selection and paused-session normal relaunch pass. Debug/Release builds and test compilation pass; the automated Mac runner fails initialization before executing tests, so no XCTest runtime pass is claimed. Both cloud caches and all non-Focus fixture tables are unchanged. See `focus-keyboard-evidence.json`. iOS code is unchanged.
 
 12 October: the new isolated Mac app **and embedded widget extension** now provision/build/sign successfully with a separate App Group and URL scheme. This removes production Push provisioning as a prerequisite for isolated desktop-host testing. The native launch is live but the Mac is locked; no installed-host or rendered-widget pass is claimed. Production APNs/distribution gates remain open. See `mac-widget-host-setup-evidence.json`.
+
+12 October: fixed compact landscape task-editor input visibility and the keyboard-dismiss target. Two normal/largest native insertion/Save/relaunch cases pass without runtime warnings; screenshots were inspected, planned fields are retained and protected caches/devices are unchanged. Text-selection gestures remain unaccepted. See `landscape-editor-evidence.json`.

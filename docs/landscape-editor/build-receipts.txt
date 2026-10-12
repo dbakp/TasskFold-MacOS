@@ -1,0 +1,3 @@
+Debug test compilation: landscape-editor-ios-build-v14.log: TEST BUILD SUCCEEDED
+Release: landscape-editor-ios-release-v2.log: BUILD SUCCEEDED
+Native runtime: landscape-editor-ios-v12.xcresult: 2 passed, 0 failed/skipped/runtime warnings

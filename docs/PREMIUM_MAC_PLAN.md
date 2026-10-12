@@ -1665,3 +1665,7 @@ xcodebuild -project /private/tmp/taskfold-widget-host-fresh/Taskfold.xcodeproj -
 ```
 
 For cold widget routes, launch the isolated app in its local workspace and create test tasks through the native UI. Do not assume `--uitesting` survives an OS URL launch. Preserve the current development app while native acceptance is pending; do not replace production installations or use their App Group. An enrolled production team is still required for release capabilities.
+
+### 12 October - compact landscape editor acceptance
+
+The independently owned iOS TaskEditor now keeps its active input and caret above the onscreen keyboard at normal/largest text. Two native insertion/Save/relaunch cases pass without runtime warnings, with inspected captures and protected-data preservation. This is an iOS-specific layout change; Mac code is unchanged. See `landscape-editor-evidence.json`. Installed Mac widget and notification-action gates remain open; computer use timed out on the existing isolated host during this follow-up.
