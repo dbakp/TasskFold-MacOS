@@ -5,6 +5,7 @@ import subprocess,plistlib,argparse
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output', type=Path, required=True)
 parser.add_argument('--small', action='store_true', help='Inspect the small widget layout')
+parser.add_argument('--kind', choices=['list', 'today-focus'], default='list')
 args=parser.parse_args()
 repo=Path(__file__).resolve().parent.parent
 dest=args.output.expanduser().resolve()
@@ -45,6 +46,9 @@ source+='''
     }
 }
 '''
+if args.kind == 'today-focus':
+    source=source.replace('ListWidgetView(entry: ListEntry(date: now, snapshot: snapshot, listID: listID))', 'TodayWidgetView(entry: TodayEntry(date: now, snapshot: snapshot))')
+    source=source.replace('ListWidgetView(entry: ListEntry(date: now, snapshot: completed, listID: listID))', 'FocusWidgetView(entry: TodayEntry(date: now, snapshot: snapshot))')
 if args.small:
     source=source.replace('var family: WidgetFamily = .systemMedium', 'var family: WidgetFamily = .systemSmall')
     source=source.replace('frame(width: 338, height: 180)', 'frame(width: 170, height: 170)')

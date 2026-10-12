@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-12",
+  "finding": {
+    "Today": "Native accessibility link revealed the visually redacted task title and time.",
+    "Focus": "Native accessibility emitted unreadable redaction glyphs; explicit private state improves the accessible message and avoids a hidden-task root route."
+  },
+  "fix": "Private Today/Focus show a generic accessible card and route to Today. Today accessories use compact generic lock states. Normal content retained.",
+  "verification": {
+    "medium": "Mac-owned source in native macOS SwiftUI host: reproduced before and verified after; normal accessibility subtree byte-identical.",
+    "small": "iOS-owned source in native macOS SwiftUI host: generic private accessibility and readable layout.",
+    "screenshots": "Both corrected captures visually inspected.",
+    "builds": {
+      "mac-debug": {
+        "path": "/private/tmp/taskfold-today-focus-privacy-mac-debug.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "8f83839e418eac170dbf51fd970833d79d2840591e5c25999a825341418f081c"
+      },
+      "mac-release": {
+        "path": "/private/tmp/taskfold-today-focus-privacy-mac-release.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "07336f9c8336a70fd340ca2a5f432c88858c54e44f3b9bccdfae79482615d68c"
+      },
+      "ios-debug": {
+        "path": "/private/tmp/taskfold-today-focus-privacy-ios-debug.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "d162a677ab6205d4ca94ce8e0a4a2fe1d5931b0522acf246b3cc99f816e4d6c3"
+      },
+      "ios-release": {
+        "path": "/private/tmp/taskfold-today-focus-privacy-ios-release.log",
+        "result": "BUILD SUCCEEDED",
+        "sha256": "51133c3516b8cffc6f898bf35d1e07f9cd83e359188f589e49dbb4a49d4cd3e6"
+      }
+    },
+    "scriptSyntax": "AST parse passes independently in both repos"
+  },
+  "limitations": [
+    "Explicit injected redaction, not system-selected locked-device acceptance.",
+    "No spoken VoiceOver acceptance.",
+    "iOS accessory branches compile but have no new native accessory runtime proof.",
+    "The host compiled from iOS-owned source runs on macOS, not iOS.",
+    "Other P0/release gates remain open."
+  ],
+  "dataSafety": "In-memory synthetic snapshots only; no link/action clicked; no real Taskfold instance launched or replaced. All preview apps quit normally.",
+  "cleanup": {
+    "prunedBytes": 306307869,
+    "removed": [
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/today-focus-privacy-mac",
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/today-focus-privacy-ios",
+      "/private/tmp/taskfold-today-focus-privacy-before-v1/Taskfold Widget Privacy Test.app",
+      "/private/tmp/taskfold-today-focus-privacy-after-v1/Taskfold Widget Privacy Test.app",
+      "/private/tmp/taskfold-today-focus-privacy-small-v1/Taskfold Widget Privacy Test.app"
+    ],
+    "retained": "Generated source, logs and evidence captures."
+  },
+  "captures": {
+    "before-ax.txt": "95dbac9e0ad5ebaed1eee90abc8320efd69fcc5a3d99ce15300cf147547dbc0b",
+    "before.png": "6ed8066b722b4a14903c739141efca5c883a8417de78c27a3420566de8310dfb",
+    "after.png": "b4c520bbbbb2fb2ff5d124d966dd9b099dc143ae839ff283703ff2ec501519e1",
+    "small-ax.txt": "f1922547bd9f7ba49b382a5c25a0d10aafcfadb69b19108884d0fa899f0fdc23",
+    "after-ax.txt": "63e6b40f33d4fcf2d7ec75cfff9ac0604cee29c481f05e3bf410336b55182898",
+    "small.png": "7017c6d1420b438a54640c9e069d650df6a65838cf21f1a8f3574a1d8a39ee04"
+  }
+}

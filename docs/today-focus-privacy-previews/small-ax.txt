@@ -1,0 +1,28 @@
+Window: "Taskfold widget privacy test", App: Taskfold Widget Privacy Test.
+0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.Text, SwiftUI.ModifiedContent<SwiftUI.HStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<PrivacyTest.TodayWidgetView, SwiftUI._PaddingLayout>, SwiftUI._FrameLayout>, SwiftUI._BackgroundModifier<PrivacyTest.WidgetSurface>>, SwiftUI.AccessibilityContainerModifier>, SwiftUI.AccessibilityAttachmentModifier
+	1 container
+		2 text Normal
+		3 container normal-open
+			4 text Today Mon, 12 Oct 1 scheduled tasks
+			5 link Description: Private launch budget, 09:00, Value: taskfold://task/preview-1
+			6 text TASKFOLD
+			7 link Description: Capture task in Inbox, Value: taskfold://add
+		8 container normal-completed
+			9 text Focus Private launch budget Today · P1 · 09:00 Studio
+			10 image arrow.up.right.circle.fill
+		11 text Privacy redaction
+		12 text Today, Tasks are private, Open Taskfold to view your tasks., TASKFOLD
+		13 text Focus, Tasks are private, Open Taskfold to view your tasks., TASKFOLD
+	14 close button
+	15 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	16 minimize button
+	17 text Taskfold widget privacy test
+18 menu bar
+	19 Taskfold Widget Privacy Test
+	20 File
+	21 Edit
+	22 View
+	23 Window
+	24 Help
+
+The focused UI element is 0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.Text, SwiftUI.ModifiedContent<SwiftUI.HStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<PrivacyTest.TodayWidgetView, SwiftUI._PaddingLayout>, SwiftUI._FrameLayout>, SwiftUI._BackgroundModifier<PrivacyTest.WidgetSurface>>, SwiftUI.AccessibilityContainerModifier>, SwiftUI.AccessibilityAttachmentModifier

@@ -857,3 +857,8 @@ The coordinated reader now has native iPhone coverage: corrupt-file error/recove
 ### 12 October — My list privacy accessibility fix
 
 A synthetic native SwiftUI host reproduced task/list/completion names leaking through accessibility during privacy redaction, with dates and mutation controls still visible. Both owned widget views now show a generic “Tasks are private” card and omit those controls. Small and medium private accessibility trees contain no sensitive fixture content; normal medium content is byte-identical. All three captures were inspected. Both Mac and iOS widget targets pass Debug and Release; independent preview scripts pass syntax checks. See `widget-list-privacy-evidence.json`. This verifies the owned view under explicit privacy redaction, not installed system privacy, spoken VoiceOver or native iOS UI acceptance. No real data or installed widget changed. Stopped preview apps and this turn’s inactive build products were pruned; source, logs and evidence remain.
+
+
+### 12 October — Today and Focus private accessibility
+
+The native synthetic host reproduced Today’s visually redacted title/time leaking through its accessibility link. Focus exposed unreadable redaction glyphs. Both owned implementations now provide readable generic private content and a Today root route. Normal medium accessibility content is byte-identical; small and medium corrected layouts were inspected. Four widget-target Debug/Release builds pass. Today accessories now have compact private states, compile-verified only. See `today-focus-privacy-evidence.json`. This is explicit-redaction view acceptance, not installed system privacy or spoken VoiceOver. All preview apps were quit and inactive products pruned; no real Taskfold app or data changed.

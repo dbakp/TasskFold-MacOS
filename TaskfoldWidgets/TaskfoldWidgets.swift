@@ -495,8 +495,26 @@ struct WidgetFooter: View {
     }
 }
 
+struct WidgetPrivateCard: View {
+    let title: String
+    let symbol: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(title, systemImage: symbol).font(.headline)
+            Spacer(minLength: 0)
+            Label("Tasks are private", systemImage: "lock.fill").font(.subheadline.weight(.semibold))
+            Text("Open Taskfold to view your tasks.").font(.caption).foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+            Text("TASKFOLD").font(.system(size: 9, weight: .semibold, design: .rounded)).tracking(1.5).foregroundStyle(.secondary)
+        }
+        .accessibilityElement(children: .combine)
+        .unredacted()
+    }
+}
+
 struct TodayWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: TodayEntry
     var tasks: [WidgetTask] { entry.snapshot.today(at: entry.date) }
     var hasSnapshot: Bool { entry.snapshot.updated > 0 }
@@ -504,6 +522,30 @@ struct TodayWidgetView: View {
     var countAccessibilityLabel: String { hasSnapshot ? "\(tasks.count) scheduled tasks" : "Task count unavailable" }
     var limit: Int { family == .systemLarge ? 7 : 2 }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            privateContent.widgetURL(URL(string: "taskfold://today"))
+        } else {
+            normalContent
+        }
+    }
+    @ViewBuilder private var privateContent: some View {
+        #if os(iOS)
+        switch family {
+        case .accessoryCircular:
+            ZStack { AccessoryWidgetBackground(); Image(systemName: "lock.fill") }
+                .accessibilityLabel("Today, tasks are private").unredacted()
+        case .accessoryRectangular, .accessoryInline:
+            Label("Tasks are private", systemImage: "lock.fill").unredacted()
+        default:
+            WidgetPrivateCard(title: "Today", symbol: "sun.max")
+                .containerBackground(for: .widget) { WidgetSurface(tint: brand) }
+        }
+        #else
+        WidgetPrivateCard(title: "Today", symbol: "sun.max")
+            .containerBackground(for: .widget) { WidgetSurface(tint: brand) }
+        #endif
+    }
+    @ViewBuilder private var normalContent: some View {
         #if os(iOS)
         switch family {
         case .accessoryCircular:
@@ -565,9 +607,19 @@ struct TodayWidgetView: View {
 
 struct FocusWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: TodayEntry
     var task: WidgetTask? { entry.snapshot.focus(at: entry.date) }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Focus", symbol: "scope")
+                .containerBackground(for: .widget) { WidgetSurface(tint: plum) }
+                .widgetURL(URL(string: "taskfold://today"))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: family == .systemMedium ? 4 : 6) {
             HStack {
                 Label("Focus", systemImage: "scope").font(.caption.weight(.semibold)).foregroundStyle(plum)
