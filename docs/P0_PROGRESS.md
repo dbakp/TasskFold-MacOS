@@ -268,3 +268,8 @@ Mac Settings now reports “No workspace open”, disables the signed-out remind
 Native cloud-account sign-out now retires one delivered and four pending system alerts. A normal signed-out relaunch preserves empty registries; signing into the same account restores the exact four future requests without resurrecting the delivered occurrence. The complete saved account snapshot remains exact across sign-out and return. See `mac-notification-authenticated-exit-evidence.json`.
 
 Native cleanup restores delivery off and deletes only the disposable task with Undo available. All 13 non-activity server tables are exactly restored, all 24 prior activity rows remain, and only the two expected create/delete records are added. All 100 protected files remain exact. This closes authenticated Mac sign-out/reentry; Mac A → B delayed-callback isolation and the other named P0 gates remain open. No source changes or new builds were required.
+
+
+### 12 October — Mac delayed notification callback preflight
+
+Mac now owns opt-in DEBUG support to hold one actual system response before its unchanged production handler, then release it after a native account switch. It requires the exact isolated bundle and an explicit launch flag. Signed v7 Debug/strict signature pass; native controls reach Armed and two disposable reminder occurrences are genuinely scheduled. See `mac-notification-hold-preflight-evidence.json`. Both reserved accounts and protected files have private baselines. Actual callback/account-switch acceptance remains pending; this is test preparation, not a pass. Inactive v6 products are pruned; active v7, logs and sources remain. iOS retains its independent existing harness.

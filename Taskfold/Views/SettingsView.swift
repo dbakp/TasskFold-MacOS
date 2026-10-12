@@ -92,6 +92,16 @@ private struct MacNotificationInspectionView: View {
                     .textSelection(.enabled)
                     .accessibilityIdentifier("systemReminderInspection")
                     .accessibilityValue(report)
+                if MacNotificationResponseHoldFixture.enabled {
+                    let fixture = MacNotificationResponseHoldFixture.shared
+                    Button("Hold next response") { fixture.arm() }
+                        .accessibilityIdentifier("holdNotificationCallback")
+                    Button("Release held response") { fixture.release() }
+                        .accessibilityIdentifier("releaseNotificationCallback")
+                    Text(fixture.status).font(.caption.monospaced())
+                        .accessibilityIdentifier("notificationCallbackPhase")
+                        .accessibilityValue(fixture.status)
+                }
             }
             .onChange(of: store.workspaceGeneration) { _, _ in report = "Workspace changed; inspect again" }
         }

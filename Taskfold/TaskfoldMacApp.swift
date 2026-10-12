@@ -102,9 +102,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             await MainActor.run { NotificationRoute.shared.focusReceipt = receipt }
             return
         }
+        #if DEBUG
+        await MacNotificationResponseHoldFixture.shared.hold(account: response.notification.request.content.userInfo["accountID"] as? String ?? "", action: response.actionIdentifier)
+        #endif
         if let route = await Store.shared.handleReminder(response.notification.request.content.userInfo, action: response.actionIdentifier) {
             await MainActor.run { NotificationRoute.shared.taskRequest = route }
         }
+        #if DEBUG
+        await MainActor.run { MacNotificationResponseHoldFixture.shared.finished(account: Store.shared.userID) }
+        #endif
     }
 }
 
@@ -201,3 +207,42 @@ struct TaskfoldCommands: Commands {
         return tasks.first?.completed == true ? "Reopen Task" : "Complete Task"
     }
 }
+
+#if DEBUG
+/// Holds one real OS callback only in an explicitly opted-in isolated Mac test app.
+@MainActor @Observable final class MacNotificationResponseHoldFixture {
+    static let shared = MacNotificationResponseHoldFixture()
+    static var enabled: Bool {
+        Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.p0notificationtests" &&
+            ProcessInfo.processInfo.arguments.contains("--notification-callback-hold-testing")
+    }
+    private(set) var phase = "Idle"
+    private(set) var account = ""
+    private(set) var action = ""
+    private(set) var receiver = ""
+    private var armed = false
+    @ObservationIgnored private var continuation: CheckedContinuation<Void, Never>?
+    var status: String { [phase, account, action, receiver].joined(separator: "|") }
+    func arm() {
+        guard Self.enabled, continuation == nil else { return }
+        account = ""; action = ""; receiver = ""; armed = true; phase = "Armed"
+    }
+    func hold(account: String, action: String) async {
+        guard Self.enabled, armed else { return }
+        armed = false; self.account = account; self.action = action
+        await withCheckedContinuation { continuation in
+            self.continuation = continuation; phase = "Held"
+        }
+        phase = "Resumed"
+    }
+    func release() {
+        guard Self.enabled, let continuation else { return }
+        self.continuation = nil; phase = "Released"; continuation.resume()
+    }
+    func finished(account: String) {
+        guard Self.enabled, phase == "Resumed" else { return }
+        receiver = account; phase = "Handled"
+    }
+}
+
+#endif

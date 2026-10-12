@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-12",
+  "scope": "Mac actual callback hold preflight, not cross-account acceptance.",
+  "gates": [
+    "DEBUG compilation",
+    "Exact isolated bundle com.dbakp.taskfold.mac.p0notificationtests",
+    "Explicit --notification-callback-hold-testing launch flag",
+    "Native Hold next response button"
+  ],
+  "build": "v7 signed Debug and strict deep signature passed",
+  "native": "Opt-in controls visible; Hold next response reaches Armed; actual scheduler contains two synthetic occurrences and three preexisting future requests.",
+  "processID": 26888,
+  "taskID": "51d925eb-21b5-4e76-85e2-94a7b8b8510f",
+  "firstFireAt": 1791796780,
+  "futureFireAt": 1791798520,
+  "preservation": "Private baseline covers both reserved accounts and 100 protected files. Synthetic task saved with zero pending edits.",
+  "prunedInactiveBuildBytes": 109236717,
+  "remaining": "Actual Complete click, held response, A to B release, A return and cleanup remain pending. iOS already has independent test support and acceptance."
+}
