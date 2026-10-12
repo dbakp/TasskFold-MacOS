@@ -1810,3 +1810,6 @@ The first exit initially leaves stale All clear despite a correct cleared projec
 
 
 12 October: current-source notification harness's normal first local launch exposes and fixes the missing DEBUG bundle allowlist entry for sandbox-local widget projection. Four starter tasks/project and parsed snapshot are preserved; native permission error clears. v2 Debug/signatures pass, inactive v1 products are pruned (108,895,377 logical bytes), and normal v2 permission approval is pending. See `mac-notification-disk-fix-evidence.json`. Production behavior is unchanged.
+
+
+12 October: both apps' Task reminders Settings now explain pending system authorization and prevent repeat toggles. Current Mac signed Debug/iOS arm64 Simulator Debug compile checks pass; actual pending-state rendering remains unaccepted. Existing Mac v2 prompt/process is preserved, v3 is ready but unlaunched, and inactive iOS compile products are pruned. See `settings-permission-progress-evidence.json`.

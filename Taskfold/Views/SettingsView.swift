@@ -37,6 +37,11 @@ struct GeneralSettings: View {
                 if !store.labels.isEmpty { Divider(); ForEach(store.labels) { Text($0.name).tag(TaskScope.label($0.id).preferenceKey) } }
             }
             Toggle("Task reminders", isOn: Binding(get: { store.remindersEnabled }, set: { enabled in if enabled { Task { await store.enableNotifications() } } else { store.disableNotifications() } }))
+                .disabled(store.requestingNotifications || store.requestingFocusAlerts)
+            if store.requestingNotifications {
+                ProgressView("Requesting permission…")
+                    .accessibilityIdentifier("taskReminderPermissionProgress")
+            }
             Text("Choose fixed-time and before/after reminders in each task. Delivery is enabled separately for this workspace on each device. The nearest 60 notifications refresh while Taskfold is open.").font(.caption).foregroundStyle(.secondary)
             Text(store.reminderStatus).font(.caption).foregroundStyle(.secondary)
             ReminderSystemSettingsButton()
