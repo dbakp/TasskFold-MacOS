@@ -118,11 +118,41 @@ public final class WidgetActionDisk: @unchecked Sendable {
             if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
         }
     }
+    private struct FeedbackDismissal: Codable, Equatable {
+        var account: String; var taskID: String; var savedAt: Double
+    }
+    /// Dismiss only the visible acknowledgement; never alter a task or its completion receipt.
+    public func dismissFeedback(account: String, taskID: String, savedAt: Double) throws {
+        try locked {
+            let url = directory.appendingPathComponent("widget.json")
+            let data = try Data(contentsOf: url)
+            guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  object["account"] as? String == account, !account.isEmpty,
+                  let feedback = object["completionFeedback"] as? [String: Any],
+                  feedback["account"] as? String == account,
+                  feedback["taskID"] as? String == taskID,
+                  feedback["savedAt"] as? Double == savedAt else { return }
+            let dismissal = FeedbackDismissal(account: account, taskID: taskID, savedAt: savedAt)
+            try JSONEncoder().encode(dismissal).write(to: directory.appendingPathComponent("widget-feedback-dismissal.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        }
+    }
+    private func removingDismissedFeedback(from data: Data) -> Data {
+        guard let dismissalData = try? Data(contentsOf: directory.appendingPathComponent("widget-feedback-dismissal.json")),
+              let dismissal = try? JSONDecoder().decode(FeedbackDismissal.self, from: dismissalData),
+              var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              object["account"] as? String == dismissal.account,
+              let feedback = object["completionFeedback"] as? [String: Any],
+              feedback["account"] as? String == dismissal.account,
+              feedback["taskID"] as? String == dismissal.taskID,
+              feedback["savedAt"] as? Double == dismissal.savedAt else { return data }
+        object.removeValue(forKey: "completionFeedback")
+        return (try? JSONSerialization.data(withJSONObject: object)) ?? data
+    }
     public func read() throws -> WidgetActionRead {
         try locked {
             let url = directory.appendingPathComponent("widget.json")
             guard FileManager.default.fileExists(atPath: url.path) else { return WidgetActionRead(data: nil, pendingTaskIDs: []) }
-            let data = try Data(contentsOf: url), projection = try JSONDecoder().decode(Projection.self, from: data)
+            let data = removingDismissedFeedback(from: try Data(contentsOf: url)), projection = try JSONDecoder().decode(Projection.self, from: data)
             guard projection.version == 2, !projection.account.isEmpty else { return WidgetActionRead(data: data, pendingTaskIDs: []) }
             let pending = try queue().requests.filter { projection.accepts($0) }.map(\.taskID)
             return WidgetActionRead(data: data, pendingTaskIDs: pending)
@@ -153,6 +183,20 @@ public final class WidgetActionDisk: @unchecked Sendable {
 
 #if !SWIFT_PACKAGE
 import AppIntents
+struct DismissWidgetFeedbackIntent: AppIntent {
+    static let title: LocalizedStringResource = "Dismiss completion message"
+    static let isDiscoverable = false
+    static let openAppWhenRun = false
+    @Parameter(title: "Workspace") var account: String
+    @Parameter(title: "Task") var taskID: String
+    @Parameter(title: "Saved at") var savedAt: Double
+    init() {}
+    init(account: String, taskID: String, savedAt: Double) { self.account = account; self.taskID = taskID; self.savedAt = savedAt }
+    func perform() async throws -> some IntentResult {
+        try WidgetActionDisk.system().dismissFeedback(account: account, taskID: taskID, savedAt: savedAt)
+        return .result()
+    }
+}
 struct CompleteWidgetTaskIntent: AppIntent {
     static let title: LocalizedStringResource = "Complete widget task"
     static let description = IntentDescription("Completes a task from the widget's current workspace.")

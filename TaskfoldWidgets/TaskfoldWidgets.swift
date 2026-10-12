@@ -952,6 +952,7 @@ struct ListWidgetView: View {
                 Text("No open tasks in this list.").font(.caption2).foregroundStyle(.secondary)
             } else {
                 if let feedback {
+                    HStack(spacing: 2) {
                     Link(destination: WidgetLinks.task(feedback.taskID)) {
                         HStack(spacing: 8) {
                             Image(systemName: "checkmark.circle.fill").font(.system(size: 21)).foregroundStyle(tint)
@@ -962,6 +963,11 @@ struct ListWidgetView: View {
                             Spacer(minLength: 0)
                         }.frame(minHeight: 44).contentShape(Rectangle())
                     }.buttonStyle(.plain).accessibilityHint("Open completed task")
+                    Button(intent: DismissWidgetFeedbackIntent(account: feedback.account, taskID: feedback.taskID, savedAt: feedback.savedAt.timeIntervalSinceReferenceDate)) {
+                        Image(systemName: "xmark").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                            .frame(width: 32, height: 44).contentShape(Rectangle())
+                    }.buttonStyle(.plain).accessibilityLabel("Dismiss completion message")
+                    }
                 }
                 ForEach(tasks.prefix(max(0, rowLimit - (feedback == nil ? 0 : 1)))) { task in
                     HStack(spacing: 2) {

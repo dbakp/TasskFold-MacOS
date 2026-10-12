@@ -22,11 +22,12 @@
     "behavior": "After durable save only, show a checkmark, Completed and privacy-aware title in the relevant My list for an eight-second timeline window. Tap opens the completed task.",
     "scopeProtection": "Account and list membership, completion token, persisted receipt, still-completed task and bounded timestamp; old caches remain readable.",
     "timingLimit": "WidgetKit schedules rendering; exact wall-clock duration is not guaranteed.",
-    "undo": "No direct widget Undo added in this change. The completed task can be opened; safe occurrence-aware Undo remains a separate design/verification task."
+    "undo": "No direct widget Undo added in this change. The completed task can be opened; safe occurrence-aware Undo remains a separate design/verification task.",
+    "dismissal": "Added an explicit close button with a durable acknowledgement marker scoped to exact account, task and saved timestamp. It cannot mutate completion or suppress a newer acknowledgement. Installed dismissal acceptance pending."
   },
   "verification": {
-    "macWidgetActionTests": 11,
-    "iosWidgetActionTests": 11,
+    "macWidgetActionTests": 12,
+    "iosWidgetActionTests": 12,
     "failures": 0,
     "macSignedDebugAppAndExtension": "passed",
     "macStrictDeepSignature": "passed",
@@ -36,7 +37,9 @@
       "hidden names",
       "last task completed"
     ],
-    "nativeFeedbackTransition": "Pending user observation on installed v7"
+    "nativeFeedbackTransition": "User saw Completed after actual widget completion, but it remained visible past the requested expiry. Automatic expiry is not accepted.",
+    "dismissalBuilds": "macOS v8 signed Debug app/extension plus strict deep signatures and iOS arm64 Simulator Debug passed.",
+    "installedDismissal": "Prepared on normal v8 with synthetic task reopened; awaiting actual widget completion and dismiss."
   },
   "cleanup": "Synthetic task reopened through native UI for feedback verification; temporary project retained. No real workspace modified."
 }

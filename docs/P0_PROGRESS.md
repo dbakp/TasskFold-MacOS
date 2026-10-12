@@ -298,3 +298,6 @@ The second real desktop title click starts v6 PID30403 without arguments and ope
 
 
 12 October: installed large Mac My list completion now saves the exact task, changes only completion fields and survives normal relaunch with a durable receipt and no pending edits. The user identified missing feedback. Both owned implementations now show a brief, privacy-aware Completed row after durable save, scoped to the workspace/list; its eight-second timeline window does not promise exact OS timing. Eleven focused tests per repo, both Debug builds, Mac strict signatures and inspected small/medium/large source renders pass. Installed feedback transition remains pending on v7; direct widget Undo is not included. See `widget-completion-feedback-evidence.json`.
+
+
+12 October: actual installed completion shows the new Completed row, but macOS retains it beyond the requested expiry. The automatic expiry check fails; empty-list status is not the cause. Both apps now include an explicit dismiss button with a durable, exact acknowledgement marker that leaves tasks unchanged. Twelve focused tests per repo pass. Installed dismissal is pending; no precise-duration claim. See `widget-completion-feedback-evidence.json`.

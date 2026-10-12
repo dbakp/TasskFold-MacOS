@@ -44,6 +44,27 @@ final class WidgetActionTests: XCTestCase {
         let widget = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(published))
         XCTAssertEqual(widget.completionFeedback, feedback)
     }
+    func testDismissalIsExactDurableAndNeverMutatesTasksOrHidesNewFeedback() throws {
+        let (disk, directory) = try disk(); defer { try? FileManager.default.removeItem(at: directory) }
+        let value = snapshot()
+        var payload = WidgetProjection.payload(tasks: [task()], projects: [], account: "a", completionTokens: WidgetCompletion.tokens(value))
+        let feedback: JSON = .object(["account": .string("a"), "taskID": .string(task().id), "savedAt": .number(123), "title": .string("Review"), "listIDs": .array([])])
+        payload["completionFeedback"] = feedback
+        let original = try JSONEncoder().encode(payload); try disk.publish(original)
+        try disk.dismissFeedback(account: "b", taskID: task().id, savedAt: 123)
+        XCTAssertEqual(try disk.read().data, original)
+        try disk.dismissFeedback(account: "a", taskID: task().id, savedAt: 122)
+        XCTAssertEqual(try disk.read().data, original)
+        try disk.dismissFeedback(account: "a", taskID: task().id, savedAt: 123)
+        let read = try XCTUnwrap(WidgetActionDisk(directory: directory).read().data)
+        let decoded = try JSONDecoder().decode([String: JSON].self, from: read)
+        XCTAssertNil(decoded["completionFeedback"])
+        XCTAssertEqual(decoded["tasks"], payload["tasks"])
+        XCTAssertEqual(try Data(contentsOf: directory.appendingPathComponent("widget.json")), original)
+        payload["completionFeedback"] = .object(["account": .string("a"), "taskID": .string(task().id), "savedAt": .number(124)])
+        let next = try JSONEncoder().encode(payload); try disk.publish(next)
+        XCTAssertEqual(try disk.read().data, next)
+    }
     func testTokenPersistsAcrossRelaunchUnrelatedEditsAndEquivalentServerTimestampSpellings() throws {
         let before = snapshot(), token = WidgetCompletion.tokens(before)[task().id]
         var after = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(before))
