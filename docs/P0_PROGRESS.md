@@ -301,3 +301,6 @@ The second real desktop title click starts v6 PID30403 without arguments and ope
 
 
 12 October: actual installed completion shows the new Completed row, but macOS retains it beyond the requested expiry. The automatic expiry check fails; empty-list status is not the cause. Both apps now include an explicit dismiss button with a durable, exact acknowledgement marker that leaves tasks unchanged. Twelve focused tests per repo pass. Installed dismissal is pending; no precise-duration claim. See `widget-completion-feedback-evidence.json`.
+
+
+12 October: installed large Mac My list completion feedback and explicit dismissal now pass. User observed Completed → × → All clear; persisted marker exactly matches account/task/save time, task remains completed and pending edits are zero. Native cleanup removes only the synthetic task/project; non-activity tables equal the pre-test baseline and all 100 protected files are hash-exact. Automatic timed expiry remains best-effort and was not accepted; explicit dismissal supplies the reliable exit. iOS has matching independent implementation and passing builds/tests, without a new installed dismissal claim. See `widget-completion-feedback-evidence.json`.

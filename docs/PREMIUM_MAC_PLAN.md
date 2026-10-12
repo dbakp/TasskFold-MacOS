@@ -1886,3 +1886,6 @@ The second real desktop title click starts v6 PID30403 without arguments and ope
 
 
 12 October: installed My list completion/persistence is accepted for the single local project task. Added a saved-only, account/list-scoped brief Completed row, with hidden-title handling and a task-open link; matching independent iOS implementation. Focused tests and Debug builds pass, source renders inspected; native feedback timing remains pending. See `widget-completion-feedback-evidence.json`.
+
+
+12 October: installed My list Completed acknowledgement and explicit dismiss are accepted on v8. Task remains completed; cleanup and 100 protected-file checks pass. Timed expiry is best-effort, direct Undo is not implemented. See `widget-completion-feedback-evidence.json`.

@@ -834,3 +834,6 @@ The second real desktop title click starts v6 PID30403 without arguments and ope
 
 
 12 October: next installed Mac widget journey is My list completion. A single disposable undated Inbox task is saved in the normal local v6 host; actual App Group projection contains its matching identity and completion token, with no pending edits. Desktop installation/Inbox selection is awaiting user interaction because system widget controls are inaccessible. See `mac-mylist-preflight-evidence.json`; no installed completion pass is claimed.
+
+
+12 October: named installed large Mac My list completion/save/relaunch and completion acknowledgement/dismissal journeys pass. The explicit × returns to All clear without reopening the task; exact durable marker and saved completion verified. Automatic short expiry failed on the native host, so no precise-duration guarantee is made. Synthetic task/project cleanup restores non-activity tables and preserves all 100 protected files. See `widget-completion-feedback-evidence.json`. Other named P0 gates remain open.
