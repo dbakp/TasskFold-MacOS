@@ -53,5 +53,6 @@
     "Reversibly delete only this synthetic task.",
     "Restore isolated Snooze preference from five minutes to original one hour.",
     "Preserve all four starter tasks/project, existing activity and protected fixtures."
-  ]
+  ],
+  "supersededBy": "mac-notification-snooze-evidence.json"
 }

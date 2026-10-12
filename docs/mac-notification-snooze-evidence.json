@@ -1,0 +1,170 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual Mac cold-process Snooze, direct pending registry, normal relaunch, terminated redelivery and exact task cold Open.",
+  "bundle": "com.dbakp.taskfold.mac.p0notificationtests",
+  "taskID": "a18324ef-1a64-48d1-890f-2f07b5f9609f",
+  "snooze": {
+    "action": "taskfold.snooze.minutes.5",
+    "responseLocalTime": "2026-10-12 10:40:26.842 +0200",
+    "processID": 21499,
+    "build": "v4",
+    "noLaunchArguments": true,
+    "actualRegistry": {
+      "accountID": "local",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.5",
+          "title": "Remind me in 5 minutes"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791794479.9976568,
+      "pending": [
+        {
+          "accountID": "local",
+          "category": "taskfold.reminder",
+          "fireAt": 1791794727.894486,
+          "id": "taskfold.r2.9af2f85bb59edc34cb991da4e6b5989b3ab076d723b97e8080c043a11510eb55.snooze",
+          "originalAt": 1791793994,
+          "signature": "r4:b384e35400be3703cddae2bd7351a12393ae5d91327d266992f5954f5e08b5de",
+          "snoozed": true,
+          "specID": "b72b22ee-40db-5df1-ab3c-cb7f1f740c3b",
+          "taskID": "a18324ef-1a64-48d1-890f-2f07b5f9609f",
+          "triggerAt": 1791794728
+        }
+      ],
+      "processID": 21499
+    },
+    "delaySecondsFromSystemResponse": 301.0524859428406,
+    "note": "Five-minute scheduler delay starts after cold app startup; actual calendar trigger rounds to the following second.",
+    "fullTaskSnapshotExact": true,
+    "normalRelaunch": {
+      "registry": {
+        "accountID": "local",
+        "actions": [
+          {
+            "id": "taskfold.complete",
+            "title": "Complete"
+          },
+          {
+            "id": "taskfold.snooze.minutes.5",
+            "title": "Remind me in 5 minutes"
+          },
+          {
+            "id": "taskfold.tomorrow",
+            "title": "Move to tomorrow"
+          }
+        ],
+        "delivered": [],
+        "observedAt": 1791794611.032178,
+        "pending": [
+          {
+            "accountID": "local",
+            "category": "taskfold.reminder",
+            "fireAt": 1791794727.894486,
+            "id": "taskfold.r2.9af2f85bb59edc34cb991da4e6b5989b3ab076d723b97e8080c043a11510eb55.snooze",
+            "originalAt": 1791793994,
+            "signature": "r4:b384e35400be3703cddae2bd7351a12393ae5d91327d266992f5954f5e08b5de",
+            "snoozed": true,
+            "specID": "b72b22ee-40db-5df1-ab3c-cb7f1f740c3b",
+            "taskID": "a18324ef-1a64-48d1-890f-2f07b5f9609f",
+            "triggerAt": 1791794728
+          }
+        ],
+        "processID": 21986
+      },
+      "pendingRequestExact": true,
+      "fullScheduledSnapshotExact": true,
+      "noLaunchArguments": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-notification-v4/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+    },
+    "nativeQuitBeforeRedelivery": {
+      "pid": 21986,
+      "nativeQuitVerifiedAt": "2026-10-12T10:44:21.170584+02:00"
+    },
+    "actualRedeliveryLocalTime": "2026-10-12 10:45:28.129 +0200",
+    "appRemainedQuitAtRedelivery": true
+  },
+  "coldOpen": {
+    "responseLocalTime": "2026-10-12 10:46:36.630 +0200",
+    "foreground": true,
+    "processID": 22597,
+    "build": "v5",
+    "noLaunchArguments": true,
+    "nativeSelectedTaskAndInspectorExact": true,
+    "fullScheduledSnapshotExact": true,
+    "screenshotInspected": true
+  },
+  "statusFix": {
+    "problem": "Native Settings initially reported zero upcoming after successful Snooze despite one real pending request. A later ordinary refresh corrected it to one; it was stale transient UI, not lost scheduling.",
+    "change": "Both independent action handlers now publish the successful report count immediately after Snooze.",
+    "validation": {
+      "TasskFold-MacOS": {
+        "configuration": "Debug",
+        "result": "passed",
+        "actionHandlerStageExact": true,
+        "actionHandlerSHA256": "06df263670d37fadd2e82f0036d737f15f33b116b8fafd4767f523a0c1d8b148",
+        "logSHA256": "4a3442b199a890f6fd720e15f82b4e0c9608bf22e855290d391bb98722c3db43",
+        "warningLines": 8
+      },
+      "TaskFold-iOS": {
+        "configuration": "Debug",
+        "result": "passed",
+        "actionHandlerStageExact": true,
+        "actionHandlerSHA256": "06df263670d37fadd2e82f0036d737f15f33b116b8fafd4767f523a0c1d8b148",
+        "logSHA256": "f576b281f21f37d731be953a05c8acbb8d7dc255bcf50a7ec42b265fd60d5f48",
+        "warningLines": 14
+      }
+    },
+    "nativeCorrectedSnoozeCallbackRetest": false,
+    "limits": "The native Snooze was in v4; v5 was cold-launched by Open. The new immediate success-status branch is source/build verified, not a second actual Snooze callback pass."
+  },
+  "cleanup": {
+    "deliveryOff": true,
+    "snoozeMinutesRestored": 60,
+    "nativeReversibleDeleteOnlySyntheticTask": true,
+    "originalFourStarterTasksAndProjectExact": true,
+    "priorActivityRetained": true,
+    "newSyntheticCreateDeleteActivityRows": 2,
+    "reminderPreferenceRow": "Explicit version1/snooze_minutes60 retained after restoring original default.",
+    "pendingEdits": 0,
+    "actualSystemRegistry": {
+      "accountID": "local",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791794913.033941,
+      "pending": [],
+      "processID": 22597
+    },
+    "protectedFilesExact": 100
+  },
+  "prune": {
+    "removedLogicalBytes": 273072459,
+    "retainedMacBuild": "v5",
+    "logsAndStagesRetained": true
+  },
+  "remaining": [
+    "Mac notification account transitions and remaining named widget/usability/provider/VoiceOver/APNs/distribution gates.",
+    "No authenticated Mac notification or physical delivery acceptance claimed."
+  ]
+}

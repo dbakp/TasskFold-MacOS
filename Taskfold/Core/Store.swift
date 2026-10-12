@@ -1346,6 +1346,7 @@ final class Store {
             if let report = await reminderScheduler.snooze(account: account, taskID: event.taskID, specID: event.specID, signature: event.signature, minutes: minutes, originalAt: event.date), generation == accountGeneration {
                 if report.failures > 0 { reminderStatus = "The snooze could not be scheduled. Open the task to try again." }
                 else if report.deferred > 0 { reminderStatus = "The nearest 60 reminders are scheduled. This snooze may be deferred until Taskfold refreshes." }
+                else { reminderStatus = "\(report.scheduled) upcoming \(report.scheduled == 1 ? "reminder" : "reminders") scheduled on this device." }
             }
         case let action where action.hasPrefix("taskfold.snooze."): return nil
         default: return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: task.id, specID: event.specID, signature: event.signature, originalAt: event.date)
