@@ -2627,3 +2627,51 @@ extension TaskfoldMacUITests {
         retainWindow(app, name: "Restored new task persists after normal Quit")
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor private func phoneRecoveryReceiptFixture() throws -> (LiveConflictFixture, String) {
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else { throw XCTSkip("Dedicated Mac receipt app required") }
+        let f = try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: "/private/tmp/taskfold-phone-creation-receipt-v1.json"))) as! NSDictionary
+        let a = f["account"] as! [String: String]
+        guard a["userID"] == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152", a["email"] == "taskfold-continuity-" + a["userID"]! + "@example.invalid", UUID(uuidString: f["restoredTaskID"] as! String) != nil, UUID(uuidString: f["restoredProjectID"] as! String) != nil else { throw XCTSkip("Disposable phone recovery receipt required") }
+        return (LiveConflictFixture(account: a, taskID: f["restoredTaskID"] as! String, originalTitle: f["title"] as! String, offlineTitle: f["title"] as! String, remoteTitle: f["title"] as! String, remoteNotes: f["notes"] as! String), f["restoredProjectID"] as! String)
+    }
+    @MainActor func testLiveMacReceivesPhoneRecoveredNewTaskAndRelaunches() throws {
+        continueAfterFailure = false
+        let (f, projectID) = try phoneRecoveryReceiptFixture(), app = XCUIApplication()
+        defer { app.terminate() }
+        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app)
+        let received = try waitLiveConflict(f) { c in
+            guard let t = self.liveConflictTask(c, f), let projects = (c["tables"] as? NSDictionary)?["projects"] as? [NSDictionary] else { return false }
+            return t["title"] as? String == f.originalTitle && t["description"] as? String == f.remoteNotes && t["duration_minutes"] as? Int == 45 && t["priority"] as? Int == 2 && t["project_id"] as? String == projectID && t["user_id"] as? String == f.account["userID"] && projects.contains { $0["id"] as? String == projectID && $0["user_id"] as? String == f.account["userID"] } && (c["pending"] as? [Any])?.isEmpty == true
+        }
+        // Acknowledge only the previous disposable Mac case's retained notice.
+        if app.buttons["dismissAccessRecovery"].exists { app.buttons["dismissAccessRecovery"].click() }
+        func inspect() {
+            app.staticTexts["All Tasks"].firstMatch.click()
+            let row = liveConflictRow(app, f.taskID)
+            XCTAssertTrue(row.waitForExistence(timeout: 15)); row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+            let title = app.textFields["taskTitle"]
+            if !title.waitForExistence(timeout: 3) { app.buttons["Inspector"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click() }
+            XCTAssertTrue(title.waitForExistence(timeout: 5)); XCTAssertEqual(title.value as? String, f.originalTitle)
+            XCTAssertEqual(app.textViews["taskDescription"].value as? String, f.remoteNotes)
+        }
+        inspect(); retainWindow(app, name: "Mac opens phone-owned recovery copy with full notes and estimate")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
+        _ = try waitLiveConflict(f) { self.liveConflictTask($0, f) == self.liveConflictTask(received, f) && ($0["pending"] as? [Any])?.isEmpty == true }
+        inspect(); retainWindow(app, name: "Mac signed-in normal Quit retains phone recovery copy")
+    }
+    @MainActor func testLiveMacReceivesPhoneRecoverySyntheticCleanup() throws {
+        continueAfterFailure = false
+        let (f, projectID) = try phoneRecoveryReceiptFixture(), app = XCUIApplication()
+        defer { app.terminate() }
+        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app)
+        _ = try waitLiveConflict(f) { c in
+            self.liveConflictTask(c, f) == nil && !((c["tables"] as? NSDictionary)?["projects"] as? [NSDictionary] ?? []).contains { $0["id"] as? String == projectID } && (c["pending"] as? [Any])?.isEmpty == true
+        }
+        app.staticTexts["All Tasks"].firstMatch.click(); XCTAssertFalse(liveConflictRow(app, f.taskID).exists)
+        retainWindow(app, name: "Mac receives exact synthetic phone recovery cleanup")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
+    }
+}
