@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-12",
+  "scope": "Hide internal task_generation from conflict review contents in both independently owned apps. No mutation, transport or resolution guard changes.",
+  "fixtureCorrection": "iOS debug deletion fixture is now seeded after startLocal loads the workspace. Earlier v1 delete case became stale before choice; v1 keep passed. v2 supersedes it.",
+  "results": {
+    "mac": {
+      "bundle": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-deletion-content-native-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "coverage": "Keep task retains newer comment and task after relaunch"
+    },
+    "iphone": {
+      "bundle": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-deletion-content-native-v2.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "coverage": "Later/reopen, Keep task retains 25-minute estimate/comment and relaunch; explicit Delete task remains deleted after relaunch"
+    }
+  },
+  "inspection": "Five scoped captures inspected: changed user content and enabled choice footer remain visible; internal generation identifier excluded.",
+  "nativeToolBoundary": {
+    "voiceOver": "Actually enabled temporarily under prior authorization; reading spoken-output panel timed out. Restored OFF; utility closed. No spoken acceptance claim.",
+    "desktopWidgets": "Notification Center control timed out; no new installed widget acceptance claim."
+  },
+  "releaseSigning": "User will configure release signing later. Distribution acceptance remains deferred; production entitlements unchanged.",
+  "cleanup": {
+    "protectedExact": 100,
+    "mainAppsAndRunners": 0,
+    "prunedLogicalBytes": 689857180
+  },
+  "limitations": [
+    "Synthetic local fixtures; no new live concurrent backend deletion claim",
+    "Remaining P0 gates remain open; this does not establish full release acceptance"
+  ],
+  "captures": {
+    "iphone-delete-actions.png": "433414ee5384d37e7e76b7467949ad748c0880e95fbace8026755e005c23e8b2",
+    "iphone-delete-review.png": "c41a13b09d999eb43c51d4440027aec5d08037aaa443cf45f27ec0aaf370d3e8",
+    "iphone-keep-actions.png": "c3ac1c14542408bda34c6e292ab698ef7f8391300a86c2e3ee0e221bcbf16b4b",
+    "iphone-keep-review.png": "6bdd4aa00a63acb8439a7503f01f6744315890f02359987b02abf5ba08f85865",
+    "mac-review.png": "006a4b493f1574f933a1ba61c09774c2f68251d2cedad7b74e09b2e61c5531c7"
+  }
+}

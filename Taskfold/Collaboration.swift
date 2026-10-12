@@ -126,7 +126,7 @@ struct ConflictReview: View {
     private var bothCompleted: Bool { !deleting && conflict.remote.completed && conflict.mutation.fields["completed"] == .bool(true) && conflict.mutation.fields["completed_at"] != nil }
     private var keys: [String] {
         let fields = deleting ? conflict.remote.fields : conflict.mutation.fields
-        let visible = fields.keys.filter { $0 != "completion_version" && (!deleting || !["id", "user_id", "source_metadata", "created_at", "notification_sent_at"].contains($0)) }
+        let visible = fields.keys.filter { !["completion_version", "task_generation"].contains($0) && (!deleting || !["id", "user_id", "source_metadata", "created_at", "notification_sent_at"].contains($0)) }
         guard deleting else {
             if bothCompleted, visible.contains("completed_at") { return ["completed_at"] + visible.filter { $0 != "completed_at" }.sorted() }
             return visible.sorted()
