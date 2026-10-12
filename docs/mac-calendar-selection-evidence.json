@@ -14,7 +14,7 @@
     "capacity": "Monday shows 480-minute working day, zero calendar busy and 480 minutes after known work. Saturday shows zero working-day capacity. No event rendered on either inspected date.",
     "disconnect": "Native Disconnect removed all planner.calendar.* preference keys. Four original starter tasks and one starter project remain; pending edits zero.",
     "limitations": [
-      "Event rendering and hidden/named event transition remain unverified on Mac; no event existed in the inspected sports-calendar dates.",
+      "Initial selection walk lacked event rendering; superseded by eventAcceptance below.",
       "No spoken VoiceOver claim; this is native accessibility-tree verification.",
       "Initial whole-cache hash differs after normal use; no full-cache identity claim.",
       "macOS permission remains granted; app-level calendar connection is disconnected."
@@ -39,5 +39,70 @@
     "/private/tmp/taskfold-mac-calendar-build-v2.log",
     "/private/tmp/taskfold-ios-calendar-label-build-v1.log"
   ],
-  "sourceSHA256": "f78680419f12105d6a35cb1513fa2ec4eb9fb0a6f49f9b8812309bb3d8fa8563"
+  "sourceSHA256": "f78680419f12105d6a35cb1513fa2ec4eb9fb0a6f49f9b8812309bb3d8fa8563",
+  "eventAcceptance": {
+    "date": "2026-10-12",
+    "scope": "Actual read-only iCloud sports-calendar event through EventKit; native Mac private/named rendering, capacity, relaunch and disconnect.",
+    "reference": "Apple Calendar showed a sports event on 13 October, 21:00\u201322:45. Taskfold rendered the same 105-minute interval. No source events or calendars were created, edited or deleted.",
+    "privacy": "Titles off rendered Busy with no event title in the accessibility tree; titles on rendered the sports event name. Final build reversed it back to Busy.",
+    "capacity": {
+      "originalHours": "09:00\u201317:00, weekdays",
+      "outsideWorkingHours": "480 working minutes, 0 calendar busy, 480 remaining",
+      "temporaryHours": "09:00\u201323:00",
+      "insideWorkingHours": "840 working minutes, 105 calendar busy, 735 remaining"
+    },
+    "relaunch": "Normal native Quit verified process exit. No-argument final build relaunch retained selected calendar, titles on and 09:00\u201323:00 hours; returning to 13 October showed the same named event and 105-minute deduction.",
+    "titleFix": {
+      "finding": "The sheet navigationTitle leaked into the main Mac window after Save/Cancel until the next navigation update.",
+      "change": "On Mac, a persistent in-sheet header replaces navigationTitle. iOS retains its native navigation title in both owned source copies.",
+      "nativeVerification": "Final Mac sheet has visible Planner settings heading and AX heading trait. Both Cancel and Save immediately return to Calendar window title. Header and private event screenshots inspected.",
+      "failedIteration": "Principal toolbar item prevented the title leak but did not render a sheet heading. Replaced with safeAreaInset header before acceptance."
+    },
+    "builds": {
+      "mac": "/private/tmp/taskfold-mac-calendar-build-v4.log",
+      "macProducts": "BuildCache/mac-calendar-v3/Build/Products/Debug/Taskfold.app",
+      "macDebugAndStrictDeepSignature": "passed",
+      "ios": "/private/tmp/taskfold-ios-calendar-title-build-v2.log",
+      "iosArm64SimulatorDebug": "passed",
+      "iosNative": "Earlier actual EventKit Simulator event/privacy/disconnect evidence remains in calendar-integration-evidence.json; this Mac-only header branch does not change iOS presentation."
+    },
+    "cleanup": {
+      "changedTables": [
+        "view_preferences"
+      ],
+      "allOtherTablesExact": true,
+      "pendingEdits": 0,
+      "calendarPreferenceKeysRemaining": 0,
+      "viewPreferences": [
+        {
+          "user_id": "local",
+          "id": "planner",
+          "working_hours": {
+            "version": 1,
+            "end": 1020,
+            "start": 540,
+            "days": [
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          }
+        }
+      ],
+      "protectedFiles": 100,
+      "protectedFileMismatches": 0,
+      "prunedInactiveBytes": {
+        "mac-calendar-v2": 110087576,
+        "ios-calendar-title-v1": 167541869
+      }
+    },
+    "remaining": [
+      "Mac permission denial/recovery",
+      "Spoken VoiceOver",
+      "Other existing P0 release gates"
+    ],
+    "sourceSHA256": "624595c3cd1d8be9ce75a20b92c0b88cb35d502db1edc3de0d428e0fc176dd64"
+  }
 }

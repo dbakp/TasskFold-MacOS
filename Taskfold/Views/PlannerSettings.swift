@@ -70,7 +70,20 @@ struct PlannerSettingsView: View {
                 }
             }
             .formStyle(.grouped)
+            #if os(macOS)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Planner settings").font(.headline)
+                        .accessibilityAddTraits(.isHeader)
+                        .padding(.horizontal, 24).padding(.vertical, 16)
+                    Divider()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.bar)
+            }
+            #else
             .navigationTitle("Planner settings")
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Save") {
