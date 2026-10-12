@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native iPhone real disposable cloud account: actual local reminder delivery, sign-out retirement of pending and delivered alerts, reentry with unchanged inspected task/reminder fields and only the future occurrence, native synthetic-task deletion and signed-out normal relaunch.",
+  "implementation": "iOS-owned DEBUG-only registry inspection and native tests; release behavior and Mac code unchanged.",
+  "testRuns": [
+    {
+      "name": "initial full run",
+      "accepted": false,
+      "result": "Failed",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "durationSeconds": 238.591,
+      "rootSummary": "auth-reminder-summary-v1.json",
+      "ignoredRemoteHierarchyDiagnostics": 0,
+      "springboardAnimationDiagnostics": 0
+    },
+    {
+      "name": "corrected interrupted-run cleanup",
+      "accepted": true,
+      "result": "Passed",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "durationSeconds": 26.851,
+      "rootSummary": "auth-reminder-cleanup-summary-v1.json",
+      "ignoredRemoteHierarchyDiagnostics": 0,
+      "springboardAnimationDiagnostics": 0
+    },
+    {
+      "name": "full authenticated workflow",
+      "accepted": true,
+      "result": "Passed",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "durationSeconds": 257.194,
+      "rootSummary": "auth-reminder-summary-v2.json",
+      "ignoredRemoteHierarchyDiagnostics": 0,
+      "springboardAnimationDiagnostics": 0
+    },
+    {
+      "name": "normal signed-out relaunch",
+      "accepted": true,
+      "result": "Passed",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "durationSeconds": 12.217,
+      "rootSummary": "auth-reminder-normal-relaunch-summary-v1.json",
+      "ignoredRemoteHierarchyDiagnostics": 0,
+      "springboardAnimationDiagnostics": 0
+    }
+  ],
+  "preservation": {
+    "changedServerTables": [
+      "task_activity"
+    ],
+    "nonActivityServerExactlyRestored": true,
+    "protectedContainers": 6,
+    "protectedFiles": 100,
+    "protectedFilesExactlyEqual": true,
+    "activityHistoryNote": "Only task_activity changes across the two synthetic task create/delete walks; all other 13 checked tables, including the epoch, are exactly restored.",
+    "originalActivityRowsExactlyEqual": true,
+    "originalActivityRows": 16,
+    "addedSyntheticActivityRows": 4,
+    "syntheticActivityTaskCount": 2,
+    "addedActivityKinds": {
+      "created": 2,
+      "deleted": 2
+    }
+  },
+  "productCleanup": {
+    "removed": "BuildCache/ios-auth-reminder",
+    "logicalBytesRemoved": 417338197,
+    "reason": "Native runs terminal; installed app terminated; disposable Simulator shut down",
+    "retained": [
+      "ios-auth-reminder-stage-v1",
+      "build/native logs",
+      "xcresult bundles",
+      "exported attachments",
+      "signing receipts",
+      "private baseline"
+    ],
+    "protectedDataPreserved": true
+  },
+  "inspectedCaptures": [
+    "delivery.png",
+    "signed-out.png",
+    "reentry.png",
+    "scheduled.png",
+    "normal-relaunch.png"
+  ],
+  "limits": [
+    "No account A \u2192 B, delayed notification callback, Mac action, APNs, physical-device or distribution pass.",
+    "Main workflow launches explicitly select cloud mode; the separate normal-relaunch test omits workspace/seed/session overrides.",
+    "The task comparison covers inspected ID/title/completion/plan/reminder fields; the server comparison independently covers all original workspace rows.",
+    "DEBUG inspection controls crowd the toolbar; these captures do not establish production toolbar visual acceptance.",
+    "Initial full run failed at cleanup because the task-details button was queried as StaticText; corrected native cleanup passed before the final full run."
+  ],
+  "environment": {
+    "simulator": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+    "bundle": "com.dbakp.taskfold.widgetstatetests",
+    "team": "3UZ4C73FM2",
+    "finalState": "App terminated; disposable Simulator shut down; persisted localMode false; isolated cache pending queue empty; temporary tasks absent."
+  },
+  "reproduce": {
+    "stage": "python3 Scripts/prepare_widget_state_fixture.py --output <new-stage>",
+    "build": "xcodebuild build-for-testing -project <new-stage>/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination platform=iOS Simulator,id=<disposable-phone> -derivedDataPath <fresh-cache> ONLY_ACTIVE_ARCH=YES ARCHS=arm64 DEVELOPMENT_TEAM=<team>",
+    "fixtures": "Private 0600 /private/tmp/taskfold-live-verification.json in its validated taskfold-continuity-<UUID>@example.invalid namespace. Supply a fresh UUID TASKFOLD_REMINDER_ACCOUNT_NONCE in the XCTest runner EnvironmentVariables. Never use --uitesting or seed flags for the authenticated journey.",
+    "signing": "Use owned sign_simulator_test_products.py with widgetstatetests allowlist and verify_widget_catalog.py --require-team before native execution.",
+    "cleanupRecovery": "The separately scoped testCleanupAuthenticatedReminderAfterInterruptedWalk uses the same nonce and an already authenticated isolated app; it must not be run against unrelated task data."
+  }
+}
