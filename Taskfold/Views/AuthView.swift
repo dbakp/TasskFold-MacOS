@@ -9,6 +9,7 @@ struct AuthView: View {
     @State private var password = ""
     @State private var signup = false
     @State private var busy = false
+    @State private var switchingLocal = false
     @State private var message: String?
     @State private var shake = 0
     @FocusState private var focus: Field?
@@ -40,15 +41,16 @@ struct AuthView: View {
                     HStack { Spacer(); if busy { ProgressView().controlSize(.small) } else { Text(signup ? "Create Account" : "Sign In") }; Spacer() }
                 }
                 .buttonStyle(.borderedProminent).controlSize(.large).keyboardShortcut(.defaultAction)
-                .disabled(busy || !canSubmit).accessibilityIdentifier("nativeSignIn")
+                .disabled(busy || switchingLocal || !canSubmit).accessibilityIdentifier("nativeSignIn")
                 Button {
+                    guard !busy, !switchingLocal else { return }
                     busy = true; message = nil
                     Task { defer { busy = false }; do { try await store.backend.googleOnMac(); await store.authenticated() } catch is CancellationError { } catch { message = error.localizedDescription } }
                 } label: { HStack { Spacer(); Label("Continue with Google", systemImage: "globe"); Spacer() } }
-                .buttonStyle(.bordered).controlSize(.large).disabled(busy).accessibilityIdentifier("googleSignIn")
+                .buttonStyle(.bordered).controlSize(.large).disabled(busy || switchingLocal).accessibilityIdentifier("googleSignIn")
                 if let message { Text(message).font(.callout).foregroundStyle(.secondary).transition(.textSwap).textSelection(.enabled) }
                 Divider().padding(.vertical, 4)
-                Button("Use on this Mac without an account") { store.startLocal() }.buttonStyle(.link).disabled(busy).accessibilityIdentifier("useLocally")
+                Button(switchingLocal ? "Opening local workspace…" : "Use on this Mac without an account", action: useLocally).buttonStyle(.link).disabled(switchingLocal).accessibilityIdentifier("useLocally")
                 Text("Local tasks stay on this Mac. Sign in to access your existing Taskfold projects and sync across devices.").font(.caption).foregroundStyle(.secondary)
             }
             .padding(40).frame(maxWidth: 420)
@@ -62,7 +64,24 @@ struct AuthView: View {
         .accessibilityElement(children: .contain)
     }
     private var canSubmit: Bool { email.contains("@") && (signup ? password.count >= 6 : !password.isEmpty) }
+    private func useLocally() {
+        guard !switchingLocal else { return }
+        switchingLocal = true; message = nil
+        let needsCredentialClear = busy || store.backend.session != nil
+        password = "" // Local entry is not a successful password sign-in.
+        Task {
+            defer { switchingLocal = false }
+            do {
+                // Clear is ordered after any in-flight credential save and invalidates its response.
+                // Enter local mode only after that clear succeeds.
+                if needsCredentialClear { try await store.backend.clearSession() }
+                store.startLocal()
+            } catch is CancellationError { }
+            catch { message = error.localizedDescription }
+        }
+    }
     private func authenticate() {
+        guard !busy, !switchingLocal else { return }
         busy = true; message = nil
         Task {
             defer { busy = false }

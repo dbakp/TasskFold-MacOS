@@ -2281,25 +2281,46 @@ extension TaskfoldMacUITests {
         settings(); signOut()
     }
 
-    @MainActor func testPendingSignInCannotSwitchToLocalWorkspace() throws {
+    @MainActor func testPendingSignInCanOpenLocalWorkspaceAndRetainNewWork() throws {
         let app = XCUIApplication(); defer { app.terminate() }
-        app.launchArguments = ["--live-auth-ui-test", "--auth-response-wait-testing", "-onboardingSeen", "YES", "-ApplePersistenceIgnoreState", "YES"]
+        let defaults = ["-ApplePersistenceIgnoreState", "YES", "-onboardingSeen", "YES", "-dailyBackups.local", "NO"]
+        app.launchArguments = ["--live-auth-ui-test", "--auth-response-wait-testing"] + defaults
         app.launch()
+        let folder = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold")
+        let path = folder.appendingPathComponent("local.json")
+        // The runner can read but cannot write the other app's sandbox on macOS.
+        // Fixture removal belongs to the isolated-build orchestration, after termination.
         let local = app.links["useLocally"]
         XCTAssertTrue(local.waitForExistence(timeout: 10)); XCTAssertTrue(local.isEnabled)
         app.textFields["authEmail"].click(); app.textFields["authEmail"].typeText("pending@example.invalid")
         app.secureTextFields["authPassword"].click(); app.secureTextFields["authPassword"].typeText("synthetic-password")
         app.buttons["nativeSignIn"].click()
-        let pending = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == false"), object: local)
+        let pending = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == false"), object: app.buttons["googleSignIn"])
         XCTAssertEqual(XCTWaiter.wait(for: [pending], timeout: 5), .completed)
-        XCTAssertFalse(app.buttons["googleSignIn"].isEnabled)
-        XCTAssertTrue(app.activityIndicators["nativeSignIn"].exists)
-        XCTAssertFalse(app.activityIndicators["nativeSignIn"].isEnabled)
-        retainWindow(app, name:"Mac pending sign-in keeps workspace choice stable")
-        app.terminate(); app.launch()
+        XCTAssertTrue(local.isEnabled)
+        retainWindow(app, name:"Mac local choice remains available during sign-in")
+        local.click()
+        XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.textFields["authEmail"].exists)
+        let title = "Local connection recovery " + String(UUID().uuidString.prefix(6))
+        app.staticTexts["Inbox"].firstMatch.click()
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 5)); input.typeText(title)
+        app.buttons["Add Task"].click()
+        XCTAssertTrue(app.staticTexts[title].firstMatch.waitForExistence(timeout: 5))
+        let saved = try JSONSerialization.jsonObject(with: Data(contentsOf: path)) as! NSDictionary
+        retainWindow(app, name:"Mac work saved after cancelling sign-in")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
+        app.launchArguments = defaults; app.launch()
+        XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 10))
+        app.staticTexts["Inbox"].firstMatch.click()
+        XCTAssertTrue(app.staticTexts[title].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: path)) as! NSDictionary, saved)
+        XCTAssertFalse(app.textFields["authEmail"].exists)
+        retainWindow(app, name:"Mac local work retained after normal relaunch")
+        // Leave the isolated app signed out before external fixture cleanup.
+        app.terminate(); app.launchArguments = ["--live-auth-ui-test", "--auth-response-wait-testing"] + defaults; app.launch()
         XCTAssertTrue(local.waitForExistence(timeout: 10)); XCTAssertTrue(local.isEnabled)
-        XCTAssertTrue(app.buttons["googleSignIn"].isEnabled)
-        retainWindow(app, name:"Mac fresh authentication after relaunch")
     }
 
 }
