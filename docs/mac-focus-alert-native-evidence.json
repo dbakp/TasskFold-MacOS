@@ -39,12 +39,11 @@
     "correction": "Stopped both obsolete instances, launched only the newer build with the isolated fixture, and delivered a fresh real finish alert at 11:57:38.102. A new human click is pending."
   },
   "latestExistingAppInspection": {
-    "date": "2026-10-11",
-    "pid": 19758,
-    "window": "Inbox \u2013 1 task",
-    "task": "Focus on the next useful step",
+    "date": "2026-10-12",
+    "pid": 47062,
+    "window": "Today",
     "finishedSheetVisible": false,
-    "action": "Rechecked the same PID 19758 after the latest user go/unlock reply. Native accessibility shows Inbox with one fixture task and no finished Focus sheet. No process restart; notification Open remains unverified.",
-    "inspectionTime": "2026-10-11 18:35 Europe/Copenhagen"
-  }
+    "action": "Explicit fixture-preserving relaunch after genuine terminated delivery, finished sheet inspected then closed. Actual notification Open remains unverified."
+  },
+  "terminatedDeliveryFollowup": "mac-focus-terminated-evidence.json"
 }
