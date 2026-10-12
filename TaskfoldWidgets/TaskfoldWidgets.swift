@@ -534,7 +534,7 @@ struct TodayWidgetView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(task.title).font(.caption.weight(.medium)).lineLimit(1)
                                 Text(task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : task.time.isEmpty ? "P\(task.priority)" : task.time).font(.system(size: 9)).foregroundStyle(task.due < WidgetSnapshot.day(entry.date) ? brand : .secondary).lineLimit(1)
-                            }
+                            }.privacySensitive()
                             Spacer(minLength: 0)
                         }
                     }.buttonStyle(.plain)
@@ -560,10 +560,10 @@ struct FocusWidgetView: View {
             }
             if let task {
                 Text(task.title).font(family == .systemSmall ? .headline : .headline.bold()).lineLimit(3).minimumScaleFactor(0.85)
-                    .fixedSize(horizontal: false, vertical: family == .systemMedium)
-                Text(task.due.isEmpty ? "Unscheduled priority · P\(task.priority)" : task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : "Today · P\(task.priority)\(task.time.isEmpty ? "" : " · \(task.time)")").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: family == .systemMedium).privacySensitive()
+                Text(task.due.isEmpty ? "Unscheduled priority · P\(task.priority)" : task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : "Today · P\(task.priority)\(task.time.isEmpty ? "" : " · \(task.time)")").font(.caption2).foregroundStyle(.secondary).lineLimit(2).privacySensitive()
                 Spacer(minLength: 0)
-                HStack { if family == .systemSmall && entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated > 86_400 { WidgetFooter(entry: entry) } else { Text(task.project.isEmpty ? "Inbox" : task.project).font(.caption2).lineLimit(1) }; Spacer(); Image(systemName: "arrow.up.right.circle.fill").font(.title2).foregroundStyle(plum) }
+                HStack { if family == .systemSmall && entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated > 86_400 { WidgetFooter(entry: entry) } else { Text(task.project.isEmpty ? "Inbox" : task.project).font(.caption2).lineLimit(1).privacySensitive() }; Spacer(); Image(systemName: "arrow.up.right.circle.fill").font(.title2).foregroundStyle(plum) }
             } else {
                 Text("Space to focus").font(.headline)
                 Text("Nothing due or high priority. Capture your next step.").font(.caption).foregroundStyle(.secondary)
