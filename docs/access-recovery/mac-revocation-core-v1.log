@@ -1,0 +1,33 @@
+Building for debugging...
+[2 / 6] TaskfoldCore
+[3 / 7] TaskfoldCore
+[8 / 12] WidgetModel
+[9 / 13] WidgetModel
+[12 / 14] TaskfoldCore
+[15 / 17] TaskfoldCore
+[18 / 20] WidgetModel
+[20 / 23] TaskfoldCoreTests-product
+[31 / 34] TaskfoldCoreTests-product
+[33 / 34] TaskfoldCoreTests-product
+Build complete! (7,34 secs)
+Test Suite 'Selected tests' started at 2026-10-12 01:46:32.259.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-12 01:46:32.262.
+Test Suite 'RevokedProjectTests' started at 2026-10-12 01:46:32.262.
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testConfirmedRevocationRemovesDependentQueueButPreservesOtherEdits]' started.
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testConfirmedRevocationRemovesDependentQueueButPreservesOtherEdits]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testLocallyMovedOutTaskUsesOriginalProjectAndPreservesRecoveryInput]' started.
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testLocallyMovedOutTaskUsesOriginalProjectAndPreservesRecoveryInput]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testMissingOrContradictoryRemoteEvidenceCannotRemoveWork]' started.
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testMissingOrContradictoryRemoteEvidenceCannotRemoveWork]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testNewSharedTaskAndSectionAndProjectEditsCanRecover]' started.
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testNewSharedTaskAndSectionAndProjectEditsCanRecover]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testOfflineNewProjectIsNeverMistakenForRevokedAccess]' started.
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testOfflineNewProjectIsNeverMistakenForRevokedAccess]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testVisibleMovedTaskAndPartialReadPreserveQueue]' started.
+Test Case '-[TaskfoldCoreTests.RevokedProjectTests testVisibleMovedTaskAndPartialReadPreserveQueue]' passed (0.000 seconds).
+Test Suite 'RevokedProjectTests' passed at 2026-10-12 01:46:32.266.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.004 (0.005) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-12 01:46:32.266.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.004 (0.005) seconds
+Test Suite 'Selected tests' passed at 2026-10-12 01:46:32.266.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.004 (0.007) seconds

@@ -1,0 +1,122 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native isolated Mac existing-shared-task offline edit, genuine owner revocation, encrypted recovery preview/apply and normal relaunch; separately scoped iPhone largest-text local encrypted-copy route.",
+  "sourceBase": {
+    "iOS": "d97094c",
+    "macOS": "8df275d"
+  },
+  "productionChange": "Account-scoped device-local acknowledgement retains the saved-work notice after successful sync and across relaunch. Direct review opens existing encrypted backups. Workspace layout preserves Mac sidebar access; bounded scrolling and stacked actions preserve accessibility text size. Each repository owns its implementation.",
+  "macNative": {
+    "rounds": 2,
+    "controlledOutage": "DEBUG transport hook limited to one isolated bundle and disposable member identity; system networking unchanged.",
+    "queuedMutations": 4,
+    "checks": [
+      "Shared title/notes and personal title/notes retained offline and through normal quit/relaunch.",
+      "Owner removes the actual membership; member reconnect receives real backend denial.",
+      "Access removed encrypted copy exists before denied mutations are removed from live cache.",
+      "Personal edits sync and queue drains to zero.",
+      "Original shared project/task no longer appear in member live cache/widget projection.",
+      "Native encrypted preview Add 2 / Keep 21; apply creates one member-owned project and one member-owned task with exact offline title/notes.",
+      "Original owner task remains unchanged.",
+      "After restore and normal relaunch durable notice still appears; explicit dismissal survives another relaunch."
+    ],
+    "finalLayoutScope": "Actual server recovery ran before sidebar layout correction. Final normal layout independently verified using process-only notice override after server cleanup; Today and direct backup list remain reachable. No additional final-layout server denial claimed.",
+    "warning": "Existing NSTableView reentrancy diagnostic remains unresolved; no warning-free Mac claim."
+  },
+  "iOSNative": {
+    "scope": "DEBUG+Simulator fixture restricted to dedicated bundle and local ui-testing workspace creates an actual encrypted Access removed copy. No real backend denial or restore apply claimed here.",
+    "resultBundle": "ios-access-recovery-ui-v6.xcresult",
+    "test": "testAccessRecoveryNoticeReviewAndAcknowledgement",
+    "signingReceipt": "access-recovery/signing-v8.json",
+    "checks": [
+      "Portrait/dark/accessibility XXXL launched using native content-size arguments.",
+      "Scroll banner to full review/dismiss controls; each action at least 44 points high, hittable, separate and inside banner viewport.",
+      "Direct native Backups & restore route opens an actual encrypted copy preview with retained records.",
+      "Cancel/Done preserve notice.",
+      "Normal process relaunch without fixture flag retains notice.",
+      "Explicit dismissal then normal process relaunch removes notice."
+    ],
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "strictVerifierPassed": true,
+    "finalCapturesVisuallyInspected": true
+  },
+  "failuresRetained": [
+    {
+      "attempt": "iOS UI v1",
+      "finding": "Native plain button hit height was 20.333 points; fixed inside-label frame. Initial environment-only text size did not establish XXXL."
+    },
+    {
+      "attempt": "iOS UI v2",
+      "finding": "Driver queried a lazy Form copy row before scrolling. Capture also revealed truncated horizontal actions; changed to wrapped stacked actions."
+    },
+    {
+      "attempt": "iOS UI v3",
+      "finding": "Functional assertions passed but full-screen capture revealed compressed banner text/action overlap. Added bounded scrolling and explicit non-overlap/viewport assertions."
+    },
+    {
+      "attempt": "iOS UI v4/v5",
+      "finding": "Bounded layout assertions passed; screenshot revealed scroll content painting under status bar. Explicitly clipped the bounded ScrollView. v4 runner signature was overwritten during build; final signing sequenced after terminal build."
+    }
+  ],
+  "preservation": {
+    "bothAccountsOriginal14NonActivityTablesExact": true,
+    "allOriginalActivityRowsPreserved": true,
+    "syntheticReadOnlyActivityEntriesRemaining": {
+      "member": 8,
+      "owner": 4
+    },
+    "all15TablesExactAfterLocalUIComparedWithCleanedServer": true,
+    "protectedPhoneFilesExact": 43,
+    "protectedTabletFilesExact": 26,
+    "dedicatedAuthenticatedPhoneCacheHashUnchanged": true,
+    "importedMacAccountCacheHashUnchanged": true,
+    "todoistWrites": 0,
+    "productionAppsReplaced": false,
+    "schemaOrPolicyChanges": false
+  },
+  "checks": {
+    "macCoreRevokedProjectTests": {
+      "passed": 6,
+      "failures": 0,
+      "log": "mac-revocation-core-v1.log"
+    },
+    "iosCoreRevokedProjectTests": {
+      "passed": 6,
+      "failures": 0,
+      "log": "ios-revocation-core-v2.log"
+    },
+    "finalMacDebugLog": "mac-revocation-debug-build-v8.log",
+    "finalMacReleaseLog": "mac-revocation-release-build-v5.log",
+    "finalIOSDebugLog": "ios-access-recovery-build-v10.log",
+    "finalIOSReleaseLog": "ios-access-recovery-release-build-v4.log",
+    "finalDebugAndReleaseBuildsPassedBothPlatforms": true,
+    "releaseObjectsExcludeDebugHooks": true,
+    "macStageMatchesAll61OwnedSwiftSourcesWithDeclaredNamespaces": true,
+    "iosRecoveryFourOwnedFilesExact": true
+  },
+  "limitations": [
+    "External file-provider transfer remains open.",
+    "Broader native organization/new-creation/account-switch recovery variants remain open.",
+    "Other staged iOS transport/import files were older; this local UI regression does not establish current complete importer/transport acceptance.",
+    "Mac initial offline caption could read Up to date before queued edits; follow-up remains open.",
+    "Spoken VoiceOver and full release acceptance remain open."
+  ],
+  "artifacts": {
+    "access-recovery/mac-sidebar-after.png": "b4499753fab6f8ce97817dddaab6253f562b17a8173854da5f7937d82b0cb146",
+    "access-recovery/mac-offline-relaunch.png": "767bba56d348a0b08048c4ea6c0a9030bd5b6136316acbf75de8551eb6eea671",
+    "access-recovery/signing-v8.json": "9a074250161c139b9bb78f981e3106d455663abf1db8ef2b9637ba8ae9953565",
+    "access-recovery/mac-restored-draft.png": "5097e91d533c6e6d2b09164bbdd5de47994471faba22cd9c9c7732c0384b166a",
+    "access-recovery/iphone-largest-after.png": "f17ee06ea61adc6dd62d572be035a79a2e64811d701aee88f669e908d06f00b7",
+    "access-recovery/iphone-overlap-before.png": "5f28f4f8dff3c5b33c01fbd1676c7fdfb4dd8d08e221685eaa5d50353f3533de",
+    "access-recovery/mac-restore-preview.png": "e8828a58db9bc7b5aa71ac3e02783d813d09ca3e1072bff61538d1f29d43d7a4",
+    "access-recovery/ios-ui-final.log": "47fe7c1d85d71e81f59d71f53f608d95dee45b27a63aa342abd50b3310564e5b",
+    "access-recovery/iphone-encrypted-preview.png": "f81369c90d6c58b8f29aa768b6ca10d3136d5329dc8f08f8825324cb2fcca04c",
+    "access-recovery/mac-revocation-core-v1.log": "16ab1476cbfdaca9f79cfd500c36bff9f3c48bb7e745d243d49ea36100bdc371",
+    "access-recovery/mac-sidebar-before.png": "41b1f417d9d605ec40cef9a606645111e0f5baad87639bd6216a7f055296e4e2",
+    "access-recovery/ios-revocation-core-v2.log": "e264fc7f653f78d6f0bcf9e3d914484640809ef7cd3c3ffd7f3643536fba8559"
+  },
+  "repository": "TasskFold-MacOS"
+}

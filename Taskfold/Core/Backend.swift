@@ -57,6 +57,16 @@ enum SecureSession {
 
 
 #if DEBUG
+/// A controlled connection outage for the isolated native Mac recovery walk.
+private final class ContinuityDisconnectedHTTP: URLProtocol, @unchecked Sendable {
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() { client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet)) }
+    override func stopLoading() {}
+}
+#endif
+
+#if DEBUG
 /// Holds only a disposable account's completed upload for a native account-switch walk.
 /// The real request has already used its original owner/path/JWT; no response is fabricated.
 private enum ProfileUploadResponseTestHold {
@@ -112,7 +122,19 @@ final class Backend: NSObject {
     init(configuration: [String: String]? = nil, http: URLSession = .shared,
          session: Session? = SecureSession.read(),
          persistSession: @escaping (Session?) throws -> Void = SecureSession.save) {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--continuity-offline"),
+           Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.p0signeduitests",
+           let user = session?.user,
+           user.id == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+           user.email == "taskfold-continuity-" + user.id + "@example.invalid" {
+            let disconnected = URLSessionConfiguration.ephemeral
+            disconnected.protocolClasses = [ContinuityDisconnectedHTTP.self]
+            self.http = URLSession(configuration: disconnected)
+        } else { self.http = http }
+        #else
         self.http = http
+        #endif
         self.session = session
         self.saveSession = persistSession
         if let configuration { config = configuration }

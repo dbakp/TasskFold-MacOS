@@ -17,7 +17,12 @@ struct RootView: View {
     var body: some View {
         @Bindable var store = store
         Group {
-            if store.signedIn { WorkspaceView().transition(.opacity) }
+            if store.signedIn {
+                VStack(spacing: 0) {
+                    if store.accessRecoveryPending { AccessRecoveryBanner() }
+                    WorkspaceView()
+                }.transition(.opacity)
+            }
             else { AuthView().transition(.opacity) }
         }
         .animation(Motion.respecting(reduceMotion, Motion.layout), value: store.signedIn)

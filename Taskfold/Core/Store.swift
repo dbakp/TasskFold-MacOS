@@ -151,6 +151,16 @@ final class Store {
     var online = true
     var error: String?
     var notice: String?
+    var accessRecoveryPending = false
+    private var accessRecoveryNoticeKey: String { "taskfold.accessRecoveryPending." + userID.lowercased() }
+    func acknowledgeAccessRecovery() {
+        UserDefaults.standard.removeObject(forKey: accessRecoveryNoticeKey)
+        accessRecoveryPending = false
+    }
+    private func markAccessRecovery() {
+        UserDefaults.standard.set(true, forKey: accessRecoveryNoticeKey)
+        accessRecoveryPending = true
+    }
     var widgetActionStatus: String?
     var syncConflict: SyncConflict?
     var focusSyncConflict: FocusSyncConflict?
@@ -476,6 +486,7 @@ final class Store {
         return projectMembers(projectID)
     }
     func load() {
+        accessRecoveryPending = UserDefaults.standard.bool(forKey: accessRecoveryNoticeKey)
         workspaceCacheReadable = false
         defer {
             if localMode, workspaceCacheReadable { migrateOrganization() }
@@ -666,6 +677,7 @@ final class Store {
         accountGeneration = UUID(); backend.session = nil; signedIn = false; localMode = false
         UserDefaults.standard.set(false, forKey: "localMode")
         snapshot = Snapshot(); undoStack = []; redoStack = []; lastSync = nil; syncConflict = nil; focusSyncConflict = nil
+        accessRecoveryPending = false
         CalendarBusyStore.shared.bind(account: "")
         publishWidgetSnapshot()
         clearScheduledReminders()
@@ -868,6 +880,7 @@ final class Store {
             guard let recovered = reviewed.recoveringUnavailableProject(for: mutation, remote: remote), recovered.pending.count < reviewed.pending.count else { return false }
             _ = try await makeRecoveryBackup(kind: "Access removed")
             guard generation == accountGeneration, account == userID, snapshot == reviewed else { return false }
+            markAccessRecovery()
             snapshot = recovered
             do { try persist() } catch { snapshot = reviewed; throw error }
             undoStack = []; redoStack = []; syncConflict = nil; lastSync = Date()

@@ -327,3 +327,79 @@ private struct BackupFilePicker: UIViewControllerRepresentable {
     }
 }
 #endif
+
+/// Keep access-loss recovery discoverable after sync succeeds and across relaunches.
+struct AccessRecoveryBanner: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dynamicTypeSize) private var textSize
+    @State private var reviewing = false
+    var body: some View {
+        Group {
+            if textSize.isAccessibilitySize {
+                ScrollView { content.padding() }
+                    .frame(height: 280)
+                    .clipped()
+                    .accessibilityIdentifier("accessRecoveryScroll")
+            } else { content.padding() }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.thinMaterial)
+        .sheet(isPresented: $reviewing) { AccessRecoveryReview() }
+        .onChange(of: store.workspaceGeneration) { _, _ in reviewing = false }
+    }
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Shared access was removed. Your unsynced work is saved on this device.")
+                .font(.callout).fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("accessRecoveryMessage")
+            if textSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 8) { reviewButton; dismissButton }
+            } else {
+                HStack { reviewButton; Spacer(minLength: 8); dismissButton }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    private var reviewButton: some View {
+        Button { reviewing = true } label: {
+            Text("View recovery copies").fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 12).frame(minHeight: 44)
+                .frame(maxWidth: textSize.isAccessibilitySize ? .infinity : nil, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain).foregroundStyle(.tint)
+        .background(.tint.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityIdentifier("reviewAccessRecovery")
+    }
+    private var dismissButton: some View {
+        Button { store.acknowledgeAccessRecovery() } label: {
+            Text("Dismiss").fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 12).frame(minHeight: 44)
+                .frame(maxWidth: textSize.isAccessibilitySize ? .infinity : nil, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain).foregroundStyle(.secondary)
+        .accessibilityIdentifier("dismissAccessRecovery")
+    }
+}
+
+private struct AccessRecoveryReview: View {
+    @Environment(\.dismiss) private var dismiss
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("Choose an Access removed copy to preview or restore your unsynced work. Restored shared projects become copies you own.")
+                }
+                BackupTools()
+            }
+            .modifier(BackupPresentation())
+            .navigationTitle("Backups & restore")
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        }
+        #if os(macOS)
+        .frame(minWidth: 560, minHeight: 540)
+        #endif
+    }
+}
