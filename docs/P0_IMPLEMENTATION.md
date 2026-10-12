@@ -4,12 +4,12 @@ Current release-gate order and external dependencies: [P0_RELEASE_STATUS.md](P0_
 
 Objective: complete all P0 work from `TODOIST_PORT_PLAN.md`, implement the proposed productive widgets, retain a premium experience, and verify functional and data parity between iOS and macOS. Started 5 October 2026. The full objective remains active until every requirement below is proved in current source and runtime behavior.
 
-## Current release gates — 9 October
+## Historical release checkpoint — 9 October
 
 Most planned P0 features now have implementations in both native repositories. The open gates below distinguish unavailable delivery from workflows that still need end-to-end proof. The dated entries below are historical evidence, not additional current blockers.
 
 - **Remote reminders:** general availability and the worker remain disabled. Provider credentials, durable scheduling and signed physical-device background delivery are still required.
-- **Cross-device reliability:** authenticated iPhone/iPad task round trips and one controlled offline conflict/Keep my edit path pass. Use synced now also preserves a later independent estimate in a paired native flow. Native Mac interaction, broader queued sequences/richer workspace data, membership revocation and paired restore remain unproved. The earlier restriction on launching the Mac app is still respected.
+- **Cross-device reliability:** authenticated iPhone/iPad task round trips and one controlled offline conflict/Keep my edit path pass. Use synced now also preserves a later independent estimate in a paired native flow. Native Mac interaction, broader queued sequences/richer workspace data, membership revocation and paired restore remain unproved. This historical checkpoint preceded the user’s later authorization to launch isolated Mac test apps.
 - **Installed widgets:** signing and configured small My list contents/routing now pass. Actual warm/background completion also passes, including durable relaunch and preservation of another task; live privacy hides/restores names and accessibility labels. Cold-launch execution, multiple instances, other families/sizes, physical devices and Mac hosts remain open. See [current host evidence](WIDGET_HOST_ACCEPTANCE.md).
 - **Provider workflows:** the API v1 importer and native review exist, but a real isolated Todoist import/retry and external file-provider recovery still need acceptance. EventKit planning exists; real calendar permissions/events need acceptance.
 - **Release packaging:** provisioned physical app/widget installs and Mac distribution containing the extension remain unproved. Existing ad-hoc Mac packaging excludes the widget.

@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-12",
+  "scope": "Current-source native local conflict review, Later/reopen, choosing synced comments while retaining a later offline estimate, original comments and durable relaunch. iPhone also verifies Keep my edit with the same later estimate.",
+  "productionBehaviorChanged": false,
+  "fixtureCorrection": "Both independently owned fixtures now capture task-generation identity using TaskCompletionRevision.capturing. Mac adds the same later 45-minute mutation as iOS. Without generation, the model correctly refused to replay that synthetic mutation; the original green Mac run did not prove estimate preservation.",
+  "finalResults": {
+    "mac": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-offline-review-native-v3.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "cases": [
+        "Keep my edit retains independent teammate comment and relaunch",
+        "Use synced retains exact later mutation, all other task fields and whole resolved workspace after normal Quit/relaunch"
+      ]
+    },
+    "iphone": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-offline-review-native-v2.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "cases": [
+        "Keep my edit retains later estimate and independent teammate comment",
+        "Use synced retains later estimate and independent teammate comment"
+      ]
+    }
+  },
+  "assertions": [
+    "Mac seeded task has estimate 45 before review; Later leaves the whole cache unchanged",
+    "Mac Use synced drops only the reviewed mutation and retains the exact later mutation",
+    "Mac every other task field and other table remains unchanged; native inspector and row display 45 minutes",
+    "iPhone both choices retain the exact later mutation and expected queue count, chosen comment and independent comment",
+    "iPhone estimate visible before and after relaunch; whole persisted resolved workspace remains exact",
+    "Nine final scoped captures inspected"
+  ],
+  "earlierRuns": {
+    "macV1": "Passed but under-scoped; visual inspection found no displayed estimate. Superseded; not estimate acceptance.",
+    "macV2": "Failed a driver assumption that macOS stepper value is String; stored 45 and stepper existence passed. Final test accepts actual visible estimate or numeric/string AX representation.",
+    "iphoneV1": "Both cases passed visible 45 but stopped before scrolling the virtualized teammate comment into view. Saved task retained both comments and 45. Final driver scrolls to each comment and verifies saved queue and whole-cache relaunch."
+  },
+  "verification": [
+    "Independent isolated Mac and iOS build-for-testing succeed",
+    "Mac deep strict signature verification passes",
+    "Both final results accepted by verify_ui_result.py",
+    "Conflict resolution model text is identical in both owned repositories"
+  ],
+  "cleanup": {
+    "protectedExact": 100,
+    "prunedLogicalBytes": 691420782,
+    "mainAppsAndRunners": 0,
+    "disposableSimulator": "App and runner uninstalled; shutdown; original phone/tablet untouched"
+  },
+  "limitations": [
+    "Synthetic local conflict fixture; no new live cross-device/backend conflict claim",
+    "Remaining concurrent organization/legacy-client variants remain open",
+    "Spoken VoiceOver, installed system privacy, authenticated backup read/account-switch, external provider failure, APNs and distribution remain separate open gates"
+  ],
+  "captures": {
+    "mac": {
+      "review.png": "410710779b256a12ad7b1b7f5cd59b25f703f8a3399c2664253d3a79db083936",
+      "synced.png": "16f02e6e09b381b9c3fe160461281c54cb4c62550710d7ef90c8bd9d442e9e67",
+      "relaunch.png": "16f02e6e09b381b9c3fe160461281c54cb4c62550710d7ef90c8bd9d442e9e67"
+    },
+    "iphone": {
+      "keep-review.png": "7dbba1a8e24d4c81f1315744622d67b7db88087c0fac53a3e1c3cc8dd769b813",
+      "keep-comments.png": "0778ec6de9e4ec1f787aa27f97508ec5423d835b4d2f5b66afa834df8bbe918d",
+      "keep-relaunch.png": "26d30a69df892215352e3bb0d205dfc50bea4ba0d0da8d93f12d874746371f08",
+      "synced-review.png": "a39245728c8aca209fb73eab93908a7828babf094268ac66ecc8fa208d161f22",
+      "synced-comments.png": "aff95fff8a0f0dd16fbe0255a2177e67373cac6c34b01b677187844b6bdd1edd",
+      "synced-relaunch.png": "e9e824b3fcb03e9e5eabedc1eaf10f5938cc266749c8eff645ef531393374cdc"
+    }
+  }
+}

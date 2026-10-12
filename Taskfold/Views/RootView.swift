@@ -339,15 +339,16 @@ struct RootView: View {
             store.snapshot = Snapshot(); store.snapshot.tables["tasks"] = [task]; workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--conflict-fixture") {
-            store.startLocal(); store.snapshot = Snapshot()
+            store.startLocal(); store.dailyBackupsEnabled = false; store.snapshot = Snapshot()
             var local = Record.task(user: store.userID, date: Date())
             local["id"] = .string("conflict-task"); local["title"] = .string("Review launch copy")
             let before: JSON = .array([.object(["id": .string("a"), "text": .string("Original comment")])])
             local["comments"] = .array([.object(["id": .string("a"), "text": .string("My revised comment")])])
             var remote = local
             remote["comments"] = .array([.object(["id": .string("a"), "text": .string("Shared revised comment")]), .object(["id": .string("b"), "text": .string("Independent teammate comment")])])
-            let change = Mutation(table: "tasks", recordID: local.id, method: "PATCH", fields: ["comments": local["comments"]], baseline: ["comments": before])
-            store.snapshot.tables["tasks"] = [local]; store.snapshot.pending = [change]
+            let change = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: local.id, method: "PATCH", fields: ["comments": local["comments"]], baseline: ["comments": before]), existing: local)
+            let later = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: local.id, method: "PATCH", fields: ["duration_minutes": .number(45)], baseline: ["duration_minutes": .null]), existing: local)
+            store.snapshot.tables["tasks"] = [local]; store.snapshot.pending = [change, later]; store.snapshot.apply(later)
             store.syncConflict = SyncConflict(mutation: change, remote: remote)
             workspace.section = .today
             try? store.persist()
