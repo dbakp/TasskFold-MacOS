@@ -5,7 +5,7 @@ This short view summarizes `P0_RELEASE_STATUS.md`; its dated entries and JSON ev
 
 | Area | Proven progress | Remaining gate |
 | --- | --- | --- |
-| Productive widgets | Twelve kinds implemented; many installed phone/tablet routes, completion/account/privacy checks; iPhone Today empty/sign-out/relaunch; Mac medium Today local exit/return/normal signed-out relaunch, install, app edit/Complete/Undo refresh and widget Capture/Inbox/save/relaunch; exact desktop task routing and large My list completion/acknowledgement/dismissal (`mac-widget-task-context-evidence.json`, `widget-completion-feedback-evidence.json`) | Remaining Mac configurations and other hosts/sizes/conditions; system privacy redaction |
+| Productive widgets | Twelve kinds implemented; many installed phone/tablet routes, completion/account/privacy checks; iPhone Today empty/sign-out/relaunch; Mac medium Today local exit/return/normal signed-out relaunch, install, app edit/Complete/Undo refresh and widget Capture/Inbox/save/relaunch; exact desktop task routing and large My list completion/acknowledgement/dismissal (`mac-widget-task-context-evidence.json`, `widget-completion-feedback-evidence.json`) | Current isolated iPhone My list selection returns to Choose your list in two runs (`widget-selection-registration-evidence.json`); investigate registration/selection before expiry acceptance. Remaining Mac configurations and other hosts/sizes/conditions; system privacy redaction |
 | Todoist import | Real read-only multi-page import and replay; native imported-workspace handoff; iPhone lost first-import and replay-response recovery; Mac lost replay-response Retry and relaunch | Named native import/retry gate closed; evidence retains exact scope |
 | Recovery | Native portable export/restore, encrypted Mac safety copy, cloud and cross-account restore/replay/relaunch; native Mac shared-access loss, encrypted recovery/apply and durable notice; independent native Mac/phone offline new-task recovery, phone offline section/task graph recovery and cross-app receipt (`section-access-recovery-evidence.json`) | Mac iCloud transfer/restore, Mac/iPhone Cancel/retry and local workspace exit/return pass; iPhone authenticated navigation/return and Mac same-page pending-read sign-out pass; session-write warning resolved; coordinated-read failure/retry/relaunch passes; external callback races and actual remote provider failures remain |
 | Device continuity | Native Mac ↔ phone tasks/notes/planning/organization round trips, offline edits and relaunches; paired name/photo and native Mac attachment handoffs; live Keep my edit title/independent-notes/later-priority return | Remaining concurrency/legacy-client variants |
@@ -27,6 +27,10 @@ Recent work includes actual user-visible calendar/accessibility fixes, native wo
 The named Todoist import/retry goal is closed. Completed work is committed and pushed separately in each repo; the task-editor fix now has scoped native acceptance. Test-driver/signing work is tracked separately from product fixes and release acceptance.
 
 Ordinary iPhone/iPad acceptance uses Xcode Simulators as requested. Actual remote delivery and distribution remain separate gates. Todoist source data must remain unchanged. Each repo owns its code and release inputs; completed work is committed and pushed separately.
+
+## Current native widget finding
+
+13 October: two installed medium iPhone My list expiry attempts fail before completion because list selection is not retained. The extension contains its entity metadata, but runtime registration errors and remote accessibility-server loss are recorded. A Simulator restart/fresh widget did not resolve it. No automatic expiry pass is claimed. See `widget-selection-registration-evidence.json`; all 36 isolated and 100 protected files are restored/exact, and app/runner are uninstalled with Simulator shut down.
 
 ## Latest closed gate
 

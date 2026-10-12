@@ -6,6 +6,8 @@ Audited against the original widget collection and Todoist port plan; current na
 
 ## Implemented versus accepted
 
+13 October current widget finding: installed iPhone My list selection returns to Choose your list in two native runs, including restart and widget replacement. Built entity metadata is present; runtime registration errors are recorded but the cause remains unproven. This blocks automatic expiry acceptance. Prior completion/dismissal evidence does not establish current selection acceptance. See `widget-selection-registration-evidence.json`.
+
 13 October widget follow-up: fixed My list completion acknowledgement expiry scheduling in each owned extension; forty widget-list tests and Mac/iOS Simulator Debug/Release extension builds pass. This is a product fix with scoped model/provider verification; installed automatic expiry remains open. See `widget-completion-expiry-evidence.json`.
 
 13 October follow-up: native Mac acceptance of the chip row-width fix now passes capture, exact Save, section selection and normal relaunch with whole-workspace preservation. VoiceOver output remains unaccepted; the temporary setting is restored to off. See `mac-capture-layout-native-evidence.json`.

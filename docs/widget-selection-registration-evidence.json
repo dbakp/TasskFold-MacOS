@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-13",
+  "scope": "Installed medium iPhone My list automatic expiry acceptance attempt",
+  "status": "FAILED BEFORE COMPLETION; automatic expiry remains unaccepted",
+  "test": "testIsolatedInstalledCompletionFeedbackAutomaticExpiry",
+  "runs": [
+    {
+      "resultBundle": "ios-widget-expiry-v1.xcresult",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "warnings": [],
+      "failure": "Selected list returned to Choose your list; Complete Sketch widget concept was absent; completion/expiry not reached",
+      "environmentChange": "Initial current extension run"
+    },
+    {
+      "resultBundle": "ios-widget-expiry-v2.xcresult",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "warnings": [],
+      "failure": "Selected list returned to Choose your list; Complete Sketch widget concept was absent; completion/expiry not reached",
+      "environmentChange": "Disposable Simulator shutdown/boot; own leftover widget removed natively and fresh widget installed"
+    }
+  ],
+  "observations": [
+    "Both native videos show selection not retained and Choose your list rendered",
+    "WidgetListEntity, WidgetNoteEntity and PulseProjectEntity exist in built extension metadata",
+    "System runtime reported Failed to build EntityIdentifier. WidgetListEntity is not a registered AppEntity identifier",
+    "SpringBoard repeatedly waited 60 seconds for animation idle and reported remote accessibility-server loss"
+  ],
+  "rootCause": "Not established. Registration error is observed evidence, not proof of a missing declaration or confirmed production defect. Restart did not make the workflow pass.",
+  "nextAction": "Inspect isolated install/registration and selection persistence using a genuinely fresh app namespace; avoid repeating this unchanged failed walk. Preserve prior accepted installed completion/dismissal as historical evidence, not current configuration acceptance.",
+  "builds": "Both native test builds succeeded; extension model/source fix verification remains valid. Existing staged host was reused; current owned widget and namespace-only widget-core inputs verified. No broad current app acceptance claimed.",
+  "metadataSHA256": "7af4163dc4fade9c391f7d4821e1c029ba75e714783d45ca1174627881e13414",
+  "cleanup": {
+    "isolatedFilesRestored": 36,
+    "protectedFilesExact": 100,
+    "appAndRunnerUninstalled": true,
+    "simulator": "Shutdown",
+    "mainTaskfoldSessions": "None running"
+  },
+  "limits": [
+    "No completion action was attempted in either run",
+    "No automatic expiry or exact eight-second duration accepted",
+    "No new Mac installed-host result",
+    "No backend/Todoist writes"
+  ]
+}

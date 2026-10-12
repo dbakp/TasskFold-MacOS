@@ -46,5 +46,10 @@
     "taskfoldMainSessionsOpen": false,
     "freeGiB": 96.8
   },
-  "productionSigning": "Not changed; distribution remains user-deferred"
+  "productionSigning": "Not changed; distribution remains user-deferred",
+  "installedAttempt20261013": {
+    "status": "FAILED BEFORE COMPLETION; automatic expiry remains unaccepted",
+    "evidence": "widget-selection-registration-evidence.json",
+    "runs": 2
+  }
 }
