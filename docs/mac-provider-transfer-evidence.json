@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native Mac iCloud Drive upload, cloud-only download through Taskfold restore picker, preview/apply and normal relaunch.",
+  "runtime": {
+    "bundle": "com.dbakp.taskfold.mac.p0calendartests",
+    "build": "mac-calendar-v3 signed Debug, v5 metadata; unchanged backup implementation"
+  },
+  "authorization": "User explicitly approved uploading the prepared 8-task/1-project synthetic export to iCloud Drive and reading it back.",
+  "source": {
+    "bytes": 5527,
+    "sha256": "db00ef5688e971e9307ea0f53f4d0015db2274afe53b426f7e215f0d2243ab87",
+    "realTaskData": false,
+    "credentials": false
+  },
+  "accepted": [
+    "Finder copied only the prepared file into iCloud Drive; Waiting to upload subsequently cleared.",
+    "Finder Remove Download evicted the local copy; Taskfold native iCloud picker explicitly showed Not downloaded / In iCloud for that file.",
+    "Open downloaded the backup and presented Restore 9 records with 8 tasks and 1 project.",
+    "Downloaded bytes exactly match the source SHA-256.",
+    "Restore completed and a Before restore encrypted recovery copy appeared.",
+    "Existing workspace records remained exact; imported tasks retained all source fields except expected ID/account/task-generation remapping. The mapped project relationship is exact.",
+    "Normal Quit stopped the app; ordinary relaunch retained every restored table, zero pending edits, and the native Studio list displayed Already organized."
+  ],
+  "cleanup": {
+    "workspace": "After successful native acceptance, stopped the isolated app and restored its private pre-test cache byte-for-byte. Relaunch retained all baseline tables, zero pending edits and empty Inbox. This is fixture cleanup, not a product Undo test.",
+    "cloudFile": "Moved only the synthetic export to the recoverable Bin using Finder; confirmed absent from iCloud Drive. Bin was not emptied.",
+    "protectedSimulatorFiles": 100,
+    "protectedFileHashes": "all exact",
+    "recoveryCopy": "Test-only encrypted Before restore copy retained in isolated app"
+  },
+  "limitations": [
+    "No iOS external-provider picker acceptance.",
+    "No offline provider/download-error acceptance.",
+    "Non-UUID seed identifiers intentionally remap; this is not same-workspace duplicate-replay evidence.",
+    "No cross-device iCloud propagation claim."
+  ],
+  "productCodeChanged": false,
+  "screenshot": {
+    "path": "provider-transfer-preflight/restored-from-icloud.png",
+    "sha256": "222549301602cbb4a1418df45384b4a845ca1302e081615190c9575fc9f9306d",
+    "inspected": true
+  }
+}
