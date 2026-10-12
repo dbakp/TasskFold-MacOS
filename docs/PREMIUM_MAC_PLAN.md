@@ -1865,3 +1865,6 @@ Native cleanup restores delivery off in both accounts and reversibly deletes onl
 ### 12 October — installed Mac Today task cold-route preflight
 
 The existing v5 host now has one disposable Today task in its previously empty normal local workspace. Native Quit from Completed leaves PID10361 stopped, with the exact saved task and zero pending edits. The installed widget task-title click is awaiting manual input because desktop-widget observation times out. See `mac-widget-task-route-preflight-evidence.json`. No cold-route pass is claimed; the original fixture cache is retained.
+
+
+12 October: notification switch fixture cleanup is complete. Disposable B sessions revoked, account deleted and 17 database checks return zero; its local cache, membership cache, encrypted recovery copy, exact isolated Keychain key and private credentials are removed. Nine unrelated local files remain hash-exact. Account A is retained. This supersedes the earlier retained-B cleanup note in `mac-notification-account-switch-evidence.json`. Pending desktop widget click remains undisturbed.

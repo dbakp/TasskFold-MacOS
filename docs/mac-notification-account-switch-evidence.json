@@ -122,7 +122,7 @@
     "pending": [],
     "processID": 26888
   },
-  "cleanup": "Delivery restored off for both accounts; synthetic A task reversibly deleted through native UI. Empty reserved B account and private credentials retained for subsequent acceptance cleanup; no real user account altered.",
+  "cleanup": "Delivery restored off for both accounts; synthetic A task reversibly deleted through native UI. Disposable B sessions revoked and account deleted; 17 SQL checks confirm zero B rows across application, auth and storage tables. B cache, membership cache, encrypted backup, exact isolated recovery Keychain item and private credentials removed. Nine unrelated cache files remain hash-exact.",
   "preservation": {
     "changedServerTables": {
       "0": [
@@ -140,5 +140,12 @@
   "limits": [
     "Accepts the named Complete callback isolation journey; does not claim every action or timing permutation.",
     "Other named widgets, usability, providers, continuity, APNs and distribution gates remain open."
-  ]
+  ],
+  "disposableAccountCleanup": {
+    "userID": "8529d5a3-de5e-4e66-859e-9fd424fc4eca",
+    "sessionRevocationHTTP": 204,
+    "databaseZeroChecks": 17,
+    "unrelatedLocalFilesExact": 9,
+    "retainedAccountA": true
+  }
 }
