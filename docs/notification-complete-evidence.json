@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-12",
+  "baseCommits": {
+    "TaskFold-iOS": "c6be5c7",
+    "TasskFold-MacOS": "9059529"
+  },
+  "scope": "Actual background-delivered local iPhone Simulator Complete action, foreground inspection, normal relaunch, Completed-list exact task editor and cleanup. No cold-process, pre-foreground cancellation timing, account-switch, Mac or physical-device acceptance.",
+  "productChanges": false,
+  "test": "testSystemCompleteActionFinishesUndatedIndependentReminderAndCancelsFutureAlerts",
+  "result": "complete-action-ios-v1.xcresult",
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "reportedRuntimeWarnings": 0,
+  "durationSeconds": 244.987,
+  "build": {
+    "name": "complete-action-ios-build-v1.log",
+    "sha256": "f3828da3b66adda7c0743fdbaf224339e29de967090ca2498e741324658ce441",
+    "passed": true
+  },
+  "testSourceSHA256": "89ee5b265fa3a1ddbf601a92904a8483baad145e003cbf905865b35e57ef8448",
+  "stageTestSourceMatches": true,
+  "accepted": [
+    "Native capture creates exactly one open undated task with two independent reminder occurrences.",
+    "Actual delivered system notification exposes Complete; native action changes the original task.",
+    "Completion, exact task identity and undated plan survive normal relaunch.",
+    "Pending registry is empty while reminders remain enabled, before End fixture.",
+    "Completed list opens the exact original task editor with Planned date off.",
+    "Only completion fields change; original reminder specs remain exact; no successor task or queued edits.",
+    "Authenticated caches and protected phone/tablet file sets and hashes remain unchanged."
+  ],
+  "preservation": "notification-complete/preservation.json",
+  "signing": "notification-complete/signing.json",
+  "sourceScope": "Test-only refactor shares the existing independent-reminder walk; Tomorrow production behavior is unchanged. Tomorrow wrapper compiles but is not rerun here; its earlier native evidence remains scoped to its recorded source. No Mac/Release/Core reruns for this test-only change.",
+  "remaining": [
+    "Mac notification Open/actions and installed widgets; live existing apps preserved after observation timeout.",
+    "Cold-process Complete and account-switch variants.",
+    "Existing P0 APNs/distribution, VoiceOver, external-provider and continuity gates."
+  ],
+  "captures": [
+    {
+      "path": "notification-complete/real-complete-action.png",
+      "sha256": "94a5b793b06e6e292ae830367c56928b1cf32ce0758aeb78148e012cd664b048",
+      "inspected": true
+    },
+    {
+      "path": "notification-complete/relaunch-original-editor.png",
+      "sha256": "e2daf9de20d89078eb453c68e2d66a22e0ca51bc45e3abc1a83907af20ff4dd7",
+      "inspected": true
+    }
+  ]
+}
