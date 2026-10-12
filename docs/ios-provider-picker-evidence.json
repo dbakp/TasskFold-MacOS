@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native iPhone corrupt-file recovery, picker/review cancellation and signed-out iCloud preflight on the coordinated-read implementation.",
+  "device": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+  "bundle": "com.dbakp.taskfold.widgetstatetests",
+  "results": {
+    "ios-provider-picker-v2.xcresult": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    "ios-provider-picker-v4.xcresult": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    }
+  },
+  "accepted": [
+    "Corrupt JSON reports an error without preview; manual recovery and valid file preview remain usable.",
+    "Cancelling reviews preserves Newer current edit and does not add Backup missing task.",
+    "Cancelling the picker, including signed-out iCloud, returns enabled backup controls without an error alert; a subsequent local file opens a valid preview."
+  ],
+  "providerPrerequisite": "Actual iCloud provider shows Sign in to iCloud. No Apple Account sign-in attempted. External iOS transfer and offline-provider acceptance remain open.",
+  "driverCorrections": [
+    "v1 final static-text query failed; task was intact as a taskDetails button. Corrected query passes in v2.",
+    "v3 assumed the provider title was a navigation-bar identifier. Actual hierarchy supplied its browsing-root identifier. Corrected observation passes in v4."
+  ],
+  "signing": "Xcode ad-hoc Simulator signatures. Optional team re-sign helper rejected the universal binary before mutation. No signed widget-host/distribution claim.",
+  "diagnostics": "Stopped only v1 optional post-test simctl diagnose after XCTest finished; Xcode finalized its failed result. Later runs used collect-test-diagnostics never.",
+  "cleanup": {
+    "simulator": "shutdown",
+    "originalAppFilesRestored": 9,
+    "originalWidgetGroupFilesRestored": 4,
+    "protectedFilesExact": 100,
+    "inactiveBuildBytesPruned": 428383973
+  },
+  "productCodeChangedThisTurn": false,
+  "captures": [
+    {
+      "path": "provider-picker-previews/preserved-task.png",
+      "sha256": "151ef5c60608397c6f30ee3f67b5b3531c7355432f90675fcc1a454dc939a999",
+      "inspected": true
+    },
+    {
+      "path": "provider-picker-previews/icloud-signin.png",
+      "sha256": "9bbd062914ff03800d26ea27c6f3ed42fdb8bd407dd4c6bb4f477ba4fa3b3766",
+      "inspected": true
+    },
+    {
+      "path": "provider-picker-previews/preview-after-cancel.png",
+      "sha256": "7775238a8ff7ab712f2cf59f71b8b65d8a3114864a426456477dd2c7c50f5301",
+      "inspected": true
+    }
+  ]
+}
