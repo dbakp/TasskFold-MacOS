@@ -2281,4 +2281,25 @@ extension TaskfoldMacUITests {
         settings(); signOut()
     }
 
+    @MainActor func testPendingSignInCannotSwitchToLocalWorkspace() throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = ["--live-auth-ui-test", "--auth-response-wait-testing", "-onboardingSeen", "YES", "-ApplePersistenceIgnoreState", "YES"]
+        app.launch()
+        let local = app.links["useLocally"]
+        XCTAssertTrue(local.waitForExistence(timeout: 10)); XCTAssertTrue(local.isEnabled)
+        app.textFields["authEmail"].click(); app.textFields["authEmail"].typeText("pending@example.invalid")
+        app.secureTextFields["authPassword"].click(); app.secureTextFields["authPassword"].typeText("synthetic-password")
+        app.buttons["nativeSignIn"].click()
+        let pending = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == false"), object: local)
+        XCTAssertEqual(XCTWaiter.wait(for: [pending], timeout: 5), .completed)
+        XCTAssertFalse(app.buttons["googleSignIn"].isEnabled)
+        XCTAssertTrue(app.activityIndicators["nativeSignIn"].exists)
+        XCTAssertFalse(app.activityIndicators["nativeSignIn"].isEnabled)
+        retainWindow(app, name:"Mac pending sign-in keeps workspace choice stable")
+        app.terminate(); app.launch()
+        XCTAssertTrue(local.waitForExistence(timeout: 10)); XCTAssertTrue(local.isEnabled)
+        XCTAssertTrue(app.buttons["googleSignIn"].isEnabled)
+        retainWindow(app, name:"Mac fresh authentication after relaunch")
+    }
+
 }

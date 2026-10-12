@@ -463,3 +463,46 @@ extension AccountTransportTests {
     }
 
 }
+
+extension AccountTransportTests {
+    @MainActor func testPasswordResponseCannotReturnAfterSignOut() async throws {
+        let gate = HTTPGate(), started = expectation(description: "Password response held")
+        var writes = 0
+        let api = backend(try signed(owner), save: { _ in writes += 1 })
+        let response = try JSONEncoder().encode(signed(other, token: "late"))
+        ScopedHTTP.handler = { _, transport in gate.hold(transport); started.fulfill() }
+        defer { ScopedHTTP.handler = nil }
+        let signingIn = Task { try await api.signIn(email: "late@example.invalid", password: "fixture", signup: false) }
+        await fulfillment(of: [started], timeout: 3)
+        try await api.clearSession()
+        gate.release(200, response)
+        do { _ = try await signingIn.value; XCTFail("An abandoned password response signed in again") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertNil(api.session)
+        XCTAssertEqual(writes, 1, "Only the explicit clear may persist")
+    }
+
+    @MainActor func testEarlierPasswordResponseCannotReplaceNewerSignIn() async throws {
+        let gate = HTTPGate(), started = expectation(description: "First password response held")
+        var saved: Session?
+        let api = backend(try signed(owner), save: { saved = $0 })
+        let old = try JSONEncoder().encode(signed(owner, token: "late-old"))
+        let next = try JSONEncoder().encode(signed(other, token: "latest"))
+        var calls = 0
+        ScopedHTTP.handler = { _, transport in
+            calls += 1
+            if calls == 1 { gate.hold(transport); started.fulfill() }
+            else { transport.finish(200, next) }
+        }
+        defer { ScopedHTTP.handler = nil }
+        let earlier = Task { try await api.signIn(email: "earlier@example.invalid", password: "fixture", signup: false) }
+        await fulfillment(of: [started], timeout: 3)
+        let accepted = try await api.signIn(email: "latest@example.invalid", password: "fixture", signup: false)
+        XCTAssertTrue(accepted)
+        gate.release(200, old)
+        do { _ = try await earlier.value; XCTFail("Earlier authentication replaced the user's newer choice") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(api.session?.user.id, other)
+        XCTAssertEqual(saved?.access_token, "latest")
+    }
+}

@@ -93,6 +93,13 @@ enum SecureSession {
 
 
 #if DEBUG
+/// A pending sign-in for isolated UI checks. No request is sent to a real service.
+private final class AuthenticationWaitingHTTP: URLProtocol, @unchecked Sendable {
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {}
+    override func stopLoading() {}
+}
 /// A controlled connection outage for the isolated native Mac recovery walk.
 private final class ContinuityDisconnectedHTTP: URLProtocol, @unchecked Sendable {
     override class func canInit(with request: URLRequest) -> Bool { true }
@@ -151,6 +158,8 @@ final class Backend: NSObject {
     private let saveSession: (Session?) async throws -> Void
     private var sessionGeneration = UUID()
     private var sessionTransition = false
+    private var authenticationAttempt: UUID?
+    private var cancelAuthenticationBrowser: (() -> Void)?
     /// Changes on sign-in/sign-out, and stays stable across ordinary token refresh.
     var reminderSessionIncarnation: UUID { sessionGeneration }
     private var refreshTask: Task<Session, Error>?
@@ -160,7 +169,13 @@ final class Backend: NSObject {
          session: Session? = SecureSession.read(),
          persistSession: @escaping (Session?) async throws -> Void = SecureSession.saveAsync) {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("--continuity-offline"),
+        if ProcessInfo.processInfo.arguments.contains("--auth-response-wait-testing"),
+           ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test"),
+           ["com.dbakp.taskfold.mac.backupcanceltests", "com.dbakp.taskfold.backupcanceltests"].contains(Bundle.main.bundleIdentifier ?? "") {
+            let waiting = URLSessionConfiguration.ephemeral
+            waiting.protocolClasses = [AuthenticationWaitingHTTP.self]
+            self.http = URLSession(configuration: waiting)
+        } else if ProcessInfo.processInfo.arguments.contains("--continuity-offline"),
            Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.p0signeduitests",
            let user = session?.user,
            user.id == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
@@ -181,7 +196,27 @@ final class Backend: NSObject {
         else { config = [:] }
         super.init()
     }
+    /// A response belongs to the sign-in that started it, not whichever workspace is current later.
+    func beginAuthentication(cancelBrowser: (() -> Void)? = nil) -> UUID {
+        cancelAuthentication()
+        let attempt = UUID(); authenticationAttempt = attempt
+        cancelAuthenticationBrowser = cancelBrowser
+        return attempt
+    }
+    func requireAuthentication(_ attempt: UUID) throws {
+        guard authenticationAttempt == attempt else { throw CancellationError() }
+    }
+    func endAuthentication(_ attempt: UUID) {
+        guard authenticationAttempt == attempt else { return }
+        cancelAuthentication()
+    }
+    private func cancelAuthentication() {
+        authenticationAttempt = nil
+        let cancel = cancelAuthenticationBrowser; cancelAuthenticationBrowser = nil
+        cancel?()
+    }
     func clearSession() async throws {
+        cancelAuthentication()
         let generation = UUID(); sessionGeneration = generation; sessionTransition = true
         defer { if sessionGeneration == generation { sessionTransition = false } }
         refreshTask?.cancel(); refreshTask = nil; refreshID = nil
@@ -190,6 +225,7 @@ final class Backend: NSObject {
         session = nil
     }
     func accept(_ next: Session) async throws {
+        cancelAuthentication()
         let generation = UUID(); sessionGeneration = generation; sessionTransition = true
         defer { if sessionGeneration == generation { sessionTransition = false } }
         refreshTask?.cancel(); refreshTask = nil; refreshID = nil
@@ -296,8 +332,10 @@ final class Backend: NSObject {
     }
 
     func signIn(email: String, password: String, signup: Bool) async throws -> Bool {
+        let attempt = beginAuthentication(); defer { endAuthentication(attempt) }
         let path = signup ? "/auth/v1/signup" : "/auth/v1/token?grant_type=password"
         let data = try await request(path, method: "POST", body: ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()), "password": .string(password)], authenticated: false)
+        try requireAuthentication(attempt)
         guard let next = try? JSONDecoder().decode(Session.self, from: data) else {
             if signup { return false }
             throw AppFailure(message: "The sign-in response was incomplete. Please try again.")
@@ -322,14 +360,15 @@ final class Backend: NSObject {
     }
     #if canImport(UIKit)
     func google() async throws {
-        guard authSession == nil else { return }
+        guard authSession == nil else { throw CancellationError() }
+        let attempt = beginAuthentication { [weak self] in self?.authSession?.cancel(); self?.authSession = nil }
+        defer { endAuthentication(attempt) }
         var bytes = [UInt8](repeating: 0, count: 32)
         guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { throw AppFailure(message: "Could not start secure sign-in.") }
         let verifier = Data(bytes).base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
         let challenge = Data(SHA256.hash(data: Data(verifier.utf8))).base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
         var components = URLComponents(string: baseURL + "/auth/v1/authorize")!
         components.queryItems = [URLQueryItem(name: "provider", value: "google"), URLQueryItem(name: "redirect_to", value: "taskfold://auth/callback"), URLQueryItem(name: "code_challenge", value: challenge), URLQueryItem(name: "code_challenge_method", value: "s256")]
-        defer { authSession?.cancel(); authSession = nil }
         let callback: URL = try await withCheckedThrowingContinuation { continuation in
             authSession = ASWebAuthenticationSession(url: components.url!, callbackURLScheme: "taskfold") { url, error in
                 if let url { continuation.resume(returning: url) }
@@ -338,8 +377,10 @@ final class Backend: NSObject {
             authSession?.presentationContextProvider = self
             if authSession?.start() != true { continuation.resume(throwing: AppFailure(message: "Could not open sign-in.")) }
         }
+        try requireAuthentication(attempt)
         let code = try OAuthCallback.code(from: callback)
         let data = try await request("/auth/v1/token?grant_type=pkce", method: "POST", body: ["auth_code": .string(code), "code_verifier": .string(verifier)], authenticated: false)
+        try requireAuthentication(attempt)
         let next = try JSONDecoder().decode(Session.self, from: data)
         try await accept(next)
     }
