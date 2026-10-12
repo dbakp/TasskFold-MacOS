@@ -1,6 +1,9 @@
 import SwiftUI
 import UniformTypeIdentifiers
 import AppKit
+#if DEBUG
+import UserNotifications
+#endif
 
 /// Preferences window (⌘,). Account, start view, appearance, reminders, data, and account-only tools.
 struct SettingsView: View {
@@ -45,6 +48,9 @@ struct GeneralSettings: View {
             Text("Choose fixed-time and before/after reminders in each task. Delivery is enabled separately for this workspace on each device. The nearest 60 notifications refresh while Taskfold is open.").font(.caption).foregroundStyle(.secondary)
             Text(store.reminderStatus).font(.caption).foregroundStyle(.secondary)
             ReminderSystemSettingsButton()
+            #if DEBUG
+            MacNotificationInspectionView()
+            #endif
             Section("Date phrases") { DatePhrasePreferencesView() }
             Section("Automatic reminders") { ReminderAutomaticPreferencesView() }
             Section("Snooze") { ReminderSnoozePreferencesView() }
@@ -57,6 +63,70 @@ struct GeneralSettings: View {
         .formStyle(.grouped)
     }
 }
+
+#if DEBUG
+/// Read-only system evidence, available only in the independently isolated notification app.
+/// No launch flag is required: a real notification cold launch must retain normal app behavior.
+private struct MacNotificationInspectionView: View {
+    @Environment(Store.self) private var store
+    @State private var report = "Not inspected"
+    @State private var inspecting = false
+    private var enabled: Bool {
+        Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.p0notificationtests"
+    }
+    var body: some View {
+        if enabled {
+            Section("Isolated notification inspection") {
+                Button(inspecting ? "Inspecting…" : "Inspect system alerts") {
+                    Task { await inspect() }
+                }
+                .disabled(inspecting)
+                .accessibilityIdentifier("inspectSystemReminders")
+                Text(report)
+                    .font(.caption.monospaced())
+                    .textSelection(.enabled)
+                    .accessibilityIdentifier("systemReminderInspection")
+                    .accessibilityValue(report)
+            }
+            .onChange(of: store.workspaceGeneration) { _, _ in report = "Workspace changed; inspect again" }
+        }
+    }
+    @MainActor private func inspect() async {
+        guard enabled, !inspecting else { return }
+        inspecting = true
+        defer { inspecting = false }
+        let account = store.userID, generation = store.workspaceGeneration
+        let center = UNUserNotificationCenter.current()
+        let pending = await center.pendingNotificationRequests()
+        let delivered = await center.deliveredNotifications()
+        let categories = await center.notificationCategories()
+        guard enabled, account == store.userID, generation == store.workspaceGeneration else { return }
+        func request(_ value: UNNotificationRequest) -> [String: Any] {
+            var row: [String: Any] = ["id": value.identifier, "category": value.content.categoryIdentifier]
+            for key in ["accountID", "taskID", "specID", "signature", "originalAt", "fireAt", "snoozed"] {
+                row[key] = value.content.userInfo[key]
+            }
+            let date = (value.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate() ??
+                (value.trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate()
+            if let date { row["triggerAt"] = date.timeIntervalSince1970 }
+            return row
+        }
+        let payload: [String: Any] = [
+            "observedAt": Date().timeIntervalSince1970,
+            "accountID": account,
+            "processID": ProcessInfo.processInfo.processIdentifier,
+            "pending": pending.sorted { $0.identifier < $1.identifier }.map(request),
+            "delivered": delivered.sorted { $0.request.identifier < $1.request.identifier }.map { request($0.request) },
+            "actions": categories.first { $0.identifier == ReminderCategory.identifier }?.actions.map {
+                ["id": $0.identifier, "title": $0.title]
+            } ?? []
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]),
+              let value = String(data: data, encoding: .utf8) else { return }
+        report = value
+    }
+}
+#endif
 
 struct AccountSettings: View {
     @Environment(Store.self) private var store

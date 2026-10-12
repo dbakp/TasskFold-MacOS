@@ -22,5 +22,6 @@
   "protectedFilesExact": 100,
   "actionAccepted": false,
   "pending": "Human choose Move to tomorrow from actual system notification; inspect action response, saved plan, normal relaunch and clean only synthetic task.",
-  "limits": "No action acceptance or independent pending registry inspection yet. Retain original four starter tasks and project."
+  "limits": "No action acceptance or independent pending registry inspection yet. Retain original four starter tasks and project.",
+  "supersededBy": "mac-notification-tomorrow-evidence.json"
 }
