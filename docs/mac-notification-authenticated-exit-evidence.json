@@ -1,0 +1,321 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native authenticated Mac sign-out, normal signed-out relaunch and same-account return.",
+  "build": "Isolated v6, current production handler, no fixture launch arguments",
+  "actualRegistries": {
+    "scheduled": {
+      "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791796245.346774,
+      "pending": [
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1791796294,
+          "id": "taskfold.r2.5858e929014cde60e5e5d8f2c5cadd1f160127503725e48e74af2c49c0217b8f",
+          "originalAt": 1791796294,
+          "signature": "r4:773893495dcfb76691eb2d8fb5662627b5cd3224dc75e6e56520c4515e81f80f",
+          "snoozed": false,
+          "specID": "eb14bdc2-fe2b-5e6a-a9fe-a050f85ce092",
+          "taskID": "4e17b46a-945e-404b-9eb5-a57368a35be3",
+          "triggerAt": 1791796294
+        },
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1791797134,
+          "id": "taskfold.r2.73c1abcbc43d42898ed1f05bf6254dbaa1b998d44d3ff358fb2ff231e82e9f4a",
+          "originalAt": 1791797134,
+          "signature": "r4:42472ba535b3b0550cb0d1d05b7157ec3592efcd9d503369eeb7d5afb270bfec",
+          "snoozed": false,
+          "specID": "6a1d722d-650d-5c17-a3bf-102393165584",
+          "taskID": "4e17b46a-945e-404b-9eb5-a57368a35be3",
+          "triggerAt": 1791797134
+        },
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1830585600,
+          "id": "taskfold.r2.9677a5455f7d99ce590060f9331e2f319f222558e8deddda0dd8b8c792167bb7",
+          "originalAt": 1830585600,
+          "signature": "r4:f211a9a933951431698c22e58b6c946b8bb4f64f539c2a27126df700b0d03cc5",
+          "snoozed": false,
+          "specID": "00000000-0000-4000-8000-000000000001",
+          "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+          "triggerAt": 1830585600
+        },
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1830584700,
+          "id": "taskfold.r2.a29129d2a00106c0c822084e3e43d708e98c735587d63d98b1a670cef686fa30",
+          "originalAt": 1830584700,
+          "signature": "r4:ce1dc0d2253fc00878e529c1c70daa7975090f8496ecae0b903e1f68ad6f1720",
+          "snoozed": false,
+          "specID": "47268592-a76d-591d-a2fb-4f9bf6d2fb91",
+          "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+          "triggerAt": 1830584700
+        },
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1830583800,
+          "id": "taskfold.r2.a2ac9a9ec7c2f97c2c1a08665192874303049c86cc8855377412dde710f93319",
+          "originalAt": 1830583800,
+          "signature": "r4:2ca4f5d90069c1f2c98e7f7323bbd8607dc4ff00579ef32091d170e1b822e7e9",
+          "snoozed": false,
+          "specID": "38d225bc-aede-5e35-a12f-0d174fcf0605",
+          "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+          "triggerAt": 1830583800
+        }
+      ],
+      "processID": 24695
+    },
+    "pre-exit": {
+      "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1791796294,
+          "id": "taskfold.r2.5858e929014cde60e5e5d8f2c5cadd1f160127503725e48e74af2c49c0217b8f",
+          "originalAt": 1791796294,
+          "signature": "r4:773893495dcfb76691eb2d8fb5662627b5cd3224dc75e6e56520c4515e81f80f",
+          "snoozed": false,
+          "specID": "eb14bdc2-fe2b-5e6a-a9fe-a050f85ce092",
+          "taskID": "4e17b46a-945e-404b-9eb5-a57368a35be3"
+        }
+      ],
+      "observedAt": 1791796312.017352,
+      "pending": [
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1791797134,
+          "id": "taskfold.r2.73c1abcbc43d42898ed1f05bf6254dbaa1b998d44d3ff358fb2ff231e82e9f4a",
+          "originalAt": 1791797134,
+          "signature": "r4:42472ba535b3b0550cb0d1d05b7157ec3592efcd9d503369eeb7d5afb270bfec",
+          "snoozed": false,
+          "specID": "6a1d722d-650d-5c17-a3bf-102393165584",
+          "taskID": "4e17b46a-945e-404b-9eb5-a57368a35be3",
+          "triggerAt": 1791797134
+        },
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1830585600,
+          "id": "taskfold.r2.9677a5455f7d99ce590060f9331e2f319f222558e8deddda0dd8b8c792167bb7",
+          "originalAt": 1830585600,
+          "signature": "r4:f211a9a933951431698c22e58b6c946b8bb4f64f539c2a27126df700b0d03cc5",
+          "snoozed": false,
+          "specID": "00000000-0000-4000-8000-000000000001",
+          "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+          "triggerAt": 1830585600
+        },
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1830584700,
+          "id": "taskfold.r2.a29129d2a00106c0c822084e3e43d708e98c735587d63d98b1a670cef686fa30",
+          "originalAt": 1830584700,
+          "signature": "r4:ce1dc0d2253fc00878e529c1c70daa7975090f8496ecae0b903e1f68ad6f1720",
+          "snoozed": false,
+          "specID": "47268592-a76d-591d-a2fb-4f9bf6d2fb91",
+          "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+          "triggerAt": 1830584700
+        },
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1830583800,
+          "id": "taskfold.r2.a2ac9a9ec7c2f97c2c1a08665192874303049c86cc8855377412dde710f93319",
+          "originalAt": 1830583800,
+          "signature": "r4:2ca4f5d90069c1f2c98e7f7323bbd8607dc4ff00579ef32091d170e1b822e7e9",
+          "snoozed": false,
+          "specID": "38d225bc-aede-5e35-a12f-0d174fcf0605",
+          "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+          "triggerAt": 1830583800
+        }
+      ],
+      "processID": 25868
+    },
+    "signedout": {
+      "accountID": "",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791796343.0876288,
+      "pending": [],
+      "processID": 25868
+    },
+    "relaunch": {
+      "accountID": "",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791796369.972359,
+      "pending": [],
+      "processID": 25971
+    },
+    "return": {
+      "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791796390.5953689,
+      "pending": [
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1791797134,
+          "id": "taskfold.r2.73c1abcbc43d42898ed1f05bf6254dbaa1b998d44d3ff358fb2ff231e82e9f4a",
+          "originalAt": 1791797134,
+          "signature": "r4:42472ba535b3b0550cb0d1d05b7157ec3592efcd9d503369eeb7d5afb270bfec",
+          "snoozed": false,
+          "specID": "6a1d722d-650d-5c17-a3bf-102393165584",
+          "taskID": "4e17b46a-945e-404b-9eb5-a57368a35be3",
+          "triggerAt": 1791797134
+        },
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1830585600,
+          "id": "taskfold.r2.9677a5455f7d99ce590060f9331e2f319f222558e8deddda0dd8b8c792167bb7",
+          "originalAt": 1830585600,
+          "signature": "r4:f211a9a933951431698c22e58b6c946b8bb4f64f539c2a27126df700b0d03cc5",
+          "snoozed": false,
+          "specID": "00000000-0000-4000-8000-000000000001",
+          "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+          "triggerAt": 1830585600
+        },
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1830584700,
+          "id": "taskfold.r2.a29129d2a00106c0c822084e3e43d708e98c735587d63d98b1a670cef686fa30",
+          "originalAt": 1830584700,
+          "signature": "r4:ce1dc0d2253fc00878e529c1c70daa7975090f8496ecae0b903e1f68ad6f1720",
+          "snoozed": false,
+          "specID": "47268592-a76d-591d-a2fb-4f9bf6d2fb91",
+          "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+          "triggerAt": 1830584700
+        },
+        {
+          "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+          "category": "taskfold.reminder",
+          "fireAt": 1830583800,
+          "id": "taskfold.r2.a2ac9a9ec7c2f97c2c1a08665192874303049c86cc8855377412dde710f93319",
+          "originalAt": 1830583800,
+          "signature": "r4:2ca4f5d90069c1f2c98e7f7323bbd8607dc4ff00579ef32091d170e1b822e7e9",
+          "snoozed": false,
+          "specID": "38d225bc-aede-5e35-a12f-0d174fcf0605",
+          "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+          "triggerAt": 1830583800
+        }
+      ],
+      "processID": 25971
+    },
+    "cleanup": {
+      "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+      "actions": [
+        {
+          "id": "taskfold.complete",
+          "title": "Complete"
+        },
+        {
+          "id": "taskfold.snooze.minutes.60",
+          "title": "Remind me in 1 hour"
+        },
+        {
+          "id": "taskfold.tomorrow",
+          "title": "Move to tomorrow"
+        }
+      ],
+      "delivered": [],
+      "observedAt": 1791796405.259011,
+      "pending": [],
+      "processID": 25971
+    }
+  },
+  "preservation": {
+    "fullSavedSnapshotExactAfterSignOutAndReturn": true,
+    "serverNonActivityTablesExactlyRestored": 13,
+    "originalActivityRowsPreserved": 24,
+    "syntheticCreateDeleteActivityRows": 2,
+    "protectedFilesExact": 100
+  },
+  "cleanup": {
+    "reminderDeliveryRestoredOff": true,
+    "nativeReversibleSyntheticTaskDeletion": true,
+    "remainingServerTasks": 3
+  },
+  "limits": [
+    "Does not prove Mac A-to-B delayed callback isolation.",
+    "No new APNs, physical-device or distribution acceptance.",
+    "iOS authenticated sign-out and held callback acceptance remain in their separate receipts."
+  ]
+}

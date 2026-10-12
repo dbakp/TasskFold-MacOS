@@ -1841,3 +1841,10 @@ Native cleanup restores delivery off and the original one-hour Snooze preference
 Native local exit with one delivered and one future alert clears both actual macOS registries. Normal signed-out relaunch stays empty; local return restores only the exact future request. Cleanup disables delivery before its fire time and reversibly removes only the synthetic task. All non-activity tables, prior activity and 100 protected files remain exact. See `mac-notification-local-exit-evidence.json`.
 
 Mac Settings now reports “No workspace open”, disables the signed-out reminder toggle and rebuilds date/reminder preferences after reentry. Native v6 verifies corrected signed-out copy and enabled controls, including opening Snooze without changing its value. The full clean snapshot remains exact. Both independent Debug builds pass; iOS receives its own toggle guard (compile verification only). Inactive v5/iOS compile products are pruned; active v6 and logs remain. Authenticated Mac account-switch/delayed-response and other named release gates remain open.
+
+
+### 12 October — authenticated Mac notification sign-out and return
+
+Native cloud-account sign-out now retires one delivered and four pending system alerts. A normal signed-out relaunch preserves empty registries; signing into the same account restores the exact four future requests without resurrecting the delivered occurrence. The complete saved account snapshot remains exact across sign-out and return. See `mac-notification-authenticated-exit-evidence.json`.
+
+Native cleanup restores delivery off and deletes only the disposable task with Undo available. All 13 non-activity server tables are exactly restored, all 24 prior activity rows remain, and only the two expected create/delete records are added. All 100 protected files remain exact. This closes authenticated Mac sign-out/reentry; Mac A → B delayed-callback isolation and the other named P0 gates remain open. No source changes or new builds were required.
