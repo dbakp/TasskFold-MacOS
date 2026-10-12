@@ -1,0 +1,27 @@
+{
+  "build": "PASS",
+  "strictDeepSignature": "PASS",
+  "team": "3UZ4C73FM2",
+  "bundle": "com.dbakp.taskfold.mac.p0notificationtests",
+  "binarySHA256": "9d33b608c4a9880a1f47649e233e3308c0abddbf27d0b89c6f2552f910d79cd7",
+  "entitlements": {
+    "com.apple.security.app-sandbox": true,
+    "com.apple.security.files.user-selected.read-write": true,
+    "com.apple.security.get-task-allow": true,
+    "com.apple.security.network.client": true,
+    "com.apple.security.personal-information.calendars": true
+  },
+  "launched": false,
+  "scope": "Current-source independently staged Debug app; build/signing only, not notification action/distribution/APNs acceptance.",
+  "preparationScript": "Mac-owned Scripts/prepare_isolated_mac_ui.py --variant p0notificationtests --output <fresh-temporary-directory>",
+  "buildLogSHA256": "0e01c3c55eebe90f6e47269239770c156254b4dbd0ad8462077a25c933a18c5c",
+  "buildWarnings": [
+    "/tmp/taskfold-isolated-mac-notification-v1/Taskfold/Views/KeyRouter.swift:22:106: warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used",
+    "/tmp/taskfold-isolated-mac-notification-v1/Taskfold/Views/Links.swift:197:23: warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode",
+    "/tmp/taskfold-isolated-mac-notification-v1/Taskfold/Workspace.swift:352:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+    "/tmp/taskfold-isolated-mac-notification-v1/Taskfold/Workspace.swift:367:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+    "|                                                                                                          `- warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used",
+    "|                       `- warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode",
+    "|         `- warning: result of call to 'withAnimation' is unused [#NoUsage]"
+  ]
+}

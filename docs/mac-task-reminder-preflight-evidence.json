@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual native Mac undated fixed reminder scheduling and delivery after Quit. System Complete action pending.",
+  "bundle": "com.dbakp.taskfold.mac.p0focuscontrasttests",
+  "binaryScope": "Historical retained build; actual delegate and Complete branch match current source. Move to tomorrow branch differs and is not accepted.",
+  "steps": [
+    "Normal local launch retained from cold Focus test, without fixture arguments.",
+    "Native Settings Task reminders enabled; zero upcoming status.",
+    "Native Inbox capture Mac reminder Complete proof !2m; accepted independent absolute reminder, no planned date.",
+    "Native Reminders editor shows fixed instant12Oct09:44 and1upcoming reminder.",
+    "Native menu Quit; PID12570 absent at09:43:38.773563.",
+    "Actual delivery09:44:45.111 and Notification Center storage with no app process.",
+    "Manual system Complete action requested; not yet observed."
+  ],
+  "task": {
+    "id": "9a78c806-da65-452e-8879-824b44c36b33",
+    "project_id": null,
+    "priority": 4,
+    "reminders": [],
+    "attachments": [],
+    "reminder_specs": [
+      {
+        "channels": [
+          "local"
+        ],
+        "taskfold_default_placeholder": true,
+        "kind": "relative",
+        "id": "00000000-0000-4000-8000-000000000001",
+        "anchor": "planned",
+        "offset_minutes": 0,
+        "version": 1,
+        "enabled": true
+      },
+      {
+        "channels": [
+          "local"
+        ],
+        "kind": "absolute",
+        "id": "b72b22ee-40db-5df1-ab3c-cb7f1f740c3b",
+        "version": 1,
+        "enabled": true,
+        "time_zone": "Europe/Copenhagen",
+        "at": "2026-10-12T07:44:45Z"
+      }
+    ],
+    "created_at": "2026-10-12T07:42:45Z",
+    "comments": [],
+    "user_id": "local",
+    "task_generation": "789af644-6671-4261-a6db-d164b98d3fa1",
+    "description": "",
+    "subtasks": [],
+    "due_date": null,
+    "is_recurring": false,
+    "completed": false,
+    "title": "Mac reminder Complete proof",
+    "scheduled_at": null,
+    "completion_version": 0,
+    "labels": []
+  },
+  "quit": {
+    "normalMenuQuit": true,
+    "pid": 12570,
+    "absentAt": "2026-10-12T09:43:38.773563"
+  },
+  "deliveryRequestID": "taskfold.r2.76cba782dbcd13752a7d2a02765edb4fe70b470213e4cec3bb79bc3d52d24640",
+  "preservation": {
+    "fullScheduledSnapshotExactAfterDelivery": true,
+    "originalUiTestingCacheHashExact": true,
+    "pending": []
+  },
+  "actionAccepted": false,
+  "lastStoppedCheck": "2026-10-12T09:48:27.515965",
+  "remaining": [
+    "Actual Complete/save/relaunch and native cleanup; leave existing alert/app untouched while pending.",
+    "Mac Snooze/Move to tomorrow/account actions and remaining named release gates."
+  ]
+}

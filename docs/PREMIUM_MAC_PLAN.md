@@ -1801,3 +1801,9 @@ The first exit initially leaves stale All clear despite a correct cleared projec
 
 
 12 October: actual cold Focus Open passes with OS-launched new PID and no arguments, exact scheduled snapshot and inspected native finished-session result. Native test cleanup returns the local task list to empty and alerts off; stopped session/activity and an expected daily backup remain. Protected 100 files and original ui-testing cache are exact. See `mac-focus-cold-open-evidence.json`. Mac task-reminder/account and other named release gates remain open.
+
+
+12 October: native normal local task reminder scheduling/terminated delivery passes; actual Complete remains pending (`mac-task-reminder-preflight-evidence.json`). Current-source `p0notificationtests` stage builds/signs and remains unlaunched. Prepare with `python3 Scripts/prepare_isolated_mac_ui.py --variant p0notificationtests --output /private/tmp/taskfold-notification-fresh`; launch without fixture arguments so OS cold actions receive the same local workspace. Its namespace is independent from the historical Focus app, which remains stopped with the pending alert. See `mac-notification-current-build-evidence.json`.
+
+
+12 October: actual terminated task-reminder Complete/save/normal relaunch and native cleanup pass (`mac-notification-complete-evidence.json`), with only completion fields changed, reminder specs retained and100protected files exact. Current-source notification build stays unlaunched for remaining Open/Snooze/Move to tomorrow/account tests. Future-occurrence cancellation/independent registry inspection are outside this one-shot pass.

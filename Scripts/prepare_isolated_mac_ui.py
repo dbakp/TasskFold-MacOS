@@ -6,6 +6,8 @@ sandbox, keychain service names and widget namespace; production URL/file type
 registrations and the embedded widget extension are omitted by default. The
 p0widgethosts variant retains an isolated extension, App Group and URL scheme for
 Desktop acceptance. Preparation alone establishes no runtime or release acceptance.
+The p0notificationtests variant uses normal local launches without fixture arguments
+so delivered notification actions can cold-launch the same isolated workspace.
 """
 import argparse
 import re
@@ -21,8 +23,8 @@ import subprocess
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--variant', choices=('p0uitests', 'p0signeduitests', 'p0widgethosts'), default='p0uitests',
-                        help='Use p0signeduitests for app acceptance or p0widgethosts for an isolated app plus Desktop widgets')
+    parser.add_argument('--variant', choices=('p0uitests', 'p0signeduitests', 'p0widgethosts', 'p0notificationtests'), default='p0uitests',
+                        help='Use p0signeduitests for app acceptance, p0widgethosts for Desktop widgets, or p0notificationtests for normal local notification launches')
     parser.add_argument("--team", help="Signing team for a macOS team-prefixed isolated widget App Group")
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
@@ -62,6 +64,7 @@ def main():
     manifest = output / 'Taskfold/Info.plist'
     info = plistlib.loads(manifest.read_bytes())
     info['CFBundleDisplayName'] = ('Taskfold Widget Host Test' if widgets else
+                                 'Taskfold Notification Test' if args.variant == 'p0notificationtests' else
                                  'Taskfold P0 Signed Test' if args.variant == 'p0signeduitests' else 'Taskfold P0 Test')
     for key in ('CFBundleURLTypes', 'CFBundleDocumentTypes', 'UTExportedTypeDeclarations', 'UTImportedTypeDeclarations'):
         info.pop(key, None)
@@ -102,7 +105,7 @@ def main():
                'isolatedURLScheme': scheme if widgets else None,
                'isolatedAppGroup': app_group if widgets else None, 'signingTeam': args.team if widgets else None,
                'namespaceOnlySourceChanges': changes, 'replacements': replacements,
-               'launchArguments': ['--uitesting'],
+               'launchArguments': [] if args.variant == 'p0notificationtests' else ['--uitesting'],
                'limitations': ['Preparation only; no launch/install/runtime acceptance.', 'Unique keychain services; no production credential migration.',
                                'Production Push Notifications and keychain-group entitlements are absent only from the copied test app.',
                                'No signed-distribution, APNs or provider acceptance.',

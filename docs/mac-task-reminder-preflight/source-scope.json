@@ -1,0 +1,12 @@
+{
+  "Taskfold/Core/Store.swift": {
+    "same": false,
+    "currentSHA256": "1ff78aea0b76d2bffa7cefb25ec76e9b36bda23e12ec1dc80b498b2e588b25ad",
+    "retainedSourceSHA256": "909d58b10e75d95c362627e8171187d1738b88e07e259c332e18d9622d1dd4b5"
+  },
+  "Taskfold/TaskfoldMacApp.swift": {
+    "same": true,
+    "currentSHA256": "d260a40061250c8f8ddab1e009e0544a2144c255bc2bf012a549e9f9d3b22ad6",
+    "retainedSourceSHA256": "d260a40061250c8f8ddab1e009e0544a2144c255bc2bf012a549e9f9d3b22ad6"
+  }
+}

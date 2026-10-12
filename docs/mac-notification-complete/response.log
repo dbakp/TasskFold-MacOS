@@ -1,0 +1,2 @@
+Timestamp               Ty Process[PID:TID]
+2026-10-12 09:48:36.444 Df usernoted[721:2ff457] [com.apple.unc:application] Received response <NotificationRecord app:"com.dbakp.taskfold.mac.p0focuscontrasttests" ident:"967A-B613" req:"taskfold.r2.76cba782dbcd13752a7d2a02765edb4fe70b470213e4cec3bb79bc3d52d24640" uuid:"A09144C1" source:"E0DD72C2" category:"taskfold.reminder" <response action: action actIdent: taskfold.complete foreground: false text: nil> >
