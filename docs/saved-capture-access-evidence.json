@@ -76,5 +76,10 @@
     "normal-editor.png": "841162e522c3ba709886ae6176c85cb7d32e0f3a4c16a8839c52e43661c2cb57",
     "largest-row.png": "ac6f31ca27e8832793de429457af65ba46c7937eb58afe54852ffb77536f8e41",
     "normal-row.png": "a5687889596e8b839dd2d993898678a9811fbb5193a140ea359b391c43498980"
+  },
+  "warningResolution": {
+    "evidence": "background-calendar-evidence.json",
+    "cause": "System midnight notification delivered on background queue; symbolicated historical stack and deterministic before/after native regression.",
+    "status": "Identified cause fixed in both apps; 2 final iPhone cases pass without structured warnings."
   }
 }

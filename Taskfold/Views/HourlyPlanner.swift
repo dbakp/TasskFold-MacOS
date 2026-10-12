@@ -95,8 +95,8 @@ struct HourlyPlannerView: View {
             busy.bind(account: store.signedIn ? store.userID : "")
             await busy.refresh(on: day)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged)) { _ in Task { await busy.refresh(on: day) } }
-        .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in Task { await busy.refresh(on: day) } }
+        .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged).receive(on: DispatchQueue.main)) { _ in Task { await busy.refresh(on: day) } }
+        .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in Task { await busy.refresh(on: day) } }
         .onChange(of: phase) { _, value in if value == .active { Task { await busy.refresh(on: day) } } }
         .sheet(isPresented: $settings) { PlannerSettingsView(busy: busy) }
         .sheet(item: $request) { request in
@@ -497,8 +497,8 @@ struct CivilDayRefresh: ViewModifier {
                     do { try await Task.sleep(for: .seconds(store.calendarRefreshDelay)) } catch { return }
                 }
             }
-            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in store.refreshCalendarContext() }
-            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in store.refreshCalendarContext() }
+            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in store.refreshCalendarContext() }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: DispatchQueue.main)) { _ in store.refreshCalendarContext() }
     }
 }
 
@@ -516,8 +516,8 @@ struct WidgetCapacityRefresh: ViewModifier {
                     await store.refreshWidgetCapacity()
                 }
             }
-            .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged)) { _ in Task { await store.refreshWidgetCapacity() } }
-            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in Task { await store.refreshWidgetCapacity() } }
-            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in Task { await store.refreshWidgetCapacity() } }
+            .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged).receive(on: DispatchQueue.main)) { _ in Task { await store.refreshWidgetCapacity() } }
+            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in Task { await store.refreshWidgetCapacity() } }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: DispatchQueue.main)) { _ in Task { await store.refreshWidgetCapacity() } }
     }
 }

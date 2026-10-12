@@ -622,3 +622,10 @@ All 14 non-activity server tables in both disposable accounts match their origin
 ### 12 October — truthful sync status
 
 Both apps now distinguish initial Waiting to sync, actual Syncing, interrupted Sync needs attention, pending changes and confirmed successful sync. A failed fetch with zero pending uploads no longer reads Up to date on Mac or 0 changes waiting to sync on iOS. A prior success cannot override a current notice, and unsent changes use a waiting icon rather than a success checkmark. iPhone/iPad local/offline wording now correctly says this device. See `sync-status-evidence.json` for the scoped native interruption/reconnect, accessibility and preservation receipts. This closes the misleading-caption finding recorded during access-loss recovery; broader P0 gates remain open.
+
+
+### 12 October — system calendar events delivered to SwiftUI on the main queue
+
+The retained saved-capture publishing warning is traced to the actual midnight notification, not the project menu: the historical runtime stack contains `__postAndResetMidnight`, Foundation Notification subscription and SwiftUI subscribers on a worker queue. Both apps now schedule day, time-zone, significant-time (iOS) and EventKit publishers before `.onReceive`. The Mac synchronous termination-save protocol is unchanged. A DEBUG isolated fixture posts day/zone notifications from an asserted background queue without changing system time.
+
+The new iPhone regression reproduces the warning before the fix. Afterward it and the affected largest-text landscape capture pass (2 tests, no failures/skips/structured runtime warnings). Native Mac saved-list day/zone membership refresh passes with no publishing-warning records. Both Debug/Release builds pass. Mac cloud account caches and protected phone/iPad files remain unchanged. See `background-calendar-evidence.json`; existing clipping, spoken VoiceOver, other runtime warnings, notification actions, widget hosts and distribution gates remain open.

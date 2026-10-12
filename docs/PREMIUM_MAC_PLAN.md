@@ -1631,3 +1631,10 @@ All 14 non-activity server tables in both disposable accounts match their origin
 12 October: native VoiceOver was temporarily enabled for the isolated signed app and restored to its original off setting. The VoiceOver output surface timed out; no spoken-output or traversal acceptance is claimed. See `critical-accessibility-evidence.json`.
 
 12 October: sidebar sync status now requires a successful sync before showing its checkmark/time, shows Sync needs attention after interruption even with no pending edits, and wraps to two lines. Native offline/reconnect evidence is in `sync-status-evidence.json`.
+
+
+### 12 October — system calendar events delivered to SwiftUI on the main queue
+
+The retained saved-capture publishing warning is traced to the actual midnight notification, not the project menu: the historical runtime stack contains `__postAndResetMidnight`, Foundation Notification subscription and SwiftUI subscribers on a worker queue. Both apps now schedule day, time-zone, significant-time (iOS) and EventKit publishers before `.onReceive`. The Mac synchronous termination-save protocol is unchanged. A DEBUG isolated fixture posts day/zone notifications from an asserted background queue without changing system time.
+
+The new iPhone regression reproduces the warning before the fix. Afterward it and the affected largest-text landscape capture pass (2 tests, no failures/skips/structured runtime warnings). Native Mac saved-list day/zone membership refresh passes with no publishing-warning records. Both Debug/Release builds pass. Mac cloud account caches and protected phone/iPad files remain unchanged. See `background-calendar-evidence.json`; existing clipping, spoken VoiceOver, other runtime warnings, notification actions, widget hosts and distribution gates remain open.

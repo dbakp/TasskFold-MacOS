@@ -1078,3 +1078,10 @@ The paired iOS flow now accepts a competing server title without losing a later 
 ## 9 October — real calendar integration and permission guidance
 
 Both apps provide a Settings shortcut and visible permission-recovery instructions. Two final isolated iPhone tests pass against actual EventKit: system denial/Settings opening and local calendar selection/private titles/named titles/relaunch/disconnect. All five retained screenshots were inspected. Final iOS and Mac Debug arm64 app/widget builds pass; Mac runtime remains restricted. The iOS Settings URL opens the Settings root in this Simulator, so successful re-enabling of denied permission remains unverified. The unsuccessful Settings.bundle experiment was removed. Fixture calendar/event counts are zero and scoped permissions were reset. [Exact scope and evidence](CALENDAR_INTEGRATION.md). Physical/external-provider/Mac calendar acceptance and full P0 remain open.
+
+
+### 12 October — system calendar events delivered to SwiftUI on the main queue
+
+The retained saved-capture publishing warning is traced to the actual midnight notification, not the project menu: the historical runtime stack contains `__postAndResetMidnight`, Foundation Notification subscription and SwiftUI subscribers on a worker queue. Both apps now schedule day, time-zone, significant-time (iOS) and EventKit publishers before `.onReceive`. The Mac synchronous termination-save protocol is unchanged. A DEBUG isolated fixture posts day/zone notifications from an asserted background queue without changing system time.
+
+The new iPhone regression reproduces the warning before the fix. Afterward it and the affected largest-text landscape capture pass (2 tests, no failures/skips/structured runtime warnings). Native Mac saved-list day/zone membership refresh passes with no publishing-warning records. Both Debug/Release builds pass. Mac cloud account caches and protected phone/iPad files remain unchanged. See `background-calendar-evidence.json`; existing clipping, spoken VoiceOver, other runtime warnings, notification actions, widget hosts and distribution gates remain open.

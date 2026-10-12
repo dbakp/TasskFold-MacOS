@@ -22,6 +22,20 @@ struct CalendarContextFixtureControls: ViewModifier {
                         Button("Fixture silent next day") { store.setCalendarFixtureClock(1) }
                         Button("Fixture next day") { store.setCalendarFixtureClock(1); NotificationCenter.default.post(name: .NSCalendarDayChanged, object: nil) }
                         Button("Fixture Honolulu") { store.setCalendarFixtureClock(2); NotificationCenter.default.post(name: .NSSystemTimeZoneDidChange, object: nil) }
+                        Button("Fixture background next day") {
+                            store.setCalendarFixtureClock(1)
+                            DispatchQueue.global(qos: .utility).async {
+                                precondition(!Thread.isMainThread)
+                                NotificationCenter.default.post(name: .NSCalendarDayChanged, object: nil)
+                            }
+                        }
+                        Button("Fixture background Honolulu") {
+                            store.setCalendarFixtureClock(2)
+                            DispatchQueue.global(qos: .utility).async {
+                                precondition(!Thread.isMainThread)
+                                NotificationCenter.default.post(name: .NSSystemTimeZoneDidChange, object: nil)
+                            }
+                        }
                         Button("Prepare fixture resume") { store.setCalendarFixtureClock(3) }
                     }.accessibilityIdentifier(prefix + "Clock").frame(minHeight: 44)
                     Text(store.calendarContext.today + " · " + store.calendarContext.timeZone).font(.caption2).accessibilityIdentifier(prefix + "Context")

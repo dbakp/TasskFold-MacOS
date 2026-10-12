@@ -148,8 +148,8 @@ struct RootView: View {
         #endif
         .modifier(WidgetCapacityRefresh())
         .onChange(of: phase) { _, value in if value == .active { Task { await store.reschedule(); await store.sync() } } }
-        .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in Task { await store.reschedule() } }
-        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in Task { await store.reschedule() } }
+        .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }
     }
 
     private func startInboxReview(_ batch: InboxReviewBatch) {

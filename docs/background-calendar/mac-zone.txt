@@ -1,0 +1,74 @@
+Window: "Live calendar", App: Taskfold P0 Signed Test.
+0 standard window Live calendar – 2 tasks, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<Taskfold.RootView, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<Taskfold.Store>>>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<Taskfold.Workspace>>>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.AnyShapeStyle>>>, SwiftUI._PreferenceWritingModifier<SwiftUI.PreferredColorSchemeKey>>, SwiftUI._FlexFrameLayout>-1-AppWindow-1
+	1 container
+		2 menu button Fixture clock, ID: calendarFixtureClock
+		3 text Value: 2026-03-28 · Pacific/Honolulu Workspace unchanged, ID: calendarFixtureContext
+		4 split group SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<Taskfold.RootView, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<Taskfold.Store>>>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<Taskfold.Workspace>>>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.AnyShapeStyle>>>, SwiftUI._PreferenceWritingModifier<SwiftUI.PreferredColorSchemeKey>>, SwiftUI._FlexFrameLayout>-1-AppWindow-1, SidebarNavigationSplitView
+			5 container
+				6 button Description: Search Everywhere, ⌘F, ID: openFinder
+				7 scroll area
+					8 list Sidebar
+						9 row (selectable)
+						10 row (selectable) Today
+Today
+						11 row (selectable) Inbox
+Inbox
+						12 row (selectable) Upcoming
+						13 row (selectable) Calendar
+						14 row (selectable) Browse
+						15 row (selectable) All Tasks
+All Tasks
+						16 row (selectable) Assigned to Me
+						17 row (selectable) Completed
+						18 row (selectable) Filters
+						19 row (selected) Live calendar
+						20 row (selectable) New Filter
+						21 row (selectable, expanded) Description: Projects, Secondary Actions: Collapse
+						22 row (selectable) New Project
+						23 row (selectable, expanded) Description: Labels, Secondary Actions: Collapse
+						24 row (selectable) New Label
+				25 menu button Photo of Local Workspace, Description: Local Workspace, Account, ID: accountMenu
+				26 image Description: internaldrive, Help: Tasks are stored only on this Mac.
+				27 text Help: Tasks are stored only on this Mac., Value: Saved on this device, ID: syncStatus
+			28 splitter (disabled, settable, float) 238
+			29 split group
+				30 container
+					31 image Description: Search, ID: magnifyingglass
+					32 text field (settable) Placeholder: Filter current list, ID: listFilter
+					33 menu button View Options, Description: Task options, Help: View options, ID: line.3.horizontal.decrease.circle
+					34 scroll area
+						35 list taskList
+							36 row (selectable) Tasks
+							37 row (selectable) Value: Fixed Copenhagen plan, overdue since 29 Mar 2026, Flag
+More, Description: Complete Fixed Copenhagen plan
+29 Mar · 1.30 · CET
+Priority for Fixed Copenhagen plan
+							38 row (selectable) More, Value: Yesterday plan, overdue since 28 Mar 2026, Description: Complete Yesterday plan
+28 Mar
+Priority for Yesterday plan
+	39 toolbar
+		40 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
+		41 button Description: Pinned notes, ID: openPinnedNotes, Secondary Actions: Increment, Decrement, Delete, Cancel, Move previous, Move next, Remove from toolbar
+		42 button Description: Project pulse, ID: openProjectPulse, Secondary Actions: Increment, Decrement, Delete, Cancel, Move previous, Move next, Remove from toolbar
+		43 button Description: Focus session, ID: openFocusSession, Secondary Actions: Increment, Decrement, Delete, Cancel, Move previous, Move next, Remove from toolbar
+		44 button Description: New Task, ID: addTask, Secondary Actions: Increment, Decrement, Delete, Cancel, Move previous, Move next, Remove from toolbar
+		45 button Description: Inspector, Secondary Actions: Increment, Decrement, Delete, Cancel, Move previous, Remove from toolbar
+	46 close button
+	47 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	48 minimize button
+	49 text Live calendar 2 tasks
+50 menu bar
+	51 Taskfold
+	52 File
+	53 Edit
+	54 View
+	55 Fixture
+	56 Account
+	57 Task
+	58 Window
+	59 Help
+
+Selected:
+	19 row (selected)
+
+Note: Pay special attention to the content selected by the user. If the user asks a question or refers to the content they are looking at on-screen, they might be referring to the selected content (but they might be referring to something else that's visible, too).

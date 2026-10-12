@@ -1,0 +1,42 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+        "deviceName": "Taskfold phone calendar rotation disposable",
+        "modelName": "iPhone 17 Pro",
+        "osBuildNumber": "23F77",
+        "osVersion": "26.5",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 1,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+  "expectedFailures": 0,
+  "failedTests": 0,
+  "finishTime": 1791765948.499,
+  "passedTests": 1,
+  "result": "Passed",
+  "runtimeWarnings": [
+    {
+      "issueType": "Runtime Warning",
+      "message": "Publishing changes from background threads is not allowed; make sure to publish values from the main thread (via operators like receive(on:)) on model updates."
+    }
+  ],
+  "skippedTests": 0,
+  "startTime": 1791765910.599,
+  "statistics": [],
+  "testFailures": [],
+  "title": "Test - Taskfold",
+  "topInsights": [],
+  "totalTestCount": 1
+}
