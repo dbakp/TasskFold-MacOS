@@ -492,6 +492,10 @@ final class BackupFileReadOperation: @unchecked Sendable {
         try checkCancellation()
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
+        #if DEBUG
+        let heldPresenter = BackupReadTestPresenter.installIfRequested(url)
+        defer { heldPresenter?.stop() }
+        #endif
         var coordinationError: NSError?
         var result: Result<WorkspaceBackup, Error>?
         coordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { readableURL in
@@ -508,3 +512,45 @@ final class BackupFileReadOperation: @unchecked Sendable {
         return try result.get()
     }
 }
+
+#if DEBUG
+/// Deterministic native test only: hold the first provider read until cancellation.
+/// Production identifiers and ordinary debug launches never install this presenter.
+private final class BackupReadTestPresenter: NSObject, NSFilePresenter {
+    private static let gate = NSLock()
+    private static var used = false
+    static func installIfRequested(_ url: URL) -> BackupReadTestPresenter? {
+        guard ["com.dbakp.taskfold.backupcanceltests", "com.dbakp.taskfold.mac.backupcanceltests"].contains(Bundle.main.bundleIdentifier ?? ""),
+              ProcessInfo.processInfo.arguments.contains("--backup-provider-wait-testing") else { return nil }
+        gate.lock(); defer { gate.unlock() }
+        guard !used else { return nil }
+        used = true
+        let presenter = BackupReadTestPresenter(url: url)
+        NSFileCoordinator.addFilePresenter(presenter)
+        return presenter
+    }
+    let presentedItemURL: URL?
+    let presentedItemOperationQueue = OperationQueue()
+    private let lock = NSLock()
+    private var completions: [(Error?) -> Void] = []
+    private var stopped = false
+    init(url: URL) {
+        presentedItemURL = url
+        presentedItemOperationQueue.maxConcurrentOperationCount = 1
+    }
+    func savePresentedItemChanges(completionHandler: @escaping (Error?) -> Void) {
+        lock.lock()
+        let finish = stopped
+        if !finish { completions.append(completionHandler) }
+        lock.unlock()
+        if finish { completionHandler(nil) }
+    }
+    func stop() {
+        lock.lock(); stopped = true
+        let callbacks = completions; completions = []
+        lock.unlock()
+        callbacks.forEach { $0(nil) }
+        NSFileCoordinator.removeFilePresenter(self)
+    }
+}
+#endif

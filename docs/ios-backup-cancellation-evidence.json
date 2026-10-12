@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native iPhone provider wait / Cancel / retry / cancelled preview / current-work preservation.",
+  "device": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+  "bundle": "com.dbakp.taskfold.backupcanceltests",
+  "result": {
+    "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-backup-cancel-native-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "reportedRuntimeWarnings": 0
+  },
+  "accepted": [
+    "Actual native file picker opens the fixture and the read waits on a registered NSFilePresenter.",
+    "Opening backup status and Cancel are visible; Cancel is enabled/hittable while Restore from file is disabled.",
+    "Cancel restores enabled controls without an error or restore preview.",
+    "Retrying the same file opens the native restore review.",
+    "Cancelling that review preserves Newer current edit and does not add Backup missing task.",
+    "Persisted fixture has one task and zero pending changes."
+  ],
+  "harness": "Debug-only presenter gated by the two exact backup-cancellation test bundle identifiers and an explicit launch argument. Holds only the first read; cancellation releases/removes the presenter. Production identifiers and normal debug launches never install it.",
+  "verification": [
+    "Three native screenshots inspected.",
+    "45 backup tests per independently owned repo pass after adding the debug presenter.",
+    "Isolated iOS app/widget/UI-test build passes; Simulator uses Xcode ad-hoc signing."
+  ],
+  "limitations": [
+    "Local deterministic provider coordination, not actual offline iCloud or another remote provider.",
+    "No new Mac native cancellation, account-switch-during-read or relaunch acceptance.",
+    "Other P0 gates remain open."
+  ],
+  "cleanup": {
+    "isolatedApp": "terminated by test, then uninstalled with its test runner",
+    "simulator": "shutdown; originally booted primary phone/iPad untouched",
+    "protectedFileHashesExact": 100,
+    "prunedBuildBytes": 418952690,
+    "retained": "xcresult, test/build logs, staged source and screenshot evidence"
+  },
+  "captures": {
+    "waiting.png": "130c36941d7f1f9d65ded665f3f2b29e4dbcfe0e37f54d81d45a5886b6f69773",
+    "retry-review.png": "d6071915afee630900161ce4a89a61cc16025de2c5fdf50a7f619f2f333b1676",
+    "preserved-task.png": "cafa5857c0ce630a0f8812e1414dd7f4b812a241974cd73296c4ef95b0e0710f"
+  }
+}
