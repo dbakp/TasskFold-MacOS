@@ -8,6 +8,7 @@ p0widgethosts variant retains an isolated extension, App Group and URL scheme fo
 Desktop acceptance. Preparation alone establishes no runtime or release acceptance.
 """
 import argparse
+import re
 import hashlib
 import json
 import os
@@ -22,10 +23,14 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--variant', choices=('p0uitests', 'p0signeduitests', 'p0widgethosts'), default='p0uitests',
                         help='Use p0signeduitests for app acceptance or p0widgethosts for an isolated app plus Desktop widgets')
+    parser.add_argument("--team", help="Signing team for a macOS team-prefixed isolated widget App Group")
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
     bundle = 'com.dbakp.taskfold.mac.' + args.variant
     widgets = args.variant == 'p0widgethosts'
+    if widgets and (not args.team or not re.fullmatch(r'[A-Z0-9]{10}', args.team)):
+        parser.error('p0widgethosts requires --team with the actual ten-character signing team identifier')
+    app_group = args.team + '.' + bundle if widgets else 'group.' + bundle
     scheme = 'taskfold-widget-host-test'
     service = 'com.taskfold.mac.' + args.variant
     output = args.output.resolve()
@@ -40,7 +45,7 @@ def main():
     changes = {}
     replacements = {'com.taskfold.ios.session': service + '.session',
                     'com.taskfold.recovery.v1': service + '.recovery.v1',
-                    'group.com.dbakp.taskfold': 'group.' + bundle}
+                    'group.com.dbakp.taskfold': app_group}
     if widgets:
         replacements.update({'taskfold://': scheme + '://', '"taskfold"': '"' + scheme + '"'})
     paths = list((output / 'Taskfold').rglob('*.swift'))
@@ -68,9 +73,9 @@ def main():
                     'com.apple.security.files.user-selected.read-write': True,
                     'com.apple.security.personal-information.calendars': True}
     if widgets:
-        entitlements['com.apple.security.application-groups'] = ['group.' + bundle]
+        entitlements['com.apple.security.application-groups'] = [app_group]
         widget_entitlements = {'com.apple.security.app-sandbox': True,
-                               'com.apple.security.application-groups': ['group.' + bundle]}
+                               'com.apple.security.application-groups': [app_group]}
         (output / 'TaskfoldWidgets/TaskfoldWidgets.entitlements').write_bytes(plistlib.dumps(widget_entitlements))
     (output / 'Taskfold/Taskfold.entitlements').write_bytes(plistlib.dumps(entitlements))
     env = dict(os.environ, TASKFOLD_WIDGETS='1' if widgets else '0')
@@ -95,7 +100,7 @@ def main():
     receipt = {'sourceRepository': str(source), 'workspace': str(output), 'bundleID': bundle,
                'sandbox': True, 'productionURLAndFileRegistrationsRemoved': True, 'embeddedWidgetExtension': widgets,
                'isolatedURLScheme': scheme if widgets else None,
-               'isolatedAppGroup': 'group.' + bundle if widgets else None,
+               'isolatedAppGroup': app_group if widgets else None, 'signingTeam': args.team if widgets else None,
                'namespaceOnlySourceChanges': changes, 'replacements': replacements,
                'launchArguments': ['--uitesting'],
                'limitations': ['Preparation only; no launch/install/runtime acceptance.', 'Unique keychain services; no production credential migration.',

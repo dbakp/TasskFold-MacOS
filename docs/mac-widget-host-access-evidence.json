@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-12",
+  "scope": "Isolated Mac widget host installation and App Group read correction; routing, edit refresh and visual acceptance incomplete",
+  "productionCodeChanged": false,
+  "failure": {
+    "nativeDesktopAX": "Today reported Open Taskfold to begin despite current seven-task shared projection",
+    "systemDiagnosis": "Extension profile lacks App Group authorization; taskgated reports Unsatisfied entitlements and container manager rejects non-team-prefixed group",
+    "decoderProbe": "Actual staged WidgetActionDisk.read and WidgetSnapshot decoder succeed with version 2, seven tasks and zero pending actions outside the sandbox"
+  },
+  "fix": {
+    "ownedScript": "Scripts/prepare_isolated_mac_ui.py (macOS repository)",
+    "requirement": "p0widgethosts now requires --team with actual ten-character signing team",
+    "oldGroup": "group.com.dbakp.taskfold.mac.p0widgethosts",
+    "newGroup": "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts",
+    "namespaceScope": "Copied app and extension sources and entitlements only; production group untouched",
+    "appleReference": "https://developer.apple.com/documentation/xcode/accessing-app-group-containers"
+  },
+  "accepted": [
+    "Native gallery distinguishes isolated Mac catalogue from iPhone Taskfold widgets",
+    "Medium Today installed through native gallery",
+    "Current-source isolated app and extension build; strict signature and actual signing team match group prefix",
+    "Old isolated process normally quit; corrected app launched without seed",
+    "Corrected extension runs; installed Today footer changes from fallback to TASKFOLD",
+    "All isolated cache JSON files unchanged; seven projected tasks retained",
+    "App-only fixture variant remains compatible; widget variant rejects missing team before creating files"
+  ],
+  "notAccepted": [
+    "Native rendered desktop pixels: Finder capture omits widget layers",
+    "Automated Capture click did not produce a verified route; human click request pending",
+    "Native app capture attempt hit ScreenCaptureKit -3812 observation error; no saved new task established",
+    "Remaining widget configuration, task routing, completion, cold launch, privacy and account boundaries",
+    "Production profile/capability authorization, APNs and signed distribution"
+  ],
+  "retainedRuntime": {
+    "appPID": 84612,
+    "extensionPID": 84614,
+    "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v2/Build/Products/Debug/Taskfold.app",
+    "installedTestWidget": "Medium Today remains for pending manual click; existing Calendar/Weather/Photos untouched"
+  },
+  "evidenceFiles": [
+    "mac-widget-host-access/rejection.txt",
+    "mac-widget-host-access/installed-before.txt",
+    "mac-widget-host-access/installed-after.txt",
+    "mac-widget-host-access/preservation.json",
+    "mac-widget-host-access/signing.json",
+    "mac-widget-host-access/script-check.json"
+  ],
+  "logs": [
+    "mac-widget-host-build-v2.log",
+    "mac-widget-decode-build-v1.log",
+    "mac-widget-decode-result-v1.log"
+  ],
+  "limitations": "The initial claim of successful signing was too weak to establish usable App Group access. Existing setup evidence is historical; this receipt supplies runtime correction."
+}

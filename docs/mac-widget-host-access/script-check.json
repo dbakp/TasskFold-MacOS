@@ -1,0 +1,5 @@
+{
+  "widgetVariantRejectsMissingTeamBeforeCreatingOutput": true,
+  "existingAppOnlyVariantStillPreparesWithoutTeam": true,
+  "teamPrefixedWidgetVariantBuildAndSignatureVerified": true
+}

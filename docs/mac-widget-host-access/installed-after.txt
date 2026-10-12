@@ -1,0 +1,3 @@
+container Description: Taskfold, ID: widget-local:com.dbakp.taskfold.mac.p0widgethosts:com.dbakp.taskfold.mac.p0widgethosts.widgets:TaskfoldToday
+			57 text Today Mon, 12 Oct 0 All clear for today No scheduled tasks outstanding. TASKFOLD
+			58 button Capture task in Inbox
