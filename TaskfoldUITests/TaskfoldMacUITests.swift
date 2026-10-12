@@ -2215,8 +2215,14 @@ extension TaskfoldMacUITests {
         }
         func signOut() {
             let leave = app.buttons["Sign Out…"]
-            for _ in 0..<10 where !leave.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -500) }
-            XCTAssertTrue(leave.isHittable); leave.click()
+            let scroll = app.scrollViews.firstMatch
+            // macOS can report clipped controls as hittable. Check the actual viewport.
+            for _ in 0..<10 {
+                if scroll.frame.contains(leave.frame) { break }
+                scroll.scroll(byDeltaX: 0, deltaY: -300)
+            }
+            XCTAssertTrue(scroll.frame.contains(leave.frame))
+            leave.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
             let confirm = app.sheets.buttons["Sign Out"].firstMatch
             XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.click()
             app.windows["Account"].buttons["_XCUI:CloseWindow"].click()
@@ -2240,8 +2246,14 @@ extension TaskfoldMacUITests {
         try JSONSerialization.data(withJSONObject: backup).write(to:file); defer { try? FileManager.default.removeItem(at:file) }
         func choose() {
             let restore = app.buttons["backupImport"]
-            for _ in 0..<10 where !restore.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX:0,deltaY:400) }
-            restore.click(); XCTAssertTrue(app.sheets.buttons["Open"].firstMatch.waitForExistence(timeout:5))
+            let scroll = app.scrollViews.firstMatch
+            for _ in 0..<10 {
+                if scroll.frame.contains(restore.frame) { break }
+                scroll.scroll(byDeltaX: 0, deltaY: restore.frame.midY > scroll.frame.maxY ? -300 : 300)
+            }
+            XCTAssertTrue(scroll.frame.contains(restore.frame))
+            restore.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+            XCTAssertTrue(app.sheets.buttons["Open"].firstMatch.waitForExistence(timeout:5))
             app.typeKey("g",modifierFlags:[.command,.shift])
             let path = app.sheets.comboBoxes.firstMatch.exists ? app.sheets.comboBoxes.firstMatch : app.sheets.textFields.firstMatch
             XCTAssertTrue(path.waitForExistence(timeout:5)); path.click(); app.typeKey("a",modifierFlags:.command); path.typeText(file.path); app.typeKey(.return,modifierFlags:[])
