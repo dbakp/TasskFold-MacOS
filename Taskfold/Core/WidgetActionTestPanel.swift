@@ -98,7 +98,12 @@ struct WidgetActionTestPanel: View {
                     Link("Missing note", destination: noteLink(account: store.userID, id: "missing-note")).accessibilityIdentifier("noteOpenMissing")
                     Link("Other workspace", destination: noteLink(account: "other-workspace", id: "note-first")).accessibilityIdentifier("noteOtherWorkspace")
                 }.font(.system(size: 12))
-                Button("Fail next save") { store.inboxFixtureFailSave = true }.accessibilityIdentifier("noteFailSave")
+                HStack {
+                    Button("Fail saves") { store.inboxFixtureFailSave = true }.accessibilityIdentifier("noteFailSave")
+                    if store.inboxFixtureFailSave {
+                        Button("Allow saves") { store.inboxFixtureFailSave = false }.accessibilityIdentifier("noteAllowSave")
+                    }
+                }
             }
         } else if ProcessInfo.processInfo.arguments.contains("--inbox-review-testing") {
             VStack(spacing: 4) {

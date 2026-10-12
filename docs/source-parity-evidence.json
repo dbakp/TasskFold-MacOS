@@ -215,5 +215,10 @@
     "matchesRetainedBaseline": true,
     "nativeDataMutationsThisCheckpoint": false
   },
-  "remaining": "Existing P0_RELEASE_STATUS.md remains authoritative. This checkpoint does not close provider, native Mac, accessibility, APNs or distribution acceptance."
+  "remaining": "Existing P0_RELEASE_STATUS.md remains authoritative. This checkpoint does not close provider, native Mac, accessibility, APNs or distribution acceptance.",
+  "nativePinSaveFollowUp": {
+    "date": "2026-10-12",
+    "status": "Named native inspector failure/retry/relaunch gate accepted; broader gates remain open",
+    "evidence": "mac-pin-retry-evidence.json"
+  }
 }

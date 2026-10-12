@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native Mac inspector pending pin retention through persistent local save failure, recovery, normal Quit/relaunch and cleanup",
+  "priorProductionFix": "source-parity-evidence.json / fix; production code unchanged this checkpoint",
+  "newCode": "Each repo independently adds a Debug-only Allow saves button and corrects the persistent fault control label to Fail saves. No Release behavior changes.",
+  "nativeChecks": [
+    "Selected unpinned note-private task through actual Inbox and Inspector",
+    "Fail saves then actual Show notes in widgets toggle triggers save error",
+    "After OK, switch stays on while full parsed disk snapshot is identical",
+    "Allow saves disables only the injected fault without restarting or editing the pin choice",
+    "Return in unchanged native title field commits the retained request",
+    "Only widget-note:note-private is added to view_orders; original pin rows and every task field remain exact",
+    "Native Command-Q stops exact app process",
+    "Relaunch without seed retains Notes: 3 / Private: visible and exact task with pin on",
+    "Native unpin restores full seeded snapshot; final native Quit stops process",
+    "While stopped, previous synthetic ui-testing cache is restored; all seven pre-session caches equal baseline"
+  ],
+  "fixture": {
+    "bundle": "com.dbakp.taskfold.mac.p0signeduitests",
+    "owner": "ui-testing",
+    "launch": [
+      "--uitesting",
+      "--pinned-notes-seed",
+      "--pinned-notes-testing",
+      "--widget-action-testing",
+      "-localMode",
+      "YES",
+      "-appearance",
+      "light"
+    ],
+    "relaunchOmits": "--pinned-notes-seed",
+    "preparation": "mac-pin-retry/isolation.json",
+    "signing": "mac-pin-retry/signing.json"
+  },
+  "builds": {
+    "macCurrentSourceDebug": "mac-pin-retry-build-v1.log",
+    "iosIndependentDebugFixture": "mac-pin-retry-ios-fixture-build-v1.log",
+    "bothPassed": true,
+    "releaseRerun": false,
+    "releaseInputsChanged": false
+  },
+  "nativeMethod": "Manual computer use through CUA plus exact parsed disk comparisons; no Mac XCTest runtime pass and no clean runtime-warning claim",
+  "preservation": "mac-pin-retry/preservation.json",
+  "captures": [
+    "mac-pin-retry/failed-save-current.png",
+    "mac-pin-retry/retained-choice-current.png",
+    "mac-pin-retry/saved-current.png",
+    "mac-pin-retry/relaunch-current.png"
+  ],
+  "captureReview": "All four inspected. Native task title, notes, pin and error are readable. Debug fixture controls overlap the list search field; no production-layout acceptance is claimed for that test strip.",
+  "initialAttempt": "Retained signed binary demonstrated unchanged disk and retained unsaved pin, but retry remained rejected because its persistent fault had no recovery control. The isolated synthetic process was stopped before rebuilding; this was fixture friction, not a new product defect. Final acceptance uses a fresh current-source signed build.",
+  "remaining": [
+    "Installed desktop widgets and actual Mac notification actions",
+    "Spoken VoiceOver, external file provider, named conflict/failure/account boundaries",
+    "APNs and enrolled-team distribution/notarization"
+  ],
+  "testedMacSourceSHA256": {
+    "Taskfold/Views/TaskInspector.swift": "9e59522c8b24d8c6a3bbc002767379560aa314c9d6f1a9446445b9938aabb195",
+    "Taskfold/Core/PinnedNotes.swift": "498f1bdf7c22682f4e9d423fe0c3afd4f93cf2eb0b9093d9e6a6e33010c2cf7e",
+    "Taskfold/Core/Store.swift": "e4c503bdf36b5e192a8ebed78904e9f09c0bb99dc3630b6a88beb4c8bd98cc75",
+    "Taskfold/Core/WidgetActionTestPanel.swift": "1d911fa5fed2f020f5468b2aef59aae3b2011178bbe40bbdd56570c82a0aca24"
+  }
+}
