@@ -1915,3 +1915,8 @@ The user restored Full Access without quitting. Connect recovered immediately in
 ### 12 October — Mac iCloud backup transfer and restore accepted
 
 With explicit user approval, the prepared synthetic export was uploaded to iCloud Drive, its local download removed in Finder, and the cloud-only file opened through Taskfold’s native restore picker. The downloaded bytes match the original exactly. Preview/apply restored eight tasks and one project, retained all existing records and relationships, saved an encrypted safety copy, and survived normal Quit/relaunch. The isolated cache baseline was restored after testing; all 100 protected Simulator files remain exact. Only the synthetic cloud file was moved to the recoverable Bin. See `mac-provider-transfer-evidence.json`. iOS provider-picker and offline/download-failure acceptance remain open; no production change or new build was needed.
+
+
+### 12 October — coordinate external backup reads
+
+Both owned apps now coordinate external backup reads with NSFileCoordinator while holding the picker’s security scope. A real file-presenter regression demonstrates stale content from the old direct read and current content after coordination; provider-save errors propagate instead of reading stale data. Missing-file retry and oversized-file rejection also pass. All 43 backup tests pass per repo (86 total). Mac signed Debug/deep strict verification and iOS arm64 Simulator Debug builds pass. No app was installed or replaced; inactive build products were pruned. This is a production reliability fix with local Foundation evidence, not new native iOS provider/offline acceptance. See `provider-coordination-evidence.json`.

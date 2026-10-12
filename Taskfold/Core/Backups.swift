@@ -36,6 +36,25 @@ struct WorkspaceBackup: Codable, Sendable {
         guard data.count <= Self.maximumBytes else { throw BackupFailure(message: "This backup exceeds the 256 MB file limit.") }
         return data
     }
+    /// Coordinate external documents so their provider can materialize or finish saving them.
+    /// Call off the main actor: providers may need time to download the selected file.
+    static func readFile(_ url: URL) throws -> Self {
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        var coordinationError: NSError?
+        var result: Result<Self, Error>?
+        NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &coordinationError) { readableURL in
+            result = Result {
+                let size = try readableURL.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+                guard size <= maximumBytes else { throw BackupFailure(message: "Choose a backup no larger than 256 MB.") }
+                return try read(Data(contentsOf: readableURL))
+            }
+        }
+        if let coordinationError { throw coordinationError }
+        guard let result else { throw BackupFailure(message: "The backup could not be opened. Choose the file again.") }
+        return try result.get()
+    }
+
     static func read(_ data: Data) throws -> Self {
         guard data.count <= maximumBytes else { throw BackupFailure(message: "Choose a backup no larger than 256 MB.") }
         do {

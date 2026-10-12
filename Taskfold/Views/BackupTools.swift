@@ -166,11 +166,7 @@ struct BackupTools: View {
             defer { ui.busy = false }
             do {
                 let backup = try await Task.detached(priority: .userInitiated) {
-                    let access = url.startAccessingSecurityScopedResource()
-                    defer { if access { url.stopAccessingSecurityScopedResource() } }
-                    let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-                    guard size <= WorkspaceBackup.maximumBytes else { throw BackupFailure(message: "Choose a backup no larger than 256 MB.") }
-                    return try WorkspaceBackup.read(Data(contentsOf: url))
+                    try WorkspaceBackup.readFile(url)
                 }.value
                 guard generation == store.workspaceGeneration else { throw BackupFailure(message: "The workspace changed. Choose the backup again in the intended workspace.") }
                 ui.review = RestoreReviewRequest(backup: backup, snapshot: store.snapshot, generation: generation, account: store.userID)
