@@ -228,5 +228,23 @@
     "Untargeted audit findings are not dismissed; row-fragment hit-area and clipping warnings need targeted triage"
   ],
   "reproduction": "Copy the isolated xctestrun beside its original in Build/Products and set TaskfoldUITests.EnvironmentVariables.TASKFOLD_RUN_ACCESSIBILITY_AUDIT to 1. Select the two CriticalCaptureAndEditorAccessibilityAudit methods. Without this explicit opt-in they skip; a skip is not a pass.",
-  "testSourceSHA256": "f300752763b0bf9661a3bab7c1cecb6d55c6ed21dd61507215d0792d639ba6ed"
+  "testSourceSHA256": "f300752763b0bf9661a3bab7c1cecb6d55c6ed21dd61507215d0792d639ba6ed",
+  "macVoiceOverAttempt20261012": {
+    "bundle": "com.dbakp.taskfold.mac.p0signeduitests",
+    "initialEnabled": false,
+    "temporaryEnableConfirmedByNativeSettings": true,
+    "labelsObserved": [
+      "Search Everywhere",
+      "Today/Inbox/Upcoming/Calendar",
+      "task title, priority, overdue date, project, notes and 25-minute estimate",
+      "New Task",
+      "Inspector"
+    ],
+    "attemptedCommand": "Control-Option-Home",
+    "voiceOverOutputInspection": "Computer-use access to com.apple.VoiceOver timed out; no spoken output or successful VoiceOver traversal receipt obtained.",
+    "originalOffStateRestoredNativeSettings": true,
+    "readOnlyPreferenceConfirmsOff": true,
+    "acceptedSpokenVoiceOver": false,
+    "taskDataEdited": false
+  }
 }
