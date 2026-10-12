@@ -61,6 +61,23 @@ private final class BackupUI {
         let review = ui.review
         let message = ui.message
         content.environment(ui)
+            .safeAreaInset(edge: .bottom) {
+                if ui.fileRead != nil {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            ProgressView().controlSize(.small)
+                            Text("Opening backup…").accessibilityIdentifier("backupReadProgress")
+                            Spacer(minLength: 8)
+                            Button("Cancel") { ui.cancelFileRead() }
+                                .accessibilityIdentifier("backupReadCancel")
+                        }
+                        Text("Waiting for the file provider. Your current work is unchanged.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    .padding().frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.regularMaterial)
+                }
+            }
             .fileExporter(isPresented: $ui.exporting, document: ui.document, contentType: .json, defaultFilename: "Taskfold-backup-" + Dates.day(Date())) { result in
                 if case .failure(let error) = result { ui.show(error) }
                 ui.document = nil
@@ -121,20 +138,6 @@ struct BackupTools: View {
             model.didSelectFile = { [weak model] url in if let model { Self.readFile(url, store: owner, ui: model) } }
             model.didCloseReview = { [weak model] in if let model { Task { await Self.refreshHistory(store: owner, ui: model) } } }
             daily = store.dailyBackupsEnabled; await refreshHistory()
-        }
-
-        if ui.fileRead != nil {
-            Section {
-                HStack {
-                    ProgressView().controlSize(.small)
-                    Text("Opening backup…").accessibilityIdentifier("backupReadProgress")
-                    Spacer()
-                    Button("Cancel") { ui.cancelFileRead() }
-                        .accessibilityIdentifier("backupReadCancel")
-                }
-                Text("Waiting for the file provider. Your current work is unchanged.")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
         }
 
         if !history.isEmpty {

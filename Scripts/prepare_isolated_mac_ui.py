@@ -10,6 +10,7 @@ The p0notificationtests variant uses normal local launches without fixture argum
 so delivered notification actions can cold-launch the same isolated workspace.
 The p0calendartests variant also launches normally to exercise actual EventKit
 permission and calendar selection, with separate sandbox and Keychain services.
+The backupcanceltests variant isolates native file-provider cancellation tests.
 """
 import argparse
 import re
@@ -25,14 +26,14 @@ import subprocess
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--variant', choices=('p0uitests', 'p0signeduitests', 'p0widgethosts', 'p0notificationtests', 'p0calendartests'), default='p0uitests',
-                        help='Use p0signeduitests for app acceptance, p0widgethosts for Desktop widgets, p0notificationtests for normal local notification launches, or p0calendartests for actual EventKit')
+    parser.add_argument('--variant', choices=('p0uitests', 'p0signeduitests', 'p0widgethosts', 'p0notificationtests', 'p0calendartests', 'backupcanceltests'), default='p0uitests',
+                        help='Use p0signeduitests for app acceptance, p0widgethosts for Desktop widgets, p0notificationtests for normal local notification launches, p0calendartests for actual EventKit, or backupcanceltests for backup cancellation')
     parser.add_argument("--team", help="Signing team for a macOS team-prefixed isolated widget App Group")
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
     bundle = 'com.dbakp.taskfold.mac.' + args.variant
     widgets = args.variant == 'p0widgethosts'
-    grouped = widgets or args.variant == 'p0calendartests'
+    grouped = widgets or args.variant in ('p0calendartests', 'backupcanceltests')
     if grouped and (not args.team or not re.fullmatch(r'[A-Z0-9]{10}', args.team)):
         parser.error('This variant requires --team with the actual ten-character signing team identifier')
     app_group = args.team + '.' + bundle if grouped else 'group.' + bundle
@@ -69,6 +70,7 @@ def main():
     info['CFBundleDisplayName'] = ('Taskfold Widget Host Test' if widgets else
                                  'Taskfold Notification Test' if args.variant == 'p0notificationtests' else
                                  'Taskfold Calendar Test' if args.variant == 'p0calendartests' else
+                                 'Taskfold Backup Cancel Test' if args.variant == 'backupcanceltests' else
                                  'Taskfold P0 Signed Test' if args.variant == 'p0signeduitests' else 'Taskfold P0 Test')
     # Keep the test name distinct in system menus as well as app discovery.
     info['CFBundleName'] = info['CFBundleDisplayName']

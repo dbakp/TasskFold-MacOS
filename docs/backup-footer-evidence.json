@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-12",
+  "change": "Keep provider wait progress and Cancel in a fixed settings footer outside the scrolling form.",
+  "ios": {
+    "result": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-backup-cancel-native-v2.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "reportedRuntimeWarnings": 0,
+    "accepted": [
+      "Footer Cancel is enabled and hittable during coordinated wait",
+      "Cancel then same-file retry opens restore review",
+      "Cancelling review retains the original task"
+    ]
+  },
+  "mac": {
+    "result": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-backup-cancel-native-v4.xcresult",
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "reportedRuntimeWarnings": 0,
+    "observation": "Footer Cancel is visibly present and enabled, but XCTest hittable remains false after ten seconds. AX reports the app and settings window disabled. Native cancellation/retry/relaunch is NOT accepted; cause remains undiagnosed.",
+    "attempts": "v1 old scrolling section failed; v2/v3 footer failed; v4 explicit ten-second wait failed; v5 next-main-queue picker callback failed and that speculative change was removed.",
+    "harness": "Independent backupcanceltests bundle/group/Keychain services; synthetic temporary backup and task. Native test is gated to the exact isolated runner."
+  },
+  "cleanup": {
+    "closedOldMacSessions": 6,
+    "testApps": "All new Mac runs terminate their app; iPhone app and runner uninstalled; disposable Simulator shut down.",
+    "protectedFilesExact": 100,
+    "prunedBuildBytes": 691206794,
+    "preserved": "OS-managed installed widget extensions, original app/data, primary phone/iPad Simulators, source/logs/xcresults"
+  },
+  "limitations": [
+    "Actual offline cloud provider transfer, account-switch-during-read and other P0 gates remain open."
+  ],
+  "captures": {
+    "ios-waiting.png": "a2bac7dc575b5dc95c49c66a03a16501b2c7233dbf07434f018860f93ba8dbde",
+    "ios-retry.png": "1d96e70f2704a1506ccb8c42ce48ddbdccac47193126ede41d55ef647da44637",
+    "ios-preserved.png": "e418aa08eaf67b95f0d402c053cc0a058b74b0cebb9fdac29b3291a6ecdaf320",
+    "mac-waiting.png": "fad2c618ecdb17f12ea2b87407deb7547cca6fe512378924c665d64385c07b53"
+  }
+}
