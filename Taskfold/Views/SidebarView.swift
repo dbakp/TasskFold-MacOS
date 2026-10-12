@@ -186,7 +186,7 @@ struct SyncFooter: View {
                     .id(symbol).transition(.iconSwap)
                 Group {
                     if store.syncing { ShimmerText(text: "Syncing…") }
-                    else { Text(status).lineLimit(1).id(status).transition(.textSwap) }
+                    else { Text(status).lineLimit(2).fixedSize(horizontal: false, vertical: true).id(status).transition(.textSwap).accessibilityIdentifier("syncStatus") }
                 }
                 Spacer(minLength: 0)
                 if store.syncConflict != nil { Button("Review") { reviewing = true }.buttonStyle(.link).font(.caption).accessibilityIdentifier("reviewSyncConflict") }
@@ -201,6 +201,10 @@ struct SyncFooter: View {
         .background(.bar)
         .sheet(isPresented: $reviewing) { if let conflict = store.syncConflict { ConflictReview(conflict: conflict) } }
     }
-    private var symbol: String { store.localMode ? "internaldrive" : !store.online ? "wifi.slash" : store.syncing ? "arrow.triangle.2.circlepath" : store.notice != nil ? "exclamationmark.icloud" : "checkmark.icloud" }
-    private var status: String { store.localMode ? "Saved on this Mac" : !store.online ? "Offline · saved on this Mac" : store.syncing ? "Syncing…" : store.pendingCount > 0 ? "\(store.pendingCount) \(store.pendingCount == 1 ? "change" : "changes") waiting" : store.lastSync.map { "Synced \($0.formatted(date: .omitted, time: .shortened))" } ?? "Up to date" }
+    private var presentation: SyncStatus.Presentation {
+        SyncStatus.presentation(local: store.localMode, online: store.online, syncing: store.syncing,
+                                needsAttention: store.notice != nil, pending: store.pendingCount, lastSync: store.lastSync)
+    }
+    private var symbol: String { presentation.symbol }
+    private var status: String { presentation.title }
 }

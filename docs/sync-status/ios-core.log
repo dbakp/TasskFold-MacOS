@@ -1,0 +1,30 @@
+Building for debugging...
+[2 / 11] TaskfoldCore
+[4 / 13] TaskfoldCore
+[10 / 19] WidgetModel
+[11 / 18] TaskfoldCore
+[16 / 25] TaskfoldCoreTests-product
+[18 / 27] TaskfoldCoreTests-product
+[22 / 26] TaskfoldCoreTests-product
+[24 / 26] TaskfoldCoreTests-product
+[27 / 28]
+Build complete! (3,72 secs)
+Test Suite 'Selected tests' started at 2026-10-12 02:26:46.815.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-12 02:26:46.818.
+Test Suite 'SyncStatusTests' started at 2026-10-12 02:26:46.818.
+Test Case '-[TaskfoldCoreTests.SyncStatusTests testLocalOfflineAndInFlightStatesTakePrecedence]' started.
+Test Case '-[TaskfoldCoreTests.SyncStatusTests testLocalOfflineAndInFlightStatesTakePrecedence]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.SyncStatusTests testPendingWorkOverridesPreviousSuccessfulSync]' started.
+Test Case '-[TaskfoldCoreTests.SyncStatusTests testPendingWorkOverridesPreviousSuccessfulSync]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.SyncStatusTests testTransportInterruptionsExplainSavedWorkWithoutRawCodes]' started.
+Test Case '-[TaskfoldCoreTests.SyncStatusTests testTransportInterruptionsExplainSavedWorkWithoutRawCodes]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.SyncStatusTests testUnrelatedFailuresKeepTheirExplanation]' started.
+Test Case '-[TaskfoldCoreTests.SyncStatusTests testUnrelatedFailuresKeepTheirExplanation]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.SyncStatusTests testUnverifiedAndInterruptedSyncNeverClaimsSuccess]' started.
+Test Case '-[TaskfoldCoreTests.SyncStatusTests testUnverifiedAndInterruptedSyncNeverClaimsSuccess]' passed (0.000 seconds).
+Test Suite 'SyncStatusTests' passed at 2026-10-12 02:26:46.822.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-12 02:26:46.822.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'Selected tests' passed at 2026-10-12 02:26:46.822.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.004 (0.007) seconds

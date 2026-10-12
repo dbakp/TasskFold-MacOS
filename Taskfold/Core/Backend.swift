@@ -14,6 +14,20 @@ struct AppFailure: LocalizedError {
 /// Explain transport interruptions without presenting internal networking codes.
 /// This describes already-persisted sync work, not an unsaved editor draft.
 enum SyncStatus {
+    struct Presentation {
+        let title: String
+        let symbol: String
+    }
+    /// A prior successful sync never overrides a current interruption or unsent work.
+    static func presentation(local: Bool, online: Bool, syncing: Bool, needsAttention: Bool, pending: Int, lastSync: Date?) -> Presentation {
+        if local { return Presentation(title: "Saved on this device", symbol: "internaldrive") }
+        if !online { return Presentation(title: "Offline · saved on this device", symbol: "wifi.slash") }
+        if syncing { return Presentation(title: "Syncing…", symbol: "arrow.triangle.2.circlepath") }
+        if needsAttention { return Presentation(title: "Sync needs attention", symbol: "exclamationmark.icloud") }
+        if pending > 0 { return Presentation(title: "\(pending) \(pending == 1 ? "change" : "changes") waiting to sync", symbol: "icloud") }
+        if let lastSync { return Presentation(title: "Synced \(lastSync.formatted(date: .omitted, time: .shortened))", symbol: "checkmark.icloud") }
+        return Presentation(title: "Waiting to sync", symbol: "icloud")
+    }
     static func failureMessage(_ error: Error) -> String {
         let failure = error as NSError
         if failure.domain == NSURLErrorDomain {

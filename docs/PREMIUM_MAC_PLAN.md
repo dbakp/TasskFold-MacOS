@@ -1629,3 +1629,5 @@ A genuine owner/member revocation now passes in the isolated native Mac app: fou
 All 14 non-activity server tables in both disposable accounts match their original baselines; every original activity row is preserved. Twelve synthetic activity entries remain in the read-only ledger. Primary phone/tablet files and the imported Mac account cache are unchanged. Broader organization/new-creation/account-switch recovery variants and external file providers remain open. The Mac NSTableView warning remains; the misleading initial offline “Up to date” caption is recorded for follow-up.
 
 12 October: native VoiceOver was temporarily enabled for the isolated signed app and restored to its original off setting. The VoiceOver output surface timed out; no spoken-output or traversal acceptance is claimed. See `critical-accessibility-evidence.json`.
+
+12 October: sidebar sync status now requires a successful sync before showing its checkmark/time, shows Sync needs attention after interruption even with no pending edits, and wraps to two lines. Native offline/reconnect evidence is in `sync-status-evidence.json`.

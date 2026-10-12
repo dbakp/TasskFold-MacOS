@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-12",
+  "repository": "TasskFold-MacOS",
+  "sourceBase": {
+    "iOS": "8d00031",
+    "macOS": "1efae88"
+  },
+  "scope": "Truthful sync presentation after initial/unverified state, interruptions, unsent work and success; actual isolated Mac failure/reconnect and iPhone normal/light plus accessibility XXXL/dark interruption/Retry.",
+  "fix": [
+    "No Up to date fallback before a successful sync.",
+    "Current notice takes precedence over an old successful timestamp, including zero pending uploads.",
+    "Pending edits use a waiting cloud icon rather than success checkmark.",
+    "iOS no longer describes a failed fetch as 0 changes waiting to sync.",
+    "iPhone/iPad wording refers to this device.",
+    "Status has one readable iOS accessibility element; Mac text wraps to two lines."
+  ],
+  "core": {
+    "macPassed": 5,
+    "iosPassed": 5,
+    "failures": 0,
+    "suite": "SyncStatusTests",
+    "covered": "Initial state; failed sync with/without prior success; 1/2 pending edits after success; local/offline/in-flight precedence; confirmed-success icon; existing readable failure messages."
+  },
+  "macNative": {
+    "controlledTransportFailure": true,
+    "zeroPendingBeforeAfter": true,
+    "nativeRetryInvoked": true,
+    "interruptionTitle": "Sync needs attention",
+    "successfulNormalRelaunchTitle": "Synced <current local time>",
+    "capturesVisuallyInspected": true,
+    "scope": "Genuine URLSession notConnectedToInternet from DEBUG-only exact bundle/disposable account hook; system networking untouched. Normal quit/relaunch removes process-only outage and performs successful server fetch.",
+    "all14CachedTablesEqualCleanedServerBaseline": true,
+    "byteHashNote": "Normal load/persist/member refresh changes authenticated cache hashes; no byte-identical claim for that account. Imported account hash remains unchanged.",
+    "warnings": "Existing NSTableView diagnostic remains; not a warning-free Mac claim."
+  },
+  "iOSNative": {
+    "test": "testInterruptedSyncStatusWithoutPendingEdits",
+    "result": "sync-status-ios-ui-v2.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "strictVerifierPassed": true,
+    "launches": 2,
+    "configurations": [
+      "normal/light",
+      "accessibility XXXL/dark"
+    ],
+    "checks": [
+      "Real URLSession interruption with zero pending uploads.",
+      "Full accessible Sync needs attention label.",
+      "Misleading zero-changes caption absent.",
+      "Retry is hittable and returns to failure status.",
+      "Full-screen screenshots visually inspected; status/reason/Retry readable."
+    ],
+    "dedicatedHook": "Extends existing DEBUG+Simulator outage allowlist only to calendaraccessibilitytests with exact disposable account A; original test bundle behavior preserved.",
+    "scopeLimit": "No iOS successful reconnect, physical device or full VoiceOver acceptance claimed.",
+    "semanticPreservationContinuation": {
+      "result": "sync-status-ios-ui-v3.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "strictVerifierPassed": true,
+      "allDecodedTopLevelWorkspaceFilesExact": true
+    }
+  },
+  "initialFailure": {
+    "result": "sync-status-ios-ui-v1.xcresult",
+    "finding": "Status identifier inherited by image child; first query selected the icon instead of readable status. Fixed by exposing a single explicit accessibility element and label."
+  },
+  "preservation": {
+    "all15ServerTablesExactBothAccountsComparedWithCleanedBaseline": true,
+    "protectedPhoneFilesExact": 43,
+    "protectedTabletFilesExact": 26,
+    "testTaskEdits": 0,
+    "todoistWrites": 0,
+    "schemaOrRLSChanges": false,
+    "systemNetworkChanges": false,
+    "productionAppReplaced": false,
+    "importedMacAccountCacheHashUnchanged": true,
+    "phoneInitialRawHashNote": "Initial normal startup reserialized the authenticated JSON. No byte-identical initial-cache claim; final continuation compares every decoded top-level workspace file before/after and is exact."
+  },
+  "builds": {
+    "macDebug": "sync-status-mac-build-v1.log",
+    "macRelease": "sync-status-mac-release-v1.log",
+    "iosDebug": "sync-status-ios-build-v2.log",
+    "iosRelease": "sync-status-ios-release-v2.log",
+    "allPassed": true,
+    "releaseOutageHooksAbsent": true
+  },
+  "limitations": [
+    "Broader native concurrency, widgets, notifications, external providers, spoken VoiceOver and distribution gates remain open.",
+    "Other unrelated iOS staged source files remain older; acceptance is limited to the current owned status/transport/UI source and test."
+  ],
+  "artifacts": {
+    "sync-status/mac-interrupted.png": "fe0bc9d117a0a075f9481b35b3aa9e1e379e62661a4b5a64a044b2142bbe8596",
+    "sync-status/ios-ui-final.log": "0b47749775d500b6de87c4da3d3f43a0134e908b3709e8f82dc10bb684fbce86",
+    "sync-status/ios-core.log": "19af63edd50fa2d24f90fda69db8025bab6b8af37e13494cea6258ceed1163f7",
+    "sync-status/signing.json": "9a074250161c139b9bb78f981e3106d455663abf1db8ef2b9637ba8ae9953565",
+    "sync-status/iphone-largest.png": "2ac6113f06f274e6f1f53d43eee518a8253cedbc7aa44d519761d52e25a8eeb0",
+    "sync-status/mac-core.log": "6bde931a084688a82782b83c8b495fca40e6d27da6fe1bc7fda1e5420616728f",
+    "sync-status/mac-reconnected.png": "bf3355ffa76558e69c17c67e7c0a58dd668577ce879382d7129825da3212a079",
+    "sync-status/iphone-normal.png": "afde96f522044023b34eec13a0b59558c1d7200fbfafafab2a5ec364f8a9bbea"
+  }
+}

@@ -118,5 +118,8 @@
     "access-recovery/mac-sidebar-before.png": "41b1f417d9d605ec40cef9a606645111e0f5baad87639bd6216a7f055296e4e2",
     "access-recovery/ios-revocation-core-v2.log": "e264fc7f653f78d6f0bcf9e3d914484640809ef7cd3c3ffd7f3643536fba8559"
   },
-  "repository": "TasskFold-MacOS"
+  "repository": "TasskFold-MacOS",
+  "followupResolvedBy": {
+    "initialMisleadingSyncCaption": "sync-status-evidence.json"
+  }
 }

@@ -417,6 +417,31 @@ final class NativeContinuityTests: XCTestCase {
 
 
 final class SyncStatusTests: XCTestCase {
+    func testUnverifiedAndInterruptedSyncNeverClaimsSuccess() {
+        for previous in [nil, Date(timeIntervalSince1970: 1_700_000_000)] {
+            let interrupted = SyncStatus.presentation(local: false, online: true, syncing: false, needsAttention: true, pending: 0, lastSync: previous)
+            XCTAssertEqual(interrupted.title, "Sync needs attention")
+            XCTAssertEqual(interrupted.symbol, "exclamationmark.icloud")
+        }
+        let initial = SyncStatus.presentation(local: false, online: true, syncing: false, needsAttention: false, pending: 0, lastSync: nil)
+        XCTAssertEqual(initial.title, "Waiting to sync")
+        XCTAssertEqual(initial.symbol, "icloud")
+    }
+    func testPendingWorkOverridesPreviousSuccessfulSync() {
+        for count in [1, 2] {
+            let status = SyncStatus.presentation(local: false, online: true, syncing: false, needsAttention: false, pending: count, lastSync: Date())
+            XCTAssertEqual(status.title, "\(count) \(count == 1 ? "change" : "changes") waiting to sync")
+            XCTAssertEqual(status.symbol, "icloud")
+        }
+    }
+    func testLocalOfflineAndInFlightStatesTakePrecedence() {
+        let date = Date()
+        XCTAssertEqual(SyncStatus.presentation(local: true, online: false, syncing: false, needsAttention: true, pending: 2, lastSync: date).title, "Saved on this device")
+        XCTAssertEqual(SyncStatus.presentation(local: false, online: false, syncing: false, needsAttention: true, pending: 2, lastSync: date).symbol, "wifi.slash")
+        XCTAssertEqual(SyncStatus.presentation(local: false, online: true, syncing: true, needsAttention: true, pending: 2, lastSync: date).title, "Syncing…")
+        XCTAssertEqual(SyncStatus.presentation(local: false, online: true, syncing: false, needsAttention: false, pending: 0, lastSync: date).symbol, "checkmark.icloud")
+    }
+
     func testTransportInterruptionsExplainSavedWorkWithoutRawCodes() {
         for code in [URLError.notConnectedToInternet, .networkConnectionLost, .timedOut] {
             // URLSession can bridge its failures to NSError, without a localized description.
