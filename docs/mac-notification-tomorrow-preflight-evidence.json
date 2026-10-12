@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-12",
+  "scope": "Current reminder-action source, normal isolated Mac local workspace; terminated delivery preflight only. Actual Move to tomorrow action pending.",
+  "bundle": "com.dbakp.taskfold.mac.p0notificationtests",
+  "build": "mac-notification-v2",
+  "sourceScope": "Action handler matches current repository source; v3 only adds Settings permission progress UI.",
+  "authorization": "Human approved system prompt; native Task reminders on with zero upcoming before capture.",
+  "task": {
+    "id": "aff8e49e-92d4-48eb-a7f0-75ffc88e027c",
+    "title": "Mac reminder Tomorrow proof",
+    "plannedDate": null,
+    "absoluteReminder": "2026-10-12T08:11:41Z",
+    "nativeUpcoming": 1
+  },
+  "quit": {
+    "quitVerifiedAt": "2026-10-12T10:10:07.462358+02:00",
+    "originalPID": 15247,
+    "originalPIDAbsent": true
+  },
+  "deliveryLog": "2026-10-12 10:11:41.092 Df usernoted[721:306708] [com.apple.unc:application] Delivering <NotificationRecord app:\"com.dbakp.taskfold.mac.p0notificationtests\" ident:\"A261-DB56\" req:\"taskfold.r2.ee200343161f7518f8c0962d1c71de937810c999d09f4286d6ff33fea0222299\" uuid:\"3AB985B0\" source:\"EA7CD464\" category:\"taskfold.reminder\"> to [ .alert .lockScreen .notificationCenter ]: updatedExisting: false",
+  "scheduledSnapshotExactAfterDelivery": true,
+  "protectedFilesExact": 100,
+  "actionAccepted": false,
+  "pending": "Human choose Move to tomorrow from actual system notification; inspect action response, saved plan, normal relaunch and clean only synthetic task.",
+  "limits": "No action acceptance or independent pending registry inspection yet. Retain original four starter tasks and project."
+}

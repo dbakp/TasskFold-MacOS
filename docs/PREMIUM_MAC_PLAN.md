@@ -1813,3 +1813,8 @@ The first exit initially leaves stale All clear despite a correct cleared projec
 
 
 12 October: both apps' Task reminders Settings now explain pending system authorization and prevent repeat toggles. Current Mac signed Debug/iOS arm64 Simulator Debug compile checks pass; actual pending-state rendering remains unaccepted. Existing Mac v2 prompt/process is preserved, v3 is ready but unlaunched, and inactive iOS compile products are pruned. See `settings-permission-progress-evidence.json`.
+
+
+### 12 October — current-source Mac reminder permission and cold delivery
+
+The approved system request now resolves: native Task reminders is on. A normal native Inbox capture creates one disposable undated task with an independent fixed reminder; the editor confirms one upcoming alert. Native Quit stops PID15247 before the actual 10:11:41 delivery, which leaves the complete saved snapshot unchanged and the process stopped. All100protected files remain exact. See `mac-notification-tomorrow-preflight-evidence.json`. Actual Move to tomorrow is pending a manual Notification Center action; no action/relaunch pass is claimed. The four starter tasks/project are retained. Earlier approval-pending notes are historical; the newer Settings-progress build remains unlaunched.
