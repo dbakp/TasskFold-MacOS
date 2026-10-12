@@ -8,6 +8,8 @@ p0widgethosts variant retains an isolated extension, App Group and URL scheme fo
 Desktop acceptance. Preparation alone establishes no runtime or release acceptance.
 The p0notificationtests variant uses normal local launches without fixture arguments
 so delivered notification actions can cold-launch the same isolated workspace.
+The p0calendartests variant also launches normally to exercise actual EventKit
+permission and calendar selection, with separate sandbox and Keychain services.
 """
 import argparse
 import re
@@ -23,16 +25,17 @@ import subprocess
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--variant', choices=('p0uitests', 'p0signeduitests', 'p0widgethosts', 'p0notificationtests'), default='p0uitests',
-                        help='Use p0signeduitests for app acceptance, p0widgethosts for Desktop widgets, or p0notificationtests for normal local notification launches')
+    parser.add_argument('--variant', choices=('p0uitests', 'p0signeduitests', 'p0widgethosts', 'p0notificationtests', 'p0calendartests'), default='p0uitests',
+                        help='Use p0signeduitests for app acceptance, p0widgethosts for Desktop widgets, p0notificationtests for normal local notification launches, or p0calendartests for actual EventKit')
     parser.add_argument("--team", help="Signing team for a macOS team-prefixed isolated widget App Group")
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
     bundle = 'com.dbakp.taskfold.mac.' + args.variant
     widgets = args.variant == 'p0widgethosts'
-    if widgets and (not args.team or not re.fullmatch(r'[A-Z0-9]{10}', args.team)):
-        parser.error('p0widgethosts requires --team with the actual ten-character signing team identifier')
-    app_group = args.team + '.' + bundle if widgets else 'group.' + bundle
+    grouped = widgets or args.variant == 'p0calendartests'
+    if grouped and (not args.team or not re.fullmatch(r'[A-Z0-9]{10}', args.team)):
+        parser.error('This variant requires --team with the actual ten-character signing team identifier')
+    app_group = args.team + '.' + bundle if grouped else 'group.' + bundle
     scheme = 'taskfold-widget-host-test'
     service = 'com.taskfold.mac.' + args.variant
     output = args.output.resolve()
@@ -65,6 +68,7 @@ def main():
     info = plistlib.loads(manifest.read_bytes())
     info['CFBundleDisplayName'] = ('Taskfold Widget Host Test' if widgets else
                                  'Taskfold Notification Test' if args.variant == 'p0notificationtests' else
+                                 'Taskfold Calendar Test' if args.variant == 'p0calendartests' else
                                  'Taskfold P0 Signed Test' if args.variant == 'p0signeduitests' else 'Taskfold P0 Test')
     for key in ('CFBundleURLTypes', 'CFBundleDocumentTypes', 'UTExportedTypeDeclarations', 'UTImportedTypeDeclarations'):
         info.pop(key, None)
@@ -75,8 +79,9 @@ def main():
                     'com.apple.security.network.client': True,
                     'com.apple.security.files.user-selected.read-write': True,
                     'com.apple.security.personal-information.calendars': True}
-    if widgets:
+    if grouped:
         entitlements['com.apple.security.application-groups'] = [app_group]
+    if widgets:
         widget_entitlements = {'com.apple.security.app-sandbox': True,
                                'com.apple.security.application-groups': [app_group]}
         (output / 'TaskfoldWidgets/TaskfoldWidgets.entitlements').write_bytes(plistlib.dumps(widget_entitlements))
@@ -103,9 +108,9 @@ def main():
     receipt = {'sourceRepository': str(source), 'workspace': str(output), 'bundleID': bundle,
                'sandbox': True, 'productionURLAndFileRegistrationsRemoved': True, 'embeddedWidgetExtension': widgets,
                'isolatedURLScheme': scheme if widgets else None,
-               'isolatedAppGroup': app_group if widgets else None, 'signingTeam': args.team if widgets else None,
+               'isolatedAppGroup': app_group if grouped else None, 'signingTeam': args.team if grouped else None,
                'namespaceOnlySourceChanges': changes, 'replacements': replacements,
-               'launchArguments': [] if args.variant == 'p0notificationtests' else ['--uitesting'],
+               'launchArguments': [] if args.variant in ('p0notificationtests', 'p0calendartests') else ['--uitesting'],
                'limitations': ['Preparation only; no launch/install/runtime acceptance.', 'Unique keychain services; no production credential migration.',
                                'Production Push Notifications and keychain-group entitlements are absent only from the copied test app.',
                                'No signed-distribution, APNs or provider acceptance.',

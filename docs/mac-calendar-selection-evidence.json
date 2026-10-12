@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native Mac EventKit connection, selection, accessible names, normal relaunch and disconnect; iOS label fix compiled.",
+  "finding": "Native Mac switches exposed calendar source alone, although the calendar title was visible. Several switches consequently had indistinguishable names.",
+  "change": "Both owned PlannerSettingsView implementations explicitly label each toggle with calendar title and source.",
+  "nativeMac": {
+    "bundle": "com.dbakp.taskfold.mac.p0calendartests",
+    "build": "mac-calendar-v2",
+    "fixtureArguments": false,
+    "authorization": "Actual EventKit completion returned YES at 13:18:26; no scripted system permission click.",
+    "accessibleNames": "All 10 calendar toggles expose their title and source in AX Description, with independent on/off values. Private calendar names are omitted from this receipt.",
+    "selection": "Selected one sports calendar; other nine stayed off. Status changed to Busy time from 1 selected calendar.",
+    "relaunch": "Normal Quit stopped PID45228; no-argument native relaunch retained exact selected calendar and event titles off.",
+    "capacity": "Monday shows 480-minute working day, zero calendar busy and 480 minutes after known work. Saturday shows zero working-day capacity. No event rendered on either inspected date.",
+    "disconnect": "Native Disconnect removed all planner.calendar.* preference keys. Four original starter tasks and one starter project remain; pending edits zero.",
+    "limitations": [
+      "Event rendering and hidden/named event transition remain unverified on Mac; no event existed in the inspected sports-calendar dates.",
+      "No spoken VoiceOver claim; this is native accessibility-tree verification.",
+      "Initial whole-cache hash differs after normal use; no full-cache identity claim.",
+      "macOS permission remains granted; app-level calendar connection is disconnected."
+    ]
+  },
+  "verification": {
+    "macDebug": "passed",
+    "macStrictDeepSignature": "passed",
+    "iosArm64SimulatorDebug": "passed",
+    "protectedSimulatorFiles": 100,
+    "protectedFileMismatches": 0,
+    "iosNativeLabelCheck": "not rerun",
+    "buildWarnings": "Existing unrelated Swift actor-isolation and unused withAnimation warnings remain; no warning-free build claim."
+  },
+  "testInfrastructure": {
+    "variant": "p0calendartests uses its own bundle, sandbox, Keychain namespace and team-prefixed App Group, without a widget extension or production URL registration.",
+    "failedV1": "Missing isolated App Group entitlement produced widget-storage permission warning. Fixed in v2; native status returns Saved on this device without warning.",
+    "prunedInactiveBuildBytes": 276064120,
+    "retained": "v2 products; both stages and build logs"
+  },
+  "logs": [
+    "/private/tmp/taskfold-mac-calendar-build-v2.log",
+    "/private/tmp/taskfold-ios-calendar-label-build-v1.log"
+  ],
+  "sourceSHA256": "f78680419f12105d6a35cb1513fa2ec4eb9fb0a6f49f9b8812309bb3d8fa8563"
+}

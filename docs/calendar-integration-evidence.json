@@ -70,5 +70,6 @@
       "v4": "Previous failed test left local workspace connected"
     },
     "productionCodeChanged": false
-  }
+  },
+  "macFollowUp": "mac-calendar-selection-evidence.json"
 }

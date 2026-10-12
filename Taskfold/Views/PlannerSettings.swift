@@ -38,6 +38,7 @@ struct PlannerSettingsView: View {
                             Toggle(isOn: Binding(get: { busy.selected.contains(calendar.id) }, set: { value in var ids = busy.selected; if value { ids.insert(calendar.id) } else { ids.remove(calendar.id) }; busy.select(ids) })) {
                                 VStack(alignment: .leading) { Text(calendar.title); Text(calendar.source).font(.caption).foregroundStyle(.secondary) }
                             }
+                            .accessibilityLabel(Text("\(calendar.title), \(calendar.source)"))
                         }
                         if !busy.selected.isSubset(of: Set(busy.calendars.map(\.id))) {
                             Button("Remove unavailable calendar selections") { busy.select(busy.selected.intersection(busy.calendars.map(\.id))) }

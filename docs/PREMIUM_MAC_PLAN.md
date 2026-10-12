@@ -1889,3 +1889,10 @@ The second real desktop title click starts v6 PID30403 without arguments and ope
 
 
 12 October: installed My list Completed acknowledgement and explicit dismiss are accepted on v8. Task remains completed; cleanup and 100 protected-file checks pass. Timed expiry is best-effort, direct Undo is not implemented. See `widget-completion-feedback-evidence.json`.
+
+
+### 12 October — native Mac calendar selection and accessible labels
+
+Actual Mac EventKit connection, calendar selection, normal relaunch and disconnect now pass in a separate development-signed app. Native inspection found that calendar switches exposed only their source; both apps now explicitly label them with calendar title and source. All ten Mac switches expose corrected names with independent values. Event titles remain off, one selected sports calendar survives relaunch, and Disconnect removes its device preferences. No calendar events were changed. See `mac-calendar-selection-evidence.json`.
+
+Mac signed Debug/strict signatures and iOS arm64 Simulator Debug pass; iOS native labels were not rerun. The test app's initial missing App Group entitlement was corrected and its warning disappears in v2. All 100 protected Simulator files remain exact; four starter tasks/project remain and pending edits are zero. Whole-cache identity is not claimed. Inactive products totaling 276,064,120 bytes were pruned. Mac actual event rendering/privacy, denial/recovery, spoken VoiceOver and remaining release gates stay open.
