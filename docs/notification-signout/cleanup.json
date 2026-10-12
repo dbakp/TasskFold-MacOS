@@ -1,0 +1,8 @@
+{
+  "rawResultsRetained": [
+    "signout-action-ios-v1.xcresult",
+    "signout-action-ios-after-v1.xcresult"
+  ],
+  "bytesPruned": 58067329,
+  "fullCleanupManifest": "signout-action-export-cleanup-v1.json"
+}
