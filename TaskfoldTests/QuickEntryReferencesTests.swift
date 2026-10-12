@@ -2,6 +2,19 @@ import XCTest
 @testable import TaskfoldCore
 
 final class QuickEntryReferencesTests: XCTestCase {
+    func testOfflineMemberSectionReferencesCarryIntoMoreOptions() {
+        let project = Record(["id": .string("shared"), "user_id": .string("other-owner"), "name": .string("Section recovery QA 12 Oct")])
+        let section = Record(["id": .string("offline-section"), "user_id": .string("member"), "project_id": .string("shared"), "name": .string("Offline launch section")])
+        let context = QuickEntryContext(projects: [project], sections: [section], currentUser: "member")
+        let parsed = QuickEntry(#"Offline section task recovery proof #"Section recovery QA 12 Oct" /"Offline launch section" p2 ~45m"#, context: context)
+        let expanded = parsed.applying(to: Record())
+        XCTAssertEqual(expanded.title, "Offline section task recovery proof")
+        XCTAssertEqual(expanded.string("project_id"), "shared")
+        XCTAssertEqual(expanded.string("section_id"), "offline-section")
+        XCTAssertEqual(expanded["duration_minutes"], .number(45))
+        XCTAssertEqual(expanded.priority, 2)
+    }
+
     private func row(_ id: String, _ name: String, project: String = "") -> Record {
         Record(["id": .string(id), "name": .string(name), "project_id": .string(project)])
     }

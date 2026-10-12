@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native phone offline section plus task creation, genuine owner access revocation before first POST, encrypted owned graph restore, Mac receipt and normal relaunch",
+  "status": "Named section graph recovery accepted; broader P0 remains open",
+  "productCodeChanged": false,
+  "tests": {
+    "bothOwnedCoreSuites": "Exact quoted project/section references with different project/section owners carry into More options; one new regression passes independently per repo",
+    "iOS": "Reusable guarded creation/restore helpers plus section relation assertions and draft-only rapid transition checks",
+    "macOS": "Direct native CUA project grouping and task inspector; normal Command-Q/relaunch with full saved snapshot equality. No Mac XCTest or clean-runtime claim."
+  },
+  "nativeResults": [
+    {
+      "bundle": "ios-section-recovery-offline-v1.xcresult",
+      "result": "Failed",
+      "distinctPassedTests": 0,
+      "actualPassingRuns": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "bundle": "ios-section-recovery-offline-v2.xcresult",
+      "result": "Passed",
+      "distinctPassedTests": 1,
+      "actualPassingRuns": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "bundle": "ios-section-recovery-restore-v1.xcresult",
+      "result": "Passed",
+      "distinctPassedTests": 1,
+      "actualPassingRuns": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "bundle": "ios-section-rapid-before-v1.xcresult",
+      "result": "Passed",
+      "distinctPassedTests": 1,
+      "actualPassingRuns": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "bundle": "ios-section-rapid-largest-v1.xcresult",
+      "result": "Passed",
+      "distinctPassedTests": 1,
+      "actualPassingRuns": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    }
+  ],
+  "recovery": {
+    "offline": "Native section and task remain queued POSTs through offline relaunch; owner-authenticated server reads prove neither existed remotely before revoke",
+    "revocation": "Actual authenticated owner removes disposable membership; denied member can no longer read source project",
+    "encryptedCopy": "23 records retained privately; title/notes/section name absent from ciphertext",
+    "nativePreview": {
+      "add": 3,
+      "update": 0,
+      "keep": 20
+    },
+    "apply": "New owned project, section and task IDs preserve task.section_id and both parent project IDs; priority 2, full notes and 45-minute estimate retained",
+    "crossDevice": "Mac native project shows Offline launch section with one task; inspector shows exact title, full notes, priority, estimate, project and section; survives normal Quit/relaunch",
+    "server": "Authenticated 15-table snapshots per account; cleanup restores all 13 non-activity tables exactly and preserves every original activity/epoch row. Two synthetic activity entries remain."
+  },
+  "captureFinding": {
+    "initialFailure": "Offline creation v1 created its section but capture More options retained literal references and Inbox; task was not saved. Initial screenshots show a transient sheet/chip layout; cause not established. Failed bundle retained.",
+    "subsequentRecovery": "Offline v2 succeeds with diagnostic screenshot/frame observations around keyboard dismissal; this alone does not establish rapid-transition acceptance",
+    "draftOnlyRepetitions": "Three normal/light runs plus one accessibility XXXL/dark run pass Hide keyboard then More options without screenshot/description pauses before transition; clean title and unchanged records/empty queue asserted, draft cancelled",
+    "limitation": "Earlier failure remains unexplained; no production fix or broad capture-layout acceptance claimed"
+  },
+  "builds": {
+    "iOS": "Current isolated Simulator Debug build-for-testing succeeds",
+    "macOS": "New owned core regression passes; existing current signed Debug app used for native receipt",
+    "release": "No production code change; release signing remains user-deferred"
+  },
+  "cleanup": {
+    "protectedFilesUnchanged": 100,
+    "duplicateBytesPruned": 65676945,
+    "freeGiB": 97.1,
+    "disposablePhoneUninstalledAndShutdown": true,
+    "retainedEncryptedProof": true
+  },
+  "sourceSafety": "No Todoist requests or source mutations; no schema/RLS changes, service role or global sign-out",
+  "captures": [
+    "captures/section-access-recovery/phone-restore-preview.png",
+    "captures/section-access-recovery/phone-restored-editor.png"
+  ],
+  "remaining": [
+    "Account-switch access-loss variants",
+    "Remaining installed widget configurations/privacy",
+    "Spoken VoiceOver",
+    "External OAuth/file provider and mixed-client failure cases",
+    "Real APNs/distribution; signing user-deferred",
+    "Earlier Mac QoS warning and initial capture failure remain separately unresolved"
+  ]
+}
