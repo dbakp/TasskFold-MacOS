@@ -826,3 +826,8 @@ The existing v5 host now has one disposable Today task in its previously empty n
 A real Today widget title click cold-launches PID29369 without arguments and opens the exact task inspector, preserving the full snapshot. Native AX and inspected pixels expose an inconsistent background: Completed / 0 completed. Mac external task URLs and reminder opens now select the task’s Inbox/project/Completed context and clear a stale list search before selecting the task. iOS already uses a separate task sheet and needs no sidebar fix. See `mac-widget-task-context-evidence.json`.
 
 Isolated v6 app/extension Debug build and strict deep signatures pass. Normal launch preserves the snapshot; native Quit is confirmed. The corrected installed cold route awaits a manual widget click. Inactive v5 products are pruned (125,670,357 logical bytes); v6 and logs remain. No corrected-runtime or broad widget pass is claimed yet.
+
+
+### 12 October — fixed installed Today task cold route accepted
+
+The second real desktop title click starts v6 PID30403 without arguments and opens Inbox / 1 task, the exact selected row and its inspector. Native AX and inspected pixels agree; the full saved task snapshot is unchanged. See `mac-widget-task-context-evidence.json`. Native reversible deletion restores the empty local task list and zero pending edits. Five original fixture files and all 100 protected files are hash-exact; local activity retains the two synthetic create/delete records. This closes the named Today task cold route to Inbox; other widget families/actions and the untested helper branches remain scoped separately.

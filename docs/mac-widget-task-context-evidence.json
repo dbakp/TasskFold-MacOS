@@ -19,14 +19,19 @@
     "nativeQuitPID": 30030,
     "quitConfirmed": true,
     "fullSavedSnapshotExact": true,
-    "manualColdRouteRetest": "pending"
+    "manualColdRouteRetest": "Passed: actual widget click launches PID30403 without arguments; Inbox 1 task, exact row selected and task inspector open. Native screenshot inspected; full scheduled snapshot exact."
   },
   "cleanup": {
     "inactiveV5BuildBytesPruned": 125670357,
-    "activeV6AndLogsRetained": true
+    "activeV6AndLogsRetained": true,
+    "syntheticTaskReversiblyDeleted": true,
+    "remainingLocalTasks": 0,
+    "pendingEdits": 0,
+    "originalFixtureFilesExact": 5,
+    "protectedFilesExact": 100
   },
   "limits": [
-    "Corrected installed route is not yet accepted until the second widget click.",
+    "Accepts one installed medium Today task cold route to Inbox. Project/completed branches and reminder context use the same new helper but have no new native runtime acceptance.",
     "Other widget families, completion, privacy and distribution gates remain open."
   ]
 }
