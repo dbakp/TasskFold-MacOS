@@ -1,0 +1,256 @@
+{
+  "createdAt" : "2026-10-12T05:02:02Z",
+  "format" : "com.taskfold.workspace",
+  "id" : "cd4f7cd5-cc16-4e26-91ee-f2fa2ae8fc4e",
+  "legacy" : false,
+  "sourceAccount" : "ui-testing",
+  "tables" : {
+    "projects" : [
+      {
+        "color" : "purple",
+        "id" : "inbox-project",
+        "name" : "Studio",
+        "user_id" : "ui-testing"
+      }
+    ],
+    "tasks" : [
+      {
+        "attachments" : [
+
+        ],
+        "comments" : [
+
+        ],
+        "completed" : false,
+        "completion_version" : 0,
+        "created_at" : "2026-10-12T03:50:37Z",
+        "deadline_date" : "2026-10-15",
+        "description" : "Keep the planned time, estimate and deadline when organizing this thought.",
+        "due_date" : "2026-10-13",
+        "due_time" : "10:30",
+        "duration_minutes" : 45,
+        "id" : "inbox-first",
+        "is_recurring" : false,
+        "labels" : [
+
+        ],
+        "priority" : 1,
+        "project_id" : null,
+        "reminders" : [
+
+        ],
+        "subtasks" : [
+
+        ],
+        "task_generation" : "97545266-d1f0-4969-9f67-6bcedc8d3611",
+        "title" : "Inbox launch notes",
+        "user_id" : "ui-testing"
+      },
+      {
+        "attachments" : [
+
+        ],
+        "comments" : [
+
+        ],
+        "completed" : false,
+        "completion_version" : 0,
+        "created_at" : "2026-10-12T03:50:37Z",
+        "description" : "",
+        "due_date" : null,
+        "id" : "inbox-second",
+        "is_recurring" : false,
+        "labels" : [
+
+        ],
+        "priority" : 2,
+        "project_id" : null,
+        "reminders" : [
+
+        ],
+        "subtasks" : [
+
+        ],
+        "task_generation" : "91e7d51d-41e9-4349-9028-0f1537fdae2d",
+        "title" : "Inbox studio sketch",
+        "user_id" : "ui-testing"
+      },
+      {
+        "attachments" : [
+
+        ],
+        "comments" : [
+
+        ],
+        "completed" : false,
+        "completion_version" : 0,
+        "created_at" : "2026-10-12T03:50:37Z",
+        "description" : "",
+        "due_date" : null,
+        "id" : "inbox-third",
+        "is_recurring" : false,
+        "labels" : [
+
+        ],
+        "priority" : 3,
+        "project_id" : null,
+        "reminders" : [
+
+        ],
+        "subtasks" : [
+
+        ],
+        "task_generation" : "1cf1e16a-a343-4037-8e5f-173ff3384abf",
+        "title" : "Inbox reference",
+        "user_id" : "ui-testing"
+      },
+      {
+        "attachments" : [
+
+        ],
+        "comments" : [
+
+        ],
+        "completed" : false,
+        "completion_version" : 0,
+        "created_at" : "2026-10-12T03:50:37Z",
+        "description" : "",
+        "due_date" : null,
+        "id" : "inbox-assigned",
+        "is_recurring" : false,
+        "labels" : [
+
+        ],
+        "priority" : 4,
+        "project_id" : "inbox-project",
+        "reminders" : [
+
+        ],
+        "subtasks" : [
+
+        ],
+        "task_generation" : "7bf27677-dfac-46cf-a0c5-7eeb8ef990a7",
+        "title" : "Already organized",
+        "user_id" : "ui-testing"
+      },
+      {
+        "attachments" : [
+
+        ],
+        "comments" : [
+
+        ],
+        "completed" : true,
+        "completion_version" : 0,
+        "created_at" : "2026-10-12T03:50:37Z",
+        "description" : "",
+        "due_date" : null,
+        "id" : "inbox-done",
+        "is_recurring" : false,
+        "labels" : [
+
+        ],
+        "priority" : 4,
+        "project_id" : null,
+        "reminders" : [
+
+        ],
+        "subtasks" : [
+
+        ],
+        "task_generation" : "58283a8e-88b0-4ee4-957a-7a7ea238cecf",
+        "title" : "Already finished",
+        "user_id" : "ui-testing"
+      },
+      {
+        "attachments" : [
+
+        ],
+        "comments" : [
+
+        ],
+        "completed" : false,
+        "completion_version" : 0,
+        "created_at" : "2026-01-01T00:00:02Z",
+        "description" : "",
+        "due_date" : null,
+        "id" : "inbox-next-1",
+        "is_recurring" : false,
+        "labels" : [
+
+        ],
+        "priority" : 4,
+        "project_id" : null,
+        "reminders" : [
+
+        ],
+        "subtasks" : [
+
+        ],
+        "task_generation" : "152113dc-a83a-45d4-8f8b-d1d6cbf35a05",
+        "title" : "Inbox next 1",
+        "user_id" : "ui-testing"
+      },
+      {
+        "attachments" : [
+
+        ],
+        "comments" : [
+
+        ],
+        "completed" : false,
+        "completion_version" : 0,
+        "created_at" : "2026-01-01T00:00:01Z",
+        "description" : "",
+        "due_date" : null,
+        "id" : "inbox-next-2",
+        "is_recurring" : false,
+        "labels" : [
+
+        ],
+        "priority" : 4,
+        "project_id" : null,
+        "reminders" : [
+
+        ],
+        "subtasks" : [
+
+        ],
+        "task_generation" : "58a168cb-b9f5-49e9-99fb-51e21140e578",
+        "title" : "Inbox next 2",
+        "user_id" : "ui-testing"
+      },
+      {
+        "attachments" : [
+
+        ],
+        "comments" : [
+
+        ],
+        "completed" : false,
+        "completion_version" : 0,
+        "created_at" : "2026-01-01T00:00:00Z",
+        "description" : "",
+        "due_date" : null,
+        "id" : "inbox-next-3",
+        "is_recurring" : false,
+        "labels" : [
+
+        ],
+        "priority" : 4,
+        "project_id" : null,
+        "reminders" : [
+
+        ],
+        "subtasks" : [
+
+        ],
+        "task_generation" : "2bbd4f85-086d-459d-8abc-21128435d10d",
+        "title" : "Inbox next 3",
+        "user_id" : "ui-testing"
+      }
+    ]
+  },
+  "unsyncedChanges" : 0,
+  "version" : 1
+}

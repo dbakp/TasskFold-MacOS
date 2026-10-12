@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native local export/read-back preflight for external provider testing; no provider transfer yet",
+  "runtime": "Isolated signed Mac widget host v2, backup behavior unchanged since f06c49b",
+  "export": {
+    "path": "/private/tmp/Taskfold-provider-synthetic-2026-10-12.json",
+    "bytes": 5527,
+    "sha256": "db00ef5688e971e9307ea0f53f4d0015db2274afe53b426f7e215f0d2243ab87",
+    "sourceAccount": "ui-testing",
+    "tasks": 8,
+    "projects": 1,
+    "unsyncedChanges": 0,
+    "exactBaselineTables": true
+  },
+  "accepted": [
+    "Native Export workspace opens save panel",
+    "Native save to /private/tmp creates valid portable JSON",
+    "Native Restore from file selects that export and displays eight tasks plus one project",
+    "Review canceled without applying; both isolated cache JSON files exactly equal baseline"
+  ],
+  "fixtureLimitation": "Seed records use non-UUID identifiers. Restore deliberately maps those to UUIDs; review shows Add 9 / Update 0 / Keep 0. This does not establish same-workspace replay acceptance, which has separate real-ID evidence.",
+  "provider": "iCloud Drive location visible in native save/open pickers; upload approval pending",
+  "notAccepted": [
+    "Actual iCloud save/sync/read-back",
+    "Provider offline/download/failure behavior",
+    "iOS external-provider picker",
+    "Restore application through provider"
+  ],
+  "evidenceDirectory": "provider-transfer-preflight"
+}

@@ -8,7 +8,7 @@
     "Native inspector Complete changes installed count to 0 and All clear",
     "Native Undo restores installed count 1 and original task title",
     "Normal Quit and new process 86735 retain saved task in app and installed widget",
-    "Original seven task records remain exact; only tasks, task_activity and task_activity_epoch change; zero pending edits",
+    "Original eight task records remain exact; only tasks, task_activity and task_activity_epoch change; zero pending edits",
     "Normal application-menu Quit confirms process stopped; both original isolated JSON caches restored exactly",
     "Relaunch process 87182 shows native Today 0 and installed widget 0/All clear/TASKFOLD"
   ],
