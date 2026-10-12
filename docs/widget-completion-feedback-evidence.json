@@ -39,7 +39,17 @@
     ],
     "nativeFeedbackTransition": "User saw Completed after actual widget completion, but it remained visible past the requested expiry. Automatic expiry is not accepted.",
     "dismissalBuilds": "macOS v8 signed Debug app/extension plus strict deep signatures and iOS arm64 Simulator Debug passed.",
-    "installedDismissal": "Prepared on normal v8 with synthetic task reopened; awaiting actual widget completion and dismiss."
+    "installedDismissal": "Prepared on normal v8 with synthetic task reopened; awaiting actual widget completion and dismiss.",
+    "v8HostRecovery": {
+      "failure": "macOS launched the unregistered v7 extension path; ExtensionFoundation reported Invalid bundle record before app code.",
+      "resolution": "Verified old processes stopped, removed inactive v6/v7 Build products, registered v8 and normally relaunched host.",
+      "currentHostPID": 37154,
+      "currentExtensionPID": 37060,
+      "timeline": "TaskfoldMyList systemLarge success at 12:18:59",
+      "openProjectedTasks": 1,
+      "inactiveBuildBytesPruned": 255435318,
+      "limit": "Actual dismissal still pending."
+    }
   },
   "cleanup": "Synthetic task reopened through native UI for feedback verification; temporary project retained. No real workspace modified."
 }
