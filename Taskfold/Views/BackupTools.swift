@@ -175,6 +175,9 @@ struct BackupTools: View {
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
         panel.beginSheetModal(for: window) { response in
+            // AppKit can invoke completion while the native panel remains onscreen.
+            // Dismiss it before showing read progress or another restore sheet.
+            panel.orderOut(nil)
             guard response == .OK, let url = panel.url else { return }
             ui.didSelectFile?(url)
         }

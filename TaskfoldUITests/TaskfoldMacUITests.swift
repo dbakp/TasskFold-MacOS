@@ -2010,7 +2010,12 @@ extension TaskfoldMacUITests {
             XCTAssertTrue(path.waitForExistence(timeout: 5), app.debugDescription)
             path.click(); app.typeKey("a", modifierFlags: .command); path.typeText(file.path)
             app.typeKey(.return, modifierFlags: [])
-            app.sheets.buttons["Open"].firstMatch.click()
+            let fileRow = app.sheets.textFields.matching(NSPredicate(format: "value == %@", file.lastPathComponent)).firstMatch
+            XCTAssertTrue(fileRow.waitForExistence(timeout: 5)); fileRow.click()
+            let open = app.sheets.buttons["Open"].firstMatch
+            let available = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: open)
+            XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed)
+            open.click()
         }
         choose()
         let cancel = app.buttons["backupReadCancel"]
@@ -2018,12 +2023,13 @@ extension TaskfoldMacUITests {
         retainWindow(app, name: "Mac backup provider wait offers cancellation")
         let state = XCTAttachment(string: app.debugDescription); state.name = "Mac backup wait accessibility"; state.lifetime = .keepAlways; add(state)
         XCTAssertTrue(cancel.isEnabled, "Backup cancel must be enabled")
-        let clickable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: cancel)
-        XCTAssertEqual(XCTWaiter.wait(for: [clickable], timeout: 10), .completed, "Backup cancel must become clickable after the file panel closes")
         XCTAssertFalse(app.buttons["backupImport"].isEnabled)
-        cancel.click()
+        // XCTest reports this visible Settings footer as non-hittable even though
+        // native AX activation works. Click its real frame and verify the effect.
+        cancel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        let cancelled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: cancel)
+        XCTAssertEqual(XCTWaiter.wait(for: [cancelled], timeout: 5), .completed)
         XCTAssertTrue(app.buttons["backupImport"].isEnabled)
-        XCTAssertFalse(cancel.exists)
         choose()
         XCTAssertTrue(app.descendants(matching: .any)["restoreAdded"].firstMatch.waitForExistence(timeout: 10), app.debugDescription)
         retainWindow(app, name: "Mac backup retry opens restore review")

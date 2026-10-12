@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native Mac provider wait \u2192 actual Cancel click \u2192 same-file retry \u2192 cancelled restore review \u2192 full workspace preserved after normal Quit/relaunch; native picker Cancel/reopen.",
+  "bundle": "com.dbakp.taskfold.mac.backupcanceltests",
+  "result": {
+    "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-backup-cancel-native-v8.xcresult",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "reportedRuntimeWarnings": 0
+  },
+  "accepted": [
+    "Actual NSFilePresenter holds the selected-file coordination while the visible footer offers Cancel",
+    "Clicking the real Cancel button frame removes the wait and re-enables restore controls without error/preview",
+    "Same-file retry opens the native restore review",
+    "Cancelling the review and normal Quit/relaunch preserve the entire persisted workspace dictionary exactly",
+    "Native picker cancellation permits reopening twice"
+  ],
+  "productionChange": "Mac NSOpenPanel completion explicitly orders out the panel before read progress/restore UI, per Apple guidance. iOS already waits for UIKit picker dismissal; no iOS product change needed.",
+  "appleDocumentation": "https://developer.apple.com/documentation/appkit/nssavepanel/beginsheetmodal(for:completionhandler:)",
+  "testCorrection": "XCTest isHittable falsely remained false for the visible, enabled Settings footer. A separate native CUA AX click successfully cancelled, same-file retry opened review, and whole-cache equality passed after normal Quit/relaunch. The automated case now clicks the actual button frame and verifies cancellation, retry and exact persistence. It also explicitly selects the file row and waits for Open to enable. No synthetic direct cancel call replaces the real button action.",
+  "earlierFailure": "v7 explicit orderOut alone did not fix the XCTest hit-testing assertion; desktop diagnostic showed no system permission prompt. That private desktop capture stays outside repositories.",
+  "verification": [
+    "Mac isolated development-signed build-for-testing passes",
+    "Deep strict signature verification passes",
+    "Final two native cases accepted by verify_ui_result.py",
+    "Three final app-window captures inspected; review capture shows review contents, not entire overflowing sheet",
+    "Previous iPhone footer cancellation/retry acceptance remains ios-backup-cancel-native-v2; not rerun because no iOS code changed"
+  ],
+  "cleanup": {
+    "testApps": "Both direct native launches normally quit; final XCTest app terminated; no Taskfold app process remains",
+    "protectedSimulatorFilesExact": 100,
+    "prunedBuildBytes": 270141335,
+    "retained": "Staged source, logs, xcresults and app-only capture evidence; installed desktop widgets untouched"
+  },
+  "limitations": [
+    "Deterministic local file coordination, not actual offline cloud-provider failure",
+    "Account-switch-during-read remains open",
+    "Other P0 and distribution gates remain open"
+  ],
+  "captures": {
+    "waiting.png": "85b2cd2adaf6550452d75c5c8a0aba31c4b38e1139b3ca2b35040c77e526c1ae",
+    "retry-review.png": "2df80658bdea063d83c9adb7c5481aae982a361fbc88a8b9110327d0c3e87f92",
+    "preserved-after-quit.png": "2a735422cfddab7399c4e31972de19abbf1337bf5b0fdab53072144ca8ad702b"
+  }
+}
