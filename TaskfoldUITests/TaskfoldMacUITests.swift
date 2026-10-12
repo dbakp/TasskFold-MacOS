@@ -2033,7 +2033,23 @@ extension TaskfoldMacUITests {
         choose()
         XCTAssertTrue(app.descendants(matching: .any)["restoreAdded"].firstMatch.waitForExistence(timeout: 10), app.debugDescription)
         retainWindow(app, name: "Mac backup retry opens restore review")
-        app.sheets.buttons["Cancel"].firstMatch.click()
+        let sheet = app.sheets.firstMatch
+        let apply = sheet.buttons["restoreApply"].firstMatch
+        let reviewCancel = sheet.buttons["Cancel"].firstMatch
+        XCTAssertTrue(apply.waitForExistence(timeout: 5))
+        XCTAssertTrue(apply.isHittable, "Restore must be reachable without resizing the review")
+        XCTAssertTrue(reviewCancel.isHittable, "Cancel must remain reachable")
+        let desktopTop = try XCTUnwrap(NSScreen.screens.first).frame.maxY
+        let visibleScreens = NSScreen.screens.map { screen in
+            CGRect(x: screen.visibleFrame.minX, y: desktopTop - screen.visibleFrame.maxY,
+                   width: screen.visibleFrame.width, height: screen.visibleFrame.height)
+        }
+        XCTAssertTrue(visibleScreens.contains { $0.insetBy(dx: -1, dy: -1).contains(sheet.frame) },
+                      "The complete restore sheet must fit a visible display: \(sheet.frame)")
+        let capture = XCTAttachment(screenshot: sheet.screenshot())
+        capture.name = "Complete Mac restore review and reachable actions"; capture.lifetime = .keepAlways
+        add(capture)
+        reviewCancel.click()
         XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary, before)
         app.typeKey("q", modifierFlags: .command)
         XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
