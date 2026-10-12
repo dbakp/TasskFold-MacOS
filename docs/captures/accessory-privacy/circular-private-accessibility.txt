@@ -1,0 +1,33 @@
+Attributes: Other, 0x10a8cabc0, {{195.3, 346.0}, {11.3, 16.3}}, identifier: 'accessoryPreview'
+Element subtree:
+ →Other, 0x10a8cabc0, {{195.3, 346.0}, {11.3, 16.3}}, identifier: 'accessoryPreview'
+    Image, 0x10a8cad00, {{195.3, 346.0}, {11.3, 16.3}}, identifier: 'lock.fill', label: 'Today, tasks are private'
+Path to element:
+ →Application, 0x10a8c9b80, pid: 47028, label: 'Taskfold Accessory Privacy Test'
+  ↳Window (Main), 0x10a8c9cc0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x10a8c9e00, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x10a8c9f40, {{0.0, 0.0}, {402.0, 874.0}}
+     ↳Other, 0x10a8ca080, {{0.0, 0.0}, {402.0, 874.0}}
+      ↳Other, 0x10a8ca1c0, {{0.0, 0.0}, {402.0, 874.0}}
+       ↳Other, 0x10a8cabc0, {{195.3, 346.0}, {11.3, 16.3}}, identifier: 'accessoryPreview'
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.accessoryprivacytests'
+  Output: {
+    Application, 0x10aa56940, pid: 47028, label: 'Taskfold Accessory Privacy Test'
+  }
+  ↪︎Find: Descendants matching type Other
+    Output: {
+      Other, 0x10aa557c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x10aa55900, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x10aa55a40, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x10aa55b80, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x10aa56580, {{195.3, 346.0}, {11.3, 16.3}}, identifier: 'accessoryPreview'
+    }
+    ↪︎Find: Elements matching predicate '"accessoryPreview" IN identifiers'
+      Output: {
+        Other, 0x10aa55180, {{195.3, 346.0}, {11.3, 16.3}}, identifier: 'accessoryPreview'
+      }
+      ↪︎Find: First Match
+        Output: {
+          Other, 0x10a864f00, {{195.3, 346.0}, {11.3, 16.3}}, identifier: 'accessoryPreview'
+        }
