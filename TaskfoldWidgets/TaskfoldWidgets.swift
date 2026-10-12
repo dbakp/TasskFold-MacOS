@@ -553,19 +553,23 @@ struct FocusWidgetView: View {
     let entry: TodayEntry
     var task: WidgetTask? { entry.snapshot.focus(at: entry.date) }
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label("Focus", systemImage: "scope").font(.caption.weight(.semibold)).foregroundStyle(plum)
+        VStack(alignment: .leading, spacing: family == .systemMedium ? 4 : 6) {
+            HStack {
+                Label("Focus", systemImage: "scope").font(.caption.weight(.semibold)).foregroundStyle(plum)
+                if family == .systemMedium, task != nil { Spacer(minLength: 8); WidgetFooter(entry: entry) }
+            }
             if let task {
-                Text(task.title).font(family == .systemSmall ? .headline : .title2.bold()).lineLimit(3).minimumScaleFactor(0.85)
+                Text(task.title).font(family == .systemSmall ? .headline : .headline.bold()).lineLimit(3).minimumScaleFactor(0.85)
+                    .fixedSize(horizontal: false, vertical: family == .systemMedium)
                 Text(task.due.isEmpty ? "Unscheduled priority · P\(task.priority)" : task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : "Today · P\(task.priority)\(task.time.isEmpty ? "" : " · \(task.time)")").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
                 Spacer(minLength: 0)
-                HStack { if entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated > 86_400 { WidgetFooter(entry: entry) } else { Text(task.project.isEmpty ? "Inbox" : task.project).font(.caption2).lineLimit(1) }; Spacer(); Image(systemName: "arrow.up.right.circle.fill").font(.title2).foregroundStyle(plum) }
+                HStack { if family == .systemSmall && entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated > 86_400 { WidgetFooter(entry: entry) } else { Text(task.project.isEmpty ? "Inbox" : task.project).font(.caption2).lineLimit(1) }; Spacer(); Image(systemName: "arrow.up.right.circle.fill").font(.title2).foregroundStyle(plum) }
             } else {
                 Text("Space to focus").font(.headline)
                 Text("Nothing due or high priority. Capture your next step.").font(.caption).foregroundStyle(.secondary)
                 Spacer(minLength: 0)
             }
-            if family != .systemSmall || task == nil { WidgetFooter(entry: entry) }
+            if task == nil { WidgetFooter(entry: entry) }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: plum) }
         .widgetURL(task?.url ?? URL(string: "taskfold://add"))

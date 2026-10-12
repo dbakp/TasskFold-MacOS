@@ -1,0 +1,18 @@
+{
+  "medium-focus-ios-build-v6.log": {
+    "sha256": "be8e9fac7a7a389378a9918d9e833341008bcdc83f76660760b1717ed80cc0c9",
+    "passed": true
+  },
+  "medium-focus-ios-release-v3.log": {
+    "sha256": "c2fc1720073008aacc8be668373bd86a768662d5ae4fd1cf5097e26d5b0b910e",
+    "passed": true
+  },
+  "medium-focus-mac-build-v2.log": {
+    "sha256": "1f1b9336ca05c79f4b6ef806aa3206c5094160d7055cc6fa7a45199cd1914b3e",
+    "passed": true
+  },
+  "medium-focus-mac-release-v2.log": {
+    "sha256": "f80a791e9ead6eea32c45c3b109c3667d21afb1dc56a9b20e7d5cf03301cedd8",
+    "passed": true
+  }
+}

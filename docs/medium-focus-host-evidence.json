@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-12",
+  "scope": "Installed original medium Focus recommendation widget on isolated iPhone Simulator; Mac compiles independently, installed Mac acceptance remains open.",
+  "baseCommits": {
+    "TaskFold-iOS": "d707a34",
+    "TasskFold-MacOS": "2acff35"
+  },
+  "productChange": "Medium title wraps without header/footer overflow; smaller bold headline, four-point spacing and medium status/brand in header. Small-family font/spacing retained. Ranking and persistence unchanged.",
+  "nativeTest": "testInstalledMediumFocusColdRouteAndCompletionRefresh",
+  "nativeResult": "medium-focus-ios-v6.xcresult",
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "reportedRuntimeWarnings": 0,
+  "accepted": [
+    "Actual medium gallery installation; full long overdue title and complete header/status/project/action inspected.",
+    "Terminated-app exact overdue task route.",
+    "Completion refresh advances to undated P1 ahead of future P1; inspected updated card.",
+    "Terminated-app exact next task route and normal relaunch preserve task states.",
+    "Only newly created widget removed; isolated cold-launch marker reset."
+  ],
+  "preservation": "medium-focus/preservation.json",
+  "signing": "medium-focus/signing.json",
+  "builds": "medium-focus/builds.json",
+  "attempts": {
+    "v1": "Native capture Save did not close composer; no accepted save.",
+    "v2": "Synthetic bulk input lost characters; exact draft assertion failed before Save. Root cause not established. Final test types characters individually and checks full draft.",
+    "v3": "Wrong gallery display name; corrected helper selects exact isolated app.",
+    "v4": "Functional pass rejected visually: long title truncated.",
+    "v5": "Functional pass rejected visually: wrapping pushed header/footer out of bounds.",
+    "v6": "Functional and inspected visual pass."
+  },
+  "diagnostics": [
+    "Two 60-second SpringBoard animation waits during native widget removal; ignored remote AX hierarchy diagnostics. Structured result has zero runtime warnings."
+  ],
+  "remaining": [
+    "Installed Mac widgets: existing app remains live but CUA timed out on latest inspection.",
+    "Other existing release gates remain open; this is not broad widget/privacy/accessibility acceptance."
+  ],
+  "sourceHashes": {
+    "TaskFold-iOS/TaskfoldWidgets/TaskfoldWidgets.swift": "67d263831310f5e8df5fd87efa5eb5152bfa4bb5a4596f5d6e039cdd73f99ac5",
+    "TasskFold-MacOS/TaskfoldWidgets/TaskfoldWidgets.swift": "67d263831310f5e8df5fd87efa5eb5152bfa4bb5a4596f5d6e039cdd73f99ac5",
+    "TaskFold-iOS/Taskfold/Core/Store.swift": "48b2906e5bb060a7cbf6038c6bd5953e9d088d3d685824cc85085f02866596e8",
+    "TaskFold-iOS/TaskfoldUITests/TaskfoldUITests.swift": "312aef22fd54064b9ec9b95ee166a4d13a50b7a230c21f265b2992b5caaf8f86"
+  },
+  "captures": [
+    {
+      "path": "medium-focus/before-truncated-title.png",
+      "sha256": "695a3fb9a11da8e66f55376fe97e940e63274b81e6e0cd72a09ff8af70ddea01",
+      "inspected": false
+    },
+    {
+      "path": "medium-focus/cold-next-task.png",
+      "sha256": "881da6000e0f36d2e177094e661330cb505284d940d7d42ba9adb379a10bdc44",
+      "inspected": true
+    },
+    {
+      "path": "medium-focus/cold-overdue-task.png",
+      "sha256": "3d89cc5cb24adaec4dd17506f033557e787f7645f3bda182a9a1e303f6806847",
+      "inspected": true
+    },
+    {
+      "path": "medium-focus/installed-after-completion.png",
+      "sha256": "656828a125361443a0abfac8deca326c2417fbea902fee9b4ebe24475ded6f8c",
+      "inspected": true
+    },
+    {
+      "path": "medium-focus/installed-long-title.png",
+      "sha256": "099f92dcd6157bfa45eb87658982b0710b60780bc4633fb0b017a861cbcbdf0f",
+      "inspected": true
+    },
+    {
+      "path": "medium-focus/rejected-wrap-overflow.png",
+      "sha256": "0808293ae070ee26f252df69c50f3b81bc6850d899e3221b3a8ea2915dd11828",
+      "inspected": false
+    }
+  ]
+}

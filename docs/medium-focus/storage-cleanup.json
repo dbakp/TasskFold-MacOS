@@ -1,0 +1,36 @@
+{
+  "removed": [
+    {
+      "path": "BuildCache/mac-medium-focus",
+      "files": 5702,
+      "allocatedBytes": 1049018368
+    },
+    {
+      "path": "medium-focus-attachments-v1",
+      "files": 14,
+      "allocatedBytes": 6971392
+    },
+    {
+      "path": "medium-focus-attachments-v3",
+      "files": 189,
+      "allocatedBytes": 85057536
+    },
+    {
+      "path": "medium-focus-attachments-v4",
+      "files": 6,
+      "allocatedBytes": 7053312
+    },
+    {
+      "path": "medium-focus-attachments-v5",
+      "files": 6,
+      "allocatedBytes": 7028736
+    },
+    {
+      "path": "medium-focus-attachments-v6",
+      "files": 6,
+      "allocatedBytes": 7036928
+    }
+  ],
+  "allocatedBytesRemoved": 1162166272,
+  "retained": "All raw xcresults, selected captures, build/signing/preservation receipts, iOS test products and existing Mac widget host build."
+}

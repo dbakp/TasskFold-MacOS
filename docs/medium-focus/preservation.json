@@ -1,0 +1,16 @@
+{
+  "authenticatedCachesParsedEqual": true,
+  "coldLaunchMarker": false,
+  "fixtureTaskCount": 3,
+  "fixturePendingCount": 0,
+  "protectedDevices": {
+    "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705": {
+      "exactOriginalFileSetAndHashes": true,
+      "fileCount": 43
+    },
+    "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969": {
+      "exactOriginalFileSetAndHashes": true,
+      "fileCount": 26
+    }
+  }
+}

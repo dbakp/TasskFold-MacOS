@@ -648,3 +648,8 @@ The focused compact title/notes line and keyboard-dismiss target are corrected i
 ## 12 October - classified retained clipping reports
 
 The four retained reports are now classified individually in `accessibility-clipping-classification.json`. The normal note is an intentional one-line ellipsis with full content retained and native editor activation verified. The normal photo label, largest 25 min chip and largest wrapped note are visibly complete in their exact audited captures; source layout and independent native action/persistence checks support scoped false-positive classifications. All original reports remain unchanged, and the diagnostic audit still records two failed cases. No whitelist, warning suppression or broad audit pass is claimed. These four reports no longer represent unclassified usability blockers. Spoken VoiceOver, other layouts and the remaining release gates are still open.
+
+
+### 12 October — medium Focus recommendation widget
+
+Fixed a real installed-host defect: long medium Focus titles were truncated. The final layout keeps the complete tested title, header, status, project and action inside the card. Native iPhone installation, overdue ranking, both exact terminated-app task routes, completion refresh, relaunch and cleanup pass (one test, zero failures/skips/reported runtime warnings). Earlier functional passes with truncation/overflow were rejected. Both independently owned widget implementations build in Debug/Release; no installed Mac pass is claimed. Authenticated caches and protected phone/tablet files are unchanged, and the test marker is reset. See `medium-focus-host-evidence.json`. Remaining P0 gates are unchanged.
