@@ -1505,7 +1505,7 @@ extension TaskfoldMacUITests {
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--focus-session-seed", "--focus-catalog-seed"]; app.launch(); defer { app.terminate() }
         XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10)); app.buttons["openFocusSession"].click()
         app.buttons["focusTaskPicker"].click()
-        let search = app.descendants(matching: .any)["focusTaskSearch"].firstMatch; XCTAssertTrue(search.waitForExistence(timeout: 5)); search.click(); search.typeText("proposal\n")
+        let search = app.descendants(matching: .any)["focusTaskSearch"].firstMatch; XCTAssertTrue(search.waitForExistence(timeout: 5)); search.click(); search.typeText("proposal")
         let home = app.buttons["focusTaskChoice-aaaaaaaa-aaaa-4aaa-8aaa-000000001249"], studio = app.buttons["focusTaskChoice-aaaaaaaa-aaaa-4aaa-8aaa-000000001248"]
         XCTAssertTrue(home.waitForExistence(timeout: 5)); XCTAssertTrue(studio.exists); XCTAssertTrue(home.label.contains("Home")); XCTAssertTrue(studio.label.contains("Client launch"))
         home.click(); app.buttons["focusTaskPicker"].click(); app.buttons["cancelFocusTaskChoice"].click()
@@ -1941,5 +1941,44 @@ extension TaskfoldMacUITests {
         let today = app.buttons["calendar-day-" + formatter.string(from: Date())]
         XCTAssertTrue(today.waitForExistence(timeout: 5)); XCTAssertTrue(today.isSelected)
         retainWindow(app, name: "Year keyboard month selection opens populated current month")
+    }
+}
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testFocusKeyboardSearchEmptyCancelAndRelaunch() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--focus-session-seed", "--focus-catalog-seed"]
+        app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10))
+        app.buttons["openFocusSession"].click(); app.buttons["focusTaskPicker"].click()
+        let search = app.descendants(matching: .any)["focusTaskSearch"].firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.typeText("proposal")
+        app.typeKey(.downArrow, modifierFlags: [])
+        app.typeKey(.upArrow, modifierFlags: [])
+        app.typeKey(.downArrow, modifierFlags: [])
+        app.typeKey(.return, modifierFlags: [])
+        let picker = app.buttons["focusTaskPicker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        XCTAssertTrue(picker.label.contains("Studio · Client launch"))
+        XCTAssertTrue(renderedText(app.staticTexts["focusSelectedTaskFixture"]).contains("aaaaaaaa-aaaa-4aaa-8aaa-000000001248"))
+        picker.click(); XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.typeText("zzzz-no-task")
+        app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(search.exists, "Empty search must not activate a stale selection")
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        XCTAssertTrue(picker.label.contains("Studio · Client launch"))
+        app.buttons["startFocus"].click()
+        XCTAssertTrue(app.buttons["pauseResumeFocus"].waitForExistence(timeout: 5))
+        app.buttons["pauseResumeFocus"].click()
+        app.terminate(); app.launchArguments = ["--uitesting"]; app.launch()
+        XCTAssertTrue(app.buttons["openFocusSession"].waitForExistence(timeout: 10))
+        app.buttons["openFocusSession"].click()
+        XCTAssertTrue(app.staticTexts["focusStatus"].waitForExistence(timeout: 5))
+        XCTAssertEqual(renderedText(app.staticTexts["focusStatus"]), "Paused")
+        XCTAssertEqual(renderedText(app.staticTexts["focusTaskContext"]), "Studio · Client launch")
+        retainWindow(app, name: "Keyboard-selected Focus task after Mac relaunch")
     }
 }

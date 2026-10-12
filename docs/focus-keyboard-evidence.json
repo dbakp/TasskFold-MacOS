@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-12",
+  "scope": "Mac Focus chooser keyboard navigation from search. Native isolated current-source app; no iOS runtime claim.",
+  "bundle": "com.dbakp.taskfold.mac.p0signeduitests",
+  "sourceSHA256": "a0e68c4b8117601970f01fab086cecaedb6805e2e21bf4a27a20cddd8d50b09a",
+  "before": "Search proposal returns Home and Studio tasks, but Down/Return leaves the chooser open and cannot choose a result.",
+  "fix": "Keep search focused, maintain a list selection, move it with Up/Down, scroll into view, activate the current filtered selection with Return and reset stale highlights when results change.",
+  "nativeChecks": {
+    "duplicateContextKeyboardSelection": "proposal → Down selects Studio; Up selects Home; Down/Return chooses Studio · Client launch, exact task ID aaaaaaaa-aaaa-4aaa-8aaa-000000001248.",
+    "emptyResultReturn": "zzzz-no-task + Return leaves chooser open; no stale task activated.",
+    "escapeCancel": "Returns to Focus without changing prior Studio selection.",
+    "mouseSelection": "Clicking Home result still selects exact task aaaaaaaa-aaaa-4aaa-8aaa-000000001249.",
+    "persistence": "Keyboard-selected Studio session starts, pauses, normal Command-Q stops process; no-seed relaunch retains paused status, 24:55, exact task and context."
+  },
+  "preservation": {
+    "localWorkspaceUnchanged": true,
+    "onlyFocusTableChanged": true,
+    "bothCloudCachesUnchanged": true
+  },
+  "automatedChecks": {
+    "debugBuild": "passed",
+    "buildForTesting": "passed",
+    "runtime": "Runner initialization failed before either named test executed; zero test passes. No retry loop.",
+    "resultBundle": "focus-keyboard-mac-v1.xcresult",
+    "releaseBuild": "passed"
+  },
+  "limits": [
+    "Native keyboard acceptance is scoped to task selection from chooser search; no whole-app keyboard or spoken VoiceOver claim.",
+    "Fixture Focus alerts disabled; no notification action or delivery claim.",
+    "iOS app code unchanged; independently owned touch chooser remains unchanged.",
+    "Broader P0 notification actions, installed Mac widget hosts, accessibility, APNs and distribution remain open."
+  ]
+}

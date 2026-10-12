@@ -244,6 +244,7 @@ private struct FocusTaskChooser: View {
     @Environment(\.dismiss) private var dismiss
     @State private var search = ""
     @FocusState private var searching: Bool
+    @State private var keyboardSelection: String?
     let workspace: WorkspaceBinding
     let selectedID: String?
     let choose: (FocusTaskCatalog.Choice) -> Void
@@ -258,10 +259,12 @@ private struct FocusTaskChooser: View {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
                     TextField("Search tasks", text: $search, axis: .vertical).lineLimit(1...3).autocorrectionDisabled()
-                        .focused($searching).submitLabel(.search).onSubmit { searching = false }
+                        .focused($searching).submitLabel(.search).onSubmit { activateSelection() }
+                        .onKeyPress(.downArrow) { step(1); return .handled }
+                        .onKeyPress(.upArrow) { step(-1); return .handled }
                         .onChange(of: search) { _, query in
                             if query.contains(where: { $0.isNewline }) {
-                                search = query.filter { !$0.isNewline }; searching = false
+                                search = query.filter { !$0.isNewline }
                             }
                         }
                         .accessibilityLabel("Search tasks, projects, sections or notes")
@@ -271,17 +274,28 @@ private struct FocusTaskChooser: View {
                             .buttonStyle(.plain).accessibilityLabel("Clear task search").accessibilityIdentifier("clearFocusTaskSearch")
                     }
                 }.padding(.horizontal, 12).frame(minHeight: 44).background(.quaternary, in: RoundedRectangle(cornerRadius: 14)).padding()
-                List {
-                    ForEach(choices) { choice in
-                        FocusTaskChoiceRow(choice: choice, selected: choice.id == selectedID) { choose(choice) }
+                ScrollViewReader { proxy in
+                    List(selection: $keyboardSelection) {
+                        ForEach(choices) { choice in
+                            FocusTaskChoiceRow(choice: choice, selected: choice.id == selectedID) { choose(choice) }
+                                .tag(choice.id).id(choice.id)
+                        }
                     }
-                }.listStyle(.plain).accessibilityIdentifier("focusTaskChoices")
+                    .listStyle(.plain).accessibilityIdentifier("focusTaskChoices")
+                    .onSubmit { activateSelection() }
+                    .onChange(of: keyboardSelection) { _, id in if let id { proxy.scrollTo(id) } }
                     .overlay { if choices.isEmpty { ContentUnavailableView("No matching tasks", systemImage: "magnifyingglass", description: Text("Try another task, project or section name.")) } }
+                }
             }.navigationTitle("Choose a task")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction).accessibilityIdentifier("cancelFocusTaskChoice") } }
+            .onAppear { keyboardSelection = choices.first?.id; searching = true }
+            .onChange(of: search) { _, _ in keyboardSelection = self.choices.first?.id }
+            .onChange(of: choices.map(\.id)) { _, ids in
+                if keyboardSelection.map({ !ids.contains($0) }) ?? true { keyboardSelection = ids.first }
+            }
             .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
         }
         #if os(iOS)
@@ -289,6 +303,16 @@ private struct FocusTaskChooser: View {
         #else
         .frame(minWidth: 500, minHeight: 520)
         #endif
+    }
+    private func step(_ delta: Int) {
+        let choices = self.choices
+        guard !choices.isEmpty else { return }
+        let index = choices.firstIndex { $0.id == keyboardSelection } ?? (delta > 0 ? -1 : choices.count)
+        keyboardSelection = choices[min(max(index + delta, 0), choices.count - 1)].id
+    }
+    private func activateSelection() {
+        guard let choice = choices.first(where: { $0.id == keyboardSelection }) else { return }
+        choose(choice)
     }
 }
 

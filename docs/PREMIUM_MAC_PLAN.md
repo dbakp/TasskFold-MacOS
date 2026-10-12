@@ -1645,3 +1645,8 @@ The new iPhone regression reproduces the warning before the fix. Afterward it an
 A real local Focus alert now passes delivery to Notification Center after normal Quit: macOS records app exit at 02:56:17, before timer end and delivery at 02:56:26. The app remains stopped; explicit fixture-preserving relaunch retains the finished session, exact open task and zero pending alerts. The existing Do Not Disturb setting delays the banner and mutes sound, so visible-banner and Open acceptance are not inferred. The already-authorized binary is reused; Focus model, scheduler/view, delegate notification handlers and Store/Root notification sections match owned source, but newer unrelated code and pending-inspector Quit handling are not in that binary.
 
 No production fix/build rerun was needed. See `mac-focus-terminated-evidence.json`. Open/actions/account-change/APNs and other P0 gates remain open. The relaunched isolated app is left on Today with no Focus sheet for the pending human notification click.
+
+
+### 12 October — Focus chooser keyboard selection
+
+12 October: fixed native Mac Focus chooser keyboard selection: Up/Down and Return now choose the correct filtered task/context. Empty-result Return and Escape are safe; mouse selection and paused-session normal relaunch pass. Debug/Release builds and test compilation pass; the automated Mac runner fails initialization before executing tests, so no XCTest runtime pass is claimed. Both cloud caches and all non-Focus fixture tables are unchanged. See `focus-keyboard-evidence.json`. iOS code is unchanged.
