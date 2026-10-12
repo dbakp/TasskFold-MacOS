@@ -1,6 +1,6 @@
 {
   "date": "2026-10-12",
-  "scope": "Native one-minute local Focus alert after normal Quit; cold Open awaiting manual click.",
+  "scope": "Actual cold-process Mac Focus notification Open with normal local workspace and no fixture launch overrides; native cleanup. Historical isolated binary.",
   "bundle": "com.dbakp.taskfold.mac.p0focuscontrasttests",
   "binaryScope": "Retained historical isolated binary, no current-source rebuild.",
   "initialLaunch": "Normal open app bundle with no arguments, no seeding/session/workspace override.",
@@ -10,7 +10,7 @@
     "Native Start Focus shows01:00 and scheduled status; close Focus; native menu Quit.",
     "PID12154 confirmed absent before delivery, and no matching app process present after delivery.",
     "Owned system log confirms actual delivery09:36:51.119 and Notification Center storage.",
-    "Manual newest-alert click pending; no app launch/replacement performed after Quit."
+    "User click records exact request foreground response09:38:21.564; OS launches new PID12570 without arguments; native Focus sheet immediately shows Cold Focus notification proof / Time well spent /00:00, without manual Focus activation."
   ],
   "quit": {
     "normalMenuQuit": true,
@@ -62,9 +62,33 @@
     "originalUiTestingFileHashExact": true,
     "pending": []
   },
-  "openAccepted": false,
+  "openAccepted": true,
   "remaining": [
-    "Actual cold-process notification Open and cleanup of only native-created local test task/session.",
-    "Other named P0 gates."
-  ]
+    "Mac task-reminder delivery/actions/account transitions, other named P0 gates, current-source/distribution validation."
+  ],
+  "result": {
+    "snapshotExactAfterOpen": true,
+    "pid": 12570,
+    "command": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-focus-alert-products/Taskfold.app/Contents/MacOS/Taskfold",
+    "nativeResultScreenshotInspected": true
+  },
+  "cleanup": {
+    "nativeEndSession": true,
+    "localFinishAlertsRestoredOff": true,
+    "nativeDeleteOnlySyntheticTask": true,
+    "finalLocalTaskCount": 0,
+    "pending": [],
+    "retainedExpectedTables": {
+      "stoppedFocusSession": 1,
+      "syntheticCreateDeleteActivity": 2,
+      "activityEpoch": 1
+    },
+    "existingUiTestingFileHashExact": true,
+    "protectedContainerCount": 6,
+    "protectedFileCount": 100,
+    "protectedFileSetsAndHashesExact": true,
+    "newOwnedDailyBackupRetained": true,
+    "limits": "Normal app created one encrypted daily backup and updated its index; retained, not deleted. No claim of entire local workspace byte equality."
+  },
+  "responseLogSHA256": "173aa9720d619dfd9bbe968fedb81a433dd2fb82e8a49983300f53724620ee42"
 }

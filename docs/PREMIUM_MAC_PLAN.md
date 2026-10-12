@@ -1798,3 +1798,6 @@ The first exit initially leaves stale All clear despite a correct cleared projec
 
 
 12 October: normal local cold Focus delivery passes after native Quit, using regular native task/chooser/duration controls and no fixture launch arguments. Actual cold notification Open and scoped test cleanup are pending; see `mac-focus-cold-open-evidence.json`.
+
+
+12 October: actual cold Focus Open passes with OS-launched new PID and no arguments, exact scheduled snapshot and inspected native finished-session result. Native test cleanup returns the local task list to empty and alerts off; stopped session/activity and an expected daily backup remain. Protected 100 files and original ui-testing cache are exact. See `mac-focus-cold-open-evidence.json`. Mac task-reminder/account and other named release gates remain open.

@@ -196,3 +196,10 @@ This closes the warm-process local Focus Open journey in the retained historical
 The retained isolated Focus app is normally quit, then launched with no arguments. Its normal local workspace is empty. Native Inbox capture creates one synthetic task; the regular Focus chooser and one-minute duration controls start a real session with finish alerts. Native menu Quit stops PID 12154 before the end. Actual delivery at 09:36:51.119 and Notification Center storage occur with no app process running. The scheduled local snapshot remains exact after delivery and the existing ui-testing cache retains its hash. See `mac-focus-cold-open-evidence.json`.
 
 A manual click of this newest alert is pending; no app has been relaunched after delivery, and cold Open is unaccepted. This normal local journey avoids fixture launch arguments on both scheduling and the future OS launch; the binary is still the historical isolated Focus build. Cleanup of the one test task/session follows action inspection. Other P0 gates remain open.
+
+
+### 12 October — actual cold Mac Focus Open and native cleanup accepted
+
+The newest alert's actual foreground response is recorded at 09:38:21.564. macOS starts a different process, PID 12570, with no arguments. Without manual Focus activation, its native sheet shows the correct task, “Time well spent” and 00:00. The full scheduled local snapshot is exact after Open, and the app capture is inspected. See `mac-focus-cold-open-evidence.json`.
+
+Native cleanup ends the session, restores this local account's finish-alert preference off and reversibly deletes only the one synthetic task. The local task list and queue are empty. Its stopped session, two expected create/delete activity rows and epoch remain. Normal daily backup creation adds one encrypted copy and updates the index; those are retained. The earlier ui-testing cache hash and all 100 protected files in six Simulator containers remain exact. This closes normal local cold Focus Open in the retained historical binary; Mac task-reminder/account actions, current-source/distribution validation and the other P0 gates remain open.
