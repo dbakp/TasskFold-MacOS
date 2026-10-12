@@ -4,6 +4,8 @@ Current release-gate order and external dependencies: [P0_RELEASE_STATUS.md](P0_
 
 The goal is a calm, fast native Mac app: daily actions should take few steps, navigation should preserve context, and motion should explain changes without disrupting work.
 
+13 October native follow-up: the six-chip capture layout is visually clear; exact project, section, label, deadline, priority and estimate survive normal Quit/relaunch. VoiceOver output remains unaccepted and its off state is restored. See [native capture evidence](mac-capture-layout-native-evidence.json).
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.

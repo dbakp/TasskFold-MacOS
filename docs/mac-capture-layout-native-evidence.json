@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-13",
+  "scope": "Native isolated Mac acceptance of the already committed chip row-width fix; iOS companion documentation only",
+  "sourceCommitMac": "d073862",
+  "sourceCommitIOS": "27c3c3f",
+  "bundle": "com.dbakp.taskfold.mac.backupcanceltests",
+  "signedDebugBuild": "PASS; Apple Development; isolated App Group and no production Push entitlement modification",
+  "nativeCapture": {
+    "entry": "Mac accessible capture proof #\"Client Work\" /\"Next steps\" @\"Client notes\" p2 ~45m {2028-01-06}",
+    "observed": "Six complete chips on two rows; title wraps; Add Task remains separate; native screenshot visually inspected in tool transcript, no new PNG artifact saved",
+    "save": "Return; clean title and exact metadata observed in inspector",
+    "normalQuitAndRelaunch": "PASS; reseeding argument omitted; Client Work > Next steps > selected task reopened",
+    "wholeWorkspaceSemanticEquality": true,
+    "savedTask": {
+      "priority": 2,
+      "duration_minutes": 45,
+      "section_id": "qe-next",
+      "assigned_to": null,
+      "deadline_date": "2028-01-06",
+      "id": "300bcec7-9839-4894-af35-a351d7180dfb",
+      "description": "",
+      "created_at": "2026-10-12T23:03:08Z",
+      "project_id": "qe-work",
+      "labels": [
+        "qe-client-label"
+      ],
+      "is_recurring": false,
+      "completed": false,
+      "task_generation": "589f9634-f69f-44d7-b9e7-d650a3394311",
+      "attachments": [],
+      "user_id": "ui-testing",
+      "comments": [],
+      "title": "Mac accessible capture proof",
+      "scheduled_at": null,
+      "due_date": null,
+      "completion_version": 0,
+      "reminders": [],
+      "subtasks": []
+    }
+  },
+  "voiceOver": {
+    "original": "off",
+    "temporarilyEnabled": "on verified in System Settings",
+    "attempt": "Control-Option-Right from task title; native screenshot and AX inspected",
+    "utility": "Show caption panel already enabled; preference unchanged",
+    "observed": "No caption or speech output; CUA inventory reported VoiceOver not running despite enabled setting",
+    "result": "NOT ACCEPTED: no genuine spoken output or verified VoiceOver traversal",
+    "restored": "off verified in System Settings; VoiceOver Utility quit",
+    "reference": "https://support.apple.com/en-lamr/guide/voiceover/unac078/mac"
+  },
+  "cleanup": {
+    "appQuit": true,
+    "isolatedCacheRestoredToBaseline": true,
+    "protectedFilesExact": 100
+  },
+  "limits": [
+    "No new broad accessibility acceptance",
+    "No new installed WidgetKit privacy acceptance",
+    "No new iOS workflow acceptance",
+    "Release signing remains user-deferred",
+    "Existing Mac runtime warnings remain unresolved"
+  ]
+}

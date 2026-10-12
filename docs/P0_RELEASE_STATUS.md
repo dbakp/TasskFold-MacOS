@@ -6,6 +6,8 @@ Audited against the original widget collection and Todoist port plan; current na
 
 ## Implemented versus accepted
 
+13 October follow-up: native Mac acceptance of the chip row-width fix now passes capture, exact Save, section selection and normal relaunch with whole-workspace preservation. VoiceOver output remains unaccepted; the temporary setting is restored to off. See `mac-capture-layout-native-evidence.json`.
+
 The core P0 feature families exist in both independently owned native repositories: current API importer/review, quick-entry planning, saved filters/favorites/preferences, independent deadlines, estimates/hourly planning, multiple reminders, recovery/export/restore, and the twelve widget kinds. Implementation and compilation do not establish release acceptance. The evidence below is deliberately scoped; each native iOS ↔ Mac journey requires its own scoped receipt; the live task-conflict journey below now has one.
 
 | Requirement | Evidence already obtained | Remaining acceptance |
