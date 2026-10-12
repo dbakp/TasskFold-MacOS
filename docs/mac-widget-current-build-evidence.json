@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-12",
+  "scope": "Current-source isolated Mac app/widget build replacement; signed-out native acceptance pending unlock",
+  "ownedSourceRepository": "TasskFold-MacOS",
+  "sourceCommit": "02e9588",
+  "widgetSourceSHA256": "6d3056ea05c45e7418f00ce1d5f885fa8e897e7ab4785c914444fbc29ebcdec4",
+  "stageWidgetNamespaceOnlyVerified": true,
+  "build": "mac-widget-host-build-v3.log: BUILD SUCCEEDED",
+  "acceptedPreparation": [
+    "Fresh independently staged Mac-owned app and extension include the committed Today unavailable-state fix",
+    "Strict app/extension/deep signatures pass with actual team 3UZ4C73FM2 and existing isolated team-prefixed group",
+    "Production App Group, URL scheme and APNs entitlements remain unchanged",
+    "Old isolated app PID 87182 stopped by targeted SIGTERM for replacement; not a native Quit test",
+    "Current app PID 92233 and extension PID 92235 run from v3 products",
+    "Only v3 extension remains registered; old v2 registration is gone",
+    "Both isolated cache JSON files remain exactly equal baseline after replacement"
+  ],
+  "nativeState": "CUA revalidated locked Mac on the new app handle; manual unlock request pending",
+  "notAccepted": [
+    "Native new-build window or installed Today unavailable-state display",
+    "Mac Capture/task/completion/cold routes and system privacy/account boundaries",
+    "Production APNs/distribution capability or release packaging"
+  ],
+  "evidenceDirectory": "mac-widget-current-build",
+  "historicalEvidence": "Previous v2 app-edit/widget refresh remains scoped historical acceptance in mac-widget-live-refresh-evidence.json",
+  "logsSHA256": {
+    "mac-widget-host-build-v3.log": "ebfa9e635cdb2e75e0e25ac723e667dba4bde98abde2a904ec7ac5dc469ce188"
+  }
+}

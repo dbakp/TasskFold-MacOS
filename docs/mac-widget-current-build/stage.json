@@ -1,0 +1,90 @@
+{
+  "sourceRepository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "workspace": "/private/tmp/taskfold-isolated-mac-widget-host-v3",
+  "bundleID": "com.dbakp.taskfold.mac.p0widgethosts",
+  "sandbox": true,
+  "productionURLAndFileRegistrationsRemoved": true,
+  "embeddedWidgetExtension": true,
+  "isolatedURLScheme": "taskfold-widget-host-test",
+  "isolatedAppGroup": "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts",
+  "signingTeam": "3UZ4C73FM2",
+  "namespaceOnlySourceChanges": {
+    "Taskfold/Core/ProjectPulseWidget.swift": {
+      "originalSHA256": "5cff18a7008e95a29d0bbee1e07aacab2cd34d87dc874493557daa27bf0e57a9",
+      "isolatedSHA256": "b6fd995cf1f19ccde1757139a5a3596cf4a7bd39b06eb217b3c5cf3a53eb445c"
+    },
+    "Taskfold/Core/Backups.swift": {
+      "originalSHA256": "5bc30bf8c4a8b61b5746e870d89e34739393b89e642d5a4c9719519a9d4d8c8f",
+      "isolatedSHA256": "37718e987066f9b1480616d595c3748a1b069e637b7400754a9742f59c2fecdd"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "originalSHA256": "564ade4799562e459427efc3e5d087e0df589259ac8ede9ffd33507b06f4f14c",
+      "isolatedSHA256": "995080939a1fe43579d6c21d5754dc3ba47e9f143dedc09558d856fa83cfd417"
+    },
+    "Taskfold/Core/FocusWidget.swift": {
+      "originalSHA256": "f89f11f4594a1669402e79dfb525ae79e206664ccf69477662be800a24862101",
+      "isolatedSHA256": "a200ca2f8082a9e421edc6a27b767e558a48fa04a1c027c9d40b241f7770328c"
+    },
+    "Taskfold/Core/WidgetActionTestPanel.swift": {
+      "originalSHA256": "1d911fa5fed2f020f5468b2aef59aae3b2011178bbe40bbdd56570c82a0aca24",
+      "isolatedSHA256": "323fff5a0ae4e001f038da91de8c82290f199a959bd2363e74145541c0b5b5f8"
+    },
+    "Taskfold/Core/InboxReview.swift": {
+      "originalSHA256": "6f073a7ae9e697f14d905083860768fb746bcbd53d82aca52ea8482d4e183bcd",
+      "isolatedSHA256": "423567361d412ca55a7fa4bc59dfb1f8f4de5cf9ca0d66a489b2c007e44a739c"
+    },
+    "Taskfold/Core/Planner.swift": {
+      "originalSHA256": "d2c8402fcf91d1b4625ae884e038107e42dd46da9e08fec8bf195d5394bce653",
+      "isolatedSHA256": "2068316911bbea19ff15fd5591512ccd18626a346456e0bcab47797cf09537ea"
+    },
+    "Taskfold/Core/Models.swift": {
+      "originalSHA256": "df922353f53e98f128cc4e7434e7e624b1541577a6d7b4dd4acc78ee3b6365a4",
+      "isolatedSHA256": "67c4f05a3d3cf10b728e25027956e55a41c3c1322bc66644d4106feb3c398008"
+    },
+    "Taskfold/Core/Store.swift": {
+      "originalSHA256": "e4c503bdf36b5e192a8ebed78904e9f09c0bb99dc3630b6a88beb4c8bd98cc75",
+      "isolatedSHA256": "879d2f0bbcd73fa55ca7a31416709a71fb3dfe505e7bbf0cad455fff4ad2a839"
+    },
+    "Taskfold/Core/PinnedNotes.swift": {
+      "originalSHA256": "498f1bdf7c22682f4e9d423fe0c3afd4f93cf2eb0b9093d9e6a6e33010c2cf7e",
+      "isolatedSHA256": "53d1a7651588524fbcf1003bb4ca2018866cf67446ea2d2e1a15a2af486cbba9"
+    },
+    "Taskfold/Core/WidgetActions.swift": {
+      "originalSHA256": "555fde1c881fce208a4a90be42584e5b4d9dd8fcbd78f4a70802c78711d36ea2",
+      "isolatedSHA256": "c5c2faacd1c5f7007b0b7d389ce189e20bd4a88d5e5ff2eaaa17dbe829a4cddb"
+    },
+    "Taskfold/Views/Editors.swift": {
+      "originalSHA256": "245b57063eb4b94855615fa02db8fb1d236729779b8b6e34d5eec22857bfd49c",
+      "isolatedSHA256": "70cbab115031fe1f01789580c19adf285ffd0ea17508d04db4b8bb471061ba7e"
+    },
+    "Taskfold/Views/RootView.swift": {
+      "originalSHA256": "2e946fbb27960f43e208f2d7db57604d8d0691c657caaad770eb057464715e0e",
+      "isolatedSHA256": "673f2b78838f37a860b8b2acd4700d99ef7e8027abd6752a32f8444b9a1d5835"
+    },
+    "Taskfold/Views/AuthView.swift": {
+      "originalSHA256": "04260a1a62cfd27860fe34563dfd45311b13c14b4c09aaf0838269e9a9146bc1",
+      "isolatedSHA256": "567d8037ebb3154b338dc4e928544f220b48469e8ef8c577f4bfb870a1bd5260"
+    },
+    "TaskfoldWidgets/TaskfoldWidgets.swift": {
+      "originalSHA256": "6d3056ea05c45e7418f00ce1d5f885fa8e897e7ab4785c914444fbc29ebcdec4",
+      "isolatedSHA256": "c4207cb2ba0b7abd7950c2eef7ec10e5b6bd9d8c577fe269bb704e42b8ee859e"
+    }
+  },
+  "replacements": {
+    "com.taskfold.ios.session": "com.taskfold.mac.p0widgethosts.session",
+    "com.taskfold.recovery.v1": "com.taskfold.mac.p0widgethosts.recovery.v1",
+    "group.com.dbakp.taskfold": "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts",
+    "taskfold://": "taskfold-widget-host-test://",
+    "\"taskfold\"": "\"taskfold-widget-host-test\""
+  },
+  "launchArguments": [
+    "--uitesting"
+  ],
+  "limitations": [
+    "Preparation only; no launch/install/runtime acceptance.",
+    "Unique keychain services; no production credential migration.",
+    "Production Push Notifications and keychain-group entitlements are absent only from the copied test app.",
+    "No signed-distribution, APNs or provider acceptance.",
+    "Cold OS launches omit --uitesting and use the isolated local workspace; fixture continuity must be verified separately."
+  ]
+}
