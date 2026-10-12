@@ -186,12 +186,13 @@ struct WidgetSnapshot: Codable {
     var projectPulse: ProjectPulseSnapshot? = nil
     var focusSession: FocusWidgetSnapshot? = nil
     var capacity: WidgetCapacity? = nil
+    var completionFeedback: WidgetCompletionFeedback? = nil
     var pendingSync: Int = 0
     var pendingTaskIDs: [String] = [] // Derived under the same disk lock as the snapshot read.
     init(updated: TimeInterval, tasks: [WidgetTask], version: Int = 2, account: String = "", lists: [WidgetList] = []) {
         self.updated = updated; self.tasks = tasks; self.version = version; self.account = account; self.lists = lists
     }
-    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync, capacity, notes, focusSession, projectPulse }
+    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync, capacity, notes, focusSession, projectPulse, completionFeedback }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         version = try row.decodeIfPresent(Int.self, forKey: .version) ?? 1
@@ -205,6 +206,7 @@ struct WidgetSnapshot: Codable {
         capacity = try? row.decode(WidgetCapacity.self, forKey: .capacity)
         focusSession = try? row.decode(FocusWidgetSnapshot.self, forKey: .focusSession)
         projectPulse = try? row.decode(ProjectPulseSnapshot.self, forKey: .projectPulse)
+        completionFeedback = try? row.decode(WidgetCompletionFeedback.self, forKey: .completionFeedback)
     }
     var availableNotes: [WidgetNote] {
         var seen = Set<String>()
@@ -743,7 +745,12 @@ struct WindowProvider: AppIntentTimelineProvider {
     }
     func timeline(for configuration: WindowConfiguration, in context: Context) async -> Timeline<WindowEntry> {
         let snapshot = WidgetSnapshot.load()
-        return Timeline(entries: snapshot.listTimelineDates(configuration.list?.id, from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+        let now = Date()
+        var dates = snapshot.listTimelineDates(configuration.list?.id, from: now)
+        if let feedback = snapshot.completionFeedback, feedback.visible(account: snapshot.account, listID: configuration.list?.id, at: now) {
+            dates.append(feedback.expiresAt)
+        }
+        return Timeline(entries: Array(Set(dates)).sorted().map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
     }
     private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: WindowConfiguration) -> WindowEntry {
         WindowEntry(date: date, snapshot: snapshot, budget: configuration.budget, scope: configuration.scope, palette: configuration.palette, hideTitles: configuration.hideTitles, listID: configuration.list?.id)
@@ -914,6 +921,10 @@ struct WidgetListEmpty: View {
 struct ListWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let entry: ListEntry
+    private var feedback: WidgetCompletionFeedback? {
+        entry.snapshot.completionFeedback.flatMap { $0.visible(account: entry.snapshot.account, listID: entry.listID, at: entry.date) ? $0 : nil }
+    }
+    private var rowLimit: Int { family == .systemSmall ? 1 : family == .systemLarge ? 5 : 2 }
     private var target: WidgetList? { entry.snapshot.list(entry.listID) }
     private var tasks: [WidgetTask] { entry.snapshot.listTasks(entry.listID, at: entry.date) }
     private var status: WidgetListStatus { entry.snapshot.listStatus(entry.listID, at: entry.date) }
@@ -936,11 +947,23 @@ struct ListWidgetView: View {
                 listHeader
             }
             if status != .ready { Spacer(minLength: 0); WidgetListEmpty(status: status) }
-            else if tasks.isEmpty {
+            else if tasks.isEmpty && feedback == nil {
                 Spacer(minLength: 0); Text("All clear").font(.headline)
                 Text("No open tasks in this list.").font(.caption2).foregroundStyle(.secondary)
             } else {
-                ForEach(tasks.prefix(family == .systemSmall ? 1 : family == .systemLarge ? 5 : 2)) { task in
+                if let feedback {
+                    Link(destination: WidgetLinks.task(feedback.taskID)) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill").font(.system(size: 21)).foregroundStyle(tint)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Completed").font(.caption.weight(.semibold)).foregroundStyle(tint)
+                                Text(entry.hideTitles ? "Private task" : feedback.title).font(.caption2).lineLimit(2).privacySensitive()
+                            }
+                            Spacer(minLength: 0)
+                        }.frame(minHeight: 44).contentShape(Rectangle())
+                    }.buttonStyle(.plain).accessibilityHint("Open completed task")
+                }
+                ForEach(tasks.prefix(max(0, rowLimit - (feedback == nil ? 0 : 1)))) { task in
                     HStack(spacing: 2) {
                         if let token = task.completionToken, !entry.snapshot.account.isEmpty {
                             let pending = entry.snapshot.pendingTaskIDs.contains(task.id)

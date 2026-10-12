@@ -28,6 +28,35 @@ public struct WidgetActionRead {
     public var pendingTaskIDs: [String]
 }
 
+/// A short-lived acknowledgement of a durably saved widget action, never a pending tap.
+public struct WidgetCompletionFeedback: Codable, Equatable, Sendable {
+    public var account: String
+    public var taskID: String
+    public var title: String
+    public var listIDs: [String]
+    public var savedAt: Date
+    public var expiresAt: Date { savedAt.addingTimeInterval(8) }
+    public func visible(account: String, listID: String?, at date: Date) -> Bool {
+        !account.isEmpty && self.account == account && listID.map(listIDs.contains) == true && date >= savedAt && date < expiresAt
+    }
+    public static func capture(_ request: WidgetCompletionRequest, projection: Data?, at date: Date = Date()) -> Self? {
+        struct Projection: Decodable {
+            struct Task: Decodable { var id: String; var title: String; var completionToken: String? }
+            struct List: Decodable { var id: String; var days: [String: [String]]; var timeZone: String }
+            var account: String; var tasks: [Task]; var lists: [List]
+        }
+        guard let projection, let value = try? JSONDecoder().decode(Projection.self, from: projection),
+              value.account == request.account,
+              let task = value.tasks.first(where: { $0.id.lowercased() == request.taskID.lowercased() && $0.completionToken == request.token }) else { return nil }
+        let lists = value.lists.filter { list in
+            guard let zone = TimeZone(identifier: list.timeZone) else { return false }
+            let formatter = DateFormatter(); formatter.calendar = Calendar(identifier: .gregorian); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.timeZone = zone; formatter.dateFormat = "yyyy-MM-dd"
+            return (list.days["*"] ?? list.days[formatter.string(from: date)])?.contains(task.id) == true
+        }.map(\.id)
+        return Self(account: request.account, taskID: task.id, title: task.title, listIDs: lists, savedAt: date)
+    }
+}
+
 /// Locks both snapshot reads and queue updates across the app/extension processes.
 /// Cache credentials and executable task mutations never enter this directory.
 public final class WidgetActionDisk: @unchecked Sendable {

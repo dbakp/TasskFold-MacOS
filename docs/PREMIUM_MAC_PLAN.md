@@ -1883,3 +1883,6 @@ The second real desktop title click starts v6 PID30403 without arguments and ope
 
 
 12 October: next installed Mac widget journey is My list completion. A single disposable undated Inbox task is saved in the normal local v6 host; actual App Group projection contains its matching identity and completion token, with no pending edits. Desktop installation/Inbox selection is awaiting user interaction because system widget controls are inaccessible. See `mac-mylist-preflight-evidence.json`; no installed completion pass is claimed.
+
+
+12 October: installed My list completion/persistence is accepted for the single local project task. Added a saved-only, account/list-scoped brief Completed row, with hidden-title handling and a task-open link; matching independent iOS implementation. Focused tests and Debug builds pass, source renders inspected; native feedback timing remains pending. See `widget-completion-feedback-evidence.json`.

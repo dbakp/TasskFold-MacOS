@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-12",
+  "scope": "Installed large Mac My list completion and new brief completion acknowledgement",
+  "installedCompletion": {
+    "userObservedTaskDisappear": true,
+    "taskID": "1c0c6814-7bbc-41fd-9257-0b4857442bde",
+    "changedTaskFields": [
+      "completed",
+      "completed_at",
+      "completion_version"
+    ],
+    "durableReceipt": true,
+    "pendingEdits": 0,
+    "fullSnapshotExactAfterNormalRelaunch": true,
+    "nativeCompletedRowObserved": true
+  },
+  "feedback": {
+    "platforms": [
+      "macOS",
+      "iOS"
+    ],
+    "behavior": "After durable save only, show a checkmark, Completed and privacy-aware title in the relevant My list for an eight-second timeline window. Tap opens the completed task.",
+    "scopeProtection": "Account and list membership, completion token, persisted receipt, still-completed task and bounded timestamp; old caches remain readable.",
+    "timingLimit": "WidgetKit schedules rendering; exact wall-clock duration is not guaranteed.",
+    "undo": "No direct widget Undo added in this change. The completed task can be opened; safe occurrence-aware Undo remains a separate design/verification task."
+  },
+  "verification": {
+    "macWidgetActionTests": 11,
+    "iosWidgetActionTests": 11,
+    "failures": 0,
+    "macSignedDebugAppAndExtension": "passed",
+    "macStrictDeepSignature": "passed",
+    "iosArm64SimulatorDebug": "passed",
+    "sourceRendersInspected": [
+      "small/medium/large completion",
+      "hidden names",
+      "last task completed"
+    ],
+    "nativeFeedbackTransition": "Pending user observation on installed v7"
+  },
+  "cleanup": "Synthetic task reopened through native UI for feedback verification; temporary project retained. No real workspace modified."
+}

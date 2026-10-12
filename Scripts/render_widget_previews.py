@@ -72,7 +72,11 @@ extension PreviewLink where Content == Text {
             listSnapshot.lists[0].days = ["*": listSnapshot.tasks.map(\.id)]
         }
         let chosen = mode == "lists-unavailable" ? "deleted-list" : listSnapshot.availableLists.first?.id
-        let listPrivate = mode == "lists-private"
+        let listPrivate = mode == "lists-private" || mode == "lists-completed-private"
+        if mode.hasPrefix("lists-completed"), let chosen {
+            listSnapshot.completionFeedback = WidgetCompletionFeedback(account: listSnapshot.account, taskID: "completed-proof", title: "Prepare the quarterly planning notes and share the final draft", listIDs: [chosen], savedAt: entry.date)
+            if mode == "lists-completed-empty" { listSnapshot.tasks = [] }
+        }
         let listContent = VStack(alignment: .leading, spacing: 20) {
             Text("Your work, close by").font(.system(size: 28, weight: .bold, design: .rounded))
             Text("Choose a project, label or saved filter. Keep the useful part in view.").font(.subheadline).foregroundStyle(.secondary)
@@ -192,6 +196,6 @@ with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporar
     path = Path(temporary)
     (path / 'Preview.swift').write_text(source)
     subprocess.run(['xcrun', 'swiftc', '-parse-as-library', '-D', 'TASKFOLD_WIDGET_EXTENSION', str(root / 'Taskfold/Core/WidgetActions.swift'), str(root / 'Taskfold/Core/FocusWidget.swift'), str(root / 'Taskfold/Core/ProjectPulseWidget.swift'), str(path / 'Preview.swift'), '-o', str(path / 'preview')], check=True)
-    modes = [(mode, mode) for mode in ['notes', 'notes-dark', 'notes-private', 'notes-choose', 'notes-deleted', 'notes-legacy', 'notes-blank', 'notes-dense', 'notes-largest']] if '--notes' in sys.argv else [(mode, mode) for mode in ['inbox', 'inbox-dark', 'inbox-empty', 'inbox-private', 'inbox-legacy', 'inbox-dense', 'inbox-largest']] if '--inbox' in sys.argv else [(mode, mode) for mode in ['capacity', 'capacity-dark', 'capacity-overload', 'capacity-unknown', 'capacity-off', 'capacity-incomplete', 'capacity-refresh', 'capacity-empty', 'capacity-private', 'capacity-rest', 'capacity-largest']] if '--capacity' in sys.argv else [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable', 'lists-pending', 'lists-sync', 'lists-dense']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
+    modes = [(mode, mode) for mode in ['notes', 'notes-dark', 'notes-private', 'notes-choose', 'notes-deleted', 'notes-legacy', 'notes-blank', 'notes-dense', 'notes-largest']] if '--notes' in sys.argv else [(mode, mode) for mode in ['inbox', 'inbox-dark', 'inbox-empty', 'inbox-private', 'inbox-legacy', 'inbox-dense', 'inbox-largest']] if '--inbox' in sys.argv else [(mode, mode) for mode in ['capacity', 'capacity-dark', 'capacity-overload', 'capacity-unknown', 'capacity-off', 'capacity-incomplete', 'capacity-refresh', 'capacity-empty', 'capacity-private', 'capacity-rest', 'capacity-largest']] if '--capacity' in sys.argv else [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable', 'lists-pending', 'lists-sync', 'lists-dense', 'lists-completed', 'lists-completed-private', 'lists-completed-empty']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
     for mode, name in modes:
         subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode], check=True)

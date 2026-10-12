@@ -6,6 +6,7 @@ struct WidgetCompletionCache: Codable, Equatable, Sendable {
     var states: [String: State] = [:]
     var receipts: [String: String] = [:]
     var receiptOrder: [String] = []
+    var feedback: WidgetCompletionFeedback? = nil
     mutating func record(_ request: WidgetCompletionRequest) {
         let id = request.id.uuidString.lowercased()
         receipts[id] = request.taskID.lowercased(); receiptOrder.removeAll { $0 == id }; receiptOrder.append(id)

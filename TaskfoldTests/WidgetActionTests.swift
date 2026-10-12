@@ -15,6 +15,35 @@ final class WidgetActionTests: XCTestCase {
     private func publish(_ disk: WidgetActionDisk, _ snapshot: Snapshot, account: String = "a") throws {
         try disk.publish(JSONEncoder().encode(WidgetProjection.payload(tasks: snapshot.tables["tasks"] ?? [], projects: [], account: account, completionTokens: WidgetCompletion.tokens(snapshot))))
     }
+    func testCompletionFeedbackIsScopedBoundedAndCompatibleWithOldCaches() throws {
+        var value = snapshot()
+        value.tables["tasks"]?[0]["project_id"] = .string("p")
+        let project = Record(["id": .string("p"), "name": .string("Proof"), "user_id": .string("a")])
+        let action = try request(value), now = action.createdAt
+        let payload = WidgetProjection.payload(tasks: value.tables["tasks"]!, projects: [project], account: "a", now: now, completionTokens: WidgetCompletion.tokens(value))
+        let data = try JSONEncoder().encode(payload)
+        let feedback = try XCTUnwrap(WidgetCompletionFeedback.capture(action, projection: data, at: now))
+        let listID = try XCTUnwrap(feedback.listIDs.first)
+        XCTAssertTrue(feedback.visible(account: "a", listID: listID, at: now))
+        XCTAssertTrue(feedback.visible(account: "a", listID: listID, at: now.addingTimeInterval(7)))
+        XCTAssertFalse(feedback.visible(account: "b", listID: listID, at: now))
+        XCTAssertFalse(feedback.visible(account: "a", listID: "other", at: now))
+        XCTAssertFalse(feedback.visible(account: "a", listID: listID, at: now.addingTimeInterval(-1)))
+        XCTAssertFalse(feedback.visible(account: "a", listID: listID, at: now.addingTimeInterval(8)))
+        var foreign = action; foreign.account = "b"
+        XCTAssertNil(WidgetCompletionFeedback.capture(foreign, projection: data, at: now))
+        foreign = action; foreign.token = UUID().uuidString
+        XCTAssertNil(WidgetCompletionFeedback.capture(foreign, projection: data, at: now))
+        let old = try JSONDecoder().decode(WidgetCompletionCache.self, from: Data(#"{"states":{},"receipts":{},"receiptOrder":[]}"#.utf8))
+        XCTAssertNil(old.feedback)
+        value.widgetCompletion.feedback = feedback
+        let restored = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(value))
+        XCTAssertEqual(restored.widgetCompletion.feedback, feedback)
+        var published = payload
+        published["completionFeedback"] = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(feedback))
+        let widget = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(published))
+        XCTAssertEqual(widget.completionFeedback, feedback)
+    }
     func testTokenPersistsAcrossRelaunchUnrelatedEditsAndEquivalentServerTimestampSpellings() throws {
         let before = snapshot(), token = WidgetCompletion.tokens(before)[task().id]
         var after = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(before))
