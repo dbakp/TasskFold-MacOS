@@ -2402,3 +2402,117 @@ extension TaskfoldMacUITests {
     }
 
 }
+
+// Run these live phases individually in the order recorded in
+// docs/live-native-task-conflict-evidence.json, with the guarded private fixture.
+// The ordinary runner skips them; credentials never belong in the repository.
+private struct LiveConflictFixture: Decodable {
+    let account: [String: String]
+    let taskID: String
+    let originalTitle: String
+    let offlineTitle: String
+    let remoteTitle: String
+    let remoteNotes: String
+}
+extension TaskfoldMacUITests {
+    @MainActor private func liveConflictFixture() throws -> LiveConflictFixture {
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else { throw XCTSkip("Dedicated native conflict app required") }
+        let f = try JSONDecoder().decode(LiveConflictFixture.self, from: Data(contentsOf: URL(fileURLWithPath: "/private/tmp/taskfold-live-conflict-native.json")))
+        guard f.account["userID"] == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152", f.account["email"] == "taskfold-continuity-" + f.account["userID"]! + "@example.invalid", UUID(uuidString: f.taskID) != nil else { throw XCTSkip("Disposable continuity fixture required") }
+        return f
+    }
+    @MainActor private func liveConflictCache(_ f: LiveConflictFixture) throws -> NSDictionary {
+        let path = "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/" + f.account["userID"]! + ".json"
+        return try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: path))) as! NSDictionary
+    }
+    @MainActor private func waitLiveConflict(_ f: LiveConflictFixture, _ condition: @escaping (NSDictionary) -> Bool) throws -> NSDictionary {
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let cache = try? self.liveConflictCache(f) else { return false }; return condition(cache)
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 35), .completed)
+        return try liveConflictCache(f)
+    }
+    @MainActor private func liveConflictTask(_ cache: NSDictionary, _ f: LiveConflictFixture) -> NSDictionary? {
+        (cache["tables"] as? NSDictionary)?["tasks"].flatMap { $0 as? [NSDictionary] }?.first { $0["id"] as? String == f.taskID }
+    }
+    @MainActor private func liveConflictLaunch(_ app: XCUIApplication) {
+        app.launch()
+        // A Dock-style reopen is needed when XCTest restores an app with no window.
+        if let url = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests" })?.bundleURL {
+            let configuration = NSWorkspace.OpenConfiguration(); configuration.activates = true
+            NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, _ in }
+        }
+        app.activate()
+        XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 30))
+    }
+    @MainActor private func liveConflictArguments(_ f: LiveConflictFixture) -> [String] {
+        ["-ApplePersistenceIgnoreState", "YES", "-onboardingSeen", "YES", "-dailyBackups." + f.account["userID"]!, "NO"]
+    }
+    @MainActor private func liveConflictRow(_ app: XCUIApplication, _ taskID: String) -> XCUIElement {
+        app.staticTexts["title-" + taskID]
+    }
+    @MainActor func testLiveMacQueuesTwoOfflineEditsAndRetainsThemAfterRelaunch() throws {
+        continueAfterFailure = false
+        let f = try liveConflictFixture(), app = XCUIApplication(); defer { app.terminate() }
+        let args = liveConflictArguments(f)
+        app.launchArguments = ["--live-auth-ui-test"] + args; liveConflictLaunch(app)
+        let email = app.textFields["authEmail"], password = app.secureTextFields["authPassword"]
+        XCTAssertTrue(email.waitForExistence(timeout: 30)); email.click(); email.typeText(f.account["email"]!)
+        password.click()
+        let board = NSPasteboard.general
+        let saved = (board.pasteboardItems ?? []).map { item in item.types.compactMap { type in item.data(forType: type).map { (type, $0) } } }
+        board.clearContents(); board.setString(f.account["password"]!, forType: .string); app.typeKey("v", modifierFlags: .command)
+        board.clearContents(); board.writeObjects(saved.map { values in let item = NSPasteboardItem(); for (type, data) in values { item.setData(data, forType: type) }; return item })
+        app.buttons["nativeSignIn"].click(); XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 30))
+        app.staticTexts["Inbox"].firstMatch.click(); XCTAssertTrue(liveConflictRow(app, f.taskID).waitForExistence(timeout: 30))
+        _ = try waitLiveConflict(f) { self.liveConflictTask($0, f)?["title"] as? String == f.originalTitle && ($0["pending"] as? [Any])?.isEmpty == true }
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
+        app.launchArguments = ["--continuity-offline"] + args; liveConflictLaunch(app); app.staticTexts["Inbox"].firstMatch.click()
+        liveConflictRow(app, f.taskID).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        let title = app.descendants(matching: .any)["taskTitle"].firstMatch
+        if !title.waitForExistence(timeout: 3) { app.buttons["Inspector"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click() }
+        XCTAssertTrue(title.waitForExistence(timeout: 5)); title.click(); app.typeKey("a", modifierFlags: .command); title.typeText(f.offlineTitle); app.typeKey(.tab, modifierFlags: [])
+        _ = try waitLiveConflict(f) { self.liveConflictTask($0, f)?["title"] as? String == f.offlineTitle && ($0["pending"] as? [Any])?.count == 1 }
+        let priority = app.menuButtons["priority-" + f.taskID]
+        XCTAssertTrue(priority.waitForExistence(timeout: 5)); priority.click(); app.menuItems["Priority 1"].firstMatch.click()
+        let queued = try waitLiveConflict(f) { self.liveConflictTask($0, f)?["priority"] as? Int == 1 && ($0["pending"] as? [Any])?.count == 2 }
+        retainWindow(app, name: "Mac two real offline edits queued")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
+        XCTAssertTrue(liveConflictRow(app, f.taskID).waitForExistence(timeout: 10)); XCTAssertEqual(try liveConflictCache(f), queued)
+        retainWindow(app, name: "Mac offline queue retained after normal Quit")
+    }
+    @MainActor func testLiveMacReviewsCollisionAndPreservesLaterOfflinePriority() throws {
+        continueAfterFailure = false
+        let f = try liveConflictFixture(), app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app)
+        let review = app.links["reviewSyncConflict"]
+        XCTAssertTrue(review.waitForExistence(timeout: 35)); let queued = try liveConflictCache(f)
+        XCTAssertEqual((queued["pending"] as? [Any])?.count, 2)
+        review.click(); XCTAssertTrue(app.buttons["conflictLater"].waitForExistence(timeout: 5)); app.buttons["conflictLater"].click()
+        XCTAssertEqual(try liveConflictCache(f), queued)
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
+        XCTAssertTrue(review.waitForExistence(timeout: 35)); review.click()
+        let capture = XCTAttachment(screenshot: app.sheets.firstMatch.screenshot()); capture.name = "Mac real phone collision after Later and relaunch"; capture.lifetime = .keepAlways; add(capture)
+        app.buttons["useSharedEdit"].click()
+        let settled = try waitLiveConflict(f) { cache in
+            let task = self.liveConflictTask(cache, f)
+            return task?["title"] as? String == f.remoteTitle && task?["description"] as? String == f.remoteNotes && task?["priority"] as? Int == 1 && (cache["pending"] as? [Any])?.isEmpty == true
+        }
+        app.staticTexts["Inbox"].firstMatch.click(); XCTAssertTrue(liveConflictRow(app, f.taskID).waitForExistence(timeout: 10)); liveConflictRow(app, f.taskID).coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        XCTAssertEqual(app.textViews["taskDescription"].value as? String, f.remoteNotes)
+        retainWindow(app, name: "Mac synced phone title and notes retain later offline priority")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
+        XCTAssertTrue(liveConflictRow(app, f.taskID).waitForExistence(timeout: 10)); XCTAssertEqual(try liveConflictCache(f), settled)
+        retainWindow(app, name: "Mac resolved real collision retained after normal Quit")
+    }
+    @MainActor func testLiveMacRemovesOnlySyntheticCollisionTask() throws {
+        continueAfterFailure = false
+        let f = try liveConflictFixture(), app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app); app.staticTexts["Inbox"].firstMatch.click()
+        let row = liveConflictRow(app, f.taskID); XCTAssertTrue(row.waitForExistence(timeout: 20)); row.click()
+        app.typeKey(.delete, modifierFlags: .command)
+        _ = try waitLiveConflict(f) { self.liveConflictTask($0, f) == nil && ($0["pending"] as? [Any])?.isEmpty == true }
+        XCTAssertFalse(row.exists)
+        retainWindow(app, name: "Mac removes only the synthetic collision task")
+    }
+}

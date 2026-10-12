@@ -176,7 +176,7 @@ final class Backend: NSObject {
             waiting.protocolClasses = [AuthenticationWaitingHTTP.self]
             self.http = URLSession(configuration: waiting)
         } else if ProcessInfo.processInfo.arguments.contains("--continuity-offline"),
-           Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.p0signeduitests",
+           ["com.dbakp.taskfold.mac.p0signeduitests", "com.dbakp.taskfold.mac.backupcanceltests"].contains(Bundle.main.bundleIdentifier ?? ""),
            let user = session?.user,
            user.id == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
            user.email == "taskfold-continuity-" + user.id + "@example.invalid" {

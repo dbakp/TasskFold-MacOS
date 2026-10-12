@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-12",
+  "scope": "Real independent native Mac offline edits, iPhone competing edit, conflict review and resolved return through the live disposable account",
+  "productionChange": "None. DEBUG-only offline transport allowlists now include the exact isolated test app IDs, retaining disposable account guards. Each repo owns its native tests independently.",
+  "setup": "One synthetic task inserted through owner-authenticated REST into the pre-existing disposable account. All subsequent competing title, notes and priority edits, conflict choices and final deletion use native app UI. Each device signs in independently. No credentials committed.",
+  "native": [
+    {
+      "phase": "Mac offline queue",
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-live-conflict-queue-v9.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+        }
+      ]
+    },
+    {
+      "phase": "Phone competing edit",
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-live-conflict-remote-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "phase": "Mac Later and resolution",
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-live-conflict-review-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "phase": "Phone receives resolution",
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-live-conflict-received-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "phase": "Mac removes synthetic task",
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-live-conflict-cleanup-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "phase": "Phone receives cleanup",
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-live-conflict-cleanup-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": []
+    }
+  ],
+  "acceptance": "Functional conflict and durability journey passes. Clean-runtime acceptance of the Mac preparation remains OPEN because one internal QoS warning was reported during task-title input; source attribution is not established. Five later phases report no runtime warnings.",
+  "retention": [
+    "Two separate Mac pending edits survive normal Quit/relaunch with whole saved-workspace equality",
+    "Later preserves the whole queued workspace and review survives normal Quit/relaunch",
+    "Use synced keeps the phone title and independent phone notes plus the later offline Priority 1",
+    "Both resolved saved workspace dictionaries survive normal process relaunch exactly",
+    "Mac native deletion reaches the phone; both pending queues are empty"
+  ],
+  "server": [
+    {
+      "phase": "remote",
+      "originalNonActivityTablesExact": 12,
+      "allOriginalActivityRowsPreserved": true,
+      "syntheticTaskAbsent": false,
+      "syntheticPriority": 4
+    },
+    {
+      "phase": "resolved",
+      "originalNonActivityTablesExact": 12,
+      "allOriginalActivityRowsPreserved": true,
+      "syntheticTaskAbsent": false,
+      "syntheticPriority": 1
+    },
+    {
+      "phase": "cleanup",
+      "originalNonActivityTablesExact": 12,
+      "allOriginalActivityRowsPreserved": true,
+      "syntheticTaskAbsent": true,
+      "syntheticPriority": null
+    }
+  ],
+  "serverLimits": "12 non-activity table comparisons are exact, filtering only the synthetic task before cleanup. All original activity rows remain; activity epoch and new synthetic activity are not claimed byte-identical. No tombstone-table comparison is claimed.",
+  "core": {
+    "macAccountTransport": {
+      "passed": 24,
+      "failed": 0
+    },
+    "iosAccountTransport": {
+      "passed": 24,
+      "failed": 0
+    }
+  },
+  "builds": {
+    "mac": "Independent Debug build-for-testing succeeded; strict deep signature passed",
+    "ios": "Independent Debug build-for-testing succeeded",
+    "release": "Not rebuilt for DEBUG/test-only changes; signing remains user-deferred"
+  },
+  "earlierAttempts": "Mac v1-v8 and diagnostic v7 were unsuccessful driver attempts, not accepted workflow runs. Exact-path launch and process sample showed AppKit event processing, not a Keychain stall. Final driver uses Launch Services reopen, waits for actual window/inspector, stable task-title IDs and coordinate clicks. A CUA inspection inadvertently relaunched online and flushed synthetic edits; only the synthetic server task was reset before the final complete v9 journey.",
+  "accessibility": "VoiceOver was briefly enabled under prior authorization; spoken/caption inspection timed out. Its original off state was restored and confirmed. No VoiceOver acceptance is claimed. Older import-count audit was already superseded by import-count-accessibility-evidence.json; no new importer fix.",
+  "captures": {
+    "mac-offline-queued.png": "6959b560f68904a2a85292b12f46203a8b542e6246b6e815327c4af0c99150d4",
+    "mac-offline-relaunch.png": "3d1119eb50377416173c33a7e024dd9409ebc62c795fa56211b9870e2ec35dea",
+    "iphone-competing-edit.png": "b4f121d9dbae4ba37a83096c32976326451ec1ab6d384efe5209d2dfa6ef21f8",
+    "mac-real-conflict-review.png": "19b486b753cd45a164b1507ca05c3b2e3dee4acc444fe53270b16562a5824025",
+    "mac-resolved-inspector.png": "8e913bf6b914d1fee9a0c362ba4510159cd739654e340a854d9c5f16c2fe4aa8",
+    "mac-resolved-relaunch.png": "9dd87928e00994fc6ad91f160e12f473d547961da83b5538f50b2d5782e3771d",
+    "iphone-resolved-inspector.png": "c835c69f229124a570b5432c56c8344c855f8faa34d0f9a9398b5bdb2d3c2b90",
+    "iphone-relaunch-workspace.png": "ce962098dee4801e77ce52470a1b80ee241c8cb60f8ef72f21da95329cbb0c93",
+    "mac-synthetic-task-removed.png": "95f0753937b4d4ee0d7e81a02b310087fdafa528f89672414c787e90b24c92d9"
+  },
+  "captureLimits": "All nine captures visually inspected. The phone relaunch capture shows the default Today workspace; resolved-task retention after that launch is established by whole-cache equality, not visibility in that capture.",
+  "cleanup": {
+    "protectedFilesExact": 100,
+    "mainAppAndRunnerProcessesRemaining": 0,
+    "disposablePhoneAppAndRunnerUninstalled": true,
+    "disposableSimulatorShutDown": true,
+    "sourceTodoist": "No source requests or mutations in this checkpoint",
+    "inactiveCacheAndDuplicateExportBytesPruned": 8594944145
+  },
+  "open": "Mac preparation QoS warning; spoken VoiceOver; remaining widget hosts/privacy variants, external OAuth/provider, mixed-client and other named P0 gates; APNs and user-deferred distribution signing. Mac review also shows duplicate Later affordances, retained as a small usability follow-up."
+}
