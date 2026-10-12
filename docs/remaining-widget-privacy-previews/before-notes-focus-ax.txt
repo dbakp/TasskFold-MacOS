@@ -1,0 +1,37 @@
+Window: "Taskfold widget privacy test", App: Taskfold Widget Privacy Test.
+0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Picker<SwiftUI.Text, Swift.Int, SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<
+	1 container
+		2 Widget pair
+			3 radio button Description: Planning, Value: 0
+			4 radio button Description: Workload, Value: 0
+			5 radio button Description: Notes & Focus, Value: 1
+			6 radio button Description: Week & Pulse, Value: 0
+		7 text Normal
+		8 container normal-open
+			9 text PINNED NOTE Make room for good ideas Start with one clear thought.
+Sketch it before polishing.
+Leave a little space for surprise. READ FULL NOTE
+			10 image arrow.up.right
+		11 container normal-completed
+			12 text FOCUS SESSION 19:52 Time to focus Make room for the next good idea 25 minutes for one task. Open session
+			13 image arrow.up.right
+		14 text Privacy redaction
+		15 container private-open
+			16 text PINNED NOTE 􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷 􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷 READ FULL NOTE
+			17 image arrow.up.right
+		18 container private-completed
+			19 text FOCUS SESSION 19:52 Time to focus 􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷 25 minutes for one task. Open session
+			20 image arrow.up.right
+	21 close button
+	22 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	23 minimize button
+	24 text Taskfold widget privacy test
+25 menu bar
+	26 Taskfold Widget Privacy Test
+	27 File
+	28 Edit
+	29 View
+	30 Window
+	31 Help
+
+The focused UI element is 0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Picker<SwiftUI.Text, Swift.Int, SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<

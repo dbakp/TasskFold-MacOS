@@ -1,0 +1,33 @@
+Window: "Taskfold widget privacy test", App: Taskfold Widget Privacy Test.
+0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Picker<SwiftUI.Text, Swift.Int, SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<
+	1 container
+		2 Widget pair
+			3 radio button Description: Planning, Value: 0
+			4 radio button Description: Workload, Value: 0
+			5 radio button Description: Notes & Focus, Value: 1
+			6 radio button Description: Week & Pulse, Value: 0
+		7 text Normal
+		8 container normal-open
+			9 text PINNED NOTE Make room for good ideas Start with one clear thought.
+Sketch it before polishing.
+Leave a little space for surprise. READ FULL NOTE
+			10 image arrow.up.right
+		11 container normal-completed
+			12 text FOCUS 20:00 Time to focus Make room for the next good idea Open session
+			13 image arrow.up.right
+		14 text Privacy redaction
+		15 text Pinned note, Note is private, Open Taskfold to read your notes., TASKFOLD
+		16 text Focus session, Session is private, Open Taskfold to view your session., TASKFOLD
+	17 close button
+	18 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	19 minimize button
+	20 text Taskfold widget privacy test
+21 menu bar
+	22 Taskfold Widget Privacy Test
+	23 File
+	24 Edit
+	25 View
+	26 Window
+	27 Help
+
+The focused UI element is 0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Picker<SwiftUI.Text, Swift.Int, SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<

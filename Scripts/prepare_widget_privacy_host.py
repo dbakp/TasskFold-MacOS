@@ -5,7 +5,7 @@ import subprocess,plistlib,argparse
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output', type=Path, required=True)
 parser.add_argument('--small', action='store_true', help='Inspect the small widget layout')
-parser.add_argument('--kind', choices=['list', 'today-focus'], default='list')
+parser.add_argument('--kind', choices=['list', 'today-focus', 'remaining'], default='list')
 args=parser.parse_args()
 repo=Path(__file__).resolve().parent.parent
 dest=args.output.expanduser().resolve()
@@ -49,6 +49,30 @@ source+='''
 if args.kind == 'today-focus':
     source=source.replace('ListWidgetView(entry: ListEntry(date: now, snapshot: snapshot, listID: listID))', 'TodayWidgetView(entry: TodayEntry(date: now, snapshot: snapshot))')
     source=source.replace('ListWidgetView(entry: ListEntry(date: now, snapshot: completed, listID: listID))', 'FocusWidgetView(entry: TodayEntry(date: now, snapshot: snapshot))')
+if args.kind == 'remaining':
+    source=source.replace('@main struct WidgetPrivacyTestHost: App {', '@main struct WidgetPrivacyTestHost: App {\n    @State private var selectedPair = 0')
+    source=source.replace('Text("Normal").font(.headline)', '''Picker("Widget pair", selection: $selectedPair) {
+                    Text("Planning").tag(0)
+                    Text("Workload").tag(1)
+                    Text("Notes & Focus").tag(2)
+                    Text("Week & Pulse").tag(3)
+                }.pickerStyle(.segmented)
+                Text("Normal").font(.headline)''')
+    source=source.replace('ListWidgetView(entry: ListEntry(date: now, snapshot: snapshot, listID: listID))', 'remainingCard(index: 0)')
+    source=source.replace('ListWidgetView(entry: ListEntry(date: now, snapshot: completed, listID: listID))', 'remainingCard(index: 1)')
+    source=source.replace('    func cards(privateMode: Bool) -> some View {', '''    @ViewBuilder func remainingCard(index: Int) -> some View {
+        switch (selectedPair, index) {
+        case (0, 0): DeadlineWidgetView(entry: DeadlineEntry(date: TodayEntry.preview.date, snapshot: TodayEntry.preview.snapshot))
+        case (0, 1): WindowWidgetView(entry: WindowEntry(date: TodayEntry.preview.date, snapshot: TodayEntry.preview.snapshot))
+        case (1, 0): CapacityWidgetView(entry: .preview)
+        case (1, 1): InboxWidgetView(entry: .preview)
+        case (2, 0): NoteWidgetView(entry: .preview)
+        case (2, 1): FocusSessionWidgetView(entry: .preview)
+        case (3, 0): WeekWidgetView(entry: .preview)
+        default: PulseWidgetView(entry: .preview)
+        }
+    }
+    func cards(privateMode: Bool) -> some View {''')
 if args.small:
     source=source.replace('var family: WidgetFamily = .systemMedium', 'var family: WidgetFamily = .systemSmall')
     source=source.replace('frame(width: 338, height: 180)', 'frame(width: 170, height: 170)')

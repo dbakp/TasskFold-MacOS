@@ -1,0 +1,38 @@
+Window: "Taskfold widget privacy test", App: Taskfold Widget Privacy Test.
+0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Picker<SwiftUI.Text, Swift.Int, SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<
+	1 container
+		2 Widget pair
+			3 radio button Description: Planning, Value: 0
+			4 radio button Description: Workload, Value: 0
+			5 radio button Description: Notes & Focus, Value: 0
+			6 radio button Description: Week & Pulse, Value: 1
+		7 text Normal
+		8 container normal-open
+			9 text Next 7 days 5 scheduled
+			10 unknown Monday, 4 scheduled tasks
+			11 unknown Tuesday, 0 scheduled tasks
+			12 unknown Wednesday, 1 scheduled tasks
+			13 unknown Thursday, 0 scheduled tasks
+			14 unknown Friday, 0 scheduled tasks
+			15 unknown Saturday, 0 scheduled tasks
+			16 unknown Sunday, 0 scheduled tasks
+			17 text TASKFOLD
+		18 container normal-completed
+			19 text PROJECT PULSE A good idea, taking shape 8 of 12 current project tasks completed completed · current tasks 2 need attention Review project
+			20 image arrow.up.right
+		21 text Privacy redaction
+		22 text Week ahead, Tasks are private, Open Taskfold to view your tasks., TASKFOLD
+		23 text Project pulse, Project is private, Open Taskfold to view your projects., TASKFOLD
+	24 close button
+	25 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	26 minimize button
+	27 text Taskfold widget privacy test
+28 menu bar
+	29 Taskfold Widget Privacy Test
+	30 File
+	31 Edit
+	32 View
+	33 Window
+	34 Help
+
+The focused UI element is 0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Picker<SwiftUI.Text, Swift.Int, SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<

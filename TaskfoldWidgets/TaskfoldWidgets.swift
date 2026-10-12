@@ -498,12 +498,14 @@ struct WidgetFooter: View {
 struct WidgetPrivateCard: View {
     let title: String
     let symbol: String
+    var message = "Tasks are private"
+    var instruction = "Open Taskfold to view your tasks."
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label(title, systemImage: symbol).font(.headline)
+            Label(title, systemImage: symbol).font(.headline).lineLimit(2)
             Spacer(minLength: 0)
-            Label("Tasks are private", systemImage: "lock.fill").font(.subheadline.weight(.semibold))
-            Text("Open Taskfold to view your tasks.").font(.caption).foregroundStyle(.secondary)
+            Label(message, systemImage: "lock.fill").font(.subheadline.weight(.semibold))
+            Text(instruction).font(.caption).foregroundStyle(.secondary)
             Spacer(minLength: 0)
             Text("TASKFOLD").font(.system(size: 9, weight: .semibold, design: .rounded)).tracking(1.5).foregroundStyle(.secondary)
         }
@@ -644,9 +646,19 @@ struct FocusWidgetView: View {
 }
 
 struct WeekWidgetView: View {
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: TodayEntry
     var days: [WidgetDay] { entry.snapshot.week(at: entry.date) }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Week ahead", symbol: "calendar", message: "Tasks are private", instruction: "Open Taskfold to view your tasks.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: mint) }
+                .widgetURL(URL(string: "taskfold://upcoming"))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack { Label("Next 7 days", systemImage: "calendar").font(.headline); Spacer(); Text("\(days.reduce(0) { $0 + $1.count }) scheduled").font(.caption).foregroundStyle(mint) }
             HStack(alignment: .bottom, spacing: 8) {
@@ -846,12 +858,22 @@ struct PlanningWidgetEmpty: View {
 
 struct DeadlineWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: DeadlineEntry
     private var tint: Color { entry.palette.color(fallback: brand) }
     private var tasks: [WidgetTask] { entry.snapshot.scoped(to: entry.listID, at: entry.date).deadlines(at: entry.date, days: entry.window.days) }
     private var today: String { WidgetSnapshot.day(entry.date) }
     private var missed: Int { tasks.filter { ($0.deadlineDay ?? "9999") < today }.count }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Deadline radar", symbol: "flag.checkered", message: "Tasks are private", instruction: "Open Taskfold to view your tasks.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.list(entry.listID)?.url ?? URL(string: "taskfold://all"))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 7 : 5) {
             HStack { Label("Deadline radar", systemImage: "flag.checkered").font(family == .systemSmall ? .caption.weight(.semibold) : .headline); Spacer(minLength: 0); if family != .systemSmall && entry.snapshot.updated > 0 && entry.snapshot.hasPlanningFields && (entry.listID == nil || entry.snapshot.listStatus(entry.listID, at: entry.date) == .ready) { Text("\(tasks.count)").font(.title2.weight(.semibold)).monospacedDigit().foregroundStyle(tint) } }
             if let listID = entry.listID, entry.snapshot.listStatus(listID, at: entry.date) != .ready {
@@ -899,11 +921,21 @@ struct DeadlineWidgetView: View {
 
 struct WindowWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: WindowEntry
     private var tint: Color { entry.palette.color(fallback: plum) }
     private var tasks: [WidgetTask] { entry.snapshot.scoped(to: entry.listID, at: entry.date).smallWindow(minutes: entry.budget.minutes, scope: entry.scope, at: entry.date) }
     private var unknown: Int { entry.snapshot.scoped(to: entry.listID, at: entry.date).windowTasks(scope: entry.scope, at: entry.date).filter { $0.estimate == nil }.count }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Small window", symbol: "hourglass", message: "Tasks are private", instruction: "Open Taskfold to view your tasks.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.list(entry.listID)?.url ?? entry.scope.url)
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 6 : 5) {
             HStack {
                 Label(family == .systemSmall ? "Small window" : "A small window", systemImage: "hourglass").font(family == .systemSmall ? .caption.weight(.semibold) : .headline).foregroundStyle(tint)
@@ -1137,10 +1169,20 @@ struct CapacityProvider: AppIntentTimelineProvider {
 }
 struct CapacityWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: CapacityEntry
     private var reading: WidgetCapacityReading { entry.snapshot.capacityReading(at: entry.date, day: entry.day) }
     private var tint: Color { entry.palette.color(fallback: mint) }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Day capacity", symbol: "chart.bar.xaxis", message: "Plan is private", instruction: "Open Taskfold to view your plan.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(WidgetLinks.scoped("day", id: reading.dayKey))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 5) {
                 Image(systemName: "chart.bar.xaxis").foregroundStyle(tint)
@@ -1263,6 +1305,7 @@ struct InboxProvider: AppIntentTimelineProvider {
 }
 struct InboxWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: InboxEntry
     private var reading: WidgetInboxReading { entry.snapshot.inboxReading() }
     private var tint: Color { entry.palette.color(fallback: plum) }
@@ -1273,6 +1316,15 @@ struct InboxWidgetView: View {
         return batchCount < count ? "Review \(batchCount) of \(count)" : "Review all \(count)"
     }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Inbox reset", symbol: "tray", message: "Tasks are private", instruction: "Open Taskfold to view your tasks.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.inboxReviewURL(batch: entry.batch))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 5) {
                 Image(systemName: "tray").foregroundStyle(tint)
@@ -1385,11 +1437,21 @@ struct NoteProvider: AppIntentTimelineProvider {
 }
 struct NoteWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: NoteEntry
     private var tint: Color { entry.palette.color(fallback: mint) }
     private var status: WidgetNoteStatus { entry.snapshot.noteStatus(entry.noteID, at: entry.date) }
     private var note: WidgetNote? { status == .ready ? entry.snapshot.note(entry.noteID) : nil }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Pinned note", symbol: "pin.fill", message: "Note is private", instruction: "Open Taskfold to read your notes.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.notesURL)
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 4 : family == .systemLarge ? 12 : 8) {
             HStack {
                 Label("PINNED NOTE", systemImage: "pin.fill").font(.system(size: 10, weight: .semibold, design: .rounded)).tracking(1).foregroundStyle(tint)
@@ -1472,6 +1534,7 @@ struct FocusSessionProvider: AppIntentTimelineProvider {
 }
 struct FocusSessionWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: FocusSessionEntry
     private var tint: Color { entry.palette.color(fallback: plum) }
     private var status: FocusWidgetStatus { entry.snapshot.focusSessionStatus(at: entry.date) }
@@ -1498,6 +1561,15 @@ struct FocusSessionWidgetView: View {
         }
     }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Focus session", symbol: "timer", message: "Session is private", instruction: "Open Taskfold to view your session.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.focusSessionURL)
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 4 : 8) {
             HStack {
                 Label(family == .systemSmall ? "FOCUS" : "FOCUS SESSION", systemImage: status == .paused ? "pause.circle" : "timer")
@@ -1634,6 +1706,7 @@ struct PulseProvider: AppIntentTimelineProvider {
 }
 struct PulseWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: PulseEntry
     private var tint: Color { entry.palette.color(fallback: mint) }
     private var status: PulseWidgetStatus { entry.snapshot.pulseStatus(entry.projectID, at: entry.date) }
@@ -1642,6 +1715,15 @@ struct PulseWidgetView: View {
     private var large: Bool { family == .systemLarge }
     private var small: Bool { family == .systemSmall }
     var body: some View {
+        if redactionReasons.contains(.privacy) {
+            WidgetPrivateCard(title: "Project pulse", symbol: "chart.bar.fill", message: "Project is private", instruction: "Open Taskfold to view your projects.")
+                .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+                .widgetURL(entry.snapshot.pulseURL(nil))
+        } else {
+            normalContent
+        }
+    }
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: small ? 5 : 8) {
             HStack {
                 Label("PROJECT PULSE", systemImage: "chart.bar.fill").font(.system(size: 9, weight: .semibold, design: .rounded)).tracking(0.8).foregroundStyle(tint)

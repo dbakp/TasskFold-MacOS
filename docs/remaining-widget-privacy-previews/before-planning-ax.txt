@@ -1,0 +1,47 @@
+Window: "Taskfold widget privacy test", App: Taskfold Widget Privacy Test.
+0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Picker<SwiftUI.Text, Swift.Int, SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<
+	1 container
+		2 Widget pair
+			3 radio button Description: Planning, Value: 1
+			4 radio button Description: Workload, Value: 0
+			5 radio button Description: Notes & Focus, Value: 0
+			6 radio button Description: Week & Pulse, Value: 0
+		7 text Normal
+		8 container normal-open
+			9 text Deadline radar 3 1 missed · next 7 days
+			10 link Description: File the expense report, Work, Deadline 2026-10-11, missed, Value: taskfold://task/preview-5
+			11 link Description: Sketch the next big idea, Studio, Deadline 2026-10-13, Value: taskfold://task/preview-1
+			12 link Description: Send the proposal, Work, Deadline 2026-10-15, Value: taskfold://task/preview-2
+			13 text TASKFOLD
+		14 container normal-completed
+			15 text A small window 25 min Today, overdue & undated
+			16 link Description: File the expense report, Work, 15m, Value: taskfold://task/preview-5
+			17 link Description: Sketch the next big idea, Studio, 25m, Value: taskfold://task/preview-1
+			18 link Description: Send the proposal, Work, 10m, Value: taskfold://task/preview-2
+			19 text TASKFOLD 1 unestimated
+		20 text Privacy redaction
+		21 container private-open
+			22 text Deadline radar 3 1 missed · next 7 days
+			23 link Description: File the expense report, Work, Deadline 2026-10-11, missed, Value: taskfold://task/preview-5
+			24 link Description: Sketch the next big idea, Studio, Deadline 2026-10-13, Value: taskfold://task/preview-1
+			25 link Description: Send the proposal, Work, Deadline 2026-10-15, Value: taskfold://task/preview-2
+			26 text TASKFOLD
+		27 container private-completed
+			28 text A small window 25 min 􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷􀮷
+			29 link Description: File the expense report, Work, 15m, Value: taskfold://task/preview-5
+			30 link Description: Sketch the next big idea, Studio, 25m, Value: taskfold://task/preview-1
+			31 link Description: Send the proposal, Work, 10m, Value: taskfold://task/preview-2
+			32 text TASKFOLD 1 unestimated
+	33 close button
+	34 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	35 minimize button
+	36 text Taskfold widget privacy test
+37 menu bar
+	38 Taskfold Widget Privacy Test
+	39 File
+	40 Edit
+	41 View
+	42 Window
+	43 Help
+
+The focused UI element is 0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Picker<SwiftUI.Text, Swift.Int, SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<Swift.Int>>, SwiftUI.ModifiedContent<SwiftUI.Text, SwiftUI._TagTraitWritingModifier<
