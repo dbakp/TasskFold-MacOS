@@ -1,0 +1,42 @@
+{
+  "sourceRepository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "workspace": "/private/tmp/taskfold-isolated-mac-notification-v2",
+  "bundleID": "com.dbakp.taskfold.mac.p0notificationtests",
+  "sandbox": true,
+  "productionURLAndFileRegistrationsRemoved": true,
+  "embeddedWidgetExtension": false,
+  "isolatedURLScheme": null,
+  "isolatedAppGroup": null,
+  "signingTeam": null,
+  "namespaceOnlySourceChanges": {
+    "Taskfold/Core/Backups.swift": {
+      "originalSHA256": "5bc30bf8c4a8b61b5746e870d89e34739393b89e642d5a4c9719519a9d4d8c8f",
+      "isolatedSHA256": "b70babbb7b7349b5288d3960fa5851c1afcc388721fe3e4029d20b0e80857cc8"
+    },
+    "Taskfold/Core/Backend.swift": {
+      "originalSHA256": "564ade4799562e459427efc3e5d087e0df589259ac8ede9ffd33507b06f4f14c",
+      "isolatedSHA256": "f4a473b2164b75e5ce3bf3fa2530394f79a964390809bbf6489ae51cc73a1258"
+    },
+    "Taskfold/Core/Store.swift": {
+      "originalSHA256": "8ab4b363520637807d355117a7355ac07163eb0c3a2ff31a84140f5c8d9157b9",
+      "isolatedSHA256": "6f520f875fa6ed3643571816a304e77568f09a48577007b6a03d2c804adb3a73"
+    },
+    "Taskfold/Core/WidgetActions.swift": {
+      "originalSHA256": "555fde1c881fce208a4a90be42584e5b4d9dd8fcbd78f4a70802c78711d36ea2",
+      "isolatedSHA256": "8bdbe2423ed73464f813335e2f72bf2002e0e7fccc3dc3c80a9b516c64dcdccd"
+    }
+  },
+  "replacements": {
+    "com.taskfold.ios.session": "com.taskfold.mac.p0notificationtests.session",
+    "com.taskfold.recovery.v1": "com.taskfold.mac.p0notificationtests.recovery.v1",
+    "group.com.dbakp.taskfold": "group.com.dbakp.taskfold.mac.p0notificationtests"
+  },
+  "launchArguments": [],
+  "limitations": [
+    "Preparation only; no launch/install/runtime acceptance.",
+    "Unique keychain services; no production credential migration.",
+    "Production Push Notifications and keychain-group entitlements are absent only from the copied test app.",
+    "No signed-distribution, APNs or provider acceptance.",
+    "Cold OS launches omit --uitesting and use the isolated local workspace; fixture continuity must be verified separately."
+  ]
+}

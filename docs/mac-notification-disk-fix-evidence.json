@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-12",
+  "scope": "First normal local launch of current-source isolated notification app exposes DEBUG missing bundle allowlist; corrected build native launch and preservation. Notification permission pending; no action acceptance.",
+  "bundle": "com.dbakp.taskfold.mac.p0notificationtests",
+  "firstFailure": "New app is widget-free but omitted from DEBUG isolatedNativeBundles, so WidgetActionDisk.system attempts unentitled Group Containers write; native Today shows permission error and Retry.",
+  "fix": "Add only com.dbakp.taskfold.mac.p0notificationtests to DEBUG isolatedNativeBundles. Uses the existing sandbox-local WidgetActionTests directory. No production behavior changes.",
+  "nativeSteps": [
+    "Normal v1 launch, native Use on this Mac without an account, skip welcome tour; standard starter workspace creates four tasks and one project.",
+    "Observed widget storage permission error; saved fresh three-file baseline.",
+    "Native menu Quit verified v1 app absent; independently staged corrected source v2 built/signed.",
+    "Old v1 registration removed and inactive Build products pruned; stage/logs retained.",
+    "Normal v2 launch shows four original Today tasks and Saved on this device with no permission/Retry warning.",
+    "Native Settings Task reminders activation sends actual OS authorization request09:56:51.990; approval requested, no test reminder scheduled yet."
+  ],
+  "preservation": {
+    "parsedSnapshotExact": true,
+    "originalTasks": 4,
+    "originalProjectCount": 1,
+    "originalFileHashEquality": {
+      "local.json": false,
+      "Backups/37ab6eac-1cbe-895f-b5f4-59ec47fe6a30/9022915a-9f77-4cf6-9830-2bcc0c111c1b.taskfoldbackup": true,
+      "Backups/37ab6eac-1cbe-895f-b5f4-59ec47fe6a30/index.json": true
+    },
+    "encodingOnlyLocalJSONChange": true,
+    "sandboxLocalProjectionAccount": "local",
+    "projectedTasks": 4
+  },
+  "signing": {
+    "build": "PASS",
+    "strictDeepSignature": "PASS",
+    "team": "3UZ4C73FM2",
+    "bundle": "com.dbakp.taskfold.mac.p0notificationtests",
+    "binarySHA256": "99ebb7f789e87eee2291129a5c1868b67b789fe065054fb1156f1b622e354ca7",
+    "entitlements": {
+      "com.apple.security.app-sandbox": true,
+      "com.apple.security.files.user-selected.read-write": true,
+      "com.apple.security.get-task-allow": true,
+      "com.apple.security.network.client": true,
+      "com.apple.security.personal-information.calendars": true
+    },
+    "scope": "Corrected DEBUG isolated bundle disk path; no runtime/action acceptance yet."
+  },
+  "storageCleanup": {
+    "retiredPath": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-notification-v1/Build",
+    "logicalBytes": 108895377,
+    "appProcessAbsent": true,
+    "registrationRemoved": true,
+    "stageAndLogsRetained": true,
+    "v2ProductsKept": true
+  },
+  "runtime": {
+    "pid": 15247,
+    "normalLaunchNoArguments": true,
+    "permission": "pending user approval"
+  },
+  "remaining": [
+    "Native current-source task reminder Move to tomorrow/Snooze/Open/account actions.",
+    "Distribution/APNs and remaining named P0 gates."
+  ]
+}

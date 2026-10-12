@@ -577,7 +577,8 @@ final class Store {
         let isolatedNativeBundles: Set<String> = [
             "com.dbakp.taskfold.mac.p0uitests", "com.dbakp.taskfold.mac.p0localuitests",
             "com.dbakp.taskfold.mac.p0importa11ytests", "com.dbakp.taskfold.mac.p0focuscontrasttests",
-            "com.dbakp.taskfold.mac.p0grammaruitests", "com.dbakp.taskfold.mac.p0signeduitests"
+            "com.dbakp.taskfold.mac.p0grammaruitests", "com.dbakp.taskfold.mac.p0signeduitests",
+            "com.dbakp.taskfold.mac.p0notificationtests"
         ]
         if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") || isolatedNativeBundles.contains(Bundle.main.bundleIdentifier ?? "") {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "WidgetActionTests", directoryHint: .isDirectory))

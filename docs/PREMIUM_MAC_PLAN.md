@@ -1807,3 +1807,6 @@ The first exit initially leaves stale All clear despite a correct cleared projec
 
 
 12 October: actual terminated task-reminder Complete/save/normal relaunch and native cleanup pass (`mac-notification-complete-evidence.json`), with only completion fields changed, reminder specs retained and100protected files exact. Current-source notification build stays unlaunched for remaining Open/Snooze/Move to tomorrow/account tests. Future-occurrence cancellation/independent registry inspection are outside this one-shot pass.
+
+
+12 October: current-source notification harness's normal first local launch exposes and fixes the missing DEBUG bundle allowlist entry for sandbox-local widget projection. Four starter tasks/project and parsed snapshot are preserved; native permission error clears. v2 Debug/signatures pass, inactive v1 products are pruned (108,895,377 logical bytes), and normal v2 permission approval is pending. See `mac-notification-disk-fix-evidence.json`. Production behavior is unchanged.
