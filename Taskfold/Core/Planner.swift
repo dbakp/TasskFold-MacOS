@@ -172,6 +172,13 @@ enum TaskPlanner {
         let selected = last.map { calendar.timeZone.secondsFromGMT(for: $0) == calendar.timeZone.secondsFromGMT(for: old) ? $0 : first } ?? first
         return ((try? fields(task: task, start: selected, calendar: calendar)) ?? [:]).filter { task[$0.key] != $0.value }
     }
+    /// Notification “Move to tomorrow” means the receiving device's next calendar day,
+    /// including undated work and reminders that arrive before a future task plan.
+    static func tomorrowFields(task: Record, now: Date = Date(), calendar: Calendar = .current) -> [String: JSON] {
+        guard now.timeIntervalSince1970.isFinite,
+              let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) else { return [:] }
+        return dayFields(task: task, day: dayKey(tomorrow, calendar: calendar), calendar: calendar)
+    }
     static func resizedMinutes(task: Record, delta: Int) -> Int? {
         guard let old = task.durationMinutes else { return nil }
         return min(10080, max(1, old + delta))

@@ -1333,8 +1333,9 @@ final class Store {
         switch action {
         case ReminderCategory.complete: toggle(task)
         case ReminderCategory.tomorrow:
-            if let due = TaskPlanner.dayDate(task), let next = Calendar.current.date(byAdding: .day, value: 1, to: max(due, Calendar.current.startOfDay(for: Date()))) {
-                _ = commit([Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: TaskPlanner.dayFields(task: task, day: TaskPlanner.dayKey(next)))])
+            let fields = TaskPlanner.tomorrowFields(task: task)
+            if !fields.isEmpty {
+                _ = commit([Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields)])
             }
         case let action where ReminderSnooze.minutes(action: action) != nil:
             guard let minutes = ReminderSnooze.minutes(action: action) else { return nil }

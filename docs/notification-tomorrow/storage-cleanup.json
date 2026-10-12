@@ -1,0 +1,26 @@
+{
+  "removed": [
+    {
+      "path": "BuildCache/mac-notification-tomorrow",
+      "allocatedBytes": 1047236608
+    },
+    {
+      "path": "tomorrow-action-before-attachments-v1",
+      "allocatedBytes": 36966400
+    },
+    {
+      "path": "tomorrow-action-before-attachments-v2",
+      "allocatedBytes": 32501760
+    },
+    {
+      "path": "tomorrow-action-before-attachments-v3",
+      "allocatedBytes": 67207168
+    },
+    {
+      "path": "tomorrow-action-after-attachments-v1",
+      "allocatedBytes": 7888896
+    }
+  ],
+  "allocatedBytesRemoved": 1191800832,
+  "retained": "All raw native result bundles, build/Core logs, source/signing/preservation receipts, selected captures, iOS test products and existing live Mac test binaries."
+}

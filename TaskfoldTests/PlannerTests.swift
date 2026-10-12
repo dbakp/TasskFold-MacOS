@@ -141,3 +141,46 @@ extension PlannerTests {
         XCTAssertThrowsError(try WorkingHours(start: 1020, end: 540).replacing(WorkingHours().document))
     }
 }
+
+
+extension PlannerTests {
+    func testNotificationTomorrowPlansUndatedAndFutureWorkOnActualTomorrow() {
+        let c = calendar(), now = day("2026-10-12", c).addingTimeInterval(12 * 3600)
+        for originalDay in ["", "2026-10-10", "2026-10-12", "2026-10-13", "2026-10-20"] {
+            var original = task("notification", "", minutes: 45, date: originalDay)
+            original["description"] = .string("Keep the independent notes")
+            original["reminder_specs"] = .array([.object(ReminderSpec.absolute(now).raw)])
+            let fields = TaskPlanner.tomorrowFields(task: original, now: now, calendar: c)
+            var snapshot = Snapshot(tables: ["tasks": [original]])
+            snapshot.apply(Mutation(table: "tasks", recordID: original.id, method: "PATCH", fields: fields))
+            let moved = snapshot.tables["tasks"]!.first!
+            XCTAssertEqual(moved.string("due_date"), "2026-10-13", originalDay)
+            for key in ["id", "title", "description", "duration_minutes", "deadline_date", "reminder_specs", "completed", "due_time"] {
+                XCTAssertEqual(moved[key], original[key], key + " from " + originalDay)
+            }
+            if originalDay == "2026-10-13" { XCTAssertTrue(fields.isEmpty) }
+        }
+    }
+    func testNotificationTomorrowUsesCalendarDayAcrossDSTAndKeepsFixedLocalClock() throws {
+        let c = calendar(), now = day("2026-03-28", c).addingTimeInterval(23 * 3600)
+        let floating = task("floating", "02:30", date: "2026-04-10")
+        let spring = TaskPlanner.tomorrowFields(task: floating, now: now, calendar: c)
+        XCTAssertEqual(spring["due_date"], .string("2026-03-29"))
+        XCTAssertEqual(spring["due_time"], .string("03:30"))
+        let travel = calendar("America/New_York")
+        var fixed = task("fixed", "00:30", date: "2026-10-20")
+        fixed["time_zone"] = .string("Europe/Copenhagen"); fixed["scheduled_at"] = .string("2026-10-19T22:30:00Z")
+        let localNow = day("2026-10-12", travel).addingTimeInterval(22 * 3600)
+        let fields = TaskPlanner.tomorrowFields(task: fixed, now: localNow, calendar: travel)
+        var snapshot = Snapshot(tables: ["tasks": [fixed]])
+        snapshot.apply(Mutation(table: "tasks", recordID: fixed.id, method: "PATCH", fields: fields))
+        let moved = try XCTUnwrap(snapshot.tables["tasks"]?.first)
+        XCTAssertEqual(TaskPlanner.plannedDay(moved, calendar: travel), "2026-10-13")
+        XCTAssertEqual(TaskPlanner.clockValue(moved, calendar: travel), "18:30")
+        XCTAssertEqual(moved.string("time_zone"), "Europe/Copenhagen")
+        XCTAssertEqual(moved.string("deadline_date"), fixed.string("deadline_date"))
+    }
+    func testNotificationTomorrowRejectsInvalidClockWithoutChangingWork() {
+        XCTAssertTrue(TaskPlanner.tomorrowFields(task: task("invalid", ""), now: Date(timeIntervalSince1970: .nan), calendar: calendar()).isEmpty)
+    }
+}
