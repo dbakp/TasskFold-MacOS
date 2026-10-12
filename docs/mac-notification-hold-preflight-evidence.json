@@ -15,5 +15,6 @@
   "futureFireAt": 1791798520,
   "preservation": "Private baseline covers both reserved accounts and 100 protected files. Synthetic task saved with zero pending edits.",
   "prunedInactiveBuildBytes": 109236717,
-  "remaining": "Actual Complete click, held response, A to B release, A return and cleanup remain pending. iOS already has independent test support and acceptance."
+  "remaining": "Actual Complete click, held response, A to B release, A return and cleanup remain pending. iOS already has independent test support and acceptance.",
+  "supersededBy": "mac-notification-account-switch-evidence.json"
 }

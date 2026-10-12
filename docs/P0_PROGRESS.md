@@ -10,7 +10,7 @@ This short view summarizes `P0_RELEASE_STATUS.md`; its dated entries and JSON ev
 | Recovery | Native portable export/restore, encrypted Mac safety copy, cloud and cross-account restore/replay/relaunch; native Mac shared-access loss, encrypted recovery/apply and durable notice | External provider-backed file transfer and remaining failure boundaries |
 | Device continuity | Native Mac ↔ phone tasks/notes/planning/organization round trips, offline edits and relaunches; paired name/photo and native Mac attachment handoffs | Remaining concurrency/legacy-client variants |
 | Core usability | Capture/editor/subtasks/completion/Undo fixes; Mac calendar keyboard navigation; scoped phone/tablet normal and largest-text calendar routes; four clipping reports classified with scoped evidence | Spoken VoiceOver; remaining critical landscape/sidebar flows |
-| Notifications | Mac Focus authorization, scheduling, pause/resume, background banner and terminated-app Notification Center delivery evidence; real iPhone Move to tomorrow/Complete and relaunch, including terminated-process Complete; native local/authenticated sign-out and actual Complete callback across A → B → A | Mac A → B delayed callback isolation; real APNs delivery and rollout proof |
+| Notifications | Mac Focus authorization, scheduling, pause/resume, background banner and terminated-app Notification Center delivery evidence; real iPhone Move to tomorrow/Complete and relaunch, including terminated-process Complete; native local/authenticated sign-out and actual Complete callback across A → B → A | Named Mac local/authenticated actions and delayed Complete isolation pass; real APNs delivery and rollout remain open |
 | Distribution | Independent repositories and development builds | Mac app provisioning blocked by current Personal Team’s Push Notifications limit; enrolled team, Developer ID/notarization and distribution signing |
 
 ## How to interpret recent activity
@@ -273,3 +273,10 @@ Native cleanup restores delivery off and deletes only the disposable task with U
 ### 12 October — Mac delayed notification callback preflight
 
 Mac now owns opt-in DEBUG support to hold one actual system response before its unchanged production handler, then release it after a native account switch. It requires the exact isolated bundle and an explicit launch flag. Signed v7 Debug/strict signature pass; native controls reach Armed and two disposable reminder occurrences are genuinely scheduled. See `mac-notification-hold-preflight-evidence.json`. Both reserved accounts and protected files have private baselines. Actual callback/account-switch acceptance remains pending; this is test preparation, not a pass. Inactive v6 products are pruned; active v7, logs and sources remain. iOS retains its independent existing harness.
+
+
+### 12 October — actual Mac delayed Complete across A → B → A
+
+The actual Notification Center Complete response is held for A, then released after native sign-out/sign-in to B with delivery enabled. The unchanged production handler returns under B; B tasks, pending edits and both notification registries remain empty. Returning to A preserves its complete scheduled snapshot, still-open task and exact four future requests. See `mac-notification-account-switch-evidence.json`. This closes the named Mac delayed Complete isolation journey; it does not expand acceptance to every action/timing permutation.
+
+Native cleanup restores delivery off in both accounts and reversibly deletes only the synthetic A task. Cloud comparison proves A non-activity tables and prior activity exact, B all 14 tables exact, and 100 protected files exact. The empty reserved B account/0600 credentials remain for final fixture cleanup. Other named P0 release gates remain open. The earlier callback preflight is superseded by this actual result.

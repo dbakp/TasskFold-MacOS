@@ -1,0 +1,144 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual Mac Complete response held across authenticated A to B switch, released under B, then A return.",
+  "build": "v7 isolated signed Debug with explicit callback hold flag; unchanged production handleReminder",
+  "processID": 26888,
+  "actualAction": "taskfold.complete",
+  "taskID": "51d925eb-21b5-4e76-85e2-94a7b8b8510f",
+  "nativeHeldResponseObserved": true,
+  "nativeHandledUnderBObserved": true,
+  "accountBRegistry": {
+    "accountID": "8529d5a3-de5e-4e66-859e-9fd424fc4eca",
+    "actions": [
+      {
+        "id": "taskfold.complete",
+        "title": "Complete"
+      },
+      {
+        "id": "taskfold.snooze.minutes.60",
+        "title": "Remind me in 1 hour"
+      },
+      {
+        "id": "taskfold.tomorrow",
+        "title": "Move to tomorrow"
+      }
+    ],
+    "delivered": [],
+    "observedAt": 1791796916.4614038,
+    "pending": [],
+    "processID": 26888
+  },
+  "accountAReturnRegistry": {
+    "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+    "actions": [
+      {
+        "id": "taskfold.complete",
+        "title": "Complete"
+      },
+      {
+        "id": "taskfold.snooze.minutes.60",
+        "title": "Remind me in 1 hour"
+      },
+      {
+        "id": "taskfold.tomorrow",
+        "title": "Move to tomorrow"
+      }
+    ],
+    "delivered": [],
+    "observedAt": 1791796976.400006,
+    "pending": [
+      {
+        "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "category": "taskfold.reminder",
+        "fireAt": 1791798520,
+        "id": "taskfold.r2.6d499a6f24c87cccb9ff3e02edb321e83e161912a36a9f108ac79a4f5e626dd0",
+        "originalAt": 1791798520,
+        "signature": "r4:068d1a8944bd4535e3fd90e9fb6093d6f9ad88ef58f7116ac14fb37d03d01bbf",
+        "snoozed": false,
+        "specID": "9cf95bad-616e-51d4-ae22-81d24fcf2390",
+        "taskID": "51d925eb-21b5-4e76-85e2-94a7b8b8510f",
+        "triggerAt": 1791798520
+      },
+      {
+        "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "category": "taskfold.reminder",
+        "fireAt": 1830585600,
+        "id": "taskfold.r2.9677a5455f7d99ce590060f9331e2f319f222558e8deddda0dd8b8c792167bb7",
+        "originalAt": 1830585600,
+        "signature": "r4:f211a9a933951431698c22e58b6c946b8bb4f64f539c2a27126df700b0d03cc5",
+        "snoozed": false,
+        "specID": "00000000-0000-4000-8000-000000000001",
+        "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+        "triggerAt": 1830585600
+      },
+      {
+        "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "category": "taskfold.reminder",
+        "fireAt": 1830584700,
+        "id": "taskfold.r2.a29129d2a00106c0c822084e3e43d708e98c735587d63d98b1a670cef686fa30",
+        "originalAt": 1830584700,
+        "signature": "r4:ce1dc0d2253fc00878e529c1c70daa7975090f8496ecae0b903e1f68ad6f1720",
+        "snoozed": false,
+        "specID": "47268592-a76d-591d-a2fb-4f9bf6d2fb91",
+        "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+        "triggerAt": 1830584700
+      },
+      {
+        "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+        "category": "taskfold.reminder",
+        "fireAt": 1830583800,
+        "id": "taskfold.r2.a2ac9a9ec7c2f97c2c1a08665192874303049c86cc8855377412dde710f93319",
+        "originalAt": 1830583800,
+        "signature": "r4:2ca4f5d90069c1f2c98e7f7323bbd8607dc4ff00579ef32091d170e1b822e7e9",
+        "snoozed": false,
+        "specID": "38d225bc-aede-5e35-a12f-0d174fcf0605",
+        "taskID": "15ed6dc6-7b53-5b61-a9c1-e13a5b5e1a49",
+        "triggerAt": 1830583800
+      }
+    ],
+    "processID": 26888
+  },
+  "fullAccountASnapshotExactAfterReleaseAndReturn": true,
+  "accountBTasksAndPendingEditsEmpty": true,
+  "nativeAccountATaskStillOpen": true,
+  "cleanupRegistry": {
+    "accountID": "9a8bfc3d-42ec-4c89-8f1d-c830b2215152",
+    "actions": [
+      {
+        "id": "taskfold.complete",
+        "title": "Complete"
+      },
+      {
+        "id": "taskfold.snooze.minutes.60",
+        "title": "Remind me in 1 hour"
+      },
+      {
+        "id": "taskfold.tomorrow",
+        "title": "Move to tomorrow"
+      }
+    ],
+    "delivered": [],
+    "observedAt": 1791796994.279416,
+    "pending": [],
+    "processID": 26888
+  },
+  "cleanup": "Delivery restored off for both accounts; synthetic A task reversibly deleted through native UI. Empty reserved B account and private credentials retained for subsequent acceptance cleanup; no real user account altered.",
+  "preservation": {
+    "changedServerTables": {
+      "0": [
+        "task_activity"
+      ],
+      "1": []
+    },
+    "accountAOtherTablesExactlyRestored": true,
+    "accountAOriginalActivityExact": true,
+    "accountBAllTablesExact": true,
+    "protectedContainers": 6,
+    "protectedFiles": 100,
+    "protectedFilesExactlyEqual": true
+  },
+  "limits": [
+    "Accepts the named Complete callback isolation journey; does not claim every action or timing permutation.",
+    "Other named widgets, usability, providers, continuity, APNs and distribution gates remain open."
+  ]
+}

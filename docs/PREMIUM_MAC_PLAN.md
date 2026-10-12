@@ -1853,3 +1853,10 @@ Native cleanup restores delivery off and deletes only the disposable task with U
 ### 12 October — Mac delayed notification callback preflight
 
 Mac now owns opt-in DEBUG support to hold one actual system response before its unchanged production handler, then release it after a native account switch. It requires the exact isolated bundle and an explicit launch flag. Signed v7 Debug/strict signature pass; native controls reach Armed and two disposable reminder occurrences are genuinely scheduled. See `mac-notification-hold-preflight-evidence.json`. Both reserved accounts and protected files have private baselines. Actual callback/account-switch acceptance remains pending; this is test preparation, not a pass. Inactive v6 products are pruned; active v7, logs and sources remain. iOS retains its independent existing harness.
+
+
+### 12 October — actual Mac delayed Complete across A → B → A
+
+The actual Notification Center Complete response is held for A, then released after native sign-out/sign-in to B with delivery enabled. The unchanged production handler returns under B; B tasks, pending edits and both notification registries remain empty. Returning to A preserves its complete scheduled snapshot, still-open task and exact four future requests. See `mac-notification-account-switch-evidence.json`. This closes the named Mac delayed Complete isolation journey; it does not expand acceptance to every action/timing permutation.
+
+Native cleanup restores delivery off in both accounts and reversibly deletes only the synthetic A task. Cloud comparison proves A non-activity tables and prior activity exact, B all 14 tables exact, and 100 protected files exact. The empty reserved B account/0600 credentials remain for final fixture cleanup. Other named P0 release gates remain open. The earlier callback preflight is superseded by this actual result.
