@@ -70,6 +70,8 @@ def main():
                                  'Taskfold Notification Test' if args.variant == 'p0notificationtests' else
                                  'Taskfold Calendar Test' if args.variant == 'p0calendartests' else
                                  'Taskfold P0 Signed Test' if args.variant == 'p0signeduitests' else 'Taskfold P0 Test')
+    # Keep the test name distinct in system menus as well as app discovery.
+    info['CFBundleName'] = info['CFBundleDisplayName']
     for key in ('CFBundleURLTypes', 'CFBundleDocumentTypes', 'UTExportedTypeDeclarations', 'UTImportedTypeDeclarations'):
         info.pop(key, None)
     if widgets:
