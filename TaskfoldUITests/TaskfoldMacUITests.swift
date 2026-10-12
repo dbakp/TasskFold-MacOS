@@ -2519,3 +2519,111 @@ extension TaskfoldMacUITests {
         retainWindow(app, name: "Mac removes only the synthetic collision task")
     }
 }
+
+
+// Run these phases explicitly and in order with the private disposable fixture.
+// The owner revokes membership between phases; a full-suite run cannot seed it.
+extension TaskfoldMacUITests {
+    @MainActor private func newCreationFixture() throws -> NSDictionary {
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else { throw XCTSkip("Dedicated recovery app required") }
+        let f = try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/new-task-revocation-native-v1.json"))) as! NSDictionary
+        let a = f["account"] as! [String: String]
+        guard a["userID"] == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152", a["email"] == "taskfold-continuity-" + a["userID"]! + "@example.invalid", UUID(uuidString: f["project"] as! String) != nil else { throw XCTSkip("Disposable recovery fixture required") }
+        return f
+    }
+    @MainActor private func newCreationCache(_ f: NSDictionary) throws -> NSDictionary {
+        let a = f["account"] as! [String: String]
+        let url = URL(fileURLWithPath: "/Users/" + NSUserName()).appendingPathComponent("Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/" + a["userID"]! + ".json")
+        return try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! NSDictionary
+    }
+    @MainActor private func waitNewCreation(_ f: NSDictionary, _ condition: @escaping (NSDictionary) -> Bool) throws -> NSDictionary {
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let cache = try? self.newCreationCache(f) else { return false }; return condition(cache)
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 40), .completed)
+        return try newCreationCache(f)
+    }
+    @MainActor private func newCreationTasks(_ c: NSDictionary, _ f: NSDictionary) -> [NSDictionary] {
+        ((c["tables"] as? NSDictionary)?["tasks"] as? [NSDictionary] ?? []).filter { $0["title"] as? String == f["title"] as? String }
+    }
+    @MainActor private func newCreationArguments(_ f: NSDictionary) -> [String] {
+        let a = f["account"] as! [String: String]
+        return ["-ApplePersistenceIgnoreState", "YES", "-onboardingSeen", "YES", "-dailyBackups." + a["userID"]!, "NO"]
+    }
+    @MainActor func testLiveMacCreatesSharedTaskOfflineBeforeRevocation() throws {
+        continueAfterFailure = false
+        let f = try newCreationFixture(), a = f["account"] as! [String: String], app = XCUIApplication()
+        defer { app.terminate() }
+        let args = newCreationArguments(f)
+        // A driver retry must keep the draft offline instead of signing in and flushing it.
+        let existing = try? newCreationCache(f)
+        let resume = existing.flatMap { newCreationTasks($0, f).first }
+        if resume == nil {
+            app.launchArguments = ["--live-auth-ui-test"] + args; liveConflictLaunch(app)
+            let email = app.textFields["authEmail"], password = app.secureTextFields["authPassword"]
+            XCTAssertTrue(email.waitForExistence(timeout: 30)); email.click(); email.typeText(a["email"]!)
+            password.click()
+            let board = NSPasteboard.general
+            let saved = (board.pasteboardItems ?? []).map { item in item.types.compactMap { type in item.data(forType: type).map { (type, $0) } } }
+            board.clearContents(); board.setString(a["password"]!, forType: .string); app.typeKey("v", modifierFlags: .command)
+            board.clearContents(); board.writeObjects(saved.map { values in let item = NSPasteboardItem(); for (type, data) in values { item.setData(data, forType: type) }; return item })
+            app.buttons["nativeSignIn"].click(); XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 30))
+            let loadedProject = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", f["projectName"] as! String, f["projectName"] as! String)).firstMatch
+            XCTAssertTrue(loadedProject.waitForExistence(timeout: 30))
+            _ = try waitNewCreation(f) { ($0["pending"] as? [Any])?.isEmpty == true && (($0["tables"] as? NSDictionary)?["projects"] as? [NSDictionary])?.contains(where: { $0["id"] as? String == f["project"] as? String }) == true }
+            app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
+        }
+        app.launchArguments = ["--continuity-offline"] + args; liveConflictLaunch(app)
+        let project = app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@", f["projectName"] as! String, f["projectName"] as! String)).firstMatch
+        XCTAssertTrue(project.waitForExistence(timeout: 10)); project.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        if let resume {
+            let row = app.staticTexts["title-" + (resume["id"] as! String)]
+            XCTAssertTrue(row.waitForExistence(timeout: 10)); row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        } else {
+            app.typeKey("n", modifierFlags: .command)
+            let input = app.textFields["quickAdd"]
+            XCTAssertTrue(input.waitForExistence(timeout: 5)); input.typeText((f["title"] as! String) + " ~25m"); app.buttons["Add Task"].click()
+        }
+        let notes = app.textViews["taskDescription"]
+        XCTAssertTrue(notes.waitForExistence(timeout: 5)); notes.click(); app.typeKey("a", modifierFlags: .command); notes.typeText(f["notes"] as! String); app.textFields["taskTitle"].click()
+        let queued = try waitNewCreation(f) { c in
+            guard let t = self.newCreationTasks(c, f).first else { return false }
+            return t["project_id"] as? String == f["project"] as? String && t["description"] as? String == f["notes"] as? String && t["duration_minutes"] as? Int == 25 && (c["pending"] as? [NSDictionary])?.contains(where: { $0["recordID"] as? String == t["id"] as? String && $0["method"] as? String == "POST" }) == true
+        }
+        XCTAssertEqual(newCreationTasks(queued, f).count, 1)
+        retainWindow(app, name: "New shared task and notes saved offline")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
+        XCTAssertEqual(try newCreationCache(f), queued)
+        retainWindow(app, name: "New task pending POST retained after normal Quit")
+    }
+    @MainActor func testLiveMacRestoresNewTaskAfterOwnerRevokesAccess() throws {
+        continueAfterFailure = false
+        let f = try newCreationFixture(), a = f["account"] as! [String: String], app = XCUIApplication()
+        defer { app.terminate() }
+        XCTAssertNotNil(f["taskID"], "Run owner revocation before this phase")
+        app.launchArguments = newCreationArguments(f); liveConflictLaunch(app)
+        let review = app.buttons["reviewAccessRecovery"]
+        XCTAssertTrue(review.waitForExistence(timeout: 40))
+        _ = try waitNewCreation(f) { self.newCreationTasks($0, f).isEmpty && ($0["pending"] as? [Any])?.isEmpty == true }
+        retainWindow(app, name: "Actual forbidden new task retained in encrypted recovery")
+        review.click()
+        let copy = app.menuButtons["recovery-Access removed"].firstMatch
+        XCTAssertTrue(copy.waitForExistence(timeout: 10)); copy.click(); app.menuItems["Preview restore"].firstMatch.click()
+        let apply = app.buttons["restoreApply"].firstMatch
+        XCTAssertTrue(apply.waitForExistence(timeout: 10)); XCTAssertTrue(apply.isEnabled)
+        retainWindow(app, name: "New task encrypted restore preview")
+        apply.click()
+        let ok = app.buttons["OK"].firstMatch
+        XCTAssertTrue(ok.waitForExistence(timeout: 20)); app.typeKey(.return, modifierFlags: [])
+        let restored = try waitNewCreation(f) { c in
+            guard let t = self.newCreationTasks(c, f).first, let projects = (c["tables"] as? NSDictionary)?["projects"] as? [NSDictionary] else { return false }
+            return t["description"] as? String == f["notes"] as? String && t["duration_minutes"] as? Int == 25 && t["user_id"] as? String == a["userID"] && projects.contains { $0["id"] as? String == t["project_id"] as? String && $0["user_id"] as? String == a["userID"] && $0["id"] as? String != f["project"] as? String } && (c["pending"] as? [Any])?.isEmpty == true
+        }
+        XCTAssertEqual(newCreationTasks(restored, f).count, 1)
+        app.buttons["Done"].firstMatch.click()
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
+        _ = try waitNewCreation(f) { self.newCreationTasks($0, f) == self.newCreationTasks(restored, f) && ($0["pending"] as? [Any])?.isEmpty == true }
+        XCTAssertTrue(app.buttons["reviewAccessRecovery"].exists)
+        retainWindow(app, name: "Restored new task persists after normal Quit")
+    }
+}
