@@ -1650,3 +1650,18 @@ No production fix/build rerun was needed. See `mac-focus-terminated-evidence.jso
 ### 12 October — Focus chooser keyboard selection
 
 12 October: fixed native Mac Focus chooser keyboard selection: Up/Down and Return now choose the correct filtered task/context. Empty-result Return and Escape are safe; mouse selection and paused-session normal relaunch pass. Debug/Release builds and test compilation pass; the automated Mac runner fails initialization before executing tests, so no XCTest runtime pass is claimed. Both cloud caches and all non-Focus fixture tables are unchanged. See `focus-keyboard-evidence.json`. iOS code is unchanged.
+
+
+### 12 October - isolated Desktop widget host setup
+
+12 October: the new isolated Mac app **and embedded widget extension** now provision/build/sign successfully with a separate App Group and URL scheme. This removes production Push provisioning as a prerequisite for isolated desktop-host testing. The native launch is live but the Mac is locked; no installed-host or rendered-widget pass is claimed. Production APNs/distribution gates remain open. See `mac-widget-host-setup-evidence.json`.
+The Mac-owned preparation script now supports `--variant p0widgethosts`; it retains independently signed widgets, a private App Group and a private callback scheme while removing only the copied test app production Push/Keychain-group entitlements. Existing app-only variants remain available. Both staging modes pass isolation assertions, and all Swift files in the scripted widget stage match the successfully built stage. Native host testing waits for unlock; no product-runtime gate is closed.
+
+Reproduce with a fresh temporary directory (preparation does not build or launch):
+
+```sh
+python3 Scripts/prepare_isolated_mac_ui.py --variant p0widgethosts --output /private/tmp/taskfold-widget-host-fresh
+xcodebuild -project /private/tmp/taskfold-widget-host-fresh/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination platform=macOS -derivedDataPath /private/tmp/taskfold-widget-host-products CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=3UZ4C73FM2 -allowProvisioningUpdates build
+```
+
+For cold widget routes, launch the isolated app in its local workspace and create test tasks through the native UI. Do not assume `--uitesting` survives an OS URL launch. Preserve the current development app while native acceptance is pending; do not replace production installations or use their App Group. An enrolled production team is still required for release capabilities.

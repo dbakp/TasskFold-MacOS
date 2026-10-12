@@ -1,0 +1,3 @@
+/tmp/taskfold-isolated-mac-widget-host/Taskfold.xcodeproj: error: "TaskfoldWidgets" requires a provisioning profile. Select a provisioning profile in the Signing & Capabilities editor. (in target 'TaskfoldWidgets' from project 'Taskfold')
+/tmp/taskfold-isolated-mac-widget-host/Taskfold.xcodeproj: error: "Taskfold" requires a provisioning profile. Select a provisioning profile in the Signing & Capabilities editor. (in target 'Taskfold' from project 'Taskfold')
+** BUILD FAILED **

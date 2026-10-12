@@ -1,0 +1,10 @@
+/tmp/taskfold-isolated-mac-widget-host/Taskfold/Views/KeyRouter.swift:22:106: warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used
+   |                                                                                                          `- warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used
+/tmp/taskfold-isolated-mac-widget-host/Taskfold/Views/Links.swift:197:23: warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode
+    |                       `- warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode
+/tmp/taskfold-isolated-mac-widget-host/Taskfold/Workspace.swift:337:9: warning: result of call to 'withAnimation' is unused [#NoUsage]
+    |         `- warning: result of call to 'withAnimation' is unused [#NoUsage]
+/tmp/taskfold-isolated-mac-widget-host/Taskfold/Workspace.swift:352:9: warning: result of call to 'withAnimation' is unused [#NoUsage]
+    |         `- warning: result of call to 'withAnimation' is unused [#NoUsage]
+warning: not stripping binary because it is signed: /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host/Build/Products/Debug/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgetswarning: not stripping binary because it is signed: /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host/Build/Products/Debug/TaskfoldWidgets.appex/Contents/MacOS/__preview.dylibwarning: not stripping binary because it is signed: /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host/Build/Products/Debug/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets.debug.dylib (in target 'Taskfold' from project 'Taskfold')
+** BUILD SUCCEEDED **
