@@ -11,7 +11,6 @@ struct RootView: View {
     @State private var pulseRequest: ProjectPulseRequest?
     @State private var focusRequest: FocusSessionRequest?
     @State private var inboxReview: InboxReviewRequest?
-    @State private var seeded = false
     @Environment(\.openSettings) private var openSettings
     @AppStorage("mac.pendingInvitations") private var pendingInvitations = false
     var body: some View {
@@ -159,8 +158,9 @@ struct RootView: View {
 
     /// Debug-only fixtures shared with the UI tests. Release builds ignore these arguments.
     private func seed() {
-        guard !seeded else { return }; seeded = true
         #if DEBUG
+        // Every window shares this workspace; a new window must not reset active routes or data.
+        guard !workspace.fixturePrepared else { return }; workspace.fixturePrepared = true
         let arguments = ProcessInfo.processInfo.arguments
         // Debug options use --key=value so AppKit never mistakes a bare value for a document to open.
         func option(_ key: String) -> String? { arguments.first { $0.hasPrefix("--\(key)=") }.map { String($0.dropFirst(key.count + 3)) } }

@@ -34,7 +34,10 @@ struct TaskfoldMacApp: App {
                 .tint(tint)
                 .preferredColorScheme(appearance == "system" ? nil : appearance == "dark" ? .dark : .light)
                 .frame(minWidth: 820, minHeight: 520)
+                // Widget and notification URLs should reuse an open workspace window.
+                .handlesExternalEvents(preferring: ["*"], allowing: ["*"])
         }
+        .handlesExternalEvents(matching: ["*"])
         .defaultSize(width: 1380, height: 840)
         .windowToolbarStyle(.unified)
         .commands { TaskfoldCommands(workspace: workspace, store: store) }

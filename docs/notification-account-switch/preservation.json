@@ -1,0 +1,15 @@
+{
+  "changedServerTables": {
+    "0": [
+      "task_activity"
+    ],
+    "1": []
+  },
+  "accountAOtherTablesExactlyRestored": true,
+  "accountAOriginalActivityExact": true,
+  "accountBAllTablesExact": true,
+  "protectedContainers": 6,
+  "protectedFiles": 100,
+  "protectedFilesExactlyEqual": true,
+  "newActivityRows": 4
+}

@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-12",
+  "scope": "Development-signed Mac capture-fix build preparation; native widget routing remains unaccepted",
+  "sourceCommit": "f5474f3",
+  "ownedSourceRepository": "TasskFold-MacOS",
+  "buildPassed": true,
+  "strictAppExtensionAndDeepSignaturesPassed": true,
+  "captureSourceExact": true,
+  "captureSourceSHA256": "d59f5d11f4e8b11a9a5440c2774a4a86ca79cbf7632d8920f31c682a185bb817",
+  "buildLogSHA256": "a0f4c6a9c29b54564277a414d0480aeb3f0fb93b1a074d89137a3329a2e91e83",
+  "nativeAcceptance": false,
+  "runtime": "Historical v4 build preparation. User click first reopened older v3, then v4 exposed new-window/fixture reset. Both old products retired; v5 fix/native acceptance recorded separately in mac-widget-capture-native-evidence.json.",
+  "limitations": [
+    "No installed widget Capture/Inbox/save/relaunch acceptance from this build",
+    "No production APNs or distribution capability proof"
+  ],
+  "evidenceDirectory": "mac-capture-signed-build"
+}

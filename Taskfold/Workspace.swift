@@ -71,6 +71,9 @@ struct Confirmation: Equatable {
 @MainActor @Observable
 final class Workspace {
     let store: Store
+    #if DEBUG
+    @ObservationIgnored var fixturePrepared = false
+    #endif
     var section: SidebarItem {
         didSet {
             UserDefaults.standard.set(section.key, forKey: "macSection")

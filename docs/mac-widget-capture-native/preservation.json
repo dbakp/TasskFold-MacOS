@@ -1,0 +1,20 @@
+{
+  "originalTasksExact": 8,
+  "addedTaskID": "777a1144-6d40-4c97-8f32-3fd0ebfbe89f",
+  "addedTitle": "Widget capture handoff proof",
+  "inInbox": true,
+  "undated": true,
+  "open": true,
+  "pendingEdits": 0,
+  "nativeMenuQuitProcessExitVerified": true,
+  "nativeRelaunchInboxRowVerified": true,
+  "allNineTasksExactAfterRelaunch": true,
+  "windowMenuContainsOnlyInboxWindowAfterSave": true,
+  "nativeSyntheticTaskDeleted": true,
+  "allEightOriginalTasksExactAfterCleanup": true,
+  "changedTablesAfterCleanup": [
+    "task_activity",
+    "task_activity_epoch"
+  ],
+  "protectedFilesExactAfterMacWalk": 100
+}

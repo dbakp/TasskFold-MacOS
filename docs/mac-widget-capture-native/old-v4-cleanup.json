@@ -1,0 +1,9 @@
+{
+  "stoppedExactOldFixturePIDs": [
+    4952,
+    4954
+  ],
+  "stopMethod": "SIGTERM for isolated build replacement, not native Quit acceptance",
+  "pruned": "BuildCache/mac-widget-host-v4",
+  "logicalBytes": 354178812
+}
