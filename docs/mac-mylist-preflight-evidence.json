@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-12",
+  "scope": "Mac installed My list completion preflight; installation pending",
+  "host": "Signed isolated widget host v6",
+  "taskID": "1c0c6814-7bbc-41fd-9257-0b4857442bde",
+  "title": "Desktop My list completion proof",
+  "nativeCapture": "Undated Inbox task saved; pending edits zero",
+  "appGroupProjection": {
+    "account": "local",
+    "taskCount": 1,
+    "matchingTaskID": true,
+    "completionTokenPresent": true,
+    "sha256": "117aa6325e15b97102bf728f1218de5ac5e646238a73ff188bdb394f50e279d0"
+  },
+  "remaining": "Manual My list installation/Inbox selection, then actual checkbox, persistence and cleanup. No installed My list pass claimed."
+}

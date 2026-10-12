@@ -831,3 +831,6 @@ Isolated v6 app/extension Debug build and strict deep signatures pass. Normal la
 ### 12 October — fixed installed Today task cold route accepted
 
 The second real desktop title click starts v6 PID30403 without arguments and opens Inbox / 1 task, the exact selected row and its inspector. Native AX and inspected pixels agree; the full saved task snapshot is unchanged. See `mac-widget-task-context-evidence.json`. Native reversible deletion restores the empty local task list and zero pending edits. Five original fixture files and all 100 protected files are hash-exact; local activity retains the two synthetic create/delete records. This closes the named Today task cold route to Inbox; other widget families/actions and the untested helper branches remain scoped separately.
+
+
+12 October: next installed Mac widget journey is My list completion. A single disposable undated Inbox task is saved in the normal local v6 host; actual App Group projection contains its matching identity and completion token, with no pending edits. Desktop installation/Inbox selection is awaiting user interaction because system widget controls are inaccessible. See `mac-mylist-preflight-evidence.json`; no installed completion pass is claimed.
