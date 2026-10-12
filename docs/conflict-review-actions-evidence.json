@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-12",
+  "scope": "Remove duplicate conflict-review Later controls while preserving cancellation, resolution and saved work in both independently owned apps",
+  "productionChange": "One persistent Later action in the bottom inset. Only the two resolution actions are disabled when the captured review is stale, keeping dismissal available. The existing cancel keyboard shortcut remains on Later.",
+  "native": [
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-conflict-actions-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-conflict-actions-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-conflict-actions-variants-v1.xcresult",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    }
+  ],
+  "coverage": [
+    "Mac and iPhone assert exactly one enabled Later control",
+    "Later dismisses without changing the whole saved workspace",
+    "Use synced keeps the independent comment and later 45-minute estimate, with whole saved-workspace equality after relaunch on both platforms",
+    "iPhone Keep my edit preserves independent comments and the later estimate across relaunch",
+    "iPhone dark largest-text native check proves all three footer actions hittable and at least 44 points tall"
+  ],
+  "limits": [
+    "Stale-review escape is verified by the modifier placement in source; no native stale-while-open transition was injected",
+    "Mac live title-input QoS warning from live-native-task-conflict-evidence.json remains unresolved; these clean fixture cases do not supersede it",
+    "Nine native captures inspected; only the three changed review layouts retained in docs. Other captures remain in the result bundles",
+    "No new live server, mixed-client, VoiceOver, widget-host, provider or distribution acceptance",
+    "Release not rebuilt for this view change; signing remains user-deferred"
+  ],
+  "builds": {
+    "mac": "Independent Debug build-for-testing and strict deep signature pass",
+    "ios": "Independent Debug build-for-testing passes"
+  },
+  "cleanup": {
+    "mainAppAndRunnerProcessesRemaining": 0,
+    "protectedFilesExact": 100,
+    "macIsolatedUITestingCache": "Original bytes restored after process termination",
+    "disposablePhoneAppAndRunner": "Uninstalled; Simulator shut down",
+    "duplicateExportBytesPruned": 3706367
+  },
+  "captures": {
+    "mac-one-later.png": "ff702fcdc73a826ca236bfb5addf9325847426f8372ab8717577f47eeac5f3c7",
+    "iphone-one-later.png": "25b2c407f4a26894ac8313c185c5eebbb836f049958a6710cfcc69839d4b4779",
+    "iphone-dark-largest-actions.png": "13a663137edd55b1ea2ca3a24dd45c9896ad4073c988a6854e5ee8f222de1e9c"
+  }
+}

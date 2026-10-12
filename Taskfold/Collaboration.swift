@@ -183,19 +183,18 @@ struct ConflictReview: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button { dismiss() } label: { Text("Later").frame(minHeight: 44) }.accessibilityIdentifier("conflictClose") } }
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 10) {
                     Divider()
                     Button(deleting ? "Delete task" : "Keep my edit", role: deleting ? .destructive : nil) { resolve(keepLocal: true) }
-                        .buttonStyle(.borderedProminent).accessibilityIdentifier("keepMyEdit")
+                        .buttonStyle(.borderedProminent).accessibilityIdentifier("keepMyEdit").disabled(!current)
                     Button(deleting ? "Keep task" : "Use synced") { resolve(keepLocal: false) }
-                        .buttonStyle(.bordered).accessibilityIdentifier("useSharedEdit")
+                        .buttonStyle(.bordered).accessibilityIdentifier("useSharedEdit").disabled(!current)
                     Button { dismiss() } label: { Text("Later").frame(minHeight: 44) }
                         .buttonStyle(.plain).accessibilityIdentifier("conflictLater")
                         .keyboardShortcut(.cancelAction)
                 }.controlSize(.large).padding([.horizontal, .bottom]).frame(maxWidth: .infinity)
-                    .background(.regularMaterial).disabled(!current)
+                    .background(.regularMaterial)
             }
             .alert("Review could not finish", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
                 Button("OK") { message = nil }

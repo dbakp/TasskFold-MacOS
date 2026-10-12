@@ -780,7 +780,7 @@ final class TaskfoldMacUITests: XCTestCase {
             throw XCTSkip("Dedicated isolated native acceptance app required")
         }
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--conflict-fixture"]
-        app.launch(); defer { app.terminate() }
+        liveConflictLaunch(app); defer { app.terminate() }
         let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/ui-testing.json")
         func saved() throws -> NSDictionary { try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary }
         let review = app.links["reviewSyncConflict"]
@@ -791,7 +791,10 @@ final class TaskfoldMacUITests: XCTestCase {
         let seededTables = try XCTUnwrap(before["tables"] as? NSDictionary)
         XCTAssertEqual((seededTables["tasks"] as? [NSDictionary])?.first?["duration_minutes"] as? Int, 45)
         review.click()
-        XCTAssertTrue(app.buttons["conflictLater"].waitForExistence(timeout: 5)); app.buttons["conflictLater"].click()
+        XCTAssertTrue(app.buttons["conflictLater"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "label == %@", "Later")).count, 1)
+        XCTAssertTrue(app.buttons["conflictLater"].isEnabled)
+        app.buttons["conflictLater"].click()
         XCTAssertTrue(review.waitForExistence(timeout: 5)); XCTAssertEqual(try saved(), before)
         review.click()
         let sheet = app.sheets.firstMatch
@@ -817,7 +820,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["My revised comment"].exists)
         retainWindow(app, name: "Mac synced comment keeps independent work")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
-        app.launchArguments = ["--uitesting"]; app.launch()
+        app.launchArguments = ["--uitesting"]; liveConflictLaunch(app)
         XCTAssertTrue(app.staticTexts["title-conflict-task"].waitForExistence(timeout: 10))
         app.staticTexts["title-conflict-task"].click()
         XCTAssertTrue(app.staticTexts["Shared revised comment"].waitForExistence(timeout: 5))
