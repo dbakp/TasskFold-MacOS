@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual Mac offline title/priority versus native phone title/notes; Mac Keep my edit; signed-in cross-device return and cleanup",
+  "status": "Functional native named choice accepted; full P0 and clean Mac runner gate remain open",
+  "productCodeChanged": false,
+  "testChanges": "Each repo owns its phased native helpers. Both choices share guarded helpers; the new keep-local fixture is separate. Password input no longer uses or reads the user clipboard. Phone receipt now reopens its native editor after normal signed-in relaunch.",
+  "builds": {
+    "macOS": "Isolated independently owned Debug build-for-testing passed; strict deep app signature passed",
+    "iOS": "Isolated independently owned Simulator Debug build-for-testing passed",
+    "release": "User-deferred signing; no release claim"
+  },
+  "macNative": {
+    "driver": "CUA direct native app controls; existing signed-in disposable account; normal Command-Q and Launch Services relaunch",
+    "steps": [
+      "Fetched one server-seeded synthetic Inbox task without editing original work",
+      "Existing guarded DEBUG offline transport: native title edit, Tab save, separate Priority 1 menu choice",
+      "Two pending edits survive normal Quit/relaunch with whole saved snapshot equality",
+      "Native phone commits competing title and independent full notes to live cloud",
+      "Mac reconnect presents actual title collision; native Later preserves whole offline snapshot",
+      "Normal Quit/relaunch retains Review and both values",
+      "Native Keep my edit resolves to Mac title, independent phone notes, later Mac priority and original 25-minute estimate; empty queue",
+      "Native inspector reopens exact title/notes/priority/estimate after normal Quit/relaunch; whole resolved snapshot equality",
+      "Native inspector Delete Task and named confirmation remove only this synthetic task; phone receives deletion"
+    ],
+    "screenshots": "Mac app and conflict-sheet screenshots inspected in this conversation; no on-disk Mac screenshot is claimed",
+    "cleanRuntime": "Not established by CUA; two Mac XCTest attempts failed before reaching app tests with automation initialization timeout. No Mac XCTest pass or warning-free acceptance is claimed"
+  },
+  "phoneNative": [
+    {
+      "resultBundle": "ios-keep-conflict-remote-v1.xcresult",
+      "scope": "Native independent phone title/notes edit while Mac has two offline edits",
+      "actualPassingTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "resultBundle": "ios-keep-conflict-received-v1.xcresult",
+      "scope": "Signed-in phone receives kept Mac title, own notes and later Mac priority; native editor reopens after normal relaunch",
+      "actualPassingTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    {
+      "resultBundle": "ios-keep-conflict-cleanup-v1.xcresult",
+      "scope": "Phone receives native Mac synthetic task deletion",
+      "actualPassingTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    }
+  ],
+  "cloud": {
+    "actualDisposableOwnerAuth": true,
+    "tablesCompared": 15,
+    "nonActivityTablesExactAfterCleanup": 13,
+    "allPreexistingActivityAndEpochRowsRetained": true,
+    "syntheticTaskAbsentAfterCleanup": true,
+    "allOtherSyntheticTaskFieldsPreserved": true,
+    "noSchemaRLSOrServiceRoleChanges": true,
+    "noTodoistRequestsOrWrites": true
+  },
+  "failedDiagnostics": [
+    {
+      "resultBundle": "mac-keep-conflict-queue-v1.xcresult",
+      "outcome": "Runner initialization timed out enabling automation; no app case executed"
+    },
+    {
+      "resultBundle": "mac-keep-conflict-queue-v2.xcresult",
+      "outcome": "Explicit arm64 retry also timed out enabling automation; switched to direct native CUA instead of looping"
+    }
+  ],
+  "otherDiagnostics": "Initial build mistakenly targeted production checkout and stopped at missing provisioning profile; no production app installed. Correct isolated stage build passed. Initial server baseline request tried ordering import_sources by nonexistent id; failed before baseline or fixture mutation. Corrected to canonical client-side sorting before successful setup.",
+  "documentationReview": "Reused current 12 October Supabase changelog and official RLS/TLS/Postgres review recorded in new-task-access-recovery-evidence.json; no new backend feature/schema change.",
+  "capture": {
+    "path": "previews/keep-local-conflict/phone-relaunch.png",
+    "sha256": "3d893672c5e6ed9ef11af763d9eced725d45b6cafdf76ac61d1b476144980062",
+    "reviewed": true,
+    "scope": "Native phone Task details after signed-in relaunch; kept Mac title, phone notes, Priority 1 and 25-minute estimate visible"
+  },
+  "cleanup": {
+    "protectedFilesByteIdentical": 100,
+    "mainTaskfoldAndTestRunnerProcesses": 0,
+    "disposablePhoneAppAndRunnerUninstalled": true,
+    "disposableSimulatorShutDown": true,
+    "widgetHostsPreserved": true,
+    "duplicateCaptureExportAndCredentialCopyBytesPruned": 427364,
+    "freeStorageGiB": 97.5
+  },
+  "limits": [
+    "This accepts one live title collision with independent notes and a later priority change; not all comments/subtasks, mixed-version, recurrence or organization collision variants",
+    "Prepared Mac native test helper compiles but did not execute; direct CUA walk is distinct evidence",
+    "Earlier Mac QoS warning remains unresolved; current initialization failures do not identify its source",
+    "Organization/account-switch access loss, remaining installed hosts, spoken VoiceOver and external provider/distribution gates remain open"
+  ]
+}
