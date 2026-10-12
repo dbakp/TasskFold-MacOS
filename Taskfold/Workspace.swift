@@ -284,6 +284,17 @@ final class Workspace {
         titleFocusRequest += 1
     }
 
+    /// External links need a list context that agrees with the task being inspected.
+    func openExternalTask(_ id: String) {
+        guard let task = taskRecord(id) else { return }
+        let project = task.string("project_id")
+        if task.completed { section = .completed }
+        else if !project.isEmpty, store.record("projects", id: project) != nil { section = .project(project) }
+        else { section = .inbox }
+        search = ""
+        open(id)
+    }
+
     /// Persist completion before returning from the action, including an immediate app exit.
     func complete(_ task: Record) {
         if Self.subtaskPath(task.id) != nil {

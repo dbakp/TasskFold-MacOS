@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-12",
+  "scope": "Actual installed Today cold task route and Mac list-context correction",
+  "before": {
+    "humanWidgetClick": true,
+    "coldProcess": 29369,
+    "noLaunchArguments": true,
+    "exactTaskInspector": "cd9b77cc-6ce3-49db-932b-70351b8e333f",
+    "fullTaskSnapshotExact": true,
+    "finding": "Correct inspector opened behind Completed / 0 completed; list context contradicted the open task.",
+    "nativeAXAndScreenshotInspected": true
+  },
+  "change": "Mac external task URLs and reminder routes select Completed for completed tasks, the existing project for project tasks, otherwise Inbox; clear stale list search, then select/open the task.",
+  "ios": "Already uses a separate openedTask sheet; no Mac sidebar context fix required. No new iOS runtime claim.",
+  "validation": {
+    "isolatedV6DebugBuild": "passed",
+    "appAndExtensionStrictDeepSignature": "passed",
+    "normalV6Launch": "Completed, no task inspector before URL",
+    "nativeQuitPID": 30030,
+    "quitConfirmed": true,
+    "fullSavedSnapshotExact": true,
+    "manualColdRouteRetest": "pending"
+  },
+  "cleanup": {
+    "inactiveV5BuildBytesPruned": 125670357,
+    "activeV6AndLogsRetained": true
+  },
+  "limits": [
+    "Corrected installed route is not yet accepted until the second widget click.",
+    "Other widget families, completion, privacy and distribution gates remain open."
+  ]
+}

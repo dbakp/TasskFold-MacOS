@@ -819,3 +819,10 @@ The existing v5 host now has one disposable Today task in its previously empty n
 
 
 12 October: notification switch fixture cleanup is complete. Disposable B sessions revoked, account deleted and 17 database checks return zero; its local cache, membership cache, encrypted recovery copy, exact isolated Keychain key and private credentials are removed. Nine unrelated local files remain hash-exact. Account A is retained. This supersedes the earlier retained-B cleanup note in `mac-notification-account-switch-evidence.json`. Pending desktop widget click remains undisturbed.
+
+
+### 12 October — installed Mac task route exposes stale list context
+
+A real Today widget title click cold-launches PID29369 without arguments and opens the exact task inspector, preserving the full snapshot. Native AX and inspected pixels expose an inconsistent background: Completed / 0 completed. Mac external task URLs and reminder opens now select the task’s Inbox/project/Completed context and clear a stale list search before selecting the task. iOS already uses a separate task sheet and needs no sidebar fix. See `mac-widget-task-context-evidence.json`.
+
+Isolated v6 app/extension Debug build and strict deep signatures pass. Normal launch preserves the snapshot; native Quit is confirmed. The corrected installed cold route awaits a manual widget click. Inactive v5 products are pruned (125,670,357 logical bytes); v6 and logs remain. No corrected-runtime or broad widget pass is claimed yet.

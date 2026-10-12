@@ -90,7 +90,7 @@ struct RootView: View {
             guard !Task.isCancelled, NotificationRoute.shared.taskRequest == route else { return }
             NotificationRoute.shared.taskRequest = nil
             guard let task = store.reminderTask(for: route) else { return }
-            workspace.open(task.id)
+            workspace.openExternalTask(task.id)
         }
         .task(id: "invitation-route-\(pendingInvitations)-\(store.signedIn)-\(store.localMode)") {
             guard pendingInvitations else { return }
@@ -135,7 +135,7 @@ struct RootView: View {
             if url.scheme == "taskfold", url.host == "invitations" {
                 pendingInvitations = true; workspace.settingsTab = .invitations; openSettings()
             }
-            if url.scheme == "taskfold" && url.host == "task", store.record("tasks", id: url.lastPathComponent) != nil { workspace.open(url.lastPathComponent) }
+            if url.scheme == "taskfold" && url.host == "task", store.record("tasks", id: url.lastPathComponent) != nil { workspace.openExternalTask(url.lastPathComponent) }
         }
         .task(id: "members-\(store.userID)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { await workspace.loadProjectMembers() }
         #if DEBUG

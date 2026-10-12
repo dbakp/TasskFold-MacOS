@@ -10,5 +10,6 @@
   "limits": [
     "No cold-launch routing acceptance yet.",
     "Today task rows are links; interactive completion belongs to My list."
-  ]
+  ],
+  "supersededBy": "mac-widget-task-context-evidence.json"
 }
