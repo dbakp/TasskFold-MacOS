@@ -1,0 +1,35 @@
+{
+  "protectedContainers": [
+    {
+      "container": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705:com.dbakp.taskfold.calendaraccessibilitytests",
+      "files": 4,
+      "exactFileSetAndHashes": true
+    },
+    {
+      "container": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969:com.dbakp.taskfold.calendaraccessibilitytests",
+      "files": 4,
+      "exactFileSetAndHashes": true
+    },
+    {
+      "container": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D:com.dbakp.taskfold.calendaraccessibilitytests",
+      "files": 17,
+      "exactFileSetAndHashes": true
+    },
+    {
+      "container": "5FCB147F-9EC2-4CBA-9AC7-00D1E9944705:com.dbakp.taskfold.assigneepatterntests",
+      "files": 43,
+      "exactFileSetAndHashes": true
+    },
+    {
+      "container": "8B9ED7EB-9E7F-4FBF-86D6-AC310AADE969:com.dbakp.taskfold.assigneepatterntests",
+      "files": 26,
+      "exactFileSetAndHashes": true
+    },
+    {
+      "container": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D:com.dbakp.taskfold.notificationtests",
+      "files": 6,
+      "exactFileSetAndHashes": true
+    }
+  ],
+  "totalProtectedFiles": 100
+}

@@ -1,0 +1,10 @@
+{
+  "checkedOwnedSwiftAndEntitlements": 49,
+  "namespaceOnlySourceChanges": true,
+  "bundlePrefix": "com.dbakp.taskfold.widgetstatetests",
+  "isolatedGroup": "group.com.dbakp.taskfold.widgetstatetests",
+  "isolatedScheme": "taskfold-widget-state-test",
+  "independentKeychain": true,
+  "newOutputOnly": true,
+  "existingOutputRejectedWithoutMutation": true
+}
