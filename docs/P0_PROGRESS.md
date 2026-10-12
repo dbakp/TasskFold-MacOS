@@ -30,6 +30,8 @@ Ordinary iPhone/iPad acceptance uses Xcode Simulators as requested. Actual remot
 
 ## Latest closed gate
 
+13 October: corrected the completion acknowledgement expiry being scheduled by the wrong widget provider in both apps. Forty widget-list test executions and all four Debug/Release widget builds pass. Installed automatic expiry remains unaccepted; completion/dismissal already passed. See `widget-completion-expiry-evidence.json`.
+
 13 October: native Mac six-chip capture now passes with clean layout, exact metadata and full workspace preservation after normal Quit/relaunch. VoiceOver enablement again produced no speech/caption output; its original off setting is restored. All 100 protected files are exact and the isolated cache is restored. This closes only the Mac capture layout follow-up; spoken accessibility remains open. See `mac-capture-layout-native-evidence.json`.
 
 13 October: reproduced and fixed the fresh-section capture failure. Seven scoped native iPhone executions pass, including three rapid repetitions, stationary controls, exact persistence and affected normal/largest landscape flows. Both owned layouts compile independently. The subsequent native Mac capture, exact Save, section selection and normal relaunch also pass; see `mac-capture-layout-native-evidence.json`. All 100 protected files are exact, main apps/test runners are closed, and about 1.3 GB of inactive build/export files were pruned. See `capture-control-stability-evidence.json`. Broader P0 and user-deferred signing remain open.

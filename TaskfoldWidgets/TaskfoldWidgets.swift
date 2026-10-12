@@ -404,6 +404,15 @@ struct WidgetSnapshot: Codable {
         return Array(Set(dates)).sorted()
     }
 
+    /// My list alone displays the completion acknowledgement and needs its expiry entry.
+    func completionTimelineDates(_ id: String?, from now: Date, calendar: Calendar = .current) -> [Date] {
+        var dates = listTimelineDates(id, from: now, calendar: calendar)
+        if let feedback = completionFeedback, feedback.visible(account: account, listID: id, at: now) {
+            dates.append(feedback.expiresAt)
+        }
+        return Array(Set(dates)).sorted()
+    }
+
     /// Day entries make relative selections change at midnight even while the app is closed.
     static func timelineDates(from now: Date, calendar: Calendar = .current) -> [Date] {
         [now] + (1..<8).compactMap { calendar.date(byAdding: .day, value: $0, to: calendar.startOfDay(for: now)) }
@@ -809,12 +818,7 @@ struct WindowProvider: AppIntentTimelineProvider {
     }
     func timeline(for configuration: WindowConfiguration, in context: Context) async -> Timeline<WindowEntry> {
         let snapshot = WidgetSnapshot.load()
-        let now = Date()
-        var dates = snapshot.listTimelineDates(configuration.list?.id, from: now)
-        if let feedback = snapshot.completionFeedback, feedback.visible(account: snapshot.account, listID: configuration.list?.id, at: now) {
-            dates.append(feedback.expiresAt)
-        }
-        return Timeline(entries: Array(Set(dates)).sorted().map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+        return Timeline(entries: snapshot.listTimelineDates(configuration.list?.id, from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
     }
     private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: WindowConfiguration) -> WindowEntry {
         WindowEntry(date: date, snapshot: snapshot, budget: configuration.budget, scope: configuration.scope, palette: configuration.palette, hideTitles: configuration.hideTitles, listID: configuration.list?.id)
@@ -987,7 +991,7 @@ struct ListProvider: AppIntentTimelineProvider {
     func snapshot(for configuration: ListConfiguration, in context: Context) async -> ListEntry { context.isPreview ? placeholder(in: context) : entry(Date(), snapshot: .load(), configuration: configuration) }
     func timeline(for configuration: ListConfiguration, in context: Context) async -> Timeline<ListEntry> {
         let snapshot = WidgetSnapshot.load()
-        return Timeline(entries: snapshot.listTimelineDates(configuration.list?.id, from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
+        return Timeline(entries: snapshot.completionTimelineDates(configuration.list?.id, from: Date()).map { entry($0, snapshot: snapshot, configuration: configuration) }, policy: .atEnd)
     }
     private func entry(_ date: Date, snapshot: WidgetSnapshot, configuration: ListConfiguration) -> ListEntry {
         ListEntry(date: date, snapshot: snapshot, listID: configuration.list?.id, palette: configuration.palette, hideTitles: configuration.hideTitles)

@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-13",
+  "issue": "Completed acknowledgement remains visible in installed My list after last task completion",
+  "rootCause": "Completion expiry was appended to WindowProvider, which never displays the acknowledgement. ListProvider, which displays it, scheduled only ordinary list transitions.",
+  "fix": "Independently owned My list providers now use completionTimelineDates: retain list day/clock transitions and add the visible account/list-scoped acknowledgement expiry. Remove the unused acknowledgement expiry from A small window.",
+  "durationSeconds": 8,
+  "verification": {
+    "macWidgetListTests": 20,
+    "iosWidgetListTests": 20,
+    "failures": 0,
+    "newTests": [
+      "Last-task feedback has an expiry entry and becomes invisible exactly at the boundary; ordinary list transitions remain",
+      "Wrong account/list, unselected list, future feedback and already elapsed feedback do not add an expiry entry"
+    ],
+    "actualProviderWiringInspected": true,
+    "sourceCopiesByteIdentical": true,
+    "builds": {
+      "taskfold-expiry-mac-debug.log": {
+        "sha256": "46aa4837585f95fd76f76e4e10370c47b9cd0e2bd66d062098170250b4ad929c",
+        "result": "BUILD SUCCEEDED",
+        "warnings": [
+          "warning: ONLY_ACTIVE_ARCH=YES requested with multiple ARCHS and no active architecture could be computed; building for all applicable architectures (in target 'TaskfoldWidgets' from project 'Taskfold')"
+        ]
+      },
+      "taskfold-expiry-mac-release.log": {
+        "sha256": "07b8952eec3bfd68a176bb80085e7ca566876a91b36f7ee3151476009cd21a9b",
+        "result": "BUILD SUCCEEDED",
+        "warnings": []
+      },
+      "taskfold-expiry-ios-debug.log": {
+        "sha256": "86257615a5d2d4ce55ea502cf79573aa95f9c56ebb7c545beee2933630bd5975",
+        "result": "BUILD SUCCEEDED",
+        "warnings": []
+      },
+      "taskfold-expiry-ios-release.log": {
+        "sha256": "77cba0d3d9dff0a134d3261b73ced77e1f0fa4cc5b71d4277363e085dd7a2ff4",
+        "result": "BUILD SUCCEEDED",
+        "warnings": []
+      }
+    }
+  },
+  "acceptanceLimit": "Fix and model/provider wiring are verified. Installed WidgetKit automatic expiry after this fix has not yet been accepted; scheduling may delay actual redraw. Existing actual completion and manual dismissal acceptance remain valid.",
+  "cleanup": {
+    "newUnsignedBuildProductsAndIntermediatesPruned": true,
+    "protectedFilesExact": 100,
+    "taskfoldMainSessionsOpen": false,
+    "freeGiB": 96.8
+  },
+  "productionSigning": "Not changed; distribution remains user-deferred"
+}

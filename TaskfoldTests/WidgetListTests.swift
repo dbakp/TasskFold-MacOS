@@ -28,6 +28,30 @@ final class WidgetListTests: XCTestCase {
         }
     }
 
+    func testCompletionTimelineExpiresLastTaskMessageWithoutDroppingListTransitions() throws {
+        var value = try snapshot([])
+        let key = try XCTUnwrap(value.availableLists.first { $0.kind == "project" }?.id)
+        value.completionFeedback = WidgetCompletionFeedback(account: value.account, taskID: "last-task", title: "Completed proof", listIDs: [key], savedAt: now)
+        let feedback = try XCTUnwrap(value.completionFeedback)
+        let dates = value.completionTimelineDates(key, from: now, calendar: cph)
+        XCTAssertEqual(dates, (value.listTimelineDates(key, from: now, calendar: cph) + [feedback.expiresAt]).sorted())
+        XCTAssertTrue(feedback.visible(account: value.account, listID: key, at: now.addingTimeInterval(7.999)))
+        XCTAssertFalse(feedback.visible(account: value.account, listID: key, at: feedback.expiresAt))
+        XCTAssertFalse(value.completionTimelineDates(key, from: now.addingTimeInterval(9), calendar: cph).contains(feedback.expiresAt))
+    }
+
+    func testCompletionTimelineDoesNotScheduleOtherListOrAccountFeedback() throws {
+        var value = try snapshot([])
+        let key = try XCTUnwrap(value.availableLists.first { $0.kind == "project" }?.id)
+        for (account, listIDs) in [("another", [key]), (value.account, ["another-list"])] {
+            value.completionFeedback = WidgetCompletionFeedback(account: account, taskID: "task", title: "Private proof", listIDs: listIDs, savedAt: now)
+            XCTAssertEqual(value.completionTimelineDates(key, from: now, calendar: cph), value.listTimelineDates(key, from: now, calendar: cph))
+        }
+        value.completionFeedback = WidgetCompletionFeedback(account: value.account, taskID: "task", title: "Future proof", listIDs: [key], savedAt: now.addingTimeInterval(10))
+        XCTAssertEqual(value.completionTimelineDates(key, from: now, calendar: cph), value.listTimelineDates(key, from: now, calendar: cph))
+        XCTAssertEqual(value.completionTimelineDates(nil, from: now, calendar: cph), value.listTimelineDates(nil, from: now, calendar: cph))
+    }
+
     private let now = ISO8601DateFormatter().date(from: "2026-10-24T12:00:00Z")!
     private var cph: Calendar { var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: "Europe/Copenhagen")!; return c }
     private let project = Record(["id": .string("studio"), "name": .string("Studio")])
