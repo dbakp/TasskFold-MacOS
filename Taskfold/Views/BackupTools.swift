@@ -61,6 +61,9 @@ private final class BackupUI {
         let review = ui.review
         let message = ui.message
         content.environment(ui)
+            // A popped settings page must not retain a coordinated read after
+            // its workspace observer and Cancel control disappear.
+            .onDisappear { if ui.fileRead != nil { ui.cancelFileRead() } }
             .safeAreaInset(edge: .bottom) {
                 if ui.fileRead != nil {
                     VStack(alignment: .leading, spacing: 8) {
