@@ -30,6 +30,8 @@ Ordinary iPhone/iPad acceptance uses Xcode Simulators as requested. Actual remot
 
 ## Current native widget finding
 
+13 October follow-up: a separate isolated identity with zero retained files also fails selection despite publishing two tasks and three lists. An isolated host-entity metadata diagnostic also fails; selected Widget Studio is visibly present before closing configuration. Diagnostic code was removed. The configuration-to-widget handoff is the next investigation; no speculative production refactor. See `widget-selection-handoff-evidence.json`.
+
 13 October: two installed medium iPhone My list expiry attempts fail before completion because list selection is not retained. The extension contains its entity metadata, but runtime registration errors and remote accessibility-server loss are recorded. A Simulator restart/fresh widget did not resolve it. No automatic expiry pass is claimed. See `widget-selection-registration-evidence.json`; all 36 isolated and 100 protected files are restored/exact, and app/runner are uninstalled with Simulator shut down.
 
 ## Latest closed gate

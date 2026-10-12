@@ -10,6 +10,8 @@ The goal is a calm, fast native Mac app: daily actions should take few steps, na
 
 13 October companion acceptance finding: installed iPhone My list selection is not retained in two expiry attempts. Current Mac configuration acceptance remains open; no Mac regression is inferred. See [selection evidence](widget-selection-registration-evidence.json).
 
+13 October companion diagnostic: separate iPhone identity and an isolated host-entity declaration do not resolve selected-list handoff. Diagnostic code was removed; production widget code remains as committed. See [handoff evidence](widget-selection-handoff-evidence.json).
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.

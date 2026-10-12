@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-13",
+  "scope": "Separate isolated iPhone widget identity and host entity metadata diagnostic",
+  "status": "Selection persistence still fails before completion",
+  "runs": [
+    {
+      "resultBundle": "ios-widget-expiry-separate-v1.xcresult",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0
+    },
+    {
+      "resultBundle": "ios-widget-entity-host-probe-v1.xcresult",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0
+    }
+  ],
+  "separateIdentity": {
+    "bundle": "com.dbakp.taskfold.backupcanceltests",
+    "retainedAppAndGroupFilesBefore": 0,
+    "publishedProjection": {
+      "account": "ui-testing",
+      "tasks": 2,
+      "lists": 3
+    },
+    "result": "Same Choose your list after selection. Reused widget-state installation alone does not explain the failure."
+  },
+  "hostEntityDiagnostic": {
+    "isolatedStageOnly": true,
+    "productionCodeChanged": false,
+    "hostMetadataContainsWidgetListEntity": true,
+    "hostMetadataSHA256": "f476f73ba2471d02f0c6471994a71499c0611f6233fbc54cda8c08d5ca23a652",
+    "change": "Diagnostic DEBUG app-only WidgetListEntity and query from synthetic shared projection; widget declarations unchanged",
+    "result": "Selection is visibly Widget Studio in configuration, but after closing the widget still has no selected list",
+    "removed": true,
+    "limit": "Adding host declarations in this experiment did not resolve the observed failure; this does not establish the root cause or justify a production entity refactor."
+  },
+  "interpretation": "Synthetic projection is populated; metadata declarations exist. The failure is between visible configuration selection and the rendered widget. Runtime entity-registration errors remain observed evidence, not a proven cause. No completion/automatic-expiry acceptance.",
+  "nextAction": "Inspect configuration serialization/registered entity identity at the handoff. Do not repeat gallery/namespace or host-declaration experiments unchanged.",
+  "cleanup": {
+    "testAppAndRunnerUninstalled": true,
+    "simulator": "Shutdown",
+    "protectedFilesExact": 100,
+    "diagnosticSourceRestored": true,
+    "inactiveIOSBuildCacheBytesPruned": 897841797,
+    "originalNativeResultBundlesRetained": true
+  }
+}

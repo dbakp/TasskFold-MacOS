@@ -6,6 +6,8 @@ Audited against the original widget collection and Todoist port plan; current na
 
 ## Implemented versus accepted
 
+13 October selection follow-up: the failure persists with a separate app identity and populated projection; app-only entity metadata in an isolated diagnostic build does not resolve it. The recorded configuration shows the selected project before closure. No production entity refactor or expiry pass is claimed. See `widget-selection-handoff-evidence.json`.
+
 13 October current widget finding: installed iPhone My list selection returns to Choose your list in two native runs, including restart and widget replacement. Built entity metadata is present; runtime registration errors are recorded but the cause remains unproven. This blocks automatic expiry acceptance. Prior completion/dismissal evidence does not establish current selection acceptance. See `widget-selection-registration-evidence.json`.
 
 13 October widget follow-up: fixed My list completion acknowledgement expiry scheduling in each owned extension; forty widget-list tests and Mac/iOS Simulator Debug/Release extension builds pass. This is a product fix with scoped model/provider verification; installed automatic expiry remains open. See `widget-completion-expiry-evidence.json`.
