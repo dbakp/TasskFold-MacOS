@@ -1,0 +1,121 @@
+Window: "Today", App: Taskfold Widget Host Test.
+0 standard window Today – Monday, 12 October · 1 task, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<Taskfold.RootView, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<Taskfold.Store>>>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<Taskfold.Workspace>>>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.AnyShapeStyle>>>, SwiftUI._PreferenceWritingModifier<SwiftUI.PreferredColorSchemeKey>>, SwiftUI._FlexFrameLayout>-1-AppWindow-1
+	1 split group SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<Taskfold.RootView, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<Taskfold.Store>>>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<Taskfold.Workspace>>>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.AnyShapeStyle>>>, SwiftUI._PreferenceWritingModifier<SwiftUI.PreferredColorSchemeKey>>, SwiftUI._FlexFrameLayout>-1-AppWindow-1, SidebarNavigationSplitView
+		2 container
+			3 button Description: Search Everywhere, ⌘F, ID: openFinder
+			4 scroll area
+				5 list Sidebar
+					6 row (selectable)
+					7 row (selected) Today
+Today
+					8 row (selectable) Inbox
+Inbox
+					9 row (selectable) Upcoming
+					10 row (selectable) Calendar
+					11 row (selectable) Browse
+					12 row (selectable) All Tasks
+All Tasks
+					13 row (selectable) Assigned to Me
+					14 row (selectable) Completed
+					15 row (selectable) Filters
+					16 row (selectable) New Filter
+					17 row (selectable, expanded) Description: Projects, Secondary Actions: Collapse
+					18 row (selectable) Studio
+Studio
+					19 row (selectable) New Project
+					20 row (selectable, expanded) Description: Labels, Secondary Actions: Collapse
+					21 row (selectable) New Label
+			22 menu button Photo of Local Workspace, Description: Local Workspace, Account, ID: accountMenu
+			23 image Description: internaldrive, Help: Tasks are stored only on this Mac.
+			24 text Help: Tasks are stored only on this Mac., Value: Saved on this device, ID: syncStatus
+		25 splitter (disabled, settable, float) 238
+		26 split group
+			27 container
+				28 image Description: Search, ID: magnifyingglass
+				29 text field (settable) Placeholder: Filter current list, ID: listFilter
+				30 menu button View Options, Description: Task options, Help: View options, ID: line.3.horizontal.decrease.circle
+				31 scroll area
+					32 list taskList
+						33 row (selectable) Today, 1
+						34 row (selected) Value: Desktop widget refresh check, due 12 Oct 2026, Flag
+More, Description: Complete Desktop widget refresh check
+Priority for Desktop widget refresh check
+						35 row (selectable) End of list
+			36 splitter (disabled, settable, float) 1070
+			37 scroll area ID: inspector, Secondary Actions: Scroll Up, Scroll Down
+				38 container
+					39 text field (settable) Description: Title, Value: Desktop widget refresh check, Placeholder: What needs doing?, ID: taskTitle
+					40 scroll area Secondary Actions: Scroll Up, Scroll Down
+						41 text entry area (settable) Description: Notes, ID: taskDescription
+						42 scroll bar (disabled, settable, float) 0
+					43 text Value: Notes, ID: taskDescription
+					44 switch Show notes in widgets, Value: off, ID: pinTaskNotes
+					45 text Pin only text you want visible on your desktop or Home Screen. Choose it in the Pinned note widget; hide its details for privacy.
+					46 button Complete
+				47 heading Plan
+				48 container
+					49 switch Planned date, Value: on
+					50 date time area (settable, date) Date, Value: 12/10/2026
+						51 stepper Value: 0.5, Secondary Actions: Increment, Decrement
+							52 increment arrow button
+							53 decrement arrow button
+					54 switch Time, Value: off
+					55 button Today
+					56 button Tomorrow
+					57 button Next week
+					58 switch Deadline, Value: off
+					59 switch Time estimate, Value: off
+					60 pop up button Priority, Value: None
+					61 button Assigned to, Description: Assigned to Unassigned, ID: taskAssignee
+					62 pop up button Project, Value: Inbox
+					63 button Description: Repeat, Help: Show repeat settings, Value: Collapsed. Never, ID: taskRepeat
+					64 button Description: Reminders…, ID: taskReminders
+				65 heading Labels
+				66 text Create labels from the sidebar.
+				67 heading Subtasks
+				68 container
+					69 text field (settable) Description: Subtask, Placeholder: Add a subtask, ID: addSubtask
+					70 button (disabled) Add subtask
+				71 heading Attachments
+				72 button Attach a File…
+				73 heading Comments
+				74 container
+					75 text Write a comment
+					76 scroll area Secondary Actions: Scroll Up, Scroll Down
+						77 text entry area (settable) Description: Write a comment, ID: commentEditor
+						78 scroll bar (disabled, settable, float) 0
+					79 text Paste an image with ⌘V to attach it immediately.
+					80 button (disabled) Add Comment
+				81 container
+					82 text Created, Value: 12 Oct 2026 at 6.49
+					83 button Delete Task…
+				84 scroll bar (settable, float) 0
+					85 value indicator (settable, float) 0
+					86 increment arrow button
+					87 decrement arrow button
+					88 increment page button
+					89 decrement page button
+	90 toolbar
+		91 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
+		92 button Description: Pinned notes, ID: openPinnedNotes, Secondary Actions: Increment, Decrement, Delete, Cancel, Move previous, Move next, Remove from toolbar
+		93 button Description: Project pulse, ID: openProjectPulse, Secondary Actions: Increment, Decrement, Delete, Cancel, Move previous, Move next, Remove from toolbar
+		94 button Description: Focus session, ID: openFocusSession, Secondary Actions: Increment, Decrement, Delete, Cancel, Move previous, Move next, Remove from toolbar
+		95 button Description: Plan Your Day, ID: planButton, Secondary Actions: Increment, Decrement, Delete, Cancel, Move previous, Move next, Remove from toolbar
+		96 button Description: New Task, ID: addTask, Secondary Actions: Increment, Decrement, Delete, Cancel, Move previous, Move next, Remove from toolbar
+		97 button Description: Inspector, Secondary Actions: Increment, Decrement, Delete, Cancel, Move previous, Remove from toolbar
+	98 close button
+	99 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	100 minimize button
+	101 text Today Monday, 12 October · 1 task
+102 menu bar
+	103 Taskfold
+	104 File
+	105 Edit
+	106 View
+	107 Fixture
+	108 Account
+	109 Task
+	110 Window
+	111 Help
+
+The focused UI element is 0 standard window Today – Monday, 12 October · 1 task, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<Taskfold.RootView, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<Taskfold.Store>>>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<Taskfold.Workspace>>>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.AnyShapeStyle>>>, SwiftUI._PreferenceWritingModifier<SwiftUI.PreferredColorSchemeKey>>, SwiftUI._FlexFrameLayout>-1-AppWindow-1

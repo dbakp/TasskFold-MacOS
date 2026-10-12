@@ -1,0 +1,13 @@
+{
+  "normalQuitConfirmed": true,
+  "originalSevenTaskRecordsExact": true,
+  "changedTables": [
+    "task_activity",
+    "task_activity_epoch",
+    "tasks"
+  ],
+  "syntheticTaskCount": 1,
+  "syntheticTaskID": "a84da717-5e9a-4b9a-b1fd-779387421550",
+  "syntheticTaskCompletedAfterUndo": false,
+  "pendingMutationCount": 0
+}

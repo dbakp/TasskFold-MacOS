@@ -497,18 +497,21 @@ struct TodayWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let entry: TodayEntry
     var tasks: [WidgetTask] { entry.snapshot.today(at: entry.date) }
+    var hasSnapshot: Bool { entry.snapshot.updated > 0 }
+    var countText: String { hasSnapshot ? "\(tasks.count)" : "—" }
+    var countAccessibilityLabel: String { hasSnapshot ? "\(tasks.count) scheduled tasks" : "Task count unavailable" }
     var limit: Int { family == .systemLarge ? 7 : 2 }
     var body: some View {
         #if os(iOS)
         switch family {
         case .accessoryCircular:
-            ZStack { AccessoryWidgetBackground(); VStack(spacing: 0) { Text("\(tasks.count)").font(.title2.bold()).monospacedDigit(); Text("due").font(.caption2) } }
+            ZStack { AccessoryWidgetBackground(); VStack(spacing: 0) { Text(countText).font(.title2.bold()).monospacedDigit().accessibilityLabel(countAccessibilityLabel); Text(hasSnapshot ? "due" : "open").font(.caption2) } }
                 .widgetURL(URL(string: "taskfold://today"))
         case .accessoryRectangular:
-            VStack(alignment: .leading, spacing: 2) { Text(tasks.first?.title ?? "All clear").font(.headline).lineLimit(2).fixedSize(horizontal: false, vertical: true).privacySensitive(tasks.first != nil); Text("\(tasks.count) due · incl. overdue").font(.caption2).lineLimit(1) }
+            VStack(alignment: .leading, spacing: 2) { Text(hasSnapshot ? tasks.first?.title ?? "All clear" : "Open Taskfold").font(.headline).lineLimit(2).fixedSize(horizontal: false, vertical: true).privacySensitive(tasks.first != nil); Text(hasSnapshot ? "\(tasks.count) due · incl. overdue" : "Refresh your tasks").font(.caption2).lineLimit(1) }
                 .widgetURL(tasks.first?.url ?? URL(string: "taskfold://today"))
         case .accessoryInline:
-            Text("Taskfold · \(tasks.count) due").widgetURL(URL(string: "taskfold://today"))
+            Text(hasSnapshot ? "Taskfold · \(tasks.count) due" : "Taskfold · Open app").widgetURL(URL(string: "taskfold://today"))
         default: content
         }
         #else
@@ -520,9 +523,13 @@ struct TodayWidgetView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) { Text("Today").font(.headline); Text(entry.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())).font(.caption2).foregroundStyle(.secondary) }
                 Spacer()
-                Text("\(tasks.count)").font(.system(.title2, design: .rounded).weight(.semibold)).monospacedDigit().foregroundStyle(brand)
+                Text(countText).font(.system(.title2, design: .rounded).weight(.semibold)).monospacedDigit().foregroundStyle(brand).accessibilityLabel(countAccessibilityLabel)
             }
-            if tasks.isEmpty {
+            if !hasSnapshot {
+                Spacer(minLength: 0)
+                Label("Open Taskfold", systemImage: "arrow.clockwise").font(.subheadline.weight(.medium))
+                Text("Refresh your tasks.").font(.caption).foregroundStyle(.secondary)
+            } else if tasks.isEmpty {
                 Spacer(minLength: 0)
                 Label("All clear for today", systemImage: "sun.max").font(.subheadline.weight(.medium))
                 Text("No scheduled tasks outstanding.").font(.caption).foregroundStyle(.secondary)
@@ -541,7 +548,13 @@ struct TodayWidgetView: View {
                 }
             }
             Spacer(minLength: 0)
-            HStack { WidgetFooter(entry: entry); Spacer(); if tasks.count > limit { Text("+\(tasks.count - limit)").font(.caption2).foregroundStyle(.secondary) }; Link(destination: URL(string: "taskfold://add")!) { Image(systemName: "plus.circle.fill").foregroundStyle(brand) }.accessibilityLabel("Capture task in Inbox") }
+            HStack {
+                if hasSnapshot { WidgetFooter(entry: entry) }
+                else { Text("TASKFOLD").font(.system(size: 9, weight: .semibold, design: .rounded)).tracking(1.5).foregroundStyle(.secondary) }
+                Spacer()
+                if tasks.count > limit { Text("+\(tasks.count - limit)").font(.caption2).foregroundStyle(.secondary) }
+                Link(destination: URL(string: "taskfold://add")!) { Image(systemName: "plus.circle.fill").foregroundStyle(brand) }.accessibilityLabel("Capture task in Inbox")
+            }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: brand) }
         .widgetURL(URL(string: "taskfold://today"))

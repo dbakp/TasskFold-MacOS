@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native app edits refresh installed medium Mac Today widget; not widget-action routing acceptance",
+  "runtime": "Development-signed isolated v2 host from f06c49b; built before subsequent Today unavailable-state production fix",
+  "accepted": [
+    "Native keyboard capture creates one synthetic task due today",
+    "Installed desktop widget AX shows count 1 and exact synthetic task title",
+    "Native inspector Complete changes installed count to 0 and All clear",
+    "Native Undo restores installed count 1 and original task title",
+    "Normal Quit and new process 86735 retain saved task in app and installed widget",
+    "Original seven task records remain exact; only tasks, task_activity and task_activity_epoch change; zero pending edits",
+    "Normal application-menu Quit confirms process stopped; both original isolated JSON caches restored exactly",
+    "Relaunch process 87182 shows native Today 0 and installed widget 0/All clear/TASKFOLD"
+  ],
+  "captureRoute": "After user click, New Task sheet said Today, not expected Inbox. Initial prior sheet state makes attribution uncertain. Closed sheet and reset fixture; requested one clean-state click. Route remains unaccepted.",
+  "cleanup": "Only isolated com.dbakp.taskfold.mac.p0widgethosts fixture restored, no production cache changed",
+  "notAccepted": [
+    "Desktop rendered pixels: captured app image blank; Finder omits widget layers",
+    "Widget capture route and widget task/completion actions",
+    "Remaining Mac widget families/configurations/cold routes/privacy/account boundaries"
+  ],
+  "evidenceDirectory": "mac-widget-live-refresh",
+  "captureWarning": "ScreenCaptureKit -3812 from sheet observations did not prove action failure; keyboard capture verified by AX and saved records. Blank screenshot excluded."
+}
