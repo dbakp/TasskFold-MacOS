@@ -1669,3 +1669,7 @@ For cold widget routes, launch the isolated app in its local workspace and creat
 ### 12 October - compact landscape editor acceptance
 
 The independently owned iOS TaskEditor now keeps its active input and caret above the onscreen keyboard at normal/largest text. Two native insertion/Save/relaunch cases pass without runtime warnings, with inspected captures and protected-data preservation. This is an iOS-specific layout change; Mac code is unchanged. See `landscape-editor-evidence.json`. Installed Mac widget and notification-action gates remain open; computer use timed out on the existing isolated host during this follow-up.
+
+## 12 October - classified retained clipping reports
+
+The four retained reports are now classified individually in `accessibility-clipping-classification.json`. The normal note is an intentional one-line ellipsis with full content retained and native editor activation verified. The normal photo label, largest 25 min chip and largest wrapped note are visibly complete in their exact audited captures; source layout and independent native action/persistence checks support scoped false-positive classifications. All original reports remain unchanged, and the diagnostic audit still records two failed cases. No whitelist, warning suppression or broad audit pass is claimed. These four reports no longer represent unclassified usability blockers. Spoken VoiceOver, other layouts and the remaining release gates are still open.

@@ -141,5 +141,6 @@
     "largest-search-placeholder.png": "4d23700cf16e9e0d1e97986523fe0865f948e22da3af3534b9c268d850f18fb8",
     "largest-search-query.png": "d2648f070fa112488b5c62e38dc0700d7ce4ded8dbfb2d981e04ad91e17d867c",
     "signing.json": "9a074250161c139b9bb78f981e3106d455663abf1db8ef2b9637ba8ae9953565"
-  }
+  },
+  "classificationFollowup": "accessibility-clipping-classification.json classifies the four retained non-Search reports individually on 12 October; original audit results remain failed and unchanged."
 }
