@@ -1,0 +1,41 @@
+Window: "", App: Taskfold Focus Contrast Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text Value: Focus session, Secondary Actions: Cancel
+		3 scroll area Secondary Actions: Scroll Up, Scroll Down, Cancel
+			4 text Value: Time well spent Focus on the next useful step Inbox Time remaining 00:00, ID: focusStatus
+			5 progress indicator 1
+			6 text Your timer is finished. Complete the task when its work is done, or start another session.
+			7 button Description: End session, ID: endFocus
+			8 text Your next session
+			9 button Description: Focus on the next useful step, Inbox, ID: focusTaskPicker
+			10 stepper 1 minute, Value: 1, ID: focusDuration, Secondary Actions: Increment, Decrement
+				11 increment arrow button
+				12 decrement arrow button
+			13 button Description: Start Focus, ID: startFocus
+			14 text Saved on this device.
+			15 checkbox Description: Alert when Focus finishes, Value: 1, ID: focusAlerts
+			16 text ID: focusAlertStatus, Value: Start another session to receive its finish alert. Enable on each device where you want a finish alert. The alert opens your session; task completion is up to you.
+			17 button Open Notification Settings…
+			18 text Value: Pending Focus alerts: 0, ID: focusPendingAlerts
+			19 button Description: Refresh scheduled alerts, ID: focusRefreshAlerts
+			20 button Description: Finish soon fixture, ID: focusFinishSoon
+			21 scroll bar (settable, float) 1
+				22 value indicator (settable, float) 1
+				23 increment arrow button
+				24 decrement arrow button
+				25 increment page button
+				26 decrement page button
+		27 button Description: Close, ID: closeFocusSession
+28 menu bar
+	29 Taskfold Focus Contrast Test
+	30 File
+	31 Edit
+	32 View
+	33 Fixture
+	34 Account
+	35 Task
+	36 Window
+	37 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

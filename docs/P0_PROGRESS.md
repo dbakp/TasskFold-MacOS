@@ -182,3 +182,10 @@ The first exit initially leaves stale All clear despite a correct cleared projec
 One fresh actual Focus alert is scheduled in the retained isolated Mac process, with native pending count one. The Focus panel is closed before delivery. Owned system logs confirm delivery at 09:29:24, Notification Center storage and reported banner/sound presentation without DND suppression. Notification pixels are uninspected. Only the Focus snapshot table changes; tasks, queue and completion metadata remain exact. Snapshot/widget publication files change; four other files retain exact hashes. See `mac-focus-open-preflight-evidence.json`.
 
 Notification Center observation times out twice with successful inventory recovery between attempts. The app stays running without replacement. A manual click of the newest alert is pending; actual Open is unaccepted. This reuses the historical Focus binary, not a fresh current-source build. Other P0 gates remain open.
+
+
+### 12 October — actual Mac Focus notification Open accepted
+
+The user clicks the newest 09:29 alert. Owned macOS logs record the exact request's foreground response at 09:31:55.393 and bring the existing PID 47062 forward. Without restart or manual Focus activation, the native Focus sheet opens with the original task, “Time well spent” and 00:00; the app capture is inspected and pending Focus alerts are zero. Tasks remain exact. See `mac-focus-open-native-evidence.json`.
+
+This closes the warm-process local Focus Open journey in the retained historical isolated binary. Cold-process Open without fixture launch overrides, task-reminder actions/account transitions, current-source release validation and the other named P0 gates remain open.

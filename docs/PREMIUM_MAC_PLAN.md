@@ -1792,3 +1792,6 @@ The first exit initially leaves stale All clear despite a correct cleared projec
 
 
 12 October: fresh retained-process Focus alert delivery confirmed in owned logs without DND suppression. Task data remains exact; Focus is closed before delivery. Actual notification Open is pending. See `mac-focus-open-preflight-evidence.json`; no current-source build or production change is claimed.
+
+
+12 October: actual warm-process Focus notification Open now passes: exact system foreground response, unchanged PID, native finished-session sheet and pending count zero. Inspected screenshot and task preservation receipt in `mac-focus-open-native-evidence.json`. Cold-process Open and Mac task-reminder/account actions remain open.
