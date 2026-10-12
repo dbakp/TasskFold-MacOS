@@ -39,20 +39,7 @@ struct WorkspaceBackup: Codable, Sendable {
     /// Coordinate external documents so their provider can materialize or finish saving them.
     /// Call off the main actor: providers may need time to download the selected file.
     static func readFile(_ url: URL) throws -> Self {
-        let access = url.startAccessingSecurityScopedResource()
-        defer { if access { url.stopAccessingSecurityScopedResource() } }
-        var coordinationError: NSError?
-        var result: Result<Self, Error>?
-        NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &coordinationError) { readableURL in
-            result = Result {
-                let size = try readableURL.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-                guard size <= maximumBytes else { throw BackupFailure(message: "Choose a backup no larger than 256 MB.") }
-                return try read(Data(contentsOf: readableURL))
-            }
-        }
-        if let coordinationError { throw coordinationError }
-        guard let result else { throw BackupFailure(message: "The backup could not be opened. Choose the file again.") }
-        return try result.get()
+        try BackupFileReadOperation().read(url)
     }
 
     static func read(_ data: Data) throws -> Self {
@@ -481,5 +468,43 @@ struct BackupVault: Sendable {
         let saved = SecItemAdd(add as CFDictionary, nil)
         if saved == errSecDuplicateItem { return try deviceKey(account: account) }
         guard saved == errSecSuccess else { throw BackupFailure(message: "Could not securely save the backup key.") }; return key
+    }
+}
+
+/// One external read. Cancellation can interrupt provider coordination; if reading
+/// has already started, its eventual result is discarded before reaching the UI.
+final class BackupFileReadOperation: @unchecked Sendable {
+    private let coordinator = NSFileCoordinator()
+    private let lock = NSLock()
+    private var cancelled = false
+
+    func cancel() {
+        lock.lock(); cancelled = true; lock.unlock()
+        coordinator.cancel()
+    }
+
+    private func checkCancellation() throws {
+        lock.lock(); let stopped = cancelled; lock.unlock()
+        if stopped { throw CocoaError(.userCancelled) }
+    }
+
+    func read(_ url: URL) throws -> WorkspaceBackup {
+        try checkCancellation()
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        var coordinationError: NSError?
+        var result: Result<WorkspaceBackup, Error>?
+        coordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { readableURL in
+            result = Result {
+                try self.checkCancellation()
+                let size = try readableURL.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+                guard size <= WorkspaceBackup.maximumBytes else { throw BackupFailure(message: "Choose a backup no larger than 256 MB.") }
+                return try WorkspaceBackup.read(Data(contentsOf: readableURL))
+            }
+        }
+        try checkCancellation()
+        if let coordinationError { throw coordinationError }
+        guard let result else { throw BackupFailure(message: "The backup could not be opened. Choose the file again.") }
+        return try result.get()
     }
 }

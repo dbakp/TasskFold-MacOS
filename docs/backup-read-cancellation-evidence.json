@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-12",
+  "problem": "External backup coordination disabled backup controls without progress or cancellation while a provider prepared the file.",
+  "changes": [
+    "Both apps show Opening backup with a Cancel action and unchanged-work guidance outside the disabled controls.",
+    "A per-read operation can cancel active NSFileCoordinator waits, checks cancellation before accepting bytes, and balances security-scoped access.",
+    "Read identity guards ignore late results/errors and prevent an old operation from clearing a newer operation\u2019s busy state.",
+    "Workspace changes cancel pending reads; reappearance in the same workspace does not cancel them."
+  ],
+  "verification": {
+    "realFoundationRegression": "HoldingBackupPresenter withholds its save completion. Cancel returns NSUserCancelledError before releasing that presenter; source bytes stay identical and a new read returns the original backup.",
+    "preCancelledRead": "Returns cancellation; independent retry succeeds without modifying the file.",
+    "backupSuites": "45 tests per repo, 90 total, zero failures. Includes stale-presenter coordination, permission failure, missing-file retry, oversized-file rejection and existing backup/restore safeguards.",
+    "builds": "Both final Debug app targets build for arm64 macOS / iOS Simulator with signing disabled; no app installed.",
+    "logs": {
+      "mac-tests": {
+        "path": "/private/tmp/taskfold-backup-cancel-mac-tests.log",
+        "sha256": "4174e59d3c0bac1c94a2903e66c4db8768a057c8f8daaf97303d9aa390a81750",
+        "result": "45 tests passed"
+      },
+      "mac-final-debug": {
+        "path": "/private/tmp/taskfold-backup-cancel-mac-final-debug.log",
+        "sha256": "865bd78efa5e4d7d486ec0b1c351f45503c97fa54b2e9e35a504a9a3431f7bf8",
+        "result": "BUILD SUCCEEDED"
+      },
+      "ios-tests": {
+        "path": "/private/tmp/taskfold-backup-cancel-ios-tests.log",
+        "sha256": "3e54948f4af9b955b216699f2af182fd0735527e7e442f552826d7daf8df728f",
+        "result": "45 tests passed"
+      },
+      "ios-final-debug": {
+        "path": "/private/tmp/taskfold-backup-cancel-ios-final-debug.log",
+        "sha256": "463826a50db9c1717a4048938168cbd2b1dc4e5012ccb5096b16d58282803792",
+        "result": "BUILD SUCCEEDED"
+      }
+    }
+  },
+  "limitations": [
+    "New progress/Cancel interface and late-result behavior have not yet been exercised in a native app workflow.",
+    "Actual offline cloud-provider download/retry remains unaccepted; the regression uses a real local NSFilePresenter.",
+    "No distribution signing or full P0 acceptance claim."
+  ],
+  "reference": "https://developer.apple.com/documentation/foundation/nsfilecoordinator/cancel()",
+  "cleanup": {
+    "prunedBytes": 629854051,
+    "paths": [
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/backup-cancel-mac",
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/backup-cancel-ios"
+    ],
+    "apps": "No Taskfold/preview apps launched this turn; none running at verification.",
+    "retained": "Test/build logs and repository-owned code/tests."
+  }
+}

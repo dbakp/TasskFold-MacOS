@@ -28,6 +28,12 @@ private final class BackupUI {
     var history: [RecoveryEntry] = []
     var daily = true
     var busy = false
+    var fileRead: BackupFileReadOperation?
+    func cancelFileRead() {
+        fileRead?.cancel()
+        fileRead = nil
+        busy = false
+    }
     var importing = false
     var selectedFile: URL?
     var pickerClosed = false
@@ -111,9 +117,24 @@ struct BackupTools: View {
         .onChange(of: daily) { _, value in store.dailyBackupsEnabled = value }
         .task(id: store.workspaceGeneration) {
             let model = ui, owner = store
+            if model.fileRead != nil, model.intendedWorkspace != owner.workspaceGeneration { model.cancelFileRead() }
             model.didSelectFile = { [weak model] url in if let model { Self.readFile(url, store: owner, ui: model) } }
             model.didCloseReview = { [weak model] in if let model { Task { await Self.refreshHistory(store: owner, ui: model) } } }
             daily = store.dailyBackupsEnabled; await refreshHistory()
+        }
+
+        if ui.fileRead != nil {
+            Section {
+                HStack {
+                    ProgressView().controlSize(.small)
+                    Text("Opening backup…").accessibilityIdentifier("backupReadProgress")
+                    Spacer()
+                    Button("Cancel") { ui.cancelFileRead() }
+                        .accessibilityIdentifier("backupReadCancel")
+                }
+                Text("Waiting for the file provider. Your current work is unchanged.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
 
         if !history.isEmpty {
@@ -161,16 +182,25 @@ struct BackupTools: View {
     private static func readFile(_ url: URL, store: Store, ui: BackupUI) {
         let generation = ui.intendedWorkspace ?? store.workspaceGeneration
         guard generation == store.workspaceGeneration else { ui.show(BackupFailure(message: "The workspace changed. Choose the backup again in the intended workspace.")); return }
+        ui.fileRead?.cancel()
+        let operation = BackupFileReadOperation()
+        ui.fileRead = operation
         ui.busy = true
         Task {
-            defer { ui.busy = false }
+            defer {
+                if ui.fileRead === operation { ui.fileRead = nil; ui.busy = false }
+            }
             do {
                 let backup = try await Task.detached(priority: .userInitiated) {
-                    try WorkspaceBackup.readFile(url)
+                    try operation.read(url)
                 }.value
+                guard ui.fileRead === operation else { return }
                 guard generation == store.workspaceGeneration else { throw BackupFailure(message: "The workspace changed. Choose the backup again in the intended workspace.") }
                 ui.review = RestoreReviewRequest(backup: backup, snapshot: store.snapshot, generation: generation, account: store.userID)
-            } catch { ui.show(error) }
+            } catch {
+                guard ui.fileRead === operation else { return }
+                ui.show(error)
+            }
         }
     }
     private func preview(_ backup: WorkspaceBackup) {
