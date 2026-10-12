@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-12",
+  "scope": "Current-source isolated Mac actual registry, native Quit and terminated delivery; Snooze action pending.",
+  "bundle": "com.dbakp.taskfold.mac.p0notificationtests",
+  "build": "v4",
+  "taskID": "a18324ef-1a64-48d1-890f-2f07b5f9609f",
+  "taskTitle": "Mac reminder Snooze proof",
+  "normalLocalWorkspace": true,
+  "scheduledRegistry": {
+    "accountID": "local",
+    "actions": [
+      {
+        "id": "taskfold.complete",
+        "title": "Complete"
+      },
+      {
+        "id": "taskfold.snooze.minutes.5",
+        "title": "Remind me in 5 minutes"
+      },
+      {
+        "id": "taskfold.tomorrow",
+        "title": "Move to tomorrow"
+      }
+    ],
+    "delivered": [],
+    "observedAt": 1791793885.4840941,
+    "pending": [
+      {
+        "accountID": "local",
+        "category": "taskfold.reminder",
+        "fireAt": 1791793994,
+        "id": "taskfold.r2.9af2f85bb59edc34cb991da4e6b5989b3ab076d723b97e8080c043a11510eb55",
+        "originalAt": 1791793994,
+        "signature": "r4:b384e35400be3703cddae2bd7351a12393ae5d91327d266992f5954f5e08b5de",
+        "snoozed": false,
+        "specID": "b72b22ee-40db-5df1-ab3c-cb7f1f740c3b",
+        "taskID": "a18324ef-1a64-48d1-890f-2f07b5f9609f",
+        "triggerAt": 1791793994
+      }
+    ],
+    "processID": 19589
+  },
+  "quit": {
+    "quitVerifiedAt": "2026-10-12T10:32:01.676946+02:00",
+    "originalPID": 19589,
+    "originalPIDAbsent": true
+  },
+  "delivery": "2026-10-12 10:33:14.114 Df usernoted[721:30dca9] [com.apple.unc:application] Delivering <NotificationRecord app:\"com.dbakp.taskfold.mac.p0notificationtests\" ident:\"0004-6FC0\" req:\"taskfold.r2.9af2f85bb59edc34cb991da4e6b5989b3ab076d723b97e8080c043a11510eb55\" uuid:\"E4C5F719\" source:\"EA7CD464\" category:\"taskfold.reminder\"> to [ .alert .lockScreen .notificationCenter ]: updatedExisting: false",
+  "actionAccepted": false,
+  "pending": "Manual actual Remind me in 5 minutes action; inspect response, real snoozed trigger, unchanged task and relaunch/redelivery.",
+  "cleanupRequired": [
+    "Disable isolated task delivery after test.",
+    "Reversibly delete only this synthetic task.",
+    "Restore isolated Snooze preference from five minutes to original one hour.",
+    "Preserve all four starter tasks/project, existing activity and protected fixtures."
+  ]
+}
