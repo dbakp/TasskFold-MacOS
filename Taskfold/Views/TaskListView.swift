@@ -225,7 +225,9 @@ struct TaskListView: View {
         .sheet(item: $collaborationProject) { CollaboratorsView(project: $0) }
         .sheet(isPresented: $sectionsEditor) { SectionsEditor(projectID: projectID) }
         .sheet(isPresented: $bulkDatePicker) { DatePickSheet(date: $bulkDate, count: workspace.selection.count) { workspace.reschedule(workspace.selection, to: Dates.day(bulkDate), label: bulkDate.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())) } }
-        .onChange(of: workspace.quickAddFocusRequest) { _, _ in if workspace.section.scope == scope { revealQuickAdd() } }
+        .onChange(of: workspace.quickAddFocusRequest, initial: true) { _, _ in
+            if workspace.section.key == preferenceKey, workspace.consumeQuickAddRequest(destination: preferenceKey) { revealQuickAdd() }
+        }
         .onChange(of: workspace.searchPresented) { _, requested in
             if requested && workspace.section.scope == scope { filterFocused = true; workspace.searchPresented = false }
         }

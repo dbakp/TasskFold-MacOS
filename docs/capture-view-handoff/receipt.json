@@ -1,0 +1,45 @@
+{
+  "scope": "Actual SwiftUI listener-pattern and owned capture-queue probe; no app/widget/URL dispatch.",
+  "results": [
+    {
+      "appeared": [
+        "today",
+        "inbox",
+        "today",
+        "inbox"
+      ],
+      "captures": [
+        "inbox"
+      ],
+      "capturesAfterSwitch": [],
+      "capturesAfterWarmRequest": [
+        "inbox"
+      ],
+      "mode": "old",
+      "requestPending": true
+    },
+    {
+      "appeared": [
+        "today",
+        "inbox",
+        "today",
+        "inbox"
+      ],
+      "captures": [
+        "inbox",
+        "inbox"
+      ],
+      "capturesAfterSwitch": [
+        "inbox"
+      ],
+      "capturesAfterWarmRequest": [
+        "inbox",
+        "inbox"
+      ],
+      "mode": "fixed",
+      "requestPending": false
+    }
+  ],
+  "captureSourceSHA256": "d59f5d11f4e8b11a9a5440c2774a4a86ca79cbf7632d8920f31c682a185bb817",
+  "workspaceBindingSHA256": "f97cfcb44f1b91b31d0e002b456a2d4cf6ef8905c6cbcd5d1e365576c522202a"
+}

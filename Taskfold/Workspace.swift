@@ -75,6 +75,7 @@ final class Workspace {
         didSet {
             UserDefaults.standard.set(section.key, forKey: "macSection")
             guard section != oldValue else { return }
+            quickAddPresentation.cancel()
             finderTaskID = nil
             navigationSubtitle = ""
             recentDestinations.removeAll { $0 == section }
@@ -141,7 +142,17 @@ final class Workspace {
     var searchPresented = false
     var inspectorShown: Bool { didSet { UserDefaults.standard.set(inspectorShown, forKey: "inspectorShown") } }
     /// Bumping these asks the matching text field to take focus.
-    var quickAddFocusRequest = 0
+    private var quickAddPresentation = CapturePresentationQueue()
+    var quickAddFocusRequest = 0 {
+        didSet {
+            quickAddPresentation.request(destination: section.key,
+                workspace: WorkspaceBinding(account: store.signedIn ? store.userID : "", generation: store.workspaceGeneration))
+        }
+    }
+    func consumeQuickAddRequest(destination: String) -> Bool {
+        guard store.signedIn else { quickAddPresentation.cancel(); return false }
+        return quickAddPresentation.take(destination: destination, account: store.userID, generation: store.workspaceGeneration)
+    }
     var titleFocusRequest = 0
     var newProjectRequest = 0
     /// Presents the planning sheet for a day or a week.
@@ -169,6 +180,7 @@ final class Workspace {
     }
 
     func clearNavigationMemory() {
+        quickAddPresentation.cancel()
         expandedTasks.removeAll()
         projectMembers.removeAll()
         rosterAccount = ""

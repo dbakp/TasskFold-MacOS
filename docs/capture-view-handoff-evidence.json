@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-12",
+  "scope": "Mac capture presentation handoff across SwiftUI destination-view replacement. Framework/model proof and unsigned app builds; installed widget route is not accepted.",
+  "problem": "Root switches to Inbox and increments a counter in one update; the detail view is keyed by section. The replacement Inbox listener starts with the incremented value and the old onChange default omits initial execution.",
+  "change": "Retain one workspace-bound destination request; initial and subsequent listeners consume it only in the correct surface. Cancel on navigation/account reset, reject signed-out and stale workspace requests, and consume at most once. Calendar and list listeners use the same handoff.",
+  "platforms": {
+    "macOS": "Owns CapturePresentation.swift, Workspace/view integration, core tests and SwiftUI probe script.",
+    "iOS": "Existing external capture already retains a WorkspaceBinding and consumes it on Inbox appearance/change; existing native external-capture evidence remains scoped. No iOS source change needed."
+  },
+  "frameworkProbe": {
+    "scope": "Actual SwiftUI listener-pattern and owned capture-queue probe; no app/widget/URL dispatch.",
+    "results": [
+      {
+        "appeared": [
+          "today",
+          "inbox",
+          "today",
+          "inbox"
+        ],
+        "captures": [
+          "inbox"
+        ],
+        "capturesAfterSwitch": [],
+        "capturesAfterWarmRequest": [
+          "inbox"
+        ],
+        "mode": "old",
+        "requestPending": true
+      },
+      {
+        "appeared": [
+          "today",
+          "inbox",
+          "today",
+          "inbox"
+        ],
+        "captures": [
+          "inbox",
+          "inbox"
+        ],
+        "capturesAfterSwitch": [
+          "inbox"
+        ],
+        "capturesAfterWarmRequest": [
+          "inbox",
+          "inbox"
+        ],
+        "mode": "fixed",
+        "requestPending": false
+      }
+    ],
+    "captureSourceSHA256": "d59f5d11f4e8b11a9a5440c2774a4a86ca79cbf7632d8920f31c682a185bb817",
+    "workspaceBindingSHA256": "f97cfcb44f1b91b31d0e002b456a2d4cf6ef8905c6cbcd5d1e365576c522202a"
+  },
+  "coreTests": {
+    "filter": "CapturePresentationTests",
+    "passed": 4,
+    "failed": 0,
+    "rootLog": "capture-handoff-core-v2.log"
+  },
+  "builds": {
+    "debug": {
+      "result": "BUILD SUCCEEDED",
+      "codeSigningAllowed": false,
+      "rootLog": "capture-handoff-debug-build-v1.log",
+      "compilerAndToolWarningLines": 4
+    },
+    "release": {
+      "result": "BUILD SUCCEEDED",
+      "codeSigningAllowed": false,
+      "rootLog": "capture-handoff-release-build-v1.log",
+      "compilerAndToolWarningLines": 8
+    }
+  },
+  "storage": {
+    "removed": "BuildCache/mac-capture-handoff",
+    "logicalBytesRemoved": 1024402922,
+    "retained": "Owned source/script, stage-independent probe inputs/executables/receipts, core/build logs; live v3 widget host/products untouched."
+  },
+  "documentation": [
+    {
+      "title": "Apple onChange initial parameter",
+      "url": "https://developer.apple.com/documentation/SwiftUI/View/onChange(of:initial:_:)-8wgw9",
+      "verified": "2026-10-12",
+      "relevance": "initial defaults to false and controls execution when the view first appears."
+    }
+  ],
+  "limits": [
+    "Probe uses the same SwiftUI listener/view-identity pattern and actual owned queue source, not the complete Taskfold view or a URL event.",
+    "No browser custom protocol was dispatched; previous browser policy block was not bypassed.",
+    "No installed widget click, actual Inbox capture save, Mac warm/cold URL route or native account-switch pass is claimed.",
+    "Mac computer use remains locked. The original v3 widget test process and its window state are preserved; it does not yet contain this fix.",
+    "Builds are unsigned compile checks; APNs/distribution gates remain unchanged.",
+    "Build warnings are retained in the root logs; no warning-free build claim."
+  ]
+}

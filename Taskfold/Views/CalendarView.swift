@@ -160,7 +160,9 @@ struct CalendarView: View {
                 }
             }
         }
-        .onChange(of: workspace.quickAddFocusRequest) { _, _ in if workspace.section == .calendar { quickAddVisible = true } }
+        .onChange(of: workspace.quickAddFocusRequest, initial: true) { _, _ in
+            if workspace.section == .calendar, workspace.consumeQuickAddRequest(destination: "calendar") { quickAddVisible = true }
+        }
         .onDisappear { quickAddVisible = false }
         .onKeyPress(keys: [.leftArrow, .rightArrow, .upArrow, .downArrow, .return, .escape], phases: .down) { press in
             guard press.modifiers.intersection([.command, .option, .control, .shift]).isEmpty else { return .ignored }
