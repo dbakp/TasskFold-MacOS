@@ -2117,6 +2117,84 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary, before)
         retainWindow(app, name: "Mac backup cancellation retains workspace after normal Quit")
     }
+    @MainActor func testBackupProviderFailureRetryPreservesWorkspace() throws {
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else {
+            throw XCTSkip("Dedicated backup cancellation app required")
+        }
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("Taskfold-mac-backup-cancel-" + UUID().uuidString + ".json")
+        let task: [String: Any] = ["id": UUID().uuidString.lowercased(), "user_id": "synthetic", "title": "Synthetic backup preview task", "completed": false, "priority": 4]
+        let backup: [String: Any] = ["format": "com.taskfold.workspace", "version": 1, "id": UUID().uuidString.lowercased(), "createdAt": ISO8601DateFormatter().string(from: Date()), "sourceAccount": "synthetic", "tables": ["tasks": [task]], "unsyncedChanges": 0, "legacy": false]
+        try JSONSerialization.data(withJSONObject: backup).write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--quick-entry-fixture", "--backup-provider-failure-testing", "--section=inbox"]
+        app.launch(); defer { app.terminate() }
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]
+        XCTAssertTrue(input.waitForExistence(timeout: 5)); input.typeText("Backup wait preserves Mac task")
+        app.buttons["Add Task"].click()
+        XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].firstMatch.waitForExistence(timeout: 5))
+        let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/ui-testing.json")
+        let before = try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary
+        app.typeKey(",", modifierFlags: .command)
+        app.buttons["Account"].firstMatch.click()
+        func choose() {
+            app.buttons["backupImport"].click()
+            XCTAssertTrue(app.sheets.buttons["Open"].firstMatch.waitForExistence(timeout: 5))
+            app.typeKey("g", modifierFlags: [.command, .shift])
+            let path = app.sheets.comboBoxes.firstMatch.exists ? app.sheets.comboBoxes.firstMatch : app.sheets.textFields.firstMatch
+            XCTAssertTrue(path.waitForExistence(timeout: 5), app.debugDescription)
+            path.click(); app.typeKey("a", modifierFlags: .command); path.typeText(file.path)
+            app.typeKey(.return, modifierFlags: [])
+            let fileRow = app.sheets.textFields.matching(NSPredicate(format: "value == %@", file.lastPathComponent)).firstMatch
+            XCTAssertTrue(fileRow.waitForExistence(timeout: 5)); fileRow.click()
+            let open = app.sheets.buttons["Open"].firstMatch
+            let available = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: open)
+            XCTAssertEqual(XCTWaiter.wait(for: [available], timeout: 5), .completed)
+            open.click()
+        }
+        choose()
+        let error = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "Your current work is unchanged.", "Your current work is unchanged.")).firstMatch
+        let ok = app.buttons["OK"].firstMatch
+        XCTAssertTrue(ok.waitForExistence(timeout: 10), app.debugDescription)
+        retainWindow(app, name: "Mac coordinated backup read failure")
+        XCTAssertTrue(error.exists, "File-provider errors need recovery guidance and preservation reassurance")
+        XCTAssertFalse(app.descendants(matching: .any)["restoreAdded"].exists)
+        XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary, before)
+        // Return activates the alert's default action without selecting its Touch Bar duplicate.
+        app.typeKey(.return, modifierFlags: [])
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: error)], timeout: 5), .completed)
+        XCTAssertTrue(app.buttons["backupImport"].isEnabled)
+        XCTAssertFalse(app.buttons["backupReadCancel"].exists)
+        choose()
+        XCTAssertTrue(app.descendants(matching: .any)["restoreAdded"].firstMatch.waitForExistence(timeout: 10), app.debugDescription)
+        retainWindow(app, name: "Mac backup retry opens restore review")
+        let sheet = app.sheets.firstMatch
+        let apply = sheet.buttons["restoreApply"].firstMatch
+        let reviewCancel = sheet.buttons["Cancel"].firstMatch
+        XCTAssertTrue(apply.waitForExistence(timeout: 5))
+        XCTAssertTrue(apply.isHittable, "Restore must be reachable without resizing the review")
+        XCTAssertTrue(reviewCancel.isHittable, "Cancel must remain reachable")
+        let desktopTop = try XCTUnwrap(NSScreen.screens.first).frame.maxY
+        let visibleScreens = NSScreen.screens.map { screen in
+            CGRect(x: screen.visibleFrame.minX, y: desktopTop - screen.visibleFrame.maxY,
+                   width: screen.visibleFrame.width, height: screen.visibleFrame.height)
+        }
+        XCTAssertTrue(visibleScreens.contains { $0.insetBy(dx: -1, dy: -1).contains(sheet.frame) },
+                      "The complete restore sheet must fit a visible display: \(sheet.frame)")
+        let capture = XCTAttachment(screenshot: sheet.screenshot())
+        capture.name = "Complete Mac restore review and reachable actions"; capture.lifetime = .keepAlways
+        add(capture)
+        reviewCancel.click()
+        XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary, before)
+        app.typeKey("q", modifierFlags: .command)
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
+        app.launchArguments = ["--uitesting", "--section=inbox"]
+        app.launch()
+        XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary, before)
+        retainWindow(app, name: "Mac backup cancellation retains workspace after normal Quit")
+    }
     @MainActor func testBackupProviderWaitNavigationAndWorkspaceReturn() throws {
         guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else {
             throw XCTSkip("Dedicated backup cancellation app required")

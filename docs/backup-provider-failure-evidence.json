@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native coordinated backup-read failure, useful recovery feedback, picker retry and whole-workspace preservation",
+  "reproduction": {
+    "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-backup-failure-before-v1.xcresult",
+    "finding": "Actual file coordinator propagated presenter URLError -1009; native alert displayed only NSURLErrorDomain error -1009. The guidance assertion failed and the screenshot was inspected."
+  },
+  "productionChange": "Both independently owned readers present plain-language availability/download/reselection guidance and confirm current work is unchanged. Provider cancellation retains its cancellation code; parsing/size validation stays distinct.",
+  "controlledBoundary": "Exact isolated DEBUG app IDs plus --backup-provider-failure-testing register a first-read-only NSFilePresenter. Its save callback returns URLError.notConnectedToInternet to the real NSFileCoordinator. The presenter is removed on exit, so choosing the same actual file again performs a normal successful coordinated read. No remote provider or network setting is changed.",
+  "core": {
+    "mac": {
+      "cases": 6,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/taskfold-backup-failure-mac-core-final.log",
+      "coverage": "Pending-presenter ordering, failed-presenter rejection and exact file bytes, missing-file retry, prior cancellation, in-flight cancellation and oversized-file rejection"
+    },
+    "ios": {
+      "cases": 6,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/taskfold-backup-failure-ios-core-final.log",
+      "coverage": "Pending-presenter ordering, failed-presenter rejection and exact file bytes, missing-file retry, prior cancellation, in-flight cancellation and oversized-file rejection"
+    }
+  },
+  "native": {
+    "mac": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-backup-failure-native-v3.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "wholePersistedWorkspaceAfterFailureCancelAndRelaunch": "Exact dictionary equality"
+    },
+    "ios": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-backup-failure-native-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "wholePersistedWorkspaceAfterFailureCancelAndRelaunch": "Exact dictionary equality"
+    }
+  },
+  "journey": [
+    "Choose a real synthetic backup through the native picker",
+    "Real coordination reports the controlled presenter failure; verify readable guidance, no restore review and exact current workspace",
+    "Dismiss error; verify Restore from file enabled and no pending Cancel/read control",
+    "Choose the same file again; verify restore review, then Cancel",
+    "Normal Mac Quit / iPhone termination and ordinary launch without failure/seed flags; exact whole workspace and visible current task retained"
+  ],
+  "builds": {
+    "mac": "Independent signed Debug test build succeeds; deep strict app signature passes",
+    "ios": "Independent iOS Simulator Debug test build succeeds",
+    "release": "Not repeated for this message-only production change; previous Release receipts predate this checkpoint. Distribution signing remains user-deferred."
+  },
+  "driverCorrections": [
+    "Mac corrected native error text query to accept value as well as label; first post-fix capture already showed correct visible message",
+    "Mac Return activates the default alert action, avoiding XCTest selecting its non-clickable Touch Bar duplicate. Both failed runs retained privately.",
+    "Inherited iPhone attachment caption refers to cancellation of a wait; this run actually retries a failed coordinated read, as its flags, preceding error capture and assertions establish."
+  ],
+  "cleanup": {
+    "protectedFilesExact": 100,
+    "mainTaskfoldAppsAndRunners": 0,
+    "disposablePhone": "Exact isolated app and runner removed, Simulator shut down",
+    "installedWidgetHosts": "Preserved",
+    "realBackendOrTodoistOperations": 0,
+    "releaseProductsPrunedThisCheckpoint": 0,
+    "currentDebugProducts": "Retained for continuing P0 acceptance"
+  },
+  "capturesIndividuallyInspected": 8,
+  "captures": {
+    "mac-before-error.png": "b1a74a4f9577e6491400f1e57eba7e3048676a8667e5acb22180911035fa5759",
+    "mac-error.png": "d34a0c79b153d0a1b3d4f850a6921fd2308d5d3b3fcf19e822e3b6efda52f2fe",
+    "mac-retry.png": "cef9ecea54748b94787e58d331e07861b68aafbcdb0018fde16e4702339cdbed",
+    "mac-review.png": "7412a53befeec0bb5d438aaaffcdf240b09dc579af1d2765324153e2794e176c",
+    "mac-relaunch.png": "aed34f2d19288a1ba60e4417c88f74b490ee6ba9582cd0e5173e4656e378710e",
+    "iphone-error.png": "a5ecb6e74d72fcb6ebe79e47948374143456413c4fd394df1b146831663215b5",
+    "iphone-retry.png": "73977d1d11ff2ea4ab098d20cfde6a12d93f6e0cb92f1eff65a11dc4dad4c95e",
+    "iphone-relaunch.png": "e0fa538a4741976fb0da006b2e719200fe58d518a7ebc2ae39c0c5e6e52845f3"
+  },
+  "limitations": [
+    "Controlled presenter failure verifies the actual coordinator/UI boundary; it is not a real iCloud/provider outage or iOS cloud transfer acceptance",
+    "No restore apply in this case; accepted prior restore-apply evidence remains separate",
+    "Installed Mac widget host still returns computer-use timeout -10005 on desktop observation; no new host acceptance",
+    "No spoken VoiceOver, external OAuth, APNs or distribution acceptance; full P0 remains incomplete"
+  ],
+  "sourceHashes": {
+    "Taskfold/Core/Backups.swift": "4b8ade71572229154e887e0c342b0f853d7e606108c0cc52967c64eca8478b77",
+    "TaskfoldTests/BackupFileReadTests.swift": "16c3560623ec2391edb3279e69810e83434c1cd10f60060f7b3a579b7bd793aa",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "dd8af700252222aa6e06150a014336b0c3de92d25701b45e93286c86830de91b"
+  }
+}

@@ -33,7 +33,11 @@ final class BackupFileReadTests: XCTestCase {
             let presenter = SavingBackupPresenter(url: url, contents: data, failure: CocoaError(.fileReadNoPermission))
             NSFileCoordinator.addFilePresenter(presenter)
             defer { NSFileCoordinator.removeFilePresenter(presenter) }
-            XCTAssertThrowsError(try WorkspaceBackup.readFile(url))
+            XCTAssertThrowsError(try WorkspaceBackup.readFile(url)) { error in
+                XCTAssertTrue(error.localizedDescription.contains("choose it again"))
+                XCTAssertTrue(error.localizedDescription.contains("Your current work is unchanged."))
+            }
+            XCTAssertEqual(try Data(contentsOf: url), data)
         }
     }
 

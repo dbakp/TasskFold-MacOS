@@ -507,21 +507,27 @@ final class BackupFileReadOperation: @unchecked Sendable {
             }
         }
         try checkCancellation()
-        if let coordinationError { throw coordinationError }
+        if let coordinationError {
+            if coordinationError.domain == NSCocoaErrorDomain && coordinationError.code == NSUserCancelledError {
+                throw coordinationError
+            }
+            throw BackupFailure(message: "The backup could not be opened. Make sure the file is downloaded and available, then choose it again. Your current work is unchanged.")
+        }
         guard let result else { throw BackupFailure(message: "The backup could not be opened. Choose the file again.") }
         return try result.get()
     }
 }
 
 #if DEBUG
-/// Deterministic native test only: hold the first provider read until cancellation.
+/// Deterministic native test only: hold or fail the first coordinated provider read.
 /// Production identifiers and ordinary debug launches never install this presenter.
 private final class BackupReadTestPresenter: NSObject, NSFilePresenter {
     private static let gate = NSLock()
     private static var used = false
     static func installIfRequested(_ url: URL) -> BackupReadTestPresenter? {
         guard ["com.dbakp.taskfold.backupcanceltests", "com.dbakp.taskfold.mac.backupcanceltests"].contains(Bundle.main.bundleIdentifier ?? ""),
-              ProcessInfo.processInfo.arguments.contains("--backup-provider-wait-testing") else { return nil }
+              (ProcessInfo.processInfo.arguments.contains("--backup-provider-wait-testing") ||
+               ProcessInfo.processInfo.arguments.contains("--backup-provider-failure-testing")) else { return nil }
         gate.lock(); defer { gate.unlock() }
         guard !used else { return nil }
         used = true
@@ -539,6 +545,10 @@ private final class BackupReadTestPresenter: NSObject, NSFilePresenter {
         presentedItemOperationQueue.maxConcurrentOperationCount = 1
     }
     func savePresentedItemChanges(completionHandler: @escaping (Error?) -> Void) {
+        if ProcessInfo.processInfo.arguments.contains("--backup-provider-failure-testing") {
+            completionHandler(URLError(.notConnectedToInternet))
+            return
+        }
         lock.lock()
         let finish = stopped
         if !finish { completions.append(completionHandler) }
