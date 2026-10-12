@@ -189,3 +189,10 @@ Notification Center observation times out twice with successful inventory recove
 The user clicks the newest 09:29 alert. Owned macOS logs record the exact request's foreground response at 09:31:55.393 and bring the existing PID 47062 forward. Without restart or manual Focus activation, the native Focus sheet opens with the original task, “Time well spent” and 00:00; the app capture is inspected and pending Focus alerts are zero. Tasks remain exact. See `mac-focus-open-native-evidence.json`.
 
 This closes the warm-process local Focus Open journey in the retained historical isolated binary. Cold-process Open without fixture launch overrides, task-reminder actions/account transitions, current-source release validation and the other named P0 gates remain open.
+
+
+### 12 October — normal local Mac cold Focus delivery
+
+The retained isolated Focus app is normally quit, then launched with no arguments. Its normal local workspace is empty. Native Inbox capture creates one synthetic task; the regular Focus chooser and one-minute duration controls start a real session with finish alerts. Native menu Quit stops PID 12154 before the end. Actual delivery at 09:36:51.119 and Notification Center storage occur with no app process running. The scheduled local snapshot remains exact after delivery and the existing ui-testing cache retains its hash. See `mac-focus-cold-open-evidence.json`.
+
+A manual click of this newest alert is pending; no app has been relaunched after delivery, and cold Open is unaccepted. This normal local journey avoids fixture launch arguments on both scheduling and the future OS launch; the binary is still the historical isolated Focus build. Cleanup of the one test task/session follows action inspection. Other P0 gates remain open.

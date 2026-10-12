@@ -1795,3 +1795,6 @@ The first exit initially leaves stale All clear despite a correct cleared projec
 
 
 12 October: actual warm-process Focus notification Open now passes: exact system foreground response, unchanged PID, native finished-session sheet and pending count zero. Inspected screenshot and task preservation receipt in `mac-focus-open-native-evidence.json`. Cold-process Open and Mac task-reminder/account actions remain open.
+
+
+12 October: normal local cold Focus delivery passes after native Quit, using regular native task/chooser/duration controls and no fixture launch arguments. Actual cold notification Open and scoped test cleanup are pending; see `mac-focus-cold-open-evidence.json`.

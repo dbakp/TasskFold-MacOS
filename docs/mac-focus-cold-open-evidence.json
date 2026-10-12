@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-12",
+  "scope": "Native one-minute local Focus alert after normal Quit; cold Open awaiting manual click.",
+  "bundle": "com.dbakp.taskfold.mac.p0focuscontrasttests",
+  "binaryScope": "Retained historical isolated binary, no current-source rebuild.",
+  "initialLaunch": "Normal open app bundle with no arguments, no seeding/session/workspace override.",
+  "steps": [
+    "Native Inbox New Task creates Cold Focus notification proof in empty isolated normal local workspace.",
+    "Native Focus chooser selects task; decrement native duration from25 to1minute; enable local account finish alerts with already granted app permission.",
+    "Native Start Focus shows01:00 and scheduled status; close Focus; native menu Quit.",
+    "PID12154 confirmed absent before delivery, and no matching app process present after delivery.",
+    "Owned system log confirms actual delivery09:36:51.119 and Notification Center storage.",
+    "Manual newest-alert click pending; no app launch/replacement performed after Quit."
+  ],
+  "quit": {
+    "normalMenuQuit": true,
+    "pid": 12154,
+    "absentAt": "2026-10-12T09:36:22.220390"
+  },
+  "stillStoppedAfterDeliveryAt": "2026-10-12T09:37:43.212689",
+  "deliveryRequestID": "taskfold.f1.8eaf2d92d30e859f6dd56b0b815e60307fe80417f9b039614eaecdc664d91c53",
+  "session": [
+    {
+      "state": {
+        "started_at_ms": 1791790550546,
+        "task_id": "83ac75bd-6b28-4969-88b3-a97fcd44db27",
+        "running_since_ms": 1791790550546,
+        "duration_seconds": 60,
+        "changed_at_ms": 1791790550546,
+        "session_id": "0ac40ee5-8211-49ae-8c10-229930fcfad6",
+        "status": "running",
+        "elapsed_ms": 0
+      },
+      "action_id": "82b63ac5-9f5a-43c2-b6a6-dd06cc4986aa",
+      "revision": 1,
+      "user_id": "local",
+      "id": "current"
+    }
+  ],
+  "localTask": {
+    "labels": [],
+    "id": "83ac75bd-6b28-4969-88b3-a97fcd44db27",
+    "title": "Cold Focus notification proof",
+    "reminders": [],
+    "description": "",
+    "completed": false,
+    "is_recurring": false,
+    "task_generation": "129915c0-5f1a-4ef0-b3a8-ab3792013ddd",
+    "user_id": "local",
+    "completion_version": 0,
+    "attachments": [],
+    "due_date": null,
+    "subtasks": [],
+    "created_at": "2026-10-12T07:35:10Z",
+    "scheduled_at": null,
+    "priority": 4,
+    "comments": [],
+    "project_id": null
+  },
+  "preservation": {
+    "scheduledLocalSnapshotExactAfterQuitAndDelivery": true,
+    "originalUiTestingFileHashExact": true,
+    "pending": []
+  },
+  "openAccepted": false,
+  "remaining": [
+    "Actual cold-process notification Open and cleanup of only native-created local test task/session.",
+    "Other named P0 gates."
+  ]
+}
