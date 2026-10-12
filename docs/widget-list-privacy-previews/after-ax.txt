@@ -1,0 +1,30 @@
+Window: "Taskfold widget privacy test", App: Taskfold Widget Privacy Test.
+0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.Text, SwiftUI.ModifiedContent<SwiftUI.HStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<PrivacyTest.ListWidgetView, SwiftUI._PaddingLayout>, SwiftUI._FrameLayout>, SwiftUI._BackgroundModifier<PrivacyTest.WidgetSurface>>, SwiftUI.AccessibilityContainerModifier>, SwiftUI.AccessibilityAttachmentModifier>
+	1 container
+		2 text Normal
+		3 container normal-open
+			4 link Description: Studio, 1, Value: taskfold://project/preview-studio
+			5 button Description: Complete Private launch budget, ID: circle
+			6 link Description: Private launch budget, Planned 2026-10-12, Deadline 2026-10-13, Value: taskfold://task/preview-1
+			7 text TASKFOLD
+		8 container normal-completed
+			9 link Description: Studio, 0, Value: taskfold://project/preview-studio
+			10 link (selected) Description: Completed, Confidential completed proposal, Help: Open completed task, Value: taskfold://task/completed-proof
+			11 button Description: Dismiss completion message, ID: xmark
+			12 text TASKFOLD
+		13 text Privacy redaction
+		14 text My list, Tasks are private, Open Taskfold to view this list., TASKFOLD
+		15 text My list, Tasks are private, Open Taskfold to view this list., TASKFOLD
+	16 close button
+	17 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	18 minimize button
+	19 text Taskfold widget privacy test
+20 menu bar
+	21 Taskfold Widget Privacy Test
+	22 File
+	23 Edit
+	24 View
+	25 Window
+	26 Help
+
+The focused UI element is 0 standard window Taskfold widget privacy test, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.VStack<SwiftUI.TupleView<(SwiftUI.Text, SwiftUI.ModifiedContent<SwiftUI.HStack<SwiftUI.TupleView<(SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<PrivacyTest.ListWidgetView, SwiftUI._PaddingLayout>, SwiftUI._FrameLayout>, SwiftUI._BackgroundModifier<PrivacyTest.WidgetSurface>>, SwiftUI.AccessibilityContainerModifier>, SwiftUI.AccessibilityAttachmentModifier>

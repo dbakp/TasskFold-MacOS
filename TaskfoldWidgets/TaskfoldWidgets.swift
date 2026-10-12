@@ -920,6 +920,7 @@ struct WidgetListEmpty: View {
 }
 struct ListWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.redactionReasons) private var redactionReasons
     let entry: ListEntry
     private var feedback: WidgetCompletionFeedback? {
         entry.snapshot.completionFeedback.flatMap { $0.visible(account: entry.snapshot.account, listID: entry.listID, at: entry.date) ? $0 : nil }
@@ -940,6 +941,26 @@ struct ListWidgetView: View {
         .contentShape(Rectangle())
     }
     var body: some View {
+        Group {
+            if redactionReasons.contains(.privacy) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("My list", systemImage: "list.bullet.rectangle").font(.headline)
+                    Spacer(minLength: 0)
+                    Label("Tasks are private", systemImage: "lock.fill").font(.subheadline.weight(.semibold))
+                    Text("Open Taskfold to view this list.").font(.caption).foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                    Text("TASKFOLD").font(.system(size: 9, weight: .semibold, design: .rounded)).tracking(1.5).foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                .unredacted()
+            } else {
+                listContent
+            }
+        }
+        .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
+        .widgetURL(status == .ready ? (redactionReasons.contains(.privacy) ? target?.url : family == .systemSmall ? tasks.first?.url ?? target?.url : target?.url) : URL(string: "taskfold://all"))
+    }
+    private var listContent: some View {
         VStack(alignment: .leading, spacing: 6) {
             if family != .systemSmall, status == .ready, let url = target?.url {
                 Link(destination: url) { listHeader }.buttonStyle(.plain)
@@ -996,8 +1017,7 @@ struct ListWidgetView: View {
             Spacer(minLength: 0)
             WidgetFooter(entry: TodayEntry(date: entry.date, snapshot: entry.snapshot))
         }
-        .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
-        .widgetURL(status == .ready ? (family == .systemSmall ? tasks.first?.url ?? target?.url : target?.url) : URL(string: "taskfold://all"))
+
     }
 }
 struct ListWidget: Widget {
