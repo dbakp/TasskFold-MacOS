@@ -1860,3 +1860,8 @@ Mac now owns opt-in DEBUG support to hold one actual system response before its 
 The actual Notification Center Complete response is held for A, then released after native sign-out/sign-in to B with delivery enabled. The unchanged production handler returns under B; B tasks, pending edits and both notification registries remain empty. Returning to A preserves its complete scheduled snapshot, still-open task and exact four future requests. See `mac-notification-account-switch-evidence.json`. This closes the named Mac delayed Complete isolation journey; it does not expand acceptance to every action/timing permutation.
 
 Native cleanup restores delivery off in both accounts and reversibly deletes only the synthetic A task. Cloud comparison proves A non-activity tables and prior activity exact, B all 14 tables exact, and 100 protected files exact. The empty reserved B account/0600 credentials remain for final fixture cleanup. Other named P0 release gates remain open. The earlier callback preflight is superseded by this actual result.
+
+
+### 12 October — installed Mac Today task cold-route preflight
+
+The existing v5 host now has one disposable Today task in its previously empty normal local workspace. Native Quit from Completed leaves PID10361 stopped, with the exact saved task and zero pending edits. The installed widget task-title click is awaiting manual input because desktop-widget observation times out. See `mac-widget-task-route-preflight-evidence.json`. No cold-route pass is claimed; the original fixture cache is retained.

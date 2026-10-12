@@ -20,7 +20,7 @@ Recent work includes actual user-visible calendar/accessibility fixes, native wo
 ## Next execution order
 
 1. Compact landscape task-editor insertion/visible input/caret, keyboard-visible Save and exact persisted values after relaunch now pass normal and largest text (`landscape-editor-evidence.json`). This named journey is closed; do not expand into another calendar/layout matrix.
-2. Verify installed Mac widgets in the isolated signed host, then the outstanding real notification Open/actions. The isolated app and extension now sign independently of the production Push entitlement blocker.
+2. Finish remaining installed Mac widget routes/configuration/privacy in the isolated signed host. Named local/authenticated notification Open/actions, sign-out/reentry and delayed Complete isolation now pass; physical APNs remains separate.
 3. Resolve the named accessibility, external file-provider and conflict/failure gaps above. Keep acceptance scoped to critical user journeys; additional combinations are not automatically P0 requirements.
 4. Close APNs and distribution with actual signing/provider/delivery evidence. The current Personal Team cannot provision the production Mac Push capability.
 

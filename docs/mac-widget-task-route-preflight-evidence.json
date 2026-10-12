@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-12",
+  "scope": "Installed Mac Today exact task cold-launch preflight; click pending.",
+  "host": "Existing signed v5 isolated widget host",
+  "taskID": "cd9b77cc-6ce3-49db-932b-70351b8e333f",
+  "taskTitle": "Desktop widget action proof",
+  "workspace": "Previously empty normal local workspace, no fixture launch arguments",
+  "native": "Saved Today task; selected Completed; native Quit; original PID10361 verified absent. Zero pending edits.",
+  "automationLimit": "NotificationCenter desktop-widget observation timed out. Manual task-title click requested.",
+  "limits": [
+    "No cold-launch routing acceptance yet.",
+    "Today task rows are links; interactive completion belongs to My list."
+  ]
+}
