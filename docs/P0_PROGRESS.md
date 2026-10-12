@@ -304,3 +304,6 @@ The second real desktop title click starts v6 PID30403 without arguments and ope
 
 
 12 October: installed large Mac My list completion feedback and explicit dismissal now pass. User observed Completed → × → All clear; persisted marker exactly matches account/task/save time, task remains completed and pending edits are zero. Native cleanup removes only the synthetic task/project; non-activity tables equal the pre-test baseline and all 100 protected files are hash-exact. Automatic timed expiry remains best-effort and was not accepted; explicit dismissal supplies the reliable exit. iOS has matching independent implementation and passing builds/tests, without a new installed dismissal claim. See `widget-completion-feedback-evidence.json`.
+
+
+12 October: matching installed medium iPhone My list acknowledgement/dismissal now passes actual SpringBoard interaction, unrelated-task preservation and normal app relaunch. One native test passes with zero failures/skips/reported runtime warnings; both screenshots inspected. Temporary widget removed, Simulator shut down, nine isolated files restored/hash-exact and 100 other protected files exact. Inactive build products pruned, logs/results/staged sources retained. See `widget-completion-feedback-evidence.json`.

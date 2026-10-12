@@ -43,7 +43,7 @@
       "result": "Passed on installed large Mac My list v8",
       "humanObservation": "Completed appeared; \u00d7 returned widget to All clear.",
       "savedState": "Task remained completed, zero pending edits; dismissal account/task/savedAt exactly matched persisted feedback.",
-      "scope": "Mac installed dismiss acceptance only; iOS builds/unit tests/source-render evidence, no new installed iOS dismissal claim."
+      "scope": "Mac installed large acknowledgement/dismissal accepted; independent iPhone medium acceptance is recorded separately."
     },
     "v8HostRecovery": {
       "failure": "macOS launched the unregistered v7 extension path; ExtensionFoundation reported Invalid bundle record before app code.",
@@ -54,6 +54,18 @@
       "openProjectedTasks": 1,
       "inactiveBuildBytesPruned": 255435318,
       "limit": "Actual dismissal still pending."
+    },
+    "installedIOSDismissal": {
+      "test": "testIsolatedInstalledCompletionFeedbackDismissal",
+      "resultBundle": "ios-widget-feedback-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0,
+      "scope": "Installed medium iPhone My list: project selection, actual completion, acknowledgement, dismiss to All clear, unrelated task retained and completion survives normal relaunch. Two screenshots inspected.",
+      "cleanup": "Temporary widget removed; Simulator shutdown. All 9 isolated original files restored/exact; all 100 other protected files exact.",
+      "testInfrastructure": "SpringBoard took repeated 60-second animation idle waits; test continued successfully. Install remapped the isolated data container; original retained account cache and backups were unchanged.",
+      "inactiveBuildBytesPruned": 345952560
     }
   },
   "cleanup": {
