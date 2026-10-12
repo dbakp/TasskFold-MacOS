@@ -1834,3 +1834,10 @@ Actual `Remind me in 5 minutes` cold-starts the isolated app. Direct macOS inspe
 The walk exposes transient stale status: Settings initially says zero upcoming despite the real snooze; an ordinary later refresh corrects it. Both independently owned action handlers now publish the successful Snooze report count immediately. Mac signed Debug/strict signature and iOS arm64 Simulator Debug builds pass. The new status branch is source/build verified; v5 Open does not constitute a repeated Snooze callback.
 
 Native cleanup restores delivery off and the original one-hour Snooze preference, deletes only the synthetic task, and verifies empty actual pending/delivered registries. All four starter tasks/project, prior activity and100protected files remain exact; only two expected create/delete activity rows and the explicit restored preference row remain. Inactive v4 and iOS compile products are pruned (273,072,459 logical bytes); sources/logs and active v5 remain. Mac account-transition acceptance, other named P0 gates and full release acceptance remain open.
+
+
+### 12 October — Mac local notification retirement and Settings recovery
+
+Native local exit with one delivered and one future alert clears both actual macOS registries. Normal signed-out relaunch stays empty; local return restores only the exact future request. Cleanup disables delivery before its fire time and reversibly removes only the synthetic task. All non-activity tables, prior activity and 100 protected files remain exact. See `mac-notification-local-exit-evidence.json`.
+
+Mac Settings now reports “No workspace open”, disables the signed-out reminder toggle and rebuilds date/reminder preferences after reentry. Native v6 verifies corrected signed-out copy and enabled controls, including opening Snooze without changing its value. The full clean snapshot remains exact. Both independent Debug builds pass; iOS receives its own toggle guard (compile verification only). Inactive v5/iOS compile products are pruned; active v6 and logs remain. Authenticated Mac account-switch/delayed-response and other named release gates remain open.

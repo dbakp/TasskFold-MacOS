@@ -40,7 +40,7 @@ struct GeneralSettings: View {
                 if !store.labels.isEmpty { Divider(); ForEach(store.labels) { Text($0.name).tag(TaskScope.label($0.id).preferenceKey) } }
             }
             Toggle("Task reminders", isOn: Binding(get: { store.remindersEnabled }, set: { enabled in if enabled { Task { await store.enableNotifications() } } else { store.disableNotifications() } }))
-                .disabled(store.requestingNotifications || store.requestingFocusAlerts)
+                .disabled(!store.signedIn || store.requestingNotifications || store.requestingFocusAlerts)
             if store.requestingNotifications {
                 ProgressView("Requesting permission…")
                     .accessibilityIdentifier("taskReminderPermissionProgress")
@@ -51,10 +51,15 @@ struct GeneralSettings: View {
             #if DEBUG
             MacNotificationInspectionView()
             #endif
-            Section("Date phrases") { DatePhrasePreferencesView() }
-            Section("Automatic reminders") { ReminderAutomaticPreferencesView() }
-            Section("Snooze") { ReminderSnoozePreferencesView() }
-            Section("Remote reminders") { RemoteReminderRegistrationView() }
+            if store.signedIn {
+                Section("Date phrases") { DatePhrasePreferencesView() }
+                Section("Automatic reminders") { ReminderAutomaticPreferencesView() }
+                Section("Snooze") { ReminderSnoozePreferencesView() }
+                Section("Remote reminders") { RemoteReminderRegistrationView() }
+            } else {
+                Text("Open a workspace to change date and reminder preferences.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Section {
                 Button("Show Welcome Tour…") { workspace.onboarding = true; NSApp.windows.first { $0.identifier?.rawValue.contains("Taskfold") == true || $0.title == workspace.navigationTitle }?.makeKeyAndOrderFront(nil) }
                     .disabled(!store.signedIn)
@@ -174,7 +179,7 @@ struct AccountSettings: View {
                 }
             }
             Section("Data") {
-                LabeledContent("Storage", value: store.localMode ? "This Mac" : "Synced account and this Mac")
+                LabeledContent("Storage", value: !store.signedIn ? "No workspace open" : store.localMode ? "This Mac" : "Synced account and this Mac")
                 if store.signedIn && !store.localMode {
                     LabeledContent("Pending changes", value: "\(store.pendingCount)")
                     if let date = store.lastSync { LabeledContent("Last sync", value: date.formatted(date: .abbreviated, time: .shortened)) }
