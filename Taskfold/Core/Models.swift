@@ -169,7 +169,17 @@ enum TaskEdit {
     /// Labels are membership, not an ordered replacement. Keep remote-only labels
     /// while applying this edit's additions/removals relative to its own baseline.
     static func keepingLocal(field: String, base: JSON, desired: JSON, remote: JSON) -> JSON {
-        if field == "labels", let merged = labelMembershipEdit(base: base, desired: desired, remote: remote) { return merged }
+        if let merged = collectionEdit(field: field, base: base, desired: desired, remote: remote) { return merged }
+        return keepingLocal(base: base, desired: desired, remote: remote)
+    }
+    fileprivate static func collectionEdit(field: String, base: JSON, desired: JSON, remote: JSON) -> JSON? {
+        if field == "labels" { return labelMembershipEdit(base: base, desired: desired, remote: remote) }
+        guard ["comments", "attachments", "subtasks"].contains(field),
+              case .array(let before) = base, case .array(let after) = desired, case .array(let current) = remote,
+              [before, after, current].allSatisfy({ items in
+                  let ids = items.map { $0.object["id"]?.text ?? "" }
+                  return !ids.contains("") && Set(ids).count == ids.count
+              }) else { return nil }
         return keepingLocal(base: base, desired: desired, remote: remote)
     }
     fileprivate static func labelMembershipEdit(base: JSON, desired: JSON, remote: JSON) -> JSON? {
@@ -284,18 +294,24 @@ struct SyncConflict: Identifiable {
         for pendingIndex in result.pending.indices where result.pending[pendingIndex].table == "tasks" && result.pending[pendingIndex].recordID.lowercased() == mutation.recordID.lowercased() {
             var local = result.pending[pendingIndex]; local.recordID = mutation.recordID
             if local.fields["id"] != nil { local.fields["id"] = .string(mutation.recordID) }
-            // Later offline label edits express their own membership delta. Rebase
-            // that delta after the reviewed choice so replay cannot erase remote
-            // additions or resurrect an earlier edit that the user discarded.
+            // Later collection edits express their own delta. Rebase it after the
+            // reviewed choice so replay retains remote additions and cannot resurrect
+            // an earlier edit that the user discarded. Unknown baselines stay guarded.
             if laterMutationIDs.contains(local.id), local.method == "PATCH",
-               let desired = local.fields["labels"], let baseline = local.baseline?["labels"],
                let current = result.tables["tasks"]?.first(where: { $0.id.lowercased() == mutation.recordID.lowercased() }),
-               TaskGeneration.permitsLocalAction(local, existing: current),
-               let merged = TaskEdit.labelMembershipEdit(base: baseline, desired: desired, remote: current["labels"]) {
-                local.fields["labels"] = merged
-                local.baseline?["labels"] = current["labels"]
-                result.pending[pendingIndex].fields["labels"] = local.fields["labels"]
-                result.pending[pendingIndex].baseline?["labels"] = current["labels"]
+               TaskGeneration.permitsLocalAction(local, existing: current) {
+                for field in ["labels", "comments", "attachments", "subtasks"] {
+                    guard let desired = local.fields[field], let baseline = local.baseline?[field],
+                          let merged = TaskEdit.collectionEdit(field: field, base: baseline, desired: desired, remote: current[field]) else { continue }
+                    // Reverse only this edit's delta to reconstruct its guard.
+                    // Remote-only items join the baseline, but a later overlapping
+                    // edit still guards its original value and requires review.
+                    let rebasedBaseline = field == "labels" ? current[field] : TaskEdit.keepingLocal(base: desired, desired: baseline, remote: current[field])
+                    local.fields[field] = merged
+                    local.baseline?[field] = rebasedBaseline
+                    result.pending[pendingIndex].fields[field] = merged
+                    result.pending[pendingIndex].baseline?[field] = rebasedBaseline
+                }
             }
             result.apply(local)
         }

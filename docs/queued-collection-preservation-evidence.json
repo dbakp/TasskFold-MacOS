@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-13",
+  "scope": "Later queued comment/attachment/subtask edits after an earlier sync-conflict choice. Independently implemented in both clients; core/transport regression evidence and native builds, not live paired UI acceptance.",
+  "problem": "A later queued whole collection replaced the reviewed projection, dropping remote-only items from the cached view and resurrecting a discarded earlier edit. Labels already rebased membership deltas; identified collections did not.",
+  "reproduction": {
+    "sameRegressionRunBeforeFixInBothRepositories": true,
+    "selectedTestsPerRepository": 1,
+    "assertionFailuresPerRepository": 12,
+    "fields": [
+      "comments",
+      "attachments",
+      "subtasks"
+    ],
+    "reviewChoices": [
+      "Use synced",
+      "Keep my edit"
+    ]
+  },
+  "repair": "Apply each later collection delta relative to its own recorded baseline. Preserve remote-only items in projected values and queued requests. Reconstruct the request baseline by reversing only that later delta, preserving original guards for overlapping edits while incorporating independent remote work. Existing label membership semantics, task-generation checks and unknown-baseline behavior remain guarded. No schema or API change.",
+  "newRegressionTests": [
+    "testLaterCollectionAdditionRetainsRemoteWorkAndRespectsReviewedChoice",
+    "testLaterOverlappingCollectionEditRetainsItsOriginalGuard",
+    "testRebasedCollectionsSendGuardedRequestsAndAcknowledgeWithoutLoss"
+  ],
+  "newCoverage": {
+    "parameterizedScenarios": 15,
+    "guardedURLSessionStubRequestScenarios": 6,
+    "requestCountAcrossThoseScenarios": 9,
+    "snapshotEncodeDecodeRoundTrip": true,
+    "sameItemOverlapKeepsOriginalGuard": true,
+    "subsequentRemoteOnlyUpdateSurvivesSecondReview": true,
+    "originalQueueNotMutatedDuringPlanning": true,
+    "actualRemoteBackendOrNativeUserWalkPerformed": false
+  },
+  "checks": {
+    "mac": {
+      "selected": 113,
+      "passed": 111,
+      "failed": 0,
+      "skipped": 2,
+      "skipReasons": [
+        "Disposable ordering fixture not supplied",
+        "Disposable account-switch fixtures not supplied"
+      ],
+      "newTestsSkipped": false,
+      "appBuild": "Succeeded"
+    },
+    "ios": {
+      "selected": 111,
+      "passed": 111,
+      "failed": 0,
+      "skipped": 0,
+      "appAndWidgetBuild": "Succeeded"
+    },
+    "isolatedIOSStageMetadata": "Retains earlier test-only version metadata; this build is not distribution-candidate acceptance."
+  },
+  "sources": {
+    "TasskFold-MacOS": {
+      "modelsSHA256": "07050c7c9f7ccc492ade860132d0d965fca2010dc694890d2df3e72944cdac61",
+      "testsSHA256": "500a3d201548478f9a54482cd30caf9ebfd236caca6b5e311d105af17ad04582"
+    },
+    "TaskFold-iOS": {
+      "modelsSHA256": "07050c7c9f7ccc492ade860132d0d965fca2010dc694890d2df3e72944cdac61",
+      "testsSHA256": "500a3d201548478f9a54482cd30caf9ebfd236caca6b5e311d105af17ad04582"
+    }
+  },
+  "logs": [
+    {
+      "log": "taskfold-later-collection-before-mac-v1.log",
+      "sha256": "0c1ea3cb39be387c4d71b9bb7ccce80ab649d6710f2f167f2c03f27420c688c7"
+    },
+    {
+      "log": "taskfold-later-collection-before-ios-v1.log",
+      "sha256": "2e8290af0a142523e20560fdf4f1e8865d77c6844ed47ebc5bd5a74a1cb67722"
+    },
+    {
+      "log": "taskfold-later-collection-affected-mac-v2.log",
+      "sha256": "0334d9eaa968a9d031df6df67d44e72ea8cd195314b865986465d61615f11f89"
+    },
+    {
+      "log": "taskfold-later-collection-affected-ios-v2.log",
+      "sha256": "47aaab364e3196ad45a889d32c5dfcdd68e19ea770de8813dcc6667526b83d12"
+    },
+    {
+      "log": "taskfold-later-collection-mac-build-v1.log",
+      "sha256": "1b3b34f9473b3d89e85b571018d01ee934ad48b447aaecde533445b547bf192b"
+    },
+    {
+      "log": "taskfold-later-collection-ios-build-v1.log",
+      "sha256": "15c1f3d939a402ddf466ddbb5675f20a9d1b8eddb4d856800a9dcc1921570b5e"
+    }
+  ],
+  "preservation": {
+    "originalIsolatedFilesExact": 28,
+    "otherProtectedFilesExact": 100,
+    "retainedPhoneFixtureFilesExact": 36,
+    "pendingMacWidgetDataExact": true,
+    "runtimeWorkspacesNotEdited": true,
+    "extraAppsNotLaunched": true
+  },
+  "next": "Exercise this exact two-offline-edits/remote-addition/review/relaunch sequence through the actual Mac and phone interfaces, including Use synced and Keep my edit. Keep broader P0 acceptance open until that and the remaining named gates are verified."
+}

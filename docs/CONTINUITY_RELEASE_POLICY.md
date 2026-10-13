@@ -1,6 +1,6 @@
 # P0 continuity release boundary
 
-The supported P0 candidate pair is **Taskfold for macOS 1.2.0 (build 3) or later** and **Taskfold for iPhone/iPad 1.4.0 (build 19) or later**. App and widget versions must match within each release. These numbers reserve the first candidates containing the guarded task edits, task-generation/completion revisions, atomic organization ordering, strict filter-document preservation and label-membership conflict fix. They do not announce a shipped release or establish acceptance of the remaining P0 gates.
+The supported P0 candidate pair is **Taskfold for macOS 1.2.0 (build 3) or later** and **Taskfold for iPhone/iPad 1.4.0 (build 19) or later**. App and widget versions must match within each release. These numbers reserve the first candidates containing the guarded task edits, task-generation/completion revisions, atomic organization ordering, strict filter-document preservation and label-membership and queued identified-collection conflict fixes. They do not announce a shipped release or establish acceptance of the remaining P0 gates.
 
 Each repository owns `Config/continuity-release.json`, its project, validator and tests. The paired version numbers describe a compatible service/data contract; neither build reads or imports the other repository. Mac's project generator also retains the new version rather than resetting it during packaging.
 
