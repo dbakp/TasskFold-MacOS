@@ -1,0 +1,328 @@
+{
+  "date": "2026-10-13",
+  "scope": "Read-only retained Mac runtime assessment and remaining P0 prerequisite audit. No new app execution, source fix, backend request or acceptance pass.",
+  "originalObjective": "Productive premium widgets, all original P0, independently owned Mac/iOS implementations, native usability and cross-device work preservation; completion remains unproven.",
+  "runtime": {
+    "originalLogs": [
+      {
+        "log": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-signed-native-v1.log",
+        "sha256": "9c36ce2c6574bb219cdadaa3f02dba8016bb4001e4413d5bea38e492d0986895",
+        "warningCount": 1,
+        "warnings": [
+          {
+            "line": 1,
+            "message": "2026-10-12 00:48:09.103 Taskfold[25608:2272025] WARNING: Application performed a reentrant operation in its NSTableView delegate. This warning will become an assert in the future."
+          }
+        ]
+      },
+      {
+        "log": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-profile-switch-normal-relaunch-v2.log",
+        "sha256": "31e2f6897e08e85c03384fcb34fbf4188cd60be7bad370136907a4bae4440ec1",
+        "warningCount": 7,
+        "warnings": [
+          {
+            "line": 1,
+            "message": "=== AttributeGraph: cycle detected through attribute 7929088 ==="
+          },
+          {
+            "line": 2,
+            "message": "=== AttributeGraph: cycle detected through attribute 8110336 ==="
+          },
+          {
+            "line": 3,
+            "message": "=== AttributeGraph: cycle detected through attribute 6511872 ==="
+          },
+          {
+            "line": 4,
+            "message": "=== AttributeGraph: cycle detected through attribute 5771520 ==="
+          },
+          {
+            "line": 5,
+            "message": "=== AttributeGraph: cycle detected through attribute 6846208 ==="
+          },
+          {
+            "line": 6,
+            "message": "=== AttributeGraph: cycle detected through attribute 7566592 ==="
+          },
+          {
+            "line": 7,
+            "message": "=== AttributeGraph: cycle detected through attribute 7747840 ==="
+          }
+        ]
+      },
+      {
+        "log": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-cloud-restore-native-v2.log",
+        "sha256": "3561b0a36838c4eb0596f89870cf248eedd73fcd42694142bcd229b686a8a6ea",
+        "warningCount": 7,
+        "warnings": [
+          {
+            "line": 1,
+            "message": "=== AttributeGraph: cycle detected through attribute 6023424 ==="
+          },
+          {
+            "line": 2,
+            "message": "=== AttributeGraph: cycle detected through attribute 3684608 ==="
+          },
+          {
+            "line": 3,
+            "message": "=== AttributeGraph: cycle detected through attribute 4424960 ==="
+          },
+          {
+            "line": 4,
+            "message": "=== AttributeGraph: cycle detected through attribute 5479680 ==="
+          },
+          {
+            "line": 5,
+            "message": "=== AttributeGraph: cycle detected through attribute 4759296 ==="
+          },
+          {
+            "line": 6,
+            "message": "=== AttributeGraph: cycle detected through attribute 5660928 ==="
+          },
+          {
+            "line": 7,
+            "message": "=== AttributeGraph: cycle detected through attribute 5842176 ==="
+          }
+        ]
+      },
+      {
+        "log": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-cloud-restore-relaunch-v2.log",
+        "sha256": "2d92d81ec2e29dcf1ae20897daaefd7a95afde112ed09cc8960053da0967193e",
+        "warningCount": 6,
+        "warnings": [
+          {
+            "line": 1,
+            "message": "=== AttributeGraph: cycle detected through attribute 6049536 ==="
+          },
+          {
+            "line": 2,
+            "message": "=== AttributeGraph: cycle detected through attribute 4632320 ==="
+          },
+          {
+            "line": 3,
+            "message": "=== AttributeGraph: cycle detected through attribute 3891968 ==="
+          },
+          {
+            "line": 4,
+            "message": "=== AttributeGraph: cycle detected through attribute 4967680 ==="
+          },
+          {
+            "line": 5,
+            "message": "=== AttributeGraph: cycle detected through attribute 5687040 ==="
+          },
+          {
+            "line": 6,
+            "message": "=== AttributeGraph: cycle detected through attribute 5868288 ==="
+          }
+        ]
+      },
+      {
+        "log": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/imported-handoff-mac-relaunch-v1.log",
+        "sha256": "f923e61638ad56f9d0dcaddfe8f3fbdd073b90a80c0c1c3944ccce0f0efbdfe3",
+        "warningCount": 7,
+        "warnings": [
+          {
+            "line": 1,
+            "message": "=== AttributeGraph: cycle detected through attribute 5842176 ==="
+          },
+          {
+            "line": 2,
+            "message": "=== AttributeGraph: cycle detected through attribute 6023424 ==="
+          },
+          {
+            "line": 3,
+            "message": "=== AttributeGraph: cycle detected through attribute 3684608 ==="
+          },
+          {
+            "line": 4,
+            "message": "=== AttributeGraph: cycle detected through attribute 4424960 ==="
+          },
+          {
+            "line": 5,
+            "message": "=== AttributeGraph: cycle detected through attribute 5479680 ==="
+          },
+          {
+            "line": 6,
+            "message": "=== AttributeGraph: cycle detected through attribute 4759296 ==="
+          },
+          {
+            "line": 7,
+            "message": "=== AttributeGraph: cycle detected through attribute 5660928 ==="
+          }
+        ]
+      },
+      {
+        "log": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/imported-handoff-mac-relaunch-v2.log",
+        "sha256": "aacb2fe36f6b2f092b4bdd9b54f905842cd402105947e903af2ac2e1dea3b7ee",
+        "warningCount": 7,
+        "warnings": [
+          {
+            "line": 1,
+            "message": "=== AttributeGraph: cycle detected through attribute 4759296 ==="
+          },
+          {
+            "line": 2,
+            "message": "=== AttributeGraph: cycle detected through attribute 5660928 ==="
+          },
+          {
+            "line": 3,
+            "message": "=== AttributeGraph: cycle detected through attribute 5842176 ==="
+          },
+          {
+            "line": 4,
+            "message": "=== AttributeGraph: cycle detected through attribute 6023424 ==="
+          },
+          {
+            "line": 5,
+            "message": "=== AttributeGraph: cycle detected through attribute 3684608 ==="
+          },
+          {
+            "line": 6,
+            "message": "=== AttributeGraph: cycle detected through attribute 4424960 ==="
+          },
+          {
+            "line": 7,
+            "message": "=== AttributeGraph: cycle detected through attribute 5479680 ==="
+          }
+        ]
+      },
+      {
+        "log": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-real-provider-mac-manual-v1.log",
+        "sha256": "6b8e32ede2e5ffc07d1bbac20390a8ba92fba3df2d516f73eaf16a66785bfd25",
+        "warningCount": 7,
+        "warnings": [
+          {
+            "line": 1,
+            "message": "=== AttributeGraph: cycle detected through attribute 5660928 ==="
+          },
+          {
+            "line": 2,
+            "message": "=== AttributeGraph: cycle detected through attribute 5842176 ==="
+          },
+          {
+            "line": 3,
+            "message": "=== AttributeGraph: cycle detected through attribute 6023424 ==="
+          },
+          {
+            "line": 4,
+            "message": "=== AttributeGraph: cycle detected through attribute 3684608 ==="
+          },
+          {
+            "line": 5,
+            "message": "=== AttributeGraph: cycle detected through attribute 4424960 ==="
+          },
+          {
+            "line": 6,
+            "message": "=== AttributeGraph: cycle detected through attribute 5479680 ==="
+          },
+          {
+            "line": 7,
+            "message": "=== AttributeGraph: cycle detected through attribute 4759296 ==="
+          }
+        ]
+      }
+    ],
+    "currentSourceSHA256": {
+      "Taskfold/Views/TaskListView.swift": "2f655503f2e5072d7c7b073221767ba24cb103c813a1e9b66ecbd905203c7c3b",
+      "Taskfold/Views/SettingsView.swift": "8c93a88b0a9117e52d57ef500b535ec00b5b4e07cd015f6b5dd3e0c874bdd218"
+    },
+    "findings": [
+      "Seven-cycle AttributeGraph patterns occur across several cloud relaunch logs, including handoff/restore, and are not localized by the archive to the profile-photo interaction",
+      "These bare cycle messages contain attribute IDs, not causal stacks or recorded user-action timing; they cannot identify the responsible view or mutation",
+      "The historical NSTableView warning explicitly says reentrant delegate operation may become an assertion; it remains a runtime risk despite prior functional success",
+      "Current list code already defers displayed-task selection pruning and checks the destination scope; this predates the reported table warning, so it is not a newly demonstrated fix",
+      "Warm Settings/inspector navigation previously added no warnings and preserved all 14 workspace tables, but does not explain cold-start cycles",
+      "Two QoS stacks were previously attributed to AppKit Services-menu/data-detectors accessibility inspection; the older notes archive lacks its reported event and remains unclassified"
+    ],
+    "rootCauseEstablished": false,
+    "warningFreeAcceptance": false,
+    "nextRequiredObservation": "Once native access is restored, reproduce the current-source cold cloud launch/initial list update and Settings presentation with causal diagnostic stacks; reuse accepted profile/data fixtures. Do not infer a scheduling fix from warning IDs.",
+    "selectionDeferralHistory": {
+      "commit": "b1cfa01",
+      "committedAt": "2026-10-10T17:43:21+02:00",
+      "presentInThatSource": [
+        "deferred MainActor selection pruning",
+        "destination-scope guard"
+      ],
+      "laterTableWarningAt": "2026-10-12 00:48:09.103"
+    }
+  },
+  "remainingGates": [
+    {
+      "requirement": "Installed Mac widgets: automatic acknowledgement clear, advertised configurations/routes and remaining account/empty states",
+      "evidence": "widget-completion-expiry-evidence.json; P0_PROGRESS.md",
+      "missing": "Actual desktop host observation/control; pending My list task is still open and fingerprint unchanged"
+    },
+    {
+      "requirement": "Actual system-selected widget privacy and safe routing",
+      "evidence": "widget-privacy-redaction-evidence.json; ios-accessory-privacy-evidence.json",
+      "missing": "Actual installed system-selected redaction; explicit .privacy rendering is narrower evidence"
+    },
+    {
+      "requirement": "Spoken VoiceOver traversal and operation of critical controls",
+      "evidence": "mac-runtime-warning-attribution-evidence.json",
+      "missing": "Observable announcements or user traversal; actual VoiceOver output surface timed out. Prior off setting was restored. No unchanged toggle attempt repeated"
+    },
+    {
+      "requirement": "Actual iOS external-provider transfer/failure and late callback",
+      "evidence": "ios-provider-picker-evidence.json; mac-provider-transfer-evidence.json; backup-picker-session-evidence.json",
+      "missing": "Configured external provider; iOS picker requires iCloud sign-in. Do not change the user Apple account. Mac cloud-only transfer and local/held-read cases retain accepted scope"
+    },
+    {
+      "requirement": "Bounded live Mac/phone label-conflict resolution and normal relaunch",
+      "evidence": "native-label-continuity-evidence.json; label-conflict-preservation-evidence.json",
+      "missing": "Mac native operation; current-source regression/guarded-request checks and real phone save/sync/relaunch do not establish paired UI acceptance"
+    },
+    {
+      "requirement": "Mac retained runtime findings",
+      "evidence": "This inventory; mac-settings-cycle-diagnostic-evidence.json; mac-runtime-warning-attribution-evidence.json",
+      "missing": "Current native causal reproduction/assessment; archived bare warning IDs are insufficient"
+    },
+    {
+      "requirement": "APNs provider/device acceptance, controlled rollout and signed distribution/install",
+      "evidence": "release-environment-check.json; CONTINUITY_RELEASE_POLICY.md",
+      "missing": "User-deferred release signing plus actual remote-delivery/distribution prerequisites. Do not remove production capabilities or treat Simulator/local delivery as APNs proof"
+    }
+  ],
+  "completedScopeRetained": [
+    "Twelve widget kinds independently implemented; scoped installed phone/tablet/Mac evidence remains",
+    "Real read-only Todoist import/retry and imported workspace handoff accepted",
+    "Planning, documented filters/favorites/orders, recovery/access-loss and local alert journeys retain their specific native receipts",
+    "P0 minimum candidate pair now named and locally checked: Mac 1.2.0 (3), iOS 1.4.0 (19); no server legacy-write blocking or distribution inferred",
+    "Separate owned repositories and all completed changes pushed; no sibling source-build dependency introduced"
+  ],
+  "blockedAudit": {
+    "consecutiveGoalTurnsWithEquivalentNativeAccessBarrier": 3,
+    "turns": [
+      {
+        "evidence": "native-label-continuity-evidence.json",
+        "observation": "Mac automation initialization failed; CUA subsequently explicitly reported Mac locked",
+        "independentProgress": "Phone real label edit/sync/relaunch passed and both repos pushed"
+      },
+      {
+        "evidence": "continuity-release-boundary-evidence.json",
+        "observation": "Two relevant native apps returned cgWindowNotFound",
+        "independentProgress": "Named release boundary and 21 checks, separate repo pushes"
+      },
+      {
+        "evidence": "This audit",
+        "observation": "Current pending host still runs; fresh CUA getApp by exact path again returned cgWindowNotFound",
+        "independentProgress": "Assessed original runtime messages and mapped every remaining checklist gate to its missing external observation"
+      }
+    ],
+    "impasse": "After this audit no remaining required acceptance can safely be completed with the currently available native/provider/signing surfaces. Do not invent speculative fixes or repeat narrower tests to keep the goal active.",
+    "resumeTrigger": "Working native Mac controls/user unlock permits the next desktop/paired/runtime checks; other gates retain their explicitly stated provider, spoken-output and deferred signing prerequisites.",
+    "completionAchieved": false
+  },
+  "preservation": {
+    "primaryFilesExact": 100,
+    "isolatedMacFilesExact": 28,
+    "retainedIOSWidgetFilesExact": 36,
+    "pendingDesktopTaskCompleted": false,
+    "pendingWidgetFingerprintExact": true,
+    "onlyLiveTaskfoldProcess": "Original pending widget host, PID 79318",
+    "newNativeTestOrBuildProcesses": "None started in this audit",
+    "newProductCodeChanges": false,
+    "newProviderOrTodoistRequests": false
+  }
+}

@@ -1,7 +1,7 @@
 # P0 progress snapshot — 13 October 2026
 
 **Core feature implementation is largely complete; release acceptance is incomplete.**
-This is the current checklist, reconciled against the original Todoist port plan. Historical attempts and exact verification limits remain in [P0 release acceptance](P0_RELEASE_STATUS.md) and the linked evidence. A build, model test or one native journey does not establish every platform/condition. The full requested objective remains active.
+This is the current checklist, reconciled against the original Todoist port plan. Historical attempts and exact verification limits remain in [P0 release acceptance](P0_RELEASE_STATUS.md) and the linked evidence. A build, model test or one native journey does not establish every platform/condition. The full requested objective remains incomplete. The prerequisite audit now supports blocking automatic goal work: native controls have failed across three consecutive goal turns, and every remaining gate needs an unavailable native/provider/spoken-output surface or deferred distribution input. See `p0-prerequisite-audit-evidence.json`. Resume when a prerequisite changes; do not repeat unchanged attempts.
 
 ## What is already working
 
