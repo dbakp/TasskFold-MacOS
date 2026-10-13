@@ -190,7 +190,7 @@ struct SyncFooter: View {
                 }
                 Spacer(minLength: 0)
                 if store.syncConflict != nil { Button("Review") { reviewing = true }.buttonStyle(.link).font(.caption).accessibilityIdentifier("reviewSyncConflict") }
-                else if store.notice != nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link).font(.caption) }
+                else if store.notice != nil && store.focusSyncConflict == nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link).font(.caption) }
             }
             .font(.caption).foregroundStyle(.secondary)
             .padding(.horizontal, 14).padding(.vertical, 8)

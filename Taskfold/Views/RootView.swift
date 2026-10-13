@@ -356,6 +356,7 @@ struct RootView: View {
             let later = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: local.id, method: "PATCH", fields: ["duration_minutes": .number(45)], baseline: ["duration_minutes": .null]), existing: local)
             store.snapshot.tables["tasks"] = [local]; store.snapshot.pending = [change, later]; store.snapshot.apply(later)
             store.syncConflict = SyncConflict(mutation: change, remote: remote)
+            store.notice = "Changes overlap on the same task. Review this edit to resume sync."
             workspace.section = .today
             try? store.persist()
         }

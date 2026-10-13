@@ -785,6 +785,8 @@ final class TaskfoldMacUITests: XCTestCase {
         func saved() throws -> NSDictionary { try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary }
         let review = app.links["reviewSyncConflict"]
         XCTAssertTrue(review.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Retry"].exists, "A conflict needs Review, not another retry")
+        XCTAssertFalse(app.links["Retry"].exists, "Link-styled retry must also be absent")
         let before = try saved()
         let originalPending = try XCTUnwrap(before["pending"] as? [NSDictionary])
         XCTAssertEqual(originalPending.count, 2)
