@@ -1,6 +1,6 @@
 {
   "date": "2026-10-13",
-  "status": "PREPARED_AWAITING_MANUAL_MAC_UNLOCK",
+  "status": "NORMAL_LAUNCH_AND_MY_LIST_COLD_TASK_ROUTE_ACCEPTED__PINNED_NOTE_PENDING",
   "scope": "Current-source installed Mac widget continuation using ordinary local tasks rather than a launch-argument-dependent ui-testing workspace. Preparation is not new installed-host acceptance.",
   "sourceHeads": {
     "TasskFold-MacOS": "38893b20bfae7ce3db56d9155238e1de8bafcc29",
@@ -75,7 +75,9 @@
     "reason": "CUA reports Mac locked; current build UI launch/inspection did not start a main app process.",
     "manualUnlockRequested": true,
     "currentMainAppSessions": 0,
-    "currentBuildWillRemainIntact": true
+    "currentBuildWillRemainIntact": true,
+    "resolved": true,
+    "resolution": "User confirmed manual unlock; current normal launch and installed My list route inspected."
   },
   "preservation": {
     "previousHumanCompletedFixtureByteExact": true,
@@ -86,10 +88,44 @@
     "inactiveOldBuildBytesPruned": 372752384,
     "currentBuildAndOriginalEvidenceRetained": true
   },
-  "next": "After manual unlock, inspect a normal launch and unchanged local task/note data. Configure the existing My list widget for Desktop widget workshop, quit the app, then verify the actual matching project/task route. Native app URL-handler acceptance already exists; it is not substituted for this installed-host check.",
+  "next": "Installed medium Pinned note configuration and cold route with the same normal local task and exact full instructions. User installation/click requested; main app fully quit and current build untouched.",
   "limits": [
-    "No new installed widget route, completion, privacy or cloud-account acceptance claimed.",
+    "Accepts the named installed My list configured-project cold task route; no new completion, privacy, cloud-account or other-family claim.",
     "Normal-mode preparation used the prior retained binary; the new source build still needs GUI observation.",
     "Release signing remains user-deferred."
-  ]
+  ],
+  "currentNativeAcceptance": {
+    "normalProcess": "20026 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+    "noLaunchArguments": true,
+    "localSnapshotExact": true,
+    "previousHumanCompletedFixtureExact": true,
+    "nativeObserved": {
+      "inboxTask": "Keep the workshop notes",
+      "project": "Desktop widget workshop",
+      "task": "Prepare the design review",
+      "date": "2026-10-14",
+      "estimateMinutes": 25,
+      "pinEnabled": true,
+      "fullThreeLineNotes": true
+    },
+    "leftBeforeQuit": "Inbox, 1 task, inspector closed",
+    "normalQuitConfirmed": true,
+    "mainProcessesAfterQuit": 0,
+    "installedMyListColdTaskRoute": {
+      "humanConfiguredAndClickedTaskTitle": true,
+      "observedBeforeCUAAppBinding": true,
+      "mainProcess": "20280 Tue Oct 13 23:03:21 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+      "noLaunchArguments": true,
+      "projectSelected": "Desktop widget workshop",
+      "taskInspectorTitle": "Prepare the design review",
+      "taskID": "c779b991-bb9e-4fde-bba6-045e07889264",
+      "notesExact": true,
+      "pinEnabled": true,
+      "plannedDate": "2026-10-14",
+      "estimateMinutes": 25,
+      "fullSavedWorkspaceExact": true,
+      "unrelatedInboxTaskRetained": true,
+      "familyNotNewlyInspected": true
+    }
+  }
 }

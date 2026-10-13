@@ -125,5 +125,16 @@
     "nativeDriverMatches": true,
     "privateURLRegistrationMatches": true,
     "stageMetadataTestsPassed": 3
+  },
+  "installedMacMyListFollowup20261013": {
+    "evidence": "mac-widget-normal-workspace-evidence.json",
+    "scope": "Current-source configured project, actual desktop task-title click from fully quit normal local app; exact task/project/notes/date/estimate open and whole snapshot remains unchanged.",
+    "processObservedBeforeCUAAppBinding": true,
+    "noFixtureLaunchArguments": true,
+    "notInferred": [
+      "Wrong-owner installed cloud-account transition",
+      "Other widget kinds or sizes",
+      "System privacy"
+    ]
   }
 }
