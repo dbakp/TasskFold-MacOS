@@ -39,7 +39,7 @@
       }
     }
   },
-  "acceptanceLimit": "Installed medium iPhone automatic expiry is accepted on iOS 26.2 and properly team-signed iOS 26.5 by the named native journeys. The prior 26.5 selection setup gap is resolved. Installed Mac automatic expiry remains unaccepted; no exact duration promise.",
+  "acceptanceLimit": "Installed medium iPhone automatic expiry is accepted on iOS 26.2 and properly team-signed iOS 26.5 by the named native journeys. Installed Mac My list last-task automatic clear is accepted by human observation with durable completed-state verification after normal Quit. No exact duration or Mac relaunch claim.",
   "cleanup": {
     "newUnsignedBuildProductsAndIntermediatesPruned": true,
     "protectedFilesExact": 100,
@@ -68,5 +68,36 @@
     "failed": 0,
     "skipped": 0,
     "structuredRuntimeWarnings": 0
+  },
+  "installedAcceptanceMac20261013": {
+    "date": "2026-10-13",
+    "scope": "Installed Mac My list last-task completion acknowledgement automatically clears to All clear without dismiss",
+    "method": "Human observation of the existing isolated desktop widget; read-only durable cache verification before and after normal app Quit",
+    "host": "Taskfold Widget Host Test",
+    "bundleIdentifier": "com.dbakp.taskfold.mac.p0widgethosts",
+    "configuration": {
+      "list": "Widget Studio",
+      "task": "Sketch widget concept"
+    },
+    "setupFinding": "The widget was still configured for the earlier list. User selected Widget Studio and confirmed the new task appeared; no rebuild, replacement or reseeding occurred.",
+    "humanReport": "It clears automatically to All clear",
+    "savedResult": {
+      "taskID": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeee04",
+      "completed": true,
+      "completedAt": "2026-10-13T20:10:56Z",
+      "completionVersion": 1,
+      "pendingMutations": 0,
+      "cacheSHA256": "48e5f7128b39c30654634e4b0f750685fb6c2437b6e351a5ada5d1bddfcd7b32"
+    },
+    "cleanup": {
+      "normalQuit": true,
+      "remainingTaskfoldMainProcesses": 0,
+      "installedWidgetAndBuildRetained": true
+    },
+    "limits": [
+      "No measured exact duration claim",
+      "No normal relaunch performed in this observation",
+      "Does not establish other Mac widget kinds, privacy, account transitions or distribution acceptance"
+    ]
   }
 }
