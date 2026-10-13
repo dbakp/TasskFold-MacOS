@@ -2843,7 +2843,7 @@ extension TaskfoldMacUITests {
         }
         let app = XCUIApplication(); defer { app.terminate() }
         let arguments = ["-ApplePersistenceIgnoreState", "NO", "-onboardingSeen", "YES", "-dailyBackups." + account["userID"]!, "NO"]
-        app.launchArguments = ["--live-auth-ui-test"] + arguments; app.launch(); app.activate()
+        app.launchArguments = ["--live-auth-ui-test"] + arguments; liveConflictLaunch(app)
         let email = app.textFields["authEmail"], password = app.secureTextFields["authPassword"]
         XCTAssertTrue(email.waitForExistence(timeout: 25)); email.click(); email.typeText(account["email"]!)
         password.click(); password.typeText(account["password"]!); app.buttons["nativeSignIn"].click()
@@ -2857,7 +2857,7 @@ extension TaskfoldMacUITests {
         retainWindow(app, name: "Imported Account open during initial cloud startup")
         // Leave Settings open; do not override OS window restoration on relaunch.
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
-        app.launchArguments = arguments; app.launch(); app.activate()
+        app.launchArguments = arguments; liveConflictLaunch(app)
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 30))
         let restoredAccount = app.buttons["Save Profile"].waitForExistence(timeout: 3)
         let receipt = XCTAttachment(string: "Account controls restored automatically: \(restoredAccount); OS restoration enabled; Settings left open at Quit")
