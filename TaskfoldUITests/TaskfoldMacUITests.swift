@@ -2876,3 +2876,53 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
     }
 }
+
+// Exercise the actual local Account -> authenticated Account transition and
+// unsaved profile draft during sync. The server profile must never be saved.
+extension TaskfoldMacUITests {
+    @MainActor func testLiveLocalAccountDirtyProfileSyncAndRelaunchReadOnly() throws {
+        continueAfterFailure = false
+        let f = try liveConflictFixture(), app = XCUIApplication(); defer { app.terminate() }
+        let server = try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: "/private/tmp/taskfold-cold-cloud-settings-server-before.json"))) as! NSDictionary
+        let profile = try XCTUnwrap((server["profiles"] as? [NSDictionary])?.first { $0["user_id"] as? String == f.account["userID"] })
+        // This guarded continuity account has Native Handoff Test in sign-in metadata;
+        // a null profile display_name legitimately falls back to that identity.
+        let storedName = profile["display_name"] as? String ?? ""
+        let savedName = storedName.isEmpty ? "Native Handoff Test" : storedName
+        let draft = "Unsaved isolated profile runtime check"
+        func cacheTables() throws -> NSDictionary { try XCTUnwrap(try liveConflictCache(f)["tables"] as? NSDictionary) }
+        app.launchArguments = ["--uitesting", "--live-auth-ui-test"] + liveConflictArguments(f); liveConflictLaunch(app)
+        app.typeKey(",", modifierFlags: .command)
+        let account = app.buttons["Account"].firstMatch; XCTAssertTrue(account.waitForExistence(timeout: 8)); account.click()
+        let login = app.buttons["accountSignIn"]; XCTAssertTrue(login.waitForExistence(timeout: 5)); login.click()
+        let email = app.textFields["authEmail"], password = app.secureTextFields["authPassword"]
+        XCTAssertTrue(email.waitForExistence(timeout: 8)); email.click(); email.typeText(f.account["email"]!)
+        password.click(); password.typeText(f.account["password"]!); app.buttons["nativeSignIn"].click()
+        XCTAssertTrue(app.buttons["Save Profile"].waitForExistence(timeout: 30))
+        let name = app.windows["Account"].textFields.firstMatch
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in name.value as? String == savedName }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 30), .completed)
+        _ = try waitLiveConflict(f) { snapshot in
+            guard let tables = snapshot["tables"] as? NSDictionary else { return false }
+            return (snapshot["pending"] as? [Any])?.isEmpty == true && Set(server.allKeys as! [String]).isSubset(of: Set(tables.allKeys as! [String]))
+        }
+        let before = try cacheTables()
+        name.click(); name.typeKey("a", modifierFlags: .command); name.typeText(draft)
+        let sync = app.buttons["Sync Now"]; XCTAssertTrue(sync.waitForExistence(timeout: 15)); sync.click()
+        XCTAssertTrue(sync.waitForExistence(timeout: 15))
+        let idle = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in sync.isEnabled }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [idle], timeout: 25), .completed)
+        XCTAssertEqual(name.value as? String, draft)
+        XCTAssertEqual(try cacheTables(), before)
+        retainWindow(app, name: "Unsaved profile draft retained through live sync")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app)
+        app.typeKey(",", modifierFlags: .command)
+        let tab = app.buttons["Account"].firstMatch; XCTAssertTrue(tab.waitForExistence(timeout: 8)); tab.click()
+        XCTAssertTrue(app.buttons["Save Profile"].waitForExistence(timeout: 8))
+        XCTAssertEqual(app.windows["Account"].textFields.firstMatch.value as? String, savedName)
+        XCTAssertEqual(try cacheTables(), before)
+        retainWindow(app, name: "Saved cloud profile restored after unsaved draft Quit")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+    }
+}
