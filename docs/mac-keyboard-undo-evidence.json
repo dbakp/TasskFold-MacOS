@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-13",
+  "scope": "Native Mac foreground keyboard Undo/redo after an autosaved title, completion feedback expiry and normal relaunch, with VoiceOver off and on. No product behavior change.",
+  "appSourceBase": "74a6a83",
+  "nativeTest": "testKeyboardUndoAfterAutosavedTitleAndCompletionFeedbackExpires",
+  "nativeTestSourceSHA256": "10d0cb74123a62bd8a51ce65c4dd3aa5e61b43c00403d8691cb7bdce1be2b5c4",
+  "results": [
+    {
+      "result": "mac-keyboard-undo-vo-off-v4.xcresult",
+      "voiceOverExpectedAndObserved": false,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 1,
+      "strictVerifier": "Rejected: retained runtime warning"
+    },
+    {
+      "result": "mac-keyboard-undo-vo-on-v1.xcresult",
+      "voiceOverExpectedAndObserved": true,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 1,
+      "strictVerifier": "Rejected: retained runtime warning"
+    }
+  ],
+  "journey": [
+    "Dedicated isolated runner guard; local synthetic workspace only",
+    "Capture task and edit title; wait for exact edited name in durable cache",
+    "Click row to leave title field; Space completes and cache confirms completed true",
+    "Wait until completion acknowledgement disappears",
+    "Command-Z reopens exact edited task; saved completed false and visible row",
+    "Command-Shift-Z redoes completion; saved completed true",
+    "Command-Z reopens again; edited title remains exact",
+    "Normal Quit, verified process exit, fixture-preserving relaunch and All Tasks receipt",
+    "Entire cached workspace equals pre-Quit snapshot"
+  ],
+  "voiceOverModeVerification": {
+    "api": "NSWorkspace.shared.isVoiceOverEnabled (public SDK NSWorkspaceAccessibility category)",
+    "expectedState": "Off by default; explicit private JSON Bool at /private/tmp/taskfold-keyboard-undo-expected-voiceover.json selects on for dedicated invocation",
+    "beforeAndAfterAssertions": true,
+    "modeFileRemovedAfterward": true,
+    "offReceipt": "Expected VoiceOver enabled: false; observed: false",
+    "onReceipt": "Expected VoiceOver enabled: true; observed: true",
+    "settingsChangedByTestCaseItself": false
+  },
+  "priorAttempts": [
+    {
+      "result": "mac-keyboard-undo-vo-off-v1.xcresult",
+      "failed": 1,
+      "boundary": "Stopped waiting for capture field before creating task; workspace-readiness/Dock-reopen precondition added; initial cause not established"
+    },
+    {
+      "result": "mac-keyboard-undo-vo-off-v2.xcresult",
+      "failed": 1,
+      "boundary": "First keyboard Undo already corroborated; optional native screenshot failed on the test display; replaced by a durable-state text receipt without removing functional assertions"
+    },
+    {
+      "result": "mac-keyboard-undo-vo-off-v3.xcresult",
+      "failed": 1,
+      "boundary": "Undo/redo/Undo corroborated; row lookup after relaunch failed although saved task stayed open. Relaunch now uses existing Dock reopen, workspace readiness and explicit All Tasks navigation"
+    }
+  ],
+  "runtimeAttribution": [
+    {
+      "report": "runtime-warning-attribution/keyboard-undo-off.json",
+      "reportedWarnings": 1,
+      "archivedEvents": 1,
+      "frames": 59,
+      "symbolicated": 47,
+      "classification": "UUID-matched AppKit Services/Data Detectors menu accessibility inspection"
+    },
+    {
+      "report": "runtime-warning-attribution/keyboard-undo-on.json",
+      "reportedWarnings": 1,
+      "archivedEvents": 1,
+      "frames": 59,
+      "symbolicated": 48,
+      "classification": "UUID-matched AppKit Services/Data Detectors menu accessibility inspection"
+    }
+  ],
+  "assessment": "No application keyboard Undo defect reproduced in this controlled foreground sequence, including with VoiceOver running. This supplies functional shortcut evidence; the earlier manual Command-Z event is not retroactively declared successful. Both passing cases remain warning-bearing and strict verification rejects them. No speculative app scheduling change or warning suppression.",
+  "preservation": {
+    "voiceOverRestoredOffAndVerified": true,
+    "welcomeDialogRestoredOnAndVerified": true,
+    "appleScriptControlRemainedOff": true,
+    "extraAppAndUtilityClosed": true,
+    "originalIsolatedFilesRestoredExact": 28,
+    "protectedPrimaryFilesExact": 100,
+    "retainedIOSFilesExact": 36,
+    "pendingWidgetFingerprintExact": true,
+    "privateFinalSyntheticCache": "/private/tmp/taskfold-keyboard-undo-final-local-v1.json"
+  },
+  "limits": [
+    "Functional native keyboard acceptance, not new spoken-output/foreground-transition acceptance",
+    "Earlier manual speech reports and unresolved recovery-route observation retain their separate limits",
+    "No warning-free runtime claim; current imported-workspace full-accessibility-tree cycles remain separate and unresolved",
+    "Mac-only AppKit keyboard case; no new iOS native execution or product changes",
+    "No real Todoist interaction, remote-provider upload, backend schema or release-signing changes"
+  ]
+}

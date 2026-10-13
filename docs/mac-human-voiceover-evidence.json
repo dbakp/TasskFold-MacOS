@@ -94,5 +94,6 @@
       "path": "/private/tmp/taskfold-inspector-autosave-hint-native-v1.log",
       "sha256": "a5cabb67dd39dc8065ad8f9d4201b64b15292aa5014946fb75e20c1038afd96c"
     }
-  ]
+  ],
+  "subsequentFunctionalKeyboardVerification": "mac-keyboard-undo-evidence.json; original human shortcut outcome remains unchanged"
 }

@@ -2926,3 +2926,65 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
     }
 }
+
+// Mirrors the human listening sequence and checks durable state, not just speech
+// or an Undo menu's enabled state. Isolated runner only; no cloud records.
+extension TaskfoldMacUITests {
+    @MainActor func testKeyboardUndoAfterAutosavedTitleAndCompletionFeedbackExpires() throws {
+        continueAfterFailure = false
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else { throw XCTSkip("Dedicated local keyboard app required") }
+        let modeFile = URL(fileURLWithPath: "/private/tmp/taskfold-keyboard-undo-expected-voiceover.json")
+        let expectsVoiceOver = FileManager.default.fileExists(atPath: modeFile.path) ? try JSONDecoder().decode(Bool.self, from: Data(contentsOf: modeFile)) : false
+        XCTAssertEqual(NSWorkspace.shared.isVoiceOverEnabled, expectsVoiceOver)
+        defer { XCTAssertEqual(NSWorkspace.shared.isVoiceOverEnabled, expectsVoiceOver, "VoiceOver mode must remain stable through the native case") }
+        let modeReceipt = XCTAttachment(string: "Expected VoiceOver enabled: \(expectsVoiceOver); observed: \(NSWorkspace.shared.isVoiceOverEnabled)")
+        modeReceipt.name = "Native VoiceOver mode"; modeReceipt.lifetime = .keepAlways; add(modeReceipt)
+        let app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = ["--uitesting", "--live-auth-ui-test", "--quick-entry-fixture", "-onboardingSeen", "YES"]
+        liveConflictLaunch(app)
+        XCTAssertTrue(app.buttons["addTask"].waitForExistence(timeout: 20), "Local workspace must be ready before capture")
+        app.typeKey("n", modifierFlags: .command)
+        let input = app.textFields["quickAdd"]; XCTAssertTrue(input.waitForExistence(timeout: 10))
+        input.typeText("Keyboard capture proof"); app.buttons["Add Task"].click()
+        let title = app.textFields["taskTitle"]; XCTAssertTrue(title.waitForExistence(timeout: 8))
+        title.click(); title.typeKey("a", modifierFlags: .command); title.typeText("Keyboard editing proof")
+        let cacheURL = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/ui-testing.json")
+        func cache() throws -> NSDictionary { try JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as! NSDictionary }
+        func sample() throws -> NSDictionary {
+            let tables = try XCTUnwrap(try cache()["tables"] as? NSDictionary)
+            let tasks = try XCTUnwrap(tables["tasks"] as? [NSDictionary]); XCTAssertEqual(tasks.count, 1)
+            return try XCTUnwrap(tasks.first)
+        }
+        func waitCompleted(_ completed: Bool) throws {
+            let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard let task = try? sample() else { return false }
+                return task["title"] as? String == "Keyboard editing proof" && (task["completed"] as? NSNumber)?.boolValue == completed
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed)
+        }
+        try waitCompleted(false)
+        let id = try XCTUnwrap(try sample()["id"] as? String)
+        let row = app.staticTexts["title-" + id]
+        XCTAssertTrue(row.waitForExistence(timeout: 8)); row.click()
+        app.typeKey(" ", modifierFlags: []); try waitCompleted(true)
+        XCTAssertTrue(waitForDisappearance(row, timeout: 8))
+        let feedback = app.descendants(matching: .any)["undoConfirmation"]
+        XCTAssertTrue(feedback.waitForExistence(timeout: 2))
+        XCTAssertTrue(waitForDisappearance(feedback, timeout: 8), "Undo must survive feedback dismissal while the user listens")
+        app.typeKey("z", modifierFlags: .command); try waitCompleted(false)
+        XCTAssertTrue(row.waitForExistence(timeout: 8))
+        let reopened = try sample()
+        let undoReceipt = XCTAttachment(string: "Saved title: \(reopened["title"] ?? NSNull()); completed: \(reopened["completed"] ?? NSNull())")
+        undoReceipt.name = "Keyboard Undo durable state after feedback expiry"; undoReceipt.lifetime = .keepAlways; add(undoReceipt)
+        app.typeKey("z", modifierFlags: [.command, .shift]); try waitCompleted(true)
+        app.typeKey("z", modifierFlags: .command); try waitCompleted(false)
+        let before = try cache()
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+        app.launchArguments = ["--uitesting", "-onboardingSeen", "YES"]; liveConflictLaunch(app)
+        XCTAssertTrue(app.buttons["addTask"].waitForExistence(timeout: 20))
+        app.staticTexts["All Tasks"].firstMatch.click()
+        XCTAssertTrue(row.waitForExistence(timeout: 10)); try waitCompleted(false)
+        XCTAssertEqual(try cache(), before)
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+    }
+}
