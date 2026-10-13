@@ -2750,3 +2750,62 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
     }
 }
+
+// Scoped read-only regression for retained cold cloud/Settings runtime findings.
+// No fixture records are created, edited or removed. Run explicitly with the
+// existing guarded account and a fresh private server baseline.
+extension TaskfoldMacUITests {
+    @MainActor func testLiveMacColdCloudSettingsReadOnlyAndRelaunch() throws {
+        continueAfterFailure = false
+        let f = try liveConflictFixture(), app = XCUIApplication(); defer { app.terminate() }
+        let server = try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: "/private/tmp/taskfold-cold-cloud-settings-server-before.json"))) as! NSDictionary
+        let expectedIDs = Set((server["tasks"] as! [NSDictionary]).compactMap { $0["id"] as? String })
+        XCTAssertFalse(expectedIDs.isEmpty)
+        func settled() throws -> NSDictionary {
+            try waitLiveConflict(f) { cache in
+                let tables = cache["tables"] as? NSDictionary
+                let tasks = tables?["tasks"] as? [NSDictionary] ?? []
+                return Set(tasks.compactMap { $0["id"] as? String }) == expectedIDs && (cache["pending"] as? [Any])?.isEmpty == true
+            }
+        }
+        func stableTables(_ cache: NSDictionary) throws -> [String: [String]] {
+            let tables = cache["tables"] as! NSDictionary
+            return try Dictionary(uniqueKeysWithValues: (server.allKeys as! [String]).map { table in
+                let rows = try XCTUnwrap(tables[table] as? [NSDictionary], "Missing synced table")
+                return (table, try rows.map { try JSONSerialization.data(withJSONObject: $0, options: [.sortedKeys]).base64EncodedString() }.sorted())
+            })
+        }
+        app.launchArguments = ["--live-auth-ui-test"] + liveConflictArguments(f); liveConflictLaunch(app)
+        let email = app.textFields["authEmail"], password = app.secureTextFields["authPassword"]
+        XCTAssertTrue(email.waitForExistence(timeout: 20)); email.click(); email.typeText(f.account["email"]!)
+        password.click(); password.typeText(f.account["password"]!); app.buttons["nativeSignIn"].click()
+        XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 30))
+        let before = try stableTables(settled())
+        app.staticTexts["All Tasks"].firstMatch.click()
+        let id = try XCTUnwrap(expectedIDs.sorted().first), row = liveConflictRow(app, id)
+        XCTAssertTrue(row.waitForExistence(timeout: 15)); row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        let title = app.descendants(matching: .any)["taskTitle"].firstMatch
+        if !title.waitForExistence(timeout: 3) { app.buttons["Inspector"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click() }
+        XCTAssertTrue(title.waitForExistence(timeout: 5)); retainWindow(app, name: "Cold cloud list and inspector without edits")
+        func settingsWalk(_ name: String) {
+            app.typeKey(",", modifierFlags: .command)
+            for tab in ["General", "Appearance", "Account"] {
+                let button = app.buttons[tab].firstMatch; XCTAssertTrue(button.waitForExistence(timeout: 8)); button.click()
+            }
+            XCTAssertTrue(app.buttons["Save Profile"].waitForExistence(timeout: 5))
+            let restore = app.buttons["backupImport"]; XCTAssertTrue(restore.exists)
+            retainWindow(app, name: name)
+            restore.click(); XCTAssertTrue(app.sheets.buttons["Cancel"].firstMatch.waitForExistence(timeout: 5)); app.sheets.buttons["Cancel"].firstMatch.click()
+            XCTAssertTrue(restore.waitForExistence(timeout: 5))
+            app.windows["Account"].buttons["_XCUI:CloseWindow"].click()
+        }
+        settingsWalk("Cloud Account and recovery controls before normal Quit")
+        XCTAssertEqual(try stableTables(settled()), before)
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
+        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app)
+        XCTAssertEqual(try stableTables(settled()), before)
+        settingsWalk("Cloud Account and recovery controls after ordinary relaunch")
+        XCTAssertEqual(try stableTables(settled()), before)
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
+    }
+}
