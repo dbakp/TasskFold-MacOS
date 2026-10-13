@@ -324,5 +324,10 @@
     "newNativeTestOrBuildProcesses": "None started in this audit",
     "newProductCodeChanges": false,
     "newProviderOrTodoistRequests": false
+  },
+  "subsequentLiveLabelAcceptance": {
+    "evidence": "live-label-pair-evidence.json",
+    "date": "2026-10-13",
+    "status": "Mac access restored; bounded live label pair accepted. Earlier attempt limits remain historical."
   }
 }

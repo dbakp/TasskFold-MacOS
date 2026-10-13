@@ -2729,9 +2729,20 @@ extension TaskfoldMacUITests {
         let review = app.links["reviewSyncConflict"]; XCTAssertTrue(review.waitForExistence(timeout: 35)); review.click()
         XCTAssertTrue(app.buttons["keepMyEdit"].waitForExistence(timeout: 5)); retainWindow(app, name: "Real phone and Mac label conflict review")
         app.buttons["keepMyEdit"].click()
+        try verifyResolvedLabels(app, f, labels)
+    }
+    @MainActor func testLiveMacRetainsResolvedLabelMembershipAfterRelaunch() throws {
+        continueAfterFailure = false
+        let (f, labels) = try labelFixture(), app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app)
+        try verifyResolvedLabels(app, f, labels)
+    }
+    @MainActor private func verifyResolvedLabels(_ app: XCUIApplication, _ f: LiveConflictFixture, _ labels: [String: String]) throws {
         let settled = try waitLiveConflict(f) { self.hasLabels($0, f, Array(labels.values)) && self.liveConflictTask($0, f)?["description"] as? String == f.remoteNotes && ($0["pending"] as? [Any])?.isEmpty == true }
         openLabelTask(app, f)
-        for id in labels.values { XCTAssertEqual(labelControl(app, id).value as? String, "1") }
+        XCTAssertEqual(app.textViews["taskDescription"].value as? String, f.remoteNotes)
+        // Native macOS switches return NSNumber; iOS switches return String.
+        for id in labels.values { XCTAssertEqual((labelControl(app, id).value as? NSNumber)?.intValue, 1) }
         retainWindow(app, name: "All independent labels preserved after Keep my edit")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
         _ = try waitLiveConflict(f) { self.hasLabels($0, f, Array(labels.values)) && ($0["pending"] as? [Any])?.isEmpty == true }

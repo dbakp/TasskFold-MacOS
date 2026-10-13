@@ -121,5 +121,10 @@
     "Phone pass alone does not accept paired conflict resolution",
     "Existing 54 regression tests per repository and controlled guarded-request evidence remain the product-fix proof",
     "No VoiceOver, system WidgetKit privacy, cloud-provider, APNs, distribution or minimum-client rollout gate closed by this run"
-  ]
+  ],
+  "subsequentLiveLabelAcceptance": {
+    "evidence": "live-label-pair-evidence.json",
+    "date": "2026-10-13",
+    "status": "Mac access restored; bounded live label pair accepted. Earlier attempt limits remain historical."
+  }
 }

@@ -49,5 +49,10 @@
     "Original P0 objective remains active.",
     "No schema/server change, new grammar or universal mixed-client acceptance.",
     "Installed Mac widget expiry, actual system widget privacy, spoken output, external providers and user-deferred signing/delivery remain separate gates."
-  ]
+  ],
+  "subsequentLiveLabelAcceptance": {
+    "evidence": "live-label-pair-evidence.json",
+    "date": "2026-10-13",
+    "status": "Mac access restored; bounded live label pair accepted. Earlier attempt limits remain historical."
+  }
 }

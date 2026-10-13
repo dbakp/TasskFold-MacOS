@@ -49,7 +49,9 @@ def main():
     shutil.copy2(source / 'Taskfold.xcodeproj/xcshareddata/xcschemes/Taskfold.xcscheme', output / 'Taskfold.xcodeproj/xcshareddata/xcschemes/Taskfold.xcscheme')
     # Namespaces only: preserve app behavior, synchronization contracts and test actions.
     changes = {}
-    replacements = {'com.taskfold.ios.session': service + '.session',
+    task_type = bundle + '.task'
+    replacements = {'com.dbakp.taskfold.task': task_type,
+                    'com.taskfold.ios.session': service + '.session',
                     'com.taskfold.recovery.v1': service + '.recovery.v1',
                     'group.com.dbakp.taskfold': app_group}
     if widgets:
@@ -76,6 +78,11 @@ def main():
     info['CFBundleName'] = info['CFBundleDisplayName']
     for key in ('CFBundleURLTypes', 'CFBundleDocumentTypes', 'UTExportedTypeDeclarations', 'UTImportedTypeDeclarations'):
         info.pop(key, None)
+    # Native drag providers still need an exported task type. Keep it private
+    # to this test identity, with no filename tags or document associations.
+    info['UTExportedTypeDeclarations'] = [{'UTTypeIdentifier': task_type,
+                                          'UTTypeDescription': 'Isolated Taskfold task',
+                                          'UTTypeConformsTo': ['public.data']}]
     if widgets:
         info['CFBundleURLTypes'] = [{'CFBundleURLName': bundle, 'CFBundleURLSchemes': [scheme]}]
     manifest.write_bytes(plistlib.dumps(info))

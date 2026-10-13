@@ -20,7 +20,7 @@ Older queues may lack a baseline or individual baseline fields. Those edits requ
 
 Task labels use membership semantics. With a known original baseline, Keep my edit applies only this edit's additions and removals to the synced labels; independent remote additions survive, and a remotely removed label that was unchanged locally stays removed. Later queued label edits are rebased individually after the review choice, including their guarded request baselines. Use synced can therefore discard the reviewed addition without resurrecting it through a later edit. Undo/Redo uses the same baseline-relative membership behavior.
 
-This logic is restricted to valid label collections and compatible task generations. It does not reinterpret arbitrary ordered arrays or silently approve unsupported later baselines. Older work without a reconstructable baseline retains the existing explicit-review behavior. See `label-conflict-preservation-evidence.json` for reproduced loss, regression coverage and the remaining live native label acceptance boundary.
+This logic is restricted to valid label collections and compatible task generations. It does not reinterpret arbitrary ordered arrays or silently approve unsupported later baselines. Older work without a reconstructable baseline retains the existing explicit-review behavior. See `label-conflict-preservation-evidence.json` for reproduced loss and regression coverage, and `live-label-pair-evidence.json` for the bounded actual Mac/phone conflict and relaunch acceptance.
 
 ## Verification
 

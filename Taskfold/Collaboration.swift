@@ -174,7 +174,7 @@ struct ConflictReview: View {
                     } else if conflict.mutation.fields.keys.contains(where: { conflict.mutation.baseline?[$0] == nil }) {
                         Text("This edit came from an older app version. Keep my edit uses the values shown above, including any comments or subtasks in this edit. Use synced version keeps the current synced values. Later offline edits and other tasks are kept.").font(.callout).foregroundStyle(.secondary)
                     } else {
-                        Text("Keep my edit applies your changes and retains independent comments and subtask edits. Use synced version discards this queued edit. Later offline edits and other tasks are kept with either choice.").font(.callout).foregroundStyle(.secondary)
+                        Text("Keep my edit applies your changes and retains independent labels, comments and subtask edits. Use synced version discards this queued edit. Later offline edits and other tasks are kept with either choice.").font(.callout).foregroundStyle(.secondary)
                     }
                     if !current { Text("This edit is no longer waiting for review. Close this screen and reopen the current review.").foregroundStyle(.secondary) }
                 }
