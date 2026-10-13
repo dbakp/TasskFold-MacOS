@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-13",
+  "platform": "macOS",
+  "method": "Direct native CUA interaction and screenshot/AX inspection, with saved-state and process verification. This is not a Mac XCTest runtime pass.",
+  "sourceCommit": "3c12be2",
+  "source": {
+    "BackupToolsSHA256": "a5d6dba606d32c0b7dd31ce42399b0575db896bac9ee202f1e1ec23709fd80ab",
+    "BackupsSHA256": "0cde657fc705c0c206d2e8a5e9cfd4f9e993d402877f1572479410c74549d26f",
+    "stagedBackupToolsByteIdentical": true,
+    "isolationReceiptSHA256": "0e3be8bfe646f5a04c62ffd842ca0a6a6142aca7500b11938ae2e77d9cf38d3e"
+  },
+  "build": {
+    "configuration": "Debug",
+    "result": "BUILD SUCCEEDED",
+    "log": "taskfold-mac-picker-session-build-v1.log",
+    "logSHA256": "f014cbd320a78118795f924f3b353cca500520be8e26242b5a054da3c726e160",
+    "strictDeepSignatureVerified": true,
+    "team": "3UZ4C73FM2",
+    "bundleID": "com.dbakp.taskfold.mac.backupcanceltests",
+    "appProductPath": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-provider-read-v1/Build/Products/Debug/Taskfold.app",
+    "binarySHA256": "2c7ba5e671ad0b9c2f770cc5be2cc703fe5cbc4134b6fe7bf6f8608d1278bda5",
+    "existingWarnings": [
+      "/tmp/taskfold-mac-picker-session-v1/Taskfold/Workspace.swift:363:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+      "/tmp/taskfold-mac-picker-session-v1/Taskfold/Workspace.swift:378:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+      "/tmp/taskfold-mac-picker-session-v1/Taskfold/Views/KeyRouter.swift:22:106: warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used",
+      "/tmp/taskfold-mac-picker-session-v1/Taskfold/Views/Links.swift:197:23: warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode"
+    ]
+  },
+  "journey": [
+    "Launch isolated test mode and quick-entry fixture; save one synthetic Inbox task through actual Command-N/Add Task controls.",
+    "Capture full saved snapshot before the picker; one open task and zero pending entries.",
+    "Settings Account \u2192 Restore from file \u2192 actual NSOpenPanel/Go to folder \u2192 select synthetic JSON.",
+    "Controlled coordinated-provider wait presents readable progress/footer and enabled Cancel while backup actions are disabled.",
+    "Click actual Cancel; progress disappears, actions re-enable and no error appears; whole snapshot remains exact.",
+    "Reopen native picker, select the same JSON, Open; actual restore review shows Add 1/Update 0/Tasks 1 and reachable Restore/Cancel.",
+    "Inspect full native review screenshot, Cancel without applying; whole snapshot remains exact.",
+    "Use explicit native app-menu Quit; independently confirm no backup-host process before relaunch.",
+    "Relaunch with --uitesting and no fixture/held-provider arguments; open Inbox and verify exact saved task.",
+    "Compare complete saved snapshot with pre-picker snapshot; identical. Quit explicitly and verify process stopped."
+  ],
+  "wholeSnapshot": {
+    "prePickerSHA256": "afb7ba0f9e8253196b73290b700015828f8c67303d6623b39f9fd80a266a1405",
+    "postRelaunchSHA256": "31a4209becb95a79698adc90879a611b193506c24c6e70914b0f94ec52df8b1b",
+    "decodedEquality": true,
+    "checkpoints": [
+      "read Cancel",
+      "preview Cancel",
+      "fixture-preserving relaunch"
+    ]
+  },
+  "visualInspection": {
+    "screens": [
+      "native read progress/footer",
+      "complete restore review"
+    ],
+    "result": "Readable controls and messages; review Restore and Cancel visible. Screenshots inspected in the CUA conversation; no exported Mac image files are claimed."
+  },
+  "correctedAttempts": "An initial Command-Q plus immediate AX inspection reopened the default local workspace. A subsequent too-early process assertion did not prevent an extra test launch. The extra default instance was closed using its native Quit menu. The accepted sequence separately verified zero host processes before explicit fixture-preserving relaunch. Test snapshot remained exact throughout; this is not evidence of task loss.",
+  "cleanup": {
+    "backupAppConfirmedStopped": true,
+    "isolatedDataAndPreferenceFilesRestoredExact": 28,
+    "protectedFilesExact": 100,
+    "pendingWidgetSnapshotExact": true,
+    "freeGiB": 93.4,
+    "prunedInactiveIntermediatesLogicalBytes": 109241072,
+    "signedAppProductRetained": true
+  },
+  "limits": [
+    "Controlled provider wait and a local synthetic file, not actual remote-provider failure or a delayed external delegate callback.",
+    "No signed-in account-switch race is accepted by this Mac journey. Core request/workspace lifecycle regressions cover that contract separately.",
+    "Relaunch retains test mode without reseeding; no ordinary production account, encrypted restore Apply or release acceptance is claimed.",
+    "The pending desktop-widget expiry observation remains untouched and unaccepted. Spoken VoiceOver/system privacy and other current P0 gates remain open; release signing remains user-deferred."
+  ]
+}

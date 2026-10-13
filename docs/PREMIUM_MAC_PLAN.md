@@ -2104,3 +2104,8 @@ Reconciled the progress snapshot with the original Todoist port priorities. Repl
 ### 13 October — backup picker callback ownership
 
 The Mac native panel now captures an immutable request and workspace generation, rejecting stale selection/cancellation before a coordinated read. Both repos independently own the lifecycle guard and eight new regressions; all 14 selected backup tests pass per repo. Mac Debug compilation passes; current Mac native panel runtime is not claimed because the installed widget test remains untouched while its user observation is pending. Three actual iPhone Files retry/cancellation/navigation cases pass with whole-workspace preservation; see `backup-picker-session-evidence.json` for the separate platform/signing limits. No backup schema or backend changes.
+
+
+### 13 October — native Mac backup callback-fix regression
+
+Current-source team-signed isolated host passes the real native file-picker/provider-wait Cancel/retry/review/Cancel journey, with full workspace equality and a verified stopped-process boundary before fixture-preserving relaunch. Actual task receipt is visible afterward. Direct CUA screenshots/AX were inspected; no Mac XCTest runtime or real remote-provider race is claimed. The temporary backup app is closed, its 28 original data/preference files restored, and primary data plus the pending widget snapshot preserved. See `mac-backup-picker-session-evidence.json`. No additional product change was needed.

@@ -117,5 +117,9 @@
     "Taskfold/Core/Backups.swift": "0cde657fc705c0c206d2e8a5e9cfd4f9e993d402877f1572479410c74549d26f",
     "Taskfold/Views/BackupTools.swift": "a5d6dba606d32c0b7dd31ce42399b0575db896bac9ee202f1e1ec23709fd80ab",
     "TaskfoldTests/BackupFileReadTests.swift": "b8b4b7aff39c99b144201303eb64246c4dfc64cefc2da4ca78de436c0731755a"
+  },
+  "subsequentMacAcceptance": {
+    "evidence": "mac-backup-picker-session-evidence.json",
+    "scope": "Actual native picker/wait/Cancel/retry preview/Cancel, confirmed Quit, fixture-preserving relaunch and whole-snapshot equality"
   }
 }
