@@ -1,0 +1,145 @@
+{
+  "date": "2026-10-13",
+  "scope": "Current-source Mac repeat review of original synthetic cloud backup, Cancel, normal Quit/relaunch and repeat; actual CUA journey plus new scoped runtime reproduction",
+  "acceptedFunctionalJourney": {
+    "method": "Native CUA, two ordinary OS-launched processes; no auth/seed/wait fixture flag",
+    "originalBackupSHA256": "73b27927f4c8dde6df061da2dd072b483b330c8b015c98148dba9b3278a7191a",
+    "importedTasks": 256,
+    "nativeSelectedFileObserved": true,
+    "bothReviews": {
+      "add": 0,
+      "update": 0,
+      "keep": 14,
+      "matchingPolicy": "Keep current edits",
+      "restoreDisabled": true,
+      "cancelReachableAndObserved": true,
+      "completeSheetScreenshotInspectedInConversation": true
+    },
+    "normalQuitAndProcessExitVerifiedTwice": true,
+    "wholeCacheExactlyUnchangedAcrossBothReviewsAndRelaunch": true,
+    "serverTablesExactlyUnchanged": 15,
+    "currentMacAppSwiftFilesComparedNamespaceOnly": 62
+  },
+  "runtime": {
+    "firstProcessFinalCycles": 4,
+    "secondProcessCheckpoints": [
+      {
+        "stage": "Ordinary launch, before any CUA interaction",
+        "cycles": 0
+      },
+      {
+        "stage": "After main-window accessibility read plus opening General Settings (combined checkpoint)",
+        "cycles": 4
+      },
+      {
+        "stage": "After switching to Account",
+        "cycles": 4
+      },
+      {
+        "stage": "After repeat restore review and Cancel/Quit",
+        "cycles": 4
+      }
+    ],
+    "rawTableReentrancyWarningsBothProcesses": 0,
+    "assessment": "Current normal OS-launched app reproduces four AttributeGraph warnings during the first CUA main-window accessibility read, before Settings. General Settings, Account and repeat restore add no further warnings in the separated observations. This is an accessibility-linked trigger; causal frames and actual spoken impact remain unknown. Native XCTest clean runs do not establish clean full-tree inspection.",
+    "next": "Capture a diagnostic stack at first main-window accessibility inspection; no speculative product fix or warning suppression",
+    "thirdProcessSeparatedCheckpoints": [
+      {
+        "stage": "Before CUA",
+        "cycles": 0
+      },
+      {
+        "stage": "After main-window accessibility read only, before Settings",
+        "cycles": 4
+      },
+      {
+        "stage": "After opening General Settings",
+        "cycles": 4
+      }
+    ]
+  },
+  "failedNativeAttempts": [
+    {
+      "result": "mac-repeat-restore-runtime-v1.xcresult",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "result": "mac-repeat-restore-runtime-v2.xcresult",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "result": "mac-repeat-restore-runtime-v3.xcresult",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "result": "mac-repeat-restore-runtime-v4.xcresult",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 0
+    }
+  ],
+  "failedNativeAttemptDetails": [
+    "v1: authEmail not found before sign-in; normal CUA launch exposed sign-in. Cause unproven; existing Dock reopen helper used subsequently.",
+    "v2: full-path picker already selected original file, but redundant filename click reported non-hittable; removed redundant click.",
+    "v3: review reached; test String-value reader returned label Add instead of numeric count. CUA independently observes Add Details 0, Update Details 0, Keep Details 14.",
+    "v4: stopped before review because Save Profile was not found after Account selection; cause unproven. No passing native runner claim."
+  ],
+  "probeDisposition": "Unaccepted transient native probe retained privately at /private/tmp/taskfold-repeat-restore-native-probe-v4.swift; not promoted to the repository. All previously committed native tests retained unchanged.",
+  "preservation": {
+    "protectedPrimaryFilesExact": 100,
+    "originalIsolatedMacFilesRestoredExact": 28,
+    "retainedIOSFilesExact": 36,
+    "pendingWidgetFingerprintExact": true,
+    "unusedIsolatedAppClosed": true,
+    "todoistRequests": 0,
+    "serverCounts": {
+      "favorites": 0,
+      "focus_sessions": 1,
+      "import_sources": 368,
+      "labels": 6,
+      "profiles": 1,
+      "project_collaborators": 0,
+      "projects": 24,
+      "reminder_preferences": 0,
+      "saved_views": 1,
+      "sections": 89,
+      "task_activity": 258,
+      "task_activity_epoch": 1,
+      "tasks": 256,
+      "view_orders": 3,
+      "view_preferences": 5
+    },
+    "serverExactAfterThirdSeparatedProcess": true
+  },
+  "limits": [
+    "Functional actual CUA pass, not a strict Mac XCTest pass or warning-free runtime",
+    "No restore Apply or avatar upload in this read-only journey",
+    "Historical cycle identity/causality is not proved by matching the category; new current trigger is independently observed",
+    "Mac-only journey; iOS receives scoped evidence only",
+    "Release signing and other native/provider/spoken/widget gates remain open"
+  ],
+  "logs": [
+    {
+      "path": "/private/tmp/taskfold-repeat-review-cua-v1.log",
+      "sha256": "67aabbd4b6ebe8522fabe2f61600ee652a9c70cbb34cb69fcd94dc1ca6cb50be"
+    },
+    {
+      "path": "/private/tmp/taskfold-repeat-review-cua-v2.log",
+      "sha256": "67aabbd4b6ebe8522fabe2f61600ee652a9c70cbb34cb69fcd94dc1ca6cb50be"
+    },
+    {
+      "path": "/private/tmp/taskfold-settings-split-cua-v1.log",
+      "sha256": "67aabbd4b6ebe8522fabe2f61600ee652a9c70cbb34cb69fcd94dc1ca6cb50be"
+    }
+  ]
+}
