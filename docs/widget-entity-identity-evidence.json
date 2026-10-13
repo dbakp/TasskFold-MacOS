@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-13",
+  "scope": "Isolated iPhone AppEntity identity and namespace diagnosis",
+  "status": "Selection-to-render handoff remains unaccepted; completion not reached",
+  "productionCodeChanged": false,
+  "runs": [
+    {
+      "resultBundle": "ios-widget-identity-diagnostic-v1.xcresult",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "resultBundle": "ios-widget-identity-module-v1.xcresult",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "resultBundle": "ios-widget-identity-types-v1.xcresult",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 0
+    }
+  ],
+  "identity": {
+    "embeddedMetadataMatchedStandaloneAndInstalled": true,
+    "originalMetadataSHA256": "3a2a7ec9cac1e28f54f6985547f9b26e633689b67d2c6508c6e0fb27434f0db4",
+    "runtimeDefaultIdentifierMatchedMetadataKey": true,
+    "publicEntityValueMaximumLength": 4096,
+    "diagnosticReports": [
+      {
+        "bundle": "com.dbakp.taskfold.backupcanceltests.widgets",
+        "call": "suggested",
+        "count": 3,
+        "persistentIdentifier": "WidgetListEntity",
+        "reflectedType": "TaskfoldWidgets.WidgetListEntity",
+        "metadataEntityIDs": [
+          "PulseProjectEntity",
+          "WidgetListEntity",
+          "WidgetNoteEntity"
+        ]
+      },
+      {
+        "bundle": "com.dbakp.taskfold.backupcanceltests.widgets",
+        "call": "suggested",
+        "count": 3,
+        "persistentIdentifier": "WidgetListEntity",
+        "reflectedType": "TaskfoldBackupTestWidgets.WidgetListEntity",
+        "metadataEntityIDs": [
+          "PulseProjectEntity",
+          "WidgetListEntity",
+          "WidgetNoteEntity"
+        ]
+      },
+      {
+        "bundle": "com.dbakp.taskfold.backupcanceltests.widgets",
+        "call": "suggested",
+        "count": 3,
+        "persistentIdentifier": "BackupTestWidgetListEntity",
+        "reflectedType": "TaskfoldBackupTestWidgets.BackupTestWidgetListEntity",
+        "metadataEntityIDs": [
+          "BackupTestWidgetListEntity",
+          "PulseProjectEntity",
+          "WidgetNoteEntity"
+        ]
+      }
+    ]
+  },
+  "experiments": [
+    {
+      "change": "Unique isolated extension module TaskfoldBackupTestWidgets",
+      "result": "Selected task action never appears after closing configuration",
+      "limit": "Existing own widget was reconfigured"
+    },
+    {
+      "change": "Same unique module plus BackupTestWidgetListEntity, BackupTestWidgetListQuery and BackupTestListConfiguration; fresh app installation and newly installed My list",
+      "result": "Widget Studio visible before closure; task completion action absent afterward",
+      "limit": "Video shows overlapping Choose your list and Tasks are private rendering; this does not prove configuration serialization alone is the cause"
+    }
+  ],
+  "runtimeObservation": "System log reports both WidgetListEntity and namespaced BackupTestWidgetListEntity as not a registered AppEntity identifier, although their runtime and packaged identities match. Query reports return three synthetic lists. Last report is suggested; overwriting reports do not establish complete query history. SpringBoard remote AX errors and 60-second animation waits are also present.",
+  "builds": {
+    "module": "TEST BUILD SUCCEEDED",
+    "types": "TEST BUILD SUCCEEDED",
+    "warnings": "Each incremental build reports signed widget binary not stripped; no clean-build claim"
+  },
+  "interpretation": "No identity mismatch was demonstrated. Unique names and a fresh installation did not resolve the handoff. No speculative identity migration was promoted to production. Automatic completion-expiry acceptance remains open.",
+  "nextAction": "Use a minimal isolated configurable widget with a constant entity and simple ID to distinguish framework/installation failure from Taskfold projection and configuration behavior. Do not repeat namespace/gallery experiments unchanged.",
+  "cleanup": {
+    "testAppAndRunnerUninstalled": true,
+    "simulator": "Shutdown",
+    "protectedFilesExact": 100,
+    "retainedWidgetFixtureFilesExact": 36,
+    "isolatedProjectAndWidgetSourceRestored": true,
+    "originalNativeResultsRetained": true,
+    "duplicateExportBytesPruned": 197287928,
+    "incrementalBuildCacheRetainedForMinimalDiagnostic": true
+  }
+}

@@ -1,5 +1,7 @@
 # Current P0 release acceptance
 
+13 October entity identity follow-up: runtime identifiers match the packaged metadata keys. A unique extension module and then unique list entity/query/configuration names with a fresh installation both still fail to expose the selected task. The latter video shows overlapping unselected/private widget states; serialization alone is not proven as the cause. No diagnostic type rename was promoted. See `widget-entity-identity-evidence.json`. Next: a minimal constant-entity widget to separate framework/installation behavior from Taskfold projection. Automatic expiry remains unaccepted.
+
 For the concise current gate summary, see [P0 progress snapshot](P0_PROGRESS.md).
 
 Audited against the original widget collection and Todoist port plan; current native follow-ups reconciled 13 October 2026 using the scoped evidence below. Each evidence artifact records its own build and verification limits. This is the current execution checklist; dated implementation entries elsewhere are historical records, not a growing list of additional release requirements. The full requested objective remains active.

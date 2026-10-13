@@ -1,5 +1,7 @@
 # P0 progress snapshot — 13 October 2026
 
+13 October entity identity follow-up: runtime identifiers match the packaged metadata keys. A unique extension module and then unique list entity/query/configuration names with a fresh installation both still fail to expose the selected task. The latter video shows overlapping unselected/private widget states; serialization alone is not proven as the cause. No diagnostic type rename was promoted. See `widget-entity-identity-evidence.json`. Next: a minimal constant-entity widget to separate framework/installation behavior from Taskfold projection. Automatic expiry remains unaccepted.
+
 **Feature implementation is largely complete. Release acceptance is incomplete.**
 This short view summarizes `P0_RELEASE_STATUS.md`; its dated entries and JSON evidence remain authoritative for exact scope. A passing build is not native workflow acceptance. No percentage is assigned because remaining gates have very different risk and effort.
 
