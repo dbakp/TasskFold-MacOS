@@ -1,6 +1,6 @@
 {
   "date": "2026-10-13",
-  "status": "MY_LIST_NOTE_FOCUS_WORKFLOWS_ACCEPTED__PROJECT_PULSE_PENDING",
+  "status": "NAMED_MY_LIST_NOTE_FOCUS_PULSE_ACCEPTED__PULSE_REVERSE_REFRESH_PENDING",
   "scope": "Current-source installed Mac widget continuation in a normal local workspace; named My list and medium Pinned note workflows accepted.",
   "sourceHeads": {
     "TasskFold-MacOS": "38893b20bfae7ce3db56d9155238e1de8bafcc29",
@@ -88,11 +88,12 @@
     "inactiveOldBuildBytesPruned": 372752384,
     "currentBuildAndOriginalEvidenceRetained": true
   },
-  "next": "Installed Project pulse configuration for Desktop widget workshop and cold route; main app quit, unchanged v10 retained.",
+  "next": "User observes installed Project pulse returning to 0 of 1 after Undo; main app quit and build retained.",
   "limits": [
     "Accepts named installed My list, Pinned note and paused Focus cold routes plus subsequent native Focus controls; no new privacy or cloud-account claim.",
     "Focus desktop ended preview confirmed; actual ended cold-launch state inspected with full workspace equality. Click attribution is inferred, not explicit. Desktop family/layout not independently inspected. Installed Project pulse remains pending.",
-    "Release signing remains user-deferred."
+    "Release signing remains user-deferred.",
+    "Project pulse cold route and forward completion refresh accepted; reverse installed refresh pending. Unusable screenshot excludes new visual-layout acceptance."
   ],
   "currentNativeAcceptance": {
     "normalProcess": "20026 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
@@ -220,6 +221,33 @@
         "wholeWorkspaceUnchanged": true,
         "installedAcceptance": false
       }
+    },
+    "installedProjectPulse": {
+      "humanConfiguredAndClicked": true,
+      "mediumRequested": true,
+      "actualDesktopFamilyNotIndependentlyInspected": true,
+      "mainProcessObservedBeforeCUABinding": "26288 Tue Oct 13 23:48:29 2026 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+      "noLaunchArguments": true,
+      "project": "Desktop widget workshop",
+      "initialNativeCompleted": 0,
+      "total": 1,
+      "initialWholeWorkspaceExact": true,
+      "humanObservedCompletedWidget100Percent": true,
+      "nativeCompletedTotalsAgree": true,
+      "publishedCompletedTotalsAgree": true,
+      "nativeUndoRestoredOpenTask": true,
+      "nativeAndPublishedRestoredCompleted": 0,
+      "historyAfterUndo": {
+        "completions": 1,
+        "reopens": 1,
+        "additions": 1
+      },
+      "onlyExpectedTaskCompletionFieldsAndActivityChanged": true,
+      "restoredTaskOnlyCompletionVersionDiffersFromBefore": 2,
+      "unrelatedWorkExact": true,
+      "nativeQuitConfirmed": true,
+      "installedReverseRefreshPending": true,
+      "screenshotLimitation": "CUA screenshot was white/unusable; accessibility tree exposed complete expected overview. No visual layout acceptance inferred."
     }
   }
 }
