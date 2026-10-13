@@ -1,0 +1,121 @@
+{
+  "date": "2026-10-13",
+  "finding": "A late document-picker callback used mutable intendedWorkspace state. Opening a newer picker could let an older result borrow the newer request ownership.",
+  "verificationOfFinding": "Source/lifecycle audit; no wrong-account restore was performed and no real provider race was induced.",
+  "change": "Both independently owned apps bind selection, cancellation and dismissal to immutable request ID and workspace generation. Stale/duplicate events are ignored; selected files are delivered once after dismissal, including dismissal-before-selection. Navigation invalidates the picker. The coordinated read receives the original generation explicitly.",
+  "dataContracts": "No persistent schema, backup format, backend or Todoist source changes.",
+  "coreRegression": {
+    "perRepositoryPassed": 14,
+    "perRepositoryFailures": 0,
+    "newLifecycleTestsPerRepository": 8,
+    "existingCoordinatedReadTestsPerRepository": 6,
+    "totalExecutions": 28,
+    "cases": [
+      "selection then dismissal, exactly once",
+      "dismissal then selection",
+      "stale selection/dismissal/cancellation after new workspace picker",
+      "stale callback after newer picker in same workspace",
+      "workspace changes before observer runs",
+      "same account returns with a new generation",
+      "navigation cancellation and retry",
+      "new picker does not inherit old undelivered file"
+    ]
+  },
+  "nativeIOS": {
+    "resultBundle": "ios-picker-session-native-v1.xcresult",
+    "device": "F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0,
+    "strictVerifierPassed": true,
+    "cases": [
+      "testBackupProviderFailureRetryPreservesWorkspace",
+      "testBackupProviderWaitCanCancelAndRetryWithoutChangingWork",
+      "testBackupProviderWaitNavigationAndWorkspaceReturn"
+    ],
+    "scope": "Actual Files selection; controlled coordinated-read failure/wait; reachable Cancel and Retry preview; navigation/local workspace exit/return; unchanged full snapshot in failure/navigation cases and normal relaunch.",
+    "signatureScope": "Xcode Simulator test products; this is application file-picker acceptance, not WidgetKit/AppEntity/team-signing or distribution acceptance.",
+    "setupNote": "Supplemental real-team signing did not run: the certificate-display-name lookup incorrectly assumed the team ID appeared there. Native tests ran with the Xcode-built Simulator signatures. No signing change was made while tests ran."
+  },
+  "builds": {
+    "mac": {
+      "log": "taskfold-picker-session-mac-build.log",
+      "sha256": "90883410c08f4f1deea4401a17a0fae64b2d357414069823834973c6b1cab95e",
+      "result": "** BUILD SUCCEEDED **",
+      "warnings": [
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Workspace.swift:363:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Workspace.swift:378:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Views/KeyRouter.swift:22:106: warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used",
+        "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Views/Links.swift:197:23: warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode"
+      ],
+      "changedSourcesHaveWarnings": false,
+      "configuration": "Debug",
+      "scope": "unsigned Mac compile"
+    },
+    "ios": {
+      "log": "taskfold-picker-session-ios-build.log",
+      "sha256": "9c2884e206d5df07d4d21e4fdd069ac17d3ce3d80517cc0edf82ea79a01178d2",
+      "result": "** TEST BUILD SUCCEEDED **",
+      "warnings": [
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/Views/DayDrag.swift:389:92: warning: main actor-isolated static property 'space' can not be referenced from a Sendable closure",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/TaskfoldApp.swift:1286:242: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/TaskfoldApp.swift:1451:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/Views/Motion.swift:133:65: warning: main actor-isolated static property 'space' can not be referenced from a Sendable closure",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/Views/Motion.swift:135:66: warning: conformance of 'Header' to protocol 'View' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/Views/Motion.swift:135:66: warning: conformance of 'Content' to protocol 'View' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/Views/Motion.swift:135:66: warning: call to main actor-isolated instance method 'headerOffset' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/TaskfoldApp.swift:1286:242: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/TaskfoldApp.swift:1451:9: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/Views/Motion.swift:133:65: warning: main actor-isolated static property 'space' can not be referenced from a Sendable closure",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/Views/Motion.swift:135:66: warning: conformance of 'Header' to protocol 'View' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/Views/Motion.swift:135:66: warning: conformance of 'Content' to protocol 'View' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/Views/Motion.swift:135:66: warning: call to main actor-isolated instance method 'headerOffset' in a synchronous nonisolated context [#ActorIsolatedCall]",
+        "/tmp/taskfold-picker-session-ui-v1/Taskfold/Views/DayDrag.swift:389:92: warning: main actor-isolated static property 'space' can not be referenced from a Sendable closure",
+        "/tmp/taskfold-picker-session-ui-v1/TaskfoldUITests/TaskfoldUITests.swift:7636:99: warning: 'changed' mutated after capture by sendable closure",
+        "warning: not stripping binary because it is signed: /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/ios-widget-identity-diagnostic-v1/Build/Products/Debug-iphonesimulator/TaskfoldWidgets.appex/TaskfoldWidgets (in target 'Taskfold' from project 'Taskfold')",
+        "/tmp/taskfold-picker-session-ui-v1/TaskfoldUITests/TaskfoldUITests.swift:7636:99: warning: 'changed' mutated after capture by sendable closure",
+        "2026-10-13 03:05:16.186 appintentsmetadataprocessor[81975:4867980] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+      ],
+      "changedSourcesHaveWarnings": false,
+      "configuration": "Debug",
+      "scope": "isolated iOS Simulator build-for-testing"
+    }
+  },
+  "captures": {
+    "read-failure.png": {
+      "sha256": "beccb5ca9968e9a9515a0e5e3fe289b723dedf5c56b73a0087032b390abe433e",
+      "visuallyInspected": true
+    },
+    "retry-review.png": {
+      "sha256": "b2aadf19f7429377f676a1307ccf622905589c103ce6a16636cfc8ba34ffb0b9",
+      "visuallyInspected": true
+    },
+    "cancellable-read.png": {
+      "sha256": "811371aa2d25c6595e7e9935ea211022a3f29616404fd7c842d8ada8ebe8c6c1",
+      "visuallyInspected": true
+    }
+  },
+  "limits": [
+    "The delayed old-provider callback is covered by core lifecycle regressions and native-source wiring inspection, not an induced real remote-provider callback.",
+    "No current-source Mac picker runtime acceptance in this checkpoint; its pending widget host was left untouched.",
+    "Actual iOS cloud-provider transfer/failure, system widget privacy, spoken VoiceOver and other P0 gates remain open.",
+    "Release signing remains user-deferred."
+  ],
+  "cleanup": {
+    "isolatedAppAndRunnerRemoved": true,
+    "isolatedSimulatorShutdown": true,
+    "prunedLogicalBytes": 361596345,
+    "freeGiB": 93.6,
+    "macWidgetHostPreserved": true,
+    "protectedFilesExact": 100,
+    "retainedIOSFixtureFilesExact": 36,
+    "retainedIOSFixtureFileSetsExact": true,
+    "pendingMacWidgetTaskStillOpen": true
+  },
+  "ownedSources": {
+    "Taskfold/Core/Backups.swift": "0cde657fc705c0c206d2e8a5e9cfd4f9e993d402877f1572479410c74549d26f",
+    "Taskfold/Views/BackupTools.swift": "a5d6dba606d32c0b7dd31ce42399b0575db896bac9ee202f1e1ec23709fd80ab",
+    "TaskfoldTests/BackupFileReadTests.swift": "b8b4b7aff39c99b144201303eb64246c4dfc64cefc2da4ca78de436c0731755a"
+  }
+}

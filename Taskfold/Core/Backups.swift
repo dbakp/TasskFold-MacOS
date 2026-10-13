@@ -564,3 +564,48 @@ private final class BackupReadTestPresenter: NSObject, NSFilePresenter {
     }
 }
 #endif
+
+/// Bind document-picker events to the request and workspace that opened it.
+/// Providers may select after dismissal, or call back after a newer picker opens.
+struct BackupPickerSession {
+    struct Request: Identifiable, Equatable {
+        let id = UUID()
+        let workspace: UUID
+    }
+    struct Selection {
+        let url: URL
+        let workspace: UUID
+    }
+    private(set) var request: Request?
+    private var selected: URL?
+    private var closed = false
+    private var delivered = false
+
+    mutating func begin(workspace: UUID) -> Request {
+        let next = Request(workspace: workspace)
+        request = next; selected = nil; closed = false; delivered = false
+        return next
+    }
+    func accepts(_ candidate: Request, workspace: UUID) -> Bool {
+        request == candidate && candidate.workspace == workspace && !delivered
+    }
+    mutating func select(_ url: URL, for candidate: Request, workspace: UUID) -> Selection? {
+        guard accepts(candidate, workspace: workspace), selected == nil else { return nil }
+        selected = url
+        return takeSelection()
+    }
+    mutating func close(_ candidate: Request, workspace: UUID) -> Selection? {
+        guard accepts(candidate, workspace: workspace) else { return nil }
+        closed = true
+        return takeSelection()
+    }
+    mutating func cancel(_ candidate: Request) {
+        guard request == candidate else { return }
+        request = nil; selected = nil; closed = false; delivered = false
+    }
+    private mutating func takeSelection() -> Selection? {
+        guard closed, let selected, let request, !delivered else { return nil }
+        delivered = true
+        return Selection(url: selected, workspace: request.workspace)
+    }
+}

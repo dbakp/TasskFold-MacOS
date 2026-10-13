@@ -2099,3 +2099,8 @@ Both apps compile independently in Debug and Release, with retained warnings out
 ### 13 October — bounded current P0 checklist
 
 Reconciled the progress snapshot with the original Todoist port priorities. Replaced the accumulated 483-line historical snapshot with a current feature/acceptance checklist, preserving detailed attempts and limits in P0_RELEASE_STATUS and scoped receipts. Later-phase parity stays in the port backlog; passing native journeys are reused rather than reopening an exhaustive platform matrix. The signed current-source Mac widget host is running with its synthetic task still open while the manual automatic-expiry observation is pending. No new desktop acceptance, product change or release signing is claimed by this documentation update. Both repositories own the current checklist independently.
+
+
+### 13 October — backup picker callback ownership
+
+The Mac native panel now captures an immutable request and workspace generation, rejecting stale selection/cancellation before a coordinated read. Both repos independently own the lifecycle guard and eight new regressions; all 14 selected backup tests pass per repo. Mac Debug compilation passes; current Mac native panel runtime is not claimed because the installed widget test remains untouched while its user observation is pending. Three actual iPhone Files retry/cancellation/navigation cases pass with whole-workspace preservation; see `backup-picker-session-evidence.json` for the separate platform/signing limits. No backup schema or backend changes.

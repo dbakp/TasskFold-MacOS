@@ -34,16 +34,22 @@ private final class BackupUI {
         fileRead = nil
         busy = false
     }
-    var importing = false
-    var selectedFile: URL?
-    var pickerClosed = false
+    var pickerSession = BackupPickerSession()
+    var presentedPicker: BackupPickerSession.Request?
     var intendedWorkspace: UUID?
     var exporting = false
     var document: WorkspaceDocument?
     var review: RestoreReviewRequest?
     var message: String?
-    var didSelectFile: ((URL) -> Void)?
+    var didSelectFile: ((URL, UUID) -> Void)?
     var didCloseReview: (() -> Void)?
+    func cancelPicker() {
+        if let request = pickerSession.request { pickerSession.cancel(request) }
+        presentedPicker = nil
+    }
+    func deliver(_ selection: BackupPickerSession.Selection?) {
+        if let selection { didSelectFile?(selection.url, selection.workspace) }
+    }
     func show(_ error: Error) {
         let value = error as NSError
         if value.domain == NSCocoaErrorDomain && value.code == NSUserCancelledError { return }
@@ -63,7 +69,7 @@ private final class BackupUI {
         content.environment(ui)
             // A popped settings page must not retain a coordinated read after
             // its workspace observer and Cancel control disappear.
-            .onDisappear { if ui.fileRead != nil { ui.cancelFileRead() } }
+            .onDisappear { ui.cancelPicker(); if ui.fileRead != nil { ui.cancelFileRead() } }
             .safeAreaInset(edge: .bottom) {
                 if ui.fileRead != nil {
                     VStack(alignment: .leading, spacing: 8) {
@@ -86,16 +92,8 @@ private final class BackupUI {
                 ui.document = nil
             }
             #if os(iOS)
-            .sheet(isPresented: $ui.importing, onDismiss: {
-                ui.pickerClosed = true
-                if let url = ui.selectedFile { ui.selectedFile = nil; ui.didSelectFile?(url) }
-            }) {
-                BackupFilePicker { result in
-                    do { ui.selectedFile = try result.get() } catch { ui.show(error) }
-                    ui.importing = false
-                    // UIKit may notify dismissal before delivering its selected URL.
-                    if ui.pickerClosed, let url = ui.selectedFile { ui.selectedFile = nil; ui.didSelectFile?(url) }
-                }
+            .sheet(item: $ui.presentedPicker) { request in
+                BackupPickerSheet(request: request, ui: ui)
             }
             #endif
             .sheet(item: Binding(get: { review }, set: { ui.review = $0 }), onDismiss: { ui.didCloseReview?() }) { request in
@@ -107,6 +105,34 @@ private final class BackupUI {
     }
 }
 
+#if os(iOS)
+/// Keep dismissal and provider callbacks attached to this sheet's immutable request.
+private struct BackupPickerSheet: View {
+    let request: BackupPickerSession.Request
+    let ui: BackupUI
+    @Environment(Store.self) private var store
+    var body: some View {
+        BackupFilePicker { result in
+            guard ui.pickerSession.accepts(request, workspace: store.workspaceGeneration) else { return }
+            switch result {
+            case .success(let url):
+                let selection = ui.pickerSession.select(url, for: request, workspace: store.workspaceGeneration)
+                ui.presentedPicker = nil
+                ui.deliver(selection)
+            case .failure(let error):
+                ui.pickerSession.cancel(request)
+                ui.presentedPicker = nil
+                ui.show(error)
+            }
+        }
+        .onDisappear {
+            // UIKit can dismiss before delivering the selected URL.
+            ui.deliver(ui.pickerSession.close(request, workspace: store.workspaceGeneration))
+        }
+    }
+}
+#endif
+
 /// Each platform owns this native form, its export document and restore preview.
 struct BackupTools: View {
     @Environment(Store.self) private var store
@@ -114,7 +140,6 @@ struct BackupTools: View {
     private var history: [RecoveryEntry] { get { ui.history } nonmutating set { ui.history = newValue } }
     private var daily: Bool { get { ui.daily } nonmutating set { ui.daily = newValue } }
     private var busy: Bool { get { ui.busy } nonmutating set { ui.busy = newValue } }
-    private var importing: Bool { get { ui.importing } nonmutating set { ui.importing = newValue } }
     private var exporting: Bool { get { ui.exporting } nonmutating set { ui.exporting = newValue } }
     private var document: WorkspaceDocument? { get { ui.document } nonmutating set { ui.document = newValue } }
     private var review: RestoreReviewRequest? { get { ui.review } nonmutating set { ui.review = newValue } }
@@ -138,7 +163,8 @@ struct BackupTools: View {
         .task(id: store.workspaceGeneration) {
             let model = ui, owner = store
             if model.fileRead != nil, model.intendedWorkspace != owner.workspaceGeneration { model.cancelFileRead() }
-            model.didSelectFile = { [weak model] url in if let model { Self.readFile(url, store: owner, ui: model) } }
+            if let request = model.pickerSession.request, request.workspace != owner.workspaceGeneration { model.cancelPicker() }
+            model.didSelectFile = { [weak model] url, generation in if let model { Self.readFile(url, generation: generation, store: owner, ui: model) } }
             model.didCloseReview = { [weak model] in if let model { Task { await Self.refreshHistory(store: owner, ui: model) } } }
             daily = store.dailyBackupsEnabled; await refreshHistory()
         }
@@ -164,8 +190,6 @@ struct BackupTools: View {
         }
     }
     private func chooseRestoreFile() {
-        ui.pickerClosed = false
-        ui.intendedWorkspace = store.workspaceGeneration
         #if os(macOS)
         guard let window = NSApp.keyWindow else {
             ui.show(BackupFailure(message: "Open Backups & restore again to choose a file."))
@@ -173,6 +197,7 @@ struct BackupTools: View {
         }
         // SwiftUI's fileImporter can fail to present from a Settings form.
         // Attach the native panel to the window that owns this action instead.
+        let request = ui.pickerSession.begin(workspace: store.workspaceGeneration)
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.json]
         panel.canChooseDirectories = false
@@ -181,17 +206,19 @@ struct BackupTools: View {
             // AppKit can invoke completion while the native panel remains onscreen.
             // Dismiss it before showing read progress or another restore sheet.
             panel.orderOut(nil)
-            guard response == .OK, let url = panel.url else { return }
-            ui.didSelectFile?(url)
+            guard ui.pickerSession.accepts(request, workspace: store.workspaceGeneration) else { return }
+            guard response == .OK, let url = panel.url else { ui.pickerSession.cancel(request); return }
+            _ = ui.pickerSession.select(url, for: request, workspace: store.workspaceGeneration)
+            ui.deliver(ui.pickerSession.close(request, workspace: store.workspaceGeneration))
         }
         #else
-        importing = true
+        ui.presentedPicker = ui.pickerSession.begin(workspace: store.workspaceGeneration)
         #endif
     }
-    private static func readFile(_ url: URL, store: Store, ui: BackupUI) {
-        let generation = ui.intendedWorkspace ?? store.workspaceGeneration
+    private static func readFile(_ url: URL, generation: UUID, store: Store, ui: BackupUI) {
         guard generation == store.workspaceGeneration else { ui.show(BackupFailure(message: "The workspace changed. Choose the backup again in the intended workspace.")); return }
         ui.fileRead?.cancel()
+        ui.intendedWorkspace = generation
         let operation = BackupFileReadOperation()
         ui.fileRead = operation
         ui.busy = true

@@ -156,3 +156,100 @@ private final class HoldingBackupPresenter: NSObject, NSFilePresenter {
         callback?(nil)
     }
 }
+
+final class BackupPickerSessionTests: XCTestCase {
+    private let file = URL(fileURLWithPath: "/synthetic/old-workspace.json")
+    private let newerFile = URL(fileURLWithPath: "/synthetic/current-workspace.json")
+
+    func testSelectionWaitsForDismissalAndDeliversExactlyOnce() throws {
+        let workspace = UUID()
+        var session = BackupPickerSession()
+        let request = session.begin(workspace: workspace)
+        XCTAssertNil(session.select(file, for: request, workspace: workspace))
+        let selection = try XCTUnwrap(session.close(request, workspace: workspace))
+        XCTAssertEqual(selection.url, file)
+        XCTAssertEqual(selection.workspace, workspace)
+        XCTAssertNil(session.close(request, workspace: workspace))
+        XCTAssertNil(session.select(newerFile, for: request, workspace: workspace))
+    }
+
+    func testProviderCanSelectAfterDismissalWithoutLosingFile() throws {
+        let workspace = UUID()
+        var session = BackupPickerSession()
+        let request = session.begin(workspace: workspace)
+        XCTAssertNil(session.close(request, workspace: workspace))
+        let selection = try XCTUnwrap(session.select(file, for: request, workspace: workspace))
+        XCTAssertEqual(selection.url, file)
+        XCTAssertEqual(selection.workspace, workspace)
+        XCTAssertNil(session.select(file, for: request, workspace: workspace))
+    }
+
+    func testOldSelectionDismissalAndCancelCannotTouchNewWorkspacePicker() throws {
+        let first = UUID(), second = UUID()
+        var session = BackupPickerSession()
+        let old = session.begin(workspace: first)
+        let current = session.begin(workspace: second)
+        // An old delegate must not borrow the current request's workspace identity.
+        XCTAssertNil(session.select(file, for: old, workspace: second))
+        XCTAssertNil(session.close(old, workspace: second))
+        session.cancel(old)
+        XCTAssertEqual(session.request, current)
+        XCTAssertNil(session.select(newerFile, for: current, workspace: second))
+        let selected = try XCTUnwrap(session.close(current, workspace: second))
+        XCTAssertEqual(selected.url, newerFile)
+        XCTAssertEqual(selected.workspace, second)
+    }
+
+    func testOldPickerCannotReplaceNewSelectionWithinSameWorkspace() throws {
+        let workspace = UUID()
+        var session = BackupPickerSession()
+        let old = session.begin(workspace: workspace)
+        XCTAssertNil(session.close(old, workspace: workspace))
+        let current = session.begin(workspace: workspace)
+        XCTAssertNil(session.select(newerFile, for: current, workspace: workspace))
+        XCTAssertNil(session.select(file, for: old, workspace: workspace))
+        XCTAssertNil(session.close(old, workspace: workspace))
+        XCTAssertEqual(try XCTUnwrap(session.close(current, workspace: workspace)).url, newerFile)
+    }
+
+    func testWorkspaceChangeRejectsPendingSelectionEvenWithoutObserver() {
+        let first = UUID(), second = UUID()
+        var session = BackupPickerSession()
+        let request = session.begin(workspace: first)
+        XCTAssertNil(session.select(file, for: request, workspace: first))
+        XCTAssertNil(session.close(request, workspace: second))
+        XCTAssertNil(session.select(newerFile, for: request, workspace: second))
+        XCTAssertFalse(session.accepts(request, workspace: second))
+    }
+
+    func testReturningToSameAccountDoesNotRestoreOldGenerationOwnership() {
+        let originalGeneration = UUID(), returnedGeneration = UUID()
+        var session = BackupPickerSession()
+        let request = session.begin(workspace: originalGeneration)
+        XCTAssertNil(session.close(request, workspace: originalGeneration))
+        XCTAssertNil(session.select(file, for: request, workspace: returnedGeneration))
+    }
+
+    func testNavigationCancellationRejectsLateResultAndAllowsRetry() throws {
+        let workspace = UUID()
+        var session = BackupPickerSession()
+        let cancelled = session.begin(workspace: workspace)
+        session.cancel(cancelled)
+        XCTAssertNil(session.select(file, for: cancelled, workspace: workspace))
+        XCTAssertNil(session.close(cancelled, workspace: workspace))
+        let retry = session.begin(workspace: workspace)
+        XCTAssertNil(session.close(retry, workspace: workspace))
+        XCTAssertEqual(try XCTUnwrap(session.select(newerFile, for: retry, workspace: workspace)).url, newerFile)
+    }
+    func testNewPickerDoesNotInheritUndeliveredOldSelection() throws {
+        let workspace = UUID()
+        var session = BackupPickerSession()
+        let old = session.begin(workspace: workspace)
+        XCTAssertNil(session.select(file, for: old, workspace: workspace))
+        let current = session.begin(workspace: workspace)
+        XCTAssertNil(session.close(current, workspace: workspace))
+        XCTAssertNil(session.close(old, workspace: workspace))
+        XCTAssertEqual(try XCTUnwrap(session.select(newerFile, for: current, workspace: workspace)).url, newerFile)
+    }
+
+}
