@@ -2809,3 +2809,70 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
     }
 }
+
+// Read-only original imported-account startup and open-Settings relaunch probe.
+// Explicit private fixture and runner guards prevent ordinary suite execution.
+extension TaskfoldMacUITests {
+    @MainActor func testImportedWorkspaceStartupAndOpenSettingsRelaunchReadOnly() throws {
+        continueAfterFailure = false
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else { throw XCTSkip("Dedicated isolated app required") }
+        let account = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: URL(fileURLWithPath: "/private/tmp/taskfold-provider-import-native.txt")))
+        guard account["userID"] == "316d6706-449c-4ab8-8480-db12e7d92642",
+              account["email"]?.hasPrefix("taskfold-todoist-readonly-") == true,
+              account["email"]?.hasSuffix("@example.invalid") == true else { throw XCTSkip("Original disposable imported owner required") }
+        let baselineURL = URL(fileURLWithPath: "/Users/" + NSUserName() + "/.codex/workspaces/taskfold-acceptance/mac-imported-runtime-server-before-v1.json")
+        let server = try JSONSerialization.jsonObject(with: Data(contentsOf: baselineURL)) as! NSDictionary
+        let taskCount = (server["tasks"] as! [NSDictionary]).count
+        XCTAssertGreaterThanOrEqual(taskCount, 256)
+        let cacheURL = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/" + account["userID"]! + ".json")
+        func cache() throws -> NSDictionary { try JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as! NSDictionary }
+        func tables(_ snapshot: NSDictionary) throws -> [String: [String]] {
+            let source = snapshot["tables"] as! NSDictionary
+            return try Dictionary(uniqueKeysWithValues: (source.allKeys as! [String]).map { table in
+                let rows = try XCTUnwrap(source[table] as? [NSDictionary])
+                return (table, try rows.map { try JSONSerialization.data(withJSONObject: $0, options: [.sortedKeys]).base64EncodedString() }.sorted())
+            })
+        }
+        func settled() throws -> NSDictionary {
+            let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard let snapshot = try? cache(), let t = snapshot["tables"] as? NSDictionary else { return false }
+                return (t["tasks"] as? [Any])?.count == taskCount && (snapshot["pending"] as? [Any])?.isEmpty == true
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 40), .completed)
+            return try cache()
+        }
+        let app = XCUIApplication(); defer { app.terminate() }
+        let arguments = ["-ApplePersistenceIgnoreState", "NO", "-onboardingSeen", "YES", "-dailyBackups." + account["userID"]!, "NO"]
+        app.launchArguments = ["--live-auth-ui-test"] + arguments; app.launch(); app.activate()
+        let email = app.textFields["authEmail"], password = app.secureTextFields["authPassword"]
+        XCTAssertTrue(email.waitForExistence(timeout: 25)); email.click(); email.typeText(account["email"]!)
+        password.click(); password.typeText(account["password"]!); app.buttons["nativeSignIn"].click()
+        XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 30))
+        // Open Account while initial cloud loading may still be in progress.
+        app.typeKey(",", modifierFlags: .command)
+        let accountTab = app.buttons["Account"].firstMatch; XCTAssertTrue(accountTab.waitForExistence(timeout: 8)); accountTab.click()
+        XCTAssertTrue(app.buttons["Save Profile"].waitForExistence(timeout: 8))
+        let before = try tables(settled())
+        XCTAssertEqual(before.count, 14)
+        retainWindow(app, name: "Imported Account open during initial cloud startup")
+        // Leave Settings open; do not override OS window restoration on relaunch.
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+        app.launchArguments = arguments; app.launch(); app.activate()
+        XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 30))
+        let restoredAccount = app.buttons["Save Profile"].waitForExistence(timeout: 3)
+        let receipt = XCTAttachment(string: "Account controls restored automatically: \(restoredAccount); OS restoration enabled; Settings left open at Quit")
+        receipt.name = "Settings restoration observation"; receipt.lifetime = .keepAlways; add(receipt)
+        XCTAssertEqual(try tables(settled()), before)
+        if !restoredAccount {
+            app.typeKey(",", modifierFlags: .command)
+            let tab = app.buttons["Account"].firstMatch; XCTAssertTrue(tab.waitForExistence(timeout: 8)); tab.click()
+        }
+        XCTAssertTrue(app.buttons["Save Profile"].waitForExistence(timeout: 8))
+        retainWindow(app, name: "Imported Account after open-Settings normal relaunch")
+        app.windows["Account"].buttons["_XCUI:CloseWindow"].click()
+        app.staticTexts["All Tasks"].firstMatch.click()
+        XCTAssertTrue(app.outlines.firstMatch.exists)
+        XCTAssertEqual(try tables(settled()), before)
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+    }
+}
