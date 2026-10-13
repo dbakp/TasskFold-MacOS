@@ -20,7 +20,9 @@
     "task-generation-and-completion-revision",
     "atomic-organization-order",
     "strict-filter-document-preservation",
-    "independent-label-membership-rebase"
+    "independent-label-membership-rebase",
+    "independent-identified-collection-rebase",
+    "known-empty-and-nested-collection-deltas"
   ],
   "olderActiveWritersSupported": false,
   "serverRejectsAllLegacyDirectWrites": false,

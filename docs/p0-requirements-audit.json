@@ -1,0 +1,251 @@
+{
+  "date": "2026-10-13",
+  "objectiveAchieved": false,
+  "scope": "Original Todoist P0 plus requested productive widgets, for the two user-named Apple repositories. Read-only existing evidence audit; no new native app execution or backend mutation.",
+  "sourceHeads": {
+    "TasskFold-MacOS": "b8bcc73c3681429e45af615a5fccc73487f1a6ae",
+    "TaskFold-iOS": "7ecea2e0495a994a7416bd1e171104ac8a671fb0"
+  },
+  "requirements": [
+    {
+      "id": "migration",
+      "requirement": "Current API pagination/mapping, useful preview/auth errors, duplicate-free import/retry and unchanged Todoist source.",
+      "status": "accepted_named_workflow",
+      "evidence": [
+        "todoist-live-provider-evidence.json",
+        "first-import-recovery-evidence.json",
+        "mac-import-retry-native-evidence.json",
+        "imported-workspace-native-handoff-evidence.json"
+      ],
+      "boundary": "Mac first-import response loss was not separately injected; phone first-import and Mac replay retry are the accepted bounded coverage."
+    },
+    {
+      "id": "capture",
+      "requirement": "Useful capture with supported reference/date/deadline/estimate/repeat/reminder grammar, explicit invalid feedback and durable edits.",
+      "status": "accepted_bounded",
+      "evidence": [
+        "capture-grammar-native-evidence.json",
+        "mac-repeat-keyboard-native-evidence.json",
+        "capture-suggestion-caret-evidence.json",
+        "capture-control-stability-evidence.json",
+        "mac-capture-layout-native-evidence.json"
+      ],
+      "boundary": "Full Todoist natural-language equivalence is not claimed; remaining spoken coverage is separate."
+    },
+    {
+      "id": "filters_organization",
+      "requirement": "Stable account-owned filters/favorites/view settings; original documented Boolean/date/target subset, offline persistence, safe ordering and access boundaries.",
+      "status": "accepted_bounded_current_contract",
+      "evidence": [
+        "saved-filter-continuity-evidence.json",
+        "mac-phone-organization-offline-evidence.json",
+        "mac-phone-view-preferences-evidence.json",
+        "atomic-organization-order-evidence.json",
+        "native-filter-favorite-order-handoff-evidence.json",
+        "filter-future-settings-evidence.json",
+        "access-recovery-evidence.json",
+        "section-access-recovery-evidence.json"
+      ],
+      "boundary": "All-four-table SQL evidence, shared owned ORDER implementation and representative native conflict/handoffs cover the bounded contract. Per-list native permutations remain unexercised, not universally accepted."
+    },
+    {
+      "id": "planning",
+      "requirement": "Independent deadline/estimate, rescheduling/Undo, recurrence boundaries, old-cache/backup compatibility and honest hourly/calendar capacity.",
+      "status": "accepted_bounded",
+      "evidence": [
+        "mac-phone-planning-evidence.json",
+        "workspace-handoff-evidence.json",
+        "recurrence-continuity-evidence.json",
+        "calendar-integration-evidence.json",
+        "mac-calendar-permission-evidence.json",
+        "capacity-version-safety-evidence.json"
+      ],
+      "boundary": "Read-only EventKit is implemented; external mirroring and richer recurrence grammar retain their original later-phase scope."
+    },
+    {
+      "id": "local_reminders",
+      "requirement": "Local scheduling, actual closed-app actions/snooze, cancellation and account/stale-callback safety.",
+      "status": "accepted_bounded",
+      "evidence": [
+        "mac-focus-cold-open-evidence.json",
+        "mac-notification-snooze-evidence.json",
+        "notification-account-switch-evidence.json",
+        "mac-notification-account-switch-evidence.json"
+      ],
+      "boundary": "Simulator/local alerts do not prove APNs or signed distribution."
+    },
+    {
+      "id": "recovery",
+      "requirement": "Validated portable/encrypted restore, relationships, safe Cancel/retry, account-owned reads and actual external-provider boundaries.",
+      "status": "incomplete_external_provider",
+      "evidence": [
+        "portable-workspace-evidence.json",
+        "mac-cloud-restore-native-evidence.json",
+        "backup-picker-session-evidence.json",
+        "mac-backup-picker-session-evidence.json",
+        "mac-provider-transfer-evidence.json"
+      ],
+      "boundary": "Actual iOS provider download/offline failure/late callback remains unaccepted; local held reads and Mac cloud transfer do not replace it."
+    },
+    {
+      "id": "continuity",
+      "requirement": "Relevant work survives device switches, offline queues/review, generation/identity guards and access revocation.",
+      "status": "accepted_bounded_current_clients_rollout_open",
+      "evidence": [
+        "mac-phone-note-focus-evidence.json",
+        "mac-phone-planning-evidence.json",
+        "live-native-task-conflict-evidence.json",
+        "keep-local-conflict-evidence.json",
+        "live-label-pair-evidence.json",
+        "live-comment-pair-evidence.json",
+        "legacy-empty-collection-evidence.json",
+        "section-access-recovery-evidence.json"
+      ],
+      "boundary": "Old active writers must be upgraded/retired; service still allows legacy direct writes. Nested/attachment collision evidence is core/transport, not a claimed universal native matrix."
+    },
+    {
+      "id": "widgets",
+      "requirement": "Twelve productive kinds, stable per-instance configuration, useful routes/actions, durable completion, privacy/account isolation and readable installed hosts.",
+      "status": "incomplete_mac_host_and_system_privacy",
+      "evidence": [
+        "widget-host-evidence.json",
+        "tablet-mylist-evidence.json",
+        "note-focus-account-widget-evidence.json",
+        "mac-widget-task-context-evidence.json",
+        "widget-completion-feedback-evidence.json",
+        "widget-team-signing-evidence.json",
+        "system-widget-privacy-prerequisite-evidence.json"
+      ],
+      "boundary": "Mac automatic expiry and unaccepted configuration/action/account/empty classes; actual system-selected redaction/routing. Explicit redaction/source previews are not substitutes."
+    },
+    {
+      "id": "usability_accessibility_runtime",
+      "requirement": "Native capture/edit/plan/complete/Undo/recovery, accessible controls and explicit assessment of actual runtime findings.",
+      "status": "incomplete_remaining_spoken_coverage",
+      "evidence": [
+        "landscape-editor-evidence.json",
+        "capture-control-stability-evidence.json",
+        "filter-unavailable-presentation-evidence.json",
+        "mac-human-voiceover-evidence.json",
+        "mac-keyboard-undo-evidence.json",
+        "mac-renderer-cloud-replay-evidence.json",
+        "mac-table-reentry-evidence.json",
+        "mac-runtime-followup-evidence.json"
+      ],
+      "boundary": "Remaining genuine spoken critical-control coverage. Named renderer cycles are fixed; scoped table/QoS framework findings remain risks. No blanket clean-runtime or every-control speech claim."
+    },
+    {
+      "id": "independent_releases_remote_delivery",
+      "requirement": "Independent app/release sources, compatible candidate pair, real provider/device delivery and signed distribution before rollout.",
+      "status": "ownership_accepted_distribution_user_deferred",
+      "evidence": [
+        "CONTINUITY_RELEASE_POLICY.md",
+        "REPOSITORY_OWNERSHIP.md",
+        "release-environment-check.json",
+        "REMINDER_AUTHORITY.md",
+        "REMOTE_REMINDER_DELIVERY.md"
+      ],
+      "boundary": "Enrolled signing/capabilities, final provider/device/APNs acceptance, notarized/signed install and old-writer rollout remain. Remote delivery stays disabled; recognized email is optional future provider work, not active delivery."
+    }
+  ],
+  "retainedNativeResultsReverified": [
+    {
+      "bundle": "first-import-phone-v1.xcresult",
+      "expectedPassingCases": 1,
+      "failures": 0,
+      "skips": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "bundle": "mac-rich-planning-v1.xcresult",
+      "expectedPassingCases": 1,
+      "failures": 0,
+      "skips": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "bundle": "phone-planning-successor-v1.xcresult",
+      "expectedPassingCases": 1,
+      "failures": 0,
+      "skips": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "bundle": "mac-planning-return-v2.xcresult",
+      "expectedPassingCases": 1,
+      "failures": 0,
+      "skips": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "bundle": "native-filter-favorite-phone-v1.xcresult",
+      "expectedPassingCases": 1,
+      "failures": 0,
+      "skips": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "bundle": "mac-renderer-imported-runtime-v2.xcresult",
+      "expectedPassingCases": 1,
+      "failures": 0,
+      "skips": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "bundle": "mac-legacy-empty-collection-v2.xcresult",
+      "expectedPassingCases": 2,
+      "failures": 0,
+      "skips": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "bundle": "ios-legacy-empty-collection-v2.xcresult",
+      "expectedPassingCases": 2,
+      "failures": 0,
+      "skips": 0,
+      "structuredRuntimeWarnings": 0
+    }
+  ],
+  "verificationBoundary": "Ten existing native cases in eight bundles reverified, not ten new executions or proof of every feature. Historical failed/warning-bearing results and artifact limitations remain intact.",
+  "completeOrderContract": {
+    "unchangedMacFromAtomicRepair": "45fc16c",
+    "ownedOrderImplementationSHA256": {
+      "TasskFold-MacOS": "4111f03d0b700ab95ed1a4e7f2a7215963384bbfe041f370472c05a655a9800a",
+      "TaskFold-iOS": "4111f03d0b700ab95ed1a4e7f2a7215963384bbfe041f370472c05a655a9800a"
+    },
+    "fourTableSQLFixtureSHA256": "b35bafd543cabe9cbd75ec4bd98851e7414a842de8a11d9756b96c7ca4663eb6"
+  },
+  "releaseMetadata": {
+    "projectCheckPassedBothRepos": true,
+    "existingRegressionTestsPassedPerRepo": 8,
+    "macMinimum": "1.2.0 (3)",
+    "iOSMinimum": "1.4.0 (19)",
+    "addedInformationalCapabilities": [
+      "independent-identified-collection-rebase",
+      "known-empty-and-nested-collection-deltas"
+    ],
+    "validatorProvesImplementationOrSigning": false,
+    "versionsOrRolloutFlagsChanged": false
+  },
+  "remainingPrerequisites": [
+    "Manual installed Mac widget observations/configuration/actions.",
+    "Actual supported system privacy controls/locked transition.",
+    "Human spoken-output observations for remaining critical controls.",
+    "Configured iOS external file provider for real download/offline/late-callback boundaries.",
+    "User-deferred signing/provider/distribution and old-active-writer rollout."
+  ],
+  "stoppingRule": "Do not invent a gate for every possible combination or substitute easier previews/core tests. Continue distinct actionable risks; resume prerequisite-limited gates when their external state changes.",
+  "pendingMacWidgetHostPID": 79318,
+  "humanWidgetObservationRequestedThisTurn": true,
+  "newNativeAppSessions": 0,
+  "preservation": {
+    "protectedFilesExact": 100,
+    "macBaselineFilesExact": 28,
+    "retainedIOSFilesExact": 36,
+    "pendingWidgetFingerprintUnchanged": true,
+    "pendingTaskPresent": true,
+    "pendingTaskCompleted": false,
+    "noNativeAppLaunched": true,
+    "remainingTaskfoldMainProcessCount": 1
+  }
+}
