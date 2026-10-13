@@ -82,6 +82,20 @@ class ReleaseArtifactTests(unittest.TestCase):
             with self.subTest(mode=mode, path=path.name, inputs=inputs), self.assertRaises(ValueError):
                 artifact.verify_receipt(self.receipt, path, inputs, mode)
 
+    def test_reject_obsolete_app_inside_signed_valid_dmg(self):
+        before = dict(self.info)
+        minimum = artifact.policy()
+        try:
+            self.info['CFBundleShortVersionString'] = minimum['minimumVersion']
+            self.info['CFBundleVersion'] = str(minimum['minimumBuild'] - 1)
+            self.write_info()
+            obsolete = self.make_dmg('obsolete-p0-floor')
+            with self.assertRaisesRegex(ValueError, 'predates'):
+                artifact.inspect_dmg(obsolete, 'distribution')
+        finally:
+            self.info.clear(); self.info.update(before)
+            self.write_info()
+
     def test_reject_wrong_app_inside_valid_dmg(self):
         self.info['CFBundleIdentifier'] = 'invalid.fixture'
         try:

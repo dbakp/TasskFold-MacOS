@@ -229,3 +229,5 @@ Both native repos independently own the canonical queue and APNs provider worker
 
 
 Inactive native reminder registration now owns fresh-token callbacks, secure unlink persistence and account/session fencing. Remote delivery remains unavailable; local reminders continue. [Behavior and remaining gates](docs/REMOTE_REMINDER_DELIVERY.md#inactive-native-registration-lifecycle--6-october).
+
+The unreleased P0 candidate pair is Mac 1.2.0 (3) / iOS 1.4.0 (19). Each repository owns its release metadata checks; older active writers must be upgraded or retired. See [compatibility and release checks](docs/CONTINUITY_RELEASE_POLICY.md). These candidate versions do not announce completed acceptance or distribution.

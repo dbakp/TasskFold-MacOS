@@ -9,6 +9,8 @@ import re
 import subprocess
 import tempfile
 
+from verify_continuity_release import policy, validate_version
+
 ROOT = Path(__file__).resolve().parent.parent
 MODES = ('distribution', 'development', 'developer-id')
 
@@ -24,6 +26,7 @@ def inspect_app(app, mode, require_notarization=True):
     version, build = info['CFBundleShortVersionString'], info['CFBundleVersion']
     if not re.fullmatch(r'[0-9]+(?:\.[0-9]+)*', version) or not re.fullmatch(r'[0-9]+', build):
         raise ValueError('Invalid release version/build')
+    validate_version(version, build, policy())
     run('codesign', '--verify', '--deep', '--strict', str(app))
     signature = run('codesign', '-dvv', str(app)).decode()
     widget = app / 'Contents/PlugIns/TaskfoldWidgets.appex'

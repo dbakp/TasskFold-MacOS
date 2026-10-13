@@ -14,6 +14,7 @@ case "${3:-}" in
 esac
 [ "$#" -le 3 ] || { echo "Unexpected arguments" >&2; exit 2; }
 [ -f "$notes" ] || { echo "Release notes do not exist" >&2; exit 1; }
+python3 Scripts/verify_continuity_release.py --project >/dev/null
 version="$(python3 Scripts/release_artifact.py verify "$dmg" --mode "$mode" --inputs "$(python3 Scripts/release_inputs.py)")"
 # A previous version must never be silently retagged or replaced.
 tag="v$version"

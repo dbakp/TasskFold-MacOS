@@ -47,3 +47,7 @@ Task editor saves use the revision from the original form baseline when changing
 Sync captures its workspace account for each queue run. Backend sends reject a stale account before HTTP, retain account/session-generation guards across response awaits and 401 retries, and prevent joined token refreshes from restoring an older sign-in. `AccountTransportTests.swift` exercises late 401, stale shared-task/Focus transport and joined-refresh races through held responses. These deterministic regressions do not replace native paired/offline account-switch acceptance.
 
 Focus has its own revision/action guarded slot and review: [Focus sessions](FOCUS_SESSIONS.md). Use synced removes the dependent Focus command chain; Keep this device rebases its final desired state while retaining unrelated queued task edits. Timer commands are excluded from ordinary task Undo history.
+
+## Supported candidate versions
+
+The P0 continuity candidate floor is Mac **1.2.0 (3)** and iPhone/iPad **1.4.0 (19)**. Older active writers are unsupported and must be upgraded or retired before enabling a workspace; the server still permits their legacy direct writes. Release-floor checks do not enforce server access or establish runtime/distribution acceptance. See [rollout and pending-work preservation](CONTINUITY_RELEASE_POLICY.md).
