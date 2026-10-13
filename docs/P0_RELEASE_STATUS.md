@@ -1022,3 +1022,8 @@ Known query operators with future settings now remain unsupported and intact ins
 ### 13 October — unsupported-filter presentation
 
 Resolved the observed misleading empty/count, clipped warning and Mac editor-title leak. Final native phone largest-text scrolling/action/Cancel/relaunch passes with one test and no structured runtime warnings; native Mac title/Cancel and readable explanation pass through CUA. See `filter-unavailable-presentation-evidence.json` and paired before/after captures for scope. Broader P0 gates remain open.
+
+
+### 13 October — retained Mac runtime-warning attribution
+
+The conflict-edit and offline-new-task QoS warnings now have UUID-matched relocated stacks showing AppKit Services-menu data-detector scanning through accessibility inspection. No Taskfold persistence/sync scheduler defect is established; no speculative code change or warning suppression was made. The older notes archive has one reported warning but no matching event, so it stays unresolved. The Mac-owned inspector explicitly checks archival coverage; companion iOS stores evidence only. See `mac-runtime-warning-attribution-evidence.json`. VoiceOver output access again times out; original off state and all test data are restored. All 100 protected, 36 retained and 28 restored files plus pending-widget fingerprint match; duplicate diagnostic export pruned. Broader P0 remains open.
