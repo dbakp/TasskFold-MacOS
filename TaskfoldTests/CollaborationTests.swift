@@ -362,45 +362,161 @@ extension CollaborationTests {
         let backend = Backend(configuration: ["URL": "https://native-auth.test", "Key": "public"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
         defer { AuthTransportTests.Stub.handler = nil }
         for field in ["comments", "attachments", "subtasks"] {
-            for keepLocal in [false, true] {
-                func item(_ id: String) -> JSON { .object(["id": .string(id), "text": .string(id)]) }
-                let base: JSON = .array([])
-                let first: JSON = .array([item("mine")])
-                let last: JSON = .array([item("mine"), item("later")])
-                let edit = Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: [field: first], baseline: [field: base])
-                let later = Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: [field: last], baseline: [field: first])
-                var server = Record(["id": .string("task"), field: .array([item("remote")]), "description": .string("Independent notes")])
-                var calls = 0
-                AuthTransportTests.Stub.handler = { request in
-                    XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_patch_task")
-                    var data = request.httpBody ?? Data()
-                    if let stream = request.httpBodyStream {
-                        stream.open(); defer { stream.close() }
-                        var buffer = [UInt8](repeating: 0, count: 1024)
-                        while stream.hasBytesAvailable { let count = stream.read(&buffer, maxLength: buffer.count); if count <= 0 { break }; data.append(buffer, count: count) }
+            for base in [JSON.array([]), JSON.null] {
+                for keepLocal in [false, true] {
+                    func item(_ id: String) -> JSON { .object(["id": .string(id), "text": .string(id)]) }
+                    let first: JSON = .array([item("mine")])
+                    let last: JSON = .array([item("mine"), item("later")])
+                    let edit = Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: [field: first], baseline: [field: base])
+                    let later = Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: [field: last], baseline: [field: first])
+                    var server = Record(["id": .string("task"), field: .array([item("remote")]), "description": .string("Independent notes")])
+                    var calls = 0
+                    AuthTransportTests.Stub.handler = { request in
+                        XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_patch_task")
+                        var data = request.httpBody ?? Data()
+                        if let stream = request.httpBodyStream {
+                            stream.open(); defer { stream.close() }
+                            var buffer = [UInt8](repeating: 0, count: 1024)
+                            while stream.hasBytesAvailable { let count = stream.read(&buffer, maxLength: buffer.count); if count <= 0 { break }; data.append(buffer, count: count) }
+                        }
+                        let body = try JSONDecoder().decode(Record.self, from: data)
+                        XCTAssertEqual(body["_base"].object[field], server[field], "The request must guard its actual predecessor")
+                        XCTAssertEqual(Set(body["_changes"].object.keys), [field])
+                        server[field] = try XCTUnwrap(body["_changes"].object[field])
+                        calls += 1
+                        return (200, try JSONEncoder().encode(server))
                     }
-                    let body = try JSONDecoder().decode(Record.self, from: data)
-                    XCTAssertEqual(body["_base"].object[field], server[field], "The request must guard its actual predecessor")
-                    XCTAssertEqual(Set(body["_changes"].object.keys), [field])
-                    server[field] = try XCTUnwrap(body["_changes"].object[field])
-                    calls += 1
-                    return (200, try JSONEncoder().encode(server))
+                    let original = Snapshot(tables: ["tasks": [Record(["id": .string("task"), field: last])]], pending: [edit, later])
+                    var resolved = try XCTUnwrap(SyncConflict(mutation: edit, remote: server).resolving(original, keepLocal: keepLocal))
+                    resolved = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(resolved))
+                    while let change = resolved.pending.first {
+                        let confirmed = try await backend.send(change)
+                        resolved.acknowledge(change, saved: confirmed)
+                    }
+                    let expected: JSON = .array([item("remote")] + (keepLocal ? [item("mine")] : []) + [item("later")])
+                    XCTAssertEqual(server[field], expected, "\(field), keepLocal=\(keepLocal)")
+                    XCTAssertEqual(calls, keepLocal ? 2 : 1)
+                    XCTAssertTrue(resolved.pending.isEmpty)
+                    XCTAssertEqual(resolved.tables["tasks"]?.first, server)
+                    XCTAssertEqual(server.string("description"), "Independent notes")
                 }
-                let original = Snapshot(tables: ["tasks": [Record(["id": .string("task"), field: last])]], pending: [edit, later])
-                var resolved = try XCTUnwrap(SyncConflict(mutation: edit, remote: server).resolving(original, keepLocal: keepLocal))
-                resolved = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(resolved))
-                while let change = resolved.pending.first {
-                    let confirmed = try await backend.send(change)
-                    resolved.acknowledge(change, saved: confirmed)
-                }
-                let expected: JSON = .array([item("remote")] + (keepLocal ? [item("mine")] : []) + [item("later")])
-                XCTAssertEqual(server[field], expected, "\(field), keepLocal=\(keepLocal)")
-                XCTAssertEqual(calls, keepLocal ? 2 : 1)
-                XCTAssertTrue(resolved.pending.isEmpty)
-                XCTAssertEqual(resolved.tables["tasks"]?.first, server)
-                XCTAssertEqual(server.string("description"), "Independent notes")
             }
         }
     }
 
+}
+
+
+extension CollaborationTests {
+    func testLegacyEmptyCollectionsKeepIndependentRemoteItemsAfterReview() throws {
+        for field in ["comments", "attachments", "subtasks"] {
+            let mine: JSON = .object(["id": .string("mine"), "text": .string("Local addition")])
+            let theirs: JSON = .object(["id": .string("remote"), "text": .string("Remote addition")])
+            for explicitlyNull in [false, true] {
+                var legacy = Record(["id": .string("task"), "title": .string("Before")])
+                if explicitlyNull { legacy[field] = .null }
+                let change = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: legacy.id, method: "PATCH", fields: ["title": .string("My title"), field: .array([mine])]), existing: legacy)
+                XCTAssertEqual(change.baseline?[field], .null, "A captured known-empty field differs from a missing mutation baseline")
+                let remote = Record(["id": .string("task"), "title": .string("Remote title"), field: .array([theirs]), "description": .string("Independent notes")])
+                var snapshot = Snapshot(tables: ["tasks": [legacy]], pending: [change]); snapshot.apply(change)
+                let resolved = try XCTUnwrap(SyncConflict(mutation: change, remote: remote).resolving(snapshot, keepLocal: true))
+                let expected: JSON = .array([theirs, mine])
+                XCTAssertEqual(resolved.tables["tasks"]?.first?[field], expected, field)
+                XCTAssertEqual(resolved.pending.first?.fields[field], expected, field)
+                XCTAssertEqual(resolved.pending.first?.baseline?[field], remote[field])
+                XCTAssertEqual(resolved.tables["tasks"]?.first?.string("description"), "Independent notes")
+                XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(resolved)), resolved)
+            }
+        }
+    }
+
+    func testLaterLegacyEmptyCollectionAdditionSurvivesEitherTitleChoice() throws {
+        for field in ["comments", "attachments", "subtasks"] {
+            let mine: JSON = .object(["id": .string("mine"), "text": .string("Later local addition")])
+            let theirs: JSON = .object(["id": .string("remote"), "text": .string("Independent remote addition")])
+            let legacy = Record(["id": .string("task"), "title": .string("Before"), field: .null])
+            let reviewed = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: legacy.id, method: "PATCH", fields: ["title": .string("My title")]), existing: legacy)
+            let later = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: legacy.id, method: "PATCH", fields: [field: .array([mine])]), existing: legacy)
+            let remote = Record(["id": .string("task"), "title": .string("Remote title"), field: .array([theirs])])
+            var snapshot = Snapshot(tables: ["tasks": [legacy]], pending: [reviewed, later]); snapshot.apply(reviewed); snapshot.apply(later)
+            for keepLocal in [false, true] {
+                let resolved = try XCTUnwrap(SyncConflict(mutation: reviewed, remote: remote).resolving(snapshot, keepLocal: keepLocal))
+                XCTAssertEqual(resolved.tables["tasks"]?.first?[field], .array([theirs, mine]), field)
+                XCTAssertEqual(resolved.pending.last?.fields[field], .array([theirs, mine]), field)
+                XCTAssertEqual(resolved.pending.last?.baseline?[field], remote[field], "Known-empty addition must guard the rebased predecessor")
+                XCTAssertEqual(resolved.tables["tasks"]?.first?.title, keepLocal ? "My title" : "Remote title")
+                XCTAssertEqual(snapshot.pending, [reviewed, later])
+            }
+        }
+    }
+
+    func testLaterLegacyNullClearRemovesOnlyObservedCollectionItems() throws {
+        for field in ["comments", "attachments", "subtasks"] {
+            let mine: JSON = .object(["id": .string("mine"), "text": .string("Observed before clear")])
+            let theirs: JSON = .object(["id": .string("remote"), "text": .string("Independent remote addition")])
+            let legacy = Record(["id": .string("task"), "title": .string("Before"), field: .array([mine])])
+            let reviewed = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: legacy.id, method: "PATCH", fields: ["title": .string("My title")]), existing: legacy)
+            let later = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: legacy.id, method: "PATCH", fields: [field: .null]), existing: legacy)
+            let remote = Record(["id": .string("task"), "title": .string("Remote title"), field: .array([mine, theirs])])
+            var snapshot = Snapshot(tables: ["tasks": [legacy]], pending: [reviewed, later]); snapshot.apply(reviewed); snapshot.apply(later)
+            for keepLocal in [false, true] {
+                let resolved = try XCTUnwrap(SyncConflict(mutation: reviewed, remote: remote).resolving(snapshot, keepLocal: keepLocal))
+                XCTAssertEqual(resolved.tables["tasks"]?.first?[field], .array([theirs]), field)
+                XCTAssertEqual(resolved.pending.last?.fields[field], .array([theirs]), field)
+                XCTAssertEqual(resolved.pending.last?.baseline?[field], remote[field], "Reverse only the clear delta, retaining the remote-only baseline item")
+                XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(resolved)), resolved)
+            }
+        }
+    }
+}
+
+
+extension CollaborationTests {
+    func testUnknownOrMalformedLaterCollectionBaselinesStayGuarded() throws {
+        for field in ["comments", "attachments", "subtasks"] {
+            let item: JSON = .object(["id": .string("mine"), "text": .string("Local")])
+            let reviewed = Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: ["title": .string("Local title")], baseline: ["title": .string("Before")])
+            let invalid: [[String: JSON]?] = [nil, [:], [field: .object([:])], [field: .array([item, item])]]
+            for baseline in invalid {
+                let later = Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: [field: .array([item])], baseline: baseline)
+                let remote = Record(["id": .string("task"), "title": .string("Remote"), field: .array([])])
+                let original = Snapshot(tables: ["tasks": [remote]], pending: [reviewed, later])
+                let resolved = try XCTUnwrap(SyncConflict(mutation: reviewed, remote: remote).resolving(original, keepLocal: false))
+                XCTAssertEqual(resolved.pending, [later], "Do not invent approval or a baseline for an unsupported \(field) edit")
+            }
+        }
+    }
+}
+
+
+extension CollaborationTests {
+    func testNestedKnownEmptyCollectionsRetainIndependentRemoteItems() throws {
+        for field in ["labels", "comments", "attachments", "subtasks"] {
+            let mine: JSON = field == "labels" ? .string("mine") : .object(["id": .string("mine"), "text": .string("My addition")])
+            let theirs: JSON = field == "labels" ? .string("remote") : .object(["id": .string("remote"), "text": .string("Remote addition")])
+            for explicitlyNull in [false, true] {
+                var child: [String: JSON] = ["id": .string("child"), "title": .string("Child")]
+                if explicitlyNull { child[field] = .null }
+                let base: JSON = .array([.object(child)])
+                var edited = child; edited[field] = .array([mine])
+                var shared = child; shared[field] = .array([theirs]); shared["future_metadata"] = .string("Remote metadata")
+                let remoteValue: JSON = .array([.object(shared)])
+                let original = Record(["id": .string("task"), "title": .string("Before"), "subtasks": base])
+                let change = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: ["subtasks": .array([.object(edited)])]), existing: original)
+                let remote = Record(["id": .string("task"), "title": .string("Remote title"), "subtasks": remoteValue])
+                var expected = shared; expected[field] = .array([theirs, mine])
+                let expectedValue: JSON = .array([.object(expected)])
+                let direct = try XCTUnwrap(SyncConflict(mutation: change, remote: remote).resolving(Snapshot(tables: ["tasks": [original]], pending: [change]), keepLocal: true))
+                XCTAssertEqual(direct.tables["tasks"]?.first?["subtasks"], expectedValue, "Nested \(field) must retain remote work")
+                let title = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: ["title": .string("My title")]), existing: original)
+                for keepLocal in [false, true] {
+                    let resolved = try XCTUnwrap(SyncConflict(mutation: title, remote: remote).resolving(Snapshot(tables: ["tasks": [original]], pending: [title, change]), keepLocal: keepLocal))
+                    XCTAssertEqual(resolved.tables["tasks"]?.first?["subtasks"], expectedValue)
+                    XCTAssertEqual(resolved.pending.last?.fields["subtasks"], expectedValue)
+                    XCTAssertEqual(resolved.pending.last?.baseline?["subtasks"], remoteValue, "Reverse only the nested addition; retain the remote-only baseline item and metadata")
+                    XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(resolved)), resolved)
+                }
+            }
+        }
+    }
 }

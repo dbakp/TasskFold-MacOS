@@ -348,10 +348,11 @@ struct RootView: View {
             store.startLocal(); store.dailyBackupsEnabled = false; store.snapshot = Snapshot()
             var local = Record.task(user: store.userID, date: Date())
             local["id"] = .string("conflict-task"); local["title"] = .string("Review launch copy")
-            let before: JSON = .array([.object(["id": .string("a"), "text": .string("Original comment")])])
+            let legacyEmpty = ProcessInfo.processInfo.arguments.contains("--legacy-null-collection-fixture")
+            let before: JSON = legacyEmpty ? .null : .array([.object(["id": .string("a"), "text": .string("Original comment")])])
             local["comments"] = .array([.object(["id": .string("a"), "text": .string("My revised comment")])])
             var remote = local
-            remote["comments"] = .array([.object(["id": .string("a"), "text": .string("Shared revised comment")]), .object(["id": .string("b"), "text": .string("Independent teammate comment")])])
+            remote["comments"] = .array([.object(["id": .string(legacyEmpty ? "remote" : "a"), "text": .string("Shared revised comment")]), .object(["id": .string("b"), "text": .string("Independent teammate comment")])])
             let change = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: local.id, method: "PATCH", fields: ["comments": local["comments"]], baseline: ["comments": before]), existing: local)
             let later = TaskCompletionRevision.capturing(Mutation(table: "tasks", recordID: local.id, method: "PATCH", fields: ["duration_minutes": .number(45)], baseline: ["duration_minutes": .null]), existing: local)
             store.snapshot.tables["tasks"] = [local]; store.snapshot.pending = [change, later]; store.snapshot.apply(later)

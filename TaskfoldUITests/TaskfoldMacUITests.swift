@@ -776,10 +776,19 @@ final class TaskfoldMacUITests: XCTestCase {
 
 
     @MainActor func testConflictUseSyncedPreservesLaterOfflineEstimateAndRelaunch() throws {
+        try walkCommentConflict(keepLocal: false, legacyEmpty: false)
+    }
+    @MainActor func testLegacyNullCollectionKeepMyEditRetainsRemoteCommentsAndRelaunch() throws {
+        try walkCommentConflict(keepLocal: true, legacyEmpty: true)
+    }
+    @MainActor func testLegacyNullCollectionUseSyncedRetainsRemoteCommentsAndRelaunch() throws {
+        try walkCommentConflict(keepLocal: false, legacyEmpty: true)
+    }
+    @MainActor private func walkCommentConflict(keepLocal: Bool, legacyEmpty: Bool) throws {
         guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else {
             throw XCTSkip("Dedicated isolated native acceptance app required")
         }
-        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--conflict-fixture"]
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--conflict-fixture"] + (legacyEmpty ? ["--legacy-null-collection-fixture"] : [])
         liveConflictLaunch(app); defer { app.terminate() }
         let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/ui-testing.json")
         func saved() throws -> NSDictionary { try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary }
@@ -790,6 +799,9 @@ final class TaskfoldMacUITests: XCTestCase {
         let before = try saved()
         let originalPending = try XCTUnwrap(before["pending"] as? [NSDictionary])
         XCTAssertEqual(originalPending.count, 2)
+        if legacyEmpty {
+            XCTAssertTrue((originalPending[0]["baseline"] as? NSDictionary)?["comments"] is NSNull)
+        }
         let seededTables = try XCTUnwrap(before["tables"] as? NSDictionary)
         XCTAssertEqual((seededTables["tasks"] as? [NSDictionary])?.first?["duration_minutes"] as? Int, 45)
         review.click()
@@ -802,16 +814,22 @@ final class TaskfoldMacUITests: XCTestCase {
         let sheet = app.sheets.firstMatch
         let capture = XCTAttachment(screenshot: sheet.screenshot())
         capture.name = "Mac offline conflict before choosing synced comment"; capture.lifetime = .keepAlways; add(capture)
-        app.buttons["useSharedEdit"].click()
+        app.buttons[keepLocal ? "keepMyEdit" : "useSharedEdit"].click()
         XCTAssertTrue(waitForDisappearance(review, timeout: 5))
         let after = try saved()
-        XCTAssertEqual(after["pending"] as? [NSDictionary], [originalPending[1]], "Discard only the reviewed comment edit")
+        let afterPending = try XCTUnwrap(after["pending"] as? [NSDictionary])
+        if keepLocal {
+            XCTAssertEqual(afterPending.count, 2)
+            XCTAssertEqual(afterPending.last, originalPending.last, "Retain the exact later estimate")
+        } else { XCTAssertEqual(afterPending, [originalPending[1]], "Discard only the reviewed comment edit") }
         let beforeTables = try XCTUnwrap(before["tables"] as? NSDictionary)
         let afterTables = try XCTUnwrap(after["tables"] as? NSDictionary)
         let originalTask = try XCTUnwrap((beforeTables["tasks"] as? [NSDictionary])?.first)
         let currentTask = try XCTUnwrap((afterTables["tasks"] as? [NSDictionary])?.first)
         let expectedTask = originalTask.mutableCopy() as! NSMutableDictionary
-        expectedTask["comments"] = [["id": "a", "text": "Shared revised comment"], ["id": "b", "text": "Independent teammate comment"]]
+        var expectedComments = [["id": legacyEmpty ? "remote" : "a", "text": "Shared revised comment"], ["id": "b", "text": "Independent teammate comment"]]
+        if keepLocal { expectedComments.append(["id": "a", "text": "My revised comment"]) }
+        expectedTask["comments"] = expectedComments
         XCTAssertEqual(currentTask, expectedTask, "Retain every other task field, including the later estimate")
         for key in beforeTables.allKeys as! [String] where key != "tasks" { XCTAssertEqual(afterTables[key] as? NSArray, beforeTables[key] as? NSArray) }
         app.staticTexts["title-conflict-task"].click()
@@ -819,7 +837,8 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.steppers["taskDuration"].exists)
         XCTAssertTrue(app.staticTexts["Estimate · 45 min"].exists || (app.steppers["taskDuration"].value as? NSNumber)?.intValue == 45 || app.steppers["taskDuration"].value as? String == "45", app.steppers["taskDuration"].debugDescription)
         XCTAssertTrue(app.staticTexts["Independent teammate comment"].exists)
-        XCTAssertFalse(app.staticTexts["My revised comment"].exists)
+        if keepLocal { XCTAssertTrue(app.staticTexts["My revised comment"].exists) }
+        else { XCTAssertFalse(app.staticTexts["My revised comment"].exists) }
         retainWindow(app, name: "Mac synced comment keeps independent work")
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
         app.launchArguments = ["--uitesting"]; liveConflictLaunch(app)
@@ -829,6 +848,7 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertTrue(app.steppers["taskDuration"].exists)
         XCTAssertTrue(app.staticTexts["Estimate · 45 min"].exists || (app.steppers["taskDuration"].value as? NSNumber)?.intValue == 45 || app.steppers["taskDuration"].value as? String == "45", app.steppers["taskDuration"].debugDescription)
         XCTAssertTrue(app.staticTexts["Independent teammate comment"].exists)
+        if keepLocal { XCTAssertTrue(app.staticTexts["My revised comment"].exists) }
         XCTAssertEqual(try saved(), after, "Normal Quit/relaunch must preserve the whole resolved workspace")
         retainWindow(app, name: "Mac offline conflict resolution retained after normal Quit")
     }

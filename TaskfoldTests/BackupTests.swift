@@ -448,3 +448,25 @@ extension BackupTests {
         XCTAssertEqual(try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(queued)).pending[0].fields["date_preferences"],document)
     }
 }
+
+
+extension BackupTests {
+    func testSupportedLegacyEmptyCollectionsRoundTripWithoutInventingItems() throws {
+        for field in ["comments", "attachments", "subtasks"] {
+            for explicitlyNull in [false, true] {
+                var original = fixture()
+                if explicitlyNull { original.tables["tasks"]![0][field] = .null }
+                else { original.tables["tasks"]![0].fields.removeValue(forKey: field) }
+                let file = try WorkspaceBackup.read(WorkspaceBackup.make(original, account: owner).data())
+                let plan = try file.plan(current: Snapshot(), account: other)
+                let restored = try XCTUnwrap(plan.changes.first { $0.table == "tasks" })
+                if field == "subtasks" {
+                    // Restore already remaps child identities/assignments and
+                    // canonicalizes an empty child graph to an empty array.
+                    XCTAssertEqual(restored.fields[field], .array([]))
+                } else { XCTAssertEqual(restored.fields[field], explicitlyNull ? .null : nil) }
+                XCTAssertTrue((restored.fields[field] ?? .null).list.isEmpty, "Restore must not invent collection items")
+            }
+        }
+    }
+}

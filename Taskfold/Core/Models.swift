@@ -174,13 +174,19 @@ enum TaskEdit {
     }
     fileprivate static func collectionEdit(field: String, base: JSON, desired: JSON, remote: JSON) -> JSON? {
         if field == "labels" { return labelMembershipEdit(base: base, desired: desired, remote: remote) }
-        guard ["comments", "attachments", "subtasks"].contains(field),
-              case .array(let before) = base, case .array(let after) = desired, case .array(let current) = remote,
+        guard ["comments", "attachments", "subtasks"].contains(field) else { return nil }
+        // Supported legacy rows use null for an empty list. A captured null is
+        // known-empty; an absent mutation baseline is still unknown and guarded.
+        let values = [base, desired, remote].map { $0 == .null ? JSON.array([]) : $0 }
+        guard case .array(let before) = values[0], case .array(let after) = values[1], case .array(let current) = values[2],
               [before, after, current].allSatisfy({ items in
                   let ids = items.map { $0.object["id"]?.text ?? "" }
                   return !ids.contains("") && Set(ids).count == ids.count
               }) else { return nil }
-        return keepingLocal(base: base, desired: desired, remote: remote)
+        // Keep exact representations when no merge is necessary.
+        if desired == base { return remote }
+        if remote == base || remote == desired { return desired }
+        return keepingLocal(base: values[0], desired: values[1], remote: values[2])
     }
     fileprivate static func labelMembershipEdit(base: JSON, desired: JSON, remote: JSON) -> JSON? {
         guard let before = labelMembers(base), let after = labelMembers(desired), let current = labelMembers(remote) else { return nil }
@@ -206,8 +212,12 @@ enum TaskEdit {
         if case .object(let b) = base, case .object(let d) = desired, case .object(let c) = remote {
             var result = c
             for key in Set(b.keys).union(d.keys) where b[key] != d[key] {
-                if let value = d[key] { result[key] = keepingLocal(base: b[key] ?? .null, desired: value, remote: c[key] ?? .null) }
-                else { result.removeValue(forKey: key) }
+                if let value = d[key] { result[key] = keepingLocal(field: key, base: b[key] ?? .null, desired: value, remote: c[key] ?? .null) }
+                else if let merged = collectionEdit(field: key, base: b[key] ?? .null, desired: .null, remote: c[key] ?? .null) {
+                    // Child records may omit empty lists. Reversing a nested
+                    // addition must retain remote-only items, not erase the key.
+                    result[key] = merged
+                } else { result.removeValue(forKey: key) }
             }
             return .object(result)
         }
@@ -306,7 +316,7 @@ struct SyncConflict: Identifiable {
                     // Reverse only this edit's delta to reconstruct its guard.
                     // Remote-only items join the baseline, but a later overlapping
                     // edit still guards its original value and requires review.
-                    let rebasedBaseline = field == "labels" ? current[field] : TaskEdit.keepingLocal(base: desired, desired: baseline, remote: current[field])
+                    let rebasedBaseline = field == "labels" ? current[field] : TaskEdit.keepingLocal(field: field, base: desired, desired: baseline, remote: current[field])
                     local.fields[field] = merged
                     local.baseline?[field] = rebasedBaseline
                     result.pending[pendingIndex].fields[field] = merged
