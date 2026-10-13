@@ -1,7 +1,7 @@
 {
   "date": "2026-10-13",
-  "status": "NORMAL_LAUNCH_AND_MY_LIST_COLD_TASK_ROUTE_ACCEPTED__PINNED_NOTE_PENDING",
-  "scope": "Current-source installed Mac widget continuation using ordinary local tasks rather than a launch-argument-dependent ui-testing workspace. Preparation is not new installed-host acceptance.",
+  "status": "MY_LIST_AND_MEDIUM_PINNED_NOTE_ACCEPTED__FOCUS_INSTALLATION_PENDING",
+  "scope": "Current-source installed Mac widget continuation in a normal local workspace; named My list and medium Pinned note workflows accepted.",
   "sourceHeads": {
     "TasskFold-MacOS": "38893b20bfae7ce3db56d9155238e1de8bafcc29",
     "TaskFold-iOS": "0e9f3166cf6e929e21a122cb713600b7baad4820"
@@ -88,10 +88,10 @@
     "inactiveOldBuildBytesPruned": 372752384,
     "currentBuildAndOriginalEvidenceRetained": true
   },
-  "next": "Installed medium Pinned note configuration and cold route with the same normal local task and exact full instructions. User installation/click requested; main app fully quit and current build untouched.",
+  "next": "Installed medium Focus session cold route into the paused synthetic session. User installation/click requested; main app fully quit, unchanged build retained.",
   "limits": [
-    "Accepts the named installed My list configured-project cold task route; no new completion, privacy, cloud-account or other-family claim.",
-    "Normal-mode preparation used the prior retained binary; the new source build still needs GUI observation.",
+    "Accepts named installed My list and medium Pinned note workflows only; no new privacy, cloud-account or other-family claim.",
+    "Focus native preparation is not installed Focus acceptance.",
     "Release signing remains user-deferred."
   ],
   "currentNativeAcceptance": {
@@ -126,6 +126,40 @@
       "fullSavedWorkspaceExact": true,
       "unrelatedInboxTaskRetained": true,
       "familyNotNewlyInspected": true
+    },
+    "installedMediumPinnedNote": {
+      "humanAddedConfiguredAndClickedMediumPinnedNote": true,
+      "processObservedBeforeCUAAppBinding": 21495,
+      "noLaunchArgumentsVerifiedAfterBinding": true,
+      "normalProcess": "21495 Tue Oct 13 23:13:12 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+      "exactOriginalThreeLinesObserved": true,
+      "nativeReaderScreenshotInspected": true,
+      "editDetailsOpenedCorrectTask": true,
+      "dateEstimatePinUnchanged": true,
+      "editedFirstLineOnly": true,
+      "fullSnapshotOnlyTargetDescriptionChanged": true,
+      "publishedPinnedNoteTextExact": true,
+      "nativeReaderUpdatedAfterDone": true,
+      "transientAXErrorAfterSheetTransition": "One AXError.failure; same binding refresh exposed correct task details. No app replacement/restart.",
+      "installedRefreshAndColdReopen": {
+        "humanObservedUpdatedPreviewAndClicked": true,
+        "observedBeforeCUAAppBinding": true,
+        "process": "21966 Tue Oct 13 23:17:56 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+        "noLaunchArguments": true,
+        "fullEditedThreeLinesObserved": true,
+        "fullEditedWorkspaceExact": true,
+        "buildNotReplacedOrReseeded": true
+      }
+    },
+    "focusPreparation": {
+      "durationSeconds": 1500,
+      "elapsedMilliseconds": 3373,
+      "status": "paused",
+      "taskID": "c779b991-bb9e-4fde-bba6-045e07889264",
+      "onlyFocusSessionsChanged": true,
+      "finishAlertsOff": true,
+      "normalQuitConfirmed": true,
+      "installedAcceptance": false
     }
   }
 }
