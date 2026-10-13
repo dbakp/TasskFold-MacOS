@@ -1,6 +1,6 @@
 {
   "date": "2026-10-13",
-  "status": "MY_LIST_AND_MEDIUM_PINNED_NOTE_ACCEPTED__FOCUS_INSTALLATION_PENDING",
+  "status": "MY_LIST_PINNED_NOTE_AND_PAUSED_FOCUS_COLD_ROUTES_ACCEPTED__ENDED_FOCUS_PENDING",
   "scope": "Current-source installed Mac widget continuation in a normal local workspace; named My list and medium Pinned note workflows accepted.",
   "sourceHeads": {
     "TasskFold-MacOS": "38893b20bfae7ce3db56d9155238e1de8bafcc29",
@@ -88,10 +88,10 @@
     "inactiveOldBuildBytesPruned": 372752384,
     "currentBuildAndOriginalEvidenceRetained": true
   },
-  "next": "Installed medium Focus session cold route into the paused synthetic session. User installation/click requested; main app fully quit, unchanged build retained.",
+  "next": "User observation of ended Focus desktop preview and cold reopen; app normally quit, unchanged build retained.",
   "limits": [
-    "Accepts named installed My list and medium Pinned note workflows only; no new privacy, cloud-account or other-family claim.",
-    "Focus native preparation is not installed Focus acceptance.",
+    "Accepts named installed My list, Pinned note and paused Focus cold routes plus subsequent native Focus controls; no new privacy or cloud-account claim.",
+    "Focus widget was requested as medium; actual desktop family/layout was not independently inspected. Ended-state installed preview/reopen remains pending.",
     "Release signing remains user-deferred."
   ],
   "currentNativeAcceptance": {
@@ -161,6 +161,39 @@
       "normalQuitConfirmed": true,
       "installedAcceptance": false,
       "publishedProjectionMatchesDurableSession": true
+    },
+    "installedFocusColdRoute": {
+      "processObservedBeforeCUABinding": {
+        "processesBeforeCUABinding": [
+          "24758 Tue Oct 13 23:38:02 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+        ]
+      },
+      "nativeOpenedCorrectSession": true,
+      "task": "Prepare the design review",
+      "project": "Desktop widget workshop",
+      "pausedRemaining": "24:57",
+      "fullPausedWorkspaceExactOnColdOpen": true,
+      "nativePanelScreenshotInspected": true,
+      "resumePauseEndWorked": true,
+      "endedSpent": "00:06",
+      "endedState": {
+        "elapsed_ms": 6400,
+        "task_id": "c779b991-bb9e-4fde-bba6-045e07889264",
+        "duration_seconds": 1500,
+        "changed_at_ms": 1791927517520,
+        "status": "stopped",
+        "running_since_ms": null,
+        "session_id": "3454a750-9b22-4aad-8e91-7a45f3ff858c",
+        "started_at_ms": 1791926965702
+      },
+      "onlyFocusSessionsChanged": true,
+      "taskProjectNotesAndUnrelatedInboxExact": true,
+      "publishedEndedClockMatches": true,
+      "finishAlertsOff": true,
+      "widgetMediumRequested": true,
+      "actualDesktopFamilyNotIndependentlyInspected": true,
+      "unchangedBuildNoSeedArguments": true,
+      "normalQuitConfirmed": true
     }
   }
 }
