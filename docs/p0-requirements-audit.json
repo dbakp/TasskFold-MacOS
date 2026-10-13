@@ -115,7 +115,7 @@
         "widget-record-route-evidence.json",
         "mac-widget-normal-workspace-evidence.json"
       ],
-      "boundary": "Installed Mac My list automatic expiry/persisted completion and current-source configured-project cold task route accepted. Medium Pinned note cold open/edit/preview refresh/edited-note cold reopen accepted. Installed Focus paused-session cold route and subsequent native Resume/Pause/End accepted with only session data changed; ended preview confirmed and exact ended cold-launch state inspected, with inferred click attribution. Project pulse installed cold route/forward completion refresh accepted; native Undo restores task/totals and installed reverse refresh accepted. Remaining distinct Mac configuration/action/account/empty classes and actual system-selected redaction/routing stay open; previews and native URL-handler tests do not substitute."
+      "boundary": "Installed Mac My list automatic expiry/persisted completion and current-source configured-project cold task route accepted. Medium Pinned note cold open/edit/preview refresh/edited-note cold reopen accepted. Installed Focus paused-session cold route and subsequent native Resume/Pause/End accepted with only session data changed; ended preview confirmed and exact ended cold-launch state inspected, with inferred click attribution. Project pulse installed cold route/forward completion refresh accepted; native Undo restores task/totals and installed reverse refresh accepted. Four named installed kinds clear/recover on normal-local leave/return; signed-out Pulse cold route opens sign-in safely. Cloud-account-to-account transitions remain separate. Remaining distinct Mac configuration/action/account/empty classes and actual system-selected redaction/routing stay open; previews and native URL-handler tests do not substitute."
     },
     {
       "id": "usability_accessibility_runtime",
@@ -279,6 +279,8 @@
     "projectPulseInstalledColdRouteAndCompletionRefreshAccepted": true,
     "projectPulseInstalledReverseRefreshPending": false,
     "taskRestoredOpenWithCompletionVersion": 2,
-    "projectPulseInstalledReverseRefreshAccepted": true
+    "projectPulseInstalledReverseRefreshAccepted": true,
+    "installedLocalLeaveReturnFourKindsAccepted": true,
+    "installedSignedOutPulseColdRouteAccepted": true
   }
 }

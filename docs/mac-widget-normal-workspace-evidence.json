@@ -1,6 +1,6 @@
 {
   "date": "2026-10-13",
-  "status": "NAMED_WIDGET_WORKFLOWS_ACCEPTED__SIGNED_OUT_HOST_OBSERVATION_PENDING",
+  "status": "NAMED_WIDGET_WORKFLOWS_AND_LOCAL_LEAVE_RETURN_ACCEPTED",
   "scope": "Current-source installed Mac widget continuation in a normal local workspace; named My list and medium Pinned note workflows accepted.",
   "sourceHeads": {
     "TasskFold-MacOS": "38893b20bfae7ce3db56d9155238e1de8bafcc29",
@@ -88,12 +88,13 @@
     "inactiveOldBuildBytesPruned": 372752384,
     "currentBuildAndOriginalEvidenceRetained": true
   },
-  "next": "Grouped installed signed-out content removal observation and Project pulse safe cold route pending; reopen preserved local workspace afterward.",
+  "next": "Remaining distinct installed Mac unavailable/account conditions, actual system privacy and critical spoken observations. Normal local workspace restored and main app quit.",
   "limits": [
     "Accepts named installed My list, Pinned note and paused Focus cold routes plus subsequent native Focus controls; no new privacy or cloud-account claim.",
     "Focus desktop ended preview confirmed; actual ended cold-launch state inspected with full workspace equality. Click attribution is inferred, not explicit. Desktop family/layout not independently inspected. Installed Project pulse remains pending.",
     "Release signing remains user-deferred.",
-    "Project pulse cold route and forward completion refresh accepted; reverse installed refresh also confirmed. Unusable screenshot excludes new visual-layout acceptance."
+    "Project pulse cold route and forward completion refresh accepted; reverse installed refresh also confirmed. Unusable screenshot excludes new visual-layout acceptance.",
+    "Four named installed kinds clear/recover on leaving/reopening normal local workspace; this does not prove cloud-account-to-account switching or system-selected privacy."
   ],
   "currentNativeAcceptance": {
     "normalProcess": "20026 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
@@ -259,6 +260,24 @@
       "publishedNoFixtureContent": true,
       "mainAppNormallyQuit": true,
       "installedObservationAccepted": false
+    },
+    "installedLocalLeaveReturn": {
+      "humanConfirmedFourWidgetsClearedContent": true,
+      "humanExplicitlyConfirmedClick": true,
+      "mainProcessesBeforeCUABinding": [
+        "27993 Tue Oct 13 23:55:50 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+      ],
+      "nativeColdLaunchSignInOnly": true,
+      "noFixtureContentExposedInNativeSignedOutScreen": true,
+      "reopenedViaNativeUseLocally": true,
+      "fullPostUndoWorkspaceExactAfterReturn": true,
+      "nativeTaskProjectEditedNotesDateEstimateRetained": true,
+      "publishedTaskNoteEndedFocusPulseRestored": true,
+      "humanConfirmedFourInstalledWidgetsRestored": true,
+      "normalQuitConfirmed": true,
+      "protectedPrimaryFilesExact": 100,
+      "earlierHumanCompletedFixtureByteExact": true,
+      "scope": "Normal local workspace leave and return in installed My list/Pinned note/Focus session/Project pulse. Does not prove cloud-account-to-account switching or system-selected privacy."
     }
   }
 }
