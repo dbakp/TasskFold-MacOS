@@ -159,7 +159,8 @@
       "onlyFocusSessionsChanged": true,
       "finishAlertsOff": true,
       "normalQuitConfirmed": true,
-      "installedAcceptance": false
+      "installedAcceptance": false,
+      "publishedProjectionMatchesDurableSession": true
     }
   }
 }

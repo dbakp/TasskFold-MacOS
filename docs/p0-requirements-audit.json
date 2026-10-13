@@ -1,11 +1,7 @@
 {
   "date": "2026-10-13",
   "objectiveAchieved": false,
-  "scope": "Original Todoist P0 plus requested productive widgets, for the two user-named Apple repositories. Read-only existing evidence audit; no new native app execution or backend mutation.",
-  "sourceHeads": {
-    "TasskFold-MacOS": "b8bcc73c3681429e45af615a5fccc73487f1a6ae",
-    "TaskFold-iOS": "7ecea2e0495a994a7416bd1e171104ac8a671fb0"
-  },
+  "scope": "Original Todoist P0 plus productive widgets for the two independently owned Apple apps. Existing evidence audit reconciled with subsequent native widget acceptance; historical result bundles below are retained, not newly executed.",
   "requirements": [
     {
       "id": "migration",
@@ -114,9 +110,12 @@
         "mac-widget-task-context-evidence.json",
         "widget-completion-feedback-evidence.json",
         "widget-team-signing-evidence.json",
-        "system-widget-privacy-prerequisite-evidence.json"
+        "system-widget-privacy-prerequisite-evidence.json",
+        "widget-completion-expiry-evidence.json",
+        "widget-record-route-evidence.json",
+        "mac-widget-normal-workspace-evidence.json"
       ],
-      "boundary": "Mac automatic expiry and unaccepted configuration/action/account/empty classes; actual system-selected redaction/routing. Explicit redaction/source previews are not substitutes."
+      "boundary": "Installed Mac My list automatic expiry/persisted completion and current-source configured-project cold task route accepted. Medium Pinned note cold open/edit/preview refresh/edited-note cold reopen accepted. Remaining distinct Mac configuration/action/account/empty classes and actual system-selected redaction/routing stay open; previews and native URL-handler tests do not substitute."
     },
     {
       "id": "usability_accessibility_runtime",
@@ -235,17 +234,40 @@
     "User-deferred signing/provider/distribution and old-active-writer rollout."
   ],
   "stoppingRule": "Do not invent a gate for every possible combination or substitute easier previews/core tests. Continue distinct actionable risks; resume prerequisite-limited gates when their external state changes.",
-  "pendingMacWidgetHostPID": 79318,
-  "humanWidgetObservationRequestedThisTurn": true,
-  "newNativeAppSessions": 0,
-  "preservation": {
-    "protectedFilesExact": 100,
-    "macBaselineFilesExact": 28,
-    "retainedIOSFilesExact": 36,
-    "pendingWidgetFingerprintUnchanged": true,
-    "pendingTaskPresent": true,
-    "pendingTaskCompleted": false,
-    "noNativeAppLaunched": true,
-    "remainingTaskfoldMainProcessCount": 1
+  "earlierAuditObservation": {
+    "sourceHeads": {
+      "TasskFold-MacOS": "b8bcc73c3681429e45af615a5fccc73487f1a6ae",
+      "TaskFold-iOS": "7ecea2e0495a994a7416bd1e171104ac8a671fb0"
+    },
+    "pendingMacWidgetHostPID": 79318,
+    "humanWidgetObservationRequestedThisTurn": true,
+    "newNativeAppSessions": 0,
+    "preservation": {
+      "protectedFilesExact": 100,
+      "macBaselineFilesExact": 28,
+      "retainedIOSFilesExact": 36,
+      "pendingWidgetFingerprintUnchanged": true,
+      "pendingTaskPresent": true,
+      "pendingTaskCompleted": false,
+      "noNativeAppLaunched": true,
+      "remainingTaskfoldMainProcessCount": 1
+    }
+  },
+  "sourceHeads": {
+    "TasskFold-MacOS": "4896958a72e01aeae14d64519df3284381d1b240",
+    "TaskFold-iOS": "e0b3f66eb9ad8ead9796125d15a299456d03352e"
+  },
+  "currentWidgetFollowup": {
+    "normalWorkspaceEvidence": "mac-widget-normal-workspace-evidence.json",
+    "build": "v10, source Mac 38893b2, unchanged since installation",
+    "mainAppProcessCount": 0,
+    "focusInstalledClickPending": true,
+    "focusDurableAndPublishedProjectionAgree": true,
+    "focusStatus": "paused",
+    "focusElapsedMilliseconds": 3373,
+    "focusDurationSeconds": 1500,
+    "fullPausedWorkspaceUnchanged": true,
+    "earlierHumanCompletedFixtureByteExact": true,
+    "noNewInstalledFocusAcceptance": true
   }
 }
