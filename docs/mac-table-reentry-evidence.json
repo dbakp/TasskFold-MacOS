@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-13",
+  "scope": "Current Mac table re-entry stack, rejected renderer measurement experiment, plain-row discriminator and standalone SwiftUI-only reproduction. No production behavior change.",
+  "shippingSourceBase": "0b73b78",
+  "osVersion": "26.6.2",
+  "osBuild": "25G83",
+  "sdkVersion": "27.0",
+  "shippingReproduction": {
+    "localImportedCopyTasks": 256,
+    "todayOpenTasks": 44,
+    "allOpenTasks": 255,
+    "route": "Full main-window CUA read on Today, then select All Tasks",
+    "warningCapture": "NSLog breakpoint matched the constant table warning format; no varargs or private task values inspected",
+    "stackFrames": 115,
+    "stackPath": "runtime-warning-attribution/table-reentry-native-stack.json",
+    "stackAssessment": "Nested NSTableRowHeightData._cacheRowSpansInRange and _adjustRowSpansStartingAtRow during SwiftUI OutlineListCoordinator.diffRows/endUpdates. Only Taskfold frames are generated application entry points. This captures the warning path, not every earlier contributor.",
+    "debuggerDetached": true,
+    "listNavigationCompletedAfterDetach": true,
+    "CUATimeoutWhileDeliberatelyStoppedAtBreakpointNotAnAppHang": true
+  },
+  "diagnosticVariations": {
+    "offViewLinkMeasurement": "Compiled and executed; two table warnings remain. Change rejected and reverted.",
+    "plainTaskRowText": "Staged-only switch excludes LinkText from task titles and note previews; two table warnings remain. Variation restored before shipping build.",
+    "standaloneFrameworkOnly": "No Taskfold application source, data, AppKit representables, scroll helper, backend or custom table delegate. Standard SwiftUI NavigationSplitView/List/Text with 44/256 synthetic rows; warning reproduced in two processes. Second process has 0 before CUA, 0 after initial accessibility read, 1 after All Tasks.",
+    "minimalDebuggerAttempt": "Attach did not finish; cancelled. Minimal app remained running, no LLDB process remained. No minimal-app stack claimed."
+  },
+  "minimalReproducer": {
+    "macOwnedSource": "Scripts/Diagnostics/TableLayoutProbe.swift",
+    "macOwnedBuilder": "Scripts/Diagnostics/build_table_layout_probe.py",
+    "sourceSHA256": "2d7cff83fac5c171beb861b114ccca973db83b438b70f1313b42e18a0af99222",
+    "builderExecuted": true,
+    "builderLaunchesApp": false,
+    "ownedSourceMatchesExecutedPrivateSource": true
+  },
+  "logs": [
+    {
+      "log": "taskfold-table-symbols-v1.log",
+      "sha256": "c41ed55d1691bb177fbab98ccac161191d718468d00dc1ec98e46dbce17f5d31",
+      "tableReentryWarnings": 1,
+      "attributeGraphCycles": 0
+    },
+    {
+      "log": "taskfold-link-measurement-cua-v1.log",
+      "sha256": "edee34c43e0ed62e2b05bbf32cba46cde0c2cf1f0a864bc58afc2afe31838d7c",
+      "tableReentryWarnings": 2,
+      "attributeGraphCycles": 0
+    },
+    {
+      "log": "taskfold-table-plain-rows-cua-v1.log",
+      "sha256": "0a16326d5aaff7aa24c84403ad43c79863a5ccfffa10a95303b7103dfe795ade",
+      "tableReentryWarnings": 2,
+      "attributeGraphCycles": 0
+    },
+    {
+      "log": "taskfold-table-layout-probe-v1.log",
+      "sha256": "1b5ed10785a4a01b806216a9dc96273e048658fcb60650f6528da262379e206d",
+      "tableReentryWarnings": 1,
+      "attributeGraphCycles": 0
+    },
+    {
+      "log": "taskfold-table-layout-probe-v2.log",
+      "sha256": "70cf64a6b3c127162f80d003995aeab689ac7567e1ad1dfbe01163f64e9cad1b",
+      "tableReentryWarnings": 1,
+      "attributeGraphCycles": 0
+    }
+  ],
+  "preservation": {
+    "wholeLocalImportedSnapshotUnchanged": true,
+    "originalPrivateBaselineFilesRestoredExact": 28,
+    "otherProtectedFilesExact": 100,
+    "phoneFixtureFilesExact": 36,
+    "pendingWidgetDataExact": true,
+    "shippingSourceFilesComparedNamespaceOnly": 62,
+    "shippingBuildRestoredSuccessfully": true,
+    "extraDiagnosticAppsClosed": true
+  },
+  "assessment": "The same warning can be produced without Taskfold code on this OS/SDK pair. Custom link-row measurement is not a sufficient cause. This supports framework-level follow-up and avoids speculative application workarounds; it does not prove every historical instance shares this cause, promise no future framework assertion, or turn warning-bearing runs into clean-runtime passes.",
+  "next": "Replay the original authenticated cloud recovery journey on the fixed shipping renderer, then continue remaining widget/provider and continuity acceptance. Preserve the platform warning as a documented release risk."
+}

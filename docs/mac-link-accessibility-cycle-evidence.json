@@ -118,5 +118,6 @@
     "debuggerDetachedAfterBothStackCaptures": true
   },
   "remaining": "Original authenticated cloud repeat-review must be checked on the repaired binary. One table re-entry warning recurred on the final local first launch, none on its relaunch; causal stack remains open. QoS warning and broader P0 gates remain open.",
-  "platformOwnership": "Mac owns the AppKit fix. iOS uses its independently owned SwiftUI attributed-link renderer; no AppKit implementation or sibling build dependency is added."
+  "platformOwnership": "Mac owns the AppKit fix. iOS uses its independently owned SwiftUI attributed-link renderer; no AppKit implementation or sibling build dependency is added.",
+  "subsequentTableDiagnosis": "See mac-table-reentry-evidence.json: actual table stack captured; same warning reproduced without Taskfold in standalone SwiftUI app. No production measurement workaround retained."
 }
