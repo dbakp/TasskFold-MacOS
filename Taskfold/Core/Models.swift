@@ -1781,3 +1781,20 @@ struct ProfileNameDraft: Equatable {
         workspace?.matches(account: account, generation: generation) == true
     }
 }
+
+
+/// New widget record links retain their workspace even if a different workspace reuses the ID.
+/// Existing unscoped task/project links remain compatible with earlier apps and shared links.
+enum WidgetRecordLink {
+    static func allows(_ url: URL, account: String, available: Bool) -> Bool {
+        guard url.scheme == "taskfold", let host = url.host,
+              ["task", "project", "label", "view"].contains(host),
+              let parts = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let items = parts.queryItems, items.contains(where: { $0.name == "account" }) else { return true }
+        guard available, !account.isEmpty, items.count == 1,
+              items[0].name == "account", items[0].value == account,
+              parts.fragment == nil, url.pathComponents.count == 2,
+              !url.lastPathComponent.isEmpty else { return false }
+        return true
+    }
+}

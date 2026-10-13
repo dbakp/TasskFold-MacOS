@@ -312,6 +312,9 @@ final class Store {
         return ReminderAutomatic.applying(to: task, previous: current ?? previous, minutes: reminderAutomaticMinutes)
     }
     var focusRecord: Record? { record(FocusSessionChange.table, id: FocusSessionChange.recordID) }
+    func allowsWidgetRecordLink(_ url: URL) -> Bool {
+        WidgetRecordLink.allows(url, account: userID, available: workspaceCacheReadable && (signedIn || localMode))
+    }
     var focusAvailable: Bool { workspaceCacheReadable && (signedIn || localMode) }
     var focusSession: FocusSession? { FocusSessionChange.session(in: focusRecord, account: userID) }
     @discardableResult func changeFocus(_ session: FocusSession?, expected: Record?, workspace: WorkspaceBinding) -> Bool {

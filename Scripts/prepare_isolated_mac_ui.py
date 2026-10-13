@@ -29,7 +29,10 @@ def main():
     parser.add_argument('--variant', choices=('p0uitests', 'p0signeduitests', 'p0widgethosts', 'p0notificationtests', 'p0calendartests', 'backupcanceltests'), default='p0uitests',
                         help='Use p0signeduitests for app acceptance, p0widgethosts for Desktop widgets, p0notificationtests for normal local notification launches, p0calendartests for actual EventKit, or backupcanceltests for backup cancellation')
     parser.add_argument("--team", help="Signing team for a macOS team-prefixed isolated widget App Group")
+    parser.add_argument("--record-route-testing", action="store_true", help="Register a private URL scheme in backupcanceltests for native record-route acceptance")
     args = parser.parse_args()
+    if args.record_route_testing and args.variant != 'backupcanceltests':
+        parser.error('--record-route-testing requires --variant backupcanceltests')
     source = Path(__file__).resolve().parents[1]
     bundle = 'com.dbakp.taskfold.mac.' + args.variant
     widgets = args.variant == 'p0widgethosts'
@@ -37,7 +40,7 @@ def main():
     if grouped and (not args.team or not re.fullmatch(r'[A-Z0-9]{10}', args.team)):
         parser.error('This variant requires --team with the actual ten-character signing team identifier')
     app_group = args.team + '.' + bundle if grouped else 'group.' + bundle
-    scheme = 'taskfold-widget-host-test'
+    scheme = 'taskfold-backup-route-test' if args.record_route_testing else 'taskfold-widget-host-test'
     service = 'com.taskfold.mac.' + args.variant
     output = args.output.resolve()
     assert not output.exists(), 'Use a fresh task-owned workspace; never overwrite a checkout or installed app'
@@ -54,11 +57,13 @@ def main():
                     'com.taskfold.ios.session': service + '.session',
                     'com.taskfold.recovery.v1': service + '.recovery.v1',
                     'group.com.dbakp.taskfold': app_group}
-    if widgets:
+    if widgets or args.record_route_testing:
         replacements.update({'taskfold://': scheme + '://', '"taskfold"': '"' + scheme + '"'})
     paths = list((output / 'Taskfold').rglob('*.swift'))
     if widgets:
         paths += list((output / 'TaskfoldWidgets').rglob('*.swift'))
+    if args.record_route_testing:
+        paths += list((output / 'TaskfoldUITests').rglob('*.swift'))
     for path in paths:
         before = path.read_text(); after = before
         for old, new in replacements.items():
@@ -83,8 +88,8 @@ def main():
     info['UTExportedTypeDeclarations'] = [{'UTTypeIdentifier': task_type,
                                           'UTTypeDescription': 'Isolated Taskfold task',
                                           'UTTypeConformsTo': ['public.data']}]
-    if widgets:
-        info['CFBundleURLTypes'] = [{'CFBundleURLName': bundle, 'CFBundleURLSchemes': [scheme]}]
+    if widgets or args.record_route_testing:
+        info['CFBundleURLTypes'] = [{'CFBundleURLName': bundle + ('.widget-record-routing' if args.record_route_testing else ''), 'CFBundleURLSchemes': [scheme]}]
     manifest.write_bytes(plistlib.dumps(info))
     entitlements = {'com.apple.security.app-sandbox': True,
                     'com.apple.security.network.client': True,
@@ -114,11 +119,12 @@ def main():
     for path in paths:
         body = path.read_text()
         assert '"com.taskfold.ios.session"' not in body and '"com.taskfold.recovery.v1"' not in body and '"group.com.dbakp.taskfold"' not in body
-        if widgets:
+        if widgets or args.record_route_testing:
             assert 'taskfold://' not in body and '"taskfold"' not in body
     receipt = {'sourceRepository': str(source), 'workspace': str(output), 'bundleID': bundle,
                'sandbox': True, 'productionURLAndFileRegistrationsRemoved': True, 'embeddedWidgetExtension': widgets,
-               'isolatedURLScheme': scheme if widgets else None,
+               'isolatedURLScheme': scheme if widgets or args.record_route_testing else None,
+               'recordRouteTesting': args.record_route_testing,
                'isolatedAppGroup': app_group if grouped else None, 'signingTeam': args.team if grouped else None,
                'namespaceOnlySourceChanges': changes, 'replacements': replacements,
                'launchArguments': [] if args.variant in ('p0notificationtests', 'p0calendartests') else ['--uitesting'],

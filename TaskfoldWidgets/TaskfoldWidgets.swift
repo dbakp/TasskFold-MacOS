@@ -51,10 +51,18 @@ struct WidgetTask: Codable, Identifiable {
         return local.date(bySettingHour: clock[0], minute: clock[1], second: 0, of: day, matchingPolicy: .nextTimePreservingSmallerComponents, repeatedTimePolicy: .first, direction: .forward)
     }
     var url: URL { WidgetLinks.task(id) }
+    func url(account: String) -> URL { WidgetLinks.task(id, account: account) }
 }
 
 enum WidgetLinks {
     static func task(_ id: String) -> URL { scoped("task", id: id) }
+    static func task(_ id: String, account: String) -> URL { scoped("task", id: id, account: account) }
+    static func scoped(_ host: String, id: String, account: String) -> URL {
+        guard !account.isEmpty else { return URL(string: "taskfold://all")! }
+        var parts = URLComponents(url: scoped(host, id: id), resolvingAgainstBaseURL: false)!
+        parts.queryItems = [URLQueryItem(name: "account", value: account)]
+        return parts.url ?? URL(string: "taskfold://all")!
+    }
     static func scoped(_ host: String, id: String) -> URL {
         var allowed = CharacterSet.urlPathAllowed; allowed.remove(charactersIn: "/?#%")
         let component = id.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
@@ -147,7 +155,11 @@ struct WidgetList: Codable, Identifiable, Sendable {
         guard !account.isEmpty, let data = Data(base64Encoded: id), let key = try? JSONDecoder().decode([String].self, from: data) else { return false }
         return key == [account, kind, recordID] && ["project", "label", "filter"].contains(kind)
     }
-    var url: URL { WidgetLinks.scoped(kind == "filter" ? "view" : kind, id: recordID) }
+    var url: URL {
+        guard let data = Data(base64Encoded: id), let key = try? JSONDecoder().decode([String].self, from: data),
+              key.count == 3, belongs(to: key[0]) else { return URL(string: "taskfold://all")! }
+        return WidgetLinks.scoped(kind == "filter" ? "view" : kind, id: recordID, account: key[0])
+    }
     var typeName: String { kind == "project" ? "Project" : kind == "label" ? "Label" : "Saved filter" }
 }
 
@@ -564,7 +576,7 @@ struct TodayWidgetView: View {
                 .widgetURL(URL(string: "taskfold://today"))
         case .accessoryRectangular:
             VStack(alignment: .leading, spacing: 2) { Text(hasSnapshot ? tasks.first?.title ?? "All clear" : "Open Taskfold").font(.headline).lineLimit(2).fixedSize(horizontal: false, vertical: true).privacySensitive(tasks.first != nil); Text(hasSnapshot ? "\(tasks.count) due · incl. overdue" : "Refresh your tasks").font(.caption2).lineLimit(1) }
-                .widgetURL(tasks.first?.url ?? URL(string: "taskfold://today"))
+                .widgetURL(tasks.first?.url(account: entry.snapshot.account) ?? URL(string: "taskfold://today"))
         case .accessoryInline:
             Text(hasSnapshot ? "Taskfold · \(tasks.count) due" : "Taskfold · Open app").widgetURL(URL(string: "taskfold://today"))
         default: content
@@ -590,7 +602,7 @@ struct TodayWidgetView: View {
                 Text("No scheduled tasks outstanding.").font(.caption).foregroundStyle(.secondary)
             } else {
                 ForEach(tasks.prefix(limit)) { task in
-                    Link(destination: task.url) {
+                    Link(destination: task.url(account: entry.snapshot.account)) {
                         HStack(spacing: 8) {
                             RoundedRectangle(cornerRadius: 2).fill(widgetColor(task.color)).frame(width: 3, height: 22)
                             VStack(alignment: .leading, spacing: 2) {
@@ -650,7 +662,7 @@ struct FocusWidgetView: View {
             if task == nil { WidgetFooter(entry: entry) }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: plum) }
-        .widgetURL(task?.url ?? URL(string: "taskfold://add"))
+        .widgetURL(task?.url(account: entry.snapshot.account) ?? URL(string: "taskfold://add"))
     }
 }
 
@@ -888,7 +900,7 @@ struct DeadlineWidgetView: View {
             } else {
                 Text(family == .systemSmall ? (missed > 0 ? "\(missed) missed · \(entry.window.days) days" : "Next \(entry.window.days) days") : (missed > 0 ? "\(missed) missed · next \(entry.window.days) days" : "Hard cutoffs · next \(entry.window.days) days")).font(.caption2).foregroundStyle(missed > 0 ? tint : .secondary).lineLimit(1)
                 ForEach(tasks.prefix(family == .systemSmall ? 1 : 3)) { task in
-                    Link(destination: task.url) {
+                    Link(destination: task.url(account: entry.snapshot.account)) {
                         if family == .systemSmall {
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(entry.hideTitles ? "Task names hidden" : task.title).font(.headline).lineLimit(2).fixedSize(horizontal: false, vertical: true).privacySensitive()
@@ -912,7 +924,7 @@ struct DeadlineWidgetView: View {
             HStack { WidgetFooter(entry: entry.footer); Spacer(minLength: 0); if family != .systemSmall && tasks.count > 3 { Text("+\(tasks.count - 3)").font(.caption2).foregroundStyle(.secondary) } }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
-        .widgetURL(tasks.first?.url ?? entry.snapshot.list(entry.listID)?.url ?? URL(string: "taskfold://all"))
+        .widgetURL(tasks.first?.url(account: entry.snapshot.account) ?? entry.snapshot.list(entry.listID)?.url ?? URL(string: "taskfold://all"))
     }
     private func deadlineBadge(_ task: WidgetTask) -> some View {
         let day = task.deadlineDay ?? ""
@@ -954,7 +966,7 @@ struct WindowWidgetView: View {
                 PlanningWidgetEmpty(snapshot: entry.snapshot, title: "Nothing fits yet", message: unknown > 0 ? "\(unknown) tasks need estimates. Add one in Taskfold." : "No known estimate fits this budget and scope.", symbol: "sparkle", compact: family == .systemSmall)
             } else {
                 ForEach(tasks.prefix(family == .systemSmall ? 1 : 3)) { task in
-                    Link(destination: task.url) {
+                    Link(destination: task.url(account: entry.snapshot.account)) {
                         HStack(spacing: 8) {
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(entry.hideTitles ? "Task names hidden" : task.title).font(family == .systemSmall ? .subheadline.weight(.semibold) : .caption.weight(.medium)).lineLimit(family == .systemSmall ? 2 : 1).fixedSize(horizontal: false, vertical: family == .systemSmall).privacySensitive()
@@ -974,7 +986,7 @@ struct WindowWidgetView: View {
             }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
-        .widgetURL(tasks.first?.url ?? (entry.snapshot.updated == 0 || !entry.snapshot.hasPlanningFields ? URL(string: "taskfold://all") : entry.snapshot.list(entry.listID)?.url ?? entry.scope.url))
+        .widgetURL(tasks.first?.url(account: entry.snapshot.account) ?? (entry.snapshot.updated == 0 || !entry.snapshot.hasPlanningFields ? URL(string: "taskfold://all") : entry.snapshot.list(entry.listID)?.url ?? entry.scope.url))
     }
     private var budgetBadge: some View { Text("\(entry.budget.minutes) min").font(.subheadline.weight(.semibold)).monospacedDigit().padding(.horizontal, 9).padding(.vertical, 4).foregroundStyle(tint).background(tint.opacity(0.12), in: .capsule) }
 }
@@ -1046,7 +1058,7 @@ struct ListWidgetView: View {
             }
         }
         .containerBackground(for: .widget) { WidgetSurface(tint: tint) }
-        .widgetURL(status == .ready ? (redactionReasons.contains(.privacy) ? target?.url : family == .systemSmall ? tasks.first?.url ?? target?.url : target?.url) : URL(string: "taskfold://all"))
+        .widgetURL(status == .ready ? (redactionReasons.contains(.privacy) ? target?.url : family == .systemSmall ? tasks.first?.url(account: entry.snapshot.account) ?? target?.url : target?.url) : URL(string: "taskfold://all"))
     }
     private var listContent: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -1062,7 +1074,7 @@ struct ListWidgetView: View {
             } else {
                 if let feedback {
                     HStack(spacing: 2) {
-                    Link(destination: WidgetLinks.task(feedback.taskID)) {
+                    Link(destination: WidgetLinks.task(feedback.taskID, account: feedback.account)) {
                         HStack(spacing: 8) {
                             Image(systemName: "checkmark.circle.fill").font(.system(size: 21)).foregroundStyle(tint)
                             VStack(alignment: .leading, spacing: 2) {
@@ -1089,7 +1101,7 @@ struct ListWidgetView: View {
                             }.buttonStyle(.plain).disabled(pending)
                                 .accessibilityLabel(pending ? "Waiting to complete" : entry.hideTitles ? "Complete private task" : "Complete \(task.title)")
                         }
-                        Link(destination: task.url) {
+                        Link(destination: task.url(account: entry.snapshot.account)) {
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(entry.hideTitles ? "Private task" : task.title).font(.caption.weight(.semibold)).lineLimit(family == .systemSmall ? 3 : 2).privacySensitive()
                                 if WidgetSnapshot.validDay(task.due) {

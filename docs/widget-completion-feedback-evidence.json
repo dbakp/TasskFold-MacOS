@@ -81,6 +81,6 @@
     "rootCause": "Completion expiry was appended to WindowProvider, which never displays the acknowledgement. ListProvider, which displays it, scheduled only ordinary list transitions.",
     "fixed": "Independently owned My list providers now use completionTimelineDates: retain list day/clock transitions and add the visible account/list-scoped acknowledgement expiry. Remove the unused acknowledgement expiry from A small window.",
     "evidence": "widget-completion-expiry-evidence.json",
-    "installedAutomaticExpiry": "Still pending after correction"
+    "installedAutomaticExpiry": "Accepted on installed Mac My list by human observation with saved-state proof, and on phone by the separate native journeys; see widget-completion-expiry-evidence.json."
   }
 }

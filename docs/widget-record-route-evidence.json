@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-13",
+  "issue": "Task/project/label/saved-filter widget URLs omitted workspace ownership; an earlier workspace link could resolve a same-ID record after switching workspaces.",
+  "trigger": "Inspecting the installed My list header after completing its final task. Normal launch selected local rather than the prior ui-testing fixture. The original completed fixture stayed byte-exact; the colliding-ID risk was found in source and reproduced as six missing-owner assertions per repo, not observed as disclosure of real data.",
+  "change": [
+    "New record-specific task widget URLs carry the containing snapshot account, including completion feedback.",
+    "Project/label/filter URLs derive ownership from their validated existing list identity.",
+    "Both app URL handlers reject wrong-owner, unavailable and malformed account-scoped record routes before navigating, with a useful message.",
+    "Original dedicated note/Focus/Pulse/Inbox/day and existing shared-link handlers retain their routing statements."
+  ],
+  "compatibility": [
+    "No backup, database or widget-payload schema change.",
+    "Existing unscoped shared/task links retain compatibility; ownership cannot be inferred retroactively from those legacy URLs. Older installed widget frames need timeline refresh to emit the new scoped links.",
+    "Legacy payloads without an account remain readable; record taps use generic All Tasks until a current snapshot is available."
+  ],
+  "before": {
+    "modelTest": "WidgetListTests.testConfiguredListLinksRetainTheirWorkspaceWhenRecordIDsAreReused",
+    "testsPerRepo": 1,
+    "missingOwnerAssertionFailuresPerRepo": 6,
+    "logs": [
+      "taskfold-widget-route-before-mac.log",
+      "taskfold-widget-route-before-ios.log"
+    ]
+  },
+  "affectedModelTests": {
+    "perRepo": 44,
+    "failures": 0,
+    "skips": 0,
+    "newMethods": 4,
+    "coverage": [
+      "Project/label/filter owners when IDs are reused",
+      "Task links, reserved path/query characters and empty-owner fallback",
+      "All four record hosts with wrong owner, unavailable/signed-out owner, duplicate/blank owner, extra query, fragment and malformed path",
+      "Existing unscoped and dedicated-route compatibility",
+      "Existing list/deadline/capacity/productivity model behavior"
+    ]
+  },
+  "nativeAcceptance": {
+    "macOS": {
+      "resultBundle": "mac-widget-record-route-v5.xcresult",
+      "passingCases": 1,
+      "failures": 0,
+      "skips": 0,
+      "structuredRuntimeWarnings": 0,
+      "routeDriver": "Native NSWorkspace open to the isolated acceptance app using a private registered URL scheme. All 62 Swift app sources match owned sources after namespace substitutions; the owned staging recipe reproduces the tested app, native driver and registration.",
+      "scope": "Four wrong-owner routes reference IDs that exist in the current local fixture; each is rejected with the actual alert. Matching project opens Widget Studio, matching task opens its inspector. Full snapshot is unchanged after routes and normal Quit/relaunch.",
+      "capture": "TasskFold-MacOS/docs/usability-previews/widget-record-routing/mac-matching-task.png"
+    },
+    "iOS": {
+      "resultBundle": "ios-widget-record-route-v3.xcresult",
+      "passingCases": 1,
+      "failures": 0,
+      "skips": 0,
+      "structuredRuntimeWarnings": 0,
+      "routeDriver": "XCUIApplication.open(URL), retaining --uitesting for the isolated workspace and removing the seed argument after initial setup. Real team signatures verified.",
+      "scope": "Four wrong-owner routes reference IDs already present; each is rejected with the actual alert. Matching project opens Widget Studio, matching task opens Task details. Full snapshot remains unchanged across URL launches and final relaunch.",
+      "capture": "TaskFold-iOS/docs/usability-previews/widget-record-routing/ios-matching-task.png"
+    }
+  },
+  "builds": {
+    "macUniversalUnsignedRelease": "mac-widget-record-release-build-v3.log: BUILD SUCCEEDED",
+    "macExistingWarnings": "Existing KeyRouter nil-coalescing, NSEvent Sendable and unused withAnimation diagnostics retained; not a warning-free build claim.",
+    "iOSArm64SimulatorAppWidgetsAndRunner": "ios-widget-record-route-build-v5.log: TEST BUILD SUCCEEDED",
+    "productionSigningOrDistributionChanged": false
+  },
+  "retainedAttempts": [
+    "Mac/iOS initial inline guards exceeded view-expression type-checking; named handler extraction exposed a private Store property access. The check now belongs inside Store. No native pass is claimed for either build failure.",
+    "Mac v3: isolated copy omitted URL registration, so the app did not receive the route. Added only a private scheme in the copied acceptance app.",
+    "Mac v4: rejection/message passed, but test clicked ambiguous alert/Touch Bar OK. Final v5 queries the sheet button.",
+    "iOS v1: fixture ready on Today, while test assumed Inbox. Final driver explicitly selects Inbox.",
+    "iOS v2: real rejection passed; preservation failed because XCTest URL launch still carried the fixture seed argument. Final driver removes only the seed flag and keeps full equality assertions."
+  ],
+  "handlerExtractionAudit": {
+    "TasskFold-MacOS": {
+      "originalRoutingStatementsPreserved": true,
+      "originalHandlerBodySHA256": "164ebd6dd0a7dc8a9a83dddf4e74aceec454ca4a87842cbd46094d3ce51ce86b"
+    },
+    "TaskFold-iOS": {
+      "originalRoutingStatementsPreserved": true,
+      "originalHandlerBodySHA256": "7a16d7a431f1b1e2a3fc23a299a99a756df9b39cabc6076c4fd82d401500fd05"
+    }
+  },
+  "isolatedAppSourceAudit": {
+    "TasskFold-MacOS": {
+      "appSwiftFilesNamespaceOnly": 62
+    },
+    "TaskFold-iOS": {
+      "appSwiftFilesNamespaceOnly": 46
+    }
+  },
+  "cleanup": {
+    "protectedPrimaryFilesExact": 100,
+    "isolatedMacBaselineFilesRestoredExact": 28,
+    "retainedIOSFixtureFilesExact": 36,
+    "humanCompletedWidgetFixtureByteExact": true,
+    "remainingTaskfoldMainSessions": 0,
+    "isolatedPhoneAppAndRunnerUninstalled": true,
+    "simulatorState": "Shutdown",
+    "prunedInactiveUnsignedCompileProductsBytes": 716132352,
+    "buildLogsRetained": true,
+    "installedWidgetBuildPruned": false
+  },
+  "limits": [
+    "Actual installed automatic expiry remains accepted by the prior separate observation.",
+    "This new fix has generated-link model and native app URL-handler acceptance; it does not claim a newly installed desktop/widget-family run or a real cloud account-switch execution.",
+    "System-selected privacy, remaining spoken accessibility, actual iOS external-provider boundaries and user-deferred distribution/provider/rollout remain open."
+  ],
+  "ownedSourceHashes": {
+    "Taskfold/Core/Models.swift": "c7d84a3f670d0487a9207c582ead5260f1122b5ba65d8de3cc27f527087e9956",
+    "Taskfold/Core/Store.swift": "823d236a8bdac434a095bf368ff171a64d273e18152be6cc211b9dc28c8c75c0",
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "618853a893aa2e1b30830b9d17dec032b11e2ded161fc4ba2b6e1572ed68bb51",
+    "TaskfoldTests/WidgetListTests.swift": "dd447a9ef3499e630a7c9bd8d3e3a41afc3d99542cc6a27f1b05f896b0c522b6",
+    "TaskfoldTests/WidgetRecordLinkTests.swift": "3339a4d4b9ea2aa441f1f3c301594370b3c2a238242094a14df38ca612729809",
+    "Taskfold/Views/RootView.swift": "6584bb945d5b458583837840b9865ff75ebf72f2fe610805a8e9b6d192490391",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "532fc7ce74d6749eb4248f3f0a39b5ac005330a315a7a998820975d686ddc071",
+    "Scripts/prepare_isolated_mac_ui.py": "46adb240bb01df03688e70eefde2ea001bdbcd637e19519f89483830f2106106",
+    "Scripts/test_isolated_mac_metadata.py": "7c076ca10a37a065701b72458fde1a0a3f0cc8aa0bb2415544be68f2f4b7009a"
+  },
+  "inspectedCaptureHashes": {
+    "macOS": "76bc1badf93407da1f40479325bd0ebf6bf2c9d296765628813548be3b44a165",
+    "iOS": "d2226128f7350c939bb62a4c7cd4b188a704fad641dd22db36dbdcc122903e75"
+  },
+  "reproducibleMacStage": {
+    "freshOwnedRecipeMatchesTestedAppSwiftFiles": 62,
+    "nativeDriverMatches": true,
+    "privateURLRegistrationMatches": true,
+    "stageMetadataTestsPassed": 3
+  }
+}

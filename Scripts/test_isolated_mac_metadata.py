@@ -38,5 +38,29 @@ class IsolatedMacMetadataTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), contents, str(path))
 
 
+    def test_record_route_variant_registers_only_a_private_scheme_in_app_and_driver(self):
+        with tempfile.TemporaryDirectory(prefix='taskfold-record-stage-', dir='/private/tmp') as folder:
+            output = Path(folder) / 'record-routes'
+            result = subprocess.run(['python3', str(ROOT / 'Scripts/prepare_isolated_mac_ui.py'), '--output', str(output), '--variant', 'backupcanceltests', '--team', '3UZ4C73FM2', '--record-route-testing'], check=True, capture_output=True, text=True)
+            receipt = json.loads(result.stdout)
+            info = plistlib.loads((output / 'Taskfold/Info.plist').read_bytes())
+            self.assertEqual(info['CFBundleURLTypes'][0]['CFBundleURLSchemes'], ['taskfold-backup-route-test'])
+            self.assertEqual(receipt['isolatedURLScheme'], 'taskfold-backup-route-test')
+            self.assertFalse(receipt['embeddedWidgetExtension'])
+            for relative in ['Taskfold/Core/Models.swift', 'Taskfold/Views/RootView.swift', 'TaskfoldUITests/TaskfoldMacUITests.swift']:
+                source = (output / relative).read_text()
+                self.assertIn('"taskfold-backup-route-test"', source)
+                self.assertNotIn('"taskfold"', source)
+            self.assertNotIn('CFBundleDocumentTypes', info)
+
+    def test_record_route_registration_cannot_expand_to_another_variant(self):
+        with tempfile.TemporaryDirectory(prefix='taskfold-record-reject-', dir='/private/tmp') as folder:
+            output = Path(folder) / 'rejected'
+            result = subprocess.run(['python3', str(ROOT / 'Scripts/prepare_isolated_mac_ui.py'), '--output', str(output), '--variant', 'p0signeduitests', '--record-route-testing'], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('requires --variant backupcanceltests', result.stderr)
+            self.assertFalse(output.exists())
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -3078,3 +3078,38 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testWidgetRecordWorkspaceGuardAndMatchingRoutesPreserveWork() throws {
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else { throw XCTSkip("Requires isolated backup acceptance workspace") }
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-list-fixture", "-onboardingSeen", "YES"]
+        liveConflictLaunch(app); defer { app.terminate() }
+        let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.backupcanceltests/Data/Library/Application Support/Taskfold/ui-testing.json")
+        func saved() throws -> NSDictionary { try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as! NSDictionary }
+        let before = try saved()
+        let bundle = try XCTUnwrap(NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests" }?.bundleURL)
+        func route(_ host: String, _ id: String, _ owner: String) {
+            var parts = URLComponents(); parts.scheme = "taskfold"; parts.host = host; parts.path = "/" + id; parts.queryItems = [URLQueryItem(name: "account", value: owner)]
+            NSWorkspace.shared.open([parts.url!], withApplicationAt: bundle, configuration: NSWorkspace.OpenConfiguration()) { _, _ in }
+        }
+        let project = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeee01", task = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeee04"
+        for (host, id) in [("project", project), ("label", "eeeeeeee-eeee-4eee-8eee-eeeeeeeeee02"), ("view", "eeeeeeee-eeee-4eee-8eee-eeeeeeeeee03"), ("task", task)] {
+            route(host, id, "other-workspace")
+            XCTAssertTrue(app.sheets.buttons["OK"].firstMatch.waitForExistence(timeout: 10))
+            XCTAssertTrue(app.staticTexts["This widget belongs to another workspace or is unavailable. Open a task or list in your current workspace."].exists)
+            app.sheets.buttons["OK"].firstMatch.click(); XCTAssertEqual(try saved(), before)
+            XCTAssertFalse(app.textFields["taskTitle"].exists)
+        }
+        route("project", project, "ui-testing")
+        let projectShown = XCTNSPredicateExpectation(predicate: NSPredicate(format: "title CONTAINS %@", "Widget Studio"), object: app.windows.firstMatch)
+        XCTAssertEqual(XCTWaiter.wait(for: [projectShown], timeout: 10), .completed)
+        route("task", task, "ui-testing")
+        XCTAssertTrue(app.textFields["taskTitle"].waitForExistence(timeout: 10)); XCTAssertEqual(app.textFields["taskTitle"].value as? String, "Sketch widget concept")
+        XCTAssertEqual(try saved(), before)
+        retainWindow(app, name: "Matching widget task opens only its workspace")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+        app.launchArguments = ["--uitesting", "-onboardingSeen", "YES"]; liveConflictLaunch(app)
+        XCTAssertEqual(try saved(), before)
+    }
+}

@@ -288,3 +288,18 @@ extension WidgetListTests {
         XCTAssertEqual(future["query_ast"], query)
     }
 }
+
+
+extension WidgetListTests {
+    func testConfiguredListLinksRetainTheirWorkspaceWhenRecordIDsAreReused() throws {
+        for owner in ["owner-a", "owner-b"] {
+            let data = try snapshot([task("shared-task")], account: owner, views: [view(.predicate("all", ""))])
+            XCTAssertEqual(Set(data.availableLists.map(\.kind)), ["project", "label", "filter"])
+            for list in data.availableLists {
+                let parts = try XCTUnwrap(URLComponents(url: list.url, resolvingAgainstBaseURL: false))
+                XCTAssertEqual(parts.queryItems, [URLQueryItem(name: "account", value: owner)])
+                XCTAssertEqual(parts.url?.lastPathComponent, list.recordID)
+            }
+        }
+    }
+}

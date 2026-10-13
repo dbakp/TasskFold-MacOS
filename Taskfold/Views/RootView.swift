@@ -108,41 +108,7 @@ struct RootView: View {
                 pendingInvitations = false
             }
         }
-        .onOpenURL { url in
-            if url.scheme == "taskfold", url.host == "pulse" {
-                guard let link = ProjectPulseLink.parse(url), store.focusAvailable, link.account == store.userID else { store.error = "This project widget belongs to another workspace or is unavailable. Open Project pulse in your current workspace."; return }
-                pulseRequest = ProjectPulseRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), projectID: link.project)
-                return
-            }
-            if url.scheme == "taskfold", url.host == "focus" {
-                guard let link = FocusSessionLink.parse(url), store.focusAvailable, link.account == store.userID else { store.error = "This Focus widget belongs to another workspace or is unavailable. Open Focus session in your current workspace."; return }
-                focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
-                return
-            }
-            if url.scheme == "taskfold", url.host == "note" || url.host == "notes" {
-                guard let note = PinnedNoteLink.parse(url), store.signedIn, note.account == store.userID else { store.error = "This note link belongs to another workspace or is unavailable. Open Pinned notes in your current workspace."; return }
-                pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), taskID: note.taskID)
-                return
-            }
-            if let review = InboxReviewLink.parse(url) {
-                guard store.signedIn, review.account == store.userID else { store.error = "This widget belongs to another workspace. Open Inbox to review your current tasks."; return }
-                workspace.section = .inbox; startInboxReview(review.batch)
-                return
-            }
-            if let day = PlannerWidgetRoute.day(url) { workspace.calendarDay = day; workspace.calendarMode = .day; workspace.section = .calendar }
-            if url.scheme == "taskfold" && url.host == "view" && !url.lastPathComponent.isEmpty { workspace.section = .saved(url.lastPathComponent) }
-            if url.scheme == "taskfold", url.host == "project", store.record("projects", id: url.lastPathComponent) != nil { workspace.section = .project(url.lastPathComponent) }
-            if url.scheme == "taskfold", url.host == "label", store.record("labels", id: url.lastPathComponent) != nil { workspace.section = .label(url.lastPathComponent) }
-            if url.scheme == "taskfold" && url.host == "today" { workspace.section = .today }
-            if url.scheme == "taskfold" && url.host == "inbox" { workspace.section = .inbox }
-            if url.scheme == "taskfold" && url.host == "all" { workspace.section = .all }
-            if url.scheme == "taskfold" && url.host == "upcoming" { workspace.section = .upcoming }
-            if url.scheme == "taskfold", url.host == "add", store.signedIn { workspace.section = .inbox; workspace.quickAddFocusRequest += 1 }
-            if url.scheme == "taskfold", url.host == "invitations" {
-                pendingInvitations = true; workspace.settingsTab = .invitations; openSettings()
-            }
-            if url.scheme == "taskfold" && url.host == "task", store.record("tasks", id: url.lastPathComponent) != nil { workspace.openExternalTask(url.lastPathComponent) }
-        }
+        .onOpenURL(perform: handleExternalURL)
         .task(id: "members-\(store.userID)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { await workspace.loadProjectMembers() }
         #if DEBUG
         .safeAreaInset(edge: .top) { if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") { WidgetActionTestPanel() } }
@@ -155,6 +121,46 @@ struct RootView: View {
         .onChange(of: phase) { _, value in if value == .active { Task { await store.reschedule(); await store.sync() } } }
         .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: DispatchQueue.main)) { _ in Task { await store.reschedule() } }
+    }
+
+    private func handleExternalURL(_ url: URL) {
+        guard store.allowsWidgetRecordLink(url) else {
+            store.error = "This widget belongs to another workspace or is unavailable. Open a task or list in your current workspace."
+            return
+        }
+        if url.scheme == "taskfold", url.host == "pulse" {
+            guard let link = ProjectPulseLink.parse(url), store.focusAvailable, link.account == store.userID else { store.error = "This project widget belongs to another workspace or is unavailable. Open Project pulse in your current workspace."; return }
+            pulseRequest = ProjectPulseRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), projectID: link.project)
+            return
+        }
+        if url.scheme == "taskfold", url.host == "focus" {
+            guard let link = FocusSessionLink.parse(url), store.focusAvailable, link.account == store.userID else { store.error = "This Focus widget belongs to another workspace or is unavailable. Open Focus session in your current workspace."; return }
+            focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+            return
+        }
+        if url.scheme == "taskfold", url.host == "note" || url.host == "notes" {
+            guard let note = PinnedNoteLink.parse(url), store.signedIn, note.account == store.userID else { store.error = "This note link belongs to another workspace or is unavailable. Open Pinned notes in your current workspace."; return }
+            pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), taskID: note.taskID)
+            return
+        }
+        if let review = InboxReviewLink.parse(url) {
+            guard store.signedIn, review.account == store.userID else { store.error = "This widget belongs to another workspace. Open Inbox to review your current tasks."; return }
+            workspace.section = .inbox; startInboxReview(review.batch)
+            return
+        }
+        if let day = PlannerWidgetRoute.day(url) { workspace.calendarDay = day; workspace.calendarMode = .day; workspace.section = .calendar }
+        if url.scheme == "taskfold" && url.host == "view" && !url.lastPathComponent.isEmpty { workspace.section = .saved(url.lastPathComponent) }
+        if url.scheme == "taskfold", url.host == "project", store.record("projects", id: url.lastPathComponent) != nil { workspace.section = .project(url.lastPathComponent) }
+        if url.scheme == "taskfold", url.host == "label", store.record("labels", id: url.lastPathComponent) != nil { workspace.section = .label(url.lastPathComponent) }
+        if url.scheme == "taskfold" && url.host == "today" { workspace.section = .today }
+        if url.scheme == "taskfold" && url.host == "inbox" { workspace.section = .inbox }
+        if url.scheme == "taskfold" && url.host == "all" { workspace.section = .all }
+        if url.scheme == "taskfold" && url.host == "upcoming" { workspace.section = .upcoming }
+        if url.scheme == "taskfold", url.host == "add", store.signedIn { workspace.section = .inbox; workspace.quickAddFocusRequest += 1 }
+        if url.scheme == "taskfold", url.host == "invitations" {
+            pendingInvitations = true; workspace.settingsTab = .invitations; openSettings()
+        }
+        if url.scheme == "taskfold" && url.host == "task", store.record("tasks", id: url.lastPathComponent) != nil { workspace.openExternalTask(url.lastPathComponent) }
     }
 
     private func startInboxReview(_ batch: InboxReviewBatch) {

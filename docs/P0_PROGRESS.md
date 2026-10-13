@@ -17,6 +17,8 @@
 
 The latest preservation repair covers supported null/omitted empty lists and nested child collections. Both apps reproduced the loss before repair. Current evidence contains 120 affected core tests per repo and four final native comment-review/relaunch cases without failures/skips/runtime warnings. Nested/attachment variants have core/guarded-transport evidence; a new universal native matrix is not claimed. See `legacy-empty-collection-evidence.json`.
 
+New task/list widget record links carry workspace ownership. Both native app handlers now reject wrong-owner links even when the record ID exists locally; matching project/task routes and whole-cache relaunch pass on Mac and iPhone. Legacy unscoped shared links retain compatibility. This is native handler acceptance, with installed family/account-switch scope still bounded below. See `widget-record-route-evidence.json`.
+
 ## Remaining acceptance and prerequisites
 
 | Gate | Required result | Current boundary / next action |
