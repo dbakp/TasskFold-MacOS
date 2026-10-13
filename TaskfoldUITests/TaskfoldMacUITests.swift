@@ -2988,3 +2988,71 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
     }
 }
+
+extension TaskfoldMacUITests {
+
+    @MainActor private func collectionFixture() throws -> (LiveConflictFixture, [String: Any]) {
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else { throw XCTSkip("Dedicated collection test app required") }
+        let v = try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: "/private/tmp/taskfold-collection-native-v1.json"))) as! [String: Any]
+        let a = v["account"] as! [String: String]
+        guard a["userID"] == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152", a["email"] == "taskfold-continuity-" + a["userID"]! + "@example.invalid", UUID(uuidString: v["taskID"] as! String) != nil, (v["originalTitle"] as! String).hasPrefix("Collection continuity proof ") else { throw XCTSkip("Disposable collection fixture required") }
+        return (LiveConflictFixture(account: a, taskID: v["taskID"] as! String, originalTitle: v["originalTitle"] as! String, offlineTitle: v["offlineTitle"] as! String, remoteTitle: v["remoteTitle"] as! String, remoteNotes: v["remoteNotes"] as! String), v)
+    }
+    @MainActor private func collectionTexts(_ cache: NSDictionary, _ f: LiveConflictFixture) -> [String] {
+        (liveConflictTask(cache, f)?["comments"] as? [NSDictionary] ?? []).map { $0["text"] as? String ?? "" }
+    }
+    @MainActor private func expectedCollectionTexts(_ v: [String: Any]) -> [String] {
+        [v["remoteComment"] as! String] + ((v["keepLocal"] as! Bool) ? [v["firstComment"] as! String] : []) + [v["laterComment"] as! String]
+    }
+
+    @MainActor private func openCollectionTask(_ app: XCUIApplication, _ f: LiveConflictFixture) {
+        app.staticTexts["Inbox"].firstMatch.click()
+        let row = liveConflictRow(app, f.taskID); XCTAssertTrue(row.waitForExistence(timeout: 30)); row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        if !app.descendants(matching: .any)["taskTitle"].firstMatch.waitForExistence(timeout: 3) { app.buttons["Inspector"].click() }
+        XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].firstMatch.waitForExistence(timeout: 5))
+    }
+    @MainActor private func revealCollectionComments(_ app: XCUIApplication) -> XCUIElement {
+        let editor = app.textViews["commentEditor"]
+        let form = app.scrollViews.containing(.textView, identifier: "commentEditor").firstMatch
+        for _ in 0..<15 { if editor.exists && editor.isHittable { break }; form.scroll(byDeltaX: 0, deltaY: -400) }
+        XCTAssertTrue(editor.exists); XCTAssertTrue(editor.isHittable); return editor
+    }
+    @MainActor func testLiveMacAddsIndependentCommentWhilePhoneHasTwoOfflineEdits() throws {
+        continueAfterFailure = false
+        let (f, v) = try collectionFixture(), app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = ["--live-auth-ui-test"] + liveConflictArguments(f); liveConflictLaunch(app)
+        let email = app.textFields["authEmail"], password = app.secureTextFields["authPassword"]
+        XCTAssertTrue(email.waitForExistence(timeout: 30)); email.click(); email.typeText(f.account["email"]!); password.click(); password.typeText(f.account["password"]!); app.buttons["nativeSignIn"].click()
+        openCollectionTask(app, f)
+        let title = app.descendants(matching: .any)["taskTitle"].firstMatch
+        title.click(); title.typeKey("a", modifierFlags: .command); title.typeText(f.remoteTitle); app.typeKey(.tab, modifierFlags: [])
+        _ = try waitLiveConflict(f) { self.liveConflictTask($0, f)?["title"] as? String == f.remoteTitle && ($0["pending"] as? [Any])?.isEmpty == true }
+        let notes = app.descendants(matching: .any)["taskDescription"].firstMatch
+        notes.click(); notes.typeKey("a", modifierFlags: .command); notes.typeText(f.remoteNotes); title.click()
+        _ = try waitLiveConflict(f) { self.liveConflictTask($0, f)?["description"] as? String == f.remoteNotes && ($0["pending"] as? [Any])?.isEmpty == true }
+        let editor = revealCollectionComments(app); editor.click(); editor.typeText(v["remoteComment"] as! String); app.buttons["Add Comment"].click()
+        let settled = try waitLiveConflict(f) { self.collectionTexts($0, f) == [v["remoteComment"] as! String] && ($0["pending"] as? [Any])?.isEmpty == true }
+        retainWindow(app, name: "Mac independent comment before phone review")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app)
+        let restored = try waitLiveConflict(f) { self.collectionTexts($0, f) == [v["remoteComment"] as! String] && ($0["pending"] as? [Any])?.isEmpty == true }
+        XCTAssertEqual(liveConflictTask(restored, f), liveConflictTask(settled, f))
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+    }
+    @MainActor func testLiveMacReceivesReviewedCollectionAndRetainsWholeTaskAfterRelaunch() throws {
+        continueAfterFailure = false
+        let (f, v) = try collectionFixture(), app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app)
+        let expected = expectedCollectionTexts(v), title = (v["keepLocal"] as! Bool) ? f.offlineTitle : f.remoteTitle
+        let settled = try waitLiveConflict(f) { self.collectionTexts($0, f) == expected && self.liveConflictTask($0, f)?["title"] as? String == title && self.liveConflictTask($0, f)?["description"] as? String == f.remoteNotes && ($0["pending"] as? [Any])?.isEmpty == true }
+        openCollectionTask(app, f)
+        XCTAssertEqual(app.descendants(matching: .any)["taskTitle"].firstMatch.value as? String, title)
+        _ = revealCollectionComments(app)
+        for text in expected { XCTAssertTrue(app.staticTexts[text].exists) }
+        retainWindow(app, name: "Mac receives preserved reviewed comments")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8)); liveConflictLaunch(app)
+        let restored = try waitLiveConflict(f) { self.collectionTexts($0, f) == expected && ($0["pending"] as? [Any])?.isEmpty == true }
+        XCTAssertEqual(liveConflictTask(restored, f), liveConflictTask(settled, f))
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+    }
+}

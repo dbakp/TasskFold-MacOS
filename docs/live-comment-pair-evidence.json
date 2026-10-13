@@ -1,0 +1,237 @@
+{
+  "date": "2026-10-13",
+  "scope": "Real same-account iPhone \u2192 Mac \u2192 iPhone conflict review \u2192 Mac comment continuity, with two offline edits and both choices. No Todoist operation.",
+  "applicationSources": {
+    "macBase": "e3d6282",
+    "iosBase": "5d18647",
+    "macModelSHA256": "07050c7c9f7ccc492ade860132d0d965fca2010dc694890d2df3e72944cdac61",
+    "iosModelSHA256": "07050c7c9f7ccc492ade860132d0d965fca2010dc694890d2df3e72944cdac61",
+    "iosStageScope": "Current app/widget Swift code with group-only isolation; retained earlier test-only version metadata. Not distribution acceptance."
+  },
+  "journeys": {
+    "twoOfflineEdits": "iPhone explicitly saves title + first comment together, then adds a later comment; two pending mutations and whole-cache equality across offline relaunch. Simulator transport disconnect is guarded to the disposable account and isolated bundle.",
+    "realRemotePeer": "Mac changes title and notes and adds its independent comment through native controls; actual server snapshot contains only that Mac comment before phone review.",
+    "review": "Actual RPC collision, Later, unchanged full queue, process relaunch, then selected Use synced or Keep my edit.",
+    "useSynced": "Mac title and comment retained; first phone comment discarded with reviewed mutation; later phone comment retained.",
+    "keepMyEdit": "Phone title and both phone comments retained alongside Mac comment and independent notes.",
+    "relaunch": "Both phone resolved task and Mac received task compare as whole records across normal process relaunches; queues empty. Mac title field and visible comment strings inspected by native assertions.",
+    "metadata": "Mac comment object unchanged after Use synced. After Keep, final server comments equal the original Mac comment object followed by both archived offline phone comment objects, preserving IDs/text/authors/timestamps."
+  },
+  "nativeResults": [
+    {
+      "result": "ios-collection-queue-synced-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "cleanRuntimeAccepted": true
+    },
+    {
+      "result": "mac-collection-peer-synced-v2.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 1,
+      "cleanRuntimeAccepted": false
+    },
+    {
+      "result": "ios-collection-review-synced-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "cleanRuntimeAccepted": true
+    },
+    {
+      "result": "mac-collection-receive-synced-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "cleanRuntimeAccepted": true
+    },
+    {
+      "result": "ios-collection-queue-keep-v2.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "cleanRuntimeAccepted": true
+    },
+    {
+      "result": "mac-collection-peer-keep-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 1,
+      "cleanRuntimeAccepted": false
+    },
+    {
+      "result": "ios-collection-review-keep-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "cleanRuntimeAccepted": true
+    },
+    {
+      "result": "mac-collection-receive-keep-v1.xcresult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "cleanRuntimeAccepted": true
+    },
+    {
+      "result": "mac-collection-peer-synced-v1.xcresult",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "runtimeWarnings": 1,
+      "cleanRuntimeAccepted": false
+    },
+    {
+      "result": "ios-collection-queue-keep-v1.xcresult",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "cleanRuntimeAccepted": false
+    }
+  ],
+  "acceptedFunctionalCases": 8,
+  "acceptedCleanRuntimeCases": 6,
+  "warningBearingFunctionalCases": 2,
+  "warningAttribution": [
+    {
+      "path": "runtime-warning-attribution/collection-peer-synced.json",
+      "reportedWarnings": 1,
+      "archivedEvents": 1,
+      "AppKitServicesMenuInspectionObserved": true
+    },
+    {
+      "path": "runtime-warning-attribution/collection-peer-keep.json",
+      "reportedWarnings": 1,
+      "archivedEvents": 1,
+      "AppKitServicesMenuInspectionObserved": true
+    }
+  ],
+  "driverFailures": [
+    {
+      "result": "mac-collection-peer-synced-v1.xcresult",
+      "observation": "Mac multiline notes received literal Tab from test focus-navigation action; saved title/notes and empty queue observed. Corrected driver clicks title to move focus; synthetic note repaired through native UI in successful retry."
+    },
+    {
+      "result": "ios-collection-queue-keep-v1.xcresult",
+      "observation": "iOS element-targeted Command-A did not replace existing title; exact pending-field assertion catches concatenation. Final driver uses native Select All and verifies complete input before Save. Only two failed synthetic mutations and their task projection were reset from unchanged server after archiving the queue.",
+      "postTestFinalization": "Native case already failed; live xcodebuild sampled waiting in collectSimulatorDiagnostics \u2192 simCtlDiagnose. Only that job explicitly interrupted; exit 75. Bundle remains readable and reports one failed test. Not an acceptance pass."
+    }
+  ],
+  "visualInspection": {
+    "capturesInspected": [
+      "Phone Use synced comparison opening",
+      "Phone two retained comments",
+      "Mac kept title/notes and all three comments",
+      "Phone all three kept comments"
+    ],
+    "commentBodiesReadable": true,
+    "limits": "Opening comparison capture is transitional; no settled full-footer visibility or spoken-output claim. Background phone capture shows both Review sync edit and generic Retry sync status; coherent conflict feedback needs a separate usability check."
+  },
+  "serverPreservationAfterCleanup": {
+    "tasks": {
+      "originalRowsPreserved": 3,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "projects": {
+      "originalRowsPreserved": 3,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "sections": {
+      "originalRowsPreserved": 1,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "labels": {
+      "originalRowsPreserved": 1,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "profiles": {
+      "originalRowsPreserved": 1,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "project_collaborators": {
+      "originalRowsPreserved": 0,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "saved_views": {
+      "originalRowsPreserved": 3,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "favorites": {
+      "originalRowsPreserved": 2,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "view_preferences": {
+      "originalRowsPreserved": 5,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "view_orders": {
+      "originalRowsPreserved": 1,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "reminder_preferences": {
+      "originalRowsPreserved": 0,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "focus_sessions": {
+      "originalRowsPreserved": 1,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "task_activity_epoch": {
+      "originalRowsPreserved": 1,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    },
+    "task_activity": {
+      "originalRowsPreserved": 44,
+      "newSyntheticRows": 4,
+      "exactlyUnchanged": false
+    },
+    "import_sources": {
+      "originalRowsPreserved": 0,
+      "newSyntheticRows": 0,
+      "exactlyUnchanged": true
+    }
+  },
+  "cleanup": {
+    "onlyTwoPreparedTaskIDsDeleted": true,
+    "originalIDsExplicitlyExcludedBeforeDelete": true,
+    "syntheticAuditRowsRetained": true,
+    "macBaselineFilesRestoredExact": 28,
+    "otherProtectedFilesExact": 100,
+    "retainedPhoneFixtureFilesExact": 36,
+    "pendingMacWidgetDataExact": true,
+    "extraMainAppsClosed": true,
+    "phoneIsolatedAppAndRunnerUninstalled": true,
+    "disposablePhoneSimulatorShutdown": true,
+    "activePrivateFixtureArchived": true,
+    "duplicateImageExportBytesPruned": 1866699,
+    "originalNativeResultsRetained": true
+  },
+  "remaining": "This accepts the bounded native comment chain for both choices. Attachment/subtask core/transport regressions remain separate evidence; no native simultaneous collision for those fields is claimed. Widget/privacy, spoken/provider, remaining distinct continuity and deferred distribution gates stay open.",
+  "nativeTestSourceSHA256": {
+    "TasskFold-MacOS": "eb53d73b0d31292243c90d9e99dea64fca2ce8e0457b83f96cc96df773267cc4",
+    "TaskFold-iOS": "7296bdaf5ab66df5a3c9f9624ca5a4dfbf45dbb9a296c7a4fc066a9299b950cd"
+  }
+}

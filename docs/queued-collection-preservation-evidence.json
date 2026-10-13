@@ -98,5 +98,6 @@
     "runtimeWorkspacesNotEdited": true,
     "extraAppsNotLaunched": true
   },
-  "next": "Exercise this exact two-offline-edits/remote-addition/review/relaunch sequence through the actual Mac and phone interfaces, including Use synced and Keep my edit. Keep broader P0 acceptance open until that and the remaining named gates are verified."
+  "next": "Exercise this exact two-offline-edits/remote-addition/review/relaunch sequence through the actual Mac and phone interfaces, including Use synced and Keep my edit. Keep broader P0 acceptance open until that and the remaining named gates are verified.",
+  "subsequentLiveCommentAcceptance": "Both actual paired review choices and client relaunches now pass; eight functional cases/six clean. See live-comment-pair-evidence.json. No native simultaneous attachment/subtask collision claimed."
 }
