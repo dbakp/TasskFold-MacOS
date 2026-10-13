@@ -2094,3 +2094,8 @@ Both apps compile independently in Debug and Release, with retained warnings out
 ### 13 October — companion iOS 26.5 signing setup corrected
 
 13 October signing correction: the iOS 26.5 selection failure was in the isolated test setup. Its products were ad hoc because the existing team-signing helper excluded backupcanceltests. With that identity explicitly allowlisted and real team signatures verified in installed app/extension, the same current widget passes selection, completion, automatic All clear without dismiss, unrelated task retention and normal relaunch on the retained iOS 26.5 device. One strict native test passes with zero failures/skips/structured runtime warnings. No production entity rename or fallback was needed. See `widget-team-signing-evidence.json`. Mac installed expiry and broader P0 remain open. This changes iOS-owned test infrastructure only. Mac widget code remains independently owned; its installed automatic expiry still needs a native receipt.
+
+
+### 13 October — bounded current P0 checklist
+
+Reconciled the progress snapshot with the original Todoist port priorities. Replaced the accumulated 483-line historical snapshot with a current feature/acceptance checklist, preserving detailed attempts and limits in P0_RELEASE_STATUS and scoped receipts. Later-phase parity stays in the port backlog; passing native journeys are reused rather than reopening an exhaustive platform matrix. The signed current-source Mac widget host is running with its synthetic task still open while the manual automatic-expiry observation is pending. No new desktop acceptance, product change or release signing is claimed by this documentation update. Both repositories own the current checklist independently.
