@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-13",
+  "scope": "Real installed medium My list configuration, completion and automatic feedback expiry on retained iOS 26.5 Simulator",
+  "resolvedSetupGap": "The isolated backupcanceltests products retained ad-hoc Simulator signatures without a team identity. The existing signing helper did not allow this test bundle. After adding only that isolated identity and applying the helper, the current widget passes on the same retained device/runtime without entity/type/production behavior changes.",
+  "productCodeChanged": false,
+  "infrastructureChanges": [
+    "Allow backupcanceltests in the existing real-team Simulator signing helper",
+    "Document the mandatory signing step for installed widget tests in backup fixture preparation"
+  ],
+  "signing": {
+    "products": {
+      "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      },
+      "TaskfoldUITests-Runner.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      }
+    },
+    "installed": {
+      "Taskfold.app": {
+        "teamIdentifierVerified": true,
+        "strictSignatureVerified": true,
+        "adhoc": false
+      },
+      "TaskfoldWidgets.appex": {
+        "teamIdentifierVerified": true,
+        "strictSignatureVerified": true,
+        "adhoc": false
+      }
+    },
+    "productionBundleStillRejected": true,
+    "simulatorEntitlementsPreserved": true
+  },
+  "native": {
+    "resultBundle": "ios-widget-team-signed-expiry-v1.xcresult",
+    "runtime": "iOS 26.5, 23F77",
+    "device": "Retained disposable iPhone 17 Pro F7AD9C8B-EF5E-44F0-82DF-6654524DA94D",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0,
+    "strictVerifier": "Passed",
+    "journey": [
+      "Install medium My list and select Widget Studio",
+      "Selected task is rendered and completed via widget",
+      "Saved completion acknowledgement appears",
+      "All clear appears without a dismiss tap; dismissal button absent",
+      "Unrelated Inbox task remains open",
+      "Completed task remains reopenable after ordinary process relaunch",
+      "Temporary widget removed"
+    ]
+  },
+  "source": {
+    "widgetSHA256": "0bb34b0331f74b0fbb020b4a3eab8e88e71191b83ab0146adbdc463f57efc083",
+    "bothOwnedProductionCopiesAndStageMatch": true,
+    "diagnosticTypeRenamesOrFallbackList": false
+  },
+  "runtimeObservation": "No actual not-a-registered-AppEntity error in the collected eight-minute window covering this run. Remote AX-server and 60-second SpringBoard idle messages remain in the native driver log despite passing state assertions.",
+  "visualLimits": "Acknowledgement and automatic-clear captures inspected. The clear capture catches the outgoing row crossfade, not a settled-layout image. No exact wall-clock duration, all-widget privacy, Mac installed automatic-expiry or distribution acceptance claimed.",
+  "interpretation": "The named current iOS 26.5 configuration failure is resolved by the verified test signing setup. Earlier ad-hoc failures and forum leads are historical diagnostics, not evidence that the shipped entity identity must change.",
+  "remaining": "Installed Mac automatic expiry/configuration/privacy and other original P0 gates remain open. Release signing stays user-deferred.",
+  "cleanup": {
+    "mainAppsAndTestRunnersClosed": true,
+    "isolatedIOSAppAndRunnerUninstalled": true,
+    "simulator": "Shutdown",
+    "protectedFilesExact": 100,
+    "retainedWidgetFixtureFileSetAndHashesExact": 36,
+    "originalResultBundleRetained": true,
+    "duplicateExportBytesPruned": 6557012,
+    "signedProductsAndIncrementalCacheRetainedForRemainingWidgetChecks": true,
+    "freeGiB": 94.1
+  }
+}

@@ -74,7 +74,7 @@
     "warnings": "Signed binary not stripped; real-widget test rebuild also retains existing sendable-capture warning and app metadata extraction skipped because host has no AppIntents dependency. No clean compilation claim."
   },
   "runtimeLimits": "Native logs retain remote AX-server and 60-second SpringBoard animation-idle messages even in passing runs. Strict verifier covers structured XCTest runtime warnings only.",
-  "remaining": "iOS 26.5 registration/configuration environment, Mac installed automatic expiry and remaining configuration/privacy gates; broader original P0 remains active. Next controlled comparison can test development-certificate signing in the isolated 26.5 host, without changing production entity identity.",
+  "remaining": "Installed Mac automatic expiry/configuration/privacy and other original P0 gates. The named current 26.5 selection gap is resolved.",
   "cleanup": {
     "mainAppsAndRunnersClosed": true,
     "temporaryAppsUninstalled": true,
@@ -87,5 +87,9 @@
     "duplicateExportBytesPruned": 123502653,
     "incrementalBuildCacheRetainedForSigningComparison": true,
     "freeGiB": 94.1
+  },
+  "signingFollowUp": {
+    "evidence": "widget-team-signing-evidence.json",
+    "result": "Same retained iOS 26.5 now passes real configuration/completion/automatic-expiry after proper team signing. Do not infer an OS incompatibility from the earlier ad-hoc control comparison."
   }
 }

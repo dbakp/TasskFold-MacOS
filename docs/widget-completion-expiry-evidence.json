@@ -39,7 +39,7 @@
       }
     }
   },
-  "acceptanceLimit": "Installed iPhone automatic expiry is accepted on iOS 26.2 by the named native journey. iOS 26.5 configuration remains unresolved, and installed Mac automatic expiry is not accepted. WidgetKit may delay redraw; no exact duration promise.",
+  "acceptanceLimit": "Installed medium iPhone automatic expiry is accepted on iOS 26.2 and properly team-signed iOS 26.5 by the named native journeys. The prior 26.5 selection setup gap is resolved. Installed Mac automatic expiry remains unaccepted; no exact duration promise.",
   "cleanup": {
     "newUnsignedBuildProductsAndIntermediatesPruned": true,
     "protectedFilesExact": 100,
@@ -60,5 +60,13 @@
     "structuredRuntimeWarnings": 0,
     "evidence": "widget-configuration-control-evidence.json",
     "scope": "Installed medium iPhone My list, last-task completion, automatic clear without dismiss, unrelated task preservation and completed-state normal relaunch on fresh iOS 26.2 Simulator"
+  },
+  "installedAcceptanceIOS26_5": {
+    "evidence": "widget-team-signing-evidence.json",
+    "resultBundle": "ios-widget-team-signed-expiry-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0
   }
 }

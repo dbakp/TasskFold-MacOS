@@ -47,5 +47,9 @@
     "diagnosticSourceRestored": true,
     "inactiveIOSBuildCacheBytesPruned": 897841797,
     "originalNativeResultBundlesRetained": true
+  },
+  "subsequentResolution": {
+    "evidence": "widget-team-signing-evidence.json",
+    "result": "Current real widget passes on retained iOS 26.5 after proper team signing of the isolated products; earlier ad-hoc failures are setup diagnostics."
   }
 }

@@ -51,5 +51,9 @@
   "followUp20261013": {
     "evidence": "widget-selection-handoff-evidence.json",
     "finding": "Separate identity with populated projection and isolated host-entity metadata diagnostic both fail selection handoff; root cause unestablished."
+  },
+  "subsequentResolution": {
+    "evidence": "widget-team-signing-evidence.json",
+    "result": "Current real widget passes on retained iOS 26.5 after proper team signing of the isolated products; earlier ad-hoc failures are setup diagnostics."
   }
 }

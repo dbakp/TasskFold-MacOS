@@ -1,6 +1,6 @@
 # Current P0 release acceptance
 
-13 October installed-widget acceptance: the constant-entity control fails on the retained iOS 26.5 Simulator but passes unchanged on a fresh iOS 26.2 Simulator. The real medium My list then passes selection, last-task completion, visible acknowledgement, automatic All clear without dismiss, unrelated task retention and completed-state relaunch. Both passing runs satisfy the strict native verifier. This closes the named iPhone automatic-expiry journey on iOS 26.2; it does not close iOS 26.5 registration, Mac installed expiry or broader P0. See `widget-configuration-control-evidence.json`.
+13 October signing correction: the iOS 26.5 selection failure was in the isolated test setup. Its products were ad hoc because the existing team-signing helper excluded backupcanceltests. With that identity explicitly allowlisted and real team signatures verified in installed app/extension, the same current widget passes selection, completion, automatic All clear without dismiss, unrelated task retention and normal relaunch on the retained iOS 26.5 device. One strict native test passes with zero failures/skips/structured runtime warnings. No production entity rename or fallback was needed. See `widget-team-signing-evidence.json`. Mac installed expiry and broader P0 remain open.
 
 For the concise current gate summary, see [P0 progress snapshot](P0_PROGRESS.md).
 
