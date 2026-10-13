@@ -116,6 +116,9 @@ struct LinkText: NSViewRepresentable {
         view.isVerticallyResizable = false; view.isHorizontallyResizable = false
         view.setContentHuggingPriority(.defaultLow, for: .horizontal)
         view.setAccessibilityRole(.staticText)
+        // Populate before the text view joins the table's accessibility hierarchy.
+        // Lazy row creation can itself happen during an accessibility traversal.
+        view.setInitialContent(attributed())
         return view
     }
     func updateNSView(_ view: LinkAwareTextView, context: Context) {
@@ -124,7 +127,9 @@ struct LinkText: NSViewRepresentable {
         view.textContainer?.lineBreakMode = lineLimit == 0 ? .byWordWrapping : .byTruncatingTail
         view.linkTextAttributes = [.foregroundColor: linkColor, .cursor: NSCursor.pointingHand]
         let content = attributed()
-        view.textStorage?.setAttributedString(content)
+        // Replacing identical text posts AppKit selection/accessibility notifications.
+        // During an accessibility traversal those notifications can reenter SwiftUI's graph.
+        view.updateContent(content)
         view.setAccessibilityIdentifier(accessibilityIdentifier)
         view.setAccessibilityLabel(accessibilityLabel ?? content.string)
         view.setAccessibilityValue(content.string)
@@ -161,6 +166,31 @@ struct LinkText: NSViewRepresentable {
 /// hover, and offers Open, Copy Link, and Share from the context menu.
 final class LinkAwareTextView: NSTextView, NSTextViewDelegate {
     weak var workspace: Workspace?
+    private var renderedContent: NSAttributedString?
+    private var pendingContent: NSAttributedString?
+    private var contentUpdateScheduled = false
+    func setInitialContent(_ content: NSAttributedString) {
+        renderedContent = NSAttributedString(attributedString: content)
+        textStorage?.setAttributedString(content)
+    }
+    func updateContent(_ content: NSAttributedString) {
+        pendingContent = NSAttributedString(attributedString: content)
+        guard !contentUpdateScheduled else { return }
+        guard renderedContent?.isEqual(to: content) != true else { pendingContent = nil; return }
+        contentUpdateScheduled = true
+        // AppKit can synchronously inspect table accessibility children while replacing
+        // text. Finish SwiftUI's graph update first, then apply the newest render once.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.contentUpdateScheduled = false
+            guard let next = self.pendingContent else { return }
+            self.pendingContent = nil
+            guard self.renderedContent?.isEqual(to: next) != true else { return }
+            self.renderedContent = next
+            self.textStorage?.setAttributedString(next)
+            self.invalidateIntrinsicContentSize()
+        }
+    }
     override init(frame frameRect: NSRect, textContainer container: NSTextContainer?) { super.init(frame: frameRect, textContainer: container); delegate = self }
     override init(frame frameRect: NSRect) { super.init(frame: frameRect); delegate = self }
     required init?(coder: NSCoder) { super.init(coder: coder); delegate = self }

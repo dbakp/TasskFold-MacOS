@@ -56,7 +56,8 @@
         "stage": "After opening General Settings",
         "cycles": 4
       }
-    ]
+    ],
+    "subsequentDiagnostic": "See mac-link-accessibility-cycle-evidence.json: local copy reproduces without cloud sync; captured app frame identifies text replacement re-entry; scoped Mac renderer repair clears cycles. Original cloud repeat review on repaired binary remains pending; table warning recurs locally."
   },
   "failedNativeAttempts": [
     {

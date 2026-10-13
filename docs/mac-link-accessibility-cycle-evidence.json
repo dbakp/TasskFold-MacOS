@@ -1,0 +1,122 @@
+{
+  "date": "2026-10-13",
+  "scope": "Mac link-renderer accessibility re-entry diagnosis and bounded repair; local diagnostic variation, not original cloud repeat-review acceptance",
+  "sourceBase": "47940f9",
+  "rendererSourceSHA256": "6928028fb0e6c26c2f23a14a6dfb4d30e8e89b627449ff42748989b3997918bf",
+  "diagnosticSetup": {
+    "bundleID": "com.dbakp.taskfold.mac.backupcanceltests",
+    "localOnly": true,
+    "launchArguments": [
+      "--uitesting",
+      "-onboardingSeen",
+      "YES"
+    ],
+    "tasks": 256,
+    "projects": 24,
+    "pendingWrites": 0,
+    "ownerFieldsUnchangedFromPrivateImportedSnapshot": true,
+    "cloudSessionNotRequiredForReproduction": true,
+    "rawSnapshotAndAXTreesNotCommitted": true,
+    "isolatedMacSwiftFilesComparedNamespaceOnly": 62
+  },
+  "causalStack": {
+    "path": "runtime-warning-attribution/link-text-accessibility-cycle.json",
+    "frameCount": 215,
+    "appFrame": 44,
+    "appFunction": "LinkText.updateNSView",
+    "source": "Links.swift:127 at sourceBase",
+    "chain": "textStorage.setAttributedString \u2192 NSTextStorage editing \u2192 NSTextView selection \u2192 accessibility notification \u2192 NSTableView child lookup \u2192 NSHostingView accessibilityChildren \u2192 SwiftUI accessibility graph \u2192 cycle"
+  },
+  "repair": "Initialize text before joining the hierarchy. Coalesce later attributed-text changes on the next main-queue turn, applying the latest render after the SwiftUI update completes. Preserve link attributes and invalidate intrinsic size after real changes. No warning suppression.",
+  "discardedApproaches": "Equality against textStorage, initializing detached content alone, and remembering submitted content without deferral each retained four cycles; not accepted as fixes.",
+  "runtimeLogs": [
+    {
+      "log": "taskfold-ax-local-256-v1.log",
+      "sha256": "5f0bf501d8f8a25c3f3af9482817aea579dc366fe9da1dc352b1fc96cc57f392",
+      "attributeGraphCycles": 4,
+      "tableReentrancyWarnings": 0
+    },
+    {
+      "log": "taskfold-ax-local-256-noop-v1.log",
+      "sha256": "90d165987ca2fee46f3af31fc182c18064662c1e6e24b2cc04d8a2415aafa0db",
+      "attributeGraphCycles": 4,
+      "tableReentrancyWarnings": 0
+    },
+    {
+      "log": "taskfold-ax-local-256-initial-v1.log",
+      "sha256": "ab782d1936047720e4e3a1ad782bd518987dfcb118a5f4023fc83fd9b858f007",
+      "attributeGraphCycles": 4,
+      "tableReentrancyWarnings": 0
+    },
+    {
+      "log": "taskfold-ax-local-256-cached-v1.log",
+      "sha256": "64dd17ca52019c2aaa11abd48bb4aad737a9b8434f528502f912064aa4a6da45",
+      "attributeGraphCycles": 4,
+      "tableReentrancyWarnings": 0
+    },
+    {
+      "log": "taskfold-ax-local-256-cached-v2.log",
+      "sha256": "27a1b73c8bfe1fc415389755769d59a3f7027e5b3e7a2c70bb7ec694e018426d",
+      "attributeGraphCycles": 4,
+      "tableReentrancyWarnings": 0
+    },
+    {
+      "log": "taskfold-ax-local-256-deferred-v1.log",
+      "sha256": "2ebf99f3c3839430dd4562d1915204ff2c4bd36b263ca4faa2f0b7bc01b13992",
+      "attributeGraphCycles": 0,
+      "tableReentrancyWarnings": 0
+    },
+    {
+      "log": "taskfold-ax-local-256-deferred-relaunch-v1.log",
+      "sha256": "5c0605bb632f2786d1d736aad46d39f9a1b1c6b91abcda458a8d491e79c3b6ef",
+      "attributeGraphCycles": 0,
+      "tableReentrancyWarnings": 0
+    },
+    {
+      "log": "taskfold-ax-local-256-deferred-final-v1.log",
+      "sha256": "45d157bcda042bedcda5026c99f61b6abd80730420a2308dd27e401ac42ae6f9",
+      "attributeGraphCycles": 0,
+      "tableReentrancyWarnings": 1
+    },
+    {
+      "log": "taskfold-ax-local-256-deferred-final-relaunch-v1.log",
+      "sha256": "de8f05320da870f290595b7a9d5932ac7c4a247b315ac58e0b6f8c21dc4b718a",
+      "attributeGraphCycles": 0,
+      "tableReentrancyWarnings": 0
+    }
+  ],
+  "nativeResults": [
+    {
+      "result": "mac-link-deferred-v1.xcresult",
+      "test": "testLinkClickDoesNotSelectRow",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "strictVerifier": "Passed"
+    },
+    {
+      "result": "mac-link-deferred-edit-v1.xcresult",
+      "test": "testKeyboardUndoAfterAutosavedTitleAndCompletionFeedbackExpires",
+      "voiceOverExpectedAndObserved": false,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 1,
+      "warning": "QoS priority inversion",
+      "strictVerifier": "Rejected; no clean-runtime claim",
+      "warningNewlyAttributed": false
+    }
+  ],
+  "preservation": {
+    "whole256TaskCacheExactlyUnchangedAfterFinalLaunchAndNormalRelaunch": true,
+    "originalIsolatedBaselineFilesRestoredExact": 28,
+    "otherProtectedFilesExact": 100,
+    "retainedPhoneFixtureFilesExact": 36,
+    "pendingDesktopWidgetFileExact": true,
+    "extraDiagnosticAppQuit": true,
+    "debuggerDetachedAfterBothStackCaptures": true
+  },
+  "remaining": "Original authenticated cloud repeat-review must be checked on the repaired binary. One table re-entry warning recurred on the final local first launch, none on its relaunch; causal stack remains open. QoS warning and broader P0 gates remain open.",
+  "platformOwnership": "Mac owns the AppKit fix. iOS uses its independently owned SwiftUI attributed-link renderer; no AppKit implementation or sibling build dependency is added."
+}
