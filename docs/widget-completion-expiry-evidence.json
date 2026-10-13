@@ -39,7 +39,7 @@
       }
     }
   },
-  "acceptanceLimit": "Fix and model/provider wiring are verified. Installed WidgetKit automatic expiry after this fix has not yet been accepted; scheduling may delay actual redraw. Existing actual completion and manual dismissal acceptance remain valid.",
+  "acceptanceLimit": "Installed iPhone automatic expiry is accepted on iOS 26.2 by the named native journey. iOS 26.5 configuration remains unresolved, and installed Mac automatic expiry is not accepted. WidgetKit may delay redraw; no exact duration promise.",
   "cleanup": {
     "newUnsignedBuildProductsAndIntermediatesPruned": true,
     "protectedFilesExact": 100,
@@ -51,5 +51,14 @@
     "status": "FAILED BEFORE COMPLETION; automatic expiry remains unaccepted",
     "evidence": "widget-selection-registration-evidence.json",
     "runs": 2
+  },
+  "installedAcceptance20261013": {
+    "resultBundle": "ios-widget-expiry-26-2-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0,
+    "evidence": "widget-configuration-control-evidence.json",
+    "scope": "Installed medium iPhone My list, last-task completion, automatic clear without dismiss, unrelated task preservation and completed-state normal relaunch on fresh iOS 26.2 Simulator"
   }
 }

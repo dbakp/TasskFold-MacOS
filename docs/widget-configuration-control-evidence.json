@@ -1,0 +1,91 @@
+{
+  "date": "2026-10-13",
+  "scope": "Constant-entity control and real installed iPhone My list automatic expiry",
+  "productionCodeChanged": false,
+  "runs": [
+    {
+      "resultBundle": "ios-widget-minimal-control-v1.xcresult",
+      "runtime": "26.5",
+      "runtimeBuild": "23F77",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "resultBundle": "ios-widget-minimal-control-26-2-v1.xcresult",
+      "runtime": "26.2",
+      "runtimeBuild": "23C54",
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    {
+      "resultBundle": "ios-widget-expiry-26-2-v1.xcresult",
+      "runtime": "26.2",
+      "runtimeBuild": "23C54",
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 0
+    }
+  ],
+  "control": {
+    "fixedEntityID": "control-list",
+    "storageAccountPrivacyDependencies": false,
+    "sameCompiledControlUsedInBothRuns": true,
+    "ios26_5": "Configuration displays Widget Studio; rendered widget remains No selected control list; system log says IdentityControlEntityV1 is not a registered AppEntity identifier",
+    "freshIOS26_2": "Configuration survives closure; Selected control-list is rendered",
+    "limits": "Both runtime and retained device state differ. This does not isolate either as the sole cause. Ad hoc signature has no team identity; no certificate comparison performed."
+  },
+  "primaryReports": [
+    {
+      "url": "https://developer.apple.com/forums/thread/830733",
+      "summary": "Original reporter identifies default-value resolution in iOS 26.5 and 27.0b1 Simulators (FB23075373). This is a lead, not proof of our cause."
+    },
+    {
+      "url": "https://developer.apple.com/forums/thread/834793",
+      "summary": "Apple Frameworks Engineer calls the reported Xcode 27 bespoke-entity behavior unexpected and requests a reproducer. Reporter filed FB23176939. No fix or applicability to our exact build is established."
+    }
+  ],
+  "realWidgetAcceptance": {
+    "runtime": "iOS 26.2 Simulator, fresh disposable iPhone 17 Pro",
+    "sourceSHA256": "0bb34b0331f74b0fbb020b4a3eab8e88e71191b83ab0146adbdc463f57efc083",
+    "matchesBothOwnedProductionWidgetSources": true,
+    "journey": [
+      "Install medium My list and choose Widget Studio",
+      "Complete last task via widget",
+      "Actual Completed acknowledgement and dismissal button appear",
+      "All clear appears without a dismiss tap; dismissal button absent",
+      "Unrelated Inbox task remains open",
+      "Completed task is reopenable in app before and after normal relaunch",
+      "Remove temporary widget"
+    ],
+    "strictVerifier": "1 actual passing UI test, zero failures/skips/structured runtime warnings",
+    "visualLimits": "Acknowledgement capture inspected. Automatic-clear capture catches its crossfade with the outgoing acknowledgement; it is not a settled-layout image. Native state assertions and completion persistence pass. No exact wall-clock duration promise or Mac installed expiry claim."
+  },
+  "builds": {
+    "constantControl": "TEST BUILD SUCCEEDED",
+    "realWidget": "TEST BUILD SUCCEEDED",
+    "warnings": "Signed binary not stripped; real-widget test rebuild also retains existing sendable-capture warning and app metadata extraction skipped because host has no AppIntents dependency. No clean compilation claim."
+  },
+  "runtimeLimits": "Native logs retain remote AX-server and 60-second SpringBoard animation-idle messages even in passing runs. Strict verifier covers structured XCTest runtime warnings only.",
+  "remaining": "iOS 26.5 registration/configuration environment, Mac installed automatic expiry and remaining configuration/privacy gates; broader original P0 remains active. Next controlled comparison can test development-certificate signing in the isolated 26.5 host, without changing production entity identity.",
+  "cleanup": {
+    "mainAppsAndRunnersClosed": true,
+    "temporaryAppsUninstalled": true,
+    "newDisposableIOS26_2DeviceDeleted": true,
+    "retainedIOS26_5Device": "Shutdown",
+    "protectedFilesExact": 100,
+    "retainedWidgetFixtureFilesExact": 36,
+    "diagnosticStageWidgetAndTestSourcesRestored": true,
+    "originalNativeResultsRetained": true,
+    "duplicateExportBytesPruned": 123502653,
+    "incrementalBuildCacheRetainedForSigningComparison": true,
+    "freeGiB": 94.1
+  }
+}
