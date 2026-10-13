@@ -88,13 +88,14 @@
     "inactiveOldBuildBytesPruned": 372752384,
     "currentBuildAndOriginalEvidenceRetained": true
   },
-  "next": "Installed selected Pinned note unavailable preview/cold route pending; restore its pin after observation. Normal local task/text preserved, main app quit.",
+  "next": "Exact visible note-widget text pending after reported instructions. Safe empty-list cold route accepted; unavailable visual refresh unresolved. Preserve unchanged unpinned state before repinning.",
   "limits": [
     "Accepts named installed My list, Pinned note and paused Focus cold routes plus subsequent native Focus controls; no new privacy or cloud-account claim.",
     "Focus desktop ended preview confirmed; actual ended cold-launch state inspected with full workspace equality. Click attribution is inferred, not explicit. Desktop family/layout not independently inspected. Installed Project pulse remains pending.",
     "Release signing remains user-deferred.",
     "Project pulse cold route and forward completion refresh accepted; reverse installed refresh also confirmed. Unusable screenshot excludes new visual-layout acceptance.",
-    "Four named installed kinds clear/recover on leaving/reopening normal local workspace; this does not prove cloud-account-to-account switching or system-selected privacy."
+    "Four named installed kinds clear/recover on leaving/reopening normal local workspace; this does not prove cloud-account-to-account switching or system-selected privacy.",
+    "Current note host logs identify systemLarge. Earlier medium setup wording is a request, not independent family/layout proof; no medium-layout acceptance inferred. Reported instructions after unpin require exact-text clarification despite successful host reloads."
   ],
   "currentNativeAcceptance": {
     "normalProcess": "20026 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
@@ -291,6 +292,40 @@
       "normalQuitConfirmed": true,
       "installedObservationPending": true,
       "verificationCorrection": "Initial diagnostic incorrectly expected a task pinned_note field; actual pin contract is view_orders. Corrected source-based comparison proves only view_orders changed; no product failure inferred."
+    },
+    "unavailableNoteInvestigation": {
+      "date": "2026-10-14",
+      "normalLocalWorkspace": true,
+      "nativeUnpinThroughReader": true,
+      "nativeEmptyPinnedNotesObserved": true,
+      "onlyPinSelectionViewOrdersChanged": true,
+      "allTaskRecordsExact": true,
+      "pendingAndCompletionFeedbackExact": true,
+      "publishedPinnedNotesEmpty": true,
+      "normalQuitConfirmed": true,
+      "installedObservationPending": true,
+      "verificationCorrection": "Initial diagnostic incorrectly expected a task pinned_note field; actual pin contract is view_orders. Corrected source-based comparison proves only view_orders changed; no product failure inferred.",
+      "humanObservedStaleInstructionsAfterUnpin": true,
+      "humanClicked": true,
+      "mainBeforeCUABinding": [
+        "31652 Wed Oct 14 00:09:49 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+      ],
+      "nativeColdClickOpenedSafeEmptyPinnedNotes": true,
+      "wholeUnpinnedWorkspaceExactAfterClick": true,
+      "publishedNotesStillEmpty": true,
+      "normalQuitAfterInspection": true,
+      "hostDiagnostic": {
+        "privateLog": "taskfold-note-unavailable-host-v10.log",
+        "sha256": "d0c2f34c161a26928e44de6c89fc8e314b175c42ea9c672c10e55170b0aabd4d",
+        "successfulNoteTimelineReloads": 13,
+        "latestSuccess": "2026-10-14 00:09:54.885 Df chronod[705:61d026] [com.apple.chrono:timeline.store] [com.dbakp.taskfold.mac.p0widgethosts::com.dbakp.taskfold.mac.p0widgethosts.widgets:TaskfoldPinnedNote:systemLarge:-3406671470781599966:344.00/344.00/27.88:(null)~(null)] on local reload: succeeded with 9 entries",
+        "matchingLoggedErrors": 0,
+        "observedCurrentFamily": "systemLarge"
+      },
+      "initialEntityResolutionHypothesisUnproven": true,
+      "productCodeChanged": false,
+      "humanExactVisibleTextPending": true,
+      "installedUnavailableVisualAcceptance": false
     }
   }
 }
