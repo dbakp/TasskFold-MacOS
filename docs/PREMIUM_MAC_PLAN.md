@@ -2109,3 +2109,6 @@ The Mac native panel now captures an immutable request and workspace generation,
 ### 13 October — native Mac backup callback-fix regression
 
 Current-source team-signed isolated host passes the real native file-picker/provider-wait Cancel/retry/review/Cancel journey, with full workspace equality and a verified stopped-process boundary before fixture-preserving relaunch. Actual task receipt is visible afterward. Direct CUA screenshots/AX were inspected; no Mac XCTest runtime or real remote-provider race is claimed. The temporary backup app is closed, its 28 original data/preference files restored, and primary data plus the pending widget snapshot preserved. See `mac-backup-picker-session-evidence.json`. No additional product change was needed.
+
+
+13 October: guarded unknown filter settings against lossy editing; native Cancel/Quit/relaunch preserves the snapshot. Unsupported-filter empty-state/count and sheet-title presentation remain open; see `filter-future-settings-evidence.json`.

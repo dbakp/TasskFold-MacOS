@@ -1012,3 +1012,8 @@ Source review found that a late picker callback could read a newer request’s m
 ### 13 October — current-source Mac backup picker accepted
 
 The independent signed Mac app now passes actual NSOpenPanel selection, controlled provider wait, readable enabled Cancel, immediate re-enabled backup controls, retry into the complete native restore review and Cancel without Apply. The full workspace snapshot remains exact after both cancellations and a confirmed-zero-process Quit followed by fixture-preserving relaunch; the saved task is visible in Inbox. Direct CUA functional acceptance is not a clean Mac XCTest runtime pass. Initial default-workspace/duplicate relaunch mistakes and the corrected process-boundary check are recorded in `mac-backup-picker-session-evidence.json`. All 28 original isolated data/preference files are restored, 100 protected files and the pending widget snapshot remain exact, and the backup test app is closed. Pruned 109,241,072 bytes of inactive intermediates; the signed app product is retained. Actual remote-provider race/failure, spoken accessibility, system privacy, pending desktop expiry and deferred release delivery remain separate open gates.
+
+
+### 13 October — preserve unknown filter settings
+
+Known query operators with future settings now remain unsupported and intact instead of being silently rewritten. Both repos pass 110 filter/backup and 21 widget tests, Debug and unsigned Release builds. One strict native iPhone case and native Mac CUA Cancel/confirmed Quit/relaunch preserve the full snapshot. See `filter-future-settings-evidence.json` for bounded evidence and the three observed presentation defects still open. This does not close all mixed-client acceptance.

@@ -1620,7 +1620,7 @@ extension Snapshot {
         }
         return result
     }
-    static func filterPrimitiveFixture(user: String) -> Snapshot {
+    static func filterPrimitiveFixture(user: String, unknownSettings: Bool = false) -> Snapshot {
         var result = Snapshot()
         let project = Record(["id": .string("filter-studio"), "name": .string("Studio"), "user_id": .string(user)])
         result.tables["projects"] = [project]
@@ -1636,7 +1636,9 @@ extension Snapshot {
             if index == 5 { row["comments"] = .array([.object(["text": .string("email")])]) }
             return row
         }
-        result.tables["saved_views"] = [Record(["id": .string("filter-future"), "user_id": .string(user), "name": .string("Future filter"), "query_ast": .object(["version": .number(1), "root": .object(["op": .string("predicate"), "field": .string("future_field"), "value": .string("retain this value")])]), "layout": .string("list"), "grouping": .string("none"), "sort_by": .string("manual"), "include_completed": .bool(false), "order_index": .number(0)])]
+        result.tables["saved_views"] = [Record(["id": .string("filter-future"), "user_id": .string(user), "name": .string("Future filter"), "query_ast": unknownSettings
+            ? .object(["version": .number(1), "root": .object(["op": .string("predicate"), "field": .string("search"), "value": .string("email"), "case_sensitive": .bool(true)])])
+            : .object(["version": .number(1), "root": .object(["op": .string("predicate"), "field": .string("future_field"), "value": .string("retain this value")])]), "layout": .string("list"), "grouping": .string("none"), "sort_by": .string("manual"), "include_completed": .bool(false), "order_index": .number(0)])]
         return result
     }
 }

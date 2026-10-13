@@ -300,7 +300,7 @@ struct RootView: View {
         }
         if arguments.contains("--uitesting") && arguments.contains("--filter-primitives-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
-            store.snapshot = Snapshot.filterPrimitiveFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
+            store.snapshot = Snapshot.filterPrimitiveFixture(user: store.userID, unknownSettings: ProcessInfo.processInfo.arguments.contains("--filter-unknown-settings-fixture")); workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--parity-fixture") {
             store.startLocal(); store.snapshot = Snapshot()

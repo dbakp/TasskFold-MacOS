@@ -294,13 +294,20 @@ indirect enum FilterRule: Hashable, Sendable {
     var document: JSON { .object(["version": .number(1), "root": json]) }
     init(document: JSON) throws {
         guard document.object["version"] == .number(1), let root = document.object["root"] else { throw FilterFailure(message: "This filter version is unsupported. Update Taskfold before editing it.") }
+        try Self.requireKnownKeys(document, allowed: ["version", "root"])
         try self.init(json: root, depth: 0)
+    }
+    private static func requireKnownKeys(_ json: JSON, allowed: Set<String>) throws {
+        guard Set(json.object.keys).isSubset(of: allowed) else {
+            throw FilterFailure(message: "This filter has unsupported settings. Update Taskfold before editing it.")
+        }
     }
     init(json: JSON, depth: Int = 0) throws {
         guard depth < 24 else { throw FilterFailure(message: "This filter is nested too deeply.") }
         let row = Record(json.object)
         switch row.string("op") {
         case "predicate":
+            try Self.requireKnownKeys(json, allowed: ["op", "field", "value"])
             let field = row.string("field"), value = row.string("value")
             guard Self.fields.contains(field) else { throw FilterFailure(message: "Unsupported filter field: \(field).") }
             if ["priority", "next", "deadline_next", "duration_max"].contains(field) {
@@ -333,13 +340,17 @@ indirect enum FilterRule: Hashable, Sendable {
                 self = .predicate(field, try FilterTimeReference.canonical(value))
             } else { self = .predicate(field, value) }
         case "sections":
+            try Self.requireKnownKeys(json, allowed: ["op", "children"])
             guard depth == 0, case .array(let nodes) = row["children"], (2...20).contains(nodes.count) else { throw FilterFailure(message: "Separate query lists need 2–20 queries at the top level.") }
             self = .sections(try nodes.map { try Self(json: $0, depth: depth + 1) })
         case "and", "or":
+            try Self.requireKnownKeys(json, allowed: ["op", "children"])
             guard case .array(let nodes) = row["children"], !nodes.isEmpty, nodes.count <= 20 else { throw FilterFailure(message: "A filter group needs 1–20 conditions.") }
             let rules = try nodes.map { try Self(json: $0, depth: depth + 1) }
             self = row.string("op") == "and" ? .and(rules) : .or(rules)
-        case "not": self = .not(try Self(json: row["child"], depth: depth + 1))
+        case "not":
+            try Self.requireKnownKeys(json, allowed: ["op", "child"])
+            self = .not(try Self(json: row["child"], depth: depth + 1))
         default: throw FilterFailure(message: "This filter has an invalid operator.")
         }
     }

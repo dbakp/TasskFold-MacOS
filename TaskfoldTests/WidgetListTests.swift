@@ -273,3 +273,18 @@ extension WidgetListTests {
         XCTAssertEqual(target.days.count,8); XCTAssertFalse(String(decoding:data,as:UTF8.self).contains("date_preferences"))
     }
 }
+
+
+extension WidgetListTests {
+    func testFutureSettingsCannotBroadenSavedWidgetSelection() throws {
+        let query: JSON = .object(["version": .number(1), "root": .object([
+            "op": .string("predicate"), "field": .string("search"), "value": .string("email"), "case_sensitive": .bool(true)
+        ])])
+        let future = Record(["id": .string("future"), "name": .string("Future filter"), "query_ast": query])
+        let value = try snapshot([task("Email"), task("email")], views: [future])
+        let key = try XCTUnwrap(value.availableLists.first { $0.kind == "filter" }?.id)
+        XCTAssertEqual(value.listStatus(key, at: now, calendar: cph), .unavailable)
+        XCTAssertTrue(value.listTasks(key, at: now, calendar: cph).isEmpty)
+        XCTAssertEqual(future["query_ast"], query)
+    }
+}

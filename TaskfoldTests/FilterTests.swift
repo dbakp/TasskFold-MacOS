@@ -908,3 +908,68 @@ extension FilterTests {
         XCTAssertEqual(TaskGrouping.queryGroups([row],rule:rule,by:"none",context:missing,today:"2026-10-08",timeZone:"UTC").map { $0.tasks.map(\.id) },[[],["safe"]])
     }
 }
+
+
+extension FilterTests {
+    func testFutureSettingsOnKnownPredicateMustNotBeSilentlyDiscarded() throws {
+        let document: JSON = .object(["version": .number(1), "root": .object([
+            "op": .string("predicate"), "field": .string("search"), "value": .string("Task"),
+            "case_sensitive": .bool(true)
+        ])])
+        XCTAssertThrowsError(try FilterRule(document: document), "An older reader must refuse editing rather than erase future matching semantics")
+    }
+}
+
+extension FilterTests {
+    func testUnknownEnvelopeAndKnownOperatorSettingsRequireUpgrade() {
+        let leaf = FilterRule.predicate("today", "")
+        let nodes: [FilterRule] = [leaf, .and([leaf]), .or([leaf]), .not(leaf), .sections([leaf, .predicate("overdue", "")])]
+        for rule in nodes {
+            var fields = rule.json.object
+            fields["future_options"] = .object(["mode": .string("new semantics")])
+            XCTAssertThrowsError(try FilterRule(json: .object(fields))) { error in
+                XCTAssertTrue(error.localizedDescription.contains("Update Taskfold"))
+            }
+        }
+        var document = leaf.document.object
+        document["evaluation_zone"] = .string("UTC")
+        XCTAssertThrowsError(try FilterRule(document: .object(document)))
+    }
+
+    func testNestedUnknownSettingsCannotHideInsideSupportedGroups() {
+        var future = FilterRule.predicate("search", "email").json.object
+        future["case_sensitive"] = .bool(true)
+        let child = JSON.object(future)
+        for root: JSON in [
+            .object(["op": .string("and"), "children": .array([FilterRule.predicate("today", "").json, child])]),
+            .object(["op": .string("or"), "children": .array([child])]),
+            .object(["op": .string("not"), "child": child]),
+            .object(["op": .string("sections"), "children": .array([child, FilterRule.predicate("overdue", "").json])])
+        ] { XCTAssertThrowsError(try FilterRule(document: .object(["version": .number(1), "root": root]))) }
+    }
+
+    func testFutureQuerySurvivesCacheQueueAndExportWithoutLossyRestore() throws {
+        let document: JSON = .object(["version": .number(1), "root": .object([
+            "op": .string("predicate"), "field": .string("search"), "value": .string("email"), "case_sensitive": .bool(true)
+        ])])
+        let row = Record(["id": .string("11111111-1111-4111-8111-111111111111"), "user_id": .string("owner"), "name": .string("Future query"), "query_ast": document])
+        let mutation = Mutation(table: "saved_views", recordID: row.id, method: "POST", fields: row.fields)
+        let original = Snapshot(tables: ["saved_views": [row]], pending: [mutation])
+        let cached = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(original))
+        XCTAssertEqual(cached, original)
+        XCTAssertEqual(cached.pending[0].fields["query_ast"], document)
+        let bytes = try WorkspaceBackup.make(cached, account: "owner").data()
+        let exported = try JSONDecoder().decode(WorkspaceBackup.self, from: bytes)
+        XCTAssertEqual(exported.tables["saved_views"]?[0]["query_ast"], document)
+        XCTAssertThrowsError(try WorkspaceBackup.read(bytes), "Restore must reject unsupported semantics before remapping rather than silently discard them")
+        XCTAssertEqual(original.tables["saved_views"]?[0]["query_ast"], document)
+    }
+
+    func testSupportedDocumentsAndLegacyMissingEmptyValueStillWork() throws {
+        let today = FilterRule.predicate("today", "")
+        let rules: [FilterRule] = [today, .predicate("search", "email"), .and([today]), .or([today]), .not(today), .sections([today, .predicate("overdue", "")])]
+        for rule in rules { XCTAssertEqual(try FilterRule(document: rule.document).document, rule.document) }
+        let legacy: JSON = .object(["version": .number(1), "root": .object(["op": .string("predicate"), "field": .string("today")])])
+        XCTAssertEqual(try FilterRule(document: legacy), today)
+    }
+}

@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-13",
+  "scope": "Unknown settings in supported filter documents must not be discarded by an older editor. case_sensitive is synthetic future data, not a new supported feature.",
+  "change": "Reject unknown envelope and recursive node keys; preserve raw query in cache, queue and export; disable lossy editing and widget evaluation.",
+  "before": {
+    "namedRegressionFailures": 1
+  },
+  "after": {
+    "perRepository": {
+      "filterAndBackupTestsPassed": 110,
+      "widgetListTestsPassed": 21,
+      "failures": 0
+    },
+    "nativeIPhone": {
+      "testsPassed": 1,
+      "failures": 0,
+      "skips": 0,
+      "structuredRuntimeWarnings": 0,
+      "result": "ios-filter-future-settings-native-v1.xcresult",
+      "signing": "Installed app and extension strictly verified with real team 3UZ4C73FM2; arm64 isolated products."
+    },
+    "nativeMac": "CUA: unsupported results, disabled Save/expression, Cancel, confirmed Quit and ordinary isolated relaunch; full Snapshot equality. Not a clean-runtime XCTest claim.",
+    "builds": "Both independent apps Debug and unsigned Release builds succeeded."
+  },
+  "preservation": {
+    "restoredAndRetainedFiles": 64,
+    "protectedFiles": 100,
+    "pendingWidgetUnchanged": true
+  },
+  "observedUnresolvedUX": [
+    "Generic No matching tasks and zero count imply successful evaluation of unsupported query.",
+    "iPhone largest-text list warning truncates update instruction.",
+    "Mac parent title retains Edit filter after cancelling sheet."
+  ],
+  "limits": [
+    "No universal mixed-client/server compatibility claim.",
+    "No real late remote-provider callback claim.",
+    "Distribution signing remains user-deferred."
+  ]
+}
