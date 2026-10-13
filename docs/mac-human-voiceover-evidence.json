@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-13",
+  "scope": "Human listening and real keyboard use with VoiceOver in the independently isolated Mac app, local synthetic workspace only; Mac autosave clarity fix",
+  "foregroundCorrection": {
+    "initialReportsNotCounted": true,
+    "reason": "Listener clarified the initial speech was ChatGPT content. Taskfold control observations begin only after manually bringing the isolated app to the foreground.",
+    "automationLimit": "App-targeted VoiceOver activation did not save the task; real Control-Option-Space did. No general claim about the tool mechanism."
+  },
+  "humanObservations": [
+    {
+      "control": "Add Task",
+      "report": "Yes, Add Task button",
+      "status": "Role/name confirmed after actual foreground Shift-Tab/Tab"
+    },
+    {
+      "action": "Control-Option-Space on Add Task",
+      "report": "Saved, with clear speech afterward",
+      "corroboration": "One local task saved with the exact sample title; no tasks existed before creation"
+    },
+    {
+      "control": "Task Title field",
+      "report": "Speech clear, but return didnt save",
+      "corroboration": "Edited name already durably autosaved before the manual Return; later whole-cache relaunch retained it. No Return-specific save pass claimed."
+    },
+    {
+      "action": "Space complete then Command-Z",
+      "report": "Both actions worked with clear speech",
+      "corroboration": "Saved task remained completed after report. Completion corroborated; spoken keyboard Undo NOT accepted."
+    },
+    {
+      "control": "Restore from file / picker cancellation",
+      "report": "All clear; picker cancelled",
+      "corroboration": "Account window returned with no picker sheet. Focus afterward was Export workspace; exact open panel was not sampled while live, so exact activation route is not independently established."
+    }
+  ],
+  "undoFollowUp": {
+    "manualShortcutResult": "Unverified; completed remained true",
+    "ordinaryMenuResult": "With VoiceOver restored off, actual main-window Edit > Undo reopened the sample; cached completed false and relaunch preserved it",
+    "cause": "Unknown; no speculative Undo code fix or blanket spoken Undo acceptance"
+  },
+  "productChange": {
+    "platform": "macOS",
+    "file": "Taskfold/Views/TaskInspector.swift",
+    "change": "Small accessible Changes save automatically hint below title",
+    "reason": "Human listener expected Return to produce a separate save despite the already persisted autosave",
+    "currentSourceSHA256": "87464e28aa0627d37601c4ab3fe856e725d3eff96878a89b3ab71f65e2c6ff09",
+    "priorSourceSHA256": "feee9d0f09d123d2cdc788f833c56c99d9ba63a0366d654f422bcb80b66dd273",
+    "iOS": "Own TaskEditor retains its explicit Save action; no misleading autosave hint added there",
+    "saveBehaviorChanged": false
+  },
+  "validation": {
+    "macDebugBuild": "BUILD SUCCEEDED",
+    "buildLog": "/private/tmp/taskfold-inspector-autosave-hint-build-v1.log",
+    "nativeHint": "Observed inspectorAutosaveHint text and inspected native screenshot; title, Notes, Complete and planning controls remain reachable",
+    "currentOwnedStagedAppSwiftFilesComparedNamespaceOnly": 62,
+    "wholeLocalCacheExactThroughRebuiltPreviewQuitAndRelaunch": true,
+    "rawCycleAndTableWarningsInLocalWalkthroughAndHintPreview": 0,
+    "strictXCTestPassClaimed": false,
+    "newHintSpokenAcceptanceClaimed": false
+  },
+  "restoration": {
+    "originalVoiceOverEnabled": false,
+    "finalVoiceOverEnabled": false,
+    "finalEnabledVerifiedInSystemSettings": true,
+    "originalWelcomeDialog": true,
+    "finalWelcomeDialog": true,
+    "finalWelcomeVerifiedInUtility": true,
+    "appleScriptControlUnchangedOff": true,
+    "captionPanelNotChanged": true,
+    "extraIsolatedAppAndVoiceOverUtilityClosed": true,
+    "originalIsolatedFilesRestoredExact": 28,
+    "protectedPrimaryFilesExact": 100,
+    "retainedIOSFilesExact": 36,
+    "pendingWidgetFingerprintExact": true
+  },
+  "privateReceipts": [
+    "/private/tmp/taskfold-human-voiceover-unverified-undo-v1.json",
+    "/private/tmp/taskfold-human-voiceover-final-local-v1.json"
+  ],
+  "limits": [
+    "Bounded Mac human observations, not full critical-workflow or iOS spoken acceptance",
+    "Initial ChatGPT speech is explicitly excluded",
+    "Manual keyboard Undo result and exact recovery activation route remain unverified",
+    "No actual speech recording; listener reports are the spoken-output evidence",
+    "Existing imported-workspace accessibility cycle finding remains separate and unresolved",
+    "No real Todoist interaction, provider upload or release-signing change"
+  ],
+  "logs": [
+    {
+      "path": "/private/tmp/taskfold-human-voiceover-v1.log",
+      "sha256": "32010cf9417444d7f132053484f489b4665f131da27b82476c048d42611c9de6"
+    },
+    {
+      "path": "/private/tmp/taskfold-inspector-autosave-hint-native-v1.log",
+      "sha256": "a5cabb67dd39dc8065ad8f9d4201b64b15292aa5014946fb75e20c1038afd96c"
+    }
+  ]
+}
