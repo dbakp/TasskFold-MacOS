@@ -16,6 +16,12 @@ Reviews identify the exact queued mutation. Stale/mismatched requests cannot res
 
 Older queues may lack a baseline or individual baseline fields. Those edits require explicit review before any update is sent. The review explains that Keep my edit uses the shown values in full, including comments/subtasks in the affected fields; automatic collection merging cannot reconstruct an unknown original state. An intentional clear remains a clear after that choice. New task edits capture all affected baselines normally.
 
+## Label membership
+
+Task labels use membership semantics. With a known original baseline, Keep my edit applies only this edit's additions and removals to the synced labels; independent remote additions survive, and a remotely removed label that was unchanged locally stays removed. Later queued label edits are rebased individually after the review choice, including their guarded request baselines. Use synced can therefore discard the reviewed addition without resurrecting it through a later edit. Undo/Redo uses the same baseline-relative membership behavior.
+
+This logic is restricted to valid label collections and compatible task generations. It does not reinterpret arbitrary ordered arrays or silently approve unsupported later baselines. Older work without a reconstructable baseline retains the existing explicit-review behavior. See `label-conflict-preservation-evidence.json` for reproduced loss, regression coverage and the remaining live native label acceptance boundary.
+
 ## Verification
 
 `CollaborationTests.swift` covers reference identity, nested merge behavior, reviewed versus later queued edits, stale/mismatched requests, durable encoding, old-baseline clearing, RPC confirmation and rejection of unknown-baseline transport. `NativeConflictIntegrationTests.swift` is an opt-in live test of two native Backend instances with separately authenticated URLSessions against a disposable account. It exercises independent title/deadline edits, independent comments, retry deduplication, same-field rejection, persisted resolution/rebase and a second conflict when the server changes during review. It deletes the task it creates. The operator must revoke/delete the disposable account afterward.

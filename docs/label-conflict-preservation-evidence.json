@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-13",
+  "defect": "Keeping an overlapping offline label edit replaced the complete string array, erasing a label independently added on another device. A later queued label edit could erase the remote addition again or resurrect an earlier discarded edit. Undo used the same replacement path.",
+  "before": {
+    "regressionsExecuted": 2,
+    "failedTests": 2,
+    "failedAssertions": 5,
+    "log": "/private/tmp/taskfold-label-conflict-before.log"
+  },
+  "fix": "Apply baseline-relative label membership additions/removals; preserve remote-only membership and remote removals of locally unchanged labels. Rebase only later compatible label mutations and their guarded baselines. Task generation and unsupported membership-shape guards remain intact. Route native Undo/Redo through the same field-aware merge. Other string arrays retain replacement semantics.",
+  "verification": {
+    "perRepository": {
+      "selectedTestsPassed": 54,
+      "failures": 0,
+      "suites": [
+        "CollaborationTests",
+        "TaskGenerationTests",
+        "CompletionRevisionTests",
+        "PinnedNotesTests",
+        "TaskDeletionTests"
+      ]
+    },
+    "newTests": [
+      "testKeepLocalLabelsPreservesRemoteAdditionAndLocalRemoval",
+      "testLaterOfflineLabelIntentPreservesRemoteMembershipForBothChoices",
+      "testLabelUndoAndRedoPreserveIndependentAdditionsAndRemovals",
+      "testLaterLabelRebaseDoesNotApproveRecreatedTaskOrUnknownMembershipShape",
+      "testRebasedLabelChainSendsGuardedBaselinesAndAcknowledgesWithoutLoss"
+    ],
+    "requestBoundary": "Real native Backend sends two rebased RPC requests through URLProtocol stub. Each request guards the preceding confirmed labels and only changes labels. Acknowledge and durable encode/decode retain remote label, description and deadline. This is controlled transport evidence, not a live server test.",
+    "builds": "Final-source independent macOS Debug and arm64 iOS Simulator Debug app/widget builds pass.",
+    "ui": "No new native UI journey or live cross-device label acceptance claimed. Existing conflict UI and earlier live title/comment/deadline receipts retain their own scope.",
+    "sources": {
+      "Taskfold/Core/Models.swift": "103e18ecc72189541f39ea9042bb3b4a4d1a60b0f5954bbf7bd688e48b96a770",
+      "Taskfold/Core/Store.swift": "7e1aeb167ab9688ed71566ae358c28bcdd04c436b29d4f52c3e00800b37635da",
+      "TaskfoldTests/CollaborationTests.swift": "e7567f6154c8e418624b8c2cd0cb9aa8ccee14731905fc89a13fef9c34064c5a"
+    }
+  },
+  "preservation": {
+    "protectedFilesExact": 100,
+    "retainedWidgetFilesExact": 36,
+    "restoredMacFilesExact": 28,
+    "pendingWidgetSnapshotExact": true,
+    "realTasksAndTodoistMutated": false,
+    "newTestAppLaunches": 0
+  },
+  "nextAcceptance": "Use the existing disposable-account/native conflict setup for a bounded Mac/phone label membership edit and normal relaunch; do not rerun accepted title/comment matrices.",
+  "limits": [
+    "Original P0 objective remains active.",
+    "No schema/server change, new grammar or universal mixed-client acceptance.",
+    "Installed Mac widget expiry, actual system widget privacy, spoken output, external providers and user-deferred signing/delivery remain separate gates."
+  ]
+}

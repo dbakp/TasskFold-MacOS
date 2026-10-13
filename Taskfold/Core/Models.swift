@@ -166,6 +166,30 @@ enum TaskCompletionRevision {
 
 /// Applies only the user's changes when explicitly resolving a conflict. Remote-only items survive.
 enum TaskEdit {
+    /// Labels are membership, not an ordered replacement. Keep remote-only labels
+    /// while applying this edit's additions/removals relative to its own baseline.
+    static func keepingLocal(field: String, base: JSON, desired: JSON, remote: JSON) -> JSON {
+        if field == "labels", let merged = labelMembershipEdit(base: base, desired: desired, remote: remote) { return merged }
+        return keepingLocal(base: base, desired: desired, remote: remote)
+    }
+    fileprivate static func labelMembershipEdit(base: JSON, desired: JSON, remote: JSON) -> JSON? {
+        guard let before = labelMembers(base), let after = labelMembers(desired), let current = labelMembers(remote) else { return nil }
+        let removed = Set(before).subtracting(after)
+        let added = Set(after).subtracting(before)
+        var result = current.filter { !removed.contains($0) }
+        for value in after where added.contains(value) && !result.contains(value) { result.append(value) }
+        return .array(result.map(JSON.string))
+    }
+    private static func labelMembers(_ value: JSON) -> [String]? {
+        if value == .null { return [] }
+        guard case .array(let values) = value else { return nil }
+        var result: [String] = []
+        for value in values {
+            guard case .string(let label) = value, !label.isEmpty, !result.contains(label) else { return nil }
+            result.append(label)
+        }
+        return result
+    }
     static func keepingLocal(base: JSON, desired: JSON, remote: JSON) -> JSON {
         if desired == base { return remote }
         if remote == base || remote == desired { return desired }
@@ -212,12 +236,13 @@ struct SyncConflict: Identifiable {
         guard mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
               remote.id.lowercased() == mutation.recordID.lowercased(),
               let index = snapshot.pending.firstIndex(where: { $0 == mutation }) else { return nil }
+        let laterMutationIDs = Set(snapshot.pending.dropFirst(index + 1).map(\.id))
         var result = snapshot
         if keepLocal, mutation.method == "DELETE" {
             result.pending[index].baseline = remote.fields
         } else if keepLocal {
             result.pending[index].fields = Dictionary(uniqueKeysWithValues: mutation.fields.map { key, value in
-                (key, mutation.baseline?[key].map { TaskEdit.keepingLocal(base: $0, desired: value, remote: remote[key]) } ?? value)
+                (key, mutation.baseline?[key].map { TaskEdit.keepingLocal(field: key, base: $0, desired: value, remote: remote[key]) } ?? value)
             })
             result.pending[index].baseline = Dictionary(uniqueKeysWithValues: mutation.fields.keys.map { ($0, remote[$0]) })
             result.pending[index] = TaskCompletionRevision.capturing(result.pending[index], existing: remote)
@@ -256,9 +281,22 @@ struct SyncConflict: Identifiable {
         if let row = confirmed.firstIndex(where: { $0.id.lowercased() == mutation.recordID.lowercased() }) { confirmed[row] = Record(remoteFields) }
         else { confirmed.append(Record(remoteFields)) }
         result.tables["tasks"] = confirmed
-        for change in result.pending where change.table == "tasks" && change.recordID.lowercased() == mutation.recordID.lowercased() {
-            var local = change; local.recordID = mutation.recordID
+        for pendingIndex in result.pending.indices where result.pending[pendingIndex].table == "tasks" && result.pending[pendingIndex].recordID.lowercased() == mutation.recordID.lowercased() {
+            var local = result.pending[pendingIndex]; local.recordID = mutation.recordID
             if local.fields["id"] != nil { local.fields["id"] = .string(mutation.recordID) }
+            // Later offline label edits express their own membership delta. Rebase
+            // that delta after the reviewed choice so replay cannot erase remote
+            // additions or resurrect an earlier edit that the user discarded.
+            if laterMutationIDs.contains(local.id), local.method == "PATCH",
+               let desired = local.fields["labels"], let baseline = local.baseline?["labels"],
+               let current = result.tables["tasks"]?.first(where: { $0.id.lowercased() == mutation.recordID.lowercased() }),
+               TaskGeneration.permitsLocalAction(local, existing: current),
+               let merged = TaskEdit.labelMembershipEdit(base: baseline, desired: desired, remote: current["labels"]) {
+                local.fields["labels"] = merged
+                local.baseline?["labels"] = current["labels"]
+                result.pending[pendingIndex].fields["labels"] = local.fields["labels"]
+                result.pending[pendingIndex].baseline?["labels"] = current["labels"]
+            }
             result.apply(local)
         }
         return result

@@ -1027,3 +1027,8 @@ Resolved the observed misleading empty/count, clipped warning and Mac editor-tit
 ### 13 October — retained Mac runtime-warning attribution
 
 The conflict-edit and offline-new-task QoS warnings now have UUID-matched relocated stacks showing AppKit Services-menu data-detector scanning through accessibility inspection. No Taskfold persistence/sync scheduler defect is established; no speculative code change or warning suppression was made. The older notes archive has one reported warning but no matching event, so it stays unresolved. The Mac-owned inspector explicitly checks archival coverage; companion iOS stores evidence only. See `mac-runtime-warning-attribution-evidence.json`. VoiceOver output access again times out; original off state and all test data are restored. All 100 protected, 36 retained and 28 restored files plus pending-widget fingerprint match; duplicate diagnostic export pruned. Broader P0 remains open.
+
+
+### 13 October — preserve independent label membership
+
+Two regressions reproduced actual label loss before the fix (five failed assertions). Both owned clients now merge baseline-relative label additions/removals for reviewed edits and Undo/Redo, and rebase only later compatible label edits/baselines after either review choice. Final selected core suites pass 54 tests per repo; controlled native Backend requests and persisted acknowledgements preserve remote labels, notes and deadline. Both final-source native Debug builds pass. See `label-conflict-preservation-evidence.json`. This does not claim a new live two-app label journey; that bounded acceptance remains. All protected/retained/restored files and pending widget fingerprint match; no real task, Todoist or backend mutation.

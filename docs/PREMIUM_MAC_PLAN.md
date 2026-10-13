@@ -2116,3 +2116,5 @@ Current-source team-signed isolated host passes the real native file-picker/prov
 13 October follow-up: unsupported filters now have an honest unavailable state; native Mac Cancel retains the correct main window title. Phone largest-text explanation/action/Cancel/relaunch passes. Evidence: `filter-unavailable-presentation-evidence.json`.
 
 13 October: two retained QoS diagnostics traced to AppKit Services-menu accessibility scanning, with UUID-correct stack relocation. No speculative app scheduling fix. Older notes/table/profile-cycle findings and actual spoken accessibility remain open. See `mac-runtime-warning-attribution-evidence.json`.
+
+13 October: fixed independent label loss during Keep my edit, later offline replay and Undo/Redo. Companion iOS owns the same membership behavior independently. 54 affected tests per repo, guarded-request regression and final native Debug builds pass; live paired label acceptance remains. See `label-conflict-preservation-evidence.json`.

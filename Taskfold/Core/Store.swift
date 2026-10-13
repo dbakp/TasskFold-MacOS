@@ -865,7 +865,7 @@ final class Store {
                   let current = record("tasks", id: change.recordID) else { return change }
             var next = change
             next.fields = Dictionary(uniqueKeysWithValues: change.fields.map { key, value in
-                (key, TaskEdit.keepingLocal(base: base[key] ?? .null, desired: value, remote: current[key]))
+                (key, TaskEdit.keepingLocal(field: key, base: base[key] ?? .null, desired: value, remote: current[key]))
             })
             next.baseline = nil // commit captures the actual state before applying the rebased inverse.
             return next
