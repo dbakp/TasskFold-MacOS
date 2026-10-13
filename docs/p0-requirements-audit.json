@@ -115,7 +115,7 @@
         "widget-record-route-evidence.json",
         "mac-widget-normal-workspace-evidence.json"
       ],
-      "boundary": "Installed Mac My list automatic expiry/persisted completion and current-source configured-project cold task route accepted. Medium Pinned note cold open/edit/preview refresh/edited-note cold reopen accepted. Installed Focus paused-session cold route and subsequent native Resume/Pause/End accepted with only session data changed; ended-state widget preview/reopen pending. Remaining distinct Mac configuration/action/account/empty classes and actual system-selected redaction/routing stay open; previews and native URL-handler tests do not substitute."
+      "boundary": "Installed Mac My list automatic expiry/persisted completion and current-source configured-project cold task route accepted. Medium Pinned note cold open/edit/preview refresh/edited-note cold reopen accepted. Installed Focus paused-session cold route and subsequent native Resume/Pause/End accepted with only session data changed; ended preview confirmed and exact ended cold-launch state inspected, with inferred click attribution. Project pulse installed configuration/route pending. Remaining distinct Mac configuration/action/account/empty classes and actual system-selected redaction/routing stay open; previews and native URL-handler tests do not substitute."
     },
     {
       "id": "usability_accessibility_runtime",
@@ -270,7 +270,11 @@
     "noNewInstalledFocusAcceptance": false,
     "focusInstalledColdPausedRouteAccepted": true,
     "focusResumePauseEndNativeAccepted": true,
-    "focusEndedInstalledPreviewReopenPending": true,
-    "fullPausedWorkspaceExactAtColdOpen": true
+    "focusEndedInstalledPreviewReopenPending": false,
+    "fullPausedWorkspaceExactAtColdOpen": true,
+    "focusEndedPreviewConfirmed": true,
+    "focusEndedColdLaunchInspected": true,
+    "focusEndedClickAttribution": "inferred, not explicitly confirmed",
+    "projectPulseInstalledPending": true
   }
 }

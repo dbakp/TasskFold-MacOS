@@ -1,6 +1,6 @@
 {
   "date": "2026-10-13",
-  "status": "MY_LIST_PINNED_NOTE_AND_PAUSED_FOCUS_COLD_ROUTES_ACCEPTED__ENDED_FOCUS_PENDING",
+  "status": "MY_LIST_NOTE_FOCUS_WORKFLOWS_ACCEPTED__PROJECT_PULSE_PENDING",
   "scope": "Current-source installed Mac widget continuation in a normal local workspace; named My list and medium Pinned note workflows accepted.",
   "sourceHeads": {
     "TasskFold-MacOS": "38893b20bfae7ce3db56d9155238e1de8bafcc29",
@@ -88,10 +88,10 @@
     "inactiveOldBuildBytesPruned": 372752384,
     "currentBuildAndOriginalEvidenceRetained": true
   },
-  "next": "User observation of ended Focus desktop preview and cold reopen; app normally quit, unchanged build retained.",
+  "next": "Installed Project pulse configuration for Desktop widget workshop and cold route; main app quit, unchanged v10 retained.",
   "limits": [
     "Accepts named installed My list, Pinned note and paused Focus cold routes plus subsequent native Focus controls; no new privacy or cloud-account claim.",
-    "Focus widget was requested as medium; actual desktop family/layout was not independently inspected. Ended-state installed preview/reopen remains pending.",
+    "Focus desktop ended preview confirmed; actual ended cold-launch state inspected with full workspace equality. Click attribution is inferred, not explicit. Desktop family/layout not independently inspected. Installed Project pulse remains pending.",
     "Release signing remains user-deferred."
   ],
   "currentNativeAcceptance": {
@@ -194,6 +194,32 @@
       "actualDesktopFamilyNotIndependentlyInspected": true,
       "unchangedBuildNoSeedArguments": true,
       "normalQuitConfirmed": true
+    },
+    "focusEndedFollowup": {
+      "humanConfirmedEndedPreview": true,
+      "humanConfirmedClick": false,
+      "mainProcessesBeforeCUABinding": [
+        "25661 Tue Oct 13 23:45:51 2026     /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold"
+      ],
+      "nativeEndedSessionObserved": true,
+      "task": "Prepare the design review",
+      "project": "Desktop widget workshop",
+      "timeSpent": "00:06",
+      "wholeEndedWorkspaceExact": true,
+      "normalQuitConfirmed": true,
+      "triggerAttribution": "Consistent with requested widget click: new no-argument process already running and Focus sheet open before CUA binding. User explicitly confirmed preview only; click not independently observed.",
+      "projectPulsePreparation": {
+        "nativeProjectChosen": "Desktop widget workshop",
+        "completed": 0,
+        "total": 1,
+        "open": 1,
+        "overdueOrNearDeadline": false,
+        "completionEvents": 0,
+        "reopenEvents": 0,
+        "addedEvents": 1,
+        "wholeWorkspaceUnchanged": true,
+        "installedAcceptance": false
+      }
     }
   }
 }
