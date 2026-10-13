@@ -1,0 +1,125 @@
+{
+  "date": "2026-10-13",
+  "scope": "Native iPhone label selection, real owner-authenticated sync, and normal relaunch; paired Mac collision acceptance remains open.",
+  "productChange": "Stable taskLabel-<label UUID> accessibility identifiers on independently owned Mac and iOS label toggles. No synchronization or authentication behavior changed in this follow-up.",
+  "fixture": {
+    "account": "Existing whitelisted disposable continuity account; no Todoist or real-account task data",
+    "recordsCreated": {
+      "tasks": 1,
+      "labels": 4
+    },
+    "credentials": "Private host-only fixture, never committed or included here"
+  },
+  "ios": {
+    "device": "Disposable iPhone 17 Pro, iOS 26.5 Simulator",
+    "bundle": "com.dbakp.taskfold.backupcanceltests",
+    "signing": "Existing Apple Development certificate, actual team 3UZ4C73FM2 verified by repo signing helper",
+    "test": "TaskfoldUITests/testLivePhoneAddsIndependentLabelWhileMacIsOffline",
+    "resultBundle": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-label-edit-v2.xcresult",
+    "actualPassingTests": 1,
+    "failures": 0,
+    "skips": 0,
+    "structuredRuntimeWarnings": 0,
+    "checks": [
+      "Visible shared label starts selected; phone label starts off",
+      "Target trailing native switch and assert it turns on",
+      "Save phone label and independent notes; wait for empty pending queue",
+      "Normal relaunch without test authentication flag; exact synthetic task record retained",
+      "Owner-authenticated server read confirms shared + phone membership and notes"
+    ],
+    "visualInspection": "Exported XCTest screenshot inspected: Proof Phone and Proof Shared on; other proof labels off",
+    "firstAttempt": {
+      "resultBundle": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/ios-label-edit-v1.xcresult",
+      "result": "Failed: test tapped inert label midpoint; screenshot and cache show switch stayed off. No app data-loss defect inferred. Corrected target and explicit switch-state assertion pass."
+    }
+  },
+  "mac": {
+    "build": "Current source app and native test bundle build-for-testing succeeded",
+    "resultBundle": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/mac-label-queue-v1.xcresult",
+    "result": "Runner failed to initialize while enabling automation mode; no app-body steps executed, no native Mac acceptance claimed",
+    "computerUse": "Ordinary isolated app accessible once; subsequent Quit attempt reported Mac locked. Manual unlock requested; no reply before cleanup. Unused isolated process closed, original files restored.",
+    "preparedPhases": [
+      "testLiveMacQueuesIndependentLabelMembership",
+      "testLiveMacKeepsLabelsWithoutLosingPhoneMembership"
+    ],
+    "remaining": "Fresh fixture; actual offline Mac edits, phone edit, Mac Keep my edit and both relaunches. Do not retry unchanged locked/automation boundary."
+  },
+  "preparedPhoneReceivePhase": "testLivePhoneReceivesAllIndependentLabelsAfterRelaunch (compiled, not executed)",
+  "cleanup": {
+    "serverTables": {
+      "tasks": {
+        "originalRowsPreserved": 3,
+        "syntheticMetadataRemaining": 0
+      },
+      "projects": {
+        "originalRowsPreserved": 3,
+        "syntheticMetadataRemaining": 0
+      },
+      "sections": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "labels": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "profiles": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "project_collaborators": {
+        "originalRowsPreserved": 0,
+        "syntheticMetadataRemaining": 0
+      },
+      "saved_views": {
+        "originalRowsPreserved": 3,
+        "syntheticMetadataRemaining": 0
+      },
+      "favorites": {
+        "originalRowsPreserved": 2,
+        "syntheticMetadataRemaining": 0
+      },
+      "view_preferences": {
+        "originalRowsPreserved": 5,
+        "syntheticMetadataRemaining": 0
+      },
+      "view_orders": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "reminder_preferences": {
+        "originalRowsPreserved": 0,
+        "syntheticMetadataRemaining": 0
+      },
+      "focus_sessions": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "task_activity_epoch": {
+        "originalRowsPreserved": 1,
+        "syntheticMetadataRemaining": 0
+      },
+      "task_activity": {
+        "originalRowsPreserved": 40,
+        "syntheticMetadataRemaining": 2
+      }
+    },
+    "originalIsolatedMacFilesRestored": 28,
+    "primaryFilesUnchanged": 100,
+    "retainedIOSWidgetFixtureFilesUnchanged": 36,
+    "pendingMacWidgetFixture": "Exact fingerprint preserved; only pending host left running",
+    "disposablePhone": "App and runner uninstalled; only F7AD9C8B-EF5E-44F0-82DF-6654524DA94D shut down",
+    "activity": "Two new synthetic creation/deletion activity records remain. All original activity rows and global epoch preserved.",
+    "releaseSigning": "User-deferred; unchanged",
+    "prunedUnusedBuildCache": {
+      "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-session-async-v1",
+      "allocatedKiB": 482376,
+      "reason": "Inactive superseded cache; current products and original result bundles retained. Removes duplicate backup test app identity."
+    }
+  },
+  "limits": [
+    "Phone pass alone does not accept paired conflict resolution",
+    "Existing 54 regression tests per repository and controlled guarded-request evidence remain the product-fix proof",
+    "No VoiceOver, system WidgetKit privacy, cloud-provider, APNs, distribution or minimum-client rollout gate closed by this run"
+  ]
+}

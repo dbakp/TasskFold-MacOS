@@ -228,7 +228,7 @@ struct TaskInspectorForm: View {
                 ForEach(store.labels) { label in
                     Toggle(isOn: Binding(get: { TaskLabels.normalized(draft["labels"].list, labels: store.labels).contains(.string(label.id)) }, set: { enabled in
                         var labels = TaskLabels.normalized(draft["labels"].list, labels: store.labels).filter { $0 != .string(label.id) }; if enabled { labels.append(.string(label.id)) }; draft["labels"] = .array(labels)
-                    })) { Label(label.name, systemImage: "tag.fill").foregroundStyle(Color.project(label.string("color"))) }
+                    })) { Label(label.name, systemImage: "tag.fill").foregroundStyle(Color.project(label.string("color"))) }.accessibilityIdentifier("taskLabel-" + label.id)
                 }
             }
             if workspace.taskDepth(taskID) < 2 {

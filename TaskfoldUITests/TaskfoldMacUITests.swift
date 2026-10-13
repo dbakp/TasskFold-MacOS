@@ -2678,3 +2678,64 @@ extension TaskfoldMacUITests {
         app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
     }
 }
+
+extension TaskfoldMacUITests {
+
+    @MainActor private func labelFixture() throws -> (LiveConflictFixture, [String: String]) {
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.backupcanceltests.runner" else { throw XCTSkip("Dedicated label continuity runner required") }
+        let values = try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: "/private/tmp/taskfold-label-native-v1.json"))) as! [String: Any]
+        let account = values["account"] as! [String: String], labels = values["labels"] as! [String: String]
+        guard account["userID"] == "9a8bfc3d-42ec-4c89-8f1d-c830b2215152", account["email"] == "taskfold-continuity-" + account["userID"]! + "@example.invalid", UUID(uuidString: values["taskID"] as! String) != nil, labels.count == 4, labels.values.allSatisfy({ UUID(uuidString: $0) != nil }) else { throw XCTSkip("Disposable label fixture required") }
+        let title = values["title"] as! String
+        return (LiveConflictFixture(account: account, taskID: values["taskID"] as! String, originalTitle: title, offlineTitle: title, remoteTitle: title, remoteNotes: values["notes"] as! String), labels)
+    }
+    @MainActor private func hasLabels(_ cache: NSDictionary, _ f: LiveConflictFixture, _ ids: [String]) -> Bool {
+        Set(liveConflictTask(cache, f)?["labels"] as? [String] ?? []) == Set(ids)
+    }
+
+    @MainActor private func labelControl(_ app: XCUIApplication, _ id: String) -> XCUIElement {
+        let control = app.descendants(matching: .any)["taskLabel-" + id].firstMatch
+        for _ in 0..<12 { if control.exists && control.isHittable { break }; app.scrollViews["inspector"].firstMatch.swipeUp() }
+        XCTAssertTrue(control.exists); XCTAssertTrue(control.isHittable); return control
+    }
+    @MainActor private func openLabelTask(_ app: XCUIApplication, _ f: LiveConflictFixture) {
+        app.staticTexts["Inbox"].firstMatch.click()
+        let row = liveConflictRow(app, f.taskID); XCTAssertTrue(row.waitForExistence(timeout: 30)); row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        if !app.descendants(matching: .any)["taskTitle"].firstMatch.waitForExistence(timeout: 3) { app.buttons["Inspector"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click() }
+    }
+    @MainActor func testLiveMacQueuesIndependentLabelMembership() throws {
+        continueAfterFailure = false
+        let (f, labels) = try labelFixture(), app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = ["--live-auth-ui-test"] + liveConflictArguments(f); liveConflictLaunch(app)
+        let email = app.textFields["authEmail"], password = app.secureTextFields["authPassword"]
+        XCTAssertTrue(email.waitForExistence(timeout: 30)); email.click(); email.typeText(f.account["email"]!); password.click(); password.typeText(f.account["password"]!); app.buttons["nativeSignIn"].click()
+        XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 30))
+        _ = try waitLiveConflict(f) { self.hasLabels($0, f, [labels["shared"]!]) && ($0["pending"] as? [Any])?.isEmpty == true }
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
+        app.launchArguments = ["--continuity-offline"] + liveConflictArguments(f); liveConflictLaunch(app); openLabelTask(app, f)
+        labelControl(app, labels["mac"]!).click()
+        _ = try waitLiveConflict(f) { self.hasLabels($0, f, [labels["shared"]!, labels["mac"]!]) && ($0["pending"] as? [Any])?.count == 1 }
+        labelControl(app, labels["later"]!).click()
+        let queued = try waitLiveConflict(f) { self.hasLabels($0, f, [labels["shared"]!, labels["mac"]!, labels["later"]!]) && ($0["pending"] as? [Any])?.count == 2 }
+        retainWindow(app, name: "Two offline label memberships queued")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
+        XCTAssertEqual(try liveConflictCache(f), queued)
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
+    }
+    @MainActor func testLiveMacKeepsLabelsWithoutLosingPhoneMembership() throws {
+        continueAfterFailure = false
+        let (f, labels) = try labelFixture(), app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = liveConflictArguments(f); liveConflictLaunch(app)
+        let review = app.links["reviewSyncConflict"]; XCTAssertTrue(review.waitForExistence(timeout: 35)); review.click()
+        XCTAssertTrue(app.buttons["keepMyEdit"].waitForExistence(timeout: 5)); retainWindow(app, name: "Real phone and Mac label conflict review")
+        app.buttons["keepMyEdit"].click()
+        let settled = try waitLiveConflict(f) { self.hasLabels($0, f, Array(labels.values)) && self.liveConflictTask($0, f)?["description"] as? String == f.remoteNotes && ($0["pending"] as? [Any])?.isEmpty == true }
+        openLabelTask(app, f)
+        for id in labels.values { XCTAssertEqual(labelControl(app, id).value as? String, "1") }
+        retainWindow(app, name: "All independent labels preserved after Keep my edit")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5)); liveConflictLaunch(app)
+        _ = try waitLiveConflict(f) { self.hasLabels($0, f, Array(labels.values)) && ($0["pending"] as? [Any])?.isEmpty == true }
+        XCTAssertEqual(try liveConflictCache(f), settled)
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 5))
+    }
+}
