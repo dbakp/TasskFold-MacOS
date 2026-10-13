@@ -2202,3 +2202,13 @@ The user explicitly confirmed the desktop Focus widget said ended. PID25661 was 
 ### 13 October — installed Project pulse cold route and completion refresh
 
 PID26288 from unchanged v10 was observed before CUA binding, without launch arguments; the user then confirmed clicking the configured Project pulse widget. Native overview selected Desktop widget workshop, 0 of 1 completed and 1 open; whole saved workspace was exact. Completed only Prepare the design review through its inspector: native overview and published projection changed to 1 of 1, and the user confirmed the installed widget showed 100%. Native Command-Z restored the task and native/published totals to 0 of 1. History correctly retained 1 completion and 1 reopen event, separate from current totals. Only task completion fields and task_activity changed; after Undo the task differs from the original solely by completion_version=2, with notes/date/estimate/project and unrelated work unchanged. Normal Quit left no main app sessions; all 100 protected primary files remain exact. Installed reverse-refresh observation requested. CUA screenshot was white/unusable, so readable visual desktop-family/layout acceptance is not inferred from the correct accessibility tree. See `mac-widget-normal-workspace-evidence.json`.
+
+
+### 13 October — installed Project pulse reverse refresh accepted
+
+The user confirmed the desktop Project pulse widget returned to 0 of 1 completed after native Undo. The full restored workspace remains exact to the post-Undo baseline and no Taskfold main app session is running. All 100 protected primary files remain exact. This completes the named installed project selection → cold overview → completion refresh → Undo reverse-refresh journey. Existing visual-family, account and system-privacy limits remain; the full P0 objective is not complete. See `mac-widget-normal-workspace-evidence.json`.
+
+
+### 13 October — normal signed-out widget host prepared
+
+Through current v10 native Account controls, chose Leave Local Workspace and confirmed the explicit promise that saved tasks/pending changes stay on this Mac. Account then showed Not signed in / No workspace open, disabled backup controls and the main sign-in screen. The full local cache remains exact to the post-Undo baseline. Published widget payload is account empty, updated 0 and tasks empty, without any test task/project/note content. Closed Settings and quit normally; no Taskfold main process remains. Requested one grouped human observation of installed My list/note/Focus/Pulse content removal plus a Project pulse click. This is native sign-out/cache/publication evidence; actual installed refresh/safe cold routing remain pending. No real account or Todoist data changed.
