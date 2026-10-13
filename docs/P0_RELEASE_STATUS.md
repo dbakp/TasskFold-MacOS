@@ -1017,3 +1017,8 @@ The independent signed Mac app now passes actual NSOpenPanel selection, controll
 ### 13 October — preserve unknown filter settings
 
 Known query operators with future settings now remain unsupported and intact instead of being silently rewritten. Both repos pass 110 filter/backup and 21 widget tests, Debug and unsigned Release builds. One strict native iPhone case and native Mac CUA Cancel/confirmed Quit/relaunch preserve the full snapshot. See `filter-future-settings-evidence.json` for bounded evidence and the three observed presentation defects still open. This does not close all mixed-client acceptance.
+
+
+### 13 October — unsupported-filter presentation
+
+Resolved the observed misleading empty/count, clipped warning and Mac editor-title leak. Final native phone largest-text scrolling/action/Cancel/relaunch passes with one test and no structured runtime warnings; native Mac title/Cancel and readable explanation pass through CUA. See `filter-unavailable-presentation-evidence.json` and paired before/after captures for scope. Broader P0 gates remain open.

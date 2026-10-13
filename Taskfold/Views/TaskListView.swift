@@ -152,8 +152,16 @@ struct TaskListView: View {
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(maxWidth: ReadingColumn.width).frame(maxWidth: .infinity)
-            if let failure = store.filterError(scope) { VStack(alignment: .leading, spacing: 8) { Label(failure, systemImage: "exclamationmark.triangle"); if case .saved(let id) = scope, let view = store.record("saved_views", id: id) { Button("Edit Filter…") { filterEditor = view } } }.padding().accessibilityIdentifier("savedFilterError") }
-            if case .saved = scope, projectLayout == "board" { SavedFilterBoard(scope: scope, tasks: filtered, open: { workspace.selection = [$0.id] }, toggle: { workspace.toggle([$0.id]) }) }
+            if let failure = store.filterError(scope) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Label("Filter unavailable", systemImage: "exclamationmark.triangle").font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                        Text(failure).fixedSize(horizontal: false, vertical: true)
+                        Text("Your saved filter is preserved. Its results cannot be shown in this version of Taskfold.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        if case .saved(let id) = scope, let view = store.record("saved_views", id: id) { Button("Edit Filter…") { filterEditor = view } }
+                    }.padding(24).frame(maxWidth: ReadingColumn.width, alignment: .leading).frame(maxWidth: .infinity, alignment: .center)
+                }.accessibilityIdentifier("savedFilterError")
+            } else if case .saved = scope, projectLayout == "board" { SavedFilterBoard(scope: scope, tasks: filtered, open: { workspace.selection = [$0.id] }, toggle: { workspace.toggle([$0.id]) }) }
             else if !projectID.isEmpty && projectLayout == "board" {
                 ProjectBoard(columns: boardColumns) { section in captureSection = section; quickAddVisible = true }
             } else {
@@ -248,6 +256,7 @@ struct TaskListView: View {
 
     /// A date line and a count; no tagline copy.
     private var subtitle: String {
+        if store.filterError(scope) != nil { return "Filter unavailable" }
         if scope == .completed { return "\(filtered.count) completed" }
         let count = remaining == 1 ? "1 task" : "\(remaining) tasks"
         if scope == .today { return Date().formatted(.dateTime.weekday(.wide).day().month(.wide)) + " · " + count }

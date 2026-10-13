@@ -74,6 +74,10 @@ struct SavedViewEditor: View {
         NavigationStack {
             Form {
                 Section {
+                    Text(store.record("saved_views", id: record.id) == nil ? "New filter" : "Edit filter")
+                        .font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                }
+                Section {
                     TextField("Filter name", text: text("name")).focused($focusedField, equals: "name").accessibilityIdentifier("savedViewName")
                     if let nameFailure { Label(nameFailure, systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("filterNameValidationError") }
                     Toggle("Edit expression", isOn: Binding(get: { advanced }, set: { value in
@@ -136,8 +140,8 @@ struct SavedViewEditor: View {
             #if DEBUG
             .modifier(CalendarContextFixtureControls(editor: true))
             #endif
-            .navigationTitle(store.record("saved_views", id: record.id) == nil ? "New filter" : "Edit filter")
             #if os(iOS)
+            .navigationTitle(store.record("saved_views", id: record.id) == nil ? "New filter" : "Edit filter")
             .navigationBarTitleDisplayMode(.inline)
             // Keep the keyboard dismissal control in the sheet's measured safe area.
             // A keyboard ToolbarItem emits invalid-frame warnings as this Form gains focus.

@@ -36,5 +36,6 @@
     "No universal mixed-client/server compatibility claim.",
     "No real late remote-provider callback claim.",
     "Distribution signing remains user-deferred."
-  ]
+  ],
+  "presentationFollowUp": "The three recorded observations were addressed and verified in filter-unavailable-presentation-evidence.json; retained captures document the before state."
 }

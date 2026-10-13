@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-13",
+  "change": "Unsupported filters show a dedicated scrollable explanation instead of evaluated-empty results. Mac subtitle says Filter unavailable and editor uses an in-sheet heading to avoid leaking its navigation title. iPhone largest-text heading separates its icon to avoid splitting unavailable.",
+  "validation": {
+    "independentDebugBuilds": "Mac app and iOS build-for-testing succeeded.",
+    "nativeIPhone": "Final v2: one passing test, zero failures/skips/structured runtime warnings. Largest dark text; scroll to preservation explanation and reachable Edit filter; disabled Save; Cancel, exact whole Snapshot equality and relaunch.",
+    "result": "ios-filter-unavailable-native-v2.xcresult",
+    "installedSignatures": "App and extension strict real team 3UZ4C73FM2 verified before uninstall.",
+    "nativeMac": "CUA: Future filter \u2014 Filter unavailable; full explanation visible, no generic empty results; disabled editor Save; Cancel retains correct main title. Saved-view records equal previous seeded document.",
+    "macScopeLimit": "Fresh fixture timestamps, task generations and widget tokens differ from prior run; this presentation check does not claim whole Snapshot equality to that earlier seed. Separate earlier preservation run has exact full-snapshot evidence.",
+    "screenshots": "Final top and scrolled iPhone captures visually inspected; native Mac screenshot inspected inline.",
+    "cleanup": "Mac test process quit; original 28 files restored. Protected 100 files, retained 36 files and pending widget fingerprint verified again after cleanup. Final iPhone test app/runner uninstalled and Simulator shut down; pending Mac widget host untouched."
+  },
+  "limitations": [
+    "Spoken VoiceOver traversal remains open.",
+    "Mac CUA checks do not establish clean XCTest runtime.",
+    "Installed desktop widget expiry and distribution gates remain open."
+  ]
+}

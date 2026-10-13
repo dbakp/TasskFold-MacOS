@@ -2112,3 +2112,5 @@ Current-source team-signed isolated host passes the real native file-picker/prov
 
 
 13 October: guarded unknown filter settings against lossy editing; native Cancel/Quit/relaunch preserves the snapshot. Unsupported-filter empty-state/count and sheet-title presentation remain open; see `filter-future-settings-evidence.json`.
+
+13 October follow-up: unsupported filters now have an honest unavailable state; native Mac Cancel retains the correct main window title. Phone largest-text explanation/action/Cancel/relaunch passes. Evidence: `filter-unavailable-presentation-evidence.json`.
