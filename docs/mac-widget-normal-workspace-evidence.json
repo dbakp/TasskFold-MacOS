@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-13",
+  "status": "PREPARED_AWAITING_MANUAL_MAC_UNLOCK",
+  "scope": "Current-source installed Mac widget continuation using ordinary local tasks rather than a launch-argument-dependent ui-testing workspace. Preparation is not new installed-host acceptance.",
+  "sourceHeads": {
+    "TasskFold-MacOS": "38893b20bfae7ce3db56d9155238e1de8bafcc29",
+    "TaskFold-iOS": "0e9f3166cf6e929e21a122cb713600b7baad4820"
+  },
+  "build": {
+    "log": "taskfold-mac-widget-native-build-v10.log",
+    "sha256": "609c3ec78aee232382b51e79f80e8b563bbb3a5380c8b0d22325f81ef81abc61",
+    "result": "BUILD SUCCEEDED",
+    "configuration": "Debug arm64 macOS app and embedded widget extension",
+    "productionSigningChanged": false
+  },
+  "signatures": {
+    "Taskfold.app": {
+      "strictSignature": true,
+      "team": "3UZ4C73FM2",
+      "group": [
+        "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts"
+      ]
+    },
+    "TaskfoldWidgets.appex": {
+      "strictSignature": true,
+      "team": "3UZ4C73FM2",
+      "group": [
+        "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts"
+      ]
+    }
+  },
+  "registration": {
+    "singleCurrentPluginPath": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex",
+    "oldRegisteredPathsRemoved": true,
+    "oldExtensionStoppedForReplacement": true
+  },
+  "sourceAudit": {
+    "appAndWidgetSwiftFilesNamespaceOnly": 63,
+    "projectionAccount": "local",
+    "openTaskIDs": [
+      "060a3b4d-be6e-4c9a-a143-864b2b14f53e",
+      "c779b991-bb9e-4fde-bba6-045e07889264"
+    ],
+    "pinnedNoteTaskIDs": [
+      "c779b991-bb9e-4fde-bba6-045e07889264"
+    ],
+    "newAppMainProcessStarted": false
+  },
+  "nativeDataPreparation": {
+    "app": "Prior retained isolated host, normal launch without --uitesting or seed arguments; quit normally before replacement.",
+    "project": "Desktop widget workshop",
+    "tasks": [
+      {
+        "id": "c779b991-bb9e-4fde-bba6-045e07889264",
+        "title": "Prepare the design review",
+        "projectID": "afb3f2b9-427e-405c-9399-52322487805f",
+        "dueDate": "2026-10-14",
+        "estimateMinutes": 25,
+        "completed": false
+      },
+      {
+        "id": "060a3b4d-be6e-4c9a-a143-864b2b14f53e",
+        "title": "Keep the workshop notes",
+        "projectID": null,
+        "dueDate": null,
+        "estimateMinutes": null,
+        "completed": false
+      }
+    ],
+    "notes": "Review the desktop widget layout.\nCapture three decisions.\nList the next steps.",
+    "pinnedNotes": 1,
+    "pendingMutations": 0
+  },
+  "blockedObservation": {
+    "reason": "CUA reports Mac locked; current build UI launch/inspection did not start a main app process.",
+    "manualUnlockRequested": true,
+    "currentMainAppSessions": 0,
+    "currentBuildWillRemainIntact": true
+  },
+  "preservation": {
+    "previousHumanCompletedFixtureByteExact": true,
+    "localSyntheticSnapshotExactAfterRegistration": true,
+    "protectedPrimaryFilesExact": 100
+  },
+  "cleanup": {
+    "inactiveOldBuildBytesPruned": 372752384,
+    "currentBuildAndOriginalEvidenceRetained": true
+  },
+  "next": "After manual unlock, inspect a normal launch and unchanged local task/note data. Configure the existing My list widget for Desktop widget workshop, quit the app, then verify the actual matching project/task route. Native app URL-handler acceptance already exists; it is not substituted for this installed-host check.",
+  "limits": [
+    "No new installed widget route, completion, privacy or cloud-account acceptance claimed.",
+    "Normal-mode preparation used the prior retained binary; the new source build still needs GUI observation.",
+    "Release signing remains user-deferred."
+  ]
+}
