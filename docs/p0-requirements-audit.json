@@ -73,7 +73,7 @@
     {
       "id": "recovery",
       "requirement": "Validated portable/encrypted restore, relationships, safe Cancel/retry, account-owned reads and actual external-provider boundaries.",
-      "status": "incomplete_external_provider",
+      "status": "accepted_bounded",
       "evidence": [
         "portable-workspace-evidence.json",
         "mac-cloud-restore-native-evidence.json",
@@ -82,9 +82,10 @@
         "mac-provider-transfer-evidence.json",
         "ios-fileprovider-feasibility-evidence.json",
         "backup-file-access-guidance-evidence.json",
-        "ios-external-provider-transfer-evidence.json"
+        "ios-external-provider-transfer-evidence.json",
+        "ios-external-provider-recovery-evidence.json"
       ],
-      "boundary": "Named iPhone actual provider download/restore/relaunch passes with synthetic loopback delivery. Actual unavailable/offline retry and delayed/cancelled workspace callbacks remain unaccepted. No general cloud-provider compatibility claim."
+      "boundary": "Representative native recovery and external-file cases pass in recorded scope, including actual iPhone provider download/restore/relaunch, same-file unavailable/retry and late provider response after system-picker cancellation plus local workspace departure/return. No new authenticated external-provider matrix, app-received late URL callback or universal provider compatibility claim."
     },
     {
       "id": "continuity",
@@ -234,7 +235,6 @@
     "Supported interaction surface for remaining distinct installed Mac widget configuration/actions; text reads are automated.",
     "Actual supported system privacy controls/locked transition.",
     "Human spoken-output observations for remaining critical controls.",
-    "Actual iOS unavailable/offline retry and delayed/cancelled workspace callbacks; named real provider download/restore/relaunch now passes.",
     "User-deferred signing/provider/distribution and old-active-writer rollout."
   ],
   "stoppingRule": "Do not invent a gate for every possible combination or substitute easier previews/core tests. Continue distinct actionable risks; resume prerequisite-limited gates when their external state changes.",

@@ -111,7 +111,7 @@
     "protectedMismatches": [],
     "inactiveBuildBytesPruned": 206248345
   },
-  "nextAction": "Verify real offline/unavailable retry and delayed/cancelled workspace callbacks using the independently owned provider fixture.",
+  "nextAction": "Named representative external-file cases are accepted in transfer/recovery evidence; reuse them. Continue the remaining Mac widget/system-privacy and user-deferred requirements without inventing an exhaustive provider matrix.",
   "sources": [
     "https://developer.apple.com/documentation/fileprovider",
     "https://developer.apple.com/documentation/fileprovider/synchronizing-files-using-file-provider-extensions",
@@ -312,5 +312,6 @@
     "productFinding": "A coordinated file-access failure could expose a raw system message. Both independent readers now normalize file-access errors to the existing actionable retry guidance while preserving parser, size and cancellation behavior. See backup-file-access-guidance-evidence.json."
   },
   "latestStatus": "Corrected nonreplicated domain mapping and actual Taskfold server-backed transfer/restore/relaunch pass. Earlier picker differences were observed with invalid prototype mappings and are not general API limitations.",
-  "latestEvidence": "ios-external-provider-transfer-evidence.json"
+  "latestEvidence": "ios-external-provider-transfer-evidence.json",
+  "latestRecoveryEvidence": "ios-external-provider-recovery-evidence.json"
 }

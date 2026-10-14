@@ -145,8 +145,8 @@
     "earlierReplicatedDisposableDeviceResidual": "Prior Simulator-delete Cocoa 513/POSIX 1 residual remains stopped; no new permission override or delete retry."
   },
   "remaining": [
-    "Actual unavailable/offline-file recovery and retry through this provider",
-    "Actual delayed/cancelled callback across a workspace transition",
-    "System-selected widget privacy, remaining representative installed Mac interactions and user-deferred spoken accessibility/signing retain their existing scope"
-  ]
+    "Named representative external-file failure/retry and delayed cancellation cases now pass; see latestRecoveryEvidence.",
+    "Remaining Mac widget/system-privacy and user-deferred spoken/signing/rollout requirements retain their existing scope."
+  ],
+  "latestRecoveryEvidence": "ios-external-provider-recovery-evidence.json"
 }
