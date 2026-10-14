@@ -113,9 +113,10 @@
         "system-widget-privacy-prerequisite-evidence.json",
         "widget-completion-expiry-evidence.json",
         "widget-record-route-evidence.json",
-        "mac-widget-normal-workspace-evidence.json"
+        "mac-widget-normal-workspace-evidence.json",
+        "mac-widget-cloud-workspace-evidence.json"
       ],
-      "boundary": "Installed Mac My list automatic expiry/persisted completion and current-source configured-project cold task route accepted. Configured Pinned note cold open/edit/preview refresh/edited-note cold reopen accepted. Installed Focus paused-session cold route and subsequent native Resume/Pause/End accepted with only session data changed; ended preview confirmed and exact ended cold-launch state inspected, with inferred click attribution. Project pulse installed cold route/forward completion refresh accepted; native Undo restores task/totals and installed reverse refresh accepted. Four named installed kinds clear/recover on normal-local leave/return; signed-out Pulse cold route opens sign-in safely. Cloud-account-to-account transitions remain separate. Remaining distinct Mac configuration/action/account/empty classes and actual system-selected redaction/routing stay open; previews and native URL-handler tests do not substitute."
+      "boundary": "Named Today/My list/note/Focus/Pulse Mac workflows, local leave/return and local \u2192 two existing authenticated accounts \u2192 local cycle accepted within their receipts. Direct desktop text verifies isolated content and exact return; first-account My list safe cold route accepted. Second-account AX click did not launch. Remaining representative planning/aggregate routes/readable layouts and actual host-selected privacy remain; avoid every-combination gates."
     },
     {
       "id": "usability_accessibility_runtime",
@@ -291,9 +292,14 @@
     "restoredNoteSelectedTitleAccepted": true,
     "restoredNoteBodyNewHumanObservation": false,
     "authenticatedNativeFirstPhaseAccepted": true,
-    "installedAuthenticatedRoutePending": true,
+    "installedAuthenticatedRoutePending": false,
     "authenticatedEvidence": "mac-widget-cloud-workspace-evidence.json",
-    "currentNormalWorkspace": "first disposable cloud account; original local cache exact"
+    "currentNormalWorkspace": "normal local restored; full post-Undo snapshot exact; main app closed",
+    "namedAuthenticatedInstalledCycleAccepted": true,
+    "directDesktopTextReadable": true,
+    "exactRestoredNoteBodyDirectlyObserved": true,
+    "secondAccountAXClickNotAccepted": true,
+    "routineManualTextChecksNoLongerNeeded": true
   },
   "spokenFollowupUserDeferred": true
 }

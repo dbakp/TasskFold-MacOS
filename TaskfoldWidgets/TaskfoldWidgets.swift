@@ -542,7 +542,7 @@ struct TodayWidgetView: View {
     var tasks: [WidgetTask] { entry.snapshot.today(at: entry.date) }
     var hasSnapshot: Bool { entry.snapshot.updated > 0 }
     var countText: String { hasSnapshot ? "\(tasks.count)" : "—" }
-    var countAccessibilityLabel: String { hasSnapshot ? "\(tasks.count) scheduled tasks" : "Task count unavailable" }
+    var countAccessibilityLabel: String { hasSnapshot ? "\(tasks.count) scheduled \(tasks.count == 1 ? "task" : "tasks")" : "Task count unavailable" }
     var limit: Int { family == .systemLarge ? 7 : 2 }
     var body: some View {
         if redactionReasons.contains(.privacy) {
