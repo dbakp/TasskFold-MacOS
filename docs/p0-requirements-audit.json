@@ -283,7 +283,10 @@
     "installedLocalLeaveReturnFourKindsAccepted": true,
     "installedSignedOutPulseColdRouteAccepted": true,
     "unavailableNoteSafeEmptyColdRouteAccepted": true,
-    "unavailableNoteVisualRefreshUnresolved": true,
-    "currentNoteLoggedFamily": "systemLarge"
+    "unavailableNoteVisualRefreshUnresolved": false,
+    "currentNoteLoggedFamily": "systemLarge",
+    "unpinClearsInstalledNoteToEmptySelectionAccepted": true,
+    "pinRestoredFullWorkspaceExact": true,
+    "restoredNotePreviewPending": true
   }
 }
