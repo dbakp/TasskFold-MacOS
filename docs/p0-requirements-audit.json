@@ -299,7 +299,11 @@
     "directDesktopTextReadable": true,
     "exactRestoredNoteBodyDirectlyObserved": true,
     "secondAccountAXClickNotAccepted": true,
-    "routineManualTextChecksNoLongerNeeded": true
+    "routineManualTextChecksNoLongerNeeded": true,
+    "desktopActionAutomationDiagnostic": "mac-widget-desktop-automation-evidence.json",
+    "desktopTextReadableActionsBlocked": true,
+    "experimentalDesktopTestRemoved": true,
+    "fullLocalCacheAndRetainedHostStillExact": true
   },
   "spokenFollowupUserDeferred": true
 }
