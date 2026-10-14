@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-14",
+  "scope": "File-reader access-error guidance and preservation; local filesystem/core tests, not external-provider restore acceptance.",
+  "behavior": "Normalize errors obtaining file metadata/bytes after successful coordination to download/availability/retry guidance. Retain parser errors, maximum-size failure and cancellation.",
+  "source": {
+    "file": "Taskfold/Core/Backups.swift",
+    "sha256": "6049d4d15c5dc21265caf20ae388d9b7454349d464b5c1fff5c7522cefc465b6"
+  },
+  "regression": {
+    "test": "testExistingUnreadableDocumentGivesRecoveryGuidanceAndCanRetry",
+    "fixture": "Temporary directory occupying the selected document URL, then replaced with a valid local backup for retry. No cloud/provider substitute claim.",
+    "before": {
+      "cases": 8,
+      "failedCases": 1,
+      "failedAssertions": 3
+    },
+    "after": {
+      "passed": 8,
+      "failures": 0,
+      "skips": 0
+    }
+  },
+  "checks": [
+    "Retry succeeds after readable bytes become available",
+    "Cancellation before/during coordination remains cancellation",
+    "Pending presenter saves are coordinated",
+    "Presenter errors preserve existing bytes",
+    "Oversized backup retains size-limit message",
+    "Invalid-version backup retains its specific validation message and exact bytes"
+  ],
+  "build": {
+    "iOSDebugSimulator": "passed; CODE_SIGNING_ALLOWED=NO, compilation only; retained warnings in unchanged sources",
+    "MacCore": "compiled and all eight focused tests passed"
+  },
+  "productUI": "BackupTools displays the localized error; no new native Taskfold restore acceptance is inferred.",
+  "preservation": {
+    "protectedFilesExact": 164,
+    "normalMacLocalJSONExact": true,
+    "humanCompletedMacFixtureByteExact": true
+  },
+  "limits": [
+    "Synthetic provider has not delivered readable contents",
+    "Actual Taskfold external transfer/offline/late-callback gate remains open",
+    "No production signing/distribution or server state changed"
+  ]
+}

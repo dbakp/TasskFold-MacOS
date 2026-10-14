@@ -10,6 +10,33 @@ final class BackupFileReadTests: XCTestCase {
         try body(folder.appendingPathComponent("backup.json"))
     }
 
+    func testExistingUnreadableDocumentGivesRecoveryGuidanceAndCanRetry() throws {
+        try temporaryFile { url in
+            // Coordination can succeed although the provider has not supplied readable file bytes.
+            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            XCTAssertThrowsError(try WorkspaceBackup.readFile(url)) { error in
+                XCTAssertTrue(error is BackupFailure)
+                XCTAssertTrue(error.localizedDescription.contains("downloaded and available"))
+                XCTAssertTrue(error.localizedDescription.contains("Your current work is unchanged."))
+            }
+            try FileManager.default.removeItem(at: url)
+            let backup = WorkspaceBackup.make(Snapshot(), account: "file-access-retry")
+            try backup.data().write(to: url)
+            XCTAssertEqual(try WorkspaceBackup.readFile(url).id, backup.id)
+        }
+    }
+
+    func testReadableInvalidBackupKeepsItsSpecificValidationMessage() throws {
+        try temporaryFile { url in
+            let bytes = Data("{\"format\":\"com.taskfold.workspace\",\"version\":999}".utf8)
+            try bytes.write(to: url)
+            XCTAssertThrowsError(try WorkspaceBackup.readFile(url)) { error in
+                XCTAssertEqual(error as? BackupFailure, BackupFailure(message: "This backup format or version is unsupported. Update Taskfold before restoring it."))
+            }
+            XCTAssertEqual(try Data(contentsOf: url), bytes)
+        }
+    }
+
     func testReadCoordinatesPendingPresenterSaveBeforeParsing() throws {
         try temporaryFile { url in
             let stale = WorkspaceBackup.make(Snapshot(), account: "stale")

@@ -474,6 +474,9 @@ struct BackupVault: Sendable {
 /// One external read. Cancellation can interrupt provider coordination; if reading
 /// has already started, its eventual result is discarded before reaching the UI.
 final class BackupFileReadOperation: @unchecked Sendable {
+    private static var unavailableFile: BackupFailure {
+        BackupFailure(message: "The backup could not be opened. Make sure the file is downloaded and available, then choose it again. Your current work is unchanged.")
+    }
     private let coordinator = NSFileCoordinator()
     private let lock = NSLock()
     private var cancelled = false
@@ -501,9 +504,18 @@ final class BackupFileReadOperation: @unchecked Sendable {
         coordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { readableURL in
             result = Result {
                 try self.checkCancellation()
-                let size = try readableURL.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-                guard size <= WorkspaceBackup.maximumBytes else { throw BackupFailure(message: "Choose a backup no larger than 256 MB.") }
-                return try WorkspaceBackup.read(Data(contentsOf: readableURL))
+                let bytes: Data
+                do {
+                    let size = try readableURL.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+                    guard size <= WorkspaceBackup.maximumBytes else { throw BackupFailure(message: "Choose a backup no larger than 256 MB.") }
+                    bytes = try Data(contentsOf: readableURL)
+                } catch let failure as BackupFailure {
+                    throw failure
+                } catch {
+                    // Coordination may succeed before the provider supplies readable bytes.
+                    throw Self.unavailableFile
+                }
+                return try WorkspaceBackup.read(bytes)
             }
         }
         try checkCancellation()
@@ -511,7 +523,7 @@ final class BackupFileReadOperation: @unchecked Sendable {
             if coordinationError.domain == NSCocoaErrorDomain && coordinationError.code == NSUserCancelledError {
                 throw coordinationError
             }
-            throw BackupFailure(message: "The backup could not be opened. Make sure the file is downloaded and available, then choose it again. Your current work is unchanged.")
+            throw Self.unavailableFile
         }
         guard let result else { throw BackupFailure(message: "The backup could not be opened. Choose the file again.") }
         return try result.get()

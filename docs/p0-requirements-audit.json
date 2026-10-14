@@ -80,7 +80,8 @@
         "backup-picker-session-evidence.json",
         "mac-backup-picker-session-evidence.json",
         "mac-provider-transfer-evidence.json",
-        "ios-fileprovider-feasibility-evidence.json"
+        "ios-fileprovider-feasibility-evidence.json",
+        "backup-file-access-guidance-evidence.json"
       ],
       "boundary": "Actual iOS provider download/offline failure/late callback remains unaccepted; local held reads and Mac cloud transfer do not replace it."
     },
