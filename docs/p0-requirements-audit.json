@@ -79,7 +79,8 @@
         "mac-cloud-restore-native-evidence.json",
         "backup-picker-session-evidence.json",
         "mac-backup-picker-session-evidence.json",
-        "mac-provider-transfer-evidence.json"
+        "mac-provider-transfer-evidence.json",
+        "ios-fileprovider-feasibility-evidence.json"
       ],
       "boundary": "Actual iOS provider download/offline failure/late callback remains unaccepted; local held reads and Mac cloud transfer do not replace it."
     },
@@ -228,10 +229,10 @@
     "versionsOrRolloutFlagsChanged": false
   },
   "remainingPrerequisites": [
-    "Manual installed Mac widget observations/configuration/actions.",
+    "Supported interaction surface for remaining distinct installed Mac widget configuration/actions; text reads are automated.",
     "Actual supported system privacy controls/locked transition.",
     "Human spoken-output observations for remaining critical controls.",
-    "Configured iOS external file provider for real download/offline/late-callback boundaries.",
+    "Actual iOS system-picker provider delivery/offline/late-callback tests; standalone synthetic provider registration/activation does not close these gates.",
     "User-deferred signing/provider/distribution and old-active-writer rollout."
   ],
   "stoppingRule": "Do not invent a gate for every possible combination or substitute easier previews/core tests. Continue distinct actionable risks; resume prerequisite-limited gates when their external state changes.",

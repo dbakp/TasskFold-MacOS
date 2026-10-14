@@ -1,0 +1,120 @@
+{
+  "date": "2026-10-14",
+  "scope": "Standalone synthetic iOS File Provider feasibility diagnostic; no Taskfold import, provider download, offline or late-callback acceptance.",
+  "environment": {
+    "platform": "iOS Simulator",
+    "os": "26.5",
+    "model": "iPhone 17 Pro",
+    "appIdentifier": "com.dbakp.taskfold.providerprobe",
+    "extensionIdentifier": "com.dbakp.taskfold.providerprobe.provider",
+    "fixturePayload": "{\"taskfold_provider_probe\":true}\\n",
+    "AppleAccountSignIn": false,
+    "networkTransfer": false
+  },
+  "findings": [
+    "Development-signed replicated extension with linked Simulator identity/app group registers through public NSFileProviderManager.add.",
+    "Before native Files activation, direct getUserVisibleURL lookup reports NSFileProviderErrorDomain -2011 (domainDisabled).",
+    "Files exposes the fixture under Taskfold Provider Probe. Its switch is unnamed and must be queried within the named location cell.",
+    "An enabled location switch does not complete first-use activation: opening its own location shows Turn On Taskfold Provider Probe.",
+    "Native test accepts Turn On for this synthetic location only. Direct getUserVisibleURL lookup then reports NSPOSIXErrorDomain 1 (operation not permitted).",
+    "No coordinated file read completed. This does not establish that actual document-picker selection is unsupported."
+  ],
+  "nativeResults": {
+    "3": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "testFailures": [
+        {
+          "failureText": "failed - Synthetic provider location not exposed",
+          "targetName": "ProbeUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+          "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+          "testName": "testEnableSyntheticProviderLocationAndRead()"
+        }
+      ]
+    },
+    "4": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+          "targetName": "ProbeUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+          "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+          "testName": "testEnableSyntheticProviderLocationAndRead()"
+        }
+      ]
+    },
+    "5": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+          "targetName": "ProbeUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+          "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+          "testName": "testEnableSyntheticProviderLocationAndRead()"
+        }
+      ]
+    },
+    "6": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "testFailures": [
+        {
+          "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+          "targetName": "ProbeUITests",
+          "testIdentifier": 1,
+          "testIdentifierString": "ProbeUITests/testEnableSyntheticProviderLocationAndRead()",
+          "testIdentifierURL": "test://com.apple.xcode/ProviderProbe/ProbeUITests/ProbeUITests/testEnableSyntheticProviderLocationAndRead",
+          "testName": "testEnableSyntheticProviderLocationAndRead()"
+        }
+      ]
+    }
+  },
+  "setupAttempts": {
+    "v1": "No test executed: requested xctestrun filename omitted generated x86_64 suffix.",
+    "v2": "Same nonexistent filename; explicit test selector did not repair it.",
+    "correction": "Used the actual generated arm64-x86_64 xctestrun; native tests then executed."
+  },
+  "retainedDiagnostics": {
+    "results": [
+      "ios-fileprovider-probe-ui-v1.xcresult",
+      "ios-fileprovider-probe-ui-v2.xcresult",
+      "ios-fileprovider-probe-ui-v3.xcresult",
+      "ios-fileprovider-probe-ui-v4.xcresult",
+      "ios-fileprovider-probe-ui-v5.xcresult",
+      "ios-fileprovider-probe-ui-v6.xcresult"
+    ],
+    "privateSource": "/private/tmp/taskfold-provider-probe-v1",
+    "runtimeReceipt": "/private/tmp/taskfold-provider-probe-runtime-v6.json",
+    "productionTargetsChanged": false
+  },
+  "cleanup": {
+    "ownProbeAndRunnerUninstalled": true,
+    "probeRunnerFilesSessionsClosed": true,
+    "simulatorShutdown": true,
+    "protectedFilesChecked": 164,
+    "protectedMismatches": [],
+    "inactiveBuildBytesPruned": 206248345
+  },
+  "nextAction": "Use the actual system document picker with the isolated synthetic provider, then exercise Taskfold restore using a valid synthetic export. Keep provider delivery/offline/late response acceptance open until those paths actually run.",
+  "sources": [
+    "https://developer.apple.com/documentation/fileprovider",
+    "https://developer.apple.com/documentation/fileprovider/synchronizing-files-using-file-provider-extensions",
+    "https://developer.apple.com/documentation/fileprovider/nsfileprovidermanager/add(_:completionhandler:)"
+  ]
+}
