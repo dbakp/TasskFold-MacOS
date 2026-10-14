@@ -3113,3 +3113,102 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(try saved(), before)
     }
 }
+
+// Explicit installed-host acceptance only. This driver preserves the normal app
+// launch and existing desktop configurations; it never seeds or edits task data.
+extension TaskfoldMacUITests {
+    @MainActor func testInstalledWidgetHostCloudPhaseReadOnly() throws {
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.p0widgethosts.runner" else {
+            throw XCTSkip("Dedicated installed widget host runner required")
+        }
+        continueAfterFailure = false
+        let controlURL = URL(fileURLWithPath: "/private/tmp/taskfold-widget-cloud-control.json")
+        guard FileManager.default.fileExists(atPath: controlURL.path) else { throw XCTSkip("Explicit private control required") }
+        let control = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: controlURL))
+        XCTAssertEqual(control["bundleID"], "com.dbakp.taskfold.mac.p0widgethosts")
+        let phase = try XCTUnwrap(control["phase"])
+        XCTAssertTrue(["first", "second", "local"].contains(phase))
+        let accounts = try JSONDecoder().decode([String: [String: String]].self,
+            from: Data(contentsOf: URL(fileURLWithPath: try XCTUnwrap(control["credentialsPath"]))))
+        for key in ["first", "second"] {
+            let account = try XCTUnwrap(accounts[key])
+            XCTAssertNotNil(UUID(uuidString: try XCTUnwrap(account["userID"])))
+            XCTAssertTrue(account["email"]?.hasSuffix("@example.invalid") == true)
+        }
+        XCTAssertNotEqual(accounts["first"]?["userID"], accounts["second"]?["userID"])
+        let directory = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.p0widgethosts/Data/Library/Application Support/Taskfold")
+        let baseline = try JSONSerialization.jsonObject(with: Data(contentsOf:
+            URL(fileURLWithPath: try XCTUnwrap(control["localBaselinePath"])))) as! NSDictionary
+        func localUnchanged() throws {
+            let local = try JSONSerialization.jsonObject(with: Data(contentsOf: directory.appendingPathComponent("local.json"))) as! NSDictionary
+            XCTAssertEqual(local, baseline, "Normal local workspace must remain exact")
+        }
+        try localUnchanged()
+        let app = XCUIApplication(bundleIdentifier: "com.dbakp.taskfold.mac.p0widgethosts")
+        app.launchArguments = []; app.launchEnvironment = [:]
+        XCTAssertEqual(app.state, .notRunning, "Start only after prior normal Quit")
+        app.launch()
+        // Leave the current readable workspace using the real confirmation.
+        app.typeKey(",", modifierFlags: .command)
+        let settings = app.windows["Account"]
+        let accountTab = app.buttons["Account"].firstMatch
+        XCTAssertTrue(accountTab.waitForExistence(timeout: 10)); accountTab.click()
+        let label = phase == "first" ? "Leave Local Workspace…" : "Sign Out…"
+        let leave = settings.buttons[label]
+        XCTAssertTrue(leave.waitForExistence(timeout: 10))
+        let scroll = settings.scrollViews.firstMatch
+        for _ in 0..<10 {
+            if scroll.frame.contains(leave.frame) { break }
+            scroll.scroll(byDeltaX: 0, deltaY: -300)
+        }
+        XCTAssertTrue(scroll.frame.contains(leave.frame))
+        leave.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        let confirmation = app.sheets.buttons[phase == "first" ? "Leave" : "Sign Out"].firstMatch
+        XCTAssertTrue(confirmation.waitForExistence(timeout: 5)); confirmation.click()
+        let close = settings.buttons["_XCUI:CloseWindow"]
+        XCTAssertTrue(close.waitForExistence(timeout: 10)); close.click()
+        XCTAssertTrue(app.textFields["authEmail"].waitForExistence(timeout: 15))
+        if phase == "local" {
+            app.links["useLocally"].click()
+            XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 20))
+            try localUnchanged()
+        } else {
+            let account = try XCTUnwrap(accounts[phase])
+            let email = app.textFields["authEmail"], secret = app.secureTextFields["authPassword"]
+            email.click(); email.typeText(try XCTUnwrap(account["email"]))
+            secret.click()
+            // Keep credentials out of test typing logs; restore the clipboard.
+            let clipboard = NSPasteboard.general
+            let saved = (clipboard.pasteboardItems ?? []).map { item in
+                item.types.compactMap { type in item.data(forType: type).map { (type, $0) } }
+            }
+            clipboard.clearContents(); clipboard.setString(try XCTUnwrap(account["password"]), forType: .string)
+            app.typeKey("v", modifierFlags: .command)
+            clipboard.clearContents(); clipboard.writeObjects(saved.map { values in
+                let item = NSPasteboardItem(); for (type, data) in values { item.setData(data, forType: type) }; return item
+            })
+            app.buttons["nativeSignIn"].click()
+            XCTAssertTrue(app.outlines.firstMatch.waitForExistence(timeout: 40))
+            let server = try JSONSerialization.jsonObject(with: Data(contentsOf:
+                URL(fileURLWithPath: try XCTUnwrap(control["baselinePath"])))) as! [String: Any]
+            let expected = server[phase] as! [String: Any]
+            let tables = expected["tables"] as! [String: Any]
+            let expectedIDs = Set((tables["tasks"] as! [[String: Any]]).compactMap { $0["id"] as? String })
+            let accountID = try XCTUnwrap(account["userID"])
+            let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard let data = try? Data(contentsOf: directory.appendingPathComponent(accountID + ".json")),
+                      let value = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let savedTables = value["tables"] as? [String: Any],
+                      let tasks = savedTables["tasks"] as? [[String: Any]],
+                      let pending = value["pending"] as? [Any] else { return false }
+                return Set(tasks.compactMap { $0["id"] as? String }) == expectedIDs && pending.isEmpty
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 60), .completed)
+            try localUnchanged()
+        }
+        retainWindow(app, name: "Installed widget host normal workspace phase " + phase)
+        app.typeKey("q", modifierFlags: .command)
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
+        try localUnchanged()
+    }
+}

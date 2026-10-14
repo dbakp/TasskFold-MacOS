@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-14",
+  "status": "FIRST_NATIVE_AUTHENTICATED_PHASE_ACCEPTED__INSTALLED_ACCOUNT_ROUTE_PENDING",
+  "scope": "Current retained Mac v10 normal local workspace to an existing disposable authenticated account, without fixture launch arguments or task mutations. Installed widget account observation/click pending.",
+  "appSourceHeads": {
+    "macOS": "38893b2",
+    "iOS": "0e9f316"
+  },
+  "native": {
+    "result": "mac-widget-cloud-first-v1.xcresult",
+    "test": "TaskfoldMacUITests.testInstalledWidgetHostCloudPhaseReadOnly",
+    "phase": "first",
+    "actualPassed": 1,
+    "failures": 0,
+    "skips": 0,
+    "structuredRuntimeWarnings": 0,
+    "normalAppLaunchNoArguments": true,
+    "nativeLeaveLocalAndRealSignIn": true,
+    "cloudTasksSynced": 3,
+    "pendingMutations": 0,
+    "normalQuitConfirmed": true,
+    "fullNormalLocalWorkspaceExact": true
+  },
+  "preservation": {
+    "serverTablesExactPerDisposableAccount": 14,
+    "accountsVerified": 2,
+    "primaryProtectedFilesExact": 100,
+    "retainedHostAppAndWidgetBinariesExact": true
+  },
+  "driver": {
+    "extensionSHA256": "4449da4c81a9ef2c177e3b895e7450fd5180e161f63ead03b0505973b8e39da1",
+    "runnerGuard": "com.dbakp.taskfold.mac.p0widgethosts.runner",
+    "credentialsRemainPrivate": true,
+    "clipboardRestored": true,
+    "retargetedExistingHost": true,
+    "inactiveDuplicateProductBytesPruned": 40964217
+  },
+  "next": "Human observation that configured local widgets hide local content in the authenticated workspace, plus My list heading cold click. Then second account/normal-local return phases as needed; preserve source data.",
+  "limits": [
+    "Actual installed authenticated-account route not yet accepted. Native sign-in alone does not prove widget-host content or routing.",
+    "Only first driver phase has executed; second/local branches are compiled but not accepted.",
+    "VoiceOver remaining observations explicitly deferred by the user until later.",
+    "No new identity, credential rotation, service configuration, task data edit or production signing change."
+  ]
+}

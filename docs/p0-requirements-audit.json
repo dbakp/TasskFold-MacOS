@@ -289,6 +289,11 @@
     "pinRestoredFullWorkspaceExact": true,
     "restoredNotePreviewPending": false,
     "restoredNoteSelectedTitleAccepted": true,
-    "restoredNoteBodyNewHumanObservation": false
-  }
+    "restoredNoteBodyNewHumanObservation": false,
+    "authenticatedNativeFirstPhaseAccepted": true,
+    "installedAuthenticatedRoutePending": true,
+    "authenticatedEvidence": "mac-widget-cloud-workspace-evidence.json",
+    "currentNormalWorkspace": "first disposable cloud account; original local cache exact"
+  },
+  "spokenFollowupUserDeferred": true
 }
