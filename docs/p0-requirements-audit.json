@@ -81,9 +81,10 @@
         "mac-backup-picker-session-evidence.json",
         "mac-provider-transfer-evidence.json",
         "ios-fileprovider-feasibility-evidence.json",
-        "backup-file-access-guidance-evidence.json"
+        "backup-file-access-guidance-evidence.json",
+        "ios-external-provider-transfer-evidence.json"
       ],
-      "boundary": "Actual iOS provider download/offline failure/late callback remains unaccepted; local held reads and Mac cloud transfer do not replace it."
+      "boundary": "Named iPhone actual provider download/restore/relaunch passes with synthetic loopback delivery. Actual unavailable/offline retry and delayed/cancelled workspace callbacks remain unaccepted. No general cloud-provider compatibility claim."
     },
     {
       "id": "continuity",
@@ -233,7 +234,7 @@
     "Supported interaction surface for remaining distinct installed Mac widget configuration/actions; text reads are automated.",
     "Actual supported system privacy controls/locked transition.",
     "Human spoken-output observations for remaining critical controls.",
-    "Actual iOS system-picker provider delivery/offline/late-callback tests; standalone synthetic provider registration/activation does not close these gates.",
+    "Actual iOS unavailable/offline retry and delayed/cancelled workspace callbacks; named real provider download/restore/relaunch now passes.",
     "User-deferred signing/provider/distribution and old-active-writer rollout."
   ],
   "stoppingRule": "Do not invent a gate for every possible combination or substitute easier previews/core tests. Continue distinct actionable risks; resume prerequisite-limited gates when their external state changes.",

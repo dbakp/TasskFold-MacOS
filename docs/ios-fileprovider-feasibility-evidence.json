@@ -1,6 +1,6 @@
 {
   "date": "2026-10-14",
-  "scope": "Standalone synthetic iOS File Provider feasibility diagnostic; no Taskfold import, provider download, offline or late-callback acceptance.",
+  "scope": "Historical standalone File Provider diagnostics; named transfer scope superseded by ios-external-provider-transfer-evidence.json. No universal provider compatibility claim.",
   "environment": {
     "platform": "iOS Simulator",
     "os": "26.5",
@@ -111,7 +111,7 @@
     "protectedMismatches": [],
     "inactiveBuildBytesPruned": 206248345
   },
-  "nextAction": "Exercise the production-equivalent UIDocumentPickerViewController path with verified external materialization before claiming Taskfold provider acceptance. Do not repeat the unchanged replicated metadata failure or infer provider download from file visibility.",
+  "nextAction": "Verify real offline/unavailable retry and delayed/cancelled workspace callbacks using the independently owned provider fixture.",
   "sources": [
     "https://developer.apple.com/documentation/fileprovider",
     "https://developer.apple.com/documentation/fileprovider/synchronizing-files-using-file-provider-extensions",
@@ -310,5 +310,7 @@
     },
     "nextDistinctApproach": "Exercise the production-equivalent UIDocumentPickerViewController path with verified external materialization before claiming Taskfold provider acceptance. Do not repeat the unchanged replicated metadata failure or infer provider download from file visibility.",
     "productFinding": "A coordinated file-access failure could expose a raw system message. Both independent readers now normalize file-access errors to the existing actionable retry guidance while preserving parser, size and cancellation behavior. See backup-file-access-guidance-evidence.json."
-  }
+  },
+  "latestStatus": "Corrected nonreplicated domain mapping and actual Taskfold server-backed transfer/restore/relaunch pass. Earlier picker differences were observed with invalid prototype mappings and are not general API limitations.",
+  "latestEvidence": "ios-external-provider-transfer-evidence.json"
 }

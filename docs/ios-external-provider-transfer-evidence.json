@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-14",
+  "status": "named_transfer_restore_relaunch_accepted_remaining_external_cases_open",
+  "scope": "Actual iPhone Simulator native external File Provider delivery over loopback, Taskfold restore/keep-current-work and cold relaunch. No iCloud/Dropbox/production-cloud or universal provider compatibility claim.",
+  "environment": {
+    "device": "iPhone 17 Pro",
+    "os": "iOS 26.5 Simulator",
+    "SDK": "iOS 27.0",
+    "app": "com.dbakp.taskfold.backupcanceltests",
+    "provider": "com.dbakp.taskfold.fileproviderfixture.provider",
+    "AppleAccountSignIn": false,
+    "realTasksOrCredentialsUsed": false
+  },
+  "pipeline": [
+    "Native fixture host registers its own public nonreplicated provider and publishes fresh file identities",
+    "Real Files controls enable only the synthetic provider location",
+    "Taskfold\u2019s existing UIDocumentPickerViewController, asCopy:false, selects its external file",
+    "Provider startProvidingItem fetches bundled synthetic JSON from loopback server; no result/read/preview injection",
+    "Normal BackupFileReadOperation coordinates the downloaded file and normal restore preview applies it",
+    "Cold relaunch exposes the added task, description, 25-minute estimate, 25 Oct deadline and unchanged newer current task"
+  ],
+  "nativeAcceptance": {
+    "result": "ios-external-backup-transfer-v7.xcresult",
+    "passed": 1,
+    "failures": 0,
+    "skips": 0,
+    "structuredRuntimeWarnings": [],
+    "productPickerOrReaderChangedForTest": false,
+    "onlySeedArguments": [
+      "--uitesting",
+      "--backup-fixture"
+    ],
+    "providerReadInjectionFlagsUsed": false
+  },
+  "transport": {
+    "address": "127.0.0.1:18761 only",
+    "newSuccessfulDeliveriesDuringFinalRun": 2,
+    "bytes": 1227,
+    "payloadSHA256": "2bf71c4ee8755251bd31ef6d9e5c3e9649ea62f9b6a981e1d76f54f3125b922e",
+    "materializedFileByteExact": true,
+    "domainDirectory": "File Provider Storage/synthetic",
+    "freshGenerationAvoidsCachedFileFalsePass": true
+  },
+  "savedWork": {
+    "tasksAfter": 2,
+    "pendingChanges": 0,
+    "entireExistingTaskRecordExact": true,
+    "restoredDescriptionEstimateDeadlineNativeAndDiskExact": true,
+    "beforeRestoreRecoveryCopy": {
+      "kind": "Before restore",
+      "records": 1,
+      "scope": "Existing encrypted-vault index in the isolated app; no decrypted-content or new history-UI claim."
+    }
+  },
+  "signatures": {
+    "providerProducts": {
+      "com.dbakp.taskfold.fileproviderfixture": {
+        "strictDevelopmentSignatureVerified": true,
+        "team": "3UZ4C73FM2",
+        "linkedSimulatorIdentityAndGroupVerified": true
+      },
+      "com.dbakp.taskfold.fileproviderfixture.provider": {
+        "strictDevelopmentSignatureVerified": true,
+        "team": "3UZ4C73FM2",
+        "linkedSimulatorIdentityAndGroupVerified": true
+      }
+    },
+    "clientReceipt": "taskfold-external-backup-client-sign-v5.json",
+    "clientScope": "Strict real-team app/widget/runner/test signatures and linked Simulator identity/group verified before unchanged final client runs. This is development testing, not distribution acceptance."
+  },
+  "fixtureCorrection": {
+    "cause": "Nonreplicated domain declared pathRelativeToDocumentStorage=synthetic, but prototypes mapped item URLs from its parent directory. This can list items without reliable content routing. Corrected using the SDK-declared domain-relative directory.",
+    "source": "Apple iPhoneSimulator SDK FileProvider.framework Headers/NSFileProviderDomain.h and NSFileProviderManager.h",
+    "staleCacheHandling": "Publish a fresh generation of file IDs with real delete/update enumeration notifications. Never count a cached read as a new transfer."
+  },
+  "failedDiagnosticsRetained": [
+    {
+      "result": "ios-external-backup-transfer-v1.xcresult",
+      "passed": 0,
+      "failures": 1,
+      "skips": 0,
+      "structuredRuntimeWarningCount": 0,
+      "boundary": "Restore/relaunch saved both records correctly; a title-only static-text lookup did not find the combined current-task accessibility row."
+    },
+    {
+      "result": "ios-external-backup-transfer-v2.xcresult",
+      "passed": 0,
+      "failures": 1,
+      "skips": 0,
+      "structuredRuntimeWarningCount": 0,
+      "boundary": "An added immediate recovery-history UI-count assertion failed; no lost safety copy is inferred. Final on-disk history separately contains Before restore for one record."
+    },
+    {
+      "result": "ios-external-backup-transfer-v3.xcresult",
+      "passed": 0,
+      "failures": 1,
+      "skips": 0,
+      "structuredRuntimeWarningCount": 0,
+      "boundary": "The restored row accessibility label also contains description/deadline/estimate; an exact title-only equality check was invalid."
+    },
+    {
+      "result": "ios-external-backup-transfer-v4.xcresult",
+      "passed": 0,
+      "failures": 1,
+      "skips": 0,
+      "structuredRuntimeWarningCount": 0,
+      "boundary": "All restore/relaunch UI checks passed, but a new-transfer assertion detected a cached-file read with no new network request."
+    },
+    {
+      "result": "ios-external-backup-transfer-v5.xcresult",
+      "passed": 0,
+      "failures": 1,
+      "skips": 0,
+      "structuredRuntimeWarningCount": 0,
+      "boundary": "Deleting cached fixture bytes left stale metadata; preview failed with actionable file-unavailable guidance and no new network delivery."
+    },
+    {
+      "result": "ios-external-backup-transfer-v6.xcresult",
+      "passed": 0,
+      "failures": 1,
+      "skips": 0,
+      "structuredRuntimeWarningCount": 0,
+      "boundary": "Fresh item identities were visible, but the fixture still mapped URLs outside its declared domain directory. No new content delivery; preview failed safely."
+    }
+  ],
+  "sourceHashes": {
+    "TaskfoldUITests/TaskfoldUITests.swift": "1ec86319b8e421d642ec382927f5bf49069f8c8759a8f1fb2fe0c1380d3205ff",
+    "TestSupport/FileProviderFixture/Host.swift": "ddefb1b1028b0d931f1f6c682700f90d9d9fa77a679984ef38382c2ec51ce34b",
+    "TestSupport/FileProviderFixture/Provider.swift": "cba699f0b6f575273850962595bd80ec196187a9a140a9ba4f223a364575cf6f",
+    "TestSupport/FileProviderFixture/FixtureGeneration.swift": "c09f68bd1bb74654d0615f60d9201700aed4fcaae0a1a17dc3b7b2a516317bdb",
+    "TestSupport/FileProviderFixture/server.py": "6fdec2cb60e574739c617bf178291441a9caed32f5e2426c2fa8324e4ca74755",
+    "TestSupport/FileProviderFixture/prepare.py": "74a984e6f048770d48110c12fdb90f22355b207000027eadec1dd3269a644bc3",
+    "TestSupport/FileProviderFixture/backup.json": "2bf71c4ee8755251bd31ef6d9e5c3e9649ea62f9b6a981e1d76f54f3125b922e"
+  },
+  "ownership": "Reusable provider/server/installer and native driver are owned only by TaskFold-iOS. No shipping target depends on TestSupport or on the Mac repo. Mac keeps its already separate real iCloud transfer acceptance.",
+  "cleanup": {
+    "testMainAppsClosed": true,
+    "loopbackServerStopped": true,
+    "originalSimulatorShutdown": true,
+    "finalProviderAndClientProductsRetainedForNextCases": true,
+    "inactiveBuildBytesPruned": 1131668371,
+    "protectedFilesByteExact": 164,
+    "humanCompletedMacFixtureByteExact": true,
+    "normalMacLocalJSONExact": true,
+    "earlierReplicatedDisposableDeviceResidual": "Prior Simulator-delete Cocoa 513/POSIX 1 residual remains stopped; no new permission override or delete retry."
+  },
+  "remaining": [
+    "Actual unavailable/offline-file recovery and retry through this provider",
+    "Actual delayed/cancelled callback across a workspace transition",
+    "System-selected widget privacy, remaining representative installed Mac interactions and user-deferred spoken accessibility/signing retain their existing scope"
+  ]
+}
