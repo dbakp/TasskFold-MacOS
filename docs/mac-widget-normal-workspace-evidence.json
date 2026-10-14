@@ -88,7 +88,7 @@
     "inactiveOldBuildBytesPruned": 372752384,
     "currentBuildAndOriginalEvidenceRetained": true
   },
-  "next": "User observation of restored pinned-note preview pending; full normal local workspace restored, main app closed.",
+  "next": "Remaining distinct installed Mac account conditions, actual system-selected privacy and critical spoken observations; current normal local workspace restored, main app closed.",
   "limits": [
     "Accepts named installed My list, Pinned note and paused Focus cold routes plus subsequent native Focus controls; no new privacy or cloud-account claim.",
     "Focus desktop ended preview confirmed; actual ended cold-launch state inspected with full workspace equality. Click attribution is inferred, not explicit. Desktop family/layout not independently inspected. Installed Project pulse remains pending.",
@@ -369,7 +369,10 @@
       "wholePostUndoWorkspaceRestoredExactly": true,
       "publishedExactEditedNoteRestored": true,
       "mainAppClosedAfterRestore": true,
-      "installedRepinPreviewObservationPending": true
+      "installedRepinPreviewObservationPending": false,
+      "humanObservedRepinnedTitle": "Prepare the design review",
+      "humanNewlyConfirmedRepinnedBody": false,
+      "repinSelectionRecoveryAccepted": true
     }
   }
 }

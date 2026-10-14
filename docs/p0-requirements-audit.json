@@ -287,6 +287,8 @@
     "currentNoteLoggedFamily": "systemLarge",
     "unpinClearsInstalledNoteToEmptySelectionAccepted": true,
     "pinRestoredFullWorkspaceExact": true,
-    "restoredNotePreviewPending": true
+    "restoredNotePreviewPending": false,
+    "restoredNoteSelectedTitleAccepted": true,
+    "restoredNoteBodyNewHumanObservation": false
   }
 }
