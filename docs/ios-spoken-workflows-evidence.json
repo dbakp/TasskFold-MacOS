@@ -1,6 +1,6 @@
 {
   "date": "2026-10-20",
-  "scope": "Genuine iOS 27 Simulator capture/edit/completion speech/Undo/relaunch and named validation output. Human native picker Cancel accepted; recovery-specific spoken return and same-case relaunch remain unverified. Not universal accessibility or all-device/gesture acceptance.",
+  "scope": "Genuine iOS 27 Simulator capture/edit/completion speech/Undo/relaunch, named validation output and actual human native picker Cancel/clear recovery return/whole-cache relaunch accepted. Not universal accessibility or all-device/gesture acceptance.",
   "device": {
     "name": "iPhone 18 Pro",
     "os": "iOS 27.0 (24A434)",
@@ -125,7 +125,7 @@
     "voiceOverVerifiedOffInTeardown": true
   },
   "recovery": {
-    "status": "human_cancel_accepted_recovery_specific_return_not_accepted",
+    "status": "accepted_named_native_spoken_recovery",
     "actualSpokenFilterWarning": "Add a condition after the operator.",
     "actualSpokenRestoreControl": "Restore from file Button",
     "actualNativePickerOpened": true,
@@ -133,14 +133,14 @@
     "v7PickerStillHittableAndHostNotHittable": true,
     "noFileSelected": true,
     "filterDraftCancelledWithEntireCacheExactBeforePicker": true,
-    "latestResultBundle": "ios-voiceover-fixed-human-v1.xcresult outside repos",
-    "latestCasePassed": false,
+    "latestResultBundle": "ios-voiceover-order-human-v1.xcresult outside repos",
+    "latestCasePassed": true,
     "actualPickerStillHittable": false,
     "hostRestoreControlNotHittable": false,
     "actualUIKitCancellationCallbacks": [
       {
         "requestAccepted": true,
-        "timestamp": 1792493439.7969642
+        "timestamp": 1792494477.342505
       }
     ],
     "nativeInputAttempts": [
@@ -149,10 +149,14 @@
       "Control-Option-Space and Escape keyboard commands"
     ],
     "noTaskfoldCancellationGuardDefectEstablished": true,
-    "humanFollowup": "Human testing reproduced Settings Back button on the first focus repair, while proving whole-cache equality after actual Cancel with VoiceOver on. Native read-only lifecycle tracing then showed sheet dismissal preceding the Cancel callback in both attempts, so the first implementation never emitted a focus request. Current iOS source waits for both events in either order and consumes the request once, retaining workspace and presentation guards. The strengthened native Cancel/retry/relaunch case passes 1/0/0 with no structured runtime warnings: two accepted native callbacks, two focus events and two Restore-binding applications, plus full cache equality after each Cancel and ordinary relaunch. VoiceOver is off in that regression; a current-build spoken return is still unverified.",
-    "actualReturnedSpeech": "Settings Back button",
-    "humanReported": "It said Settings, back button, voiceover off",
-    "humanRunInspection": {
+    "humanFollowup": "Current-source iOS spoken recovery is accepted in its named representative scope. The human activates real native picker Cancel with VoiceOver on and reports Restore from file; the actual Xcode VoiceOver service returns Restore from file Button. The real UIKit callback is accepted, the picker stops accepting input and the Restore control is usable. The entire saved cache equals its pre-picker baseline after Cancel and again after ordinary terminate/relaunch. Final case passes 1/0/0 with no structured runtime warnings. VoiceOver is restored off, the test app and dedicated Simulator stop, and Device Hub closes with its original selection restored. Prior failed inputs/first focus repair and compiler/console warnings remain retained; no every-device/gesture or universal clean-runtime claim.",
+    "actualReturnedSpeech": "Restore from file Button",
+    "humanReported": "Restore from file",
+    "returnedContextAssertionPassed": true,
+    "sameCaseWholeCacheEqualityAndRelaunchReached": true,
+    "wholeCacheEqualityAfterHumanCancelPassed": true,
+    "sameCaseRelaunchReached": true,
+    "priorHumanRunInspection": {
       "ready": {
         "pickerHittable": true,
         "stage": "awaiting_actual_human_cancel",
@@ -191,10 +195,15 @@
       "pending": [],
       "relaunchNotReached": true
     },
-    "returnedContextAssertionPassed": false,
-    "sameCaseWholeCacheEqualityAndRelaunchReached": false,
-    "wholeCacheEqualityAfterHumanCancelPassed": true,
-    "sameCaseRelaunchReached": false
+    "latestHumanRunInspection": {
+      "entirePostRelaunchCacheEqualsAttachedPostCancelCache": true,
+      "canonicalCacheSHA256": "3e5e30aa5b9be593c009fb23f4c3417e76ae6edb5935cf4a1e0588e71f5db50e",
+      "appObservedVoiceOverOffBeforeTeardown": true,
+      "pendingWrites": 0,
+      "taskCount": 2,
+      "inspection": "Read own container metadata while Simulator stays Shutdown; no relaunch to recover simctl lookup."
+    },
+    "acceptedEvidence": "ios-spoken-recovery-evidence.json"
   },
   "failedAttempts": [
     {
@@ -279,9 +288,9 @@
     "xcodeSettingsRestored": true
   },
   "builds": {
-    "final": "ios-voiceover-actions-build-v10.log; TEST BUILD SUCCEEDED; manual case subsequently executed, failed only at recovery-specific returned-speech assertion after accepted human cancellation.",
+    "final": "ios-focus-order-build-v1.log; TEST BUILD SUCCEEDED. Current-source genuine human native Cancel/spoken return/whole-cache relaunch now passes in ios-voiceover-order-human-v1.xcresult, 1/0/0; earlier failed cases remain retained.",
     "shippingAppSourceUnchanged": true,
     "namespaceAndReadOnlyProbeReproductionExact": true
   },
-  "subsequentRestoreFocusRepair": "ios-restore-focus-order-evidence.json; first focus repair failed human speech; actual callback ordering defect now repaired with two observed focus-event and binding deliveries plus native retry/cache/relaunch checks. No current-build spoken success claim."
+  "subsequentRestoreFocusRepair": "The callback-order repair is now accepted by genuine human Cancel, actual Restore from file Button output and exact same-case cache relaunch. See ios-restore-focus-order-evidence.json and ios-spoken-recovery-evidence.json. Prior failed attempts remain unchanged."
 }

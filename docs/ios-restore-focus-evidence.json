@@ -76,5 +76,5 @@
     "Actual system-selected widget privacy in an environment exposing the required controls.",
     "User-deferred provider/APNs signing/distribution and supported-writer rollout."
   ],
-  "subsequentOrderingRepair": "ios-restore-focus-order-evidence.json; first repair failed the human spoken check. The cancellation/dismissal ordering defect is now repaired and native focus-binding delivery/retry/relaunch pass. Spoken confirmation on the newer source remains open."
+  "subsequentOrderingRepair": "ios-restore-focus-order-evidence.json and ios-spoken-recovery-evidence.json; the first repair failed human speech. The corrected event-order implementation now passes a distinct real human Cancel/spoken return/whole-cache relaunch case, 1/0/0. The earlier failed result is retained."
 }

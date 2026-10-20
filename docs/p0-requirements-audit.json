@@ -126,7 +126,7 @@
     {
       "id": "usability_accessibility_runtime",
       "requirement": "Native capture/edit/plan/complete/Undo/recovery, accessible controls and explicit assessment of actual runtime findings.",
-      "status": "incomplete_ios_picker_return_spoken_followup",
+      "status": "accepted_named_spoken_workflows_with_documented_platform_risks",
       "evidence": [
         "landscape-editor-evidence.json",
         "capture-control-stability-evidence.json",
@@ -140,9 +140,11 @@
         "spoken-completion-feedback-evidence.json",
         "mac-spoken-filter-planner-evidence.json",
         "ios-voiceover-service-evidence.json",
-        "ios-spoken-workflows-evidence.json"
+        "ios-spoken-workflows-evidence.json",
+        "ios-restore-focus-order-evidence.json",
+        "ios-spoken-recovery-evidence.json"
       ],
-      "boundary": "Named representative Mac spoken scope remains accepted. Genuine iOS 27 task capture, Save, edit, completed-task-name announcement, persistent Undo, restored task speech and exact whole-cache relaunch now pass; original fixture records remain exact. Minutes/estimate and invalid-filter warnings are genuinely spoken. Native Restore control and actual file-picker output are read. Human Cancel reaches the accepted UIKit callback and restores a usable host. Actual Settings Back button return fails the recovery-specific speech expectation; same-case cache equality/relaunch assertions were not reached. Automated inputs previously failed to cancel. No app guard defect, all-gesture or clean-runtime claim. Current iOS source now requests Restore focus after sheet dismissal; native Cancel/retry and whole-cache relaunch pass with VoiceOver off. Current-build spoken return remains unverified; see ios-restore-focus-evidence.json. Subsequent human test rejected the first focus repair but proved whole-cache equality after Cancel. Current source repairs the traced dismissal-before-callback race; two focus requests reach the Restore binding in the native regression. Spoken verification remains open; see ios-restore-focus-order-evidence.json."
+      "boundary": "Named representative Mac and iOS spoken scope is accepted. Genuine iOS capture, Save, edit, task-name completion announcement, persistent Undo, restored-task reading, Minutes/estimate and filter validation have recorded output. Current-source human native picker Cancel now returns actual Restore from file Button speech with a usable host and exact full-cache equality after Cancel and ordinary relaunch, passing 1/0/0. Original fixture records stay exact. Prior failed input methods/first repair, documented Mac platform/runtime issues and existing console/compiler warnings remain retained. No all-device/gesture or universal clean-runtime claim."
     },
     {
       "id": "independent_releases_remote_delivery",
@@ -239,7 +241,6 @@
   },
   "remainingPrerequisites": [
     "Actual supported system privacy controls/locked transition.",
-    "Genuine iOS VoiceOver returned focus and same-case relaunch on the newer callback-order repair. Human native Cancel and whole-cache equality already pass; first focus repair reproduced Settings Back button. Native event/binding delivery is verified on current source with VoiceOver off.",
     "User-deferred signing/provider/distribution and old-active-writer rollout."
   ],
   "stoppingRule": "Do not invent a gate for every possible combination or substitute easier previews/core tests. Continue distinct actionable risks; resume prerequisite-limited gates when their external state changes.",
@@ -316,5 +317,5 @@
     "planningAggregateEvidence": "mac-widget-planning-aggregate-evidence.json"
   },
   "spokenFollowupUserDeferred": false,
-  "spokenFollowupLatest": "20 October: Human testing reproduced Settings Back button on the first focus repair, while proving whole-cache equality after actual Cancel with VoiceOver on. Native read-only lifecycle tracing then showed sheet dismissal preceding the Cancel callback in both attempts, so the first implementation never emitted a focus request. Current iOS source waits for both events in either order and consumes the request once, retaining workspace and presentation guards. The strengthened native Cancel/retry/relaunch case passes 1/0/0 with no structured runtime warnings: two accepted native callbacks, two focus events and two Restore-binding applications, plus full cache equality after each Cancel and ordinary relaunch. VoiceOver is off in that regression; a current-build spoken return is still unverified. See ios-restore-focus-order-evidence.json."
+  "spokenFollowupLatest": "20 October: Current-source iOS spoken recovery is accepted in its named representative scope. The human activates real native picker Cancel with VoiceOver on and reports Restore from file; the actual Xcode VoiceOver service returns Restore from file Button. The real UIKit callback is accepted, the picker stops accepting input and the Restore control is usable. The entire saved cache equals its pre-picker baseline after Cancel and again after ordinary terminate/relaunch. Final case passes 1/0/0 with no structured runtime warnings. VoiceOver is restored off, the test app and dedicated Simulator stop, and Device Hub closes with its original selection restored. Prior failed inputs/first focus repair and compiler/console warnings remain retained; no every-device/gesture or universal clean-runtime claim. See ios-spoken-recovery-evidence.json."
 }

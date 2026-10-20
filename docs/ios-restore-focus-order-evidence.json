@@ -1,6 +1,6 @@
 {
   "date": "2026-10-20",
-  "status": "ordering_race_repaired_native_focus_delivery_verified_spoken_followup_open",
+  "status": "ordering_race_repaired_native_and_named_spoken_recovery_accepted",
   "humanReproduction": {
     "bundle": "ios-voiceover-fixed-human-v1.xcresult outside repos",
     "testPassed": false,
@@ -195,7 +195,7 @@
     "noShippingProbeOrFakeCallback": true,
     "scope": "Records actual callback/dismissal/focus-event/binding execution in the copied Simulator app. Does not post announcements, synthesize focus or invoke native callbacks. Compiler and console warnings remain in retained logs."
   },
-  "remaining": "Genuine current-build VoiceOver Cancel/returned-focus and same-case relaunch acceptance remains open. No repeat human check requested in this session. System-selected widget privacy and user-deferred signing/provider/distribution/old-writer rollout remain open.",
+  "remaining": "Named current-source spoken recovery is now accepted. Actual system-selected widget privacy and user-deferred signing/provider/distribution/old-writer rollout remain open.",
   "cleanup": {
     "voiceOverOffInTestTeardown": true,
     "testAppTerminatedInTeardown": true,
@@ -205,5 +205,14 @@
     "currentIncrementalBuildAndEvidenceRetained": true,
     "deviceHubClosed": true,
     "originalDeviceSelectionRestored": true
+  },
+  "spokenAcceptance": {
+    "evidence": "ios-spoken-recovery-evidence.json",
+    "bundle": "ios-voiceover-order-human-v1.xcresult",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "actualUtterance": "Restore from file Button",
+    "sameCaseEntireCachePreservedThroughRelaunch": true
   }
 }
