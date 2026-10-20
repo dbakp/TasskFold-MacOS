@@ -126,7 +126,7 @@
     {
       "id": "usability_accessibility_runtime",
       "requirement": "Native capture/edit/plan/complete/Undo/recovery, accessible controls and explicit assessment of actual runtime findings.",
-      "status": "incomplete_ios_spoken_coverage",
+      "status": "incomplete_ios_picker_return_spoken_followup",
       "evidence": [
         "landscape-editor-evidence.json",
         "capture-control-stability-evidence.json",
@@ -139,9 +139,10 @@
         "mac-voiceover-live-followup-evidence.json",
         "spoken-completion-feedback-evidence.json",
         "mac-spoken-filter-planner-evidence.json",
-        "ios-voiceover-service-evidence.json"
+        "ios-voiceover-service-evidence.json",
+        "ios-spoken-workflows-evidence.json"
       ],
-      "boundary": "Named representative Mac capture/edit/complete/Undo/recovery and filter/planner-validation speech accepted in recorded scopes. Genuine iOS 27 service speech accepts an unsaved capture title/Add task button and planner Minutes/invalid-estimate warning, with complete-cache preservation through relaunch. iOS activation/save, editing, completion announcement, Undo and recovery speech remain open. No every-control or clean-runtime claim."
+      "boundary": "Named representative Mac spoken scope remains accepted. Genuine iOS 27 task capture, Save, edit, completed-task-name announcement, persistent Undo, restored task speech and exact whole-cache relaunch now pass; original fixture records remain exact. Minutes/estimate and invalid-filter warnings are genuinely spoken. Native Restore control and actual file-picker output are read. Human Cancel reaches the accepted UIKit callback and restores a usable host. Actual Settings Back button return fails the recovery-specific speech expectation; same-case cache equality/relaunch assertions were not reached. Automated inputs previously failed to cancel. No app guard defect, all-gesture or clean-runtime claim."
     },
     {
       "id": "independent_releases_remote_delivery",
@@ -238,7 +239,7 @@
   },
   "remainingPrerequisites": [
     "Actual supported system privacy controls/locked transition.",
-    "Genuine iOS spoken-output observations for the critical workflows, including the new completion announcement.",
+    "Genuine iOS VoiceOver recovery-specific return focus and same-case cache/relaunch after native picker Cancel. Human cancellation is accepted; returned Settings Back button speech fails the current expectation.",
     "User-deferred signing/provider/distribution and old-active-writer rollout."
   ],
   "stoppingRule": "Do not invent a gate for every possible combination or substitute easier previews/core tests. Continue distinct actionable risks; resume prerequisite-limited gates when their external state changes.",
@@ -315,5 +316,5 @@
     "planningAggregateEvidence": "mac-widget-planning-aggregate-evidence.json"
   },
   "spokenFollowupUserDeferred": false,
-  "spokenFollowupLatest": "20 October: actual iOS 27 Simulator speech exposes a missing Minutes field name. Explicit label repaired independently in both apps. Final native speech tests pass 2/0/0 with entire saved cache unchanged after discard/Cancel/relaunch; VoiceOver off and Simulator shutdown. Remaining iOS activation/save/edit/Complete/Undo/recovery speech remains open. Warnings and failed attempts retained."
+  "spokenFollowupLatest": "20 October: genuine iOS 27 task capture/edit/Complete-name speech/Undo/relaunch passes as a distinct named case (v7 bundle overall 1 pass/1 recovery failure). System announcement-finished callback reports successful full task-name output while app active with VoiceOver running. Existing records and post-Undo cache/relaunch are exact. Filter warning is clearly spoken; human native picker Cancel now accepted with a usable host. Settings Back button return fails the recovery-specific speech expectation; teardown intentionally quits the app and disables VoiceOver. Cache modification predates picker readiness, original tasks remain open and pending writes are empty, but same-case equality/relaunch assertions were not reached. No passing recovery-case claim. Other system privacy and deferred distribution prerequisites remain open."
 }

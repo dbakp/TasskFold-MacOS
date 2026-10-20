@@ -127,5 +127,6 @@
     "resultsLogsAndSavedWorkRetained": true,
     "MacMainTestAppsClosed": true,
     "MacEntireSavedCacheStillEqualToPriorBaseline": true
-  }
+  },
+  "subsequentWorkflowEvidence": "ios-spoken-workflows-evidence.json; task capture/edit/completion/Undo/relaunch accepted. Human native picker Cancel accepted; recovery-specific returned speech and same-case preservation/relaunch remain open."
 }

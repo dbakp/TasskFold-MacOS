@@ -1,0 +1,284 @@
+{
+  "date": "2026-10-20",
+  "scope": "Genuine iOS 27 Simulator capture/edit/completion speech/Undo/relaunch and named validation output. Human native picker Cancel accepted; recovery-specific spoken return and same-case relaunch remain unverified. Not universal accessibility or all-device/gesture acceptance.",
+  "device": {
+    "name": "iPhone 18 Pro",
+    "os": "iOS 27.0 (24A434)",
+    "simulator": true
+  },
+  "isolation": {
+    "bundle": "com.dbakp.taskfold.voiceovertests",
+    "account": "Synthetic ui-testing local workspace only",
+    "reproduction": "iOS Scripts/prepare_voiceover_ui_test.py",
+    "copyOnlyObservers": [
+      "Public UIAccessibility.announcementDidFinishNotification with original text/success flag",
+      "Actual application VoiceOver status notification",
+      "Real UIKit picker-cancellation callback before the unchanged session guard"
+    ],
+    "shippingSourceChanged": false,
+    "noFakeCallbacksOrEnabledFlags": true
+  },
+  "taskWorkflow": {
+    "test": "testIOS27VoiceOverActivatesCaptureEditCompleteAndUndo",
+    "resultBundle": "ios-voiceover-actions-v7.xcresult outside repos",
+    "testPassed": true,
+    "bundleOverall": {
+      "passed": 1,
+      "failed": 1,
+      "skipped": 0,
+      "structuredRuntimeWarnings": 0
+    },
+    "otherCaseFailure": "Recovery Cancel failed in this same bundle; it is not a passing overall bundle.",
+    "actualSpeechObservations": [
+      {
+        "step": "Open capture",
+        "utterance": "Add task Button Drag onto a date or project section to create a "
+      },
+      {
+        "step": "Read captured title",
+        "utterance": "Text field Is editing VoiceOver action proof Character mode inse"
+      },
+      {
+        "step": "Dismiss capture keyboard",
+        "utterance": "Hide keyboard Button"
+      },
+      {
+        "step": "Save captured task",
+        "utterance": "Add task Button"
+      },
+      {
+        "step": "Open task details",
+        "utterance": "VoiceOver action proof Button Opens task details Actions availab"
+      },
+      {
+        "step": "Edit title field",
+        "utterance": "VoiceOver action proof Text field Double-tap to edit. Use the ro"
+      },
+      {
+        "step": "Read edited title",
+        "utterance": "Text field Is editing VoiceOver action proof revised Character m"
+      },
+      {
+        "step": "Dismiss editor keyboard",
+        "utterance": "Hide keyboard Button"
+      },
+      {
+        "step": "Save edited task",
+        "utterance": "Save Button"
+      },
+      {
+        "step": "Complete edited task",
+        "utterance": "Complete VoiceOver action proof revised Button Actions available"
+      },
+      {
+        "step": "Open persistent task actions",
+        "utterance": "Task options Button Pop-up button Double-tap to activate the pic"
+      },
+      {
+        "step": "Open history",
+        "utterance": "Undo & redo Button Collapsed Double-tap to expand"
+      },
+      {
+        "step": "Undo completed task",
+        "utterance": "Undo Button"
+      },
+      {
+        "step": "Read restored open task",
+        "utterance": "Complete VoiceOver action proof revised Button Actions available"
+      }
+    ],
+    "actualAnnouncementFinishedCallbacks": {
+      "events": [
+        {
+          "applicationActive": true,
+          "successful": true,
+          "text": "Added",
+          "timestamp": 1792490542.2372432,
+          "voiceOverRunning": true
+        },
+        {
+          "applicationActive": true,
+          "successful": true,
+          "text": "Completed \u201cVoiceOver action proof revised\u201d",
+          "timestamp": 1792490596.7890592,
+          "voiceOverRunning": true
+        }
+      ],
+      "observerInstalled": true,
+      "pickerCancellations": [],
+      "source": "UIAccessibility.announcementDidFinishNotification",
+      "voiceOverRunning": true
+    },
+    "targetTask": {
+      "id": "29f104ca-d382-4efb-b69f-963bc49e2bd3",
+      "title": "VoiceOver action proof revised",
+      "completedAfterUndo": false,
+      "completionVersion": 2
+    },
+    "preservation": {
+      "oneTaskCreatedThenEditedCompletedAndUndone": true,
+      "unrelatedOriginalTasksExact": true,
+      "unrelatedExistingTablesExact": true,
+      "entirePostUndoCacheEqualAfterRelaunch": true,
+      "postUndoExportedWorkspaceSHA256": "1c9eddf508ac0763781fbb06240c744c75b861ff4ad3b34551481348ec45e9b0"
+    },
+    "voiceOverVerifiedOffInTeardown": true
+  },
+  "recovery": {
+    "status": "human_cancel_accepted_recovery_specific_return_not_accepted",
+    "actualSpokenFilterWarning": "Add a condition after the operator.",
+    "actualSpokenRestoreControl": "Restore from file Button",
+    "actualNativePickerOpened": true,
+    "v7UIKitCancellationCallbacks": [],
+    "v7PickerStillHittableAndHostNotHittable": true,
+    "noFileSelected": true,
+    "filterDraftCancelledWithEntireCacheExactBeforePicker": true,
+    "latestResultBundle": "ios-voiceover-human-picker-v1.xcresult outside repos",
+    "latestCasePassed": false,
+    "actualPickerStillHittable": false,
+    "hostRestoreControlNotHittable": false,
+    "actualUIKitCancellationCallbacks": [
+      {
+        "requestAccepted": true,
+        "timestamp": 1792492248.962984
+      }
+    ],
+    "nativeInputAttempts": [
+      "Screen-center and control-point double taps",
+      "Native UIKit element double tap and single tap",
+      "Control-Option-Space and Escape keyboard commands"
+    ],
+    "noTaskfoldCancellationGuardDefectEstablished": true,
+    "humanFollowup": "Human Cancel now reaches the actual accepted UIKit callback with VoiceOver on; the picker dismisses and Restore becomes hittable. Actual returned speech is Settings Back button, outside the recovery-specific test expectation. The test therefore fails and teardown deliberately closes the app and disables VoiceOver. No crash is established. No file was selected; post-test inspection finds both original fixture tasks open, no pending writes, and the cache modification time predates picker readiness. Whole-cache equality and relaunch assertions were not reached in this case; retain that limitation.",
+    "actualReturnedSpeech": "Settings Back button",
+    "humanReported": "It took a while, but it cancelled it and then the app seems to have closed.",
+    "humanRunInspection": {
+      "ready": {
+        "pickerHittable": true,
+        "stage": "awaiting_actual_human_cancel",
+        "timestamp": 1792492181.594872,
+        "utterance": "Cancel Button"
+      },
+      "afterTeardown": {
+        "events": [],
+        "observerInstalled": true,
+        "pickerCancellations": [
+          {
+            "requestAccepted": true,
+            "timestamp": 1792492248.962984
+          }
+        ],
+        "source": "UIAccessibility.announcementDidFinishNotification",
+        "voiceOverRunning": false
+      },
+      "cacheSHA256": "ce18c6f33c6efeb9b5cae6212b738d94ba3d79cba21be435e4ef60a6f8552f26",
+      "cacheModifiedAt": 1792492158.2806046,
+      "cacheNotWrittenSincePickerReady": true,
+      "tasks": [
+        {
+          "id": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeee04",
+          "title": "Sketch widget concept",
+          "completed": false,
+          "completion_version": 0
+        },
+        {
+          "id": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeee05",
+          "title": "Unrelated Inbox task",
+          "completed": false,
+          "completion_version": 0
+        }
+      ],
+      "pending": [],
+      "relaunchNotReached": true
+    },
+    "returnedContextAssertionPassed": false,
+    "sameCaseWholeCacheEqualityAndRelaunchReached": false
+  },
+  "failedAttempts": [
+    {
+      "bundle": "ios-voiceover-actions-v1.xcresult",
+      "reason": "Driver setup checked Inbox content before selecting Inbox."
+    },
+    {
+      "bundle": "ios-voiceover-actions-v2.xcresult",
+      "reason": "Screen-center double-tap did not activate the focused control."
+    },
+    {
+      "bundle": "ios-voiceover-actions-v3.xcresult",
+      "reason": "Synthesized Control-Option-Space did not activate the focused control."
+    },
+    {
+      "bundle": "ios-voiceover-actions-v4.xcresult",
+      "reason": "Direct control-point double-tap worked; title insertion occurred at the touched middle caret, contradicting the driver append assumption. Actual Added announcement succeeded."
+    },
+    {
+      "bundle": "ios-voiceover-actions-v5.xcresult",
+      "reason": "Simulator inserted a for Command-A; recovery picker remained after attempted coordinate Cancel."
+    },
+    {
+      "bundle": "ios-voiceover-actions-v6.xcresult",
+      "reason": "Exact renamed task/completion speech passed; UIKit menu dropped test identifiers. Recovery hit testing proved picker genuinely remained, not only a stale AX node."
+    },
+    {
+      "bundle": "ios-voiceover-actions-v7.xcresult",
+      "reason": "Task workflow passed; native document picker remained after element double tap with zero UIKit cancellation callbacks."
+    },
+    {
+      "bundle": "ios-voiceover-actions-v8.xcresult",
+      "reason": "Native picker Cancel single tap still produced no callback; host remained blocked."
+    },
+    {
+      "bundle": "ios-voiceover-actions-v9.xcresult",
+      "reason": "Escape with real VoiceOver enabled still produced no callback; host remained blocked."
+    },
+    {
+      "bundle": "ios-voiceover-frontend-picker-v1.xcresult",
+      "reason": "Automated Device Hub frontend double-click/Control-Option-Space did not reach UIKit cancellation before the wait expired. Not a human attempt."
+    },
+    {
+      "bundle": "ios-voiceover-human-picker-v1.xcresult",
+      "reason": "Actual human Cancel accepted and host usable; actual return Settings Back button fails the recovery-specific speech expectation. Teardown intentionally terminates app. Cache/relaunch assertions after that failure were not reached."
+    }
+  ],
+  "limits": [
+    "Native XCTest touch synthesis/element actions and system VoiceOver service output; no claim of every motor gesture or physical-device combination.",
+    "The app itself reports VoiceOver running, and successful completion speech is a real system callback, not just a post call.",
+    "Optional verbose failure sysdiagnose collection was interrupted for v4 after the runner ended; normal results/attachments/logs remain. Later commands use collect-test-diagnostics never; structured/console warnings are retained.",
+    "System-selected widget privacy and user-deferred signing/provider/distribution/old-writer rollout remain open."
+  ],
+  "cleanup": {
+    "date": "2026-10-20",
+    "removed": [
+      {
+        "path": "BuildCache/ios-voiceover-service-v1/Build/Intermediates.noindex",
+        "bytes": 97640389
+      },
+      {
+        "path": "BuildCache/ios-voiceover-service-v1/Index.noindex",
+        "bytes": 29840600
+      },
+      {
+        "path": "BuildCache/ios-voiceover-service-v1/ModuleCache.noindex",
+        "bytes": 17305678
+      },
+      {
+        "path": "BuildCache/ios-voiceover-service-v1/SDKStatCaches.noindex",
+        "bytes": 1616564
+      }
+    ],
+    "removedBytes": 146403231,
+    "retainedProductsHashVerifiedExact": true,
+    "resultsLogsAndDataRetained": true,
+    "simulatorShutdown": true,
+    "manualCheckPreparedNotExecuted": false,
+    "manualCheckExecuted": true,
+    "deviceHubClosed": true,
+    "captureKeyboardRestoredOff": true,
+    "xcodeSettingsRestored": true
+  },
+  "builds": {
+    "final": "ios-voiceover-actions-build-v10.log; TEST BUILD SUCCEEDED; manual case subsequently executed, failed only at recovery-specific returned-speech assertion after accepted human cancellation.",
+    "shippingAppSourceUnchanged": true,
+    "namespaceAndReadOnlyProbeReproductionExact": true
+  }
+}
