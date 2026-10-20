@@ -501,3 +501,7 @@ Owned Core: 583 tests per app/configuration, four optional integration skips, ze
 ## 20 October — selected P1 workflows implemented
 
 Project archiving/subprojects and reusable templates/multi-line capture are implemented in both independently owned repositories. [Feature contracts](PROJECT_WORKFLOWS.md) and [separate acceptance evidence](project-workflows-evidence.json) cover this expansion. The user explicitly deferred remote reminders, older-client safeguards and distribution verification; this delivery does not clear those rollout gates.
+
+## 20 October — ranked P1 implementation begins
+
+See `P1_PLAN.md` for the remaining P1 order. The first subtask-organizer foundation is independently implemented in iOS/Mac: nested names/completion, branch ordering/indent/outdent, child creation/deletion, stable identity and preserved metadata. Native phone/tablet/Mac and actual two-client transport checks pass. Full nested child-detail editing parity remains active before saved template management. The three user-deferred release items remain deferred.

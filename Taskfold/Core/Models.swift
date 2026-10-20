@@ -186,6 +186,7 @@ enum TaskEdit {
         // Keep exact representations when no merge is necessary.
         if desired == base { return remote }
         if remote == base || remote == desired { return desired }
+        if field == "subtasks", let merged = SubtaskTree.rebased(base: values[0], desired: values[1], remote: values[2]) { return merged }
         return keepingLocal(base: values[0], desired: values[1], remote: values[2])
     }
     fileprivate static func labelMembershipEdit(base: JSON, desired: JSON, remote: JSON) -> JSON? {

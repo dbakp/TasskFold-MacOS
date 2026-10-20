@@ -2402,3 +2402,9 @@ The user has explicitly deferred remote reminder delivery, old-client safeguards
 - 2026-10-20: Workflow cloud transport acceptance now covers Mac creation → iOS reuse/batch → Mac receipt with actual owned cores and the real backend. All three phases passed; synthetic account removed. Evidence: `project-workflows-cloud-evidence.json`. This adds transport evidence to the representative native workflow checks, without asserting a new native realtime handoff.
 
 - 2026-10-20: Native iPhone cloud workflow follow-up passes with Mac-owned source creation and return verification, saved session and second relaunch. Four projects/four tasks/one template, zero native pending writes; synthetic data removed. See `project-workflows-native-cloud-evidence.json` for the native/core boundary.
+
+## 20 October — P1 implementation begins
+
+The user requested ranked P1 implementation. See `P1_PLAN.md`. The first item is nested subtask editing/organization, with a local draft, explicit Save/Cancel, whole-branch moves and identity-aware collection rebase. Implementation is present; final native acceptance is in progress. The three release gates remain deferred.
+
+20 October P1 organizer acceptance: nested names/completion, add-child, branch moves, confirmed deletion, local Cancel, native Cmd-S/Undo/Redo and normal Quit/relaunch pass with isolated data. Progress badges count all levels. Both owned cores pass real-service move/reorder conflict/review/retry checks; the deployed structural review guard prevents a reproduced silent reorder loss. Owned Mac app/widgets Debug build passes independently. `P1_PLAN.md` keeps full child-detail parity and the remaining P1s open; evidence and retained limits are in `p1-subtasks-evidence.json`.

@@ -1,0 +1,40 @@
+# P1 implementation order
+
+User-directed scope, 20 October 2026. Ranking favors daily usefulness and preservation of existing work, then independent features, then provider/team dependencies. Both apps own their implementation and tests. Remote reminders, older-client rollout and distribution remain deferred.
+
+| Rank | Work | Why this order | Acceptance |
+| --- | --- | --- | --- |
+| 1 | Nested subtask editing and organization | Existing work can contain children that the primary editors do not expose. This is a daily editing gap. | Both apps can edit/complete nested children, including notes and planning fields on both apps, add children, reorder whole branches and indent/outdent; Cancel preserves work; Save/relaunch retains metadata and stable identities; concurrent moves/edits do not duplicate children or discard their notes. |
+| 2 | Saved template management | Builds directly on the newly implemented reusable workflows. | Rename/edit saved definitions, refresh from a source with review, preserve existing runs, reject unsupported versions and verify cross-device edits. Standalone interchange and a public catalog are later additions. |
+| 3 | Widget manual/grouped ordering | Makes the desktop/Home Screen reflect how the user arranged the app. | My list respects supported saved ordering/grouping; additions/completions/retries retain identity and honest empty states. |
+| 4 | Useful Insights and daily/weekly goals | Existing activity recording supports factual progress without invented history. | Explicit scope/time window, completion-occurrence deduplication, reopen correction, rest days and coverage-boundary messaging; matching settings/results across apps. |
+| 5 | Advanced recurrence | Extends daily scheduling once organization is usable. | Multiple monthly dates with clear preview and consistent month-end/zone/count behavior; persistence, completion/Undo and cross-device fixtures. Sub-day/holiday policies require their own explicit design. |
+| 6 | Direct Google/Outlook calendar connections | Useful but requires provider OAuth/reconnect and real-account acceptance. | Read-only calendars first, visible provider/account, private event handling, selected calendars and disconnect/reconnect; mirroring only after identity/deletion/loop policy and acceptance. |
+| 7 | Shared activity and mentions | Depends on clear ownership, access and notification semantics. | Project-scoped activity, permission-checked mentions, departed-member safety and honest local/remote delivery state. Advanced team roles/folders/admin remain separate. |
+
+Already delivered: archive/restore, owner-safe subprojects, first-version private templates, reviewed multi-line capture, native assignment/member controls, guarded collection edits and the Project pulse history foundation. These are not new implementation backlog entries.
+
+## First implementation: subtask organizer
+
+Status: the nested organizer foundation is implemented and has representative native/core/live acceptance in both apps. **Rank 1 remains in progress:** full child-detail editing parity (including notes and planning controls on iOS) is next, before rank 2 template management.
+
+- A dedicated Organize subtasks sheet exposes the nested checklist while retaining existing inline controls.
+- Each row has an editable name, completion state and actions for adding a child, sibling moves, indent/outdent and confirmed branch deletion.
+- The sheet holds an isolated draft until Save; Cancel does not assign legacy identities or change saved work. A task/workspace change refuses the stale draft.
+- Branches retain IDs and all existing fields, including unknown metadata. Missing legacy IDs are assigned in the explicit saved draft; malformed/duplicate identities are refused without rewriting the original.
+- New nesting is bounded to ten levels, including the containing inspector depth on Mac. Existing deeper supported data stays readable.
+- Current guarded transport remains in use. The collection rebase indexes identities across the tree so a moved child retains remote field changes and is not duplicated at its old location. A reviewed local layout retains remote-only children. This is not the deferred migration to independent child-task database records.
+- No new task/child tables or sibling build dependency are introduced. A compatible guarded-RPC migration is included.
+
+The list/planner progress badges count all supported checklist levels. Native iPhone/iPad checks cover Cancel, whole-branch moves, completion, composer preservation, task Save, relaunch and the 1-of-5 count. Mac additionally covers native Undo/Redo, child creation/deletion and normal app-menu Quit/relaunch. Both independently compiled cores pass real-service two-client move/order conflict/review/retry tests. See `p1-subtasks-evidence.json` and `p1-subtasks-database-evidence.json` for exact coverage and limits.
+
+Migration `20261020194217_subtask_structure_review.sql` fixes an observed service acknowledgement that silently retained the old array order after a concurrent append. It requires review when either client changed checklist structure, while retaining automatic merges for independent fields with unchanged structure. The role fixture checks owner behavior and outsider denial. The helper is private, security-invoker, has a fixed search path and grants no execution to anon; security advisors add no warning. The CLI-generated filename is aligned with the actual remote migration version in both repos.
+
+This organizer is a draft until Save; iOS then returns to the outer task editor, whose Save retains the task. Mac applies it through the existing task autosave/Undo path. It does not move rows outside the task being organized or migrate embedded children to independent database records.
+
+### Reproduce the first foundation checks
+
+Use each repo's `Scripts/prepare_workflow_ui_test.py` with a fresh `workflowtests` namespace. The synthetic fixture additionally requires `--uitesting --workflow-fixture --subtask-organizer-fixture -localMode YES`. Run iOS UI test `testSubtaskOrganizerCancelMoveSaveAndRelaunch` on phone and tablet sequentially to avoid shared keyboard-focus ambiguity. Mac normal relaunch retains `--uitesting -localMode YES` but omits both reset fixture flags. Keep consistent development signing for the Mac namespace and use a fresh physical bundle path when Launch Services has cached an older bundle at the build-product path.
+
+Core suites include `SubtaskTreeTests`; the optional live test uses `TASKFOLD_SUBTASK_LIVE_FIXTURE` with a private JSON file containing the URL/public key and a fresh synthetic continuity-account ID/email/password. Never supply a real account. `SubtaskTransportIntegrationTests` creates only its own task, exercises two sessions, and removes that task. Revoke sessions, delete the disposable account and remove credentials after the run. The actual-role SQL fixture is rollback-only.
+

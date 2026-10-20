@@ -115,7 +115,8 @@ struct PlanDayView: View {
                 }
             }
             if !task["subtasks"].list.isEmpty {
-                Label("\(task["subtasks"].list.filter { $0.object["completed"]?.flag == true }.count) of \(task["subtasks"].list.count) subtasks done", systemImage: "checklist").font(.caption).foregroundStyle(.secondary)
+                let progress = SubtaskTree.progress(task["subtasks"])
+                Label("\(progress.completed) of \(progress.total) subtasks done", systemImage: "checklist").font(.caption).foregroundStyle(.secondary)
             }
         }
         .padding(20)

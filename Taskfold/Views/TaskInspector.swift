@@ -236,6 +236,7 @@ struct TaskInspectorForm: View {
             }
             if workspace.taskDepth(taskID) < 2 {
             Section("Subtasks") {
+                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID))
                 ForEach(Array(draft["subtasks"].list.enumerated()), id: \.offset) { index, value in
                     let title = value.object["title"]?.text ?? ""
                     let completed = value.object["completed"]?.flag == true

@@ -1714,6 +1714,13 @@ extension Store {
             Record(["id": .string(id), "user_id": .string(userID), "name": .string(name), "color": .string("#8b5cf6"), "parent_id": parent.isEmpty ? .null : .string(parent), "is_archived": .bool(false), "order_index": .number(parent.isEmpty ? 0 : 1)])
         }
         var task = Record.task(user: userID, project: child, date: Date()); task["title"] = .string("Prepare workflow brief"); task["description"] = .string("Keep the original notes.")
+        if ProcessInfo.processInfo.arguments.contains("--subtask-organizer-fixture") {
+            func child(_ suffix: String, _ title: String, _ children: [JSON] = []) -> JSON {
+                .object(["id": .string("f1710000-0000-4000-8000-" + suffix), "title": .string(title), "completed": .bool(false),
+                         "description": .string("Keep these checklist notes."), "due_date": .string("2027-01-04"), "subtasks": .array(children)])
+            }
+            task["subtasks"] = .array([child("000000000001", "Planning", [child("000000000002", "Research", [child("000000000004", "Collect references")])]), child("000000000003", "Review")])
+        }
         snapshot = Snapshot(tables: ["projects": projects, "tasks": [task]])
         do { try persist() } catch { self.error = error.localizedDescription }
     }

@@ -1,0 +1,154 @@
+{
+  "observedOn": "2026-10-20",
+  "scope": "First P1 subtask-organizer foundation in both independently owned apps",
+  "status": "representative organizer acceptance passed; full child-detail editing parity remains in P1 rank 1",
+  "core": {
+    "ios": {
+      "reportedTests": 709,
+      "environmentGatedSkips": 8,
+      "failures": 0,
+      "focusedTreeTests": 13,
+      "logSHA256": "edce85f5ecbbce1882cabbfb3769bc39eb6b9fd46d2d1c40c5c991617cd2c9b1"
+    },
+    "mac": {
+      "reportedTests": 733,
+      "environmentGatedSkips": 28,
+      "failures": 0,
+      "focusedTreeTests": 13,
+      "logSHA256": "3635c91fc857cbc4a6ffd9a25c9aead002c9bc3d1176c0250d69bbc9f5548998"
+    }
+  },
+  "native": {
+    "phone": {
+      "tests": 1,
+      "failures": 0,
+      "seconds": 71.549,
+      "resultBundle": "ios-p1-subtask-phone-serial.xcresult",
+      "logSHA256": "65467f3dc664c1506acd2d8ad86273da9a679b59e0da66bdb83910f58c9855a9"
+    },
+    "tablet": {
+      "tests": 1,
+      "failures": 0,
+      "seconds": 84.402,
+      "resultBundle": "ios-p1-subtask-tablet-verified.xcresult",
+      "logSHA256": "d7f365aac58255766aeea2be39a24a78e101a17dcd584e11d2726dd132406377"
+    },
+    "iosFlow": [
+      "local rename/completion followed by Cancel restores the original values",
+      "indent Review, outdent Research together with its original child",
+      "edit and complete only Research; its child remains open",
+      "Save includes an entered root composer title even without tapping Add",
+      "outer task Save and relaunch preserve the five-node hierarchy",
+      "combined task accessibility label says 1 of 5 subtasks completed"
+    ],
+    "simulatorCacheChecks": [
+      {
+        "device": "phone",
+        "pending": 0,
+        "taskCount": 1,
+        "subtaskCount": 5,
+        "completedSubtasks": 1,
+        "originalMetadataPreserved": true,
+        "cacheSHA256": "d9b7efbfba416d7f8cca03cdcbd3a508ee5c1f5c469554e5f395744550250d89"
+      },
+      {
+        "device": "tablet",
+        "pending": 0,
+        "taskCount": 1,
+        "subtaskCount": 5,
+        "completedSubtasks": 1,
+        "originalMetadataPreserved": true,
+        "cacheSHA256": "f38e727b83cc1356da482e6f2fe01120c4eec97fab75e6d1c4c1c97e0f8507e3"
+      }
+    ],
+    "mac": {
+      "method": "direct native computer-use walkthrough",
+      "checks": [
+        "readable full-width names, hierarchy indentation and compact menus",
+        "local rename/completion then Escape leaves the saved task unchanged",
+        "whole-branch indent/outdent",
+        "Command-S saves and includes the pending composer title",
+        "one native Undo restores the exact original task; Redo restores the organized task",
+        "native child creation dialog, confirmed save and retained child",
+        "deletion confirmation Cancel retains the child; confirmed delete and Save remove only that child",
+        "child creation/deletion round trip returns to the exact saved five-node task",
+        "normal app-menu Quit and relaunch retain the exact saved task",
+        "current build shows 1 of 5 subtasks completed; notes and dates remain exact"
+      ],
+      "walkthroughLogSHA256": "c087fca54b7dc7652e8ca227221d686962c88345cb393104ba3bdfa8e2011bd1",
+      "relaunchLogSHA256": "d39861fba8c1efdd062af4094c7eec7a7888a9bb3370a4dcbacde0d49df891ec",
+      "currentCountLogSHA256": "c00f173ba18a4de4510b94661a10e022d5fe10086170962a91cded3e9db29ba3"
+    }
+  },
+  "liveTransport": {
+    "test": "SubtaskTransportIntegrationTests.testMovedChildAndReviewedOrderKeepSecondClientWork",
+    "ios": {
+      "tests": 1,
+      "failures": 0,
+      "logSHA256": "df90c02a0000130d9b2659f04d479fa6e05c118476296086919e51a55fcbd3ae"
+    },
+    "mac": {
+      "tests": 1,
+      "failures": 0,
+      "logSHA256": "635815d9e8b478b21aa09144a64d707e8b9525b8344aa91ac158ce795bb5d313"
+    },
+    "checks": [
+      "two real authenticated native Backend sessions",
+      "concurrent branch move pauses for review rather than dropping second-client notes",
+      "reviewed move retains the leaf under its moved parent without duplicate IDs",
+      "concurrent reorder plus a second-client addition pauses for review",
+      "reviewed order retains the independent addition",
+      "persisted/reloaded review queue and exact retry retain the result"
+    ],
+    "redReproductionLogSHA256": "ff3b3c8c538cc2ee077c389b8cd02af28504f5a132c41e2799e3d3fd9cc54874"
+  },
+  "databaseEvidence": "p1-subtasks-database-evidence.json",
+  "builds": {
+    "iosAppWidgetsAndUITests": {
+      "passed": true,
+      "logSHA256": "78ab7e27168d09b5cc4561ef1fcb7d228dbb022a937a0429c0f8fab3acc3127a"
+    },
+    "macSignedIsolatedApp": {
+      "passed": true,
+      "logSHA256": "29b2c88a3a3cc082985c598c284c3ea3176a7aec391ed84cc1f3e0efef8b004c"
+    },
+    "macOwnedAppAndWidgetsUnsignedDebug": {
+      "passed": true,
+      "logSHA256": "8c46bff8f37480a0c3d23c5bed6f44b7f9479aefe47d1b9b1ce131a12f1524d5"
+    },
+    "ownedFeatureSourcesMatchTestedCopiesExceptDisposableNamespaces": true
+  },
+  "retainedLimitations": [
+    "A phone run while both Simulators were executing lost keyboard focus after moving a row. Its result is not counted as acceptance. The unchanged serial phone run passes; the concurrency of the Simulator run is an observation, not a proven product root cause.",
+    "No new human VoiceOver speech, every-depth/large-checklist layout, native cloud screen-to-screen or signed distribution acceptance is claimed.",
+    "Organizer fields are names/completion/hierarchy. Full nested child-detail editing parity, then the other ranked P1 items, remain active work.",
+    "Remote reminders, older-client safeguards and distribution remain user-deferred."
+  ],
+  "cleanup": {
+    "testAccountsAndTasksRemoved": true,
+    "privateFixtureCredentialsRemoved": true,
+    "testAppsClosed": true,
+    "simulatorAppsUninstalled": true,
+    "simulatorsReturnedToShutdown": true,
+    "realUserDataModified": false,
+    "removedObsoleteArtifacts": [
+      {
+        "artifact": "mac-p1-owned-build",
+        "allocatedBytesBefore": 380125184
+      },
+      {
+        "artifact": "TaskfoldP1.app",
+        "allocatedBytesBefore": 33902592
+      },
+      {
+        "artifact": "ios-p1-subtask-native-v1.xcresult"
+      },
+      {
+        "artifact": "ios-p1-subtask-tablet-v1.xcresult"
+      },
+      {
+        "artifact": "ios-p1-subtask-phone-verified.xcresult"
+      }
+    ]
+  }
+}
