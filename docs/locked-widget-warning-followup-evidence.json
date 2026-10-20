@@ -1,0 +1,144 @@
+{
+  "date": "2026-10-20",
+  "status": "physical_build20_locked_private_and_protected_tap_accepted_normal_return_pending",
+  "humanReport": {
+    "locked": "It does not show 1 due; the same error message appears.",
+    "unlocked": "1 due visible.",
+    "warningClarification": "After replacing with wider rectangular Today, user reports Please adopt\u2026 while locked.",
+    "widgetFamily": "Wider rectangular Today per requested replacement.",
+    "errorTextConfirmed": true,
+    "completeErrorTextStillTruncated": true
+  },
+  "diagnostic": {
+    "method": "Explicit .redacted(reason: .privacy) injected only in a fresh isolated diagnostic widget configuration; new diagnostic kind prevents reusing normal gallery previews. Actual WidgetKit extension in real SpringBoard gallery.",
+    "source": "Current widget implementation from 8c43018; no new shipping source repair.",
+    "resultBundle": "ios-widget-private-background-before-v1.xcresult outside repos",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "structuredRuntimeWarnings": [],
+    "visualReview": {
+      "inspected": true,
+      "screenshot": "widget-previews/today-private-gallery-diagnostic.png",
+      "sha256": "9655390ff06b2de7adbf308c0e62b9c561ac02411210ee48550fc80acbdf2404",
+      "circular": "Lock icon, no count or warning.",
+      "rectangular": "Lock icon and complete Tasks are private on two lines, no warning.",
+      "privateTaskDetailsVisible": false
+    },
+    "entitlementsAndSigning": "App/widget identity and App Group checked in both arm64/x86_64 slices, with strict real-team signatures.",
+    "wholeWorkspaceEqualToBaseline": true,
+    "taskCount": 2,
+    "pendingWrites": 0,
+    "consoleWarnings": "Apple duplicate accessibility class and Xcode debugger warnings retained; no universal clean-runtime claim.",
+    "limits": [
+      "Explicit privacy injection is not actual system-selected lock redaction.",
+      "Gallery preview is not an installed locked timeline or tap/authentication proof.",
+      "Simulator OS is iOS 27.0; physical phone is iOS 27.0.1."
+    ]
+  },
+  "noSpeculativeShippingPatch": false,
+  "physicalPhoneAppNotReplacedForThisDiagnostic": "The initial explicit-privacy Simulator diagnostic did not replace the phone app. The later normal build20 root-background repair did replace only the isolated phone app.",
+  "nextAction": "Confirm original On setting restored and normal widget content returns with open padlock; then finalize representative physical privacy acceptance.",
+  "cleanup": {
+    "forcedDiagnosticSimulatorAppRemoved": true,
+    "simulatorShutdown": true,
+    "normalStagedWidgetSourceRestored": true,
+    "phoneAppAndSettingsUntouchedByAgent": true,
+    "syntheticCacheAndNativeResultRetained": true
+  },
+  "repairCandidate": {
+    "implementation": "Declare one containerBackground at the stable Today root, outside privacy-dependent content; choose transparent accessory or existing card surface only by static family. Remove nested per-branch background registrations.",
+    "rationale": "Physical system privacy transition still reports a background API warning after all branches were annotated. Stable outer registration removes dependence on conditional redaction structure.",
+    "causeProvenBySimulator": false,
+    "physicalBeforeObservedByHuman": true,
+    "physicalAfterAccepted": false,
+    "nativeSimulatorPrivateGallery": {
+      "resultBundle": "ios-widget-private-root-fixed-v1.xcresult outside repos",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "structuredRuntimeWarnings": [],
+      "screenshot": "widget-previews/today-private-gallery-root-background.png",
+      "screenshotSHA256": "0aacc23568395a44f8201c0f0585d0170a3f601127057f797a8a82820141f533",
+      "visuallyInspected": true,
+      "result": "Circular lock icon and complete rectangular Tasks are private; no warning.",
+      "boundary": "Explicit privacy diagnostic in actual gallery; this was already working before the root change, so it is regression coverage, not reproduction or proof of the physical fix."
+    },
+    "macWidgetSourceTypecheck": "passed",
+    "normalTodayVisualRegression": {
+      "sixCompositeImagesByteExact": true,
+      "sizesPerImage": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "states": [
+        "unavailable",
+        "empty",
+        "ready"
+      ],
+      "appearances": [
+        "light",
+        "dark"
+      ],
+      "comparisons": [
+        {
+          "file": "empty-dark.png",
+          "bothSHA256": "838e7d66ccafcbb49213b1304709eaf87385b7e2d6d38d32b3735105e7039b41"
+        },
+        {
+          "file": "empty-light.png",
+          "bothSHA256": "3762e99b2779e8fb32144d08a5b1c601ee9cd979f982caaad4cf12473d99d758"
+        },
+        {
+          "file": "ready-dark.png",
+          "bothSHA256": "ae584b8e461da099622e1f880c4c73ef6c8e40d1c5c9391d3e5d6865615b88e4"
+        },
+        {
+          "file": "ready-light.png",
+          "bothSHA256": "2bb756899cfaa6f8648f1f16c32b0529d18cea0e72a48eb77f38c97a92fe65d3"
+        },
+        {
+          "file": "unavailable-dark.png",
+          "bothSHA256": "97fe41b3bc082080d44524895c2f0d3c29331a2af53fc9c28a2469a2225fbcec"
+        },
+        {
+          "file": "unavailable-light.png",
+          "bothSHA256": "7efb219d7c7bb45e9bc25938ccb0ad6eb6cbb136c7ccbd7eedd8bda48b01f279"
+        }
+      ]
+    },
+    "physicalBuild": {
+      "result": "BUILD SUCCEEDED",
+      "version": "1.4.0 (20), isolated app and widget only",
+      "appAndExtensionStrictSignaturesPassed": true,
+      "forcedPrivacyInjectionAbsent": true,
+      "releaseVersionsAndEntitlementsUnchanged": true
+    },
+    "installation": {
+      "firstAttempt": "CoreDevice RSD allocation error",
+      "sameBuildRetry": "succeeded",
+      "installedMetadataVerified": {
+        "app": "com.dbakp.taskfold.deviceprivacytests",
+        "version": "1.4.0",
+        "build": "20"
+      },
+      "wholePhysicalDiagnosticCacheEqualAcrossReplacement": true,
+      "beforeSHA256": "093c22c170e3ea90a2fcee5052cd179acae0daba052026fda2fe52afea64ed9c",
+      "afterSHA256": "093c22c170e3ea90a2fcee5052cd179acae0daba052026fda2fe52afea64ed9c"
+    },
+    "regularUserAppUntouched": true,
+    "physicalAfterLockedCheck": {
+      "humanReply": "Private/blank; no access before unlocking",
+      "procedure": "Open build20 once, lock with Face ID covered; closed padlock; observe rectangular Today then tap. Same privacy setting as previous failing check.",
+      "warningAbsentAccepted": true,
+      "privatePresentationAccepted": true,
+      "protectedInteractionBoundaryAccepted": true,
+      "deliveredGenericTodayCallbackClaimed": false,
+      "limits": "Human observed OS-protected interaction; no claim that a private widget URL callback reached the app."
+    },
+    "normalReturnAndOriginalSettingRestoration": "Human check pending.",
+    "stageReproductionFilesByteExact": 64,
+    "ownedSourceSHA256": "d067c4fc342113d73d9d0f156b2cabdec63977578070d7093c2551152bc20577"
+  }
+}

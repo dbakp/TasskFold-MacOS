@@ -545,11 +545,28 @@ struct TodayWidgetView: View {
     var countAccessibilityLabel: String { hasSnapshot ? "\(tasks.count) scheduled \(tasks.count == 1 ? "task" : "tasks")" : "Task count unavailable" }
     var limit: Int { family == .systemLarge ? 7 : 2 }
     var body: some View {
-        if redactionReasons.contains(.privacy) {
-            privateContent.widgetURL(URL(string: "taskfold://today"))
-        } else {
-            normalContent
+        Group {
+            if redactionReasons.contains(.privacy) {
+                privateContent.widgetURL(URL(string: "taskfold://today"))
+            } else {
+                normalContent
+            }
         }
+        // Keep WidgetKit's background registration outside the privacy-dependent
+        // content tree so it stays present when the system changes redaction.
+        .containerBackground(for: .widget) { containerSurface }
+    }
+    @ViewBuilder private var containerSurface: some View {
+        #if os(iOS)
+        switch family {
+        case .accessoryCircular, .accessoryRectangular, .accessoryInline:
+            Color.clear
+        default:
+            WidgetSurface(tint: brand)
+        }
+        #else
+        WidgetSurface(tint: brand)
+        #endif
     }
     @ViewBuilder private var privateContent: some View {
         #if os(iOS)
@@ -557,17 +574,13 @@ struct TodayWidgetView: View {
         case .accessoryCircular:
             ZStack { AccessoryWidgetBackground(); Image(systemName: "lock.fill") }
                 .accessibilityLabel("Today, tasks are private").unredacted()
-                .containerBackground(for: .widget) { Color.clear }
         case .accessoryRectangular, .accessoryInline:
             Label("Tasks are private", systemImage: "lock.fill").unredacted()
-                .containerBackground(for: .widget) { Color.clear }
         default:
             WidgetPrivateCard(title: "Today", symbol: "sun.max")
-                .containerBackground(for: .widget) { WidgetSurface(tint: brand) }
         }
         #else
         WidgetPrivateCard(title: "Today", symbol: "sun.max")
-            .containerBackground(for: .widget) { WidgetSurface(tint: brand) }
         #endif
     }
     @ViewBuilder private var normalContent: some View {
@@ -576,14 +589,11 @@ struct TodayWidgetView: View {
         case .accessoryCircular:
             ZStack { AccessoryWidgetBackground(); VStack(spacing: 0) { Text(countText).font(.title2.bold()).monospacedDigit().accessibilityLabel(countAccessibilityLabel); Text(hasSnapshot ? "due" : "open").font(.caption2) } }
                 .widgetURL(URL(string: "taskfold://today"))
-                .containerBackground(for: .widget) { Color.clear }
         case .accessoryRectangular:
             VStack(alignment: .leading, spacing: 2) { Text(hasSnapshot ? tasks.first?.title ?? "All clear" : "Open Taskfold").font(.headline).lineLimit(2).fixedSize(horizontal: false, vertical: true).privacySensitive(tasks.first != nil); Text(hasSnapshot ? "\(tasks.count) due · incl. overdue" : "Refresh your tasks").font(.caption2).lineLimit(1) }
                 .widgetURL(tasks.first?.url(account: entry.snapshot.account) ?? URL(string: "taskfold://today"))
-                .containerBackground(for: .widget) { Color.clear }
         case .accessoryInline:
             Text(hasSnapshot ? "Taskfold · \(tasks.count) due" : "Taskfold · Open app").widgetURL(URL(string: "taskfold://today"))
-                .containerBackground(for: .widget) { Color.clear }
         default: content
         }
         #else
@@ -628,7 +638,6 @@ struct TodayWidgetView: View {
                 Link(destination: URL(string: "taskfold://add")!) { Image(systemName: "plus.circle.fill").foregroundStyle(brand) }.accessibilityLabel("Capture task in Inbox")
             }
         }
-        .containerBackground(for: .widget) { WidgetSurface(tint: brand) }
         .widgetURL(URL(string: "taskfold://today"))
     }
 }

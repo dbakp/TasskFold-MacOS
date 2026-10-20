@@ -156,5 +156,11 @@
     "evidence": "accessory-widget-background-evidence.json",
     "priorObservationsApplyToEarlierBuild": true,
     "postFixPrivacyAcceptance": false
+  },
+  "currentFollowup": {
+    "evidence": "locked-widget-warning-followup-evidence.json",
+    "build": "20",
+    "lockedPrivateAndProtectedTapAccepted": true,
+    "originalSettingRestorationAndNormalReturn": "Pending after latest repair"
   }
 }
