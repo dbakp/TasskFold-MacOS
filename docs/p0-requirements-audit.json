@@ -327,6 +327,11 @@
     "lockedSampleHidingAccepted": true,
     "furtherChecksUserDeferred": true,
     "originalSettingRestorationConfirmed": false,
-    "nextAction": "User defers further physical checks. Simulator ordinary journeys remain accepted; prior actual Simulator passcode/privacy settings were unusable. Do not repeat those attempts or substitute previews. Resume only the remaining locked tap/authentication route when user chooses; release signing/delivery/old-writer rollout stays separately deferred."
+    "nextAction": "User defers further physical checks. Simulator ordinary journeys remain accepted; prior actual Simulator passcode/privacy settings were unusable. Do not repeat those attempts or substitute previews. Resume only the remaining locked tap/authentication route when user chooses; release signing/delivery/old-writer rollout stays separately deferred.",
+    "galleryWarningFollowup": {
+      "evidence": "accessory-widget-background-evidence.json",
+      "repair": "Transparent container background on every Today accessory rendering branch.",
+      "installedGalleryAfterFixAccepted": false
+    }
   }
 }

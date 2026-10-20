@@ -149,5 +149,10 @@
     "tasks": 2,
     "pendingWrites": 0,
     "realTaskfoldCacheNotAccessed": true
+  },
+  "subsequentGalleryDefect": {
+    "evidence": "accessory-widget-background-evidence.json",
+    "priorObservationsApplyToEarlierBuild": true,
+    "postFixPrivacyAcceptance": false
   }
 }

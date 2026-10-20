@@ -2366,3 +2366,9 @@ Current-source iOS spoken recovery is accepted in its named representative scope
 ### 20 October — physical iOS widget installed; locked title hidden
 
 20 October physical widget result: after the first free-profile-limit installation failure, the user requested a retry and the same signed isolated app installed successfully. The actual iPhone 16 Pro / iOS 27.0.1 rectangular Today Lock Screen widget showed Privacy check sample while authenticated. With Lock Screen Widgets changed from its original On to Off and the padlock closed, the user confirmed the sample was hidden. Further private-presentation/tap/authentication checks were deferred by the user; no route or full privacy acceptance is claimed. The entire diagnostic saved JSON is unchanged before/after (two tasks, zero pending writes). The isolated host is terminated; its app/widget remain installed. Restoring the original On setting was requested but is not confirmed. Earlier Simulator privacy settings were unusable, so previews cannot close this remaining native check. Production APNs/release inputs remain unchanged. See `physical-widget-privacy-preparation-evidence.json`.
+
+### 20 October — Today accessory background declaration
+
+The user’s actual iPhone gallery screenshot exposes a missing background declaration in the accessory branches. Both independently owned widget sources now declare a transparent widget container for normal and private accessory layouts. The macOS typecheck passes; these branches are iOS-only, with no Mac runtime change. Post-fix gallery and locked-route acceptance remain separate. See `accessory-widget-background-evidence.json`.
+
+Corrected physical iOS build, strict signatures, configuration metadata and installation pass. Both synthetic tasks remain open; later reschedule history prevents an exact earlier-cache comparison. Host remains stopped; no post-install gallery observation is claimed.

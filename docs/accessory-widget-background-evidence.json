@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-20",
+  "issue": "User screenshot shows Today Lock Screen gallery warning icon and truncated Please adopt c\u2026 text.",
+  "diagnosis": "Today declares containerBackground in Home Screen/default layouts but omits it in all iOS accessory layouts, including private rendering. This matches the reported WidgetKit background API warning.",
+  "fix": "Each circular/rectangular/inline normal and private accessory rendering branch declares a transparent widget container background. Existing Home Screen surfaces, privacy-sensitive content and URLs retain their implementation.",
+  "scope": "Independent owned widget source updated in each repo. Accessory branches compile only on iOS; macOS behavior unchanged.",
+  "validation": {
+    "macOSWidgetSourceTypecheck": "passed",
+    "physicalIOSBuild": "BUILD SUCCEEDED; app and embedded extension strict codesign verification passed",
+    "installedGalleryAfterFix": "not yet verified",
+    "privacyGateClosed": false,
+    "compiledWidgetCatalog": "8 configurations, 3 entities, 6 enums and app/widget completion metadata verified with matching signing teams",
+    "isolatedPhoneInstallation": "succeeded",
+    "applicationLaunchedForTesting": false,
+    "diagnosticHostConfirmedStoppedAfterInstallation": true,
+    "buildLogSHA256": "c9bb2ab9c10dd0fbb37d63e16f4bcde21d494d46def1d396502753e8138fdd1d",
+    "warnings": "Retained build/compiler logs; no universal warning-free claim."
+  },
+  "screenshot": "User-provided 20 October 15:26 screenshot; personal image not copied into repositories.",
+  "reference": "https://developer.apple.com/documentation/swiftui/view/containerbackground(_:for:)",
+  "sourceSHA256": "d9fc11d6475e09a376df5a5483b20f5f9770b540e517b370e97d59e5c28a4ce3",
+  "savedDataObservation": {
+    "diagnosticContainerOnly": true,
+    "sameTwoTaskIDsPresent": true,
+    "bothTasksStillOpen": true,
+    "wholeCacheEqualsEarlierPrivacyBaseline": false,
+    "difference": "Later diagnostic cache contains reschedule-and-return activity, a view order and additional nullable schedule fields. No cache was captured immediately before this replacement, so changes cannot be attributed to the installation. No data rollback performed.",
+    "realTaskfoldDataNotAccessed": true
+  }
+}
