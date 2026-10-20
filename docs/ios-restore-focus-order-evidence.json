@@ -201,7 +201,9 @@
     "testAppTerminatedInTeardown": true,
     "dedicatedSimulatorShutdown": true,
     "captureKeyboardRestoredOff": true,
-    "deviceHubWindow": "Opened for human check. Mac later locked; restoring its original selected iPad/closing its window was unavailable to computer use. No unlock requested. The Simulator itself is shut down and no Taskfold main test process remains.",
-    "currentIncrementalBuildAndEvidenceRetained": true
+    "deviceHubWindow": "Subsequent cleanup: Mac available, original Taskfold assignment iPad selection restored with keyboard capture Off, Quit Device Hub selected from its app menu. Fresh app inventory confirms Device Hub isRunning false; VoiceOver is also false. No Simulator or test app launched.",
+    "currentIncrementalBuildAndEvidenceRetained": true,
+    "deviceHubClosed": true,
+    "originalDeviceSelectionRestored": true
   }
 }
