@@ -1,4 +1,4 @@
-# P0 progress — 14 October 2026
+# P0 progress — 20 October 2026
 
 **Core feature implementation is largely complete; the full requested objective and release acceptance remain incomplete.** The original scope is the productive widget collection plus Todoist P0 foundations on both independently owned Apple apps. This is the current summary; [the original port plan](TODOIST_PORT_PLAN.md), [requirement audit](p0-requirements-audit.json) and [dated acceptance history](P0_RELEASE_STATUS.md) retain the detailed contracts and limits. Historical open items superseded by later evidence are not additional release gates.
 
@@ -46,3 +46,5 @@ The complete organization-order implementation is unchanged from the accepted at
 File-access recovery guidance is now consistent in both readers even when coordination succeeds but metadata/bytes are unavailable. Eight focused cases pass independently per repo after reproducing the old failure; specific invalid-backup and size/cancellation messages are retained. This is local reader evidence, not external-provider transfer acceptance. See `backup-file-access-guidance-evidence.json`.
 
 The representative iOS external-file group is now accepted: real server-backed provider download/restore/relaunch, same-file unavailable/retry, and delayed provider response after system-picker cancellation and local workspace departure/return. Both new native cases preserve the entire canonical cache through relaunch. This does not claim a late URL callback reached Taskfold or universal provider compatibility. See `ios-external-provider-recovery-evidence.json`.
+
+Direct installed Mac widget reads on 20 October confirm normal refresh of the local task, full edited note, ended Focus and project totals, with the entire local cache canonically unchanged. This adds no action/layout/account-route acceptance. A singular Overdue accessibility label is repaired in Mac source and compiles; the retained installed host was not replaced. Routine widget observations remain automated; the remaining system-owned interaction surface is still unavailable. See `mac-widget-refresh-recheck-evidence.json`.

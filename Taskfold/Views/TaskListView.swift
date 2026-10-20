@@ -325,7 +325,7 @@ struct TaskListView: View {
             }
             }.buttonStyle(.plain)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Overdue, \(tasks.count) tasks")
+            .accessibilityLabel("Overdue, \(tasks.count) \(tasks.count == 1 ? "task" : "tasks")")
             .accessibilityValue(overdueCollapsed ? "Collapsed" : "Expanded")
             .accessibilityIdentifier("overdueToggle")
         }
