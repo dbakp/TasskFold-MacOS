@@ -506,3 +506,50 @@ extension AccountTransportTests {
         XCTAssertEqual(saved?.access_token, "latest")
     }
 }
+
+extension AccountTransportTests {
+    @MainActor func testTemplateEditsUseGuardedRPCAndConfirmSavedFields() async throws {
+        let api=backend(try signed(owner)),id="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+        let base:[String:JSON]=["id":.string(id),"user_id":.string(owner),"name":.string("Original"),"document":.object(["version":.number(1)])]
+        var response=base;response["name"] = .string("Edited")
+        let data=try JSONEncoder().encode(Record(response)),called=expectation(description:"Guarded template edit")
+        ScopedHTTP.handler={request,transport in
+            XCTAssertEqual(request.url?.path,"/rest/v1/rpc/taskfold_edit_template");XCTAssertEqual(request.httpMethod,"POST")
+            let body=try? JSONDecoder().decode([String:JSON].self,from:request.httpBody ?? { let stream=request.httpBodyStream!;stream.open();defer{stream.close()};var data=Data(),buffer=[UInt8](repeating:0,count:4096);while stream.hasBytesAvailable { let count=stream.read(&buffer,maxLength:buffer.count);if count<=0{break};data.append(buffer,count:count) };return data }())
+            XCTAssertEqual(body?["_base"],.object(base));XCTAssertEqual(body?["_changes"],.object(["name":.string("Edited")]));XCTAssertEqual(body?["_delete"],.bool(false))
+            transport.finish(200,data);called.fulfill()
+        }
+        defer{ScopedHTTP.handler=nil}
+        let saved=try await api.send(Mutation(table:WorkflowTemplate.table,recordID:id,method:"PATCH",fields:["name":.string("Edited")],baseline:base),expectedAccount:owner)
+        XCTAssertEqual(saved?.name,"Edited");await fulfillment(of:[called],timeout:2)
+    }
+    @MainActor func testTemplateConflictAndMissingBaselineNeverSendBlindPatch() async throws {
+        let api=backend(try signed(owner)),gate=HTTPGate(),id="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+        ScopedHTTP.handler={_,transport in gate.hold(transport);transport.finish(409,Data(#"{"message":"TASKFOLD_CONFLICT: overlapping template"}"#.utf8))}
+        defer{ScopedHTTP.handler=nil}
+        let base:[String:JSON]=["name":.string("Original"),"document":.object(["version":.number(1)])]
+        do{_ = try await api.send(Mutation(table:WorkflowTemplate.table,recordID:id,method:"PATCH",fields:["name":.string("Edited")]));XCTFail("Missing baseline sent")}catch{XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"))}
+        XCTAssertEqual(gate.count,0)
+        do{_ = try await api.send(Mutation(table:WorkflowTemplate.table,recordID:id,method:"PATCH",fields:["name":.string("Edited")],baseline:base));XCTFail("Overlap accepted")}catch{XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"))}
+        XCTAssertEqual(gate.count,1)
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testTemplateRestoreCannotUpsertOverAnotherDevicesEdit() async throws {
+        let api=backend(try signed(owner)),id="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+        let desired:[String:JSON]=["id":.string(id),"user_id":.string(owner),"name":.string("Older restored copy"),"document":.object(["version":.number(1)])]
+        var remote=desired;remote["name"] = .string("Other device edited this")
+        let data=try JSONEncoder().encode([Record(remote)]),posted=expectation(description:"Insert ignores existing identity"),fetched=expectation(description:"Existing template compared")
+        ScopedHTTP.handler={request,transport in
+            if request.httpMethod=="POST" {
+                XCTAssertTrue(request.value(forHTTPHeaderField:"Prefer")?.contains("resolution=ignore-duplicates")==true)
+                transport.finish(200,Data("[]".utf8));posted.fulfill()
+            } else { transport.finish(200,data);fetched.fulfill() }
+        }
+        defer{ScopedHTTP.handler=nil}
+        do { _ = try await api.send(Mutation(table:WorkflowTemplate.table,recordID:id,method:"POST",fields:desired));XCTFail("A stale restoration overwrote the current template") }
+        catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"),error.localizedDescription) }
+        await fulfillment(of:[posted,fetched],timeout:2)
+    }
+}

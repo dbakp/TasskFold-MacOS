@@ -254,6 +254,7 @@ struct SyncConflict: Identifiable {
     /// Resolve only the edit that was reviewed, then replay later offline work.
     /// Returning nil leaves stale or mismatched review requests untouched.
     func resolving(_ snapshot: Snapshot, keepLocal: Bool) -> Snapshot? {
+        if mutation.table == WorkflowTemplate.table { return TemplateEditing.resolving(self, snapshot: snapshot, keepLocal: keepLocal) }
         guard mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
               remote.id.lowercased() == mutation.recordID.lowercased(),
               let index = snapshot.pending.firstIndex(where: { $0 == mutation }) else { return nil }
@@ -403,6 +404,11 @@ struct Snapshot: Codable, Equatable, Sendable {
             rows[i] = change.table == "tasks" ? TaskCompletionRevision.applying(projected, to: rows[i]) : Record(rows[i].fields.merging(projected) { _, new in new })
         } else {
             var fields = change.fields
+            if change.table == WorkflowTemplate.table, change.method == "PATCH" {
+                // Keep a deleted template's full queued draft visible until its guarded sync review.
+                fields = (change.baseline ?? [:]).merging(fields) { _, desired in desired }
+                fields["id"] = .string(change.recordID)
+            }
             if change.table == "tasks", change.method == "POST" { fields["completion_version"] = .number(0) }
             rows.append(Record(fields))
         }

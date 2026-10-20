@@ -441,6 +441,14 @@ final class Backend: NSObject {
             }
             return saved
         }
+        if change.table == WorkflowTemplate.table, ["PATCH","DELETE"].contains(change.method) {
+            guard let base=change.baseline,base["name"] != nil,base["document"] != nil else { throw AppFailure(message:"TASKFOLD_CONFLICT: Review this older template edit before replacing synced work.") }
+            let data=try await request("/rest/v1/rpc/taskfold_edit_template",method:"POST",body:["_id":.string(change.recordID),"_base":.object(base),"_changes":.object(change.fields),"_delete":.bool(change.method=="DELETE")],expectedAccount:expectedOwner)
+            if change.method=="DELETE" { return nil }
+            let saved=try JSONDecoder().decode(Record.self,from:data)
+            guard saved.id.lowercased()==change.recordID.lowercased(),change.fields.allSatisfy({saved[$0.key]==$0.value}) else { throw AppFailure(message:"The server did not confirm this template edit. It remains saved on this device.") }
+            return saved
+        }
         // Both native clients protect edits with the same server-side baseline merge.
         if change.table == "tasks", change.method == "PATCH" {
             // Missing baselines cannot safely distinguish a clear from no change.
@@ -495,13 +503,14 @@ final class Backend: NSObject {
             }
             return saved
         }
+        let guardedTemplateCreation = change.table == WorkflowTemplate.table && change.method == "POST"
         let conflictKey = ["favorites", "view_preferences", "view_orders", ReminderSnooze.table].contains(change.table) ? "user_id,id" : "id"
         let escapedID = change.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? change.recordID
         let query = change.method == "POST" ? "?on_conflict=\(conflictKey)" : "?id=eq.\(escapedID)"
         let data = try await request("/rest/v1/\(change.table)\(query)", method: change.method,
             body: change.method == "DELETE" ? nil : change.fields,
-            extra: ["Prefer": change.method == "POST" ? (change.insertOnly == true ? "handling=strict,resolution=ignore-duplicates,missing=default,return=representation" : "resolution=merge-duplicates,return=representation") : "return=representation"], expectedAccount: expectedOwner)
-        if change.method == "POST", change.insertOnly == true {
+            extra: ["Prefer": change.method == "POST" ? (change.insertOnly == true || guardedTemplateCreation ? "handling=strict,resolution=ignore-duplicates,missing=default,return=representation" : "resolution=merge-duplicates,return=representation") : "return=representation"], expectedAccount: expectedOwner)
+        if change.method == "POST", change.insertOnly == true || guardedTemplateCreation {
             let rows = try JSONDecoder().decode([Record].self, from: data)
             if let saved = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() && $0.string("user_id") == change.fields["user_id"]?.text }) { return saved }
             let owner = (change.fields["user_id"]?.text ?? "").addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
@@ -510,6 +519,10 @@ final class Backend: NSObject {
             let found = try JSONDecoder().decode([Record].self, from: existing)
             guard found.contains(where: { $0.id == change.recordID && $0.string("user_id") == change.fields["user_id"]?.text }) else {
                 throw AppFailure(message: "The server could not confirm this new item. It remains saved on this device.")
+            }
+            if guardedTemplateCreation, let existing=found.first,
+               existing["name"] != change.fields["name"] || existing["document"] != change.fields["document"] {
+                throw AppFailure(message:"TASKFOLD_CONFLICT: This template already exists with different saved contents. Review before restoring it.")
             }
             return found.first
         }

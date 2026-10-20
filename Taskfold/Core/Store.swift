@@ -772,6 +772,9 @@ final class Store {
             if change.table == "tasks", change.method == "DELETE", change.baseline == nil, let existing = record("tasks", id: change.recordID) {
                 change.baseline = existing.fields
             }
+            if change.table == WorkflowTemplate.table, ["PATCH","DELETE"].contains(change.method), let existing=record(change.table,id:change.recordID) {
+                change.baseline = existing.fields.merging(change.baseline ?? [:]) { _, original in original }
+            }
             change = TaskCompletionRevision.capturing(change, existing: record(change.table, id: change.recordID))
             guard TaskGeneration.permitsLocalAction(change, existing: record(change.table, id: change.recordID)) else {
                 snapshot = old
@@ -809,7 +812,7 @@ final class Store {
         let changed = (baseline ?? existing).map { old in editable.filter { old.fields[$0.key] != $0.value } } ?? editable
         guard !changed.isEmpty else { return true }
         var changes = [Mutation(table: table, recordID: record.id, method: existing == nil ? "POST" : "PATCH", fields: changed, baseline: baseline.map { old in
-            table == "tasks" ? TaskCompletionRevision.editBaseline(for: changed, from: old) : Dictionary(uniqueKeysWithValues: changed.keys.map { ($0, old[$0]) })
+            table == WorkflowTemplate.table ? old.fields : table == "tasks" ? TaskCompletionRevision.editBaseline(for: changed, from: old) : Dictionary(uniqueKeysWithValues: changed.keys.map { ($0, old[$0]) })
         })]
         if table == "labels", let existing, existing.name != record.name {
             for task in tasks {
@@ -988,6 +991,13 @@ final class Store {
                     Task { await reschedule() }
                     publishWidgetSnapshot(scheduleCapacityRefresh: false)
                     notice = "Focus changed on another device. Open Focus session to review it and resume sync."
+                }
+                if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation=sending,mutation.table==WorkflowTemplate.table,
+                   let escaped=mutation.recordID.addingPercentEncoding(withAllowedCharacters:.alphanumerics),
+                   let data=try? await backend.request("/rest/v1/project_templates?id=eq.\(escaped)&select=*"),
+                   let rows=try? JSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
+                    syncConflict=SyncConflict(mutation:mutation,remote:rows.first ?? Record(["id":.string(mutation.recordID),"name":.string("Deleted template")]))
+                    notice="This template changed on another device. Review it to resume sync."
                 }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation = sending,
                    mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),

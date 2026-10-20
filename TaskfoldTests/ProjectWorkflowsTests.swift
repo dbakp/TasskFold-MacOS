@@ -236,3 +236,138 @@ extension ProjectWorkflowsTests {
         XCTAssertTrue(Set(tasks.map(\.id)).isDisjoint(with: Set(nested)))
     }
 }
+
+extension ProjectWorkflowsTests {
+    func templateRow() throws -> Record {
+        let definition=try WorkflowTemplate.capture(kind:.project,id:"root",snapshot:fixture())
+        return Record(["id":.string("template"),"user_id":.string(owner),"name":.string("Weekly studio"),"document":definition.document])
+    }
+    func testDefinitionEditsKeepNestedIdentitiesMetadataAndExistingRuns() throws {
+        let original=try templateRow(),before=try WorkflowTemplate(document:original["document"]).instantiate(account:owner,name:"Previous run")
+        let item=try XCTUnwrap(TemplateEditing.tasks(original["document"]).first{$0.record.title=="Design review"})
+        let edited=try TemplateEditing.changing(original["document"],item:item,fields:["description":.string("New reusable notes"),"duration_minutes":.number(45),"planned_offset":.null,"deadline_offset":.number(7)])
+        let updated=TemplateEditing.tasks(edited).first{$0.record.id==item.record.id}!.record
+        XCTAssertNil(updated.fields["planned_offset"]);XCTAssertEqual(updated["deadline_offset"],.number(7));XCTAssertEqual(updated["labels"],item.record["labels"]);XCTAssertEqual(updated["subtasks"],item.record["subtasks"])
+        let saved=try TemplateEditing.edit(original:original,name:"  Better studio  ",document:edited,current:original)
+        XCTAssertEqual(saved.name,"Better studio");XCTAssertEqual(saved.id,original.id);XCTAssertEqual(saved["user_id"],original["user_id"])
+        let after=try WorkflowTemplate(document:saved["document"]).instantiate(account:owner,name:"Next run",start:Dates.parse("2026-11-01"))
+        XCTAssertTrue(before.filter{$0.table=="tasks"}.allSatisfy{$0.fields["description"] != .string("New reusable notes")})
+        XCTAssertTrue(after.contains{$0.table=="tasks" && $0.fields["description"] == .string("New reusable notes") && $0.fields["duration_minutes"] == .number(45) && $0.fields["due_date"] == .null})
+        XCTAssertTrue(Set(before.filter{$0.table=="tasks"}.map(\.recordID)).isDisjoint(with:Set(after.filter{$0.table=="tasks"}.map(\.recordID))))
+    }
+    func testDefinitionChildAddDeleteAndOrganizationRenameAreDraftOnly() throws {
+        let row=try templateRow(),original=row["document"],parent=TemplateEditing.tasks(original).first!
+        let added=try TemplateEditing.adding(original,parent:parent)
+        XCTAssertEqual(TemplateEditing.tasks(added).count,TemplateEditing.tasks(original).count+1)
+        let new=TemplateEditing.tasks(added).first{$0.record.title=="New task"}!
+        XCTAssertEqual(try TemplateEditing.changing(added,item:new,fields:[:],remove:true),original)
+        let renamed=try TemplateEditing.renamed(original,table:"projects",id:"child",name:"  Review studio  ")
+        XCTAssertEqual(try WorkflowTemplate(document:renamed).projects.first{$0.id=="child"}?.name,"Review studio")
+        XCTAssertEqual(row["document"],original)
+        XCTAssertThrowsError(try TemplateEditing.renamed(original,table:"sections",id:"section",name:" "))
+    }
+    func testTemplateSaveRejectsStaleDeletedInvalidAndUnsupportedDefinitions() throws {
+        let row=try templateRow();var remote=row;remote["name"] = .string("Another device")
+        XCTAssertThrowsError(try TemplateEditing.edit(original:row,name:"Local",document:row["document"],current:remote))
+        XCTAssertThrowsError(try TemplateEditing.edit(original:row,name:"Local",document:row["document"],current:nil))
+        XCTAssertThrowsError(try TemplateEditing.edit(original:row,name:String(repeating:"x",count:161),document:row["document"],current:row))
+        var future=row["document"].object;future["version"] = .number(99)
+        XCTAssertThrowsError(try TemplateEditing.edit(original:row,name:"Local",document:.object(future),current:row))
+    }
+    func testTemplateConflictKeepsExplicitDocumentChoiceAndIndependentRemoteName() throws {
+        let original=try templateRow();var remote=original;remote["name"] = .string("Remote name")
+        let item=TemplateEditing.tasks(original["document"]).first!
+        let document=try TemplateEditing.changing(original["document"],item:item,fields:["title":.string("Local definition")])
+        let change=Mutation(table:WorkflowTemplate.table,recordID:original.id,method:"PATCH",fields:["document":document],baseline:original.fields)
+        var snapshot=Snapshot(tables:[WorkflowTemplate.table:[original],"tasks":fixture().tables["tasks"]!],pending:[change]);snapshot.apply(change)
+        let reviewed=try XCTUnwrap(SyncConflict(mutation:change,remote:remote).resolving(snapshot,keepLocal:true))
+        XCTAssertEqual(reviewed.tables[WorkflowTemplate.table]?.first?.name,"Remote name")
+        XCTAssertEqual(reviewed.tables[WorkflowTemplate.table]?.first?["document"],document)
+        XCTAssertEqual(reviewed.pending.first?.baseline,remote.fields)
+        XCTAssertEqual(reviewed.tables["tasks"],snapshot.tables["tasks"])
+        XCTAssertEqual(try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(reviewed)),reviewed)
+    }
+    func testUseSyncedTemplateKeepsLaterOfflineWorkGuardedByItsOriginalBaseline() throws {
+        let row=try templateRow();var remote=row;remote["name"] = .string("Remote name")
+        let first=Mutation(table:WorkflowTemplate.table,recordID:row.id,method:"PATCH",fields:["name":.string("First local")],baseline:row.fields)
+        var secondBase=row;secondBase["name"] = .string("First local")
+        let second=Mutation(table:WorkflowTemplate.table,recordID:row.id,method:"PATCH",fields:["name":.string("Later local")],baseline:secondBase.fields)
+        let snapshot=Snapshot(tables:[WorkflowTemplate.table:[row]],pending:[first,second])
+        let reviewed=try XCTUnwrap(SyncConflict(mutation:first,remote:remote).resolving(snapshot,keepLocal:false))
+        XCTAssertEqual(reviewed.pending,[second]);XCTAssertEqual(reviewed.tables[WorkflowTemplate.table]?.first?.name,"Later local")
+        XCTAssertEqual(reviewed.pending.first?.baseline?["name"],.string("First local"),"Later overlapping work must still require review against Remote name")
+    }
+    func testDeletedTemplateRecoveryCreatesNewIdentityAndNeverRecreatesOldID() throws {
+        let row=try templateRow(),change=Mutation(table:WorkflowTemplate.table,recordID:row.id,method:"PATCH",fields:["name":.string("Recovered")],baseline:row.fields)
+        let snapshot=Snapshot(tables:[WorkflowTemplate.table:[row]],pending:[change]),missing=Record(["id":.string(row.id),"name":.string("Deleted template")])
+        let recovered=try XCTUnwrap(SyncConflict(mutation:change,remote:missing).resolving(snapshot,keepLocal:true))
+        XCTAssertEqual(recovered.pending.count,1);XCTAssertEqual(recovered.pending[0].method,"POST");XCTAssertNotEqual(recovered.pending[0].recordID,row.id)
+        XCTAssertEqual(recovered.tables[WorkflowTemplate.table]?.first?.name,"Recovered")
+        XCTAssertFalse(recovered.tables[WorkflowTemplate.table]!.contains{$0.id==row.id})
+        let discarded=try XCTUnwrap(SyncConflict(mutation:change,remote:missing).resolving(snapshot,keepLocal:false));XCTAssertTrue(discarded.pending.isEmpty);XCTAssertTrue(discarded.tables[WorkflowTemplate.table]!.isEmpty)
+    }
+}
+
+extension ProjectWorkflowsTests {
+    func testTemplateSiblingMovesRetainWholeBranchAndRoundTripExactly() throws {
+        let row=try templateRow(),source=row["document"]
+        let item=try XCTUnwrap(TemplateEditing.tasks(source).first{$0.record.title=="Design review"})
+        let moved=try TemplateEditing.moving(source,item:item,delta:-1)
+        XCTAssertEqual(moved.object["tasks"]?.list.first,.object(item.record.fields))
+        let back=TemplateEditing.tasks(moved).first!
+        XCTAssertEqual(try TemplateEditing.moving(moved,item:back,delta:1),source)
+        XCTAssertThrowsError(try TemplateEditing.moving(moved,item:back,delta:-1))
+    }
+    func testRecoveredTemplateRemapsLaterFullRecordIdentity() throws {
+        let row=try templateRow(),change=Mutation(table:WorkflowTemplate.table,recordID:row.id,method:"PATCH",fields:["name":.string("Recovered")],baseline:row.fields)
+        let later=Mutation(table:WorkflowTemplate.table,recordID:row.id,method:"POST",fields:row.fields)
+        let reviewed=try XCTUnwrap(SyncConflict(mutation:change,remote:Record(["id":.string(row.id)])).resolving(Snapshot(tables:[:],pending:[change,later]),keepLocal:true))
+        let copyID=reviewed.pending[0].recordID
+        XCTAssertNotEqual(copyID,row.id);XCTAssertEqual(reviewed.pending[1].recordID,copyID);XCTAssertEqual(reviewed.pending[1].fields["id"],.string(copyID))
+        XCTAssertFalse(reviewed.tables[WorkflowTemplate.table]!.contains{$0.id==row.id})
+    }
+}
+
+extension ProjectWorkflowsTests {
+    func testNewerSyncedDefinitionCannotBeOverwrittenDuringConflictReview() throws {
+        let row=try templateRow();var remote=row,document=row["document"].object;document["version"] = .number(99);remote["document"] = .object(document)
+        let change=Mutation(table:WorkflowTemplate.table,recordID:row.id,method:"PATCH",fields:["document":row["document"]],baseline:row.fields)
+        let snapshot=Snapshot(tables:[WorkflowTemplate.table:[row]],pending:[change]),conflict=SyncConflict(mutation:change,remote:remote)
+        XCTAssertNil(conflict.resolving(snapshot,keepLocal:true))
+        let accepted=try XCTUnwrap(conflict.resolving(snapshot,keepLocal:false));XCTAssertEqual(accepted.tables[WorkflowTemplate.table]?.first?["document"],remote["document"]);XCTAssertTrue(accepted.pending.isEmpty)
+    }
+}
+
+extension ProjectWorkflowsTests {
+    func testQueuedTemplateDraftSurvivesAuthenticatedRemoteAbsenceWithoutBecomingCreation() throws {
+        let row=try templateRow(),change=Mutation(table:WorkflowTemplate.table,recordID:row.id,method:"PATCH",fields:["name":.string("Queued draft")],baseline:row.fields)
+        var snapshot=Snapshot(tables:[WorkflowTemplate.table:[row]],pending:[change])
+        snapshot.mergeRemote([WorkflowTemplate.table:[]])
+        let draft=try XCTUnwrap(snapshot.tables[WorkflowTemplate.table]?.first)
+        XCTAssertEqual(draft.id,row.id);XCTAssertEqual(draft.name,"Queued draft");XCTAssertEqual(draft["document"],row["document"])
+        XCTAssertEqual(snapshot.pending,[change]);XCTAssertEqual(snapshot.pending[0].method,"PATCH")
+        XCTAssertEqual(try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(snapshot)),snapshot)
+    }
+}
+
+extension ProjectWorkflowsTests {
+    func testReviewedTemplateCreationBecomesGuardedPatchWithoutOwnershipFields() throws {
+        let row=try templateRow();var remote=row;remote["name"] = .string("Changed after restore")
+        let creation=Mutation(table:WorkflowTemplate.table,recordID:row.id,method:"POST",fields:row.fields)
+        let reviewed=try XCTUnwrap(SyncConflict(mutation:creation,remote:remote).resolving(Snapshot(tables:[:],pending:[creation]),keepLocal:true))
+        let patch=reviewed.pending[0]
+        XCTAssertEqual(patch.method,"PATCH");XCTAssertEqual(Set(patch.fields.keys),["name","document"]);XCTAssertEqual(patch.baseline,remote.fields)
+        XCTAssertEqual(reviewed.tables[WorkflowTemplate.table]?.first?.name,row.name)
+    }
+}
+
+extension ProjectWorkflowsTests {
+    func testTemplateReviewIncludesChangedSchedulePriorityNotesAndDestinations() throws {
+        let row=try templateRow(),item=try XCTUnwrap(TemplateEditing.tasks(row["document"]).first{$0.record.title=="Design review"})
+        let document=try TemplateEditing.changing(row["document"],item:item,fields:["priority":.number(1),"description":.string("Review these new notes"),"duration_minutes":.number(45),"planned_offset":.number(2),"deadline_offset":.number(7)])
+        let review=TemplateEditing.reviewText(document)
+        for value in ["Design review","Review these new notes","Priority 1","45 min","Planned day 2","Deadline day 7","root · Prepare","Prepare outline"] { XCTAssertTrue(review.contains(value),value) }
+        var unsupported=document.object;unsupported["version"] = .number(99)
+        XCTAssertTrue(TemplateEditing.reviewText(.object(unsupported)).contains("newer Taskfold version"))
+    }
+}

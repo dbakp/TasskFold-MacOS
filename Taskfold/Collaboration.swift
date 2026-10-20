@@ -122,6 +122,9 @@ struct ConflictReview: View {
     let conflict: SyncConflict
     @State private var message: String?
     private var current: Bool { store.syncConflict?.id == conflict.id && store.snapshot.pending.contains(conflict.mutation) }
+    private var templateConflict: Bool { conflict.mutation.table == WorkflowTemplate.table }
+    private var unsupportedTemplate: Bool { templateConflict && conflict.remote["document"] != .null && (try? WorkflowTemplate(document:conflict.remote["document"])) == nil && conflict.mutation.fields["document"] != nil }
+    private var missingTemplate: Bool { templateConflict && conflict.remote["document"] == .null }
     private var deleting: Bool { conflict.mutation.method == "DELETE" }
     private var bothCompleted: Bool { !deleting && conflict.remote.completed && conflict.mutation.fields["completed"] == .bool(true) && conflict.mutation.fields["completed_at"] != nil }
     private var keys: [String] {
@@ -149,8 +152,12 @@ struct ConflictReview: View {
             Form {
                 Section {
                     Label("Your work is saved", systemImage: "checkmark.icloud").font(.headline).foregroundStyle(Color.taskfold)
-                    Text(conflict.remote.title).font(.headline)
+                    Text(templateConflict ? conflict.remote.name : conflict.remote.title).font(.headline)
+                    if templateConflict {
+                        Text(missingTemplate ? "This template was removed on another device. Keep your edits as a new template, or accept the deletion. Existing runs stay unchanged." : "This reusable definition changed on another device. Compare both versions before continuing. Existing runs stay unchanged.").foregroundStyle(.secondary)
+                    } else {
                     Text(deleting ? "This task changed before it could be deleted. Review its current contents before choosing how to continue." : bothCompleted ? "Both devices completed this task. Compare the completion times below, then choose which time to keep." : "Changes from another device overlap with this edit. Compare the values below, then choose how to continue.").foregroundStyle(.secondary)
+                    }
                 }
                 ForEach(keys, id: \.self) { key in
                     Section(fieldName(key)) {
@@ -165,7 +172,9 @@ struct ConflictReview: View {
                     }
                 }
                 Section {
-                    if deleting {
+                    if templateConflict {
+                        Text("Keep my edit replaces the changed definition fields shown above. Use synced discards this queued edit. Later offline work is retained. A removed template can be saved under a new identity.").font(.callout).foregroundStyle(.secondary)
+                    } else if deleting {
                         Text("Keep task cancels this queued deletion and restores the synced task. Delete task removes the contents shown here; if another device changes them again, you will be asked to review again. Later offline edits and other tasks are kept.").font(.callout).foregroundStyle(.secondary)
                     } else if bothCompleted {
                         Text("Keep my edit keeps your completion time. Use synced keeps the other device’s completion time. Either choice removes an unedited next occurrence created only on this device. Later edits to that occurrence are kept as an independent task. Existing synced tasks and later offline work are kept.").font(.callout).foregroundStyle(.secondary)
@@ -176,19 +185,20 @@ struct ConflictReview: View {
                     } else {
                         Text("Keep my edit applies your changes and retains independent labels, comments and subtask edits. Use synced version discards this queued edit. Later offline edits and other tasks are kept with either choice.").font(.callout).foregroundStyle(.secondary)
                     }
+                    if unsupportedTemplate { Text("The synced definition needs a newer Taskfold version. It cannot be replaced by this older draft.").foregroundStyle(.secondary) }
                     if !current { Text("This edit is no longer waiting for review. Close this screen and reopen the current review.").foregroundStyle(.secondary) }
                 }
             }.formStyle(.grouped)
-            .navigationTitle(deleting ? "Review task deletion" : "Review sync edit")
+            .navigationTitle(templateConflict ? "Review template edit" : deleting ? "Review task deletion" : "Review sync edit")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 10) {
                     Divider()
-                    Button(deleting ? "Delete task" : "Keep my edit", role: deleting ? .destructive : nil) { resolve(keepLocal: true) }
-                        .buttonStyle(.borderedProminent).accessibilityIdentifier("keepMyEdit").disabled(!current)
-                    Button(deleting ? "Keep task" : "Use synced") { resolve(keepLocal: false) }
+                    Button(templateConflict ? (deleting ? "Delete template" : missingTemplate ? "Save as new template" : "Keep my edit") : (deleting ? "Delete task" : "Keep my edit"), role: deleting ? .destructive : nil) { resolve(keepLocal: true) }
+                        .buttonStyle(.borderedProminent).accessibilityIdentifier("keepMyEdit").disabled(!current || unsupportedTemplate)
+                    Button(templateConflict ? (deleting ? "Keep template" : "Use synced") : (deleting ? "Keep task" : "Use synced")) { resolve(keepLocal: false) }
                         .buttonStyle(.bordered).accessibilityIdentifier("useSharedEdit").disabled(!current)
                     Button { dismiss() } label: { Text("Later").frame(minHeight: 44) }
                         .buttonStyle(.plain).accessibilityIdentifier("conflictLater")
@@ -210,9 +220,10 @@ struct ConflictReview: View {
         else { message = store.error ?? "Reopen the current sync review."; store.error = nil }
     }
     private func fieldName(_ key: String) -> String {
-        ["title":"Task title", "description":"Notes", "due_date":"Planned date", "due_time":"Planned time", "deadline_date":"Deadline", "duration_minutes":"Estimate", "project_id":"Project", "section_id":"Section", "assigned_to":"Assigned to", "subtasks":"Subtasks", "comments":"Comments", "scheduled_at":"Scheduled instant", "time_zone":"Time zone", "recurrence_pattern":"Repeat rule", "reminder_specs":"Reminders", "completed":"Status", "completed_at":"Completed at", "priority":"Priority", "labels":"Labels"][key] ?? key.replacingOccurrences(of: "_", with: " ").capitalized
+        ["document":"Workflow definition", "name":"Template name", "title":"Task title", "description":"Notes", "due_date":"Planned date", "due_time":"Planned time", "deadline_date":"Deadline", "duration_minutes":"Estimate", "project_id":"Project", "section_id":"Section", "assigned_to":"Assigned to", "subtasks":"Subtasks", "comments":"Comments", "scheduled_at":"Scheduled instant", "time_zone":"Time zone", "recurrence_pattern":"Repeat rule", "reminder_specs":"Reminders", "completed":"Status", "completed_at":"Completed at", "priority":"Priority", "labels":"Labels"][key] ?? key.replacingOccurrences(of: "_", with: " ").capitalized
     }
     private func summary(_ value: JSON, key: String = "") -> String {
+        if key == "document" { return TemplateEditing.reviewText(value) }
         if key == "completed", case .bool(let flag) = value { return flag ? "Completed" : "Open" }
         if key == "completed_at", let date = TaskPlanning.instant(value.text) { return date.formatted(.dateTime.year().month(.abbreviated).day().hour().minute().second().timeZone(.specificName(.short))) }
         if value == .null { return "None" }

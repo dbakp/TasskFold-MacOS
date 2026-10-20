@@ -288,3 +288,164 @@ struct WorkflowTemplate {
         return changes + taskChanges + orders
     }
 }
+
+/// Template edits change a definition, never the tasks created by a previous run.
+enum TemplateEditing {
+    struct TaskItem: Identifiable {
+        let root: Int
+        let path: [Int]
+        let record: Record
+        let siblingCount: Int
+        var depth: Int { path.count }
+        var id: String { ([root] + path).map(String.init).joined(separator: ".") }
+    }
+    static func tasks(_ document: JSON) -> [TaskItem] {
+        var result: [TaskItem] = []
+        func visit(_ row: Record, root: Int, path: [Int], count: Int) {
+            guard path.count <= 10 else { return }
+            result.append(TaskItem(root: root, path: path, record: row, siblingCount:count))
+            for (index, child) in row["subtasks"].list.enumerated() { visit(Record(child.object), root: root, path: path + [index],count:row["subtasks"].list.count) }
+        }
+        for (index, row) in document.object["tasks", default: .null].list.enumerated() { visit(Record(row.object), root: index, path: [],count:document.object["tasks",default:.null].list.count) }
+        return result
+    }
+    static func changing(_ document: JSON, item: TaskItem, fields: [String: JSON], remove: Bool = false) throws -> JSON {
+        var root = document.object, rows = root["tasks", default: .null].list
+        func change(_ rows: inout [JSON], path: [Int]) throws {
+            guard let index = path.first, rows.indices.contains(index) else { throw AppFailure(message: "This template changed. Reopen its current task.") }
+            if path.count == 1 {
+                if remove { rows.remove(at:index) }
+                else {
+                    var row=rows[index].object.merging(fields) { _, new in new }
+                    for key in ["planned_offset","deadline_offset"] where row[key] == .null { row.removeValue(forKey:key) }
+                    rows[index] = .object(row)
+                }
+            } else {
+                var row=rows[index].object, children=row["subtasks",default:.null].list
+                try change(&children,path:Array(path.dropFirst()));row["subtasks"] = .array(children);rows[index] = .object(row)
+            }
+        }
+        try change(&rows,path:[item.root]+item.path);root["tasks"] = .array(rows)
+        return try WorkflowTemplate(document:.object(root)).document
+    }
+    static func moving(_ document:JSON,item:TaskItem,delta:Int) throws -> JSON {
+        guard [-1,1].contains(delta) else { throw AppFailure(message:"Choose a sibling move.") }
+        var root=document.object
+        func move(_ rows:[JSON],path:[Int]) throws -> [JSON] {
+            var rows=rows;guard let index=path.first,rows.indices.contains(index) else { throw AppFailure(message:"This template changed.") }
+            if path.count==1 {
+                guard rows.indices.contains(index+delta) else { throw AppFailure(message:"This task is already at the end of its group.") }
+                rows.swapAt(index,index+delta)
+            } else {
+                var row=rows[index].object;row["subtasks"] = .array(try move(row["subtasks",default:.null].list,path:Array(path.dropFirst())));rows[index] = .object(row)
+            }
+            return rows
+        }
+        root["tasks"] = .array(try move(root["tasks",default:.null].list,path:[item.root]+item.path))
+        return try WorkflowTemplate(document:.object(root)).document
+    }
+    static func adding(_ document: JSON, parent: TaskItem? = nil) throws -> JSON {
+        let definition=try WorkflowTemplate(document:document)
+        var row=Record(["id":.string(UUID().uuidString.lowercased()),"title":.string("New task"),"description":.string(""),"priority":.number(4),"labels":.array([]),"subtasks":.array([])])
+        if let parent {
+            guard parent.depth < 10 else { throw AppFailure(message:"Use up to ten subtask levels in a template.") }
+            row["project_id"]=parent.record["project_id"]
+            var children=parent.record["subtasks"].list;children.append(.object(row.fields))
+            return try changing(document,item:parent,fields:["subtasks":.array(children)])
+        }
+        guard definition.kind != .task else { throw AppFailure(message:"A task template has one main task. Add a subtask instead.") }
+        row["project_id"] = definition.projects.first.map { .string($0.id) } ?? .null
+        row["section_id"] = definition.kind == .section ? definition.sections.first.map { .string($0.id) } ?? .null : .null
+        var root=document.object, rows=definition.tasks.map { JSON.object($0.fields) };rows.append(.object(row.fields));root["tasks"] = .array(rows)
+        return try WorkflowTemplate(document:.object(root)).document
+    }
+    static func renamed(_ document: JSON, table: String, id: String, name: String) throws -> JSON {
+        guard ["projects","sections"].contains(table) else { throw AppFailure(message:"Choose a project or section.") }
+        var root=document.object, rows=root[table,default:.null].list
+        guard let index=rows.firstIndex(where:{$0.object["id"]?.text==id}) else { throw AppFailure(message:"This template changed.") }
+        var row=rows[index].object;row["name"] = .string(name.trimmingCharacters(in:.whitespacesAndNewlines));rows[index] = .object(row);root[table] = .array(rows)
+        return try WorkflowTemplate(document:.object(root)).document
+    }
+    static func edit(original: Record, name: String, document: JSON, current: Record?) throws -> Record {
+        let name=name.trimmingCharacters(in:.whitespacesAndNewlines)
+        guard (1...160).contains(name.count) else { throw AppFailure(message:"Use a template name between 1 and 160 characters.") }
+        guard let current, current.id==original.id,
+              current["name"]==original["name"],current["document"]==original["document"] else {
+            throw AppFailure(message:"The template changed or was removed. Your draft is still here; reopen the current template before saving.")
+        }
+        _ = try WorkflowTemplate(document:document)
+        var saved=current;saved["name"] = .string(name);saved["document"]=document;return saved
+    }
+    static func resolving(_ conflict: SyncConflict, snapshot: Snapshot, keepLocal: Bool) -> Snapshot? {
+        let change=conflict.mutation, remote=conflict.remote
+        guard change.table==WorkflowTemplate.table,["POST","PATCH","DELETE"].contains(change.method),remote.id.lowercased()==change.recordID.lowercased(),
+              let index=snapshot.pending.firstIndex(of:change) else { return nil }
+        var result=snapshot
+        let missing=remote["document"] == .null
+        if keepLocal, !missing, change.fields["document"] != nil, (try? WorkflowTemplate(document:remote["document"])) == nil { return nil }
+        if missing && keepLocal {
+            guard change.method=="PATCH",let base=change.baseline,base["document"] != nil,base["name"] != nil else { return nil }
+            let newID=UUID().uuidString.lowercased()
+            var fields=base.merging(change.fields){_,new in new};fields["id"] = .string(newID)
+            fields = fields.filter { ["id","user_id","name","document"].contains($0.key) }
+            guard fields["user_id"] != nil,(try? WorkflowTemplate(document:fields["document"] ?? .null)) != nil else { return nil }
+            result.pending[index]=Mutation(table:WorkflowTemplate.table,recordID:newID,method:"POST",fields:fields,insertOnly:true)
+            for later in result.pending.indices where later>index && result.pending[later].table==WorkflowTemplate.table && result.pending[later].recordID==change.recordID {
+                result.pending[later].recordID=newID
+                if result.pending[later].fields["id"] != nil { result.pending[later].fields["id"] = .string(newID) }
+                if result.pending[later].baseline?["id"] != nil { result.pending[later].baseline?["id"] = .string(newID) }
+            }
+        } else if keepLocal {
+            if change.method=="POST" {
+                guard let name=change.fields["name"],let document=change.fields["document"],(try? WorkflowTemplate(document:document)) != nil else { return nil }
+                result.pending[index].method="PATCH";result.pending[index].fields=["name":name,"document":document]
+            }
+            result.pending[index].baseline=remote.fields
+        } else {
+            result.pending.remove(at:index)
+            if missing { result.pending.removeAll{$0.table==WorkflowTemplate.table && $0.recordID==change.recordID} }
+        }
+        var rows=result.tables[WorkflowTemplate.table] ?? [];rows.removeAll{$0.id.lowercased()==change.recordID.lowercased()}
+        if !missing { var row=remote;row["id"] = .string(change.recordID);rows.append(row) }
+        result.tables[WorkflowTemplate.table]=rows
+        for pending in result.pending where pending.table==WorkflowTemplate.table { result.apply(pending) }
+        return result
+    }
+    static func taskSummary(_ task: Record) -> String {
+        var parts=[task.priority==4 ? "No priority" : "Priority \(task.priority)"]
+        if let minutes=task.durationMinutes { parts.append("\(minutes) min") }
+        for (key,title) in [("planned_offset","Planned day"),("deadline_offset","Deadline day"),("repeat_start_offset","Repeat starts day"),("repeat_end_offset","Repeat ends day")] {
+            if case .number(let value)=task[key] { parts.append(title+" "+String(Int(value))) }
+        }
+        if !task.string("due_time").isEmpty { parts.append(task.string("due_time")+(task.string("time_zone").isEmpty ? " local time" : " "+task.string("time_zone"))) }
+        let labels=task["labels"].list.map{$0.object["name",default:.null].text}.filter{!$0.isEmpty};if !labels.isEmpty { parts.append(labels.joined(separator:", ")) }
+        if task["is_recurring"].flag { parts.append(Recurrence.summary(Record(task["recurrence_pattern"].object))) }
+        return parts.joined(separator:" · ")
+    }
+    static func reviewText(_ document:JSON) -> String {
+        guard let definition=try? WorkflowTemplate(document:document) else { return "This definition needs a newer Taskfold version. Its content is preserved." }
+        let projects=Dictionary(uniqueKeysWithValues:definition.projects.map{($0.id,$0.name)}),sections=Dictionary(uniqueKeysWithValues:definition.sections.map{($0.id,$0.name)})
+        var lines=[summary(document)]
+        for item in ProjectOrganization.outline(definition.projects) {
+            let row=item.project
+            lines.append("Project: "+row.name+(row.string("parent_id").isEmpty ? "" : " · inside "+(projects[row.string("parent_id")] ?? "project")))
+            if !row.string("description").isEmpty { lines.append(row.string("description")) }
+            if !row.string("color").isEmpty { lines.append("Color: "+row.string("color")) }
+        }
+        for row in OrganizationOrder.sorted(definition.sections) { lines.append("Section: "+row.name+" · "+(projects[row.string("project_id")] ?? "Chosen destination")) }
+        for item in tasks(document) {
+            let row=item.record
+            lines.append((item.depth==0 ? "Task: " : "Subtask level \(item.depth): ")+row.title)
+            if !row.string("description").isEmpty { lines.append(row.string("description")) }
+            if definition.kind == .project && item.depth==0 { lines.append((projects[row.string("project_id")] ?? "Project")+(sections[row.string("section_id")].map{" · "+$0} ?? "")) }
+            lines.append(taskSummary(row))
+        }
+        return lines.joined(separator:"\n\n")
+    }
+    static func summary(_ document: JSON) -> String {
+        guard let definition=try? WorkflowTemplate(document:document) else { return "Unsupported template definition" }
+        let count=tasks(document).count
+        func label(_ count:Int,_ noun:String) -> String { "\(count) "+noun+(count==1 ? "" : "s") }
+        return label(definition.projects.count,"project")+" · "+label(definition.sections.count,"section")+" · "+(count==1 ? "1 task" : "\(count) tasks and subtasks")
+    }
+}

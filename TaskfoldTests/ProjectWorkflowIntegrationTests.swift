@@ -130,3 +130,70 @@ final class ProjectWorkflowIntegrationTests: XCTestCase {
         try JSONEncoder().encode(checkpoint).write(to: checkpointURL, options: .atomic)
     }
 }
+
+extension ProjectWorkflowIntegrationTests {
+    @MainActor func testTwoClientTemplateEditReviewRetryAndDeletedCopyRecovery() async throws {
+        guard let path=ProcessInfo.processInfo.environment["TASKFOLD_TEMPLATE_LIVE_FIXTURE"] else { throw XCTSkip("Disposable template account required") }
+        let f=try JSONDecoder().decode([String:String].self,from:Data(contentsOf:URL(fileURLWithPath:path)))
+        let owner=try XCTUnwrap(f["userID"]),identity=try XCTUnwrap(f["emailIdentity"]),email=try XCTUnwrap(f["email"])
+        guard UUID(uuidString:owner) != nil,UUID(uuidString:identity) != nil,email=="taskfold-continuity-"+identity+"@example.invalid" else { throw AppFailure(message:"Synthetic account only") }
+        let config=["URL":try XCTUnwrap(f["url"]),"Key":try XCTUnwrap(f["key"])]
+        func client()->Backend { Backend(configuration:config,http:URLSession(configuration:.ephemeral),session:nil,persistSession:{_ in}) }
+        let a=client(),b=client()
+        for api in [a,b] { let signed=try await api.signIn(email:email,password:try XCTUnwrap(f["password"]),signup:false);XCTAssertTrue(signed);XCTAssertEqual(api.session?.user.id,owner) }
+        func send(_ api:Backend,_ change:Mutation) async throws ->Record { let value=try await api.send(change);return try XCTUnwrap(value) }
+        let id=UUID().uuidString.lowercased()
+        let document:JSON = .object(["version":.number(1),"kind":.string("task"),"projects":.array([]),"sections":.array([]),"tasks":.array([.object(["id":.string("source"),"title":.string("Original reusable task"),"description":.string("Original reusable notes"),"labels":.array([]),"subtasks":.array([])])])])
+        let original=try await send(a,Mutation(table:WorkflowTemplate.table,recordID:id,method:"POST",fields:["id":.string(id),"user_id":.string(owner),"name":.string("Synthetic template"),"document":document],insertOnly:true))
+        var run=try WorkflowTemplate(document:document).instantiate(account:owner,name:"",run:UUID())
+        run[0].insertOnly=true
+        let createdTask=try await send(a,run[0])
+        var templateIDs=[id]
+        func current(_ api:Backend,_ target:String) async throws ->Record? { try await api.rows(WorkflowTemplate.table).first{$0.id==target} }
+        func patch(_ row:Record,_ fields:[String:JSON])->Mutation { Mutation(table:WorkflowTemplate.table,recordID:row.id,method:"PATCH",fields:fields,baseline:row.fields) }
+        func cleanup() async throws {
+            for target in templateIDs { if let row=try await current(a,target) { _ = try await a.send(Mutation(table:WorkflowTemplate.table,recordID:target,method:"DELETE",fields:[:],baseline:row.fields)) } }
+            if let row=try await a.rows("tasks").first(where:{$0.id==createdTask.id}) { _ = try await a.send(Mutation(table:"tasks",recordID:row.id,method:"DELETE",fields:[:],baseline:row.fields)) }
+        }
+        do {
+            _ = try await b.send(patch(original,["name":.string("Second device name")]))
+            let item=TemplateEditing.tasks(document)[0]
+            let local=try TemplateEditing.changing(document,item:item,fields:["description":.string("First device notes")])
+            let independent=try await send(a,patch(original,["document":local]))
+            XCTAssertEqual(independent.name,"Second device name")
+            let remoteDocument=try TemplateEditing.changing(local,item:item,fields:["description":.string("Second device notes")])
+            let remote=try await send(b,patch(independent,["document":remoteDocument]))
+            let desired=try TemplateEditing.changing(local,item:item,fields:["description":.string("Reviewed local notes")])
+            let edit=patch(independent,["document":desired])
+            do { _ = try await a.send(edit);XCTFail("Overlapping definitions silently merged") } catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"),error.localizedDescription) }
+            let queue=Snapshot(tables:[WorkflowTemplate.table:[independent]],pending:[edit])
+            let reviewed=try XCTUnwrap(SyncConflict(mutation:edit,remote:remote).resolving(queue,keepLocal:true))
+            let durable=try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(reviewed))
+            let saved=try await send(a,durable.pending[0]);_ = try await a.send(durable.pending[0])
+            XCTAssertEqual(saved["document"],desired)
+            let received=try await current(b,id);XCTAssertEqual(received?["document"],desired)
+            let oldRun=try await b.rows("tasks").first{$0.id==createdTask.id};XCTAssertEqual(oldRun?.string("description"),"Original reusable notes")
+            // Undo/Redo restoration is an insert-only creation until explicitly reviewed.
+            let restoreID=UUID().uuidString.lowercased();templateIDs.append(restoreID)
+            let restore=Mutation(table:WorkflowTemplate.table,recordID:restoreID,method:"POST",fields:["id":.string(restoreID),"user_id":.string(owner),"name":.string("Restore fixture"),"document":document])
+            let restoreBase=try await send(a,restore);_ = try await a.send(restore)
+            let changedRestore=try await send(b,patch(restoreBase,["name":.string("Changed by second client"),"document":desired]))
+            do { _ = try await a.send(restore);XCTFail("A stale restore overwrote another device") } catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"),error.localizedDescription) }
+            let restoreQueue=Snapshot(tables:[WorkflowTemplate.table:[changedRestore]],pending:[restore])
+            let restoreReview=try XCTUnwrap(SyncConflict(mutation:restore,remote:changedRestore).resolving(restoreQueue,keepLocal:true))
+            let restored=try await send(a,restoreReview.pending[0]);_ = try await a.send(restoreReview.pending[0])
+            XCTAssertEqual(restored.name,"Restore fixture");XCTAssertEqual(restored["document"],document)
+
+            let deletion=Mutation(table:WorkflowTemplate.table,recordID:id,method:"DELETE",fields:[:],baseline:independent.fields)
+            do { _ = try await b.send(deletion);XCTFail("Stale deletion accepted") } catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"),error.localizedDescription) }
+            _ = try await b.send(Mutation(table:WorkflowTemplate.table,recordID:id,method:"DELETE",fields:[:],baseline:saved.fields))
+            let late=patch(saved,["name":.string("Recovered template")])
+            do { _ = try await a.send(late);XCTFail("Removed template resurrected") } catch { XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"),error.localizedDescription) }
+            let recovered=try XCTUnwrap(SyncConflict(mutation:late,remote:Record(["id":.string(id)])).resolving(Snapshot(tables:[:],pending:[late]),keepLocal:true))
+            let copyID=recovered.pending[0].recordID;templateIDs.append(copyID);XCTAssertNotEqual(copyID,id)
+            _ = try await a.send(recovered.pending[0]);let copy=try await current(b,copyID);XCTAssertEqual(copy?.name,"Recovered template");XCTAssertEqual(copy?["document"],desired)
+            let removed=try await current(b,id);XCTAssertNil(removed)
+            try await cleanup()
+        } catch { try? await cleanup();throw error }
+    }
+}

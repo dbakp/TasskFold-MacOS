@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-20",
+  "status": "implemented; iPhone/iPad and live sync accepted; Mac walkthrough pending unlock",
+  "core": {
+    "ios": {
+      "reported": 731,
+      "skipped": 9,
+      "failures": 0,
+      "log": "ios-p1-template-core-acceptance.log"
+    },
+    "macOS": {
+      "reported": 755,
+      "skipped": 29,
+      "failures": 0,
+      "log": "mac-p1-template-core-acceptance.log"
+    }
+  },
+  "live_two_client": {
+    "ios": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 3.249,
+      "log": "ios-p1-template-live-final.log"
+    },
+    "macOS": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 3.56,
+      "log": "mac-p1-template-live-final.log"
+    },
+    "checks": [
+      "independent rename/definition merge",
+      "overlap refuses silent replacement",
+      "review and retry survives queue encoding",
+      "repeated acknowledgement",
+      "existing run retains original notes",
+      "stale deletion refused",
+      "deleted identity not recreated",
+      "explicit recovery creates a new identity",
+      "stale Undo/Redo-style creation refuses overwrite",
+      "repeated creation acknowledgement",
+      "reviewed restoration becomes a guarded PATCH"
+    ]
+  },
+  "database": {
+    "migrations": [
+      "20261020204903_template_edit_review.sql",
+      "20261020205307_template_review_error_response.sql"
+    ],
+    "actual_role_fixture": "supabase/tests/template_edit_review.sql",
+    "owner_and_outsider": true,
+    "anonymous_execution_denied": true,
+    "security_invoker": true,
+    "fixed_empty_search_path": true,
+    "advisors_before_categories": 6,
+    "advisors_after_categories": 6,
+    "new_advisor_findings": 0,
+    "cleanup": {
+      "synthetic_users": 0,
+      "synthetic_templates": 0,
+      "synthetic_tasks": 0,
+      "sessions_and_refresh_tokens_revoked": true,
+      "credential_file_removed": true,
+      "disposable_accounts_removed": 2
+    }
+  },
+  "native": {
+    "macOS": "Signed current build succeeds; walkthrough pending manual Mac unlock. The previous isolated main app was closed. No native Mac runtime acceptance claimed.",
+    "iPad": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 157.674,
+      "runtime_warnings": 0,
+      "result": "ios-p1-template-tablet-exact.xcresult",
+      "saved_cache": {
+        "sha256": "c75f2e5327539646e6a40ef56256e5f9a7fcc31c09ebaa38cc2bb4370b945ac2",
+        "templates": 1,
+        "projects": 6,
+        "tasks": 3,
+        "pending": 0,
+        "exact_saved_values": true,
+        "source_and_prior_run_unchanged": true,
+        "new_run_uses_saved_definition": true,
+        "cancelled_source_replacement_preserved_definition": true
+      },
+      "screenshots_reviewed": [
+        "Template comparison overview",
+        "Template replacement review action"
+      ]
+    },
+    "iPhone": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 143.084,
+      "runtime_warnings": 0,
+      "result": "ios-p1-template-phone-exact.xcresult",
+      "saved_cache": {
+        "sha256": "e31a00fb7dd3bcb4bc6f3255410eb02aff0fc99bf08725506e8f1328465ba39a",
+        "templates": 1,
+        "projects": 6,
+        "tasks": 3,
+        "pending": 0,
+        "exact_saved_values": true,
+        "source_and_prior_run_unchanged": true,
+        "new_run_uses_saved_definition": true,
+        "cancelled_source_replacement_preserved_definition": true
+      }
+    },
+    "coverage": [
+      "capture a private project template",
+      "create an earlier run",
+      "cancel edited name and task definition",
+      "save exact title, notes, 45-minute estimate and planned offset 2",
+      "relaunch without reseeding",
+      "create a later independent run",
+      "review source replacement and discard it",
+      "verify exact saved cache and distinct task identities"
+    ],
+    "copy_note": "Native cases ran immediately before the final singular/plural summary wording fix; both owned cores and both native targets are rebuilt afterward. No flow or persistence behavior changed in that wording fix."
+  },
+  "limits": [
+    "Public catalog and standalone interchange are not part of this ranked P1.",
+    "Release signing, remote reminders and older-client rollout remain deferred.",
+    "No new human VoiceOver acceptance claimed."
+  ],
+  "cleanup": {
+    "obsolete_allocated_bytes_pruned": 553312256,
+    "obsolete_mac_main_app_closed": true,
+    "synthetic_live_accounts_removed": 2
+  }
+}
