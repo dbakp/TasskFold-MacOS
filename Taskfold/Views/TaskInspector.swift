@@ -86,7 +86,7 @@ struct TaskInspectorForm: View {
     private var suggestions: QuickEntry? {
         guard draft.title != titleParsingBaseline else { return nil }
         let nested = Workspace.subtaskPath(taskID) != nil
-        let parsed = QuickEntry(draft.title, disabled: nested ? declined.union(["project_id", "section_id"]) : declined,
+        let parsed = QuickEntry(draft.title, disabled: nested ? declined.union(SubtaskTree.childQuickEntryExclusions) : declined,
             context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices), task: draft)
         return parsed.tokens.isEmpty && parsed.warnings.isEmpty ? nil : parsed
     }
@@ -108,7 +108,7 @@ struct TaskInspectorForm: View {
                     .focused($titleFocused)
                     .onChange(of: titleFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
                     .accessibilityIdentifier("taskTitle")
-                    .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: Workspace.subtaskPath(taskID) == nil ? [] : ["project_id", "section_id"], onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
+                    .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: Workspace.subtaskPath(taskID) == nil ? [] : SubtaskTree.childQuickEntryExclusions, onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
                 Text("Changes save automatically")
                     .font(.caption).foregroundStyle(.secondary)
                     .accessibilityIdentifier("inspectorAutosaveHint")
@@ -213,6 +213,7 @@ struct TaskInspectorForm: View {
                 LabeledContent("Assigned to") {
                     AssigneeMenu(task: draft, contextID: taskID, showsName: true) { draft["assigned_to"] = $0.isEmpty ? .null : .string($0) }
                 }
+                if Workspace.subtaskPath(taskID) == nil {
                 Picker("Project", selection: text("project_id")) {
                     Text("Inbox").tag("")
                     ForEach(store.projects) { Text($0.name).tag($0.id) }
@@ -223,8 +224,17 @@ struct TaskInspectorForm: View {
                         ForEach(store.rows("sections").filter { $0.string("project_id") == draft.string("project_id") }) { Text($0.name).tag($0.id) }
                     }
                 }
+                } else {
+                    LabeledContent("Project", value: store.record("projects", id: workspace.assignmentProject(draft, contextID: taskID))?.name ?? "Inbox")
+                    Text("Subtasks stay with the parent task.").font(.caption).foregroundStyle(.secondary)
+                }
+                if Workspace.subtaskPath(taskID) == nil {
                 RecurrenceEditor(task: $draft)
                 Button("Reminders…", systemImage: "bell") { showingReminders = true }.accessibilityIdentifier("taskReminders")
+                } else {
+                    Text("Manage repeating schedules and reminders on the parent task.").font(.caption).foregroundStyle(.secondary)
+                }
+
             }
             Section("Labels") {
                 if store.labels.isEmpty { Text("Create labels from the sidebar.").foregroundStyle(.secondary) }
@@ -234,9 +244,16 @@ struct TaskInspectorForm: View {
                     })) { Label(label.name, systemImage: "tag.fill").foregroundStyle(Color.project(label.string("color"))) }.accessibilityIdentifier("taskLabel-" + label.id)
                 }
             }
-            if workspace.taskDepth(taskID) < 2 {
+            if workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty {
             Section("Subtasks") {
-                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID))
+                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID), saveAndOpen: { children, path in
+                    let previous = draft
+                    draft["subtasks"] = children
+                    guard saveNow() else { draft = previous; return false }
+                    let childID = path.reduce(taskID) { parent, id in workspace.childID(parent: parent, value: .object(["id": .string(id)]), index: 0) }
+                    workspace.open(childID)
+                    return true
+                })
                 ForEach(Array(draft["subtasks"].list.enumerated()), id: \.offset) { index, value in
                     let title = value.object["title"]?.text ?? ""
                     let completed = value.object["completed"]?.flag == true
@@ -259,7 +276,7 @@ struct TaskInspectorForm: View {
                         Button { var list = draft["subtasks"].list; list.remove(at: index); draft["subtasks"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove " + accessibleTitle)
                     }
                 }
-                HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).accessibilityIdentifier("addSubtask").labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).accessibilityLabel("Add subtask").disabled(subtask.trimmingCharacters(in: .whitespaces).isEmpty) }
+                HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).accessibilityIdentifier("addSubtask").labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).accessibilityLabel("Add subtask").disabled(subtask.trimmingCharacters(in: .whitespaces).isEmpty || workspace.taskDepth(taskID) >= SubtaskTree.maximumDepth) }
             }
             }
             Section("Attachments") {
@@ -410,7 +427,7 @@ struct TaskInspectorForm: View {
     private func applyReferenceChoices() {
         guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, current != nil else { return }
         let referenceGroups: Set<String> = ["project_id", "section_id", "assigned_to", "labels"]
-        let excluded = Set(QuickEntry.groups).subtracting(referenceGroups).union(declined).union(Workspace.subtaskPath(taskID) == nil ? [] : ["project_id", "section_id"])
+        let excluded = Set(QuickEntry.groups).subtracting(referenceGroups).union(declined).union(Workspace.subtaskPath(taskID) == nil ? [] : SubtaskTree.childQuickEntryExclusions)
         let parsed = QuickEntry(draft.title, disabled: excluded, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices), task: draft)
         draft = parsed.applying(to: draft)
         for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.id == value.text || $0.name == value.text }) {
@@ -423,31 +440,33 @@ struct TaskInspectorForm: View {
         saveTask?.cancel()
         saveTask = Task { try? await Task.sleep(for: .milliseconds(600)); guard !Task.isCancelled else { return }; saveNow() }
     }
-    private func saveNow() {
-        guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { return }
-        guard draft != original || notePin != nil, let current else { return }
+    @discardableResult private func saveNow() -> Bool {
+        guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, let current else { return false }
+        guard draft != original || notePin != nil else { return true }
         guard editingGeneration == currentGeneration else {
             store.error = "This task was deleted and restored while you were editing. Your draft is still here; reopen the current task before saving."
-            return
+            return false
         }
         var merged = current
         for (key, value) in draft.fields where original.fields[key] != value { merged[key] = value }
         merged["title"] = .string(merged.title.trimmingCharacters(in: .whitespacesAndNewlines))
         if merged.title.isEmpty { merged["title"] = original["title"] }
-        if merged["is_recurring"].flag && merged.due == nil { merged["due_date"] = .string(Dates.day(Date())) }
-        merged = store.applyingReminderDefault(merged, previous: original)
-        guard merged != current || notePin != nil else { original = merged; draft = merged; return }
+        if Workspace.subtaskPath(taskID) == nil && merged["is_recurring"].flag && merged.due == nil { merged["due_date"] = .string(Dates.day(Date())) }
+        if Workspace.subtaskPath(taskID) == nil { merged = store.applyingReminderDefault(merged, previous: original) }
+        guard merged != current || notePin != nil else { original = merged; draft = merged; return true }
         var saved = false
         if let notePin {
             workspace.run("Edit Pinned Note") { saved = store.saveTaskWithNotePin(merged, pin: notePin, baseline: original) }
             if saved { self.notePin = nil }
         } else { saved = workspace.save("tasks", merged, name: "Edit Task", baseline: original) }
         if saved { original = merged; draft = merged }
+        return saved
     }
     private func addSubtask() {
-        guard workspace.taskDepth(taskID) < 2 else { return }
+        guard workspace.taskDepth(taskID) < SubtaskTree.maximumDepth else { return }
         let title = subtask.trimmingCharacters(in: .whitespacesAndNewlines); guard !title.isEmpty else { return }
-        var list = draft["subtasks"].list; list.append(.object(["id": .string(UUID().uuidString.lowercased()), "title": .string(title), "completed": .bool(false)])); draft["subtasks"] = .array(list); subtask = ""; saveNow(); workspace.expandedTasks.insert(taskID)
+        do { draft["subtasks"] = try SubtaskTree.adding(draft["subtasks"], title: title, baseDepth: workspace.taskDepth(taskID)); subtask = ""; saveNow(); workspace.expandedTasks.insert(taskID) }
+        catch { store.error = error.localizedDescription }
     }
     private func appendComment(text: String = "", attachment: Record? = nil) {
         var fields: [String: JSON] = ["id": .string(UUID().uuidString.lowercased()), "text": .string(text), "createdAt": .string(Dates.timestamp()), "authorId": .string(store.userID), "authorName": .string(store.profile.string("display_name").isEmpty ? (store.localMode ? "You" : store.email) : store.profile.string("display_name"))]

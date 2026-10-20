@@ -128,4 +128,70 @@ final class SubtaskTreeTests: XCTestCase {
         XCTAssertEqual(SubtaskTree.progress(.null).total,0)
         XCTAssertFalse(SubtaskTree.outline(completed).first{$0.id=="leaf"}!.record.completed)
     }
+
+    func testChildDetailsPreserveContainmentAndUntouchedConcurrentFields() throws {
+        var original = Record(node("b").object)
+        original["user_id"] = .string("owner"); original["provider_id"] = .string("imported")
+        var edited = SubtaskTree.detailDraft(original, project: "context")
+        edited["title"] = .string("  New child title  "); edited["duration_minutes"] = .number(45)
+        edited["user_id"] = .string("other"); edited["provider_id"] = .null
+        edited["section_id"] = .string("elsewhere"); edited["reminder_specs"] = .array([.string("unsupported")])
+        var current = original; current["description"] = .string("Remote notes")
+        let saved = try SubtaskTree.detailChanges(original: original, edited: edited, current: current)
+        XCTAssertEqual(saved.title, "New child title"); XCTAssertEqual(saved.durationMinutes,45)
+        XCTAssertEqual(saved.string("description"), "Remote notes")
+        for key in ["id","user_id","provider_id","project_id","section_id","reminder_specs","attachments","future_field"] { XCTAssertEqual(saved[key],current[key],key) }
+    }
+    func testChildDetailPlanningCanonicalizesInstantAndPreservesFoldOnNoteEdit() throws {
+        var original = Record(node("b").object)
+        original["due_date"] = .string("2026-10-25"); original["due_time"] = .string("02:30")
+        original["time_zone"] = .string("Europe/Copenhagen"); original["scheduled_at"] = .string("2026-10-25T01:30:00Z")
+        var edited = original; edited["description"] = .string("New notes")
+        let notes = try SubtaskTree.detailChanges(original:original,edited:edited,current:original)
+        XCTAssertEqual(notes["scheduled_at"],original["scheduled_at"])
+        edited["due_date"] = .string("2026-10-26"); edited["deadline_date"] = .string("2026-10-30")
+        edited["priority"] = .number(1)
+        let planned = try SubtaskTree.detailChanges(original:original,edited:edited,current:original)
+        XCTAssertEqual(planned.string("scheduled_at"),"2026-10-26T01:30:00Z")
+        XCTAssertEqual(planned.string("deadline_date"),"2026-10-30"); XCTAssertEqual(planned.priority,1)
+    }
+    func testChildDetailsRejectInvalidIdentityAndPlanningWithoutChangingSource() {
+        let original = Record(node("b").object)
+        let invalid: [(String,JSON)] = [("id",.string("other")),("title",.string("  ")),("duration_minutes",.number(0)),("duration_minutes",.number(1.5)),("priority",.number(5)),("due_date",.string("bad")),("due_time",.string("25:90")),("time_zone",.string("Missing/Zone"))]
+        for (key,value) in invalid {
+            var edited=original; edited[key]=value
+            XCTAssertThrowsError(try SubtaskTree.detailChanges(original:original,edited:edited,current:original),key)
+        }
+        XCTAssertEqual(original,Record(node("b").object))
+    }
+    func testChildPathFollowsWholeMovedBranch() throws {
+        let source: JSON = .array([node("a"),node("b",[node("leaf")])])
+        XCTAssertEqual(SubtaskTree.path(source,id:"leaf"),["b","leaf"])
+        let moved=try SubtaskTree.moving(source,id:"b",direction:.indent)
+        XCTAssertEqual(SubtaskTree.path(moved,id:"leaf"),["a","b","leaf"])
+        XCTAssertNil(SubtaskTree.path(moved,id:"missing"))
+    }
+    func testStaleChildDraftProjectionKeepsRemoteFieldsAndOriginalQueuedIntent() throws {
+        let base: JSON = .array([node("a",[node("b")])])
+        let desired=SubtaskTree.changing(base,id:"b",fields:["description":.string("Local notes")])
+        let remote=SubtaskTree.changing(base,id:"b",fields:["priority":.number(1),"attachments":.array([node("remote-file")])])
+        var task=Record.task(user:"test"); task["subtasks"]=remote
+        let change=Mutation(table:"tasks",recordID:task.id,method:"PATCH",fields:["subtasks":desired],baseline:["subtasks":base,"task_generation":task["task_generation"]])
+        var snapshot=Snapshot(tables:["tasks":[task]],pending:[change]);snapshot.apply(change)
+        let child=SubtaskTree.outline(snapshot.tables["tasks"]![0]["subtasks"]).last!.record
+        XCTAssertEqual(child.string("description"),"Local notes");XCTAssertEqual(child.priority,1)
+        XCTAssertEqual(child["attachments"],SubtaskTree.outline(remote).last!.record["attachments"])
+        XCTAssertEqual(snapshot.pending,[change]);XCTAssertEqual(change.fields["subtasks"],desired)
+        XCTAssertEqual(try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(snapshot)),snapshot)
+    }
+    func testDeepChildReferenceRetainsAncestryAcrossEverySupportedLevel() {
+        var reference="root", path=["root"]
+        for level in 1...SubtaskTree.readableDepth {
+            path.append("child-\(level)")
+            reference=SubtaskTree.reference(parent:reference,key:path.last!)
+            XCTAssertEqual(SubtaskTree.referencePath(reference),path)
+        }
+        XCTAssertNil(SubtaskTree.referencePath(SubtaskTree.reference(parent:reference,key:"too-deep")))
+        XCTAssertNil(SubtaskTree.referencePath("subtask:invalid"))
+    }
 }

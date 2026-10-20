@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-20",
+  "scope": "P1 nested child details for the existing embedded checklist contract",
+  "release_gates": "Remote reminders, older-client rollout and distribution remain deferred",
+  "core": {
+    "ios": {
+      "reported": 715,
+      "skipped": 8,
+      "failures": 0
+    },
+    "macOS": {
+      "reported": 739,
+      "skipped": 28,
+      "failures": 0
+    },
+    "focused_subtask_tests_per_repo": 19,
+    "checks": [
+      "changed-field-only child edits and stable identity",
+      "ownership/provider/opaque metadata preservation",
+      "invalid identity/planning refusal",
+      "fixed-zone planning normalization and DST-fold preservation",
+      "stale child-draft projection retains remote fields without rewriting queued intent",
+      "deep reference ancestry across all 32 readable levels"
+    ]
+  },
+  "macOS_native": {
+    "normal_quit_relaunch_exact_snapshot": true,
+    "root_tasks": 1,
+    "pending": 0,
+    "checks": [
+      "inherited project context",
+      "notes, estimate, deadline, priority on second-level child",
+      "third-level details route and notes save",
+      "parent notes and other branch metadata preserved"
+    ],
+    "snapshot_sha256": "5b00481c62ba8d44c4b21067fbe48cc3fbc137afff8b11ec819c0e3515691101",
+    "logs": [
+      "mac-p1-child-details-native.log",
+      "mac-p1-child-details-relaunch.log",
+      "mac-p1-child-details-final-relaunch.log"
+    ]
+  },
+  "limits": [
+    "Independent child recurrence and reminder scheduling remain parent-task controls. Existing imported child metadata is retained.",
+    "No new live-service test or migration in this child-detail continuation; prior guarded transport acceptance is retained in p1-subtasks-evidence.json.",
+    "No new human VoiceOver acceptance in this continuation."
+  ],
+  "ios_native": {
+    "test": "testSubtaskDetailsDraftCancelSaveAndRelaunch",
+    "phone": {
+      "device": "iPhone 18 Pro / iOS 27 Simulator",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 74.806,
+      "reported_runtime_warnings": 0,
+      "result": "ios-p1-child-details-phone-verified.xcresult"
+    },
+    "checks": [
+      "saving child details then cancelling organizer preserves original child notes",
+      "child notes and estimate survive organizer Save, outer task Save and relaunch",
+      "parent Repeat/Reminders controls are absent from embedded child form"
+    ],
+    "harness_notes": "Initial runs exposed unscoped controls from background parent forms, the active keyboard, and a row-center tap that did not change the native switch. Final case scopes controls to the active form, dismisses the keyboard, taps the switch itself and asserts its value before Save. Diagnostic logs retained; obsolete failed bundles removed.",
+    "tablet": {
+      "device": "iPad Pro 13 / iOS 27 Simulator",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 91.586,
+      "reported_runtime_warnings": 0,
+      "result": "ios-p1-child-details-tablet-verified.xcresult"
+    },
+    "saved_cache_checks": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "root_tasks": 1,
+        "subtasks": 4,
+        "pending": 0,
+        "child_notes_and_estimate": true,
+        "parent_unchanged": true,
+        "stable_child_ids": [
+          "f1710000-0000-4000-8000-000000000001",
+          "f1710000-0000-4000-8000-000000000002",
+          "f1710000-0000-4000-8000-000000000004",
+          "f1710000-0000-4000-8000-000000000003"
+        ],
+        "cache_sha256": "fcaff866ca4ed2f29b3e95d670fab7a1764a3c887bf95fbb111d3e669fdcb9ce"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "root_tasks": 1,
+        "subtasks": 4,
+        "pending": 0,
+        "child_notes_and_estimate": true,
+        "parent_unchanged": true,
+        "stable_child_ids": [
+          "f1710000-0000-4000-8000-000000000001",
+          "f1710000-0000-4000-8000-000000000002",
+          "f1710000-0000-4000-8000-000000000004",
+          "f1710000-0000-4000-8000-000000000003"
+        ],
+        "cache_sha256": "057d37bed58a293d9e97db2584e58972de7eba1053dfc39dcabf9bc6a23893a0"
+      }
+    ]
+  },
+  "builds": {
+    "ios_app_widgets_ui_tests": "ios-p1-child-details-build.log",
+    "mac_app_widgets_signed_debug": "mac-p1-child-details-build.log",
+    "source_comparison": "Modified app/core/UI-test inputs match their owned repository; only existing isolated namespace substitution differs."
+  },
+  "cleanup": {
+    "test_simulator_apps_uninstalled": true,
+    "both_test_simulators_shutdown": true,
+    "mac_main_apps_closed": true,
+    "obsolete_app_and_failed_result_allocated_bytes_removed": 226861056,
+    "retained": "Current source stages/build caches and successful native result bundles; bounded diagnostic logs. Existing installed desktop widget extension was left alone."
+  }
+}

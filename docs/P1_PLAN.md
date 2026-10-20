@@ -16,7 +16,7 @@ Already delivered: archive/restore, owner-safe subprojects, first-version privat
 
 ## First implementation: subtask organizer
 
-Status: the nested organizer foundation is implemented and has representative native/core/live acceptance in both apps. **Rank 1 remains in progress:** full child-detail editing parity (including notes and planning controls on iOS) is next, before rank 2 template management.
+Status: **Rank 1 is delivered for the embedded checklist model:** nested organization and child-detail editing (including notes and planning fields) are implemented in both apps. Representative native phone/tablet/Mac checks and both owned core suites pass. The organizer’s prior live transport acceptance remains recorded separately. **Next: rank 2, saved template management.**
 
 - A dedicated Organize subtasks sheet exposes the nested checklist while retaining existing inline controls.
 - Each row has an editable name, completion state and actions for adding a child, sibling moves, indent/outdent and confirmed branch deletion.
@@ -38,3 +38,14 @@ Use each repo's `Scripts/prepare_workflow_ui_test.py` with a fresh `workflowtest
 
 Core suites include `SubtaskTreeTests`; the optional live test uses `TASKFOLD_SUBTASK_LIVE_FIXTURE` with a private JSON file containing the URL/public key and a fresh synthetic continuity-account ID/email/password. Never supply a real account. `SubtaskTransportIntegrationTests` creates only its own task, exercises two sessions, and removes that task. Revoke sessions, delete the disposable account and remove credentials after the run. The actual-role SQL fixture is rollback-only.
 
+
+### Child-detail editing continuation
+
+The organizer now exposes full child details. iOS opens a child editor that saves into the organizer draft; cancelling the organizer discards those edits, and the outer task Save remains the persistence boundary. Mac labels the action “Save and open details” and saves through its normal inspector/Undo path before navigating. Children inherit their parent’s project; independent project/section movement and pinning are not offered. Existing labels, assignment, comments and attachments remain editable in the established details UI. Repeating schedules and notifications remain parent-task controls; imported child recurrence/reminder metadata is preserved rather than advertised as independently scheduled.
+
+Child edits preserve identities, ownership, provider fields and opaque metadata, update only changed editable fields, and normalize planning dates/instants. A notes-only edit preserves a selected DST-fold instant. The iOS outer editor retains its original guarded save baseline. Local replay merges stale child-array drafts into the latest observed snapshot while keeping the queued network intent/baseline unchanged.
+
+Mac’s previous two-level reference, expansion and assigned-list traversal limits are removed. New branches retain the ten-level creation bound; existing supported branches remain readable to the same 32-level bound as the organizer. List indentation is visually capped to keep the title usable. A native regression initially reproduced an empty inspector for a third-level child, and the fixed build opened and saved that child. Pure reference tests cover every supported level.
+
+
+Child-detail acceptance: both owned core suites pass (iOS 715 reported, 8 environment skips; Mac 739 reported, 28 skips; zero failures, 19 focused subtask cases each). The same native iOS case passes on iPhone and iPad, verifying child-draft cancellation, notes/estimate editing, outer task Save and relaunch. Mac verifies inherited context, notes/estimate/deadline/priority, a third-level child and normal Quit/relaunch with exact saved-snapshot equality. See `p1-child-details-evidence.json` for precise coverage and limitations. No distribution, remote-reminder or older-client release gate is closed by this P1 acceptance.

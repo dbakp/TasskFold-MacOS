@@ -39,8 +39,8 @@ struct TaskRowView: View {
     }
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            if workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(workspace.taskDepth(task.id)) * 24 - 10, height: 1).accessibilityHidden(true) }
-            if workspace.section != .assigned && workspace.taskDepth(task.id) < 2 && !task["subtasks"].list.isEmpty {
+            if workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(min(workspace.taskDepth(task.id), 5)) * 24 - 10, height: 1).accessibilityHidden(true) }
+            if workspace.section != .assigned && workspace.taskDepth(task.id) < SubtaskTree.readableDepth && !task["subtasks"].list.isEmpty {
                 Button {
                     if !workspace.expandedTasks.insert(task.id).inserted { workspace.expandedTasks.remove(task.id) }
                 } label: {

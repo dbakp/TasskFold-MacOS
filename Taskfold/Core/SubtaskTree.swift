@@ -7,6 +7,66 @@ enum SubtaskTree {
         var errorDescription: String? { message }
     }
     static let maximumDepth = 10
+    static let readableDepth = 32
+    static func referencePath(_ id: String) -> [String]? {
+        guard id.hasPrefix("subtask:"), let data = Data(base64Encoded: String(id.dropFirst(8))),
+              let path = try? JSONDecoder().decode([String].self, from: data), (2...readableDepth + 1).contains(path.count), path.allSatisfy({ !$0.isEmpty }) else { return nil }
+        return path
+    }
+    static func reference(parent: String, key: String) -> String {
+        let path = (referencePath(parent) ?? [parent]) + [key]
+        return "subtask:" + (try! JSONEncoder().encode(path)).base64EncodedString()
+    }
+    static let childQuickEntryExclusions: Set<String> = ["project_id", "section_id", "labels", "recurrence", "reminder_specs"]
+    /// Context is visible in the editor but ownership and containment remain on the parent.
+    static func detailDraft(_ child: Record, project: String) -> Record {
+        var result = child; result["project_id"] = project.isEmpty ? .null : .string(project)
+        return result
+    }
+    static func detailChanges(original: Record, edited: Record, current: Record) throws -> Record {
+        guard !original.id.isEmpty, original.id == edited.id, current.id == original.id else {
+            throw Failure(message: "This subtask changed. Reopen its current details before saving.")
+        }
+        let editable: Set<String> = ["title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "subtasks", "comments", "attachments"]
+        var fields = edited.fields.filter { editable.contains($0.key) && original.fields[$0.key] != $0.value }
+        if let title = fields["title"] {
+            let value = title.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !value.isEmpty else { throw Failure(message: "Give the subtask a name.") }
+            fields["title"] = .string(value)
+        }
+        for key in ["due_date", "deadline_date"] {
+            if let value = fields[key], value != .null, !value.text.isEmpty {
+                guard case .string = value, Dates.parse(value.text) != nil else { throw Failure(message: "Choose a valid date for the subtask.") }
+            }
+        }
+        if let estimate = fields["duration_minutes"], estimate != .null {
+            guard case .number(let minutes) = estimate, minutes.rounded() == minutes, (1...10080).contains(minutes) else { throw Failure(message: "Choose an estimate between 1 minute and 7 days.") }
+        }
+        if let priority = fields["priority"], priority != .null {
+            guard case .number(let value) = priority, value.rounded() == value, (1...4).contains(value) else { throw Failure(message: "Choose a priority between 1 and 4.") }
+        }
+        if let time = fields["due_time"], time != .null, !time.text.isEmpty {
+            let parts = time.text.split(separator: ":", omittingEmptySubsequences: false)
+            guard case .string = time, parts.count == 2, parts.allSatisfy({ $0.count == 2 }), let hour = Int(parts[0]), let minute = Int(parts[1]), (0...23).contains(hour), (0...59).contains(minute) else { throw Failure(message: "Choose a valid time for the subtask.") }
+        }
+        if let zone = fields["time_zone"], zone != .null, !zone.text.isEmpty {
+            guard case .string = zone, TimeZone(identifier: zone.text) != nil else { throw Failure(message: "Choose a valid time zone for the subtask.") }
+        }
+        fields = TaskPlanning.fields(fields, existing: current)
+        var result = current
+        for (key, value) in fields { result[key] = value }
+        return result
+    }
+    static func path(_ value: JSON, id: String) -> [String]? {
+        let rows = Dictionary(uniqueKeysWithValues: outline(value).map { ($0.id, $0) })
+        guard var item = rows[id] else { return nil }
+        var result = [item.id], seen: Set<String> = [item.id]
+        while let parent = item.parent {
+            guard seen.insert(parent).inserted, let row = rows[parent] else { return nil }
+            result.insert(parent, at: 0); item = row
+        }
+        return result
+    }
     struct Item: Identifiable {
         let record: Record
         let parent: String?

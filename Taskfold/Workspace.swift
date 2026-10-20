@@ -393,7 +393,11 @@ final class Workspace {
     func save(_ table: String, _ record: Record, name: String, baseline: Record? = nil) -> Bool {
         var saved = false
         if table == "tasks", let path = Self.subtaskPath(record.id) {
-            guard let root = store.record("tasks", id: path[0]), let updated = Self.replacing(root, path: Array(path.dropFirst()), value: record) else { return false }
+            guard let root = store.record("tasks", id: path[0]), let current = taskRecord(record.id) else { return false }
+            let edited: Record
+            do { edited = try SubtaskTree.detailChanges(original: baseline ?? current, edited: record, current: current) }
+            catch { store.error = error.localizedDescription; return false }
+            guard let updated = Self.replacing(root, path: Array(path.dropFirst()), value: edited) else { return false }
             let rootBaseline = baseline.flatMap { Self.replacing(root, path: Array(path.dropFirst()), value: $0) }
             run(name) { saved = store.save("tasks", updated, baseline: rootBaseline) }
             return saved
@@ -596,14 +600,11 @@ enum SettingsTab: String { case general, appearance, account, imports, invitatio
 extension Workspace {
     /// Paths identify embedded subtasks without creating duplicate backend task records.
     static func subtaskPath(_ id: String) -> [String]? {
-        guard id.hasPrefix("subtask:"), let data = Data(base64Encoded: String(id.dropFirst(8))),
-              let path = try? JSONDecoder().decode([String].self, from: data), (2...3).contains(path.count) else { return nil }
-        return path
+        SubtaskTree.referencePath(id)
     }
     static func childKey(_ value: JSON, index: Int) -> String { value.object["id"]?.text.isEmpty == false ? value.object["id"]!.text : "@\(index)" }
     func childID(parent: String, value: JSON, index: Int) -> String {
-        let path = (Self.subtaskPath(parent) ?? [parent]) + [Self.childKey(value, index: index)]
-        return "subtask:" + (try! JSONEncoder().encode(path)).base64EncodedString()
+        SubtaskTree.reference(parent: parent, key: Self.childKey(value, index: index))
     }
     func taskDepth(_ id: String) -> Int { (Self.subtaskPath(id)?.count ?? 1) - 1 }
     func taskRecord(_ id: String) -> Record? {
@@ -619,7 +620,7 @@ extension Workspace {
     func visibleTasks(_ roots: [Record]) -> [Record] {
         if section == .assigned { return roots }
         return roots.flatMap { task -> [Record] in
-            guard taskDepth(task.id) < 2, expandedTasks.contains(task.id) else { return [task] }
+            guard taskDepth(task.id) < SubtaskTree.readableDepth, expandedTasks.contains(task.id) else { return [task] }
             let children = task["subtasks"].list.enumerated().map { index, value -> Record in
                 var child = Record(value.object); child["id"] = .string(childID(parent: task.id, value: value, index: index)); return child
             }

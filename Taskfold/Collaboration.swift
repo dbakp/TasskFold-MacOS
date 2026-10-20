@@ -20,7 +20,7 @@ extension Workspace {
         var result: [Record] = []
         func visit(_ task: Record, depth: Int) {
             if task.string("assigned_to").lowercased() == store.userID.lowercased() { result.append(task) }
-            guard depth < 2 else { return }
+            guard depth < SubtaskTree.readableDepth else { return }
             for (index, value) in task["subtasks"].list.enumerated() {
                 let id = childID(parent: task.id, value: value, index: index)
                 if let child = taskRecord(id) { visit(child, depth: depth + 1) }

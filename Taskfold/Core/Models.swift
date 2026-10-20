@@ -395,7 +395,12 @@ struct Snapshot: Codable, Equatable, Sendable {
         } else if change.method == "DELETE" { rows.removeAll { $0.id == change.recordID } }
         else if let i = rows.firstIndex(where: { $0.id == change.recordID }) {
             if change.method == "POST", change.insertOnly == true { return }
-            rows[i] = change.table == "tasks" ? TaskCompletionRevision.applying(change.fields, to: rows[i]) : Record(rows[i].fields.merging(change.fields) { _, new in new })
+            var projected = change.fields
+            if change.table == "tasks", change.method == "PATCH", let base = change.baseline?["subtasks"], let desired = projected["subtasks"] {
+                // Keep the queued intent intact while retaining already observed child edits locally.
+                projected["subtasks"] = TaskEdit.keepingLocal(field: "subtasks", base: base, desired: desired, remote: rows[i]["subtasks"])
+            }
+            rows[i] = change.table == "tasks" ? TaskCompletionRevision.applying(projected, to: rows[i]) : Record(rows[i].fields.merging(projected) { _, new in new })
         } else {
             var fields = change.fields
             if change.table == "tasks", change.method == "POST" { fields["completion_version"] = .number(0) }

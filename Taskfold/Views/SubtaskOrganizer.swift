@@ -4,11 +4,13 @@ struct SubtaskOrganizerButton: View {
     @Binding var children: JSON
     let taskID: String
     var baseDepth = 0
+    var projectID = ""
+    var saveAndOpen: ((JSON, [String]) -> Bool)? = nil
     @State private var showing = false
     var body: some View {
         Button("Organize subtasks", systemImage: "list.bullet.indent") { showing = true }
             .accessibilityIdentifier("organizeSubtasks")
-            .sheet(isPresented: $showing) { SubtaskOrganizer(children: $children, taskID: taskID, baseDepth: baseDepth) }
+            .sheet(isPresented: $showing) { SubtaskOrganizer(children: $children, taskID: taskID, baseDepth: baseDepth, projectID: projectID, saveAndOpen: saveAndOpen) }
     }
 }
 
@@ -18,6 +20,10 @@ private struct SubtaskOrganizer: View {
     @Binding var children: JSON
     let taskID: String
     let baseDepth: Int
+    let projectID: String
+    let saveAndOpen: ((JSON, [String]) -> Bool)?
+    private struct ChildRequest: Identifiable { let record: Record; let depth: Int; var id: String { record.id } }
+    @State private var editingChild: ChildRequest?
     @State private var source: JSON
     @State private var originalTaskID: String
     @State private var draft: JSON
@@ -30,8 +36,8 @@ private struct SubtaskOrganizer: View {
     @State private var removing: SubtaskTree.Item?
     @State private var childTitle = ""
 
-    init(children: Binding<JSON>, taskID: String, baseDepth: Int) {
-        _children = children; self.taskID = taskID; self.baseDepth = baseDepth
+    init(children: Binding<JSON>, taskID: String, baseDepth: Int, projectID: String, saveAndOpen: ((JSON, [String]) -> Bool)?) {
+        _children = children; self.taskID = taskID; self.baseDepth = baseDepth; self.projectID = projectID; self.saveAndOpen = saveAndOpen
         _source = State(initialValue: children.wrappedValue)
         _originalTaskID = State(initialValue: taskID)
         do { _draft = State(initialValue: try SubtaskTree.prepared(children.wrappedValue)); _loadError = State(initialValue: nil) }
@@ -64,6 +70,13 @@ private struct SubtaskOrganizer: View {
                                     .accessibilityHint("Level \(baseDepth + item.depth + 1). Use the actions menu to move or nest this subtask.")
                                     .accessibilityIdentifier("organizedTitle-" + item.id)
                                 Menu {
+                                    #if os(iOS)
+                                    Button("Edit details", systemImage: "slider.horizontal.3") { editingChild = ChildRequest(record: item.record, depth: baseDepth + item.depth + 1) }
+                                    #else
+                                    if saveAndOpen != nil {
+                                        Button("Save and open details", systemImage: "sidebar.trailing") { commit(opening: item.id) }
+                                    }
+                                    #endif
                                     Button("Add child subtask", systemImage: "plus") { addingTo = item.id; childTitle = ""; addingChild = true }
                                         .disabled(baseDepth + item.depth + 1 >= SubtaskTree.maximumDepth)
                                     Button("Move up", systemImage: "arrow.up") { move(item, .up) }.disabled(!canMove(item, .up))
@@ -94,6 +107,18 @@ private struct SubtaskOrganizer: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction) }
                 ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).keyboardShortcut("s", modifiers: .command).disabled(loadError != nil || items.contains { $0.record.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }).accessibilityIdentifier("saveSubtaskOrganizer") }
             }
+            #if os(iOS)
+            .sheet(item: $editingChild) { request in
+                TaskEditor(task: SubtaskTree.detailDraft(request.record, project: projectID), embeddedSave: { edited in
+                    guard binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true,
+                          taskID == originalTaskID, let current = items.first(where: { $0.id == request.id })?.record else {
+                        throw SubtaskTree.Failure(message: "This task or workspace changed. Reopen its current details before saving.")
+                    }
+                    let saved = try SubtaskTree.detailChanges(original: request.record, edited: edited, current: current)
+                    draft = SubtaskTree.changing(draft, id: request.id, fields: saved.fields)
+                }, embeddedDepth: request.depth)
+            }
+            #endif
             .alert("Add child subtask", isPresented: $addingChild) {
                 TextField("Subtask name", text: $childTitle)
                 Button("Cancel", role: .cancel) { addingTo = nil }
@@ -129,7 +154,8 @@ private struct SubtaskOrganizer: View {
         do { draft = try SubtaskTree.adding(draft, title: title, parent: parent, baseDepth: baseDepth); message = nil }
         catch { message = error.localizedDescription }
     }
-    private func save() {
+    private func save() { commit(opening: nil) }
+    private func commit(opening childID: String?) {
         guard binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true,
               taskID == originalTaskID, children == source else {
             message = "The task or workspace changed. Cancel and reopen the organizer to keep the latest work."; return
@@ -137,7 +163,13 @@ private struct SubtaskOrganizer: View {
         do {
             let title = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
             let saved = title.isEmpty ? draft : try SubtaskTree.adding(draft, title: title, baseDepth: baseDepth)
-            children = saved; dismiss()
+            guard !SubtaskTree.outline(saved).contains(where: { $0.record.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
+                throw SubtaskTree.Failure(message: "Give each subtask a name before saving.")
+            }
+            if let childID, let saveAndOpen, let path = SubtaskTree.path(saved, id: childID) {
+                guard saveAndOpen(saved, path) else { message = store.error ?? "The task could not be saved. Your checklist draft is still here."; return }
+            } else { children = saved }
+            dismiss()
         } catch { message = error.localizedDescription }
     }
 }
