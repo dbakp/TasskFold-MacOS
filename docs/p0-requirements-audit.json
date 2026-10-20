@@ -106,7 +106,7 @@
     {
       "id": "widgets",
       "requirement": "Twelve productive kinds, stable per-instance configuration, useful routes/actions, durable completion, privacy/account isolation and readable installed hosts.",
-      "status": "incomplete_system_privacy",
+      "status": "accepted_bounded_installed_hosts_and_representative_system_privacy",
       "evidence": [
         "widget-host-evidence.json",
         "tablet-mylist-evidence.json",
@@ -124,7 +124,7 @@
         "accessory-widget-background-evidence.json",
         "locked-widget-warning-followup-evidence.json"
       ],
-      "boundary": "Named representative installed Mac routes/layouts now include Day capacity and Inbox reset alongside recorded Today/My list/note/Focus/Pulse journeys. Day capacity has human medium-card readability; corrected isolated Inbox has exact native cold-review/count evidence, not a separately confirmed replacement layout. Named local/two-account cycle remains bounded; second-account AX click is not accepted. Actual physical Today widget now shows its sample while authenticated and hides it when genuinely locked with system widget access Off. Private presentation and locked tap/authentication routing are user-deferred; no full system privacy acceptance. See physical-widget-privacy-preparation-evidence.json."
+      "boundary": "Named representative installed Mac routes/layouts now include Day capacity and Inbox reset alongside recorded Today/My list/note/Focus/Pulse journeys. Day capacity has human medium-card readability; corrected isolated Inbox has exact native cold-review/count evidence, not a separately confirmed replacement layout. Named local/two-account cycle remains bounded; second-account AX click is not accepted. Actual physical rectangular Today system privacy now passes after the stable-root background repair: no warning/private content while genuinely locked, protected tap, original On restoration and normal authenticated return, with whole saved JSON unchanged. Named scope only; no all-family/device matrix or app-received private callback claim. See locked-widget-warning-followup-evidence.json."
     },
     {
       "id": "usability_accessibility_runtime",
@@ -243,7 +243,6 @@
     "versionsOrRolloutFlagsChanged": false
   },
   "remainingPrerequisites": [
-    "Confirm original widget setting restored and authenticated content returns after the physical root-background repair; locked privacy/protected tap accepted on build20.",
     "User-deferred signing/provider/distribution and old-active-writer rollout."
   ],
   "stoppingRule": "Do not invent a gate for every possible combination or substitute easier previews/core tests. Continue distinct actionable risks; resume prerequisite-limited gates when their external state changes.",
@@ -323,13 +322,13 @@
   "spokenFollowupLatest": "20 October: Current-source iOS spoken recovery is accepted in its named representative scope. The human activates real native picker Cancel with VoiceOver on and reports Restore from file; the actual Xcode VoiceOver service returns Restore from file Button. The real UIKit callback is accepted, the picker stops accepting input and the Restore control is usable. The entire saved cache equals its pre-picker baseline after Cancel and again after ordinary terminate/relaunch. Final case passes 1/0/0 with no structured runtime warnings. VoiceOver is restored off, the test app and dedicated Simulator stop, and Device Hub closes with its original selection restored. Prior failed inputs/first focus repair and compiler/console warnings remain retained; no every-device/gesture or universal clean-runtime claim. See ios-spoken-recovery-evidence.json.",
   "physicalWidgetPrivacyFollowup": {
     "evidence": "physical-widget-privacy-preparation-evidence.json",
-    "status": "physical_build20_locked_private_and_protected_tap_accepted_normal_return_pending",
-    "systemPrivacyAccepted": false,
+    "status": "accepted_named_physical_system_privacy_and_normal_return",
+    "systemPrivacyAccepted": true,
     "installationAccepted": true,
     "lockedSampleHidingAccepted": true,
     "furtherChecksUserDeferred": false,
     "originalSettingRestorationConfirmed": true,
-    "nextAction": "Confirm original On setting restored and normal widget content returns with open padlock; then finalize representative physical privacy acceptance.",
+    "nextAction": "No further phone privacy check needed for this named gate. Only user-deferred release signing/provider/delivery/distribution and old-writer rollout remain.",
     "galleryWarningFollowup": {
       "evidence": "accessory-widget-background-evidence.json",
       "repair": "Transparent container background on every Today accessory rendering branch.",
@@ -338,6 +337,7 @@
     },
     "lockedWarningEvidence": "locked-widget-warning-followup-evidence.json",
     "lockedPrivateBuild20Accepted": true,
-    "protectedTapBuild20Accepted": true
+    "protectedTapBuild20Accepted": true,
+    "normalReturnBuild20Accepted": true
   }
 }

@@ -1,6 +1,6 @@
 {
   "date": "2026-10-20",
-  "status": "physical_build20_locked_private_and_protected_tap_accepted_normal_return_pending",
+  "status": "accepted_named_physical_system_privacy_and_normal_return",
   "humanReport": {
     "locked": "It does not show 1 due; the same error message appears.",
     "unlocked": "1 due visible.",
@@ -36,22 +36,28 @@
       "Simulator OS is iOS 27.0; physical phone is iOS 27.0.1."
     ]
   },
-  "noSpeculativeShippingPatch": false,
   "physicalPhoneAppNotReplacedForThisDiagnostic": "The initial explicit-privacy Simulator diagnostic did not replace the phone app. The later normal build20 root-background repair did replace only the isolated phone app.",
-  "nextAction": "Confirm original On setting restored and normal widget content returns with open padlock; then finalize representative physical privacy acceptance.",
+  "nextAction": "No further phone privacy check needed for this named gate. Only user-deferred release signing/provider/delivery/distribution and old-writer rollout remain.",
   "cleanup": {
     "forcedDiagnosticSimulatorAppRemoved": true,
     "simulatorShutdown": true,
     "normalStagedWidgetSourceRestored": true,
-    "phoneAppAndSettingsUntouchedByAgent": true,
-    "syntheticCacheAndNativeResultRetained": true
+    "syntheticCacheAndNativeResultRetained": true,
+    "isolatedPhoneMainAppTerminated": true,
+    "exactInstalledExecutableValidatedBeforeTermination": true,
+    "absenceVerifiedAfterTermination": true,
+    "testPhoneAppAndWidgetRemainInstalled": true,
+    "phoneSecuritySettingRestoredByHuman": true,
+    "regularPhoneAppAndDataUntouchedByAgent": true,
+    "deviceSettingsChangedOnlyByHuman": true,
+    "isolatedPhoneAppReplacedByNormalBuild20": true
   },
   "repairCandidate": {
     "implementation": "Declare one containerBackground at the stable Today root, outside privacy-dependent content; choose transparent accessory or existing card surface only by static family. Remove nested per-branch background registrations.",
     "rationale": "Physical system privacy transition still reports a background API warning after all branches were annotated. Stable outer registration removes dependence on conditional redaction structure.",
     "causeProvenBySimulator": false,
     "physicalBeforeObservedByHuman": true,
-    "physicalAfterAccepted": false,
+    "physicalAfterAccepted": true,
     "nativeSimulatorPrivateGallery": {
       "resultBundle": "ios-widget-private-root-fixed-v1.xcresult outside repos",
       "passedTests": 1,
@@ -137,8 +143,32 @@
       "deliveredGenericTodayCallbackClaimed": false,
       "limits": "Human observed OS-protected interaction; no claim that a private widget URL callback reached the app."
     },
-    "normalReturnAndOriginalSettingRestoration": "Human check pending.",
+    "normalReturnAndOriginalSettingRestoration": {
+      "humanReply": "Normal count/task returned",
+      "originalLockScreenWidgetsSetting": "On",
+      "restoredByHuman": true,
+      "normalContentReturnedWithOpenPadlock": true
+    },
     "stageReproductionFilesByteExact": 64,
-    "ownedSourceSHA256": "d067c4fc342113d73d9d0f156b2cabdec63977578070d7093c2551152bc20577"
-  }
+    "ownedSourceSHA256": "d067c4fc342113d73d9d0f156b2cabdec63977578070d7093c2551152bc20577",
+    "wholeSavedWorkspaceAfterHumanCycle": {
+      "equalsImmediatePreInstallBaseline": true,
+      "beforeSHA256": "093c22c170e3ea90a2fcee5052cd179acae0daba052026fda2fe52afea64ed9c",
+      "afterSHA256": "6d411f6a97a1128968f0b1f2409526f9fd875209581228ac89a76bd9ad647481",
+      "tasks": 2,
+      "pendingWrites": 0
+    }
+  },
+  "systemPrivacyGate": {
+    "accepted": true,
+    "scope": "One actual iPhone16Pro/iOS27.0.1 rectangular Today widget, real Lock Screen Widgets Off and closed padlock with covered Face ID, protected tap, then original On restoration and authenticated normal return.",
+    "privatePlaceholderExactWordsConfirmed": false,
+    "allFamiliesOrDevicesAccepted": false,
+    "privateURLCallbackDeliveredToAppClaimed": false,
+    "repairSourceCommits": {
+      "iOS": "38990d5",
+      "macOS": "37a33a3"
+    }
+  },
+  "shippingRepairValidatedByNamedPhysicalCheck": true
 }

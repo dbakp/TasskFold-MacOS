@@ -1,7 +1,7 @@
 {
   "date": "2026-10-20",
-  "status": "installed_physical_widget_locked_title_hidden_safe_route_user_deferred",
-  "scope": "Current independently namespaced iOS app and genuine rectangular Today Lock Screen WidgetKit widget. Authenticated title and actual locked hiding accepted; locked tap/authentication route and restoration observation deferred at user request.",
+  "status": "accepted_named_physical_system_privacy_and_normal_return",
+  "scope": "Current independently namespaced app and genuine rectangular Today Lock Screen widget on iPhone16Pro/iOS27.0.1. Actual system-private locked presentation/protected tap and original-setting/authenticated normal return accepted in this named representative scope after the root-background repair.",
   "device": {
     "model": "iPhone 16 Pro",
     "os": {
@@ -89,7 +89,7 @@
     },
     "testAppLaunched": true,
     "widgetInstalled": true,
-    "privacyFullyAccepted": false
+    "privacyAcceptedInNamedRepresentativeScope": true
   },
   "existingApp": {
     "bundle": "com.dbakp.taskfold",
@@ -99,7 +99,7 @@
     "noExistingAppLaunchOrDataWriteRequested": true,
     "noWholeUserCacheComparisonClaim": true
   },
-  "nextAction": "User defers further physical checks. Simulator ordinary journeys remain accepted; prior actual Simulator passcode/privacy settings were unusable. Do not repeat those attempts or substitute previews. Resume only the remaining locked tap/authentication route when user chooses; release signing/delivery/old-writer rollout stays separately deferred.",
+  "nextAction": "No further phone privacy check needed for this named gate. Only user-deferred release signing/provider/delivery/distribution and old-writer rollout remain.",
   "privacyGuidance": "Use the actual device setting described by Apple, genuine locked/unlocked transitions and real installed widget observations; no in-app preview or simulated redaction as acceptance. Record/restore the original setting and keep passcodes in the OS only.",
   "references": [
     "https://developer.apple.com/documentation/widgetkit/creating-a-widget-extension",
@@ -161,6 +161,8 @@
     "evidence": "locked-widget-warning-followup-evidence.json",
     "build": "20",
     "lockedPrivateAndProtectedTapAccepted": true,
-    "originalSettingRestorationAndNormalReturn": "Pending after latest repair"
-  }
+    "originalSettingRestorationAndNormalReturn": "Accepted by human report",
+    "wholeWorkspaceEqualAcrossHumanCycle": true
+  },
+  "observationsHistoricalBeforeRootRepair": true
 }
