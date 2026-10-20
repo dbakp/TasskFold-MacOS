@@ -259,3 +259,40 @@ extension ProjectWorkflowIntegrationTests {
         } catch { try? await cleanup();throw error }
     }
 }
+
+extension ProjectWorkflowIntegrationTests {
+    @MainActor func testTwoClientMonthlyDatesPersistCompleteAndReopen() async throws {
+        guard let path=ProcessInfo.processInfo.environment["TASKFOLD_MONTHLY_LIVE_FIXTURE"] else {throw XCTSkip("Disposable monthly-date account required")}
+        let permissions=try FileManager.default.attributesOfItem(atPath:path)[.posixPermissions] as? NSNumber
+        XCTAssertEqual((permissions?.intValue ?? 0o777)&0o077,0)
+        let f=try JSONDecoder().decode([String:String].self,from:Data(contentsOf:URL(fileURLWithPath:path)))
+        let owner=try XCTUnwrap(f["userID"]),identity=try XCTUnwrap(f["emailIdentity"]),email=try XCTUnwrap(f["email"])
+        guard UUID(uuidString:owner) != nil,UUID(uuidString:identity) != nil,email=="taskfold-continuity-"+identity+"@example.invalid" else {throw AppFailure(message:"Synthetic account only")}
+        let configuration=["URL":try XCTUnwrap(f["url"]),"Key":try XCTUnwrap(f["key"])]
+        func client()->Backend {Backend(configuration:configuration,http:URLSession(configuration:.ephemeral),session:nil,persistSession:{_ in})}
+        let a=client(),b=client()
+        for api in [a,b] {let signed=try await api.signIn(email:email,password:try XCTUnwrap(f["password"]),signup:false);XCTAssertTrue(signed);XCTAssertEqual(api.session?.user.id,owner)}
+        let initial=try await a.rows("tasks");guard initial.isEmpty else {throw AppFailure(message:"Fresh synthetic workspace required")}
+        let root=UUID().uuidString.lowercased(),next=TaskCompletion.successorID(parent:root,day:"2027-01-15")
+        func cleanup() async throws {for id in [next,root] {if let row=try await a.rows("tasks").first(where:{$0.id==id}) {_ = try await a.send(Mutation(table:"tasks",recordID:id,method:"DELETE",fields:[:],baseline:row.fields))}}}
+        do {
+            var task=Record.task(user:owner);task["id"] = .string(root);task["title"] = .string("Synthetic month-date continuity proof")
+            task["due_date"] = .string("2027-01-01");task["due_time"] = .string("09:00");task["time_zone"] = .string("Europe/Copenhagen");task["scheduled_at"] = .string("2027-01-01T08:00:00Z")
+            task["is_recurring"] = .bool(true);task["recurrence_pattern"] = .object(["type":.string("monthly"),"interval":.number(1),"daysOfMonth":.array([.number(1),.number(15),.number(31)]),"count":.number(3),"opaque_metadata":.object(["keep":.bool(true)])])
+            _ = try await a.send(Mutation(table:"tasks",recordID:root,method:"POST",fields:task.fields,insertOnly:true),expectedAccount:owner)
+            let fetched=try await b.rows("tasks"),remote=try XCTUnwrap(fetched.first{$0.id==root});XCTAssertEqual(remote["recurrence_pattern"],task["recurrence_pattern"])
+            let restored=try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(Snapshot(tables:["tasks":[remote]])))
+            let instant=try XCTUnwrap(TaskPlanning.instant("2027-01-01T12:00:00Z")),reloaded=try XCTUnwrap(restored.tables["tasks"]?.first)
+            XCTAssertEqual(Recurrence.preview(reloaded,completion:instant),Recurrence.preview(remote,completion:instant))
+            let changes=TaskCompletion.complete(reloaded,tasks:fetched,at:instant);XCTAssertEqual(changes.count,2)
+            for change in changes {_ = try await b.send(change,expectedAccount:owner)}
+            let first=try await a.rows("tasks"),second=try await b.rows("tasks");XCTAssertEqual(first.count,2);XCTAssertEqual(Set(first.map(\.id)),Set(second.map(\.id)))
+            let completed=try XCTUnwrap(first.first{$0.id==root}),successor=try XCTUnwrap(first.first{$0.id==next});XCTAssertTrue(completed.completed);XCTAssertFalse(successor.completed)
+            XCTAssertEqual(successor.string("due_date"),"2027-01-15");XCTAssertEqual(TaskPlanning.instant(successor.string("scheduled_at")),TaskPlanning.instant("2027-01-15T08:00:00Z"))
+            var expected=task["recurrence_pattern"].object;expected["count"] = .number(2);XCTAssertEqual(successor["recurrence_pattern"],.object(expected))
+            _ = try await a.send(try XCTUnwrap(TaskCompletion.toggle(completed,tasks:first,at:instant).first),expectedAccount:owner)
+            for api in [a,b] {let rows=try await api.rows("tasks");XCTAssertEqual(rows.count,2);XCTAssertEqual(rows.filter{$0.id==root && !$0.completed}.count,1);XCTAssertEqual(rows.filter{$0.id==next}.count,1);XCTAssertEqual(rows.first{$0.id==root}?["recurrence_pattern"],task["recurrence_pattern"])}
+            try await cleanup()
+        } catch {try? await cleanup();throw error}
+    }
+}

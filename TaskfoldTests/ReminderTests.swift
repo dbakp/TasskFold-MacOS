@@ -773,3 +773,42 @@ extension ReminderTests {
         XCTAssertFalse(ReminderSpec.rows(saved).contains { $0.object[ReminderAutomatic.placeholder] != nil })
     }
 }
+
+extension ReminderTests {
+    func testMonthlyDateSetCalendarScheduleCountsClampedDatesOnce() throws {
+        let spec=try calendarSpec("every month on 30 and 31 for 5 occurrences",start:"2027-01-31")
+        let schedule=try XCTUnwrap(spec.schedule)
+        XCTAssertEqual(schedule.dates(after:now).map{TaskPlanner.dayKey($0,calendar:calendar)},["2027-01-31","2027-02-28","2027-03-30","2027-03-31","2027-04-30"])
+        XCTAssertEqual(ReminderCalendarSchedule.make(schedule.expression,time:schedule.time,start:schedule.startDay,zone:schedule.timeZone),schedule)
+    }
+    func testMonthlySetIndependentCalendarIntervalsCatchupAndSignatures() throws {
+        let spec=try calendarSpec("every 2 months on 1, 15 and 31",start:"2026-01-01")
+        let schedule=try XCTUnwrap(spec.schedule)
+        let dates=schedule.dates(after:TaskPlanning.instant("2026-03-10T00:00:00Z")!,limit:4)
+        XCTAssertEqual(dates.map{TaskPlanner.dayKey($0,calendar:calendar)},["2026-03-15","2026-03-31","2026-05-01","2026-05-15"])
+        let changed=try calendarSpec("every 2 months on 1 and 31",start:"2026-01-01")
+        XCTAssertNotEqual(spec.semanticKey,changed.semanticKey)
+        var shuffled=schedule.raw;var rule=schedule.rule.fields;rule["daysOfMonth"] = .array([.number(31),.number(1),.number(15)]);shuffled["recurrence"] = .object(rule)
+        let reversed=try XCTUnwrap(ReminderCalendarSchedule(raw:shuffled));XCTAssertEqual(reversed.semanticFields,schedule.semanticFields)
+        XCTAssertEqual(reversed.dates(after:now,limit:4),schedule.dates(after:now,limit:4))
+    }
+    func testReplacingReminderCalendarRuleDoesNotRetainOldMonthSet() throws {
+        let old=try calendarSpec("every month on 1 and 15")
+        let replacement=try calendarSpec("every month on 31")
+        let merged=old.mergingSettings(from:replacement)
+        XCTAssertNil(merged.raw["recurrence"]?.object["daysOfMonth"])
+        XCTAssertEqual(merged.schedule?.rule["dayOfMonth"],.number(31))
+    }
+}
+
+
+extension ReminderTests {
+    func testMonthlySetSignatureMatchesServerCanonicalFixture() throws {
+        let schedule=try XCTUnwrap(ReminderCalendarSchedule.make("every month on 15 and 31 for 3 occurrences",time:"09:00",start:"2026-10-15",zone:"Europe/Copenhagen"))
+        let spec=ReminderSpec.recurring(schedule,id:"f1751000-0000-4000-8000-000000000002")
+        let row=Record(["id":.string("f1751000-0000-4000-8000-000000000001"),"task_generation":.string("f1751000-0000-4000-8000-000000000003"),"completion_version":.number(7)])
+        let date=try XCTUnwrap(TaskPlanning.instant("2026-10-31T08:00:00Z"))
+        XCTAssertTrue(schedule.contains(date))
+        XCTAssertEqual(ReminderSignature.make(task:row,spec:spec,date:date),"r5:9ed0659acab62189add81d4608ef6c8fc2cae2304c6404d2bcea7fa4db90a4b2")
+    }
+}

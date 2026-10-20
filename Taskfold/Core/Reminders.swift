@@ -106,7 +106,7 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
         var result = self
         for (key, value) in replacement.raw { result.raw[key] = value }
         if kind == "recurring", replacement.kind == "recurring" {
-            let known = Set(["type", "interval", "daysOfWeek", "dayOfMonth", "monthOfYear", "weekday", "weekdayOrdinal", "count", "endDate", "fromCompletion"])
+            let known = Set(["type", "interval", "daysOfWeek", "dayOfMonth", "daysOfMonth", "monthOfYear", "weekday", "weekdayOrdinal", "count", "endDate", "fromCompletion"])
             var pattern = replacement.raw["recurrence"]?.object ?? [:]
             for (key, value) in raw["recurrence"]?.object ?? [:] where !known.contains(key) { pattern[key] = value }
             result.raw["recurrence"] = .object(pattern)
@@ -173,6 +173,14 @@ private struct ReminderCivilDay: Comparable {
         guard (0..<9999 * 12).contains(index) else { return nil }
         return Self.monthDay(year: index / 12 + 1, month: index % 12 + 1, rule: rule, fallback: day)
     }
+    func monthOptions(_ offset:Int,rule:Record)->[Self] {
+        guard rule["daysOfMonth"] != .null else {return monthOffset(offset,rule:rule).map{[$0]} ?? []}
+        let index=(year-1)*12+month-1+offset
+        guard (0..<9999*12).contains(index) else{return []}
+        let year=index/12+1,month=index%12+1,length=Self.monthLength(year,month)
+        let selected=Set(rule["daysOfMonth"].list.map{min($0.integer,length)}).sorted()
+        return selected.compactMap{Self(String(format:"%04d-%02d-%02d",year,month,$0))}
+    }
     func next(_ rule: Record, after: Self) -> Self? {
         let threshold = max(self, after), n = rule["interval"] == .null ? 1 : rule["interval"].integer
         let selected = Array(Set(rule["daysOfWeek"].list.map(\.integer))).sorted()
@@ -191,9 +199,9 @@ private struct ReminderCivilDay: Comparable {
                 }
             }
         case "monthly":
-            let elapsed = (threshold.year - year) * 12 + threshold.month - month, first = max(1, elapsed / n)
+            let elapsed = (threshold.year - year) * 12 + threshold.month - month, first = max(rule["daysOfMonth"] == .null ? 1 : 0, elapsed / n)
             for offset in first...(first + 400) {
-                if let value = monthOffset(offset * n, rule: rule), value > threshold { result = value; break }
+                if let value=monthOptions(offset*n,rule:rule).first(where:{$0>threshold}) {result=value;break}
                 if (year - 1) * 12 + month - 1 + offset * n >= 9999 * 12 { break }
             }
         case "yearly":
@@ -212,7 +220,7 @@ private struct ReminderCivilDay: Comparable {
         if !selected.isEmpty { result = adding(selected.map { ($0 - weekday + 7) % 7 }.min()!) }
         else if rule.string("type") == "monthly" {
             result = nil
-            for offset in 0...400 { if let value = monthOffset(offset, rule: rule), value >= self { result = value; break } }
+            for offset in 0...400 {if let value=monthOptions(offset,rule:rule).first(where:{$0>=self}) {result=value;break}}
         } else if rule.string("type") == "yearly" {
             result = Self.monthDay(year: year, month: rule["monthOfYear"].integer, rule: rule, fallback: day)
             if let value = result, value < self { result = Self.monthDay(year: year + 1, month: rule["monthOfYear"].integer, rule: rule, fallback: day) }
@@ -252,7 +260,7 @@ struct ReminderCalendarSchedule: Equatable, Sendable {
         if rule["dayOfMonth"] != .null && !["monthly", "yearly"].contains(rule.string("type")) { return nil }
         if rule["monthOfYear"] != .null && rule.string("type") != "yearly" { return nil }
         if rule["weekday"] != .null && rule["weekdayOrdinal"] == .null { return nil }
-        if ["monthly", "yearly"].contains(rule.string("type")), rule["dayOfMonth"] == .null, rule["weekdayOrdinal"] == .null { return nil }
+        if ["monthly", "yearly"].contains(rule.string("type")), rule["dayOfMonth"] == .null, rule["weekdayOrdinal"] == .null, rule["daysOfMonth"] == .null { return nil }
         if rule.string("type") == "yearly", rule["monthOfYear"] == .null { return nil }
         guard day.first(rule) == day, instant(on: day) != nil else { return nil }
     }
@@ -298,9 +306,11 @@ struct ReminderCalendarSchedule: Equatable, Sendable {
         return dates(after: date.addingTimeInterval(-0.001), limit: 1).first == date
     }
     var semanticFields: [String] {
-        [startDay, time, timeZone, rule.string("type"), String(rule["interval"].integer == 0 ? 1 : rule["interval"].integer),
+        let fields=[startDay, time, timeZone, rule.string("type"), String(rule["interval"].integer == 0 ? 1 : rule["interval"].integer),
          Array(Set(rule["daysOfWeek"].list.map(\.integer))).sorted().map(String.init).joined(separator: ","),
          ["dayOfMonth", "monthOfYear", "weekday", "weekdayOrdinal", "count"].map { rule[$0] == .null ? "" : String(rule[$0].integer) }.joined(separator: ","), rule.string("endDate")]
+        // Keep existing signatures byte-for-byte for unchanged schedules.
+        return fields+(rule["daysOfMonth"] == .null ? [] : ["monthly-dates",rule["daysOfMonth"].list.map(\.integer).sorted().map(String.init).joined(separator:",")])
     }
     func formatted(_ date: Date) -> String {
         let formatter = DateFormatter(); formatter.calendar = calendar; formatter.timeZone = calendar.timeZone
@@ -322,6 +332,7 @@ struct ReminderCalendarSchedule: Equatable, Sendable {
         let days = Array(Set(rule["daysOfWeek"].list.map(\.integer))).sorted()
         if unit == "week", !days.isEmpty { value += " on " + days.map { Recurrence.weekdays[$0] }.joined(separator: " and ") }
         if unit == "month", let ordinal = Recurrence.number(rule["weekdayOrdinal"], in: -1...5), let weekday = Recurrence.number(rule["weekday"], in: 0...6) { value += " on " + (Recurrence.ordinals[ordinal] ?? "") + " " + Recurrence.weekdays[weekday] }
+        else if unit == "month",rule["daysOfMonth"] != .null {value += " on "+rule["daysOfMonth"].list.map(\.integer).sorted().map(String.init).joined(separator:" and ")}
         else if unit == "month" { value += " on \(rule["dayOfMonth"].integer)" }
         else if unit == "year" { value += " on " + QuickRecurrenceText.months[rule["monthOfYear"].integer - 1] + " \(rule["dayOfMonth"].integer)" }
         if !rule.string("endDate").isEmpty { value += " until " + rule.string("endDate") }
@@ -334,7 +345,7 @@ struct ReminderCalendarSchedule: Equatable, Sendable {
         guard let now = Dates.parse(start, calendar: c), let parsed = QuickRecurrenceText.parse(phrase, now: now, calendar: c, datePreferences: datePreferences), !parsed.rule["fromCompletion"].flag else { return nil }
         var rule = parsed.rule
         let day = parsed.start.flatMap(ReminderCivilDay.init) ?? anchor
-        if ["monthly", "yearly"].contains(rule.string("type")), rule["dayOfMonth"] == .null, rule["weekdayOrdinal"] == .null { rule["dayOfMonth"] = .number(Double(day.day)) }
+        if ["monthly", "yearly"].contains(rule.string("type")), rule["dayOfMonth"] == .null, rule["weekdayOrdinal"] == .null, rule["daysOfMonth"] == .null { rule["dayOfMonth"] = .number(Double(day.day)) }
         if rule.string("type") == "yearly", rule["monthOfYear"] == .null { rule["monthOfYear"] = .number(Double(day.month)) }
         guard let first = day.first(rule) else { return nil }
         return Self(raw: ["start_day": .string(first.key), "time": .string(time), "time_zone": .string(zone), "recurrence": .object(rule.fields)])

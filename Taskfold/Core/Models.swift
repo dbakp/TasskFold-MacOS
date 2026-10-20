@@ -1374,6 +1374,7 @@ enum TaskCompletion {
         if !pattern["fromCompletion", default: .bool(false)].flag {
             if ["monthly", "yearly"].contains(pattern["type"]?.text ?? ""), pattern["dayOfMonth"] == nil || pattern["dayOfMonth"] == .null,
                pattern["weekdayOrdinal"] == nil || pattern["weekdayOrdinal"] == .null,
+               pattern["daysOfMonth"] == nil || pattern["daysOfMonth"] == .null,
                let first = Dates.parse(task.string("due_date"), calendar: calendar) { pattern["dayOfMonth"] = .number(Double(calendar.component(.day, from: first))) }
             if pattern["type"] == .string("yearly"), pattern["monthOfYear"] == nil || pattern["monthOfYear"] == .null,
                let first = Dates.parse(task.string("due_date"), calendar: calendar) { pattern["monthOfYear"] = .number(Double(calendar.component(.month, from: first))) }

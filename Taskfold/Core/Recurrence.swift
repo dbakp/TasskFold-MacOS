@@ -22,6 +22,11 @@ enum Recurrence {
         if p["daysOfWeek"] != .null {
             guard case .array(let days) = p["daysOfWeek"], days.count <= 7, days.allSatisfy({ number($0, in: 0...6) != nil }) else { return false }
         }
+        if p["daysOfMonth"] != .null {
+            guard p.string("type")=="monthly", p["dayOfMonth"] == .null, p["weekdayOrdinal"] == .null, p["weekday"] == .null, p["monthOfYear"] == .null, p["daysOfWeek"] == .null,
+                  case .array(let days)=p["daysOfMonth"], !days.isEmpty, days.count<=31,
+                  days.allSatisfy({number($0,in:1...31) != nil}), Set(days.map(\.integer)).count==days.count else {return false}
+        }
         if p["fromCompletion"] != .null { guard case .bool = p["fromCompletion"] else { return false } }
         if p["endDate"] == .null { return true }
         guard case .string(let end) = p["endDate"] else { return false }
@@ -39,6 +44,34 @@ enum Recurrence {
         } else { parts.day = min(day, range.count) }
         return calendar.date(from: parts)
     }
+    /// Clamp selected dates independently, then collapse dates sharing a short month's last day.
+    static func monthDates(_ month:Date,rule:Record,fallback:Int,calendar:Calendar)->[Date] {
+        if rule["daysOfMonth"] != .null {
+            return Array(Set(rule["daysOfMonth"].list.compactMap {number($0,in:1...31)}.compactMap {
+                monthDate(month,day:$0,weekday:nil,ordinal:nil,calendar:calendar)
+            })).sorted()
+        }
+        return monthDate(month,day:number(rule["dayOfMonth"],in:1...31) ?? fallback,weekday:number(rule["weekday"],in:0...6),ordinal:number(rule["weekdayOrdinal"],in:-1...5),calendar:calendar).map{[$0]} ?? []
+    }
+    /// Predictions assume future completions happen on the displayed days. The first uses today's completion boundary.
+    static func preview(_ task:Record,completion:Date,limit:Int=5,calendar input:Calendar = .current)->[Date] {
+        let calendar=TaskCompletion.calendar(for:task,input:input)
+        var task=task,at=completion,result:[Date]=[]
+        var stable=task["recurrence_pattern"].object
+        if !stable["fromCompletion",default:.bool(false)].flag, let day=Dates.parse(task.string("due_date"),calendar:calendar) {
+            if ["monthly","yearly"].contains(stable["type"]?.text ?? ""), ["dayOfMonth","daysOfMonth","weekdayOrdinal"].allSatisfy({stable[$0] == nil || stable[$0] == .null}) {stable["dayOfMonth"] = .number(Double(calendar.component(.day,from:day)))}
+            if stable["type"] == .string("yearly"),stable["monthOfYear"] == nil || stable["monthOfYear"] == .null {stable["monthOfYear"] = .number(Double(calendar.component(.month,from:day)))}
+        }
+        task["recurrence_pattern"] = .object(stable)
+        for _ in 0..<min(20,max(0,limit)) {
+            guard let day=next(task,calendar:calendar,completion:at) else {break}
+            result.append(day);task["due_date"] = .string(TaskPlanner.dayKey(day,calendar:calendar))
+            var rule=task["recurrence_pattern"].object
+            if let count=number(rule["count"] ?? .null,in:1...2147483647) {rule["count"] = .number(Double(count-1))}
+            task["recurrence_pattern"] = .object(rule);at=day
+        }
+        return result
+    }
     /// Completion-based calendar rules wait the whole interval, then find the first
     /// chosen calendar day at or after it. A weekday never silently shortens two weeks.
     private static func afterCompletion(_ p: Record, origin: Date, interval: Int, calendar: Calendar) -> Date? {
@@ -50,12 +83,12 @@ enum Recurrence {
             let delta = p["daysOfWeek"].list.compactMap { number($0, in: 0...6) }.map { ($0 - weekday + 7) % 7 }.min() ?? 0
             return calendar.date(byAdding: .day, value: delta, to: waited)
         }
-        if p.string("type") == "monthly", p["dayOfMonth"] != .null || p["weekdayOrdinal"] != .null {
+        if p.string("type") == "monthly", p["dayOfMonth"] != .null || p["weekdayOrdinal"] != .null || p["daysOfMonth"] != .null {
             var parts = calendar.dateComponents([.year, .month], from: waited); parts.day = 1
             guard let month = calendar.date(from: parts) else { return nil }
             for offset in 0...400 {
                 guard let target = calendar.date(byAdding: .month, value: offset, to: month), calendar.component(.year, from: target) <= 9999 else { return nil }
-                if let day = monthDate(target, day: number(p["dayOfMonth"], in: 1...31) ?? 1, weekday: number(p["weekday"], in: 0...6), ordinal: number(p["weekdayOrdinal"], in: -1...5), calendar: calendar), day >= waited { return day }
+                if let day=monthDates(target,rule:p,fallback:1,calendar:calendar).first(where:{$0>=waited}) {return day}
             }
             return nil
         }
@@ -110,10 +143,10 @@ enum Recurrence {
             var parts = calendar.dateComponents([.year, .month], from: origin); parts.day = 1
             guard let month = calendar.date(from: parts) else { return nil }
             let elapsed = calendar.dateComponents([.month], from: month, to: threshold).month ?? 0
-            let start = max(1, elapsed / interval)
+            let start = max(p["daysOfMonth"] == .null ? 1 : 0, elapsed / interval)
             for offset in start...(start + 400) {
                 guard let target = calendar.date(byAdding: .month, value: offset * interval, to: month), calendar.component(.year, from: target) <= 9999 else { return nil }
-                if let date = monthDate(target, day: number(p["dayOfMonth"], in: 1...31) ?? calendar.component(.day, from: origin), weekday: number(p["weekday"], in: 0...6), ordinal: number(p["weekdayOrdinal"], in: -1...5), calendar: calendar), date > threshold { result = date; break }
+                if let date=monthDates(target,rule:p,fallback:calendar.component(.day,from:origin),calendar:calendar).first(where:{$0>threshold}) {result=date;break}
             }
         case "yearly":
             let originalYear = calendar.component(.year, from: origin)
@@ -141,7 +174,8 @@ enum Recurrence {
         var parts = [interval == 1 ? "Every \(unit)" : "Every \(interval) \(unit)s"]
         let days = Array(Set(p["daysOfWeek"].list.compactMap { number($0, in: 0...6) })).sorted()
         if p.string("type") == "weekly", !days.isEmpty { parts.append(days.map { weekdays[$0].prefix(3).capitalized }.joined(separator: ", ")) }
-        if let ordinal = number(p["weekdayOrdinal"], in: -1...5), let day = number(p["weekday"], in: 0...6) { parts.append((ordinals[ordinal] ?? "") + " " + weekdays[day].capitalized) }
+        if p["daysOfMonth"] != .null {parts.append((p["daysOfMonth"].list.count==1 ? "Day ":"Days ")+p["daysOfMonth"].list.map(\.integer).sorted().map(String.init).joined(separator:", "))}
+        else if let ordinal = number(p["weekdayOrdinal"], in: -1...5), let day = number(p["weekday"], in: 0...6) { parts.append((ordinals[ordinal] ?? "") + " " + weekdays[day].capitalized) }
         else if let day = number(p["dayOfMonth"], in: 1...31) {
             if let month = number(p["monthOfYear"], in: 1...12) { parts.append(DateFormatter().monthSymbols[month - 1] + " \(day)") }
             else { parts.append("Day \(day)") }
@@ -283,7 +317,8 @@ enum QuickRecurrenceText {
     static let ordinal = #"(?:first|second|third|fourth|fifth|last|\d+(?:st|nd|rd|th)?)"#
     static let months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
     static let days = day + #"(?:(?:\s*,\s*(?:and\s+)?|\s+and\s+)(?!(?:every!?|daily|weekly|monthly|yearly)\b)[\p{L}\p{N}_-]+\b)*"#
-    static let on = #"(?:the\s+)?(?:"# + ordinal + #"\s+"# + day + #"|[a-z]+\s+\d+(?:st|nd|rd|th)?|"# + days + #"|\S+)"#
+    static let monthDays = #"\d+(?:st|nd|rd|th)?(?:(?:\s*,\s*(?:and\s+)?|\s+and\s+)(?!(?:every!?|daily|weekly|monthly|yearly)\b)[\p{L}\p{N}_-]+\b)*"#
+    static let on = #"(?:the\s+)?(?:"# + ordinal + #"\s+"# + day + #"|[a-z]+\s+\d+(?:st|nd|rd|th)?|"# + days + #"|"# + monthDays + #"|\S+)"#
     static let pattern = #"(?<![\p{L}\p{N}_!])(?:every!?\s+(?:(?:(?:\d+|other)\s+)?(?:days?|weeks?|months?|years?)\b(?:\s+on\s+"# + on + #")?|(?:weekdays?|workdays?|weekends?)\b|"# + ordinal + #"\s+"# + day + #"|"# + days + #"|\S+(?:\s+"# + day + #")?)|daily\b|weekly\b|monthly\b|yearly\b)(?:\s+(?:(?:starting|from|until|ending)(?:\s+on)?\s+"# + QuickNaturalDateText.capturedBoundary + #"|for\s+\S+\s+\S+))*"#
     struct Parsed { var rule: Record; var start: String? }
     static func parse(_ raw: String, now: Date = Date(), calendar: Calendar = .current, datePreferences: DatePhrasePreferences? = DatePhrasePreferences()) -> Parsed? {
@@ -345,7 +380,15 @@ enum QuickRecurrenceText {
                 let n = names[m[1]] ?? Int(m[1].filter(\.isNumber)) ?? 0
                 guard Recurrence.ordinals[n] != nil else { return nil }
                 rule["weekdayOrdinal"] = .number(Double(n)); rule["weekday"] = .number(Double(day))
-            } else if rule.string("type") == "monthly", let m = match(#"(\d+)(?:st|nd|rd|th)?"#, detail), let n = Int(m[1]), (1...31).contains(n) { rule["dayOfMonth"] = .number(Double(n)) }
+            } else if rule.string("type") == "monthly" {
+                let pieces=detail.replacingOccurrences(of:#"\s*(?:,\s*(?:and\s+)?|\band\b)\s*"#,with:"|",options:.regularExpression).components(separatedBy:"|")
+                let days=pieces.compactMap { part -> Int? in
+                    guard let m=match(#"(\d+)(?:st|nd|rd|th)?"#,part),let n=Int(m[1]),(1...31).contains(n) else{return nil};return n
+                }
+                guard days.count==pieces.count,!days.isEmpty,Set(days).count==days.count else{return nil}
+                if days.count==1 {rule["dayOfMonth"] = .number(Double(days[0]))}
+                else {rule["daysOfMonth"] = .array(days.sorted().map{.number(Double($0))})}
+            }
             else if rule.string("type") == "yearly", let m = match(#"([a-z]+)\s+(\d+)(?:st|nd|rd|th)?"#, detail), let month = months.firstIndex(where: { $0 == m[1] || String($0.prefix(3)) == m[1] }), let n = Int(m[2]), (1...31).contains(n) {
                 guard Dates.parse(String(format: "2000-%02d-%02d", month + 1, n)) != nil else { return nil }
                 rule["monthOfYear"] = .number(Double(month + 1)); rule["dayOfMonth"] = .number(Double(n))
@@ -365,13 +408,13 @@ enum QuickRecurrenceText {
             let inclusive = parsed.start != nil || !existing.isEmpty || days.count > 1
             let delta = days.map { ($0.integer - weekday + 7) % 7 }.map { $0 == 0 && !inclusive ? 7 : $0 }.min() ?? 0
             first = calendar.date(byAdding: .day, value: delta, to: anchor) ?? anchor
-        } else if rule.string("type") == "monthly", rule["dayOfMonth"] != .null || rule["weekdayOrdinal"] != .null {
+        } else if rule.string("type") == "monthly", rule["dayOfMonth"] != .null || rule["weekdayOrdinal"] != .null || rule["daysOfMonth"] != .null {
             var parts = calendar.dateComponents([.year, .month], from: anchor); parts.day = 1
             guard let month = calendar.date(from: parts) else { return nil }
             var found: Date?
             for offset in 0...400 {
                 guard let target = calendar.date(byAdding: .month, value: offset, to: month), calendar.component(.year, from: target) <= 9999 else { return nil }
-                if let date = Recurrence.monthDate(target, day: rule["dayOfMonth"].integer, weekday: Recurrence.number(rule["weekday"], in: 0...6), ordinal: Recurrence.number(rule["weekdayOrdinal"], in: -1...5), calendar: calendar), date >= anchor { found = date; break }
+                if let date=Recurrence.monthDates(target,rule:rule,fallback:calendar.component(.day,from:anchor),calendar:calendar).first(where:{$0>=anchor}) {found=date;break}
             }
             guard let found else { return nil }; first = found
         } else if rule.string("type") == "yearly", rule["monthOfYear"] != .null {
@@ -383,7 +426,7 @@ enum QuickRecurrenceText {
             }
         }
         if !rule["fromCompletion"].flag {
-            if ["monthly", "yearly"].contains(rule.string("type")), rule["dayOfMonth"] == .null, rule["weekdayOrdinal"] == .null { rule["dayOfMonth"] = .number(Double(calendar.component(.day, from: first))) }
+            if ["monthly", "yearly"].contains(rule.string("type")), rule["dayOfMonth"] == .null, rule["weekdayOrdinal"] == .null, rule["daysOfMonth"] == .null { rule["dayOfMonth"] = .number(Double(calendar.component(.day, from: first))) }
             if rule.string("type") == "yearly", rule["monthOfYear"] == .null { rule["monthOfYear"] = .number(Double(calendar.component(.month, from: first))) }
         }
         if !rule.string("endDate").isEmpty, let end = Dates.parse(rule.string("endDate"), calendar: calendar), first > end { return nil }

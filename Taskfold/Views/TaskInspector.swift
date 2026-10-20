@@ -636,7 +636,7 @@ struct RecurrenceFields: View {
     private func field(_ key: String, _ value: JSON) { var p = pattern.fields; p[key] = value; task["recurrence_pattern"] = .object(p); task["recurrence_end_date"] = .null }
     private func type(_ value: String) {
         var p = pattern.fields
-        for key in ["daysOfWeek", "weekday", "weekdayOrdinal", "dayOfMonth", "monthOfYear"] { p.removeValue(forKey: key) }
+        for key in ["daysOfWeek", "weekday", "weekdayOrdinal", "dayOfMonth", "daysOfMonth", "monthOfYear"] { p.removeValue(forKey: key) }
         p["type"] = .string(value)
         if ["monthly", "yearly"].contains(value), !pattern["fromCompletion"].flag {
             p["dayOfMonth"] = .number(Double(Calendar(identifier: .gregorian).component(.day, from: task.due ?? Date())))
@@ -662,7 +662,7 @@ struct RecurrenceFields: View {
             Text(pattern["fromCompletion"].flag ? "Wait the full interval from completion, then use the next chosen weekday or calendar day." : "Keep the planned rhythm. Missed dates are skipped when you complete the task late.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             if pattern["fromCompletion"].flag, ["monthly", "yearly"].contains(pattern.string("type")) {
                 Toggle("Use completion calendar day", isOn: Binding(get: { followsCompletionDay }, set: { enabled in
-                    for key in ["weekday", "weekdayOrdinal", "dayOfMonth", "monthOfYear"] { field(key, .null) }
+                    for key in ["weekday", "weekdayOrdinal", "dayOfMonth", "daysOfMonth", "monthOfYear"] { field(key, .null) }
                     if !enabled {
                         let calendar = TaskCompletion.calendar(for: task)
                         field("dayOfMonth", .number(Double(calendar.component(.day, from: task.due ?? Date()))))
@@ -679,11 +679,13 @@ struct RecurrenceFields: View {
                 Text("With no weekdays selected, repeat every chosen number of weeks from the task’s date.").font(.caption).foregroundStyle(.secondary)
             }
             if pattern.string("type") == "monthly", !followsCompletionDay {
-                Picker("Repeat on", selection: Binding(get: { pattern["weekdayOrdinal"] != .null }, set: { useWeekday in
-                    field("weekdayOrdinal", useWeekday ? .number(1) : .null)
-                    field("weekday", useWeekday ? .number(Double(Calendar(identifier: .gregorian).component(.weekday, from: task.due ?? Date()) - 1)) : .null)
-                    field("dayOfMonth", useWeekday ? .null : .number(Double(Calendar(identifier: .gregorian).component(.day, from: task.due ?? Date()))))
-                })) { Text("Day of month").tag(false); Text("Weekday of month").tag(true) }.accessibilityIdentifier("repeatMonthlyMode")
+                Picker("Repeat on",selection:Binding(get:{monthlyMode},set:setMonthlyMode)) {
+                    Text("Day of month").tag("day");Text("Multiple dates").tag("dates");Text("Weekday of month").tag("weekday")
+                }.accessibilityIdentifier("repeatMonthlyMode")
+                if monthlyMode=="dates" {
+                    MonthlyDateChoices(days:Set(pattern["daysOfMonth"].list.map(\.integer))) { days in field("daysOfMonth",.array(days.sorted().map{.number(Double($0))})) }
+                    Text("Choose at least one date. Short months use their last day; dates landing on the same day count once.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                }
                 if pattern["weekdayOrdinal"] != .null {
                     Picker("Which", selection: Binding(get: { pattern["weekdayOrdinal"].integer }, set: { field("weekdayOrdinal", .number(Double($0))) })) {
                         ForEach([1,2,3,4,5,-1], id: \.self) { value in Text(Recurrence.ordinals[value] ?? "").tag(value) }
@@ -698,7 +700,7 @@ struct RecurrenceFields: View {
                     ForEach(1...12, id: \.self) { month in Text(DateFormatter().monthSymbols[month - 1]).tag(month) }
                 }.accessibilityIdentifier("repeatMonth")
             }
-            if ["monthly", "yearly"].contains(pattern.string("type")), pattern["weekdayOrdinal"] == .null, !followsCompletionDay {
+            if ["monthly", "yearly"].contains(pattern.string("type")), pattern["weekdayOrdinal"] == .null, pattern["daysOfMonth"] == .null, !followsCompletionDay {
                 RepeatStepper(title: "Day \(Recurrence.number(pattern["dayOfMonth"], in: 1...31) ?? Calendar(identifier: .gregorian).component(.day, from: task.due ?? Date()))", value: Binding(get: { Recurrence.number(pattern["dayOfMonth"], in: 1...31) ?? Calendar(identifier: .gregorian).component(.day, from: task.due ?? Date()) }, set: { field("dayOfMonth", .number(Double($0))) }), range: 1...31, identifier: "repeatDayOfMonth")
             }
             Toggle("End date", isOn: Binding(get: { !pattern.string("endDate").isEmpty }, set: { field("endDate", $0 ? .string(task.string("due_date").isEmpty ? Dates.day(Date()) : task.string("due_date")) : .null); task["recurrence_end_date"] = .null })).accessibilityIdentifier("repeatEndDateEnabled")
@@ -706,16 +708,70 @@ struct RecurrenceFields: View {
             Toggle("Limit occurrences", isOn: Binding(get: { pattern["count"].integer > 0 }, set: { field("count", $0 ? .number(10) : .null) })).accessibilityIdentifier("repeatCountEnabled")
             if pattern["count"].integer > 0 { RepeatStepper(title: "\(pattern["count"].integer) occurrences remaining", value: Binding(get: { pattern["count"].integer }, set: { field("count", .number(Double($0))) }), range: 1...999, identifier: "repeatCount") }
             Text("Completing creates one next occurrence. Shorter months use their last day; months without a fifth chosen weekday are skipped. The occurrence limit includes this task.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            if let date = Dates.next(task, completion: Date()) {
-                Text("If completed today: " + date.formatted(date: .abbreviated, time: .omitted)).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("repeatNextPreview")
+            let dates=Recurrence.preview(task,completion:Date())
+            if let date=dates.first {
+                Text("If completed today: "+previewDate(date)).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("repeatNextPreview")
+                VStack(alignment:.leading,spacing:8) {
+                    Text("Upcoming occurrences").font(.subheadline.weight(.semibold))
+                    ForEach(Array(dates.enumerated()),id:\.offset) { index,day in
+                        Text("\(index+1). "+previewDate(day)).monospacedDigit().accessibilityIdentifier("repeatPreview-\(index)")
+                    }
+                    Text(pattern["fromCompletion"].flag ? "After the first date, this preview assumes each task is completed on its scheduled day. Later completions move the next date." : "Dates follow the planned rhythm. Completing late skips missed dates.").font(.caption).foregroundStyle(.secondary)
+                    if !task.string("due_time").isEmpty {Text("Task time: "+task.string("due_time")+" · "+previewCalendar.timeZone.identifier).font(.caption).foregroundStyle(.secondary)}
+                }.fixedSize(horizontal:false,vertical:true)
             } else { Text("No next occurrence within this rule’s limits.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("repeatNextPreview") }
         }
     }
-    private var followsCompletionDay: Bool { pattern["fromCompletion"].flag && pattern["dayOfMonth"] == .null && pattern["monthOfYear"] == .null && pattern["weekdayOrdinal"] == .null }
+    private var followsCompletionDay: Bool { pattern["fromCompletion"].flag && pattern["dayOfMonth"] == .null && pattern["monthOfYear"] == .null && pattern["weekdayOrdinal"] == .null && pattern["daysOfMonth"] == .null }
+    private var previewCalendar:Calendar {TaskCompletion.calendar(for:task)}
+    private var plannedDay:Int {previewCalendar.component(.day,from:Dates.parse(task.string("due_date"),calendar:previewCalendar) ?? Date())}
+    private var monthlyMode:String {pattern["daysOfMonth"] != .null ? "dates" : pattern["weekdayOrdinal"] != .null ? "weekday" : "day"}
+    private func setMonthlyMode(_ mode:String) {
+        var values=pattern.fields
+        for key in ["dayOfMonth","daysOfMonth","weekday","weekdayOrdinal","daysOfWeek","monthOfYear"] {values.removeValue(forKey:key)}
+        switch mode {
+        case "dates":values["daysOfMonth"] = .array([.number(Double(Recurrence.number(pattern["dayOfMonth"],in:1...31) ?? plannedDay))])
+        case "weekday":values["weekdayOrdinal"] = .number(1);values["weekday"] = .number(Double(previewCalendar.component(.weekday,from:Dates.parse(task.string("due_date"),calendar:previewCalendar) ?? Date())-1))
+        default:values["dayOfMonth"] = .number(Double(pattern["daysOfMonth"].list.compactMap{Recurrence.number($0,in:1...31)}.min() ?? plannedDay))
+        }
+        task["recurrence_pattern"] = .object(values);task["recurrence_end_date"] = .null
+    }
+    private func previewDate(_ date:Date)->String {let formatter=DateFormatter();formatter.calendar=previewCalendar;formatter.timeZone=previewCalendar.timeZone;formatter.dateStyle = .medium;return formatter.string(from:date)}
     private var unit: String {
         let singular = ["daily":"day", "weekly":"week", "monthly":"month", "yearly":"year", "custom":"day"][pattern.string("type")] ?? "interval"
         return pattern["interval"].integer > 1 ? singular + "s" : singular
     }
+}
+
+/// Selected calendar dates, with touch targets and an explicit nonempty choice.
+struct MonthlyDateChoices:View {
+    let days:Set<Int>
+    let change:(Set<Int>)->Void
+    @Environment(\.dynamicTypeSize) private var textSize
+    var body:some View {
+        LazyVGrid(columns:[GridItem(.adaptive(minimum:textSize.isAccessibilitySize ? 88:44),spacing:4)],spacing:8) {
+            ForEach(1...31,id:\.self) { day in
+                let selected=days.contains(day)
+                Button {
+                    var next=days;if selected {next.remove(day)}else{next.insert(day)}
+                    if !next.isEmpty {change(next)}
+                } label: {
+                    Text("\(day)").font(.body.weight(selected ? .semibold:.regular)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
+                        .foregroundStyle(selected ? Color.white:Color.primary).frame(maxWidth:.infinity,minHeight:44)
+                        .background(selected ? Color.taskfold:Color.secondary.opacity(0.1),in:RoundedRectangle(cornerRadius:12)).contentShape(.rect)
+                }.buttonStyle(MonthlyDateButtonStyle())
+                    .accessibilityLabel("Day \(day)").accessibilityValue(selected ? "Selected":"Not selected")
+                    .disabled(selected && days.count==1)
+                    .accessibilityHint(selected && days.count==1 ? "Select another date before removing this one.":"")
+                    .accessibilityIdentifier("repeatMonthDate-\(day)")
+            }
+        }.accessibilityElement(children:.contain).accessibilityLabel("Dates of month")
+    }
+}
+
+/// Preserve readable selected ink when the minimum one-date choice cannot be removed.
+private struct MonthlyDateButtonStyle:ButtonStyle {
+    func makeBody(configuration:Configuration)->some View {configuration.label.opacity(configuration.isPressed ? 0.75:1)}
 }
 
 /// Keep native Mac controls; give iPhone increment/decrement actions full touch targets.
