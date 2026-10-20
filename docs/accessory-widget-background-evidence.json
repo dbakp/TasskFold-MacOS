@@ -7,7 +7,7 @@
   "validation": {
     "macOSWidgetSourceTypecheck": "passed",
     "physicalIOSBuild": "BUILD SUCCEEDED; app and embedded extension strict codesign verification passed",
-    "installedGalleryAfterFix": "not yet verified",
+    "installedGalleryAfterFix": "Accepted actual iOS 27 Simulator Lock Screen gallery in named circular/rectangular preview scope; physical replacement appearance remains unobserved.",
     "privacyGateClosed": false,
     "compiledWidgetCatalog": "8 configurations, 3 entities, 6 enums and app/widget completion metadata verified with matching signing teams",
     "isolatedPhoneInstallation": "succeeded",
@@ -26,5 +26,61 @@
     "wholeCacheEqualsEarlierPrivacyBaseline": false,
     "difference": "Later diagnostic cache contains reschedule-and-return activity, a view order and additional nullable schedule fields. No cache was captured immediately before this replacement, so changes cannot be attributed to the installation. No data rollback performed.",
     "realTaskfoldDataNotAccessed": true
+  },
+  "simulatorGallery": {
+    "device": "iPhone 18 Pro",
+    "os": "iOS 27.0 (24A434)",
+    "realWidgetExtension": true,
+    "sourceRevision": "8c43018 iOS / 641737f Mac widget source unchanged",
+    "resultBundle": "ios-accessory-gallery-focused-v3.xcresult outside repos",
+    "case": "testTodayLockScreenGalleryProvidesBothAccessoryPreviews",
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "structuredRuntimeWarnings": [],
+    "nativeAssertions": [
+      "Real SpringBoard wallpaper customization and installed provider selection",
+      "Both Widget Circular and Widget Rectangular previews available",
+      "No Please adopt warning in the gallery accessibility tree"
+    ],
+    "visualInspection": {
+      "screenshot": "widget-previews/today-lockscreen-gallery-background.png",
+      "sha256": "3374a09b0b6b6a9a815dfd1e302d4d1b1beff02ba10a0ae96fa19f6a7ff54996",
+      "inspected": true,
+      "observed": "Circular 4 due; rectangular Sketch the next big idea on two lines with complete 4 due \u00b7 incl. overdue subtitle. No warning icon or background API warning; preview contents fit.",
+      "accessibilityAttachmentSHA256": "c060aba09480e673f97eccb9071f6cf75ae937d300ed10db9686190b5f050b6b"
+    },
+    "fullWorkspaceJSONEqualsBaseline": true,
+    "baselineSHA256": "e195ab7051a6fbb593c1d3313138931ee4b2c69e668d5655ee803de2e4c9ebd4",
+    "fixtureTasks": 2,
+    "pendingWrites": 0,
+    "freshPreparationFilesByteExact": 64,
+    "retainedFailures": [
+      {
+        "resultBundle": "ios-accessory-gallery-focused-v1.xcresult",
+        "cause": "Harness queried gallery provider as button; actual element is cell.",
+        "optionalVerboseDiagnosticCollectionStoppedAfterTerminalTest": true
+      },
+      {
+        "resultBundle": "ios-accessory-gallery-focused-v2.xcresult",
+        "cause": "Harness expected gallery text as StaticText; actual previews expose host wrapper labels.",
+        "verboseDiagnosticsDisabled": true
+      }
+    ],
+    "warnings": "Duplicate Apple accessibility class and Xcode debugger diagnostics remain in retained console logs; not a universal clean-runtime claim.",
+    "limits": [
+      "Gallery previews, not added timeline/action acceptance",
+      "No actual system-selected privacy or locked authentication route acceptance",
+      "Physical iPhone post-replacement gallery not newly observed"
+    ],
+    "cleanup": {
+      "diagnosticMainAppAlreadyStoppedByTest": true,
+      "simulatorShutdown": true,
+      "originalDeviceHubIPadSelectionRestored": true,
+      "keyboardCaptureRemainedOff": true,
+      "deviceHubQuitRequestedThroughAppMenu": true,
+      "unusedFreshStageRemoved": true,
+      "deviceHubConfirmedStoppedByFreshInventory": true
+    }
   }
 }

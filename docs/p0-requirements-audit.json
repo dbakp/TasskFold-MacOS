@@ -120,7 +120,8 @@
         "mac-widget-normal-workspace-evidence.json",
         "mac-widget-cloud-workspace-evidence.json",
         "mac-widget-planning-aggregate-evidence.json",
-        "physical-widget-privacy-preparation-evidence.json"
+        "physical-widget-privacy-preparation-evidence.json",
+        "accessory-widget-background-evidence.json"
       ],
       "boundary": "Named representative installed Mac routes/layouts now include Day capacity and Inbox reset alongside recorded Today/My list/note/Focus/Pulse journeys. Day capacity has human medium-card readability; corrected isolated Inbox has exact native cold-review/count evidence, not a separately confirmed replacement layout. Named local/two-account cycle remains bounded; second-account AX click is not accepted. Actual physical Today widget now shows its sample while authenticated and hides it when genuinely locked with system widget access Off. Private presentation and locked tap/authentication routing are user-deferred; no full system privacy acceptance. See physical-widget-privacy-preparation-evidence.json."
     },
@@ -326,12 +327,13 @@
     "installationAccepted": true,
     "lockedSampleHidingAccepted": true,
     "furtherChecksUserDeferred": true,
-    "originalSettingRestorationConfirmed": false,
+    "originalSettingRestorationConfirmed": true,
     "nextAction": "User defers further physical checks. Simulator ordinary journeys remain accepted; prior actual Simulator passcode/privacy settings were unusable. Do not repeat those attempts or substitute previews. Resume only the remaining locked tap/authentication route when user chooses; release signing/delivery/old-writer rollout stays separately deferred.",
     "galleryWarningFollowup": {
       "evidence": "accessory-widget-background-evidence.json",
       "repair": "Transparent container background on every Today accessory rendering branch.",
-      "installedGalleryAfterFixAccepted": false
+      "installedGalleryAfterFixAccepted": true,
+      "acceptanceScope": "Actual iOS 27 Simulator circular/rectangular Lock Screen gallery previews; physical replacement rendering and system privacy remain separate."
     }
   }
 }

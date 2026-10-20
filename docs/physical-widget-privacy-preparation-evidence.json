@@ -112,9 +112,10 @@
     "systemManagedWidgetExtensionNotForceKilled": true,
     "diagnosticAppAndWidgetRemainInstalled": true,
     "noSimulatorOrMacTestAppLaunched": true,
-    "deviceSettingRestorationRequestedButNotConfirmed": true,
+    "deviceSettingRestorationRequestedButNotConfirmed": false,
     "preparedProductsAndBuildLogsRetained": true,
-    "privateDeviceIDsAndRawInstallInventoryOutsideRepos": true
+    "privateDeviceIDsAndRawInstallInventoryOutsideRepos": true,
+    "deviceSettingRestorationReportedByUser": true
   },
   "observations": {
     "authenticatedBaseline": {
@@ -137,8 +138,9 @@
     },
     "settingRestoration": {
       "requested": "Restore Lock Screen Widgets to original On setting.",
-      "confirmed": false,
-      "noFurtherPhoneTestingRequested": true
+      "confirmed": true,
+      "noFurtherPhoneTestingRequested": true,
+      "basis": "User replied I did to the request to restore On, then supplied the gallery-warning screenshot. Human-reported restoration; not an independent OS-settings read."
     }
   },
   "dataPreservation": {
