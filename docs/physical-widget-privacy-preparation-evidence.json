@@ -1,0 +1,153 @@
+{
+  "date": "2026-10-20",
+  "status": "installed_physical_widget_locked_title_hidden_safe_route_user_deferred",
+  "scope": "Current independently namespaced iOS app and genuine rectangular Today Lock Screen WidgetKit widget. Authenticated title and actual locked hiding accepted; locked tap/authentication route and restoration observation deferred at user request.",
+  "device": {
+    "model": "iPhone 16 Pro",
+    "os": {
+      "components": [
+        27,
+        0,
+        1,
+        0,
+        0
+      ],
+      "originalComponentsCount": 3,
+      "stringValue": "27.0.1"
+    },
+    "developerModeAlreadyEnabled": true,
+    "paired": true,
+    "identifiersOmitted": true
+  },
+  "preparation": {
+    "script": "Scripts/prepare_device_widget_privacy_test.py",
+    "bundle": "com.dbakp.taskfold.deviceprivacytests",
+    "displayName": "Taskfold Device Privacy Test",
+    "group": "group.com.dbakp.taskfold.deviceprivacytests",
+    "fixture": "Two persisted local-only synthetic tasks, including Privacy check sample. No cloud account or source-account writes.",
+    "isolation": "Independent app container, App Group, URL scheme, session and recovery Keychain service names. Existing Taskfold app is never targeted for install/replacement.",
+    "actualWidgetSourceUnchangedExceptNamespace": true,
+    "verification": {
+      "realWidgetSourceExactExceptNamespace": true,
+      "widgetSourceSHA256": "2da9ce8a2e7cbd2a482e062c6c1c3cc5647f360886e96c4722d5848f00272a9c",
+      "shippingEntitlementsKeepAPNs": true,
+      "signatures": [
+        {
+          "bundle": "com.dbakp.taskfold.deviceprivacytests",
+          "displayName": "Taskfold Device Privacy Test",
+          "valid": true,
+          "group": "group.com.dbakp.taskfold.deviceprivacytests",
+          "profileExpiresUTC": "2026-10-27T11:22:16Z"
+        },
+        {
+          "bundle": "com.dbakp.taskfold.deviceprivacytests.widgets",
+          "displayName": "Taskfold Device Privacy Test",
+          "valid": true,
+          "group": "group.com.dbakp.taskfold.deviceprivacytests",
+          "profileExpiresUTC": "2026-10-27T11:22:18Z"
+        }
+      ],
+      "freshReproduction": {
+        "filesCompared": 64,
+        "allBytesExact": true,
+        "duplicateRemoved": true
+      }
+    },
+    "apsEntitlement": "Omitted only from the independent diagnostic copy because this checks WidgetKit, not remote notifications. Production app retains its Push Notifications and App Group entitlements.",
+    "releaseConfigurationChanged": false
+  },
+  "builds": {
+    "initial": {
+      "log": "ios-device-privacy-build-v1.log outside repos",
+      "result": "BUILD SUCCEEDED",
+      "logSHA256": "058c0dc1556cbe9cc4ede2c1f89fb3a65db77429eaafbd28086c669b72832b35"
+    },
+    "final": {
+      "log": "ios-device-privacy-build-v2.log outside repos",
+      "result": "BUILD SUCCEEDED",
+      "logSHA256": "1873bf53f917ddfe0e111911db9b372c22e2b49c7c2283a7f6d6c303bc992e98",
+      "change": "Distinct widget gallery display name to avoid confusion with the older regular app."
+    },
+    "signaturesAndProfiles": "App and embedded extension strict signature verification passes; real development profiles contain the exact isolated App Group. Personal Team development provisioning succeeded for this diagnostic app; this is not distribution/APNs acceptance.",
+    "warnings": "Compiler and console warnings remain in retained build logs; no universal clean-runtime claim."
+  },
+  "installation": {
+    "accepted": true,
+    "initialAttempt": {
+      "accepted": false,
+      "coreDeviceError": 3002,
+      "userPresentableError": 14,
+      "installerError": 13,
+      "reason": "Three installed free-profile development-app limit."
+    },
+    "retry": {
+      "userInstruction": "Try again",
+      "accepted": true,
+      "sameSignedBuild": true,
+      "otherAppsRemovedByAgent": false,
+      "noInferenceAboutUserSlotChanges": true
+    },
+    "testAppLaunched": true,
+    "widgetInstalled": true,
+    "privacyFullyAccepted": false
+  },
+  "existingApp": {
+    "bundle": "com.dbakp.taskfold",
+    "version": "1.3.0",
+    "build": "18",
+    "filteredAppMetadataIdenticalBeforeAfter": "Before and after the initial failed installation only; no later inventory claim.",
+    "noExistingAppLaunchOrDataWriteRequested": true,
+    "noWholeUserCacheComparisonClaim": true
+  },
+  "nextAction": "User defers further physical checks. Simulator ordinary journeys remain accepted; prior actual Simulator passcode/privacy settings were unusable. Do not repeat those attempts or substitute previews. Resume only the remaining locked tap/authentication route when user chooses; release signing/delivery/old-writer rollout stays separately deferred.",
+  "privacyGuidance": "Use the actual device setting described by Apple, genuine locked/unlocked transitions and real installed widget observations; no in-app preview or simulated redaction as acceptance. Record/restore the original setting and keep passcodes in the OS only.",
+  "references": [
+    "https://developer.apple.com/documentation/widgetkit/creating-a-widget-extension",
+    "https://support.apple.com/guide/iphone/turn-on-lock-screen-features-iph9a2a69136/ios",
+    "system-widget-privacy-prerequisite-evidence.json"
+  ],
+  "cleanup": {
+    "diagnosticHostTerminated": true,
+    "PIDAndExactInstalledExecutableValidatedBeforeTermination": true,
+    "systemManagedWidgetExtensionNotForceKilled": true,
+    "diagnosticAppAndWidgetRemainInstalled": true,
+    "noSimulatorOrMacTestAppLaunched": true,
+    "deviceSettingRestorationRequestedButNotConfirmed": true,
+    "preparedProductsAndBuildLogsRetained": true,
+    "privateDeviceIDsAndRawInstallInventoryOutsideRepos": true
+  },
+  "observations": {
+    "authenticatedBaseline": {
+      "widget": "Rectangular Today Lock Screen widget from Taskfold Device Privacy Test",
+      "padlock": "open",
+      "humanReply": "Sample visible"
+    },
+    "lockedSystemPrivacy": {
+      "originalLockScreenWidgetsSetting": "On",
+      "temporarySetting": "Off",
+      "procedure": "Lock, cover Face ID camera, wake without unlocking; verify closed padlock. Passcode stays on iPhone.",
+      "humanReply": "Was On; sample is hidden",
+      "hiddenSampleAccepted": true
+    },
+    "privatePresentationAndTapRoute": {
+      "verified": false,
+      "userDeferred": true,
+      "userReply": "Let's not test this now, as the iphone can't access many features while locked. Can you not test this with the emulator?",
+      "noPrivatePlaceholderOrRouteClaim": true
+    },
+    "settingRestoration": {
+      "requested": "Restore Lock Screen Widgets to original On setting.",
+      "confirmed": false,
+      "noFurtherPhoneTestingRequested": true
+    }
+  },
+  "dataPreservation": {
+    "ownDiagnosticContainerOnly": true,
+    "wholeSavedJSONEqualBeforeAfter": true,
+    "beforeSHA256": "efc1e2a70583920bc710d0cff135549cf8216b8c8a7162e47215f3d125820871",
+    "afterSHA256": "efc1e2a70583920bc710d0cff135549cf8216b8c8a7162e47215f3d125820871",
+    "tasks": 2,
+    "pendingWrites": 0,
+    "realTaskfoldCacheNotAccessed": true
+  }
+}
