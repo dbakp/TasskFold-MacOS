@@ -126,7 +126,7 @@
     {
       "id": "usability_accessibility_runtime",
       "requirement": "Native capture/edit/plan/complete/Undo/recovery, accessible controls and explicit assessment of actual runtime findings.",
-      "status": "incomplete_remaining_spoken_coverage",
+      "status": "incomplete_ios_spoken_coverage",
       "evidence": [
         "landscape-editor-evidence.json",
         "capture-control-stability-evidence.json",
@@ -137,9 +137,10 @@
         "mac-table-reentry-evidence.json",
         "mac-runtime-followup-evidence.json",
         "mac-voiceover-live-followup-evidence.json",
-        "spoken-completion-feedback-evidence.json"
+        "spoken-completion-feedback-evidence.json",
+        "mac-spoken-filter-planner-evidence.json"
       ],
-      "boundary": "Named Mac autosave/Restore follow-ups and separately corroborated human completion/Undo now have bounded evidence. Missing completion speech reproduced, repaired, built independently on both platforms and human-verified in the fixed isolated Mac app; iOS is build-only for this repair. Wider phone/critical-flow speech remains incomplete. Historical earlier failures/runtime warnings retain their actual limits."
+      "boundary": "Named representative Mac capture/edit/complete/Undo/recovery and filter/planner-validation spoken workflows accepted in their recorded scopes. No every-control or clean-runtime claim. Genuine iOS speech, including the new completion announcement, remains unverified; Mac human reports and iOS builds do not substitute."
     },
     {
       "id": "independent_releases_remote_delivery",
@@ -236,7 +237,7 @@
   },
   "remainingPrerequisites": [
     "Actual supported system privacy controls/locked transition.",
-    "Human spoken-output observations for remaining critical controls.",
+    "Genuine iOS spoken-output observations for the critical workflows, including the new completion announcement.",
     "User-deferred signing/provider/distribution and old-active-writer rollout."
   ],
   "stoppingRule": "Do not invent a gate for every possible combination or substitute easier previews/core tests. Continue distinct actionable risks; resume prerequisite-limited gates when their external state changes.",
@@ -313,5 +314,5 @@
     "planningAggregateEvidence": "mac-widget-planning-aggregate-evidence.json"
   },
   "spokenFollowupUserDeferred": false,
-  "spokenFollowupLatest": "20 October separate human completion and Undo corroborated; missing completion confirmation repaired in Mac ConfirmationBar and independently in iOS UndoToast. Fixed Mac human speech says Completed spoken completion proof; completion/Undo/relaunch state verified. VoiceOver off; apps closed. iOS new speech and broader coverage unverified."
+  "spokenFollowupLatest": "20 October Mac filter invalid-query warning plus planner Minutes/invalid-estimate warning are clearly heard; disabled Save sampled natively, both drafts cancelled, entire cache unchanged across relaunch. Representative named Mac speech scope accepted; genuine iOS speech remains open. VoiceOver off and test app closed."
 }

@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-20",
+  "scope": "Two named Mac critical-validation spoken workflows in the retained isolated p0speechtests app; not universal accessibility or iOS speech acceptance.",
+  "build": "mac-spoken-isolated-v1; source app matches current Mac code under namespace-only replacements as recorded in spoken-completion-feedback-evidence.json",
+  "actualVoiceOverPID": 57361,
+  "filterValidation": {
+    "draftName": "VoiceOver filter draft",
+    "expression": "today AND (",
+    "nativeWarning": "Add a condition after the operator.",
+    "warningIdentifier": "filterValidationError",
+    "saveDisabled": true,
+    "humanNavigation": "Control\u2013Option\u2013Right Arrow from Expression past Clear expression to warning",
+    "humanReport": "Yes, warning is clear",
+    "cancelledWithoutSave": true,
+    "accepted": true
+  },
+  "plannerValidation": {
+    "task": "Press Space to complete this task; isolated starter task",
+    "draftRoute": "Calendar > Day > task Schedule action",
+    "nativeStart": "20 October 2026 09:00; Europe/Copenhagen fixed time",
+    "estimateMinutesDraft": "0",
+    "nativeField": "Minutes; plannerEstimate",
+    "nativeWarning": "Choose an estimate between 1 minute and 7 days.",
+    "warningIdentifier": "plannerEstimateValidation",
+    "saveDisabled": true,
+    "humanReport": "Minutes and the warning are clear",
+    "humanScope": "Minutes field identification and forward navigation to estimate validation; Start/fixed-time controls have native structure evidence but no new human speech assertion.",
+    "cancelledWithoutSave": true,
+    "accepted": true
+  },
+  "preservation": {
+    "wholeLocalCacheCanonicalEqualBeforeAfterCancelAndRelaunch": true,
+    "afterSHA256": "5409d91031f370338390cb328152840aca9cb52a7887d209164ffd90959a4ff4",
+    "baseline": "mac-spoken-filter-planner-2026-10-20/before.json outside repos",
+    "noFilterOrScheduleSaved": true,
+    "originalCalendarModeWeekRestored": true,
+    "returnedToInbox": true,
+    "voiceOverVerifiedOff": true,
+    "mainAppAndScreenReaderProcessesAbsent": true,
+    "welcomeCheckboxUntouched": true
+  },
+  "limits": [
+    "Human reports establish the named speech output; no audio recording or new XCTest execution.",
+    "No code or test source changed for these checks. Existing runtime warning findings are not cleared by this walkthrough.",
+    "Representative Mac capture/edit/complete/Undo/recovery/filter-validation/planner-validation checks now have bounded evidence, not every-control coverage.",
+    "Genuine iOS speech, actual system-selected widget privacy and deferred signing/delivery/rollout remain open."
+  ]
+}
