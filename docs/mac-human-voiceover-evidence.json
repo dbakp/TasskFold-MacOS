@@ -95,5 +95,6 @@
       "sha256": "a5cabb67dd39dc8065ad8f9d4201b64b15292aa5014946fb75e20c1038afd96c"
     }
   ],
-  "subsequentFunctionalKeyboardVerification": "mac-keyboard-undo-evidence.json; original human shortcut outcome remains unchanged"
+  "subsequentFunctionalKeyboardVerification": "mac-keyboard-undo-evidence.json; original human shortcut outcome remains unchanged",
+  "subsequentNamedSpokenFollowups": "mac-voiceover-live-followup-evidence.json; 20 October autosave cue plus actual live Restore activation/cancellation accepted; original historical Undo and other scope limits unchanged"
 }

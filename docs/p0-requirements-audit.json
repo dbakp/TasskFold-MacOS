@@ -135,9 +135,10 @@
         "mac-keyboard-undo-evidence.json",
         "mac-renderer-cloud-replay-evidence.json",
         "mac-table-reentry-evidence.json",
-        "mac-runtime-followup-evidence.json"
+        "mac-runtime-followup-evidence.json",
+        "mac-voiceover-live-followup-evidence.json"
       ],
-      "boundary": "Remaining genuine spoken critical-control coverage. Named renderer cycles are fixed; scoped table/QoS framework findings remain risks. No blanket clean-runtime or every-control speech claim."
+      "boundary": "Named Mac autosave-cue and exact recovery activation/cancellation spoken follow-ups accepted 20 October with actual VoiceOver engine, human reports, live picker and final restored focus corroborated. Original manual spoken Undo is not retroactively accepted; broader critical spoken workflows/phone coverage remain incomplete. Renderer repair and recorded platform risks keep their separate scopes."
     },
     {
       "id": "independent_releases_remote_delivery",
@@ -311,5 +312,5 @@
     "planningAggregateEvidence": "mac-widget-planning-aggregate-evidence.json"
   },
   "spokenFollowupUserDeferred": false,
-  "spokenFollowupLatest": "User returned 20 October; no autosave cue heard, Restore not attempted; VoiceOver finally verified off. No new speech acceptance."
+  "spokenFollowupLatest": "20 October actual VoiceOver engine running; human clearly heard autosave cue and Restore button; live picker sampled before human Escape, then focus/announcement correctly returned to Restore. Two named Mac follow-ups accepted; VoiceOver restored off. Broader speech acceptance remains bounded."
 }
