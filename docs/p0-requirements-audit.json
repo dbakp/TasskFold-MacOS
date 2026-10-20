@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-13",
+  "date": "2026-10-20",
   "objectiveAchieved": false,
   "scope": "Original Todoist P0 plus productive widgets for the two independently owned Apple apps. Existing evidence audit reconciled with subsequent native widget acceptance; historical result bundles below are retained, not newly executed.",
   "requirements": [
@@ -106,7 +106,7 @@
     {
       "id": "widgets",
       "requirement": "Twelve productive kinds, stable per-instance configuration, useful routes/actions, durable completion, privacy/account isolation and readable installed hosts.",
-      "status": "incomplete_mac_host_and_system_privacy",
+      "status": "incomplete_system_privacy",
       "evidence": [
         "widget-host-evidence.json",
         "tablet-mylist-evidence.json",
@@ -118,9 +118,10 @@
         "widget-completion-expiry-evidence.json",
         "widget-record-route-evidence.json",
         "mac-widget-normal-workspace-evidence.json",
-        "mac-widget-cloud-workspace-evidence.json"
+        "mac-widget-cloud-workspace-evidence.json",
+        "mac-widget-planning-aggregate-evidence.json"
       ],
-      "boundary": "Named Today/My list/note/Focus/Pulse Mac workflows, local leave/return and local \u2192 two existing authenticated accounts \u2192 local cycle accepted within their receipts. Direct desktop text verifies isolated content and exact return; first-account My list safe cold route accepted. Second-account AX click did not launch. Remaining representative planning/aggregate routes/readable layouts and actual host-selected privacy remain; avoid every-combination gates."
+      "boundary": "Named representative installed Mac routes/layouts now include Day capacity and Inbox reset alongside recorded Today/My list/note/Focus/Pulse journeys. Day capacity has human medium-card readability; corrected isolated Inbox has exact native cold-review/count evidence, not a separately confirmed replacement layout. Named local/two-account cycle remains bounded; second-account AX click is not accepted. Actual host-selected system privacy remains open. No every-combination claim or gate."
     },
     {
       "id": "usability_accessibility_runtime",
@@ -232,7 +233,6 @@
     "versionsOrRolloutFlagsChanged": false
   },
   "remainingPrerequisites": [
-    "Supported interaction surface for remaining distinct installed Mac widget configuration/actions; text reads are automated.",
     "Actual supported system privacy controls/locked transition.",
     "Human spoken-output observations for remaining critical controls.",
     "User-deferred signing/provider/distribution and old-active-writer rollout."
@@ -306,7 +306,10 @@
     "desktopActionAutomationDiagnostic": "mac-widget-desktop-automation-evidence.json",
     "desktopTextReadableActionsBlocked": true,
     "experimentalDesktopTestRemoved": true,
-    "fullLocalCacheAndRetainedHostStillExact": true
+    "fullLocalCacheAndRetainedHostStillExact": true,
+    "representativePlanningAggregateAccepted": true,
+    "planningAggregateEvidence": "mac-widget-planning-aggregate-evidence.json"
   },
-  "spokenFollowupUserDeferred": true
+  "spokenFollowupUserDeferred": false,
+  "spokenFollowupLatest": "User returned 20 October; no autosave cue heard, Restore not attempted; VoiceOver finally verified off. No new speech acceptance."
 }

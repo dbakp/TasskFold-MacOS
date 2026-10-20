@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-20",
+  "scope": "Representative installed medium Mac planning and aggregate widget routes, human readability and full local-workspace preservation. Retained isolated v10 build; no new XCTest execution or universal widget matrix.",
+  "hostBundle": "com.dbakp.taskfold.mac.p0widgethosts",
+  "hostBuild": "BuildCache/mac-widget-host-v10/Build/Products/Debug/Taskfold.app; retained unchanged",
+  "dayCapacity": {
+    "humanReport": "Both readable; clicked Day capacity",
+    "installedKind": "TaskfoldDayCapacity",
+    "installedText": "Day capacity Today 8h whole day after estimates Working, 8h Calendar, \u2014 Tasks, 0m All planned tasks estimated \u00b7 1 overdue outside plan Calendar not included TASKFOLD",
+    "mainAppConfirmedQuitBeforeClick": true,
+    "nativeDestination": "Calendar; selected Day; Tuesday, 20 Oct",
+    "nativeCapacity": "0 min estimated \u00b7 0 without estimates",
+    "nativeWorkingCapacity": "480 min working day \u00b7 480 min after task estimates",
+    "nativeCalendarState": "Calendar busy time is not connected.",
+    "accepted": "Cold route to matching current-day planner; medium card readability confirmed by human; unknown calendar coverage stays explicit."
+  },
+  "inboxReset": {
+    "initialSelectionExcluded": "First Inbox reset instance belonged to regular com.dbakp.taskfold; no click or data mutation requested on it.",
+    "humanCorrectedReport": "Added test widget and clicked Review",
+    "installedKind": "TaskfoldInboxReset",
+    "installedOwner": "widget-local:com.dbakp.taskfold.mac.p0widgethosts:com.dbakp.taskfold.mac.p0widgethosts.widgets:TaskfoldInboxReset",
+    "installedText": "Inbox reset 1 open in Inbox Keep the workshop notes 0 priorities \u00b7 1 without dates Review all 1 TASKFOLD",
+    "mainAppConfirmedQuitBeforeClick": true,
+    "nativeDestination": "Review Inbox sheet over Inbox",
+    "nativeProgress": "0 reviewed \u00b7 1 left; Captured batch 0 of 1 settled",
+    "nativeTask": "Keep the workshop notes",
+    "nativeControls": [
+      "Move to project",
+      "Edit details",
+      "Complete",
+      "Keep in Inbox",
+      "Close"
+    ],
+    "closedWithoutDecision": true,
+    "accepted": "Correct isolated installed cold review route, count and batch; review closes to Inbox with original task.",
+    "layoutLimit": "Initial combined readability report preceded replacement of the regular-app Inbox instance. No separate human readability assertion for the replacement; its full text is present in AX. Representative Mac readable-layout acceptance uses Day capacity plus previously recorded kinds, not every-kind coverage."
+  },
+  "voiceOverAttempt": {
+    "humanReports": [
+      "VoiceOver does not seem to be on",
+      "Yes, speech is on",
+      "No / different speech",
+      "Nothing"
+    ],
+    "observed": "Initially Settings On but only Quickstart process present; after reset and manual user start, later final Settings Off and no screen-reader process. The intended hint was not heard.",
+    "hintSpokenAccepted": false,
+    "restoreActivationAttemptedThisSession": false,
+    "appAccessibilityDefectInferred": false,
+    "finalVoiceOverSetting": "off",
+    "priorQuickstartProcessRetained": true
+  },
+  "preservation": {
+    "wholeLocalCacheCanonicalEqual": true,
+    "wholeLocalCacheByteEqual": false,
+    "baseline": "mac-fast-human-check-2026-10-20/local-before.json outside repos",
+    "afterSHA256": "80598bb1ab4f50af9ceebcf34a9e9842d88ed55e562fe8a6b5fad0f442fa3975",
+    "finalMainAppProcessCount": 0,
+    "realTodoistOrProductionWorkspaceChanged": false
+  },
+  "acceptanceBoundary": "Closes the remaining named representative Mac planning/aggregate installed-host group. Existing bounded account/action and other-family limits remain recorded; actual host-selected system privacy, remaining genuine speech and user-deferred signing/delivery/rollout remain open."
+}
