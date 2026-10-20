@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-20",
+  "scope": "Prune only disposable build intermediates and indexes after finished acceptance tests. No app source, final product, result bundle or workspace data deleted.",
+  "liveXcodebuildBeforeCleanup": false,
+  "deleted": [
+    {
+      "path": "BuildCache/ios-external-backup-client-v1/Index.noindex",
+      "bytes": 40531024
+    },
+    {
+      "path": "BuildCache/ios-external-backup-client-v1/SDKStatCaches.noindex",
+      "bytes": 1616564
+    },
+    {
+      "path": "BuildCache/ios-external-provider-replay-v3/SDKStatCaches.noindex",
+      "bytes": 1616564
+    },
+    {
+      "path": "BuildCache/ios-widget-identity-diagnostic-v1/Build/Intermediates.noindex",
+      "bytes": 338727839
+    },
+    {
+      "path": "BuildCache/ios-widget-identity-diagnostic-v1/Index.noindex",
+      "bytes": 49397600
+    },
+    {
+      "path": "BuildCache/ios-widget-identity-diagnostic-v1/ModuleCache.noindex",
+      "bytes": 45741771
+    },
+    {
+      "path": "BuildCache/ios-widget-identity-diagnostic-v1/SDKStatCaches.noindex",
+      "bytes": 1616564
+    },
+    {
+      "path": "BuildCache/mac-provider-read-v1/Build/Intermediates.noindex",
+      "bytes": 250894996
+    },
+    {
+      "path": "BuildCache/mac-provider-read-v1/Index.noindex",
+      "bytes": 46067264
+    },
+    {
+      "path": "BuildCache/mac-provider-read-v1/ModuleCache.noindex",
+      "bytes": 28960926
+    },
+    {
+      "path": "BuildCache/mac-provider-read-v1/SDKStatCaches.noindex",
+      "bytes": 15291804
+    },
+    {
+      "path": "BuildCache/mac-widget-cloud-driver-v1/Index.noindex",
+      "bytes": 34596500
+    },
+    {
+      "path": "BuildCache/mac-widget-cloud-driver-v1/ModuleCache.noindex",
+      "bytes": 21260952
+    },
+    {
+      "path": "BuildCache/mac-widget-cloud-driver-v1/SDKStatCaches.noindex",
+      "bytes": 15291804
+    },
+    {
+      "path": "BuildCache/mac-widget-host-v10/Build/Intermediates.noindex",
+      "bytes": 87370899
+    },
+    {
+      "path": "BuildCache/mac-widget-host-v10/Index.noindex",
+      "bytes": 32962252
+    },
+    {
+      "path": "BuildCache/mac-widget-host-v10/ModuleCache.noindex",
+      "bytes": 14672353
+    },
+    {
+      "path": "BuildCache/mac-widget-host-v10/SDKStatCaches.noindex",
+      "bytes": 15291804
+    }
+  ],
+  "bytesRemoved": 1041909480,
+  "retainedProductsExact": true,
+  "retainedProducts": {
+    "BuildCache/ios-calendar-tablet/Build/Products": {
+      "files": 111,
+      "sha256": "08aead581f41e096f4a5a96da7167f687452d76a482f96aede78c3774c85fc2f"
+    },
+    "BuildCache/ios-external-backup-client-v1/Build/Products": {
+      "files": 74,
+      "sha256": "0f969b2b920b52c1ca178156e94066fdea62a307ed41baab0c54c78dea118316"
+    },
+    "BuildCache/ios-external-provider-replay-v3/Build/Products": {
+      "files": 24,
+      "sha256": "9e328612a2af36fa1af6702f91f8af5d1cc7917045f7720268d22a1ed49c4985"
+    },
+    "BuildCache/ios-first-import/Build/Products": {
+      "files": 71,
+      "sha256": "f56c0e7ea6c2674730bbf2b1e95334ba3421a49b8ca25de6b90547d9c4dedc2f"
+    },
+    "BuildCache/ios-live-ui/Build/Products": {
+      "files": 80,
+      "sha256": "819dec3cd900aa18c343d7b250d36fe9e6ba21cfbe4d579713400f1d26c656f4"
+    },
+    "BuildCache/ios-provider/Build/Products": {
+      "files": 55,
+      "sha256": "a6286b94baad36d926bb858361e7f3a03003e92b5d4b031bd6b1583f5444099f"
+    },
+    "BuildCache/ios-widget-identity-diagnostic-v1/Build/Products": {
+      "files": 71,
+      "sha256": "0d7d0122c67182d0706e291211f14cec5aea66ab07acbfb40f17fe545840c252"
+    },
+    "BuildCache/mac-calendar-v3/Build/Products": {
+      "files": 15,
+      "sha256": "20ebeadea778205c3b776dc7cdc2e89379e7628d3c26d8cf8679198bf86f4772"
+    },
+    "BuildCache/mac-focus-contrast/Build/Products": {
+      "files": 1,
+      "sha256": "48d96fb96256a90948adee97eb16f6fc8e6f0a52485ea76c7048be2d7f3aec92"
+    },
+    "BuildCache/mac-grammar/Build/Products": {
+      "files": 27,
+      "sha256": "835c69624ef0858c56e3fcf96ab8ebfaf764f354ef6bbdb7e8bee333ac268909"
+    },
+    "BuildCache/mac-notification-v7/Build/Products": {
+      "files": 15,
+      "sha256": "5cffa74d6a2188dfa9a5a527da463800f010248ccc4601b9cf0be714b53198b9"
+    },
+    "BuildCache/mac-provider-read-v1/Build/Products": {
+      "files": 27,
+      "sha256": "7a6efce874f45e969367d5be7341da4f5150a3c80145e31c146fb48ad052918e"
+    },
+    "BuildCache/mac-selection-focus/Build/Products": {
+      "files": 1,
+      "sha256": "516a70f5a77f5606e5572c1a9fce5ff9fb30cd588e389fc47dc08e7440320d33"
+    },
+    "BuildCache/mac-signed-acceptance/Build/Products": {
+      "files": 39,
+      "sha256": "b760e6dbb7466bc4f0e44f5a810ed762265a2b4bc4260609c71a10fa65399637"
+    },
+    "BuildCache/mac-ui/Build/Products": {
+      "files": 27,
+      "sha256": "8f0d127b88f7161fb64ecb9f067c4e9340291b31e613f56d8abe97697bc2f6d4"
+    },
+    "BuildCache/mac-widget-cloud-driver-v1/Build/Products": {
+      "files": 20,
+      "sha256": "fed63d0b6c6dd0fbcea795008b372302dcff9e1d038c6adf58dbebc64f1eb7b5"
+    },
+    "BuildCache/mac-widget-host-v10/Build/Products": {
+      "files": 33,
+      "sha256": "1df14954afc5cb5dd55c5e85803fa529387ad2ac292c6caf82b5cf91a5234b7a"
+    }
+  },
+  "remaining": "Actual system widget privacy, genuine remaining speech and deferred signing/delivery/rollout remain incomplete."
+}
