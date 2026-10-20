@@ -133,14 +133,14 @@
     "v7PickerStillHittableAndHostNotHittable": true,
     "noFileSelected": true,
     "filterDraftCancelledWithEntireCacheExactBeforePicker": true,
-    "latestResultBundle": "ios-voiceover-human-picker-v1.xcresult outside repos",
+    "latestResultBundle": "ios-voiceover-fixed-human-v1.xcresult outside repos",
     "latestCasePassed": false,
     "actualPickerStillHittable": false,
     "hostRestoreControlNotHittable": false,
     "actualUIKitCancellationCallbacks": [
       {
         "requestAccepted": true,
-        "timestamp": 1792492248.962984
+        "timestamp": 1792493439.7969642
       }
     ],
     "nativeInputAttempts": [
@@ -149,9 +149,9 @@
       "Control-Option-Space and Escape keyboard commands"
     ],
     "noTaskfoldCancellationGuardDefectEstablished": true,
-    "humanFollowup": "Human Cancel now reaches the actual accepted UIKit callback with VoiceOver on; the picker dismisses and Restore becomes hittable. Actual returned speech is Settings Back button, outside the recovery-specific test expectation. The test therefore fails and teardown deliberately closes the app and disables VoiceOver. No crash is established. No file was selected; post-test inspection finds both original fixture tasks open, no pending writes, and the cache modification time predates picker readiness. Whole-cache equality and relaunch assertions were not reached in this case; retain that limitation.",
+    "humanFollowup": "Human testing reproduced Settings Back button on the first focus repair, while proving whole-cache equality after actual Cancel with VoiceOver on. Native read-only lifecycle tracing then showed sheet dismissal preceding the Cancel callback in both attempts, so the first implementation never emitted a focus request. Current iOS source waits for both events in either order and consumes the request once, retaining workspace and presentation guards. The strengthened native Cancel/retry/relaunch case passes 1/0/0 with no structured runtime warnings: two accepted native callbacks, two focus events and two Restore-binding applications, plus full cache equality after each Cancel and ordinary relaunch. VoiceOver is off in that regression; a current-build spoken return is still unverified.",
     "actualReturnedSpeech": "Settings Back button",
-    "humanReported": "It took a while, but it cancelled it and then the app seems to have closed.",
+    "humanReported": "It said Settings, back button, voiceover off",
     "humanRunInspection": {
       "ready": {
         "pickerHittable": true,
@@ -192,7 +192,9 @@
       "relaunchNotReached": true
     },
     "returnedContextAssertionPassed": false,
-    "sameCaseWholeCacheEqualityAndRelaunchReached": false
+    "sameCaseWholeCacheEqualityAndRelaunchReached": false,
+    "wholeCacheEqualityAfterHumanCancelPassed": true,
+    "sameCaseRelaunchReached": false
   },
   "failedAttempts": [
     {
@@ -281,5 +283,5 @@
     "shippingAppSourceUnchanged": true,
     "namespaceAndReadOnlyProbeReproductionExact": true
   },
-  "subsequentRestoreFocusRepair": "ios-restore-focus-evidence.json; current iOS source requests VoiceOver focus after native Cancel dismissal, with workspace/presentation guards. Ordinary native Cancel/retry/whole-cache relaunch passes 1/0/0. Current-build spoken return remains unverified; old human failure retained."
+  "subsequentRestoreFocusRepair": "ios-restore-focus-order-evidence.json; first focus repair failed human speech; actual callback ordering defect now repaired with two observed focus-event and binding deliveries plus native retry/cache/relaunch checks. No current-build spoken success claim."
 }

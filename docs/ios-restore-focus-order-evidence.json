@@ -1,0 +1,207 @@
+{
+  "date": "2026-10-20",
+  "status": "ordering_race_repaired_native_focus_delivery_verified_spoken_followup_open",
+  "humanReproduction": {
+    "bundle": "ios-voiceover-fixed-human-v1.xcresult outside repos",
+    "testPassed": false,
+    "userReport": "It said Settings, back button, voiceover off",
+    "actualReturnedSpeech": "Settings Back button",
+    "actualNativeCallback": {
+      "events": [],
+      "observerInstalled": true,
+      "pickerCancellations": [
+        {
+          "requestAccepted": true,
+          "timestamp": 1792493439.7969642
+        }
+      ],
+      "source": "UIAccessibility.announcementDidFinishNotification",
+      "voiceOverRunning": true
+    },
+    "wholeCacheEqualityAfterCancelPassed": true,
+    "preservedWorkspaceAttachmentSHA256": "3e0a917cb4914eabaea65715975d586e60aff02b232e042056ff1ed771441252",
+    "sameCaseRelaunchReached": false,
+    "voiceOverOffAndAppTermination": "Intentional XCTest teardown after the spoken-return assertion failed, not evidence of an app crash."
+  },
+  "baselineLifecycle": {
+    "bundle": "ios-focus-lifecycle-native-v1.xcresult outside repos",
+    "scope": "Two real native cancellations with VoiceOver off. Existing cache checks passed, but the trace reveals no focus event or binding application. This is not a spoken test.",
+    "actualObservation": {
+      "events": [],
+      "focusLifecycle": [
+        {
+          "event": "Sheet dismissal",
+          "flags": {
+            "busy": false,
+            "hasCancelledWorkspace": false,
+            "hasMessage": false,
+            "hasPicker": false,
+            "hasReview": false,
+            "sameWorkspace": false
+          },
+          "timestamp": 1792493624.32337,
+          "voiceOverRunning": false
+        },
+        {
+          "event": "Cancelled workspace captured",
+          "flags": {},
+          "timestamp": 1792493624.326061,
+          "voiceOverRunning": false
+        },
+        {
+          "event": "Sheet dismissal",
+          "flags": {
+            "busy": false,
+            "hasCancelledWorkspace": false,
+            "hasMessage": false,
+            "hasPicker": false,
+            "hasReview": false,
+            "sameWorkspace": false
+          },
+          "timestamp": 1792493632.686374,
+          "voiceOverRunning": false
+        },
+        {
+          "event": "Cancelled workspace captured",
+          "flags": {},
+          "timestamp": 1792493632.688519,
+          "voiceOverRunning": false
+        }
+      ],
+      "observerInstalled": true,
+      "pickerCancellations": [
+        {
+          "requestAccepted": true,
+          "timestamp": 1792493624.325309
+        },
+        {
+          "requestAccepted": true,
+          "timestamp": 1792493632.687891
+        }
+      ],
+      "source": "UIAccessibility.announcementDidFinishNotification",
+      "voiceOverRunning": false
+    },
+    "finding": "SwiftUI onDismiss precedes native Cancel capture by about 2\u20133 ms in both observed attempts. The previous implementation cleared/read the pending owner before the callback supplied it."
+  },
+  "implementation": {
+    "repository": "TaskFold-iOS",
+    "source": "Taskfold/Views/BackupTools.swift",
+    "sourceSHA256": "c15b5f224fe8cf17047c7f1f56cb14b09bd61afd18c62508ba800cad523caae9",
+    "behavior": "Both native Cancel and completed sheet dismissal call the same readiness check. It requires both events, a matching workspace and no active picker/review/error/busy operation, then clears the pending owner and emits one focus request. Opening a new picker resets dismissal readiness.",
+    "noTimedRetry": true,
+    "persistedDataChanged": false,
+    "MacSourceChanged": false,
+    "MacReason": "Native Mac already returns to Restore, human-confirmed and AX-verified in mac-voiceover-live-followup-evidence.json."
+  },
+  "currentNativeRegression": {
+    "build": "ios-focus-order-build-v1.log; TEST BUILD SUCCEEDED",
+    "bundle": "ios-focus-order-native-v1.xcresult outside repos",
+    "case": "testIOS27NativePickerCancelRetryPreservesWorkspace",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0,
+    "voiceOverEnabled": false,
+    "focusEventsEmitted": 2,
+    "restoreBindingApplications": 2,
+    "wholeCacheEqualityAfterEachCancelAndRelaunch": true,
+    "actualObservation": {
+      "events": [],
+      "focusLifecycle": [
+        {
+          "event": "Sheet dismissal",
+          "flags": {
+            "busy": false,
+            "hasCancelledWorkspace": false,
+            "hasMessage": false,
+            "hasPicker": false,
+            "hasReview": false,
+            "sameWorkspace": false
+          },
+          "timestamp": 1792493828.005268,
+          "voiceOverRunning": false
+        },
+        {
+          "event": "Cancelled workspace captured",
+          "flags": {},
+          "timestamp": 1792493828.008605,
+          "voiceOverRunning": false
+        },
+        {
+          "event": "Restore focus event emitted",
+          "flags": {},
+          "timestamp": 1792493828.009249,
+          "voiceOverRunning": false
+        },
+        {
+          "event": "Restore focus binding applied",
+          "flags": {},
+          "timestamp": 1792493828.014979,
+          "voiceOverRunning": false
+        },
+        {
+          "event": "Sheet dismissal",
+          "flags": {
+            "busy": false,
+            "hasCancelledWorkspace": false,
+            "hasMessage": false,
+            "hasPicker": false,
+            "hasReview": false,
+            "sameWorkspace": false
+          },
+          "timestamp": 1792493835.9480228,
+          "voiceOverRunning": false
+        },
+        {
+          "event": "Cancelled workspace captured",
+          "flags": {},
+          "timestamp": 1792493835.951443,
+          "voiceOverRunning": false
+        },
+        {
+          "event": "Restore focus event emitted",
+          "flags": {},
+          "timestamp": 1792493835.952075,
+          "voiceOverRunning": false
+        },
+        {
+          "event": "Restore focus binding applied",
+          "flags": {},
+          "timestamp": 1792493835.956973,
+          "voiceOverRunning": false
+        }
+      ],
+      "observerInstalled": true,
+      "pickerCancellations": [
+        {
+          "requestAccepted": true,
+          "timestamp": 1792493828.0077682
+        },
+        {
+          "requestAccepted": true,
+          "timestamp": 1792493835.950498
+        }
+      ],
+      "source": "UIAccessibility.announcementDidFinishNotification",
+      "voiceOverRunning": false
+    },
+    "limits": "Binding delivery is not a real system spoken-focus result. The observed dismissal-first ordering is tested; no universal ordering/platform matrix claim."
+  },
+  "instrumentation": {
+    "reproduction": "Scripts/prepare_voiceover_ui_test.py",
+    "readOnlyCopyOnly": true,
+    "observer": "Scripts/VoiceOverAnnouncementProbe.swift",
+    "noShippingProbeOrFakeCallback": true,
+    "scope": "Records actual callback/dismissal/focus-event/binding execution in the copied Simulator app. Does not post announcements, synthesize focus or invoke native callbacks. Compiler and console warnings remain in retained logs."
+  },
+  "remaining": "Genuine current-build VoiceOver Cancel/returned-focus and same-case relaunch acceptance remains open. No repeat human check requested in this session. System-selected widget privacy and user-deferred signing/provider/distribution/old-writer rollout remain open.",
+  "cleanup": {
+    "voiceOverOffInTestTeardown": true,
+    "testAppTerminatedInTeardown": true,
+    "dedicatedSimulatorShutdown": true,
+    "captureKeyboardRestoredOff": true,
+    "deviceHubWindow": "Opened for human check. Mac later locked; restoring its original selected iPad/closing its window was unavailable to computer use. No unlock requested. The Simulator itself is shut down and no Taskfold main test process remains.",
+    "currentIncrementalBuildAndEvidenceRetained": true
+  }
+}

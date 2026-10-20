@@ -1,6 +1,6 @@
 {
   "date": "2026-10-20",
-  "status": "implemented_native_cancel_regression_passed_spoken_return_unverified",
+  "status": "historical_first_focus_repair_reproduced_ordering_defect_superseded",
   "problem": "Human VoiceOver Cancel succeeded, but iOS returned Settings Back button rather than the recovery control. The failed test then intentionally quit the app in teardown.",
   "implementation": {
     "repository": "TaskFold-iOS",
@@ -56,7 +56,7 @@
   "spokenVerification": {
     "accepted": false,
     "latestActualHumanResult": "Old build: accepted native Cancel, usable host, Settings Back button utterance; ios-voiceover-human-picker-v1.xcresult fails its recovery-specific return assertion.",
-    "currentBuild": "No subsequent live VoiceOver Cancel/return acceptance claim. Prepared guarded manual case now records whole-cache preservation before checking returned speech, so speech failure cannot hide that diagnostic.",
+    "currentBuild": "This first focus repair was subsequently human-tested and returned Settings Back button again. The whole-cache equality assertion passed before the speech failure. See subsequent ordering repair evidence for the current source.",
     "manualCase": "testIOS27VoiceOverManualPickerCancelPreservesWorkspace",
     "manualOptIn": "TASKFOLD_MANUAL_VOICEOVER_PICKER_CANCEL=1; requires genuine human callback, never synthesizes success."
   },
@@ -75,5 +75,6 @@
     "Current-build genuine spoken recovery return acceptance.",
     "Actual system-selected widget privacy in an environment exposing the required controls.",
     "User-deferred provider/APNs signing/distribution and supported-writer rollout."
-  ]
+  ],
+  "subsequentOrderingRepair": "ios-restore-focus-order-evidence.json; first repair failed the human spoken check. The cancellation/dismissal ordering defect is now repaired and native focus-binding delivery/retry/relaunch pass. Spoken confirmation on the newer source remains open."
 }
