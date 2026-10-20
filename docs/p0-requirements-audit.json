@@ -138,9 +138,10 @@
         "mac-runtime-followup-evidence.json",
         "mac-voiceover-live-followup-evidence.json",
         "spoken-completion-feedback-evidence.json",
-        "mac-spoken-filter-planner-evidence.json"
+        "mac-spoken-filter-planner-evidence.json",
+        "ios-voiceover-service-evidence.json"
       ],
-      "boundary": "Named representative Mac capture/edit/complete/Undo/recovery and filter/planner-validation spoken workflows accepted in their recorded scopes. No every-control or clean-runtime claim. Genuine iOS speech, including the new completion announcement, remains unverified; Mac human reports and iOS builds do not substitute."
+      "boundary": "Named representative Mac capture/edit/complete/Undo/recovery and filter/planner-validation speech accepted in recorded scopes. Genuine iOS 27 service speech accepts an unsaved capture title/Add task button and planner Minutes/invalid-estimate warning, with complete-cache preservation through relaunch. iOS activation/save, editing, completion announcement, Undo and recovery speech remain open. No every-control or clean-runtime claim."
     },
     {
       "id": "independent_releases_remote_delivery",
@@ -314,5 +315,5 @@
     "planningAggregateEvidence": "mac-widget-planning-aggregate-evidence.json"
   },
   "spokenFollowupUserDeferred": false,
-  "spokenFollowupLatest": "20 October Mac filter invalid-query warning plus planner Minutes/invalid-estimate warning are clearly heard; disabled Save sampled natively, both drafts cancelled, entire cache unchanged across relaunch. Representative named Mac speech scope accepted; genuine iOS speech remains open. VoiceOver off and test app closed."
+  "spokenFollowupLatest": "20 October: actual iOS 27 Simulator speech exposes a missing Minutes field name. Explicit label repaired independently in both apps. Final native speech tests pass 2/0/0 with entire saved cache unchanged after discard/Cancel/relaunch; VoiceOver off and Simulator shutdown. Remaining iOS activation/save/edit/Complete/Undo/recovery speech remains open. Warnings and failed attempts retained."
 }

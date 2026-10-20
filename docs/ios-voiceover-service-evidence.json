@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-20",
+  "scope": "Genuine iOS 27 Simulator VoiceOver output for named controls; critical-flow speech acceptance remains incomplete.",
+  "api": "Public XCUIDevice.shared.voiceOverService, Xcode 27.0 (27A266a)",
+  "source": "https://developer.apple.com/documentation/xcuiautomation/xcuivoiceoverservice",
+  "isolation": {
+    "appBundle": "com.dbakp.taskfold.voiceovertests",
+    "uiTestBundle": "com.dbakp.taskfold.voiceovertests.uitests",
+    "appGroup": "group.com.dbakp.taskfold.voiceovertests",
+    "fixture": "Synthetic local ui-testing.json only; no real account",
+    "reproduction": "iOS Scripts/prepare_voiceover_ui_test.py; prepared copy byte-matches tested stage"
+  },
+  "device": {
+    "name": "iPhone 18 Pro",
+    "os": "iOS 27.0 (24A434)",
+    "simulator": true
+  },
+  "capture": {
+    "test": "testIOS27VoiceOverReadsNativeCaptureControls",
+    "resultBundle": "ios-voiceover-capture-v2.xcresult outside repos",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0,
+    "actualSpeech": {
+      "addTaskButtonSpoken": true,
+      "source": "XCUIVoiceOverService.Output.utterance",
+      "systemVersion": "27.0",
+      "titleSpoken": true,
+      "utterances": [
+        "Taskfold VoiceOver Test VoiceOver simulator draft Text field Dou",
+        "Date Button Pop-up button Double-tap to activate the picker",
+        "Priority Button Pop-up button Double-tap to activate the picker",
+        "Inbox Button Pop-up button Double-tap to activate the picker",
+        "More options Button",
+        "Add task Button"
+      ],
+      "voiceOverEnabled": true
+    },
+    "entireSavedCacheEqualAfterDiscardAndRelaunch": true,
+    "voiceOverRestoredOff": true,
+    "firstAttempt": {
+      "resultBundle": "ios-voiceover-capture-v1.xcresult outside repos",
+      "failed": 1,
+      "reason": "Speech assertions passed; relaunch task assertion searched default Today instead of Inbox. Corrected only test navigation and reran."
+    }
+  },
+  "limits": [
+    "Spoken controls are genuine service utterances, not AX label assertions or injected enabled flags.",
+    "Unsaved capture reading does not establish VoiceOver activation/save, editing, completion announcement, Undo or recovery speech.",
+    "An OS duplicate UIAccessibilityLoaderWebShared class console warning is retained; zero structured runtime warnings is not a universal clean-runtime assertion.",
+    "Shipping signing/capabilities and real workspaces are unchanged."
+  ],
+  "plannerReproduction": {
+    "resultBundle": "ios-voiceover-planner-v1.xcresult outside repos",
+    "passed": 0,
+    "failed": 1,
+    "actualEstimateSpeech": "0 Text field Double-tap to edit.",
+    "minutesFieldSpoken": false,
+    "actualWarningSpeech": "Choose an estimate between 1 minute and 7 days.",
+    "validationSpoken": true,
+    "saveDisabled": true,
+    "repair": "Each independently owned HourlyPlanner gives the field accessibilityLabel(\"Minutes\"); layout/validation/persistence unchanged."
+  },
+  "testCleanupFailure": {
+    "resultBundle": "ios-voiceover-planner-v2.xcresult outside repos",
+    "failed": 1,
+    "detail": "The first failed XCTest left Simulator VoiceOver active; a subsequent ordinary navigation tap selected Calendar without activating it, leaving Today. Final tests disable this dedicated fixture reader before UI setup and use XCTest teardown blocks, which execute after assertion aborts, to verify it is off and terminate the app. No product navigation fix claimed."
+  },
+  "builds": {
+    "Mac": "mac-planner-spoken-label-v1.log; BUILD SUCCEEDED; 8 warning lines; no new Mac listening assertion",
+    "iOS": "ios-voiceover-service-build-v6.log; TEST BUILD SUCCEEDED; 4 warning lines retained",
+    "interruptedBuild": "ios-voiceover-service-build-v5.log; wrong checkout invocation caught and interrupted with SIGINT/exit75 before test/install; rebuilt isolated app and verified its actual bundle ID before final run"
+  },
+  "finalRun": {
+    "resultBundle": "ios-voiceover-final-v1.xcresult outside repos",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0,
+    "captureSpeech": {
+      "addTaskButtonSpoken": true,
+      "source": "XCUIVoiceOverService.Output.utterance",
+      "systemVersion": "27.0",
+      "titleSpoken": true,
+      "utterances": [
+        "Taskfold VoiceOver Test VoiceOver simulator draft Text field Dou",
+        "Date Button Pop-up button Double-tap to activate the picker",
+        "Priority Button Pop-up button Double-tap to activate the picker",
+        "Inbox Button Pop-up button Double-tap to activate the picker",
+        "More options Button",
+        "Add task Button"
+      ],
+      "voiceOverEnabled": true
+    },
+    "plannerSpeech": {
+      "minutesFieldSpoken": true,
+      "saveDisabled": true,
+      "source": "XCUIVoiceOverService.Output.utterance",
+      "systemVersion": "27.0",
+      "utterances": [
+        "Taskfold VoiceOver Test Cancel Button",
+        "Schedule task Heading",
+        "Save dimmed Button",
+        "Prepare report",
+        "Start",
+        "20 Oct 2026 Button Collapsed Double-tap to expand",
+        "09.00 Button Collapsed Double-tap to expand",
+        "Fixed time Switch button on Double-tap to toggle setting.",
+        "Keeps the same moment when you travel. Displayed in Europe/Copen",
+        "Estimate Heading",
+        "Set an estimate Switch button on Double-tap to toggle setting.",
+        "Minutes 0 Text field Double-tap to edit.",
+        "Choose an estimate between 1 minute and 7 days."
+      ],
+      "validationSpoken": true,
+      "voiceOverEnabled": true
+    },
+    "entireSavedCacheEqualAfterEachDraftCancelOrDiscardAndRelaunch": true,
+    "voiceOverVerifiedOffInEachTeardown": true,
+    "simulatorShutdown": true
+  },
+  "cleanup": {
+    "removedUnusedBuildBytes": 280846757,
+    "finalProductsHashVerifiedExact": true,
+    "receipt": "voiceover-service-cleanup-2026-10-20.json outside repos",
+    "resultsLogsAndSavedWorkRetained": true,
+    "MacMainTestAppsClosed": true,
+    "MacEntireSavedCacheStillEqualToPriorBaseline": true
+  }
+}

@@ -432,7 +432,7 @@ private struct PlannerScheduleForm: View {
             }
             Section("Estimate") {
                 Toggle("Set an estimate", isOn: $estimated).accessibilityIdentifier("plannerHasEstimate")
-                if estimated { TextField("Minutes", text: $estimate).focused($estimateFocused).accessibilityIdentifier("plannerEstimate")
+                if estimated { TextField("Minutes", text: $estimate).focused($estimateFocused).accessibilityLabel("Minutes").accessibilityIdentifier("plannerEstimate")
                     #if os(iOS)
                     .keyboardType(.numberPad)
                     #endif
