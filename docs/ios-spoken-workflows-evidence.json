@@ -280,5 +280,6 @@
     "final": "ios-voiceover-actions-build-v10.log; TEST BUILD SUCCEEDED; manual case subsequently executed, failed only at recovery-specific returned-speech assertion after accepted human cancellation.",
     "shippingAppSourceUnchanged": true,
     "namespaceAndReadOnlyProbeReproductionExact": true
-  }
+  },
+  "subsequentRestoreFocusRepair": "ios-restore-focus-evidence.json; current iOS source requests VoiceOver focus after native Cancel dismissal, with workspace/presentation guards. Ordinary native Cancel/retry/whole-cache relaunch passes 1/0/0. Current-build spoken return remains unverified; old human failure retained."
 }

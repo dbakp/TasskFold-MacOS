@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-20",
+  "status": "implemented_native_cancel_regression_passed_spoken_return_unverified",
+  "problem": "Human VoiceOver Cancel succeeded, but iOS returned Settings Back button rather than the recovery control. The failed test then intentionally quit the app in teardown.",
+  "implementation": {
+    "repository": "TaskFold-iOS",
+    "source": "Taskfold/Views/BackupTools.swift",
+    "sourceSHA256": "b0e262cc00f4eca77e10e4cb268bbcbe0dac7bb0935ed8830c897f676d858708",
+    "behavior": "After a real native userCancelled callback, the completed sheet dismissal requests VoiceOver focus on Restore from file. The request is memory-only; normal keyboard focus is unchanged.",
+    "guards": [
+      "The native callback must belong to the current picker request and workspace.",
+      "The dismissal must still belong to the same workspace; no restore review, error alert, busy read or newly presented picker may be active.",
+      "Opening another picker and abandoning the settings presenter clear the pending request."
+    ],
+    "noDataContractChange": true,
+    "noAnnouncementFabrication": true
+  },
+  "build": {
+    "log": "ios-voiceover-focus-build-v1.log outside repos",
+    "result": "TEST BUILD SUCCEEDED",
+    "configuration": "Independent Simulator copy of current iOS source, app plus widget and UI tests",
+    "warnings": "Existing compiler warnings retained in the log; no universal clean-build claim."
+  },
+  "nativeRegression": {
+    "case": "testIOS27NativePickerCancelRetryPreservesWorkspace",
+    "bundle": "ios-voiceover-focus-native-v1.xcresult outside repos",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "structuredRuntimeWarnings": 0,
+    "voiceOverEnabled": false,
+    "checks": [
+      "Two actual native picker opens and Cancel callbacks accepted.",
+      "Restore becomes enabled and hittable; picker no longer accepts input.",
+      "No restore preview or recovery error alert appears.",
+      "Complete saved workspace equals its baseline after each cancellation.",
+      "Complete saved workspace equals the same baseline after ordinary terminate/relaunch."
+    ],
+    "actualCallbackObservation": {
+      "events": [],
+      "observerInstalled": true,
+      "pickerCancellations": [
+        {
+          "requestAccepted": true,
+          "timestamp": 1792492716.551513
+        },
+        {
+          "requestAccepted": true,
+          "timestamp": 1792492726.099191
+        }
+      ],
+      "source": "UIAccessibility.announcementDidFinishNotification",
+      "voiceOverRunning": false
+    }
+  },
+  "spokenVerification": {
+    "accepted": false,
+    "latestActualHumanResult": "Old build: accepted native Cancel, usable host, Settings Back button utterance; ios-voiceover-human-picker-v1.xcresult fails its recovery-specific return assertion.",
+    "currentBuild": "No subsequent live VoiceOver Cancel/return acceptance claim. Prepared guarded manual case now records whole-cache preservation before checking returned speech, so speech failure cannot hide that diagnostic.",
+    "manualCase": "testIOS27VoiceOverManualPickerCancelPreservesWorkspace",
+    "manualOptIn": "TASKFOLD_MANUAL_VOICEOVER_PICKER_CANCEL=1; requires genuine human callback, never synthesizes success."
+  },
+  "macOS": {
+    "sourceChanged": false,
+    "reason": "Native Mac focus already returns to Restore from file, human-confirmed and AX-verified in mac-voiceover-live-followup-evidence.json. Each repository retains its own platform UI implementation."
+  },
+  "cleanup": {
+    "dedicatedSimulatorStateAfterTest": "Shutdown; confirmed by simctl shutdown reporting current state Shutdown",
+    "voiceOverVerifiedOffInTestTeardown": true,
+    "isolatedAppTerminatedInTeardown": true,
+    "noMacAppOrDeviceHubOpened": true,
+    "buildCache": "Retain only the current useful incremental build, test products, sources and results. Approximately 84 GiB free at the build check; no unrelated data removed."
+  },
+  "remaining": [
+    "Current-build genuine spoken recovery return acceptance.",
+    "Actual system-selected widget privacy in an environment exposing the required controls.",
+    "User-deferred provider/APNs signing/distribution and supported-writer rollout."
+  ]
+}
