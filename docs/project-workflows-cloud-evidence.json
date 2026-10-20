@@ -1,0 +1,56 @@
+{
+  "observedOn": "2026-10-20",
+  "kind": "real cloud transport with separately compiled owned platform cores",
+  "test": "ProjectWorkflowIntegrationTests.testWorkflowCloudHandoff",
+  "sequence": [
+    "macOS create and archive",
+    "iOS download, reuse, batch capture and restore",
+    "macOS receive and verify"
+  ],
+  "phases": {
+    "macCreate": {
+      "passed": true,
+      "tests": 1,
+      "failures": 0,
+      "seconds": 5.575,
+      "logSHA256": "03858192625cf36caa2a51c33dde52fa482b82994c2992f3daab883542ba078a"
+    },
+    "iosReuse": {
+      "passed": true,
+      "tests": 1,
+      "failures": 0,
+      "seconds": 1.933,
+      "logSHA256": "da9dfc859f64c99eac31904c93c242e99306ba2a8ef202e27db889cdec8ddfbf"
+    },
+    "macReceive": {
+      "passed": true,
+      "tests": 1,
+      "failures": 0,
+      "seconds": 0.843,
+      "logSHA256": "16f28f2542145423ccc2708d8d0bc091fd209bc345ab95b8b74f5bce6577f15e"
+    }
+  },
+  "verified": [
+    "parent-first upload of project/subproject/section/task graph",
+    "downloaded archive inheritance excludes parent and child from active outline",
+    "private template JSON downloaded and instantiated by the other owned core",
+    "new graph identities and original work preserved",
+    "relative planned date rebased from November 4 to December 1",
+    "multi-line tasks survive queue encode/decode before upload",
+    "replayed batch insert yields exactly one task",
+    "archive restoration reaches the returning core",
+    "four projects, two sections, four tasks, one reusable template"
+  ],
+  "cleanup": {
+    "authSessionsRevokedBeforeAccountDeletion": true,
+    "syntheticUsersRemaining": 0,
+    "syntheticProjectsRemaining": 0,
+    "syntheticTemplatesRemaining": 0,
+    "realUserDataTouched": false
+  },
+  "limits": [
+    "This is a real-service transport/core round trip, not a new native UI or realtime wake-up acceptance.",
+    "Existing representative screen checks are recorded separately in project-workflows-evidence.json.",
+    "Remote reminders, older-client safeguards and distribution remain user-deferred."
+  ]
+}

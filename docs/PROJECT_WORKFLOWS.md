@@ -62,3 +62,11 @@ Mac's `--workflow-diagnostics` can log the synthetic snapshot only in an isolate
 ## Deferred acceptance
 
 Remote-delivery eligibility must respect archived projects before remote reminders are enabled. Older clients can still bypass newer editing safeguards and do not provide this archive UX; that rollout work remains explicitly deferred. Signing/distribution/install/update acceptance is also deferred. Passing these feature checks does not clear those release gates or claim a new native cloud handoff for this feature set.
+
+## Cloud round-trip follow-up
+
+The separately compiled Mac core created a synthetic project tree and saved template, then archived the parent through the actual Backend transport. The iOS core downloaded that state, checked inherited archive visibility, reused the template with fresh identities and a rebased start date, persisted/reloaded a multi-line queue and uploaded it, replayed one insert, then restored the original parent. The returning Mac core verified all records, hierarchy, dates, preserved notes and exact counts. All three phases passed. Sessions were revoked and the disposable account and its rows were removed; no real user data was changed.
+
+`ProjectWorkflowIntegrationTests.testWorkflowCloudHandoff` is independently owned in each repository. It requires `TASKFOLD_WORKFLOW_LIVE_FIXTURE` pointing to a private JSON file containing `url`, public `key`, `userID`, `email` and `password` for a fresh disposable `taskfold-continuity-<userID>@example.invalid` account. Never supply a real account. Run the test with `TASKFOLD_WORKFLOW_LIVE_PHASE=create` using the Mac core, `reuse` using the iOS core, then `receive` using the Mac core. Keep the generated `.checkpoint` file between phases. The test skips when no fixture/phase is supplied. Remove the disposable account and credentials after the run.
+
+This verifies real cloud transport and durable queue/model compatibility, independently of the earlier native screen walkthroughs. It does not claim fresh native screen-to-screen or realtime wake-up acceptance. See `project-workflows-cloud-evidence.json` for hashes and boundaries.

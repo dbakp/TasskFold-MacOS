@@ -98,3 +98,5 @@ Setting-restoration reconciliation: the user’s “I did” response to the res
 ## 20 October — next active scope authorized
 
 The user explicitly tables remote reminders, older-client upgrade safety and distribution verification for later. Active work now covers project archiving/restore, subproject hierarchy, reusable workflow templates and reviewed multi-line capture in both independently owned apps. The implementation and representative native acceptance are complete in both repositories. New feature verification is recorded separately in `project-workflows-evidence.json`; historical P0 results are not substituted for these checks.
+
+- 2026-10-20: New project-workflow cloud transport round trip passed across independently compiled Mac → iOS → Mac cores, covering hierarchy/archive, template reuse, batch queue persistence/replay and restoration. Synthetic account removed. See `project-workflows-cloud-evidence.json`; native screen/realtime acceptance is not claimed by this test.
