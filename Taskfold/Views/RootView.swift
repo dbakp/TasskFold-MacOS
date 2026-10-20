@@ -237,6 +237,8 @@ struct RootView: View {
                 try? store.persist()
             }
         }
+        if arguments.contains("--uitesting") && arguments.contains("--workflow-fixture") { store.startLocal(); store.seedWorkflowFixture(); workspace.section = .inbox }
+        if arguments.contains("--uitesting") && arguments.contains("--workflow-diagnostics") { try? store.persist() }
         if arguments.contains("--uitesting") && arguments.contains("--quick-entry-fixture") {
             store.startLocal(); store.snapshot = Snapshot.quickEntryFixture(user: store.userID); workspace.section = .inbox
             workspace.projectMembers["qe-work"] = store.rows("project_members:qe-work")

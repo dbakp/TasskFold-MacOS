@@ -2388,3 +2388,13 @@ Corrected physical iOS build, strict signatures, configuration metadata and inst
 ### 20 October — genuine physical privacy gate closed
 
 20 October physical system privacy accepted: after the stable-root background repair, the real iPhone 16 Pro / iOS 27.0.1 rectangular Today widget is private/blank with no background API warning under the actual locked setting, and its tap exposes no content before authentication. The user then restores Lock Screen Widgets to its original On setting and confirms Normal count/task returned with the padlock open. The entire saved diagnostic JSON equals its immediate pre-install baseline after installation and again after the human lock/tap/unlock cycle (two tasks, pending zero). The exact isolated host is terminated and its absence reverified; the test app/widget remain installed. This closes the named representative system-privacy gate, without claiming every family/device combination or an app-received private URL callback. Explicit Simulator privacy remains regression evidence, not a substitute for this human system check. Only deferred signing/provider/distribution and old-active-writer rollout remain. See `locked-widget-warning-followup-evidence.json`.
+
+### 20 October — project workflows scope
+
+Release/delivery/older-client rollout are explicitly tabled by the user. Implement reversible project archiving, cycle-safe subprojects, reusable templates and reviewed multi-line capture in both apps, including persistence, backups and native usability. This phase is not yet accepted.
+
+## 20 October — project workflow expansion
+
+The independently owned Mac app now implements project hierarchy and archive/restore, private reusable project/section/task templates, and reviewed multi-line capture. Native Edit menu Undo/Redo covers batches and workflow creation. Archive filtering includes daily queries, task reminders, widget content and new Focus choices; preserved work remains accessible from the archive. See [contracts and usage](PROJECT_WORKFLOWS.md) and [verification evidence](project-workflows-evidence.json).
+
+The user has explicitly deferred remote reminder delivery, old-client safeguards and distribution verification. They are not active blockers for this feature expansion and have not been relabeled as accepted release work.

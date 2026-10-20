@@ -314,7 +314,7 @@ struct RestoreReview: View {
                         countRow("Update", value: value.updated, identifier: "restoreUpdated")
                         countRow("Keep", value: value.kept, identifier: "restoreKept")
                         ForEach(WorkspaceBackup.workTables.filter { value.counts[$0] != nil }, id: \.self) { table in
-                            countRow(["projects":"Projects", "labels":"Labels", "sections":"Sections", "tasks":"Tasks", "saved_views":"Saved filters", "favorites":"Favorites", "view_preferences":"View settings", "view_orders":"Task ordering", "focus_sessions":"Focus session", "reminder_preferences":"Reminder preferences"][table] ?? table, value: value.counts[table] ?? 0, identifier: "restoreCount-" + table)
+                            countRow(["projects":"Projects", WorkflowTemplate.table:"Templates", "labels":"Labels", "sections":"Sections", "tasks":"Tasks", "saved_views":"Saved filters", "favorites":"Favorites", "view_preferences":"View settings", "view_orders":"Task ordering", "focus_sessions":"Focus session", "reminder_preferences":"Reminder preferences"][table] ?? table, value: value.counts[table] ?? 0, identifier: "restoreCount-" + table)
                         }
                     }.accessibilityElement(children: .contain)
                     Section("Before you restore") {

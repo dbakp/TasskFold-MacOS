@@ -1,0 +1,120 @@
+{
+  "observedOn": "2026-10-20",
+  "scope": [
+    "project archive/restore",
+    "subprojects",
+    "private reusable project/section/task templates",
+    "reviewed multi-line capture"
+  ],
+  "deferredByUser": [
+    "remote reminders",
+    "older-client upgrade safeguards",
+    "distribution verification"
+  ],
+  "databaseEvidence": "project-workflows-database-evidence.json",
+  "core": {
+    "ios": {
+      "reportedTests": 694,
+      "environmentGatedSkips": 6,
+      "failures": 0,
+      "focusedWorkflowTests": 21,
+      "logSHA256": "ea1fd01fa0de25844fcc84a5353b37b9cd1ee5f2d3fc3aae2041936e6d03a24f",
+      "nativeCopyMatchesOwnedSwiftExceptIsolatedNamespaces": true
+    },
+    "mac": {
+      "reportedTests": 718,
+      "environmentGatedSkips": 26,
+      "failures": 0,
+      "focusedWorkflowTests": 21,
+      "logSHA256": "2419bcd6cc6008e53567c012dceb291feff904eb48e2802367df34df0bbb2305",
+      "nativeCopyMatchesOwnedSwiftExceptIsolatedNamespaces": true
+    }
+  },
+  "native": {
+    "phone": {
+      "result": "passed",
+      "flow": "multi-line review, injected persistence failure, retry, one copy per task, save/use project template, relaunch retention",
+      "logSHA256": "5a24c5cb117ef06fa1a82d19abfed54bdf201b759608bf3e3ec032d155d2589c"
+    },
+    "tablet": {
+      "result": "passed",
+      "flow": "multi-line review, injected persistence failure, retry, one copy per task, save/use project template, relaunch retention",
+      "logSHA256": "0b9975f73ebce31605e9ae31a8601d0b577bc4b3494ede9837846439752d401c"
+    },
+    "iosArchive": {
+      "result": "passed",
+      "flow": "create subproject with native parent picker; archive parent; verify inherited child archive; restore only the intended project; relaunch and verify original task and subproject",
+      "logSHA256": "cc4d8ac578dab91c1ccd40e508113aab80933f22ae1ad874c9bdf8ec94e46178",
+      "regressionFixed": "Explicit independent iOS archive-row button styles prevent Restore from also activating Open/Edit."
+    },
+    "mac": {
+      "result": "passed representative direct native walkthrough",
+      "projects": 4,
+      "tasks": 4,
+      "templates": 1,
+      "checks": [
+        "editable/excludable task-line review",
+        "parsed date and priority",
+        "two-task durable save",
+        "single batch Undo and Redo",
+        "save/use project-and-subproject template",
+        "new copy without old planned date",
+        "archive removes original task from Today",
+        "archive browser retains child and task count",
+        "Open dismisses archive and opens exact preserved task list",
+        "parent-picker move saved and reopened at top level",
+        "native Undo restores original parent",
+        "normal Quit/relaunch retains all work",
+        "whole template card opens preview",
+        "cancel does not create another run",
+        "archive/open/Undo restores the entire snapshot exactly"
+      ],
+      "exactSnapshotAfterArchiveOpenUndo": true,
+      "snapshotSHA256": "e33fcb218f4f95d08e068cc7f73c9e1d710e925a028112bb42b21bac1c9427a0",
+      "sourceTaskTextDateAndCompletionRetained": true,
+      "xctestDriver": "Could not initialize automation mode; not counted as a successful XCTest run. Direct native computer-use checks supply the representative runtime evidence.",
+      "largeBatchObservation": "The extra 100-line desktop observation was not run because the Mac locked. The final source uses a grouped native scrolling Form; no exhaustive layout claim is made."
+    }
+  },
+  "ownedCoreContractSHA256": "8cf90db1f9af4b2b045a40b2694476bc1f6b2665d8fe4ab67ecd419fc7a9f9ee",
+  "limits": [
+    "No new native cloud handoff is claimed for this feature set. Actual-role database access and existing generic transport are covered separately.",
+    "Remote notifications, legacy writers and distribution remain deferred.",
+    "Representative native checks are not an exhaustive device/family/layout audit."
+  ],
+  "cleanup": {
+    "removedObsoleteBuildCaches": [
+      {
+        "directory": "ios-project-workflows-app",
+        "allocatedBytesBefore": 768733184
+      },
+      {
+        "directory": "mac-project-workflows-app",
+        "allocatedBytesBefore": 377200640
+      },
+      {
+        "directory": "mac-project-workflows-native",
+        "allocatedBytesBefore": 292704256
+      }
+    ],
+    "removedObsoleteResultBundles": [
+      "mac-project-workflows-native-v4.xcresult",
+      "ios-project-workflows-native-archive-v2.xcresult",
+      "ios-project-workflows-native-archive-v3.xcresult",
+      "ios-project-workflows-native-v3.xcresult",
+      "ios-project-workflows-native-v2.xcresult",
+      "ios-project-workflows-native-final-phone.xcresult",
+      "mac-project-workflows-native-v2.xcresult",
+      "mac-project-workflows-native-v3.xcresult",
+      "ios-project-workflows-native-archive-v4.xcresult",
+      "ios-project-workflows-native-v4.xcresult",
+      "ios-project-workflows-native-v1.xcresult",
+      "ios-project-workflows-native-archive-v1.xcresult",
+      "mac-project-workflows-native-v1.xcresult"
+    ]
+  },
+  "builds": {
+    "ios": "Final isolated app and UI-test targets build successfully, including the archive-row fix.",
+    "mac": "Final isolated app and UI-test targets build successfully with Apple Development signing; runtime acceptance uses the direct native walkthrough."
+  }
+}

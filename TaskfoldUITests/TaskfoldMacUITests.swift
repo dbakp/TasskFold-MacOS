@@ -3212,3 +3212,40 @@ extension TaskfoldMacUITests {
         try localUnchanged()
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor func testProjectWorkflowMultiLineTemplateArchiveAndRelaunch() throws {
+        guard Bundle(for: Self.self).bundleIdentifier?.contains("workflowtests") == true else { throw XCTSkip("Requires a disposable workflow test app") }
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--workflow-fixture", "--section=inbox"]
+        app.launch(); defer { app.terminate() }
+        let capture = app.buttons["openMultiLineCapture"]
+        XCTAssertTrue(capture.waitForExistence(timeout: 8)); capture.click()
+        let input = app.textViews["multiLineText"]
+        XCTAssertTrue(input.waitForExistence(timeout: 5)); input.click(); input.typeText("- Capture Mac workflow idea\n- Review Mac workflow sketch tomorrow p1")
+        app.buttons["reviewMultiLine"].click()
+        XCTAssertTrue(app.buttons["saveMultiLine"].waitForExistence(timeout: 5)); app.buttons["saveMultiLine"].click()
+        app.staticTexts["Inbox"].firstMatch.click()
+        XCTAssertTrue(app.staticTexts["Capture Mac workflow idea"].waitForExistence(timeout: 8))
+        app.buttons["openTemplates"].click()
+        let name = app.textFields["templateName"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5)); name.click(); name.typeText("Weekly Mac launch")
+        app.buttons["saveWorkflowTemplate"].click()
+        let template = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "workflowTemplate-")).firstMatch
+        XCTAssertTrue(template.waitForExistence(timeout: 8)); template.click()
+        XCTAssertTrue(app.buttons["applyWorkflowTemplate"].waitForExistence(timeout: 5)); app.buttons["applyWorkflowTemplate"].click()
+        XCTAssertTrue(NSPredicate(format: "exists == false").evaluate(with: app.buttons["applyWorkflowTemplate"]) || XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.buttons["applyWorkflowTemplate"])], timeout: 5) == .completed)
+        app.buttons["Done"].firstMatch.click()
+        let root = app.descendants(matching: .any)["project-f0742000-1111-4111-8111-000000000001"].firstMatch
+        XCTAssertTrue(root.waitForExistence(timeout: 5)); root.rightClick(); app.menuItems["Edit Project…"].click()
+        let archived = app.checkBoxes["projectArchived"]
+        XCTAssertTrue(archived.waitForExistence(timeout: 5)); archived.click(); app.buttons["saveRecord"].click()
+        app.buttons["openArchivedProjects"].click()
+        XCTAssertTrue(app.staticTexts["Design studio"].waitForExistence(timeout: 5))
+        app.buttons["restoreProject-f0742000-1111-4111-8111-000000000001"].click()
+        app.buttons["Done"].firstMatch.click()
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
+        app.staticTexts["Inbox"].firstMatch.click()
+        XCTAssertTrue(app.staticTexts["Capture Mac workflow idea"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Weekly Mac launch"].exists)
+    }
+}

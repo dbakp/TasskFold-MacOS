@@ -26,7 +26,7 @@ extension Workspace {
                 if let child = taskRecord(id) { visit(child, depth: depth + 1) }
             }
         }
-        for task in store.tasks { visit(task, depth: 0) }
+        for task in store.activeTasks { visit(task, depth: 0) }
         return result
     }
     func assignmentProject(_ task: Record, contextID: String? = nil) -> String {

@@ -7,10 +7,13 @@ struct SidebarView: View {
     @State private var projectEditor: Record?
     @State private var labelEditor: Record?
     @State private var filterEditor: Record?
+    @State private var templatesPresented = false
+    @State private var archivePresented = false
+    @State private var multiLinePresented = false
     @State private var projectsExpanded = true
     @State private var labelsExpanded = true
     private var today: String { Dates.day(Date()) }
-    private var open: [Record] { store.tasks.filter { !$0.completed } }
+    private var open: [Record] { store.activeTasks.filter { !$0.completed } }
     var body: some View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
@@ -35,6 +38,8 @@ struct SidebarView: View {
                 item(.all, "All Tasks", count: open.count)
                 item(.assigned, "Assigned to Me", count: workspace.assignedTasks.filter { !$0.completed }.count)
                 item(.completed, "Completed", count: nil)
+                Button("Templates", systemImage: "square.stack.3d.up") { templatesPresented = true }.accessibilityIdentifier("openTemplates")
+                Button("Add Multiple Tasks…", systemImage: "text.badge.plus") { multiLinePresented = true }.accessibilityIdentifier("openMultiLineCapture")
             }
             if !store.favorites.isEmpty {
                 Section("Favorites") {
@@ -59,7 +64,8 @@ struct SidebarView: View {
                 Button("New Filter", systemImage: "plus") { filterEditor = store.newSavedView() }.accessibilityIdentifier("newSavedView")
             }
             Section(isExpanded: $projectsExpanded) {
-                ForEach(store.projects) { project in
+                ForEach(ProjectOrganization.outline(store.allProjects)) { item in
+                    let project = item.project
                     ProjectDropRow(project: project) {
                         Label {
                             HStack {
@@ -69,21 +75,23 @@ struct SidebarView: View {
                             }
                         } icon: { Image(systemName: "folder.fill").foregroundStyle(Color.project(project.string("color"))) }
                     }
+                    .padding(.leading, CGFloat(item.depth) * 12)
                     .tag(SidebarItem.project(project.id))
                     .contextMenu {
                         Button("Edit Project…") { projectEditor = project }
                         Button(store.isFavorite(.project(project.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.project(project.id)) }
-                        orderActions(table: "projects", id: project.id, ids: store.projects.map(\.id))
+                        orderActions(table: "projects", id: project.id, ids: store.allProjects.map(\.id))
                         Button("Delete Project…", role: .destructive) { projectEditor = project }
                     }
                     .accessibilityLabel(project.name).accessibilityIdentifier("project-" + project.id)
                 }
                 .onMove { source, destination in
                     var projects = store.projects; projects.move(fromOffsets: source, toOffset: destination)
-                    workspace.run("Reorder Projects") { store.reorderOrganization("projects", ids: projects.map(\.id)) }
+                    workspace.run("Reorder Projects") { store.reorderOrganization("projects", ids: projects.map(\.id) + store.archivedProjects.map(\.id)) }
                 }
                 Button { newProject() } label: { Label("New Project", systemImage: "plus").foregroundStyle(.secondary) }
                     .buttonStyle(.plain).accessibilityIdentifier("newProject")
+            Button("Archived Projects", systemImage: "archivebox") { archivePresented = true }.accessibilityIdentifier("openArchivedProjects")
             } header: { Text("Projects") }
             Section(isExpanded: $labelsExpanded) {
                 ForEach(store.labels) { label in
@@ -99,6 +107,9 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) { VStack(spacing: 0) { AccountMenu(); SyncFooter() } }
+        .sheet(isPresented: $templatesPresented) { TemplateLibraryView() }
+        .sheet(isPresented: $archivePresented) { ArchivedProjectsView() }
+        .sheet(isPresented: $multiLinePresented) { MultiLineCaptureView() }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }
         .sheet(item: $labelEditor) { NamedEditor(table: "labels", record: $0) }
         .sheet(item: $filterEditor) { SavedViewEditor(record: $0) }

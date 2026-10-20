@@ -24,6 +24,7 @@ struct TaskListView: View {
     }
     @AppStorage("mac.collapsedProjectSections") private var collapsedSections = ""
     private var projectLayout: String { get { store.viewValue(scope, field: "layout", fallback: .string("list")).text } nonmutating set { store.setViewValue(scope, field: "layout", value: .string(newValue)) } }
+    @State private var multiLinePresented = false
     @State private var captureSection = ""
     @State private var nativeList = ListNativeHandle()
     @State private var bulkDatePicker = false
@@ -224,6 +225,7 @@ struct TaskListView: View {
         .onChange(of: subtitle) { _, value in if workspace.section.scope == scope { workspace.navigationSubtitle = value } }
         .animation(Transitions.Ease.smoothOut, value: subtitle)
         .toolbar { if workspace.section.scope == scope { toolbar } }
+        .sheet(isPresented: $multiLinePresented) { MultiLineCaptureView(text: workspace.quickAdd, project: projectID, onSaved: { workspace.quickAdd = "" }) }
         .sheet(isPresented: $quickAddVisible) {
             TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, choices: $referenceChoices, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt,
                 context: workspace.quickEntryContext(project: captureDraft.string("project_id")), task: captureDraft, submit: submitQuickAdd)
@@ -275,6 +277,7 @@ struct TaskListView: View {
     private var captureDate: Date? { scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil }
     private var captureDraft: Record { workspace.captureTask(project: projectID, date: captureDate, sectionID: captureSection) }
     private func submitQuickAdd() {
+        if workspace.quickAdd.contains(where: { $0.isNewline }) { quickAddVisible = false; multiLinePresented = true; return }
         let date = captureDate
         let labelName: String? = { if case .label(let id) = scope { return store.record("labels", id: id)?.name }; return nil }()
         guard let id = workspace.add(quickAdd, project: projectID, date: date, declined: declinedGroups, sectionID: captureSection, referenceChoices: referenceChoices) else { return }
@@ -432,6 +435,7 @@ struct TaskListView: View {
                     .disabled(workspace.planQueue(scope == .today ? .day : .week).isEmpty)
                     .accessibilityIdentifier("planButton")
             }
+            Button("Add Multiple Tasks…", systemImage: "text.badge.plus") { multiLinePresented = true }.accessibilityIdentifier("openMultiLineCaptureInList")
             Button { revealQuickAdd() } label: { Label("New Task", systemImage: "plus") }
                 .help("New Task (⌘N)").accessibilityIdentifier("addTask")
 

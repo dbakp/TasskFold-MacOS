@@ -38,6 +38,7 @@ enum WidgetCompletion {
         if snapshot.widgetCompletion.saved(request) { return .saved }
         guard let task = snapshot.tables["tasks"]?.first(where: { $0.id.lowercased() == request.taskID.lowercased() }) else { return .stale }
         if task.completed { return .saved }
+        guard !ProjectOrganization.archived(task.string("project_id"), in: snapshot.tables["projects"] ?? []) else { return .stale }
         guard snapshot.widgetCompletion.states[task.id.lowercased()]?.token == request.token else { return .stale }
         return .complete(TaskCompletion.complete(task, tasks: snapshot.tables["tasks"] ?? [], at: request.createdAt, calendar: calendar))
     }

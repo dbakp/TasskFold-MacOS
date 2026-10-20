@@ -14,6 +14,9 @@ import WidgetKit
 final class Store {
     /// One store per process so notification actions and App Intents share the app's data.
     static let shared = Store()
+    #if DEBUG
+    @ObservationIgnored private var workflowFixtureFailureConsumed = false
+    #endif
     var snapshot = Snapshot() {
         didSet {
             if taskCache.update(snapshot.tables["tasks"] ?? []) { taskRevision += 1 }
@@ -361,7 +364,10 @@ final class Store {
             query.filter = rule; query.datePreferences = datePhrasePreferences; query.now = rule.usesClockWindow ? calendarContext.minute : nil; query.filterLabels = labels.map { FilterReference(id: $0.id, name: $0.name) }; query.userID = userID
             query.includeCompleted = query.includeCompleted || view["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion)
         }
-        return taskCache.matching(query)
+        let matches = taskCache.matching(query)
+        if case .project = query.scope { return matches }
+        let archived = ProjectOrganization.archivedIDs(in: allProjects)
+        return matches.filter { !archived.contains($0.string("project_id")) }
     }
     func filterGroups(_ scope: TaskScope, tasks: [Record], includeCompleted: Bool = false) -> [TaskGrouping.Group] {
         let view: Record? = { if case .saved(let id) = scope { return record("saved_views", id: id) }; return nil }()
@@ -415,7 +421,11 @@ final class Store {
             return changes.isEmpty || commit(changes)
         } catch { self.error = error.localizedDescription; return false }
     }
-    var projects: [Record] { OrganizationOrder.sorted(rows("projects")) }
+    var allProjects: [Record] { OrganizationOrder.sorted(rows("projects")) }
+    var projects: [Record] { ProjectOrganization.outline(allProjects).map(\.project) }
+    var archivedProjects: [ProjectOrganization.Item] { ProjectOrganization.outline(allProjects, archived: true) }
+    var activeTasks: [Record] { let archived = ProjectOrganization.archivedIDs(in: allProjects); return tasks.filter { !archived.contains($0.string("project_id")) } }
+    var workflowTemplates: [Record] { rows(WorkflowTemplate.table).sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
     var labels: [Record] { rows("labels").sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
     func quickEntryContext(project: String = "") -> QuickEntryContext {
         QuickEntryContext(projects: projects, sections: rows("sections"), labels: labels,
@@ -522,6 +532,12 @@ final class Store {
         try FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try JSONEncoder().encode(snapshot).write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         publishWidgetSnapshot()
+        #if DEBUG
+        if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-diagnostics"), Bundle.main.bundleIdentifier?.contains(".workflowtests") == true {
+            let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+            if let data = try? encoder.encode(snapshot), let text = String(data: data, encoding: .utf8) { print("WORKFLOW_SNAPSHOT " + text); fflush(stdout) }
+        }
+        #endif
         scheduleDailyBackup()
     }
     func makeInboxReview(batch: InboxReviewBatch = .five, excluding: Set<String> = []) -> InboxReviewRequest? {
@@ -540,7 +556,7 @@ final class Store {
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.connected ? (busy.selected.isEmpty ? "choose" : "refresh") : "off"
-        var payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people)
+        var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people)
         if let feedback = snapshot.widgetCompletion.feedback, feedback.account == account,
            Date() < feedback.expiresAt, record("tasks", id: feedback.taskID)?.completed == true {
             payload["completionFeedback"] = try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(feedback))
@@ -706,6 +722,12 @@ final class Store {
     @discardableResult
     func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil) -> Bool {
         guard !signingOut else { return false }
+        #if DEBUG
+        if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-save-failure-once"), !workflowFixtureFailureConsumed,
+           changes.filter({ $0.table == "tasks" && $0.method == "POST" }).count > 1 {
+            workflowFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
+        }
+        #endif
         guard changes.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable }) else { error = "Activity history is read-only."; return false }
         guard changes.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
             error = "This Focus command needs a valid workspace and revision."; return false
@@ -772,8 +794,18 @@ final class Store {
     @discardableResult
     func save(_ table: String, _ record: Record, baseline: Record? = nil, applyReminderDefaults: Bool = true) -> Bool {
         let existing = self.record(table, id: record.id)
+        if table == "projects" {
+            let intended = baseline.map { old in record.fields.filter { old.fields[$0.key] != $0.value } } ?? record.fields
+            let proposed = Record((existing?.fields ?? [:]).merging(intended) { _, new in new })
+            do { try ProjectOrganization.validate(proposed, previous: existing, account: userID, projects: allProjects) }
+            catch { self.error = error.localizedDescription; return false }
+        }
+        if table == WorkflowTemplate.table {
+            do { _ = try WorkflowTemplate(document: record["document"]) }
+            catch { self.error = error.localizedDescription; return false }
+        }
         let record = table == "tasks" && applyReminderDefaults ? applyingReminderDefault(record, previous: baseline ?? existing) : record
-        let editable = record.fields.filter { table != "tasks" || $0.key != "completion_version" && (existing == nil || $0.key != "task_generation") }
+        let editable = record.fields.filter { !(table == "projects" && $0.key == "ancestor_archived") && (table != "tasks" || $0.key != "completion_version" && (existing == nil || $0.key != "task_generation")) }
         let changed = (baseline ?? existing).map { old in editable.filter { old.fields[$0.key] != $0.value } } ?? editable
         guard !changed.isEmpty else { return true }
         var changes = [Mutation(table: table, recordID: record.id, method: existing == nil ? "POST" : "PATCH", fields: changed, baseline: baseline.map { old in
@@ -826,6 +858,9 @@ final class Store {
             }
         }
         if table == "projects" {
+            for child in allProjects where child.string("parent_id") == id {
+                changes.append(Mutation(table: "projects", recordID: child.id, method: "PATCH", fields: ["parent_id": .null, "ancestor_archived": .bool(false)]))
+            }
             for task in tasks where task.string("project_id") == id {
                 changes.append(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["project_id": .null, "section_id": .null]))
             }
@@ -893,7 +928,7 @@ final class Store {
         guard !projectIDs.isEmpty else { return false }
         do {
             var remote: [String: [Record]] = [:]
-            for table in ["projects", "tasks", "sections", "labels", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", ReminderSnooze.table, "focus_sessions", "task_activity_epoch", "task_activity"] {
+            for table in ["projects", "tasks", "sections", "labels", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions", "task_activity_epoch", "task_activity"] {
                 remote[table] = try await backend.rows(table)
                 guard generation == accountGeneration, snapshot == reviewed else { return false }
                 if table == "projects", projectIDs.allSatisfy({ id in remote[table]!.contains { $0.id.lowercased() == id } }) { return false }
@@ -926,7 +961,7 @@ final class Store {
                 snapshot.acknowledge(mutation, saved: saved); try persist()
             }
             var remote: [String: [Record]] = [:]
-            for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", ReminderSnooze.table, "focus_sessions", "task_activity_epoch", "task_activity"] {
+            for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions", "task_activity_epoch", "task_activity"] {
                 remote[table] = try await backend.rows(table)
                 guard generation == accountGeneration else { return }
             }
@@ -1286,9 +1321,9 @@ final class Store {
     }
     private func reminderState() -> ReminderState {
         reminderRevision += 1
-        var events = remindersEnabled ? DueReminder.events(tasks: tasks) : []
+        var events = remindersEnabled ? DueReminder.events(tasks: activeTasks) : []
         if focusAlertsEnabled, let event = focusFinishEvent { events.append(event) }
-        return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events, validationTasks: remindersEnabled ? tasks : [], deliveryAuthority: reminderAuthority, deliveryAuthorityUnreadable: reminderAuthorityUnreadable, deliveryAuthorityAccount: remoteReminderTestWorkspace ? reminderAuthorityAccount : nil)
+        return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events, validationTasks: remindersEnabled ? activeTasks : [], deliveryAuthority: reminderAuthority, deliveryAuthorityUnreadable: reminderAuthorityUnreadable, deliveryAuthorityAccount: remoteReminderTestWorkspace ? reminderAuthorityAccount : nil)
     }
     func reschedule() async {
         ReminderCategory.register(minutes: reminderSnoozeMinutes)
@@ -1336,12 +1371,12 @@ final class Store {
         guard remindersEnabled, let account = info["accountID"] as? String, account == userID,
               let task = info["taskID"] as? String, let spec = info["specID"] as? String,
               let signature = info["signature"] as? String else { return nil }
-        return DueReminder.validated(tasks: tasks, taskID: task, specID: spec, signature: signature, originalAt: (info["originalAt"] as? Double).map { Date(timeIntervalSince1970: $0) })
+        return DueReminder.validated(tasks: activeTasks, taskID: task, specID: spec, signature: signature, originalAt: (info["originalAt"] as? Double).map { Date(timeIntervalSince1970: $0) })
     }
     func reminderTask(for route: ReminderTaskRoute) -> Record? {
         let valid = workspaceCacheReadable && (signedIn || localMode) && remindersEnabled &&
             route.workspace.matches(account: userID, generation: workspaceGeneration) &&
-            DueReminder.validated(tasks: tasks, taskID: route.taskID, specID: route.specID, signature: route.signature, originalAt: route.originalAt) != nil
+            DueReminder.validated(tasks: activeTasks, taskID: route.taskID, specID: route.specID, signature: route.signature, originalAt: route.originalAt) != nil
         #if DEBUG
         if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing") {
             reminderRouteFixtureOutcome = valid ? "Opened" : "Ignored"
@@ -1421,7 +1456,7 @@ extension Store {
         return await handleReminder(["accountID":userID,"taskID":event.taskID,"specID":event.specID,"signature":old],action:UNNotificationDefaultActionIdentifier)
     }
     func reminderRouteFixtureRequest() -> ReminderTaskRoute? {
-        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing"), let event = DueReminder.events(tasks: tasks).first else { return nil }
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing"), let event = DueReminder.events(tasks: activeTasks).first else { return nil }
         return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: event.taskID, specID: event.specID, signature: event.signature)
     }
     func seedWidgetActionFixture() {
@@ -1614,5 +1649,73 @@ extension Store {
         _ = try widgetActionDisk().enqueue(request)
     }
     func widgetActionFixturePending() -> Int { ((try? widgetActionDisk().pending(account: userID)) ?? []).count }
+}
+#endif
+
+extension Store {
+    func workflowReady(_ binding: WorkspaceBinding?) -> Bool {
+        guard binding?.matches(account: userID, generation: workspaceGeneration) == true, workspaceCacheReadable, signedIn || localMode else {
+            error = "Your workspace changed. Reopen this tool before saving."; return false
+        }
+        return true
+    }
+    @discardableResult func archiveProject(_ project: Record, archived: Bool) -> Bool {
+        guard var current = record("projects", id: project.id), current.string("user_id") == userID else { error = "Only the project owner can archive or restore it."; return false }
+        current["is_archived"] = .bool(archived)
+        return save("projects", current)
+    }
+    func workflowDestinationsAvailable(_ lines: [MultiLineCapture.Line]) -> Bool {
+        let active = Set(projects.map(\.id)), sections = rows("sections")
+        return lines.allSatisfy { line in
+            let task = line.task, project = task.string("project_id"), section = task.string("section_id")
+            return (project.isEmpty || active.contains(project)) && (section.isEmpty || sections.contains { $0.id == section && $0.string("project_id") == project })
+        }
+    }
+    func workflowChanges(_ lines: [MultiLineCapture.Line]) throws -> [Mutation] {
+        guard !lines.isEmpty else { throw AppFailure(message: "Choose at least one task.") }
+        guard workflowDestinationsAvailable(lines) else { throw AppFailure(message: "A project or section changed. Review the original text again before saving.") }
+        var changes: [Mutation] = [], knownLabels = labels
+        for line in lines {
+            var task = line.task
+            guard task.string("user_id") == userID, !task.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  task.string("project_id").isEmpty || projects.contains(where: { $0.id == task.string("project_id") }) else { throw AppFailure(message: "Every task needs a title and an available active project.") }
+            var values: [JSON] = []
+            for value in task["labels"].list {
+                if let label = knownLabels.first(where: { $0.id == value.text || $0.name.lowercased() == value.text.lowercased() }) { values.append(.string(label.id)) }
+                else {
+                    let label = Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(userID), "name": value, "color": .string("#8b5cf6")])
+                    knownLabels.append(label); values.append(.string(label.id)); changes.append(Mutation(table: "labels", recordID: label.id, method: "POST", fields: label.fields))
+                }
+            }
+            task["labels"] = .array(values)
+            changes.append(Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields))
+        }
+        let groups = Dictionary(grouping: changes.filter { $0.table == "tasks" }) { change in
+            let row = Record(change.fields)
+            return row.string("project_id").isEmpty ? "scope:inbox" : "group:" + row.string("project_id") + ":" + (row.string("section_id").isEmpty ? "none" : row.string("section_id"))
+        }
+        for key in groups.keys.sorted() {
+            let existing = record("view_orders", id: key)
+            let ids = (existing?["ids"].list ?? []) + groups[key]!.map { .string($0.recordID) }
+            changes.append(Mutation(table: "view_orders", recordID: key, method: existing == nil ? "POST" : "PATCH", fields: ["id": .string(key), "user_id": .string(userID), "ids": .array(ids)]))
+        }
+        return changes
+    }
+}
+
+
+#if DEBUG
+extension Store {
+    func seedWorkflowFixture() {
+        guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-fixture") else { return }
+        dailyBackupsEnabled = false; disableNotifications(); undoStack = []; redoStack = []
+        let parent = "f0742000-1111-4111-8111-000000000001", child = "f0742000-1111-4111-8111-000000000002"
+        let projects = [(parent, "Launch lab", ""), (child, "Design studio", parent)].map { id, name, parent in
+            Record(["id": .string(id), "user_id": .string(userID), "name": .string(name), "color": .string("#8b5cf6"), "parent_id": parent.isEmpty ? .null : .string(parent), "is_archived": .bool(false), "order_index": .number(parent.isEmpty ? 0 : 1)])
+        }
+        var task = Record.task(user: userID, project: child, date: Date()); task["title"] = .string("Prepare workflow brief"); task["description"] = .string("Keep the original notes.")
+        snapshot = Snapshot(tables: ["projects": projects, "tasks": [task]])
+        do { try persist() } catch { self.error = error.localizedDescription }
+    }
 }
 #endif

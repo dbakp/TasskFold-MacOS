@@ -26,9 +26,9 @@ struct FocusSessionView: View {
     @State private var replacing = false
     @State private var replacementBase: Record?
     private var activeWorkspace: Bool { request.workspace.matches(account: store.userID, generation: store.workspaceGeneration) && store.focusAvailable }
-    private var choices: [FocusTaskCatalog.Choice] { guard activeWorkspace else { return [] }; return FocusTaskCatalog(tasks: store.tasks, projects: store.projects, sections: store.rows("sections")).choices }
+    private var choices: [FocusTaskCatalog.Choice] { guard activeWorkspace else { return [] }; return FocusTaskCatalog(tasks: store.activeTasks, projects: store.projects, sections: store.rows("sections")).choices }
     private var currentChoice: FocusTaskCatalog.Choice? { choices.first { $0.id == selectedTask?.id && $0.generation == selectedTask?.generation } }
-    private func taskContext(_ task: Record) -> String { FocusTaskCatalog.context(task, tasks: store.tasks, projects: store.projects, sections: store.rows("sections")) }
+    private func taskContext(_ task: Record) -> String { FocusTaskCatalog.context(task, tasks: store.tasks, projects: store.allProjects, sections: store.rows("sections")) }
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -70,7 +70,7 @@ struct FocusSessionView: View {
             .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
             .sheet(isPresented: $choosingTask) {
                 FocusTaskChooser(workspace: request.workspace, selectedID: currentChoice?.id) { task in
-                    guard activeWorkspace, FocusTaskCatalog.selectable(task, tasks: store.tasks) else { return }
+                    guard activeWorkspace, FocusTaskCatalog.selectable(task, tasks: store.activeTasks) else { return }
                     selectedTask = task; choosingTask = false; message = nil
                 }
             }
@@ -220,7 +220,7 @@ struct FocusSessionView: View {
         let remaining = Int(ceil(seconds)); return String(format: "%02d:%02d", remaining / 60, remaining % 60)
     }
     private func start(expected: Record?) {
-        guard activeWorkspace, let choice = currentChoice, FocusTaskCatalog.selectable(choice, tasks: store.tasks) else {
+        guard activeWorkspace, let choice = currentChoice, FocusTaskCatalog.selectable(choice, tasks: store.activeTasks) else {
             message = "Choose an open task from your current workspace."; return
         }
         change(expected: expected) { try FocusSession(taskID: choice.id, minutes: minutes) }
@@ -250,7 +250,7 @@ private struct FocusTaskChooser: View {
     let choose: (FocusTaskCatalog.Choice) -> Void
     private var choices: [FocusTaskCatalog.Choice] {
         guard workspace.matches(account: store.userID, generation: store.workspaceGeneration), store.focusAvailable else { return [] }
-        return FocusTaskCatalog(tasks: store.tasks, projects: store.projects, sections: store.rows("sections"), search: search).choices
+        return FocusTaskCatalog(tasks: store.activeTasks, projects: store.projects, sections: store.rows("sections"), search: search).choices
     }
     var body: some View {
         let choices = self.choices

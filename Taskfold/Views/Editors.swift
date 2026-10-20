@@ -8,6 +8,8 @@ struct NamedEditor: View {
     let table: String
     @State var record: Record
     @State private var confirmDelete = false
+    @State private var workflowBinding: WorkspaceBinding?
+    @State private var workflowBaseline: Record?
     @FocusState private var nameFocused: Bool
     private let palette = [("Rose", "#e31e4b"), ("Red", "#ef4444"), ("Orange", "#f97316"), ("Green", "#22c55e"), ("Blue", "#3b82f6"), ("Purple", "#8b5cf6"), ("Teal", "#14b8a6"), ("Gray", "#6b7280")]
     private var isNew: Bool { store.record(table, id: record.id) == nil }
@@ -28,7 +30,20 @@ struct NamedEditor: View {
                         }
                     }
                 }
-                if table == "projects" { TextField("Description", text: Binding(get: { record.string("description") }, set: { record["description"] = .string($0) }), axis: .vertical).lineLimit(2...4) }
+                if table == "projects" { TextField("Description", text: Binding(get: { record.string("description") }, set: { record["description"] = .string($0) }), axis: .vertical).lineLimit(2...4)
+                    Picker("Parent project", selection: Binding(get: { record.string("parent_id") }, set: { record["parent_id"] = $0.isEmpty ? .null : .string($0) })) {
+                        Text("Top level").tag("")
+                        if !record.string("parent_id").isEmpty && !ProjectOrganization.parentChoices(for: record, account: store.userID, projects: store.allProjects).contains(where: { $0.id == record.string("parent_id") }) {
+                            Text(store.record("projects", id: record.string("parent_id"))?.name ?? "Unavailable parent").tag(record.string("parent_id"))
+                        }
+                        ForEach(ProjectOrganization.parentChoices(for: record, account: store.userID, projects: store.allProjects)) { item in Text(String(repeating: "  ", count: item.depth) + item.project.name).tag(item.id) }
+                    }.disabled(record.string("user_id") != store.userID).accessibilityIdentifier("projectParent")
+                    if !record.string("parent_id").isEmpty { Text("Subprojects share organization, not access. Sharing stays separate for each project.").font(.caption).foregroundStyle(.secondary) }
+                    if store.record("projects", id: record.id) != nil && record.string("user_id") == store.userID {
+                        Toggle("Archived", isOn: Binding(get: { record["is_archived"].flag }, set: { record["is_archived"] = .bool($0) })).accessibilityIdentifier("projectArchived")
+                        Text("Archiving preserves this project and its subprojects. Independently archived children remain archived when you restore the parent.").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
             }.formStyle(.columns)
             HStack {
                 if !isNew && (table != "projects" || record.string("user_id") == store.userID) {
@@ -40,19 +55,20 @@ struct NamedEditor: View {
             }
         }
         .padding(20).frame(width: 420)
-        .onAppear { nameFocused = true }
+        .onAppear { nameFocused = true; if workflowBinding == nil { workflowBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); workflowBaseline = store.record(table, id: record.id) } }
         .confirmationDialog("Delete this \(noun.lowercased())?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
                 workspace.run("Delete \(noun)") { store.remove(table, record.id) }
                 if workspace.section == (table == "projects" ? .project(record.id) : .label(record.id)) { workspace.section = .today }
                 dismiss()
             }
-        } message: { if table == "projects" { Text("Its tasks move to Inbox.") } }
+        } message: { if table == "projects" { Text("Its tasks move to Inbox. Subprojects remain saved at the top level.") } }
     }
     private var canSave: Bool { !record.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     private func save() {
+        guard store.workflowReady(workflowBinding) else { return }
         record["name"] = .string(record.name.trimmingCharacters(in: .whitespacesAndNewlines))
-        if workspace.save(table, record, name: isNew ? "Add \(noun)" : "Edit \(noun)") {
+        if workspace.save(table, record, name: isNew ? "Add \(noun)" : "Edit \(noun)", baseline: workflowBaseline) {
             if isNew { workspace.section = table == "projects" ? .project(record.id) : .label(record.id) }
             dismiss()
         }
