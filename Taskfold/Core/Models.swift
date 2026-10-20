@@ -1408,9 +1408,9 @@ enum TaskCompletion {
 
 /// Versioned widget payload. The extension receives bounded planning/Focus data, never authentication sessions or executable mutations.
 enum WidgetProjection {
-    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = []) -> [String: JSON] {
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = []) -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
-        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people)
+        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders)
         let pulse = pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar)
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let rows = tasks.filter { !$0.completed }.map { task -> JSON in
@@ -1464,15 +1464,34 @@ enum WidgetProjection {
             "hours": .string(String(format: "%02d:%02d–%02d:%02d", hours.start / 60, hours.start % 60, hours.end / 60, hours.end % 60)), "days": .object(days)])
     }
 
-    /// Only open task IDs and display names leave the app; filter expressions and credentials do not.
-    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar, datePreferences preferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = []) -> [JSON] {
+    /// Publish open task IDs and display names, never filter expressions or ordering records.
+    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar, datePreferences preferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = []) -> [JSON] {
+        guard !account.isEmpty else { return [] }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account, people: people, datePreferences: preferences)
         let cache = TaskCache(); cache.update(tasks)
-        func row(_ record: Record, kind: String, days: [String: [String]], error: Bool = false, clock: Bool = false) -> JSON {
+        let settings = viewPreferences.filter { $0.string("user_id") == account }
+        let orders = viewOrders.filter { $0.string("user_id") == account }
+        func sort(_ scope: TaskScope) -> String { settings.first { $0.id == scope.preferenceKey }?.fields["sort_by"]?.text ?? "manual" }
+        func supportedSort(_ value:String) -> Bool { ["manual","priority","title","date","deadline","duration"].contains(value) }
+        func arranged(_ rows: [Record], key: String, sort: String) -> [Record] {
+            guard ["manual", "priority"].contains(sort) else { return rows }
+            return DayPlacement.arranged(rows, ids: orders.first { $0.id == key }?["ids"].list.map(\.text) ?? [])
+        }
+        func projection(_ groups: [TaskGrouping.Group]) -> (ids: [String], groups: [JSON]) {
+            var seen=Set<String>(), ids:[String]=[], values:[JSON]=[]
+            for group in groups {
+                let unique=group.tasks.filter { !$0.completed && seen.insert($0.id).inserted }.map(\.id)
+                guard !unique.isEmpty else { continue }
+                ids += unique
+                values.append(.object(["id":.string(group.id),"name":.string(group.name),"ids":.array(unique.map(JSON.string))]))
+            }
+            return (ids,values)
+        }
+        func row(_ record: Record, kind: String, days: [String: [String]], groups: [String:[JSON]] = [:], error: Bool = false, clock: Bool = false) -> JSON {
             let key = (try? JSONEncoder().encode([account, kind, record.id]).base64EncodedString()) ?? ""
             var fields: [String: JSON] = ["id": .string(key), "recordID": .string(record.id), "kind": .string(kind), "name": .string(record.name),
-                "days": .object(days.mapValues { .array($0.map(JSON.string)) }), "timeZone": .string(calendar.timeZone.identifier), "invalid": .bool(error)]
+                "days": .object(days.mapValues { .array($0.map(JSON.string)) }), "groups": .object(groups.mapValues(JSON.array)), "timeZone": .string(calendar.timeZone.identifier), "invalid": .bool(error)]
             if clock {
                 let minute = FilterClockWindow.minute(now).timeIntervalSinceReferenceDate
                 fields["clockUpdated"] = .number(minute); fields["clockValidUntil"] = .number(minute + 60)
@@ -1480,26 +1499,50 @@ enum WidgetProjection {
             return .object(fields)
         }
         var result = projects.filter { !$0.id.isEmpty }.map { project in
-            row(project, kind: "project", days: ["*": cache.matching(TaskQuery(scope: .project(project.id))).map(\.id)])
+            let scope=TaskScope.project(project.id), ordering=sort(scope)
+            guard supportedSort(ordering) else { return row(project,kind:"project",days:[:],error:true) }
+            let rows=cache.matching(TaskQuery(scope:scope,sort:ordering))
+            let selected=OrganizationOrder.sorted(sections.filter { $0.string("project_id")==project.id })
+            let valid=Set(selected.map(\.id))
+            var groups=[TaskGrouping.Group(id:"none",name:selected.isEmpty ? "" : "Tasks",tasks:arranged(rows.filter { !valid.contains($0.string("section_id")) },key:"group:"+project.id+":none",sort:ordering))]
+            groups += selected.map { section in TaskGrouping.Group(id:section.id,name:section.name,tasks:arranged(rows.filter{$0.string("section_id")==section.id},key:"group:"+project.id+":"+section.id,sort:ordering)) }
+            let value=projection(groups)
+            return row(project,kind:"project",days:["*":value.ids],groups:["*":value.groups])
         }
         result += labels.filter { !$0.id.isEmpty }.map { label in
-            row(label, kind: "label", days: ["*": cache.matching(TaskQuery(scope: .label(label.id), labelName: label.name)).map(\.id)])
+            let scope=TaskScope.label(label.id), ordering=sort(scope)
+            guard supportedSort(ordering) else { return row(label,kind:"label",days:[:],error:true) }
+            let rows=cache.matching(TaskQuery(scope:scope,sort:ordering,labelName:label.name))
+            let value=projection([TaskGrouping.Group(id:"all",name:"",tasks:arranged(rows,key:"scope:"+scope.preferenceKey,sort:ordering))])
+            return row(label,kind:"label",days:["*":value.ids],groups:["*":value.groups])
         }
         for view in savedViews where !view.id.isEmpty {
             guard let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: context)) != nil else {
                 result.append(row(view, kind: "filter", days: [:], error: true)); continue
             }
-            var days: [String: [String]] = [:]
+            let ordering=view.fields["sort_by"]?.text ?? "manual", grouping=view.fields["grouping"]?.text ?? "none"
+            guard supportedSort(ordering),["none","project","priority","date","deadline"].contains(grouping) else { result.append(row(view,kind:"filter",days:[:],error:true));continue }
+            var days: [String: [String]] = [:], dayGroups:[String:[JSON]]=[:]
             for offset in 0..<(rule.usesClockWindow ? 1 : 8) {
                 guard let date = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)) else { continue }
                 let day = TaskPlanner.dayKey(date, calendar: calendar)
-                let query = TaskQuery(scope: .all, sort: view.string("sort_by"), today: day, filter: rule, now: rule.usesClockWindow ? now : nil, datePreferences: preferences,
+                let query = TaskQuery(scope: .all, sort: ordering, today: day, filter: rule, now: rule.usesClockWindow ? now : nil, datePreferences: preferences,
                     filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) },
                     filterProjects: projects.map { FilterReference(id: $0.id, name: $0.name) },
                     filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: context.personReferences, userID: account, timeZone: calendar.timeZone.identifier)
-                days[day] = cache.matching(query).filter { !$0.completed }.map(\.id)
+                let matches=cache.matching(query).filter{!$0.completed}
+                var groups=TaskGrouping.queryGroups(matches,rule:rule,by:grouping,context:context,today:day,timeZone:calendar.timeZone.identifier,now:query.now)
+                for index in groups.indices {
+                    groups[index].tasks=arranged(groups[index].tasks,key:"scope:view:"+view.id+":group:"+groups[index].id,sort:ordering)
+                    // Query text stays in the app. Ordinals retain its displayed section order.
+                    if let ordinal=rule.querySectionKeys.firstIndex(where:{groups[index].id.hasPrefix($0+":")}) {
+                        let subgroup=grouping=="none" ? "" : TaskGrouping.groups(groups[index].tasks,by:grouping,projects:projects,timeZone:calendar.timeZone.identifier).first?.name ?? ""
+                        groups[index].name="Query \(ordinal+1)"+(subgroup.isEmpty ? "" : " · "+subgroup)
+                    } else if grouping=="none" { groups[index].name="" }
+                }
+                let value=projection(groups);days[day]=value.ids;dayGroups[day]=value.groups
             }
-            result.append(row(view, kind: "filter", days: days, clock: rule.usesClockWindow))
+            result.append(row(view, kind: "filter", days: days,groups:dayGroups, clock: rule.usesClockWindow))
         }
         return result
     }

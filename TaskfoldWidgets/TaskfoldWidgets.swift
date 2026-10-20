@@ -141,6 +141,12 @@ struct WidgetDay: Identifiable {
     var id: Date { date }
 }
 
+struct WidgetListGroup: Codable, Identifiable, Sendable {
+    var id: String
+    var name: String
+    var ids: [String]
+}
+
 struct WidgetList: Codable, Identifiable, Sendable {
     var id: String
     var recordID: String
@@ -151,6 +157,7 @@ struct WidgetList: Codable, Identifiable, Sendable {
     var invalid: Bool
     var clockUpdated: Double? = nil
     var clockValidUntil: Double? = nil
+    var groups: [String: [WidgetListGroup]]? = nil
     func belongs(to account: String) -> Bool {
         guard !account.isEmpty, let data = Data(base64Encoded: id), let key = try? JSONDecoder().decode([String].self, from: data) else { return false }
         return key == [account, kind, recordID] && ["project", "label", "filter"].contains(kind)
@@ -363,6 +370,22 @@ struct WidgetSnapshot: Codable {
         let byID = Dictionary(tasks.map { ($0.id, $0.displayed(calendar: calendar)) }, uniquingKeysWith: { first, _ in first })
         var seen = Set<String>()
         return ids.compactMap { seen.insert($0).inserted ? byID[$0] : nil }
+    }
+    /// Group captions cannot add membership, duplicate a task, or survive a stale/account-mismatched list.
+    func listGroups(_ id: String?, at date: Date, calendar: Calendar = .current) -> [WidgetListGroup] {
+        let rows=listTasks(id,at:date,calendar:calendar)
+        guard let target=list(id), !rows.isEmpty else { return [] }
+        let key=target.kind == "filter" ? Self.day(date,calendar:calendar) : "*"
+        let canonical=rows.map(\.id), allowed=Set(canonical)
+        var seen=Set<String>(), result:[WidgetListGroup]=[]
+        for group in target.groups?[key] ?? [] {
+            let members=Set(group.ids).intersection(allowed)
+            let ids=canonical.filter{members.contains($0) && seen.insert($0).inserted}
+            if !ids.isEmpty { result.append(WidgetListGroup(id:group.id,name:group.name,ids:ids)) }
+        }
+        let rest=canonical.filter{seen.insert($0).inserted}
+        if !rest.isEmpty { result.append(WidgetListGroup(id:"ungrouped",name:"",ids:rest)) }
+        return result
     }
     func scoped(to id: String?, at date: Date, calendar: Calendar = .current) -> WidgetSnapshot {
         guard let id else { return self }
@@ -1043,6 +1066,12 @@ struct ListWidgetView: View {
     private var target: WidgetList? { entry.snapshot.list(entry.listID) }
     private var tasks: [WidgetTask] { entry.snapshot.listTasks(entry.listID, at: entry.date) }
     private var status: WidgetListStatus { entry.snapshot.listStatus(entry.listID, at: entry.date) }
+    private func detail(_ task: WidgetTask) -> String {
+        var parts:[String]=[]
+        if !entry.hideTitles, let group=entry.snapshot.listGroups(entry.listID,at:entry.date).first(where:{$0.ids.contains(task.id)}), !group.name.isEmpty { parts.append(group.name) }
+        if WidgetSnapshot.validDay(task.due) { parts.append("Planned \(widgetDate(task.due))") }
+        return parts.joined(separator:" · ")
+    }
     private var tint: Color { entry.palette.color(fallback: mint) }
     private var listHeader: some View {
         HStack {
@@ -1118,9 +1147,8 @@ struct ListWidgetView: View {
                         Link(destination: task.url(account: entry.snapshot.account)) {
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(entry.hideTitles ? "Private task" : task.title).font(.caption.weight(.semibold)).lineLimit(family == .systemSmall ? 3 : 2).privacySensitive()
-                                if WidgetSnapshot.validDay(task.due) {
-                                    Text("Planned \(widgetDate(task.due))").font(.caption2).foregroundStyle(.secondary)
-                                        .accessibilityLabel("Planned \(task.due)")
+                                if !detail(task).isEmpty {
+                                    Text(detail(task)).font(.caption2).foregroundStyle(.secondary).lineLimit(1).privacySensitive()
                                 }
                                 if family != .systemSmall, let day = task.deadlineDay { Text(widgetDate(day)).font(.caption2).foregroundStyle(tint).accessibilityLabel("Deadline \(day)") }
                             }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())

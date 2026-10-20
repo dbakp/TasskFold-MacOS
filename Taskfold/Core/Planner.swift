@@ -226,6 +226,25 @@ extension Snapshot {
         var outside = Record.task(user: user); outside["id"] = .string("eeeeeeee-eeee-4eee-8eee-eeeeeeeeee05"); outside["title"] = .string("Unrelated Inbox task")
         var result = Snapshot(); result.tables["projects"] = [project]; result.tables["labels"] = [label]; result.tables["saved_views"] = [view]; result.tables["tasks"] = [selected, outside]; return result
     }
+    static func widgetOrderingFixture(user:String) -> Snapshot {
+        var result=widgetListFixture(user:user)
+        let project=result.tables["projects"]![0].id
+        let review="eeeeeeee-eeee-4eee-8eee-eeeeeeeeee11", ship="eeeeeeee-eeee-4eee-8eee-eeeeeeeeee12"
+        result.tables["sections"]=[Record(["id":.string(review),"user_id":.string(user),"project_id":.string(project),"name":.string("Design review"),"order_index":.number(0)]),Record(["id":.string(ship),"user_id":.string(user),"project_id":.string(project),"name":.string("Ready to ship"),"order_index":.number(1)])]
+        let names=["Refine the concept","Review the layout","Approve contrast","Publish the design"]
+        let tasks=names.enumerated().map { index,name -> Record in
+            var row=Record.task(user:user,project:project)
+            row["id"] = .string("eeeeeeee-eeee-4eee-8eee-eeeeeeeeee2\(index)");row["title"] = .string(name)
+            row["priority"] = .number(index==2 ? 1 : index==3 ? 4 : 2)
+            row["section_id"] = .string(index==3 ? ship : review)
+            row["labels"] = .array([.string(result.tables["labels"]![0].id)])
+            return row
+        }
+        result.tables["tasks"]=tasks
+        result.tables["view_orders"]=[Record(["id":.string("group:"+project+":"+review),"user_id":.string(user),"ids":.array([tasks[1].id,tasks[0].id,tasks[2].id].map(JSON.string))])]
+        result.tables["view_preferences"]=[Record(["id":.string("project:"+project),"user_id":.string(user),"sort_by":.string("manual")])]
+        return result
+    }
     static func deadlineFixture(user: String) -> Snapshot {
         var first = Record.task(user: user)
         first["id"] = .string("dddddddd-dddd-4ddd-8ddd-dddddddddd01"); first["title"] = .string("Prepare launch")

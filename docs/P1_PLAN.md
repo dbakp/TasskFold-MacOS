@@ -16,7 +16,7 @@ Already delivered: archive/restore, owner-safe subprojects, first-version privat
 
 ## First implementation: subtask organizer
 
-Status: **Rank 1 is delivered for the embedded checklist model:** nested organization and child-detail editing (including notes and planning fields) are implemented in both apps. Representative native phone/tablet/Mac checks and both owned core suites pass. The organizer’s prior live transport acceptance remains recorded separately. **Next: rank 2, saved template management.**
+Status: **Rank 1 is delivered for the embedded checklist model:** nested organization and child-detail editing (including notes and planning fields) are implemented in both apps. Representative native phone/tablet/Mac checks and both owned core suites pass. The organizer’s prior live transport acceptance remains recorded separately. **Rank 2 template management and rank 3 widget ordering are tracked below, with native acceptance limits stated explicitly.**
 
 - A dedicated Organize subtasks sheet exposes the nested checklist while retaining existing inline controls.
 - Each row has an editable name, completion state and actions for adding a child, sibling moves, indent/outdent and confirmed branch deletion.
@@ -64,3 +64,12 @@ Migrations `20261020204903_template_edit_review.sql` and `20261020205307_templat
 Interchange/public catalogs remain later additions. Full native acceptance is recorded in `p1-template-management-evidence.json`; it must not be inferred from compilation or the core tests alone.
 
 Template acceptance: both owned core suites pass (iOS 731 reported, 9 environment skips; Mac 755 reported, 29 skips; zero failures). Full iPhone/iPad flows verify draft Cancel, exact definition Save, relaunch, later reuse and cancelled source replacement. Saved caches contain exactly one edited template, three independent tasks, six projects and no pending changes; the source and earlier run retain their original notes. Native comparison screenshots were reviewed. Mac independently builds and signs; its interactive walkthrough remains pending manual unlock. Next implementation: rank 3, widget ordering/grouping.
+
+
+## Rank 3 — widget ordering and grouping
+
+Implemented in both independently owned app/widget codebases. Installed iPhone/iPad acceptance passes; the Mac walkthrough remains pending manual unlock. My list projects follow section organization order and saved per-section task order; labels use their saved scope order. Default order retains priority bands. Explicit title/date/deadline/estimate sorting ignores manual ranks. Saved filters use their supported grouping and per-group saved order. Overlapping query sections contribute each open task once, at its first displayed group; empty groups disappear after completion. Query sections use ordinal captions so expressions and collaborator identifiers stay in the app.
+
+The widget projection exports only resolved task IDs, display names and compact group membership. Account-owned preferences/orders are selected before projection; no settings rows or raw filter AST are published. Widget decoding supports existing snapshots without group metadata. Group captions cannot add task membership and are omitted when Hide task titles is enabled. Existing account/date/clock refresh gates, completion feedback and action tokens remain in place. Unknown newer sort/grouping settings show List unavailable instead of a false default order. Native acceptance and exact limits are recorded in `p1-widget-ordering-evidence.json`.
+
+21 October widget acceptance: both full core suites pass (iOS 737 reported, 9 environment skips; Mac 761 reported, 29 skips; zero failures). Independently built/signed app/widget targets pass. Installed medium My list widgets on iPhone and iPad verify saved section order, priority bands, captions, completion feedback dismissal, remaining manual order and host relaunch. Exact caches retain all four synthetic tasks, only the approval completed, unchanged saved order and no pending mutations. Screenshots were reviewed for readable, unclipped rows. Mac desktop interaction remains pending manual unlock. Next implementation: rank 4, Insights and daily/weekly goals.

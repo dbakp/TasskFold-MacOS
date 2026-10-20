@@ -1,0 +1,107 @@
+{
+  "date": "2026-10-21",
+  "status": "implemented; installed iPhone/iPad acceptance passed; Mac walkthrough pending unlock",
+  "core": {
+    "ios": {
+      "reported": 737,
+      "skipped": 9,
+      "failures": 0,
+      "log": "ios-p1-widget-order-core-guarded.log"
+    },
+    "macOS": {
+      "reported": 761,
+      "skipped": 29,
+      "failures": 0,
+      "log": "mac-p1-widget-order-core-guarded.log"
+    }
+  },
+  "model_cases": [
+    "project section order and priority bands",
+    "new tasks after saved same-priority order",
+    "completion retains remaining order",
+    "label manual order and explicit sort",
+    "foreign account preferences ignored",
+    "query per-group ordering and overlap deduplication",
+    "empty query groups removed",
+    "civil day change and projection expiry",
+    "group metadata cannot add or duplicate membership",
+    "old snapshots without group metadata",
+    "unknown future sort/grouping refuses false ordering"
+  ],
+  "native": {
+    "macOS": "Independent app/widget build succeeds. Interactive acceptance pending manual unlock.",
+    "iPhone": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 130.375,
+      "runtime_warnings": 0,
+      "result": "ios-p1-widget-order-phone.xcresult",
+      "real_team_identity_verified": true,
+      "app_group_identity_verified": true,
+      "screenshots_reviewed": [
+        "saved section order and priority bands",
+        "remaining manual order after completion and host relaunch"
+      ],
+      "saved_cache": {
+        "sha256": "6b12f447097cf892ba319381c459befa25bb0cbd188f9149275d18abbef02e20",
+        "tasks": 4,
+        "completed": 1,
+        "pending": 0,
+        "only_synthetic_approval_completed": true,
+        "saved_order_unchanged": true
+      }
+    },
+    "iPad": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 164.393,
+      "runtime_warnings": 0,
+      "result": "ios-p1-widget-order-tablet-pager.xcresult",
+      "real_team_identity_verified": true,
+      "app_group_identity_verified": true,
+      "screenshots_reviewed": [
+        "saved section order and priority bands",
+        "remaining manual order after completion and host relaunch"
+      ],
+      "saved_cache": {
+        "sha256": "e2da885625996835d0f73ee9855cfbee49abca7cbb806d3c07df5208e39a38b4",
+        "tasks": 4,
+        "completed": 1,
+        "pending": 0,
+        "only_synthetic_approval_completed": true,
+        "saved_order_unchanged": true
+      }
+    },
+    "phone_build_note": "Phone ran before the added unsupported-settings guard. All tested supported settings are unchanged; the latest native build and iPad case include the guard.",
+    "gallery_harness": "Initial iPad attempt dragged blank gallery space; the next was stopped after the same unchanged preview. The final harness starts on the accessible preview card and requires the page indicator to advance. The resulting installed-widget case passes; product code was unchanged by the gallery fix."
+  },
+  "scope_limits": [
+    "My list displays compact per-task group captions within the existing row budget.",
+    "Multi-query captions retain section ordinal without publishing filter expressions.",
+    "No new remote reminder, older-client rollout or distribution acceptance claim."
+  ],
+  "cleanup": {
+    "isolated_simulator_apps_removed": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1"
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner"
+      }
+    ],
+    "simulators_shut_down": true,
+    "superseded_allocated_bytes_pruned": 705961984,
+    "no_main_mac_test_app_running": true,
+    "reviewed_exports_pruned_bytes": 31846400
+  }
+}

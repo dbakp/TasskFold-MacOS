@@ -336,7 +336,7 @@ struct RootView: View {
         if arguments.contains("--invitation-link-fixture") { pendingInvitations = true }
         if arguments.contains("--uitesting") && arguments.contains("--widget-list-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
-            store.snapshot = Snapshot.widgetListFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
+            store.snapshot = arguments.contains("--widget-ordering-fixture") ? Snapshot.widgetOrderingFixture(user:store.userID) : Snapshot.widgetListFixture(user: store.userID); workspace.section = .inbox; try? store.persist()
         }
         if arguments.contains("--uitesting") && arguments.contains("--deadline-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()

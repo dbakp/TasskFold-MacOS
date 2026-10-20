@@ -2416,3 +2416,8 @@ The user requested ranked P1 implementation. See `P1_PLAN.md`. The first item is
 
 
 20 October P1 template management: definition editing, reviewed source replacement, local-draft comparison, protected sync/delete and explicit recovery are implemented. Both cores and both real-service two-client tests pass. Signed isolated Mac build succeeds; native walkthrough is pending while the Mac is locked. `P1_PLAN.md` and `p1-template-management-evidence.json` preserve that acceptance boundary. The three deferred release gates remain open.
+
+
+20 October P1 widget ordering: My list now publishes saved project-section, label and filter-group order, with priority bands, explicit sort overrides, unique first membership and compact private captions. Both owned core suites pass (737 iOS / 761 Mac reported, zero failures); the independent Mac app/widget target builds. Native acceptance is in progress, and Mac UI remains pending manual unlock. See `p1-widget-ordering-evidence.json`.
+
+21 October widget acceptance continuation: installed iPhone/iPad medium My list cases now pass with readable group captions and correct saved order before/after completion and host relaunch. Exact fixture caches and real Simulator team/App Group identity are verified. iPad gallery automation was fixed to pan from the accessible preview and stop if its page number does not advance. Independent Mac build/core checks pass; desktop interaction is still pending unlock, so no new Mac runtime acceptance is claimed.

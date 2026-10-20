@@ -303,3 +303,97 @@ extension WidgetListTests {
         }
     }
 }
+
+extension WidgetListTests {
+    private func orderedSnapshot(_ tasks:[Record], sections:[Record]=[], views:[Record]=[], settings:[Record]=[], orders:[Record]=[]) throws -> WidgetSnapshot {
+        try JSONDecoder().decode(WidgetSnapshot.self,from:JSONEncoder().encode(WidgetProjection.payload(tasks:tasks,projects:[project],account:"owner",now:now,labels:[label],sections:sections,savedViews:views,calendar:cph,viewPreferences:settings,viewOrders:orders)))
+    }
+    private func order(_ key:String,_ ids:[String],owner:String="owner") -> Record { Record(["id":.string(key),"user_id":.string(owner),"ids":.array(ids.map(JSON.string))]) }
+    private func sortSetting(_ scope:String,_ sort:String,owner:String="owner") -> Record { Record(["id":.string(scope),"user_id":.string(owner),"sort_by":.string(sort)]) }
+    func testProjectWidgetKeepsSectionOrderPriorityBandsAndNewTasksAfterSavedOrder() throws {
+        let sections=[Record(["id":.string("drafts"),"project_id":.string("studio"),"name":.string("Drafts"),"order_index":.number(1)]),Record(["id":.string("review"),"project_id":.string("studio"),"name":.string("Review"),"order_index":.number(0)])]
+        var high=task("high"), b=task("b"), c=task("c"), added=task("new"), draft=task("draft")
+        high["priority"] = .number(1)
+        for id in ["high","b","c","new"] {
+            if id==high.id { high["section_id"] = .string("review") }; if id==b.id { b["section_id"] = .string("review") };if id==c.id { c["section_id"] = .string("review") };if id==added.id { added["section_id"] = .string("review") }
+        }
+        draft["section_id"] = .string("drafts")
+        let orders=[order("group:studio:review",["c","b","high"])]
+        let data=try orderedSnapshot([draft,b,c,high,added,task("loose")],sections:sections,orders:orders)
+        let key=try XCTUnwrap(data.availableLists.first{$0.kind=="project"}?.id)
+        XCTAssertEqual(data.listTasks(key,at:now,calendar:cph).map(\.id),["loose","high","c","b","new","draft"])
+        XCTAssertEqual(data.listGroups(key,at:now,calendar:cph).map(\.name),["Tasks","Review","Drafts"])
+        XCTAssertEqual(data.listGroups(key,at:now,calendar:cph).map(\.ids),[["loose"],["high","c","b","new"],["draft"]])
+        let remaining=try orderedSnapshot([draft,b,added,task("loose")],sections:sections,orders:orders)
+        XCTAssertEqual(remaining.listTasks(key,at:now,calendar:cph).map(\.id),["loose","b","new","draft"])
+        XCTAssertEqual(remaining.listGroups(key,at:now,calendar:cph).map(\.name),["Tasks","Review","Drafts"])
+    }
+    func testLabelWidgetFollowsManualOrderAndExplicitSortWithoutForeignSettings() throws {
+        let rows=[task("alpha",labels:["waiting"]),task("bravo",labels:["Waiting"]),task("charlie",labels:["waiting"])]
+        let orders=[order("scope:label:waiting",["charlie","bravo","alpha"])]
+        let manual=try orderedSnapshot(rows,orders:orders), key=try XCTUnwrap(manual.availableLists.first{$0.kind=="label"}?.id)
+        XCTAssertEqual(manual.listTasks(key,at:now,calendar:cph).map(\.id),["charlie","bravo","alpha"])
+        let title=try orderedSnapshot(rows,settings:[sortSetting("label:waiting","title")],orders:orders)
+        XCTAssertEqual(title.listTasks(key,at:now,calendar:cph).map(\.id),["alpha","bravo","charlie"])
+        let foreign=try orderedSnapshot(rows,settings:[sortSetting("label:waiting","title",owner:"another")],orders:orders+[order("scope:label:waiting",["alpha","bravo","charlie"],owner:"another")])
+        XCTAssertEqual(foreign.listTasks(key,at:now,calendar:cph).map(\.id),["charlie","bravo","alpha"])
+        XCTAssertEqual(manual.listGroups(key,at:now,calendar:cph).first?.name,"")
+    }
+    func testGroupedQueryWidgetUsesPerGroupOrderAndUniqueFirstMembership() throws {
+        let rule=FilterRule.sections([.predicate("priority","1"),.predicate("all","")])
+        var saved=view(rule);saved["grouping"] = .string("priority");saved["sort_by"] = .string("manual")
+        var high=task("high");high["priority"] = .number(1)
+        let orders=[order("scope:view:filter:group:"+rule.querySectionKeys[1]+":priority:4",["b","a"])]
+        let data=try orderedSnapshot([task("a"),high,task("b"),task("done",done:true)],views:[saved],orders:orders)
+        let key=try XCTUnwrap(data.availableLists.first{$0.kind=="filter"}?.id)
+        XCTAssertEqual(data.listTasks(key,at:now,calendar:cph).map(\.id),["high","b","a"])
+        let groups=data.listGroups(key,at:now,calendar:cph)
+        XCTAssertEqual(groups.map(\.name),["Query 1 · Priority 1","Query 2 · No priority"])
+        XCTAssertEqual(groups.map(\.ids),[["high"],["b","a"]])
+        let remaining=try orderedSnapshot([task("a"),task("b")],views:[saved],orders:orders)
+        XCTAssertEqual(remaining.listGroups(key,at:now,calendar:cph).map(\.name),["Query 2 · No priority"])
+        let encoded=String(decoding:try JSONEncoder().encode(data),as:UTF8.self)
+        XCTAssertFalse(encoded.contains("query_ast"));XCTAssertFalse(encoded.contains("sort_by"));XCTAssertFalse(encoded.contains("view_orders"))
+    }
+    func testWidgetGroupsFollowDayAndAccountValidityWithoutAddingOrDuplicatingTasks() throws {
+        var saved=view(.predicate("planned_on","tomorrow"));saved["grouping"] = .string("priority")
+        var data=try orderedSnapshot([task("tomorrow",due:"2026-10-25"),task("later",due:"2026-10-26")],views:[saved])
+        let key=try XCTUnwrap(data.availableLists.first{$0.kind=="filter"}?.id)
+        XCTAssertEqual(data.listGroups(key,at:now,calendar:cph).flatMap(\.ids),["tomorrow"])
+        let next=try XCTUnwrap(cph.date(byAdding:.day,value:1,to:now))
+        XCTAssertEqual(data.listGroups(key,at:next,calendar:cph).flatMap(\.ids),["later"])
+        let expired=try XCTUnwrap(cph.date(byAdding:.day,value:8,to:now))
+        XCTAssertTrue(data.listGroups(key,at:expired,calendar:cph).isEmpty)
+        let index=try XCTUnwrap(data.lists.firstIndex{$0.id==key})
+        data.lists[index].groups=[WidgetSnapshot.day(now,calendar:cph):[WidgetListGroup(id:"one",name:"First",ids:["tomorrow","later","tomorrow"]),WidgetListGroup(id:"two",name:"Second",ids:["tomorrow"])]]
+        XCTAssertEqual(data.listGroups(key,at:now,calendar:cph).map(\.ids),[["tomorrow"]])
+        data.account="another";XCTAssertTrue(data.listGroups(key,at:now,calendar:cph).isEmpty)
+    }
+    func testLegacyWidgetListsKeepOrderWithoutGroupMetadata() throws {
+        let source=try orderedSnapshot([task("a"),task("b")],orders:[order("group:studio:none",["b","a"])])
+        var object=try XCTUnwrap(JSONSerialization.jsonObject(with:JSONEncoder().encode(source)) as? [String:Any])
+        object["lists"]=(object["lists"] as? [[String:Any]])?.map{ row in var row=row;row.removeValue(forKey:"groups");return row }
+        let decoded=try JSONDecoder().decode(WidgetSnapshot.self,from:JSONSerialization.data(withJSONObject:object))
+        let key=try XCTUnwrap(decoded.availableLists.first{$0.kind=="project"}?.id)
+        XCTAssertEqual(decoded.listGroups(key,at:now,calendar:cph).map(\.ids),[["b","a"]])
+        XCTAssertEqual(decoded.listGroups(key,at:now,calendar:cph).map(\.name),[""])
+    }
+}
+
+
+extension WidgetListTests {
+    func testUnknownWidgetSortAndGroupingRequireRefreshInsteadOfInventingAnOrder() throws {
+        var saved=view(.predicate("all",""));saved["sort_by"] = .string("future-sort")
+        let sorted=try orderedSnapshot([task("a")],views:[saved],settings:[sortSetting("project:studio","future-sort")])
+        for list in sorted.availableLists where list.kind != "label" {
+            XCTAssertEqual(sorted.listStatus(list.id,at:now,calendar:cph),.unavailable)
+            XCTAssertTrue(sorted.listTasks(list.id,at:now,calendar:cph).isEmpty)
+            XCTAssertTrue(sorted.listGroups(list.id,at:now,calendar:cph).isEmpty)
+        }
+        saved["sort_by"] = .string("manual");saved["grouping"] = .string("future-group")
+        let grouped=try orderedSnapshot([task("a")],views:[saved])
+        let key=try XCTUnwrap(grouped.availableLists.first{$0.kind=="filter"}?.id)
+        XCTAssertEqual(grouped.listStatus(key,at:now,calendar:cph),.unavailable)
+        XCTAssertTrue(grouped.listGroups(key,at:now,calendar:cph).isEmpty)
+    }
+}
