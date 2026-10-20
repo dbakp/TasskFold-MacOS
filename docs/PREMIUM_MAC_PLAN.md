@@ -2400,3 +2400,5 @@ The independently owned Mac app now implements project hierarchy and archive/res
 The user has explicitly deferred remote reminder delivery, old-client safeguards and distribution verification. They are not active blockers for this feature expansion and have not been relabeled as accepted release work.
 
 - 2026-10-20: Workflow cloud transport acceptance now covers Mac creation → iOS reuse/batch → Mac receipt with actual owned cores and the real backend. All three phases passed; synthetic account removed. Evidence: `project-workflows-cloud-evidence.json`. This adds transport evidence to the representative native workflow checks, without asserting a new native realtime handoff.
+
+- 2026-10-20: Native iPhone cloud workflow follow-up passes with Mac-owned source creation and return verification, saved session and second relaunch. Four projects/four tasks/one template, zero native pending writes; synthetic data removed. See `project-workflows-native-cloud-evidence.json` for the native/core boundary.

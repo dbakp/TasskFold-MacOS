@@ -8,7 +8,7 @@ final class ProjectWorkflowIntegrationTests: XCTestCase {
         let environment = ProcessInfo.processInfo.environment
         guard let path = environment["TASKFOLD_WORKFLOW_LIVE_FIXTURE"],
               let phase = environment["TASKFOLD_WORKFLOW_LIVE_PHASE"],
-              ["create", "reuse", "receive"].contains(phase) else {
+              ["create", "reuse", "receive", "nativeReceive"].contains(phase) else {
             throw XCTSkip("Disposable workflow fixture and handoff phase required")
         }
         let url = URL(fileURLWithPath: path)
@@ -93,6 +93,23 @@ final class ProjectWorkflowIntegrationTests: XCTestCase {
             // Replay after a lost acknowledgement must retain one task per line.
             _ = try await backend.send(bulk[0], expectedAccount: owner)
             _ = try await upload([Mutation(table: "projects", recordID: root.id, method: "PATCH", fields: ["is_archived": .bool(false)])], snapshot: snapshot)
+        } else if phase == "nativeReceive" {
+            let root = try row(snapshot, "projects", "root"), child = try row(snapshot, "projects", "child")
+            XCTAssertFalse(root["is_archived"].flag); XCTAssertFalse(child["ancestor_archived"].flag)
+            let original = try row(snapshot, "tasks", "task")
+            XCTAssertEqual(original.string("due_date"), "2026-11-04"); XCTAssertFalse(original.completed)
+            let copyRoot = try XCTUnwrap(snapshot.tables["projects"]?.first { $0.name == "Native workflow copy" })
+            let copyChild = try XCTUnwrap(snapshot.tables["projects"]?.first { $0.string("parent_id") == copyRoot.id })
+            let copy = try XCTUnwrap(snapshot.tables["tasks"]?.first { $0.string("project_id") == copyChild.id })
+            XCTAssertNotEqual(copy.id, original.id); XCTAssertFalse(copy.completed)
+            XCTAssertTrue(copy.string("due_date").isEmpty, "Native template default must clear the source's old date")
+            XCTAssertEqual(copy.string("description"), original.string("description"))
+            XCTAssertEqual(copy["duration_minutes"], .number(30))
+            let batch = snapshot.tables["tasks"]?.filter { $0.string("project_id").isEmpty } ?? []
+            XCTAssertEqual(Set(batch.map(\.title)), ["Native handoff first", "Native handoff second"])
+            XCTAssertEqual(batch.count, 2); XCTAssertEqual(snapshot.tables["tasks"]?.count, 4)
+            XCTAssertEqual(snapshot.tables["projects"]?.count, 4); XCTAssertEqual(snapshot.tables["sections"]?.count, 2)
+            XCTAssertEqual(snapshot.tables[WorkflowTemplate.table]?.count, 1)
         } else {
             let root = try row(snapshot, "projects", "root"), child = try row(snapshot, "projects", "child")
             XCTAssertFalse(root["is_archived"].flag); XCTAssertFalse(child["ancestor_archived"].flag)

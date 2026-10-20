@@ -1,0 +1,75 @@
+{
+  "observedOn": "2026-10-20",
+  "scope": "Native iPhone screen reception/reuse of a Mac-core-created synthetic cloud workspace, followed by separately compiled Mac and iOS core server verification",
+  "result": "passed",
+  "phases": {
+    "macSource": {
+      "tests": 1,
+      "failures": 0,
+      "seconds": 2.194,
+      "logSHA256": "b12f15799adc9e8d61de0d4893fa0309be54ea324337cbc8a1f1f359ca9ce24f"
+    },
+    "iphoneNative": {
+      "tests": 1,
+      "failures": 0,
+      "seconds": 91.974,
+      "logSHA256": "ef72ccc3d99cf1fbff1305dee53d03d249fce80f49179709d6d7f8710fef8e30"
+    },
+    "macReceive": {
+      "tests": 1,
+      "failures": 0,
+      "seconds": 0.862,
+      "logSHA256": "fb52f69107322e6cb4ced6318e5811cb1bb080d4f22a142a2b74c725e5190196"
+    },
+    "iosReceive": {
+      "tests": 1,
+      "failures": 0,
+      "seconds": 0.99,
+      "logSHA256": "02cee5384bd48eec9e81b232f13577f67d2808e9678df1ff1b0abd65f40bc988"
+    }
+  },
+  "nativeTest": "testProjectWorkflowNativeCloudReceiveReuseAndRelaunch",
+  "resultBundle": "ios-workflow-cloud-native-v4.xcresult",
+  "verified": [
+    "native email/password sign-in without injected session",
+    "normal relaunch retains the actual authenticated session",
+    "downloaded archived project has a working native Restore action",
+    "downloaded project template creates fresh project/subproject/section/task records through native controls",
+    "multi-line review saves two tasks through native controls",
+    "second relaunch retains both task rows and copied project",
+    "returning independently compiled Mac and iOS cores verify exact cloud graph/counts, original schedule/notes, cleared copy schedule and restored archive projection"
+  ],
+  "savedSimulatorCache": {
+    "pending": 0,
+    "projects": 4,
+    "tasks": 4,
+    "templates": 1
+  },
+  "sourceMatch": "Owned app sources; only disposable app-group/bundle namespaces differ. Native test source matches the owned source after those substitutions.",
+  "harnessFailures": {
+    "attempts": 3,
+    "cause": "The Simulator password-save sheet remained over Browse; no workflow mutation was reached. Direct app/service queries and interruption monitoring did not dismiss the remote-hosted sheet.",
+    "resolution": "After actual native sign-in, normal Quit/relaunch checks persisted authentication and removes the ephemeral password sheet before workflow testing. No app production change or injected auth is involved.",
+    "retainedLogs": [
+      "ios-workflow-cloud-native-v1.log",
+      "ios-workflow-cloud-native-v2.log",
+      "ios-workflow-cloud-native-v3.log"
+    ]
+  },
+  "cleanup": {
+    "revokedSessions": true,
+    "testUsersRemaining": 0,
+    "testTasksRemaining": 0,
+    "testProjectsRemaining": 0,
+    "testTemplatesRemaining": 0,
+    "isolatedAppUninstalled": true,
+    "simulatorReturnedToShutdown": true,
+    "realUserDataChanged": false,
+    "credentialsRemoved": true
+  },
+  "limits": [
+    "New cloud interactions are exercised through native iPhone screens; Mac creation/receipt uses the actual Mac-owned core transport, not newly driven Mac screens.",
+    "This does not add realtime background-wake, signed distribution or remote reminder acceptance.",
+    "Earlier representative local Mac, iPhone and iPad workflow acceptance remains separately recorded."
+  ]
+}

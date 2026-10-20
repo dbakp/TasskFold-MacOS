@@ -339,5 +339,19 @@
     "lockedPrivateBuild20Accepted": true,
     "protectedTapBuild20Accepted": true,
     "normalReturnBuild20Accepted": true
+  },
+  "projectWorkflowsFollowup": {
+    "userAddedScope": [
+      "archive/restore and subprojects",
+      "private reusable templates",
+      "reviewed multi-line capture"
+    ],
+    "status": "accepted_bounded_native_and_cloud_transport",
+    "evidence": [
+      "project-workflows-evidence.json",
+      "project-workflows-cloud-evidence.json",
+      "project-workflows-native-cloud-evidence.json"
+    ],
+    "boundary": "Representative local Mac/iPhone/iPad native checks, new native iPhone cloud receive/reuse/relaunch, and both owned cores actual-service transport; no new native Mac cloud/background-wake acceptance."
   }
 }
