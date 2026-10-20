@@ -553,3 +553,45 @@ extension AccountTransportTests {
         await fulfillment(of:[posted,fetched],timeout:2)
     }
 }
+
+extension AccountTransportTests {
+    @MainActor func testProductivityGoalCreationAndEditsUseGuardedRPCWithExactBaselines() async throws {
+        let api=backend(try signed(owner)),owner=self.owner
+        var goals=try ProductivityGoals();goals.timeZone="UTC";goals.dailyTarget=5;goals.weeklyTarget=20
+        let first=try ProductivityGoalEdit.command(goals.document,previous:nil,account:owner)
+        var original=ProductivityGoalEdit.emptyRow(account:owner);original[ProductivityGoals.field]=goals.document
+        goals.dailyTarget=6;let second=try ProductivityGoalEdit.command(goals.document,previous:original,account:owner)
+        let expected=[first,second],called=expectation(description:"Guarded goal saves");called.expectedFulfillmentCount=2
+        var index=0
+        ScopedHTTP.handler={request,transport in
+            XCTAssertEqual(request.url?.path,"/rest/v1/rpc/taskfold_set_productivity_goals");XCTAssertEqual(request.httpMethod,"POST")
+            let data=request.httpBody ?? {let stream=request.httpBodyStream!;stream.open();defer{stream.close()};var data=Data(),buffer=[UInt8](repeating:0,count:4096);while stream.hasBytesAvailable {let count=stream.read(&buffer,maxLength:buffer.count);if count<=0{break};data.append(buffer,count:count)};return data}()
+            let body=try? JSONDecoder().decode([String:JSON].self,from:data),change=expected[index];index+=1
+            XCTAssertEqual(body,["_base":change.baseline![ProductivityGoals.field]!,"_goals":change.fields[ProductivityGoals.field]!])
+            var saved=ProductivityGoalEdit.emptyRow(account:owner);saved[ProductivityGoals.field]=change.fields[ProductivityGoals.field]!;saved["sort_by"] = .string("title")
+            transport.finish(200,try! JSONEncoder().encode(saved));called.fulfill()
+        }
+        defer{ScopedHTTP.handler=nil}
+        let savedFirst=try await api.send(first,expectedAccount:owner);XCTAssertEqual(savedFirst?[ProductivityGoals.field],first.fields[ProductivityGoals.field])
+        let savedSecond=try await api.send(second,expectedAccount:owner);XCTAssertEqual(savedSecond?[ProductivityGoals.field],second.fields[ProductivityGoals.field])
+        await fulfillment(of:[called],timeout:2)
+    }
+    @MainActor func testGoalUnknownBaselineNeedsReviewAndConflictPropagatesWithoutBlindPatch() async throws {
+        let api=backend(try signed(owner)),gate=HTTPGate()
+        var goals=try ProductivityGoals();goals.timeZone="UTC";goals.dailyTarget=3
+        var change=try ProductivityGoalEdit.command(goals.document,previous:nil,account:owner)
+        change.baseline?[ProductivityGoals.field] = .object(["version":.number(2)])
+        ScopedHTTP.handler={_,transport in gate.hold(transport);transport.finish(400,Data(#"{"message":"TASKFOLD_CONFLICT: Goals changed"}"#.utf8))};defer{ScopedHTTP.handler=nil}
+        do{_ = try await api.send(change);XCTFail("Unsupported baseline sent")}catch{XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"))};XCTAssertEqual(gate.count,0)
+        change.baseline?[ProductivityGoals.field] = .null
+        do{_ = try await api.send(change);XCTFail("Stale save accepted")}catch{XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"))};XCTAssertEqual(gate.count,1)
+    }
+    @MainActor func testGoalServerAcknowledgementMustConfirmOwnerAndCompleteChoice() async throws {
+        let api=backend(try signed(owner));var goals=try ProductivityGoals();goals.timeZone="UTC";goals.dailyTarget=3
+        let change=try ProductivityGoalEdit.command(goals.document,previous:nil,account:owner)
+        var wrong=ProductivityGoalEdit.emptyRow(account:owner);wrong[ProductivityGoals.field] = .null
+        let data=try JSONEncoder().encode(wrong)
+        ScopedHTTP.handler={_,transport in transport.finish(200,data)};defer{ScopedHTTP.handler=nil}
+        do{_ = try await api.send(change);XCTFail("Unconfirmed goal choice was acknowledged")}catch{XCTAssertTrue(error.localizedDescription.contains("did not confirm"))}
+    }
+}

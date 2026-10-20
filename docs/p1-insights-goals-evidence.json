@@ -1,0 +1,175 @@
+{
+  "date": "2026-10-21",
+  "status": "implemented; iPhone/iPad native acceptance passed; Mac walkthrough pending unlock",
+  "ownership": "Independently owned app/core code, tests, migrations and release inputs; no sibling build dependency.",
+  "core": {
+    "ios": {
+      "reported": 767,
+      "skipped": 10,
+      "failures": 0,
+      "log": "ios-p1-insights-core-final.log"
+    },
+    "macOS": {
+      "reported": 791,
+      "skipped": 30,
+      "failures": 0,
+      "log": "mac-p1-insights-core-final.log"
+    },
+    "focused_activity_goal_cases": 31
+  },
+  "behavior": [
+    "Optional personal daily/weekly targets, rest weekdays, fixed saved time zone and week start",
+    "7/28-day Mine/Workspace history; goals remain personal",
+    "Recorded-transition deduplication and reopen/completion-time corrections",
+    "Retained completed-deletion credit and separate explicit recreation lifecycle",
+    "Imported completed creation does not invent completion history",
+    "Coverage boundary, malformed-history, pending-sync and access-change explanations",
+    "Isolated editor draft, inline validation, Cancel/discard and explicit stale-choice review",
+    "Unknown metadata preserved; unsupported versions cannot be overwritten",
+    "Account-bound guarded sync/retry and guarded supported backup application",
+    "Largest accessibility text uses a day list; normal chart supports day selection"
+  ],
+  "database": {
+    "migration": "20261020221933_productivity_goals_review.sql",
+    "project": "zqxflydiyfjeedqvyova",
+    "deployed": true,
+    "actual_role_fixture": "supabase/tests/productivity_goals_review.sql",
+    "role_fixture_rolled_back": true,
+    "security": "Security invoker, empty search_path, authenticated only, existing own-account RLS, per-record row lock and atomic full-document baseline comparison.",
+    "advisors": {
+      "before": 6,
+      "after": 6,
+      "new_findings": []
+    }
+  },
+  "live_two_client": {
+    "case": "ProjectWorkflowIntegrationTests.testTwoClientGoalsReviewAndRecordedCompletionCorrection",
+    "ios": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 6.663,
+      "log": "ios-p1-insights-live-final.log"
+    },
+    "macOS": {
+      "passed": 1,
+      "failures": 0,
+      "seconds": 3.799,
+      "log": "mac-p1-insights-live-final.log"
+    },
+    "covered": [
+      "First save and idempotent retry",
+      "Overlapping choices require review",
+      "Queue encoding retains guarded draft",
+      "Unknown goal metadata and independent sort preserved",
+      "Stale retry after newer update refused",
+      "Explicit use-synced resolution",
+      "Matching saved calendar boundaries across two sessions",
+      "Actual recorded task completion and reopen corrected on both clients"
+    ],
+    "cleanup": "Disposable account, tasks, preferences, activity, sessions and refresh tokens removed; server counts verified zero; private credential fixture removed.",
+    "limit": "Final live runs predate the local-only timestamp-parser optimization; final owned suites cover equivalence of that parser."
+  },
+  "performance": {
+    "fixture": "5,000 unique recorded events/tasks and distinct timestamps",
+    "before_seconds": 3.271551,
+    "after_seconds": 0.362509,
+    "after_log": "ios-p1-insights-core-final.log",
+    "method": "Per-calculation local ISO parsers and timestamp/civil-day caches; no shared mutable formatter. Matching counts and fractional/offset parser equivalence tested.",
+    "limit": "Synthetic local benchmark, not a production latency guarantee."
+  },
+  "native": {
+    "ios_build": "ios-p1-insights-build-final.log",
+    "macOS_build": "mac-p1-insights-build-final.log",
+    "macOS": "Current-source independent app builds/signs. Interactive walkthrough pending manual unlock; no runtime or VoiceOver acceptance claim.",
+    "iPhone": {
+      "passed": 2,
+      "skipped": 0,
+      "failures": 0,
+      "runtime_warnings": 0,
+      "seconds": 162.17,
+      "result": "ios-p1-insights-phone-clean.xcresult",
+      "checks": [
+        "Draft target/time-zone changes cancelled without saving",
+        "Inline invalid-target validation and disabled Save",
+        "Daily/weekly targets, rest day and calendar survive relaunch",
+        "Mine/Workspace and 7/28-day totals",
+        "Completion and task Undo correct recorded personal totals",
+        "Largest accessibility text and dark appearance",
+        "Saved synthetic cache has five tasks, Polish the chart open and no pending mutations"
+      ],
+      "screenshots_reviewed": [
+        "Normal personal progress",
+        "Workspace personal-goal separation on iPhone",
+        "Largest text day list",
+        "Largest text inline validation"
+      ],
+      "saved_cache_sha256": "b36f4ec37ac773383c4956e538304b49482561eb6bdae2cc8a8a1cf39a0b3d96",
+      "saved_goals": {
+        "weekly_target": 6,
+        "version": 1,
+        "active_weekdays": [
+          1,
+          2,
+          4,
+          5,
+          6,
+          7
+        ],
+        "week_start": 2,
+        "time_zone": "UTC",
+        "daily_target": 3
+      },
+      "tasks": 5,
+      "pending": 0
+    },
+    "iPad": {
+      "passed": 2,
+      "skipped": 0,
+      "failures": 0,
+      "runtime_warnings": 0,
+      "seconds": 170.893,
+      "result": "ios-p1-insights-tablet-clean.xcresult",
+      "checks": [
+        "Draft target/time-zone changes cancelled without saving",
+        "Inline invalid-target validation and disabled Save",
+        "Daily/weekly targets, rest day and calendar survive relaunch",
+        "Mine/Workspace and 7/28-day totals",
+        "Completion and task Undo correct recorded personal totals",
+        "Largest accessibility text and dark appearance",
+        "Saved synthetic cache has five tasks, Polish the chart open and no pending mutations"
+      ],
+      "screenshots_reviewed": [
+        "Normal personal progress",
+        "Workspace personal-goal separation on iPhone",
+        "Largest text day list",
+        "Largest text inline validation"
+      ],
+      "saved_cache_sha256": "641f74a9bf24d1c0bddce5463afe2ca67777cd1799b0a9fc3b9b064393489566",
+      "saved_goals": {
+        "time_zone": "UTC",
+        "daily_target": 3,
+        "weekly_target": 6,
+        "active_weekdays": [
+          1,
+          2,
+          4,
+          5,
+          6,
+          7
+        ],
+        "version": 1,
+        "week_start": 2
+      },
+      "tasks": 5,
+      "pending": 0
+    },
+    "resolved_runtime_issue": "An initial two-case phone run passed functionally but reported two invalid-frame warnings when opening the numeric keyboard. The goal editor now uses the existing measured keyboard-safe-area control instead of a keyboard toolbar. Final phone/tablet bundles each verify two actual passes and zero runtime warnings."
+  },
+  "limits": [
+    "Targets do not invent historical goal attainment or streaks.",
+    "Totals reflect accessible recorded activity, not every historical completed task.",
+    "Remote reminders, older-client rollout safeguards and distribution verification remain explicitly deferred.",
+    "No real task/account data used for acceptance."
+  ],
+  "cleanup": "Superseded failed native bundles/attachments pruned. Isolated phone/tablet apps and runners removed and both simulators shut down after acceptance. One current signed Mac acceptance bundle retained without launch."
+}

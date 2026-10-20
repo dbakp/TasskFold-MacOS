@@ -80,7 +80,7 @@ struct WorkspaceBackup: Codable, Sendable {
         "tasks": ["id","user_id","title","description","completed","completion_version","task_generation","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at"],
         "saved_views": ["id","user_id","name","query_ast","layout","grouping","sort_by","include_completed","order_index","created_at","updated_at"],
         "favorites": ["id","user_id","order_index","created_at"],
-        "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours","date_preferences"],
+        "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours","date_preferences",ProductivityGoals.field],
         "view_orders": ["id","user_id","ids","updated_at"],
         "focus_sessions": ["id","user_id","revision","action_id","state","updated_at"],
         ReminderSnooze.table: ["id","user_id","settings","updated_at"]
@@ -163,6 +163,11 @@ struct WorkspaceBackup: Codable, Sendable {
                     throw BackupFailure(message: "The backup includes invalid reminder preferences.")
                 }
                 if table == "saved_views" { _ = try FilterRule(document: row["query_ast"]) }
+                if row[ProductivityGoals.field] != .null {
+                    guard table=="view_preferences",row.id==ProductivityGoals.recordID else { throw BackupFailure(message:"The goal settings have an invalid record scope.") }
+                    guard case .object(let document)=row[ProductivityGoals.field],case .number(let version)=document["version"],version>=1,version.rounded(.down)==version,(try JSONEncoder().encode(row[ProductivityGoals.field])).count<=4096 else { throw BackupFailure(message:"The saved goals have an invalid definition.") }
+                    if version==1 { _ = try ProductivityGoals(document:row[ProductivityGoals.field]) }
+                }
                 if row["date_preferences"] != .null { _ = try DatePhrasePreferences(document: row["date_preferences"]) }
                 if row["working_hours"] != .null { _ = try WorkingHours(document: row["working_hours"]) }
                 if table == FocusSessionChange.table, !FocusSessionChange.validRow(row, account: row.string("user_id")) {
@@ -318,6 +323,21 @@ extension WorkspaceBackup {
         }
         for table in Self.workTables {
             for original in try orderedRows(table) {
+                if table=="view_preferences",original.id==ProductivityGoals.recordID,original.fields[ProductivityGoals.field] != nil {
+                    let existing=currentRows[table]?[ProductivityGoals.recordID]
+                    if let existing,existing.string("user_id") != account { throw BackupFailure(message:"A restore target belongs to another account.") }
+                    if existing != nil,policy == .keepCurrent { result.kept+=1;continue }
+                    var changed=false
+                    if existing==nil || existing?[ProductivityGoals.field] != original[ProductivityGoals.field] {
+                        result.changes.append(try ProductivityGoalEdit.command(original[ProductivityGoals.field],previous:existing,account:account));changed=true
+                    }
+                    let other=original.fields.filter{!["id","user_id","updated_at",ProductivityGoals.field].contains($0.key) && existing?[$0.key] != $0.value}
+                    if !other.isEmpty {
+                        result.changes.append(Mutation(table:table,recordID:ProductivityGoals.recordID,method:"PATCH",fields:other,baseline:Dictionary(uniqueKeysWithValues:other.keys.map{($0,existing?[$0] ?? .null)})));changed=true
+                    }
+                    if changed { if existing==nil {result.added+=1}else{result.updated+=1};result.counts[table,default:0]+=1 } else {result.kept+=1}
+                    continue
+                }
                 if table == FocusSessionChange.table {
                     let existing = currentRows[table]?[FocusSessionChange.recordID]
                     if existing != nil && policy == .keepCurrent { result.kept += 1; continue }

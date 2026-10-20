@@ -9,6 +9,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var phase
     @State private var pinnedNote: PinnedNoteRequest?
     @State private var pulseRequest: ProjectPulseRequest?
+    @State private var insightsRequest:InsightsRequest?
     @State private var focusRequest: FocusSessionRequest?
     @State private var inboxReview: InboxReviewRequest?
     @Environment(\.openSettings) private var openSettings
@@ -39,6 +40,8 @@ struct RootView: View {
         .environment(\.startInboxReview, startInboxReview)
         .environment(\.openPinnedNotes, { pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .environment(\.openFocusSession, { focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
+        .environment(\.openInsights,{insightsRequest=InsightsRequest(workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))})
+        .sheet(item:$insightsRequest) { InsightsView(request:$0) }
         .environment(\.openProjectPulse, { project in pulseRequest = ProjectPulseRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), projectID: project) })
         .sheet(item: $pulseRequest) { request in ProjectPulseView(request: request) { task in
             guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), store.record("tasks", id: task.id) != nil else { return }
@@ -56,7 +59,7 @@ struct RootView: View {
         .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
         .onChange(of: store.workspaceGeneration) { _, _ in
             workspace.clearNavigationMemory(); workspace.section = .today
-            inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil
+            inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil; insightsRequest = nil
         }
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
             BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.ids.sorted().compactMap { workspace.taskRecord($0) } : []) { day in
@@ -334,6 +337,7 @@ struct RootView: View {
             try? store.persist()
         }
         if arguments.contains("--invitation-link-fixture") { pendingInvitations = true }
+        if arguments.contains("--uitesting") && arguments.contains("--insights-fixture") { store.startLocal();store.seedInsightsFixture();workspace.section = .inbox }
         if arguments.contains("--uitesting") && arguments.contains("--widget-list-fixture") {
             store.startLocal(); store.dailyBackupsEnabled = false; store.disableNotifications()
             store.snapshot = arguments.contains("--widget-ordering-fixture") ? Snapshot.widgetOrderingFixture(user:store.userID) : Snapshot.widgetListFixture(user: store.userID); workspace.section = .inbox; try? store.persist()

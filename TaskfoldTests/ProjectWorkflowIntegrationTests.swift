@@ -197,3 +197,65 @@ extension ProjectWorkflowIntegrationTests {
         } catch { try? await cleanup();throw error }
     }
 }
+
+extension ProjectWorkflowIntegrationTests {
+    @MainActor func testTwoClientGoalsReviewAndRecordedCompletionCorrection() async throws {
+        guard let path=ProcessInfo.processInfo.environment["TASKFOLD_GOALS_LIVE_FIXTURE"] else { throw XCTSkip("Disposable goal account required") }
+        let permissions=try FileManager.default.attributesOfItem(atPath:path)[.posixPermissions] as? NSNumber
+        XCTAssertEqual((permissions?.intValue ?? 0o777)&0o077,0)
+        let f=try JSONDecoder().decode([String:String].self,from:Data(contentsOf:URL(fileURLWithPath:path)))
+        let owner=try XCTUnwrap(f["userID"]),identity=try XCTUnwrap(f["emailIdentity"]),email=try XCTUnwrap(f["email"])
+        guard UUID(uuidString:owner) != nil,UUID(uuidString:identity) != nil,email=="taskfold-continuity-"+identity+"@example.invalid" else { throw AppFailure(message:"Synthetic account only") }
+        let config=["URL":try XCTUnwrap(f["url"]),"Key":try XCTUnwrap(f["key"])]
+        func client()->Backend { Backend(configuration:config,http:URLSession(configuration:.ephemeral),session:nil,persistSession:{_ in}) }
+        let a=client(),b=client()
+        for api in [a,b] { let signed=try await api.signIn(email:email,password:try XCTUnwrap(f["password"]),signup:false);XCTAssertTrue(signed);XCTAssertEqual(api.session?.user.id,owner) }
+        func current(_ api:Backend) async throws ->Record? { try await api.rows("view_preferences").first{$0.id==ProductivityGoals.recordID} }
+        func send(_ api:Backend,_ change:Mutation) async throws ->Record { let row=try await api.send(change,expectedAccount:owner);return try XCTUnwrap(row) }
+        let before=try await current(a),initialTasks=try await a.rows("tasks")
+        guard before==nil,initialTasks.isEmpty else { throw AppFailure(message:"Fresh synthetic goals and tasks required") }
+        let taskID=UUID().uuidString.lowercased()
+        func cleanup() async throws {
+            if let task=try await a.rows("tasks").first(where:{$0.id==taskID}) { _ = try await a.send(Mutation(table:"tasks",recordID:task.id,method:"DELETE",fields:[:],baseline:task.fields)) }
+            if let row=try await current(a) { _ = try await a.send(Mutation(table:"view_preferences",recordID:row.id,method:"DELETE",fields:[:],baseline:row.fields)) }
+        }
+        func source(_ api:Backend) async throws ->Snapshot {
+            var result=Snapshot();for table in ["view_preferences",TaskActivity.table,TaskActivity.epochTable] {result.tables[table]=try await api.rows(table)};return result
+        }
+        do {
+            var goals=try ProductivityGoals();goals.dailyTarget=5;goals.weeklyTarget=20;goals.timeZone="UTC"
+            let creation=try ProductivityGoalEdit.command(goals.document,previous:nil,account:owner)
+            let original=try await send(a,creation);_ = try await send(a,creation)
+            var remoteGoals=goals;remoteGoals.dailyTarget=6
+            var remoteDocument=remoteGoals.document.object;remoteDocument["metadata"] = .string("Keep independent synced metadata")
+            _ = try await send(b,ProductivityGoalEdit.command(.object(remoteDocument),previous:original,account:owner))
+            _ = try await b.send(Mutation(table:"view_preferences",recordID:ProductivityGoals.recordID,method:"PATCH",fields:["sort_by":.string("title")]))
+            goals.weeklyTarget=25
+            let stale=try ProductivityGoalEdit.command(goals.document,previous:original,account:owner)
+            do{_ = try await a.send(stale);XCTFail("Overlapping goal was replaced without review")}catch{XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"))}
+            let fetched=try await current(a);let remote=try XCTUnwrap(fetched);var queued=Snapshot(tables:["view_preferences":[original]],pending:[stale]);queued.apply(stale)
+            queued=try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(queued))
+            let reviewed=try XCTUnwrap(SyncConflict(mutation:stale,remote:remote).resolving(queued,keepLocal:true))
+            let retry=try XCTUnwrap(reviewed.pending.first),saved=try await send(a,retry)
+            XCTAssertEqual(saved[ProductivityGoals.field].object["metadata"],.string("Keep independent synced metadata"));XCTAssertEqual(saved.string("sort_by"),"title")
+            _ = try await send(a,retry)
+            var final=try ProductivityGoals(document:saved[ProductivityGoals.field]);final.timeZone="Europe/Copenhagen";final.weekStart=1;final.weeklyTarget=30
+            let latest=try await send(b,ProductivityGoalEdit.command(final.document,previous:saved,account:owner))
+            do{_ = try await a.send(retry);XCTFail("Old retry overwrote a newer goal choice")}catch{XCTAssertTrue(error.localizedDescription.contains("TASKFOLD_CONFLICT:"))}
+            let synced=try XCTUnwrap(SyncConflict(mutation:retry,remote:latest).resolving(Snapshot(pending:[retry]),keepLocal:false))
+            XCTAssertTrue(synced.pending.isEmpty);XCTAssertEqual(ProductivityGoals.row(synced,account:owner)?[ProductivityGoals.field],latest[ProductivityGoals.field])
+            var task=Record.task(user:owner);task["id"] = .string(taskID);task["title"] = .string("Synthetic Insights completion proof")
+            let created=try await send(a,Mutation(table:"tasks",recordID:taskID,method:"POST",fields:task.fields,insertOnly:true))
+            let completed=try await send(a,Mutation(table:"tasks",recordID:taskID,method:"PATCH",fields:["completed":.bool(true),"completed_at":.string(TaskActivity.stamp(Date()))],baseline:created.fields))
+            let first=try await source(a),second=try await source(b),instant=Date().addingTimeInterval(2)
+            let one=try ProductivityGoals(document:try XCTUnwrap(ProductivityGoals.row(first,account:owner))[ProductivityGoals.field]),two=try ProductivityGoals(document:try XCTUnwrap(ProductivityGoals.row(second,account:owner))[ProductivityGoals.field])
+            XCTAssertEqual(one.document,two.document)
+            let r1=InsightsReading(account:owner,activity:first.tables[TaskActivity.table]!,epoch:first.tables[TaskActivity.epochTable]!,goals:one,now:instant)
+            let r2=InsightsReading(account:owner,activity:second.tables[TaskActivity.table]!,epoch:second.tables[TaskActivity.epochTable]!,goals:two,now:instant)
+            XCTAssertTrue(r1.reliable);XCTAssertTrue(r2.reliable);XCTAssertEqual(r1.today,1);XCTAssertEqual(r1.week,1);XCTAssertEqual(r1.days,r2.days)
+            _ = try await send(b,Mutation(table:"tasks",recordID:taskID,method:"PATCH",fields:["completed":.bool(false),"completed_at":.null],baseline:completed.fields))
+            for api in [a,b] { let snapshot=try await source(api);let reading=InsightsReading(account:owner,activity:snapshot.tables[TaskActivity.table]!,epoch:snapshot.tables[TaskActivity.epochTable]!,goals:one,now:Date().addingTimeInterval(2));XCTAssertTrue(reading.reliable);XCTAssertEqual(reading.today,0);XCTAssertEqual(reading.week,0) }
+            try await cleanup()
+        } catch { try? await cleanup();throw error }
+    }
+}

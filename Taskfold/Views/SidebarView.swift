@@ -2,6 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct SidebarView: View {
+    @Environment(\.openInsights) private var openInsights
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @State private var projectEditor: Record?
@@ -38,6 +39,7 @@ struct SidebarView: View {
                 item(.all, "All Tasks", count: open.count)
                 item(.assigned, "Assigned to Me", count: workspace.assignedTasks.filter { !$0.completed }.count)
                 item(.completed, "Completed", count: nil)
+                Button("Insights",systemImage:"chart.xyaxis.line") { openInsights() }.accessibilityIdentifier("openInsights")
                 Button("Templates", systemImage: "square.stack.3d.up") { templatesPresented = true }.accessibilityIdentifier("openTemplates")
                 Button("Add Multiple Tasks…", systemImage: "text.badge.plus") { multiLinePresented = true }.accessibilityIdentifier("openMultiLineCapture")
             }

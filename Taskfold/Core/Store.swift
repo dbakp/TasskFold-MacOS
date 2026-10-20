@@ -262,6 +262,16 @@ final class Store {
     var workingHours: WorkingHours? { workingHoursDocument == .null ? WorkingHours() : try? WorkingHours(document: workingHoursDocument) }
     var workingHoursDocument: JSON { record("view_preferences", id: "planner")?["working_hours"] ?? .null }
     var workingHoursEditable: Bool { workspaceCacheReadable && (signedIn || localMode) && WorkingHours.editable(workingHoursDocument) }
+    var insightsAvailable:Bool { workspaceCacheReadable && (signedIn || localMode) }
+    var productivityGoalRow:Record? { ProductivityGoals.row(snapshot,account:userID) }
+    var productivityGoalDocument:JSON { productivityGoalRow?[ProductivityGoals.field] ?? .null }
+    var productivityGoals:ProductivityGoals? { try? ProductivityGoals(document:productivityGoalDocument) }
+    @discardableResult func saveProductivityGoals(_ desired:JSON,expected:JSON,workspace:WorkspaceBinding) -> Bool {
+        guard workspace.matches(account:userID,generation:workspaceGeneration),workspaceCacheReadable,signedIn || localMode else { error="Reopen goals in your current workspace.";return false }
+        guard productivityGoalDocument==expected else { error="Goals changed while you were editing. Your draft is kept; review the latest goals before saving.";return false }
+        do { return commit([try ProductivityGoalEdit.command(desired,previous:productivityGoalRow,account:userID)],remember:false) }
+        catch { self.error=error.localizedDescription;return false }
+    }
     var datePhraseRecord: Record? { DatePhrasePreferences.row(snapshot, account: userID) }
     var datePhrasePreferences: DatePhrasePreferences? { try? DatePhrasePreferences(document: datePhraseRecord?["date_preferences"] ?? .null) }
     var datePhraseEditable: Bool { workspaceCacheReadable && (signedIn || localMode) && datePhrasePreferences != nil }
@@ -728,6 +738,7 @@ final class Store {
             workflowFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
         }
         #endif
+        guard changes.filter(ProductivityGoalEdit.matches).allSatisfy({ProductivityGoalEdit.valid($0,account:userID)}) else { error="These goals need a supported choice and current workspace.";return false }
         guard changes.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable }) else { error = "Activity history is read-only."; return false }
         guard changes.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
             error = "This Focus command needs a valid workspace and revision."; return false
@@ -991,6 +1002,14 @@ final class Store {
                     Task { await reschedule() }
                     publishWidgetSnapshot(scheduleCapacityRefresh: false)
                     notice = "Focus changed on another device. Open Focus session to review it and resume sync."
+                }
+                if error.localizedDescription.contains("TASKFOLD_CONFLICT:"),let mutation=sending,ProductivityGoalEdit.matches(mutation),
+                   let data=try? await backend.request("/rest/v1/view_preferences?id=eq.insights&select=*",expectedAccount:account),
+                   let rows=try? JSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
+                    let remote=rows.first ?? ProductivityGoalEdit.emptyRow(account:account)
+                    if remote.id==ProductivityGoals.recordID,remote.string("user_id")==account {
+                        syncConflict=SyncConflict(mutation:mutation,remote:remote);notice="Goals changed on another device. Review both choices to resume sync."
+                    }
                 }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation=sending,mutation.table==WorkflowTemplate.table,
                    let escaped=mutation.recordID.addingPercentEncoding(withAllowedCharacters:.alphanumerics),
@@ -1468,6 +1487,10 @@ extension Store {
     func reminderRouteFixtureRequest() -> ReminderTaskRoute? {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--reminder-route-testing"), let event = DueReminder.events(tasks: activeTasks).first else { return nil }
         return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: event.taskID, specID: event.specID, signature: event.signature)
+    }
+    func seedInsightsFixture() {
+        guard userID=="ui-testing",ProcessInfo.processInfo.arguments.contains("--uitesting"),ProcessInfo.processInfo.arguments.contains("--insights-fixture") else { return }
+        dailyBackupsEnabled=false;disableNotifications();snapshot=Snapshot.insightsFixture(account:userID);undoStack=[];redoStack=[];try? persist()
     }
     func seedWidgetActionFixture() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--widget-action-testing") else { return }

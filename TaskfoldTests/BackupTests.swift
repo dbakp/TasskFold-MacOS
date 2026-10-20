@@ -470,3 +470,44 @@ extension BackupTests {
         }
     }
 }
+
+
+extension BackupTests {
+    func testGoalPreferencesExportRestoreAndGuardedQueueRemainAccountOwned() throws {
+        var source=fixture(),goals=try ProductivityGoals();goals.dailyTarget=4;goals.weeklyTarget=18;goals.timeZone="UTC"
+        source.tables["view_preferences",default:[]].append(Record(["id":.string(ProductivityGoals.recordID),"user_id":.string(owner),ProductivityGoals.field:goals.document]))
+        let file=try WorkspaceBackup.read(WorkspaceBackup.make(source,account:owner).data())
+        let plan=try file.plan(current:Snapshot(),account:other)
+        let change=try XCTUnwrap(plan.changes.first(where:ProductivityGoalEdit.matches));XCTAssertTrue(ProductivityGoalEdit.valid(change,account:other))
+        XCTAssertEqual(change.baseline?[ProductivityGoals.field],.null);XCTAssertEqual(change.fields[ProductivityGoals.field],goals.document)
+        let queued=try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(Snapshot(pending:[change])))
+        XCTAssertEqual(queued.pending,[change]);var restored=Snapshot();for mutation in plan.changes{restored.apply(mutation)}
+        XCTAssertEqual(ProductivityGoals.row(restored,account:other)?[ProductivityGoals.field],goals.document)
+    }
+    func testGoalRestorePolicyPreservesCurrentOrUsesReviewedGoalBaselineWithoutLosingOtherFields() throws {
+        var source=fixture(),goals=try ProductivityGoals();goals.dailyTarget=4;goals.timeZone="UTC"
+        source.tables["view_preferences",default:[]].append(Record(["id":.string(ProductivityGoals.recordID),"user_id":.string(owner),ProductivityGoals.field:goals.document,"sort_by":.string("title")]))
+        let file=try WorkspaceBackup.read(WorkspaceBackup.make(source,account:owner).data())
+        var current=ProductivityGoalEdit.emptyRow(account:other),latest=goals;latest.dailyTarget=8;current[ProductivityGoals.field]=latest.document;current["sort_by"] = .string("manual")
+        let target=Snapshot(tables:["view_preferences":[current]])
+        let keep=try file.plan(current:target,account:other,policy:.keepCurrent);XCTAssertFalse(keep.changes.contains(where:ProductivityGoalEdit.matches))
+        let replace=try file.plan(current:target,account:other,policy:.backupValues)
+        let change=try XCTUnwrap(replace.changes.first(where:ProductivityGoalEdit.matches));XCTAssertEqual(change.baseline?[ProductivityGoals.field],latest.document)
+        var restored=target;for mutation in replace.changes{restored.apply(mutation)}
+        XCTAssertEqual(ProductivityGoals.row(restored,account:other)?[ProductivityGoals.field],goals.document)
+        XCTAssertEqual(ProductivityGoals.row(restored,account:other)?.string("sort_by"),"title")
+    }
+    func testNewNullableGoalColumnOnOrdinaryPreferencesDoesNotBecomeAGoalCommand() throws {
+        var source=fixture();source.tables["view_preferences",default:[]].append(Record(["id":.string("inbox"),"user_id":.string(owner),"sort_by":.string("title"),ProductivityGoals.field:.null]))
+        let file=try WorkspaceBackup.read(WorkspaceBackup.make(source,account:owner).data());let plan=try file.plan(current:Snapshot(),account:other)
+        let preference=try XCTUnwrap(plan.changes.first{$0.table=="view_preferences" && $0.recordID=="inbox"})
+        XCTAssertFalse(ProductivityGoalEdit.matches(preference));XCTAssertEqual(preference.fields[ProductivityGoals.field],.null)
+    }
+    func testNewerGoalDefinitionsStayInBackupButRequireSupportedRestore() throws {
+        var source=fixture();let future:JSON = .object(["version":.number(2),"future":.string("preserve")])
+        source.tables["view_preferences",default:[]].append(Record(["id":.string(ProductivityGoals.recordID),"user_id":.string(owner),ProductivityGoals.field:future]))
+        let file=try WorkspaceBackup.read(WorkspaceBackup.make(source,account:owner).data())
+        XCTAssertEqual(file.tables["view_preferences"]?.first{$0.id==ProductivityGoals.recordID}?[ProductivityGoals.field],future)
+        XCTAssertThrowsError(try file.plan(current:Snapshot(),account:other))
+    }
+}

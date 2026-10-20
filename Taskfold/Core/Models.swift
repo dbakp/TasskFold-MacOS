@@ -254,6 +254,7 @@ struct SyncConflict: Identifiable {
     /// Resolve only the edit that was reviewed, then replay later offline work.
     /// Returning nil leaves stale or mismatched review requests untouched.
     func resolving(_ snapshot: Snapshot, keepLocal: Bool) -> Snapshot? {
+        if ProductivityGoalEdit.matches(mutation) { return ProductivityGoalEdit.resolving(self,snapshot:snapshot,keepLocal:keepLocal) }
         if mutation.table == WorkflowTemplate.table { return TemplateEditing.resolving(self, snapshot: snapshot, keepLocal: keepLocal) }
         guard mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
               remote.id.lowercased() == mutation.recordID.lowercased(),

@@ -441,6 +441,14 @@ final class Backend: NSObject {
             }
             return saved
         }
+        if ProductivityGoalEdit.matches(change) {
+            guard let owner=expectedOwner,ProductivityGoalEdit.scoped(change,account:owner),let base=change.baseline?[ProductivityGoals.field],let desired=change.fields[ProductivityGoals.field] else { throw AppFailure(message:"These saved goals need a valid workspace before syncing.") }
+            guard ProductivityGoalEdit.valid(change,account:owner) else { throw AppFailure(message:"TASKFOLD_CONFLICT: These saved goals need a supported choice and review before syncing.") }
+            let data=try await request("/rest/v1/rpc/taskfold_set_productivity_goals",method:"POST",body:["_base":base,"_goals":desired],expectedAccount:owner)
+            let saved=try JSONDecoder().decode(Record.self,from:data)
+            guard saved.id==ProductivityGoals.recordID,saved.string("user_id").lowercased()==owner.lowercased(),saved[ProductivityGoals.field]==desired else { throw AppFailure(message:"The server did not confirm your goals. They remain saved on this device.") }
+            return saved
+        }
         if change.table == WorkflowTemplate.table, ["PATCH","DELETE"].contains(change.method) {
             guard let base=change.baseline,base["name"] != nil,base["document"] != nil else { throw AppFailure(message:"TASKFOLD_CONFLICT: Review this older template edit before replacing synced work.") }
             let data=try await request("/rest/v1/rpc/taskfold_edit_template",method:"POST",body:["_id":.string(change.recordID),"_base":.object(base),"_changes":.object(change.fields),"_delete":.bool(change.method=="DELETE")],expectedAccount:expectedOwner)

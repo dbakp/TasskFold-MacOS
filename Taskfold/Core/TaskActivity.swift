@@ -21,17 +21,17 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
     var kinds: [Kind]
     var before: [String: JSON]
     var after: [String: JSON]
-    init?(row: Record) {
+    init?(row: Record, parseInstant:(String)->Date? = TaskPlanning.instant, validDay:(String)->Bool = {Dates.parse($0) != nil}) {
         guard UUID(uuidString: row.id) != nil, let sequence = Self.integer(row["sequence"]), sequence > 0,
               Self.validID(row.string("user_id")), Self.validID(row.string("task_id")),
               row["actor_id"] == .null || Self.validID(row.string("actor_id")),
-              let recorded = TaskPlanning.instant(row.string("recorded_at")), let effective = TaskPlanning.instant(row.string("effective_at")),
+              let recorded = parseInstant(row.string("recorded_at")), let effective = parseInstant(row.string("effective_at")),
               let version = Self.integer(row["completion_version"]),
               case .array(let values) = row["kinds"], !values.isEmpty, values.count <= Kind.allCases.count,
               values.allSatisfy({ if case .string(let value) = $0 { return Kind(rawValue: value) != nil }; return false }),
               Set(values.map(\.text)).count == values.count,
               case .object(let before) = row["before_state"], case .object(let after) = row["after_state"],
-              Self.validState(before), Self.validState(after),
+              Self.validState(before,parseInstant:parseInstant,validDay:validDay), Self.validState(after,parseInstant:parseInstant,validDay:validDay),
               Self.changes(before: before, after: after).map(\.rawValue) == values.map(\.text) else { return nil }
         id = row.id.lowercased(); self.sequence = sequence; owner = row.string("user_id"); taskID = row.string("task_id").lowercased()
         actor = row["actor_id"] == .null ? nil : row.string("actor_id")
@@ -43,7 +43,7 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
         guard case .number(let n) = value, n.isFinite, n >= 0, n <= 9_007_199_254_740_991, n.rounded(.down) == n else { return nil }
         return Int64(n)
     }
-    static func validState(_ state: [String: JSON]) -> Bool {
+    static func validState(_ state: [String: JSON],parseInstant:(String)->Date? = TaskPlanning.instant,validDay:(String)->Bool = {Dates.parse($0) != nil}) -> Bool {
         guard state.isEmpty || Set(state.keys) == stateKeys && { if case .bool = state["completed"] { return true }; return false }() else { return false }
         for (key, value) in state {
             if value == .null { continue }
@@ -51,11 +51,11 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
             else { guard case .string(let text) = value, text.utf8.count <= 256 else { return false } }
         }
         for key in ["completed_at", "scheduled_at"] where state[key] != nil && state[key] != .null {
-            guard TaskPlanning.instant(state[key]!.text) != nil else { return false }
+            guard parseInstant(state[key]!.text) != nil else { return false }
         }
         for key in ["due_date", "deadline_date"] where state[key] != nil && state[key] != .null {
             let text = state[key]!.text
-            guard text.count == 10, Dates.parse(text) != nil else { return false }
+            guard text.count == 10, validDay(text) else { return false }
         }
         return true
     }
@@ -148,3 +148,220 @@ enum TaskActivityPage {
         return cursor
     }
 }
+
+/// Goal settings are account-owned; the saved zone keeps phone and Mac on the same civil day.
+struct ProductivityGoals: Equatable {
+    static let recordID = "insights"
+    static let field = "productivity_goals"
+    var dailyTarget: Int
+    var weeklyTarget: Int
+    var activeWeekdays: Set<Int>
+    var weekStart: Int
+    var timeZone: String
+    private var original: [String:JSON]
+    init(document:JSON = .null, calendar:Calendar = .current) throws {
+        if document == .null {
+            dailyTarget=0;weeklyTarget=0;activeWeekdays=Set(2...6);weekStart=2;timeZone=calendar.timeZone.identifier;original=[:];return
+        }
+        guard case .object(let fields)=document, fields["version"] == .number(1),
+              let data=try? JSONEncoder().encode(document),data.count<=4096 else { throw AppFailure(message:"These goals need a newer Taskfold version. Your settings are preserved.") }
+        func integer(_ field:String,range:ClosedRange<Int>) throws -> Int {
+            guard let raw=fields[field],let value=TaskActivity.integer(raw),let number=Int(exactly:value),range.contains(number) else { throw AppFailure(message:"Choose valid whole-number goals and weekdays.") }
+            return number
+        }
+        dailyTarget=try integer("daily_target",range:0...10000);weeklyTarget=try integer("weekly_target",range:0...10000);weekStart=try integer("week_start",range:1...7)
+        guard case .array(let days)=fields["active_weekdays"],days.count<=7,
+              days.allSatisfy({if case .number(let value)=$0 { return value.isFinite && (1...7).contains(value) && value.rounded(.down)==value };return false}),
+              Set(days.map(\.integer)).count==days.count,
+              case .string(let zone)=fields["time_zone"],TimeZone(identifier:zone) != nil else { throw AppFailure(message:"Choose a supported time zone and distinct weekdays.") }
+        activeWeekdays=Set(days.map(\.integer));timeZone=zone;original=fields
+        guard dailyTarget==0 || !activeWeekdays.isEmpty else { throw AppFailure(message:"Choose at least one active day, or turn off the daily goal.") }
+    }
+    var document:JSON {
+        .object(original.merging(["version":.number(1),"daily_target":.number(Double(dailyTarget)),"weekly_target":.number(Double(weeklyTarget)),"active_weekdays":.array(activeWeekdays.sorted().map{.number(Double($0))}),"week_start":.number(Double(weekStart)),"time_zone":.string(timeZone)]){_,new in new})
+    }
+    var calendar:Calendar { var value=Calendar(identifier:.gregorian);value.timeZone=TimeZone(identifier:timeZone) ?? .gmt;value.firstWeekday=(1...7).contains(weekStart) ? weekStart : 2;return value }
+    func target(on day:Date) -> Int? { dailyTarget>0 && activeWeekdays.contains(calendar.component(.weekday,from:day)) ? dailyTarget : nil }
+    func validated() throws -> Self { try Self(document:document) }
+    static func row(_ snapshot:Snapshot,account:String) -> Record? { snapshot.tables["view_preferences"]?.first{$0.id==recordID && $0.string("user_id")==account} }
+}
+
+/// Observed completion credits, corrected by later reopen/time edits. No history is inferred from today's task rows.
+struct InsightsReading {
+    enum Scope:String,CaseIterable { case mine,workspace;var title:String { self == .mine ? "My completions" : "Workspace completions" } }
+    enum Coverage:String { case recorded,partial,untracked }
+    struct Day:Identifiable,Equatable {
+        var id:String
+        var date:Date
+        var count:Int
+        var coverage:Coverage
+        var restDay:Bool
+    }
+    struct Credit:Equatable {
+        var taskID:String
+        var lifecycle:String
+        var version:Int64
+        var date:Date
+        var projectID:String
+        var actor:String?
+    }
+    var days:[Day]=[]
+    var credits:[Credit]=[]
+    var today=0
+    var week=0
+    var malformed=0
+    var recordedFrom:Date?
+    var windowStart:Date
+    var windowEnd:Date
+    var weekStart:Date
+    var scope:Scope
+    var hasHistory:Bool { recordedFrom != nil }
+    var reliable:Bool { hasHistory && malformed==0 }
+    init(account:String,activity:[Record],epoch:[Record],goals:ProductivityGoals,scope:Scope = .mine,projectID:String? = nil,accessibleProjects:Set<String> = [],windowDays:Int=7,now:Date=Date()) {
+        self.scope=scope
+        let validGoals=try? goals.validated()
+        let goals=validGoals ?? (try! ProductivityGoals())
+        let calendar=goals.calendar,todayStart=calendar.startOfDay(for:now)
+        windowStart=calendar.date(byAdding:.day,value:-(min(366,max(1,windowDays))-1),to:todayStart)!
+        windowEnd=calendar.date(byAdding:.day,value:1,to:todayStart)!
+        weekStart=calendar.date(byAdding:.day,value:-((calendar.component(.weekday,from:now)-goals.weekStart+7)%7),to:todayStart)!
+        guard !account.isEmpty,validGoals != nil else { if validGoals==nil { malformed=1 };return }
+        // Parsers and caches belong to this fold, with no shared mutable formatter state.
+        let fractional=ISO8601DateFormatter();fractional.formatOptions=[.withInternetDateTime,.withFractionalSeconds]
+        let whole=ISO8601DateFormatter();whole.formatOptions=[.withInternetDateTime]
+        var instants:[String:Date]=[:],invalidInstants=Set<String>(),validDays:[String:Bool]=[:]
+        func instant(_ text:String)->Date? {
+            if let date=instants[text] {return date};if invalidInstants.contains(text){return nil}
+            if let date=fractional.date(from:text) ?? whole.date(from:text) {instants[text]=date;return date}
+            invalidInstants.insert(text);return nil
+        }
+        func validDay(_ text:String)->Bool {
+            if let value=validDays[text]{return value};let value=Dates.parse(text) != nil;validDays[text]=value;return value
+        }
+        let epochRows=epoch.filter{$0.id=="current"}
+        if epochRows.count==1,let date=instant(epochRows[0].string("recorded_from")),date<=now { recordedFrom=date }
+        else if !epochRows.isEmpty { malformed+=1 }
+        let account=account.lowercased(),accessible=Set(accessibleProjects.map{$0.lowercased()})
+        var unique:[String:TaskActivity]=[:],blocked=Set<String>()
+        for row in activity {
+            let projects=[row["before_state"].object["project_id"]?.text.lowercased() ?? "",row["after_state"].object["project_id"]?.text.lowercased() ?? ""]
+            guard row.string("user_id").lowercased()==account || projects.contains(where:{!$0.isEmpty && accessible.contains($0)}) else { continue }
+            guard let event=TaskActivity(row:row,parseInstant:instant,validDay:validDay) else { malformed+=1;continue }
+            guard event.recordedAt<=now,!blocked.contains(event.id) else { continue }
+            if let previous=unique[event.id],previous != event { unique.removeValue(forKey:event.id);blocked.insert(event.id);malformed+=1 }
+            else { unique[event.id]=event }
+        }
+        var latest:[String:Int64]=[:],active:[String:Credit]=[:],deleted=Set<String>(),lifecycles:[String:String]=[:],archived:[Credit]=[]
+        for event in unique.values.sorted(by:{$0.sequence==$1.sequence ? $0.id<$1.id : $0.sequence<$1.sequence}) {
+            guard recordedFrom != nil else { break }
+            if deleted.contains(event.taskID),event.kinds.contains(.created) {
+                deleted.remove(event.taskID);latest.removeValue(forKey:event.taskID)
+            }
+            if event.kinds.contains(.created) {
+                if active[event.taskID] != nil { malformed+=1 }
+                lifecycles[event.taskID]=event.id
+            }
+            if let version=latest[event.taskID],event.completionVersion<version { continue }
+            if deleted.contains(event.taskID) { if !event.kinds.contains(.deleted) { malformed+=1 };continue }
+            latest[event.taskID]=event.completionVersion
+            if event.kinds.contains(.reopened) { active.removeValue(forKey:event.taskID) }
+            if event.kinds.contains(.completed) {
+                let date=event.after["completed_at"].flatMap{instant($0.text)} ?? event.effectiveAt
+                let next=Credit(taskID:event.taskID,lifecycle:lifecycles[event.taskID] ?? "existing:"+event.taskID,version:event.completionVersion,date:date,projectID:event.after["project_id"]?.text.lowercased() ?? "",actor:event.actor?.lowercased())
+                if let previous=active[event.taskID],previous.version==next.version,previous != next { malformed+=1 }
+                else { active[event.taskID]=next }
+            } else if event.kinds.contains(.completion_time),var credit=active[event.taskID],event.after["completed"] == .bool(true) {
+                if let date=event.after["completed_at"].flatMap({instant($0.text)}) { credit.date=date;credit.version=event.completionVersion;active[event.taskID]=credit }
+                else { active.removeValue(forKey:event.taskID);malformed+=1 }
+            }
+            if event.kinds.contains(.deleted) {
+                if let credit=active.removeValue(forKey:event.taskID) { archived.append(credit) }
+                deleted.insert(event.taskID)
+            }
+        }
+        credits=(archived+Array(active.values)).filter { credit in
+            credit.date<=now && (scope == .workspace || credit.actor==account) && (projectID.map{$0.lowercased()==credit.projectID} ?? true)
+        }.sorted{$0.date==$1.date ? $0.taskID<$1.taskID : $0.date<$1.date}
+        today=credits.filter{$0.date>=todayStart && $0.date<windowEnd}.count
+        week=credits.filter{$0.date>=weekStart && $0.date<windowEnd}.count
+        let counts=Dictionary(grouping:credits){TaskPlanner.dayKey($0.date,calendar:calendar)}.mapValues(\.count)
+        var day=windowStart
+        while day<windowEnd {
+            let end=calendar.date(byAdding:.day,value:1,to:day)!,key=TaskPlanner.dayKey(day,calendar:calendar)
+            var coverage:Coverage=recordedFrom.map{$0>=end ? .untracked : $0>day ? .partial : .recorded} ?? .untracked
+            if coverage == .untracked,counts[key,default:0]>0 { coverage = .partial }
+            days.append(Day(id:key,date:day,count:counts[key] ?? 0,coverage:coverage,restDay:!goals.activeWeekdays.contains(calendar.component(.weekday,from:day))))
+            day=end
+        }
+    }
+}
+
+/// One guarded preference command; immutable account scope survives retries and explicit review.
+enum ProductivityGoalEdit {
+    static func matches(_ change:Mutation) -> Bool { change.table=="view_preferences" && change.recordID==ProductivityGoals.recordID && change.fields[ProductivityGoals.field] != nil }
+    static func command(_ desired:JSON,previous:Record?,account:String) throws -> Mutation {
+        guard !account.isEmpty,previous.map({$0.id==ProductivityGoals.recordID && $0.string("user_id")==account}) ?? true else { throw AppFailure(message:"Reopen goals in your current workspace.") }
+        _ = try ProductivityGoals(document:desired)
+        let baseline=previous?[ProductivityGoals.field] ?? .null
+        _ = try ProductivityGoals(document:baseline)
+        return Mutation(table:"view_preferences",recordID:ProductivityGoals.recordID,method:previous==nil ? "POST" : "PATCH",fields:["id":.string(ProductivityGoals.recordID),"user_id":.string(account),ProductivityGoals.field:desired],baseline:["user_id":.string(account),ProductivityGoals.field:baseline])
+    }
+    static func scoped(_ change:Mutation,account:String) -> Bool {
+        matches(change) && ["POST","PATCH"].contains(change.method) && change.recordID==ProductivityGoals.recordID && change.fields["id"] == .string(ProductivityGoals.recordID) && change.fields["user_id"] == .string(account) && Set(change.fields.keys)==["id","user_id",ProductivityGoals.field] && change.baseline?["user_id"] == .string(account) && change.baseline?[ProductivityGoals.field] != nil
+    }
+    static func valid(_ change:Mutation,account:String) -> Bool { scoped(change,account:account) && (try? ProductivityGoals(document:change.fields[ProductivityGoals.field] ?? .null)) != nil && (try? ProductivityGoals(document:change.baseline?[ProductivityGoals.field] ?? .null)) != nil }
+    static func emptyRow(account:String) -> Record { Record(["id":.string(ProductivityGoals.recordID),"user_id":.string(account),ProductivityGoals.field:.null]) }
+    static func keepingKnownFields(_ desired:JSON,over remote:JSON) throws -> JSON {
+        _ = try ProductivityGoals(document:desired);_ = try ProductivityGoals(document:remote)
+        guard desired != .null,remote != .null else { return desired }
+        var result=remote.object
+        for key in ["version","daily_target","weekly_target","active_weekdays","week_start","time_zone"] { result[key]=desired.object[key] }
+        return try ProductivityGoals(document:.object(result)).document
+    }
+    static func resolving(_ conflict:SyncConflict,snapshot:Snapshot,keepLocal:Bool) -> Snapshot? {
+        let change=conflict.mutation,remote=conflict.remote,account=change.fields["user_id"]?.text ?? ""
+        guard scoped(change,account:account),!account.isEmpty,remote.id==ProductivityGoals.recordID,remote.string("user_id")==account,
+              let index=snapshot.pending.firstIndex(of:change) else { return nil }
+        var result=snapshot
+        if keepLocal {
+            guard valid(change,account:account),let desired=try? keepingKnownFields(change.fields[ProductivityGoals.field] ?? .null,over:remote[ProductivityGoals.field]) else { return nil }
+            guard let next=try? command(desired,previous:remote,account:account) else { return nil }
+            result.pending[index].method=next.method;result.pending[index].fields=next.fields;result.pending[index].baseline=next.baseline
+        } else { result.pending.remove(at:index) }
+        var rows=result.tables["view_preferences"] ?? [];rows.removeAll{$0.id==ProductivityGoals.recordID};rows.append(remote);result.tables["view_preferences"]=rows
+        for queued in result.pending where queued.table=="view_preferences" && queued.recordID==ProductivityGoals.recordID { result.apply(queued) }
+        return result
+    }
+    static func summary(_ document:JSON) -> String {
+        if document == .null { return "Goals are off. A time zone is saved when you configure them." }
+        guard let goals=try? ProductivityGoals(document:document) else { return "Goals need a newer Taskfold version. The saved choice is preserved." }
+        let names=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+        let days=goals.activeWeekdays.sorted().map{names[$0-1]}.joined(separator:", ")
+        return "Daily: "+(goals.dailyTarget==0 ? "Off" : "\(goals.dailyTarget)")+"\nWeekly: "+(goals.weeklyTarget==0 ? "Off" : "\(goals.weeklyTarget)")+"\nActive days: "+(days.isEmpty ? "None" : days)+"\nWeek starts: "+names[goals.weekStart-1]+"\nTime zone: "+goals.timeZone
+    }
+}
+
+#if DEBUG
+extension Snapshot {
+    static func insightsFixture(account:String,now:Date=Date()) -> Snapshot {
+        var calendar=Calendar(identifier:.gregorian);calendar.timeZone=TimeZone(identifier:"UTC")!
+        let today=calendar.startOfDay(for:now),epoch=calendar.date(byAdding:.day,value:-30,to:today)!
+        let names=["Draft the workshop plan","Check the type scale","Read the workspace brief","Polish the chart","Pair on the review"]
+        let tasks=names.enumerated().map { index,name -> Record in
+            var row=Record.task(user:account);row["id"] = .string("f1741000-0000-4000-8000-00000000000\(index+1)");row["title"] = .string(name);row["created_at"] = .string(TaskActivity.stamp(epoch));return row
+        }
+        var result=Snapshot(tables:["tasks":tasks])
+        let elapsed=max(0,now.timeIntervalSince(today))
+        for (index,date) in [(2,calendar.date(byAdding:.day,value:-8,to:today)!),(0,today.addingTimeInterval(elapsed/3)),(1,today.addingTimeInterval(elapsed*2/3)),(4,today.addingTimeInterval(elapsed*3/4))] {
+            let before=result.tables["tasks"]![index]
+            let change=Mutation(table:"tasks",recordID:before.id,method:"PATCH",fields:["completed":.bool(true),"completed_at":.string(TaskActivity.stamp(date))])
+            result.apply(change);TaskActivity.recordLocal(change,before:before,after:result.tables["tasks"]![index],snapshot:&result,account:account,now:date)
+            if index==4 { result.tables[TaskActivity.table]![result.tables[TaskActivity.table]!.count-1]["actor_id"] = .string("f1742000-0000-4000-8000-000000000001") }
+        }
+        result.tables[TaskActivity.epochTable]=[Record(["id":.string("current"),"recorded_from":.string(TaskActivity.stamp(epoch))])]
+        var goals=try! ProductivityGoals();goals.dailyTarget=5;goals.weeklyTarget=10;goals.activeWeekdays=Set(1...7);goals.timeZone="UTC"
+        result.tables["view_preferences"]=[Record(["id":.string(ProductivityGoals.recordID),"user_id":.string(account),ProductivityGoals.field:goals.document])]
+        return result
+    }
+}
+#endif
