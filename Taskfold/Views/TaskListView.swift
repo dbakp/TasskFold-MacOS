@@ -545,6 +545,13 @@ struct ConfirmationBar: View {
         .background(.bar)
         .overlay(alignment: .top) { Divider() }
         .accessibilityElement(children: .contain)
+        .task(id: confirmation.id) {
+            guard NSApp.isActive, NSWorkspace.shared.isVoiceOverEnabled else { return }
+            // A removed row can announce “no row selected”; keep the action's result audible.
+            var announcement = AttributedString(confirmation.message)
+            announcement.accessibilitySpeechAnnouncementPriority = .high
+            AccessibilityNotification.Announcement(announcement).post()
+        }
     }
 }
 

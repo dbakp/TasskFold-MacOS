@@ -1,0 +1,117 @@
+{
+  "date": "2026-10-20",
+  "scope": "Repair an actual Mac VoiceOver completion-feedback defect and independently add equivalent foreground toast announcements on iOS. Bounded Mac human/native acceptance; iOS compile acceptance only.",
+  "before": {
+    "host": "unchanged isolated p0widgethosts v10",
+    "actualVoiceOverPID": 54487,
+    "humanCompletionReport": "Space completed, but the announcement said no row selected; no completion announcement heard",
+    "completedStateVerified": true,
+    "humanUndoReport": "Task returned and it said Undo complete task",
+    "reopenedStateVerified": true,
+    "preservation": {
+      "targetID": "060a3b4d-be6e-4c9a-a143-864b2b14f53e",
+      "title": "Keep the workshop notes",
+      "completedBefore": false,
+      "completedAfter": false,
+      "completionVersionBefore": 0,
+      "completionVersionAfter": 2,
+      "unrelatedTaskRecordsAndTablesExact": true,
+      "pending": 0,
+      "expectedAuditChanges": [
+        "task_activity",
+        "widgetCompletion.states",
+        "target completion_version/completed_at"
+      ]
+    }
+  },
+  "implementation": {
+    "Mac": "ConfirmationBar posts its existing message as a high-priority AccessibilityNotification.Announcement from a task keyed by confirmation identity, only with the app active and VoiceOver enabled. Visible confirmation/Undo and persistence are unchanged.",
+    "iOS": "Own UndoToast posts foreground VoiceOver announcements keyed by toast identity. Successful single-task completion supplies its task title in a separate speech string; visible short toast and Undo stay unchanged. No core Store/background/widget announcement hooks.",
+    "reference": "https://developer.apple.com/documentation/accessibility/accessibilitynotification/announcement"
+  },
+  "validation": {
+    "iOSDebugSimulatorApp": "BUILD SUCCEEDED; 14 warning lines retained; no actual iOS speech acceptance",
+    "MacIsolatedDebugApp": "BUILD SUCCEEDED; 8 warning lines retained, including ad-hoc/hardened-runtime note; strict local signature verification passed; not distribution acceptance",
+    "MacInitialShippingTargetAttempt": "Failed before compilation on development-certificate entitlement requirements; invocation mistakenly used the shipping project. No installed app or production signing configuration changed. Log retained.",
+    "MacSourceAudit": "62 app Swift files match current Mac repo under the recorded isolated namespace replacements only.",
+    "runtimeTestClaims": "No new XCTest execution, universal clean-runtime or all-surface speech claim."
+  },
+  "fixedNativeWalk": {
+    "bundle": "com.dbakp.taskfold.mac.p0speechtests",
+    "displayName": "Taskfold VoiceOver Test",
+    "isolatedFromInstalledWidgets": true,
+    "fixture": "Fresh local onboarding starter tasks plus one captured Inbox task; no credentials or account sign-in",
+    "actualVoiceOverPID": 55658,
+    "humanAction": "Foreground app, Space on selected Spoken completion proof with inspector closed",
+    "humanReport": "No row selected. Completed spoken completion proof",
+    "assessment": "Completion and exact task name clearly follow the system empty-selection announcement. That system message is retained, not suppressed.",
+    "savedCompleted": true,
+    "completionVersionAfterComplete": 1,
+    "nativeUndoReopened": true,
+    "normalQuitAndRelaunchRetainsReopenedTask": true,
+    "wholeCacheCanonicalEqualAcrossFinalQuitRelaunch": true,
+    "preservation": {
+      "targetID": "bb4c2707-512a-481e-9e84-27bda455ebea",
+      "title": "Spoken completion proof",
+      "completedBefore": false,
+      "completedAfter": false,
+      "completionVersionBefore": 0,
+      "completionVersionAfter": 2,
+      "unrelatedTaskRecordsAndTablesExact": true,
+      "pending": 0,
+      "expectedAuditChanges": [
+        "task_activity",
+        "widgetCompletion.states",
+        "target completion_version/completed_at"
+      ]
+    }
+  },
+  "cleanup": {
+    "voiceOverVerifiedOff": true,
+    "noTaskfoldMainAppsRemain": true,
+    "oldWidgetHostUnchanged": true,
+    "originalWidgetLocalCacheMatchesPostHumanUndo": true,
+    "welcomeCheckboxUnchangedUnchecked": true,
+    "noProductionDataChanged": true,
+    "unusedBuildBytesRemoved": 576269288,
+    "removed": [
+      {
+        "path": "BuildCache/ios-spoken-completion-v1",
+        "bytes": 351057857
+      },
+      {
+        "path": "BuildCache/mac-spoken-completion-v1",
+        "bytes": 1647543
+      },
+      {
+        "path": "BuildCache/mac-spoken-isolated-v1/Build/Intermediates.noindex",
+        "bytes": 77376887
+      },
+      {
+        "path": "BuildCache/mac-spoken-isolated-v1/Index.noindex",
+        "bytes": 32151616
+      },
+      {
+        "path": "BuildCache/mac-spoken-isolated-v1/ModuleCache.noindex",
+        "bytes": 7583821
+      },
+      {
+        "path": "BuildCache/mac-spoken-isolated-v1/SDKStatCaches.noindex",
+        "bytes": 15291804
+      },
+      {
+        "path": "BuildCache/mac-spoken-isolated-v1/SDKExplicitPrecompiledModules",
+        "bytes": 91159760
+      }
+    ],
+    "retained": [
+      "BuildCache/mac-spoken-isolated-v1/Build/Products",
+      "mac-spoken-isolated-v1.log",
+      "ios-spoken-completion-v1.log",
+      "mac-spoken-completion-v1.log",
+      "mac-human-spoken-undo-2026-10-20 snapshots",
+      "/private/tmp/taskfold-spoken-completion-v1 source/isolation receipt"
+    ]
+  },
+  "remaining": "Broader phone/critical-flow genuine speech, actual system widget privacy, and user-deferred signing/delivery/rollout remain incomplete."
+}

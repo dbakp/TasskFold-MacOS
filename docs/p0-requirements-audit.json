@@ -136,9 +136,10 @@
         "mac-renderer-cloud-replay-evidence.json",
         "mac-table-reentry-evidence.json",
         "mac-runtime-followup-evidence.json",
-        "mac-voiceover-live-followup-evidence.json"
+        "mac-voiceover-live-followup-evidence.json",
+        "spoken-completion-feedback-evidence.json"
       ],
-      "boundary": "Named Mac autosave-cue and exact recovery activation/cancellation spoken follow-ups accepted 20 October with actual VoiceOver engine, human reports, live picker and final restored focus corroborated. Original manual spoken Undo is not retroactively accepted; broader critical spoken workflows/phone coverage remain incomplete. Renderer repair and recorded platform risks keep their separate scopes."
+      "boundary": "Named Mac autosave/Restore follow-ups and separately corroborated human completion/Undo now have bounded evidence. Missing completion speech reproduced, repaired, built independently on both platforms and human-verified in the fixed isolated Mac app; iOS is build-only for this repair. Wider phone/critical-flow speech remains incomplete. Historical earlier failures/runtime warnings retain their actual limits."
     },
     {
       "id": "independent_releases_remote_delivery",
@@ -312,5 +313,5 @@
     "planningAggregateEvidence": "mac-widget-planning-aggregate-evidence.json"
   },
   "spokenFollowupUserDeferred": false,
-  "spokenFollowupLatest": "20 October actual VoiceOver engine running; human clearly heard autosave cue and Restore button; live picker sampled before human Escape, then focus/announcement correctly returned to Restore. Two named Mac follow-ups accepted; VoiceOver restored off. Broader speech acceptance remains bounded."
+  "spokenFollowupLatest": "20 October separate human completion and Undo corroborated; missing completion confirmation repaired in Mac ConfirmationBar and independently in iOS UndoToast. Fixed Mac human speech says Completed spoken completion proof; completion/Undo/relaunch state verified. VoiceOver off; apps closed. iOS new speech and broader coverage unverified."
 }

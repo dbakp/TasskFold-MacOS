@@ -96,5 +96,6 @@
     }
   ],
   "subsequentFunctionalKeyboardVerification": "mac-keyboard-undo-evidence.json; original human shortcut outcome remains unchanged",
-  "subsequentNamedSpokenFollowups": "mac-voiceover-live-followup-evidence.json; 20 October autosave cue plus actual live Restore activation/cancellation accepted; original historical Undo and other scope limits unchanged"
+  "subsequentNamedSpokenFollowups": "mac-voiceover-live-followup-evidence.json; 20 October autosave cue plus actual live Restore activation/cancellation accepted; original historical Undo and other scope limits unchanged",
+  "subsequentCorroboratedHumanUndo": "spoken-completion-feedback-evidence.json; separate 20 October human Complete and Command-Z steps corroborate saved completed true then false. Original historical outcome remains unchanged; completion speech defect reproduced and repaired in current source."
 }
