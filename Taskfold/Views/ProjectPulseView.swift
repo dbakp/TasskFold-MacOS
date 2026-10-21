@@ -21,6 +21,10 @@ struct ProjectPulseView: View {
     let openTask: (Record) -> Void
     @State private var projectID = ""
     @State private var limit = 30
+    @State private var onlyMine = false
+    @State private var peopleError: String?
+    @State private var loadingPeople = false
+    @State private var peopleRequest = UUID()
     private var active: Bool { request.workspace.matches(account: store.userID, generation: store.workspaceGeneration) && store.focusAvailable }
     private var project: Record? { store.projects.first { $0.id.lowercased() == projectID.lowercased() } }
     private var recordedFrom: Date? { store.rows(TaskActivity.epochTable).first { $0.id == "current" }.flatMap { TaskPlanning.instant($0.string("recorded_from")) } }
@@ -67,7 +71,9 @@ struct ProjectPulseView: View {
             #endif
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("closeProjectPulse") } }
             .onAppear { projectID = request.projectID?.lowercased() ?? "" }
-            .onChange(of: projectID) { _, _ in limit = 30 }
+            .onChange(of: projectID) { _, _ in limit = 30; peopleError = nil; loadingPeople = false; peopleRequest = UUID() }
+            .onChange(of: onlyMine) { _, _ in limit = 30 }
+            .task(id: projectID) { await refreshPeople() }
             .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
         }
         #if os(macOS)
@@ -96,12 +102,23 @@ struct ProjectPulseView: View {
                     } else { Label("Some activity could not be read. Refresh before relying on these counts.", systemImage: "exclamationmark.arrow.triangle.2.circlepath").fixedSize(horizontal: false, vertical: true) }
                     Text("History starts \(recordedFrom.formatted(date: .abbreviated, time: .shortened)). Earlier work has no recorded timeline. Offline changes appear when received; a completion’s chosen time is retained.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryCoverage")
                     Text("\(store.localMode ? "Saved on this device." : "Activity is limited to currently accessible work.") These are events, separate from the current task total.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    if reading.events.isEmpty { Text("No recorded activity for this project yet.").foregroundStyle(.secondary) }
+                    Divider().padding(.vertical, 8)
+                    Text("Project activity").font(.headline)
+                    Text("Most recently received changes.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Toggle("Only my changes", isOn: $onlyMine).frame(minHeight: 44).accessibilityIdentifier("pulseOnlyMine")
+                    if !store.localMode {
+                        Button { Task { await refreshPeople() } } label: {
+                            Label(loadingPeople ? "Refreshing people…" : "Refresh people", systemImage: "arrow.clockwise").frame(minHeight: 44)
+                        }.disabled(loadingPeople).accessibilityIdentifier("pulseRefreshPeople")
+                        if let peopleError { Text(peopleError).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                    }
+                    let events = reading.events.filter { !onlyMine || ProjectActivityContext.isMine($0, account: store.userID) }
+                    if events.isEmpty { Text(onlyMine ? "No recorded changes by you in this project yet." : "No recorded activity for this project yet.").foregroundStyle(.secondary).accessibilityIdentifier("pulseActivityEmpty") }
                     else {
                         LazyVStack(alignment: .leading, spacing: 20) {
-                            ForEach(Array(reading.events.prefix(limit))) { event in activityRow(event) }
+                            ForEach(Array(events.prefix(limit))) { event in activityRow(event) }
                         }
-                        if limit < reading.events.count { Button { limit += 30 } label: { Text("Show more activity").frame(maxWidth: .infinity, minHeight: 44) }.accessibilityIdentifier("pulseMoreActivity") }
+                        if limit < events.count { Button { limit += 30 } label: { Text("Show more activity").frame(maxWidth: .infinity, minHeight: 44) }.accessibilityIdentifier("pulseMoreActivity") }
                     }
                 } else {
                     Text(store.localMode ? "Activity will be recorded when you change a task on this device." : "Sync your workspace to load recorded history.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryUnavailable")
@@ -138,9 +155,18 @@ struct ProjectPulseView: View {
         }
     }
     private func activityRow(_ event: TaskActivity) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let context = activityContext(event)
+        return VStack(alignment: .leading, spacing: 6) {
             Text(event.kinds.map(\.title).joined(separator: " · ")).font(.subheadline.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseEvent-" + event.id)
-            Text(store.tasks.first { $0.id.lowercased() == event.taskID }?.title ?? "Removed or unavailable task").fixedSize(horizontal: false, vertical: true)
+            Label(context.actorLabel, systemImage: "person.crop.circle").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseActor-" + event.id)
+            if let task = context.task {
+                Button {
+                    guard active, let current = activityContext(event).task else { return }
+                    dismiss(); openTask(current)
+                } label: {
+                    Label(task.title, systemImage: "arrow.up.forward").fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                }.buttonStyle(.plain).foregroundStyle(Color.taskfold).accessibilityHint("Open the current task").accessibilityIdentifier("pulseActivityTask-" + event.id)
+            } else { Text("Removed or unavailable task").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
             Text("Recorded \(event.recordedAt.formatted(date: .abbreviated, time: .shortened))").font(.footnote).foregroundStyle(.secondary)
             if event.kinds.contains(.completed), abs(event.effectiveAt.timeIntervalSince(event.recordedAt)) >= 60 {
                 Text("Completion time \(event.effectiveAt.formatted(date: .abbreviated, time: .shortened))").font(.footnote).foregroundStyle(.secondary)
@@ -149,6 +175,23 @@ struct ProjectPulseView: View {
                 Text("\(place(event.before)) → \(place(event.after))").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
         }.frame(maxWidth: .infinity, alignment: .leading)
+    }
+    private func activityContext(_ event: TaskActivity) -> ProjectActivityContext {
+        ProjectActivityContext(event: event, project: projectID, tasks: store.tasks, projects: store.allProjects, members: store.projectMembers(projectID), account: store.userID)
+    }
+    private func refreshPeople() async {
+        guard active, !store.localMode, let project else { return }
+        let id = project.id, token = UUID()
+        peopleRequest = token; loadingPeople = true
+        defer { if active && peopleRequest == token { loadingPeople = false } }
+        do {
+            try await store.refreshProjectMembers(id)
+            guard !Task.isCancelled, active, peopleRequest == token, projectID.lowercased() == id.lowercased() else { return }
+            peopleError = nil
+        } catch {
+            guard !Task.isCancelled, active, peopleRequest == token, projectID.lowercased() == id.lowercased() else { return }
+            peopleError = "People could not be refreshed. Activity remains available; some names may be missing or out of date."
+        }
     }
     private func projectLabel(_ project: Record) -> String {
         store.projects.filter { $0.name.caseInsensitiveCompare(project.name) == .orderedSame }.count > 1 ? project.name + " · " + project.id : project.name

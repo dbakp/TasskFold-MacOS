@@ -365,3 +365,28 @@ extension Snapshot {
     }
 }
 #endif
+
+/// Display context only: ledger authorship is immutable; task routes use current accessible rows.
+struct ProjectActivityContext {
+    let task: Record?
+    let actorLabel: String
+    static func isMine(_ event: TaskActivity, account: String) -> Bool {
+        guard !account.isEmpty, let actor = event.actor else { return false }
+        return actor.lowercased() == account.lowercased()
+    }
+    init(event: TaskActivity, project: String, tasks: [Record], projects: [Record], members: [Record], account: String) {
+        let accessible = Set(projects.map { $0.id.lowercased() })
+        guard !account.isEmpty, event.involves(project: project), accessible.contains(project.lowercased()) else {
+            task = nil; actorLabel = "Name unavailable"; return
+        }
+        if Self.isMine(event, account: account) { actorLabel = "You" }
+        else if let actor = event.actor {
+            let name = members.first { $0.id.lowercased() == actor.lowercased() }?.string("display_name").trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            actorLabel = name.isEmpty ? "Collaborator" : name
+        } else { actorLabel = "Name unavailable" }
+        if let current = tasks.first(where: { $0.id.lowercased() == event.taskID.lowercased() }),
+           current.string("project_id").isEmpty ? current.string("user_id").lowercased() == account.lowercased() : accessible.contains(current.string("project_id").lowercased()) {
+            task = current
+        } else { task = nil }
+    }
+}

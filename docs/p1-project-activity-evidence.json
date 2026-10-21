@@ -1,0 +1,150 @@
+{
+  "date": "2026-10-21",
+  "rank": 7,
+  "status": "project activity continuation implemented; shared comments and mentions remain",
+  "scope": "Attribution, own-changes filter and safe current-task routes in existing Project pulse",
+  "sourceSHA256": {
+    "Taskfold/Core/TaskActivity.swift": "66e11ed26957fac1a8dd9369996ac7ca9bf1fcfc2687e602a139f77f81d8cacd",
+    "Taskfold/Views/ProjectPulseView.swift": "977d6b735a09d32538520064edbb2cefe1e86486a074597fe0859fd5e1828490",
+    "TaskfoldTests/ProjectActivityContextTests.swift": "65db99b6de7fab7d99ab5d5b7ac06e9ff83b39d9943b5aeab7643bd5335160a5"
+  },
+  "coreSuite": {
+    "reported": 856,
+    "skipped": 31,
+    "failures": 0,
+    "focusedActivityContextCases": 5,
+    "log": "mac-p1-activity-final-core.log"
+  },
+  "nativeBuild": {
+    "result": "succeeded",
+    "log": "mac-p1-activity-presentation-build.log",
+    "newSourceWarnings": 0,
+    "note": "iOS has the existing unrelated Sendable-capture warning in an older UI test and AppIntents metadata note.",
+    "macStrictSignatureVerification": true
+  },
+  "nativeIOS": {
+    "phone": {
+      "result": "ios-p1-activity-phone-final.xcresult",
+      "actualPassingTests": 2,
+      "runtimeWarnings": 0,
+      "cases": [
+        {
+          "test": "TaskfoldUITests testProjectActivityAttributionScopeAndCurrentTaskRoute",
+          "seconds": 55.762
+        },
+        {
+          "test": "TaskfoldUITests testProjectActivityAttributionScopeAndRouteAtLargestText",
+          "seconds": 68.697
+        }
+      ]
+    },
+    "tablet": {
+      "result": "ios-p1-activity-tablet-final.xcresult",
+      "actualPassingTests": 2,
+      "runtimeWarnings": 0,
+      "cases": [
+        {
+          "test": "TaskfoldUITests testProjectActivityAttributionScopeAndCurrentTaskRoute",
+          "seconds": 68.565
+        },
+        {
+          "test": "TaskfoldUITests testProjectActivityAttributionScopeAndRouteAtLargestText",
+          "seconds": 62.218
+        }
+      ]
+    },
+    "syntheticOnly": true,
+    "providerNetworkAccess": false,
+    "remoteMessagesSent": 0,
+    "coverage": [
+      "Normal and dark accessibility XXXL activity rows and own-changes toggle",
+      "Task link has at least a 44-point target and lies within asserted screen bounds",
+      "Attribution uses the local ledger identity",
+      "Opening the completed task resolves the correct current title",
+      "Cancel and relaunch retain 1 of 3 completed and zero pending mutations"
+    ],
+    "visualReview": "Normal and dark largest-text phone/tablet captures reviewed; full wrapping and clear task links. Content beyond the scroll viewport remains scrollable.",
+    "macRuntimeClaim": false
+  },
+  "installedSyntheticState": {
+    "phone": {
+      "tasks": [
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa72",
+          "title": "Finish a useful draft",
+          "completed": true
+        },
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa73",
+          "title": "Review the launch checklist",
+          "completed": false
+        },
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa74",
+          "title": "A task without urgency",
+          "completed": false
+        }
+      ],
+      "pendingCount": 0,
+      "activityRecords": 6
+    },
+    "tablet": {
+      "tasks": [
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa72",
+          "title": "Finish a useful draft",
+          "completed": true
+        },
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa73",
+          "title": "Review the launch checklist",
+          "completed": false
+        },
+        {
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa74",
+          "title": "A task without urgency",
+          "completed": false
+        }
+      ],
+      "pendingCount": 0,
+      "activityRecords": 6
+    }
+  },
+  "coreCoverage": [
+    "Current task identity/title resolved after rename without changing ledger",
+    "Removed project/task and inaccessible current destination refuse routes",
+    "Inbox requires current ownership",
+    "Actor scope uses stable identity, never display-name strings; unknown/nil authors have neutral labels",
+    "Case-normalized identity, missing account and unrelated project guards"
+  ],
+  "serverReview": {
+    "changes": false,
+    "newMigration": false,
+    "readOnlyChecks": "Existing tasks/project membership/task activity RLS and accepted-collaborator access helper reviewed on TaskFold project. Existing ledger access is unchanged.",
+    "serverCommentAuthoringClaim": false
+  },
+  "remaining": [
+    "Server-authenticated shared comment operations with stable identity, author binding, version/retry semantics and legacy preservation",
+    "Explicit teammate IDs validated against current task/project access atomically with comment creation",
+    "Private account-owned Mentions inbox with read/unread state, safe current-access routes and honest pending state",
+    "Actual-role and disposable two-client acceptance for comments/mentions, including departure, private moves, deletion, offline/retry/relaunch and backup preservation",
+    "Native Mac walkthrough pending unlock"
+  ],
+  "deferredUnchanged": [
+    "Remote reminders",
+    "Older-client rollout safeguards",
+    "Distribution verification"
+  ],
+  "cleanup": {
+    "obsoleteBuildCachesRemoved": 38,
+    "totalArtifactFootprintRemovedMiB": 1349.6,
+    "retainedBuildCaches": [
+      "ios-project-workflows-core",
+      "ios-project-workflows-native",
+      "mac-project-workflows-core",
+      "mac-project-workflows-native-v2",
+      "mac-widget-host-v10"
+    ],
+    "note": "Rebuildable obsolete acceptance outputs and superseded result/capture artifacts only; current results, source, app data and active legacy widget extension retained."
+  }
+}
