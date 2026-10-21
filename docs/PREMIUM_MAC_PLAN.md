@@ -2567,3 +2567,8 @@ The Mac now implements device-local trackpad action choices, deliberate reveal b
 ### Reviewed voice drafts — 21 October 2026
 
 The Mac independently owns device-only Speech/AVFoundation input, bounded correction/review and an explicit append-to-draft handoff to existing multiline capture. Permission requests require Start; unsupported on-device recognition has no server fallback. Workspace/request/original-text tokens prevent late retargeting, and the existing task preview/Add/Undo owns persistence. Core/controller checks and offscreen light/dark component previews are recorded in `p2-voice-drafts-evidence.json`; real microphone/TCC/audio/VoiceOver and full native interaction remain unverified while locked. Cloud AI and all explicit user release/provider/push/older-client deferrals remain unchanged.
+
+
+## 21 October — elapsed reminder foundation
+
+Rank 5 begins with independently owned elapsed scheduling: fixed-instant anchor, 5-minute through 7-day intervals, inclusive end/count caps, no catch-up burst, bounded seeking and exact receipt membership. The app and Core package compile the source; native editor/persistence/notification integration is still required before exposure. `ADVANCED_REMINDERS.md` defines the behavior and remaining travel/holiday/location/urgent order. Exact checks are in `p2-interval-reminder-foundation-evidence.json`. No real task, notification permission, installed widget host or release input is changed. Mac live acceptance remains unavailable while locked; broader Px and user deferrals stay open.

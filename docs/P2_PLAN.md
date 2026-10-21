@@ -142,3 +142,8 @@ Mac now owns trackpad row controls and device-only preferences, with full-swipe 
 ## Reviewed voice drafts (rank 4, implementation with acceptance gates)
 
 Both apps now own on-device-only recording adapters and a correction/review sheet in Add multiple tasks. Apply appends bounded text to the unchanged, workspace-bound draft; it does not save tasks. Existing multiline preview, metadata/destination validation and explicit Add still own mutations. Cancel/refusal preserve the original draft, recording tokens fence late callbacks and account changes, and recording/finalization are time-bounded. See `VOICE_DRAFTS.md` and `p2-voice-drafts-evidence.json`. Genuine microphone/transcription, OS permission/recovery/audio-session and full Mac/VoiceOver/account-switch acceptance remain open. Synthetic speech fixtures are not real speech acceptance. Cloud AI assistance remains disabled; this does not complete rank 4 or the full Px backlog.
+
+
+## Elapsed reminder schedules (rank 5, foundation only)
+
+Elapsed repeating reminders are the first rank-5 capability: a fixed anchor plus a user-chosen interval, reviewed upcoming alerts, count/end limits and no catch-up burst. Both apps independently compile the bounded schedule/receipt-membership foundation. It is not exposed or persisted yet. The spec/editor, durable save/import/Undo, notification projection/action integration and genuine native/delivery acceptance remain required. See `ADVANCED_REMINDERS.md` for the explicit travel/holiday/location/urgent work order and `p2-interval-reminder-foundation-evidence.json` for exact foundation checks. No full rank or deferred release/provider gate is closed.
