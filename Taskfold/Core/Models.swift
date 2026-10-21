@@ -390,6 +390,7 @@ struct Snapshot: Codable, Equatable, Sendable {
             return
         }
         var rows = tables[change.table] ?? []
+        let assignmentBefore = change.table == "tasks" ? rows.first { $0.id == change.recordID } : nil
         // A fetched recreated task must remain visible while its older queued action needs review.
         if !TaskGeneration.permitsLocalAction(change, existing: rows.first(where: { $0.id == change.recordID })) { return }
         if change.table == ReminderSnooze.table, change.method == "POST", change.insertOnly != true {
@@ -416,6 +417,7 @@ struct Snapshot: Codable, Equatable, Sendable {
             rows.append(Record(fields))
         }
         tables[change.table] = rows
+        if change.table == "tasks" { TaskAssignmentProvenance.invalidate(before:assignmentBefore,after:rows.first { $0.id == change.recordID },snapshot:&self) }
     }
     /// Confirm the server revision before replaying work queued during the request.
     mutating func acknowledge(_ change: Mutation, saved: Record?) {
@@ -440,6 +442,9 @@ struct Snapshot: Codable, Equatable, Sendable {
         }
     }
     mutating func mergeRemote(_ remote: [String: [Record]]) {
+        // A fresh task snapshot without matching history cannot certify the old
+        // actor, including an unobserved remote A→B→A assignment cycle.
+        if remote["tasks"] != nil && remote[TaskAssignmentProvenance.table] == nil { tables.removeValue(forKey:TaskAssignmentProvenance.table) }
         tables.merge(remote) { _, new in new }
         for change in pending { apply(change) }
         ConversationCache.prune(&self)
@@ -1070,6 +1075,7 @@ struct TaskQuery: Hashable {
     var filterProjects: [FilterReference] = []
     var filterSections: [FilterReference] = []
     var filterPeople: [FilterReference] = []
+    var filterAssignments = TaskAssignmentProvenance.Catalog(nil)
     var userID = ""
     var timeZone = TimeZone.current.identifier
 }
@@ -1119,6 +1125,7 @@ final class TaskCache {
         var query = incoming
         query.now = query.filter?.usesClockWindow == true ? query.now.flatMap { $0.timeIntervalSinceReferenceDate.isFinite ? FilterClockWindow.minute($0) : nil } : nil
         if query.filter?.usesDatePreferences != true { query.datePreferences = DatePhrasePreferences() }
+        if query.filter?.usesAssignmentHistory != true { query.filterAssignments = .init(nil) }
         if let cached = results[query] { return cached }
         computationCount += 1
         let nameBindings = query.filter?.nameBindings(projects: query.filterProjects, sections: query.filterSections, labels: query.filterLabels, people: query.filterPeople)
@@ -1134,8 +1141,8 @@ final class TaskCache {
             if !query.text.isEmpty && !(task.title + " " + task.string("description")).localizedCaseInsensitiveContains(query.text) { return false }
             if let filter = query.filter {
                 if case .sections(let rules) = filter {
-                    guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople) }) else { return false }
-                } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople) { return false }
+                    guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople, assignments: query.filterAssignments) }) else { return false }
+                } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople, assignments: query.filterAssignments) { return false }
             }
             let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
             switch query.scope {
@@ -1450,9 +1457,9 @@ enum TaskCompletion {
 
 /// Versioned widget payload. The extension receives bounded planning/Focus data, never authentication sessions or executable mutations.
 enum WidgetProjection {
-    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil) -> [String: JSON] {
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil)) -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
-        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators)
+        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments)
         let pulse = pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar)
         let nested = WidgetCompletion.hierarchy(Snapshot(tables: ["tasks": tasks, "projects": projects, "saved_views": savedViews]), account: account)?.items.filter { $0.isSubtask && !$0.record.completed } ?? []
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
@@ -1511,10 +1518,10 @@ enum WidgetProjection {
     }
 
     /// Publish open task IDs and display names, never filter expressions or ordering records.
-    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar, datePreferences preferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil) -> [JSON] {
+    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar, datePreferences preferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil)) -> [JSON] {
         guard !account.isEmpty else { return [] }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
-        let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account, people: people, datePreferences: preferences, collaborators: collaborators)
+        let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account, people: people, datePreferences: preferences, collaborators: collaborators, assignments: assignments)
         let cache = TaskCache(); cache.update(tasks)
         let settings = viewPreferences.filter { $0.string("user_id") == account }
         let orders = viewOrders.filter { $0.string("user_id") == account }
@@ -1576,7 +1583,7 @@ enum WidgetProjection {
                 let query = TaskQuery(scope: .all, sort: ordering, today: day, filter: rule, now: rule.usesClockWindow ? now : nil, datePreferences: preferences,
                     filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) },
                     filterProjects: context.projectReferences,
-                    filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: context.personReferences, userID: account, timeZone: calendar.timeZone.identifier)
+                    filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: context.personReferences, filterAssignments: assignments, userID: account, timeZone: calendar.timeZone.identifier)
                 let matches=cache.matching(query).filter{!$0.completed}
                 var groups=TaskGrouping.queryGroups(matches,rule:rule,by:grouping,context:context,today:day,timeZone:calendar.timeZone.identifier,now:query.now)
                 for index in groups.indices {

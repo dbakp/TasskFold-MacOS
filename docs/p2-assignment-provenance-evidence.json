@@ -159,5 +159,7 @@
   "cleanup": {
     "main_test_apps": "not launched for this implementation",
     "obsolete_sql_runtime_bytes_pruned": "approximately 75 MiB; pinned lockfiles retained"
-  }
+  },
+  "integration_followup": "p2-assigned-by-filters-evidence.json",
+  "historical_scope_note": "This file records the foundation milestone. Later integration supersedes several then-remaining gates; use the follow-up evidence for current status."
 }

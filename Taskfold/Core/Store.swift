@@ -270,7 +270,14 @@ final class Store {
     var email: String { backend.session?.user.email ?? "On this iPhone" }
     var tasks: [Record] { _ = taskRevision; return taskCache.tasks }
     private var filterCollaborators: [Record]? { snapshot.tables["project_collaborators"] ?? (localMode ? [] : nil) }
-    var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { project in projectMembers(project.id).map { person in var scoped = person; scoped["project_id"] = .string(project.id); return scoped } }, datePreferences: datePhrasePreferences, collaborators: filterCollaborators) }
+    @ObservationIgnored private var cachedAssignments: (rows:[Record]?,scope:String?,catalog:TaskAssignmentProvenance.Catalog)?
+    var assignmentCatalog: TaskAssignmentProvenance.Catalog {
+        let rows = snapshot.tables[TaskAssignmentProvenance.table] ?? (localMode ? [] : nil), scope = localMode ? userID : nil
+        if let cachedAssignments, cachedAssignments.rows == rows, cachedAssignments.scope == scope { return cachedAssignments.catalog }
+        let catalog = TaskAssignmentProvenance.Catalog(rows,localAccount:scope)
+        cachedAssignments = (rows,scope,catalog); return catalog
+    }
+    var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { project in projectMembers(project.id).map { person in var scoped = person; scoped["project_id"] = .string(project.id); return scoped } }, datePreferences: datePhrasePreferences, collaborators: filterCollaborators, assignments: assignmentCatalog) }
     var savedViews: [Record] { OrganizationOrder.sorted(rows("saved_views")) }
     var favorites: [Record] { OrganizationOrder.sorted(rows("favorites")) }
     var workingHours: WorkingHours? { workingHoursDocument == .null ? WorkingHours() : try? WorkingHours(document: workingHoursDocument) }
@@ -388,6 +395,7 @@ final class Store {
             query.filter = rule; query.datePreferences = datePhrasePreferences; query.now = rule.usesClockWindow ? calendarContext.minute : nil; query.filterLabels = labels.map { FilterReference(id: $0.id, name: $0.name) }; query.userID = userID
             query.includeCompleted = query.includeCompleted || view["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion)
         }
+        if query.filter?.usesAssignmentHistory == true { query.filterAssignments = assignmentCatalog }
         let matches = taskCache.matching(query)
         if case .project = query.scope { return matches }
         let archived = ProjectOrganization.archivedIDs(in: allProjects)
@@ -587,7 +595,7 @@ final class Store {
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.anyConnected ? (busy.connected && busy.selected.isEmpty && busy.links?.active != true ? "choose" : "refresh") : "off"
-        var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people, viewPreferences: rows("view_preferences"), viewOrders: rows("view_orders"), collaborators: filterCollaborators)
+        var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people, viewPreferences: rows("view_preferences"), viewOrders: rows("view_orders"), collaborators: filterCollaborators, assignments: assignmentCatalog)
         if let feedback = snapshot.widgetCompletion.feedback, feedback.account == account,
            Date() < feedback.expiresAt, widgetFeedbackIsCurrent(feedback) {
             payload["completionFeedback"] = try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(feedback))
@@ -830,7 +838,10 @@ final class Store {
             committedChanges.append(change)
             let before = change.table == "tasks" ? record("tasks", id: change.recordID) : nil
             snapshot.apply(change)
-            if localMode { TaskActivity.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID) }
+            if localMode {
+                TaskActivity.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID)
+                TaskAssignmentProvenance.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID)
+            }
             if !localMode { snapshot.pending.append(change) }
         }
         if let widgetReceipt { snapshot.widgetCompletion.record(widgetReceipt); snapshot.widgetCompletion.feedback = widgetFeedback }
@@ -987,6 +998,8 @@ final class Store {
                 if table == "projects", projectIDs.allSatisfy({ id in remote[table]!.contains { $0.id.lowercased() == id } }) { return false }
                 if table == mutation.table, remote[table]!.contains(where: { $0.id.lowercased() == mutation.recordID.lowercased() }) { return false }
             }
+            remote[TaskAssignmentProvenance.table] = await backend.assignmentProvenanceRows()
+            guard generation == accountGeneration, snapshot == reviewed else { return false }
             guard let recovered = reviewed.recoveringUnavailableProject(for: mutation, remote: remote), recovered.pending.count < reviewed.pending.count else { return false }
             _ = try await makeRecoveryBackup(kind: "Access removed")
             guard generation == accountGeneration, account == userID, snapshot == reviewed else { return false }
@@ -1019,6 +1032,8 @@ final class Store {
                 remote[table] = try await backend.rows(table)
                 guard generation == accountGeneration else { return }
             }
+            remote[TaskAssignmentProvenance.table] = await backend.assignmentProvenanceRows()
+            guard generation == accountGeneration else { return }
             snapshot.mergeRemote(remote); try persist(); lastSync = Date(); migrateOrganization()
             await syncConversations()
             if !avatarMetadataLoaded {
@@ -1809,6 +1824,19 @@ extension Store {
             snapshot.tables["project_collaborators"] = [
                 Record(["id": .string("f3910000-0000-4000-8000-000000000001"), "project_id": .string(child), "user_id": .string("f3910000-0000-4000-8000-000000000002"), "status": .string("accepted"), "role": .string("collaborator")]),
                 Record(["id": .string("f3910000-0000-4000-8000-000000000003"), "project_id": .string(parent), "status": .string("pending"), "invited_email": .string("sharing-fixture@example.invalid"), "role": .string("collaborator")])]
+        }
+        if ProcessInfo.processInfo.arguments.contains("--assignment-history-fixture"), Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowtestsnotes1" {
+            let member = "f4920000-0000-4000-8000-000000000001"
+            func assigned(_ title: String, _ recipient: String) -> Record {
+                var result = Record.task(user:userID,project:child,date:Date()); result["title"] = .string(title)
+                result["task_generation"] = .string(UUID().uuidString.lowercased()); result["assigned_to"] = recipient.isEmpty ? .null : .string(recipient)
+                return result
+            }
+            let mine = assigned("Plan the calm handoff",userID), legacy = assigned("Review earlier assignment",userID)
+            let other = assigned("Follow the team handoff",member), unassigned = assigned("Capture the next idea","")
+            snapshot.tables["tasks"] = [mine,legacy,other,unassigned]
+            TaskAssignmentProvenance.recordLocal(Mutation(table:"tasks",recordID:mine.id,method:"POST",fields:mine.fields),before:nil,after:mine,snapshot:&snapshot,account:userID)
+            snapshot.tables[TaskAssignmentProvenance.table,default:[]].append(Record(["id":.string(UUID().uuidString.lowercased()),"task_id":.string(other.id),"task_generation":other["task_generation"],"node_key":.string(""),"node_path":.array([]),"assignee_id":.string(member),"actor_id":.string(member),"event_id":.string(UUID().uuidString.lowercased()),"assigned_at":.string(TaskActivity.stamp(Date())),"origin":.string("recorded"),"active":.bool(true)]))
         }
         do { try persist(); seedSharedCaptureFixture() } catch { self.error = error.localizedDescription }
     }

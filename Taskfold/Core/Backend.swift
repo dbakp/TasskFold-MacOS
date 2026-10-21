@@ -412,6 +412,14 @@ final class Backend: NSObject {
             if page.count < 500 { return result }; offset += page.count
         }
     }
+    /// Optional feature reads cannot stop core task sync or reuse a previous
+    /// account's evidence. A missing table, denial or transport failure is unknown.
+    func assignmentProvenanceRows() async -> [Record]? {
+        let generation = sessionGeneration, account = session?.user.id
+        guard account != nil else { return nil }
+        guard let result = try? await rows(TaskAssignmentProvenance.table), generation == sessionGeneration, session?.user.id == account else { return nil }
+        return result
+    }
     @discardableResult func send(_ change: Mutation, expectedAccount: String? = nil) async throws -> Record? {
         guard change.table != TaskActivity.table, change.table != TaskActivity.epochTable, change.table != TaskAssignmentProvenance.table else { throw AppFailure(message: "Activity history is read-only.") }
         let expectedOwner = expectedAccount ?? session?.user.id

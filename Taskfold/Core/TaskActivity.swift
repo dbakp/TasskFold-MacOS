@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 /// Server-confirmed current assignment history. The task author and invitation
 /// sender never substitute for a missing actor. Catalogs belong to one workspace.
@@ -6,7 +7,7 @@ enum TaskAssignmentProvenance {
     static let table = "task_assignment_provenance"
     static let legacyGeneration = "00000000-0000-0000-0000-000000000000"
     enum Unknown: String, Equatable, Sendable {
-        case unavailable, legacy, system, recurrence, unsupported, stale, ambiguous, deletedActor
+        case unavailable, legacy, system, recurrence, unsupported, stale, ambiguous, deletedActor, pending
     }
     enum Resolution: Equatable, Sendable {
         case unassigned
@@ -18,22 +19,51 @@ enum TaskAssignmentProvenance {
         let generation: String
         let node: String
     }
-    struct Catalog: Equatable, Sendable {
+    struct Catalog: Hashable, Sendable {
         private let rows: [Key: [Record]]?
-        init(_ source: [Record]?) {
-            rows = source.map { source in
+        private let localAccount: String?
+        private let fingerprint: Data
+        private let instants: [String:Date]
+        var available: Bool { rows != nil }
+        init(_ source: [Record]?, localAccount: String? = nil) {
+            self.localAccount = localAccount
+            let grouped = source.map { source in
                 Dictionary(grouping: source, by: { row in
                     Key(task: row.string("task_id").lowercased(), generation: row.string("task_generation").lowercased(), node: row.string("node_key"))
                 })
             }
+            rows = grouped
+            let ordered = grouped?.keys.sorted { [$0.task,$0.generation,$0.node].lexicographicallyPrecedes([$1.task,$1.generation,$1.node]) }.map { key in
+                JSON.array([.string(key.task),.string(key.generation),.string(key.node),.array(grouped![key]!.map { .object($0.fields) })])
+            }
+            if let ordered {
+                let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+                fingerprint = Data(SHA256.hash(data: (try? encoder.encode(ordered)) ?? Data()))
+            } else { fingerprint = Data() }
+            var parsed: [String:Date] = [:]
+            let stamps = Set((source ?? []).filter { ["recorded","local"].contains($0.string("origin")) }.map { $0.string("assigned_at") }.filter { !$0.isEmpty })
+            if !stamps.isEmpty {
+                // Reuse thread-local parsers for this immutable catalog. Matching
+                // thousands of rows must not allocate a date parser per task.
+                let fractional = ISO8601DateFormatter(); fractional.formatOptions = [.withInternetDateTime,.withFractionalSeconds]
+                let whole = ISO8601DateFormatter()
+                for stamp in stamps { parsed[stamp] = fractional.date(from:stamp) ?? whole.date(from:stamp) }
+            }
+            instants = parsed
         }
+        func hash(into hasher: inout Hasher) { hasher.combine(fingerprint); hasher.combine(localAccount) }
         func resolution(root: Record) -> Resolution { resolve(source: root, root: root, path: []) }
+        func resolution(projected task: Record) -> Resolution {
+            guard task.id.hasPrefix("subtask:") else { return resolution(root: task) }
+            guard let path = SubtaskTree.referencePath(task.id), let rootID = path.first else { return .unknown(.unsupported) }
+            return resolve(source: task, root: Record(["id":.string(rootID),"task_generation":task["task_generation"]]), path: Array(path.dropFirst()))
+        }
         /// Hierarchy items have already passed the bounded identity/tree validator.
         func resolution(item: TaskHierarchyIndex.Item) -> Resolution { resolve(source: item.source, root: item.root, path: item.path) }
         private func resolve(source: Record, root: Record, path: [String]) -> Resolution {
             let recipient = source["assigned_to"]
             if recipient == .null || recipient == .string("") { return .unassigned }
-            guard case .string(let recipientID) = recipient, UUID(uuidString: recipientID) != nil,
+            guard case .string(let recipientID) = recipient, UUID(uuidString: recipientID) != nil || recipientID == localAccount,
                   UUID(uuidString: root.id) != nil else { return .unknown(.unsupported) }
             let generation: String
             if root["task_generation"] == .null { generation = legacyGeneration }
@@ -50,8 +80,12 @@ enum TaskAssignmentProvenance {
             guard row["active"] == .bool(true), encodedPath.map(\.text) == path,
                   row.string("assignee_id").lowercased() == recipientID.lowercased() else { return .unknown(.stale) }
             switch row.string("origin") {
+            case "local":
+                guard let localAccount, row.string("scope_account") == localAccount, row.string("actor_id") == localAccount,
+                      let recordedAt = instants[row.string("assigned_at")] else { return .unknown(.unsupported) }
+                return .known(actor:localAccount,event:row.string("event_id").lowercased(),recordedAt:recordedAt)
             case "recorded":
-                guard let recordedAt = TaskPlanning.instant(row.string("assigned_at")) else { return .unknown(.unsupported) }
+                guard let recordedAt = instants[row.string("assigned_at")] else { return .unknown(.unsupported) }
                 guard row["actor_id"] != .null else { return .unknown(.deletedActor) }
                 guard UUID(uuidString: row.string("actor_id")) != nil else { return .unknown(.unsupported) }
                 return .known(actor: row.string("actor_id").lowercased(), event: row.string("event_id").lowercased(), recordedAt: recordedAt)
@@ -60,9 +94,106 @@ enum TaskAssignmentProvenance {
             case "recurrence": return .unknown(.recurrence)
             case "unsupported": return .unknown(.unsupported)
             case "unassigned": return .unknown(.stale)
+            case "pending": return .unknown(.pending)
             default: return .unknown(.unsupported)
             }
         }
+    }
+
+    private static func generation(_ root: Record) -> String { root.string("task_generation").isEmpty ? legacyGeneration : root.string("task_generation").lowercased() }
+    private static func recipient(_ value: JSON) -> JSON {
+        if value == .string("") { return .null }
+        if case .string(let id) = value, let uuid = UUID(uuidString:id) { return .string(uuid.uuidString.lowercased()) }
+        return value
+    }
+    /// An index validates stable identities without normalizing or generating any.
+    private static func nodes(_ root: Record) -> [String: TaskHierarchyIndex.Item]? {
+        let project = root.string("project_id")
+        let projects = project.isEmpty ? [] : [Record(["id":.string(project),"name":.string("Containment")])]
+        guard let index = try? TaskHierarchyIndex(roots:[root],projects:projects,workspace:WorkspaceBinding(account:"assignment-index",generation:UUID())) else { return nil }
+        return Dictionary(uniqueKeysWithValues:index.items.map { ($0.path.last ?? "",$0) })
+    }
+    /// Cloud optimism never certifies an actor. Invalidate every real transition,
+    /// including A→B→A, and retain a proven event across a pure child move.
+    static func invalidate(before: Record?, after: Record?, snapshot: inout Snapshot) {
+        guard let after else { return }
+        if let before, recipient(before["assigned_to"]) == recipient(after["assigned_to"]), before["subtasks"] == after["subtasks"] { return }
+        guard var rows = snapshot.tables[table] else { return }
+        var keys = Set(rows.filter { $0.string("task_id").lowercased() == after.id.lowercased() && $0.string("task_generation").lowercased() == generation(after) }.map { $0.string("node_key") })
+        func appendMissing(_ source: Record, path: [String], changed: Bool) {
+            let value = recipient(source["assigned_to"])
+            guard changed, value != .null, keys.insert(path.last ?? "").inserted else { return }
+            rows.append(Record(["id":.string(UUID().uuidString.lowercased()),"task_id":.string(after.id.lowercased()),"task_generation":.string(generation(after)),"node_key":.string(path.last ?? ""),"node_path":.array(path.map(JSON.string)),"assignee_id":value,"actor_id":.null,"event_id":.string(UUID().uuidString.lowercased()),"assigned_at":.null,"origin":.string("pending"),"active":.bool(true)]))
+        }
+        guard let before else {
+            for i in rows.indices where rows[i].string("task_id").lowercased() == after.id.lowercased() && rows[i].string("task_generation").lowercased() == generation(after) && rows[i].string("origin") != "local" {
+                rows[i]["origin"] = .string("pending"); rows[i]["actor_id"] = .null
+            }
+            appendMissing(after,path:[],changed:true)
+            for item in nodes(after)?.values ?? Dictionary<String,TaskHierarchyIndex.Item>().values where item.isSubtask { appendMissing(item.source,path:item.path,changed:true) }
+            snapshot.tables[table] = rows; return
+        }
+        let oldNodes = before["subtasks"] == after["subtasks"] ? nil : nodes(before)
+        let newNodes = before["subtasks"] == after["subtasks"] ? nil : nodes(after)
+        for i in rows.indices where rows[i].string("task_id").lowercased() == after.id.lowercased() && rows[i].string("task_generation").lowercased() == generation(after) && rows[i].string("origin") != "local" {
+            let key = rows[i].string("node_key")
+            if key.isEmpty {
+                if recipient(before["assigned_to"]) != recipient(after["assigned_to"]) { rows[i]["origin"] = .string("pending"); rows[i]["actor_id"] = .null }
+            } else if before["subtasks"] != after["subtasks"] {
+                if oldNodes == nil || newNodes == nil || (newNodes?[key] != nil && recipient(oldNodes?[key]?.source["assigned_to"] ?? .null) != recipient(newNodes?[key]?.source["assigned_to"] ?? .null)) {
+                    rows[i]["origin"] = .string("pending"); rows[i]["actor_id"] = .null
+                } else if let old = oldNodes?[key], let new = newNodes?[key], rows[i]["node_path"] == .array(old.path.map(JSON.string)) {
+                    rows[i]["node_path"] = .array(new.path.map(JSON.string))
+                }
+            }
+        }
+        appendMissing(after,path:[],changed:recipient(before["assigned_to"]) != recipient(after["assigned_to"]))
+        if before["subtasks"] != after["subtasks"] {
+            for item in newNodes?.values ?? Dictionary<String,TaskHierarchyIndex.Item>().values where item.isSubtask {
+                appendMissing(item.source,path:item.path,changed:oldNodes == nil || recipient(oldNodes?[item.path.last ?? ""]?.source["assigned_to"] ?? .null) != recipient(item.source["assigned_to"]))
+            }
+        }
+        snapshot.tables[table] = rows
+    }
+    /// Called only by Store's explicit local-workspace commit path. These records
+    /// are never accepted as server evidence or exported to another workspace.
+    static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date = Date()) {
+        guard change.table == "tasks", !account.isEmpty, let root = after ?? before, UUID(uuidString:root.id) != nil else { return }
+        var rows = snapshot.tables[table] ?? []
+        let rootID = root.id.lowercased(), incarnation = generation(root)
+        guard let after else { rows.removeAll { $0.string("task_id").lowercased() == rootID }; snapshot.tables[table] = rows; return }
+        if let before, recipient(before["assigned_to"]) == recipient(after["assigned_to"]), before["subtasks"] == after["subtasks"] { return }
+        let prior = before.flatMap(nodes), current = nodes(after)
+        var values = current ?? [:]
+        var positions: [String:Int] = [:]
+        for i in rows.indices where rows[i].string("task_id").lowercased() == rootID && rows[i].string("task_generation").lowercased() == incarnation {
+            positions[rows[i].string("node_key")] = positions[rows[i].string("node_key")] ?? i
+        }
+        // An unsupported checklist does not prevent a real root assignment.
+        values[""] = TaskHierarchyIndex.Item(source:after,root:after,path:[],parentTitles:[],id:after.id)
+        if current == nil {
+            for i in rows.indices where rows[i].string("task_id").lowercased() == rootID && rows[i].string("task_generation").lowercased() == incarnation && !rows[i].string("node_key").isEmpty {
+                rows[i]["active"] = .bool(false); rows[i]["origin"] = .string("unsupported"); rows[i]["actor_id"] = .null
+            }
+        }
+        for i in rows.indices where rows[i].string("task_id").lowercased() == rootID && rows[i].string("task_generation").lowercased() == incarnation && !rows[i].string("node_key").isEmpty && values[rows[i].string("node_key")] == nil { rows[i]["active"] = .bool(false) }
+        let recordedAt = JSON.string(TaskActivity.stamp(now))
+        for (key,item) in values {
+            let recipient = Self.recipient(item.source["assigned_to"])
+            let previous = key.isEmpty ? before : prior?[key]?.source
+            let oldRecipient = Self.recipient(previous?["assigned_to"] ?? .null)
+            let index = positions[key]
+            if index == nil, recipient == .null { continue }
+            if let index, Self.recipient(rows[index]["assignee_id"]) == recipient, !["unsupported","pending"].contains(rows[index].string("origin")), (key.isEmpty ? before != nil : prior != nil), previous == nil || recipient == oldRecipient {
+                rows[index]["node_path"] = .array(item.path.map(JSON.string)); rows[index]["active"] = .bool(recipient != .null); continue
+            }
+            let legacy = before != nil && ((!key.isEmpty && prior == nil) || (previous != nil && recipient == oldRecipient))
+            let recurrence = before == nil && (!after.string("recurrence_parent_id").isEmpty || after["source_metadata"].object["taskfold_recurrence_v1"] != nil)
+            let origin = recipient == .null ? "unassigned" : legacy ? "legacy" : recurrence ? "recurrence" : "local"
+            let row = Record(["id":.string(index.map { rows[$0].id } ?? UUID().uuidString.lowercased()),"task_id":.string(rootID),"task_generation":.string(incarnation),"node_key":.string(key),"node_path":.array(item.path.map(JSON.string)),"assignee_id":recipient,"actor_id":origin == "local" ? .string(account) : .null,"scope_account":.string(account),"event_id":.string(UUID().uuidString.lowercased()),"assigned_at":origin == "local" ? recordedAt : .null,"origin":.string(origin),"active":.bool(recipient != .null)])
+            if let index { rows[index] = row } else { rows.append(row); positions[key] = rows.count-1 }
+        }
+        snapshot.tables[table] = rows
     }
 }
 
