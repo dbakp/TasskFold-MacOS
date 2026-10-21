@@ -445,3 +445,204 @@ struct TaskHierarchyIndex {
         var result = root; result["subtasks"] = .array(list); return result
     }
 }
+
+/// List actions use the same captured rows on both platforms. Virtual child rows
+/// become root subtree patches; overlapping destructive selections never clobber
+/// an independently requested edit, and root recurrence keeps its existing engine.
+enum TaskSelectionPlan {
+    enum Action {
+        case patch([String: JSON]), completion(Bool, Date), delete
+    }
+    struct Request {
+        var task: Record
+        var action: Action
+        var workspace: WorkspaceBinding
+    }
+    private static func failure(_ message: String) -> SubtaskTree.Failure { .init(message: message) }
+    static func changes(_ requests: [Request], accessibleRoots: [Record], projects: [Record], workspace: WorkspaceBinding, calendar: Calendar = .current) throws -> [Mutation] {
+        guard !requests.isEmpty else { return [] }
+        guard requests.count <= TaskHierarchyIndex.maximumEdits else { throw failure("Select up to 1,000 tasks at a time.") }
+        guard !workspace.account.isEmpty, requests.allSatisfy({ $0.workspace == workspace }), Set(requests.map { $0.task.id }).count == requests.count else {
+            throw failure("This selection or workspace changed. Select the tasks again.")
+        }
+        let grouped = Dictionary(grouping: accessibleRoots, by: \.id)
+        let projectGroups = Dictionary(grouping: projects, by: \.id)
+        let archived = ProjectOrganization.archivedIDs(in: projects)
+        func rootID(_ row: Record) throws -> String {
+            if let path = SubtaskTree.referencePath(row.id) { return path[0] }
+            guard !row.id.isEmpty, !row.id.hasPrefix("subtask:") else { throw failure("This task reference is unavailable. Refresh the list.") }
+            return row.id
+        }
+        var roots: [String: Record] = [:], childRootIDs = Set<String>()
+        for request in requests {
+            let id = try rootID(request.task)
+            guard let rows = grouped[id], rows.count == 1, let root = rows.first,
+                  root["task_generation"] == request.task["task_generation"] else { throw failure("A selected task was replaced or is no longer accessible. Select it again.") }
+            let project = root.string("project_id")
+            guard project.isEmpty || (projectGroups[project]?.count == 1 && !archived.contains(project)) else { throw failure("A selected project is no longer accessible. Refresh the list.") }
+            roots[id] = root
+            if SubtaskTree.referencePath(request.task.id) != nil { childRootIDs.insert(id) }
+        }
+        let index = try TaskHierarchyIndex(roots: roots.values.filter { childRootIDs.contains($0.id) }, projects: projects, workspace: workspace)
+        var selectedChildren: [String: TaskHierarchyIndex.Selection] = [:]
+        var rootRequests: [String: Request] = [:]
+        for request in requests {
+            let row = request.task
+            if SubtaskTree.referencePath(row.id) != nil {
+                guard let selected = index.selection(row.id), selected.item.record == row else { throw failure("A selected subtask changed. Select its current row again.") }
+                selectedChildren[row.id] = selected
+            } else {
+                guard let root = roots[row.id], root["created_at"] == row["created_at"], root["project_id"] == row["project_id"], root["section_id"] == row["section_id"] else { throw failure("A selected task moved. Select its current row again.") }
+                if case .delete = request.action, root != row { throw failure("A selected task changed. Review its current content before deleting it.") }
+                if case .completion(let completed, _) = request.action, root.completed != completed,
+                   (root.completed != row.completed || root["completion_version"].integer != row["completion_version"].integer) {
+                    throw failure("Task completion changed. Select its current row again.")
+                }
+                rootRequests[row.id] = request
+            }
+        }
+        func isDelete(_ action: Action) -> Bool { if case .delete = action { return true }; return false }
+        var childEdits: [TaskHierarchyIndex.Edit] = []
+        for request in requests {
+            guard let selected = selectedChildren[request.task.id] else { continue }
+            if let rootRequest = rootRequests[selected.item.root.id], isDelete(rootRequest.action) {
+                guard isDelete(request.action) else { throw failure("Choose a branch deletion or an edit to its children, then try again.") }
+                continue
+            }
+            let deletingAncestor = requests.first { other in
+                guard other.task.id != request.task.id, isDelete(other.action), let parent = selectedChildren[other.task.id] else { return false }
+                return parent.item.root.id == selected.item.root.id && selected.item.path.starts(with: parent.item.path)
+            }
+            if deletingAncestor != nil {
+                guard isDelete(request.action) else { throw failure("Choose a branch deletion or an edit to its children, then try again.") }
+                continue
+            }
+            switch request.action {
+            case .delete: childEdits.append(.delete(selected))
+            case .completion(let completed, let date): childEdits.append(.completion(selected, completed: completed, at: date))
+            case .patch(let fields): childEdits.append(.patch(selected, fields))
+            }
+        }
+        let childChanges = try TaskHierarchyIndex.changes(childEdits, accessibleRoots: Array(roots.values), projects: projects, workspace: workspace)
+        var working = roots
+        for change in childChanges { working[change.recordID]?["subtasks"] = change.fields["subtasks"] ?? .null }
+        var deleted = Set<String>(), extras: [Mutation] = []
+        var completionIDs: [String: UUID] = [:]
+        var prospective = accessibleRoots.map { working[$0.id] ?? $0 }
+        let allowedRootFields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "project_id", "section_id"]
+        for id in rootRequests.keys.sorted() {
+            guard let request = rootRequests[id], let original = roots[id], var value = working[id] else { continue }
+            switch request.action {
+            case .delete: deleted.insert(id)
+            case .patch(let fields):
+                guard Set(fields.keys).isSubset(of: allowedRootFields) else { throw failure("This list action needs the task's detail editor.") }
+                for (key, desired) in fields where original[key] != request.task[key] && original[key] != desired { throw failure("A selected field changed. Review the current task before applying this action.") }
+                for key in ["project_id", "section_id"] {
+                    if let field = fields[key], field != .null {
+                        guard case .string(let id) = field, !id.isEmpty else { throw failure("Choose a valid project or section.") }
+                    }
+                }
+                var desired = value
+                for (key, field) in fields { desired[key] = field }
+                // Reuse native detail validation for common planning/priority fields.
+                value = try SubtaskTree.detailChanges(original: value, edited: desired, current: value)
+                for key in ["project_id", "section_id"] where fields[key] != nil { value[key] = desired[key] }
+                let target = value.string("project_id")
+                guard target.isEmpty || (projectGroups[target]?.count == 1 && !archived.contains(target)) else { throw failure("Choose an accessible project.") }
+                working[id] = value
+            case .completion(let completed, let date):
+                if value.completed != completed {
+                    let changes = TaskCompletion.toggle(value, tasks: prospective, at: date, calendar: calendar)
+                    for change in changes {
+                        if change.recordID == id, change.method == "PATCH" { completionIDs[id] = change.id; for (key, field) in change.fields { value[key] = field } }
+                        else { extras.append(change); if change.method == "POST" { prospective.append(Record(change.fields)) } }
+                    }
+                    working[id] = value
+                }
+            }
+            if let position = prospective.firstIndex(where: { $0.id == id }), let value = working[id] { prospective[position] = value }
+        }
+        var result: [Mutation] = []
+        for id in roots.keys.sorted() {
+            guard let before = roots[id], let after = working[id] else { continue }
+            if deleted.contains(id) { result.append(Mutation(table: "tasks", recordID: id, method: "DELETE", fields: [:], baseline: before.fields)); continue }
+            let fields = after.fields.filter { before.fields[$0.key] != $0.value }
+            if !fields.isEmpty {
+                var mutation = Mutation(table: "tasks", recordID: id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: before))
+                if let identity = completionIDs[id] { mutation.id = identity }
+                result.append(mutation)
+            }
+        }
+        return result + extras
+    }
+}
+
+extension TaskSelectionPlan {
+    /// A selected branch is copied once. Child copies stay beside their source;
+    /// copying a main task creates a fresh root and fresh nested identities.
+    static func duplicateChanges(_ tasks: [Record], accessibleRoots: [Record], projects: [Record], workspace: WorkspaceBinding, at date: Date = Date()) throws -> [Mutation] {
+        let requests = tasks.map { Request(task: $0, action: .patch([:]), workspace: workspace) }
+        _ = try changes(requests, accessibleRoots: accessibleRoots, projects: projects, workspace: workspace)
+        guard !tasks.isEmpty else { return [] }
+        let selectedRoots = Set(tasks.filter { SubtaskTree.referencePath($0.id) == nil }.map(\.id))
+        let wantedRoots = Set(tasks.map { SubtaskTree.referencePath($0.id)?.first ?? $0.id })
+        let roots = Dictionary(accessibleRoots.filter { wantedRoots.contains($0.id) }.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let childTasks = tasks.filter { SubtaskTree.referencePath($0.id) != nil }
+        let childRootIDs = Set(childTasks.compactMap { SubtaskTree.referencePath($0.id)?.first })
+        let index = try TaskHierarchyIndex(roots: roots.values.filter { childRootIDs.contains($0.id) }, projects: projects, workspace: workspace)
+        var working = roots, inserts: [Mutation] = [], count = 0
+        func freshChildren(_ value: JSON, depth: Int = 1) throws -> JSON {
+            guard value == .null || { if case .array = value { return true }; return false }() else { throw failure("This checklist uses an unsupported format. Open its parent before duplicating it.") }
+            return .array(try value.list.map { node in
+                guard depth <= SubtaskTree.readableDepth, case .object(let fields) = node, case .string? = fields["title"], count < TaskHierarchyIndex.maximumItems else { throw failure("This checklist is too large or uses an unsupported format to duplicate.") }
+                count += 1; var row = Record(fields)
+                row["id"] = .string(UUID().uuidString.lowercased()); row["completed"] = .bool(false); row["completed_at"] = .null
+                if row.fields["task_generation"] != nil { row["task_generation"] = .string(UUID().uuidString.lowercased()) }
+                row["subtasks"] = try freshChildren(row["subtasks"], depth: depth + 1)
+                return .object(row.fields)
+            })
+        }
+        func insert(_ root: Record, path: [String], copy: JSON) -> Record? {
+            guard let key = path.first else { return nil }
+            var list = root["subtasks"].list
+            guard let position = list.firstIndex(where: { $0.object["id"] == .string(key) }) else { return nil }
+            if path.count == 1 { list.insert(copy, at: position + 1) }
+            else {
+                guard let updated = insert(Record(list[position].object), path: Array(path.dropFirst()), copy: copy) else { return nil }
+                list[position] = .object(updated.fields)
+            }
+            var updated = root; updated["subtasks"] = .array(list); return updated
+        }
+        for task in tasks {
+            if let path = SubtaskTree.referencePath(task.id) {
+                if selectedRoots.contains(path[0]) { continue }
+                let selectedPath = Array(path.dropFirst())
+                if childTasks.contains(where: { other in
+                    guard other.id != task.id, let parent = SubtaskTree.referencePath(other.id), parent[0] == path[0] else { return false }
+                    return selectedPath.starts(with: parent.dropFirst())
+                }) { continue }
+                guard let original = index.item(task.id), let current = working[path[0]] else { throw failure("A selected subtask moved. Select its current row again.") }
+                let copy = try freshChildren(.array([.object(original.source.fields)]), depth: selectedPath.count).list[0]
+                guard let updated = insert(current, path: selectedPath, copy: copy) else { throw failure("A selected subtask moved. Select its current row again.") }
+                working[path[0]] = updated
+            } else {
+                guard let original = roots[task.id], original == task else { throw failure("A selected task changed. Review its current content before duplicating it.") }
+                var copy = original
+                copy["id"] = .string(UUID().uuidString.lowercased()); copy["task_generation"] = .string(UUID().uuidString.lowercased())
+                copy["user_id"] = .string(workspace.account); copy["completion_version"] = .number(0)
+                copy["completed"] = .bool(false); copy["completed_at"] = .null; copy["created_at"] = .string(ISO8601DateFormatter().string(from: date))
+                copy["notification_sent_at"] = .null; copy["recurrence_parent_id"] = .null; copy.fields.removeValue(forKey: "updated_at")
+                if case .object(var metadata) = copy["source_metadata"] { metadata.removeValue(forKey: "taskfold_recurrence_v1"); copy["source_metadata"] = .object(metadata) }
+                copy["subtasks"] = try freshChildren(original["subtasks"])
+                inserts.append(Mutation(table: "tasks", recordID: copy.id, method: "POST", fields: copy.fields, insertOnly: true))
+            }
+        }
+        _ = try TaskHierarchyIndex(roots: Array(working.values) + inserts.map { Record($0.fields) }, projects: projects, workspace: workspace)
+        let patches = working.keys.sorted().compactMap { id -> Mutation? in
+            guard let original = roots[id], let updated = working[id], original["subtasks"] != updated["subtasks"] else { return nil }
+            let fields = ["subtasks": updated["subtasks"]]
+            return Mutation(table: "tasks", recordID: id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: original))
+        }
+        return patches + inserts
+    }
+}

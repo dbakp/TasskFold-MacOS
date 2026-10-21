@@ -146,7 +146,12 @@ struct TaskInspectorForm: View {
                     Text("Pin only text you want visible on your desktop or Home Screen. Choose it in the Pinned note widget; hide its details for privacy.").font(.caption).foregroundStyle(.secondary)
                 }
                 HStack {
-                    Button(draft.completed ? "Reopen" : "Complete", systemImage: draft.completed ? "arrow.uturn.backward.circle" : "checkmark.circle") { if let current { workspace.complete(current) } }
+                    Button(draft.completed ? "Reopen" : "Complete", systemImage: draft.completed ? "arrow.uturn.backward.circle" : "checkmark.circle") {
+                        guard editingGeneration == currentGeneration, workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { store.error = "This task or workspace changed. Reopen its current details."; return }
+                        if workspace.hierarchyFilter {
+                            do { workspace.complete(try store.selectionRecord(taskID)) } catch { store.error = error.localizedDescription }
+                        } else if let current { workspace.complete(current) }
+                    }
                         .controlSize(.small)
                     Spacer()
                     if draft.completed, let at = ISO8601DateFormatter().date(from: draft.string("completed_at")) { Text("Completed \(at.formatted(.relative(presentation: .named)))").font(.caption).foregroundStyle(.secondary) }

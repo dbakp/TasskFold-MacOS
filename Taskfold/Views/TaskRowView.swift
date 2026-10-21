@@ -39,8 +39,8 @@ struct TaskRowView: View {
     }
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            if workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(min(workspace.taskDepth(task.id), 5)) * 24 - 10, height: 1).accessibilityHidden(true) }
-            if workspace.section != .assigned && workspace.taskDepth(task.id) < SubtaskTree.readableDepth && !task["subtasks"].list.isEmpty {
+            if !workspace.hierarchyFilter && workspace.taskDepth(task.id) > 0 { Color.clear.frame(width: CGFloat(min(workspace.taskDepth(task.id), 5)) * 24 - 10, height: 1).accessibilityHidden(true) }
+            if !workspace.hierarchyFilter && workspace.section != .assigned && workspace.taskDepth(task.id) < SubtaskTree.readableDepth && !task["subtasks"].list.isEmpty {
                 Button {
                     if !workspace.expandedTasks.insert(task.id).inserted { workspace.expandedTasks.remove(task.id) }
                 } label: {
@@ -91,7 +91,7 @@ struct TaskRowView: View {
                                  accessibilityIdentifier: "notes-\(task.id)")
                     }
                 }
-                if workspace.section == .assigned, let parent = workspace.parentTitle(task.id) {
+                if workspace.section == .assigned || workspace.hierarchyFilter, let parent = workspace.parentTitle(task.id) {
                     Text(parent).font(.caption).foregroundStyle(isSelected ? selectedForeground.opacity(0.9) : .secondary).lineLimit(1)
                 }
                 if task.deadline != nil || task.durationMinutes != nil || showsDate || store.record("projects", id: task.string("project_id")) != nil || !task["subtasks"].list.isEmpty || !task["comments"].list.isEmpty || !task["attachments"].list.isEmpty || !task["labels"].list.isEmpty {
@@ -176,7 +176,8 @@ struct TaskRowView: View {
             }
             .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize(horizontal: !wrapping, vertical: true)
             .tint(isSelected ? selectedForeground : nil)
-            .help("Move to project")
+            .disabled(workspace.hierarchyFilter && Workspace.subtaskPath(task.id) != nil)
+            .help(workspace.hierarchyFilter && Workspace.subtaskPath(task.id) != nil ? "Subtasks stay in their parent's project" : "Move to project")
         }
         ForEach(task["labels"].list.map(\.text).filter { !$0.isEmpty }, id: \.self) { name in
             Text(store.record("labels", id: name)?.name ?? name).lineLimit(wrapping ? nil : 1).fixedSize(horizontal: !wrapping, vertical: true).padding(.horizontal, 6).padding(.vertical, 1)
@@ -201,6 +202,7 @@ struct TaskRowView: View {
     private var accessibilitySummary: String {
         var parts = [task.title]
         if checked { parts.append("completed") }
+        if workspace.hierarchyFilter, let parent = workspace.parentTitle(task.id) { parts.append("Subtask of " + parent) }
         if task.priority < 4 { parts.append("priority \(task.priority)") }
         if let due = TaskPlanner.dayDate(task) { parts.append(overdue ? "overdue since \(due.formatted(date: .abbreviated, time: .omitted))" : "due \(due.formatted(date: .abbreviated, time: .omitted))") }
         if let project = store.record("projects", id: task.string("project_id")) { parts.append("in \(project.name)") }

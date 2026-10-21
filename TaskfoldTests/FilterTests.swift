@@ -1108,3 +1108,108 @@ extension FilterTests {
         XCTAssertEqual(try parse(rule.expression(in: FilterContext(projects: duplicateNames)), context: FilterContext(projects: duplicateNames)), rule)
     }
 }
+
+final class HierarchyQueryTests: XCTestCase {
+    private var projects: [Record] { [Record(["id": .string("p"), "name": .string("Work")]), Record(["id": .string("q"), "name": .string("Home")])] }
+    private var labels: [Record] { [Record(["id": .string("own"), "name": .string("Own")]), Record(["id": .string("root-label"), "name": .string("Root label")])] }
+    private var context: FilterContext { FilterContext(projects: projects, labels: labels, userID: "viewer") }
+    private func node(_ id: String, priority: Int, due: String = "", children: [JSON] = []) -> JSON {
+        .object(["id": .string(id), "title": .string(id), "completed": .bool(false), "priority": .number(Double(priority)), "due_date": due.isEmpty ? .null : .string(due), "subtasks": .array(children)])
+    }
+    private var roots: [Record] {
+        var leaf = node("leaf", priority: 2, due: "2026-10-21").object; leaf["assigned_to"] = .string("viewer")
+        var b = node("b", priority: 1, due: "2026-10-22").object; b["labels"] = .array([.string("own")])
+        return [Record(["id": .string("r"), "title": .string("Root"), "completed": .bool(false), "priority": .number(1), "project_id": .string("p"), "labels": .array([.string("root-label")]), "description": .string("Root-only words"), "created_at": .string("2026-10-21T08:00:00Z"), "task_generation": .string("g"), "due_date": .string("2026-10-21"), "subtasks": .array([node("a", priority: 4, children: [.object(leaf)]), .object(b)])]), Record(["id": .string("other"), "title": .string("Other"), "priority": .number(3), "project_id": .string("q")]), Record(["id": .string("inbox"), "title": .string("Inbox")])]
+    }
+    private func parse(_ expression: String) throws -> FilterRule { var parser = try FilterParser(expression, context: context); return try parser.parse() }
+    private func query(_ rule: FilterRule, projects: [Record]? = nil) -> TaskQuery {
+        TaskQuery(scope: .all, today: "2026-10-21", filter: rule, filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: FilterReference.projects(projects ?? self.projects), userID: "viewer", timeZone: "UTC")
+    }
+    private func matching(_ expression: String, roots: [Record]? = nil) throws -> [Record] { let cache = TaskCache(); cache.update(roots ?? self.roots); return cache.matching(query(try parse(expression))) }
+    func testHierarchyGrammarRoundTripsStrictValuesAndConservativeCapture() throws {
+        for text in ["root", "subtask", "parent", "NOT subtask", "subtask & p1", "root & parent", "subtask OR today", "all, subtask, parent"] {
+            let rule = try parse(text)
+            XCTAssertTrue(rule.usesTaskHierarchy); XCTAssertEqual(try FilterRule(document: rule.document), rule)
+            XCTAssertEqual(try parse(rule.expression(in: context)), rule)
+            XCTAssertEqual(rule.captureDefaults(in: context, today: "2026-10-21"), text == "subtask & p1" ? ["priority": .number(1)] : [:], text)
+        }
+        for field in ["root", "subtask", "parent"] {
+            for value: JSON in [.null, .bool(false), .number(1), .string("yes")] { XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string(field), "value": value]))) }
+        }
+        XCTAssertFalse(try parse("all").usesTaskHierarchy)
+    }
+    func testHierarchyScopesAndBooleanPredicatesUseOwnFieldsAndGlobalPriority() throws {
+        XCTAssertEqual(try matching("all").map(\.id), ["r", "other", "inbox"])
+        XCTAssertEqual(try matching("root").map(\.id), ["r", "other", "inbox"])
+        XCTAssertEqual(try matching("NOT subtask").map(\.id), ["r", "other", "inbox"])
+        XCTAssertEqual(try matching("subtask").map(\.title), ["b", "leaf", "a"])
+        XCTAssertEqual(Set(try matching("parent").map(\.title)), ["Root", "a"])
+        XCTAssertEqual(try matching("root & parent").map(\.id), ["r"])
+        XCTAssertEqual(try matching("subtask & parent").map(\.title), ["a"])
+        XCTAssertEqual(try matching("subtask & p1").map(\.title), ["b"])
+        XCTAssertEqual(try matching("subtask & today").map(\.title), ["leaf"])
+        XCTAssertEqual(try matching("subtask & no date").map(\.title), ["a"])
+        XCTAssertEqual(try matching("subtask & label:Own").map(\.title), ["b"])
+        XCTAssertTrue(try matching(#"subtask & label:"Root label""#).isEmpty)
+        XCTAssertEqual(try matching("subtask & assignee:me").map(\.title), ["leaf"])
+        XCTAssertTrue(try matching("subtask & created:today").isEmpty)
+        XCTAssertTrue(try matching("subtask & search:Root-only").isEmpty)
+        XCTAssertEqual(try matching("root OR subtask").count, 6)
+        XCTAssertEqual(try matching("NOT root").count, 3)
+        XCTAssertTrue(try matching("root AND subtask").isEmpty)
+    }
+    func testIndependentQueriesKeepLegacyCandidateUniverseAndCompletionVisibility() throws {
+        let rule = try parse("today, subtask")
+        let cache = TaskCache(); cache.update(roots)
+        let matches = cache.matching(query(rule))
+        let groups = TaskGrouping.queryGroups(matches, rule: rule, by: "none", context: context, today: "2026-10-21", timeZone: "UTC")
+        XCTAssertEqual(groups.map { $0.tasks.map(\.title) }, [["Root"], ["b", "leaf", "a"]])
+        var completed = roots; completed[0]["subtasks"] = SubtaskTree.changing(roots[0]["subtasks"], id: "leaf", fields: ["completed": .bool(true)])
+        cache.update(completed)
+        let second = try parse("all, subtask & completed")
+        let done = cache.matching(query(second))
+        let secondGroups = TaskGrouping.queryGroups(done, rule: second, by: "none", context: context, today: "2026-10-21", timeZone: "UTC")
+        XCTAssertEqual(secondGroups.map { $0.tasks.map(\.title) }, [["Root", "Other", "Inbox"], ["leaf"]])
+        XCTAssertFalse(try parse("all").resultMatches(done.first { $0.title == "leaf" }!, context: context, today: "2026-10-21", timeZone: "UTC", includeCompleted: true))
+    }
+    func testRootOnlyProofSupportsLegacyIdentitiesAndRefusesUnknownParentShape() throws {
+        var legacy = roots; legacy[0]["subtasks"] = .array([.object(["title": .string("Legacy without ID")])])
+        for text in ["root", "NOT subtask", "root & parent", "root & subtask"] {
+            let rule = try parse(text); XCTAssertFalse(rule.needsChildCandidates)
+            let cache = TaskCache(); cache.update(legacy)
+            XCTAssertNoThrow(try cache.hierarchyCandidates(for: rule, projects: query(rule).filterProjects, userID: "viewer"))
+        }
+        XCTAssertEqual(try matching("root & parent", roots: legacy).map(\.id), ["r"])
+        let subtask = try parse("subtask"), cache = TaskCache(); cache.update(legacy)
+        XCTAssertThrowsError(try cache.hierarchyCandidates(for: subtask, projects: query(subtask).filterProjects, userID: "viewer"))
+        XCTAssertTrue(cache.matching(query(subtask)).isEmpty)
+        legacy[0]["subtasks"] = .string("new format"); cache.update(legacy)
+        let rootParent = try parse("root & parent")
+        XCTAssertThrowsError(try cache.hierarchyCandidates(for: rootParent, projects: query(rootParent).filterProjects, userID: "viewer"))
+        XCTAssertEqual(cache.matching(query(try parse("root"))).count, 3)
+        for rule in [FilterRule.not(.predicate("parent", "")), .or([.predicate("all", ""), .predicate("parent", "")])] {
+            XCTAssertFalse(rule.matches(legacy[0], today: "2026-10-21", userID: "viewer", labels: [], timeZone: "UTC"))
+        }
+    }
+    func testHierarchyCacheRefreshesForDataCatalogAndFailureRecovery() throws {
+        let rule = try parse("subtask"), cache = TaskCache(); cache.update(roots)
+        let q = query(rule); XCTAssertEqual(cache.matching(q).count, 3); _ = cache.matching(q); XCTAssertEqual(cache.computationCount, 1)
+        var archived = projects; archived[0]["is_archived"] = .bool(true)
+        XCTAssertTrue(cache.matching(query(rule, projects: archived)).isEmpty)
+        XCTAssertEqual(cache.matching(q).count, 3)
+        var malformed = roots; malformed[0]["subtasks"] = .array([.object(["title": .string("No ID")])]); cache.update(malformed)
+        XCTAssertTrue(cache.matching(q).isEmpty)
+        cache.update(roots); XCTAssertEqual(cache.matching(q).count, 3)
+        XCTAssertTrue(cache.matching(query(rule, projects: [])).isEmpty)
+    }
+    func testHierarchyDocumentsPersistAndWidgetsRefuseChildListsWithoutPublishingFakeMembership() throws {
+        let rootRule = try parse("root"), childRule = try parse("subtask")
+        let views = [rootRule, childRule].enumerated().map { Record(["id": .string("v\($0)"), "name": .string("View \($0)"), "query_ast": $1.document]) }
+        let snapshot = Snapshot(tables: ["tasks": roots, "saved_views": views], pending: [Mutation(table: "saved_views", recordID: "v1", method: "POST", fields: views[1].fields)])
+        XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot)), snapshot)
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let payload = WidgetProjection.listPayload(tasks: roots, projects: projects, labels: labels, sections: [], savedViews: views, account: "viewer", now: Dates.parse("2026-10-21")!, calendar: calendar)
+        let child = try XCTUnwrap(payload.first { $0.object["recordID"] == .string("v1") })
+        XCTAssertEqual(child.object["invalid"], .bool(true)); XCTAssertTrue(child.object["days"]!.object.isEmpty)
+    }
+}

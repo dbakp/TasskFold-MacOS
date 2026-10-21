@@ -430,3 +430,89 @@ extension TaskHierarchyIndexTests {
         XCTAssertEqual(new["task_generation"], .string("next-generation"))
     }
 }
+
+final class MixedSelectionTests: XCTestCase {
+    private let workspace = WorkspaceBinding(account: "viewer", generation: UUID())
+    private var projects: [Record] { [Record(["id": .string("p"), "name": .string("Work")]), Record(["id": .string("q"), "name": .string("Home")])] }
+    private func child(_ id: String, children: [JSON] = []) -> JSON { .object(["id": .string(id), "title": .string(id), "completed": .bool(false), "description": .string("Keep " + id), "subtasks": .array(children), "future": .number(99)]) }
+    private var root: Record { Record(["id": .string("r"), "user_id": .string("owner"), "title": .string("Main"), "project_id": .string("p"), "created_at": .string("2026-10-21T08:00:00Z"), "task_generation": .string("g"), "completion_version": .number(0), "completed": .bool(false), "priority": .number(4), "due_date": .string("2026-10-21"), "subtasks": .array([child("a", children: [child("leaf")]), child("b")])]) }
+    private func index(_ value: Record? = nil) throws -> TaskHierarchyIndex { try TaskHierarchyIndex(roots: [value ?? root], projects: projects, workspace: workspace) }
+    private func row(_ title: String, source: Record? = nil) throws -> Record { try XCTUnwrap(index(source).items.first { $0.source.title == title }?.record) }
+    private func request(_ title: String, _ action: TaskSelectionPlan.Action, source: Record? = nil) throws -> TaskSelectionPlan.Request { .init(task: try row(title, source: source), action: action, workspace: workspace) }
+    private func plan(_ requests: [TaskSelectionPlan.Request], roots: [Record]? = nil, workspace: WorkspaceBinding? = nil, projects: [Record]? = nil) throws -> [Mutation] { try TaskSelectionPlan.changes(requests, accessibleRoots: roots ?? [root], projects: projects ?? self.projects, workspace: workspace ?? self.workspace) }
+    private func apply(_ changes: [Mutation], source: Record? = nil) -> Snapshot { var snapshot = Snapshot(tables: ["tasks": [source ?? root]]); for change in changes { snapshot.apply(change) }; return snapshot }
+    func testMixedRootAndChildPriorityCoalescesOneUndoableRootMutation() throws {
+        let requests = try [request("Main", .patch(["priority": .number(1)])), request("a", .patch(["priority": .number(1)])), request("leaf", .patch(["priority": .number(1)]))]
+        let changes = try plan(requests); XCTAssertEqual(changes.count, 1); XCTAssertEqual(changes[0].recordID, "r")
+        let saved = apply(changes), value = try XCTUnwrap(saved.tables["tasks"]?.first), projected = try index(value)
+        XCTAssertEqual(projected.items.filter { ["Main", "a", "leaf"].contains($0.source.title) }.map { $0.source.priority }, [1,1,1])
+        XCTAssertEqual(projected.items.first { $0.source.title == "b" }?.source, try index().items.first { $0.source.title == "b" }?.source)
+        let history = EditHistory(changes: changes, snapshot: Snapshot(tables: ["tasks": [root]])); var undone = saved
+        for change in history.undo { undone.apply(change) }; XCTAssertEqual(undone.tables["tasks"], [root])
+        XCTAssertEqual(changes[0].baseline?["task_generation"], .string("g"))
+    }
+    func testMixedCompletionPreservesRootRecurrenceAndResetsOnlySuccessorChecklist() throws {
+        var recurring = root; recurring["is_recurring"] = .bool(true); recurring["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
+        let date = Dates.parse("2026-10-21")!.addingTimeInterval(12*3600)
+        let changes = try plan([request("Main", .completion(true, date), source: recurring), request("leaf", .completion(true, date), source: recurring)], roots: [recurring])
+        XCTAssertEqual(changes.filter { $0.recordID == "r" }.count, 1)
+        let successor = try XCTUnwrap(changes.first { $0.method == "POST" }); XCTAssertEqual(successor.fields["due_date"], .string("2026-10-22"))
+        let saved = apply(changes, source: recurring)
+        let original = try XCTUnwrap(saved.tables["tasks"]?.first { $0.id == "r" }); XCTAssertTrue(original.completed)
+        XCTAssertTrue(try index(original).items.first { $0.source.title == "leaf" }!.source.completed)
+        XCTAssertTrue(SubtaskTree.outline(successor.fields["subtasks"]!).allSatisfy { !$0.record.completed })
+        XCTAssertFalse(SubtaskTree.outline(successor.fields["subtasks"]!).contains { ["a","b","leaf"].contains($0.id) })
+        let history = EditHistory(changes: changes, snapshot: Snapshot(tables: ["tasks": [recurring]])); var undone = saved
+        for change in history.undo { undone.apply(change) }
+        var expected = recurring; expected["completion_version"] = .number(2); expected["completed_at"] = .null
+        XCTAssertEqual(undone.tables["tasks"], [expected], "Undo restores work while keeping completion revision monotonic")
+        let rootAction = try XCTUnwrap(changes.first { $0.recordID == "r" })
+        XCTAssertEqual(successor.fields["source_metadata"]?.object["taskfold_recurrence_v1"]?.object["action_id"], .string(rootAction.id.uuidString.lowercased()), "Successor ownership must use the actual coalesced root action")
+    }
+    func testOverlappingBranchDeletionCollapsesAndConflictingEditsRefuseAtomically() throws {
+        let subtree = try plan([request("a", .delete), request("leaf", .delete)])
+        XCTAssertEqual(subtree.count, 1); XCTAssertEqual(SubtaskTree.outline(subtree[0].fields["subtasks"]!).map(\.id), ["b"])
+        let all = try plan([request("Main", .delete), request("a", .delete), request("leaf", .delete)])
+        XCTAssertEqual(all.count, 1); XCTAssertEqual(all[0].method, "DELETE")
+        XCTAssertThrowsError(try plan([request("a", .delete), request("leaf", .patch(["title": .string("Keep")]))]))
+        XCTAssertThrowsError(try plan([request("Main", .delete), request("leaf", .completion(true, Date()))]))
+    }
+    func testMixedPlanningUsesEachOwnPlanAndNeverPersistsSyntheticTaskIDs() throws {
+        let requests = try [row("Main"), row("leaf")].map { TaskSelectionPlan.Request(task: $0, action: .patch(TaskPlanner.dayFields(task: $0, day: "2026-10-23")), workspace: workspace) }
+        let changes = try plan(requests), saved = try XCTUnwrap(apply(changes).tables["tasks"]?.first)
+        XCTAssertEqual(saved.string("due_date"), "2026-10-23")
+        XCTAssertEqual(try index(saved).items.first { $0.source.title == "leaf" }?.source.string("due_date"), "2026-10-23")
+        XCTAssertFalse(changes.contains { $0.recordID.hasPrefix("subtask:") })
+        XCTAssertEqual(try JSONDecoder().decode([Mutation].self, from: JSONEncoder().encode(changes)), changes)
+    }
+    func testStaleWorkspaceAccessVersionAndReadOnlyContainmentRefuseWithoutPartialChange() throws {
+        let child = try request("leaf", .patch(["priority": .number(2)]))
+        XCTAssertThrowsError(try plan([child], workspace: WorkspaceBinding(account: "viewer", generation: UUID())))
+        XCTAssertThrowsError(try plan([child], projects: [])); XCTAssertThrowsError(try plan([child], roots: []))
+        var recreated = root; recreated["task_generation"] = .string("new")
+        XCTAssertThrowsError(try plan([child], roots: [recreated]))
+        XCTAssertThrowsError(try plan([request("Main", .patch(["project_id": .string("q")])), request("leaf", .patch(["project_id": .string("q")]))]))
+        var cycled = root; cycled["completion_version"] = .number(2)
+        XCTAssertThrowsError(try plan([request("Main", .completion(true, Date()))], roots: [cycled]))
+        XCTAssertThrowsError(try plan([child, child]))
+        XCTAssertThrowsError(try plan([request("Main", .patch(["project_id": .number(2)]))]))
+    }
+    func testChildDuplicationCopiesBranchOnceBesideSourceWithFreshNestedIdentities() throws {
+        let changes = try TaskSelectionPlan.duplicateChanges([row("a"), row("leaf")], accessibleRoots: [root], projects: projects, workspace: workspace)
+        XCTAssertEqual(changes.count, 1); XCTAssertEqual(changes[0].recordID, "r"); XCTAssertEqual(changes[0].method, "PATCH")
+        let list = try XCTUnwrap(changes[0].fields["subtasks"]?.list); XCTAssertEqual(list.count, 3)
+        XCTAssertEqual(list[0], root["subtasks"].list[0]); XCTAssertEqual(list[2], root["subtasks"].list[1])
+        let copy = Record(list[1].object); XCTAssertEqual(copy.title, "a"); XCTAssertNotEqual(copy.id, "a")
+        XCTAssertEqual(copy["future"], .number(99)); XCTAssertEqual(copy.string("description"), "Keep a")
+        XCTAssertNotEqual(copy["subtasks"].list[0].object["id"], .string("leaf"))
+        let allIDs = SubtaskTree.outline(.array(list)).map(\.id); XCTAssertEqual(Set(allIDs).count, allIDs.count)
+    }
+    func testRootDuplicationDominatesChildrenAndCreatesNewRootIncarnation() throws {
+        let changes = try TaskSelectionPlan.duplicateChanges([row("Main"), row("a"), row("leaf")], accessibleRoots: [root], projects: projects, workspace: workspace)
+        XCTAssertEqual(changes.count, 1); let copy = changes[0]
+        XCTAssertEqual(copy.method, "POST"); XCTAssertEqual(copy.insertOnly, true); XCTAssertNotEqual(copy.recordID, "r")
+        XCTAssertNotEqual(copy.fields["task_generation"], .string("g")); XCTAssertEqual(copy.fields["user_id"], .string("viewer"))
+        XCTAssertFalse(SubtaskTree.outline(copy.fields["subtasks"]!).contains { ["a","b","leaf"].contains($0.id) })
+        XCTAssertEqual(root["subtasks"].list[0].object["id"], .string("a"))
+    }
+}

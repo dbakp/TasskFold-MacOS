@@ -68,7 +68,7 @@ struct RootView: View {
             inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil; insightsRequest = nil; mentionsRequest = nil
         }
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
-            BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.ids.sorted().compactMap { workspace.taskRecord($0) } : []) { day in
+            BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.records : []) { day in
                 try workspace.setDeadlines(request, day: day)
             }
         }

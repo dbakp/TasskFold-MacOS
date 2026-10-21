@@ -1079,9 +1079,37 @@ final class TaskCache {
     private var results: [TaskQuery: [Record]] = [:]
     private(set) var tasks: [Record] = []
     private(set) var computationCount = 0
+    private struct HierarchyKey: Hashable { var projects: [FilterReference]; var userID: String }
+    private var hierarchyKey: HierarchyKey?
+    private var hierarchyResult: Result<[Record], FilterFailure>?
+    /// Only records leave this cache. Store captures live workspace selections
+    /// again before an action; the read-only cache never supplies edit authority.
+    func hierarchyRecords(projects: [FilterReference], userID: String) throws -> [Record] {
+        let key = HierarchyKey(projects: projects, userID: userID)
+        if key == hierarchyKey, let hierarchyResult { return try hierarchyResult.get() }
+        let rows = projects.map { Record(["id": .string($0.id), "name": .string($0.name), "parent_id": $0.parentID.map(JSON.string) ?? .null, "is_archived": .bool($0.unavailable)]) }
+        let result: Result<[Record], FilterFailure>
+        do {
+            let index = try TaskHierarchyIndex(roots: tasks, projects: rows, workspace: WorkspaceBinding(account: userID, generation: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
+            result = .success(index.records(in: .all, includeCompleted: true))
+        } catch { result = .failure(FilterFailure(message: error.localizedDescription)) }
+        hierarchyKey = key; hierarchyResult = result
+        return try result.get()
+    }
+    func hierarchyCandidates(for rule: FilterRule, projects: [FilterReference], userID: String) throws -> [Record] {
+        if rule.needsChildCandidates { return try hierarchyRecords(projects: projects, userID: userID) }
+        let visible = Set(Dictionary(grouping: projects, by: \.id).filter { $0.value.count == 1 && !$0.value[0].unavailable }.keys)
+        let roots = tasks.filter { $0.string("project_id").isEmpty || visible.contains($0.string("project_id")) }
+        if rule.usesParentPredicate {
+            for root in roots where root["subtasks"] != .null {
+                guard FilterRule.supportedParentShape(root) else { throw FilterFailure(message: "A checklist uses an unsupported format. Open its parent task to review it.") }
+            }
+        }
+        return roots
+    }
     @discardableResult func update(_ rows: [Record]) -> Bool {
         guard source != rows else { return false }
-        source = rows
+        source = rows; hierarchyKey = nil; hierarchyResult = nil
         tasks = rows.sorted { $0.priority == $1.priority ? $0.string("created_at") > $1.string("created_at") : $0.priority < $1.priority }
         results.removeAll(keepingCapacity: true)
         return true
@@ -1093,7 +1121,12 @@ final class TaskCache {
         if let cached = results[query] { return cached }
         computationCount += 1
         let nameBindings = query.filter?.nameBindings(projects: query.filterProjects, sections: query.filterSections, labels: query.filterLabels, people: query.filterPeople)
-        let matched = tasks.filter { task in
+        let candidates: [Record]
+        if let filter = query.filter, filter.usesTaskHierarchy {
+            guard let rows = try? hierarchyCandidates(for: filter, projects: query.filterProjects, userID: query.userID) else { return [] }
+            candidates = rows
+        } else { candidates = tasks }
+        let matched = candidates.filter { task in
             if query.scope == .completed { if !task.completed { return false } }
             else if !query.includeCompleted && task.completed && !(query.filter?.hasQuerySections == true && query.filter?.includesCompletion == true) { return false }
             if query.priority > 0 && task.priority != query.priority { return false }
@@ -1114,7 +1147,10 @@ final class TaskCache {
             }
         }
         let sorted: [Record]
-        if query.sort == "title" { sorted = matched.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending } }
+        if query.sort == "priority", query.filter?.usesTaskHierarchy == true {
+            sorted = matched.enumerated().sorted { $0.element.priority == $1.element.priority ? $0.offset < $1.offset : $0.element.priority < $1.element.priority }.map(\.element)
+        }
+        else if query.sort == "title" { sorted = matched.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending } }
         else if query.sort == "date" { sorted = matched.sorted { ($0.string("due_date").isEmpty ? "9999" : $0.string("due_date")) < ($1.string("due_date").isEmpty ? "9999" : $1.string("due_date")) } }
         else if query.sort == "deadline" { sorted = matched.sorted { ($0.string("deadline_date").isEmpty ? "9999" : $0.string("deadline_date")) < ($1.string("deadline_date").isEmpty ? "9999" : $1.string("deadline_date")) } }
         else if query.sort == "duration" { sorted = matched.sorted { ($0.durationMinutes ?? Int.max) < ($1.durationMinutes ?? Int.max) } }
@@ -1525,6 +1561,8 @@ enum WidgetProjection {
             guard let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: context)) != nil else {
                 result.append(row(view, kind: "filter", days: [:], error: true)); continue
             }
+            if rule.needsChildCandidates { result.append(row(view, kind: "filter", days: [:], error: true)); continue }
+            if rule.usesTaskHierarchy, (try? cache.hierarchyCandidates(for: rule, projects: FilterReference.projects(projects), userID: account)) == nil { result.append(row(view, kind: "filter", days: [:], error: true)); continue }
             let ordering=view.fields["sort_by"]?.text ?? "manual", grouping=view.fields["grouping"]?.text ?? "none"
             guard supportedSort(ordering),["none","project","priority","date","deadline"].contains(grouping) else { result.append(row(view,kind:"filter",days:[:],error:true));continue }
             var days: [String: [String]] = [:], dayGroups:[String:[JSON]]=[:]

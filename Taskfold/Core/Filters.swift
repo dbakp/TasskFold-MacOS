@@ -318,7 +318,7 @@ enum FilterDayWindow {
 /// Versioned query AST shared by app lists, exported backups and widget projections.
 indirect enum FilterRule: Hashable, Sendable {
     case predicate(String, String), and([FilterRule]), or([FilterRule]), not(FilterRule), sections([FilterRule])
-    static let fields = ["all", "inbox", "today", "overdue", "next", "no_date", "priority", "project", "project_tree", "section", "label", "completed", "assignee", "due", "before", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline", "deadline", "deadline_before", "duration_max", "no_estimate", "search", "recurring", "no_time", "no_labels", "assigned"] + FilterDayWindow.expressions.keys.sorted() + FilterDateReference.expressions.keys.sorted() + FilterTimeReference.expressions.keys.sorted() + FilterCreationReference.expressions.keys.sorted() + FilterNamePattern.expressions.keys.sorted()
+    static let fields = ["all", "inbox", "today", "overdue", "next", "no_date", "priority", "project", "project_tree", "section", "label", "completed", "assignee", "due", "before", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline", "deadline", "deadline_before", "duration_max", "no_estimate", "search", "recurring", "no_time", "no_labels", "assigned", "root", "subtask", "parent"] + FilterDayWindow.expressions.keys.sorted() + FilterDateReference.expressions.keys.sorted() + FilterTimeReference.expressions.keys.sorted() + FilterCreationReference.expressions.keys.sorted() + FilterNamePattern.expressions.keys.sorted()
     var json: JSON {
         switch self {
         case .predicate(let field, let value): return .object(["op": .string("predicate"), "field": .string(field), "value": .string(value)])
@@ -361,7 +361,7 @@ indirect enum FilterRule: Hashable, Sendable {
             if field == "search" {
                 guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, value.unicodeScalars.count <= 400 else { throw FilterFailure(message: "Enter 1–400 characters to search for.") }
             }
-            if ["recurring", "no_time", "no_labels", "assigned"].contains(field) {
+            if ["recurring", "no_time", "no_labels", "assigned", "root", "subtask", "parent"].contains(field) {
                 guard row["value"] == .string("") else { throw FilterFailure(message: "This condition does not take a value.") }
             }
             if FilterDayWindow.expressions[field] != nil {
@@ -438,6 +438,42 @@ indirect enum FilterRule: Hashable, Sendable {
         case .not(let rule): return rule.usesClockWindow
         }
     }
+    static func supportedParentShape(_ task: Record) -> Bool {
+        if task["subtasks"] == .null { return true }
+        guard case .array(let children) = task["subtasks"] else { return false }
+        return children.allSatisfy { if case .object(let fields) = $0, case .string? = fields["title"] { return true }; return false }
+    }
+    var usesTaskHierarchy: Bool {
+        switch self {
+        case .predicate(let field, _): return ["root", "subtask", "parent"].contains(field)
+        case .and(let rules), .or(let rules), .sections(let rules): return rules.contains { $0.usesTaskHierarchy }
+        case .not(let rule): return rule.usesTaskHierarchy
+        }
+    }
+    /// Prove root-only expressions without parsing unrelated legacy checklists.
+    /// nil is an unknown child value, not an assumed match or an omitted branch.
+    var needsChildCandidates: Bool {
+        if case .sections(let rules) = self { return rules.contains { $0.needsChildCandidates } }
+        guard usesTaskHierarchy else { return false }
+        func childValue(_ rule: FilterRule) -> Bool? {
+            switch rule {
+            case .predicate(let field, _): return field == "root" ? false : ["subtask", "all"].contains(field) ? true : nil
+            case .not(let rule): return childValue(rule).map { !$0 }
+            case .and(let rules):
+                let values = rules.map(childValue); if values.contains(false) { return false }; return values.allSatisfy { $0 == true } ? true : nil
+            case .or(let rules), .sections(let rules):
+                let values = rules.map(childValue); if values.contains(true) { return true }; return values.allSatisfy { $0 == false } ? false : nil
+            }
+        }
+        return childValue(self) != false
+    }
+    var usesParentPredicate: Bool {
+        switch self {
+        case .predicate(let field, _): return field == "parent"
+        case .not(let rule): return rule.usesParentPredicate
+        case .and(let rules), .or(let rules), .sections(let rules): return rules.contains { $0.usesParentPredicate }
+        }
+    }
     var includesCompletion: Bool {
         switch self { case .predicate(let field, _): return field == "completed"; case .and(let r), .or(let r), .sections(let r): return r.contains { $0.includesCompletion }; case .not(let r): return r.includesCompletion }
     }
@@ -461,6 +497,7 @@ indirect enum FilterRule: Hashable, Sendable {
         case .and(let rules), .or(let rules): return rules.allSatisfy { $0.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID, people: people, bindings: bindings) }
         case .not(let rule): return rule.nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID, people: people, bindings: bindings)
         case .predicate(let field, let value):
+            if field == "parent", !Self.supportedParentShape(task) { return false }
             if field == "project_tree" {
                 guard let binding = bindings.first(where: { $0.field == field && $0.value == value }),
                       binding.ids.contains(value) else { return false }
@@ -489,17 +526,21 @@ indirect enum FilterRule: Hashable, Sendable {
         }
     }
     func matches(_ task: Record, today: String, userID: String, labels: [FilterReference], timeZone: String,
-                 projects: [FilterReference] = [], sections: [FilterReference] = [], nameBindings supplied: [FilterNameBinding]? = nil, now: Date? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [FilterReference] = []) -> Bool {
+                 projects: [FilterReference] = [], sections: [FilterReference] = [], nameBindings supplied: [FilterNameBinding]? = nil, now: Date? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [FilterReference] = [], hierarchyScope: Bool? = nil) -> Bool {
+        let hierarchyScope = hierarchyScope ?? usesTaskHierarchy
+        let childPath = SubtaskTree.referencePath(task.id)
+        guard !task.id.hasPrefix("subtask:") || childPath != nil else { return false }
+        if !hasQuerySections, !hierarchyScope, childPath != nil { return false }
         if !hasQuerySections, usesDatePreferences, datePreferences == nil { return false }
         // Independent query sections may still show safe results when the reader has no clock.
         if !hasQuerySections, usesClockWindow, now.map({ $0.timeIntervalSinceReferenceDate.isFinite }) != true { return false }
         let bindings = supplied ?? nameBindings(projects: projects, sections: sections, labels: labels, people: people)
         guard nameReferencesAvailable(task, projects: projects, sections: sections, labels: labels, userID: userID, people: people, bindings: bindings) else { return false }
         switch self {
-        case .sections(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people) }
-        case .and(let rules): return rules.allSatisfy { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people) }
-        case .or(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people) }
-        case .not(let rule): return !rule.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people)
+        case .sections(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people, hierarchyScope: nil) }
+        case .and(let rules): return rules.allSatisfy { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people, hierarchyScope: hierarchyScope) }
+        case .or(let rules): return rules.contains { $0.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people, hierarchyScope: hierarchyScope) }
+        case .not(let rule): return !rule.matches(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people, hierarchyScope: hierarchyScope)
         case .predicate(let field, let value):
             let day = Self.plannedDay(task, timeZone: timeZone), deadline = task.string("deadline_date")
             func next(_ date: String) -> Bool {
@@ -558,6 +599,9 @@ indirect enum FilterRule: Hashable, Sendable {
                 return task["labels"].list.contains { stored in
                     guard case .string(let item) = stored else { return false }; return binding.ids.contains(item) || binding.names.contains(item)
                 }
+            case "root": return childPath == nil
+            case "subtask": return childPath != nil
+            case "parent": return !task["subtasks"].list.isEmpty
             case "project": return task.string("project_id") == value
             case "project_tree": return bindings.first { $0.field == field && $0.value == value }?.ids.contains(task.string("project_id")) == true
             case "section": return task.string("section_id") == value
@@ -670,6 +714,7 @@ indirect enum FilterRule: Hashable, Sendable {
             if let name = FilterDayWindow.expressions[field] { return name + ":" + quote((field.hasSuffix("_past_days") ? "-" : "") + value + " days") }
             if let name = FilterDateReference.expressions[field] ?? FilterTimeReference.expressions[field] ?? FilterCreationReference.expressions[field] ?? FilterNamePattern.expressions[field] { return name + ":" + quote(value) }
             switch field {
+            case "root", "subtask", "parent": return field
             case "assigned": return "assigned"
             case "all": return "all"
             case "inbox": return "inbox"
@@ -779,7 +824,7 @@ struct FilterParser {
             return .predicate("label", try context.resolve("label", target))
         }
         if scalars.first == "/" { return .predicate("section_name", try FilterNamePattern.canonical(String(String.UnicodeScalarView(scalars.dropFirst())))) }
-        if !quotedTokens.contains(cursor - 1), ["all", "inbox", "today", "overdue", "recurring", "assigned"].contains(lower) { return .predicate(lower, "") }
+        if !quotedTokens.contains(cursor - 1), ["all", "inbox", "today", "overdue", "recurring", "assigned", "root", "subtask", "parent"].contains(lower) { return .predicate(lower, "") }
         if lower == "no", !quotedTokens.contains(cursor - 1), cursor < tokens.count, !quotedTokens.contains(cursor), ["date", "deadline", "estimate", "time", "labels", "priority"].contains(tokens[cursor].lowercased()) {
             let kind = tokens[cursor].lowercased(); cursor += 1
             return kind == "priority" ? .predicate("priority", "4") : .predicate("no_" + kind, "")

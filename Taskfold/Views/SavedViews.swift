@@ -21,11 +21,12 @@ struct SavedViewEditor: View {
     @State private var saveFailure: String?
     @FocusState private var focusedField: String?
     private static let choices: [(String, String)] = [
-        ("all","All tasks"),("search","Keywords"),("created_on","Created on"),("created_before","Created before"),("created_after","Created after"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_next_days","Planned in next days"),("planned_past_days","Planned in past days"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_next_days","Due in next days"),("effective_due_past_days","Due in past days"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_next_days","Deadline within days"),("deadline_past_days","Deadline in past days"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
+        ("all","All tasks"),("root","Main tasks"),("subtask","Subtasks"),("parent","Tasks with subtasks"),("search","Keywords"),("created_on","Created on"),("created_before","Created before"),("created_after","Created after"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_next_days","Planned in next days"),("planned_past_days","Planned in past days"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_next_days","Due in next days"),("effective_due_past_days","Due in past days"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_next_days","Deadline within days"),("deadline_past_days","Deadline in past days"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
         ("priority","Priority"),("project","Project"),("project_tree","Project and subprojects"),("project_name","Project name matches"),("section","Section"),("section_name","Section name matches"),("label","Label"),("label_name","Label name matches"),("completed","Completion"),("assigned","Assigned tasks"),("assignee","Assigned to"),("assignee_name","Assigned name matches"),
         ("due","Planned on date"),("before","Planned before date"),("deadline_today","Deadline today"),("deadline_overdue","Past deadline"),("deadline_next","Deadline in next days"),("no_deadline","No deadline"),("deadline","Deadline on date"),("deadline_before","Deadline before date"),("duration_max","Estimate up to minutes"),("no_estimate","No estimate")]
     private static let conditionGroups: [(String, [String])] = [
         ("Basics", ["all", "search", "recurring", "inbox", "no_labels", "priority"]),
+        ("Task structure", ["root", "subtask", "parent"]),
         ("Planned dates", ["planned_next_days", "planned_past_days", "planned_on", "planned_before", "planned_after", "today", "overdue", "next", "no_date"]),
         ("Effective due", ["effective_due_next_days", "effective_due_past_days", "effective_due_on", "effective_due_before", "effective_due_after"]),
         ("Deadlines", ["deadline_next_days", "deadline_past_days", "deadline_on", "deadline_before_day", "deadline_after", "deadline_today", "deadline_overdue", "deadline_next", "no_deadline"]),
@@ -61,13 +62,13 @@ struct SavedViewEditor: View {
     }
     private var queryFailure: String? {
         if case .failure(let error) = parsed { return error.localizedDescription }
+        if case .success(let rule) = parsed { return store.hierarchyFilterError(rule) }
         return nil
     }
     private var failure: String? { nameFailure ?? queryFailure }
     private var previewCount: Int {
         guard case .success(let rule) = parsed else { return 0 }
-        let cache = TaskCache(); cache.update(store.tasks)
-        return cache.matching(TaskQuery(scope: .all, includeCompleted: record["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion), today: store.calendarContext.today, filter: rule, now: store.calendarContext.minute, datePreferences: store.datePhrasePreferences, filterLabels: store.labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: FilterReference.projects(store.projects), filterSections: store.rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: store.filterContext.personReferences, userID: store.userID, timeZone: store.calendarContext.timeZone)).count
+        return store.previewFilterCount(rule, includeCompleted: record["include_completed"].flag)
     }
     private func text(_ field: String, fallback: String = "") -> Binding<String> { Binding(get: { record.fields[field]?.text ?? fallback }, set: { record[field] = .string($0) }) }
     var body: some View {
@@ -101,6 +102,7 @@ struct SavedViewEditor: View {
                             Text("Date examples: date:tomorrow, date before:\"next Monday\", effective-due:today, deadline after:yesterday. Effective due uses the planned date, falling back to the deadline only when there is no plan. Legacy due:YYYY-MM-DD and Today keep using the plan. Add a time: date before:\"today at 2pm\". Date-and-time conditions exclude tasks without a planned time. Try date before:+4 hours or date after:now for a window that updates each minute.").font(.caption).foregroundStyle(.secondary)
                             Text("Creation examples: created:today, created before:-30 days, created after:yesterday. Uses the recorded creation date in your current time zone. Before and after exclude the chosen day. Plans and deadlines do not change when a task was created.").font(.caption).foregroundStyle(.secondary)
                             Text("Name patterns: %home*, #*Work, /*Meetings*. Use * for any characters, or project matching:\"*Work Admin*\" for spaces. Pattern results follow name changes; exact targets retain their identity.").font(.caption).foregroundStyle(.secondary)
+                            Text("Task structure: subtask, parent (tasks with subtasks), root (main tasks). Combine with dates, priority or projects: subtask & p1. Each comma-separated query keeps its own task scope.").font(.caption).foregroundStyle(.secondary)
                             Text("Time examples: today & time before:14:00, time after:6pm. Time-only conditions compare the planned clock on any day in your current time zone. Combine with a date to choose a day.").font(.caption).foregroundStyle(.secondary)
                         }.font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("filterSyntaxExamples")
                         Text("Nested expressions stay in expression mode so switching views cannot discard conditions.").font(.caption).foregroundStyle(.secondary)
@@ -215,7 +217,9 @@ struct SavedViewEditor: View {
     }
     @ViewBuilder private func valueControl(_ condition: Binding<FilterCondition>) -> some View {
         let field = condition.wrappedValue.field
-        if ["project", "project_tree", "section", "label"].contains(field) {
+        if ["root", "subtask", "parent"].contains(field) {
+            Text(field == "root" ? "Main tasks at the first level, with or without subtasks." : field == "subtask" ? "Subtasks at every level. Results use each subtask's own plan, labels and completion." : "Tasks that contain subtasks, including nested parents.").font(.caption).foregroundStyle(.secondary)
+        } else if ["project", "project_tree", "section", "label"].contains(field) {
             let rows = ["project", "project_tree"].contains(field) ? store.projects : field == "section" ? store.rows("sections") : store.labels
             Picker("Target", selection: condition.value) {
                 Text("Choose…").tag("")
@@ -328,7 +332,7 @@ struct SavedViewEditor: View {
         }
     }
     private func save() {
-        guard case .success(let rule) = parsed else { return }
+        guard case .success(let rule) = parsed, failure == nil else { return }
         record["name"] = .string(record.name.trimmingCharacters(in: .whitespacesAndNewlines)); record["query_ast"] = rule.document
         if store.save("saved_views", record, baseline: baseline) {
             dismiss()

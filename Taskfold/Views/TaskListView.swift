@@ -408,6 +408,8 @@ struct TaskListView: View {
                 Button("Inbox", systemImage: "tray") { workspace.move(targets, toProject: "") }
                 ForEach(store.projects) { project in Button(project.name, systemImage: "folder") { workspace.move(targets, toProject: project.id) } }
             }
+            .disabled(workspace.hierarchyFilter && targets.contains { Workspace.subtaskPath($0) != nil })
+            .help("Subtasks stay in their parent's project")
             Menu("Priority") { ForEach(1...4, id: \.self) { n in Button(n == 4 ? "None" : "Priority \(n)", systemImage: "flag") { workspace.setPriority(targets, n) } } }
             Button("Duplicate", systemImage: "doc.on.doc") { workspace.duplicate(targets) }
             if tasks.count == 1, let task = tasks.first {

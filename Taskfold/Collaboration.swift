@@ -14,7 +14,13 @@ extension Workspace {
     }
     func parentTitle(_ id: String) -> String? {
         guard Self.subtaskPath(id) != nil else { return nil }
-        return rootTask(id)?.title
+        guard hierarchyFilter, let path = Self.subtaskPath(id), var parent = rootTask(id) else { return rootTask(id)?.title }
+        var titles = [parent.title]
+        for key in path.dropFirst().dropLast() {
+            guard let child = parent["subtasks"].list.enumerated().first(where: { Self.childKey($0.element, index: $0.offset) == key }) else { return nil }
+            parent = Record(child.element.object); titles.append(parent.title)
+        }
+        return titles.joined(separator: " › ")
     }
     var assignedTasks: [Record] {
         var result: [Record] = []

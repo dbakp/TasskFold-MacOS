@@ -2513,3 +2513,8 @@ Added an independently owned bounded hierarchy index and child edit planner. Sta
 ### Native child action bridge, 21 October 2026
 
 Both owned cores now translate contextual native drafts into guarded child edits, and both Stores reject direct synthetic task-row writes. The Mac Store has the selection/commit adapter for upcoming flat-result controls; existing Mac nested inspectors retain their current path. The iOS action bridge has its own native acceptance record in `p2-child-editor-bridge-evidence.json`; that proof does not count as Mac controller acceptance. Public parent/child grammar, Mac flat-list navigation/actions, mixed selections and widget/output integration remain open before rank 3 can close.
+
+
+### 21 October — saved hierarchy filters and mixed actions
+
+Added Main tasks, Subtasks and Tasks with subtasks to the saved-filter builder/expression grammar. Flat Mac results include parent context; completion, dates, deadlines, priority, branch duplication/deletion and mixed selections use guarded real-root transactions and existing Undo. Child project moves stay unavailable. Both owned full core suites pass (954 iOS / 978 Mac, 12 / 32 optional skips, zero failures); the isolated Mac builds and both products pass strict signature verification. Public saved-filter creation, child details, completion/Undo and ordinary relaunch pass on phone and tablet, with normal-light captures inspected and actual saved root/child data checked. These are iOS native acceptance results, not Mac interaction proof. Child widget routing/completion, output context and broader native/layout/accessibility/account acceptance remain gates. See `p2-hierarchy-query-actions-evidence.json`; rank 3 and all user-deferred release/provider work remain open.

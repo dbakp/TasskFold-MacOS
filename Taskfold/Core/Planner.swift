@@ -190,6 +190,8 @@ struct DeadlineSelection: Identifiable, Sendable {
     var id = UUID()
     var account: String
     var ids: Set<String>
+    var workspace: WorkspaceBinding? = nil
+    var records: [Record] = []
 }
 
 /// A deadline is a Gregorian calendar date, separate from every planned-time field.

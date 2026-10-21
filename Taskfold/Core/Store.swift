@@ -404,7 +404,11 @@ final class Store {
     func filterError(_ scope: TaskScope) -> String? {
         guard case .saved(let id) = scope else { return nil }
         guard let view = record("saved_views", id: id) else { return "This saved filter was deleted or is unavailable on this account." }
-        do { let rule = try FilterRule(document: view["query_ast"]); try rule.validate(in: filterContext); return nil }
+        do {
+            let rule = try FilterRule(document: view["query_ast"]); try rule.validate(in: filterContext)
+            if rule.usesTaskHierarchy { _ = try taskCache.hierarchyCandidates(for: rule, projects: FilterReference.projects(projects), userID: userID) }
+            return nil
+        }
         catch { return error.localizedDescription }
     }
     func title(for scope: TaskScope) -> String {
@@ -1821,5 +1825,55 @@ extension Store {
         guard !changes.isEmpty else { return true }
         guard commit(changes) else { throw SubtaskTree.Failure(message: error ?? "The subtask could not be saved. Your draft is still open.") }
         return true
+    }
+}
+
+
+extension Store {
+    @discardableResult
+    func commitSelection(_ tasks: [Record], action: (Record) -> TaskSelectionPlan.Action) throws -> Bool {
+        let workspace = WorkspaceBinding(account: userID, generation: workspaceGeneration)
+        let requests = tasks.map { TaskSelectionPlan.Request(task: $0, action: action($0), workspace: workspace) }
+        let changes = try TaskSelectionPlan.changes(requests, accessibleRoots: activeTasks, projects: projects, workspace: workspace)
+        guard !changes.isEmpty else { return true }
+        guard commit(changes) else { throw SubtaskTree.Failure(message: error ?? "The selection could not be saved. Try again.") }
+        return true
+    }
+    func selectionRecord(_ id: String) throws -> Record {
+        guard let path = SubtaskTree.referencePath(id) else {
+            guard let task = activeTasks.first(where: { $0.id == id }) else { throw SubtaskTree.Failure(message: "This task is no longer accessible.") }
+            return task
+        }
+        guard let root = activeTasks.first(where: { $0.id == path[0] }) else { throw SubtaskTree.Failure(message: "This subtask is no longer accessible.") }
+        let index = try TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
+        guard let task = index.item(id)?.record else { throw SubtaskTree.Failure(message: "This subtask moved. Select its current row again.") }
+        return task
+    }
+}
+
+
+extension Store {
+    func hierarchyFilterError(_ rule: FilterRule) -> String? {
+        guard rule.usesTaskHierarchy else { return nil }
+        do { _ = try taskCache.hierarchyCandidates(for: rule, projects: FilterReference.projects(projects), userID: userID); return nil }
+        catch { return error.localizedDescription }
+    }
+}
+
+
+extension Store {
+    @discardableResult
+    func duplicateSelection(_ tasks: [Record]) throws -> Bool {
+        let changes = try TaskSelectionPlan.duplicateChanges(tasks, accessibleRoots: activeTasks, projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
+        guard !changes.isEmpty else { return true }
+        guard commit(changes) else { throw SubtaskTree.Failure(message: error ?? "The copies could not be saved. Try again.") }
+        return true
+    }
+}
+
+
+extension Store {
+    func previewFilterCount(_ rule: FilterRule, includeCompleted: Bool) -> Int {
+        matching(TaskQuery(scope: .all, includeCompleted: includeCompleted || (!rule.hasQuerySections && rule.includesCompletion), filter: rule, now: calendarContext.minute, datePreferences: datePhrasePreferences, filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: FilterReference.projects(projects), filterSections: rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: filterContext.personReferences, userID: userID)).count
     }
 }
