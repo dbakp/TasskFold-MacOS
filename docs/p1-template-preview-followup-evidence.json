@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-21",
+  "status": "Mac template acceptance resumed; comparison regression fixed; other Mac P1 walkthroughs remain pending",
+  "problem": "Native Mac source replacement showed the saved template project name in both previews despite different source data. Reused project/section/task identities were not scoped to each comparison side.",
+  "change": "Each preview owns side- and record-kind-scoped row identities, including latest-version comparisons. No saved document or source mutation is introduced.",
+  "mac": {
+    "local_fixture": "com.dbakp.taskfold.mac.workflowtestsp1",
+    "checks": [
+      "create synthetic project template",
+      "rename template and change child project definition",
+      "discard an actual edited draft with confirmation",
+      "normal Quit and relaunch without reset fixture",
+      "saved template retains edited names; source project and original task remain unchanged",
+      "replacement comparison renders Review studio for saved definition and Design studio for source"
+    ],
+    "snapshot": {
+      "sha256": "b44812223dc05b3e43590d4eb8f94dba13ccc866a966d01caf4bd93d1ad255e7",
+      "templates": 1,
+      "tasks": 1,
+      "projects": 2,
+      "pending": 0
+    },
+    "limits": [
+      "Native reuse and full source-replacement acceptance remain pending",
+      "Test app reports group-container write permission failure; this is not installed-widget acceptance"
+    ],
+    "build_log": "mac-p1-template-preview-build.log",
+    "signature": "deep strict verification passed",
+    "main_app_closed": true
+  },
+  "mobile": {
+    "status": "accepted on iPhone and iPad",
+    "test": "testTemplateDefinitionCancelEditReuseAndRelaunch",
+    "checks": [
+      "draft discard preserves original",
+      "save/relaunch retains changed definition",
+      "new run uses edited definition; original source and earlier run preserved",
+      "current and replacement task labels are distinct",
+      "accept replacement into draft then discard leaves saved definition unchanged"
+    ],
+    "iPhone": {
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtime_warnings": 0,
+      "seconds": 136.953,
+      "result": "ios-p1-template-preview-phone.xcresult",
+      "snapshot_sha256": "63a3992851a6b84e11ef4257a9af98cd8934d9c8e77d7391dd5fbabb832ed857"
+    },
+    "iPad": {
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtime_warnings": 0,
+      "seconds": 172.368,
+      "result": "ios-p1-template-preview-tablet.xcresult",
+      "snapshot_sha256": "6c162fcc6a4b771fb52aaa1521494bb872ce5d2b94e21b4cfeb0bc5818057f3b"
+    },
+    "each_saved_snapshot": {
+      "templates": 1,
+      "tasks": 3,
+      "projects": 6,
+      "pending": 0
+    },
+    "verifier": "Scripts/verify_ui_result.py --expected-tests 1 passed for each result"
+  },
+  "release_deferrals": "Unchanged; provider registrations and genuine calendar acceptance remain deferred by user"
+}

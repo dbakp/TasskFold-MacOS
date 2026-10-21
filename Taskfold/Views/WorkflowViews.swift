@@ -375,8 +375,8 @@ struct TemplateDefinitionEditor: View {
             .sheet(item:$latest) { current in
                 NavigationStack {
                     List {
-                        Section("My draft · \(name)") { TemplateDefinitionPreview(document:document) }
-                        Section("Latest · \(current.name)") { TemplateDefinitionPreview(document:current["document"]) }
+                        Section("My draft · \(name)") { TemplateDefinitionPreview(document:document, scope:"draft") }
+                        Section("Latest · \(current.name)") { TemplateDefinitionPreview(document:current["document"], scope:"latest") }
                         Section {
                             Button("Keep my draft") {
                                 guard store.workflowReady(binding),let now=store.record(WorkflowTemplate.table,id:template.id),now["name"]==current["name"],now["document"]==current["document"] else { message="The template changed again. Reopen the latest review.";latest=nil;return }
@@ -537,8 +537,8 @@ private struct TemplateSourceReplacement: View {
                     Button("Review replacement") { do { preview=try WorkflowTemplate.capture(kind:kind,id:source,snapshot:store.snapshot).document;message=nil } catch { message=error.localizedDescription } }.disabled(source.isEmpty).accessibilityIdentifier("reviewTemplateReplacement")
                 }
                 if let preview {
-                    Section("Current definition") { TemplateDefinitionPreview(document:document) }
-                    Section("Replacement definition") { TemplateDefinitionPreview(document:preview) }
+                    Section("Current definition") { TemplateDefinitionPreview(document:document, scope:"draft") }
+                    Section("Replacement definition") { TemplateDefinitionPreview(document:preview, scope:"replacement") }
                     Section { Button("Use replacement in draft",role:.destructive) { onReplace(preview);dismiss() }.accessibilityIdentifier("acceptTemplateReplacement");Text("This replaces the definition in your draft. Save the template to apply it. Existing runs stay unchanged.").font(.caption).foregroundStyle(.secondary) }
                 }
                 if let message { Text(message).foregroundStyle(.red) }
@@ -551,22 +551,30 @@ private struct TemplateSourceReplacement: View {
     }
 }
 
+private struct TemplatePreviewRow<Value>: Identifiable {
+    let id:String
+    let value:Value
+}
+
 private struct TemplateDefinitionPreview: View {
     let document:JSON
+    let scope:String
     var body:some View {
         if (try? WorkflowTemplate(document:document)) != nil {
         Text(TemplateEditing.summary(document)).font(.headline)
-        ForEach(ProjectOrganization.outline(document.object["projects",default:.null].list.map{Record($0.object)})) { item in
+        ForEach(ProjectOrganization.outline(document.object["projects",default:.null].list.map{Record($0.object)}).map { TemplatePreviewRow(id:scope+":project:"+$0.id,value:$0) }) { row in
+            let item = row.value
             VStack(alignment:.leading,spacing:4) {
                 Label(item.project.name,systemImage:"folder").foregroundStyle(Color.project(item.project.string("color")))
                 if !item.project.string("description").isEmpty { Text(item.project.string("description")) }
                 if !item.project.string("parent_id").isEmpty { Text("Inside "+(document.object["projects",default:.null].list.first{$0.object["id"]?.text==item.project.string("parent_id")}?.object["name"]?.text ?? "project")).font(.caption).foregroundStyle(.secondary) }
             }.padding(.leading,CGFloat(min(item.depth,5))*10)
         }
-        ForEach(OrganizationOrder.sorted(document.object["sections",default:.null].list.map{Record($0.object)})) { row in Label(row.name,systemImage:"rectangle.split.3x1") }
-        ForEach(TemplateEditing.tasks(document)) { item in
+        ForEach(OrganizationOrder.sorted(document.object["sections",default:.null].list.map{Record($0.object)}).map { TemplatePreviewRow(id:scope+":section:"+$0.id,value:$0) }) { row in Label(row.value.name,systemImage:"rectangle.split.3x1") }
+        ForEach(TemplateEditing.tasks(document).map { TemplatePreviewRow(id:scope+":task:"+$0.id,value:$0) }) { row in
+            let item = row.value
             VStack(alignment:.leading,spacing:5) {
-                Text(item.record.title).font(.headline)
+                Text(item.record.title).font(.headline).accessibilityIdentifier("templatePreview-"+scope+"-task-"+item.id)
                 if !item.record.string("description").isEmpty { Text(item.record.string("description")) }
                 Text(TemplateEditing.taskSummary(item.record)).font(.caption).foregroundStyle(.secondary)
             }.padding(.leading,CGFloat(min(item.depth,5))*10)

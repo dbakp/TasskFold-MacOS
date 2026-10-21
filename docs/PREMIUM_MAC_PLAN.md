@@ -2469,3 +2469,6 @@ Conversation polish follow-up: Cancel now compares text and recipient selection 
 
 
 21 October user decision: Google/Microsoft native calendar registrations and genuine-provider acceptance are deferred until the user configures them. Keep providers unavailable without configuration and retain all unverified consent/credential cases for later. These are no longer current work blockers to pursue; native Mac P1 walkthroughs remain blocked by the locked desktop. The three previously deferred release items are unchanged.
+
+
+21 October P1 Mac continuation: unlocked desktop allowed the saved-template walkthrough to resume. Create/edit/confirmed discard/normal Quit and relaunch preserve template/source separation. Fixed a native comparison render collision by scoping each preview’s row identities, independently in both apps. Local-only DEBUG workflow fixtures skip cloud-session Keychain reads; normal/authenticated launches remain on their existing path. The isolated host reports a widget-container permission error, so no desktop widget acceptance is claimed. Full template reuse/source replacement and the remaining P1 Mac walkthroughs are still pending; see `p1-template-preview-followup-evidence.json`.
