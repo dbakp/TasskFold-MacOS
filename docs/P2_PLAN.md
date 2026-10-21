@@ -137,3 +137,8 @@ iPhone/iPad now implement device-local leading/trailing action choices, optional
 ### Native Mac gesture implementation and RTL correction
 
 Mac now owns trackpad row controls and device-only preferences, with full-swipe execution off by default. Core, AppKit routing and offscreen row/settings rendering checks are implemented; see `p2-mac-row-gestures-evidence.json`. The checks exposed and corrected a double RTL offset reversal in both apps. Physical trackpad, native settings/list/Undo/account-switch walkthroughs, VoiceOver and mouse/keyboard/drag interoperability remain open while the Mac is locked. This advances the existing rank-3 gesture work; it does not close rank 3 or the full Px objective.
+
+
+## Reviewed voice drafts (rank 4, implementation with acceptance gates)
+
+Both apps now own on-device-only recording adapters and a correction/review sheet in Add multiple tasks. Apply appends bounded text to the unchanged, workspace-bound draft; it does not save tasks. Existing multiline preview, metadata/destination validation and explicit Add still own mutations. Cancel/refusal preserve the original draft, recording tokens fence late callbacks and account changes, and recording/finalization are time-bounded. See `VOICE_DRAFTS.md` and `p2-voice-drafts-evidence.json`. Genuine microphone/transcription, OS permission/recovery/audio-session and full Mac/VoiceOver/account-switch acceptance remain open. Synthetic speech fixtures are not real speech acceptance. Cloud AI assistance remains disabled; this does not complete rank 4 or the full Px backlog.

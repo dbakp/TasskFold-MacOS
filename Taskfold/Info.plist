@@ -71,5 +71,9 @@
 	<string>$(TASKFOLD_GOOGLE_CALENDAR_CLIENT_ID)</string>
 	<key>TaskfoldMicrosoftCalendarClientID</key>
 	<string>$(TASKFOLD_MICROSOFT_CALENDAR_CLIENT_ID)</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Record your voice only when you start dictation. Review and apply the transcript before creating tasks.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Use on-device speech recognition to create an editable transcript. Taskfold does not send recordings to a cloud transcription service.</string>
 </dict>
 </plist>

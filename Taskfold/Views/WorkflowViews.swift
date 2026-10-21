@@ -71,6 +71,7 @@ struct MultiLineCaptureView: View {
     @State var text = ""
     @State var project = ""
     var onSaved: () -> Void = {}
+    @State private var voiceRequest: VoiceDraftRequest?
     @State private var recognize = true
     @State private var lines: [MultiLineCapture.Line] = []
     @State private var excluded = Set<Int>()
@@ -83,6 +84,13 @@ struct MultiLineCaptureView: View {
             Form {
                 if lines.isEmpty {
                     Section("One task per line") {
+                        Button("Dictate tasks", systemImage: "mic") {
+                            guard store.workflowReady(binding) else { message = store.error; return }
+                            #if os(iOS)
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            #endif
+                            voiceRequest = VoiceDraftRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), original: text)
+                        }.accessibilityIdentifier("openVoiceDraft")
                         TextEditor(text: $text).frame(minHeight: 150).accessibilityLabel("Task lines").accessibilityIdentifier("multiLineText")
                         Text("Paste a checklist or write a few lines. You’ll review every task before adding it.").font(.caption).foregroundStyle(.secondary)
                         Picker("Destination", selection: $project) {
@@ -114,6 +122,13 @@ struct MultiLineCaptureView: View {
                 if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("workflowError") }
             }.formStyle(.grouped)
         }.onAppear { if binding == nil { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) } }
+        .sheet(item: $voiceRequest) { request in
+            VoiceDraftView(request: request) { proposed in
+                guard store.workflowReady(request.workspace), text == request.original else { return false }
+                text = proposed; return true
+            }
+        }
+        .onChange(of: store.workspaceGeneration) { _, _ in voiceRequest = nil }
     }
     private func details(_ task: Record) -> String {
         var parts = [store.record("projects", id: task.string("project_id"))?.name ?? "Inbox"]

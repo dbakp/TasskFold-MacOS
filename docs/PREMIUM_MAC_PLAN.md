@@ -2562,3 +2562,8 @@ iPhone/iPad gesture preferences pass scoped phone/tablet native checks and visua
 ### Owned Mac row gestures — implementation, live acceptance pending
 
 The Mac now implements device-local trackpad action choices, deliberate reveal by default, guarded completion/scheduling/edit/delete and interruption-safe row targeting. It preserves the app-owned scroll-memory bridge and does not replace SwiftUI delegates. Scoped Core/AppKit/render verification and the cross-platform RTL fix are recorded in `p2-mac-row-gestures-evidence.json`. The Mac remains locked: physical input, full native settings/selection/Undo/drag interactions and VoiceOver are still gates. Existing release/provider/push/older-client deferrals remain unchanged.
+
+
+### Reviewed voice drafts — 21 October 2026
+
+The Mac independently owns device-only Speech/AVFoundation input, bounded correction/review and an explicit append-to-draft handoff to existing multiline capture. Permission requests require Start; unsupported on-device recognition has no server fallback. Workspace/request/original-text tokens prevent late retargeting, and the existing task preview/Add/Undo owns persistence. Core/controller checks and offscreen light/dark component previews are recorded in `p2-voice-drafts-evidence.json`; real microphone/TCC/audio/VoiceOver and full native interaction remain unverified while locked. Cloud AI and all explicit user release/provider/push/older-client deferrals remain unchanged.
