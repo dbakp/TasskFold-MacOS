@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-21",
+  "phase": "P1 rank 6 read-only calendar foundation",
+  "status": "in-progress",
+  "focusedTests": {
+    "count": 25,
+    "failures": 0,
+    "log": "mac-p1-direct-calendar-core.log"
+  },
+  "coreSuite": {
+    "reported": 831,
+    "skipped": 31,
+    "failures": 0
+  },
+  "isolatedBuild": {
+    "result": "succeeded",
+    "log": "mac-p1-direct-calendar-build.log",
+    "warnings": []
+  },
+  "dataSafety": {
+    "fixture": "Synthetic URLProtocol replies and in-memory authorization fake only",
+    "providerRequests": 0,
+    "realTaskMutations": 0,
+    "credentialsPersisted": false,
+    "serverChanges": false
+  },
+  "pending": [
+    "Native provider authorization and secure state persistence",
+    "Planner/event aggregation and native calendar-selection UI",
+    "Provider registrations/configuration",
+    "Genuine Google and Outlook consent/reconnect/account-switch acceptance",
+    "Phone/tablet/Mac native interaction and visual acceptance"
+  ],
+  "sources": [
+    "https://developers.google.com/identity/protocols/oauth2/native-app",
+    "https://developers.google.com/workspace/calendar/api/v3/reference/events/list",
+    "https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow",
+    "https://learn.microsoft.com/en-us/graph/api/user-list-calendars?view=graph-rest-1.0",
+    "https://learn.microsoft.com/en-us/graph/api/calendar-list-calendarview?view=graph-rest-1.0"
+  ]
+}
