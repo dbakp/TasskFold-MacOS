@@ -51,3 +51,12 @@ Scoped phone/tablet native Save/readback/relaunch, native Print cancellation, co
 ## Quality gates for each rank
 
 Retain independently owned app/resources/extension/tests/build inputs. Use the existing native controls and Store/Workspace durable mutation and Undo paths. Validate malformed input, workspace changes, offline retry, normal relaunch and cancellation using synthetic data. Check phone, tablet and Mac layouts and accessibility where affected. Commit and push completed changes to each corresponding repository; leave exact acceptance limits visible instead of treating compilation as end-user proof.
+
+
+## Project and subproject filters (rank 3)
+
+The builder now offers **Project and subprojects**. Expressions accept `##Work` or `project-tree:"Work"`; names containing spaces or literal stars must be quoted. This stores one project identity, includes that project plus accessible descendants, and follows moves and renames. Existing `#Work` / `project:"Work"` conditions keep their exact-project meaning. The condition does not invent a capture destination.
+
+App lists, preview counts, separate query groups and widget publication resolve the same parent graph. Archived branches, ambiguous IDs, cycles and excessive depth are excluded even inside NOT/OR. A missing/archived target invalidates the condition. An accessible shared project may have an unshared ancestor: its own readable branch remains usable, without granting access to that ancestor or other projects. Widget payloads contain resolved task membership, not the hierarchy or filter document. Existing version-1 envelopes remain; older strict readers reject the new field as unsupported rather than silently substituting an exact-project filter.
+
+Eight new core cases cover grammar/literal names, move/rename cache invalidation, inaccessible targets and Boolean expressions, archive/cycle/duplicate safety, shared boundaries/depth, independent queries/completed scope, widget membership/revocation/privacy and queued snapshot persistence. Native acceptance and exact limits are recorded in `p2-project-tree-filters-evidence.json`. Parent/child task predicates, collaboration predicates, other view controls and headings remain separate unfinished rank-3 work. This milestone does not close the full rank or reopen deferred rollout enforcement.

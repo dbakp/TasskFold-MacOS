@@ -1533,7 +1533,7 @@ enum WidgetProjection {
                 let day = TaskPlanner.dayKey(date, calendar: calendar)
                 let query = TaskQuery(scope: .all, sort: ordering, today: day, filter: rule, now: rule.usesClockWindow ? now : nil, datePreferences: preferences,
                     filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) },
-                    filterProjects: projects.map { FilterReference(id: $0.id, name: $0.name) },
+                    filterProjects: FilterReference.projects(projects),
                     filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: context.personReferences, userID: account, timeZone: calendar.timeZone.identifier)
                 let matches=cache.matching(query).filter{!$0.completed}
                 var groups=TaskGrouping.queryGroups(matches,rule:rule,by:grouping,context:context,today:day,timeZone:calendar.timeZone.identifier,now:query.now)

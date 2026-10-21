@@ -230,7 +230,7 @@ final class FilterTests: XCTestCase {
         }
         XCTAssertEqual(try parse(#"#"Work*""#, context: literal), .predicate("project", "literal"))
         XCTAssertEqual(try parse(#"%"home*""#, context: literal), .predicate("label", "star"))
-        XCTAssertThrowsError(try parse("##Work"))
+        XCTAssertEqual(try parse("##Work"), .predicate("project_tree", "work-id"))
         for field in FilterNamePattern.expressions.keys {
             for value: JSON in [.null, .number(1), .string("")] { XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string(field), "value": value]))) }
         }
@@ -971,5 +971,140 @@ extension FilterTests {
         for rule in rules { XCTAssertEqual(try FilterRule(document: rule.document).document, rule.document) }
         let legacy: JSON = .object(["version": .number(1), "root": .object(["op": .string("predicate"), "field": .string("today")])])
         XCTAssertEqual(try FilterRule(document: legacy), today)
+    }
+}
+
+extension FilterTests {
+    private func treeProject(_ id: String, _ name: String, parent: String = "", archived: Bool = false) -> Record {
+        Record(["id": .string(id), "name": .string(name), "parent_id": parent.isEmpty ? .null : .string(parent), "is_archived": .bool(archived)])
+    }
+    private var treeProjects: [Record] {
+        [treeProject("root", "Work"), treeProject("child", "Design", parent: "root"), treeProject("leaf", "Review", parent: "child"), treeProject("other", "Personal")]
+    }
+    private func treeMatches(_ rule: FilterRule, projects: [Record], project: String) -> Bool {
+        rule.resultMatches(task("sample", ["project_id": .string(project)]), context: FilterContext(projects: projects), today: "2026-10-21", timeZone: "UTC")
+    }
+    func testProjectTreeGrammarIdentityRoundTripAndLiteralStars() throws {
+        let context = FilterContext(projects: treeProjects + [treeProject("star", "Work*"), treeProject("inbox-project", "Inbox")])
+        for input in ["##Work", "project-tree:Work", #"project-tree:"Work""#, "PROJECT-TREE: root"] {
+            let rule = try parse(input, context: context)
+            XCTAssertEqual(rule, .predicate("project_tree", "root"))
+            XCTAssertEqual(try FilterRule(document: rule.document), rule)
+            XCTAssertEqual(try parse(rule.expression(in: context), context: context), rule)
+            XCTAssertTrue(rule.captureDefaults(in: context, today: "2026-10-21").isEmpty)
+        }
+        XCTAssertEqual(try parse("#Work", context: context), .predicate("project", "root"))
+        XCTAssertEqual(try parse("#Inbox", context: context), .predicate("inbox", ""))
+        XCTAssertEqual(try parse("##Inbox", context: context), .predicate("project_tree", "inbox-project"))
+        XCTAssertEqual(try parse(#"##"Work*""#, context: context), .predicate("project_tree", "star"))
+        XCTAssertEqual(try parse(#"project-tree:"Work*""#, context: context), .predicate("project_tree", "star"))
+        for input in ["##", "##Work*", "project-tree:Work*", "project-tree:", "##Missing"] { XCTAssertThrowsError(try parse(input, context: context)) }
+        for value: JSON in [.null, .number(1), .string(""), .string(" "), .string(String(repeating: "x", count: 401))] {
+            XCTAssertThrowsError(try FilterRule(json: .object(["op": .string("predicate"), "field": .string("project_tree"), "value": value])))
+        }
+    }
+    func testProjectTreeTracksMovesRenamesAndCacheIdentity() throws {
+        let rule = FilterRule.predicate("project_tree", "root")
+        let cache = TaskCache(); cache.update([task("root", ["project_id": .string("root")]), task("child", ["project_id": .string("child")]), task("leaf", ["project_id": .string("leaf")]), task("other", ["project_id": .string("other")])])
+        var query = TaskQuery(scope: .all, filter: rule, filterProjects: FilterReference.projects(treeProjects))
+        XCTAssertEqual(Set(cache.matching(query).map(\.id)), ["root", "child", "leaf"])
+        _ = cache.matching(query); XCTAssertEqual(cache.computationCount, 1)
+        var moved = treeProjects; moved[1]["parent_id"] = .string("other"); moved[0]["name"] = .string("Renamed")
+        query.filterProjects = FilterReference.projects(moved)
+        XCTAssertEqual(cache.matching(query).map(\.id), ["root"])
+        XCTAssertEqual(cache.computationCount, 2)
+        XCTAssertEqual(try parse(rule.expression(in: FilterContext(projects: moved)), context: FilterContext(projects: moved)), rule)
+        moved[3]["parent_id"] = .string("root"); query.filterProjects = FilterReference.projects(moved)
+        XCTAssertEqual(Set(cache.matching(query).map(\.id)), ["root", "child", "leaf", "other"])
+    }
+    func testProjectTreeUnavailableTargetsFailClosedUnderBooleanOperators() throws {
+        let rule = FilterRule.predicate("project_tree", "root")
+        let rows = treeProjects.filter { $0.id != "root" }
+        for candidate in [rule, .not(rule), .or([.predicate("all", ""), rule])] {
+            XCTAssertThrowsError(try candidate.validate(in: FilterContext(projects: rows)))
+            for id in ["", "root", "child", "other"] { XCTAssertFalse(treeMatches(candidate, projects: rows, project: id)) }
+        }
+        XCTAssertFalse(treeMatches(.not(rule), projects: treeProjects, project: "unavailable"))
+        XCTAssertTrue(treeMatches(.not(rule), projects: treeProjects, project: "other"))
+        XCTAssertTrue(treeMatches(.not(rule), projects: treeProjects, project: ""))
+        XCTAssertFalse(treeMatches(.predicate("project", "root"), projects: treeProjects, project: "child"))
+    }
+    func testProjectTreeArchiveInheritanceAndCyclesNeverMatchNegation() throws {
+        let rule = FilterRule.predicate("project_tree", "root")
+        var archived = treeProjects; archived[1]["is_archived"] = .bool(true)
+        for candidate in [rule, .not(rule), .or([.predicate("all", ""), rule])] {
+            XCTAssertFalse(treeMatches(candidate, projects: archived, project: "child"))
+            XCTAssertFalse(treeMatches(candidate, projects: archived, project: "leaf"))
+        }
+        XCTAssertTrue(treeMatches(rule, projects: archived, project: "root"))
+        archived[0]["is_archived"] = .bool(true)
+        XCTAssertThrowsError(try rule.validate(in: FilterContext(projects: archived)))
+        var cyclic = treeProjects; cyclic[0]["parent_id"] = .string("leaf")
+        XCTAssertThrowsError(try rule.validate(in: FilterContext(projects: cyclic)))
+        for candidate in [rule, .not(rule)] { XCTAssertFalse(treeMatches(candidate, projects: cyclic, project: "other")) }
+        let duplicates = treeProjects + [treeProject("child", "Conflicting parent", parent: "other")]
+        XCTAssertFalse(treeMatches(rule, projects: duplicates, project: "leaf"))
+        XCTAssertFalse(treeMatches(.not(rule), projects: duplicates, project: "leaf"))
+    }
+    func testProjectTreeAccessibleSharedBoundaryAndDepthLimit() throws {
+        var shared = [treeProject("root", "Shared", parent: "unshared"), treeProject("child", "Visible", parent: "root")]
+        let rule = FilterRule.predicate("project_tree", "root")
+        XCTAssertNoThrow(try rule.validate(in: FilterContext(projects: shared)))
+        XCTAssertTrue(treeMatches(rule, projects: shared, project: "child"))
+        XCTAssertFalse(treeMatches(rule, projects: shared, project: "unshared"))
+        shared[0]["ancestor_archived"] = .bool(true)
+        XCTAssertThrowsError(try rule.validate(in: FilterContext(projects: shared)))
+        var deep = [treeProject("root", "Root")]
+        for n in 1...22 { deep.append(treeProject("d\(n)", "Depth \(n)", parent: n == 1 ? "root" : "d\(n-1)")) }
+        XCTAssertTrue(treeMatches(rule, projects: deep, project: "d20"))
+        XCTAssertFalse(treeMatches(rule, projects: deep, project: "d21"))
+        XCTAssertFalse(treeMatches(.not(rule), projects: deep, project: "d21"))
+    }
+    func testProjectTreeIndependentQueriesGroupsAndCompletedVisibility() throws {
+        let tree = FilterRule.predicate("project_tree", "root")
+        let rule = FilterRule.sections([tree, .and([tree, .predicate("completed", "true")])])
+        let rows = [task("open", ["project_id": .string("leaf")]), task("done", ["project_id": .string("child"), "completed": .bool(true)])]
+        let context = FilterContext(projects: treeProjects)
+        let cache = TaskCache(); cache.update(rows)
+        let matched = cache.matching(TaskQuery(scope: .all, filter: rule, filterProjects: FilterReference.projects(treeProjects)))
+        XCTAssertEqual(Set(matched.map(\.id)), ["open", "done"])
+        let groups = TaskGrouping.queryGroups(matched, rule: rule, by: "none", context: context, today: "2026-10-21", timeZone: "UTC")
+        XCTAssertEqual(groups.map { $0.tasks.map(\.id) }, [["open"], ["done"]])
+        let partial = FilterRule.sections([.predicate("project_tree", "missing"), .predicate("project", "other")])
+        XCTAssertTrue(treeMatches(partial, projects: treeProjects, project: "other"))
+    }
+    func testProjectTreeWidgetProjectionMatchesAppAndRevocation() throws {
+        let rule = FilterRule.predicate("project_tree", "root")
+        let view = Record(["id": .string("tree-view"), "name": .string("Work tree"), "query_ast": rule.document])
+        let rows = [task("child-task", ["project_id": .string("child")]), task("other-task", ["project_id": .string("other")])]
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        func projection(_ projects: [Record]) throws -> JSON {
+            try XCTUnwrap(WidgetProjection.listPayload(tasks: rows, projects: projects, labels: [], sections: [], savedViews: [view], account: "owner", now: Dates.parse("2026-10-21")!, calendar: calendar).first { $0.object["recordID"] == .string("tree-view") })
+        }
+        let payload = try projection(treeProjects)
+        XCTAssertEqual(payload.object["days"]?.object.count, 8)
+        XCTAssertTrue(payload.object["days"]!.object.values.allSatisfy { $0 == .array([.string("child-task")]) })
+        let encoded = String(data: try JSONEncoder().encode(payload), encoding: .utf8)!
+        XCTAssertFalse(encoded.contains("query_ast")); XCTAssertFalse(encoded.contains("parent_id")); XCTAssertFalse(encoded.contains("project_tree"))
+        let revoked = try projection(treeProjects.filter { $0.id != "root" })
+        XCTAssertTrue(revoked.object["days"]!.object.isEmpty)
+    }
+}
+
+
+extension FilterTests {
+    func testProjectTreeDocumentPersistsWithoutRetargetingLegacyExactFilters() throws {
+        let rule = FilterRule.predicate("project_tree", "root")
+        let exact = FilterRule.predicate("project", "root")
+        let views = [rule, exact].enumerated().map { index, value in Record(["id": .string("view-\(index)"), "name": .string("View \(index)"), "query_ast": value.document]) }
+        let before = Snapshot(tables: ["saved_views": views], pending: [Mutation(table: "saved_views", recordID: views[0].id, method: "POST", fields: views[0].fields)])
+        let after = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(before))
+        XCTAssertEqual(before, after)
+        XCTAssertEqual(try FilterRule(document: after.tables["saved_views"]![0]["query_ast"]), rule)
+        XCTAssertEqual(try FilterRule(document: after.tables["saved_views"]![1]["query_ast"]), exact)
+        XCTAssertEqual(rule.document.object["version"], .number(1))
+        let duplicateNames = treeProjects + [treeProject("duplicate", "Work")]
+        XCTAssertThrowsError(try parse("##Work", context: FilterContext(projects: duplicateNames)))
+        XCTAssertEqual(try parse(rule.expression(in: FilterContext(projects: duplicateNames)), context: FilterContext(projects: duplicateNames)), rule)
     }
 }

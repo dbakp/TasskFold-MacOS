@@ -2498,3 +2498,8 @@ Conversation polish follow-up: Cancel now compares text and recipient selection 
 
 
 21 October final current P1 acceptance: installed large My list grouped/manual order user-confirmed; subsequent actual checkbox completion persists with exactly one receipt,empty queue,unchanged saved order and only the approval task completed. Normal Quit/relaunch and native remaining project order pass. No main Taskfold app remains running. Current agreed P1 batch complete; evidence/audit in `p1-mac-widget-order-accepted-evidence.json` and `p1-completion-audit.json`. Genuine calendar registrations/provider acceptance,remote reminders,older-client rollout and distribution remain explicitly deferred and unverified.
+
+
+### Project-tree saved filters, 21 October 2026
+
+Added a native Project and subprojects condition and matching expression grammar, preserving exact-project filters. Preview, cache, separate query groups and widget membership share accessible parent metadata and fail closed for invalid branches. Independent Mac core and isolated signed app verification are recorded in `p2-project-tree-filters-evidence.json`. Native Mac layout/VoiceOver and real cloud acceptance remain open; phone/tablet acceptance is tracked separately. Other rank-3 scopes remain in `P2_PLAN.md`.

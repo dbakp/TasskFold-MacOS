@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-21",
+  "status": "project-tree filters implemented; scoped phone/tablet expression-save/relaunch acceptance passed",
+  "contract": {
+    "field": "project_tree",
+    "envelope_version": 1,
+    "grammar": [
+      "##Work",
+      "project-tree:\"Work\""
+    ],
+    "builder": "Project and subprojects",
+    "membership": "selected readable project plus readable active descendants",
+    "identity": "project ID retained across renames; moves recompute membership",
+    "capture": "no inferred destination",
+    "legacy": "exact project predicate unchanged; unknown fields remain unsupported in older readers",
+    "graph": "20 parent edges; cycles, duplicate IDs and archived paths fail closed; missing unshared ancestor allowed only for a readable shared branch",
+    "privacy": "no inferred sharing, full graph or raw query AST in widget payload"
+  },
+  "verification": {
+    "iOS_core": {
+      "executed": 923,
+      "skipped": 12,
+      "failures": 0,
+      "log": "ios-p2-project-tree-core-final.log"
+    },
+    "Mac_core": {
+      "executed": 947,
+      "skipped": 32,
+      "failures": 0,
+      "log": "mac-p2-project-tree-core-final.log"
+    },
+    "focused_cases": 8,
+    "iOS_build": "passed; ios-p2-project-tree-build.log",
+    "Mac_build": "passed; mac-p2-project-tree-build.log; strict deep app signature passed",
+    "phone": {
+      "result": "ios-p2-project-tree-phone.xcresult",
+      "actual_passes": 1,
+      "skipped": 0,
+      "runtime_warnings": 0,
+      "checks": [
+        "create parent project filter through expression",
+        "preview reports one match",
+        "save includes existing task in child project",
+        "normal relaunch preserves filter and membership"
+      ],
+      "screenshots": "tmp/project-tree-phone; expression and result visually inspected; long list title uses existing truncation"
+    },
+    "iOS_signature": "strict deep app signature passed after final tablet run",
+    "tablet": {
+      "result": "ios-p2-project-tree-tablet.xcresult",
+      "actual_passes": 1,
+      "skipped": 0,
+      "runtime_warnings": 0,
+      "checks": [
+        "create parent project filter through expression",
+        "preview reports one match",
+        "save includes existing task in child project",
+        "normal relaunch preserves filter and membership"
+      ],
+      "screenshots": "tmp/project-tree-tablet; expression and result visually inspected"
+    }
+  },
+  "regressions_during_verification": [
+    "Updated old ##Work unsupported-grammar expectation for the newly supported condition",
+    "Corrected new fixture expected ID and widget test lookup to use account-bound recordID; initial diagnostic run failed and is not accepted"
+  ],
+  "limits": [
+    "Native condition-picker interaction, large text and VoiceOver for this new condition remain unaccepted",
+    "Native Mac filter walkthrough remains unaccepted",
+    "No new genuine cloud transport or installed-widget interaction acceptance",
+    "Parent/child task, shared/personal, assigned-by and other rank-3 features remain unfinished",
+    "All user-deferred provider, remote-reminder, old-client rollout and distribution work stays deferred"
+  ],
+  "owned_source_sha256": {
+    "Taskfold/Core/Filters.swift": "172108e98282c01bd6b3ce851d1ce04059540ff2c94568545d615abe39656b64",
+    "Taskfold/Core/Models.swift": "840cb4e3dc5bdc37295f1e0dfdf682ca1c315ffa40b7dac2d71b0645ca0bee9f",
+    "Taskfold/Core/Store.swift": "ec64cf4e0a4dc083f662fd34636b97d08d6e30bbcaacec750d2cf59874e9c110",
+    "Taskfold/Views/SavedViews.swift": "41148fb297e17632c53cd1678db25ace7ff93e4763670bcf152fd897eabe8e74",
+    "TaskfoldTests/FilterTests.swift": "13ece09d47297a19fbf3d7adb3db8f141808e9ca2788e855720caccae88231b7"
+  },
+  "cleanup": {
+    "main_app_sessions": "none remaining after final native test",
+    "free_disk": "50 GiB; existing warm build caches reused"
+  }
+}
