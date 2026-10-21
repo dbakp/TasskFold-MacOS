@@ -129,7 +129,7 @@ The native wrapper's offline proof uses actual AppAuth state/archive behavior wi
 
 ## Rank 7 readiness — shared activity and mentions
 
-Read-only review confirms the deployed TaskFold database has RLS on tasks, project membership and the existing task-activity ledger. Dedicated comment/mention/inbox tables are not present. Current comments are embedded task JSON with client-supplied attribution, so mention delivery must not be inferred from a displayed name or an imported `@name` string. No schema or policy has been changed by this review.
+The initial read-only review confirmed RLS on tasks, project membership and the task-activity ledger. At that checkpoint no dedicated comment/mention/inbox tables existed; comments were embedded task JSON with client-supplied attribution. The server continuation below adds authenticated records while preserving that legacy content. A displayed name or imported `@name` string never grants access or generates a mention.
 
 Implementation order:
 
@@ -169,3 +169,12 @@ Private hash-only operation receipts acknowledge retries without replaying an ol
 The expanded actual-role fixture passes both before deployment in a rollback-only transaction and afterward on the deployed schema. It covers owner, two accepted members, departure/rejoin, outsider/user-metadata spoofing, anonymous/missing identity, private moves, archives, author/account deletion, task recreation, stale edits, retries, read/unread and data bounds. All synthetic accounts and rows are rolled back; no real task/comment/account data is changed. The public API wrappers are security invoker; scoped private definers bind auth/current access and deny anonymous execution. Native authoring, inbox, offline/retry/relaunch, backup and HTTP/two-client acceptance are **not** proven by SQL-role tests and remain to implement/verify.
 
 Advisors were compared before and after. Two new authenticated GraphQL schema-discoverability findings are intentional for the new authenticated-readable tables; there is no new anonymous exposure or exposed definer warning. One unused FK index observation is expected for the new empty table and is retained for account-deletion maintenance. Existing unrelated advisor findings remain unchanged. Exact scope and results: `p1-shared-comment-server-evidence.json`. The three release gates remain deferred.
+
+
+### Rank 7 native transport contract
+
+Both apps independently own `SharedComments.swift`, their package/project build inputs and 15 contract checks. Comment/mention records validate identities, dates, byte/recipient bounds, revisions and tombstones while retaining unknown server metadata. Versioned comment/read-state intent envelopes round-trip without author names or author IDs in the RPC payload. A malformed/newer envelope is refused without mutating its raw record; wiring that envelope into a durable Store outbox is still pending.
+
+Replies bind the operation and comment/task/generation/project or mention/comment/recipient identity. The acknowledged revision may describe an older operation while the returned current record is newer; the model keeps the newer body/deletion/read state rather than applying the old desired value. A current acknowledgement must actually match the requested content/recipients/read state. Non-success statuses cannot acknowledge or apply a payload. Native Backend methods reject a mismatched account before refresh/HTTP and retain the existing in-flight session-incarnation guard.
+
+Both full owned suites pass (847 iOS reported / 11 environment skips; 871 Mac / 31 skips; zero failures; 15 focused cases each, no new source warnings). Both independently owned app/widget builds succeed and the Mac signature verifies strictly. These are host-core tests with intercepted URLSession requests plus native SDK builds. They do **not** prove real HTTP/PostgREST calls, the end-user composer/inbox, durable queue, backup or phone/tablet/Mac UI behavior; those integrations remain next. Exact proof and limits: `p1-shared-comment-native-contract-evidence.json`.

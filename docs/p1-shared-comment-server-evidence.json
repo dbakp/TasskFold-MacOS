@@ -176,7 +176,6 @@
     "newFindings": "One unused-index observation on the newly created comment author FK index. Retained for account-deletion maintenance; empty/tiny rollback fixtures do not establish production index usage. No new unindexed FK or RLS initplan finding."
   },
   "remaining": [
-    "Strict independently owned native transport/models and reply binding",
     "Shared-comment composer, editing/moderation and explicit teammate picker",
     "Account-owned Mentions inbox and safe current-task routes",
     "Durable pending/retry/conflict/account-switch/relaunch behavior",
@@ -191,5 +190,6 @@
   "sourceSHA256": {
     "supabase/migrations/20261021020423_shared_comments_and_mentions.sql": "fbd1adba72223942f938f83d2b2281e3774c1494c2d934184124aacf38110f5d",
     "supabase/tests/shared_comments_and_mentions.sql": "ce2e5ce67b28ef14d4c696321ea9cc984eac0e868076c561a9a3ec9a73a92b35"
-  }
+  },
+  "nativeContractFollowUp": "p1-shared-comment-native-contract-evidence.json"
 }
