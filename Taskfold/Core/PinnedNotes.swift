@@ -33,19 +33,12 @@ enum PinnedNotes {
     }
     /// Both grapheme and byte bounds matter: one combining sequence can be enormous.
     static func excerpt(_ raw: String, characters: Int, bytes: Int) -> (String, Bool) {
-        let value = raw.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
-        var result = "", count = 0, used = 0
-        for character in value {
-            let chunk = String(character), size = chunk.utf8.count
-            guard count < characters, used + size <= bytes else { return (result, true) }
-            result += chunk; count += 1; used += size
-        }
-        return (result, false)
+        NoteMarkup.excerpt(raw, characters: characters, bytes: bytes)
     }
     static func payload(tasks: [Record], pins: [Record], account: String) -> [JSON] {
         self.tasks(tasks, pins: pins, account: account).map { task in
             let title = excerpt(task.title, characters: 160, bytes: 1000)
-            let text = excerpt(task.string("description"), characters: 1200, bytes: 6000)
+            let text = NoteMarkup.preview(task.string("description"), characters: 1200, bytes: 6000)
             let id = (try? JSONEncoder().encode([account, "note", task.id]).base64EncodedString()) ?? ""
             return .object(["id": .string(id), "taskID": .string(task.id), "title": .string(title.0), "text": .string(text.0), "truncated": .bool(text.1), "completed": .bool(task.completed)])
         }

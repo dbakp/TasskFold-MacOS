@@ -60,8 +60,7 @@
   "remaining": [
     "Another sharing app\u2019s genuine text handoff",
     "Native account-switch handoff and authenticated cloud offline retry",
-    "Tablet/Mac layout, large text and accessibility",
-    "Final iPad template Cancel/Save acceptance"
+    "Tablet/Mac layout, large text and accessibility"
   ],
   "deferrals_preserved": [
     "Remote/server reminders and device/reinstall recovery",
@@ -102,6 +101,10 @@
   "limits": [
     "Core suites contain the explicitly recorded skipped integration/environment cases. No claim that skips passed.",
     "Local-mode cold-host capture and disk-write retry do not establish authenticated cloud/network retry.",
-    "Mac share-panel runtime acceptance is pending manual unlock. The iPad\u2019s existing template preview was preserved."
-  ]
+    "Mac share-panel runtime acceptance is pending manual unlock. The iPad had shut down without changing its saved test snapshot; its template acceptance now passes automatically."
+  ],
+  "native_ipad": {
+    "result": "Host review/Cancel, injected disk-full rollback/inline retry, Add and normal relaunch passed in the same three-case tablet run.",
+    "limit": "Actual iPad source-app extension, large-text and VoiceOver acceptance remain separate."
+  }
 }

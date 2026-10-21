@@ -35,7 +35,7 @@ struct PinnedNotesView: View {
                                     NavigationLink { PinnedNoteDetail(taskID: task.id, binding: request.workspace, close: { dismiss() }) } label: {
                                         VStack(alignment: .leading, spacing: 6) {
                                             Text(task.title).font(.headline).lineLimit(2)
-                                            Text(task.string("description").isEmpty ? "Add note text in task details" : task.string("description")).font(.callout).foregroundStyle(.secondary).lineLimit(2)
+                                            Text(task.string("description").isEmpty ? "Add note text in task details" : NoteMarkup.summary(task.string("description"))).font(.callout).foregroundStyle(.secondary).lineLimit(2)
                                             if task.completed { Label("Task completed", systemImage: "checkmark.circle").font(.caption).foregroundStyle(.secondary) }
                                         }.padding(.vertical, 6)
                                     }.accessibilityIdentifier("pinnedNote-" + task.id)
@@ -69,6 +69,7 @@ private struct PinnedNoteDetail: View {
     let close: () -> Void
     @State private var failure: String?
     @State private var editing: Record?
+    @State private var originalText = false
     private var live: Record? {
         binding.matches(account: store.userID, generation: store.workspaceGeneration) && store.isPinnedNote(taskID) ? store.record("tasks", id: taskID) : nil
     }
@@ -83,7 +84,11 @@ private struct PinnedNoteDetail: View {
                         if task.string("description").isEmpty {
                             Text("Your note has no text yet. Add instructions or an idea in task details.").foregroundStyle(.secondary).accessibilityIdentifier("pinnedNoteBlank")
                         } else {
-                            Text(task.string("description")).font(.body).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("pinnedNoteText")
+                            if NoteMarkup.document(task.string("description")).formatted {
+                                Toggle("Show original text", isOn: $originalText).accessibilityIdentifier("noteOriginalText")
+                                if originalText { Text(task.string("description")).font(.body).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("pinnedNoteText") }
+                                else { NoteMarkupPreview(text: task.string("description")).accessibilityIdentifier("formattedPinnedNote") }
+                            } else { Text(task.string("description")).font(.body).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("pinnedNoteText") }
                         }
                         Button { editing = task } label: { Label("Edit details", systemImage: "pencil").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("editPinnedNote")
                         Button(action: unpin) { Label("Unpin note", systemImage: "pin.slash").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("unpinNote")
@@ -130,14 +135,18 @@ private struct NewPinnedNote: View {
     let binding: WorkspaceBinding
     @State private var title = ""
     @State private var text = ""
+    @State private var formatting: NoteFormatRequest?
+    private enum Field: Hashable { case title, text }
+    @FocusState private var focusedField: Field?
     @State private var discard = false
     @State private var failure: String?
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Note title", text: $title).accessibilityIdentifier("newNoteTitle")
-                    TextField("Instructions or an idea", text: $text, axis: .vertical).lineLimit(6...16).accessibilityIdentifier("newNoteText")
+                    TextField("Note title", text: $title).focused($focusedField, equals: .title).accessibilityIdentifier("newNoteTitle")
+                    TextField("Instructions or an idea", text: $text, axis: .vertical).lineLimit(6...16).focused($focusedField, equals: .text).accessibilityIdentifier("newNoteText")
+                    Button("Format notes", systemImage: "textformat") { focusedField = nil; formatting = NoteFormatRequest(taskID: "new-pinned-note", original: text, workspace: binding, generation: .null, storedText: nil) }.accessibilityIdentifier("openNewNoteFormatting")
                 }
                 Section { Text("Creates a task in Inbox with its notes pinned. Only pin text you want visible on your Home Screen or desktop. Add a Pinned note widget and choose this note.").font(.callout).foregroundStyle(.secondary) }
             }.navigationTitle("New pinned note")
@@ -148,7 +157,13 @@ private struct NewPinnedNote: View {
                 .interactiveDismissDisabled(!title.isEmpty || !text.isEmpty)
                 .confirmationDialog("Discard your changes?", isPresented: $discard, titleVisibility: .visible) { Button("Discard changes", role: .destructive) { dismiss() } }
                 .alert("Could not save note", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) { Button("OK") { failure = nil } } message: { Text(failure ?? "") }
-                .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
+                .sheet(item: $formatting) { request in
+                    NoteFormattingView(request: request) { value in
+                        guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), text == request.original else { return "The note or workspace changed. Your formatted draft is still here." }
+                        text = value; return nil
+                    }
+                }
+                .onChange(of: store.workspaceGeneration) { _, _ in formatting = nil; dismiss() }
         }
         #if os(macOS)
         .frame(minWidth: 460, idealWidth: 560, minHeight: 440)

@@ -1,0 +1,90 @@
+{
+  "updated": "2026-10-21",
+  "milestone": "Portable note formatting and native reading",
+  "status": "Implemented independently in both apps; scoped phone/tablet flows accepted. Mac native acceptance and other rank-3 work remain open.",
+  "storage": "Existing task description string remains canonical; formatting edits plain Markdown. No schema migration, webpage/image fetch or external editor.",
+  "behavior": [
+    "Selection-based bold, italic, headings, bulleted/numbered lists, quotes, code and web links",
+    "Separate editable draft, native preview, Apply and discard confirmation",
+    "Applying to a new task or pinned note stays local until the existing parent Save",
+    "Existing task/workspace/generation and concurrent note changes rechecked before Apply",
+    "Mac uses existing durable Store/Workspace save and Undo; failed save retains formatting draft for retry",
+    "Complete original text available; oversized/fragmented notes fall back to literal original without truncating stored content",
+    "Bounded readable task/widget previews; existing accessible full task-row notes retained at large accessibility sizes",
+    "Only HTTP/HTTPS links without embedded credentials; executable links, embedded images, HTML and extended attributes remain literal"
+  ],
+  "core": {
+    "ios": {
+      "executed": 907,
+      "skipped": 12,
+      "failures": 0,
+      "log": "ios-p2-notes-all-core.log"
+    },
+    "mac": {
+      "executed": 931,
+      "skipped": 32,
+      "failures": 0,
+      "log": "mac-p2-notes-all-core.log"
+    },
+    "focused": {
+      "each_repository": 29,
+      "failures": 0,
+      "new_cases": 18
+    },
+    "coverage": [
+      "Unicode/grapheme and UTF16 selection boundaries",
+      "CRLF/indentation/blank-line preservation",
+      "Inline toggle/placeholders and embedded backtick delimiters",
+      "Unsafe URLs/HTML/images and original-only bounds",
+      "Bounded widget projections, account filtering and unchanged raw note",
+      "Compact task previews and retained link destinations"
+    ]
+  },
+  "native_iphone": {
+    "result": "Four actual UI cases pass on final source, no skipped cases or runtime warnings",
+    "bundle": "ios-p2-notes-phone-v3.xcresult",
+    "cases": [
+      "Format then Cancel/discard preserves exact original draft/account snapshot",
+      "Replace selected placeholder, Heading, Preview, Apply, parent Save and normal relaunch preserve exact source",
+      "Largest accessibility text in dark appearance keeps writing, Preview and Apply available without premature task creation",
+      "Existing task Format/Apply does not bypass parent Save; exact source persists after normal relaunch"
+    ],
+    "screenshots": "Normal light and largest-text dark previews inspected; labels/actions readable and no clipping"
+  },
+  "native_ipad": {
+    "result": "Pinned note Preview/Save/relaunch passes in v1. Final source Cancel/discard and existing-task parent-Save/relaunch pass in v2; largest-text dark Preview/Apply passes in v3.",
+    "bundles": [
+      "ios-p2-notes-tablet-v2.xcresult",
+      "ios-p2-notes-tablet-v3.xcresult"
+    ],
+    "final_v2": {
+      "actual_tests_passed": 2,
+      "skipped": 0,
+      "runtime_warnings": 0
+    },
+    "initial_finding": "First run Cancel case did not open the sheet after typing. Its event used y=682, while the final accessibility snapshot placed Format notes at y=495; no data changed. Added explicit parent focus handoff and field-value assertions. The final native Cancel flow passes without a second tap. Initial largest-text run also hit repeated 60-second animation waits; explicit Preview focus resignation is now in both apps, and final tablet largest-text flow finishes in 33 seconds.",
+    "screenshots": "Normal light and largest-text dark preview inspected; content/actions readable without clipping.",
+    "final_v3": {
+      "actual_tests_passed": 1,
+      "skipped": 0,
+      "runtime_warnings": 0,
+      "elapsed_seconds": 33.222
+    },
+    "archived_v1": {
+      "summary": "ios-p2-notes-tablet-v1.summary.json",
+      "test_tree": "ios-p2-notes-tablet-v1.tests.json",
+      "retained_artifacts": "notes-tablet-v1-retained-evidence",
+      "result": "Two passes, one failed opening tap; full superseded failure bundle pruned after final focused acceptance."
+    }
+  },
+  "native_mac": {
+    "result": "Final isolated owned Mac app builds and strict deep signature verification passes; native editing, Undo/failure recovery and VoiceOver acceptance remain pending."
+  },
+  "limits": [
+    "No full rank-3 completion claim",
+    "Native cross-workspace/concurrent-edit/durable-error/VoiceOver checks remain pending",
+    "Print/PDF, grouping/gesture controls and hierarchy filter grammar not part of this milestone",
+    "Real signing/distribution and previously deferred provider/server work remain deferred"
+  ],
+  "cleanup": "Superseded full results pruned; final passing results and diagnostic/visual evidence retained. All main Taskfold test apps closed."
+}

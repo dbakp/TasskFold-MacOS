@@ -16,6 +16,8 @@ The goal is a calm, fast native Mac app: daily actions should take few steps, na
 
 21 October share capture: the Mac owns its embedded native share extension and reviewed Shared drafts flow. Account-bound local drafts, create-only task saves and atomic receipts are implemented. Layout/listening and real source-app acceptance remain pending; see [P2_PLAN.md](P2_PLAN.md). No distribution or provider gate is marked complete by these source changes.
 
+21 October note formatting: selection tools and a native readable preview retain portable source text and the existing durable save/Undo path. Core tests pass and the isolated Mac app builds. Native Mac editing, conflict/retry and VoiceOver acceptance remain pending; print/PDF is still planned. See [note evidence](p2-note-formatting-evidence.json).
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.

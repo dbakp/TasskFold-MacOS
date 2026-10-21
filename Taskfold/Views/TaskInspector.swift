@@ -73,6 +73,7 @@ struct TaskInspectorForm: View {
     @State private var subtask = ""
     @State private var comment = ""
     @State private var conversation: ConversationRequest?
+    @State private var noteFormatting: NoteFormatRequest?
     @State private var pastedImageName: String?
     @State private var importing = false
     @State private var preview: URL?
@@ -136,6 +137,10 @@ struct TaskInspectorForm: View {
                         }
                     }
                     .accessibilityLabel("Notes").accessibilityIdentifier("taskDescription")
+                Button("Format notes", systemImage: "textformat") {
+                    guard let binding = workspaceBinding else { return }
+                    noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"))
+                }.disabled(current == nil).accessibilityIdentifier("openNoteFormatting")
                 if store.record("tasks", id: taskID) != nil {
                     Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
                     Text("Pin only text you want visible on your desktop or Home Screen. Choose it in the Pinned note widget; hide its details for privacy.").font(.caption).foregroundStyle(.secondary)
@@ -359,6 +364,20 @@ struct TaskInspectorForm: View {
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .onChange(of: titleChipFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
         .sheet(item: $conversation) { SharedConversationView(request: $0) }
+        .sheet(item: $noteFormatting) { request in
+            NoteFormattingView(request: request) { value in
+                guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), request.taskID == taskID, currentGeneration == request.generation, editingGeneration == request.generation else { return "This task or workspace changed. Your formatted draft is still here." }
+                guard let current, draft.string("description") == request.original,
+                      current.string("description") == request.storedText || current.string("description") == request.original else { return "The notes changed while formatting was open. Copy your draft before reopening the current notes." }
+                let previous = draft; saveTask?.cancel()
+                draft["description"] = .string(value)
+                if saveNow() { return nil }
+                draft = previous; saveTask?.cancel()
+                let failure = store.error ?? "The notes couldn’t be saved. Your formatted draft is still here; please try again."
+                store.error = nil
+                return failure
+            }
+        }
         .sheet(isPresented: $showingReminders) {
             NavigationStack {
                 TaskReminderEditor(task: $draft).onAppear { draft = store.applyingReminderDefault(draft, previous: original) }

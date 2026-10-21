@@ -28,7 +28,7 @@ struct TaskRowView: View {
     private var selectedForeground: Color { appearsActive && listFocused ? Color(nsColor: .alternateSelectedControlTextColor) : Color(nsColor: .labelColor) }
     private var isSelected: Bool { workspace.selection.contains(task.id) }
     // Trim only the display preview; editors and persistence retain the original text.
-    private var notePreview: String { task.string("description").trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var notePreview: String { NoteMarkup.summary(task.string("description"), includeLinkDestinations: true) }
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
     private var overdue: Bool { if let due = TaskPlanner.dayDate(task) { return due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
     private var dueToday: Bool { TaskPlanner.plannedDay(task) == Dates.day(Date()) }
