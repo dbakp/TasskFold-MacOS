@@ -1,0 +1,91 @@
+{
+  "date": "2026-10-21",
+  "platform": "macOS",
+  "kind": "native computer-use walkthrough and saved-data verification; no XCTest count claimed",
+  "bundle": "com.dbakp.taskfold.mac.workflowtestsp1",
+  "monthly_date_sets": {
+    "status": "representative native acceptance passed",
+    "checks": [
+      "quick capture recognizes month dates1/15,start2027-01-01,count5",
+      "inspector displays selected dates and honest planned-rhythm/month-end guidance",
+      "select31 updates rule and next-date preview",
+      "Command-Z restores1/15; Redo restores1/15/31",
+      "completion creates next task at2027-01-15 with4remaining and same date set",
+      "Undo restores one original open occurrence at2027-01-01 with5remaining",
+      "normal Quit/relaunch retains date set and count"
+    ],
+    "snapshot": {
+      "artifact": "mac-p1-monthly-accepted-snapshot.json",
+      "sha256": "a04bf26ca48d105dcab0ad60afead47c50bccb234a38e530a19fc36e6870d87e",
+      "matching_tasks": 1,
+      "completed": false,
+      "due_date": "2027-01-01",
+      "daysOfMonth": [
+        1,
+        15,
+        31
+      ],
+      "count": 5,
+      "pending": 0
+    },
+    "limits": [
+      "Mac inspector saves automatically and uses Undo; no draft Cancel is claimed for inspector controls",
+      "Zone/month-end/cross-client contracts retain separately recorded core/live evidence"
+    ]
+  },
+  "calendar_ui": {
+    "status": "synthetic native settings/timeline acceptance passed; genuine provider acceptance remains deferred",
+    "initial_arguments": [
+      "--uitesting",
+      "--planner-fixture",
+      "--calendar-links-fixture",
+      "--calendar-layout-ready",
+      "--calendar-layout-all-day",
+      "-localMode",
+      "YES"
+    ],
+    "relaunch_arguments": [
+      "--uitesting",
+      "--calendar-links-fixture",
+      "--calendar-layout-all-day",
+      "-localMode",
+      "YES"
+    ],
+    "checks": [
+      "timed Google fixture event occupies collision lane beside task blocks",
+      "all-day fixture event appears in All day and working-hours capacity",
+      "timed event details show9to10 and read-only label",
+      "titles off changes timed/all-day event and detail labels to Busy",
+      "readable list and timeline both available",
+      "synthetic Outlook connection requires explicit Studio selection",
+      "Outlook disconnect retains Google Workshop selection",
+      "normal Quit/relaunch without fixture reset retains Google selection,titles off,Outlook disconnected",
+      "deselect all Google calendars yields Choose calendars and calendar data incomplete,not free capacity",
+      "restore Workshop and Refresh returns busy data",
+      "device-calendar permission controls remain separate"
+    ],
+    "snapshot": {
+      "artifact": "mac-p1-calendar-accepted-snapshot.json",
+      "sha256": "c50456d40ba286b3fbd175b2b24258bc3e99643bf4fef1d0c59eea44dce42423",
+      "tasks": 4,
+      "pending": 0,
+      "original_titles_estimates_and_open_states_preserved": true
+    },
+    "limits": [
+      "CalendarFixtureProtocol intercepts every HTTP request; no genuine provider consent,refresh,revocation or provider Keychain acceptance claimed",
+      "No device-calendar permission was requested or changed",
+      "Workflow host lacks app-group entitlement,so this does not prove calendar-derived desktop widget capacity"
+    ]
+  },
+  "main_app_closed": true,
+  "remaining_current_work": [
+    "Mac installed widget ordering",
+    "Mac project activity and conversations/Mentions"
+  ],
+  "deferrals": [
+    "genuine Google/Microsoft registrations and acceptance",
+    "remote reminders",
+    "older-client rollout safeguards",
+    "distribution verification"
+  ]
+}

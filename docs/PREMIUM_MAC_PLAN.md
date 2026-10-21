@@ -2475,3 +2475,6 @@ Conversation polish follow-up: Cancel now compares text and recipient selection 
 
 
 21 October native acceptance continuation: representative Mac templates and Insights/goals walkthroughs pass. Templates create/edit/reuse/review-discard/later-edit isolation/relaunch and Insights scope/window/validation/Cancel/rest-day/reopen/Undo/relaunch have exact snapshot evidence in `p1-mac-templates-insights-evidence.json`. No main test app remains running. Remaining Mac P1 work is widgets, monthly date sets, calendar screens/timeline, activity and conversations/Mentions; genuine calendar providers and the three release gates remain deferred.
+
+
+21 October native continuation: monthly date sets pass capture/edit/preview/Undo/Redo/completion/count/Undo/relaunch. Synthetic calendar settings and timeline pass privacy, explicit selection, independent disconnect, incomplete-data and recovery checks; no genuine provider acceptance is claimed. Exact observations/snapshots: `p1-mac-recurrence-calendar-evidence.json`. The main test app is closed. Remaining current Mac acceptance: installed widget ordering and project activity/conversations/Mentions. All explicit provider/release deferrals remain unchanged.
