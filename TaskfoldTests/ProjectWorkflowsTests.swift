@@ -370,4 +370,117 @@ extension ProjectWorkflowsTests {
         var unsupported=document.object;unsupported["version"] = .number(99)
         XCTAssertTrue(TemplateEditing.reviewText(.object(unsupported)).contains("newer Taskfold version"))
     }
+
+    func testPortableTemplateRoundTripRemapsReferencesAndCreatesIndependentRuns() throws {
+        let original = fixture()
+        let definition = try WorkflowTemplate.capture(kind: .project, id: "root", snapshot: original)
+        let file = try WorkflowTemplateFile(name: "  Launch checklist  ", document: definition.document)
+        let data = try file.encoded()
+        let decoded = try WorkflowTemplateFile(data: data)
+        XCTAssertEqual(decoded.name, "Launch checklist")
+        XCTAssertEqual(decoded.template.projects.map(\.id), ["project-0002", "project-0001"])
+        XCTAssertEqual(decoded.template.tasks.map(\.id), ["task-1", "task-2"])
+        XCTAssertEqual(decoded.template.tasks.first { $0.title == "Design review" }?.string("section_id"), "section-0001")
+        XCTAssertEqual(decoded.template.sections.first?.string("project_id"), "project-0002")
+        let changes = try decoded.template.instantiate(account: "new-owner", name: "Fresh launch", start: Dates.parse("2026-11-01"))
+        let task = try XCTUnwrap(changes.first { $0.table == "tasks" && $0.fields["title"] == .string("Design review") })
+        XCTAssertEqual(task.fields["due_date"], .string("2026-11-01"))
+        XCTAssertTrue(changes.allSatisfy { $0.fields["user_id"] == .string("new-owner") })
+        XCTAssertFalse(changes.contains { $0.recordID == "root" || $0.recordID == "source" })
+        XCTAssertTrue(original.tables["tasks"]!.first!.completed, "Export does not reset the source")
+        XCTAssertEqual(try decoded.encoded(), data, "Portable references are deterministic")
+    }
+
+    func testPortableTemplateExcludesAccountAndLabelIdentityMetadata() throws {
+        let definition = try WorkflowTemplate.capture(kind: .project, id: "root", snapshot: fixture())
+        var document = definition.document.object
+        var tasks = document["tasks"]!.list
+        var task = tasks[0].object
+        task["labels"] = .array([.object(["name": .string("Design"), "color": .string("#e31e4b"), "user_id": .string("private-account"), "id": .string("private-label")])])
+        tasks[0] = .object(task); document["tasks"] = .array(tasks)
+        let data = try WorkflowTemplateFile(name: "Shareable", document: .object(document)).encoded()
+        let text = String(decoding: data, as: UTF8.self)
+        XCTAssertFalse(text.contains(owner)); XCTAssertFalse(text.contains("private-account")); XCTAssertFalse(text.contains("private-label"))
+        let decoded = try WorkflowTemplateFile(data: data)
+        XCTAssertEqual(Set(decoded.template.tasks[0]["labels"].list[0].object.keys), ["name", "color"])
+    }
+
+    func testPortableTemplateRejectsWrongFormatFutureVersionAndMalformedDefinitions() throws {
+        let definition = try WorkflowTemplate.capture(kind: .project, id: "root", snapshot: fixture())
+        let file = try WorkflowTemplateFile(name: "Checklist", document: definition.document)
+        var root = try JSONDecoder().decode(JSON.self, from: file.encoded()).object
+        root["version"] = .number(2)
+        XCTAssertThrowsError(try WorkflowTemplateFile(data: JSONEncoder().encode(JSON.object(root))))
+        root["version"] = .number(1); root["account"] = .string(owner)
+        XCTAssertThrowsError(try WorkflowTemplateFile(data: JSONEncoder().encode(JSON.object(root))))
+        root.removeValue(forKey: "account"); root["document"] = .object([:])
+        XCTAssertThrowsError(try WorkflowTemplateFile(data: JSONEncoder().encode(JSON.object(root))))
+        XCTAssertThrowsError(try WorkflowTemplateFile(data: Data("not json".utf8)))
+        XCTAssertThrowsError(try WorkflowTemplateFile(data: Data(repeating: 32, count: WorkflowTemplateFile.maximumBytes + 1)))
+        XCTAssertThrowsError(try WorkflowTemplateFile(name: "  ", document: definition.document))
+        XCTAssertThrowsError(try WorkflowTemplateFile(name: String(repeating: "x", count: 161), document: definition.document))
+    }
+
+    func testPortableSectionAndTaskFilesRemainReusableAndUnknownRepeatDetailsFailClosed() throws {
+        for kind in [WorkflowTemplate.Kind.section, .task] {
+            let definition = try WorkflowTemplate.capture(kind: kind, id: kind == .section ? "section" : "source", snapshot: fixture())
+            let file = try WorkflowTemplateFile(name: "Reusable", document: definition.document)
+            let decoded = try WorkflowTemplateFile(data: file.encoded())
+            XCTAssertEqual(decoded.template.kind, kind)
+            let changes = try decoded.template.instantiate(account: "recipient", name: "", targetProject: "destination")
+            XCTAssertTrue(changes.filter { $0.table == "tasks" }.allSatisfy { $0.fields["project_id"] == .string("destination") })
+            XCTAssertFalse(changes.contains { $0.table == "projects" })
+            var document = definition.document.object
+            var tasks = document["tasks"]!.list, task = tasks[0].object
+            task["recurrence_pattern"] = .object(["futurePolicy": .string("unknown")])
+            tasks[0] = .object(task); document["tasks"] = .array(tasks)
+            XCTAssertThrowsError(try WorkflowTemplateFile(name: "Future", document: .object(document)))
+        }
+    }
+
+    func testPortableTemplatePreservesLegacyOrganizationOrderAcrossDoubleDigitReferences() throws {
+        let children: [JSON] = (0..<12).reversed().map { index in
+            .object(["id": .string(String(format: "child-%02d", index)), "name": .string("Step \(index)"), "parent_id": .string("root")])
+        }
+        let sections: [JSON] = (0..<12).reversed().map { index in
+            .object(["id": .string(String(format: "section-%02d", index)), "name": .string("Phase \(index)"), "project_id": .string("root")])
+        }
+        let document = JSON.object(["version": .number(1), "kind": .string("project"), "projects": .array([.object(["id": .string("root"), "name": .string("Launch")])] + children), "sections": .array(sections), "tasks": .array([])])
+        let original = try WorkflowTemplateFile(name: "Launch", document: document)
+        let decoded = try WorkflowTemplateFile(data: original.encoded())
+        XCTAssertEqual(ProjectOrganization.outline(original.template.projects).map { $0.project.name }, ProjectOrganization.outline(decoded.template.projects).map { $0.project.name })
+        XCTAssertEqual(OrganizationOrder.sorted(original.template.sections).map(\.name), OrganizationOrder.sorted(decoded.template.sections).map(\.name))
+        XCTAssertEqual(try original.encoded(), try decoded.encoded())
+    }
+
+    func testCoordinatedTemplateFileReadAndOversizeRefusal() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("workflow.json")
+        let definition = try WorkflowTemplate.capture(kind: .project, id: "root", snapshot: fixture())
+        var document = definition.document.object
+        var projects = document["projects"]!.list, project = projects[0].object
+        project["description"] = .string(String(repeating: "Résumé 🙂 ", count: 20_000))
+        projects[0] = .object(project); document["projects"] = .array(projects)
+        let file = try WorkflowTemplateFile(name: "Portable launch", document: .object(document))
+        try file.encoded().write(to: url)
+        XCTAssertEqual(try WorkflowTemplateFile.read(url).encoded(), try file.encoded())
+        try Data(repeating: 32, count: WorkflowTemplateFile.maximumBytes + 1).write(to: url)
+        XCTAssertThrowsError(try WorkflowTemplateFile.read(url))
+        try Data("invalid json".utf8).write(to: url)
+        XCTAssertThrowsError(try WorkflowTemplateFile.read(url))
+    }
+
+    func testMinimalPortableDefinitionAcceptsAbsentOptionalPlanningFields() throws {
+        let data = Data(#"{"format":"taskfold-template","version":1,"name":"Reviewed design checklist","document":{"version":1,"kind":"project","projects":[{"id":"p","name":"Design checklist"}],"sections":[],"tasks":[{"id":"t","title":"Check colour contrast","description":"Review light and dark appearances.","project_id":"p","labels":[],"subtasks":[],"planned_offset":0}]}}"#.utf8)
+        let file = try WorkflowTemplateFile(data: data)
+        XCTAssertEqual(file.name, "Reviewed design checklist")
+        let changes = try file.template.instantiate(account: "recipient", name: "New checklist")
+        XCTAssertEqual(changes.filter { $0.table == "tasks" }.count, 1)
+        let task = try XCTUnwrap(changes.first { $0.table == "tasks" })
+        XCTAssertEqual(task.fields["title"], .string("Check colour contrast"))
+        XCTAssertEqual(task.fields["user_id"], .string("recipient"))
+        XCTAssertEqual(task.fields["priority"], .number(4))
+    }
 }

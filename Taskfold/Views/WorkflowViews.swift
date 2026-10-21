@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Workspace-bound workflow tools. Every preview stays local until the user saves.
 
@@ -153,6 +154,10 @@ struct TemplateLibraryView: View {
     @State private var selected: Record?
     @State private var deleting: Record?
     @State private var editingTemplate: Record?
+    @State private var importing = false
+    @State private var imported: ImportedWorkflowTemplate?
+    @State private var exportRequest: ExportedWorkflowTemplate?
+    @State private var readingFile: UUID?
     private var sources: [Record] {
         switch sourceKind {
         case "section": return OrganizationOrder.sorted(store.rows("sections").filter { row in store.allProjects.contains { $0.id == row.string("project_id") } })
@@ -172,9 +177,14 @@ struct TemplateLibraryView: View {
                         Button { selected = row } label: {
                             HStack { Image(systemName: "square.stack.3d.up"); VStack(alignment: .leading) { Text(row.name).font(.headline); Text(summary(row)).font(.caption).foregroundStyle(.secondary) }; Spacer(); Image(systemName: "chevron.right").foregroundStyle(.secondary) }.contentShape(.rect)
                         }.buttonStyle(.plain).accessibilityIdentifier("workflowTemplate-" + row.id)
-                        .contextMenu { Button("Edit template") { editingTemplate = row }; Button("Delete template", role: .destructive) { deleting = row } }
+                        .contextMenu { Button("Edit template") { editingTemplate = row }; Button("Export template…") { export(row) }; Button("Delete template", role: .destructive) { deleting = row } }
                         .swipeActions(edge:.leading) { Button("Edit") { editingTemplate=row }.tint(.accentColor) }
                     }
+                }
+                Section {
+                    Button { importing = true } label: { Label("Import template…", systemImage: "square.and.arrow.down") }
+                        .accessibilityIdentifier("importWorkflowTemplate")
+                    Text("Review a workflow file before saving a private copy. Importing does not create any tasks.").font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Save a workflow") {
                     Picker("Type", selection: $sourceKind) { Text("Project and subprojects").tag("project"); Text("Section").tag("section"); Text("Task").tag("task") }.onChange(of: sourceKind) { _, _ in source = "" }
@@ -189,11 +199,59 @@ struct TemplateLibraryView: View {
                 if let message { Text(message).foregroundStyle(.red) }
             }
         }.onAppear { if binding == nil { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) }; if source.isEmpty { source = sources.first?.id ?? "" } }
+        .safeAreaInset(edge: .bottom) {
+            if readingFile != nil {
+                HStack {
+                    ProgressView().controlSize(.small)
+                    Text("Opening template…")
+                    Spacer()
+                    Button("Cancel") { readingFile = nil }
+                }.padding().background(.regularMaterial)
+            }
+        }
+        .onDisappear { readingFile = nil }
+        .onChange(of: store.workspaceGeneration) { _, _ in
+            readingFile = nil; importing = false; imported = nil; exportRequest = nil
+        }
+        .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
+            guard store.workflowReady(binding) else { message = store.error; return }
+            do {
+                let url = try result.get(), request = UUID()
+                readingFile = request; message = nil
+                Task {
+                    do {
+                        let file = try await Task.detached(priority: .userInitiated) {
+                            try WorkflowTemplateFile.read(url)
+                        }.value
+                        guard readingFile == request else { return }
+                        readingFile = nil
+                        guard store.workflowReady(binding) else { message = store.error; return }
+                        imported = ImportedWorkflowTemplate(file: file)
+                    } catch {
+                        guard readingFile == request else { return }
+                        readingFile = nil; message = error.localizedDescription
+                    }
+                }
+            } catch {
+                if (error as NSError).code != NSUserCancelledError { message = error.localizedDescription }
+            }
+        }
+        .sheet(item: $exportRequest) { request in TemplateFileExportReview(request: request, binding: binding) }
+        .sheet(item: $imported) { request in TemplateFileReview(request: request, binding: binding) }
         .sheet(item: $selected) { TemplateRunView(template: $0) }
         .sheet(item: $editingTemplate) { TemplateDefinitionEditor(template: $0) }
         .confirmationDialog("Delete this template?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
             Button("Delete template", role: .destructive) { if store.workflowReady(binding), let row = deleting { workspace.run("Delete Template") { store.remove(WorkflowTemplate.table, row.id) } }; deleting = nil }
         } message: { Text("Tasks and projects created from it stay saved.") }
+    }
+    private func export(_ row: Record) {
+        guard store.workflowReady(binding) else { message = store.error; return }
+        do {
+            guard let current = store.record(WorkflowTemplate.table, id: row.id) else { throw AppFailure(message: "This template is no longer available.") }
+            let file = try WorkflowTemplateFile(name: current.name, document: current["document"])
+            exportRequest = ExportedWorkflowTemplate(file: file, data: try file.encoded())
+            message = nil
+        } catch { message = error.localizedDescription }
     }
     private func summary(_ row: Record) -> String {
         guard let template = try? WorkflowTemplate(document: row["document"]) else { return "Update Taskfold to use this template" }
@@ -209,6 +267,108 @@ struct TemplateLibraryView: View {
             var saved = false
             workspace.run("Save Template") { saved = store.save(WorkflowTemplate.table, row) }
             if saved { name = ""; source = ""; message = nil } else { message = store.error }
+        } catch { message = error.localizedDescription }
+    }
+}
+
+private struct ExportedWorkflowTemplate: Identifiable {
+    let id = UUID()
+    let file: WorkflowTemplateFile
+    let data: Data
+}
+
+private struct TemplateFileExportReview: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let request: ExportedWorkflowTemplate
+    let binding: WorkspaceBinding?
+    @State private var exporting = false
+    @State private var message: String?
+    var body: some View {
+        WorkflowShell(title: "Export template") {
+            if binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true {
+            Form {
+                Section {
+                    Text(request.file.name).font(.headline)
+                    Text("This file includes workflow notes, label names and relative dates. Review its content before sharing it with someone.").foregroundStyle(.secondary)
+                    Text("Account details, discussions, attachments, assignments and completion history are excluded.").font(.caption).foregroundStyle(.secondary)
+                }
+                Section("Workflow preview") { TemplateDefinitionPreview(document: request.file.template.document, scope: "export") }
+                Section {
+                    Button("Save file…", action: beginExport).accessibilityIdentifier("saveTemplateFile")
+                    Button("Cancel", role: .cancel) { dismiss() }
+                }
+                if let message { Text(message).foregroundStyle(.red) }
+            }.formStyle(.grouped)
+            } else {
+                ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Reopen templates in your current workspace."))
+            }
+        }
+        .fileExporter(isPresented: $exporting, document: WorkspaceDocument(data: request.data), contentType: .json, defaultFilename: "Taskfold-template") { result in
+            switch result {
+            case .success: dismiss()
+            case .failure(let error): if (error as NSError).code != NSUserCancelledError { message = error.localizedDescription }
+            }
+        }
+    }
+    private func beginExport() {
+        guard store.workflowReady(binding) else { message = store.error; return }
+        exporting = true
+    }
+}
+
+
+private struct ImportedWorkflowTemplate: Identifiable {
+    let id = UUID()
+    let file: WorkflowTemplateFile
+}
+
+private struct TemplateFileReview: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
+    let request: ImportedWorkflowTemplate
+    let binding: WorkspaceBinding?
+    @State private var name = ""
+    @State private var message: String?
+    var body: some View {
+        WorkflowShell(title: "Review template") {
+            if binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true {
+            Form {
+                Section {
+                    TextField("Template name", text: $name).accessibilityIdentifier("importTemplateName")
+                    Text("Only this reusable definition will be added. Start a run later to choose its destination and dates.").font(.callout).foregroundStyle(.secondary)
+                }
+                Section("Workflow preview") {
+                    TemplateDefinitionPreview(document: request.file.template.document, scope: "import")
+                }
+                Section {
+                    Button("Add to templates", action: save)
+                        .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || name.count > 160)
+                        .accessibilityIdentifier("confirmImportTemplate")
+                    Button("Cancel", role: .cancel) { dismiss() }
+                }
+                if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("templateImportError") }
+            }.formStyle(.grouped)
+            } else {
+                ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Reopen templates in your current workspace."))
+            }
+        }.onAppear { name = request.file.name }
+    }
+    private func save() {
+        guard store.workflowReady(binding) else { message = store.error; return }
+        do {
+            let file = try WorkflowTemplateFile(name: name, document: request.file.template.document)
+            let row = Record(["id": .string(request.id.uuidString.lowercased()), "user_id": .string(store.userID), "name": .string(file.name), "document": file.template.document])
+            var saved = false
+            #if os(macOS)
+            workspace.run("Import Template") { saved = store.save(WorkflowTemplate.table, row) }
+            #else
+            saved = store.save(WorkflowTemplate.table, row)
+            #endif
+            if saved { dismiss() } else { message = store.error }
         } catch { message = error.localizedDescription }
     }
 }

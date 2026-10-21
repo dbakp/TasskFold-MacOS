@@ -1,0 +1,31 @@
+# Remaining product backlog
+
+Updated 21 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
+
+## Priority and delivery order
+
+| Rank | Work | Delivery and acceptance |
+| --- | --- | --- |
+| 1 | Portable workflow templates | Versioned files for project, section and task definitions. Native export, bounded import, editable name and full preview before saving a private copy. Never create tasks merely by opening a file. Preserve source work, fresh run identities and relative scheduling. Reject incompatible/malformed files. |
+| 2 | Reviewed share and browser capture | Independent native share extensions, bounded text/URL intake, editable source link and task preview. Persist account-bound drafts before handoff; signing out or changing workspace must not deliver to a different account. Cancel creates no task. Verify Safari and another sharing app, suspended/closed host, offline retry and duplicate handoff. |
+| 3 | Notes, output and view control | Safe rich text with a readable plain-text fallback; coherent native print/PDF layouts; accessible grouping and gestures where genuinely useful. Extend saved-view grammar for descendant projects and parent/child scopes; shared/personal and assigned-by conditions must use real membership and recorded metadata, never guessed authorship. Non-completable headings require a compatible persisted contract before shipping. Preserve the existing typography, spacing and editing flow. Test malformed links, long content, large text and printed pagination. |
+| 4 | Reviewed voice drafts | Device transcription into the existing editable multiline preview, including transcript correction and explicit Apply. Permission refusal/cancellation must preserve the draft. Cloud AI breakdown/filter assistance stays disabled until its provider, cost and data handling are chosen. Generated task/query proposals must validate against the existing schema. |
+| 5 | Advanced reminders and recurrence | Define sub-day scheduling, travel, holiday policy, location and urgent-alert behavior before implementing separate opt-in capabilities. Do not describe ordinary local notifications as urgent/critical delivery. Assigned-recipient delivery depends on authenticated server delivery and stays with the deferred remote-reminder work. |
+| 6 | Automation and advanced teams | Scoped/revocable API credentials, idempotent email intake and webhook retries; separately authorized team roles/folders/admin. Establish sender verification, quotas, recipient permissions and real server fixtures before enabling capture. Independent child-task records and audio comments require explicit migration/storage/access rules. Role enforcement cannot rely only on the new app UI. |
+| 7 | Wearable clients | Start with Apple Watch Today, reviewed capture and durable offline completion using the proven account/task-generation contract. No silent retargeting after reconnect/account changes. Wear OS/Android remain separately owned work; neither Apple repository should absorb their deployment code. |
+
+## Dependencies kept deferred by the user
+
+Server-delivered reminders and device/reinstall recovery, older-client rollout safeguards, distribution signing/install/update verification, and genuine Google/Microsoft OAuth registration/provider acceptance remain deferred. Calendar write/mirroring must wait for genuine provider acceptance plus explicit deletion/retry/loop rules. New role enforcement and incompatible task contracts must resolve the older-client dependency before rollout. This backlog does not reopen those release tasks.
+
+## Current implementation
+
+Rank 1 is implemented independently in both repositories; final iPad Cancel/Save acceptance is pending the Mac being unlocked. Templates has an Import action and an Export action in each saved template's context menu. The file has a strict `taskfold-template` envelope, schema version, name and validated definition. Import reads at most 2.1 MB plus one rejection byte, opens the existing definition preview and saves a new account-owned template only on Add to templates. Provider-backed file reads are coordinated and bounded, and run away from the interface with a cancellable result; leaving the screen or changing workspace invalidates late results. The captured workspace generation is rechecked before save. Repeated runs continue using fresh task/project/generation identities. Cancel discards the review.
+
+Export first opens a contents review, then a native Mac save panel or the iOS save/share menu. Export excludes the template record's account/identity metadata and replaces project, section and nested task references with file-local references. Label names/colors and intentionally authored workflow notes are included; users should review their content before sending the file to someone. Discussions, files, completion and assignments are excluded by the existing definition contract. Unsupported definitions stay saved and cannot be exported as a misleading partial workflow.
+
+Validation is tracked in `p2-template-files-evidence.json`. File import/export uses the system picker; Taskfold does not publish an online sharing link. The chosen file provider controls its storage destination. Rank 1 does not include a public template catalog, online sharing links or registering JSON as the default app file type.
+
+## Quality gates for each rank
+
+Retain independently owned app/resources/extension/tests/build inputs. Use the existing native controls and Store/Workspace durable mutation and Undo paths. Validate malformed input, workspace changes, offline retry, normal relaunch and cancellation using synthetic data. Check phone, tablet and Mac layouts and accessibility where affected. Commit and push completed changes to each corresponding repository; leave exact acceptance limits visible instead of treating compilation as end-user proof.

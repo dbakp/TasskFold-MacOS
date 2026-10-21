@@ -1,0 +1,60 @@
+{
+  "updated": "2026-10-21",
+  "milestone": "Portable workflow template files",
+  "status": "implemented; final current-source native acceptance pending",
+  "isolation": "Synthetic local-mode data in separately namespaced workflowtestsp1 apps; no production tasks or account mutation.",
+  "core": {
+    "ios": {
+      "tests": 48,
+      "failures": 0
+    },
+    "mac": {
+      "tests": 48,
+      "failures": 0
+    },
+    "coverage": [
+      "strict versioned envelope and size limit",
+      "coordinated bounded file reads, large Unicode content and malformed files",
+      "source identity removal, label metadata minimization and deterministic bytes",
+      "relative scheduling, fresh run identities and legacy hierarchy ordering",
+      "minimal portable definition and unsupported repeat-field refusal"
+    ]
+  },
+  "native_mac": {
+    "result": "Passed export, actual file import review, private template persistence, Cancel and normal relaunch.",
+    "cancel_snapshot_equal": true,
+    "export_sha256": "3982256a62f2355c1d7849b3181be8f2907468217bcc298ad99b6bf7f6ed24db",
+    "limit": "Native acceptance preceded the final coordinated-read/chunk-loop change; the final helper is covered by the focused core suite."
+  },
+  "native_iphone": {
+    "result": "Two UI tests passed, zero skips/failures/runtime warnings.",
+    "bundle": "ios-p2-template-files-phone-v10.xcresult",
+    "coverage": [
+      "native save/share menu and dismiss",
+      "import review, Cancel without changes, explicit Save and relaunch"
+    ],
+    "limit": "This accepted run preceded the final JSON picker-session reuse and coordinated-reader changes. Repeat on final source remains pending."
+  },
+  "native_ipad": {
+    "export": "Native save/share menu and cancellation UI test passed in tablet-v3.",
+    "import": "A direct computer-use click selected the actual Mac-exported file and opened the correct complete Design handoff preview.",
+    "pending": [
+      "Cancel with snapshot comparison",
+      "explicit Add to templates with original-work comparison",
+      "normal relaunch persistence",
+      "repeat automation with remote Files screen-coordinate tap"
+    ],
+    "automation_limit": "Files remote-view test taps did not select the visible file; direct computer-use selection did. The latest root-coordinate test patch is not accepted yet.",
+    "environment": "Mac locked with import preview open; awaiting manual unlock, without replacing/restarting the app."
+  },
+  "not_claimed": [
+    "cloud/file-provider end-to-end transfer",
+    "release distribution acceptance",
+    "public template catalog or hosted links"
+  ],
+  "remaining_rank_1_gate": "Finish the pending final-source native checks before marking rank 1 accepted.",
+  "builds": {
+    "ios": "Final-source app, widget extension and UI tests compile successfully (build-for-testing).",
+    "mac": "Final-source app/widget build succeeds; codesign --verify --deep --strict succeeds."
+  }
+}

@@ -12,6 +12,8 @@ The goal is a calm, fast native Mac app: daily actions should take few steps, na
 
 13 October companion diagnostic: separate iPhone identity and an isolated host-entity declaration do not resolve selected-list handoff. Diagnostic code was removed; production widget code remains as committed. See [handoff evidence](widget-selection-handoff-evidence.json).
 
+21 October advanced backlog: the agreed P1 acceptance batch is complete. The remaining work is ranked in [P2_PLAN.md](P2_PLAN.md). Portable template files reuse the existing native library and definition preview; file review saves a private definition without creating tasks. Release/provider deferrals remain in force. Exact validation and limits are recorded with each milestone.
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.

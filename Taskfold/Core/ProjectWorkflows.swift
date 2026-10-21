@@ -1,5 +1,104 @@
 import Foundation
 
+/// A workflow file contains a definition, never an account snapshot or live records.
+struct WorkflowTemplateFile: Sendable {
+    static let maximumBytes = 2_100_000
+    let name: String
+    let template: WorkflowTemplate
+
+    init(name: String, document: JSON) throws {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, name.count <= 160 else { throw AppFailure(message: "Use a template name between 1 and 160 characters.") }
+        self.name = name
+        template = try WorkflowTemplate(document: document)
+        let repeatFields: Set<String> = ["type", "interval", "dayOfMonth", "daysOfMonth", "monthOfYear", "weekday", "weekdayOrdinal", "daysOfWeek", "count", "fromCompletion"]
+        func validateRepeat(_ row: Record) throws {
+            guard Set(row["recurrence_pattern"].object.keys).isSubset(of: repeatFields) else {
+                throw AppFailure(message: "This template has repeat details that this version cannot share. Its saved definition is unchanged.")
+            }
+            for child in row["subtasks"].list { try validateRepeat(Record(child.object)) }
+        }
+        for row in template.tasks { try validateRepeat(row) }
+    }
+
+    init(data: Data) throws {
+        guard data.count <= Self.maximumBytes else { throw AppFailure(message: "Choose a template file no larger than 2.1 MB.") }
+        let value: JSON
+        do { value = try JSONDecoder().decode(JSON.self, from: data) }
+        catch { throw AppFailure(message: "This isn’t a readable Taskfold template file.") }
+        let root = value.object
+        guard Set(root.keys) == ["format", "version", "name", "document"], root["format"] == .string("taskfold-template"), root["version"] == .number(1), case .string? = root["name"] else {
+            throw AppFailure(message: "Choose a supported Taskfold template file. Workspace backups belong in Restore from file.")
+        }
+        try self.init(name: root["name"]!.text, document: root["document"]!)
+    }
+
+    /// Coordinate provider-backed reads; never load an unbounded file into memory.
+    static func read(_ url: URL) throws -> Self {
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        if let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > maximumBytes {
+            throw AppFailure(message: "Choose a template file no larger than 2.1 MB.")
+        }
+        let coordinator = NSFileCoordinator()
+        var coordinationError: NSError?
+        var result: Result<Self, Error>?
+        coordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { readableURL in
+            result = Result {
+                let handle = try FileHandle(forReadingFrom: readableURL)
+                defer { try? handle.close() }
+                var data = Data()
+                while data.count <= maximumBytes {
+                    let count = min(65_536, maximumBytes + 1 - data.count)
+                    guard let chunk = try handle.read(upToCount: count), !chunk.isEmpty else { break }
+                    data.append(chunk)
+                }
+                return try Self(data: data)
+            }
+        }
+        if let coordinationError { throw coordinationError }
+        guard let result else { throw AppFailure(message: "The template file could not be opened. Make sure it is downloaded, then choose it again.") }
+        return try result.get()
+    }
+
+    func encoded() throws -> Data {
+        // Replace source identifiers with file-local references, including nested tasks.
+        let projectIDs = Dictionary(uniqueKeysWithValues: template.projects.map(\.id).sorted().enumerated().map { ($0.element, String(format: "project-%04d", $0.offset + 1)) })
+        let sectionIDs = Dictionary(uniqueKeysWithValues: template.sections.map(\.id).sorted().enumerated().map { ($0.element, String(format: "section-%04d", $0.offset + 1)) })
+        var document = template.document.object
+        document["projects"] = .array(template.projects.map { source in
+            var row = source
+            row["id"] = .string(projectIDs[source.id]!)
+            row["parent_id"] = projectIDs[source.string("parent_id")].map(JSON.string) ?? .null
+            return .object(row.fields)
+        })
+        document["sections"] = .array(template.sections.map { source in
+            var row = source
+            row["id"] = .string(sectionIDs[source.id]!)
+            row["project_id"] = .string(projectIDs[source.string("project_id")]!)
+            return .object(row.fields)
+        })
+        func task(_ source: Record, path: String) -> JSON {
+            var row = source
+            row["id"] = .string(path)
+            row["project_id"] = projectIDs[source.string("project_id")].map(JSON.string) ?? .null
+            row["section_id"] = sectionIDs[source.string("section_id")].map(JSON.string) ?? .null
+            row["labels"] = .array(source["labels"].list.map { label in
+                .object(["name": .string(label.object["name"]!.text), "color": .string(label.object["color"]?.text.isEmpty == false ? label.object["color"]!.text : "#e31e4b")])
+            })
+            row["subtasks"] = .array(source["subtasks"].list.enumerated().map { task(Record($0.element.object), path: path + "-\($0.offset + 1)") })
+            return .object(row.fields)
+        }
+        document["tasks"] = .array(template.tasks.enumerated().map { task($0.element, path: "task-\($0.offset + 1)") })
+        let portable = JSON.object(document)
+        _ = try WorkflowTemplate(document: portable)
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(JSON.object(["format": .string("taskfold-template"), "version": .number(1), "name": .string(name), "document": portable]))
+        guard data.count <= Self.maximumBytes else { throw AppFailure(message: "This template is too large to share as a file.") }
+        return data
+    }
+}
+
 /// Account-compatible project organization. Archive inheritance is computed from the
 /// available graph; the server projection covers an inaccessible shared ancestor.
 enum ProjectOrganization {
@@ -113,7 +212,7 @@ enum MultiLineCapture {
 
 /// Private, versioned, reusable workflow definitions. Source IDs are internal
 /// references only; every use creates new records and task generations.
-struct WorkflowTemplate {
+struct WorkflowTemplate: Sendable {
     enum Kind: String { case project, section, task }
     static let table = "project_templates"
     let document: JSON
