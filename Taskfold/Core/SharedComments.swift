@@ -206,3 +206,194 @@ extension Backend {
         return try SharedMentionReply(data: data, change: change)
     }
 }
+
+/// Separate from task mutations: a blocked conversation never discards or rewrites its authored intent.
+enum ConversationOutbox {
+    static let table = "_conversation_outbox"
+    static let viewsTable = "_conversation_views"
+    static let states: Set<String> = ["pending", "draft", "conflict", "unavailable", "archived", "forbidden", "recipients_changed"]
+    static func rows(_ snapshot: Snapshot, account: String) -> [Record] {
+        (snapshot.tables[table] ?? []).filter { $0.string("account").lowercased() == account.lowercased() }
+    }
+    static func comment(_ row: Record) -> SharedCommentChange? { try? SharedCommentChange(record: Record(row["intent"].object)) }
+    static func mention(_ row: Record) -> SharedMentionChange? { try? SharedMentionChange(record: Record(row["intent"].object)) }
+    static func valid(_ row: Record) -> Bool {
+        guard row["version"] == .number(1), UUID(uuidString: row.id) != nil, states.contains(row.string("state")),
+              TaskPlanning.instant(row.string("created_at")) != nil else { return false }
+        if let value = comment(row) { return row.id == value.operationID && row.string("account") == value.account }
+        if let value = mention(row) { return row.id == value.operationID && row.string("account") == value.account }
+        return false
+    }
+    static func enqueue(_ intent: Record, into snapshot: inout Snapshot, now: Date = Date()) throws {
+        let row = Record(["id": intent["operation_id"], "version": .number(1), "account": intent["account"], "intent": .object(intent.fields), "state": .string("pending"), "created_at": .string(TaskActivity.stamp(now))])
+        guard valid(row) else { throw AppFailure(message: "This conversation change needs a valid account and identity.") }
+        let existing = snapshot.tables[table] ?? []
+        if let previous = existing.first(where: { $0.id == row.id }) {
+            guard previous["intent"] == row["intent"], previous["account"] == row["account"] else { throw AppFailure(message: "This attempt no longer matches its saved change.") }; return
+        }
+        let entity = comment(row)?.commentID ?? mention(row)?.mentionID
+        guard !existing.contains(where: { $0.string("account") == row.string("account") && ($0["intent"].object["kind"] == intent["kind"]) && (comment($0)?.commentID ?? mention($0)?.mentionID) == entity }) else {
+            throw AppFailure(message: "Review the saved change for this conversation first.")
+        }
+        snapshot.tables[table, default: []].append(row)
+    }
+    static func remove(_ id: String, account: String, from snapshot: inout Snapshot) {
+        snapshot.tables[table]?.removeAll { $0.id == id && $0.string("account") == account }
+    }
+    static func setState(_ id: String, account: String, state: String, in snapshot: inout Snapshot) {
+        guard states.contains(state), let i = snapshot.tables[table]?.firstIndex(where: { $0.id == id && $0.string("account") == account }) else { return }
+        snapshot.tables[table]![i]["state"] = .string(state)
+    }
+    static func apply(_ reply: SharedCommentReply, change: SharedCommentChange, to snapshot: inout Snapshot) {
+        guard rows(snapshot, account: change.account).contains(where: { $0.id == change.operationID && comment($0) == change }) else { return }
+        if let current = reply.current { ConversationCache.upsert(current.row, table: SharedComment.table, in: &snapshot) }
+        if reply.status == .saved { remove(change.operationID, account: change.account, from: &snapshot) }
+        else { setState(change.operationID, account: change.account, state: reply.status.rawValue, in: &snapshot) }
+    }
+    static func apply(_ reply: SharedMentionReply, change: SharedMentionChange, to snapshot: inout Snapshot) {
+        guard rows(snapshot, account: change.account).contains(where: { $0.id == change.operationID && mention($0) == change }) else { return }
+        if let current = reply.current { ConversationCache.upsert(current.row, table: SharedMention.table, in: &snapshot) }
+        // Read-state conflicts use the verified newer state; no authored content is discarded.
+        remove(change.operationID, account: change.account, from: &snapshot)
+    }
+}
+
+enum ConversationCache {
+    static func upsert(_ incoming: Record, table: String, in snapshot: inout Snapshot) {
+        guard (table == SharedComment.table && SharedComment(incoming) != nil) || (table == SharedMention.table && SharedMention(incoming) != nil) else { return }
+        let revision = TaskActivity.integer(incoming["revision"]) ?? 0
+        if let i = snapshot.tables[table]?.firstIndex(where: { $0.id.lowercased() == incoming.id.lowercased() }) {
+            let old = snapshot.tables[table]![i], prior = TaskActivity.integer(old["revision"]) ?? 0
+            guard revision >= prior else { return }
+            var row = incoming
+            // Account deletion can clear attribution without incrementing the comment revision.
+            if table == SharedComment.table, revision == prior, old["author_id"] == .null { row["author_id"] = .null }
+            snapshot.tables[table]![i] = row
+        } else { snapshot.tables[table, default: []].append(incoming) }
+    }
+    static func accessible(_ comment: SharedComment, snapshot: Snapshot) -> Record? {
+        guard snapshot.tables["projects"]?.contains(where: { $0.id.lowercased() == comment.projectID }) == true else { return nil }
+        return snapshot.tables["tasks"]?.first { $0.id.lowercased() == comment.taskID && $0.string("task_generation").lowercased() == comment.taskGeneration && $0.string("project_id").lowercased() == comment.projectID }
+    }
+    static func prune(_ snapshot: inout Snapshot) {
+        guard snapshot.tables[SharedComment.table] != nil || snapshot.tables[SharedMention.table] != nil else { return }
+        let priorMentions = snapshot.tables[SharedMention.table]?.count ?? 0
+        let before = snapshot.tables[SharedComment.table] ?? []
+        snapshot.tables[SharedComment.table] = before.filter { row in
+            guard let value = SharedComment(row) else { return true } // Unsupported cache records remain recoverable, never rendered.
+            return accessible(value, snapshot: snapshot) != nil
+        }
+        let ids = Set((snapshot.tables[SharedComment.table] ?? []).compactMap { SharedComment($0) }.filter { !$0.isDeleted }.map(\.id))
+        snapshot.tables[SharedMention.table]?.removeAll { row in
+            guard let mention = SharedMention(row) else { return false }
+            return !ids.contains(mention.commentID)
+        }
+        if before.count != (snapshot.tables[SharedComment.table]?.count ?? 0) || priorMentions != (snapshot.tables[SharedMention.table]?.count ?? 0) {
+            snapshot.tables[ConversationOutbox.viewsTable]?.removeAll { $0.id.hasPrefix("inbox") || $0.id == "summary" }
+        }
+    }
+}
+
+/// Restore as historical task content only. Never insert authenticated rows, replay receipts or send mentions.
+enum ConversationArchive {
+    static func comments(task: Record, tables: [String: [Record]]) -> [JSON] {
+        var values = task["comments"].list
+        var ids = Set(values.compactMap { $0.object["id"]?.text })
+        func append(_ fields: [String: JSON], archiveKey: String) {
+            guard !values.contains(where: { $0.object[archiveKey] == fields[archiveKey] }) else { return }
+            var fields = fields; let base = fields["id"]!.text; var id = base; var suffix = 1
+            while !ids.insert(id).inserted { id = base + "-" + String(suffix); suffix += 1 }
+            fields["id"] = .string(id); values.append(.object(fields))
+        }
+        for row in tables[SharedComment.table] ?? [] {
+            guard let comment = SharedComment(row), !comment.isDeleted, comment.taskID == task.id.lowercased(),
+                  comment.taskGeneration == task.string("task_generation").lowercased(), comment.projectID == task.string("project_id").lowercased() else { continue }
+            let id = "shared-archive-" + comment.id
+            append(["id": .string(id), "text": .string(comment.body), "authorName": .string("Archived shared comment"),
+                "authorId": comment.authorID.map(JSON.string) ?? .null, "createdAt": row["created_at"], "sharedCommentArchive": .object(row.fields)], archiveKey: "sharedCommentArchive")
+        }
+        for row in tables[ConversationOutbox.table] ?? [] {
+            guard let change = ConversationOutbox.comment(row), !change.deleting, change.taskID == task.id.lowercased(),
+                  change.taskGeneration == task.string("task_generation").lowercased(), change.projectID == task.string("project_id").lowercased() else { continue }
+            let id = "unsent-archive-" + change.operationID
+            append(["id": .string(id), "text": .string(change.body), "authorName": .string("Unsent comment draft"),
+                "createdAt": row["created_at"], "sharedDraftArchive": row["intent"]], archiveKey: "sharedDraftArchive")
+        }
+        return values
+    }
+}
+
+struct ConversationCursor: Equatable, Sendable {
+    let createdAt: String
+    let id: String
+    init?(_ row: Record) {
+        guard TaskPlanning.instant(row.string("created_at")) != nil, let id = SharedWire.id(row["id"]) else { return nil }
+        createdAt = row.string("created_at"); self.id = id
+    }
+    var document: JSON { .object(["id": .string(id), "created_at": .string(createdAt)]) }
+}
+struct ConversationPage: Sendable {
+    let rows: [Record]
+    let cursor: ConversationCursor?
+    var hasMore: Bool { rows.count == 50 }
+}
+extension Backend {
+    private func conversationPath(_ table: String, filters: [URLQueryItem], cursor: ConversationCursor? = nil) -> String {
+        var parts = URLComponents(); parts.path = "/rest/v1/" + table
+        parts.queryItems = [URLQueryItem(name: "select", value: "*"), URLQueryItem(name: "order", value: "created_at.desc,id.desc"), URLQueryItem(name: "limit", value: "50")] + filters
+        if let cursor {
+            parts.queryItems?.append(URLQueryItem(name: "or", value: "(created_at.lt.\(cursor.createdAt),and(created_at.eq.\(cursor.createdAt),id.lt.\(cursor.id)))"))
+        }
+        return parts.path + "?" + (parts.percentEncodedQuery ?? "").replacingOccurrences(of: "+", with: "%2B")
+    }
+    func sharedCommentsPage(task: Record, account: String, cursor: ConversationCursor? = nil) async throws -> ConversationPage {
+        guard session?.user.id == account else { throw CancellationError() }
+        guard let taskID = SharedWire.id(task["id"]), let generation = SharedWire.id(task["task_generation"]), let project = SharedWire.id(task["project_id"]) else { throw SharedWire.invalidChange }
+        let path = conversationPath(SharedComment.table, filters: [URLQueryItem(name: "task_id", value: "eq." + taskID), URLQueryItem(name: "task_generation", value: "eq." + generation), URLQueryItem(name: "project_id", value: "eq." + project)], cursor: cursor)
+        let data = try await request(path, expectedAccount: account)
+        let rows = try JSONDecoder().decode([Record].self, from: data)
+        guard rows.count <= 50, Set(rows.map(\.id)).count == rows.count, rows.allSatisfy({ row in
+            guard let value = SharedComment(row) else { return false }; return value.taskID == taskID && value.taskGeneration == generation && value.projectID == project
+        }) else { throw SharedWire.invalidReply }
+        let next = rows.last.flatMap(ConversationCursor.init); guard next == nil || next != cursor else { throw SharedWire.invalidReply }
+        return ConversationPage(rows: rows, cursor: next)
+    }
+    func sharedMentionsPage(account: String, cursor: ConversationCursor? = nil, unreadOnly: Bool = false) async throws -> ConversationPage {
+        guard session?.user.id == account else { throw CancellationError() }
+        guard UUID(uuidString: account) != nil else { throw SharedWire.invalidChange }
+        var filters = [URLQueryItem(name: "recipient_id", value: "eq." + account)]
+        if unreadOnly { filters.append(URLQueryItem(name: "read_at", value: "is.null")) }
+        let data = try await request(conversationPath(SharedMention.table, filters: filters, cursor: cursor), expectedAccount: account)
+        let rows = try JSONDecoder().decode([Record].self, from: data)
+        guard rows.count <= 50, Set(rows.map(\.id)).count == rows.count, rows.allSatisfy({ row in SharedMention(row).map { $0.recipientID == account && (!unreadOnly || !$0.isRead) } == true }) else { throw SharedWire.invalidReply }
+        let next = rows.last.flatMap(ConversationCursor.init); guard next == nil || next != cursor else { throw SharedWire.invalidReply }
+        return ConversationPage(rows: rows, cursor: next)
+    }
+    func sharedComments(ids: [String], account: String) async throws -> [Record] {
+        guard session?.user.id == account else { throw CancellationError() }
+        guard ids.count <= 50, ids.allSatisfy({ UUID(uuidString: $0) != nil }) else { throw SharedWire.invalidChange }
+        if ids.isEmpty { return [] }
+        let path = "/rest/v1/task_comments?select=*&id=in.(" + Set(ids.map { $0.lowercased() }).sorted().joined(separator: ",") + ")&limit=50"
+        let data = try await request(path, expectedAccount: account), rows = try JSONDecoder().decode([Record].self, from: data)
+        let requested = Set(ids.map { $0.lowercased() })
+        guard rows.count <= 50, Set(rows.map(\.id)).count == rows.count, rows.allSatisfy({ SharedComment($0).map { requested.contains($0.id) } == true }) else { throw SharedWire.invalidReply }
+        return rows
+    }
+}
+
+struct ConversationSummary: Equatable, Sendable {
+    let total: Int
+    let unread: Int
+    init(_ row: Record) throws {
+        guard let total = TaskActivity.integer(row["total"]), let unread = TaskActivity.integer(row["unread"]), unread <= total,
+              let count = Int(exactly: total), let pending = Int(exactly: unread) else { throw SharedWire.invalidReply }
+        self.total = count; self.unread = pending
+    }
+}
+extension Backend {
+    func sharedMentionsSummary(account: String) async throws -> ConversationSummary {
+        guard session?.user.id == account else { throw CancellationError() }
+        let data = try await request("/rest/v1/rpc/taskfold_mentions_summary", method: "POST", body: [:], expectedAccount: account)
+        return try ConversationSummary(SharedWire.reply(data))
+    }
+}

@@ -28,7 +28,7 @@ struct WorkspaceBackup: Codable, Sendable {
             return row
         }
         return Self(id: UUID().uuidString.lowercased(), createdAt: ISO8601DateFormatter().string(from: now), sourceAccount: account,
-                    tables: tables, unsyncedChanges: snapshot.pending.count)
+                    tables: tables, unsyncedChanges: snapshot.pending.count + ConversationOutbox.rows(snapshot, account: account).count)
     }
     func data() throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -89,11 +89,19 @@ struct WorkspaceBackup: Codable, Sendable {
         guard tables.values.reduce(0, { $0 + $1.count }) <= 50000 else { throw BackupFailure(message: "This backup exceeds the 50,000-record limit.") }
         for (table, rows) in tables {
             let activity = table == TaskActivity.table || table == TaskActivity.epochTable
-            let metadata = activity || table == "profiles" || table == "project_collaborators" || table.hasPrefix("project_members:") || table == "_local_day_order"
+            let conversation = [SharedComment.table, SharedMention.table, ConversationOutbox.table, ConversationOutbox.viewsTable].contains(table)
+            let metadata = conversation || activity || table == "profiles" || table == "project_collaborators" || table.hasPrefix("project_members:") || table == "_local_day_order"
             guard Self.workTables.contains(table) || metadata else { throw BackupFailure(message: "This backup includes the unsupported table “\(table)”. Update Taskfold before restoring it.") }
             var ids = Set<String>()
             for row in rows {
                 try Self.checkJSON(.object(row.fields), depth: 0)
+                if conversation {
+                    guard ids.insert(row.id).inserted else { throw BackupFailure(message: "The conversation archive has a duplicate identity.") }
+                    if table == SharedComment.table, SharedComment(row) == nil { throw BackupFailure(message: "A shared comment archive needs a supported format.") }
+                    if table == SharedMention.table, SharedMention(row) == nil { throw BackupFailure(message: "A mention archive needs a supported format.") }
+                    if table == ConversationOutbox.table, !ConversationOutbox.valid(row) { throw BackupFailure(message: "A saved comment draft needs a newer app or repair before transfer.") }
+                    continue
+                }
                 if activity {
                     guard ids.insert(UUID(uuidString: row.id)?.uuidString.lowercased() ?? row.id).inserted else { throw BackupFailure(message: "The activity archive contains a duplicate ID.") }
                     if table == TaskActivity.table {
@@ -383,6 +391,8 @@ extension WorkspaceBackup {
                 if ["sections","tasks"].contains(table) && !original.string("project_id").isEmpty { row["project_id"] = .string(try mapped("projects", original.string("project_id"), required: true)) }
                 if table == "sections", row.string("project_id").isEmpty { throw BackupFailure(message: "A section has no project.") }
                 if table == "tasks" {
+                    let archivedComments = ConversationArchive.comments(task: original, tables: tables)
+                    if archivedComments != original["comments"].list { row["comments"] = .array(archivedComments) }
                     row["completion_version"] = .number(0)
                     if !original.string("section_id").isEmpty {
                         let section = try mapped("sections", original.string("section_id"), required: true)
@@ -448,6 +458,9 @@ extension WorkspaceBackup {
         if promotedSharedProjects > 0 { result.warnings.append("\(promotedSharedProjects) shared subprojects have an unavailable parent. Their copies become top-level projects and retain their archived state.") }
         if clearedAssignments > 0 { result.warnings.append("\(clearedAssignments) assignments will be cleared because those people are not current members of the restored projects.") }
         if missingFilterTargets > 0 { result.warnings.append("Some saved filter targets are unavailable. Those filters will request repair rather than match unrelated work.") }
+        if tables[SharedComment.table]?.isEmpty == false || tables[ConversationOutbox.table]?.isEmpty == false {
+            result.warnings.append("Shared conversations and unsent comment text are restored as historical task comments. Authorship is not reverified, and mentions, read state and the sending queue are never replayed.")
+        }
         if tables[TaskActivity.table]?.isEmpty == false { result.warnings.append("Recorded activity is retained in this file as an archive. It is not replayed as new history; restored task copies start their own activity.") }
         if tables.keys.contains(where: { $0 == "project_collaborators" || $0.hasPrefix("project_members:") }) { result.warnings.append("Collaborators and invitations are not recreated. Restored project copies belong to you.") }
         result.warnings.append("Existing work outside this backup is kept. Sign-in, profile identity and device calendar permissions are not changed.")

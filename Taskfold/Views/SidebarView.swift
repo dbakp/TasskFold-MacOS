@@ -2,6 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct SidebarView: View {
+    @Environment(\.openMentions) private var openMentions
     @Environment(\.openInsights) private var openInsights
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
@@ -39,6 +40,7 @@ struct SidebarView: View {
                 item(.all, "All Tasks", count: open.count)
                 item(.assigned, "Assigned to Me", count: workspace.assignedTasks.filter { !$0.completed }.count)
                 item(.completed, "Completed", count: nil)
+                Button { openMentions() } label: { HStack { Label("Mentions", systemImage: "at"); Spacer(); if let count = store.mentionUnreadCount, count > 0 { Text("\(count)").foregroundStyle(.secondary) } } }.accessibilityIdentifier("openMentions")
                 Button("Insights",systemImage:"chart.xyaxis.line") { openInsights() }.accessibilityIdentifier("openInsights")
                 Button("Templates", systemImage: "square.stack.3d.up") { templatesPresented = true }.accessibilityIdentifier("openTemplates")
                 Button("Add Multiple Tasks…", systemImage: "text.badge.plus") { multiLinePresented = true }.accessibilityIdentifier("openMultiLineCapture")

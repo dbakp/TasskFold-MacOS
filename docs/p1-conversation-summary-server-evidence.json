@@ -1,0 +1,104 @@
+{
+  "date": "2026-10-21",
+  "migration": "20261021023452_conversation_inbox_summary.sql",
+  "project": "TaskFold",
+  "projectRef": "zqxflydiyfjeedqvyova",
+  "summary": {
+    "securityInvoker": true,
+    "fixedEmptySearchPath": true,
+    "anonymousExecute": false,
+    "authenticatedExecute": true,
+    "recipientRLS": true,
+    "exactTotalAndUnread": true
+  },
+  "realtime": {
+    "published": [
+      "task_comments",
+      "task_mentions"
+    ],
+    "purpose": "In-app refresh only; APNs remains unchanged"
+  },
+  "actualRoleFixture": {
+    "path": "supabase/tests/conversation_inbox_summary.sql",
+    "passedBeforeAndAfterDeployment": true,
+    "checks": [
+      "Sender cannot count another inbox",
+      "Recipient unread/read counts",
+      "Outsider zero",
+      "Departed member zero",
+      "Missing UID denied",
+      "Anonymous execute denied"
+    ],
+    "rollback": true
+  },
+  "cleanup": {
+    "liveDisposableAccountsRemoved": 2,
+    "usersRemaining": 0,
+    "sessionsRemaining": 0,
+    "refreshTokensRemaining": 0,
+    "commentsRemaining": 0,
+    "mentionsRemaining": 0,
+    "localCredentialFileRemoved": true,
+    "projectsRemaining": 0,
+    "tasksRemaining": 0,
+    "collaboratorsRemaining": 0,
+    "operationReceiptsRemaining": 0
+  },
+  "notes": [
+    "Security categories/counts unchanged from the preceding shared-comment deployment.",
+    "Performance unused-index observations change from 6 to 7. Current observations include the new unread index and the comment project index; retain these for recipient lookup and project/FK maintenance. Advisor observations are usage-dependent.",
+    "Existing advisor findings remain; this is not a zero-finding claim."
+  ],
+  "remediation": [
+    "https://supabase.com/docs/guides/database/database-linter?lint=0027_pg_graphql_authenticated_table_exposed",
+    "https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index"
+  ],
+  "security": [
+    {
+      "name": "extension_in_public",
+      "count": 1
+    },
+    {
+      "name": "pg_graphql_anon_table_exposed",
+      "count": 6
+    },
+    {
+      "name": "pg_graphql_authenticated_table_exposed",
+      "count": 19
+    },
+    {
+      "name": "anon_security_definer_function_executable",
+      "count": 8
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "count": 9
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "count": 1
+    }
+  ],
+  "performance": [
+    {
+      "name": "unindexed_foreign_keys",
+      "count": 4
+    },
+    {
+      "name": "auth_rls_initplan",
+      "count": 14
+    },
+    {
+      "name": "unused_index",
+      "count": 7
+    },
+    {
+      "name": "table_bloat",
+      "count": 1
+    },
+    {
+      "name": "auth_db_connections_absolute",
+      "count": 1
+    }
+  ]
+}

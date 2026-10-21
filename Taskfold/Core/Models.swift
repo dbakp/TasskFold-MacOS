@@ -440,6 +440,7 @@ struct Snapshot: Codable, Equatable, Sendable {
     mutating func mergeRemote(_ remote: [String: [Record]]) {
         tables.merge(remote) { _, new in new }
         for change in pending { apply(change) }
+        ConversationCache.prune(&self)
     }
 }
 

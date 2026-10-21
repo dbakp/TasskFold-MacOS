@@ -72,6 +72,7 @@ struct TaskInspectorForm: View {
     @State private var workspaceBinding: WorkspaceBinding?
     @State private var subtask = ""
     @State private var comment = ""
+    @State private var conversation: ConversationRequest?
     @State private var pastedImageName: String?
     @State private var importing = false
     @State private var preview: URL?
@@ -289,6 +290,11 @@ struct TaskInspectorForm: View {
                 }
                 Button("Attach a File…", systemImage: "doc.badge.plus") { importing = true }
             }
+            if Workspace.subtaskPath(taskID) == nil, store.conversationsAvailable, let saved = current, !saved.string("project_id").isEmpty {
+                Section { Button("Shared conversation", systemImage: "bubble.left.and.bubble.right") { conversation = ConversationRequest(task: saved, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) }.accessibilityIdentifier("openSharedConversation")
+                    Text("Share comments and mention teammates here. Earlier task comments stay below.").font(.caption).foregroundStyle(.secondary)
+                }
+            }
             Section("Comments") {
                 ForEach(Array(draft["comments"].list.enumerated()), id: \.offset) { index, value in
                     let row = Record(value.object)
@@ -352,6 +358,7 @@ struct TaskInspectorForm: View {
         .task(id: suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) { _ = try? await store.refreshProjectMembers(suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .onChange(of: titleChipFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
+        .sheet(item: $conversation) { SharedConversationView(request: $0) }
         .sheet(isPresented: $showingReminders) {
             NavigationStack {
                 TaskReminderEditor(task: $draft).onAppear { draft = store.applyingReminderDefault(draft, previous: original) }

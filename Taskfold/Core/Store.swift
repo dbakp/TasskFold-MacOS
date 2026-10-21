@@ -171,8 +171,15 @@ final class Store {
     var undoStack: [EditHistory] = []
     var redoStack: [EditHistory] = []
     let backend: Backend
+    var conversationSyncID: UUID?
+    var conversationSyncGeneration: UUID?
+    var conversationError: String?
+    var conversationPageTokens: [String: UUID] = [:]
+    #if DEBUG
+    var conversationFixtureRevision = 0
+    #endif
     private let monitor = NWPathMonitor()
-    private var accountGeneration = UUID()
+    private var accountGeneration = UUID() { didSet { conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
     @ObservationIgnored private var consumingWidgetActions = false
     @ObservationIgnored private var widgetCalendarWindow: CalendarCapacityWindow?
     @ObservationIgnored private var widgetCalendarRevision = -1
@@ -247,6 +254,7 @@ final class Store {
     var userID: String {
         if localMode {
             #if DEBUG
+            if ConversationFixture.enabled { return ConversationFixture.owner }
             if ProcessInfo.processInfo.arguments.contains("--uitesting") { return "ui-testing" }
             if ProcessInfo.processInfo.arguments.contains("--preview") { return "preview" }
             #endif
@@ -446,7 +454,7 @@ final class Store {
     private(set) var googleAvatarURL: URL?
     private var avatarMetadataLoaded = false
     var avatarURL: URL? { localMode ? nil : ProfileAvatar.resolved(uploaded: profile.string("avatar_url"), google: googleAvatarURL) }
-    var pendingCount: Int { snapshot.pending.count }
+    var pendingCount: Int { snapshot.pending.count + ConversationOutbox.rows(snapshot, account: userID).filter { $0.string("state") != "draft" }.count }
     var cacheURL: URL {
         let folder = URL.applicationSupportDirectory.appending(path: "Taskfold", directoryHint: .isDirectory)
         return folder.appending(path: "\(userID.isEmpty ? "signed-out" : userID).json")
@@ -739,7 +747,7 @@ final class Store {
         }
         #endif
         guard changes.filter(ProductivityGoalEdit.matches).allSatisfy({ProductivityGoalEdit.valid($0,account:userID)}) else { error="These goals need a supported choice and current workspace.";return false }
-        guard changes.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable }) else { error = "Activity history is read-only."; return false }
+        guard changes.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable && $0.table != SharedComment.table && $0.table != SharedMention.table && !$0.table.hasPrefix("_conversation_") }) else { error = "Activity history is read-only."; return false }
         guard changes.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
             error = "This Focus command needs a valid workspace and revision."; return false
         }
@@ -963,7 +971,8 @@ final class Store {
     }
     func sync() async {
         consumeWidgetCompletions()
-        guard signedIn, !localMode, online, !syncing, syncConflict == nil, focusSyncConflict == nil else { return }
+        guard signedIn, !localMode, online, !syncing else { return }
+        if syncConflict != nil || focusSyncConflict != nil { await syncConversations(); return }
         syncing = true; let generation = accountGeneration, account = userID
         var sending: Mutation?
         defer { syncing = false }
@@ -980,6 +989,7 @@ final class Store {
                 guard generation == accountGeneration else { return }
             }
             snapshot.mergeRemote(remote); try persist(); lastSync = Date(); migrateOrganization()
+            await syncConversations()
             if !avatarMetadataLoaded {
                 do { try await backend.refreshUser(); if generation == accountGeneration { avatarMetadataLoaded = true } }
                 catch { /* Optional avatar refresh must not interrupt task synchronization. */ }

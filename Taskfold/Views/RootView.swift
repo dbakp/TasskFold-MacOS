@@ -9,6 +9,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var phase
     @State private var pinnedNote: PinnedNoteRequest?
     @State private var pulseRequest: ProjectPulseRequest?
+    @State private var mentionsRequest: MentionsRequest?
     @State private var insightsRequest:InsightsRequest?
     @State private var focusRequest: FocusSessionRequest?
     @State private var inboxReview: InboxReviewRequest?
@@ -42,6 +43,11 @@ struct RootView: View {
         .environment(\.openFocusSession, { focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .environment(\.openInsights,{insightsRequest=InsightsRequest(workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))})
         .sheet(item:$insightsRequest) { InsightsView(request:$0) }
+        .environment(\.openMentions, { mentionsRequest = MentionsRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
+        .sheet(item: $mentionsRequest) { request in MentionsInboxView(request: request) { task in
+            guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), let current = store.record("tasks", id: task.id), current.string("task_generation") == task.string("task_generation"), current.string("project_id") == task.string("project_id") else { return }
+            mentionsRequest = nil; workspace.openFromFinder(current.id)
+        } }
         .environment(\.openProjectPulse, { project in pulseRequest = ProjectPulseRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), projectID: project) })
         .sheet(item: $pulseRequest) { request in ProjectPulseView(request: request) { task in
             guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), store.record("tasks", id: task.id) != nil else { return }
@@ -59,7 +65,7 @@ struct RootView: View {
         .sheet(item: $inboxReview) { InboxReviewView(request: $0) }
         .onChange(of: store.workspaceGeneration) { _, _ in
             workspace.clearNavigationMemory(); workspace.section = .today
-            inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil; insightsRequest = nil
+            inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil; insightsRequest = nil; mentionsRequest = nil
         }
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
             BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.ids.sorted().compactMap { workspace.taskRecord($0) } : []) { day in
@@ -240,6 +246,7 @@ struct RootView: View {
                 try? store.persist()
             }
         }
+        if ConversationFixture.enabled { store.startLocal(); store.seedConversationFixture(); workspace.section = .inbox }
         if arguments.contains("--uitesting") && arguments.contains("--workflow-fixture") { store.startLocal(); store.seedWorkflowFixture(); workspace.section = .inbox }
         if arguments.contains("--uitesting") && arguments.contains("--workflow-diagnostics") { try? store.persist() }
         if arguments.contains("--uitesting") && arguments.contains("--quick-entry-fixture") {

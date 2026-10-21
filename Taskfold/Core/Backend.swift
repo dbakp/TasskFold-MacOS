@@ -576,7 +576,7 @@ extension Backend {
         let socket = URLSession.shared.webSocketTask(with: components.url!)
         socket.resume()
         defer { socket.cancel(with: .goingAway, reason: nil) }
-        let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions"].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
+        let subscriptions: [JSON] = ["tasks", "projects", "sections", "labels", "project_collaborators", "profiles", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions", SharedComment.table, SharedMention.table].map { .object(["event": .string("*"), "schema": .string("public"), "table": .string($0)]) }
         let join: [String: JSON] = ["topic": .string("realtime:taskfold-ios"), "event": .string("phx_join"), "ref": .string("1"), "join_ref": .string("1"), "payload": .object(["access_token": .string(session.access_token), "config": .object(["postgres_changes": .array(subscriptions)])])]
         try await socket.send(.string(String(decoding: JSONEncoder().encode(join), as: UTF8.self)))
         let heartbeat = Task { @MainActor in
