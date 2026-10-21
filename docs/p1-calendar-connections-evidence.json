@@ -350,7 +350,7 @@
   "remaining": [
     "Register/configure Google and Microsoft native clients",
     "Genuine consent, token refresh/revocation and account replacement acceptance",
-    "Physical-device and Mac credential persistence/recovery acceptance",
+    "Genuine provider-backed credential persistence/recovery in the isolated Simulators and Mac app",
     "Native Mac walkthrough, pending unlock"
   ],
   "deferredUnchanged": [

@@ -128,6 +128,10 @@ private struct ConversationComposer: View {
     @State private var loaded = false
     @State private var discard = false
     private var existing: SharedCommentChange? { request.saved.flatMap(ConversationOutbox.comment) }
+    private var initialBody: String { existing?.body ?? request.baseline?.body ?? "" }
+    private var initialPeople: Set<String> { Set(existing?.mentionIDs ?? request.baseline?.mentionIDs ?? []) }
+    private var hasChanges: Bool { loaded && (bodyText != initialBody || people != initialPeople) }
+    private var draftValid: Bool { !bodyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && bodyText.utf8.count <= 16000 }
     private var members: [Record] { store.projectMembers(request.target.project).filter { UUID(uuidString: $0.id) != nil && $0.id != store.userID } }
     private var unavailablePeople: Set<String> { people.subtracting(Set(members.map(\.id))) }
     private var valid: Bool { store.conversationWritable(taskID: request.target.taskID, generation: request.target.generation, project: request.target.project) && !bodyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && bodyText.utf8.count <= 16000 && unavailablePeople.isEmpty }
@@ -149,23 +153,23 @@ private struct ConversationComposer: View {
                     if members.isEmpty { Text("Invite a teammate from the project’s sharing controls to mention someone.").foregroundStyle(.secondary) }
                 } header: { Text("Mention people") } footer: { Text("Selected people will see this in Mentions. Typing a name alone does not send a mention.") }
                 if let error = store.conversationError { Section { Text(error).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) } }
-                Button("Save draft on this device") { save(draft: true) }.disabled(bodyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || bodyText.utf8.count > 16000).accessibilityIdentifier("conversationSaveDraft")
+                Button("Save draft on this device") { save(draft: true) }.disabled(!draftValid).accessibilityIdentifier("conversationSaveDraft")
             }.formStyle(.grouped).navigationTitle(request.baseline == nil ? "New comment" : "Edit comment")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { if bodyText.isEmpty { dismiss() } else { discard = true } }.accessibilityIdentifier("conversationCancel") }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { if hasChanges { discard = true } else { dismiss() } }.accessibilityIdentifier("conversationCancel") }
                 ToolbarItem(placement: .confirmationAction) { Button("Send") { save(draft: false) }.disabled(!valid || !active).accessibilityIdentifier("conversationSend") }
             }
             .task {
                 guard !loaded else { return }; loaded = true
-                bodyText = existing?.body ?? request.baseline?.body ?? ""; people = Set(existing?.mentionIDs ?? request.baseline?.mentionIDs ?? [])
+                bodyText = initialBody; people = initialPeople
                 if !store.localMode { _ = try? await store.refreshProjectMembers(request.target.project) }
             }
-            .interactiveDismissDisabled(!bodyText.isEmpty)
+            .interactiveDismissDisabled(hasChanges)
             .confirmationDialog("Keep this comment as a draft?", isPresented: $discard, titleVisibility: .visible) {
-                Button("Save draft") { save(draft: true) }
+                Button("Save draft") { save(draft: true) }.disabled(!draftValid)
                 Button("Discard edits", role: .destructive) { dismiss() }
                 Button("Keep editing", role: .cancel) {}
             }
@@ -202,6 +206,11 @@ private struct ConversationOutboxSection: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(label(row)).font(.subheadline.weight(.medium))
                         if let change = ConversationOutbox.comment(row), !change.deleting { Text(change.body).lineLimit(4).textSelection(.enabled).fixedSize(horizontal: false, vertical: true) }
+                        if let change = ConversationOutbox.mention(row) {
+                            Text(change.read ? "Mark mention as read" : "Mark mention as unread").font(.callout).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("conversationSavedIntent-" + row.id)
+                        } else if ConversationOutbox.comment(row)?.deleting == true {
+                            Text("Remove shared comment").font(.callout).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("conversationSavedIntent-" + row.id)
+                        }
                         ViewThatFits(in: .horizontal) {
                             HStack(spacing: 16) { savedActions(row) }.fixedSize(horizontal: true, vertical: false)
                             VStack(alignment: .leading, spacing: 8) { savedActions(row) }

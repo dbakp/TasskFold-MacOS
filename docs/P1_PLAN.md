@@ -16,6 +16,16 @@ Current status: rank 1 is delivered; ranks 2–5 are implemented with phone/tabl
 
 Already delivered: archive/restore, owner-safe subprojects, first-version private templates, reviewed multi-line capture, native assignment/member controls, guarded collection edits and the Project pulse history foundation. These are not new implementation backlog entries.
 
+
+## Current remaining acceptance
+
+The checkpoint notes below are chronological. Their “next” and “pending” wording describes that phase; this list and the current-status paragraph above determine what remains now.
+
+- **Native Mac walkthroughs:** saved templates, installed widget ordering, Insights/goals, monthly date sets, calendar settings/timeline, project activity and conversations/Mentions. The current app/widget builds and signs, but computer use still reports the Mac locked. Build/core/HTTP evidence does not prove these interactions.
+- **Genuine Google/Microsoft calendar acceptance:** both current app builds have blank provider client IDs. Native registrations and matching callbacks are needed before testing consent, real refresh/revocation, account replacement, and provider-backed Keychain persistence/disconnect. Synthetic SDK, synthetic Keychain and calendar UI checks prove only their recorded cases.
+
+Use isolated iPhone/iPad Simulators for mobile P1 testing, as requested by the user. Genuine provider sign-in and credential lifecycle checks can run there once registrations are configured. Physical-device installation/update/reinstall acceptance remains with the explicitly deferred distribution work; it is not an extra prerequisite for these Simulator P1 checks. Nothing here closes remote reminders, older-client rollout or distribution verification.
+
 ## First implementation: subtask organizer
 
 Status: **Rank 1 is delivered for the embedded checklist model:** nested organization and child-detail editing (including notes and planning fields) are implemented in both apps. Representative native phone/tablet/Mac checks and both owned core suites pass. The organizer’s prior live transport acceptance remains recorded separately. **Rank 2 template management and rank 3 widget ordering are tracked below, with native acceptance limits stated explicitly.**
@@ -200,3 +210,6 @@ Native phone/tablet acceptance passes in eight actual UI cases (four per device)
 Conversation reproduction: each repository runs its own `SharedCommentsTests` core cases. `ConversationTransportIntegrationTests` opts in only through `TASKFOLD_CONVERSATION_LIVE_FIXTURE`, a private JSON file with `url`, public `key`, and two `accounts` entries (`userID`, `emailIdentity`, `email`, `password`). It refuses non-synthetic `taskfold-continuity-<emailIdentity>@example.invalid` accounts and any other project URL. Provision fresh disposable confirmed accounts; never use real accounts or commit that file. The test creates and removes its own project/tasks and their shared rows. Revoke all test sessions, remove the disposable accounts and delete the credential file afterward.
 
 For native screens, prepare each owned isolated workflow-test app; the fixture additionally requires a `.workflowtests` bundle ID and `--uitesting --conversation-testing`. Use `--conversation-seed --conversation-offline` for initial offline capture; normal relaunch keeps the testing arguments but omits the seed. `--conversation-conflict-seed` adds only a synthetic authored conflict. Run the four `testMentionOpensCurrentTaskEditor` / `testSharedConversation…` cases sequentially on phone and tablet; do not share Simulator input between simultaneous runs. The standalone screen fixture is intentionally distinct from the genuine HTTP fixture.
+
+
+Conversation polish follow-up: an untouched existing comment or saved draft now closes directly; actual body/recipient edits retain the keep/discard/save confirmation. Unsavable blank/oversized text disables Save draft there. Queued read-state and removal operations name their intended action. Two additional native cases pass on each phone/tablet Simulator, with zero skips, failures or Xcode-recorded runtime warnings. Both exact saved states retain the task and original comment author, the acknowledged removal at revision two, and zero mentions/pending operations. Core/transport/schema are unchanged; earlier acceptance remains scoped to its original runs. See `p1-conversation-polish-evidence.json`. Mac interaction and genuine calendar acceptance remain unverified for the reasons in Current remaining acceptance.
