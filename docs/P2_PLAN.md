@@ -152,3 +152,8 @@ Elapsed repeating reminders are the first rank-5 capability: a fixed anchor plus
 ### Interval reminders connected to native editing and local scheduling
 
 The independently owned interval model now connects to a version-3 local-only reminder spec, native interval/count/end controls and upcoming-alert preview, durable task/backup/queue paths, per-occurrence notification identity and exact response validation. The previous committed readers are compiled to prove opaque preservation without a substitute alert. Repeating task successors retain the original anchor/count; completing the original task cannot retarget its notifications. Current server compatibility inspection was read-only and remote delivery stays disabled/deferred. `ADVANCED_REMINDERS.md` describes the contract; `p2-interval-reminders-evidence.json` separates native acceptance, Core checks and remaining Mac/OS-action/lifecycle gates. This supersedes the foundation-only implementation status above; rank 5 remains incomplete.
+
+
+### Saved reminder time zones and travel clarity
+
+Calendar reminders now have a native searchable time-zone choice and up-to-five source/device clock previews. An explicit zone change preserves the authored civil day/clock/rule/limits while moving alert instants; preview and Cancel do not mutate data or task planning. A skipped civil date is refused. Existing version-2 data and notification signatures remain in use; no server migration or provider permission is needed. `REMINDER_TIME_ZONES.md` and `p2-reminder-time-zones-evidence.json` record exact checks and remaining Mac/live-OS-zone/cloud/accessibility gates. Floating device clocks and holiday/location/urgent behavior remain separate unfinished work.

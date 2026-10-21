@@ -368,6 +368,73 @@ struct ReminderCalendarSchedule: Equatable, Sendable {
     var raw: [String: JSON] { ["start_day": .string(startDay), "time": .string(time), "time_zone": .string(timeZone), "recurrence": .object(rule.fields)] }
 }
 
+
+/// Calendar reminders keep a chosen civil day and clock, rather than the device's zone.
+enum ReminderTimeZones {
+    private static let known = Array(Set(TimeZone.knownTimeZoneIdentifiers + ["UTC"])).sorted()
+    static func valid(_ identifier: String) -> Bool {
+        identifier.utf8.count <= 100 && !identifier.hasPrefix("GMT+") && !identifier.hasPrefix("GMT-") && TimeZone(identifier: identifier) != nil
+    }
+    static func sourceIdentifier(for deviceZone: TimeZone) -> String { valid(deviceZone.identifier) ? deviceZone.identifier : "UTC" }
+    static func choices(including selection: String, query: String = "") -> [String] {
+        let values = known.contains(selection) || !valid(selection) ? known : (known + [selection]).sorted()
+        let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        return query.isEmpty ? values : values.filter { $0.replacingOccurrences(of: "_", with: " ").localizedCaseInsensitiveContains(query.replacingOccurrences(of: "_", with: " ")) }
+    }
+    /// A date picker's instant represents a civil day. Preserve that day explicitly.
+    /// A skipped date fails instead of silently becoming tomorrow in the new zone.
+    private static let pickerBounds: ClosedRange<Double> = {
+        var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(secondsFromGMT: 0)!
+        let first = c.date(from: DateComponents(era: 1, year: 1, month: 1, day: 1))!.timeIntervalSince1970
+        let end = c.date(from: DateComponents(era: 1, year: 10000, month: 1, day: 1))!.timeIntervalSince1970
+        return (first - 129600)...(end + 129600)
+    }()
+    static func movingCivilDay(_ date: Date, from old: String, to new: String) throws -> Date {
+        let seconds = date.timeIntervalSince1970
+        guard valid(old), valid(new), seconds.isFinite, pickerBounds.contains(seconds) else { throw AppFailure(message: "Choose a supported time zone and start date.") }
+        // This is the picker's date representation, not the notification's instant.
+        // Read/write through the same calendar, including its historical cutover.
+        var source = Calendar(identifier: .gregorian); source.timeZone = TimeZone(identifier: old)!
+        var target = source; target.timeZone = TimeZone(identifier: new)!
+        let parts = source.dateComponents([.era, .year, .month, .day], from: date)
+        guard parts.era == 1, let year = parts.year, (1...9999).contains(year), let month = parts.month, let day = parts.day,
+              ReminderCivilDay(String(format: "%04d-%02d-%02d", year, month, day)) != nil,
+              let moved = target.date(from: DateComponents(era: 1, year: year, month: month, day: day, hour: 12)) else {
+            throw AppFailure(message: "Choose a supported start date before changing the time zone.")
+        }
+        let check = target.dateComponents([.era, .year, .month, .day], from: moved)
+        guard check == parts else { throw AppFailure(message: "That start date does not exist in the selected time zone. Choose another start date first.") }
+        return moved
+    }
+}
+
+/// Read-only comparison of actual upcoming instants; no schedule or setting is changed.
+enum ReminderClockPreview {
+    struct Row: Equatable, Sendable {
+        let instant: Date
+        let sourceText: String
+        let deviceText: String?
+        let sourceOffset: Int
+        let deviceOffset: Int
+    }
+    static func rows(_ schedule: ReminderCalendarSchedule, after now: Date, displayZone: TimeZone, limit: Int = 5, locale: Locale = .current) -> [Row] {
+        let dates = schedule.dates(after: now, limit: min(5, max(0, limit)))
+        let source = schedule.calendar.timeZone
+        func formatter(_ zone: TimeZone) -> DateFormatter {
+            let f = DateFormatter(); f.locale = locale
+            var c = Calendar(identifier: .gregorian); c.timeZone = zone
+            f.calendar = c; f.timeZone = zone; f.dateStyle = .medium; f.timeStyle = .short
+            f.gregorianStartDate = Date(timeIntervalSince1970: -62_135_596_800)
+            return f
+        }
+        let a = formatter(source), b = formatter(displayZone)
+        return dates.map { Row(instant: $0, sourceText: a.string(from: $0), deviceText: source.identifier == displayZone.identifier ? nil : b.string(from: $0), sourceOffset: source.secondsFromGMT(for: $0), deviceOffset: displayZone.secondsFromGMT(for: $0)) }
+    }
+    static func clocksChange(_ rows: [Row]) -> Bool {
+        zip(rows, rows.dropFirst()).contains { $0.sourceOffset != $1.sourceOffset || $0.deviceOffset != $1.deviceOffset }
+    }
+}
+
 /// The old device-wide switch migrates to the first active workspace only.
 enum ReminderPreferences {
     static func key(_ account: String) -> String { "taskfold.reminders.enabled." + account.lowercased() }

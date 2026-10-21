@@ -16,7 +16,7 @@ struct TaskReminderEditor: View {
                 Toggle("At planned time", isOn: Binding(get: { ReminderSpec.plannedEnabled(task) }, set: { if !ReminderSpec.setPlanned($0, task: &task) { message = "Another reminder is already enabled at planned time. Turn it off or delete it first." } }))
                     .disabled(!plannedEditable).accessibilityIdentifier("reminderPlanned")
             } footer: {
-                Text(task.due == nil ? "Choose a planned date to activate reminders relative to the task. Fixed-date and repeating reminders work without one." : task.string("due_time").isEmpty ? "With a date but no time, the planned reminder is at 8:00 AM." : "Before and after reminders move with the task’s planned time.")
+                Text(task.due == nil ? "Choose a planned date to activate reminders relative to the task. Fixed-date and repeating reminders work without one." : task.string("due_time").isEmpty ? "With a date but no time, the planned reminder is at 8:00 AM in this device’s time zone." : "Before and after reminders move with the task’s planned time.")
             }
             Section("Custom reminders") {
                 ForEach(Array(rows.enumerated()), id: \.offset) { index, value in
@@ -133,6 +133,7 @@ struct ReminderSpecEditor: View {
     @State private var repeatClock: Date
     @State private var repeatText: String
     @FocusState private var repeatFocused: Bool
+    @State private var choosingTimeZone = false
     @State private var sourceZone: String
     @State private var message: String?
     @State private var intervalText: String
@@ -150,13 +151,15 @@ struct ReminderSpecEditor: View {
         _before = State(initialValue: (draft.spec.offset ?? -10) <= 0)
         _date = State(initialValue: draft.spec.schedule.flatMap { Dates.parse($0.startDay, calendar: $0.calendar) } ?? draft.spec.intervalSchedule?.start ?? draft.spec.absolute ?? Date().addingTimeInterval(3600))
         var utc = Calendar(identifier: .gregorian); utc.timeZone = TimeZone(secondsFromGMT: 0)!
-        let source = draft.spec.schedule?.calendar ?? Calendar.current
+        let initialZone = draft.spec.schedule?.timeZone ?? ReminderTimeZones.sourceIdentifier(for: .current)
+        var source = draft.spec.schedule?.calendar ?? Calendar(identifier: .gregorian)
+        source.timeZone = TimeZone(identifier: initialZone)!
         let initial = draft.spec.absolute ?? Date().addingTimeInterval(3600)
         let hour = draft.spec.schedule.flatMap { Int($0.time.prefix(2)) } ?? source.component(.hour, from: initial)
         let minute = draft.spec.schedule.flatMap { Int($0.time.suffix(2)) } ?? source.component(.minute, from: initial)
         _repeatClock = State(initialValue: utc.date(from: DateComponents(year: 2000, month: 1, day: 1, hour: hour, minute: minute))!)
         _repeatText = State(initialValue: draft.spec.schedule?.expression ?? "every week")
-        _sourceZone = State(initialValue: draft.spec.schedule?.timeZone ?? TimeZone.current.identifier)
+        _sourceZone = State(initialValue: initialZone)
         _enabled = State(initialValue: draft.spec.enabled)
         _intervalText = State(initialValue: String(draft.spec.intervalSchedule?.intervalMinutes ?? 30))
         _limitedCount = State(initialValue: draft.spec.intervalSchedule?.count != nil)
@@ -181,7 +184,7 @@ struct ReminderSpecEditor: View {
                             }
                         }.accessibilityIdentifier("reminderOffset")
                         Stepper("\(minutes) minutes", value: $minutes, in: 0...10080).accessibilityIdentifier("reminderMinutes")
-                    } footer: { Text("Uses elapsed minutes before or after the task’s planned time. A date without a time uses 8:00 AM.") }
+                    } footer: { Text("Uses elapsed minutes before or after the task’s planned time. A date without a time uses 8:00 AM in this device’s time zone.") }
                 } else if kind == "interval" {
                     intervalControls
                 } else if kind == "recurring" {
@@ -204,19 +207,34 @@ struct ReminderSpecEditor: View {
                                 Button(phrase.capitalized) { repeatText = phrase }
                             }
                         }.frame(minHeight: 44).accessibilityIdentifier("reminderRepeatSuggestions")
-                        Text(sourceZone).font(.footnote).foregroundStyle(.secondary)
-                        if sourceZone != TimeZone.current.identifier {
+                        Button { repeatFocused = false; choosingTimeZone = true } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Time zone").foregroundStyle(.primary)
+                                Text(sourceZone.replacingOccurrences(of: "_", with: " ")).fixedSize(horizontal: false, vertical: true)
+                            }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        }.buttonStyle(.borderless).accessibilityLabel("Reminder time zone").accessibilityValue(sourceZone.replacingOccurrences(of: "_", with: " ")).accessibilityIdentifier("reminderChooseTimeZone")
+                        if sourceZone != TimeZone.current.identifier && ReminderTimeZones.valid(TimeZone.current.identifier) {
                             Button("Use current time zone") {
-                                let c = recurringCalendar
-                                let parts = c.dateComponents([.year, .month, .day, .hour, .minute], from: date)
-                                sourceZone = TimeZone.current.identifier
-                                if let moved = recurringCalendar.date(from: parts) { date = moved }
-                            }.frame(minHeight: 44)
+                                if let error = selectTimeZone(TimeZone.current.identifier) { message = error }
+                            }.frame(minHeight: 44).accessibilityIdentifier("reminderUseCurrentZone")
                         }
-                        if let schedule = recurringSchedule, let next = schedule.dates(after: Date(), limit: 1).first {
+                        if let schedule = recurringSchedule, !schedule.dates(after: previewNow, limit: 1).isEmpty {
                             Text(schedule.summary).font(.footnote).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("reminderRepeatSummary")
-                            Text("Next · " + schedule.formatted(next) + " · " + schedule.timeZone)
-                                .font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("reminderRepeatPreview")
+                            Text("Upcoming alerts").font(.headline)
+                            let rows = ReminderClockPreview.rows(schedule, after: previewNow, displayZone: .current)
+                            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text((index == 0 ? "Next · " : "") + row.sourceText + " · " + sourceZone.replacingOccurrences(of: "_", with: " "))
+                                        .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier(index == 0 ? "reminderRepeatPreview" : "reminderRepeatPreview-\(index)")
+                                    if let device = row.deviceText {
+                                        Text("On this device · " + device + " · " + TimeZone.current.identifier.replacingOccurrences(of: "_", with: " "))
+                                            .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("reminderDevicePreview-\(index)")
+                                    }
+                                }
+                            }
+                            if ReminderClockPreview.clocksChange(rows) {
+                                Text("Clocks change during these dates. The saved time zone still controls each alert.").font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("reminderClockChange")
+                            }
                         } else if recurringSchedule != nil && !enabled {
                             Text("This schedule has ended. Its settings will be saved with delivery off.").font(.footnote).foregroundStyle(.secondary)
                         } else {
@@ -225,7 +243,7 @@ struct ReminderSpecEditor: View {
                                 .accessibilityIdentifier("reminderRepeatError")
                         }
                     } header: { Text("Schedule") } footer: {
-                        Text("Repeats at this clock time in its time zone, independently of the task’s plan. The task must remain open. Completing the task cancels its remaining alerts. Completion-based rules (every!) belong to the task’s repeat setting.")
+                        Text("Keeps this clock time in the saved time zone when you travel, independently of the task’s plan. The task must remain open. Completing the task cancels its remaining alerts. Completion-based rules (every!) belong to the task’s repeat setting.")
                     }
                 } else {
                     Section {
@@ -254,6 +272,9 @@ struct ReminderSpecEditor: View {
             if intervalFocused != nil { HStack { Spacer(); Button("Hide keyboard") { intervalFocused = nil }.accessibilityIdentifier("reminderIntervalHideKeyboard") }.padding(.horizontal, 16).padding(.vertical, 8).background(.bar) }
         }
         #endif
+        .sheet(isPresented: $choosingTimeZone) {
+            ReminderTimeZonePicker(selection: sourceZone, choose: selectTimeZone)
+        }
         .alert("Reminder not saved", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) { Button("OK") { message = nil } } message: { Text(message ?? "") }
         #if os(macOS)
         .frame(minWidth: 520, minHeight: 530)
@@ -329,6 +350,12 @@ struct ReminderSpecEditor: View {
               !limitedCount || Int(countText.trimmingCharacters(in: .whitespacesAndNewlines)) != nil else { return nil }
         return ReminderIntervalSchedule(start: date, everyMinutes: minutes, count: limitedCount ? Int(countText.trimmingCharacters(in: .whitespacesAndNewlines)) : nil, until: limitedEnd ? end : nil)
     }
+    private func selectTimeZone(_ zone: String) -> String? {
+        do {
+            let moved = try ReminderTimeZones.movingCivilDay(date, from: sourceZone, to: zone)
+            date = moved; sourceZone = zone; return nil
+        } catch { return error.localizedDescription }
+    }
     private var recurringCalendar: Calendar {
         var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: sourceZone) ?? .current; return c
     }
@@ -354,6 +381,42 @@ struct ReminderSpecEditor: View {
         dismiss()
     }
 }
+private struct ReminderTimeZonePicker: View {
+    @Environment(\.dismiss) private var dismiss
+    let selection: String
+    let choose: (String) -> String?
+    @State private var query = ""
+    @State private var failure: String?
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(ReminderTimeZones.choices(including: selection, query: query), id: \.self) { zone in
+                    Button {
+                        if let message = choose(zone) { failure = message } else { dismiss() }
+                    } label: {
+                        HStack {
+                            Text(zone.replacingOccurrences(of: "_", with: " ")).fixedSize(horizontal: false, vertical: true)
+                            Spacer()
+                            if zone == selection { Image(systemName: "checkmark") }
+                        }.frame(minHeight: 44)
+                    }.accessibilityLabel(zone.replacingOccurrences(of: "_", with: " ") + (zone == selection ? ", selected" : "")).accessibilityIdentifier("reminderZone-" + zone)
+                }
+            }
+            #if os(iOS)
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "City or time zone")
+            #else
+            .searchable(text: $query, prompt: "City or time zone")
+            #endif
+            .navigationTitle("Time zone")
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("reminderZoneCancel") } }
+        }
+        .alert("Time zone not changed", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) { Button("OK") { failure = nil } } message: { Text(failure ?? "") }
+        #if os(macOS)
+        .frame(minWidth: 460, idealWidth: 500, minHeight: 560, idealHeight: 600)
+        #endif
+    }
+}
+
 struct ReminderSystemSettingsButton: View {
     var body: some View {
         #if os(iOS)

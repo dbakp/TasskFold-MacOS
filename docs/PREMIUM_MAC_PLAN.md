@@ -2577,3 +2577,8 @@ Rank 5 begins with independently owned elapsed scheduling: fixed-instant anchor,
 ## 21 October — interval reminder integration
 
 Interval reminders now have owned native editing, explicit count/end limits, upcoming instants, versioned saved settings, backup/queue preservation, duplicate handling, per-occurrence notifications and exact stale-response protection. Source/account/task-incarnation guards protect the presented draft. The actual Mac editor is rendered offscreen in light/dark using the tested owned Core; the render caught duplicate field labels, now corrected. Current build verification and remaining native editing/VoiceOver/OS-action gates are in `p2-interval-reminders-evidence.json`. A selected previous Mac Core reader proves opaque row preservation. No new server delivery, release claim or installed desktop-widget changes are included.
+
+
+## 21 October — saved reminder zones and travel comparison
+
+Added an owned native named-zone chooser and source/device clock comparison for the next five calendar reminders. Explicit zone changes keep picker civil date, authored clock and limits, with skipped dates refused; preview remains read-only. Core civil/date/offset/identity checks and actual editor/picker component rendering are recorded in `p2-reminder-time-zones-evidence.json`. The Mac is still locked in the current surface check; full native keyboard/VoiceOver acceptance remains open. No new persistent envelope, server delivery, provider access or release assertion is included.
