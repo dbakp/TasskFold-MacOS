@@ -1,0 +1,195 @@
+{
+  "date": "2026-10-21",
+  "rank": 7,
+  "status": "Server contract deployed and actual-role fixture passed; native authoring/inbox workflows incomplete",
+  "migration": "20261021020423_shared_comments_and_mentions.sql",
+  "project": "zqxflydiyfjeedqvyova",
+  "scope": [
+    "Authenticated shared text comments separate from legacy/imported task JSON",
+    "Stable comment identity, revision checks, private idempotency receipts and tombstones",
+    "Atomic explicit-member recipient validation",
+    "Recipient-only mentions with revision-checked read/unread and idempotent retry",
+    "Task-generation, original-project, archive and current-access checks"
+  ],
+  "verification": {
+    "preDeployment": "Expanded DDL and actual-role fixture passed inside rollback-only transaction; schema and synthetic accounts absent afterward",
+    "postDeployment": "Same actual-role fixture passed on deployed schema; all synthetic accounts rolled back; both new public tables empty",
+    "roles": [
+      "owner",
+      "accepted collaborators",
+      "departed member",
+      "outsider with forged user metadata",
+      "anonymous",
+      "authenticated without identity",
+      "deleted account callback"
+    ],
+    "cases": [
+      "Authenticated authorship; no client author argument",
+      "Sender cannot read other recipients' inboxes",
+      "Direct comment/mention writes and private receipt reads denied",
+      "Canonical recipient-order retries do not duplicate",
+      "Reused operation ID with changed payload rejected",
+      "UTF-8 byte, whitespace, recipient-count and null-recipient bounds",
+      "Incorrect task generation refused",
+      "Archive and inherited archive prevent writes but allow current reads",
+      "Stale edits conflict without overwriting current body",
+      "Old add acknowledgement does not revert a newer body",
+      "Read/unread revisions survive body edits and delayed read acknowledgement",
+      "Cross-recipient read callback refused",
+      "Private project move hides old conversation/inbox and rejects callbacks",
+      "Departed members lose read and callback access; stale picker cannot partially write",
+      "Re-mention after explicit removal has a new unread identity",
+      "Owner moderation clears body/recipients while preserving original authorship",
+      "Deleted author becomes unavailable without forging attribution",
+      "Tombstones and task recreation prevent old callbacks resurrecting comments",
+      "Legacy/imported comment and attachment JSON unchanged",
+      "Task deletion cascades comments, mentions and private receipts"
+    ],
+    "realUserDataMutated": false,
+    "pushDeliveryEnabled": false,
+    "nativeRuntimeClaim": false,
+    "httpAPIClaim": false
+  },
+  "security": {
+    "design": "Public RPC wrappers use security invoker. Scoped writers are private-schema definers with fixed empty search paths, explicit auth.uid/current membership checks and no anonymous execute. Public tables grant authenticated SELECT only; RLS restricts current task/project generation and inbox recipient. Private receipts grant no direct client access.",
+    "before": [
+      {
+        "name": "extension_in_public",
+        "count": 1,
+        "level": "WARN"
+      },
+      {
+        "name": "pg_graphql_anon_table_exposed",
+        "count": 6,
+        "level": "WARN"
+      },
+      {
+        "name": "pg_graphql_authenticated_table_exposed",
+        "count": 17,
+        "level": "WARN"
+      },
+      {
+        "name": "anon_security_definer_function_executable",
+        "count": 8,
+        "level": "WARN"
+      },
+      {
+        "name": "authenticated_security_definer_function_executable",
+        "count": 9,
+        "level": "WARN"
+      },
+      {
+        "name": "auth_leaked_password_protection",
+        "count": 1,
+        "level": "WARN"
+      }
+    ],
+    "after": [
+      {
+        "name": "extension_in_public",
+        "count": 1,
+        "level": "WARN"
+      },
+      {
+        "name": "pg_graphql_anon_table_exposed",
+        "count": 6,
+        "level": "WARN"
+      },
+      {
+        "name": "pg_graphql_authenticated_table_exposed",
+        "count": 19,
+        "level": "WARN"
+      },
+      {
+        "name": "anon_security_definer_function_executable",
+        "count": 8,
+        "level": "WARN"
+      },
+      {
+        "name": "authenticated_security_definer_function_executable",
+        "count": 9,
+        "level": "WARN"
+      },
+      {
+        "name": "auth_leaked_password_protection",
+        "count": 1,
+        "level": "WARN"
+      }
+    ],
+    "newFindings": "Two intentional authenticated GraphQL schema-discoverability findings for task_comments/task_mentions. No new anonymous table exposure or exposed security-definer finding. RLS protects rows; table names/column names are intentionally discoverable after sign-in."
+  },
+  "performance": {
+    "before": [
+      {
+        "name": "unindexed_foreign_keys",
+        "count": 4,
+        "level": "INFO"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "count": 14,
+        "level": "WARN"
+      },
+      {
+        "name": "unused_index",
+        "count": 5,
+        "level": "INFO"
+      },
+      {
+        "name": "table_bloat",
+        "count": 1,
+        "level": "INFO"
+      },
+      {
+        "name": "auth_db_connections_absolute",
+        "count": 1,
+        "level": "INFO"
+      }
+    ],
+    "after": [
+      {
+        "name": "unindexed_foreign_keys",
+        "count": 4,
+        "level": "INFO"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "count": 14,
+        "level": "WARN"
+      },
+      {
+        "name": "unused_index",
+        "count": 6,
+        "level": "INFO"
+      },
+      {
+        "name": "table_bloat",
+        "count": 1,
+        "level": "INFO"
+      },
+      {
+        "name": "auth_db_connections_absolute",
+        "count": 1,
+        "level": "INFO"
+      }
+    ],
+    "newFindings": "One unused-index observation on the newly created comment author FK index. Retained for account-deletion maintenance; empty/tiny rollback fixtures do not establish production index usage. No new unindexed FK or RLS initplan finding."
+  },
+  "remaining": [
+    "Strict independently owned native transport/models and reply binding",
+    "Shared-comment composer, editing/moderation and explicit teammate picker",
+    "Account-owned Mentions inbox and safe current-task routes",
+    "Durable pending/retry/conflict/account-switch/relaunch behavior",
+    "Backup/import archive preservation without replaying authorship or sending mentions",
+    "Actual HTTP/two-client and native phone/tablet/Mac acceptance"
+  ],
+  "deferredUnchanged": [
+    "Remote reminders",
+    "Older-client rollout safeguards",
+    "Distribution verification"
+  ],
+  "sourceSHA256": {
+    "supabase/migrations/20261021020423_shared_comments_and_mentions.sql": "fbd1adba72223942f938f83d2b2281e3774c1494c2d934184124aacf38110f5d",
+    "supabase/tests/shared_comments_and_mentions.sql": "ce2e5ce67b28ef14d4c696321ea9cc984eac0e868076c561a9a3ec9a73a92b35"
+  }
+}
