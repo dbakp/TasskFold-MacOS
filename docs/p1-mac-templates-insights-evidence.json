@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-21",
+  "platform": "macOS",
+  "kind": "native computer-use walkthroughs and exact saved snapshot checks; no XCTest count claimed",
+  "bundle": "com.dbakp.taskfold.mac.workflowtestsp1",
+  "rank2_templates": {
+    "status": "representative native walkthrough accepted",
+    "checks": [
+      "create project/subproject template",
+      "save template rename and child-project definition change",
+      "confirmed cancellation discards an actual rename draft",
+      "normal Quit/relaunch retains edited definition",
+      "create Mac review run from edited definition",
+      "source replacement comparison shows saved Review studio versus original Design studio",
+      "Use replacement in draft changes only editor; confirmed discard preserves saved definition",
+      "save later definition child Follow-up studio; existing run child remains Review studio; source child remains Design studio",
+      "normal Quit/relaunch shows Follow-up studio in editor and Review studio in existing run sidebar"
+    ],
+    "snapshot": {
+      "artifact": "mac-p1-template-accepted-snapshot.json",
+      "sha256": "a797e0d8dab6fe992617f9a0a3a376936aa44d52509bc3b6ccf2976a7d3dc5fb",
+      "templates": 1,
+      "projects": 4,
+      "tasks": 2,
+      "pending": 0
+    },
+    "limits": [
+      "Unsupported-version, concurrency and cross-device behavior retain separately recorded core/live evidence; no new native two-client claim"
+    ]
+  },
+  "rank4_insights": {
+    "status": "representative native walkthrough accepted",
+    "checks": [
+      "personal 7-day total 2; workspace 7-day total 3",
+      "workspace 28-day total 4 with explicit window dates",
+      "coverage and deduplication/reopen messaging visible",
+      "daily zero rejected; Save unavailable; confirmed cancellation retains 5/10 targets",
+      "save daily3 weekly12 UTC Monday-start with Wednesday rest day",
+      "rest day has no daily target; two own completions remain in weekly total2/12",
+      "reopen Draft the workshop plan via Space; personal day/week drops2 to1",
+      "Command-Z restores completion and personal total2 without duplicate credit",
+      "normal Quit/relaunch retains rest day, weekly2/12 and goal settings"
+    ],
+    "snapshot": {
+      "artifact": "mac-p1-insights-accepted-snapshot.json",
+      "sha256": "4b9c78d5d39604833930881e291161e40f339a68b4115c5511e0974cf99392ed",
+      "tasks": 5,
+      "completed": 4,
+      "pending": 0,
+      "goals": {
+        "daily_target": 3,
+        "weekly_target": 12,
+        "active_weekdays": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          7
+        ],
+        "week_start": 2,
+        "time_zone": "UTC"
+      }
+    }
+  },
+  "app_closed": true,
+  "limits": [
+    "No installed-widget acceptance: workflow host intentionally lacks app-group entitlement and reports container permission failure",
+    "Remaining Mac checks: widget ordering, monthly date sets, calendar settings/timeline, project activity and conversations/Mentions",
+    "Calendar genuine-provider acceptance and three release gates remain explicitly deferred"
+  ]
+}

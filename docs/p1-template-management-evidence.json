@@ -1,6 +1,6 @@
 {
   "date": "2026-10-20",
-  "status": "implemented; iPhone/iPad and live sync accepted; Mac walkthrough pending unlock",
+  "status": "implemented; phone/tablet, representative native Mac and live sync accepted",
   "core": {
     "ios": {
       "reported": 731,
@@ -65,7 +65,7 @@
     }
   },
   "native": {
-    "macOS": "Signed current build succeeds; walkthrough pending manual Mac unlock. The previous isolated main app was closed. No native Mac runtime acceptance claimed.",
+    "macOS": "Representative native Mac create/edit/cancel/reuse/source-review-discard/later-edit independence/relaunch accepted. See p1-mac-templates-insights-evidence.json for exact checks and limits.",
     "iPad": {
       "passed": 1,
       "failures": 0,

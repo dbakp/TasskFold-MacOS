@@ -2472,3 +2472,6 @@ Conversation polish follow-up: Cancel now compares text and recipient selection 
 
 
 21 October P1 Mac continuation: unlocked desktop allowed the saved-template walkthrough to resume. Create/edit/confirmed discard/normal Quit and relaunch preserve template/source separation. Fixed a native comparison render collision by scoping each preview’s row identities, independently in both apps. Local-only DEBUG workflow fixtures skip cloud-session Keychain reads; normal/authenticated launches remain on their existing path. The isolated host reports a widget-container permission error, so no desktop widget acceptance is claimed. Full template reuse/source replacement and the remaining P1 Mac walkthroughs are still pending; see `p1-template-preview-followup-evidence.json`.
+
+
+21 October native acceptance continuation: representative Mac templates and Insights/goals walkthroughs pass. Templates create/edit/reuse/review-discard/later-edit isolation/relaunch and Insights scope/window/validation/Cancel/rest-day/reopen/Undo/relaunch have exact snapshot evidence in `p1-mac-templates-insights-evidence.json`. No main test app remains running. Remaining Mac P1 work is widgets, monthly date sets, calendar screens/timeline, activity and conversations/Mentions; genuine calendar providers and the three release gates remain deferred.

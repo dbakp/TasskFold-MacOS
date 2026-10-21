@@ -171,5 +171,6 @@
     "Remote reminders, older-client rollout safeguards and distribution verification remain explicitly deferred.",
     "No real task/account data used for acceptance."
   ],
-  "cleanup": "Superseded failed native bundles/attachments pruned. Isolated phone/tablet apps and runners removed and both simulators shut down after acceptance. One current signed Mac acceptance bundle retained without launch."
+  "cleanup": "Superseded failed native bundles/attachments pruned. Isolated phone/tablet apps and runners removed and both simulators shut down after acceptance. One current signed Mac acceptance bundle retained without launch.",
+  "mac_followup": "Representative native Mac scope/window/goal validation/cancel/rest-day/reopen/Undo/relaunch accepted; see p1-mac-templates-insights-evidence.json."
 }
