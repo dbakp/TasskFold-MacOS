@@ -1449,9 +1449,9 @@ enum TaskCompletion {
 
 /// Versioned widget payload. The extension receives bounded planning/Focus data, never authentication sessions or executable mutations.
 enum WidgetProjection {
-    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = []) -> [String: JSON] {
+    static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil) -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
-        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders)
+        let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators)
         let pulse = pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar)
         let nested = WidgetCompletion.hierarchy(Snapshot(tables: ["tasks": tasks, "projects": projects, "saved_views": savedViews]), account: account)?.items.filter { $0.isSubtask && !$0.record.completed } ?? []
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
@@ -1510,10 +1510,10 @@ enum WidgetProjection {
     }
 
     /// Publish open task IDs and display names, never filter expressions or ordering records.
-    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar, datePreferences preferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = []) -> [JSON] {
+    static func listPayload(tasks: [Record], projects: [Record], labels: [Record], sections: [Record], savedViews: [Record], account: String, now: Date, calendar input: Calendar, datePreferences preferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil) -> [JSON] {
         guard !account.isEmpty else { return [] }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
-        let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account, people: people, datePreferences: preferences)
+        let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account, people: people, datePreferences: preferences, collaborators: collaborators)
         let cache = TaskCache(); cache.update(tasks)
         let settings = viewPreferences.filter { $0.string("user_id") == account }
         let orders = viewOrders.filter { $0.string("user_id") == account }
@@ -1565,7 +1565,7 @@ enum WidgetProjection {
             guard let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: context)) != nil else {
                 result.append(row(view, kind: "filter", days: [:], error: true)); continue
             }
-            if rule.usesTaskHierarchy, (try? cache.hierarchyCandidates(for: rule, projects: FilterReference.projects(projects), userID: account)) == nil { result.append(row(view, kind: "filter", days: [:], error: true)); continue }
+            if rule.usesTaskHierarchy, (try? cache.hierarchyCandidates(for: rule, projects: context.projectReferences, userID: account)) == nil { result.append(row(view, kind: "filter", days: [:], error: true)); continue }
             let ordering=view.fields["sort_by"]?.text ?? "manual", grouping=view.fields["grouping"]?.text ?? "none"
             guard supportedSort(ordering),["none","project","priority","date","deadline"].contains(grouping) else { result.append(row(view,kind:"filter",days:[:],error:true));continue }
             var days: [String: [String]] = [:], dayGroups:[String:[JSON]]=[:]
@@ -1574,7 +1574,7 @@ enum WidgetProjection {
                 let day = TaskPlanner.dayKey(date, calendar: calendar)
                 let query = TaskQuery(scope: .all, sort: ordering, today: day, filter: rule, now: rule.usesClockWindow ? now : nil, datePreferences: preferences,
                     filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) },
-                    filterProjects: FilterReference.projects(projects),
+                    filterProjects: context.projectReferences,
                     filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: context.personReferences, userID: account, timeZone: calendar.timeZone.identifier)
                 let matches=cache.matching(query).filter{!$0.completed}
                 var groups=TaskGrouping.queryGroups(matches,rule:rule,by:grouping,context:context,today:day,timeZone:calendar.timeZone.identifier,now:query.now)

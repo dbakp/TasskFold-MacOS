@@ -269,7 +269,8 @@ final class Store {
     }
     var email: String { backend.session?.user.email ?? "On this iPhone" }
     var tasks: [Record] { _ = taskRevision; return taskCache.tasks }
-    var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { project in projectMembers(project.id).map { person in var scoped = person; scoped["project_id"] = .string(project.id); return scoped } }, datePreferences: datePhrasePreferences) }
+    private var filterCollaborators: [Record]? { snapshot.tables["project_collaborators"] ?? (localMode ? [] : nil) }
+    var filterContext: FilterContext { FilterContext(projects: projects, sections: rows("sections"), labels: labels, userID: userID, people: projects.flatMap { project in projectMembers(project.id).map { person in var scoped = person; scoped["project_id"] = .string(project.id); return scoped } }, datePreferences: datePhrasePreferences, collaborators: filterCollaborators) }
     var savedViews: [Record] { OrganizationOrder.sorted(rows("saved_views")) }
     var favorites: [Record] { OrganizationOrder.sorted(rows("favorites")) }
     var workingHours: WorkingHours? { workingHoursDocument == .null ? WorkingHours() : try? WorkingHours(document: workingHoursDocument) }
@@ -382,7 +383,7 @@ final class Store {
         var query = calendarContext.applying(to: query)
         if case .saved(let id) = query.scope {
             guard let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [] }
-            query.filterProjects = FilterReference.projects(projects); query.filterSections = rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
+            query.filterProjects = filterContext.projectReferences; query.filterSections = rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }
             query.filterPeople = filterContext.personReferences
             query.filter = rule; query.datePreferences = datePhrasePreferences; query.now = rule.usesClockWindow ? calendarContext.minute : nil; query.filterLabels = labels.map { FilterReference(id: $0.id, name: $0.name) }; query.userID = userID
             query.includeCompleted = query.includeCompleted || view["include_completed"].flag || (!rule.hasQuerySections && rule.includesCompletion)
@@ -406,7 +407,7 @@ final class Store {
         guard let view = record("saved_views", id: id) else { return "This saved filter was deleted or is unavailable on this account." }
         do {
             let rule = try FilterRule(document: view["query_ast"]); try rule.validate(in: filterContext)
-            if rule.usesTaskHierarchy { _ = try taskCache.hierarchyCandidates(for: rule, projects: FilterReference.projects(projects), userID: userID) }
+            if rule.usesTaskHierarchy { _ = try taskCache.hierarchyCandidates(for: rule, projects: filterContext.projectReferences, userID: userID) }
             return nil
         }
         catch { return error.localizedDescription }
@@ -586,7 +587,7 @@ final class Store {
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.anyConnected ? (busy.connected && busy.selected.isEmpty && busy.links?.active != true ? "choose" : "refresh") : "off"
-        var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people, viewPreferences: rows("view_preferences"), viewOrders: rows("view_orders"))
+        var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people, viewPreferences: rows("view_preferences"), viewOrders: rows("view_orders"), collaborators: filterCollaborators)
         if let feedback = snapshot.widgetCompletion.feedback, feedback.account == account,
            Date() < feedback.expiresAt, widgetFeedbackIsCurrent(feedback) {
             payload["completionFeedback"] = try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(feedback))
@@ -1800,6 +1801,15 @@ extension Store {
             task["subtasks"] = .array([child("000000000001", "Planning", [child("000000000002", "Research", [child("000000000004", "Collect references")])]), child("000000000003", "Review")])
         }
         snapshot = Snapshot(tables: ["projects": projects, "tasks": [task]])
+        if ProcessInfo.processInfo.arguments.contains("--sharing-filter-fixture"), Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowtestsnotes1" {
+            task["title"] = .string("Review shared layout")
+            var personal = Record.task(user: userID, project: parent, date: Date()); personal["title"] = .string("Prepare private draft")
+            var inbox = Record.task(user: userID, date: Date()); inbox["title"] = .string("Capture personal idea")
+            snapshot.tables["tasks"] = [task, personal, inbox]
+            snapshot.tables["project_collaborators"] = [
+                Record(["id": .string("f3910000-0000-4000-8000-000000000001"), "project_id": .string(child), "user_id": .string("f3910000-0000-4000-8000-000000000002"), "status": .string("accepted"), "role": .string("collaborator")]),
+                Record(["id": .string("f3910000-0000-4000-8000-000000000003"), "project_id": .string(parent), "status": .string("pending"), "invited_email": .string("sharing-fixture@example.invalid"), "role": .string("collaborator")])]
+        }
         do { try persist(); seedSharedCaptureFixture() } catch { self.error = error.localizedDescription }
     }
 }
@@ -1855,7 +1865,7 @@ extension Store {
 extension Store {
     func hierarchyFilterError(_ rule: FilterRule) -> String? {
         guard rule.usesTaskHierarchy else { return nil }
-        do { _ = try taskCache.hierarchyCandidates(for: rule, projects: FilterReference.projects(projects), userID: userID); return nil }
+        do { _ = try taskCache.hierarchyCandidates(for: rule, projects: filterContext.projectReferences, userID: userID); return nil }
         catch { return error.localizedDescription }
     }
 }
@@ -1874,7 +1884,7 @@ extension Store {
 
 extension Store {
     func previewFilterCount(_ rule: FilterRule, includeCompleted: Bool) -> Int {
-        matching(TaskQuery(scope: .all, includeCompleted: includeCompleted || (!rule.hasQuerySections && rule.includesCompletion), filter: rule, now: calendarContext.minute, datePreferences: datePhrasePreferences, filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: FilterReference.projects(projects), filterSections: rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: filterContext.personReferences, userID: userID)).count
+        matching(TaskQuery(scope: .all, includeCompleted: includeCompleted || (!rule.hasQuerySections && rule.includesCompletion), filter: rule, now: calendarContext.minute, datePreferences: datePhrasePreferences, filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: filterContext.projectReferences, filterSections: rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: filterContext.personReferences, userID: userID)).count
     }
 }
 
