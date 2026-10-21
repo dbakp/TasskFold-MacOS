@@ -1,6 +1,6 @@
 {
   "date": "2026-10-21",
-  "status": "current dedicated host ready; installed visual/completion check pending user response",
+  "status": "user confirmed installed grouped/manual order; checkbox persistence not yet verified",
   "problem": "Fresh Mac project generation omitted the AppAuthCore package imported by CalendarAuthorization.swift; regenerated widget-host build failed to resolve that module.",
   "fix": [
     "Mac generator preserves exact AppAuthCore3.0.0 remote package,app linkage and package reference",
@@ -49,5 +49,19 @@
     "One necessary dedicated test host remains running while awaiting the check; other main Taskfold instances closed",
     "iOS has no corresponding generator; its isolated preparer retains the checked-in configured project",
     "No distribution or genuine-provider acceptance claimed"
-  ]
+  ],
+  "user_observation": {
+    "date": "2026-10-21",
+    "report": "Order matches; completed Approve contrast",
+    "accepted": "Installed large My list configured for Widget Studio displays the expected order and group captions",
+    "verification_after_report": {
+      "approval_completed": false,
+      "other_tasks_completed": false,
+      "queued_actions": 0,
+      "core_pending": 0,
+      "projection_sha256": "42f87a0d55516b6beb91190d1e3ada7655f05a84d31eb3b3e2c61a799f49b656"
+    },
+    "diagnosis_limit": "Inspected App Intents logs show ListConfiguration resolution; no CompleteWidgetTaskIntent invocation observed. This does not establish a product-code cause.",
+    "next_check": "Exit Edit Widgets and click the desktop checkbox once; observe Completed/disappearance versus unchanged. Keep current build intact."
+  }
 }

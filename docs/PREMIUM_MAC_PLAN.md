@@ -2484,3 +2484,6 @@ Conversation polish follow-up: Cancel now compares text and recipient selection 
 
 
 21 October widget-order readiness: fixed a fresh-generation missing-AppAuthCore failure in the Mac generator; exact package/linkage/license/calendar settings retained. Three isolation checks,fresh app/widget build and strict signature pass. Current correctly entitled host and extension publish native-matching Design review/Ready to ship ordering. Installed widget view/action remains pending user check because both system-host inspection attempts time out. One required isolated widget host remains running; no other main test sessions. See `p1-mac-widget-order-readiness.json`.
+
+
+21 October installed widget observation: user confirms the large My list Widget Studio order and group captions match. The reported checkbox click has not changed saved completion,projection or action queue. Inspected logs show configuration resolution without an observed completion intent; no code defect is inferred yet. Installed order accepted; checkbox persistence pending one out-of-edit-mode retry. Current host left intact. Evidence: `p1-mac-widget-order-readiness.json`.
