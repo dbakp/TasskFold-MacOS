@@ -25,6 +25,8 @@ struct TaskListView: View {
     @AppStorage("mac.collapsedProjectSections") private var collapsedSections = ""
     private var projectLayout: String { get { store.viewValue(scope, field: "layout", fallback: .string("list")).text } nonmutating set { store.setViewValue(scope, field: "layout", value: .string(newValue)) } }
     @State private var multiLinePresented = false
+    @State private var printReview: PrintReviewRequest?
+    @State private var printFailure: String?
     @State private var captureSection = ""
     @State private var nativeList = ListNativeHandle()
     @State private var bulkDatePicker = false
@@ -225,6 +227,9 @@ struct TaskListView: View {
         .onChange(of: subtitle) { _, value in if workspace.section.scope == scope { workspace.navigationSubtitle = value } }
         .animation(Transitions.Ease.smoothOut, value: subtitle)
         .toolbar { if workspace.section.scope == scope { toolbar } }
+        .sheet(item: $printReview) { PrintReviewView(request: $0) }
+        .alert("Could not prepare document", isPresented: Binding(get: { printFailure != nil }, set: { if !$0 { printFailure = nil } })) { Button("OK") { printFailure = nil } } message: { Text(printFailure ?? "") }
+        .onChange(of: store.workspaceGeneration) { _, _ in printReview = nil; printFailure = nil }
         .sheet(isPresented: $multiLinePresented) { MultiLineCaptureView(text: workspace.quickAdd, project: projectID, onSaved: { workspace.quickAdd = "" }) }
         .sheet(isPresented: $quickAddVisible) {
             TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, choices: $referenceChoices, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt,
@@ -362,6 +367,22 @@ struct TaskListView: View {
         TaskRowView(task: task, compactDate: dated).background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
     }
 
+    private func printableDocument() throws -> PrintDocument {
+        if let error = store.filterError(scope) { throw AppFailure(message: error) }
+        let sections: [(String, [Record])]
+        if !projectID.isEmpty && projectLayout == "board" { sections = boardColumns.map { ($0.title, $0.tasks) } }
+        else if dated { sections = dayGroups }
+        else { sections = (overdueTasks.isEmpty ? [] : [("Overdue", overdueTasks)]) + groups.map { ($0.title, $0.tasks) } }
+        let named = sections.map { name, tasks in (Dates.parse(name)?.formatted(.dateTime.weekday(.wide).day().month(.wide).year()) ?? name, tasks) }
+        let detail = Date().formatted(.dateTime.day().month(.wide).year()) + (workspace.search.isEmpty ? "" : " · Search: " + workspace.search) + (priorityFilter == 0 ? "" : " · Priority \(priorityFilter)")
+        return try PrintDocument.capture(title: workspace.section == .assigned ? "Assigned to me" : title, subtitle: detail, groups: named, projects: store.projects, labels: store.labels, assigneeName: store.assigneeName)
+    }
+    private func preparePrint() {
+        do {
+            let document = try printableDocument(), binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+            printReview = PrintReviewRequest(document: document, workspace: binding, isCurrent: { (try? printableDocument()) == document })
+        } catch { printFailure = error.localizedDescription }
+    }
     // MARK: Menus
 
     @ViewBuilder private func contextMenu(_ ids: Set<String>) -> some View {
@@ -399,6 +420,8 @@ struct TaskListView: View {
 
     private var viewOptions: some View {
             Menu {
+                Button("Print or Save PDF…", systemImage: "printer") { preparePrint() }.disabled(store.filterError(scope) != nil).keyboardShortcut("p", modifiers: .command).accessibilityIdentifier("openPrintReview")
+                Divider()
                 Button(store.isFavorite(scope) ? "Remove Favorite" : "Add Favorite", systemImage: "star") { store.toggleFavorite(scope) }.accessibilityIdentifier("toggleFavorite")
                 if case .saved(let id) = scope { Button("Edit Filter…") { filterEditor = store.record("saved_views", id: id) } }
                 Button(defaultView == preferenceKey ? "Default View ✓" : "Make Default View", systemImage: "house") { defaultView = preferenceKey }

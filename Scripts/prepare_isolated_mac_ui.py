@@ -93,6 +93,7 @@ def main():
         info['CFBundleURLTypes'] = [{'CFBundleURLName': bundle + ('.widget-record-routing' if args.record_route_testing else ''), 'CFBundleURLSchemes': [scheme]}]
     manifest.write_bytes(plistlib.dumps(info))
     entitlements = {'com.apple.security.app-sandbox': True,
+                    'com.apple.security.print': True,
                     'com.apple.security.network.client': True,
                     'com.apple.security.files.user-selected.read-write': True,
                     'com.apple.security.personal-information.calendars': True}

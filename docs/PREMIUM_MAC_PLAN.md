@@ -18,6 +18,8 @@ The goal is a calm, fast native Mac app: daily actions should take few steps, na
 
 21 October note formatting: selection tools and a native readable preview retain portable source text and the existing durable save/Undo path. Core tests pass and the isolated Mac app builds. Native Mac editing, conflict/retry and VoiceOver acceptance remain pending; print/PDF is still planned. See [note evidence](p2-note-formatting-evidence.json).
 
+21 October print/PDF: task lists and pinned notes open an immutable native PDF review with paper/content options and explicit Save/Print. The independently owned renderer has multiline/Unicode, bounded pagination and complete-source tests; production and isolated app inputs include the printing sandbox entitlement. Native Mac Save/Print, error recovery and VoiceOver remain pending while the Mac is locked. See [print evidence](p2-print-output-evidence.json).
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.

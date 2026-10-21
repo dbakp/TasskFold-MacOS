@@ -38,7 +38,15 @@ Current evidence: 23 focused share tests, broader core suites (889 iOS / 913 Mac
 
 Both apps now offer selection-based formatting tools, a native readable preview and original-text access. Notes stay in the existing portable description string; Apply edits a draft and the existing durable Save/Undo path remains responsible for persistence. Links accept web addresses only, without embedded credentials; previewing never fetches images, webpages or metadata. Compact task/widget previews remove supported formatting while preserving the complete saved text. Large or excessively fragmented notes retain a complete literal fallback.
 
-Phone and tablet native cancellation, selection replacement, Preview, Apply, parent Save, relaunch and largest-text dark appearance pass in the scoped cases. Mac native acceptance, concurrent/workspace-change, save-failure UI checks and VoiceOver remain open. Exact tests and limits are in `p2-note-formatting-evidence.json`. Print/PDF, additional view controls and hierarchy grammar remain separate work in rank 3.
+Phone and tablet native cancellation, selection replacement, Preview, Apply, parent Save, relaunch and largest-text dark appearance pass in the scoped cases. Mac native acceptance, concurrent/workspace-change, save-failure UI checks and VoiceOver remain open. Exact tests and limits are in `p2-note-formatting-evidence.json`. Print/PDF is tracked separately below; additional view controls and hierarchy grammar remain open in rank 3.
+
+## Native print and PDF (rank 3, acceptance in progress)
+
+Task lists and pinned notes now open a read-only paginated review. Lists reuse their actual filtered ordering and groups, including collapsed groups; notes and complete nested checklists are optional. A separate native Options sheet keeps large-text settings clear of the preview. Users choose A4 or US Letter, then explicitly Save PDF or open the system Print panel. A changed source or workspace invalidates the review. No task mutation or automatic print job occurs.
+
+Each app owns its Core Text/Core Graphics renderer and PDFKit preview. Exports retain selectable text, native script/emoji fallback, portable formatting, complete note fallback, page numbers and coherent paragraph/heading breaks. Background work measures within page bounds and supports cancellation. Oversized or unsupported source fails explicitly instead of reporting a truncated PDF as success. Resolved labels/assignees and scheduling metadata are included; account/record identifiers, discussions and files are excluded.
+
+Scoped phone/tablet native Save/readback/relaunch, native Print cancellation, content/paper options and save cancellation pass, with exact saved-snapshot preservation. Largest-text main/Options panels and all pages of the long A4/Letter fixture are visually checked. Exact proof and remaining gates are in `p2-print-output-evidence.json`; these checks are distinct from compilation. Mac native Save/Print and VoiceOver, source/account-switch and output-error UI acceptance remain open. Physical printer delivery and real distribution are not claimed. Other view controls and hierarchy grammar are still pending.
 
 ## Quality gates for each rank
 

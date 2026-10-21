@@ -70,6 +70,8 @@ private struct PinnedNoteDetail: View {
     @State private var failure: String?
     @State private var editing: Record?
     @State private var originalText = false
+    @State private var failureTitle = "Could not unpin note"
+    @State private var printReview: PrintReviewRequest?
     private var live: Record? {
         binding.matches(account: store.userID, generation: store.workspaceGeneration) && store.isPinnedNote(taskID) ? store.record("tasks", id: taskID) : nil
     }
@@ -91,6 +93,7 @@ private struct PinnedNoteDetail: View {
                             } else { Text(task.string("description")).font(.body).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("pinnedNoteText") }
                         }
                         Button { editing = task } label: { Label("Edit details", systemImage: "pencil").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("editPinnedNote")
+                        Button("Print or save PDF", systemImage: "printer") { preparePrint() }.accessibilityIdentifier("printPinnedNote")
                         Button(action: unpin) { Label("Unpin note", systemImage: "pin.slash").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("unpinNote")
                         Text("Unpinning keeps the task and its notes. Widgets show a shortened preview; this screen shows the full text.").font(.caption).foregroundStyle(.secondary)
                     }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
@@ -100,6 +103,7 @@ private struct PinnedNoteDetail: View {
             }
         }.navigationTitle("Pinned note")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close", action: close).accessibilityIdentifier("closePinnedNotes") } }
+            .sheet(item: $printReview) { PrintReviewView(request: $0) }
             .sheet(item: $editing) { task in
                 #if os(iOS)
                 TaskEditor(task: task)
@@ -110,8 +114,15 @@ private struct PinnedNoteDetail: View {
                 }.frame(minWidth: 460, idealWidth: 560, minHeight: 540)
                 #endif
             }
-            .alert("Could not unpin note", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) { Button("OK") { failure = nil } } message: { Text(failure ?? "") }
+            .alert(failureTitle, isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) { Button("OK") { failure = nil } } message: { Text(failure ?? "") }
             .onChange(of: store.workspaceGeneration) { _, _ in editing = nil }
+    }
+    private func preparePrint() {
+        guard let task = live else { return }
+        do {
+            let document = try PrintDocument.capture(title: task.title, subtitle: "Pinned note", groups: [("", [task])], projects: [], labels: [], noteOnly: true)
+            printReview = PrintReviewRequest(document: document, workspace: binding, isCurrent: { live == task })
+        } catch { failureTitle = "Could not prepare document"; failure = error.localizedDescription }
     }
     private func unpin() {
         guard live != nil else { return }
@@ -121,7 +132,7 @@ private struct PinnedNoteDetail: View {
         #else
         saved = store.setPinnedNote(taskID, enabled: false)
         #endif
-        if saved { dismiss() } else { failure = store.error ?? "Your note is still pinned. Try again after reopening Taskfold."; store.error = nil }
+        if saved { dismiss() } else { failureTitle = "Could not unpin note"; failure = store.error ?? "Your note is still pinned. Try again after reopening Taskfold."; store.error = nil }
     }
 }
 

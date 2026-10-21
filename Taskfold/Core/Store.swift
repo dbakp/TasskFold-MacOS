@@ -1780,6 +1780,11 @@ extension Store {
             Record(["id": .string(id), "user_id": .string(userID), "name": .string(name), "color": .string("#8b5cf6"), "parent_id": parent.isEmpty ? .null : .string(parent), "is_archived": .bool(false), "order_index": .number(parent.isEmpty ? 0 : 1)])
         }
         var task = Record.task(user: userID, project: child, date: Date()); task["title"] = .string("Prepare workflow brief"); task["description"] = .string("Keep the original notes.")
+        if ProcessInfo.processInfo.arguments.contains("--print-output-fixture") {
+            task["description"] = .string((1...8).map { index in
+                "## Design section \(index)\nRésumé, København, 東京, العربية, 🙂. Review **contrast** and _spacing_, then read the [guide](https://example.com/guide).\n- Keep every instruction\n- Check the complete exported document\n```text\nLiteral **code** \(index)\n```"
+            }.joined(separator: "\n\n") + "\nFINAL-NATIVE-PRINT-INSTRUCTION")
+        }
         if ProcessInfo.processInfo.arguments.contains("--subtask-organizer-fixture") {
             func child(_ suffix: String, _ title: String, _ children: [JSON] = []) -> JSON {
                 .object(["id": .string("f1710000-0000-4000-8000-" + suffix), "title": .string(title), "completed": .bool(false),
