@@ -9,3 +9,6 @@ xcuserdata/
 
 # Local Supabase CLI metadata is not a deployment input.
 supabase/.temp/
+
+# Standalone SQL test dependencies, never app build inputs.
+Scripts/Database/node_modules/

@@ -383,6 +383,7 @@ struct Snapshot: Codable, Equatable, Sendable {
     var widgetCompletion = WidgetCompletionCache()
     var sharedCaptureReceipts: [String: String]? = nil
     mutating func apply(_ change: Mutation) {
+        guard change.table != TaskAssignmentProvenance.table else { return }
         if change.organizationOrder != nil || change.method == "ORDER" {
             guard let command = change.organizationOrder, OrganizationOrder.valid(change) else { return }
             tables[change.table] = command.applying(to: tables[change.table] ?? [])

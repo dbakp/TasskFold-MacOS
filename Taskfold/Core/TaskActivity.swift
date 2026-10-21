@@ -1,5 +1,71 @@
 import Foundation
 
+/// Server-confirmed current assignment history. The task author and invitation
+/// sender never substitute for a missing actor. Catalogs belong to one workspace.
+enum TaskAssignmentProvenance {
+    static let table = "task_assignment_provenance"
+    static let legacyGeneration = "00000000-0000-0000-0000-000000000000"
+    enum Unknown: String, Equatable, Sendable {
+        case unavailable, legacy, system, recurrence, unsupported, stale, ambiguous, deletedActor
+    }
+    enum Resolution: Equatable, Sendable {
+        case unassigned
+        case known(actor: String, event: String, recordedAt: Date)
+        case unknown(Unknown)
+    }
+    private struct Key: Hashable, Sendable {
+        let task: String
+        let generation: String
+        let node: String
+    }
+    struct Catalog: Equatable, Sendable {
+        private let rows: [Key: [Record]]?
+        init(_ source: [Record]?) {
+            rows = source.map { source in
+                Dictionary(grouping: source, by: { row in
+                    Key(task: row.string("task_id").lowercased(), generation: row.string("task_generation").lowercased(), node: row.string("node_key"))
+                })
+            }
+        }
+        func resolution(root: Record) -> Resolution { resolve(source: root, root: root, path: []) }
+        /// Hierarchy items have already passed the bounded identity/tree validator.
+        func resolution(item: TaskHierarchyIndex.Item) -> Resolution { resolve(source: item.source, root: item.root, path: item.path) }
+        private func resolve(source: Record, root: Record, path: [String]) -> Resolution {
+            let recipient = source["assigned_to"]
+            if recipient == .null || recipient == .string("") { return .unassigned }
+            guard case .string(let recipientID) = recipient, UUID(uuidString: recipientID) != nil,
+                  UUID(uuidString: root.id) != nil else { return .unknown(.unsupported) }
+            let generation: String
+            if root["task_generation"] == .null { generation = legacyGeneration }
+            else if case .string(let value) = root["task_generation"], UUID(uuidString: value) != nil, value.lowercased() != legacyGeneration { generation = value.lowercased() }
+            else { return .unknown(.unsupported) }
+            guard let rows else { return .unknown(.unavailable) }
+            let key = Key(task: root.id.lowercased(), generation: generation, node: path.last ?? "")
+            guard let candidates = rows[key], !candidates.isEmpty else { return .unknown(.legacy) }
+            guard candidates.count == 1 else { return .unknown(.ambiguous) }
+            let row = candidates[0]
+            guard UUID(uuidString: row.id) != nil, UUID(uuidString: row.string("event_id")) != nil,
+                  case .string? = row.fields["node_key"], case .array(let encodedPath) = row["node_path"],
+                  encodedPath.allSatisfy({ if case .string = $0 { return true }; return false }) else { return .unknown(.unsupported) }
+            guard row["active"] == .bool(true), encodedPath.map(\.text) == path,
+                  row.string("assignee_id").lowercased() == recipientID.lowercased() else { return .unknown(.stale) }
+            switch row.string("origin") {
+            case "recorded":
+                guard let recordedAt = TaskPlanning.instant(row.string("assigned_at")) else { return .unknown(.unsupported) }
+                guard row["actor_id"] != .null else { return .unknown(.deletedActor) }
+                guard UUID(uuidString: row.string("actor_id")) != nil else { return .unknown(.unsupported) }
+                return .known(actor: row.string("actor_id").lowercased(), event: row.string("event_id").lowercased(), recordedAt: recordedAt)
+            case "legacy": return .unknown(.legacy)
+            case "system": return .unknown(.system)
+            case "recurrence": return .unknown(.recurrence)
+            case "unsupported": return .unknown(.unsupported)
+            case "unassigned": return .unknown(.stale)
+            default: return .unknown(.unsupported)
+            }
+        }
+    }
+}
+
 struct TaskActivity: Equatable, Identifiable, Sendable {
     static let table = "task_activity"
     static let epochTable = "task_activity_epoch"

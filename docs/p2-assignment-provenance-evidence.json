@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-21",
+  "status": "assignment-actor recording and client resolution foundation implemented; assigned-by saved filters remain unfinished",
+  "migration": {
+    "version": "20261021122959",
+    "name": "assignment_provenance",
+    "backend": "zqxflydiyfjeedqvyova",
+    "applied": true,
+    "sha256": "aa456e8a973ce03c04c48ddbaa76fe8ac09b1878d23a672b03912d5e33ed3c1f",
+    "no_historical_actor_backfill": true,
+    "no_existing_task_data_rewrite": true,
+    "hosted_statement_md5": "71f1de4f3f3e8ff5612ce7c9e756ff66"
+  },
+  "contract": [
+    "Server-owned read-only table follows current tasks SELECT policy and root generation; inactive child tombstones are not readable.",
+    "Actual authenticated actor recorded on initial assignment or assignee transition. Same-recipient retries, title/date/completion edits and child reparenting preserve the assignment event.",
+    "Child removal/reappearance with the same stable identity and recipient preserves provenance for Undo; explicit unassignment/reassignment creates a new event.",
+    "Malformed, duplicate, missing-ID, excessive-depth or excessive-size legacy checklists never acquire invented identities or block unrelated changes through this new trigger.",
+    "Unassignment hides current provenance; account deletion nulls actors/recipients through FKs. Deleting a root cascades its metadata; restored root incarnations cannot use old history.",
+    "Recognized recurrence successors remain unknown; client source_metadata and recurrence_parent_id are not trusted attestations of a previous actor.",
+    "Imports/copies with fresh root identities record their creator as the initial Taskfold assignment actor, not an external historical assigner. Portable exports omit this server-only catalog; files containing it cannot certify history.",
+    "Client model binds recipient, root identity/generation and case-sensitive nested path. Missing, malformed, ambiguous, stale and unavailable catalogs cannot produce a confirmed actor.",
+    "Store commit, Snapshot.apply and Backend.send refuse generic client mutations of the provenance table."
+  ],
+  "checks": {
+    "core": {
+      "iOS": {
+        "reported": 978,
+        "skipped": 12,
+        "failures": 0,
+        "new_cases": 7,
+        "log": "ios-p2-assignment-full.log"
+      },
+      "macOS": {
+        "reported": 1002,
+        "skipped": 32,
+        "failures": 0,
+        "new_cases": 7,
+        "log": "mac-p2-assignment-full.log"
+      }
+    },
+    "local_postgresql": {
+      "runtime": "@electric-sql/pglite 0.5.11",
+      "platform_owned_lockfiles": true,
+      "mac_log": "mac-p2-assignment-sql-final.log",
+      "ios_log": "ios-p2-assignment-sql-final.log",
+      "result": "passed actual migration + shared portable fixture + rollback assertion independently",
+      "limits": "Minimal bootstrap dependency policies; not full hosted Auth, HTTP or multi-session acceptance"
+    },
+    "hosted_sql": {
+      "fixture": "supabase/tests/assignment_provenance.sql",
+      "fixture_sha256": "677f0a15bdf0a0bb3d11ddeeb67d2b66f38c6ea139e0a7e637a6fac2797650fe",
+      "passed": true,
+      "rollback_verified": {
+        "fixture_accounts_remaining": 0,
+        "fixture_tasks_remaining": 0
+      },
+      "covered": [
+        "root/child create and actual member reassignment",
+        "same-recipient and title/completion preservation",
+        "child reparenting and stable identity Undo",
+        "explicit child unassignment/reassignment",
+        "legacy unknown normalization",
+        "recurrence actor refusal",
+        "actual task RLS accepted member and revocation/outsider exclusion",
+        "denied client table mutation and private trigger/helper calls",
+        "system actor unknown",
+        "root deletion/restored generation",
+        "real recorded actor deletion",
+        "malformed/duplicate/ID-less trees",
+        "32-level and 100000-node bounds"
+      ],
+      "limits": "Transactional database-role acceptance, not independent authenticated HTTP/native filter acceptance",
+      "artifact": "p2-assignment-server-verification.json"
+    },
+    "native": {
+      "mac_build": "mac-p2-assignment-build.log",
+      "ios_simulator_build": "ios-p2-assignment-build.log",
+      "both_builds": "succeeded",
+      "strict_deep_signatures": "passed both apps",
+      "scope": "Compile/sign only; no new controls or runtime native acceptance claimed",
+      "input_manifest": "p2-assignment-native-inputs.json"
+    },
+    "security": {
+      "rls": true,
+      "anon_select": false,
+      "authenticated_writes": false,
+      "private_trigger_execute": false,
+      "assignment_related_performance_advisories": [],
+      "new_advisory": "Signed-in GraphQL schema visibility for the intentionally SELECT-granted table. This is schema discovery, not row access; actual task RLS/revocation tests pass. No new anonymously callable definer or anonymous table exposure.",
+      "schema_discovery_reference": "https://supabase.com/docs/guides/database/database-linter?lint=0027_pg_graphql_authenticated_table_exposed",
+      "other_advisories": "Existing public pg_net extension, existing legacy schema/function visibility and leaked-password setting unchanged; not claimed remediated."
+    },
+    "anonymous_http": {
+      "anonymous_select_status": 401,
+      "data_exposed": false
+    }
+  },
+  "remaining": [
+    "Capability-aware account-safe catalog sync and offline/local-workspace provenance",
+    "Trusted recurring-successor provenance rather than unauthenticated client markers",
+    "Saved assigned-by predicates including exact actors and unknown/NOT/OR behavior",
+    "Name/directory resolution and query cache/preview/grouping integration",
+    "Native builder/expression controls and widget membership integration",
+    "Genuine HTTP/concurrent-account and native phone/tablet/Mac/accessibility acceptance"
+  ],
+  "deferrals_unchanged": [
+    "Genuine Google/Microsoft registration/provider acceptance",
+    "Server reminder delivery/reinstall acceptance",
+    "Broader older-client rollout safeguards",
+    "Distribution/signing/install/update acceptance"
+  ],
+  "native_inputs": {
+    "mac": {
+      "Taskfold/Core/TaskActivity.swift": {
+        "sourceSHA256": "fd8f046c4e824757ac900d4dbf17029b26dc64231ad55903ab8964b714190708",
+        "stagedSHA256": "fd8f046c4e824757ac900d4dbf17029b26dc64231ad55903ab8964b714190708"
+      },
+      "Taskfold/Core/Backend.swift": {
+        "sourceSHA256": "a2eea8c0c9e71973b5a79a036cec016ed855b3a1e14438ac09d8fd9f53f18f0d",
+        "stagedSHA256": "6cb93af5070536935de24406bfe0cfdc64514d3e67522312b2d40f57977b9dce"
+      },
+      "Taskfold/Core/Backups.swift": {
+        "sourceSHA256": "d71972080cf91dd92111333eebb0f283bf19bf496712c0f7a5400531a82b3902",
+        "stagedSHA256": "7279ee074a411d73ac1a0139ff9dfb6f6becd3a8671557873b73bbf08378eee3"
+      },
+      "Taskfold/Core/Models.swift": {
+        "sourceSHA256": "7794f2fdac1eb58bac438a2ab78698d67ef568cb0ff0a63be2a6a59ba03a2b5e",
+        "stagedSHA256": "7794f2fdac1eb58bac438a2ab78698d67ef568cb0ff0a63be2a6a59ba03a2b5e"
+      },
+      "Taskfold/Core/Store.swift": {
+        "sourceSHA256": "3803aaff02d8f5ffd27954e53afc6c045414effdbc97b3c6086883e490063da3",
+        "stagedSHA256": "634a6559925f40020b4e81ba499925c4766d4677ace9586f423c7acd25c6ae54"
+      }
+    },
+    "ios": {
+      "Taskfold/Core/TaskActivity.swift": {
+        "sourceSHA256": "fd8f046c4e824757ac900d4dbf17029b26dc64231ad55903ab8964b714190708",
+        "stagedSHA256": "fd8f046c4e824757ac900d4dbf17029b26dc64231ad55903ab8964b714190708"
+      },
+      "Taskfold/Core/Backend.swift": {
+        "sourceSHA256": "fd82f61544c85f9091cf9bba9671d05abcf0bc20fd27bc24d0043c285c35d0cc",
+        "stagedSHA256": "f1cf967c07f7c03d5dc8941fa976dd60a6dd8bdefd9c7078a6ed8b5db215a709"
+      },
+      "Taskfold/Core/Backups.swift": {
+        "sourceSHA256": "d71972080cf91dd92111333eebb0f283bf19bf496712c0f7a5400531a82b3902",
+        "stagedSHA256": "2a40262f10d4b7142f2f0ddb3dd05fe80f6cb7704248f6af87a6192f4402f487"
+      },
+      "Taskfold/Core/Models.swift": {
+        "sourceSHA256": "7794f2fdac1eb58bac438a2ab78698d67ef568cb0ff0a63be2a6a59ba03a2b5e",
+        "stagedSHA256": "7794f2fdac1eb58bac438a2ab78698d67ef568cb0ff0a63be2a6a59ba03a2b5e"
+      },
+      "Taskfold/Core/Store.swift": {
+        "sourceSHA256": "5c973700aa566328e7f0d64a568ff6806788a002fd05fe996e2e6afd968e384c",
+        "stagedSHA256": "749b4417f187d7ddb47b85f43b10aefb590239e0665d2a53395d95176ef31242"
+      }
+    }
+  },
+  "cleanup": {
+    "main_test_apps": "not launched for this implementation",
+    "obsolete_sql_runtime_bytes_pruned": "approximately 75 MiB; pinned lockfiles retained"
+  }
+}

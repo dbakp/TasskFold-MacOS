@@ -774,7 +774,7 @@ final class Store {
         }
         #endif
         guard changes.filter(ProductivityGoalEdit.matches).allSatisfy({ProductivityGoalEdit.valid($0,account:userID)}) else { error="These goals need a supported choice and current workspace.";return false }
-        guard changes.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable && $0.table != SharedComment.table && $0.table != SharedMention.table && !$0.table.hasPrefix("_conversation_") }) else { error = "Activity history is read-only."; return false }
+        guard changes.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable && $0.table != TaskAssignmentProvenance.table && $0.table != SharedComment.table && $0.table != SharedMention.table && !$0.table.hasPrefix("_conversation_") }) else { error = "Activity history is read-only."; return false }
         guard changes.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
             error = "This Focus command needs a valid workspace and revision."; return false
         }

@@ -1,0 +1,11 @@
+{
+  "name": "taskfold-database-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:assignment": "node test-assignment.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.11"
+  }
+}

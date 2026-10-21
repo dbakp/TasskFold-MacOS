@@ -22,6 +22,8 @@ struct WorkspaceBackup: Codable, Sendable {
     static let workTables = ["projects", "labels", "sections", "tasks", "saved_views", "favorites", "view_preferences", "view_orders", "focus_sessions", ReminderSnooze.table, WorkflowTemplate.table]
     static func make(_ snapshot: Snapshot, account: String, now: Date = Date()) -> Self {
         var tables = snapshot.tables
+        // A portable file cannot certify server-recorded actors in another workspace.
+        tables.removeValue(forKey: TaskAssignmentProvenance.table)
         tables[FocusSessionChange.table] = tables[FocusSessionChange.table]?.map { row in
             var row = row
             if let session = FocusSessionChange.session(in: row, account: account), let checkpoint = try? session.checkpoint(at: now) { row["state"] = checkpoint.document }

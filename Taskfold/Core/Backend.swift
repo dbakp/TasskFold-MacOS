@@ -413,7 +413,7 @@ final class Backend: NSObject {
         }
     }
     @discardableResult func send(_ change: Mutation, expectedAccount: String? = nil) async throws -> Record? {
-        guard change.table != TaskActivity.table, change.table != TaskActivity.epochTable else { throw AppFailure(message: "Activity history is read-only.") }
+        guard change.table != TaskActivity.table, change.table != TaskActivity.epochTable, change.table != TaskAssignmentProvenance.table else { throw AppFailure(message: "Activity history is read-only.") }
         let expectedOwner = expectedAccount ?? session?.user.id
         guard expectedOwner == session?.user.id else { throw CancellationError() }
         if change.organizationOrder != nil || change.method == "ORDER" {
