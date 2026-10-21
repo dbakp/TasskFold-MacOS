@@ -16,8 +16,24 @@ struct PrintDocument: Equatable, Sendable {
     let subtitle: String
     let groups: [Group]
     let noteOnly: Bool
+    let hierarchyResults: Bool
     var count: Int { Set(groups.flatMap { $0.items.filter { $0.depth == 0 }.map(\.sourceID) }).count }
-    static func capture(title: String, subtitle: String, groups: [(String, [Record])], projects: [Record], labels: [Record], noteOnly: Bool = false, assigneeName: (Record) -> String = { _ in "" }) throws -> Self {
+    static func capture(title: String, subtitle: String, groups: [(String, [Record])], projects: [Record], labels: [Record], noteOnly: Bool = false, hierarchyRoots: [Record]? = nil, assigneeName: (Record) -> String = { _ in "" }) throws -> Self {
+        var parentContext: [String: String] = [:]
+        if let hierarchyRoots {
+            let displayed = groups.flatMap { $0.1 }
+            let childRoots = Set(displayed.compactMap { SubtaskTree.referencePath($0.id)?.first })
+            let index = try TaskHierarchyIndex(roots: hierarchyRoots.filter { childRoots.contains($0.id) }, projects: projects, workspace: WorkspaceBinding(account: "print-review", generation: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
+            for task in displayed {
+                if task.id.hasPrefix("subtask:") {
+                    guard let item = index.item(task.id), item.record == task else { throw AppFailure(message: "A filtered subtask changed. Refresh the list before printing.") }
+                    parentContext[task.id] = item.parentTitles.joined(separator: " › ")
+                } else {
+                    let roots = hierarchyRoots.filter { $0.id == task.id }
+                    guard roots.count == 1, roots[0] == task else { throw AppFailure(message: "A filtered task changed. Refresh the list before printing.") }
+                }
+            }
+        }
         var count = 0, bytes = title.utf8.count + subtitle.utf8.count
         func item(_ task: Record, depth: Int, project: String) throws -> [Item] {
             guard depth <= SubtaskTree.readableDepth else { throw AppFailure(message: "A checklist is too deeply nested to print completely. Export a smaller selection.") }
@@ -27,6 +43,7 @@ struct PrintDocument: Equatable, Sendable {
             let notes = task.string("description")
             var detail: [String] = []
             if depth == 0, !project.isEmpty { detail.append(project) }
+            if depth == 0, let parent = parentContext[task.id] { detail.append("Subtask of " + parent) }
             if (1...3).contains(task.priority) { detail.append("P\(task.priority)") }
             let date = task.string("due_date"), time = task.string("due_time"), zone = task.string("time_zone")
             if !date.isEmpty { detail.append("Due " + date + (time.isEmpty ? "" : " " + time) + (time.isEmpty || zone.isEmpty ? "" : " " + zone)) }
@@ -42,7 +59,7 @@ struct PrintDocument: Equatable, Sendable {
             bytes += name.utf8.count + notes.utf8.count + metadata.utf8.count
             guard bytes <= 16_000_000 else { throw AppFailure(message: "This selection is too large to print completely. Choose a smaller list.") }
             var result = [Item(sourceID: task.id, title: name, metadata: metadata, notes: notes, completed: task.completed, depth: depth)]
-            if noteOnly { return result }
+            if noteOnly || hierarchyRoots != nil { return result }
             guard task["subtasks"] == .null || { if case .array = task["subtasks"] { return true }; return false }() else { throw AppFailure(message: "A checklist uses an unsupported format. Its saved content is unchanged.") }
             for value in task["subtasks"].list {
                 guard case .object = value else { throw AppFailure(message: "A checklist item uses an unsupported format. Its saved content is unchanged.") }
@@ -58,6 +75,6 @@ struct PrintDocument: Equatable, Sendable {
             })
         }
         guard bytes <= 16_000_000 else { throw AppFailure(message: "Choose a smaller list to print completely.") }
-        return Self(title: title, subtitle: subtitle, groups: captured, noteOnly: noteOnly)
+        return Self(title: title, subtitle: subtitle, groups: captured, noteOnly: noteOnly, hierarchyResults: hierarchyRoots != nil)
     }
 }

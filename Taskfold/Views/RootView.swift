@@ -169,7 +169,10 @@ struct RootView: View {
         if url.scheme == "taskfold", url.host == "invitations" {
             pendingInvitations = true; workspace.settingsTab = .invitations; openSettings()
         }
-        if url.scheme == "taskfold" && url.host == "task", store.record("tasks", id: url.lastPathComponent) != nil { workspace.openExternalTask(url.lastPathComponent) }
+        if url.scheme == "taskfold" && url.host == "task" {
+            do { workspace.openExternalTask(try store.widgetLinkedTask(url).id) }
+            catch { store.error = error.localizedDescription }
+        }
     }
 
     private func startInboxReview(_ batch: InboxReviewBatch) {

@@ -1202,7 +1202,7 @@ final class HierarchyQueryTests: XCTestCase {
         cache.update(roots); XCTAssertEqual(cache.matching(q).count, 3)
         XCTAssertTrue(cache.matching(query(rule, projects: [])).isEmpty)
     }
-    func testHierarchyDocumentsPersistAndWidgetsRefuseChildListsWithoutPublishingFakeMembership() throws {
+    func testHierarchyDocumentsPersistAndWidgetsPublishResolvedChildMembership() throws {
         let rootRule = try parse("root"), childRule = try parse("subtask")
         let views = [rootRule, childRule].enumerated().map { Record(["id": .string("v\($0)"), "name": .string("View \($0)"), "query_ast": $1.document]) }
         let snapshot = Snapshot(tables: ["tasks": roots, "saved_views": views], pending: [Mutation(table: "saved_views", recordID: "v1", method: "POST", fields: views[1].fields)])
@@ -1210,6 +1210,6 @@ final class HierarchyQueryTests: XCTestCase {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(secondsFromGMT: 0)!
         let payload = WidgetProjection.listPayload(tasks: roots, projects: projects, labels: labels, sections: [], savedViews: views, account: "viewer", now: Dates.parse("2026-10-21")!, calendar: calendar)
         let child = try XCTUnwrap(payload.first { $0.object["recordID"] == .string("v1") })
-        XCTAssertEqual(child.object["invalid"], .bool(true)); XCTAssertTrue(child.object["days"]!.object.isEmpty)
+        XCTAssertEqual(child.object["invalid"], .bool(false)); XCTAssertEqual(child.object["days"]!.object["2026-10-21"]?.list.count, 3)
     }
 }

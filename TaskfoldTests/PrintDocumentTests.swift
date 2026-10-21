@@ -101,3 +101,42 @@ final class PrintDocumentTests: XCTestCase {
     }
 }
 private extension TaskPrintRenderer.Paper { var nameForTest: String { self == .a4 ? "a4" : "letter" } }
+
+extension PrintDocumentTests {
+    private func hierarchyFixture() throws -> (Record, [Record], [Record]) {
+        let leaf: JSON = .object(["id": .string("leaf"), "title": .string("Approve contrast"), "description": .string("Check **contrast**, keyboard focus and legible task titles."), "priority": .number(1), "completed": .bool(false)])
+        let nested: JSON = .object(["id": .string("branch"), "title": .string("Design review"), "subtasks": .array([leaf])])
+        var root = task("root", "Prepare release"); root["project_id"] = .string("p"); root["task_generation"] = .string("generation"); root["subtasks"] = .array([nested, .object(["id": .string("hidden"), "title": .string("UNMATCHED-TASK-SENTINEL")])])
+        let projects = [Record(["id": .string("p"), "name": .string("Widget workshop")])]
+        let index = try TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: "test", generation: UUID()))
+        return (root, index.items.filter(\.isSubtask).map(\.record), projects)
+    }
+    func testHierarchyPrintAddsAncestorsAndDoesNotExpandUnmatchedChildren() throws {
+        let (root, children, projects) = try hierarchyFixture(), selected = children.filter { ["Design review", "Approve contrast"].contains($0.title) }
+        let document = try PrintDocument.capture(title: "Design review", subtitle: "Current filtered results", groups: [("Review", selected), ("Main task", [root])], projects: projects, labels: [], hierarchyRoots: [root])
+        XCTAssertTrue(document.hierarchyResults)
+        XCTAssertEqual(document.count, 3); XCTAssertEqual(document.groups[0].items.map(\.depth), [0, 0]); XCTAssertEqual(document.groups[1].items.count, 1)
+        XCTAssertTrue(document.groups[0].items[1].metadata.contains("Subtask of Prepare release › Design review"))
+        for paper in TaskPrintRenderer.Paper.allCases {
+            let output = try TaskPrintRenderer.render(document, options: .init(paper: paper))
+            let text = try XCTUnwrap(PDFDocument(data: output.data)?.string)
+            XCTAssertTrue(text.contains("Subtask of Prepare release")); XCTAssertTrue(text.contains("Approve contrast")); XCTAssertFalse(text.contains("UNMATCHED-TASK-SENTINEL"))
+            if let directory = ProcessInfo.processInfo.environment["TASKFOLD_HIERARCHY_PDF_DIR"] {
+                let folder = URL(fileURLWithPath: directory, isDirectory: true); try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                try output.data.write(to: folder.appendingPathComponent(paper == .a4 ? "hierarchy-a4.pdf" : "hierarchy-letter.pdf"))
+            }
+        }
+    }
+    func testHierarchyPrintRefusesStaleMovedMissingAndMalformedReferences() throws {
+        let (root, children, projects) = try hierarchyFixture(); let selected = children.filter { $0.title == "Approve contrast" }
+        var changed = root; changed["task_generation"] = .string("replaced")
+        for roots in [[], [changed]] {
+            XCTAssertThrowsError(try PrintDocument.capture(title: "Review", subtitle: "", groups: [("", selected)], projects: projects, labels: [], hierarchyRoots: roots))
+        }
+        var stale = selected[0]; stale["title"] = .string("Old title")
+        XCTAssertThrowsError(try PrintDocument.capture(title: "", subtitle: "", groups: [("", [stale])], projects: projects, labels: [], hierarchyRoots: [root]))
+        var malformed = selected[0]; malformed["id"] = .string("subtask:invalid")
+        XCTAssertThrowsError(try PrintDocument.capture(title: "", subtitle: "", groups: [("", [malformed])], projects: projects, labels: [], hierarchyRoots: [root]))
+        XCTAssertThrowsError(try PrintDocument.capture(title: "", subtitle: "", groups: [("", selected)], projects: [], labels: [], hierarchyRoots: [root]))
+    }
+}

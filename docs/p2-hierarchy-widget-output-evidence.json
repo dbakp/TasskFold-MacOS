@@ -1,0 +1,177 @@
+{
+  "date": "2026-10-21",
+  "status": "Hierarchy widget/action/link integration and filtered output implemented; installed-host and broader native acceptance remain open",
+  "implementation": {
+    "catalog": "Optional nestedTasks display catalog with resolved saved-filter membership. Main Today/Inbox/planning arrays remain roots only. Missing/incomplete child catalogs require refresh or show unavailable, never false All clear.",
+    "identity": "Case-sensitive encoded paths remain exact through actions/receipts. Child links bind account, root incarnation/location and path. Hidden-title widgets also hide ancestor names.",
+    "completion": "Current own node, root generation/location and project access are checked again. Own-node token signatures exclude descendant arrays so independent leaf completion does not stale the parent checkbox. Real root-subtasks patches use the existing durable commit, receipt, retry and Undo contract.",
+    "feedback": "Existing bounded completion feedback gains optional route context. Store publishes it only for the current completed child; its parent/root status remains independent.",
+    "iOS": "External child links resolve a captured selection into the contextual editor. Ordinary root editor routes remain supported.",
+    "Mac": "External child links expand the ancestor chain and restore the actual root\u2019s containing list, even when a child alone is completed.",
+    "output": "Hierarchy-filter capture prints only displayed matches with ancestry and excludes unmatched descendants. Ordinary checklist/note output stays unchanged. Hierarchy Print options explain matching-only output and omit the inapplicable checklist toggle."
+  },
+  "verification": {
+    "owned_full_core": {
+      "executed": 987,
+      "skipped": 32,
+      "failures": 0,
+      "log": "mac-p2-child-widget-current-core.log"
+    },
+    "new_cases": {
+      "widget": 7,
+      "print": 2
+    },
+    "core_checks": [
+      "separate child membership and unchanged default counts",
+      "real locked mailbox enqueue/dedup/ack and feedback capture",
+      "real root patch, cache roundtrip and receipt replay through Undo",
+      "case-sensitive path tampering rejection",
+      "changed/moved/replaced/revoked/malformed/wrong-account actions refuse atomically",
+      "independent leaf then parent completion",
+      "account/context/incarnation-bound child links",
+      "completed-child containing-root choice",
+      "missing/incomplete child catalogs fail visibly",
+      "sign-out clears nested content",
+      "filtered ancestry and unique count without unmatched descendants",
+      "stale/moved/malformed/removed output references refuse capture"
+    ],
+    "phone": {
+      "result": "ios-p2-child-widget-phone-final.xcresult",
+      "actual_passes": 1,
+      "skipped": 0,
+      "runtime_warnings": 0,
+      "tests": [
+        "testRealSavedSubtaskFilterCompletionUndoAndRelaunch"
+      ],
+      "checks": [
+        "actual published child catalog/token/context",
+        "cold-launch exact child editor",
+        "Save leaf edit and reopen through the same link",
+        "wrong-workspace URL refuses editor"
+      ],
+      "captures": "tmp/child-widget-phone-final/",
+      "persistence": {
+        "snapshot_sha256": "7a41f042a81ea7403d4b445c49005c54eaf92b9a75507633869e4a94dd32efd4",
+        "task_rows": 1,
+        "nested_nodes": 4,
+        "edited_leaf_title": "Reviewed widget references",
+        "completed_roots": 0,
+        "completed_children": 0,
+        "saved_filter": {
+          "version": 1,
+          "root": {
+            "op": "predicate",
+            "value": "",
+            "field": "subtask"
+          }
+        },
+        "pending": 0,
+        "widget_receipts": 0
+      }
+    },
+    "tablet": {
+      "result": "ios-p2-child-widget-tablet.xcresult",
+      "actual_passes": 2,
+      "skipped": 0,
+      "runtime_warnings": 0,
+      "tests": [
+        "testRealSavedSubtaskFilterCompletionUndoAndRelaunch",
+        "testWidgetRecordWorkspaceGuardAndMatchingRoutesPreserveWork"
+      ],
+      "checks": [
+        "actual published child catalog/token/context",
+        "cold-launch exact child editor",
+        "Save leaf edit and reopen through the same link",
+        "wrong-workspace URL refuses editor"
+      ],
+      "captures": "tmp/child-widget-tablet/"
+    },
+    "native_limits": [
+      "These runs exercise saved-filter and external URL/editor behavior, not an installed WidgetKit checkbox",
+      "Final phone run covers the independent-token refinement; tablet route/root regression preceded it. Both current owned core suites cover the refinement.",
+      "Final Print options flag/explanation followed route runs and is current-build/core verified. No new native hierarchy Print/Save interaction acceptance is claimed.",
+      "No new native Mac interaction, VoiceOver, distribution or genuine-provider acceptance"
+    ],
+    "builds": {
+      "ios": "ios-p2-child-widget-current-build.log: BUILD SUCCEEDED",
+      "mac": "mac-p2-child-widget-current-isolated-build.log: BUILD SUCCEEDED",
+      "mac_extension": "mac-p2-child-widget-extension-build.log: independent owned arm64/x86_64 extension target BUILD SUCCEEDED, unsigned and never installed"
+    },
+    "signatures": "Both current isolated app products pass codesign --verify --deep --strict",
+    "catalogs": {
+      "ios": "p2-child-widget-current-catalog.txt: 8 configurations / 3 entities / 6 enums, matching app/widget completion metadata",
+      "mac": "p2-child-widget-mac-catalog.txt: independent compiled app/extension metadata 8 / 3 / 6, no installed-team/host claim"
+    },
+    "inputs": [
+      "p2-child-widget-native-run-inputs.json",
+      "p2-child-widget-current-inputs.json"
+    ],
+    "widget_visuals": {
+      "method": "Actual SwiftUI views rendered standalone on Mac, not WidgetKit hosting",
+      "modes": [
+        "light",
+        "dark",
+        "private"
+      ],
+      "inspected": "Small/medium/large My list, parent context, scoped Window and hidden titles/ancestors",
+      "directory": "tmp/hierarchy-widget-previews"
+    },
+    "pdf_visuals": {
+      "method": "Actual shared CoreText/PDFKit renderer, Poppler PNGs inspected on both papers",
+      "papers": [
+        "A4",
+        "US Letter"
+      ],
+      "pages_each": 1,
+      "directory": "tmp/hierarchy-output",
+      "sha256": {
+        "hierarchy-a4.pdf": "54aaa0069bb7cbe131caf353cd798c565b8165e469c5a2466b6f7694e1075c91",
+        "hierarchy-letter.pdf": "5395cb063dbef146845dce3b5a5756a129e42ac288a53b214aff7282de524714"
+      }
+    }
+  },
+  "remaining_gates": [
+    "installed WidgetKit child checkbox/feedback/route acceptance",
+    "native Mac hierarchy lists, commands, external child navigation and Print/Save",
+    "native hierarchy Print options/Save, broader bulk/layout/malformed-recovery/accessibility acceptance",
+    "live concurrent-workspace/account/access acceptance",
+    "remaining rank-2 share acceptance and rank-3 collaboration predicates/view controls/headings",
+    "backlog ranks 4\u20137 remain active"
+  ],
+  "user_deferrals_unchanged": [
+    "server reminders",
+    "older-client rollout enforcement",
+    "distribution signing/install/update acceptance",
+    "genuine Google/Microsoft registrations/provider acceptance"
+  ],
+  "cleanup": {
+    "removed": [
+      "ios-p2-child-widget-phone.xcresult"
+    ],
+    "reclaimed_bytes": 2035689,
+    "retained": [
+      "accepted final phone and tablet result bundles",
+      "earlier compact summary and captures",
+      "current core/build logs",
+      "warm app/core/extension caches"
+    ],
+    "main_test_processes": "none after native teardown"
+  },
+  "source_sha256": {
+    "Scripts/render_widget_previews.py": "530408e5709016881f7b2fe57decfc70056831981d40b83e0d800c6c0fe3c9f3",
+    "Taskfold/Core/Models.swift": "b8b30998b48f9be83f4ed6e4b1af6728fccdde4cf1d043c77ce10560a0b6b31e",
+    "Taskfold/Core/PrintDocument.swift": "14a58fcde9b2d7bf920b0d91fb7f670353ece1435c6f1f65b1c3d455c0e97fa1",
+    "Taskfold/Core/Store.swift": "033a3f102d8f9eba93009cfcecf429ea3226e98763755fcfa76409df4354ffec",
+    "Taskfold/Core/WidgetActions.swift": "1b14dc34c6bf891d4cf1f25df1a10f253f01e9919ddf3607358e110c83a20a06",
+    "Taskfold/Core/WidgetCompletion.swift": "3a3bcfce10b30443a6e97becd3ab2c02033282fc57e49c3b975622718896183c",
+    "Taskfold/Views/PrintReviewView.swift": "d2c4c8d7b1fad90f60d4ee146639799fe0007013fd4d7178a5e5c5e45edfeec0",
+    "Taskfold/Views/RootView.swift": "d92628129a6c0a28182fbd1c88d180d5d9673ba475d99e8c51d355f54fce28ac",
+    "Taskfold/Views/TaskListView.swift": "964258d15828c36a2bfd5ab1cc6b47ed54cd03f1a3bae433c7bb2acadc3b9121",
+    "Taskfold/Workspace.swift": "7337c099f51c99920312b888d0d3050e484293874a42135390d2b9fe988723ad",
+    "TaskfoldTests/FilterTests.swift": "e6a5951bed1407408923da485e1e38c8764d06421795fcf38011e8028fb0a344",
+    "TaskfoldTests/PrintDocumentTests.swift": "0ff8a150ad84d282036a5aed4e89b1694ee8717690f455e63ed6e6704e0afdc2",
+    "TaskfoldTests/ProductivityWidgetTests.swift": "7a6212411589ffeb9551ab80feb6125a4dddd0e3453eeea700da91d40f9e64fe",
+    "TaskfoldTests/WidgetActionTests.swift": "ba6d95bfd4d0ab83381f8585a9d93eeb65dcfd038f4350b2cc33c248c5c48330",
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "3b5abf20b9e3a1bdd9c5479655d2b50ce5a4d582e811491b8f522bfe43fd99b2"
+  }
+}

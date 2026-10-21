@@ -71,8 +71,21 @@ extension PreviewLink where Content == Text {
             }
             listSnapshot.lists[0].days = ["*": listSnapshot.tasks.map(\.id)]
         }
+        if mode.hasPrefix("lists-hierarchy") {
+            let paths = [["release", "review"], ["release", "review", "contrast"], ["release", "publish"]]
+            listSnapshot.nestedTasks = entry.snapshot.tasks.prefix(3).enumerated().map { index, value in
+                var child = value
+                child.id = "subtask:" + (try! JSONEncoder().encode(paths[index])).base64EncodedString()
+                child.title = ["Review the design", "Approve contrast", "Publish the update"][index]
+                child.parent = index == 1 ? "Prepare release › Design review" : "Prepare release"
+                child.routeContext = String(repeating: "a", count: 64)
+                return child
+            }
+            let list = WidgetList(id: (try! JSONEncoder().encode([listSnapshot.account, "filter", "nested-work"])).base64EncodedString(), recordID: "nested-work", kind: "filter", name: "Nested work", days: [WidgetSnapshot.day(entry.date, calendar: .current): listSnapshot.nestedTasks!.map(\.id)], timeZone: TimeZone.current.identifier, invalid: false)
+            listSnapshot.lists = [list]
+        }
         let chosen = mode == "lists-unavailable" ? "deleted-list" : listSnapshot.availableLists.first?.id
-        let listPrivate = mode == "lists-private" || mode == "lists-completed-private"
+        let listPrivate = mode == "lists-private" || mode == "lists-completed-private" || mode == "lists-hierarchy-private"
         if mode.hasPrefix("lists-completed"), let chosen {
             listSnapshot.completionFeedback = WidgetCompletionFeedback(account: listSnapshot.account, taskID: "completed-proof", title: "Prepare the quarterly planning notes and share the final draft", listIDs: [chosen], savedAt: entry.date)
             if mode == "lists-completed-empty" { listSnapshot.tasks = [] }
@@ -181,7 +194,7 @@ extension PreviewLink where Content == Text {
             }
         }.environment(\.dynamicTypeSize, mode == "notes-largest" ? .accessibility3 : .large)
 
-        let actual = Group { if notes { noteContent.padding(32).background(mode == "notes-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "notes-dark" ? .dark : .light) } else if inbox { inboxContent.padding(32).background(mode == "inbox-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "inbox-dark" ? .dark : .light) } else if capacity { capacityContent.padding(32).background(mode == "capacity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "capacity-dark" ? .dark : .light) } else if lists { listContent.padding(32).background(mode == "lists-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "lists-dark" ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
+        let actual = Group { if notes { noteContent.padding(32).background(mode == "notes-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "notes-dark" ? .dark : .light) } else if inbox { inboxContent.padding(32).background(mode == "inbox-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "inbox-dark" ? .dark : .light) } else if capacity { capacityContent.padding(32).background(mode == "capacity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "capacity-dark" ? .dark : .light) } else if lists { listContent.padding(32).background((mode == "lists-dark" || mode == "lists-hierarchy-dark") ? Color(white: 0.09) : Color.white).environment(\.colorScheme, (mode == "lists-dark" || mode == "lists-hierarchy-dark") ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
         let renderer = ImageRenderer(content: actual)
         renderer.scale = 2
         if let image = renderer.cgImage {
@@ -190,7 +203,7 @@ extension PreviewLink where Content == Text {
     }
 }
 '''
-output = root / 'docs/widget-previews'
+output = Path(sys.argv[sys.argv.index('--output') + 1]).resolve() if '--output' in sys.argv else root / 'docs/widget-previews'
 output.mkdir(parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporary:
     path = Path(temporary)
@@ -199,5 +212,7 @@ with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporar
     modes = [(mode, mode) for mode in ['notes', 'notes-dark', 'notes-private', 'notes-choose', 'notes-deleted', 'notes-legacy', 'notes-blank', 'notes-dense', 'notes-largest']] if '--notes' in sys.argv else [(mode, mode) for mode in ['inbox', 'inbox-dark', 'inbox-empty', 'inbox-private', 'inbox-legacy', 'inbox-dense', 'inbox-largest']] if '--inbox' in sys.argv else [(mode, mode) for mode in ['capacity', 'capacity-dark', 'capacity-overload', 'capacity-unknown', 'capacity-off', 'capacity-incomplete', 'capacity-refresh', 'capacity-empty', 'capacity-private', 'capacity-rest', 'capacity-largest']] if '--capacity' in sys.argv else [(mode, mode) for mode in ['lists', 'lists-dark', 'lists-private', 'lists-empty', 'lists-unavailable', 'lists-pending', 'lists-sync', 'lists-dense', 'lists-completed', 'lists-completed-private', 'lists-completed-empty']] if '--lists' in sys.argv else [('light', 'catalog'), ('dark', 'dark'), ('empty', 'empty')] + [(mode, mode) for mode in ['productivity', 'productivity-dark', 'productivity-empty', 'productivity-private', 'productivity-legacy']]
     if "--completion-feedback" in sys.argv:
         modes = [(mode, mode) for mode in ["lists-completed", "lists-completed-private", "lists-completed-empty"]]
+    if "--hierarchy" in sys.argv:
+        modes = [(mode, mode) for mode in ["lists-hierarchy", "lists-hierarchy-dark", "lists-hierarchy-private"]]
     for mode, name in modes:
         subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode], check=True)

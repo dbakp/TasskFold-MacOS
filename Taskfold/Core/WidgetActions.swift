@@ -5,6 +5,11 @@ import Darwin
 import Glibc
 #endif
 
+/// UUID record IDs are case insensitive; encoded nested paths are case sensitive.
+public enum WidgetTaskIdentity {
+    public static func key(_ id: String) -> String { id.hasPrefix("subtask:") ? id : id.lowercased() }
+}
+
 /// A credential-free handoff. Account and task identities are checked again by the app.
 public struct WidgetCompletionRequest: Codable, Equatable, Identifiable, Sendable {
     public var id: UUID
@@ -16,7 +21,7 @@ public struct WidgetCompletionRequest: Codable, Equatable, Identifiable, Sendabl
         guard !account.isEmpty, !taskID.isEmpty, let id = UUID(uuidString: token) else { throw WidgetActionFailure("Refresh this widget before completing a task.") }
         self.id = id; self.account = account; self.taskID = taskID; self.token = token; self.createdAt = date
     }
-    public func matches(_ other: WidgetCompletionRequest) -> Bool { account == other.account && taskID.lowercased() == other.taskID.lowercased() && token == other.token }
+    public func matches(_ other: WidgetCompletionRequest) -> Bool { account == other.account && WidgetTaskIdentity.key(taskID) == WidgetTaskIdentity.key(other.taskID) && token == other.token }
 }
 public struct WidgetActionFailure: LocalizedError {
     public var message: String
@@ -35,25 +40,26 @@ public struct WidgetCompletionFeedback: Codable, Equatable, Sendable {
     public var title: String
     public var listIDs: [String]
     public var savedAt: Date
+    public var routeContext: String? = nil
     public var expiresAt: Date { savedAt.addingTimeInterval(8) }
     public func visible(account: String, listID: String?, at date: Date) -> Bool {
         !account.isEmpty && self.account == account && listID.map(listIDs.contains) == true && date >= savedAt && date < expiresAt
     }
     public static func capture(_ request: WidgetCompletionRequest, projection: Data?, at date: Date = Date()) -> Self? {
         struct Projection: Decodable {
-            struct Task: Decodable { var id: String; var title: String; var completionToken: String? }
+            struct Task: Decodable { var id: String; var title: String; var completionToken: String?; var routeContext: String? }
             struct List: Decodable { var id: String; var days: [String: [String]]; var timeZone: String }
-            var account: String; var tasks: [Task]; var lists: [List]
+            var account: String; var tasks: [Task]; var nestedTasks: [Task]?; var lists: [List]
         }
         guard let projection, let value = try? JSONDecoder().decode(Projection.self, from: projection),
               value.account == request.account,
-              let task = value.tasks.first(where: { $0.id.lowercased() == request.taskID.lowercased() && $0.completionToken == request.token }) else { return nil }
+              let task = (value.tasks + (value.nestedTasks ?? [])).first(where: { WidgetTaskIdentity.key($0.id) == WidgetTaskIdentity.key(request.taskID) && $0.completionToken == request.token }) else { return nil }
         let lists = value.lists.filter { list in
             guard let zone = TimeZone(identifier: list.timeZone) else { return false }
             let formatter = DateFormatter(); formatter.calendar = Calendar(identifier: .gregorian); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.timeZone = zone; formatter.dateFormat = "yyyy-MM-dd"
             return (list.days["*"] ?? list.days[formatter.string(from: date)])?.contains(task.id) == true
         }.map(\.id)
-        return Self(account: request.account, taskID: task.id, title: task.title, listIDs: lists, savedAt: date)
+        return Self(account: request.account, taskID: task.id, title: task.title, listIDs: lists, savedAt: date, routeContext: task.routeContext)
     }
 }
 
@@ -67,16 +73,17 @@ public final class WidgetActionDisk: @unchecked Sendable {
     private struct Queue: Codable { var version = 1; var requests: [WidgetCompletionRequest] = [] }
     private struct Projection: Decodable {
         struct Task: Decodable { var id: String; var completionToken: String? }
-        var version: Int; var account: String; var tasks: [Task]
-        private enum CodingKeys: String, CodingKey { case version, account, tasks }
+        var version: Int; var account: String; var tasks: [Task]; var nestedTasks: [Task]
+        private enum CodingKeys: String, CodingKey { case version, account, tasks, nestedTasks }
         init(from decoder: Decoder) throws {
             let row = try decoder.container(keyedBy: CodingKeys.self)
             version = try row.decodeIfPresent(Int.self, forKey: .version) ?? 1
             account = try row.decodeIfPresent(String.self, forKey: .account) ?? ""
             tasks = try row.decode([Task].self, forKey: .tasks)
+            nestedTasks = try row.decodeIfPresent([Task].self, forKey: .nestedTasks) ?? []
         }
         func accepts(_ request: WidgetCompletionRequest) -> Bool {
-            version == 2 && account == request.account && tasks.contains { $0.id.lowercased() == request.taskID.lowercased() && $0.completionToken == request.token }
+            version == 2 && account == request.account && (tasks + nestedTasks).contains { WidgetTaskIdentity.key($0.id) == WidgetTaskIdentity.key(request.taskID) && $0.completionToken == request.token }
         }
     }
     public init(directory: URL) { self.directory = directory }

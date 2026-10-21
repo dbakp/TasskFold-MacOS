@@ -588,7 +588,7 @@ final class Store {
         let fallback = busy.anyConnected ? (busy.connected && busy.selected.isEmpty && busy.links?.active != true ? "choose" : "refresh") : "off"
         var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people, viewPreferences: rows("view_preferences"), viewOrders: rows("view_orders"))
         if let feedback = snapshot.widgetCompletion.feedback, feedback.account == account,
-           Date() < feedback.expiresAt, record("tasks", id: feedback.taskID)?.completed == true {
+           Date() < feedback.expiresAt, widgetFeedbackIsCurrent(feedback) {
             payload["completionFeedback"] = try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(feedback))
         }
         do { try disk.publish(JSONEncoder().encode(payload)); widgetPublicationRevision += 1 }
@@ -1875,5 +1875,20 @@ extension Store {
 extension Store {
     func previewFilterCount(_ rule: FilterRule, includeCompleted: Bool) -> Int {
         matching(TaskQuery(scope: .all, includeCompleted: includeCompleted || (!rule.hasQuerySections && rule.includesCompletion), filter: rule, now: calendarContext.minute, datePreferences: datePhrasePreferences, filterLabels: labels.map { FilterReference(id: $0.id, name: $0.name) }, filterProjects: FilterReference.projects(projects), filterSections: rows("sections").map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: filterContext.personReferences, userID: userID)).count
+    }
+}
+
+
+extension Store {
+    /// The URL boundary checks account/readability before resolving a nested path.
+    func widgetLinkedTask(_ url: URL) throws -> Record {
+        guard allowsWidgetRecordLink(url), url.scheme == "taskfold", url.host == "task", focusAvailable else { throw WidgetActionFailure("This task widget is unavailable in your current workspace.") }
+        return try WidgetRecordLink.task(url, roots: activeTasks, projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
+    }
+    private func widgetFeedbackIsCurrent(_ feedback: WidgetCompletionFeedback) -> Bool {
+        guard let task = try? selectionRecord(feedback.taskID), task.completed else { return false }
+        guard SubtaskTree.referencePath(feedback.taskID) != nil else { return true }
+        guard let selection = try? hierarchySelection(for: task) else { return false }
+        return WidgetCompletion.routeContext(selection.item) == feedback.routeContext
     }
 }

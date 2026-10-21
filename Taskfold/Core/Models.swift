@@ -1453,18 +1453,22 @@ enum WidgetProjection {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
         let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders)
         let pulse = pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar)
+        let nested = WidgetCompletion.hierarchy(Snapshot(tables: ["tasks": tasks, "projects": projects, "saved_views": savedViews]), account: account)?.items.filter { $0.isSubtask && !$0.record.completed } ?? []
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        let rows = tasks.filter { !$0.completed }.map { task -> JSON in
+        func projected(_ task: Record, parent: String? = nil, routeContext: String? = nil) -> JSON {
             let project = projects[task.string("project_id")]
             let instant = !task.string("time_zone").isEmpty ? TaskPlanning.start(task).map { ISO8601DateFormatter().string(from: $0) } : nil
             return .object(["id": .string(task.id), "title": .string(task.title), "due": .string(String(task.string("due_date").prefix(10))), "time": .string(String(task.string("due_time").prefix(5))),
-                "completionToken": completionTokens[task.id.lowercased()].map(JSON.string) ?? .null,
+                "completionToken": completionTokens[WidgetTaskIdentity.key(task.id)].map(JSON.string) ?? .null,
+                "parent": parent.map(JSON.string) ?? .null, "routeContext": routeContext.map(JSON.string) ?? .null,
                 "priority": .number(Double(task.priority)), "project": .string(project?.name ?? ""), "projectID": .string(task.string("project_id")), "color": .string(project?.string("color") ?? ""),
                 "deadline": task.deadline.map { _ in .string(String(task.string("deadline_date").prefix(10))) } ?? .null,
                 "duration": task.durationMinutes.map { .number(Double($0)) } ?? .null,
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
-        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "projectPulse": pulse, "focusSession": focusReadable ? focusPayload(focusRecord, tasks: tasks, account: account, conflict: focusConflict) : .null, "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
+        let rows = tasks.filter { !$0.completed }.map { projected($0) }
+        let nestedRows = nested.map { projected($0.record, parent: $0.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext($0)) }
+        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "nestedTasks": .array(nestedRows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "projectPulse": pulse, "focusSession": focusReadable ? focusPayload(focusRecord, tasks: tasks, account: account, conflict: focusConflict) : .null, "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
     }
 
     static func focusPayload(_ row: Record?, tasks: [Record], account: String, conflict: Bool) -> JSON {
@@ -1561,7 +1565,6 @@ enum WidgetProjection {
             guard let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: context)) != nil else {
                 result.append(row(view, kind: "filter", days: [:], error: true)); continue
             }
-            if rule.needsChildCandidates { result.append(row(view, kind: "filter", days: [:], error: true)); continue }
             if rule.usesTaskHierarchy, (try? cache.hierarchyCandidates(for: rule, projects: FilterReference.projects(projects), userID: account)) == nil { result.append(row(view, kind: "filter", days: [:], error: true)); continue }
             let ordering=view.fields["sort_by"]?.text ?? "manual", grouping=view.fields["grouping"]?.text ?? "none"
             guard supportedSort(ordering),["none","project","priority","date","deadline"].contains(grouping) else { result.append(row(view,kind:"filter",days:[:],error:true));continue }
@@ -1887,12 +1890,43 @@ enum WidgetRecordLink {
     static func allows(_ url: URL, account: String, available: Bool) -> Bool {
         guard url.scheme == "taskfold", let host = url.host,
               ["task", "project", "label", "view"].contains(host),
-              let parts = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              let items = parts.queryItems, items.contains(where: { $0.name == "account" }) else { return true }
-        guard available, !account.isEmpty, items.count == 1,
-              items[0].name == "account", items[0].value == account,
-              parts.fragment == nil, url.pathComponents.count == 2,
-              !url.lastPathComponent.isEmpty else { return false }
+              let parts = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return true }
+        let child = host == "task" && url.lastPathComponent.hasPrefix("subtask:")
+        let items = parts.queryItems ?? []
+        if !child && !items.contains(where: { $0.name == "account" }) { return true }
+        guard available, !account.isEmpty, parts.fragment == nil,
+              url.pathComponents.count == 2, !url.lastPathComponent.isEmpty,
+              items.filter({ $0.name == "account" }).map(\.value) == [account] else { return false }
+        if child {
+            guard SubtaskTree.referencePath(url.lastPathComponent) != nil, items.count == 2,
+                  let context = items.first(where: { $0.name == "context" })?.value,
+                  context.count == 64, context.allSatisfy({ "0123456789abcdef".contains($0) }) else { return false }
+        } else if items.count != 1 { return false }
         return true
+    }
+}
+
+
+extension WidgetRecordLink {
+    /// Completed children still belong in the list containing their actual root.
+    static func containingTask(_ task: Record, roots: [Record]) -> Record? {
+        guard let path = SubtaskTree.referencePath(task.id) else { return task }
+        let matches = roots.filter { $0.id == path[0] }
+        return matches.count == 1 ? matches[0] : nil
+    }
+    static func task(_ url: URL, roots: [Record], projects: [Record], workspace: WorkspaceBinding) throws -> Record {
+        guard allows(url, account: workspace.account, available: true), url.scheme == "taskfold", url.host == "task" else { throw WidgetActionFailure("This task widget is unavailable in your current workspace.") }
+        let id = url.lastPathComponent
+        if let path = SubtaskTree.referencePath(id) {
+            let selectedRoots = roots.filter { $0.id == path[0] }
+            guard selectedRoots.count == 1 else { throw WidgetActionFailure("This subtask is no longer available.") }
+            let index = try TaskHierarchyIndex(roots: selectedRoots, projects: projects, workspace: workspace)
+            guard let item = index.item(id), WidgetCompletion.routeContext(item) == URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "context" })?.value else { throw WidgetActionFailure("This subtask moved or was replaced. Refresh its widget.") }
+            return item.record
+        }
+        let selectedRoots = roots.filter { $0.id == id }
+        guard selectedRoots.count == 1, let task = selectedRoots.first,
+              task.string("project_id").isEmpty || (projects.filter { $0.id == task.string("project_id") }.count == 1 && !ProjectOrganization.archived(task.string("project_id"), in: projects)) else { throw WidgetActionFailure("This task is no longer accessible.") }
+        return task
     }
 }

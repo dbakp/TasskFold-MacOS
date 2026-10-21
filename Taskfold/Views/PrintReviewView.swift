@@ -108,9 +108,9 @@ struct PrintReviewView: View {
                     if !request.document.noteOnly {
                         Section("Content") {
                             Toggle("Include notes", isOn: $options.notes).accessibilityIdentifier("printIncludeNotes")
-                            Toggle("Include checklists", isOn: $options.checklists).accessibilityIdentifier("printIncludeChecklists")
+                            if !request.document.hierarchyResults { Toggle("Include checklists", isOn: $options.checklists).accessibilityIdentifier("printIncludeChecklists") }
                         }
-                        Section { Text("Includes all matching tasks and collapsed groups. Checklists include their nested items.").foregroundStyle(.secondary) }
+                        Section { Text(request.document.hierarchyResults ? "Includes matching tasks and subtasks with their parent paths. Nonmatching checklist items are excluded." : "Includes all matching tasks and collapsed groups. Checklists include their nested items.").foregroundStyle(.secondary) }
                     }
                     if !request.document.subtitle.isEmpty { Section { Text(request.document.subtitle).foregroundStyle(.secondary) } }
                 } else { Text("The document or workspace changed. Close this preview and reopen it.") }

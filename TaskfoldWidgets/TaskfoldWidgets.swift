@@ -23,6 +23,8 @@ struct WidgetTask: Codable, Identifiable {
     var scheduledAt: String? = nil
     var timeZone: String? = nil
     var completionToken: String? = nil
+    var parent: String? = nil
+    var routeContext: String? = nil
     var estimate: Int? { duration.flatMap { (1...10080).contains($0) ? $0 : nil } }
     var deadlineDay: String? { deadline.flatMap { WidgetSnapshot.validDay($0) ? $0 : nil } }
     func displayed(calendar: Calendar) -> WidgetTask {
@@ -51,12 +53,18 @@ struct WidgetTask: Codable, Identifiable {
         return local.date(bySettingHour: clock[0], minute: clock[1], second: 0, of: day, matchingPolicy: .nextTimePreservingSmallerComponents, repeatedTimePolicy: .first, direction: .forward)
     }
     var url: URL { WidgetLinks.task(id) }
-    func url(account: String) -> URL { WidgetLinks.task(id, account: account) }
+    func url(account: String) -> URL { WidgetLinks.task(id, account: account, context: routeContext) }
 }
 
 enum WidgetLinks {
     static func task(_ id: String) -> URL { scoped("task", id: id) }
-    static func task(_ id: String, account: String) -> URL { scoped("task", id: id, account: account) }
+    static func task(_ id: String, account: String, context: String? = nil) -> URL {
+        let url = scoped("task", id: id, account: account)
+        guard id.hasPrefix("subtask:"), let context, !account.isEmpty else { return url }
+        var parts = URLComponents(url: url, resolvingAgainstBaseURL: false)!
+        parts.queryItems = (parts.queryItems ?? []) + [URLQueryItem(name: "context", value: context)]
+        return parts.url ?? URL(string: "taskfold://all")!
+    }
     static func scoped(_ host: String, id: String, account: String) -> URL {
         guard !account.isEmpty else { return URL(string: "taskfold://all")! }
         var parts = URLComponents(url: scoped(host, id: id), resolvingAgainstBaseURL: false)!
@@ -198,6 +206,7 @@ enum WidgetNoteStatus: Equatable { case ready, choose, unavailable, refresh }
 struct WidgetSnapshot: Codable {
     var updated: TimeInterval
     var tasks: [WidgetTask]
+    var nestedTasks: [WidgetTask]? = nil
     var version: Int
     var account: String
     var lists: [WidgetList] = []
@@ -211,13 +220,14 @@ struct WidgetSnapshot: Codable {
     init(updated: TimeInterval, tasks: [WidgetTask], version: Int = 2, account: String = "", lists: [WidgetList] = []) {
         self.updated = updated; self.tasks = tasks; self.version = version; self.account = account; self.lists = lists
     }
-    private enum CodingKeys: String, CodingKey { case updated, tasks, version, account, lists, pendingSync, capacity, notes, focusSession, projectPulse, completionFeedback }
+    private enum CodingKeys: String, CodingKey { case updated, tasks, nestedTasks, version, account, lists, pendingSync, capacity, notes, focusSession, projectPulse, completionFeedback }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         version = try row.decodeIfPresent(Int.self, forKey: .version) ?? 1
         guard (1...2).contains(version) else { throw DecodingError.dataCorruptedError(forKey: .version, in: row, debugDescription: "Unsupported widget snapshot version") }
         updated = try row.decode(TimeInterval.self, forKey: .updated)
         tasks = try row.decode([WidgetTask].self, forKey: .tasks)
+        nestedTasks = try row.decodeIfPresent([WidgetTask].self, forKey: .nestedTasks)
         account = try row.decodeIfPresent(String.self, forKey: .account) ?? ""
         lists = try row.decodeIfPresent([WidgetList].self, forKey: .lists) ?? []
         pendingSync = max(0, try row.decodeIfPresent(Int.self, forKey: .pendingSync) ?? 0)
@@ -362,12 +372,21 @@ struct WidgetSnapshot: Codable {
                   date.timeIntervalSinceReferenceDate >= start, date.timeIntervalSinceReferenceDate < end else { return .refresh }
         }
         if target.kind == "filter", (target.timeZone != calendar.timeZone.identifier || target.days[Self.day(date, calendar: calendar)] == nil) { return .refresh }
+        if target.kind == "filter" {
+            let members = target.days[Self.day(date, calendar: calendar)] ?? []
+            let children = members.filter { $0.hasPrefix("subtask:") }
+            if !children.isEmpty {
+                guard let nestedTasks else { return .refresh }
+                let available = Set(nestedTasks.map(\.id))
+                guard children.allSatisfy(available.contains) else { return .unavailable }
+            }
+        }
         return .ready
     }
     func listTasks(_ id: String?, at date: Date, calendar: Calendar = .current) -> [WidgetTask] {
         guard listStatus(id, at: date, calendar: calendar) == .ready, let target = list(id) else { return [] }
         let ids = target.kind == "filter" ? target.days[Self.day(date, calendar: calendar)] ?? [] : target.days["*"] ?? []
-        let byID = Dictionary(tasks.map { ($0.id, $0.displayed(calendar: calendar)) }, uniquingKeysWith: { first, _ in first })
+        let byID = Dictionary((tasks + (target.kind == "filter" ? (nestedTasks ?? []) : [])).map { ($0.id, $0.displayed(calendar: calendar)) }, uniquingKeysWith: { first, _ in first })
         var seen = Set<String>()
         return ids.compactMap { seen.insert($0).inserted ? byID[$0] : nil }
     }
@@ -1069,6 +1088,7 @@ struct ListWidgetView: View {
     private func detail(_ task: WidgetTask) -> String {
         var parts:[String]=[]
         if !entry.hideTitles, let group=entry.snapshot.listGroups(entry.listID,at:entry.date).first(where:{$0.ids.contains(task.id)}), !group.name.isEmpty { parts.append(group.name) }
+        if !entry.hideTitles, let parent = task.parent, !parent.isEmpty { parts.append(parent) }
         if WidgetSnapshot.validDay(task.due) { parts.append("Planned \(widgetDate(task.due))") }
         return parts.joined(separator:" · ")
     }
@@ -1117,7 +1137,7 @@ struct ListWidgetView: View {
             } else {
                 if let feedback {
                     HStack(spacing: 2) {
-                    Link(destination: WidgetLinks.task(feedback.taskID, account: feedback.account)) {
+                    Link(destination: WidgetLinks.task(feedback.taskID, account: feedback.account, context: feedback.routeContext)) {
                         HStack(spacing: 8) {
                             Image(systemName: "checkmark.circle.fill").font(.system(size: 21)).foregroundStyle(tint)
                             VStack(alignment: .leading, spacing: 2) {

@@ -173,3 +173,131 @@ final class WidgetActionTests: XCTestCase {
         }
     }
 }
+
+final class HierarchyWidgetTests: XCTestCase {
+    private var calendar: Calendar { var value = Calendar(identifier: .gregorian); value.timeZone = TimeZone(secondsFromGMT: 0)!; return value }
+    private var now: Date { Dates.parse("2026-10-21", calendar: calendar)!.addingTimeInterval(12 * 3600) }
+    private var workspace: WorkspaceBinding { WorkspaceBinding(account: "owner", generation: UUID()) }
+    private func fixture() -> Snapshot {
+        let leaf: JSON = .object(["id": .string("CaseSensitiveLeaf"), "title": .string("Review contrast"), "completed": .bool(false), "priority": .number(1), "due_date": .string("2026-10-21")])
+        let branch: JSON = .object(["id": .string("branch"), "title": .string("Design review"), "completed": .bool(false), "subtasks": .array([leaf])])
+        let sibling: JSON = .object(["id": .string("sibling"), "title": .string("Publish"), "completed": .bool(false)])
+        let root = Record(["id": .string("root"), "title": .string("Release plan"), "completed": .bool(false), "project_id": .string("p"), "task_generation": .string("root-generation"), "created_at": .string("2026-10-20T10:00:00Z"), "due_date": .string("2026-10-21"), "subtasks": .array([branch, sibling])])
+        let view = Record(["id": .string("children"), "name": .string("Subtasks"), "query_ast": FilterRule.predicate("subtask", "").document])
+        var result = Snapshot(tables: ["tasks": [root], "projects": [Record(["id": .string("p"), "name": .string("Studio")])], "saved_views": [view]])
+        WidgetCompletion.prepare(&result); return result
+    }
+    private func index(_ value: Snapshot) throws -> TaskHierarchyIndex { try TaskHierarchyIndex(roots: value.tables["tasks"]!, projects: value.tables["projects"]!, workspace: workspace) }
+    private func leaf(_ value: Snapshot) throws -> TaskHierarchyIndex.Item { try XCTUnwrap(try index(value).items.first { $0.source.id == "CaseSensitiveLeaf" }) }
+    private func payload(_ value: Snapshot, account: String = "owner") -> [String: JSON] { WidgetProjection.payload(tasks: value.tables["tasks"]!, projects: value.tables["projects"]!, account: account, now: now, savedViews: value.tables["saved_views"]!, calendar: calendar, completionTokens: WidgetCompletion.tokens(value)) }
+    private func action(_ value: Snapshot) throws -> WidgetCompletionRequest { let item = try leaf(value); return try WidgetCompletionRequest(account: "owner", taskID: item.id, token: XCTUnwrap(WidgetCompletion.tokens(value)[item.id]), at: now) }
+    func testChildMembershipUsesSeparateCatalogAndNeverChangesDefaultCounts() throws {
+        let value = fixture(), before = value, data = try JSONEncoder().encode(payload(value))
+        let widget = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
+        XCTAssertEqual(widget.tasks.map(\.title), ["Release plan"]); XCTAssertEqual(widget.nestedTasks?.count, 3)
+        let list = try XCTUnwrap(widget.availableLists.first { $0.recordID == "children" })
+        XCTAssertEqual(widget.listStatus(list.id, at: now, calendar: calendar), .ready)
+        XCTAssertEqual(Set(widget.listTasks(list.id, at: now, calendar: calendar).map(\.title)), ["Design review", "Review contrast", "Publish"])
+        let child = try XCTUnwrap(widget.listTasks(list.id, at: now, calendar: calendar).first { $0.title == "Review contrast" })
+        XCTAssertEqual(child.parent, "Release plan › Design review"); XCTAssertNotNil(child.completionToken)
+        XCTAssertEqual(widget.inboxReading().count, 0)
+        let project = try XCTUnwrap(widget.availableLists.first { $0.recordID == "p" })
+        XCTAssertEqual(widget.listTasks(project.id, at: now, calendar: calendar).count, 1)
+        XCTAssertEqual(value, before)
+    }
+    func testDiskHandoffCompletesOnlyRealRootSubtreeAndRetainsReceiptThroughUndo() throws {
+        var value = fixture(); let before = value, request = try action(value)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-child-widget-" + UUID().uuidString); defer { try? FileManager.default.removeItem(at: directory) }
+        let disk = WidgetActionDisk(directory: directory), data = try JSONEncoder().encode(payload(value))
+        try disk.publish(data); XCTAssertEqual(try disk.enqueue(request), request); XCTAssertEqual(try disk.enqueue(request), request)
+        XCTAssertEqual(try disk.pending(account: "owner").count, 1)
+        let feedback = try XCTUnwrap(WidgetCompletionFeedback.capture(request, projection: data, at: now))
+        XCTAssertEqual(feedback.title, "Review contrast"); XCTAssertEqual(feedback.routeContext, WidgetCompletion.routeContext(try leaf(value)))
+        guard case .complete(let changes) = WidgetCompletion.plan(request, snapshot: value, account: "owner") else { return XCTFail("Missing child completion") }
+        XCTAssertEqual(changes.count, 1); XCTAssertEqual(changes[0].recordID, "root"); XCTAssertEqual(Set(changes[0].fields.keys), ["subtasks"])
+        let history = EditHistory(changes: changes, snapshot: value)
+        changes.forEach { value.apply($0); value.pending.append($0) }; value.widgetCompletion.record(request); value.widgetCompletion.feedback = feedback; WidgetCompletion.prepare(&value)
+        XCTAssertFalse(value.tables["tasks"]![0].completed); XCTAssertTrue(try leaf(value).record.completed); XCTAssertEqual(value.tables["tasks"]?.count, 1)
+        var restored = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(value))
+        XCTAssertTrue(restored.widgetCompletion.saved(request)); XCTAssertEqual(restored.pending, changes)
+        let widget = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(payload(restored)))
+        XCTAssertFalse(widget.nestedTasks!.contains { $0.id == request.taskID })
+        history.undo.forEach { restored.apply($0) }; WidgetCompletion.prepare(&restored)
+        XCTAssertEqual(restored.tables["tasks"], before.tables["tasks"])
+        guard case .saved = WidgetCompletion.plan(request, snapshot: restored, account: "owner") else { return XCTFail("Receipt retry cannot repeat completion after Undo") }
+        try disk.acknowledge(request); XCTAssertTrue(try disk.pending(account: "owner").isEmpty)
+    }
+    func testIndependentDescendantCompletionKeepsParentCheckboxUsable() throws {
+        var value = fixture(); let request = try action(value)
+        let parent = try XCTUnwrap(try index(value).items.first { $0.source.id == "branch" })
+        let parentRequest = try WidgetCompletionRequest(account: "owner", taskID: parent.id, token: XCTUnwrap(WidgetCompletion.tokens(value)[parent.id]), at: now)
+        guard case .complete(let changes) = WidgetCompletion.plan(request, snapshot: value, account: "owner") else { return XCTFail("Missing leaf completion") }
+        changes.forEach { value.apply($0) }; WidgetCompletion.prepare(&value)
+        XCTAssertEqual(WidgetCompletion.tokens(value)[parent.id], parentRequest.token)
+        guard case .complete(let next) = WidgetCompletion.plan(parentRequest, snapshot: value, account: "owner") else { return XCTFail("Independent parent checkbox became stale") }
+        next.forEach { value.apply($0) }
+        XCTAssertTrue(try leaf(value).record.completed)
+        XCTAssertTrue(try index(value).item(parent.id)!.record.completed)
+        XCTAssertFalse(value.tables["tasks"]![0].completed)
+    }
+    func testStaleChangedMovedReplacedRevokedAndMalformedChildActionsRefuseAtomically() throws {
+        let value = fixture(), request = try action(value)
+        var samples: [Snapshot] = []
+        var changed = value; changed.tables["tasks"]?[0]["subtasks"] = SubtaskTree.changing(value.tables["tasks"]![0]["subtasks"], id: "CaseSensitiveLeaf", fields: ["title": .string("Replacement")]); samples.append(changed)
+        changed = value; changed.tables["tasks"]?[0]["task_generation"] = .string("new-generation"); samples.append(changed)
+        changed = value; changed.tables["tasks"]?[0]["section_id"] = .string("moved"); samples.append(changed)
+        changed = value; changed.tables["projects"]?[0]["is_archived"] = .bool(true); samples.append(changed)
+        changed = value; changed.tables["projects"] = []; samples.append(changed)
+        changed = value; changed.tables["tasks"]?[0]["subtasks"] = .object(["unknown": .bool(true)]); samples.append(changed)
+        changed = value; changed.tables["tasks"]?[0]["subtasks"] = .array([]); samples.append(changed)
+        for var sample in samples {
+            for prepared in [false, true] {
+                if prepared { WidgetCompletion.prepare(&sample) }
+                let before = sample
+                guard case .stale = WidgetCompletion.plan(request, snapshot: sample, account: "owner") else { return XCTFail("Stale child action accepted") }
+                XCTAssertEqual(sample, before)
+            }
+        }
+        guard case .stale = WidgetCompletion.plan(request, snapshot: value, account: "other") else { return XCTFail("Wrong account") }
+    }
+    func testEncodedPathsStayCaseSensitiveAcrossRequestsReceiptsAndDisk() throws {
+        let value = fixture(), request = try action(value)
+        var corrupt = request; corrupt.taskID = request.taskID.lowercased(); XCTAssertNotEqual(request.taskID, corrupt.taskID)
+        XCTAssertFalse(request.matches(corrupt)); var copy = value; copy.widgetCompletion.record(request); XCTAssertFalse(copy.widgetCompletion.saved(corrupt))
+        guard case .stale = WidgetCompletion.plan(corrupt, snapshot: value, account: "owner") else { return XCTFail("Case-folded path accepted") }
+        XCTAssertEqual(WidgetTaskIdentity.key("ABC-DEF"), "abc-def")
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-child-case-" + UUID().uuidString); defer { try? FileManager.default.removeItem(at: directory) }
+        let disk = WidgetActionDisk(directory: directory); try disk.publish(JSONEncoder().encode(payload(value)))
+        XCTAssertThrowsError(try disk.enqueue(corrupt)); XCTAssertEqual(try disk.enqueue(request), request)
+    }
+    func testScopedLinksResolveExactChildAndRejectOldIncarnationsOrMissingContext() throws {
+        let value = fixture(), item = try leaf(value)
+        let url = WidgetLinks.task(item.id, account: "owner", context: WidgetCompletion.routeContext(item))
+        XCTAssertTrue(WidgetRecordLink.allows(url, account: "owner", available: true))
+        XCTAssertEqual(try WidgetRecordLink.task(url, roots: value.tables["tasks"]!, projects: value.tables["projects"]!, workspace: workspace), item.record)
+        for link in [WidgetLinks.task(item.id), WidgetLinks.task(item.id, account: "owner"), WidgetLinks.task(item.id, account: "other", context: WidgetCompletion.routeContext(item)), URL(string: url.absoluteString + "&context=duplicate")!] {
+            XCTAssertFalse(WidgetRecordLink.allows(link, account: "owner", available: true))
+        }
+        var roots = value.tables["tasks"]!; roots[0]["task_generation"] = .string("replaced")
+        XCTAssertThrowsError(try WidgetRecordLink.task(url, roots: roots, projects: value.tables["projects"]!, workspace: workspace))
+        XCTAssertFalse(WidgetRecordLink.allows(url, account: "owner", available: false))
+        roots = value.tables["tasks"]!; roots[0]["subtasks"] = SubtaskTree.changing(roots[0]["subtasks"], id: "CaseSensitiveLeaf", fields: ["completed": .bool(true)])
+        let completed = try WidgetRecordLink.task(url, roots: roots, projects: value.tables["projects"]!, workspace: workspace)
+        XCTAssertTrue(completed.completed, "Completion feedback can open the same saved child")
+        XCTAssertEqual(WidgetRecordLink.containingTask(completed, roots: roots)?.completed, false, "A completed child must not route to an empty root Completed list")
+        roots[0]["completed"] = .bool(true)
+        XCTAssertEqual(WidgetRecordLink.containingTask(completed, roots: roots)?.completed, true)
+        XCTAssertNil(WidgetRecordLink.containingTask(completed, roots: []))
+    }
+    func testMissingNestedCatalogCannotRenderFalseAllClearAndSignOutClearsContent() throws {
+        let value = fixture(); var published = payload(value)
+        published.removeValue(forKey: "nestedTasks")
+        var widget = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(published))
+        let list = try XCTUnwrap(widget.availableLists.first { $0.recordID == "children" })
+        XCTAssertEqual(widget.listStatus(list.id, at: now, calendar: calendar), .refresh)
+        published["nestedTasks"] = .array([]); widget = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(published))
+        XCTAssertEqual(widget.listStatus(list.id, at: now, calendar: calendar), .unavailable)
+        let empty = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(payload(value, account: "")))
+        XCTAssertTrue(empty.tasks.isEmpty); XCTAssertTrue(empty.availableLists.isEmpty); XCTAssertTrue(empty.nestedTasks?.isEmpty ?? true)
+    }
+}

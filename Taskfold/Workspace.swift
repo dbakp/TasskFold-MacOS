@@ -306,9 +306,15 @@ final class Workspace {
 
     /// External links need a list context that agrees with the task being inspected.
     func openExternalTask(_ id: String) {
-        guard let task = taskRecord(id) else { return }
+        guard let task = try? store.selectionRecord(id), let containing = WidgetRecordLink.containingTask(task, roots: store.activeTasks) else { return }
+        if let path = Self.subtaskPath(id) {
+            expandedTasks.insert(path[0])
+            if path.count > 2 {
+                for end in 2..<path.count { expandedTasks.insert("subtask:" + (try! JSONEncoder().encode(Array(path.prefix(end)))).base64EncodedString()) }
+            }
+        }
         let project = task.string("project_id")
-        if task.completed { section = .completed }
+        if containing.completed { section = .completed }
         else if !project.isEmpty, store.record("projects", id: project) != nil { section = .project(project) }
         else { section = .inbox }
         search = ""
