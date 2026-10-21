@@ -381,6 +381,7 @@ struct Snapshot: Codable, Equatable, Sendable {
     var tables: [String: [Record]] = [:]
     var pending: [Mutation] = []
     var widgetCompletion = WidgetCompletionCache()
+    var sharedCaptureReceipts: [String: String]? = nil
     mutating func apply(_ change: Mutation) {
         if change.organizationOrder != nil || change.method == "ORDER" {
             guard let command = change.organizationOrder, OrganizationOrder.valid(change) else { return }
@@ -497,12 +498,13 @@ extension Snapshot {
 }
 
 extension Snapshot {
-    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion }
+    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion, sharedCaptureReceipts }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         tables = try row.decode([String: [Record]].self, forKey: .tables)
         pending = try row.decode([Mutation].self, forKey: .pending)
         widgetCompletion = try row.decodeIfPresent(WidgetCompletionCache.self, forKey: .widgetCompletion) ?? WidgetCompletionCache()
+        sharedCaptureReceipts = try row.decodeIfPresent([String: String].self, forKey: .sharedCaptureReceipts)
     }
 }
 

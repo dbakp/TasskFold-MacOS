@@ -26,5 +26,6 @@
   ],
   "olderActiveWritersSupported": false,
   "serverRejectsAllLegacyDirectWrites": false,
-  "distributionAccepted": false
+  "distributionAccepted": false,
+  "shareBundleID": "com.dbakp.taskfold.mac.share"
 }

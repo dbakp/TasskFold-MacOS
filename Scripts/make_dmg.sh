@@ -25,8 +25,8 @@ import plistlib, subprocess, sys
 with open(sys.argv[1], 'rb') as f: options = plistlib.load(f)
 if options.get('method') != 'developer-id' or options.get('signingStyle') != 'manual':
     raise SystemExit('Export must use developer-id and existing manual signing inputs')
-if not options.get('teamID') or not all(options.get('provisioningProfiles', {}).get(key) for key in ('com.dbakp.taskfold.mac', 'com.dbakp.taskfold.mac.widgets')):
-    raise SystemExit('Supply the team and existing app/widget provisioning profiles')
+if not options.get('teamID') or not all(options.get('provisioningProfiles', {}).get(key) for key in ('com.dbakp.taskfold.mac', 'com.dbakp.taskfold.mac.widgets', 'com.dbakp.taskfold.mac.share')):
+    raise SystemExit('Supply the team and existing app/widget/share provisioning profiles')
 identities = subprocess.check_output(['security', 'find-identity', '-v', '-p', 'codesigning'], text=True)
 if '"Developer ID Application:' not in identities:
     raise SystemExit('No valid Developer ID Application identity installed; no build started')
@@ -58,11 +58,11 @@ PROJECT_BACKUP="$(mktemp -d)"
 cp Taskfold.xcodeproj/project.pbxproj "$PROJECT_BACKUP/project.pbxproj"
 cp Taskfold.xcodeproj/xcshareddata/xcschemes/Taskfold.xcscheme "$PROJECT_BACKUP/Taskfold.xcscheme"
 if [ "$MODE" != "distribution" ]; then
-  TASKFOLD_WIDGETS=1 python3 Scripts/generate_project.py >/dev/null
+  TASKFOLD_WIDGETS=1 TASKFOLD_SHARE=1 python3 Scripts/generate_project.py >/dev/null
 fi
 if [ "$MODE" = "distribution" ]; then
   echo "▸ Building Release (distribution: ad hoc signature, no widget extension)"
-  TASKFOLD_WIDGETS=0 python3 Scripts/generate_project.py >/dev/null
+  TASKFOLD_WIDGETS=0 TASKFOLD_SHARE=0 python3 Scripts/generate_project.py >/dev/null
   xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Release -derivedDataPath "$BUILD" \
     CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="-" DEVELOPMENT_TEAM="" \
     PROVISIONING_PROFILE_SPECIFIER="" CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO CODE_SIGN_ENTITLEMENTS=Taskfold/Taskfold-Distribution.entitlements \

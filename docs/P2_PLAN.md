@@ -26,6 +26,14 @@ Export first opens a contents review, then a native Mac save panel or the iOS sa
 
 Validation is tracked in `p2-template-files-evidence.json`. File import/export uses the system picker; Taskfold does not publish an online sharing link. The chosen file provider controls its storage destination. Rank 1 does not include a public template catalog, online sharing links or registering JSON as the default app file type.
 
+## Share capture implementation (rank 2, acceptance in progress)
+
+Each repository owns a native `TaskfoldShare` extension, its sources, entitlements and embedded target. The Share menu accepts text and one web URL. The extension reviews editable title, notes and source, displays the captured workspace, and saves only on **Save draft**. It does not fetch the webpage or access account credentials. Drafts remain on this device until the user opens **Shared drafts**, reviews the destination and chooses **Add task**. Cancel keeps tasks unchanged. A count beside Shared drafts helps surface captures when returning to Taskfold.
+
+The draft mailbox has a cross-process lock, atomic writes, a 64-draft capacity, a bounded 8 MB read and a 100 KB title/notes limit. It uses the existing app-group boundary and protection until first device authentication, matching the account cache/widget handoff. A workspace session change invalidates an open extension review; saved drafts remain bound to the original account. A task and its local receipt save together. A failed mailbox acknowledgement can retry without recreating a task after deletion or Undo. Shared words do not implicitly schedule, prioritize, label or assign a task.
+
+Current evidence: 23 focused share tests, broader core suites (889 iOS / 913 Mac cases, with 12 / 32 explicitly skipped), a real four-process mailbox exercise, owned-target/configuration checks and isolated app builds. The final iPhone run verifies genuine Safari capture, extension Cancel, save with the containing app fully quit, host review/Cancel, disk-full rollback, inline retry, Add and normal relaunch. Another sharing app, authenticated cloud/offline retry, native account-switch acceptance, tablet/Mac layout, large text and accessibility remain gates; exact evidence is in `p2-share-capture-evidence.json`. These checks are not satisfied by a successful build. Release-input and metadata checks include the share target; real distribution acceptance stays deferred.
+
 ## Quality gates for each rank
 
 Retain independently owned app/resources/extension/tests/build inputs. Use the existing native controls and Store/Workspace durable mutation and Undo paths. Validate malformed input, workspace changes, offline retry, normal relaunch and cancellation using synthetic data. Check phone, tablet and Mac layouts and accessibility where affected. Commit and push completed changes to each corresponding repository; leave exact acceptance limits visible instead of treating compilation as end-user proof.

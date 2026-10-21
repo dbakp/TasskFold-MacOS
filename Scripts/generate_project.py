@@ -168,3 +168,7 @@ scheme_path = ROOT / "Taskfold.xcodeproj" / "xcshareddata" / "xcschemes" / "Task
 scheme_path.parent.mkdir(parents=True, exist_ok=True)
 scheme_path.write_text(scheme)
 print(f"wrote {out} with {len(app_sources)} app sources, {len(test_sources)} test sources")
+
+# Keep the independently owned share extension in regenerated release projects.
+import subprocess, sys
+subprocess.run([sys.executable, str(ROOT / "Scripts/configure_share_extension.py")], check=True)

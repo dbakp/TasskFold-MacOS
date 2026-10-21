@@ -28,6 +28,7 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--variant', choices=('p0uitests', 'p0signeduitests', 'p0widgethosts', 'p0notificationtests', 'p0calendartests', 'backupcanceltests'), default='p0uitests',
                         help='Use p0signeduitests for app acceptance, p0widgethosts for Desktop widgets, p0notificationtests for normal local notification launches, p0calendartests for actual EventKit, or backupcanceltests for backup cancellation')
+    parser.add_argument("--share-extension", action="store_true", help="Retain a separately namespaced share extension and App Group")
     parser.add_argument("--team", help="Signing team for a macOS team-prefixed isolated widget App Group")
     parser.add_argument("--record-route-testing", action="store_true", help="Register a private URL scheme in backupcanceltests for native record-route acceptance")
     args = parser.parse_args()
@@ -36,7 +37,7 @@ def main():
     source = Path(__file__).resolve().parents[1]
     bundle = 'com.dbakp.taskfold.mac.' + args.variant
     widgets = args.variant == 'p0widgethosts'
-    grouped = widgets or args.variant in ('p0calendartests', 'backupcanceltests')
+    grouped = args.share_extension or widgets or args.variant in ('p0calendartests', 'backupcanceltests')
     if grouped and (not args.team or not re.fullmatch(r'[A-Z0-9]{10}', args.team)):
         parser.error('This variant requires --team with the actual ten-character signing team identifier')
     app_group = args.team + '.' + bundle if grouped else 'group.' + bundle
@@ -46,7 +47,7 @@ def main():
     assert not output.exists(), 'Use a fresh task-owned workspace; never overwrite a checkout or installed app'
     assert str(output).startswith(('/private/tmp/', '/tmp/')), 'Prepare only in temporary task storage'
     output.mkdir()
-    for name in ('Taskfold', 'TaskfoldWidgets', 'TaskfoldUITests', 'Scripts'):
+    for name in ('Taskfold', 'TaskfoldWidgets', 'TaskfoldShare', 'TaskfoldUITests', 'Scripts'):
         shutil.copytree(source / name, output / name, ignore=shutil.ignore_patterns('__pycache__'))
     (output / 'Taskfold.xcodeproj/xcshareddata/xcschemes').mkdir(parents=True)
     shutil.copy2(source / 'Taskfold.xcodeproj/xcshareddata/xcschemes/Taskfold.xcscheme', output / 'Taskfold.xcodeproj/xcshareddata/xcschemes/Taskfold.xcscheme')
@@ -59,7 +60,7 @@ def main():
                     'group.com.dbakp.taskfold': app_group}
     if widgets or args.record_route_testing:
         replacements.update({'taskfold://': scheme + '://', '"taskfold"': '"' + scheme + '"'})
-    paths = list((output / 'Taskfold').rglob('*.swift'))
+    paths = list((output / 'Taskfold').rglob('*.swift')) + list((output / 'TaskfoldShare').rglob('*.swift'))
     if widgets:
         paths += list((output / 'TaskfoldWidgets').rglob('*.swift'))
     if args.record_route_testing:
@@ -102,10 +103,14 @@ def main():
                                'com.apple.security.application-groups': [app_group]}
         (output / 'TaskfoldWidgets/TaskfoldWidgets.entitlements').write_bytes(plistlib.dumps(widget_entitlements))
     (output / 'Taskfold/Taskfold.entitlements').write_bytes(plistlib.dumps(entitlements))
-    env = dict(os.environ, TASKFOLD_WIDGETS='1' if widgets else '0')
+    if args.share_extension:
+        share_entitlements = {'com.apple.security.app-sandbox': True, 'com.apple.security.application-groups': [app_group]}
+        (output / 'TaskfoldShare/TaskfoldShare.entitlements').write_bytes(plistlib.dumps(share_entitlements))
+    env = dict(os.environ, TASKFOLD_WIDGETS='1' if widgets else '0', TASKFOLD_SHARE='1' if args.share_extension else '0')
     subprocess.run(['python3', str(output / 'Scripts/generate_project.py')], env=env, check=True, capture_output=True, text=True)
     project = output / 'Taskfold.xcodeproj/project.pbxproj'
     text = project.read_text().replace('PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac;', 'PRODUCT_BUNDLE_IDENTIFIER = ' + bundle + ';').replace('PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.uitests;', 'PRODUCT_BUNDLE_IDENTIFIER = ' + bundle + '.runner;')
+    text = text.replace('com.dbakp.taskfold.mac.share', bundle + '.share')
     assert text.count('PRODUCT_BUNDLE_IDENTIFIER = ' + bundle + ';') == 2
     if widgets:
         text = text.replace('PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac.widgets;',
@@ -122,7 +127,7 @@ def main():
         if widgets or args.record_route_testing:
             assert 'taskfold://' not in body and '"taskfold"' not in body
     receipt = {'sourceRepository': str(source), 'workspace': str(output), 'bundleID': bundle,
-               'sandbox': True, 'productionURLAndFileRegistrationsRemoved': True, 'embeddedWidgetExtension': widgets,
+               'sandbox': True, 'productionURLAndFileRegistrationsRemoved': True, 'embeddedWidgetExtension': widgets, 'embeddedShareExtension': args.share_extension,
                'isolatedURLScheme': scheme if widgets or args.record_route_testing else None,
                'recordRouteTesting': args.record_route_testing,
                'isolatedAppGroup': app_group if grouped else None, 'signingTeam': args.team if grouped else None,

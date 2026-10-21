@@ -34,11 +34,11 @@ def validate_version(version, build, release_policy):
 
 def verify_project(release_policy):
     text = (ROOT / 'Taskfold.xcodeproj/project.pbxproj').read_text()
-    versions = re.findall(r'\bMARKETING_VERSION\s*=\s*([^;\s]+)\s*;', text)
-    builds = re.findall(r'\bCURRENT_PROJECT_VERSION\s*=\s*([^;\s]+)\s*;', text)
-    # App/widget Debug/Release must each declare the same candidate version.
-    if len(versions) != 4 or len(builds) != 4 or len(set(versions)) != 1 or len(set(builds)) != 1:
-        raise ValueError('App/widget project release versions differ or are missing')
+    versions = [value.strip(chr(34)) for value in re.findall(r'\bMARKETING_VERSION\s*=\s*([^;\s]+)\s*;', text)]
+    builds = [value.strip(chr(34)) for value in re.findall(r'\bCURRENT_PROJECT_VERSION\s*=\s*([^;\s]+)\s*;', text)]
+    # App, widget and share-extension Debug/Release declare the same candidate version.
+    if len(versions) != 6 or len(builds) != 6 or len(set(versions)) != 1 or len(set(builds)) != 1:
+        raise ValueError('App/extensions project release versions differ or are missing')
     validate_version(versions[0], builds[0], release_policy)
     generator = ROOT / 'Scripts/generate_project.py'
     if generator.exists():
@@ -63,6 +63,13 @@ def verify_app(app, release_policy):
         raise ValueError('P0 release requires its widget extension') from None
     if widget_info.get('CFBundleIdentifier') != release_policy['widgetBundleID'] or widget_info.get('CFBundleShortVersionString') != version or widget_info.get('CFBundleVersion') != build:
         raise ValueError('Widget identity/version does not match the release app')
+    share = contents / 'PlugIns/TaskfoldShare.appex'
+    try:
+        share_info = plistlib.loads(((share / 'Contents' if mac else share) / 'Info.plist').read_bytes())
+    except FileNotFoundError:
+        raise ValueError('Release requires its share extension') from None
+    if share_info.get('CFBundleIdentifier') != release_policy['shareBundleID'] or share_info.get('CFBundleShortVersionString') != version or share_info.get('CFBundleVersion') != build:
+        raise ValueError('Share identity/version does not match the release app')
     return {'version': version, 'build': build}
 
 

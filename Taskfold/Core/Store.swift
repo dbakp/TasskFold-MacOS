@@ -16,6 +16,7 @@ final class Store {
     static let shared = Store()
     #if DEBUG
     @ObservationIgnored private var workflowFixtureFailureConsumed = false
+    @ObservationIgnored private var sharedCaptureFixtureFailureConsumed = false
     #endif
     var snapshot = Snapshot() {
         didSet {
@@ -164,6 +165,7 @@ final class Store {
         UserDefaults.standard.set(true, forKey: accessRecoveryNoticeKey)
         accessRecoveryPending = true
     }
+    var sharedCaptureDraftCount = 0
     var widgetActionStatus: String?
     var syncConflict: SyncConflict?
     var focusSyncConflict: FocusSyncConflict?
@@ -181,6 +183,8 @@ final class Store {
     private let monitor = NWPathMonitor()
     private var accountGeneration = UUID() { didSet { conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
     @ObservationIgnored private var consumingWidgetActions = false
+    @ObservationIgnored var sharedCapturePublishedWorkspace: SharedCaptureWorkspace?
+    @ObservationIgnored var sharedCapturePublicationReady = false
     @ObservationIgnored private var widgetCalendarWindow: CalendarCapacityWindow?
     @ObservationIgnored private var widgetCalendarRevision = -1
     @ObservationIgnored private var capacityRequest: (UUID, String)?
@@ -200,6 +204,7 @@ final class Store {
     var todoistImportFixture: Bool { false }
     #endif
     var workspaceGeneration: UUID { accountGeneration }
+    var sharedCaptureAvailable: Bool { workspaceCacheReadable && (signedIn || localMode) && !signingOut && !userID.isEmpty }
     var backupWarning: String?
     @ObservationIgnored private var dailyBackupRunning = false
     var dailyBackupsEnabled: Bool {
@@ -569,6 +574,7 @@ final class Store {
     static let appGroup = "group.com.dbakp.taskfold"
     /// The private cache is saved before its actionable projection is published.
     private func publishWidgetSnapshot(scheduleCapacityRefresh: Bool = true) {
+        publishSharedCaptureWorkspace()
         guard let disk = try? widgetActionDisk() else { return }
         let account = signedIn || localMode ? userID : ""
         let busy = CalendarBusyStore.shared; busy.bind(account: account)
@@ -657,6 +663,7 @@ final class Store {
     }
     /// Startup, foreground refresh and connectivity retry the same credential-free handoff.
     func consumeWidgetCompletions() {
+        refreshSharedCaptureDraftCount()
         guard !consumingWidgetActions, workspaceCacheReadable, signedIn || localMode,
               let disk = try? widgetActionDisk() else { return }
         consumingWidgetActions = true; defer { consumingWidgetActions = false }
@@ -740,9 +747,19 @@ final class Store {
         clearScheduledReminders()
     }
     @discardableResult
-    func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil) -> Bool {
+    func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil, sharedCaptureReceipt: SharedCaptureDraft? = nil) -> Bool {
         guard !signingOut else { return false }
+        if let draft = sharedCaptureReceipt {
+            guard draft.workspace.account == userID, changes.count == 1,
+                  changes[0].table == "tasks", changes[0].method == "POST",
+                  changes[0].recordID == draft.taskID, changes[0].insertOnly == true else { return false }
+        }
         #if DEBUG
+        if userID == "ui-testing", sharedCaptureReceipt != nil,
+           ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--shared-capture-save-failure-once"),
+           !sharedCaptureFixtureFailureConsumed {
+            sharedCaptureFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
+        }
         if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-save-failure-once"), !workflowFixtureFailureConsumed,
            changes.filter({ $0.table == "tasks" && $0.method == "POST" }).count > 1 {
             workflowFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
@@ -809,6 +826,10 @@ final class Store {
             if !localMode { snapshot.pending.append(change) }
         }
         if let widgetReceipt { snapshot.widgetCompletion.record(widgetReceipt); snapshot.widgetCompletion.feedback = widgetFeedback }
+        if let draft = sharedCaptureReceipt {
+            if snapshot.sharedCaptureReceipts == nil { snapshot.sharedCaptureReceipts = [:] }
+            snapshot.sharedCaptureReceipts?[draft.taskID] = draft.taskID
+        }
         do { try persist() } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
         let historyChanges = committedChanges.filter { $0.table != FocusSessionChange.table }
         if remember, !historyChanges.isEmpty { undoStack.append(EditHistory(changes: historyChanges, snapshot: old)); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
@@ -1767,7 +1788,7 @@ extension Store {
             task["subtasks"] = .array([child("000000000001", "Planning", [child("000000000002", "Research", [child("000000000004", "Collect references")])]), child("000000000003", "Review")])
         }
         snapshot = Snapshot(tables: ["projects": projects, "tasks": [task]])
-        do { try persist() } catch { self.error = error.localizedDescription }
+        do { try persist(); seedSharedCaptureFixture() } catch { self.error = error.localizedDescription }
     }
 }
 #endif

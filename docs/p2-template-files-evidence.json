@@ -1,7 +1,7 @@
 {
   "updated": "2026-10-21",
   "milestone": "Portable workflow template files",
-  "status": "implemented; final current-source native acceptance pending",
+  "status": "implemented; final iPad Cancel/Save acceptance pending",
   "isolation": "Synthetic local-mode data in separately namespaced workflowtestsp1 apps; no production tasks or account mutation.",
   "core": {
     "ios": {
@@ -27,13 +27,14 @@
     "limit": "Native acceptance preceded the final coordinated-read/chunk-loop change; the final helper is covered by the focused core suite."
   },
   "native_iphone": {
-    "result": "Two UI tests passed, zero skips/failures/runtime warnings.",
-    "bundle": "ios-p2-template-files-phone-v10.xcresult",
+    "result": "Two template UI cases passed in the three-case current-source run, with zero skips/failures/runtime warnings.",
+    "bundle": "ios-p2-share-phone-v1.xcresult",
     "coverage": [
       "native save/share menu and dismiss",
-      "import review, Cancel without changes, explicit Save and relaunch"
+      "coordinated JSON picker import review",
+      "Cancel without changes, explicit Save and normal relaunch"
     ],
-    "limit": "This accepted run preceded the final JSON picker-session reuse and coordinated-reader changes. Repeat on final source remains pending."
+    "limit": "iPad native acceptance is tracked separately; no file-provider/cloud transfer claim."
   },
   "native_ipad": {
     "export": "Native save/share menu and cancellation UI test passed in tablet-v3.",

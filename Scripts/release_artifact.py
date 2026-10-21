@@ -30,6 +30,7 @@ def inspect_app(app, mode, require_notarization=True):
     run('codesign', '--verify', '--deep', '--strict', str(app))
     signature = run('codesign', '-dvv', str(app)).decode()
     widget = app / 'Contents/PlugIns/TaskfoldWidgets.appex'
+    share = app / 'Contents/PlugIns/TaskfoldShare.appex'
     if mode == 'distribution':
         if 'Signature=adhoc' not in signature or (app / 'Contents/PlugIns').exists() or (app / 'Contents/embedded.provisionprofile').exists():
             raise ValueError('Legacy distribution must be ad hoc and widget/profile free')
@@ -37,10 +38,13 @@ def inspect_app(app, mode, require_notarization=True):
         widget_info = plistlib.loads((widget / 'Contents/Info.plist').read_bytes())
         if widget_info.get('CFBundleIdentifier') != 'com.dbakp.taskfold.mac.widgets' or widget_info.get('CFBundleShortVersionString') != version or widget_info.get('CFBundleVersion') != build:
             raise ValueError('Widget identity/version does not match the app')
+        share_info = plistlib.loads((share / 'Contents/Info.plist').read_bytes())
+        if share_info.get('CFBundleIdentifier') != 'com.dbakp.taskfold.mac.share' or share_info.get('CFBundleShortVersionString') != version or share_info.get('CFBundleVersion') != build:
+            raise ValueError('Share identity/version does not match the app')
         run('python3', str(ROOT / 'Scripts/verify_widget_catalog.py'), str(app), '--require-team')
         prefix = 'Developer ID Application:' if mode == 'developer-id' else 'Apple Development:'
         teams = []
-        for bundle in (app, widget):
+        for bundle in (app, widget, share):
             signed = run('codesign', '-dvv', str(bundle)).decode()
             if f'Authority={prefix}' not in signed:
                 raise ValueError(f'{bundle.name}: wrong signing identity for {mode}')
@@ -56,12 +60,12 @@ def inspect_app(app, mode, require_notarization=True):
                 raise ValueError(f'{bundle.name}: missing shared widget App Group')
             if mode == 'developer-id' and ('runtime' not in signed or entitlements.get('com.apple.security.get-task-allow')):
                 raise ValueError(f'{bundle.name}: production hardened runtime required')
-        if teams[0] != teams[1]:
-            raise ValueError('App/widget signing teams differ')
+        if len(set(teams)) != 1:
+            raise ValueError('App/extensions signing teams differ')
         if mode == 'developer-id' and require_notarization:
             run('xcrun', 'stapler', 'validate', str(app))
             run('spctl', '--assess', '--type', 'execute', str(app))
-    return {'version': version, 'build': build, 'widgets': widget.exists()}
+    return {'version': version, 'build': build, 'widgets': widget.exists(), 'shareExtension': share.exists()}
 
 
 def inspect_dmg(dmg, mode):

@@ -1,0 +1,107 @@
+{
+  "updated": "2026-10-21",
+  "milestone": "Reviewed native share capture",
+  "status": "implemented; native acceptance in progress",
+  "storage_and_accounts": [
+    "Credential-free native extension; no webpage fetch or direct backend access.",
+    "Editable title, notes and http(s) source link, followed by explicit Save draft.",
+    "A locked atomic device-local mailbox; original account and workspace generation checked again at save.",
+    "64 drafts maximum; bounded 8 MB mailbox read; 100 KB title/notes and 8192-byte URL limits.",
+    "Data protection until first authentication, matching existing account-cache/widget handoff; app-group access and owner-only file permissions.",
+    "Host review chooses Inbox/active project; Cancel creates no task.",
+    "Create-only task identity and private local receipt persist in one Store commit before mailbox acknowledgement. Receipts survive ordinary relaunch and are excluded from portable workspace exports."
+  ],
+  "unit_tests": {
+    "share_cases": 23,
+    "ios_all_core": {
+      "executed": 889,
+      "skipped": 12,
+      "failures": 0
+    },
+    "mac_all_core": {
+      "executed": 913,
+      "skipped": 32,
+      "failures": 0
+    },
+    "covered": [
+      "Foundation text/URL provider representations",
+      "invalid/credentialed/local links and byte bounds",
+      "context change/sign-out and account-specific draft visibility",
+      "malformed/future/oversized mailbox preservation",
+      "duplicates, capacity, exact acknowledgements and concurrent instances",
+      "create-only task plan, identity collisions and unavailable/archived projects",
+      "receipt replay after deletion/Undo, old-cache decode and portable-export exclusion",
+      "aggregate provider-text bounds checked before joining"
+    ]
+  },
+  "processes": {
+    "ios_owned_script": "64 complete drafts saved by four independent processes; no lost/changed/duplicate draft.",
+    "mac_owned_script": "64 complete drafts saved by four independent processes; no lost/changed/duplicate draft.",
+    "scope": "Temporary synthetic mailbox and compiled probe removed afterward; no app/account data accessed."
+  },
+  "configuration": {
+    "both_repos": "Two owned-target/idempotence checks pass per repository. Nine continuity metadata tests pass per repository.",
+    "mac": "Three existing isolation metadata cases and five synthetic artifact-tool cases pass. Mac release input fingerprint now covers TaskfoldShare. Legacy extension-free packaging stays extension-free.",
+    "ios": "Existing backup, widget-state and notification staging scripts verified to isolate share bundle identities and App Groups. Simulator signing includes the share extension when present.",
+    "limit": "Synthetic metadata/packaging fixtures are not actual distribution or install/update acceptance."
+  },
+  "native_iphone": {
+    "result": "Two current-source share UI cases passed in ios-p2-share-acceptance-v3.xcresult, with zero skips/failures/runtime warnings.",
+    "safari": "Real Page Menu \u2192 Share \u2192 Taskfold extension. Edited title and exact source link persisted as a draft. Cancel saved no draft. The second capture saved successfully with its containing app fully quit, then survived normal launch for review.",
+    "host_review": "Cancel preserved the full account snapshot. An injected disk-full failure preserved that same snapshot, retained the review and showed its own inline error. Retry created exactly one task with complete notes/link, persisted its receipt, and removed only its handled draft. Relaunch retained exactly one task and no handled draft. Original tasks remained unchanged.",
+    "regression": "The two template file cases also passed in ios-p2-share-phone-v1.xcresult (three passing UI cases including the original shared-draft review).",
+    "visual": "Exported host-review and actual Safari-extension screenshots inspected: readable native forms, complete source/destination, unclipped actions. Mac now owns an explicit AppKit share-panel header/footer; its appearance still needs native inspection.",
+    "fix_found": "Expected host-review save errors are handled inline and cleared from the app-wide alert path so the editor and retry remain available."
+  },
+  "native_mac": {
+    "build": "Final current-source app and native share extension build successfully; deep/strict signature verification succeeds.",
+    "acceptance": "Real share menu, layout and accessibility walkthrough pending Mac unlock."
+  },
+  "remaining": [
+    "Another sharing app\u2019s genuine text handoff",
+    "Native account-switch handoff and authenticated cloud offline retry",
+    "Tablet/Mac layout, large text and accessibility",
+    "Final iPad template Cancel/Save acceptance"
+  ],
+  "deferrals_preserved": [
+    "Remote/server reminders and device/reinstall recovery",
+    "Older-client rollout safeguards",
+    "Real distribution signing/install/update checks",
+    "Genuine Google/Microsoft registration/provider acceptance"
+  ],
+  "current_source_fingerprints": {
+    "Taskfold/Core/SharedCapture.swift": {
+      "owned_source_sha256": "b55e6cd4f02ad7910579a348d341148ea7efe30a35324b76518ce2d705249e42",
+      "isolated_source_sha256": "16e6e1218a2dc05a4f01029b57e4b3331261d9d46dbbad8b8ed0b103516025c2"
+    },
+    "Taskfold/Core/SharedCapturePlan.swift": {
+      "owned_source_sha256": "3c6e288c609afb963849f6a3f3fcd89981fa1f08931106720ef22993033e438e",
+      "isolated_source_sha256": "3c6e288c609afb963849f6a3f3fcd89981fa1f08931106720ef22993033e438e"
+    },
+    "Taskfold/SharedCaptureStore.swift": {
+      "owned_source_sha256": "4a4306fecb0b4a81e0cc1274c2f1d58f1531976b315d91a80af8c200557b436f",
+      "isolated_source_sha256": "4a4306fecb0b4a81e0cc1274c2f1d58f1531976b315d91a80af8c200557b436f"
+    },
+    "Taskfold/Views/SharedDraftsView.swift": {
+      "owned_source_sha256": "23aefa8c5520d7000b47892fa52719b4ee04aed7edfef7189cd62a1957ff5827",
+      "isolated_source_sha256": "23aefa8c5520d7000b47892fa52719b4ee04aed7edfef7189cd62a1957ff5827"
+    },
+    "TaskfoldShare/ShareViewController.swift": {
+      "owned_source_sha256": "2c4bd7099059ff298f45a2afc41632e0638ffa1bf1d06a2dfd9b985c66684080",
+      "isolated_source_sha256": "2c4bd7099059ff298f45a2afc41632e0638ffa1bf1d06a2dfd9b985c66684080"
+    },
+    "Taskfold/Core/Store.swift": {
+      "owned_source_sha256": "e86e21dc8cd7da400730b134ef148375f9910441b51724b6f6effe3687183a6c",
+      "isolated_source_sha256": "70ecd1926c8bd9005c7377b0a8f462f52b3a9a5e22b049961730c4c04236cb11"
+    },
+    "Taskfold/Core/Models.swift": {
+      "owned_source_sha256": "92dd744ea318caadd29ed48a7a0f171ae26eace9612c62af968e0059591bdfd9",
+      "isolated_source_sha256": "92dd744ea318caadd29ed48a7a0f171ae26eace9612c62af968e0059591bdfd9"
+    }
+  },
+  "limits": [
+    "Core suites contain the explicitly recorded skipped integration/environment cases. No claim that skips passed.",
+    "Local-mode cold-host capture and disk-write retry do not establish authenticated cloud/network retry.",
+    "Mac share-panel runtime acceptance is pending manual unlock. The iPad\u2019s existing template preview was preserved."
+  ]
+}

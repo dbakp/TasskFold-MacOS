@@ -14,6 +14,8 @@ The goal is a calm, fast native Mac app: daily actions should take few steps, na
 
 21 October advanced backlog: the agreed P1 acceptance batch is complete. The remaining work is ranked in [P2_PLAN.md](P2_PLAN.md). Portable template files reuse the existing native library and definition preview; file review saves a private definition without creating tasks. Release/provider deferrals remain in force. Exact validation and limits are recorded with each milestone.
 
+21 October share capture: the Mac owns its embedded native share extension and reviewed Shared drafts flow. Account-bound local drafts, create-only task saves and atomic receipts are implemented. Layout/listening and real source-app acceptance remain pending; see [P2_PLAN.md](P2_PLAN.md). No distribution or provider gate is marked complete by these source changes.
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.

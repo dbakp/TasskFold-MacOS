@@ -10,6 +10,7 @@ struct SidebarView: View {
     @State private var labelEditor: Record?
     @State private var filterEditor: Record?
     @State private var templatesPresented = false
+    @State private var sharedDraftsPresented = false
     @State private var archivePresented = false
     @State private var multiLinePresented = false
     @State private var projectsExpanded = true
@@ -42,6 +43,7 @@ struct SidebarView: View {
                 item(.completed, "Completed", count: nil)
                 Button { openMentions() } label: { HStack { Label("Mentions", systemImage: "at"); Spacer(); if let count = store.mentionUnreadCount, count > 0 { Text("\(count)").foregroundStyle(.secondary) } } }.accessibilityIdentifier("openMentions")
                 Button("Insights",systemImage:"chart.xyaxis.line") { openInsights() }.accessibilityIdentifier("openInsights")
+                Button { sharedDraftsPresented = true } label: { HStack { Label("Shared drafts", systemImage: "square.and.arrow.down"); Spacer(); if store.sharedCaptureDraftCount > 0 { Text("\(store.sharedCaptureDraftCount)").monospacedDigit().foregroundStyle(.secondary) } } }.accessibilityIdentifier("openSharedDrafts")
                 Button("Templates", systemImage: "square.stack.3d.up") { templatesPresented = true }.accessibilityIdentifier("openTemplates")
                 Button("Add Multiple Tasks…", systemImage: "text.badge.plus") { multiLinePresented = true }.accessibilityIdentifier("openMultiLineCapture")
             }
@@ -112,6 +114,7 @@ struct SidebarView: View {
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) { VStack(spacing: 0) { AccountMenu(); SyncFooter() } }
         .sheet(isPresented: $templatesPresented) { TemplateLibraryView() }
+        .sheet(isPresented: $sharedDraftsPresented) { SharedDraftsView() }
         .sheet(isPresented: $archivePresented) { ArchivedProjectsView() }
         .sheet(isPresented: $multiLinePresented) { MultiLineCaptureView() }
         .sheet(item: $projectEditor) { NamedEditor(table: "projects", record: $0) }

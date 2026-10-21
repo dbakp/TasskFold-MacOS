@@ -25,6 +25,10 @@ class ContinuityReleaseTests(unittest.TestCase):
         self.write(self.contents, self.info)
         self.widget_info = dict(self.info, CFBundleIdentifier=self.policy['widgetBundleID'])
         self.write(self.widget_contents, self.widget_info)
+        self.share_contents = self.contents / "PlugIns/TaskfoldShare.appex"
+        if self.mac: self.share_contents = self.share_contents / "Contents"
+        self.share_info = dict(self.info, CFBundleIdentifier=self.policy["shareBundleID"])
+        self.write(self.share_contents, self.share_info)
 
     def write(self, contents, info):
         contents.mkdir(parents=True, exist_ok=True)
@@ -74,6 +78,15 @@ class ContinuityReleaseTests(unittest.TestCase):
             release.verify_app(self.app, self.policy)
         (self.widget_contents / 'Info.plist').unlink()
         with self.assertRaisesRegex(ValueError, 'requires its widget'):
+            release.verify_app(self.app, self.policy)
+
+    def test_actual_missing_and_mismatched_share_extension_rejected(self):
+        self.share_info['CFBundleVersion'] = str(self.policy['minimumBuild'] + 1)
+        self.write(self.share_contents, self.share_info)
+        with self.assertRaisesRegex(ValueError, 'Share identity/version'):
+            release.verify_app(self.app, self.policy)
+        (self.share_contents / 'Info.plist').unlink()
+        with self.assertRaisesRegex(ValueError, 'requires its share'):
             release.verify_app(self.app, self.policy)
 
 
