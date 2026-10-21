@@ -1,0 +1,130 @@
+{
+  "date": "2026-10-21",
+  "rank": 6,
+  "scope": "Calendar/task timeline collision layout, all-day events and current-workspace read-only event details",
+  "status": "implemented; Simulator acceptance passed; live-provider and native Mac acceptance pending",
+  "sourceSHA256": {
+    "Taskfold/Core/Planner.swift": "c7fcc1c091b6f83d4c82d63bdd83622765fa3ad7d25ab3d37e90b450387c4d6f",
+    "Taskfold/Core/CalendarLinksFixture.swift": "08560187ac5078bf499b1815f461174f756f0fde4e6fbb67ed80b5d692ace0c5",
+    "Taskfold/Views/HourlyPlanner.swift": "f25a500ff28c758ddf5313754a033a0cfdbe72f2c1fbf742555a6ebe822fbd99",
+    "TaskfoldTests/PlannerTimelineTests.swift": "60969d1abb51218da6722f5a48d38aa3c1f4efe9b18cd7c0358ca1b95b4a5e51"
+  },
+  "coreSuite": {
+    "reported": 851,
+    "skipped": 31,
+    "failures": 0,
+    "focusedTimelineTests": 7,
+    "log": "mac-p1-timeline-delivery-core.log"
+  },
+  "nativeBuild": {
+    "result": "succeeded",
+    "log": "mac-p1-timeline-final-build.log",
+    "sourceWarnings": 0,
+    "note": "iOS emits the existing packaging warning about not stripping its signed widget binary."
+  },
+  "nativeIOS": {
+    "phoneGeometryAndTaskRegression": {
+      "result": "ios-p1-timeline-phone.xcresult",
+      "actualPassingTests": 3,
+      "runtimeWarnings": 0,
+      "cases": [
+        {
+          "test": "CalendarConnectionsUITests testAllDayCalendarUsesAllDaySectionWithoutFillingTimedLanes",
+          "seconds": 37.565
+        },
+        {
+          "test": "CalendarConnectionsUITests testCalendarTimelineSeparatesOverlapsAndOpensReadOnlyDetails",
+          "seconds": 49.009
+        },
+        {
+          "test": "TaskfoldUITests testHourlyPlannerDragResizeAndUndo",
+          "seconds": 18.764
+        }
+      ]
+    },
+    "tabletGeometry": {
+      "result": "ios-p1-timeline-tablet.xcresult",
+      "actualPassingTests": 2,
+      "runtimeWarnings": 0,
+      "cases": [
+        {
+          "test": "CalendarConnectionsUITests testAllDayCalendarUsesAllDaySectionWithoutFillingTimedLanes",
+          "seconds": 53.708
+        },
+        {
+          "test": "CalendarConnectionsUITests testCalendarTimelineSeparatesOverlapsAndOpensReadOnlyDetails",
+          "seconds": 44.197
+        }
+      ]
+    },
+    "phoneFinalPresentation": {
+      "result": "ios-p1-timeline-phone-presentation.xcresult",
+      "actualPassingTests": 2,
+      "runtimeWarnings": 0,
+      "cases": [
+        {
+          "test": "CalendarConnectionsUITests testAllDayCalendarUsesAllDaySectionWithoutFillingTimedLanes",
+          "seconds": 45.985
+        },
+        {
+          "test": "CalendarConnectionsUITests testCalendarAgendaAndDetailsAtLargestText",
+          "seconds": 29.887
+        }
+      ]
+    },
+    "tabletFinalPresentation": {
+      "result": "ios-p1-timeline-tablet-presentation.xcresult",
+      "actualPassingTests": 2,
+      "runtimeWarnings": 0,
+      "cases": [
+        {
+          "test": "CalendarConnectionsUITests testAllDayCalendarUsesAllDaySectionWithoutFillingTimedLanes",
+          "seconds": 55.605
+        },
+        {
+          "test": "CalendarConnectionsUITests testCalendarAgendaAndDetailsAtLargestText",
+          "seconds": 25.54
+        }
+      ]
+    },
+    "geometryAssertions": [
+      "Nonintersecting task/calendar frames",
+      "On narrow phone, sideways pan brings third overlapping task fully into viewport",
+      "Clock position unchanged after sideways pan",
+      "Read-only details open from graph and readable list",
+      "All-day event and task share All day without a full-height calendar overlay",
+      "Existing drag/resize/Undo passes"
+    ],
+    "presentationNote": "Geometry/drag acceptance preceded only the final All day scroll anchor, inline details heading and over-capacity copy refinements. The final normal all-day and dark accessibility XXXL list/details cases verify those refinements on each device.",
+    "visualReview": [
+      "Phone: distinct columns; all-day title/source and task visible; full wrapping in largest-text list/details; inline details heading readable",
+      "Tablet: three overlapping columns; all-day section, readable list and details at dark accessibility XXXL reviewed"
+    ],
+    "macRuntimeClaim": false
+  },
+  "behavior": [
+    "One visual collision map combines tasks and timed calendar events; unrelated clusters retain their own lane counts",
+    "Minimum 136-point cards and 30-minute visual intervals never change estimates, event duration or capacity",
+    "Time axis remains pinned while dense clusters scroll horizontally",
+    "All-day events stay in All day and still contribute busy capacity",
+    "Normal-size readable list choice; accessibility sizes default to readable list",
+    "Details retain event identity/workspace only and resolve current cache; removed/changed-workspace events cannot display frozen content",
+    "Negative remaining capacity is expressed as minutes over capacity"
+  ],
+  "fixture": {
+    "syntheticOnly": true,
+    "providerNetworkAccess": false,
+    "realCredentials": false,
+    "allDayFlag": "--calendar-layout-all-day",
+    "readyFlag": "--calendar-layout-ready requires --planner-fixture plus existing --uitesting --calendar-links-fixture"
+  },
+  "remaining": [
+    "Configured native provider registrations and genuine consent/refresh/revocation/account replacement acceptance",
+    "Physical-device/Mac credential recovery and native Mac walkthrough; Mac remains locked"
+  ],
+  "deferredUnchanged": [
+    "Remote reminders",
+    "Older-client rollout safeguards",
+    "Distribution verification"
+  ]
+}

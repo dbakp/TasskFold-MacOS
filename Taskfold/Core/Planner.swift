@@ -276,3 +276,44 @@ enum PlannerWidgetRoute {
         return Dates.parse(url.lastPathComponent)
     }
 }
+
+/// A shared visual collision map for tasks and read-only calendar events.
+/// Minimum display heights never change estimates, event intervals or capacity totals.
+struct PlannerTimelineItem:Identifiable {
+    enum Content {case task(PlannerBlock),event(PlannerEvent)}
+    var content:Content
+    var minute:Double
+    var length:Double
+    var lane=0,laneCount=1
+    var id:String {switch content {case .task(let value):return "task:"+value.id;case .event(let value):return "calendar:"+value.id}}
+    var renderLength:Double {max(30,length)}
+    var renderEnd:Double {minute+renderLength}
+    private var order:Int {if case .task=content {return 0};return 1}
+    static func layout(blocks:[PlannerBlock],events:[PlannerEvent],on day:Date,calendar:Calendar = .current)->[Self] {
+        guard let bounds=calendar.dateInterval(of:.day,for:day) else {return []}
+        var seen=Set<String>()
+        var raw=blocks.map {Self(content:.task($0),minute:$0.minute,length:$0.length)}
+        raw += events.compactMap {event in
+            guard !event.allDay,event.start.timeIntervalSince1970.isFinite,event.end.timeIntervalSince1970.isFinite,event.end>event.start,event.start<bounds.end,event.end>bounds.start else {return nil}
+            let start=max(event.start,bounds.start),end=min(event.end,bounds.end)
+            return Self(content:.event(event),minute:start.timeIntervalSince(bounds.start)/60,length:end.timeIntervalSince(start)/60)
+        }
+        raw=raw.filter {seen.insert($0.id).inserted}.sorted {
+            if $0.minute != $1.minute {return $0.minute<$1.minute}
+            if $0.renderEnd != $1.renderEnd {return $0.renderEnd>$1.renderEnd}
+            if $0.order != $1.order {return $0.order<$1.order}
+            return $0.id<$1.id
+        }
+        var result:[Self]=[],cluster:[Self]=[],ends:[Double]=[],clusterEnd = -Double.infinity
+        func finish() {for var item in cluster {item.laneCount=ends.count;result.append(item)};cluster=[];ends=[];clusterEnd = -Double.infinity}
+        for var item in raw {
+            if item.minute>=clusterEnd {finish()}
+            let lane=ends.firstIndex(where:{$0<=item.minute}) ?? ends.count
+            if lane==ends.count {ends.append(item.renderEnd)} else {ends[lane]=item.renderEnd}
+            item.lane=lane;cluster.append(item);clusterEnd=max(clusterEnd,item.renderEnd)
+        }
+        finish();return result
+    }
+    /// Dense clusters can scroll; unrelated plans retain the viewport's full width.
+    func width(in viewport:Double,minimum:Double=140)->Double {max(max(1,viewport)/Double(laneCount),minimum)-4}
+}

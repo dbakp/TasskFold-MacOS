@@ -20,6 +20,11 @@ import Foundation
             UserDefaults.standard.removeObject(forKey:key)
             for suffix in [".identity",".selected"] {UserDefaults.standard.removeObject(forKey:"planner.linked."+owner+"."+service.rawValue+suffix)}
         }
+        if service == .google,ProcessInfo.processInfo.arguments.contains("--planner-fixture"),ProcessInfo.processInfo.arguments.contains("--calendar-layout-ready") {
+            UserDefaults.standard.set("workshop@example.invalid",forKey:"planner.linked."+owner+".google.identity")
+            UserDefaults.standard.set(["workshop@example.invalid"],forKey:"planner.linked."+owner+".google.selected")
+            CalendarBusyStore.shared.setTitles(true)
+        }
         let stored=UserDefaults.standard.object(forKey:key) as? Bool
         guard stored ?? (service == .google) else {return nil}
         return CalendarAccountIdentity(id:service == .google ? "workshop@example.invalid":"fixture-default",label:"workshop@example.invalid")
@@ -49,7 +54,17 @@ private final class CalendarFixtureProtocol:URLProtocol,@unchecked Sendable {
             let formatter=ISO8601DateFormatter(),from=formatter.string(from:start.addingTimeInterval(9*3600)),to=formatter.string(from:start.addingTimeInterval(10*3600))
             object=google ? ["items":[["id":"synthetic-review","summary":"Design review","visibility":"default","start":["dateTime":from],"end":["dateTime":to]]]]:["value":[["id":"synthetic-review","subject":"Studio review","sensitivity":"normal","start":["dateTime":from,"timeZone":"UTC"],"end":["dateTime":to,"timeZone":"UTC"]]]]
         }
-        let data=try! JSONSerialization.data(withJSONObject:object)
+        var payload=object
+        if google,!list,ProcessInfo.processInfo.arguments.contains("--calendar-layout-all-day") {
+            let query=URLComponents(url:url,resolvingAgainstBaseURL:false)?.queryItems ?? []
+            let start=query.first{$0.name=="timeMin"}?.value.flatMap{ISO8601DateFormatter().date(from:$0)} ?? Date()
+            var calendar=Calendar(identifier:.gregorian);calendar.timeZone=TimeZone(identifier:"Europe/Copenhagen")!
+            let day=calendar.startOfDay(for:start.addingTimeInterval(12*3600)),end=calendar.date(byAdding:.day,value:1,to:day)!
+            var rows=payload["items"] as? [[String:Any]] ?? []
+            rows.append(["id":"synthetic-offsite","summary":"Workshop offsite","visibility":"default","start":["date":TaskPlanner.dayKey(day,calendar:calendar)],"end":["date":TaskPlanner.dayKey(end,calendar:calendar)]])
+            payload["items"]=rows
+        }
+        let data=try! JSONSerialization.data(withJSONObject:payload)
         client?.urlProtocol(self,didReceive:HTTPURLResponse(url:url,statusCode:200,httpVersion:"HTTP/1.1",headerFields:["Content-Type":"application/json"])!,cacheStoragePolicy:.notAllowed)
         client?.urlProtocol(self,didLoad:data);client?.urlProtocolDidFinishLoading(self)
     }

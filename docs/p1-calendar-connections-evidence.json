@@ -52,7 +52,7 @@
         87.593
       ]
     },
-    "visualReview": "Normal and dark accessibility XXXL settings captures reviewed on each device; account controls readable, wrapped and separate. The timeline behind the sheet exposes a remaining calendar/task label overlap.",
+    "visualReview": "Normal and dark accessibility XXXL settings captures reviewed on each device; account controls readable, wrapped and separate. These historical captures exposed a timeline overlap, subsequently addressed and verified in p1-calendar-timeline-evidence.json.",
     "macRuntimeClaim": false
   },
   "installedSyntheticState": {
@@ -348,7 +348,6 @@
     "providerClientIDsConfigured": false
   },
   "remaining": [
-    "Fix timeline calendar/task label overlap and verify its visual layout",
     "Register/configure Google and Microsoft native clients",
     "Genuine consent, token refresh/revocation and account replacement acceptance",
     "Physical-device and Mac credential persistence/recovery acceptance",
@@ -358,5 +357,6 @@
     "Remote reminders",
     "Older-client rollout safeguards",
     "Distribution verification"
-  ]
+  ],
+  "timelineFollowUp": "p1-calendar-timeline-evidence.json"
 }
