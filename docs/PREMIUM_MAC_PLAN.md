@@ -2466,3 +2466,6 @@ Conversation checkpoint: both owned cores pass (Mac 883 reported / 32 environmen
 
 
 Conversation polish follow-up: Cancel now compares text and recipient selection with the loaded draft, avoiding a warning when nothing changed while preserving confirmation for edits. Offline read/removal rows name the intended action. The owned Mac source builds and verifies with strict codesign; native Mac interaction is still unavailable because the desktop is locked. Four additional Simulator UI checks pass (two phone/two tablet) with no recorded runtime warnings, exact draft preservation and acknowledged pending-action cleanup. These are iOS runtime results. `P1_PLAN.md` now separates chronological notes from current remaining acceptance, and calendar guidance follows the user’s Simulator preference while retaining genuine provider sign-in/credential requirements. See `p1-conversation-polish-evidence.json`.
+
+
+21 October user decision: Google/Microsoft native calendar registrations and genuine-provider acceptance are deferred until the user configures them. Keep providers unavailable without configuration and retain all unverified consent/credential cases for later. These are no longer current work blockers to pursue; native Mac P1 walkthroughs remain blocked by the locked desktop. The three previously deferred release items are unchanged.

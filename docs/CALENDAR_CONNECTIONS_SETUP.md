@@ -4,6 +4,8 @@ Both apps own this integration. No code, credential, provisioning input or packa
 
 ## Provider registrations
 
+**User decision, 21 October 2026:** registrations and genuine-provider acceptance are deferred until the user configures them. Keep unconfigured providers unavailable; do not treat synthetic checks as genuine-provider acceptance. No new registration or consent work is requested now.
+
 Create a separate native app registration for each deployed bundle identifier. Public client IDs and callback schemes may be supplied as Xcode user-defined build settings; no client secret is accepted or needed. Unconfigured providers do not appear as connectable accounts. Blank client-ID defaults keep providers unavailable; the default Google callback scheme is app-specific and valid, and must be replaced by the registered reversed client ID before enabling Google.
 
 Google: enable the Calendar API, configure the consent screen and create an **iOS-type OAuth client** for the appropriate iOS or Mac bundle identifier (Google documents this client type for both platforms). Set `TASKFOLD_GOOGLE_CALENDAR_CLIENT_ID` and `TASKFOLD_GOOGLE_CALENDAR_CALLBACK_SCHEME`. The scheme is the client ID's dot-separated components in reverse order, for example `com.googleusercontent.apps.123-synthetic` for `123-synthetic.apps.googleusercontent.com`. The full callback is that scheme followed by `:/oauthredirect`. Use the registration's actual reversed client ID. The application requests only `https://www.googleapis.com/auth/calendar.readonly`, offline access and explicit account selection/consent. No profile scope or Taskfold sign-in token is reused. Provider verification/testing-user restrictions still apply to actual consent.

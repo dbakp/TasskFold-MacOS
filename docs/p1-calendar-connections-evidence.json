@@ -358,5 +358,11 @@
     "Older-client rollout safeguards",
     "Distribution verification"
   ],
-  "timelineFollowUp": "p1-calendar-timeline-evidence.json"
+  "timelineFollowUp": "p1-calendar-timeline-evidence.json",
+  "userDecision": {
+    "date": "2026-10-21",
+    "providerRegistrations": "Deferred; user will configure later",
+    "genuineProviderAcceptance": "Deferred until registrations are configured; remains unverified",
+    "nativeMacAcceptance": "Still pending unlock"
+  }
 }
