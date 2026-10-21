@@ -23,7 +23,7 @@ struct TaskReminderEditor: View {
                     if let spec = ReminderSpec(row: value), spec.id != ReminderSpec.plannedID {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Button { editing = ReminderDraft(spec: spec, index: index) } label: {
+                                Button { beginEditing(spec, index: index) } label: {
                                     Label { Text(spec.label).multilineTextAlignment(.leading).lineLimit(nil).fixedSize(horizontal: false, vertical: true) } icon: { Image(systemName: spec.kind == "absolute" ? "calendar.badge.clock" : "bell") }
                                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                                 }.buttonStyle(.borderless).disabled(!spec.locallyEditable)
@@ -42,7 +42,7 @@ struct TaskReminderEditor: View {
                         }
                     }
                 }
-                Button { editing = ReminderDraft(spec: .relative(-10), index: nil) } label: { Label("Add reminder", systemImage: "plus.circle").frame(minHeight: 44) }
+                Button { beginEditing(.relative(-10), index: nil) } label: { Label("Add reminder", systemImage: "plus.circle").frame(minHeight: 44) }
                     .disabled(rows.count >= ReminderSpec.maximum).accessibilityIdentifier("reminderAdd")
                 if rows.count >= ReminderSpec.maximum { Text("This task has the maximum of 20 reminder settings.").font(.footnote).foregroundStyle(.secondary) }
             }
@@ -70,9 +70,14 @@ struct TaskReminderEditor: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .task { await store.reschedule() }
+        .onChange(of: store.workspaceGeneration) { _, _ in editing = nil }
         .alert("Reminder not changed", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) { Button("OK") { message = nil } } message: { Text(message ?? "") }
         .sheet(item: $editing) { draft in
             ReminderSpecEditor(draft: draft) { spec in
+                guard store.workflowReady(draft.workspace), task.id == draft.taskID, task["task_generation"] == draft.taskGeneration, rows == draft.originalRows else { return "This task or its reminder settings changed. Cancel and reopen the reminder." }
+                if draft.wasPersisted {
+                    guard let current = store.record("tasks", id: draft.taskID), current["task_generation"] == draft.taskGeneration else { return "This task was removed or replaced. Close its editor before changing reminders." }
+                }
                 let current = rows.isEmpty ? [.object(ReminderSpec.relative(0, id: ReminderSpec.plannedID).raw)] : rows
                 if ReminderSpec.duplicates(spec, in: current, excluding: draft.index == nil ? nil : spec.id) { return "A reminder is already enabled for this time. Choose another time or turn the existing reminder off." }
                 if let index = draft.index, rows.indices.contains(index), rows[index].object["id"]?.text.lowercased() == spec.id {
@@ -84,6 +89,11 @@ struct TaskReminderEditor: View {
             }
         }
     }
+    private func beginEditing(_ spec: ReminderSpec, index: Int?) {
+        let workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+        guard store.workflowReady(workspace) else { message = store.error; return }
+        editing = ReminderDraft(spec: spec, index: index, workspace: workspace, taskID: task.id, taskGeneration: task["task_generation"], wasPersisted: store.record("tasks", id: task.id) != nil, originalRows: rows)
+    }
     private func remove(_ index: Int) {
         var values = rows; values.remove(at: index)
         if values.isEmpty { values = [.object(ReminderSpec.relative(0, id: ReminderSpec.plannedID, enabled: false).raw)] }
@@ -91,9 +101,10 @@ struct TaskReminderEditor: View {
     }
     private func status(_ spec: ReminderSpec) -> String {
         if !spec.enabled { return "Off" }
-        guard let date = spec.date(task: task, calendar: .current) else { return spec.kind == "recurring" ? "This schedule has ended" : "Waiting for a planned date" }
+        guard let date = spec.date(task: task, calendar: .current) else { return ["recurring", "interval"].contains(spec.kind) ? "This schedule has ended" : "Waiting for a planned date" }
         if date <= Date() { return "This reminder time has passed" }
         let time = date.formatted(date: .abbreviated, time: .shortened)
+        if spec.intervalSchedule != nil { return "Next · \(time) · elapsed time" }
         if let schedule = spec.schedule { return "Next · \(schedule.formatted(date)) · \(schedule.timeZone)" }
         return spec.kind == "absolute" ? "Fixed instant · \(time) · shown in your current time zone" : "Next · \(time)"
     }
@@ -102,9 +113,15 @@ struct TaskReminderEditor: View {
 struct ReminderDraft: Identifiable {
     var spec: ReminderSpec
     var index: Int?
+    let workspace: WorkspaceBinding
+    let taskID: String
+    let taskGeneration: JSON
+    let wasPersisted: Bool
+    let originalRows: [JSON]
     var id: String { spec.id }
 }
 struct ReminderSpecEditor: View {
+    @Environment(\.dynamicTypeSize) private var textSize
     @Environment(\.dismiss) private var dismiss
     let draft: ReminderDraft
     let save: (ReminderSpec) -> String?
@@ -118,12 +135,20 @@ struct ReminderSpecEditor: View {
     @FocusState private var repeatFocused: Bool
     @State private var sourceZone: String
     @State private var message: String?
+    @State private var intervalText: String
+    @State private var limitedCount: Bool
+    @State private var countText: String
+    @State private var limitedEnd: Bool
+    @State private var end: Date
+    @State private var previewNow = Date()
+    private enum IntervalField: Hashable { case minutes, count }
+    @FocusState private var intervalFocused: IntervalField?
     init(draft: ReminderDraft, save: @escaping (ReminderSpec) -> String?) {
         self.draft = draft; self.save = save
         _kind = State(initialValue: draft.spec.kind)
         _minutes = State(initialValue: abs(draft.spec.offset ?? -10))
         _before = State(initialValue: (draft.spec.offset ?? -10) <= 0)
-        _date = State(initialValue: draft.spec.schedule.flatMap { Dates.parse($0.startDay, calendar: $0.calendar) } ?? draft.spec.absolute ?? Date().addingTimeInterval(3600))
+        _date = State(initialValue: draft.spec.schedule.flatMap { Dates.parse($0.startDay, calendar: $0.calendar) } ?? draft.spec.intervalSchedule?.start ?? draft.spec.absolute ?? Date().addingTimeInterval(3600))
         var utc = Calendar(identifier: .gregorian); utc.timeZone = TimeZone(secondsFromGMT: 0)!
         let source = draft.spec.schedule?.calendar ?? Calendar.current
         let initial = draft.spec.absolute ?? Date().addingTimeInterval(3600)
@@ -133,12 +158,17 @@ struct ReminderSpecEditor: View {
         _repeatText = State(initialValue: draft.spec.schedule?.expression ?? "every week")
         _sourceZone = State(initialValue: draft.spec.schedule?.timeZone ?? TimeZone.current.identifier)
         _enabled = State(initialValue: draft.spec.enabled)
+        _intervalText = State(initialValue: String(draft.spec.intervalSchedule?.intervalMinutes ?? 30))
+        _limitedCount = State(initialValue: draft.spec.intervalSchedule?.count != nil)
+        _countText = State(initialValue: String(draft.spec.intervalSchedule?.count ?? 5))
+        _limitedEnd = State(initialValue: draft.spec.intervalSchedule?.until != nil)
+        _end = State(initialValue: draft.spec.intervalSchedule?.until ?? (draft.spec.intervalSchedule?.start ?? Date().addingTimeInterval(3600)).addingTimeInterval(86400))
     }
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("When", selection: $kind) { Text("From plan").tag("relative"); Text("Fixed time").tag("absolute"); Text("Repeats").tag("recurring") }
+                    Picker("When", selection: $kind) { Text("From plan").tag("relative"); Text("Fixed time").tag("absolute"); Text("Repeats").tag("recurring"); Text("Interval").tag("interval") }
                         .accessibilityIdentifier("reminderKind")
                     Toggle("Enabled", isOn: $enabled).accessibilityIdentifier("reminderEnabled")
                 }
@@ -152,6 +182,8 @@ struct ReminderSpecEditor: View {
                         }.accessibilityIdentifier("reminderOffset")
                         Stepper("\(minutes) minutes", value: $minutes, in: 0...10080).accessibilityIdentifier("reminderMinutes")
                     } footer: { Text("Uses elapsed minutes before or after the task’s planned time. A date without a time uses 8:00 AM.") }
+                } else if kind == "interval" {
+                    intervalControls
                 } else if kind == "recurring" {
                     Section {
                         DatePicker("Starts", selection: $date, displayedComponents: [.date])
@@ -207,14 +239,95 @@ struct ReminderSpecEditor: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { apply() }.disabled((kind == "absolute" && enabled && date <= Date()) || (kind == "recurring" && (recurringSchedule == nil || (enabled && recurringSchedule?.dates(after: Date(), limit: 1).isEmpty == true)))).accessibilityIdentifier("reminderSave") }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("reminderCancel") }
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { apply() }.disabled((kind == "absolute" && enabled && date <= Date()) || (kind == "recurring" && (recurringSchedule == nil || (enabled && recurringSchedule?.dates(after: Date(), limit: 1).isEmpty == true))) || (kind == "interval" && (intervalSchedule == nil || (enabled && intervalSchedule?.dates(after: previewNow, limit: 1).isEmpty == true)))).accessibilityIdentifier("reminderSave") }
             }
         }
+        .task {
+            while !Task.isCancelled {
+                previewNow = Date()
+                do { try await Task.sleep(for: .seconds(30)) } catch { break }
+            }
+        }
+        #if os(iOS)
+        .safeAreaInset(edge: .bottom) {
+            if intervalFocused != nil { HStack { Spacer(); Button("Hide keyboard") { intervalFocused = nil }.accessibilityIdentifier("reminderIntervalHideKeyboard") }.padding(.horizontal, 16).padding(.vertical, 8).background(.bar) }
+        }
+        #endif
         .alert("Reminder not saved", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) { Button("OK") { message = nil } } message: { Text(message ?? "") }
         #if os(macOS)
         .frame(minWidth: 520, minHeight: 530)
         #endif
+    }
+    @ViewBuilder private var intervalControls: some View {
+        Section {
+            DatePicker("First alert", selection: $date, displayedComponents: [.date, .hourAndMinute]).accessibilityIdentifier("reminderIntervalStart")
+            intervalInput("Minutes", text: $intervalText, field: .minutes, identifier: "reminderIntervalMinutes")
+            Menu("Interval suggestions") {
+                ForEach([15, 30, 60, 120, 1440], id: \.self) { value in Button(ReminderIntervalSchedule.intervalDescription(value)) { intervalText = String(value); intervalFocused = nil } }
+            }.frame(minHeight: 44).accessibilityIdentifier("reminderIntervalSuggestions")
+            Text("5 to 10,080 minutes. Alerts stay this far apart when clocks change or you travel.").font(.footnote).foregroundStyle(.secondary)
+        } header: { Text("Interval") }
+        Section {
+            Toggle("Limit number of alerts", isOn: $limitedCount).accessibilityIdentifier("reminderIntervalCountEnabled")
+            if limitedCount {
+                intervalInput("Total alerts", text: $countText, field: .count, identifier: "reminderIntervalCount")
+                Text("1 to 999 alerts, including the first. Missed alerts still count.").font(.footnote).foregroundStyle(.secondary)
+            }
+            Toggle("End at a date and time", isOn: $limitedEnd).accessibilityIdentifier("reminderIntervalEndEnabled")
+            if limitedEnd { DatePicker("Last allowed alert", selection: $end, displayedComponents: [.date, .hourAndMinute]).accessibilityIdentifier("reminderIntervalEnd") }
+        } header: { Text("Stop") } footer: { Text("When both limits are set, the earlier limit wins.") }
+        Section {
+            if let schedule = intervalSchedule {
+                Text(schedule.summary).font(.callout).accessibilityIdentifier("reminderIntervalSummary")
+                let next = schedule.dates(after: previewNow, limit: 5)
+                if next.isEmpty {
+                    Text(enabled ? "This schedule has ended. Choose a future alert or turn it off." : "This schedule has ended. It will be saved with delivery off.")
+                        .font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("reminderIntervalEnded")
+                } else {
+                    ForEach(Array(next.enumerated()), id: \.offset) { index, value in
+                        Text(value.formatted(date: .abbreviated, time: .shortened)).accessibilityIdentifier("reminderIntervalPreview-\(index)")
+                    }
+                }
+                Text("Shown in " + TimeZone.current.identifier).font(.footnote).foregroundStyle(.secondary)
+            } else {
+                Text("Choose an interval from 5 to 10,080 whole minutes, 1 to 999 alerts if limited, and an end at or after the first alert.")
+                    .font(.footnote).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("reminderIntervalError")
+            }
+        } header: { Text("Upcoming alerts") } footer: {
+            Text("Uses elapsed time, independently of the task’s plan. Completing this task cancels its remaining alerts. A repeating task carries the same schedule to its next task, without restarting the count. Missed alerts do not arrive in a burst; later alerts refresh while Taskfold is open.")
+        }
+    }
+    @ViewBuilder private func intervalInput(_ label: String, text: Binding<String>, field: IntervalField, identifier: String) -> some View {
+        if textSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(label).fixedSize(horizontal: false, vertical: true)
+                intervalValue(label, text: text, field: field, identifier: identifier)
+            }.frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            HStack {
+                Text(label).fixedSize(horizontal: false, vertical: true)
+                intervalValue(label, text: text, field: field, identifier: identifier)
+            }
+        }
+    }
+    private func intervalValue(_ label: String, text: Binding<String>, field: IntervalField, identifier: String) -> some View {
+        HStack {
+            TextField(label, text: text).labelsHidden().multilineTextAlignment(textSize.isAccessibilitySize ? .leading : .trailing).focused($intervalFocused, equals: field)
+                .accessibilityLabel(label).accessibilityIdentifier(identifier)
+                #if os(iOS)
+                .keyboardType(.numberPad)
+                #endif
+            if !text.wrappedValue.isEmpty {
+                Button { text.wrappedValue = ""; intervalFocused = field } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary).frame(minWidth: 44, minHeight: 44) }
+                    .buttonStyle(.borderless).accessibilityLabel("Clear " + label).accessibilityIdentifier(identifier + "Clear")
+            }
+        }
+    }
+    private var intervalSchedule: ReminderIntervalSchedule? {
+        guard let minutes = Int(intervalText.trimmingCharacters(in: .whitespacesAndNewlines)),
+              !limitedCount || Int(countText.trimmingCharacters(in: .whitespacesAndNewlines)) != nil else { return nil }
+        return ReminderIntervalSchedule(start: date, everyMinutes: minutes, count: limitedCount ? Int(countText.trimmingCharacters(in: .whitespacesAndNewlines)) : nil, until: limitedEnd ? end : nil)
     }
     private var recurringCalendar: Calendar {
         var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: sourceZone) ?? .current; return c
@@ -228,7 +341,10 @@ struct ReminderSpecEditor: View {
         // The sheet may have stayed open past its chosen time since the button rendered.
         guard kind != "absolute" || !enabled || date > Date() else { message = "Choose a future time, or turn this reminder off."; return }
         let changed: ReminderSpec
-        if kind == "recurring" {
+        if kind == "interval" {
+            guard let schedule = intervalSchedule, !enabled || !schedule.dates(after: Date(), limit: 1).isEmpty else { message = "Choose a valid interval with a future alert, or turn delivery off."; return }
+            changed = .interval(schedule, id: draft.spec.id, enabled: enabled)
+        } else if kind == "recurring" {
             guard let schedule = recurringSchedule, !enabled || !schedule.dates(after: Date(), limit: 1).isEmpty else { message = "Choose a valid calendar rule with a future occurrence."; return }
             changed = .recurring(schedule, id: draft.spec.id, enabled: enabled)
         } else { changed = kind == "absolute" ? .absolute(date, id: draft.spec.id) : .relative(before ? -minutes : minutes, id: draft.spec.id, enabled: enabled) }

@@ -2572,3 +2572,8 @@ The Mac independently owns device-only Speech/AVFoundation input, bounded correc
 ## 21 October — elapsed reminder foundation
 
 Rank 5 begins with independently owned elapsed scheduling: fixed-instant anchor, 5-minute through 7-day intervals, inclusive end/count caps, no catch-up burst, bounded seeking and exact receipt membership. The app and Core package compile the source; native editor/persistence/notification integration is still required before exposure. `ADVANCED_REMINDERS.md` defines the behavior and remaining travel/holiday/location/urgent order. Exact checks are in `p2-interval-reminder-foundation-evidence.json`. No real task, notification permission, installed widget host or release input is changed. Mac live acceptance remains unavailable while locked; broader Px and user deferrals stay open.
+
+
+## 21 October — interval reminder integration
+
+Interval reminders now have owned native editing, explicit count/end limits, upcoming instants, versioned saved settings, backup/queue preservation, duplicate handling, per-occurrence notifications and exact stale-response protection. Source/account/task-incarnation guards protect the presented draft. The actual Mac editor is rendered offscreen in light/dark using the tested owned Core; the render caught duplicate field labels, now corrected. Current build verification and remaining native editing/VoiceOver/OS-action gates are in `p2-interval-reminders-evidence.json`. A selected previous Mac Core reader proves opaque row preservation. No new server delivery, release claim or installed desktop-widget changes are included.

@@ -74,4 +74,32 @@ struct ReminderIntervalSchedule: Equatable, Sendable {
     var semanticFields: [String] {
         [String(anchorMilliseconds), String(intervalMinutes), count.map(String.init) ?? "", endMilliseconds.map(String.init) ?? ""]
     }
+    /// Versioned reminder rows own this nested payload; unknown extensions are preserved by the editor.
+    init?(raw: [String: JSON]) {
+        guard let start = Self.integer(raw["start_ms"], range: Self.minimum...Self.maximum),
+              let minutes = Self.integer(raw["every_minutes"], range: 5...10080) else { return nil }
+        let count = raw["count"] == nil || raw["count"] == .null ? nil : Self.integer(raw["count"], range: 1...999)
+        let until = raw["until_ms"] == nil || raw["until_ms"] == .null ? nil : Self.integer(raw["until_ms"], range: Self.minimum...Self.maximum)
+        guard raw["count"] == nil || raw["count"] == .null || count != nil,
+              raw["until_ms"] == nil || raw["until_ms"] == .null || until != nil else { return nil }
+        self.init(start: Self.date(start), everyMinutes: Int(minutes), count: count.map(Int.init), until: until.map(Self.date))
+    }
+    private static func integer(_ value: JSON?, range: ClosedRange<Int64>) -> Int64? {
+        guard case .number(let value)? = value, value.isFinite, value.rounded() == value,
+              value >= Double(range.lowerBound), value <= Double(range.upperBound) else { return nil }
+        return Int64(value)
+    }
+    var raw: [String: JSON] {
+        ["start_ms": .number(Double(anchorMilliseconds)), "every_minutes": .number(Double(intervalMinutes)),
+         "count": count.map { .number(Double($0)) } ?? .null,
+         "until_ms": endMilliseconds.map { .number(Double($0)) } ?? .null]
+    }
+    static func intervalDescription(_ minutes: Int) -> String {
+        if minutes % 1440 == 0 { return "Every \(minutes / 1440) day\(minutes == 1440 ? "" : "s")" }
+        if minutes % 60 == 0 { return "Every \(minutes / 60) hour\(minutes == 60 ? "" : "s")" }
+        return "Every \(minutes) minutes"
+    }
+    var summary: String {
+        Self.intervalDescription(intervalMinutes) + (count.map { " · \($0) alert\($0 == 1 ? "" : "s") total" } ?? "")
+    }
 }

@@ -147,3 +147,8 @@ Both apps now own on-device-only recording adapters and a correction/review shee
 ## Elapsed reminder schedules (rank 5, foundation only)
 
 Elapsed repeating reminders are the first rank-5 capability: a fixed anchor plus a user-chosen interval, reviewed upcoming alerts, count/end limits and no catch-up burst. Both apps independently compile the bounded schedule/receipt-membership foundation. It is not exposed or persisted yet. The spec/editor, durable save/import/Undo, notification projection/action integration and genuine native/delivery acceptance remain required. See `ADVANCED_REMINDERS.md` for the explicit travel/holiday/location/urgent work order and `p2-interval-reminder-foundation-evidence.json` for exact foundation checks. No full rank or deferred release/provider gate is closed.
+
+
+### Interval reminders connected to native editing and local scheduling
+
+The independently owned interval model now connects to a version-3 local-only reminder spec, native interval/count/end controls and upcoming-alert preview, durable task/backup/queue paths, per-occurrence notification identity and exact response validation. The previous committed readers are compiled to prove opaque preservation without a substitute alert. Repeating task successors retain the original anchor/count; completing the original task cannot retarget its notifications. Current server compatibility inspection was read-only and remote delivery stays disabled/deferred. `ADVANCED_REMINDERS.md` describes the contract; `p2-interval-reminders-evidence.json` separates native acceptance, Core checks and remaining Mac/OS-action/lifecycle gates. This supersedes the foundation-only implementation status above; rank 5 remains incomplete.
