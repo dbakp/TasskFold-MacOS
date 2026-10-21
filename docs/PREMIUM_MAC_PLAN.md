@@ -2436,3 +2436,11 @@ The user requested ranked P1 implementation. See `P1_PLAN.md`. The first item is
 ### P1 direct calendar foundation — 21 October 2026
 
 Rank 6 is in progress. The owned Google/Outlook read layer and workspace-bound staged connection state pass 25 focused checks and the full Mac core suite (831 reported, 31 environment skips, no failures). The isolated app/widget build succeeds. Existing calendar UI is unchanged; the native OAuth/Keychain bridge, planner integration, provider settings and real-account/native acceptance are still pending. See `P1_PLAN.md` and `p1-direct-calendar-foundation-evidence.json`. No distribution or deferred P0 gate is closed.
+
+
+### P1 direct calendar integration — 21 October 2026
+
+The Mac app now owns the AppAuth/system-browser bridge, private device-only credential vault, provider/calendar settings and planner/capacity combination. Device permission remains separate from direct account consent, and incomplete sources cannot claim complete free time. The exact SDK pin and its privacy/license resources are included. Core and isolated builds are checked independently; native Mac interaction, actual Keychain access and provider consent remain pending while the Mac is locked and registrations are unconfigured. The mirrored 21-check offline SDK proof was run in the iPhone Simulator, not on Mac. See `CALENDAR_CONNECTIONS_SETUP.md` and the current P1 evidence.
+
+
+Calendar integration checkpoint: both owned cores pass (Mac 844 reported, 31 skips, zero failures; 44 focused calendar cases), and the isolated Mac app/widget build succeeds. Phone/tablet settings acceptance passes in five native cases with no runtime warnings, plus 21 offline SDK checks and three synthetic OS Keychain operations on each Simulator. These are iOS runtime results. Mac native/provider acceptance remains pending unlock and configured registrations. Screenshot review exposed overlapping calendar/task labels in the graphical timeline; fix and verify that next. This checkpoint is not complete rank 6 acceptance.

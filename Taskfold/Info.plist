@@ -30,6 +30,15 @@
 				<string>taskfold</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Calendar connections</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(TASKFOLD_GOOGLE_CALENDAR_CALLBACK_SCHEME)</string>
+				<string>$(PRODUCT_BUNDLE_IDENTIFIER).calendar</string>
+			</array>
+		</dict>
 	</array>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
@@ -58,5 +67,9 @@
 	<false/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Show busy time from calendars you select to help plan your tasks. Taskfold does not change your calendar events.</string>
+	<key>TaskfoldGoogleCalendarClientID</key>
+	<string>$(TASKFOLD_GOOGLE_CALENDAR_CLIENT_ID)</string>
+	<key>TaskfoldMicrosoftCalendarClientID</key>
+	<string>$(TASKFOLD_MICROSOFT_CALENDAR_CLIENT_ID)</string>
 </dict>
 </plist>

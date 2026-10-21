@@ -54,10 +54,12 @@ struct EmptyPlannerCalendarProvider: PlannerCalendarProviding {
 @MainActor @Observable final class CalendarBusyStore {
     static let shared: CalendarBusyStore = {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("--uitesting") || ProcessInfo.processInfo.arguments.contains("--preview") { return CalendarBusyStore(provider: EmptyPlannerCalendarProvider()) }
+        if ProcessInfo.processInfo.arguments.contains("--uitesting") || ProcessInfo.processInfo.arguments.contains("--preview") { return CalendarBusyStore(provider: EmptyPlannerCalendarProvider(), links: CalendarLinksStore.shared) }
         #endif
-        return CalendarBusyStore(provider: SystemPlannerCalendarProvider())
+        return CalendarBusyStore(provider: SystemPlannerCalendarProvider(), links: CalendarLinksStore.shared)
     }()
+    let links: CalendarLinksStore?
+    var anyConnected: Bool { connected || links?.active == true }
     private let provider: any PlannerCalendarProviding
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private var generation = UUID()
@@ -70,9 +72,13 @@ struct EmptyPlannerCalendarProvider: PlannerCalendarProviding {
     private(set) var calendars: [PlannerCalendar] = []
     private(set) var events: [PlannerEvent] = []
     private(set) var status = "Calendar busy time is not connected."
+    private(set) var deviceStatus = "Calendar busy time is not connected."
     private(set) var ready = false
     private(set) var revision = 0
-    init(provider: any PlannerCalendarProviding, defaults: UserDefaults = .standard) { self.provider = provider; self.defaults = defaults }
+    init(provider: any PlannerCalendarProviding, defaults: UserDefaults = .standard, links:CalendarLinksStore?=nil) {
+        self.provider=provider;self.defaults=defaults;self.links=links
+        links?.changed={ [weak self] in guard let self else {return};self.generation=UUID();self.capacityGeneration=UUID();self.events=[];self.ready=false;self.revision+=1 }
+    }
     private var key: String { "planner.calendar." + account }
     func bind(account: String) {
         guard self.account != account else { return }
@@ -80,6 +86,8 @@ struct EmptyPlannerCalendarProvider: PlannerCalendarProviding {
         connected = !account.isEmpty && defaults.bool(forKey: key + ".connected")
         selected = Set(defaults.stringArray(forKey: key + ".selected") ?? []); showTitles = defaults.bool(forKey: key + ".titles")
         status = connected ? "Loading selected calendars…" : "Calendar busy time is not connected."
+        deviceStatus=status
+        links?.bind(owner:account)
     }
     func connect() async {
         guard !account.isEmpty else { return }
@@ -89,67 +97,65 @@ struct EmptyPlannerCalendarProvider: PlannerCalendarProviding {
             guard token == accountGeneration else { return }
             connected = allowed; defaults.set(allowed, forKey: key + ".connected")
             status = allowed ? "Choose calendars to show busy time." : "Calendar access was not granted. Enable full calendar access in system settings to connect."
-            revision += 1
-        } catch { guard token == accountGeneration else { return }; status = "Could not connect calendars: " + error.localizedDescription }
+            deviceStatus=status;revision += 1
+        } catch { guard token == accountGeneration else { return }; status = "Could not connect calendars: " + error.localizedDescription;deviceStatus=status }
     }
     func disconnect() {
-        generation = UUID(); accountGeneration = UUID(); connected = false; ready = false; events = []; calendars = []; selected = []; showTitles = false
-        for suffix in [".connected", ".selected", ".titles"] { defaults.removeObject(forKey: key + suffix) }
-        status = "Calendar busy time is not connected."; revision += 1
+        generation = UUID(); accountGeneration = UUID(); connected = false; ready = false; events = []; calendars = []; selected = []; if links?.active != true { showTitles = false }
+        for suffix in (links?.active == true ? [".connected", ".selected"] : [".connected", ".selected", ".titles"]) { defaults.removeObject(forKey: key + suffix) }
+        status = "Calendar busy time is not connected."; deviceStatus=status;revision += 1
     }
     func select(_ ids: Set<String>) { generation = UUID(); selected = ids; defaults.set(ids.sorted(), forKey: key + ".selected"); events = []; ready = false; revision += 1 }
     func setTitles(_ value: Bool) { generation = UUID(); showTitles = value; defaults.set(value, forKey: key + ".titles"); events = []; ready = false; revision += 1 }
-    func refresh(on day: Date, calendar: Calendar = .current) async {
-        let token = UUID(); generation = token; events = []; ready = false
-        guard connected, !account.isEmpty else { return }
-        guard await provider.authorized() else {
-            guard generation == token else { return }; calendars = []; status = "Calendar access is unavailable. Enable full access in system settings, or disconnect."; return
+    /// Device and direct connections share the same readiness rules, but keep separate permissions and selections.
+    private func deviceWindow(_ window:DateInterval,titles:Bool,publishCalendars:Bool,current:()->Bool) async ->LinkedCalendarWindow? {
+        func result(state:String,events:[PlannerEvent]=[],status:String)->LinkedCalendarWindow {
+            if publishCalendars {deviceStatus=status};return LinkedCalendarWindow(state:state,events:events,status:status)
         }
-        let calendars = await provider.calendars()
-        guard generation == token, !Task.isCancelled else { return }
-        self.calendars = calendars
-        let available = selected.intersection(calendars.map(\.id))
-        guard !available.isEmpty else { status = selected.isEmpty ? "Choose calendars to show busy time." : "Selected calendars are unavailable on this device."; return }
-        guard let window = calendar.dateInterval(of: .day, for: day) else { status = "Could not read this calendar day."; return }
-        let events = await provider.events(ids: available, window: window, titles: showTitles)
-        guard generation == token, !Task.isCancelled else { return }
-        // Permission can be revoked while EventKit is fetching.
-        let authorized = await provider.authorized()
-        guard generation == token, !Task.isCancelled else { return }
-        guard authorized else { self.calendars = []; status = "Calendar access is unavailable."; return }
-        self.events = events
-        ready = available.count == selected.count
-        status = ready ? "Busy time from \(available.count) selected calendar\(available.count == 1 ? "" : "s")." : "Some selected calendars are unavailable; busy time is incomplete."
+        guard connected else {return result(state:"off",status:deviceStatus)}
+        let authorized=await provider.authorized();guard current() else {return nil}
+        guard authorized else {if publishCalendars {calendars=[]};return result(state:"unavailable",status:"Calendar access is unavailable. Enable full access in system settings, or disconnect.")}
+        let calendars=await provider.calendars();guard current() else {return nil}
+        if publishCalendars {self.calendars=calendars}
+        let available=selected.intersection(calendars.map(\.id))
+        guard !available.isEmpty else {return result(state:selected.isEmpty ? "choose":"unavailable",status:selected.isEmpty ? "Choose calendars to show busy time.":"Selected calendars are unavailable on this device.")}
+        let values=await provider.events(ids:available,window:window,titles:titles);guard current() else {return nil}
+        let stillAuthorized=await provider.authorized();guard current() else {return nil}
+        guard stillAuthorized else {if publishCalendars {self.calendars=[]};return result(state:"unavailable",status:"Calendar access is unavailable.")}
+        let known=values.filter{available.contains($0.calendarID) && $0.end>$0.start}
+        return result(state:available==selected ? "ready":"incomplete",events:known,status:available==selected ? "Busy time from \(available.count) selected calendar\(available.count==1 ? "":"s").":"Some selected calendars are unavailable; busy time is incomplete.")
     }
-    /// An independent eight-day read never replaces the day currently displayed in the planner.
-    /// No permission request, event names or calendar IDs are sent to the extension.
-    func capacityWindow(now: Date = Date(), calendar input: Calendar = .current) async -> CalendarCapacityWindow? {
-        let token = UUID(); capacityGeneration = token
-        let owner = account, settings = revision, binding = accountGeneration
-        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
-        func result(_ state: String, events: [PlannerEvent] = []) -> CalendarCapacityWindow {
-            CalendarCapacityWindow(account: owner, timeZone: calendar.timeZone.identifier, updated: now, state: state, events: events)
+    private func combinedWindow(_ window:DateInterval,titles:Bool,publishCalendars:Bool,current:()->Bool) async ->LinkedCalendarWindow? {
+        guard let device=await deviceWindow(window,titles:titles,publishCalendars:publishCalendars,current:current),current() else {return nil}
+        var sources=[device]
+        if let links,links.active {
+            guard let direct=await links.read(window:window,titles:titles),current() else {return nil};sources.append(direct)
         }
-        func current() -> Bool { token == capacityGeneration && binding == accountGeneration && owner == account && settings == revision && !Task.isCancelled }
-        guard !owner.isEmpty else { return nil }
-        guard connected else { return result("off") }
-        guard !selected.isEmpty else { return result("choose") }
-        let authorized = await provider.authorized()
-        guard current() else { return nil }
-        guard authorized else { return result("unavailable") }
-        let calendars = await provider.calendars()
-        guard current() else { return nil }
-        let available = selected.intersection(calendars.map(\.id))
-        guard !available.isEmpty else { return result("unavailable") }
-        let start = calendar.startOfDay(for: now)
-        guard let end = calendar.date(byAdding: .day, value: 8, to: start) else { return result("unavailable") }
-        let events = await provider.events(ids: available, window: DateInterval(start: start, end: end), titles: false)
-        guard current() else { return nil }
-        let stillAuthorized = await provider.authorized()
-        guard current() else { return nil }
-        guard stillAuthorized else { return result("unavailable") }
-        let known = events.filter { available.contains($0.calendarID) && $0.end > $0.start }
-        return result(available == selected ? "ready" : "incomplete", events: known)
+        sources.removeAll{$0.state=="off"}
+        guard !sources.isEmpty else {return device}
+        let states=Set(sources.map(\.state)),hasKnown=states.contains("ready") || states.contains("incomplete")
+        let state=states==["ready"] ? "ready":states==["choose"] ? "choose":hasKnown ? "incomplete":"unavailable"
+        let values=sources.flatMap(\.events).sorted{$0.start==$1.start ? $0.id<$1.id:$0.start<$1.start}
+        return LinkedCalendarWindow(state:state,events:values,status:sources.map(\.status).joined(separator:"\n"))
     }
-
+    func refresh(on day:Date,calendar:Calendar = .current) async {
+        let token=UUID();generation=token;events=[];ready=false
+        let binding=accountGeneration,settings=revision
+        func current()->Bool {generation==token && accountGeneration==binding && settings==revision && !Task.isCancelled}
+        guard !account.isEmpty else {return}
+        guard let window=calendar.dateInterval(of:.day,for:day) else {status="Could not read this calendar day.";return}
+        guard let result=await combinedWindow(window,titles:showTitles,publishCalendars:true,current:current),current() else {return}
+        events=result.events;ready=result.state=="ready";status=result.status
+    }
+    /// An independent eight-day read never replaces the planner's visible day. Event names never enter capacity snapshots.
+    func capacityWindow(now:Date=Date(),calendar input:Calendar = .current) async ->CalendarCapacityWindow? {
+        let token=UUID();capacityGeneration=token
+        let owner=account,settings=revision,binding=accountGeneration
+        var calendar=Calendar(identifier:.gregorian);calendar.timeZone=input.timeZone
+        func current()->Bool {token==capacityGeneration && binding==accountGeneration && owner==account && settings==revision && !Task.isCancelled}
+        guard !owner.isEmpty else {return nil}
+        let start=calendar.startOfDay(for:now)
+        guard let end=calendar.date(byAdding:.day,value:8,to:start),let result=await combinedWindow(DateInterval(start:start,end:end),titles:false,publishCalendars:false,current:current),current() else {return nil}
+        return CalendarCapacityWindow(account:owner,timeZone:calendar.timeZone.identifier,updated:now,state:result.state,events:result.events)
+    }
 }

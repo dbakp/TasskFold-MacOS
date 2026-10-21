@@ -229,7 +229,16 @@ struct LinkedCalendarWindow:Sendable {
 }
 /// Credentials and selections are independently bound to a Taskfold workspace on this device.
 @MainActor @Observable final class CalendarLinksStore {
-    static let shared=CalendarLinksStore(authorizer:UnavailableCalendarAuthorization())
+    static let shared:CalendarLinksStore = {
+        #if DEBUG
+        let arguments=ProcessInfo.processInfo.arguments
+        if arguments.contains("--uitesting") && arguments.contains("--calendar-links-fixture") {return CalendarLinksFixture.make()}
+        if arguments.contains("--uitesting") || arguments.contains("--preview") {
+            return CalendarLinksStore(authorizer:UnavailableCalendarAuthorization(),defaults:UserDefaults(suiteName:"taskfold-calendar-empty-test-"+UUID().uuidString)!)
+        }
+        #endif
+        return CalendarLinksStore(authorizer:UnavailableCalendarAuthorization())
+    }()
     @ObservationIgnored private var authorizer:any CalendarAuthorizing
     @ObservationIgnored private let api:CalendarReadAPI
     @ObservationIgnored private let defaults:UserDefaults
@@ -243,6 +252,7 @@ struct LinkedCalendarWindow:Sendable {
     private(set) var links:[CalendarService:LinkedCalendarProfile]=[:]
     private(set) var connecting:CalendarService?
     private(set) var disconnecting=Set<CalendarService>()
+    private(set) var refreshing=Set<CalendarService>()
     private(set) var replacement:PendingCalendarReplacement?
     private(set) var message:String?
     private(set) var restoring=false
@@ -259,7 +269,7 @@ struct LinkedCalendarWindow:Sendable {
     func bind(owner:String) {
         guard self.owner != owner else {return}
         restoration?.cancel();connections.values.forEach{$0.cancel()};connections=[:];replacement?.lease.cancel();restorationFailures=[]
-        generation=UUID();self.owner=owner;links=[:];connecting=nil;disconnecting=[];replacement=nil;message=nil
+        generation=UUID();self.owner=owner;links=[:];connecting=nil;disconnecting=[];refreshing=[];replacement=nil;message=nil
         authorizer.bind(owner:owner);restoring = !owner.isEmpty;mutated()
         guard !owner.isEmpty else {restoration=nil;return}
         let binding=generation
@@ -273,6 +283,8 @@ struct LinkedCalendarWindow:Sendable {
                         var profile=LinkedCalendarProfile(service:service,identity:identity)
                         if self.defaults.string(forKey:self.key(service)+".identity")==identity.id {profile.selected=Set((self.defaults.stringArray(forKey:self.key(service)+".selected") ?? []).filter{!$0.isEmpty && $0.utf8.count<=4096}.prefix(500))}
                         self.links[service]=profile
+                    } else if self.defaults.string(forKey:self.key(service)+".identity") != nil {
+                        self.restorationFailures.insert(service);self.message="A saved calendar connection is missing. Reconnect it to refresh busy time."
                     }
                 } catch {guard self.current(owner,binding) else {return};self.restorationFailures.insert(service);self.message="A calendar connection could not be restored. Reconnect it to read busy time."}
             }
@@ -334,6 +346,25 @@ struct LinkedCalendarWindow:Sendable {
         do {try await commit(pending.catalog,pending:pending.id,account:pending.owner,binding:pending.generation,lease:pending.lease)} catch {
             authorizer.discard(pending.id)
             if current(pending.owner,pending.generation) {replacement=nil;if !(error is CancellationError) {message="Could not replace this calendar account. Your earlier connection is kept."}}
+        }
+    }
+    func refreshCalendars(_ service:CalendarService) async {
+        let account=owner,binding=generation
+        guard let profile=links[service],!profile.needsReconnect,!disconnecting.contains(service),!refreshing.contains(service),!account.isEmpty else {return}
+        refreshing.insert(service)
+        let version=revision,id=UUID(),lease=CalendarReadLease();reads[id]=lease
+        defer{reads.removeValue(forKey:id);if matches(account,binding) {refreshing.remove(service)}}
+        do {
+            let catalog=try await authorized(service,account:account,binding:binding) { token in
+                try lease.check();return try await self.api.calendars(service,accessToken:token,lease:lease)
+            }
+            guard current(account,binding),version==revision else {return}
+            guard catalog.identity==profile.identity.id else {throw CalendarReadFailure.changedAccount}
+            links[service]?.calendars=catalog.calendars;links[service]?.notice=nil;mutated()
+        } catch {
+            guard current(account,binding),version==revision,!(error is CancellationError) else {return}
+            let failure=error as? CalendarReadFailure ?? .unavailable;links[service]?.notice=failure.localizedDescription
+            if [.signIn,.permission,.changedAccount].contains(failure) {links[service]?.needsReconnect=true;mutated()}
         }
     }
     func select(_ service:CalendarService,id:String,enabled:Bool) {

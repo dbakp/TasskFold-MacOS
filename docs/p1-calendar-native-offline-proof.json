@@ -1,0 +1,35 @@
+{
+  "checks": [
+    "google: SDK PKCE and state",
+    "google: accepted record",
+    "google: SDK secure archive restored",
+    "google: fresh token and persisted state",
+    "google: write failure visible",
+    "google: other workspace isolated",
+    "google: removal failure visible",
+    "google: disconnect retry removes record",
+    "google: late acceptance rejected",
+    "google: late record cleaned conditionally",
+    "outlook: SDK PKCE and state",
+    "outlook: accepted record",
+    "outlook: SDK secure archive restored",
+    "outlook: fresh token and persisted state",
+    "outlook: write failure visible",
+    "outlook: other workspace isolated",
+    "outlook: removal failure visible",
+    "outlook: disconnect retry removes record",
+    "outlook: late acceptance rejected",
+    "outlook: late record cleaned conditionally",
+    "No SDK HTTP requests"
+  ],
+  "passed": true,
+  "providerNetworkAccess": false,
+  "realKeychainAccess": false,
+  "sdkHTTPAttempts": 0,
+  "date": "2026-10-21",
+  "runtimesVerified": [
+    "iPhone 18 Pro, iOS 27 Simulator",
+    "iPad Pro 13-inch (M5), iOS 27 Simulator"
+  ],
+  "macRuntimeVerified": false
+}

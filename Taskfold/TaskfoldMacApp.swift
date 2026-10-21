@@ -22,6 +22,7 @@ struct TaskfoldMacApp: App {
         #endif
         // One store per process: App Intents and notification actions act on the same data the window shows.
         let store = Store.shared
+        NativeCalendarAuthorization.install()
         _store = State(initialValue: store)
         _workspace = State(initialValue: Workspace(store: store))
     }

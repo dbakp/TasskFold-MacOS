@@ -112,4 +112,13 @@ final class CalendarEventsTests: XCTestCase {
 
     }
 
+    @MainActor func testDeniedDevicePermissionMessageSurvivesRefresh() async {
+        let provider=Provider();await provider.setAllowed(false)
+        let name="calendar-permission-feedback-"+UUID().uuidString,defaults=UserDefaults(suiteName:name)!
+        defer{defaults.removePersistentDomain(forName:name)}
+        let busy=CalendarBusyStore(provider:provider,defaults:defaults);busy.bind(account:"synthetic-owner")
+        await busy.connect();await busy.refresh(on:Date())
+        XCTAssertTrue(busy.deviceStatus.contains("not granted"));XCTAssertTrue(busy.status.contains("not granted"));XCTAssertFalse(busy.connected)
+    }
+
 }

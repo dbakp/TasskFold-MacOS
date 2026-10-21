@@ -1,0 +1,362 @@
+{
+  "date": "2026-10-21",
+  "rank": 6,
+  "status": "implemented; acceptance incomplete",
+  "scope": "Native read-only calendar connection bridge, private credential storage, account/calendar controls, planner and capacity aggregation",
+  "sourceSHA256": {
+    "Taskfold/CalendarAuthorization.swift": "2d2863c495a142854e5fde3c0afb8141a41100543b66b621d07d52a4a127eacb",
+    "Taskfold/Core/CalendarCredentials.swift": "7591a283db4a33e895dc708536e4ad76273ab73e4f5df31bcfa5c1f08cbcd141",
+    "Taskfold/Core/CalendarEvents.swift": "1fc7e077ec1067cf94b3ce2de6be4746a900e3b1d54b3c1d6d631965eb47af3c",
+    "Taskfold/Core/CloudCalendars.swift": "038161edaf84c48762ecc149688a93debf79c0e1ba33db5db9f403a9605a5d11",
+    "Taskfold/Views/PlannerSettings.swift": "eaa6da7f7cda6503112b9e8c757ad6ed7d888a7df41fea6675e0b12ef4d9a65f",
+    "Taskfold/Views/HourlyPlanner.swift": "e3af5a95f6415dc9193f9e10511da7c0172ed119979de288e8d1c771a3136772"
+  },
+  "dependency": {
+    "product": "AppAuthCore",
+    "version": "3.0.0",
+    "revision": "a972daac82d449d58ab119e91c68153e29ddac33",
+    "licenseBundled": true,
+    "privacyResourceBundled": true,
+    "independentProjectPin": true
+  },
+  "coreSuite": {
+    "reported": 844,
+    "skipped": 31,
+    "failures": 0,
+    "focusedCalendarTests": 44,
+    "log": "mac-p1-calendar-connection-final-core.log"
+  },
+  "nativeBuild": {
+    "result": "succeeded",
+    "log": "mac-p1-calendar-connection-final-build.log",
+    "newCalendarSourceWarnings": 0,
+    "note": "Existing unrelated unused-animation-result warnings and an AppIntents metadata note occur in the iOS build."
+  },
+  "nativeIOSSettings": {
+    "phone": {
+      "actualPassingTests": 3,
+      "runtimeWarnings": 0,
+      "result": "ios-p1-calendar-phone-final.xcresult",
+      "seconds": [
+        150.083,
+        82.006,
+        31.709
+      ]
+    },
+    "tablet": {
+      "actualPassingTests": 2,
+      "runtimeWarnings": 0,
+      "result": "ios-p1-calendar-tablet-final.xcresult",
+      "seconds": [
+        144.239,
+        87.593
+      ]
+    },
+    "visualReview": "Normal and dark accessibility XXXL settings captures reviewed on each device; account controls readable, wrapped and separate. The timeline behind the sheet exposes a remaining calendar/task label overlap.",
+    "macRuntimeClaim": false
+  },
+  "installedSyntheticState": {
+    "phone": {
+      "runtime": "phone",
+      "proofs": {
+        "calendar-native-authorization-proof.json": {
+          "checks": [
+            "google: SDK PKCE and state",
+            "google: accepted record",
+            "google: SDK secure archive restored",
+            "google: fresh token and persisted state",
+            "google: write failure visible",
+            "google: other workspace isolated",
+            "google: removal failure visible",
+            "google: disconnect retry removes record",
+            "google: late acceptance rejected",
+            "google: late record cleaned conditionally",
+            "outlook: SDK PKCE and state",
+            "outlook: accepted record",
+            "outlook: SDK secure archive restored",
+            "outlook: fresh token and persisted state",
+            "outlook: write failure visible",
+            "outlook: other workspace isolated",
+            "outlook: removal failure visible",
+            "outlook: disconnect retry removes record",
+            "outlook: late acceptance rejected",
+            "outlook: late record cleaned conditionally",
+            "No SDK HTTP requests"
+          ],
+          "passed": true,
+          "providerNetworkAccess": false,
+          "realKeychainAccess": false,
+          "sdkHTTPAttempts": 0
+        },
+        "calendar-synthetic-keychain-proof.json": {
+          "checks": [
+            "OS Keychain write/read",
+            "OS Keychain update/read",
+            "OS Keychain conditional removal"
+          ],
+          "credentialsRemoved": true,
+          "passed": true,
+          "providerNetworkAccess": false,
+          "syntheticOnly": true,
+          "uniqueDisposableService": true
+        }
+      },
+      "taskIDs": [
+        "planner-anchor",
+        "planner-design",
+        "planner-report",
+        "planner-review"
+      ],
+      "pending": 0,
+      "calendarPreferences": {
+        "planner.linked.ui-testing.google.identity": "workshop@example.invalid",
+        "planner.linked.ui-testing.google.selected": [
+          "workshop@example.invalid"
+        ],
+        "planner.calendar.ui-testing.titles": true
+      },
+      "widget": {
+        "account": "ui-testing",
+        "keys": [
+          "account",
+          "capacity",
+          "focusSession",
+          "lists",
+          "notes",
+          "pendingSync",
+          "projectPulse",
+          "tasks",
+          "updated",
+          "version"
+        ],
+        "capacity": {
+          "hours": "09:00\u201317:00",
+          "days": {
+            "2026-10-25": {
+              "overdue": 4,
+              "working": 480,
+              "unknown": 0,
+              "estimated": 0,
+              "busy": 0
+            },
+            "2026-10-21": {
+              "overdue": 0,
+              "working": 480,
+              "unknown": 1,
+              "estimated": 115,
+              "busy": 0
+            },
+            "2026-10-26": {
+              "overdue": 4,
+              "working": 480,
+              "unknown": 0,
+              "estimated": 0,
+              "busy": 0
+            },
+            "2026-10-22": {
+              "overdue": 4,
+              "working": 480,
+              "unknown": 0,
+              "estimated": 0,
+              "busy": 0
+            },
+            "2026-10-27": {
+              "overdue": 4,
+              "working": 480,
+              "unknown": 0,
+              "estimated": 0,
+              "busy": 0
+            },
+            "2026-10-28": {
+              "overdue": 4,
+              "working": 480,
+              "unknown": 0,
+              "estimated": 0,
+              "busy": 0
+            },
+            "2026-10-23": {
+              "overdue": 4,
+              "working": 480,
+              "unknown": 0,
+              "estimated": 0,
+              "busy": 0
+            },
+            "2026-10-24": {
+              "busy": 0,
+              "working": 0,
+              "unknown": 0,
+              "estimated": 0,
+              "overdue": 4
+            }
+          },
+          "timeZone": "Europe/Copenhagen",
+          "version": 1,
+          "calendarState": "off",
+          "calendarUpdated": 814236483.342741
+        },
+        "noCalendarTitlesOrCredentials": true
+      }
+    },
+    "tablet": {
+      "runtime": "tablet",
+      "proofs": {
+        "calendar-native-authorization-proof.json": {
+          "checks": [
+            "google: SDK PKCE and state",
+            "google: accepted record",
+            "google: SDK secure archive restored",
+            "google: fresh token and persisted state",
+            "google: write failure visible",
+            "google: other workspace isolated",
+            "google: removal failure visible",
+            "google: disconnect retry removes record",
+            "google: late acceptance rejected",
+            "google: late record cleaned conditionally",
+            "outlook: SDK PKCE and state",
+            "outlook: accepted record",
+            "outlook: SDK secure archive restored",
+            "outlook: fresh token and persisted state",
+            "outlook: write failure visible",
+            "outlook: other workspace isolated",
+            "outlook: removal failure visible",
+            "outlook: disconnect retry removes record",
+            "outlook: late acceptance rejected",
+            "outlook: late record cleaned conditionally",
+            "No SDK HTTP requests"
+          ],
+          "passed": true,
+          "providerNetworkAccess": false,
+          "realKeychainAccess": false,
+          "sdkHTTPAttempts": 0
+        },
+        "calendar-synthetic-keychain-proof.json": {
+          "checks": [
+            "OS Keychain write/read",
+            "OS Keychain update/read",
+            "OS Keychain conditional removal"
+          ],
+          "credentialsRemoved": true,
+          "passed": true,
+          "providerNetworkAccess": false,
+          "syntheticOnly": true,
+          "uniqueDisposableService": true
+        }
+      },
+      "taskIDs": [
+        "planner-anchor",
+        "planner-design",
+        "planner-report",
+        "planner-review"
+      ],
+      "pending": 0,
+      "calendarPreferences": {
+        "planner.linked.ui-testing.google.identity": "workshop@example.invalid",
+        "planner.linked.ui-testing.google.selected": [
+          "workshop@example.invalid"
+        ],
+        "planner.calendar.ui-testing.titles": true
+      },
+      "widget": {
+        "account": "ui-testing",
+        "keys": [
+          "account",
+          "capacity",
+          "focusSession",
+          "lists",
+          "notes",
+          "pendingSync",
+          "projectPulse",
+          "tasks",
+          "updated",
+          "version"
+        ],
+        "capacity": {
+          "calendarState": "ready",
+          "days": {
+            "2026-10-28": {
+              "estimated": 0,
+              "working": 480,
+              "unknown": 0,
+              "overdue": 4,
+              "busy": 0
+            },
+            "2026-10-27": {
+              "working": 480,
+              "estimated": 0,
+              "busy": 0,
+              "unknown": 0,
+              "overdue": 4
+            },
+            "2026-10-21": {
+              "estimated": 115,
+              "working": 480,
+              "unknown": 1,
+              "busy": 60,
+              "overdue": 0
+            },
+            "2026-10-26": {
+              "estimated": 0,
+              "working": 480,
+              "unknown": 0,
+              "busy": 0,
+              "overdue": 4
+            },
+            "2026-10-24": {
+              "estimated": 0,
+              "working": 0,
+              "unknown": 0,
+              "overdue": 4,
+              "busy": 0
+            },
+            "2026-10-25": {
+              "estimated": 0,
+              "working": 0,
+              "unknown": 0,
+              "busy": 0,
+              "overdue": 4
+            },
+            "2026-10-22": {
+              "estimated": 0,
+              "working": 480,
+              "unknown": 0,
+              "busy": 0,
+              "overdue": 4
+            },
+            "2026-10-23": {
+              "estimated": 0,
+              "working": 480,
+              "unknown": 0,
+              "overdue": 4,
+              "busy": 0
+            }
+          },
+          "version": 1,
+          "timeZone": "Europe/Copenhagen",
+          "calendarUpdated": 814236794.45361,
+          "hours": "09:00\u201317:00"
+        },
+        "noCalendarTitlesOrCredentials": true
+      }
+    }
+  },
+  "safety": {
+    "realProviderConsent": false,
+    "providerNetworkRequests": 0,
+    "realProviderDataMutations": 0,
+    "databaseChanges": false,
+    "syntheticKeychainRecordsRemoved": true,
+    "providerClientIDsConfigured": false
+  },
+  "remaining": [
+    "Fix timeline calendar/task label overlap and verify its visual layout",
+    "Register/configure Google and Microsoft native clients",
+    "Genuine consent, token refresh/revocation and account replacement acceptance",
+    "Physical-device and Mac credential persistence/recovery acceptance",
+    "Native Mac walkthrough, pending unlock"
+  ],
+  "deferredUnchanged": [
+    "Remote reminders",
+    "Older-client rollout safeguards",
+    "Distribution verification"
+  ]
+}

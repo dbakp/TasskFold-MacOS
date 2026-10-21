@@ -565,7 +565,7 @@ final class Store {
         let current = widgetCalendarWindow.flatMap { value -> CalendarCapacityWindow? in
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
-        let fallback = busy.connected ? (busy.selected.isEmpty ? "choose" : "refresh") : "off"
+        let fallback = busy.anyConnected ? (busy.connected && busy.selected.isEmpty && busy.links?.active != true ? "choose" : "refresh") : "off"
         var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people, viewPreferences: rows("view_preferences"), viewOrders: rows("view_orders"))
         if let feedback = snapshot.widgetCompletion.feedback, feedback.account == account,
            Date() < feedback.expiresAt, record("tasks", id: feedback.taskID)?.completed == true {

@@ -303,3 +303,72 @@ extension CloudCalendarTests {
         do {_ = try await api.events(calendar,window:window,titles:true,accessToken:token);XCTFail("Unknown privacy exposed an event")}catch{XCTAssertEqual(error as? CalendarReadFailure,.invalidResponse)}
     }
 }
+
+extension CloudCalendarTests {
+    @MainActor func testDeviceAndDirectBusyTimeCombineWithoutReplacingVisibleDay() async throws {
+        let (api,_,close)=fixture([.init(body:catalog()),.init(body:google([event("review")])),.init(body:catalog()),.init(body:google([event("review")]))]);defer{close()}
+        let auth=CalendarAuthorizationFixture();let (links,defaults,cleanup)=await linked(api,auth:auth,selected:true);defer{cleanup()}
+        let provider=CalendarEventsTests.Provider(),busy=CalendarBusyStore(provider:provider,defaults:defaults,links:links)
+        busy.bind(account:"workspace-a");await busy.connect();busy.select(["work"]);busy.setTitles(true)
+        let day=TaskPlanning.instant("2026-10-25T08:00:00Z")!;await busy.refresh(on:day)
+        XCTAssertTrue(busy.ready);XCTAssertEqual(busy.events.count,2);XCTAssertTrue(busy.anyConnected)
+        let visible=busy.events,capacity=await busy.capacityWindow(now:day)
+        XCTAssertEqual(capacity?.state,"ready");XCTAssertEqual(capacity?.events.count,2);XCTAssertEqual(busy.events,visible)
+        XCTAssertTrue(capacity?.events.allSatisfy{$0.title=="Busy"}==true)
+        busy.bind(account:"workspace-b");XCTAssertTrue(busy.events.isEmpty);XCTAssertTrue(links.links.isEmpty);XCTAssertFalse(busy.ready)
+    }
+    @MainActor func testRevokedDirectAccessCannotClaimCompleteCapacityFromDeviceAlone() async throws {
+        let (api,_,close)=fixture([.init(status:403,body:.object([:]))]);defer{close()}
+        let auth=CalendarAuthorizationFixture();let (links,defaults,cleanup)=await linked(api,auth:auth,selected:true);defer{cleanup()}
+        let busy=CalendarBusyStore(provider:CalendarEventsTests.Provider(),defaults:defaults,links:links)
+        busy.bind(account:"workspace-a");await busy.connect();busy.select(["work"])
+        let invalidated=await busy.capacityWindow();XCTAssertNil(invalidated)
+        let known=await busy.capacityWindow();XCTAssertEqual(known?.state,"incomplete");XCTAssertEqual(known?.events.count,1)
+        await busy.refresh(on:Date());XCTAssertFalse(busy.ready);XCTAssertEqual(busy.events.count,1);XCTAssertTrue(busy.status.contains("Reconnect"))
+    }
+    @MainActor func testDirectCalendarsWorkWithoutDevicePermissionAndDisconnectPreservesThem() async throws {
+        let (api,_,close)=fixture([.init(body:catalog()),.init(body:google([event("review")])),.init(body:catalog()),.init(body:google([event("review")]))]);defer{close()}
+        let auth=CalendarAuthorizationFixture();let (links,defaults,cleanup)=await linked(api,auth:auth,selected:true);defer{cleanup()}
+        let provider=CalendarEventsTests.Provider(),busy=CalendarBusyStore(provider:provider,defaults:defaults,links:links)
+        await provider.setAllowed(false);busy.bind(account:"workspace-a");busy.setTitles(true)
+        let day=TaskPlanning.instant("2026-10-25T08:00:00Z")!;await busy.refresh(on:day)
+        XCTAssertTrue(busy.ready);XCTAssertEqual(busy.events.count,1);XCTAssertFalse(busy.connected);XCTAssertTrue(busy.anyConnected)
+        busy.disconnect();XCTAssertTrue(busy.showTitles);await busy.refresh(on:day);XCTAssertTrue(busy.ready);XCTAssertEqual(busy.events.count,1)
+        let requests=await provider.requests;XCTAssertEqual(requests,0)
+        links.select(.google,id:"primary",enabled:false);XCTAssertTrue(busy.events.isEmpty);XCTAssertFalse(busy.ready)
+    }
+}
+
+extension CloudCalendarTests {
+    @MainActor func testManualCatalogRefreshKeepsSelectionsAndDoesNotReadEvents() async throws {
+        let extra:[String:JSON]=["id":.string("new-calendar"),"summary":.string("New calendar")]
+        let primary:[String:JSON]=["id":.string("primary"),"summary":.string("Workshop"),"primary":.bool(true)]
+        let (api,script,close)=fixture([.init(body:google([primary,extra]))]);defer{close()}
+        let auth=CalendarAuthorizationFixture();let (store,_,cleanup)=await linked(api,auth:auth,selected:true);defer{cleanup()}
+        let before=store.revision;await store.refreshCalendars(.google)
+        XCTAssertEqual(store.links[.google]?.calendars.count,2);XCTAssertEqual(store.links[.google]?.selected,["primary"])
+        XCTAssertGreaterThan(store.revision,before);XCTAssertTrue(store.refreshing.isEmpty);XCTAssertEqual(script.captured.count,1)
+        XCTAssertTrue(script.captured[0].url!.path.hasSuffix("calendarList"))
+    }
+    @MainActor func testManualCatalogRefreshRejectsChangedAccountWithoutReplacingSelection() async throws {
+        let (api,_,close)=fixture([.init(body:catalog("different-account"))]);defer{close()}
+        let auth=CalendarAuthorizationFixture();let (store,_,cleanup)=await linked(api,auth:auth,selected:true);defer{cleanup()}
+        await store.refreshCalendars(.google)
+        XCTAssertTrue(store.links[.google]?.needsReconnect==true);XCTAssertEqual(store.links[.google]?.identity.id,"primary");XCTAssertEqual(store.links[.google]?.selected,["primary"])
+        let result=await store.read(window:window,titles:false);XCTAssertEqual(result?.state,"unavailable")
+    }
+}
+
+extension CloudCalendarTests {
+    @MainActor func testMissingSavedCredentialDoesNotSilentlyBecomeDisconnectedFreeTime() async throws {
+        let (api,script,close)=fixture([]);defer{close()}
+        let auth=CalendarAuthorizationFixture();let (store,defaults,cleanup)=await linked(api,auth:auth,selected:true);defer{cleanup()}
+        auth.saved["workspace-a"]=[:];store.bind(owner:"");store.bind(owner:"workspace-a")
+        let missing=await store.read(window:window,titles:false)
+        XCTAssertEqual(missing?.state,"unavailable");XCTAssertTrue(store.restorationFailures.contains(.google));XCTAssertTrue(store.active)
+        XCTAssertTrue(script.captured.isEmpty)
+        await store.disconnect(.google)
+        XCTAssertNil(defaults.object(forKey:"planner.linked.workspace-a.google.identity"));XCTAssertFalse(store.active)
+        let removed=await store.read(window:window,titles:false);XCTAssertEqual(removed?.state,"off")
+    }
+}

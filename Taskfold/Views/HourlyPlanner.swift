@@ -145,7 +145,7 @@ struct HourlyPlannerView: View {
     private var workingSummary: String {
         guard hours != nil else { return "Capacity unavailable. Update Taskfold to read these working hours." }
         if busy.ready { return "\(capacity.workingMinutes) min working day · \(capacity.busyMinutes) min calendar busy · \(capacity.afterKnownWork) min after known work" }
-        if busy.connected { return "\(capacity.workingMinutes) min working day · calendar data incomplete" }
+        if busy.anyConnected { return "\(capacity.workingMinutes) min working day · calendar data incomplete" }
         return "\(capacity.workingMinutes) min working day · \(capacity.workingMinutes - capacity.estimatedMinutes) min after task estimates"
     }
     private var scheduleButton: some View {
@@ -509,7 +509,7 @@ struct WidgetCapacityRefresh: ViewModifier {
     func body(content: Content) -> some View {
         content
             .task(id: "\(store.userID)-\(CalendarBusyStore.shared.revision)-\(phase == .active)") {
-                guard store.signedIn, phase == .active else { return }
+                guard store.signedIn || store.localMode, phase == .active else { return }
                 await store.refreshWidgetCapacity()
                 while !Task.isCancelled {
                     do { try await Task.sleep(for: .seconds(900)) } catch { return }

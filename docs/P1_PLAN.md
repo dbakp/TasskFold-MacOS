@@ -12,6 +12,8 @@ User-directed scope, 20 October 2026. Ranking favors daily usefulness and preser
 | 6 | Direct Google/Outlook calendar connections | Useful but requires provider OAuth/reconnect and real-account acceptance. | Read-only calendars first, visible provider/account, private event handling, selected calendars and disconnect/reconnect; mirroring only after identity/deletion/loop policy and acceptance. |
 | 7 | Shared activity and mentions | Depends on clear ownership, access and notification semantics. | Project-scoped activity, permission-checked mentions, departed-member safety and honest local/remote delivery state. Advanced team roles/folders/admin remain separate. |
 
+Current status: rank 1 is delivered; ranks 2–5 are implemented with phone/tablet acceptance, while their native Mac walkthroughs await unlock. Rank 6 now includes the native sign-in/storage bridge, provider controls and planner/capacity integration; real-provider acceptance remains pending. Rank 7 has not started. The three release items remain deferred.
+
 Already delivered: archive/restore, owner-safe subprojects, first-version private templates, reviewed multi-line capture, native assignment/member controls, guarded collection edits and the Project pulse history foundation. These are not new implementation backlog entries.
 
 ## First implementation: subtask organizer
@@ -114,3 +116,34 @@ The read layer uses only Google Calendar GET endpoints and Microsoft Graph calen
 Connections require explicit calendar selection. A different calendar account requires replacement confirmation; cancelling preserves the previous account and selection. Workspace changes, selection edits and disconnect invalidate in-flight reads, including later pagination. Expired access refreshes once; denied access, changed account identity and restoration failures stay unavailable rather than becoming free capacity. Failed credential removal hides calendars and can be retried. These behaviors use an injectable native-authorization contract; they do not demonstrate an actual OAuth consent or Keychain lifecycle yet.
 
 Verification: 25 focused synthetic calendar cases pass independently in both repos. Full owned suites pass: iOS 807 reported / 11 environment skips / 0 failures; Mac 831 reported / 31 environment skips / 0 failures. Isolated iOS Simulator and Mac app/widget builds succeed. There is one iOS packaging warning about not stripping an already signed widget binary; no source/compiler warning. No native UI, provider consent, real credential persistence or external calendar-account acceptance is claimed by these checks. Exact evidence: `p1-direct-calendar-foundation-evidence.json`.
+
+
+### Rank 6 native sign-in and planner integration
+
+Implemented in both independently owned apps: AppAuthCore 3.0.0 with the system authentication browser, PKCE/state, a workspace-bound staged account choice, secure archive restoration and refresh persistence in a private device-only Keychain service. Public provider registrations are configured through per-app build settings; no secret is embedded, and providers remain unavailable without valid matching client/callback configuration. The package revision, privacy resource and Apache license are included in each app's own build inputs. See `CALENDAR_CONNECTIONS_SETUP.md`.
+
+Planner settings separates device permission from direct provider accounts, shows the account identity, exposes explicit calendar choices and refresh/reconnect/disconnect, and confirms replacing a different account. Large text stacks the account actions and retains touch targets. Device and direct reads combine into the planner and derived widget capacity. Missing credentials, revoked permissions and incomplete selections remain visibly incomplete/unavailable. Local workspaces also refresh capacity when calendar choices change. Provider events are not imported into tasks or written back to calendars.
+
+The native wrapper's offline proof uses actual AppAuth state/archive behavior with memory-only credential storage and a session that intercepts every SDK request. All 21 checks pass in the iPhone Simulator, including saved-session restoration, persistence failures, workspace isolation and conditional cleanup after switching during a held write; zero SDK HTTP requests occur. This is **not** genuine provider consent, actual Keychain acceptance or real refresh/revocation proof. The result is mirrored as iOS evidence in both repos, not claimed as Mac runtime acceptance. Native phone/tablet interaction and visual acceptance are recorded separately after verification. Real registrations/consent/Keychain and the locked Mac's walkthrough remain pending. Rank 6 is not declared delivered.
+
+
+## Rank 7 readiness — shared activity and mentions
+
+Read-only review confirms the deployed TaskFold database has RLS on tasks, project membership and the existing task-activity ledger. Dedicated comment/mention/inbox tables are not present. Current comments are embedded task JSON with client-supplied attribution, so mention delivery must not be inferred from a displayed name or an imported `@name` string. No schema or policy has been changed by this review.
+
+Implementation order:
+
+1. Add a project activity view using the existing permission-filtered ledger, current task/member context and explicit history coverage. Deleted/inaccessible task content must not be reconstructed from cached titles; current access determines navigation.
+2. Add server-authenticated comment operations and stable IDs. Preserve legacy/imported comments as historical content without generating mentions. Bind authors and project/task identity on the server, and make retry acknowledgements idempotent.
+3. Add explicit teammate selection that stores member IDs, with membership/task access rechecked atomically when a comment is sent. A stale picker or a departed member cannot create a recipient record. Cached profile names and editable JWT user metadata never grant access.
+4. Add an account-owned in-app Mentions inbox with read/unread state, safe task routes and current-access checks. Keep offline/pending state distinct from an acknowledged shared comment. Push delivery remains deferred with remote reminders; no new APNs claim is introduced.
+5. Verify owner/collaborator/outsider/departed-member behavior, private moves/deletions, account switches, offline retry/relaunch and import/backup preservation using disposable fixtures. Implement both native apps independently, run actual-role policy tests and advisor checks for schema changes, then commit/push each repo.
+
+This is readiness work, not delivered rank 7 functionality. The current Supabase changelog and RLS documentation were reviewed; the upcoming CBC cipher removal is an HTTP-client compatibility item and does not authorize changing project access. Relevant sources: [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [TLS change](https://supabase.com/changelog/cbc-tls-ciphers-deprecated).
+
+
+Calendar settings acceptance, 21 October: the full owned suites pass (iOS 820 reported, 11 skips; Mac 844 reported, 31 skips; zero failures; 44 focused calendar cases each). The native iPhone run passes three cases, and iPad passes two, with zero runtime warnings. Normal and dark largest-text settings screenshots were reviewed. Each device retains exactly the four original synthetic planner tasks and zero pending mutations. Google’s selected calendar and the title preference survive relaunch; Outlook disconnect leaves Google intact. The separate device-permission denial message remains available after refresh.
+
+The actual AppAuth/native-wrapper offline proof passes all 21 checks on each Simulator. A separate test of the actual Simulator Keychain passes write/read, update/read and conditional removal; its disposable synthetic records are removed. These checks do not grant provider access or prove physical-device/Mac Keychain recovery, live refresh or real consent. The iPad’s published capacity is ready with 60 minutes busy, and its widget JSON contains no calendar titles/account labels or credentials. The phone’s final projection is off because its last case deliberately uses the empty device-permission fixture. See `p1-calendar-connections-evidence.json` and the two native proof artifacts.
+
+**Remaining visual fix:** the settings controls are accepted, but the normal timeline currently draws calendar labels beneath overlapping task labels. The combined calendar/task layout needs a focused correction and native visual check before calendar planner acceptance. Real provider registrations/consent and the locked Mac walkthrough remain pending. No distribution, remote reminder or older-client rollout gate is closed.
