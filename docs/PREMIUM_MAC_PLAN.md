@@ -2478,3 +2478,6 @@ Conversation polish follow-up: Cancel now compares text and recipient selection 
 
 
 21 October native continuation: monthly date sets pass capture/edit/preview/Undo/Redo/completion/count/Undo/relaunch. Synthetic calendar settings and timeline pass privacy, explicit selection, independent disconnect, incomplete-data and recovery checks; no genuine provider acceptance is claimed. Exact observations/snapshots: `p1-mac-recurrence-calendar-evidence.json`. The main test app is closed. Remaining current Mac acceptance: installed widget ordering and project activity/conversations/Mentions. All explicit provider/release deferrals remain unchanged.
+
+
+21 October conversations/activity continuation: native Mac drafts, explicit mentions,offline/relaunch/read intent/retry acknowledgement,edit/remove and conflict review pass with exact saved snapshots. Project pulse attribution/filter/current completed-task route pass. Fixed Mentions/activity task opening to use matching project/Inbox/Completed context; build/signature and open-project/completed runtime checks pass. See `p1-mac-conversations-activity-evidence.json`. Main app closed. Remaining current P1 acceptance: installed Mac widget ordering; explicit provider/release deferrals unchanged.

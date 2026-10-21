@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-21",
+  "platform": "macOS",
+  "kind": "native computer-use walkthroughs plus exact saved snapshot checks; no XCTest count claimed",
+  "bundle": "com.dbakp.taskfold.mac.workflowtestsp1",
+  "route_fix": {
+    "problem": "Mentions Open task selected the correct inspector but left an empty Today list behind it. Project activity used the same finder route.",
+    "change": "Both guarded callbacks now use the existing openExternalTask route: current project for open project tasks,Inbox for open personal tasks,Completed for completed tasks. Current workspace/task-generation/project guards are retained.",
+    "verified": [
+      "Mentions -> Conversation -> Open task opens Launch studio with Review the launch notes selected",
+      "Project pulse completed activity opens Completed with Finish a useful draft selected"
+    ],
+    "build": "mac-p1-conversation-route-build.log",
+    "signature": "deep strict verification passed"
+  },
+  "conversations": {
+    "status": "representative native Mac acceptance passed",
+    "fixture_arguments": [
+      "--uitesting",
+      "--conversation-testing",
+      "--conversation-seed",
+      "--conversation-offline",
+      "-localMode",
+      "YES"
+    ],
+    "relaunch_arguments": [
+      "--uitesting",
+      "--conversation-testing",
+      "-localMode",
+      "YES"
+    ],
+    "checks": [
+      "incoming mention shows author,text,unread state",
+      "current task route opens matching project and inspector",
+      "task inspector opens shared conversation",
+      "new comment uses explicit teammate switch",
+      "private offline draft saved",
+      "untouched draft Cancel closes without discard prompt",
+      "actual edited draft Cancel offers Save draft,Discard edits,Keep editing",
+      "Discard edits preserves original saved draft and recipient",
+      "Send while offline persists immutable pending operation; no shared success is claimed",
+      "normal Quit/relaunch retains queued body and recipient",
+      "offline Mark read describes saved intent separately",
+      "Resume test delivery acknowledges both operations and clears queue",
+      "Unread becomes0; All shows Read and Mark unread",
+      "comment appears once with own author and selected teammate",
+      "edit saves revised body",
+      "Remove requires confirmation and leaves revision3 tombstone with cleared body/mentions",
+      "original incoming comment and acknowledged read mention remain intact"
+    ],
+    "offline_snapshot": {
+      "artifact": "mac-p1-conversation-offline-snapshot.json",
+      "sha256": "f5c1d1ebfe1375c9cf2628de806fc01ae40f0e33fba4daae55c90aeebe34caf2",
+      "pending_comment_operations": 1
+    },
+    "final_snapshot": {
+      "artifact": "mac-p1-conversation-accepted-snapshot.json",
+      "sha256": "b2fb940dca2dc9bf924d5b44fbb9a78995c37a33e0e5a3c533899ef3e25dd1e3",
+      "tasks": 1,
+      "projects": 1,
+      "comments_including_tombstone": 2,
+      "mentions": 1,
+      "outbox": 0,
+      "core_pending": 0
+    }
+  },
+  "conflict_review": {
+    "checks": [
+      "seeded stale authored intent appears Changed elsewhere review your draft",
+      "review displays My retained offline review beside Latest notes from the other device",
+      "explicit reviewed save uses latest baseline and clears conflict queue"
+    ],
+    "snapshot": {
+      "artifact": "mac-p1-conversation-conflict-snapshot.json",
+      "sha256": "cfc7643c802c97ef7e417b5adcfad4ae1e34504a15da49ebca6366eda516be67",
+      "own_comment_revision": 3,
+      "own_body": "Reviewed Mac collaboration notes",
+      "outbox": 0,
+      "core_pending": 0
+    }
+  },
+  "project_activity": {
+    "status": "representative native Mac acceptance passed",
+    "arguments": [
+      "--uitesting",
+      "--project-pulse-seed",
+      "-localMode",
+      "YES"
+    ],
+    "checks": [
+      "Studio shows1of3 completed and two open",
+      "seven-day completion/reopen/added totals remain separate from current task total",
+      "history coverage and saved-on-this-device notice visible",
+      "activity attributes fixture events to You",
+      "Only my changes toggles on",
+      "current completed-task activity route opens Completed and exact inspector",
+      "no task content/completion changed by navigation"
+    ],
+    "snapshot": {
+      "artifact": "mac-p1-activity-accepted-snapshot.json",
+      "sha256": "0f8b9c5ada9139b1aa7df0ccaa2c339280728c5aef46cf3a4b66e5fa6a26736b",
+      "tasks": 3,
+      "completed": 1,
+      "pending": 0
+    }
+  },
+  "main_app_closed": true,
+  "limits": [
+    "Native comments use local synthetic service; authenticated HTTP/two-client and RLS acceptance remain separately recorded evidence",
+    "No new VoiceOver listening,remote-push or physical-device acceptance claimed",
+    "Activity fixture author rows are all You; other-author/departure/access-loss contracts retain recorded core/server proofs",
+    "Open personal-task route follows existing Inbox helper; this continuation directly checks project-open and completed destinations"
+  ],
+  "remaining_current_work": [
+    "Mac installed widget ordering"
+  ],
+  "explicit_deferrals": [
+    "genuine calendar registrations/provider acceptance",
+    "remote reminders",
+    "older-client rollout safeguards",
+    "distribution verification"
+  ]
+}

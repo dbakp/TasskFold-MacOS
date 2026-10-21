@@ -46,12 +46,12 @@ struct RootView: View {
         .environment(\.openMentions, { mentionsRequest = MentionsRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .sheet(item: $mentionsRequest) { request in MentionsInboxView(request: request) { task in
             guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), let current = store.record("tasks", id: task.id), current.string("task_generation") == task.string("task_generation"), current.string("project_id") == task.string("project_id") else { return }
-            mentionsRequest = nil; workspace.openFromFinder(current.id)
+            mentionsRequest = nil; workspace.openExternalTask(current.id)
         } }
         .environment(\.openProjectPulse, { project in pulseRequest = ProjectPulseRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), projectID: project) })
         .sheet(item: $pulseRequest) { request in ProjectPulseView(request: request) { task in
             guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), store.record("tasks", id: task.id) != nil else { return }
-            pulseRequest = nil; workspace.openFromFinder(task.id)
+            pulseRequest = nil; workspace.openExternalTask(task.id)
         } }
         .sheet(item: $focusRequest) { FocusSessionView(request: $0) }
         .safeAreaInset(edge: .top) {
