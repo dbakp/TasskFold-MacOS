@@ -2582,3 +2582,8 @@ Interval reminders now have owned native editing, explicit count/end limits, upc
 ## 21 October — saved reminder zones and travel comparison
 
 Added an owned native named-zone chooser and source/device clock comparison for the next five calendar reminders. Explicit zone changes keep picker civil date, authored clock and limits, with skipped dates refused; preview remains read-only. Core civil/date/offset/identity checks and actual editor/picker component rendering are recorded in `p2-reminder-time-zones-evidence.json`. The Mac is still locked in the current surface check; full native keyboard/VoiceOver acceptance remains open. No new persistent envelope, server delivery, provider access or release assertion is included.
+
+
+## 21 October — opt-in Time Sensitive presentation
+
+Added native reminder-level presentation and an independent default-off device/workspace allowance. Actual system support is read before queue construction; unavailable/disabled support keeps normal content. Pending/snoozed requests update without shifting dates, while a task presentation edit invalidates old actions. Version-4 local-only settings are preserved opaquely by the selected previous reader. Current Mac provisioning cannot sign this new capability; unsigned compilation and offscreen production-view checks are explicitly separate from genuine native capability/Focus/distribution acceptance. Exact evidence and broader open work are in `p2-reminder-presentation-evidence.json` and `REMINDER_PRESENTATION.md`.

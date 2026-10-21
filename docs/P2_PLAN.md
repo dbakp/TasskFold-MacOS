@@ -157,3 +157,8 @@ The independently owned interval model now connects to a version-3 local-only re
 ### Saved reminder time zones and travel clarity
 
 Calendar reminders now have a native searchable time-zone choice and up-to-five source/device clock previews. An explicit zone change preserves the authored civil day/clock/rule/limits while moving alert instants; preview and Cancel do not mutate data or task planning. A skipped civil date is refused. Existing version-2 data and notification signatures remain in use; no server migration or provider permission is needed. `REMINDER_TIME_ZONES.md` and `p2-reminder-time-zones-evidence.json` record exact checks and remaining Mac/live-OS-zone/cloud/accessibility gates. Floating device clocks and holiday/location/urgent behavior remain separate unfinished work.
+
+
+### Opt-in Time Sensitive presentation
+
+Custom reminders now have an explicit Time Sensitive choice, separate from a default-off device/workspace allowance and the OS setting. Normal fallback preserves schedule/identity; Focus finish alerts stay normal. Version-4 local-only wrappers preserve prior readers' opaque settings and bind the new presentation into response signatures. `REMINDER_PRESENTATION.md` and `p2-reminder-presentation-evidence.json` distinguish scheduling/native checks from genuine capability/Focus/distribution acceptance. This independent opt-in work does not resolve the still-open holiday-source/location contracts, close rank 5 or reopen user-deferred release work.

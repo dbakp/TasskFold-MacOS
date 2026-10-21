@@ -8,7 +8,7 @@ This is rank 5 of P2_PLAN.md. It does not reopen server delivery or release veri
 2. **Travel clarity.** Label interval reminders as elapsed time. Existing calendar reminders retain their saved source-zone clock; fixed reminders retain their instant. The editor now offers a named-zone chooser and compares up to five actual source/device clock times, including offset changes. See REMINDER_TIME_ZONES.md. A future follow-my-current-zone clock is a separate explicit choice, not a migration of existing schedules.
 3. **Holiday policy.** Offer explicit Skip or Move policies only after a reviewed holiday source/region, source updates, date boundaries and count/end semantics are agreed. Do not infer holidays from a device locale, silently change task dates or couple a user's private calendar to shared reminders. No holiday behavior is implemented by this milestone.
 4. **Location reminders.** Define arrival/departure, location precision, opt-in permissions, device ownership, background/reinstall recovery, data retention and unsupported-platform presentation before requesting location access. Cross-platform editing must preserve unsupported settings. No location permission or background tracking is added by this milestone.
-5. **Urgent presentation.** Define the explicit user choice and available OS capability before adding elevated presentation. Never label ordinary alerts as critical, guaranteed or emergency delivery. Keep normal delivery available. No urgent behavior is enabled by this milestone.
+5. **Urgent presentation.** Define the explicit user choice and available OS capability before adding elevated presentation. Never label ordinary alerts as critical, guaranteed or emergency delivery. Keep normal delivery available. Opt-in Time Sensitive presentation is now implemented separately, with normal fallback and no Critical Alerts; see REMINDER_PRESENTATION.md.
 
 ## Elapsed schedule contract
 
@@ -34,7 +34,7 @@ The current hosted task check permits an array of up to 20 reminder objects. A r
 
 Independent Core cases cover malformed data, duplicate semantics, extensions/cleared limits, saved queue/portable backup, unique occurrences, exact response rejection, task generations, count inheritance, local-only handoff, queue retry/budget/snooze and account changes. Phone/tablet native checks and the actual simulator notification case are recorded separately in `p2-interval-reminders-evidence.json`, including failed iterations and exact remaining gates. Mac component rendering and successful builds are not full native acceptance.
 
-Open gates include full Mac editing and VoiceOver, actual interval notification Complete/Tomorrow/Snooze actions through the OS UI, long-running replenishment across background/restarts, paired cloud/offline account transitions and wider localization/RTL/layout acceptance. Holiday policy, location and urgent presentation remain unimplemented; the rest of rank 5 and Px remain incomplete. The user-deferred remote/rollout/release/provider work stays deferred.
+Open gates include full Mac editing and VoiceOver, actual interval notification Complete/Tomorrow/Snooze actions through the OS UI, long-running replenishment across background/restarts, paired cloud/offline account transitions and wider localization/RTL/layout acceptance. Holiday policy and location remain unimplemented; Time Sensitive presentation is tracked separately in REMINDER_PRESENTATION.md; the rest of rank 5 and Px remain incomplete. The user-deferred remote/rollout/release/provider work stays deferred.
 
 
 ## Recorded layouts

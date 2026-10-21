@@ -31,7 +31,7 @@ struct TaskReminderEditor: View {
                                 Button(role: .destructive) { remove(index) } label: { Image(systemName: "trash").frame(minWidth: 44, minHeight: 44) }
                                     .buttonStyle(.borderless).accessibilityLabel("Delete " + spec.label).accessibilityIdentifier("reminderDelete-\(index)")
                             }
-                            Text(status(spec)).font(.footnote).foregroundStyle(.secondary)
+                            Text(status(spec) + (spec.timeSensitive ? " · Time Sensitive" : "")).font(.footnote).foregroundStyle(.secondary)
                             if !spec.locallyEditable { Text("This reminder uses another delivery channel. Its settings are preserved; this app delivers only local notifications.").font(.footnote).foregroundStyle(.secondary) }
                         }
                     } else if ReminderSpec(row: value) == nil {
@@ -52,6 +52,11 @@ struct TaskReminderEditor: View {
                 })).disabled(store.requestingNotifications || store.requestingFocusAlerts).accessibilityIdentifier("reminderDelivery")
                 if store.requestingNotifications { ProgressView("Requesting permission…") }
                 Text(store.reminderStatus).font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("reminderStatus")
+                Toggle("Allow Time Sensitive reminders", isOn: Binding(get: { store.timeSensitiveRemindersEnabled }, set: { store.setTimeSensitiveReminders($0) }))
+                    .accessibilityIdentifier("reminderTimeSensitiveDevice")
+                Text("Off by default on each device and workspace. When allowed, only reminders marked Time Sensitive request immediate attention. Focus and system notification settings still control delivery.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                Text(store.timeSensitiveReminderStatus).font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("reminderTimeSensitiveStatus")
                 ReminderSystemSettingsButton()
                 RemoteReminderRegistrationView()
             } header: { Text("This device") } footer: {
@@ -130,6 +135,7 @@ struct ReminderSpecEditor: View {
     @State private var before: Bool
     @State private var date: Date
     @State private var enabled: Bool
+    @State private var timeSensitive: Bool
     @State private var repeatClock: Date
     @State private var repeatText: String
     @FocusState private var repeatFocused: Bool
@@ -160,6 +166,7 @@ struct ReminderSpecEditor: View {
         _repeatClock = State(initialValue: utc.date(from: DateComponents(year: 2000, month: 1, day: 1, hour: hour, minute: minute))!)
         _repeatText = State(initialValue: draft.spec.schedule?.expression ?? "every week")
         _sourceZone = State(initialValue: initialZone)
+        _timeSensitive = State(initialValue: draft.spec.timeSensitive)
         _enabled = State(initialValue: draft.spec.enabled)
         _intervalText = State(initialValue: String(draft.spec.intervalSchedule?.intervalMinutes ?? 30))
         _limitedCount = State(initialValue: draft.spec.intervalSchedule?.count != nil)
@@ -174,6 +181,12 @@ struct ReminderSpecEditor: View {
                     Picker("When", selection: $kind) { Text("From plan").tag("relative"); Text("Fixed time").tag("absolute"); Text("Repeats").tag("recurring"); Text("Interval").tag("interval") }
                         .accessibilityIdentifier("reminderKind")
                     Toggle("Enabled", isOn: $enabled).accessibilityIdentifier("reminderEnabled")
+                }
+                Section {
+                    Toggle("Time Sensitive", isOn: $timeSensitive).accessibilityIdentifier("reminderTimeSensitive")
+                } header: { Text("Presentation") } footer: {
+                    Text("For a task that needs your attention at this time. Requires Allow Time Sensitive reminders on this device. May interrupt Focus when permitted by system settings; does not override Silent mode or guarantee delivery.")
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 if kind == "relative" {
                     Section {
@@ -377,7 +390,8 @@ struct ReminderSpecEditor: View {
         } else { changed = kind == "absolute" ? .absolute(date, id: draft.spec.id) : .relative(before ? -minutes : minutes, id: draft.spec.id, enabled: enabled) }
         var spec = draft.spec.mergingSettings(from: changed)
         spec.raw["enabled"] = .bool(enabled)
-        if let error = save(spec) { message = error; return }
+        guard let presented = spec.settingTimeSensitive(timeSensitive) else { message = "This reminder cannot use the selected presentation. Cancel and reopen its settings."; return }
+        if let error = save(presented) { message = error; return }
         dismiss()
     }
 }

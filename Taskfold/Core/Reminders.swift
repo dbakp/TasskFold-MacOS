@@ -21,8 +21,31 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
     var kind: String { raw["kind"]?.text ?? "" }
     var schedule: ReminderCalendarSchedule? { kind == "recurring" ? ReminderCalendarSchedule(raw: raw) : nil }
     var intervalSchedule: ReminderIntervalSchedule? { kind == "interval" ? ReminderIntervalSchedule(raw: raw["interval_schedule"]?.object ?? [:]) : nil }
+    var timeSensitive: Bool { raw["version"] == .number(4) && raw["presentation"] == .string("time-sensitive") }
+    /// Version 4 wraps an otherwise validated local schedule. Previous readers keep it opaque.
+    func settingTimeSensitive(_ value: Bool) -> ReminderSpec? {
+        var fields = raw
+        if timeSensitive { fields["version"] = fields["schedule_version"] }
+        fields.removeValue(forKey: "presentation"); fields.removeValue(forKey: "schedule_version")
+        guard let base = ReminderSpec(row: .object(fields)) else { return nil }
+        guard value else { return base }
+        guard base.locallyEditable, base.id != Self.plannedID else { return nil }
+        fields["schedule_version"] = fields["version"]; fields["version"] = .number(4)
+        fields["presentation"] = .string("time-sensitive")
+        return ReminderSpec(row: .object(fields))
+    }
     init?(row: JSON) {
         let row = row.object
+        if row["version"] == .number(4) {
+            guard row["presentation"] == .string("time-sensitive"),
+                  [JSON.number(1), .number(2), .number(3)].contains(row["schedule_version"] ?? .null),
+                  row["channels"] == .array([.string("local")]),
+                  row["id"]?.text.lowercased() != Self.plannedID else { return nil }
+            var base = row; base["version"] = row["schedule_version"]
+            base.removeValue(forKey: "presentation"); base.removeValue(forKey: "schedule_version")
+            guard let validated = ReminderSpec(row: .object(base)) else { return nil }
+            self = validated; raw = row; return
+        }
         guard [JSON.number(1), .number(2), .number(3)].contains(row["version"] ?? .null), UUID(uuidString: row["id"]?.text ?? "") != nil,
               row["enabled"] == nil || row["enabled"] == .bool(true) || row["enabled"] == .bool(false),
               case .array(let channels)? = row["channels"], !channels.isEmpty,
@@ -437,6 +460,10 @@ enum ReminderClockPreview {
 
 /// The old device-wide switch migrates to the first active workspace only.
 enum ReminderPreferences {
+    static func timeSensitiveKey(_ account: String) -> String { "taskfold.reminders.timeSensitive." + account.lowercased() }
+    static func timeSensitiveEnabled(account: String, defaults: UserDefaults = .standard) -> Bool {
+        !account.isEmpty && defaults.bool(forKey: timeSensitiveKey(account))
+    }
     static func key(_ account: String) -> String { "taskfold.reminders.enabled." + account.lowercased() }
     static func enabled(account: String, fixture: Bool = false, defaults: UserDefaults = .standard) -> Bool {
         guard !account.isEmpty else { return false }
@@ -461,6 +488,10 @@ enum ReminderSignature {
         return DueReminder.digest(encoded+"|"+String(date.timeIntervalSince1970)+"|completion:"+String(task["completion_version"].integer))
     }
     static func make(task: Record, spec: ReminderSpec, date: Date) -> String {
+        if spec.timeSensitive, let base = spec.settingTimeSensitive(false) {
+            let fields = ["taskfold.reminder.v7", make(task: task, spec: base, date: date), "time-sensitive"]
+            return "r7:" + DueReminder.digest(fields.map { "\($0.utf8.count):\($0)" }.joined())
+        }
         let generation = task.string("task_generation").lowercased()
         if let schedule = spec.intervalSchedule {
             let fields = ["taskfold.reminder.v6", task.id.lowercased(), spec.id] + schedule.semanticFields + ["local", "1", milliseconds(date), String(task["completion_version"].integer), generation]
@@ -493,10 +524,11 @@ struct DueReminder: Equatable, Sendable {
     var signature: String
     var legacySignature: String? = nil
     var calendarOccurrence = false
+    var timeSensitive = false
     func hasSignature(_ value: String) -> Bool { signature == value || legacySignature == value }
     static func == (a: Self, b: Self) -> Bool {
         a.kind == b.kind && a.id == b.id && a.title == b.title && a.body == b.body && a.date == b.date &&
-        a.taskID == b.taskID && a.specID == b.specID && a.signature == b.signature && a.calendarOccurrence == b.calendarOccurrence
+        a.taskID == b.taskID && a.specID == b.specID && a.signature == b.signature && a.calendarOccurrence == b.calendarOccurrence && a.timeSensitive == b.timeSensitive
     }
     static func digest(_ value: String) -> String { SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined() }
     private static func specifications(_ task: Record, channels: Set<String>) -> [ReminderSpec] {
@@ -514,8 +546,8 @@ struct DueReminder: Equatable, Sendable {
         let id = ReminderSpec.rows(task).isEmpty ? task.id : task.id + "." + spec.id + (recurring ? "." + ReminderSignature.milliseconds(date) : "")
         return DueReminder(id: id, title: task.title, body: task.string("description"), date: date, taskID: task.id, specID: spec.id,
             signature: ReminderSignature.make(task: task, spec: spec, date: date),
-            legacySignature: !recurring && task.string("task_generation").isEmpty ? ReminderSignature.legacy(task: task, spec: spec, date: date) : nil,
-            calendarOccurrence: recurring)
+            legacySignature: !spec.timeSensitive && !recurring && task.string("task_generation").isEmpty ? ReminderSignature.legacy(task: task, spec: spec, date: date) : nil,
+            calendarOccurrence: recurring, timeSensitive: spec.timeSensitive)
     }
     static func events(tasks: [Record], calendar: Calendar = .current, channels: Set<String> = ["local"], now: Date = Date()) -> [DueReminder] {
         var result: [DueReminder] = []
@@ -576,9 +608,10 @@ struct ReminderState: Sendable {
     var deliveryAuthority: ReminderDeliveryAuthority? = nil
     var deliveryAuthorityUnreadable = false
     var deliveryAuthorityAccount: String? = nil
+    var timeSensitiveAllowed = false
     func permitsOriginal(_ event: DueReminder) -> Bool {
-        // Version-3 interval specs are explicitly local-only; the server excludes them.
-        event.kind == .focusFinish || (event.kind == .task && event.signature.hasPrefix("r6:")) || (!deliveryAuthorityUnreadable && (deliveryAuthority?.allowsLocalOriginal(account: deliveryAuthorityAccount ?? account, at: event.date) ?? true))
+        // Interval and Time Sensitive specs are explicitly local-only; the server excludes them.
+        event.kind == .focusFinish || (event.kind == .task && (event.signature.hasPrefix("r6:") || event.signature.hasPrefix("r7:"))) || (!deliveryAuthorityUnreadable && (deliveryAuthority?.allowsLocalOriginal(account: deliveryAuthorityAccount ?? account, at: event.date) ?? true))
     }
     func validated(_ event: DueReminder) -> DueReminder? {
         if let matching = events.first(where: { $0.kind == event.kind && $0.taskID == event.taskID && $0.specID == event.specID && $0.hasSignature(event.signature) }) { return matching }
@@ -647,6 +680,12 @@ actor ReminderScheduler {
             var requests = state.account.isEmpty ? [] : state.events.filter { $0.date > state.now && state.permitsOriginal($0) }.map { ReminderRequest.make(account: state.account, event: $0) }
             requests += retained.filter { old in !snoozes.contains(where: { $0.identifier == old.identifier }) }
             requests += snoozes
+            // A synced task cannot opt another device/account into elevated presentation.
+            requests = requests.map { request in
+                var request = request
+                request.event.timeSensitive = request.event.kind == .task && request.event.timeSensitive && state.timeSensitiveAllowed
+                return request
+            }
             requests.sort {
                 if $0.event.kind != $1.event.kind { return $0.event.kind == .focusFinish }
                 return $0.fireAt == $1.fireAt ? $0.identifier < $1.identifier : $0.fireAt < $1.fireAt
@@ -689,7 +728,7 @@ struct SystemReminderCenter: ReminderCenter {
                   original == fire, (0...(Double(FocusSession.maximumTimestamp) / 1000 + 180 * 60)).contains(original) else { return nil }
         }
         let decoded = ReminderRequest(identifier: request.identifier, account: account,
-            event: DueReminder(kind: kind, id: info["eventID"] as? String ?? task + "." + spec, title: request.content.title, body: request.content.body, date: Date(timeIntervalSince1970: original), taskID: task, specID: spec, signature: signature, calendarOccurrence: info["calendarOccurrence"] as? Bool ?? false),
+            event: DueReminder(kind: kind, id: info["eventID"] as? String ?? task + "." + spec, title: request.content.title, body: request.content.body, date: Date(timeIntervalSince1970: original), taskID: task, specID: spec, signature: signature, calendarOccurrence: info["calendarOccurrence"] as? Bool ?? false, timeSensitive: request.content.interruptionLevel == .timeSensitive),
             fireAt: Date(timeIntervalSince1970: fire), snoozed: info["snoozed"] as? Bool ?? false)
         if decoded.event.calendarOccurrence && decoded.identifier != ReminderRequest.make(account: account, event: decoded.event, fireAt: decoded.fireAt, snoozed: decoded.snoozed).identifier { return nil }
         if kind == .focusFinish && decoded.identifier != ReminderRequest.make(account: account, event: decoded.event).identifier { return nil }
@@ -718,6 +757,7 @@ struct SystemReminderCenter: ReminderCenter {
     static func content(for request: ReminderRequest) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
         content.title = request.event.title; content.body = request.event.body; content.sound = .default
+        content.interruptionLevel = request.event.kind == .task && request.event.timeSensitive ? .timeSensitive : .active
         content.categoryIdentifier = request.event.kind == .focusFinish ? FocusFinish.category : "taskfold.reminder"
         content.userInfo = ["eventKind": request.event.kind.rawValue, "eventID": request.event.id, "accountID": request.account, "taskID": request.event.taskID, "specID": request.event.specID, "signature": request.event.signature, "originalAt": request.event.date.timeIntervalSince1970, "fireAt": request.fireAt.timeIntervalSince1970, "snoozed": request.snoozed, "calendarOccurrence": request.event.calendarOccurrence]
         return content

@@ -144,6 +144,8 @@ final class Store {
     var remoteReminderSelected: Bool { reminderAuthority?.account == reminderAuthorityAccount && reminderAuthority?.wantsRemote == true }
     var remoteReminderNeedsConfirmation: Bool { remoteReminderHoldingOriginals }
     private var remoteReminderHoldingOriginals: Bool { reminderAuthorityUnreadable || reminderAuthority?.account == reminderAuthorityAccount && reminderAuthority?.phase != .local }
+    private var systemTimeSensitiveAllowed = false
+    var timeSensitiveReminderStatus = "System notification settings control Time Sensitive delivery."
     var reminderStatus = "Choose whether this device delivers reminders."
     var focusAlertStatus = "Finish alerts are off on this device."
     private var focusPermissionDenied = false
@@ -1364,6 +1366,16 @@ final class Store {
         guard signedIn || localMode, !userID.isEmpty else { return false }
         return ReminderPreferences.enabled(account: userID, fixture: userID == "ui-testing" || userID == "preview")
     }
+    var timeSensitiveRemindersEnabled: Bool {
+        _ = reminderPreferenceRevision
+        return (signedIn || localMode) && ReminderPreferences.timeSensitiveEnabled(account: userID)
+    }
+    func setTimeSensitiveReminders(_ enabled: Bool) {
+        guard signedIn || localMode, !userID.isEmpty else { return }
+        UserDefaults.standard.set(enabled, forKey: ReminderPreferences.timeSensitiveKey(userID))
+        reminderPreferenceRevision += 1
+        Task { await reschedule() }
+    }
     func enableNotifications() async {
         guard !requestingNotifications, !requestingFocusAlerts, signedIn || localMode else { return }
         let generation = accountGeneration, account = userID, key = reminderPreferenceKey
@@ -1408,17 +1420,24 @@ final class Store {
         reminderRevision += 1
         var events = remindersEnabled ? DueReminder.events(tasks: activeTasks) : []
         if focusAlertsEnabled, let event = focusFinishEvent { events.append(event) }
-        return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events, validationTasks: remindersEnabled ? activeTasks : [], deliveryAuthority: reminderAuthority, deliveryAuthorityUnreadable: reminderAuthorityUnreadable, deliveryAuthorityAccount: remoteReminderTestWorkspace ? reminderAuthorityAccount : nil)
+        return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events, validationTasks: remindersEnabled ? activeTasks : [], deliveryAuthority: reminderAuthority, deliveryAuthorityUnreadable: reminderAuthorityUnreadable, deliveryAuthorityAccount: remoteReminderTestWorkspace ? reminderAuthorityAccount : nil, timeSensitiveAllowed: timeSensitiveRemindersEnabled && systemTimeSensitiveAllowed)
     }
     func reschedule() async {
         ReminderCategory.register(minutes: reminderSnoozeMinutes)
         refreshCalendarContext()
         await refreshRemoteReminderRegistration()
-        let state = reminderState(), generation = accountGeneration
+        let generation = accountGeneration
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        guard generation == accountGeneration else { return }
+        systemTimeSensitiveAllowed = settings.timeSensitiveSetting == .enabled
+        let state = reminderState()
         let report = await reminderScheduler.update(state)
         guard generation == accountGeneration, state.revision == reminderRevision, report.revision == state.revision else { return }
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
-        guard generation == accountGeneration, state.revision == reminderRevision else { return }
+        switch settings.timeSensitiveSetting {
+        case .enabled: timeSensitiveReminderStatus = "System Time Sensitive delivery is allowed. Focus settings still apply."
+        case .disabled: timeSensitiveReminderStatus = "Time Sensitive delivery is off in system settings. Marked reminders follow normal delivery settings."
+        default: timeSensitiveReminderStatus = "Time Sensitive delivery is unavailable in this build or on this device. Marked reminders follow normal delivery settings."
+        }
         var allowed = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
         #if os(iOS)
         allowed = allowed || settings.authorizationStatus == .ephemeral
