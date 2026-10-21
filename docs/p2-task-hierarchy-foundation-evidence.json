@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-21",
+  "status": "core hierarchy projection and child edit foundation implemented; parent/child filters remain unfinished",
+  "implementation": {
+    "read": "complete roots/subtasks/parents with stable paths and separate ancestor-title context; no persistent schema change",
+    "inheritance": "project/section/owner containment only; own planning, labels, assignment, priority and completion",
+    "write": "current root subtree PATCH with existing task-generation baseline; one mutation per root; no synthetic task rows",
+    "concurrency": "workspace/generation/creation/location/access checks; same-field conflict and changed-content deletion refusal; independent sibling and ancestor-field composition",
+    "limits": {
+      "items": 100000,
+      "nested_levels": 32,
+      "identity_scalars": 400,
+      "encoded_reference_bytes": 33554432,
+      "child_edits_per_batch": 1000
+    },
+    "legacy": "missing child IDs produce explicit organizer-save recovery; index does not silently create random IDs",
+    "completion": "own node state; no completion cascade or root recurrence successor created for a child"
+  },
+  "verification": {
+    "focused_cases": 14,
+    "full_suite": {
+      "executed": 961,
+      "skipped": 32,
+      "failures": 0,
+      "log": "mac-p2-task-hierarchy-core-final.log"
+    },
+    "native_build_log": "mac-p2-task-hierarchy-build.log",
+    "native_build": "passed",
+    "app_signature": "strict deep verification passed"
+  },
+  "covered": [
+    "full path projection and source immutability",
+    "containment-only inheritance",
+    "own-node completed visibility",
+    "reorder stability and distinct roots",
+    "missing/archived/ambiguous/shared project boundaries",
+    "malformed/duplicate/legacy/deep/oversized input refusal",
+    "sibling edits in one root patch with preserved metadata",
+    "ancestor and child disjoint edits in both orders",
+    "unrelated concurrent edits and same-field conflict refusal",
+    "workspace switches/replacements/moves/lost access",
+    "containment fields/overlapping branch/duplicate selection refusal",
+    "completion/delete/Undo/redo/offline codec",
+    "same completion retry and reopen",
+    "bounded reference memory and all-or-nothing batch refusal"
+  ],
+  "remaining": [
+    "opt-in hierarchy filter grammar and candidate integration",
+    "iOS filtered-child editor and durable actions",
+    "Mac flat-result navigation and command integration",
+    "mixed root/child bulk operations",
+    "widget membership, identity tokens, routing and child completion",
+    "native save/completion/Undo/relaunch and workspace/access acceptance",
+    "legacy recovery and native layout/large-text/VoiceOver checks"
+  ],
+  "limits_on_claims": [
+    "No native hierarchy filter acceptance; no controls or parser fields exposed yet",
+    "No genuine cloud transport or real paired-account proof for this new planner",
+    "Existing explicit remote-reminder, older-client rollout, OAuth and distribution deferrals remain",
+    "Matching missing legacy root-generation metadata has the same identity limitation as the existing task engine; no new old-client rollout claim"
+  ],
+  "owned_source_sha256": {
+    "Taskfold/Core/SubtaskTree.swift": "8ddbc898997fde35c0b022826bbddefc179a667387ea12fc804855ad11662b07",
+    "TaskfoldTests/SubtaskTreeTests.swift": "74ac8af498777f1e3b2a9ba37287f4039ae758115968b5cc927ad7141f937bde"
+  }
+}

@@ -195,3 +195,199 @@ final class SubtaskTreeTests: XCTestCase {
         XCTAssertNil(SubtaskTree.referencePath("subtask:invalid"))
     }
 }
+
+final class TaskHierarchyIndexTests: XCTestCase {
+    private let workspace = WorkspaceBinding(account: "viewer", generation: UUID())
+    private var projects: [Record] { [Record(["id": .string("project"), "name": .string("Shared"), "user_id": .string("owner")])] }
+    private func child(_ id: String, _ children: [JSON] = []) -> JSON {
+        .object(["id": .string(id), "title": .string("Child " + id), "completed": .bool(false), "description": .string("Notes " + id), "subtasks": .array(children), "future_field": .object(["preserve": .bool(true)])])
+    }
+    private var root: Record {
+        Record(["id": .string("root"), "title": .string("Parent"), "user_id": .string("owner"), "project_id": .string("project"), "section_id": .string("section"), "task_generation": .string("generation-one"), "created_at": .string("2026-10-21T08:00:00Z"), "completed": .bool(false), "priority": .number(1), "labels": .array([.string("root-label")]), "assigned_to": .string("owner"), "due_date": .string("2026-10-21"), "subtasks": .array([child("a", [child("leaf")]), child("b")])])
+    }
+    private func index(_ roots: [Record]? = nil, projects: [Record]? = nil) throws -> TaskHierarchyIndex {
+        try TaskHierarchyIndex(roots: roots ?? [root], projects: projects ?? self.projects, workspace: workspace)
+    }
+    private func reference(_ path: String...) -> String { path.reduce("root") { SubtaskTree.reference(parent: $0, key: $1) } }
+    private func selection(_ path: String...) throws -> TaskHierarchyIndex.Selection {
+        try XCTUnwrap(index().selection(path.reduce("root") { SubtaskTree.reference(parent: $0, key: $1) }))
+    }
+    private func plan(_ edits: [TaskHierarchyIndex.Edit], roots: [Record]? = nil, projects: [Record]? = nil, workspace: WorkspaceBinding? = nil) throws -> [Mutation] {
+        try TaskHierarchyIndex.changes(edits, accessibleRoots: roots ?? [root], projects: projects ?? self.projects, workspace: workspace ?? self.workspace)
+    }
+    private func applied(_ changes: [Mutation], to original: Record? = nil) -> Snapshot {
+        var result = Snapshot(tables: ["tasks": [original ?? root]])
+        for change in changes { result.apply(change) }
+        return result
+    }
+    func testHierarchyProjectsFullPathAndOnlyInheritsContainmentWithoutMutatingSource() throws {
+        let before = root, hierarchy = try index()
+        XCTAssertEqual(hierarchy.items.map(\.id), ["root", reference("a"), reference("a", "leaf"), reference("b")])
+        XCTAssertEqual(hierarchy.records(in: .roots).map(\.title), ["Parent"])
+        XCTAssertEqual(hierarchy.records(in: .subtasks).map(\.title), ["Child a", "Child leaf", "Child b"])
+        XCTAssertEqual(hierarchy.records(in: .parents).map(\.title), ["Parent", "Child a"])
+        let leaf = try XCTUnwrap(hierarchy.item(reference("a", "leaf")))
+        XCTAssertEqual(leaf.parentTitles, ["Parent", "Child a"])
+        XCTAssertEqual(SubtaskTree.referencePath(leaf.id), ["root", "a", "leaf"])
+        for field in ["project_id", "section_id", "user_id"] { XCTAssertEqual(leaf.record[field], root[field]) }
+        for field in ["due_date", "assigned_to", "labels", "priority", "created_at"] { XCTAssertEqual(leaf.record[field], .null, field) }
+        XCTAssertEqual(leaf.source["id"], .string("leaf")); XCTAssertEqual(leaf.source["project_id"], .null)
+        XCTAssertEqual(root, before)
+        XCTAssertNil(hierarchy.item("subtask:invalid"))
+    }
+    func testHierarchyCompletionBelongsToEachNodeWithoutCascading() throws {
+        var changed = root; changed["completed"] = .bool(true)
+        changed["subtasks"] = SubtaskTree.changing(root["subtasks"], id: "a", fields: ["completed": .bool(true)])
+        let hierarchy = try index([changed])
+        XCTAssertEqual(hierarchy.records(in: .all).map(\.title), ["Child leaf", "Child b"])
+        XCTAssertEqual(hierarchy.records(in: .all, includeCompleted: true).count, 4)
+        XCTAssertEqual(hierarchy.records(in: .parents).count, 0)
+    }
+    func testHierarchyStableReferencesSurviveSiblingReorderAndDistinctRoots() throws {
+        var reordered = root; reordered["subtasks"] = .array(root["subtasks"].list.reversed())
+        XCTAssertEqual(try index([reordered]).item(reference("a", "leaf"))?.source, try index().item(reference("a", "leaf"))?.source)
+        var second = root; second["id"] = .string("second-root")
+        let both = try index([root, second])
+        XCTAssertEqual(both.items.count, 8); XCTAssertEqual(Set(both.items.map(\.id)).count, 8)
+        XCTAssertNotNil(both.item(SubtaskTree.reference(parent: "second-root", key: "a")))
+    }
+    func testHierarchyExcludesArchivedMissingAmbiguousAndInheritedArchivedProjects() throws {
+        var archived = projects[0]; archived["is_archived"] = .bool(true)
+        for catalog in [[], [archived], projects + projects] {
+            let hierarchy = try index(projects: catalog)
+            XCTAssertTrue(hierarchy.items.isEmpty); XCTAssertEqual(hierarchy.excludedRootIDs, ["root"])
+        }
+        var shared = projects[0]; shared["parent_id"] = .string("not-shared")
+        XCTAssertEqual(try index(projects: [shared]).items.count, 4)
+        shared["ancestor_archived"] = .bool(true)
+        XCTAssertTrue(try index(projects: [shared]).items.isEmpty)
+        var inbox = root; inbox["project_id"] = .null
+        XCTAssertEqual(try index([inbox], projects: []).items.count, 4)
+    }
+    func testHierarchyRejectsMalformedLegacyDuplicateAndTooDeepTreesWithoutPartialResults() throws {
+        for children: JSON in [.string("new-format"), .array([.number(1)]), .array([.object(["title": .string("Legacy without ID")])]), .array([child("a"), child("a")]), .array([child("a", [child("a")])]), .array([.object(["id": .string("a"), "title": .number(1)])])] {
+            var malformed = root; malformed["subtasks"] = children
+            XCTAssertThrowsError(try index([malformed]))
+        }
+        XCTAssertThrowsError(try index([root, root]))
+        XCTAssertThrowsError(try index(Array(repeating: root, count: TaskHierarchyIndex.maximumItems + 1)))
+        var branch = child("leaf")
+        for depth in (1...SubtaskTree.readableDepth).reversed() { branch = child("d\(depth)", [branch]) }
+        var deep = root; deep["subtasks"] = .array([branch])
+        XCTAssertThrowsError(try index([deep]))
+        deep["subtasks"] = .array(branch.object["subtasks"]!.list)
+        XCTAssertEqual(try index([deep]).items.count, SubtaskTree.readableDepth + 1)
+        XCTAssertThrowsError(try TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: "", generation: UUID())))
+    }
+    func testHierarchyEditsSiblingFieldsInOneRootPatchAndPreservesOpaqueData() throws {
+        let changes = try plan([.patch(selection("a"), ["title": .string("New title")]), .patch(selection("b"), ["description": .string("New notes")])])
+        XCTAssertEqual(changes.count, 1); XCTAssertEqual(changes[0].recordID, "root"); XCTAssertEqual(changes[0].method, "PATCH")
+        XCTAssertEqual(Set(changes[0].fields.keys), ["subtasks"])
+        XCTAssertEqual(changes[0].baseline?["subtasks"], root["subtasks"])
+        XCTAssertEqual(changes[0].baseline?["task_generation"], root["task_generation"])
+        let result = try index(applied(changes).tables["tasks"])
+        XCTAssertEqual(result.item(reference("a"))?.source.title, "New title")
+        XCTAssertEqual(result.item(reference("b"))?.source.string("description"), "New notes")
+        XCTAssertEqual(result.item(reference("a", "leaf"))?.source, try index().item(reference("a", "leaf"))?.source)
+        XCTAssertEqual(result.item(reference("a"))?.source["future_field"], child("a").object["future_field"])
+        XCTAssertFalse(String(decoding: try JSONEncoder().encode(changes), as: UTF8.self).contains("subtask:"), "Synthetic IDs must never be queued as task rows")
+    }
+    func testHierarchyParentAndChildDisjointEditsComposeInEitherOrder() throws {
+        let parent = TaskHierarchyIndex.Edit.patch(try selection("a"), ["title": .string("Changed parent")])
+        let leaf = TaskHierarchyIndex.Edit.patch(try selection("a", "leaf"), ["description": .string("Changed leaf")])
+        for edits in [[parent, leaf], [leaf, parent]] {
+            let result = try index(applied(plan(edits)).tables["tasks"])
+            XCTAssertEqual(result.item(reference("a"))?.source.title, "Changed parent")
+            XCTAssertEqual(result.item(reference("a", "leaf"))?.source.string("description"), "Changed leaf")
+        }
+    }
+    func testHierarchyAllowsUnrelatedConcurrentEditsAndRefusesConflictingFieldOrDeletion() throws {
+        let selected = try selection("a", "leaf")
+        var concurrent = root
+        concurrent["subtasks"] = SubtaskTree.changing(root["subtasks"], id: "leaf", fields: ["description": .string("Other client's notes")])
+        let edits = try plan([.patch(selected, ["title": .string("My title")])], roots: [concurrent])
+        let result = try index(applied(edits, to: concurrent).tables["tasks"])
+        XCTAssertEqual(result.item(selected.item.id)?.source.title, "My title")
+        XCTAssertEqual(result.item(selected.item.id)?.source.string("description"), "Other client's notes")
+        XCTAssertThrowsError(try plan([.patch(selected, ["description": .string("Overwrite")])], roots: [concurrent]))
+        XCTAssertThrowsError(try plan([.delete(selected)], roots: [concurrent]))
+        XCTAssertTrue(try plan([.patch(selected, ["description": .string("Other client's notes")])], roots: [concurrent]).isEmpty)
+    }
+    func testHierarchyRefusesWorkspaceIncarnationReplacementMoveAndLostAccess() throws {
+        let edit = TaskHierarchyIndex.Edit.completion(try selection("a"), completed: true)
+        for field in ["task_generation", "created_at", "project_id", "section_id"] {
+            var changed = root; changed[field] = .string("replaced")
+            XCTAssertThrowsError(try plan([edit], roots: [changed]), field)
+        }
+        for binding in [WorkspaceBinding(account: "other", generation: workspace.generation), WorkspaceBinding(account: workspace.account, generation: UUID())] {
+            XCTAssertThrowsError(try plan([edit], workspace: binding))
+        }
+        XCTAssertThrowsError(try plan([edit], roots: [])); XCTAssertThrowsError(try plan([edit], projects: []))
+        var moved = root; moved["subtasks"] = try SubtaskTree.moving(root["subtasks"], id: "leaf", direction: .outdent)
+        XCTAssertThrowsError(try plan([.patch(selection("a", "leaf"), ["title": .string("Old path")])], roots: [moved]))
+        var removed = root; removed["subtasks"] = SubtaskTree.removing(root["subtasks"], id: "a")
+        XCTAssertThrowsError(try plan([edit], roots: [removed]))
+    }
+    func testHierarchyRejectsContainmentInvalidFieldsDuplicateAndOverlappingBranchRequests() throws {
+        let selected = try selection("a"), leaf = try selection("a", "leaf")
+        for fields: [String: JSON] in [["project_id": .null], ["section_id": .null], ["user_id": .string("other")], ["task_generation": .string("new")], ["title": .string(" ")], ["duration_minutes": .number(0)], ["completed": .string("true")], ["completed": .bool(true), "completed_at": .null]] {
+            XCTAssertThrowsError(try plan([.patch(selected, fields)]))
+        }
+        XCTAssertThrowsError(try plan([.delete(selected), .delete(leaf)]))
+        XCTAssertThrowsError(try plan([.patch(selected, ["subtasks": .array([])]), .patch(leaf, ["title": .string("Lost")])]))
+        XCTAssertThrowsError(try plan([.patch(selected, [:]), .patch(selected, [:])]))
+        XCTAssertThrowsError(try plan([.patch(selected, ["subtasks": .array([child("b")])])]), "A new descendant cannot reuse an existing sibling identity")
+        let rootSelection = try XCTUnwrap(index().selection("root"))
+        XCTAssertThrowsError(try plan([.delete(rootSelection)]))
+    }
+    func testHierarchyCompleteDeleteUndoRedoAndOfflineCodecKeepRealRootIdentity() throws {
+        let complete = try plan([.completion(selection("a", "leaf"), completed: true, at: Date(timeIntervalSince1970: 1_790_000_000))])
+        let before = Snapshot(tables: ["tasks": [root]])
+        let history = EditHistory(changes: complete, snapshot: before)
+        var saved = before
+        for change in complete { saved.apply(change); saved.pending.append(change) }
+        let decoded = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(saved))
+        XCTAssertEqual(saved, decoded)
+        XCTAssertEqual(try index(saved.tables["tasks"]).item(reference("a", "leaf"))?.source.completed, true)
+        XCTAssertEqual(saved.tables["tasks"]?.first?["completed"], .bool(false))
+        XCTAssertEqual(saved.tables["tasks"]?.count, 1)
+        for change in history.undo { saved.apply(change) }
+        XCTAssertEqual(saved.tables["tasks"], before.tables["tasks"])
+        for change in history.redo { saved.apply(change) }
+        XCTAssertEqual(try index(saved.tables["tasks"]).item(reference("a", "leaf"))?.source.completed, true)
+        let deletion = try plan([.delete(selection("a"))])
+        let deleted = try index(applied(deletion).tables["tasks"])
+        XCTAssertEqual(deleted.records(in: .all).map(\.title), ["Parent", "Child b"])
+        XCTAssertTrue(try plan([.patch(selection("a"), [:])]).isEmpty)
+    }
+    func testHierarchyChecksBatchLimitBeforePlanningAnyMutation() throws {
+        let edit = TaskHierarchyIndex.Edit.delete(try selection("a"))
+        XCTAssertThrowsError(try plan(Array(repeating: edit, count: TaskHierarchyIndex.maximumEdits + 1)))
+        XCTAssertTrue(try plan([]).isEmpty)
+    }
+}
+
+
+extension TaskHierarchyIndexTests {
+    func testHierarchyCompletionRetryAndReopenDoNotCreateRowsOrChangeParentCompletion() throws {
+        let selected = try selection("a", "leaf")
+        let edit = TaskHierarchyIndex.Edit.completion(selected, completed: true, at: Date(timeIntervalSince1970: 1_790_000_000))
+        let completed = applied(try plan([edit])).tables["tasks"]!
+        XCTAssertTrue(try plan([edit], roots: completed).isEmpty)
+        let fresh = try XCTUnwrap(index(completed).selection(selected.item.id))
+        let reopened = applied(try plan([.completion(fresh, completed: false)], roots: completed), to: completed[0]).tables["tasks"]!
+        XCTAssertEqual(reopened.count, 1)
+        XCTAssertEqual(reopened[0]["completed"], .bool(false))
+        let leaf = try XCTUnwrap(index(reopened).item(selected.item.id))
+        XCTAssertFalse(leaf.source.completed); XCTAssertEqual(leaf.source["completed_at"], .null)
+    }
+    func testHierarchyBoundsEncodedReferenceMemoryAndRejectsOversizedIdentities() throws {
+        var invalid = root; invalid["subtasks"] = .array([child(String(repeating: "a", count: 401))])
+        XCTAssertThrowsError(try index([invalid]))
+        let leaves = (0..<2_100).map { child("leaf-\($0)-" + String(repeating: "x", count: 380)) }
+        var children = leaves
+        for depth in (1...31).reversed() { children = [child("level-\(depth)-" + String(repeating: "y", count: 380), children)] }
+        var large = root; large["subtasks"] = .array(children)
+        XCTAssertThrowsError(try index([large]), "Refuse the complete projection rather than returning a partial hierarchy")
+    }
+}

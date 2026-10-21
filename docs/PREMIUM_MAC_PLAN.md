@@ -2503,3 +2503,8 @@ Conversation polish follow-up: Cancel now compares text and recipient selection 
 ### Project-tree saved filters, 21 October 2026
 
 Added a native Project and subprojects condition and matching expression grammar, preserving exact-project filters. Preview, cache, separate query groups and widget membership share accessible parent metadata and fail closed for invalid branches. Independent Mac core and isolated signed app verification are recorded in `p2-project-tree-filters-evidence.json`. Native Mac layout/VoiceOver and real cloud acceptance remain open; phone/tablet acceptance is tracked separately. Other rank-3 scopes remain in `P2_PLAN.md`.
+
+
+### Parent/child query and edit foundation, 21 October 2026
+
+Added an independently owned bounded hierarchy index and child edit planner. Stable filtered identities resolve to real root subtree patches; stale workspace/root/path/content checks, concurrent-field preservation, coalesced sibling changes, Undo/redo and offline persistence pass the scoped core tests. The new foundation is not yet connected to native filtering or command controllers. Mac flat-result navigation/actions, iOS editing parity, mixed-selection handling, widget actions and native acceptance remain required before exposing the feature. See `p2-task-hierarchy-foundation-evidence.json` and `P2_PLAN.md`; no full rank-3 completion claim.
