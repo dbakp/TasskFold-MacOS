@@ -749,6 +749,9 @@ final class Store {
     @discardableResult
     func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil, sharedCaptureReceipt: SharedCaptureDraft? = nil) -> Bool {
         guard !signingOut else { return false }
+        guard !changes.contains(where: { $0.table == "tasks" && $0.recordID.hasPrefix("subtask:") }) else {
+            error = "Open this subtask's details to make this change."; return false
+        }
         if let draft = sharedCaptureReceipt {
             guard draft.workspace.account == userID, changes.count == 1,
                   changes[0].table == "tasks", changes[0].method == "POST",
@@ -1797,3 +1800,26 @@ extension Store {
     }
 }
 #endif
+
+
+extension Store {
+    /// Resolve the displayed incarnation before an action; selection captures its
+    /// workspace and raw source so later Save cannot retarget another child.
+    func hierarchySelection(for displayed: Record) throws -> TaskHierarchyIndex.Selection {
+        guard let path = SubtaskTree.referencePath(displayed.id), let root = activeTasks.first(where: { $0.id == path[0] }) else {
+            throw SubtaskTree.Failure(message: "This subtask is no longer accessible. Reopen its parent task.")
+        }
+        let index = try TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
+        guard let selection = index.selection(displayed.id), selection.item.record == displayed else {
+            throw SubtaskTree.Failure(message: "This subtask changed. Reopen its current details before editing it.")
+        }
+        return selection
+    }
+    @discardableResult
+    func commitHierarchy(_ edits: [TaskHierarchyIndex.Edit]) throws -> Bool {
+        let changes = try TaskHierarchyIndex.changes(edits, accessibleRoots: activeTasks, projects: projects, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration))
+        guard !changes.isEmpty else { return true }
+        guard commit(changes) else { throw SubtaskTree.Failure(message: error ?? "The subtask could not be saved. Your draft is still open.") }
+        return true
+    }
+}

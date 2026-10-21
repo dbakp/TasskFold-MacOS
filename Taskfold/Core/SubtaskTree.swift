@@ -266,7 +266,7 @@ struct TaskHierarchyIndex {
         var record: Record {
             guard isSubtask else { return source }
             var result = source; result["id"] = .string(id)
-            for field in ["project_id", "section_id", "user_id"] { result[field] = root[field] }
+            for field in ["project_id", "section_id", "user_id", "task_generation"] { result[field] = root[field] }
             return result
         }
     }
@@ -280,6 +280,19 @@ struct TaskHierarchyIndex {
         var selection: Selection { switch self { case .patch(let value, _), .delete(let value): return value } }
         var replacesBranch: Bool {
             switch self { case .delete: return true; case .patch(_, let fields): return fields["subtasks"] != nil }
+        }
+        /// Native editors receive a contextual projection, never a new backend row.
+        static func editing(_ selection: Selection, draft: Record, at date: Date = Date()) throws -> Edit {
+            let original = selection.item.record
+            guard selection.item.isSubtask, draft.id == original.id else { throw TaskHierarchyIndex.failure("This subtask changed. Reopen its current details.") }
+            let keys = Set(original.fields.keys).union(draft.fields.keys).filter { original.fields[$0] != draft.fields[$0] }
+            guard keys.isSubset(of: TaskHierarchyIndex.editable) else { throw TaskHierarchyIndex.failure("A subtask keeps its parent's identity, project and section. Reopen its current details.") }
+            var fields = Dictionary(uniqueKeysWithValues: keys.map { ($0, draft[$0]) })
+            if let state = fields["completed"] {
+                guard case .bool(let completed) = state else { throw TaskHierarchyIndex.failure("Choose a valid subtask completion state.") }
+                fields["completed_at"] = completed ? .string(ISO8601DateFormatter().string(from: date)) : .null
+            }
+            return .patch(selection, fields)
         }
         static func completion(_ selection: Selection, completed: Bool, at date: Date = Date()) -> Edit {
             .patch(selection, ["completed": .bool(completed), "completed_at": completed ? .string(ISO8601DateFormatter().string(from: date)) : .null])

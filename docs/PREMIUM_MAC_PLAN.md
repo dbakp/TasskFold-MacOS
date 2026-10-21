@@ -2508,3 +2508,8 @@ Added a native Project and subprojects condition and matching expression grammar
 ### Parent/child query and edit foundation, 21 October 2026
 
 Added an independently owned bounded hierarchy index and child edit planner. Stable filtered identities resolve to real root subtree patches; stale workspace/root/path/content checks, concurrent-field preservation, coalesced sibling changes, Undo/redo and offline persistence pass the scoped core tests. The new foundation is not yet connected to native filtering or command controllers. Mac flat-result navigation/actions, iOS editing parity, mixed-selection handling, widget actions and native acceptance remain required before exposing the feature. See `p2-task-hierarchy-foundation-evidence.json` and `P2_PLAN.md`; no full rank-3 completion claim.
+
+
+### Native child action bridge, 21 October 2026
+
+Both owned cores now translate contextual native drafts into guarded child edits, and both Stores reject direct synthetic task-row writes. The Mac Store has the selection/commit adapter for upcoming flat-result controls; existing Mac nested inspectors retain their current path. The iOS action bridge has its own native acceptance record in `p2-child-editor-bridge-evidence.json`; that proof does not count as Mac controller acceptance. Public parent/child grammar, Mac flat-list navigation/actions, mixed selections and widget/output integration remain open before rank 3 can close.

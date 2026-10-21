@@ -391,3 +391,42 @@ extension TaskHierarchyIndexTests {
         XCTAssertThrowsError(try index([large]), "Refuse the complete projection rather than returning a partial hierarchy")
     }
 }
+
+extension TaskHierarchyIndexTests {
+    func testHierarchyNativeDraftChangesOnlyAuthoredFieldsAndPreservesRawContainment() throws {
+        let selected = try selection("a", "leaf")
+        XCTAssertEqual(selected.item.record["task_generation"], root["task_generation"])
+        XCTAssertEqual(selected.item.source["task_generation"], .null)
+        var draft = selected.item.record; draft["title"] = .string("Edited through native details")
+        let changes = try plan([.editing(selected, draft: draft)])
+        let result = try index(applied(changes).tables["tasks"])
+        let child = try XCTUnwrap(result.item(selected.item.id))
+        XCTAssertEqual(child.source.title, "Edited through native details")
+        for field in ["project_id", "section_id", "user_id", "task_generation"] { XCTAssertEqual(child.source[field], selected.item.source[field]) }
+        XCTAssertTrue(try plan([.editing(selected, draft: selected.item.record)]).isEmpty)
+    }
+    func testHierarchyNativeDraftRejectsIdentityContainmentAndOpaqueFieldChanges() throws {
+        let selected = try selection("a")
+        for field in ["id", "project_id", "section_id", "user_id", "task_generation", "future_field"] {
+            var draft = selected.item.record; draft[field] = .string("Changed")
+            XCTAssertThrowsError(try TaskHierarchyIndex.Edit.editing(selected, draft: draft), field)
+        }
+    }
+    func testHierarchyNativeCompletionDraftAddsOwnTimestampWithoutRootCompletion() throws {
+        let selected = try selection("a")
+        var draft = selected.item.record; draft["completed"] = .bool(true)
+        let stamp = Date(timeIntervalSince1970: 1_790_000_000)
+        let changes = try plan([.editing(selected, draft: draft, at: stamp)])
+        let result = try index(applied(changes).tables["tasks"])
+        XCTAssertEqual(result.item(selected.item.id)?.source["completed_at"], .string(ISO8601DateFormatter().string(from: stamp)))
+        XCTAssertEqual(result.item("root")?.source.completed, false)
+        XCTAssertEqual(result.item(reference("a", "leaf"))?.source.completed, false)
+    }
+    func testHierarchyProjectedIncarnationChangesWhenRootIsRecreated() throws {
+        let old = try index().item(reference("a"))!.record
+        var replaced = root; replaced["task_generation"] = .string("next-generation")
+        let new = try index([replaced]).item(reference("a"))!.record
+        XCTAssertEqual(old.id, new.id); XCTAssertNotEqual(old, new)
+        XCTAssertEqual(new["task_generation"], .string("next-generation"))
+    }
+}
