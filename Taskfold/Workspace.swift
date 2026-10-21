@@ -668,7 +668,7 @@ enum CalendarMode: String, CaseIterable, Identifiable {
     var days: Int? { switch self { case .day: return 1; case .threeDay: return 3; case .fiveDay: return 5; case .week: return 7; default: return nil } }
 }
 
-enum SettingsTab: String { case general, appearance, account, imports, invitations }
+enum SettingsTab: String { case general, appearance, account, imports, invitations, swipes }
 
 extension Workspace {
     /// Paths identify embedded subtasks without creating duplicate backend task records.

@@ -131,4 +131,9 @@ Independent core checks, genuine disposable owner/member/outsider HTTP checks an
 
 ## Row gesture controls (rank 3, in progress)
 
-iPhone/iPad now implement device-local leading/trailing action choices, optional full-swipe execution, consistent list/day-card actions and cancellation/workspace/task guards. Full-swipe deletion is removed; Edit/Delete require activation. See `ROW_GESTURES.md` and `p2-row-gestures-evidence.json` for exact verification and remaining gates. Native Mac trackpad implementation/acceptance, broader VoiceOver/layout/drag interoperability and the rest of rank 3 remain open. This adds no persistent task contract and reopens none of the explicit user deferrals.
+iPhone/iPad now implement device-local leading/trailing action choices, optional full-swipe execution, consistent list/day-card actions and cancellation/workspace/task guards. Full-swipe deletion is removed; Edit/Delete require activation. See `ROW_GESTURES.md` and `p2-row-gestures-evidence.json` for exact verification and remaining gates. Mac implementation and current verification are recorded below; physical Mac input acceptance, broader VoiceOver/layout/drag interoperability and the rest of rank 3 remain open. This adds no persistent task contract and reopens none of the explicit user deferrals.
+
+
+### Native Mac gesture implementation and RTL correction
+
+Mac now owns trackpad row controls and device-only preferences, with full-swipe execution off by default. Core, AppKit routing and offscreen row/settings rendering checks are implemented; see `p2-mac-row-gestures-evidence.json`. The checks exposed and corrected a double RTL offset reversal in both apps. Physical trackpad, native settings/list/Undo/account-switch walkthroughs, VoiceOver and mouse/keyboard/drag interoperability remain open while the Mac is locked. This advances the existing rank-3 gesture work; it does not close rank 3 or the full Px objective.

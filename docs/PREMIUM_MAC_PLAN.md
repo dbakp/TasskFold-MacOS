@@ -2556,4 +2556,9 @@ Independent core checks, genuine disposable owner/member/outsider HTTP checks an
 
 ### Row gesture follow-up — 21 October 2026
 
-iPhone/iPad gesture preferences pass scoped phone/tablet native checks and visual review; native Mac trackpad support is still open. Preserve SwiftUI List scrolling, selection, keyboard actions and mouse drag reordering; no private table-delegate replacement or advertised control without working gestures. See `ROW_GESTURES.md`. Existing task data contracts and user-deferred release/provider/push/old-client rollout acceptance remain unchanged.
+iPhone/iPad gesture preferences pass scoped phone/tablet native checks and visual review; the Mac implementation has since been added below, with live acceptance still open. Preserve SwiftUI List scrolling, selection, keyboard actions and mouse drag reordering; no private table-delegate replacement or advertised control without working gestures. See `ROW_GESTURES.md`. Existing task data contracts and user-deferred release/provider/push/old-client rollout acceptance remain unchanged.
+
+
+### Owned Mac row gestures — implementation, live acceptance pending
+
+The Mac now implements device-local trackpad action choices, deliberate reveal by default, guarded completion/scheduling/edit/delete and interruption-safe row targeting. It preserves the app-owned scroll-memory bridge and does not replace SwiftUI delegates. Scoped Core/AppKit/render verification and the cross-platform RTL fix are recorded in `p2-mac-row-gestures-evidence.json`. The Mac remains locked: physical input, full native settings/selection/Undo/drag interactions and VoiceOver are still gates. Existing release/provider/push/older-client deferrals remain unchanged.

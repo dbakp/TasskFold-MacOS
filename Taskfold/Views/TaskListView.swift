@@ -29,6 +29,11 @@ struct TaskListView: View {
     @State private var printFailure: String?
     @State private var captureSection = ""
     @State private var nativeList = ListNativeHandle()
+    @State private var rowSwipe = MacRowSwipeController()
+    @AppStorage("mac.rowGesture.leading") private var leadingGesture = "complete"
+    @AppStorage("mac.rowGesture.trailing") private var trailingGesture = "tomorrow"
+    @AppStorage("mac.rowGesture.fullSwipe") private var fullSwipe = false
+    @Environment(\.layoutDirection) private var gestureLayoutDirection
     @State private var bulkDatePicker = false
     @State private var bulkDate = Date()
     @State private var projectEditor: Record?
@@ -206,6 +211,7 @@ struct TaskListView: View {
                     }
                 }
             }
+            .background(MacSwipeEventHost(controller: rowSwipe))
             .background(ListScrollMemory(key: preferenceKey, workspace: workspace, taskIDs: displayedTaskIDs, handle: nativeList))
             .focused($taskListFocused)
             .environment(\.taskListFocused, taskListFocused)
@@ -229,7 +235,18 @@ struct TaskListView: View {
         .toolbar { if workspace.section.scope == scope { toolbar } }
         .sheet(item: $printReview) { PrintReviewView(request: $0) }
         .alert("Could not prepare document", isPresented: Binding(get: { printFailure != nil }, set: { if !$0 { printFailure = nil } })) { Button("OK") { printFailure = nil } } message: { Text(printFailure ?? "") }
-        .onChange(of: store.workspaceGeneration) { _, _ in printReview = nil; printFailure = nil }
+        .onChange(of: store.workspaceGeneration) { _, _ in printReview = nil; printFailure = nil; rowSwipe.cancel() }
+        .onAppear { configureRowSwipes() }
+        .onChange(of: leadingGesture) { _, _ in configureRowSwipes() }
+        .onChange(of: trailingGesture) { _, _ in configureRowSwipes() }
+        .onChange(of: fullSwipe) { _, _ in configureRowSwipes() }
+        .onChange(of: gestureLayoutDirection) { _, _ in configureRowSwipes() }
+        .onChange(of: reduceMotion) { _, _ in configureRowSwipes() }
+        .onChange(of: workspace.section.key) { _, _ in configureRowSwipes() }
+        .onChange(of: preferenceKey) { _, _ in configureRowSwipes() }
+        .onChange(of: workspace.search) { _, _ in rowSwipe.cancel() }
+        .onChange(of: workspace.selection) { _, _ in rowSwipe.cancel() }
+        .onChange(of: workspace.drag.active) { _, _ in rowSwipe.cancel() }
         .sheet(isPresented: $multiLinePresented) { MultiLineCaptureView(text: workspace.quickAdd, project: projectID, onSaved: { workspace.quickAdd = "" }) }
         .sheet(isPresented: $quickAddVisible) {
             TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, choices: $referenceChoices, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt,
@@ -246,7 +263,7 @@ struct TaskListView: View {
         .onChange(of: workspace.searchPresented) { _, requested in
             if requested && workspace.section.scope == scope { filterFocused = true; workspace.searchPresented = false }
         }
-        .onDisappear { quickAddVisible = false }
+        .onDisappear { quickAddVisible = false; rowSwipe.cancel(); rowSwipe.isAvailable = { false } }
         .onChange(of: displayedTaskIDs) { _, ids in
             // Assign only when something actually left the list; re-setting selection during a table update is reentrant.
             guard workspace.section.scope == scope else { return }
@@ -364,7 +381,42 @@ struct TaskListView: View {
     }
     /// The selection tag must sit on the outermost row view, after any drag wrapper, or clicks cannot select.
     private func row(_ task: Record) -> some View {
-        TaskRowView(task: task, compactDate: dated).background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
+        let intent = rowGestureIntent(task)
+        return MacSwipeRow(controller: rowSwipe, completed: task.completed, selected: workspace.selection.contains(task.id), prepare: {
+            guard let intent else { return nil }
+            return { command in performRowGesture(command, intent: intent) }
+        }) { TaskRowView(task: task, compactDate: dated) }
+        .background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
+        .accessibilityAction(named: task.completed ? "Reopen" : "Complete") { if let intent { performRowGesture(.complete, intent: intent) } }
+        .accessibilityAction(named: "Move to tomorrow") { if let intent { performRowGesture(.tomorrow, intent: intent) } }
+        .accessibilityAction(named: "Edit") { if let intent { performRowGesture(.edit, intent: intent) } }
+        .accessibilityAction(named: "Delete") { if let intent { performRowGesture(.delete, intent: intent) } }
+    }
+    private func configureRowSwipes() {
+        rowSwipe.reduceMotion = reduceMotion
+        rowSwipe.configure(leading: RowGestureAction(rawValue: leadingGesture) ?? .none, trailing: RowGestureAction(rawValue: trailingGesture) ?? .none, fullSwipe: fullSwipe, rightToLeft: gestureLayoutDirection == .rightToLeft)
+        rowSwipe.isAvailable = { store.signedIn && workspace.section.key == preferenceKey && workspace.selection.count <= 1 && !workspace.drag.active && !quickAddVisible }
+    }
+    private func rowGestureIntent(_ task: Record) -> RowGestureIntent? {
+        let rootID = SubtaskTree.referencePath(task.id)?.first ?? task.id
+        guard let root = store.activeTasks.first(where: { $0.id == rootID }) else { return nil }
+        return RowGestureIntent(task: task, root: root, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+    }
+    private func performRowGesture(_ command: RowGestureCommand, intent: RowGestureIntent) {
+        let root = store.activeTasks.first { $0.id == intent.root.id }
+        let current = workspace.hierarchyFilter ? try? store.selectionRecord(intent.task.id) : workspace.taskRecord(intent.task.id)
+        guard store.signedIn, workspace.section.key == preferenceKey, !workspace.drag.active, workspace.selection.count <= 1,
+              intent.matches(current, root: root, account: store.userID, generation: store.workspaceGeneration) else { return }
+        switch command {
+        case .complete: workspace.complete(intent.task)
+        case .tomorrow:
+            guard !intent.task.completed, let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) else { return }
+            if workspace.updateTasks([intent.task.id], fields: TaskPlanner.dayFields(task: intent.task, day: Dates.day(tomorrow)), name: "Reschedule") {
+                Feedback.drop(); workspace.confirm("Moved to tomorrow")
+            }
+        case .edit: workspace.open(intent.task.id)
+        case .delete: workspace.delete([intent.task.id])
+        }
     }
 
     private func printableDocument() throws -> PrintDocument {

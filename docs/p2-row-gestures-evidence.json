@@ -1,9 +1,9 @@
 {
   "date": "2026-10-21",
-  "status": "iPhone/iPad implementation with scoped native and visual acceptance; Mac gestures remain open",
+  "status": "Initial iPhone/iPad milestone; current Mac/RTL follow-up recorded separately",
   "platformImplementation": {
     "iOS": "owned app/Core/UI/tests/project inputs",
-    "macOS": "plan update only; no advertised gesture settings or trackpad implementation"
+    "macOS": "Owned implementation and scoped automation now in p2-mac-row-gestures-evidence.json; live acceptance pending"
   },
   "behavior": [
     "Device-only independent edge choices: Complete/Reopen, Tomorrow, Edit, None",
@@ -87,40 +87,8 @@
     ],
     "scope": "English portrait settings with selected Complete/Reopen and Edit at normal text, None and Tomorrow at largest text; scrollable controls/footer"
   },
-  "currentInputs": {
-    "Taskfold/Core/RowGesture.swift": {
-      "productionSHA256": "67522790a73779bd45bbc3f33dca8efbc9ae0f0e41b3783bb4fb887555850cd7",
-      "isolatedSHA256": "67522790a73779bd45bbc3f33dca8efbc9ae0f0e41b3783bb4fb887555850cd7",
-      "namespaceOnly": true
-    },
-    "Taskfold/TaskfoldApp.swift": {
-      "productionSHA256": "582de0fdf923c5fd87bca6c2318c916e57d456b930b9e15689c42b93695a5dd3",
-      "isolatedSHA256": "582de0fdf923c5fd87bca6c2318c916e57d456b930b9e15689c42b93695a5dd3",
-      "namespaceOnly": true
-    },
-    "Taskfold/Views/BrowseView.swift": {
-      "productionSHA256": "24a1511f8ee55912a99a21f9b9da8f63804ecad18e8037c3d47815adefa35dff",
-      "isolatedSHA256": "24a1511f8ee55912a99a21f9b9da8f63804ecad18e8037c3d47815adefa35dff",
-      "namespaceOnly": true
-    },
-    "Taskfold/Views/RowSwipe.swift": {
-      "productionSHA256": "d09b9a19f051b02150fbf92388ff772668033793b12eb3fe5afa123ec4d23809",
-      "isolatedSHA256": "d09b9a19f051b02150fbf92388ff772668033793b12eb3fe5afa123ec4d23809",
-      "namespaceOnly": true
-    },
-    "Taskfold/Views/DayDrag.swift": {
-      "productionSHA256": "34200175945520ebda0e75756a88ae0488f6a4dec7212c0b6345985e5e8ba86e",
-      "isolatedSHA256": "34200175945520ebda0e75756a88ae0488f6a4dec7212c0b6345985e5e8ba86e",
-      "namespaceOnly": true
-    },
-    "TaskfoldUITests/HierarchyTaskUITests.swift": {
-      "productionSHA256": "08b78029b02309993b20ed860c71b051c9b8bf45d6212b703d62b271cdea9ba9",
-      "isolatedSHA256": "08b78029b02309993b20ed860c71b051c9b8bf45d6212b703d62b271cdea9ba9",
-      "namespaceOnly": true
-    }
-  },
   "remaining": [
-    "Native Mac trackpad implementation and runtime acceptance",
+    "Physical Mac trackpad/full-app runtime acceptance",
     "Broader VoiceOver, RTL visual layout, density, orientation and drag/selection interoperability",
     "Broader child-gesture and genuine concurrent account/offline native acceptance",
     "Other view controls/headings and the rest of rank 3/Px"
@@ -155,5 +123,96 @@
     },
     "note": "Owned generated app product rebuilt after Xcode altered Assets.car while switching simulator targets; no source changes or data reset.",
     "artifact": "p2-row-gestures-signatures.json"
+  },
+  "iOSInitialMilestoneInputs": {
+    "Taskfold/Core/RowGesture.swift": {
+      "productionSHA256": "67522790a73779bd45bbc3f33dca8efbc9ae0f0e41b3783bb4fb887555850cd7",
+      "isolatedSHA256": "67522790a73779bd45bbc3f33dca8efbc9ae0f0e41b3783bb4fb887555850cd7",
+      "namespaceOnly": true
+    },
+    "Taskfold/TaskfoldApp.swift": {
+      "productionSHA256": "582de0fdf923c5fd87bca6c2318c916e57d456b930b9e15689c42b93695a5dd3",
+      "isolatedSHA256": "582de0fdf923c5fd87bca6c2318c916e57d456b930b9e15689c42b93695a5dd3",
+      "namespaceOnly": true
+    },
+    "Taskfold/Views/BrowseView.swift": {
+      "productionSHA256": "24a1511f8ee55912a99a21f9b9da8f63804ecad18e8037c3d47815adefa35dff",
+      "isolatedSHA256": "24a1511f8ee55912a99a21f9b9da8f63804ecad18e8037c3d47815adefa35dff",
+      "namespaceOnly": true
+    },
+    "Taskfold/Views/RowSwipe.swift": {
+      "productionSHA256": "d09b9a19f051b02150fbf92388ff772668033793b12eb3fe5afa123ec4d23809",
+      "isolatedSHA256": "d09b9a19f051b02150fbf92388ff772668033793b12eb3fe5afa123ec4d23809",
+      "namespaceOnly": true
+    },
+    "Taskfold/Views/DayDrag.swift": {
+      "productionSHA256": "34200175945520ebda0e75756a88ae0488f6a4dec7212c0b6345985e5e8ba86e",
+      "isolatedSHA256": "34200175945520ebda0e75756a88ae0488f6a4dec7212c0b6345985e5e8ba86e",
+      "namespaceOnly": true
+    },
+    "TaskfoldUITests/HierarchyTaskUITests.swift": {
+      "productionSHA256": "08b78029b02309993b20ed860c71b051c9b8bf45d6212b703d62b271cdea9ba9",
+      "isolatedSHA256": "08b78029b02309993b20ed860c71b051c9b8bf45d6212b703d62b271cdea9ba9",
+      "namespaceOnly": true
+    }
+  },
+  "rtlFollowup": {
+    "phone": {
+      "checks": {
+        "cancelRevokesDelayedAction": true,
+        "deleteRequiresExplicitButton": true,
+        "editNeverExecutesByFullSwipe": true,
+        "fullCompletionDeliveredExactlyOnce": true,
+        "fullSwipeDisabledOnlyReveals": true,
+        "newGestureRevokesOlderAction": true,
+        "noneNeitherRevealsNorActs": true,
+        "revealedButtonDeliversOnce": true,
+        "rtlMirrorsLeadingAction": true,
+        "rtlMirrorsTrailingAction": true,
+        "rtlRenderedLeadingActionIsOnRight": true,
+        "unavailableTaskCannotBegin": true
+      },
+      "sourceSHA256": {
+        "Taskfold/Views/RowSwipe.swift": "6e175ea668bb18a564afe1a51232b6bd603acdeb0988f29ae571d7610fc9f2f2",
+        "Taskfold/Core/RowGesture.swift": "67522790a73779bd45bbc3f33dca8efbc9ae0f0e41b3783bb4fb887555850cd7"
+      },
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "limits": [
+        "Inert motion/haptics; does not prove rendered layout, trackpad behavior or real touch recognition."
+      ]
+    },
+    "tablet": {
+      "checks": {
+        "cancelRevokesDelayedAction": true,
+        "deleteRequiresExplicitButton": true,
+        "editNeverExecutesByFullSwipe": true,
+        "fullCompletionDeliveredExactlyOnce": true,
+        "fullSwipeDisabledOnlyReveals": true,
+        "newGestureRevokesOlderAction": true,
+        "noneNeitherRevealsNorActs": true,
+        "revealedButtonDeliversOnce": true,
+        "rtlMirrorsLeadingAction": true,
+        "rtlMirrorsTrailingAction": true,
+        "rtlRenderedLeadingActionIsOnRight": true,
+        "unavailableTaskCannotBegin": true
+      },
+      "sourceSHA256": {
+        "Taskfold/Views/RowSwipe.swift": "6e175ea668bb18a564afe1a51232b6bd603acdeb0988f29ae571d7610fc9f2f2",
+        "Taskfold/Core/RowGesture.swift": "67522790a73779bd45bbc3f33dca8efbc9ae0f0e41b3783bb4fb887555850cd7"
+      },
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "limits": [
+        "Inert motion/haptics; does not prove rendered layout, trackpad behavior or real touch recognition."
+      ]
+    },
+    "phoneNativeLTRRegression": {
+      "artifact": "ios-row-gestures-rtl-current-actions.xcresult",
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtimeWarnings": 0
+    },
+    "productionRowSHA256": "6e175ea668bb18a564afe1a51232b6bd603acdeb0988f29ae571d7610fc9f2f2",
+    "scope": "Real SwiftUI ImageRenderer RTL painted-edge check on both simulators, controller cases and phone LTR scheduling/completion/Undo; not a full localized/VoiceOver walkthrough."
   }
 }

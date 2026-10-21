@@ -13,6 +13,7 @@ struct SettingsView: View {
         @Bindable var workspace = workspace
         TabView(selection: $workspace.settingsTab) {
             GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }.tag(SettingsTab.general)
+            MacSwipeSettings().tabItem { Label("Swipes", systemImage: "hand.draw") }.tag(SettingsTab.swipes)
             AppearanceSettings().tabItem { Label("Appearance", systemImage: "paintpalette") }.tag(SettingsTab.appearance)
             AccountSettings().tabItem { Label("Account", systemImage: "person.crop.circle") }.tag(SettingsTab.account)
             ImportSettings().tabItem { Label("Import", systemImage: "square.and.arrow.down") }.tag(SettingsTab.imports)
