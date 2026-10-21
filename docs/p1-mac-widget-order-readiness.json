@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-21",
+  "status": "current dedicated host ready; installed visual/completion check pending user response",
+  "problem": "Fresh Mac project generation omitted the AppAuthCore package imported by CalendarAuthorization.swift; regenerated widget-host build failed to resolve that module.",
+  "fix": [
+    "Mac generator preserves exact AppAuthCore3.0.0 remote package,app linkage and package reference",
+    "generator retains AppAuth license resource and unconfigured public calendar build settings",
+    "local-only DEBUG widget host skips cloud-session Keychain read under isolated bundle,uitesting,localMode and no-live-auth guards"
+  ],
+  "checks": {
+    "Scripts/test_isolated_mac_metadata.py": {
+      "passed": 3,
+      "failures": 0,
+      "log": "mac-p1-generator-isolation-tests.log"
+    },
+    "fresh_generated_app_and_widget_build": "passed; mac-p1-widget-order-build.log",
+    "deep_strict_signature": "passed",
+    "app_group": "3UZ4C73FM2.com.dbakp.taskfold.mac.p0widgethosts",
+    "current_extension_running": "BuildCache/mac-p1-widget-order/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex",
+    "no_widget_container_permission_error_in_host": true,
+    "namespace_receipt_matches_current_owned_sources": true
+  },
+  "published_baseline": {
+    "artifact": "mac-p1-widget-order-published-baseline.json",
+    "sha256": "42f87a0d55516b6beb91190d1e3ada7655f05a84d31eb3b3e2c61a799f49b656",
+    "list": "Widget Studio",
+    "groups": [
+      {
+        "name": "Design review",
+        "tasks": [
+          "Approve contrast",
+          "Review the layout",
+          "Refine the concept"
+        ]
+      },
+      {
+        "name": "Ready to ship",
+        "tasks": [
+          "Publish the design"
+        ]
+      }
+    ],
+    "order_matches_native_project_list": true
+  },
+  "manual_request": "Configure large My list for Widget Studio; confirm displayed order,then complete only Approve contrast. Inspect saved completion and projection afterward.",
+  "limits": [
+    "System desktop widget host inspection timed out through Notification Center and Window Manager",
+    "Published JSON and running extension do not prove the installed widget rendering or checkbox action",
+    "One necessary dedicated test host remains running while awaiting the check; other main Taskfold instances closed",
+    "iOS has no corresponding generator; its isolated preparer retains the checked-in configured project",
+    "No distribution or genuine-provider acceptance claimed"
+  ]
+}

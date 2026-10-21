@@ -2481,3 +2481,6 @@ Conversation polish follow-up: Cancel now compares text and recipient selection 
 
 
 21 October conversations/activity continuation: native Mac drafts, explicit mentions,offline/relaunch/read intent/retry acknowledgement,edit/remove and conflict review pass with exact saved snapshots. Project pulse attribution/filter/current completed-task route pass. Fixed Mentions/activity task opening to use matching project/Inbox/Completed context; build/signature and open-project/completed runtime checks pass. See `p1-mac-conversations-activity-evidence.json`. Main app closed. Remaining current P1 acceptance: installed Mac widget ordering; explicit provider/release deferrals unchanged.
+
+
+21 October widget-order readiness: fixed a fresh-generation missing-AppAuthCore failure in the Mac generator; exact package/linkage/license/calendar settings retained. Three isolation checks,fresh app/widget build and strict signature pass. Current correctly entitled host and extension publish native-matching Design review/Ready to ship ordering. Installed widget view/action remains pending user check because both system-host inspection attempts time out. One required isolated widget host remains running; no other main test sessions. See `p1-mac-widget-order-readiness.json`.

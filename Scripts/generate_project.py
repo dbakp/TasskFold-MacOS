@@ -12,7 +12,7 @@ def uid(name):
     return hashlib.md5(name.encode()).hexdigest()[:24].upper()
 
 app_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "Taskfold").rglob("*.swift"))
-app_resources = ["Taskfold/Assets.xcassets", "Taskfold/Backend.plist", "Taskfold/TaskfoldIcon.icon"]
+app_resources = ["Taskfold/Assets.xcassets", "Taskfold/Backend.plist", "Taskfold/TaskfoldIcon.icon", "Taskfold/Legal/AppAuth-LICENSE.txt"]
 test_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldUITests").rglob("*.swift"))
 widget_sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "TaskfoldWidgets").rglob("*.swift")) + ["Taskfold/Core/WidgetActions.swift", "Taskfold/Core/FocusWidget.swift", "Taskfold/Core/ProjectPulseWidget.swift"]
 # Set TASKFOLD_WIDGETS=0 to leave the widget extension out (for example while App Groups cannot be provisioned).
@@ -43,6 +43,14 @@ def add_build(path, scope=""):
     return bid
 
 for p in app_sources + app_resources + test_sources + other_files + (widget_sources if WIDGETS else []): add_ref(p)
+# The native calendar authorizer imports AppAuthCore on both platforms.
+# Regeneration must retain the exact package dependency, not just its Swift sources.
+auth_package = uid("package:AppAuth")
+auth_product = uid("package-product:AppAuthCore")
+auth_build = uid("package-build:AppAuthCore")
+lines.append(f'{auth_package} = {{ isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/openid/AppAuth-iOS.git"; requirement = {{ kind = exactVersion; version = 3.0.0; }}; }};')
+lines.append(f'{auth_product} = {{ isa = XCSwiftPackageProductDependency; package = {auth_package}; productName = AppAuthCore; }};')
+lines.append(f'{auth_build} = {{ isa = PBXBuildFile; productRef = {auth_product}; }};')
 app_source_builds = [add_build(p) for p in app_sources]
 app_resource_builds = [add_build(p) for p in app_resources]
 test_source_builds = [add_build(p) for p in test_sources]
@@ -73,7 +81,7 @@ app_sources_phase = uid("phase:app:sources"); app_res_phase = uid("phase:app:res
 test_sources_phase = uid("phase:test:sources")
 lines.append(f'{app_sources_phase} = {{ isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(app_source_builds)},); runOnlyForDeploymentPostprocessing = 0; }};')
 lines.append(f'{app_res_phase} = {{ isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(app_resource_builds)},); runOnlyForDeploymentPostprocessing = 0; }};')
-lines.append(f'{app_fw_phase} = {{ isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};')
+lines.append(f'{app_fw_phase} = {{ isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = ({auth_build},); runOnlyForDeploymentPostprocessing = 0; }};')
 lines.append(f'{test_sources_phase} = {{ isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(test_source_builds)},); runOnlyForDeploymentPostprocessing = 0; }};')
 widget_sources_phase = uid("phase:widgets:sources"); widget_fw_phase = uid("phase:widgets:frameworks"); embed_phase = uid("phase:app:embed")
 if WIDGETS:
@@ -83,7 +91,7 @@ if WIDGETS:
     lines.append(f'{embed_phase} = {{ isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = ({embed_widget},); name = "Embed Foundation Extensions"; runOnlyForDeploymentPostprocessing = 0; }};')
 
 common = f'SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 15.0; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; DEVELOPMENT_TEAM = {TEAM}; CODE_SIGN_STYLE = Automatic; ENABLE_USER_SCRIPT_SANDBOXING = YES; COMBINE_HIDPI_IMAGES = YES; DEAD_CODE_STRIPPING = YES;'
-app_common = ('PRODUCT_NAME = Taskfold; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Taskfold/Info.plist; '
+app_common = ('TASKFOLD_GOOGLE_CALENDAR_CLIENT_ID = ""; TASKFOLD_MICROSOFT_CALENDAR_CLIENT_ID = ""; TASKFOLD_GOOGLE_CALENDAR_CALLBACK_SCHEME = "$(PRODUCT_BUNDLE_IDENTIFIER).calendar.google"; PRODUCT_NAME = Taskfold; PRODUCT_BUNDLE_IDENTIFIER = com.dbakp.taskfold.mac; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Taskfold/Info.plist; '
               'CODE_SIGN_ENTITLEMENTS = Taskfold/Taskfold.entitlements; ENABLE_HARDENED_RUNTIME = YES; ASSETCATALOG_COMPILER_APPICON_NAME = TaskfoldIcon; '
               'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CURRENT_PROJECT_VERSION = 3; MARKETING_VERSION = 1.2.0; SWIFT_EMIT_LOC_STRINGS = YES; '
               'ENABLE_PREVIEWS = YES; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks"; ')
@@ -117,9 +125,9 @@ if WIDGETS:
     lines.append(f'{widget_target} = {{ isa = PBXNativeTarget; buildConfigurationList = {widget_configs}; buildPhases = ({widget_sources_phase},{widget_fw_phase},); buildRules = (); dependencies = (); name = TaskfoldWidgets; productName = TaskfoldWidgets; productReference = {widget_product}; productType = "com.apple.product-type.app-extension"; }};')
 app_phases = f"{app_sources_phase},{app_fw_phase},{app_res_phase}," + (f"{embed_phase}," if WIDGETS else "")
 app_dependencies = f"{widget_dependency}," if WIDGETS else ""
-lines.append(f'{app_target} = {{ isa = PBXNativeTarget; buildConfigurationList = {app_configs}; buildPhases = ({app_phases}); buildRules = (); dependencies = ({app_dependencies}); name = Taskfold; productName = Taskfold; productReference = {app_product}; productType = "com.apple.product-type.application"; }};')
+lines.append(f'{app_target} = {{ packageProductDependencies = ({auth_product},); isa = PBXNativeTarget; buildConfigurationList = {app_configs}; buildPhases = ({app_phases}); buildRules = (); dependencies = ({app_dependencies}); name = Taskfold; productName = Taskfold; productReference = {app_product}; productType = "com.apple.product-type.application"; }};')
 lines.append(f'{test_target} = {{ isa = PBXNativeTarget; buildConfigurationList = {test_configs}; buildPhases = ({test_sources_phase},); buildRules = (); dependencies = ({dependency},); name = TaskfoldUITests; productName = TaskfoldUITests; productReference = {test_product}; productType = "com.apple.product-type.bundle.ui-testing"; }};')
-lines.append(f'{project_id} = {{ isa = PBXProject; attributes = {{ BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 2600; TargetAttributes = {{ {app_target} = {{ DevelopmentTeam = {TEAM}; }}; {test_target} = {{ DevelopmentTeam = {TEAM}; TestTargetID = {app_target}; }}; {widget_target} = {{ DevelopmentTeam = {TEAM}; }}; }}; }}; buildConfigurationList = {project_configs}; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en,Base,); mainGroup = {main_group}; productRefGroup = {products}; projectDirPath = ""; projectRoot = ""; targets = ({app_target},{test_target},{(widget_target + ",") if WIDGETS else ""}); }};')
+lines.append(f'{project_id} = {{ packageReferences = ({auth_package},); isa = PBXProject; attributes = {{ BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 2600; TargetAttributes = {{ {app_target} = {{ DevelopmentTeam = {TEAM}; }}; {test_target} = {{ DevelopmentTeam = {TEAM}; TestTargetID = {app_target}; }}; {widget_target} = {{ DevelopmentTeam = {TEAM}; }}; }}; }}; buildConfigurationList = {project_configs}; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en,Base,); mainGroup = {main_group}; productRefGroup = {products}; projectDirPath = ""; projectRoot = ""; targets = ({app_target},{test_target},{(widget_target + ",") if WIDGETS else ""}); }};')
 lines.append(f"}}; rootObject = {project_id}; }}")
 
 out = ROOT / "Taskfold.xcodeproj" / "project.pbxproj"

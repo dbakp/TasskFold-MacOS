@@ -464,7 +464,7 @@ final class Store {
         // This local-only fixture must never read another app's stored cloud credentials.
         // Keep authenticated test variants and every normal app launch on the existing path.
         if let bundle = Bundle.main.bundleIdentifier,
-           (bundle == "com.dbakp.taskfold.mac.p0grammaruitests" || bundle.hasPrefix("com.dbakp.taskfold.mac.workflowtests")),
+           (bundle == "com.dbakp.taskfold.mac.p0grammaruitests" || bundle == "com.dbakp.taskfold.mac.p0widgethosts" || bundle.hasPrefix("com.dbakp.taskfold.mac.workflowtests")),
            ProcessInfo.processInfo.arguments.contains("--uitesting"),
            !ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test"),
            UserDefaults.standard.bool(forKey: "localMode") {
