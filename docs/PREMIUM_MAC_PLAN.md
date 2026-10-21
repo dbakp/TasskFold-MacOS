@@ -2487,3 +2487,6 @@ Conversation polish follow-up: Cancel now compares text and recipient selection 
 
 
 21 October installed widget observation: user confirms the large My list Widget Studio order and group captions match. The reported checkbox click has not changed saved completion,projection or action queue. Inspected logs show configuration resolution without an observed completion intent; no code defect is inferred yet. Installed order accepted; checkbox persistence pending one out-of-edit-mode retry. Current host left intact. Evidence: `p1-mac-widget-order-readiness.json`.
+
+
+21 October final current P1 acceptance: installed large My list grouped/manual order user-confirmed; subsequent actual checkbox completion persists with exactly one receipt,empty queue,unchanged saved order and only the approval task completed. Normal Quit/relaunch and native remaining project order pass. No main Taskfold app remains running. Current agreed P1 batch complete; evidence/audit in `p1-mac-widget-order-accepted-evidence.json` and `p1-completion-audit.json`. Genuine calendar registrations/provider acceptance,remote reminders,older-client rollout and distribution remain explicitly deferred and unverified.

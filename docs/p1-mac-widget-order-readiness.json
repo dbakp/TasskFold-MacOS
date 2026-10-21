@@ -1,6 +1,6 @@
 {
   "date": "2026-10-21",
-  "status": "user confirmed installed grouped/manual order; checkbox persistence not yet verified",
+  "status": "readiness checkpoint superseded by accepted installed order/completion proof",
   "problem": "Fresh Mac project generation omitted the AppAuthCore package imported by CalendarAuthorization.swift; regenerated widget-host build failed to resolve that module.",
   "fix": [
     "Mac generator preserves exact AppAuthCore3.0.0 remote package,app linkage and package reference",
@@ -46,7 +46,6 @@
   "limits": [
     "System desktop widget host inspection timed out through Notification Center and Window Manager",
     "Published JSON and running extension do not prove the installed widget rendering or checkbox action",
-    "One necessary dedicated test host remains running while awaiting the check; other main Taskfold instances closed",
     "iOS has no corresponding generator; its isolated preparer retains the checked-in configured project",
     "No distribution or genuine-provider acceptance claimed"
   ],
@@ -63,5 +62,7 @@
     },
     "diagnosis_limit": "Inspected App Intents logs show ListConfiguration resolution; no CompleteWidgetTaskIntent invocation observed. This does not establish a product-code cause.",
     "next_check": "Exit Edit Widgets and click the desktop checkbox once; observe Completed/disappearance versus unchanged. Keep current build intact."
-  }
+  },
+  "finalAcceptance": "p1-mac-widget-order-accepted-evidence.json",
+  "main_app_closed": true
 }

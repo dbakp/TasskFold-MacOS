@@ -1,0 +1,117 @@
+{
+  "date": "2026-10-21",
+  "status": "current agreed P1 implementation and acceptance scope complete; explicit deferrals remain unverified",
+  "scope_source": "P1_PLAN.md ranked acceptance table and explicit user deferrals",
+  "requirements": [
+    {
+      "rank": 1,
+      "requirement": "Nested child editing,stable structure/metadata,Cancel/Save/relaunch and concurrent move/edit preservation",
+      "result": "accepted",
+      "evidence": [
+        "p1-subtasks-evidence.json",
+        "p1-child-details-evidence.json",
+        "p1-subtasks-database-evidence.json"
+      ]
+    },
+    {
+      "rank": 2,
+      "requirement": "Saved template rename/definition edit,reviewed source refresh,independent existing runs,newer-version refusal and cross-device review",
+      "result": "accepted",
+      "evidence": [
+        "p1-template-management-evidence.json",
+        "p1-template-preview-followup-evidence.json",
+        "p1-mac-templates-insights-evidence.json"
+      ]
+    },
+    {
+      "rank": 3,
+      "requirement": "Widget supported saved ordering/grouping and honest membership/completion/retry states",
+      "result": "accepted",
+      "evidence": [
+        "p1-widget-ordering-evidence.json",
+        "p1-mac-widget-order-accepted-evidence.json"
+      ],
+      "direct_final_proof": "Installed user observation plus saved receipt,remaining grouped projection and native relaunch"
+    },
+    {
+      "rank": 4,
+      "requirement": "Insights explicit scope/time/coverage,deduplication,reopen correction,rest days and compatible goals/settings",
+      "result": "accepted",
+      "evidence": [
+        "p1-insights-goals-evidence.json",
+        "p1-mac-templates-insights-evidence.json"
+      ]
+    },
+    {
+      "rank": 5,
+      "requirement": "Multiple monthly dates with preview,month-end/zone/count/persistence/completion/Undo and cross-device compatibility",
+      "result": "accepted",
+      "evidence": [
+        "p1-monthly-dates-evidence.json",
+        "p1-mac-recurrence-calendar-evidence.json"
+      ]
+    },
+    {
+      "rank": 6,
+      "requirement": "Read-only Google/Outlook bridge,configuration guards,private events,selection/disconnect/reconnect and planner integration",
+      "result": "implementation and synthetic/native UI accepted; genuine-provider acceptance explicitly deferred",
+      "evidence": [
+        "p1-calendar-connections-evidence.json",
+        "p1-calendar-timeline-evidence.json",
+        "p1-mac-recurrence-calendar-evidence.json"
+      ],
+      "unverified": "Actual provider registration,consent,refresh/revocation,account replacement and provider-backed credential lifecycle"
+    },
+    {
+      "rank": 7,
+      "requirement": "Current-project activity,authenticated authorship,access-checked explicit mentions,departed-member safety,durable outbox/inbox and honest delivery state",
+      "result": "accepted within recorded native-fixture and genuine HTTP/server scopes",
+      "evidence": [
+        "p1-project-activity-evidence.json",
+        "p1-native-conversations-evidence.json",
+        "p1-conversation-polish-evidence.json",
+        "p1-mac-conversations-activity-evidence.json"
+      ]
+    }
+  ],
+  "cross_cutting": {
+    "repository_ownership": "Each app owns its source/resources/widgets/tests/build/release inputs; no sibling build dependency introduced",
+    "core_suite_logs_inspected": {
+      "ios": {
+        "reported": 859,
+        "skipped": 12,
+        "failures": 0,
+        "log": "ios-p1-conversation-full-core.log"
+      },
+      "macOS": {
+        "reported": 883,
+        "skipped": 32,
+        "failures": 0,
+        "log": "mac-p1-conversation-full-core.log"
+      }
+    },
+    "separate_authenticated_HTTP_logs_inspected": [
+      "ios-p1-conversation-live.log",
+      "mac-p1-conversation-live.log"
+    ],
+    "later_UI_build_fixes": "Template preview regression passed phone/tablet flows and Mac comparison; route fix built/signed and native project/completed routes verified; generator fresh app/widget build and3 isolation checks passed",
+    "core_rerun_limit": "No new full-core rerun claimed for later UI/build/debug-fixture-only refinements",
+    "native_artifacts": "Recorded accepted result bundles remain present; Mac computer-use checks are observations and saved snapshots,not invented XCTest counts",
+    "data": "Only isolated synthetic data changed; no real Todoist/user task mutation",
+    "cleanup": "Main test apps closed; obsolete owned staging pruned; system-managed widget extension retained"
+  },
+  "current_required_work_remaining": [],
+  "explicit_user_deferrals": [
+    "Google/Microsoft registrations and genuine-provider acceptance",
+    "server-delivered remote reminders and device/reinstall recovery",
+    "older-client rollout safeguards",
+    "distribution signing and real installation/update checks including Mac"
+  ],
+  "later_scopes_not_silently_promised": [
+    "template interchange/public catalog",
+    "sub-day/holiday recurrence policy",
+    "independent subtask database-record migration",
+    "calendar write-back/mirroring",
+    "advanced team roles/folders/admin"
+  ]
+}

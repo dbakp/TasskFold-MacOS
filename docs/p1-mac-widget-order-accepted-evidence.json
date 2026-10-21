@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-21",
+  "status": "installed Mac grouped/manual ordering and completion persistence accepted",
+  "method": "User observation of installed large My list plus actual durable receipt,saved task/projection verification and native relaunch walkthrough",
+  "user_observations": [
+    "Order matches; completed Approve contrast",
+    "After leaving Edit Widgets: Shows Completed or disappears"
+  ],
+  "checks": [
+    "installed Widget Studio group captions/order match app and saved projection",
+    "only Approve contrast completed",
+    "durable widget receipt saved exactly once",
+    "widget action queue empty and core pending0",
+    "remaining order Review the layout,Refine the concept,Publish the design",
+    "Design review retains first two; Ready to ship retains last task",
+    "saved view order unchanged",
+    "normal Quit/relaunch without reset preserves completed task,receipt and remaining order",
+    "native project list after relaunch matches remaining projection",
+    "all Taskfold main app processes closed"
+  ],
+  "snapshot": {
+    "artifact": "mac-p1-widget-order-accepted-snapshot.json",
+    "sha256": "75f973cb4d67c18b6f65bbaf3ba07e852ba109eae1d8d06f65413af177198601",
+    "tasks": 4,
+    "completed": 1,
+    "widget_receipts": 1,
+    "pending": 0
+  },
+  "projection": {
+    "artifact": "mac-p1-widget-order-accepted-projection.json",
+    "sha256": "e553837f8c836d7bdbf19dc0329d0dc7b9c8c61f264256e773d854f7bdb29876",
+    "remaining_tasks": 3,
+    "groups": 2,
+    "queued_actions": 0
+  },
+  "limits": [
+    "Initial configuration-mode interaction did not change data; only the subsequent observed completion is accepted",
+    "User observes installed desktop rendering; automation verifies actual saved result and host UI",
+    "No new cold-quit-widget action,distribution,remote-push or genuine-provider acceptance claim",
+    "Installed system widget extension may remain managed by macOS; no main app left running"
+  ]
+}
