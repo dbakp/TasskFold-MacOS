@@ -36,7 +36,7 @@ struct TaskReminderEditor: View {
                         }
                     } else if let location = LocationReminderSettings(raw: value.object) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Label(location.transition == .arrive ? "Arrival reminder" : "Departure reminder", systemImage: "mappin.and.ellipse")
+                            Label(location.repeats ? (location.transition == .arrive ? "Every arrival until completed" : "Every departure until completed") : (location.transition == .arrive ? "Arrival reminder" : "Departure reminder"), systemImage: "mappin.and.ellipse")
                             Text("Uses a private place on its originating iPhone or iPad. Review the place and delivery there.").font(.footnote).foregroundStyle(.secondary)
                             Button("Delete location reminder", role: .destructive) { remove(index) }.buttonStyle(.borderless).frame(minHeight: 44)
                         }

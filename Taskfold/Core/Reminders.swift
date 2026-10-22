@@ -630,7 +630,7 @@ struct ReminderRequest: Equatable, Sendable {
     var fireAt: Date
     var snoozed = false
     static func make(account: String, event: DueReminder, fireAt: Date? = nil, snoozed: Bool = false) -> Self {
-        let id = event.signature.hasPrefix("r9:") && snoozed
+        let id = LocationReminderTicket.isLocationSignature(event.signature) && snoozed
             ? LocationNotificationAction.prefix + DueReminder.digest(account + "|" + event.id)
             : (event.kind == .focusFinish ? FocusFinish.prefix : prefix) + DueReminder.digest(account + "|" + event.taskID.lowercased() + "|" + event.specID + (event.calendarOccurrence ? "|" + ReminderSignature.milliseconds(event.date) : ""))
         return Self(identifier: id + (snoozed ? ".snooze" : ""), account: account, event: event, fireAt: fireAt ?? event.date, snoozed: snoozed)
@@ -665,12 +665,12 @@ struct ReminderState: Sendable {
     var locationWorkspace: UUID? = nil
     var locationContextIsCurrent: @Sendable () async -> Bool = { true }
     func permitsOriginal(_ event: DueReminder) -> Bool {
-        if event.signature.hasPrefix("r9:") { return false } // Only explicit ledger snoozes are time requests.
+        if LocationReminderTicket.isLocationSignature(event.signature) { return false } // Only explicit ledger snoozes are time requests.
         // Interval and Time Sensitive specs are explicitly local-only; the server excludes them.
         return event.kind == .focusFinish || (event.kind == .task && (event.signature.hasPrefix("r6:") || event.signature.hasPrefix("r7:") || event.signature.hasPrefix("r8:"))) || (!deliveryAuthorityUnreadable && (deliveryAuthority?.allowsLocalOriginal(account: deliveryAuthorityAccount ?? account, at: event.date) ?? true))
     }
     func validated(_ event: DueReminder) -> DueReminder? {
-        if event.signature.hasPrefix("r9:") {
+        if LocationReminderTicket.isLocationSignature(event.signature) {
             return locationValidationEvents.first { $0.id == event.id && $0.kind == event.kind && $0.taskID == event.taskID && $0.specID == event.specID && $0.signature == event.signature && $0.date == event.date && !event.calendarOccurrence && !event.timeSensitive }
         }
         if let matching = events.first(where: { $0.kind == event.kind && $0.taskID == event.taskID && $0.specID == event.specID && $0.hasSignature(event.signature) }) { return matching }
@@ -791,7 +791,7 @@ actor ReminderScheduler {
             let existing = await center.pending()
             guard token == sequence else { continue }
             snoozes.removeAll { !$0.valid(state: state) || $0.fireAt <= state.now }
-            let retained = existing.filter { $0.snoozed && $0.valid(state: state) && (!$0.event.signature.hasPrefix("r9:") || state.locationPendingIDs.contains($0.identifier)) && $0.fireAt > state.now }.compactMap { old -> ReminderRequest? in
+            let retained = existing.filter { $0.snoozed && $0.valid(state: state) && (!LocationReminderTicket.isLocationSignature($0.event.signature) || state.locationPendingIDs.contains($0.identifier)) && $0.fireAt > state.now }.compactMap { old -> ReminderRequest? in
                 guard let event = state.validated(old.event) else { return nil }
                 return ReminderRequest.make(account:state.account,event:event,fireAt:old.fireAt,snoozed:true)
             }
@@ -845,13 +845,13 @@ actor ReminderScheduler {
             var capacityBlocked = false
             for request in requests {
                 if token != sequence { break }
-                if existing.contains(request) || request.event.signature.hasPrefix("r9:") && existing.contains(where: { $0.matchesSnooze(request) }) { report.accepted(request); if request.snoozed { acceptedSnoozes.insert(request.identifier) }; continue }
+                if existing.contains(request) || LocationReminderTicket.isLocationSignature(request.event.signature) && existing.contains(where: { $0.matchesSnooze(request) }) { report.accepted(request); if request.snoozed { acceptedSnoozes.insert(request.identifier) }; continue }
                 if capacityBlocked {
                     if request.snoozed { report.deferredSnoozes.append(request) }
                     if request.event.kind == .focusFinish { report.focusDeferred = true } else { report.deferred += 1 }
                     continue
                 }
-                let location = request.event.signature.hasPrefix("r9:")
+                let location = LocationReminderTicket.isLocationSignature(request.event.signature)
                 if location {
                     guard await state.locationSnoozeTransition(request, .reserve) == .saved else { report.failed(request); continue }
                     guard token == sequence else { break }
@@ -942,7 +942,7 @@ struct SystemReminderCenter: ReminderCenter {
               let account = info["accountID"] as? String, LocationReminderIdentity.account(account),
               let task = info["taskID"] as? String, LocationReminderIdentity.uuid(.string(task)),
               let spec = info["specID"] as? String, LocationReminderIdentity.uuid(.string(spec)),
-              let signature = info["signature"] as? String, signature.hasPrefix("r9:"), signature.count == 67, signature.dropFirst(3).allSatisfy({ "0123456789abcdef".contains($0) }),
+              let signature = info["signature"] as? String, LocationReminderTicket.isLocationSignature(signature), LocationReminderTicket.validSignature(signature),
               info["originalAt"] as? Double == 0, info["snoozed"] as? Bool == true, info["calendarOccurrence"] as? Bool == false,
               let fire = info["fireAt"] as? Double, fire.isFinite, (1...Double(FocusSession.maximumTimestamp) / 1000).contains(fire), fire.rounded() == fire,
               request.content.interruptionLevel == .active,
@@ -961,7 +961,7 @@ struct SystemReminderCenter: ReminderCenter {
             // Touch only Taskfold's reminder category and versioned namespace.
             guard request.content.categoryIdentifier == "taskfold.reminder" || request.identifier.hasPrefix(ReminderRequest.prefix) || request.content.categoryIdentifier == FocusFinish.category || request.identifier.hasPrefix(FocusFinish.prefix) || request.content.categoryIdentifier == LocationNotificationAction.category || request.identifier.hasPrefix(LocationNotificationAction.prefix) else { return false }
             guard let decoded = Self.decode(request), decoded.valid(state: state) else { return true }
-            return pending && decoded.event.signature.hasPrefix("r9:") && !state.locationPendingIDs.contains(decoded.identifier)
+            return pending && LocationReminderTicket.isLocationSignature(decoded.event.signature) && !state.locationPendingIDs.contains(decoded.identifier)
         }
         center.removePendingNotificationRequests(withIdentifiers: await center.pendingNotificationRequests().filter { stale($0, pending: true) }.map(\.identifier))
         center.removeDeliveredNotifications(withIdentifiers: await center.deliveredNotifications().map(\.request).filter { stale($0, pending: false) }.map(\.identifier))
@@ -980,7 +980,7 @@ struct SystemReminderCenter: ReminderCenter {
         let content = UNMutableNotificationContent()
         content.title = request.event.title; content.body = request.event.body; content.sound = .default
         content.interruptionLevel = request.event.kind == .task && request.event.timeSensitive ? .timeSensitive : .active
-        content.categoryIdentifier = request.event.kind == .focusFinish ? FocusFinish.category : (request.event.signature.hasPrefix("r9:") ? LocationNotificationAction.category : "taskfold.reminder")
+        content.categoryIdentifier = request.event.kind == .focusFinish ? FocusFinish.category : (LocationReminderTicket.isLocationSignature(request.event.signature) ? LocationNotificationAction.category : "taskfold.reminder")
         content.userInfo = ["eventKind": request.event.kind.rawValue, "eventID": request.event.id, "accountID": request.account, "taskID": request.event.taskID, "specID": request.event.specID, "signature": request.event.signature, "originalAt": request.event.date.timeIntervalSince1970, "fireAt": request.fireAt.timeIntervalSince1970, "snoozed": request.snoozed, "calendarOccurrence": request.event.calendarOccurrence]
         return content
     }
@@ -989,7 +989,7 @@ struct SystemReminderCenter: ReminderCenter {
         guard current.count < 60 || current.contains(where: { $0.identifier == request.identifier }) else { throw ReminderSchedulingFailure.noRoom }
         // An explicit UTC instant preserves both sides of a daylight-saving fold.
         let native = UNNotificationRequest(identifier: request.identifier, content: Self.content(for: request), trigger: Self.trigger(at: request.fireAt))
-        guard !request.event.signature.hasPrefix("r9:") || Self.decodeLocationSnooze(native)?.matchesSnooze(request) == true else { throw AppFailure(message: "This location snooze is invalid.") }
+        guard !LocationReminderTicket.isLocationSignature(request.event.signature) || Self.decodeLocationSnooze(native)?.matchesSnooze(request) == true else { throw AppFailure(message: "This location snooze is invalid.") }
         try await center.add(native)
     }
 }

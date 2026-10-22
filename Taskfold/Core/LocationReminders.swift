@@ -41,9 +41,9 @@ struct LocationPrivatePlace: Equatable, Sendable {
     }
 }
 
-/// Proposed version 6 is deliberately NOT exposed through ReminderSpec yet. The native
-/// adapter, device consent, durable private storage and save/action routing must land
-/// before any app can persist or schedule these rows.
+/// Private references remain opaque to ReminderSpec. Version 6/reference 1 is
+/// one-shot; version 7/reference 2 explicitly requests every visit. Public authoring
+/// remains gated pending the remaining native/setup acceptance.
 struct LocationReminderSettings: Equatable, Sendable {
     enum Transition: String, Sendable { case arrive, leave }
     let raw: [String: JSON]
@@ -57,24 +57,26 @@ struct LocationReminderSettings: Equatable, Sendable {
     var placeRevision: String { reference["place_revision"]!.text }
     var arm: String { reference["arm"]!.text }
     var transition: Transition { Transition(rawValue: reference["transition"]!.text)! }
+    var repeats: Bool { reference["repeats"] == .bool(true) }
     var semanticFields: [String] { [device, taskID, taskGeneration, placeID, placeRevision, transition.rawValue] }
     /// A fresh arm cannot create a duplicate reminder for the same boundary/transition.
     var duplicateKey: String { LocationReminderIdentity.digest(semanticFields) }
     init?(raw: [String: JSON]) {
-        guard raw["version"] == .number(6), raw["kind"] == .string("location"),
+        guard raw["kind"] == .string("location"),
               LocationReminderIdentity.uuid(raw["id"]), raw["id"] != .string(ReminderSpec.plannedID),
               raw["channels"] == .array([.string("local")]), case .bool? = raw["enabled"],
-              case .object(let reference)? = raw["location_reference"], reference["version"] == .number(1),
+              case .object(let reference)? = raw["location_reference"],
               ["device", "task_id", "task_generation", "place_id", "place_revision", "arm"].allSatisfy({ LocationReminderIdentity.uuid(reference[$0]) }),
               Transition(rawValue: reference["transition"]?.text ?? "") != nil,
-              reference["repeats"] == .bool(false) else { return nil }
+              (raw["version"] == .number(6) && reference["version"] == .number(1) && reference["repeats"] == .bool(false) ||
+               raw["version"] == .number(7) && reference["version"] == .number(2) && reference["repeats"] == .bool(true)) else { return nil }
         self.raw = raw
     }
     static func make(device: String, taskID: String, taskGeneration: String, place: LocationPrivatePlace,
-                     transition: Transition, id: String = UUID().uuidString.lowercased(), arm: String = UUID().uuidString.lowercased(), enabled: Bool = true) -> Self? {
-        Self(raw: ["version": .number(6), "id": .string(id), "kind": .string("location"), "channels": .array([.string("local")]), "enabled": .bool(enabled),
-                   "location_reference": .object(["version": .number(1), "device": .string(device), "task_id": .string(taskID), "task_generation": .string(taskGeneration),
-                                                  "place_id": .string(place.id), "place_revision": .string(place.revision), "arm": .string(arm), "transition": .string(transition.rawValue), "repeats": .bool(false)])])
+                     transition: Transition, repeats: Bool = false, id: String = UUID().uuidString.lowercased(), arm: String = UUID().uuidString.lowercased(), enabled: Bool = true) -> Self? {
+        Self(raw: ["version": .number(repeats ? 7 : 6), "id": .string(id), "kind": .string("location"), "channels": .array([.string("local")]), "enabled": .bool(enabled),
+                   "location_reference": .object(["version": .number(repeats ? 2 : 1), "device": .string(device), "task_id": .string(taskID), "task_generation": .string(taskGeneration),
+                                                  "place_id": .string(place.id), "place_revision": .string(place.revision), "arm": .string(arm), "transition": .string(transition.rawValue), "repeats": .bool(repeats)])])
     }
     func settingEnabled(_ enabled: Bool) -> Self {
         var fields = raw; fields["enabled"] = .bool(enabled); return Self(raw: fields)!
@@ -109,12 +111,23 @@ struct LocationReminderTicket: Codable, Equatable, Sendable {
     let placeRevision: String
     let arm: String
     let transition: String
+    /// Nil retains the exact legacy envelope/signature; explicit false is invalid.
+    var repeats: Bool? = nil
+    var isRepeating: Bool { repeats == true }
+    static func isLocationSignature(_ value: String) -> Bool { value.hasPrefix("r9:") || value.hasPrefix("r10:") }
+    static func validSignature(_ value: String) -> Bool {
+        guard isLocationSignature(value), value.count == (value.hasPrefix("r10:") ? 68 : 67), let digest = value.split(separator: ":").last else { return false }
+        return digest.count == 64 && digest.allSatisfy { "0123456789abcdef".contains($0) }
+    }
     var valid: Bool {
         LocationReminderIdentity.account(account) && [device, taskID, generation, specID, placeID, placeRevision, arm].allSatisfy { LocationReminderIdentity.uuid(.string($0)) } &&
-        specID != ReminderSpec.plannedID && (0...9_007_199_254_740_991).contains(completionVersion) && LocationReminderSettings.Transition(rawValue: transition) != nil
+        specID != ReminderSpec.plannedID && (repeats == nil || repeats == true) && (0...9_007_199_254_740_991).contains(completionVersion) && LocationReminderSettings.Transition(rawValue: transition) != nil
     }
-    var signature: String { "r9:" + LocationReminderIdentity.digest([account, device, taskID, generation, String(completionVersion), specID, placeID, placeRevision, arm, transition]) }
-    var identifier: String { Self.prefix + String(signature.dropFirst(3)) }
+    var signature: String {
+        let fields = [account, device, taskID, generation, String(completionVersion), specID, placeID, placeRevision, arm, transition]
+        return (isRepeating ? "r10:" : "r9:") + LocationReminderIdentity.digest(fields + (isRepeating ? ["every-visit"] : []))
+    }
+    var identifier: String { (isRepeating ? Self.namespace + "v2." : Self.prefix) + String(signature.split(separator: ":").last!) }
 }
 
 struct LocationReminderCandidate: Equatable, Sendable {
@@ -130,7 +143,7 @@ struct LocationReminderCandidate: Equatable, Sendable {
         if task["completion_version"] == .null { completion = 0 }
         else { guard let value = Recurrence.number(task["completion_version"], in: 0...9_007_199_254_740_991) else { return nil }; completion = value }
         let ticket = LocationReminderTicket(account: account, device: device, taskID: task.id, generation: settings.taskGeneration, completionVersion: completion,
-                                            specID: settings.id, placeID: place.id, placeRevision: place.revision, arm: settings.arm, transition: settings.transition.rawValue)
+                                            specID: settings.id, placeID: place.id, placeRevision: place.revision, arm: settings.arm, transition: settings.transition.rawValue, repeats: settings.repeats ? true : nil)
         guard ticket.valid else { return nil }
         self.ticket = ticket; self.place = place; title = task.title; priority = task.priority
     }
@@ -153,6 +166,7 @@ struct LocationReminderPlan: Sendable {
     private init(eligible: [LocationReminderCandidate], capacity: Int, allowSubmissions: Bool) {
         self.eligible = eligible; self.capacity = capacity; self.allowSubmissions = allowSubmissions
     }
+    func repeatingOnly() -> Self { Self(eligible: eligible.filter { $0.ticket.isRepeating }, capacity: capacity, allowSubmissions: allowSubmissions) }
     func scoped(to account: String) -> Self {
         guard LocationReminderIdentity.account(account) else { return .empty }
         return Self(eligible: eligible.filter { $0.ticket.account == account }, capacity: capacity, allowSubmissions: allowSubmissions)
@@ -193,7 +207,13 @@ struct LocationReminderJournal: Codable, Equatable, Sendable {
         let ticket: LocationReminderTicket
         var phase: Phase
         var reason: Closure?
-        var valid: Bool { ticket.valid && ((phase == .closed) == (reason != nil)) }
+        /// Submission generations, not visits. Only active repeat intents may
+        /// advance a generation to pause/recover their OS registration.
+        var epoch: Int?
+        init(ticket: LocationReminderTicket, phase: Phase, reason: Closure? = nil, epoch: Int? = nil) {
+            self.ticket = ticket; self.phase = phase; self.reason = reason; self.epoch = ticket.isRepeating ? (epoch ?? 0) : nil
+        }
+        var valid: Bool { ticket.valid && ((phase == .closed) == (reason != nil)) && (ticket.isRepeating ? epoch.map { (0...9_007_199_254_740_991).contains($0) } == true : epoch == nil) }
     }
     var version = 1
     let device: String
@@ -202,7 +222,8 @@ struct LocationReminderJournal: Codable, Equatable, Sendable {
     /// rewriting its immutable closed entry. No visit timestamps are collected.
     var revoked: [String]? = nil
     var valid: Bool {
-        (version == 1 && revoked == nil || version == 2 && revoked != nil) &&
+        (version == 1 && revoked == nil || (version == 2 || version == 3) && revoked != nil) &&
+        (!entries.values.contains(where: { $0.ticket.isRepeating }) || version == 3) &&
         (revoked.map { $0.count <= Self.maximumEntries && Set($0).count == $0.count && $0.allSatisfy { entries[$0]?.phase == .closed } } ?? true) &&
         LocationReminderIdentity.uuid(.string(device)) && entries.count <= Self.maximumEntries &&
         entries.allSatisfy { $0.key == $0.value.ticket.identifier && $0.value.ticket.device == device && $0.value.valid }
@@ -213,6 +234,7 @@ struct LocationReminderJournal: Codable, Equatable, Sendable {
         guard valid, ticket.valid, ticket.device == device, entries[ticket.identifier] == nil,
               entries.count < Self.maximumEntries else { return false }
         entries[ticket.identifier] = .init(ticket: ticket, phase: .prepared, reason: nil)
+        if ticket.isRepeating { version = 3; revoked = revoked ?? [] }
         return true
     }
     /// This validates a genuine OS response against current accessible task/place state.
@@ -220,7 +242,7 @@ struct LocationReminderJournal: Codable, Equatable, Sendable {
     func permitsResponse(_ ticket: LocationReminderTicket, eligible: [LocationReminderCandidate]) -> Bool {
         guard valid, ticket.device == device, revoked?.contains(ticket.identifier) != true, let entry = entries[ticket.identifier], entry.ticket == ticket,
               eligible.contains(where: { $0.ticket == ticket }) else { return false }
-        guard entry.phase != .prepared else { return false }
+        guard entry.phase != .prepared || ticket.isRepeating && (entry.epoch ?? 0) > 0 else { return false }
         return entry.phase != .closed || [.delivered, .noLongerPending, .ambiguous].contains(entry.reason)
     }
 }
@@ -230,6 +252,7 @@ struct LocationReminderObservation: Sendable {
     var delivered: Set<String> = []
     var unrecognized: Set<String> = []
 }
+protocol LocationReminderReviewRequiredError: Error { var requiresLocationReview: Bool { get } }
 protocol LocationReminderCenter: Sendable {
     func observe() async throws -> LocationReminderObservation
     func remove(_ identifiers: [String]) async
@@ -318,6 +341,15 @@ actor LocationReminderEngine {
         entry.phase = .closed; entry.reason = reason; state.entries[identifier] = entry
         return await save(state)
     }
+    /// Ongoing repeat consent permits another registration after a known pause or
+    /// OS loss. One-shots and explicitly closed/revoked intents never take this path.
+    private func restartRepeat(_ identifier: String) async -> Bool {
+        guard var state = journal, let old = state.entries[identifier], old.ticket.isRepeating,
+              old.phase == .reserved || old.phase == .installed, let epoch = old.epoch, epoch < 9_007_199_254_740_991,
+              state.revoked?.contains(identifier) != true else { return false }
+        state.entries[identifier] = .init(ticket: old.ticket, phase: .prepared, epoch: epoch + 1)
+        return await save(state)
+    }
     private func drain() async {
         while true {
             if !retirements.isEmpty {
@@ -340,7 +372,7 @@ actor LocationReminderEngine {
                             state.entries[ticket.identifier]?.phase = .closed; state.entries[ticket.identifier]?.reason = .cancelled; changed = true
                         }
                     }
-                    if changed { state.version = 2; state.revoked = revoked.sorted() }
+                    if changed { state.version = max(state.version, matching.contains(where: { $0.isRepeating }) ? 3 : 2); state.revoked = revoked.sorted() }
                     let saved = changed ? await save(state) : true
                     if saved { blockedTickets.subtract(matching.map(\.identifier)) }
                     await center.remove(matching.map(\.identifier))
@@ -382,11 +414,16 @@ actor LocationReminderEngine {
             }
             guard token == sequence else { continue }
             let targetIDs = Set(targets.map { $0.ticket.identifier })
+            var repeatRecovery = false
             let unexpected = observation.pending.filter { !targetIDs.contains($0.ticket.identifier) }.map { $0.ticket.identifier } + observation.unrecognized.filter { $0.hasPrefix(LocationReminderTicket.namespace) }
             await center.remove(unexpected)
             guard token == sequence else { continue }
-            for (identifier, entry) in state.entries where entry.phase != .closed && entry.phase != .prepared && !targetIDs.contains(identifier) {
-                if await close(identifier, reason: .cancelled) { report.closed += 1 } else { report.failed += 1 }
+            for (identifier, entry) in state.entries where entry.phase != .closed && !targetIDs.contains(identifier) {
+                if entry.ticket.isRepeating, desired.contains(where: { $0.ticket == entry.ticket }) {
+                    if entry.phase != .prepared, !(await restartRepeat(identifier)) { report.failed += 1 }
+                } else if entry.phase != .prepared || entry.ticket.isRepeating && (entry.epoch ?? 0) > 0 {
+                    if await close(identifier, reason: .cancelled) { report.closed += 1 } else { report.failed += 1 }
+                }
                 if token != sequence { break }
             }
             guard token == sequence else { continue }
@@ -397,7 +434,7 @@ actor LocationReminderEngine {
                 if let entry = journal?.entries[id], entry.phase != .prepared {
                     if entry.phase == .closed {
                         await center.remove([id]); report.closed += 1
-                    } else if matches.count == 1, candidate.matches(matches[0]), !observation.delivered.contains(id) {
+                    } else if matches.count == 1, candidate.matches(matches[0]), candidate.ticket.isRepeating || !observation.delivered.contains(id) {
                         if entry.phase == .reserved {
                             var next = journal!; next.entries[id]?.phase = .installed
                             if !(await save(next)) { report.failed += 1 }
@@ -405,15 +442,22 @@ actor LocationReminderEngine {
                         report.installed += 1
                     } else {
                         await center.remove([id])
-                        let reason: LocationReminderJournal.Closure = observation.delivered.contains(id) ? .delivered : (matches.isEmpty ? (entry.phase == .reserved ? .ambiguous : .noLongerPending) : .failed)
-                        if await close(id, reason: reason) { report.closed += 1 } else { report.failed += 1 }
+                        if candidate.ticket.isRepeating && matches.isEmpty {
+                            if await restartRepeat(id) { repeatRecovery = true } else { report.failed += 1 }
+                        } else {
+                            let reason: LocationReminderJournal.Closure = observation.delivered.contains(id) ? .delivered : (matches.isEmpty ? (entry.phase == .reserved ? .ambiguous : .noLongerPending) : .failed)
+                            if await close(id, reason: reason) { report.closed += 1 } else { report.failed += 1 }
+                        }
                     }
                 } else if journal?.entries[id] == nil {
                     // No durable explicit intent: a restored/synced row cannot arm itself.
                     await center.remove([id]); report.failed += 1
-                } else if !matches.isEmpty || observation.delivered.contains(id) {
-                    // A prepared intent has never been submitted. Do not trust a request
-                    // that somehow appeared without the durable submission reservation.
+                } else if candidate.ticket.isRepeating, (journal?.entries[id]?.epoch ?? 0) > 0, matches.count == 1, candidate.matches(matches[0]) {
+                    // A paused repeat can adopt its own still-pending registration.
+                    // Never-submitted epoch zero cannot claim this OS proof.
+                    var next = journal!; next.entries[id]?.phase = .installed
+                    if await save(next) { report.installed += 1 } else { report.failed += 1 }
+                } else if (!candidate.ticket.isRepeating || (journal?.entries[id]?.epoch ?? 0) == 0) && (!matches.isEmpty || observation.delivered.contains(id)) {
                     await center.remove([id]); _ = await close(id, reason: .untracked); report.failed += 1
                 } else {
                     guard allowSubmissions else { report.deferred += 1; continue }
@@ -436,12 +480,16 @@ actor LocationReminderEngine {
                         next = journal!; next.entries[id]?.phase = .installed
                         if await save(next) { report.installed += 1 } else { report.failed += 1 }
                     } catch {
-                        await center.remove([id]); _ = await close(id, reason: .failed); report.failed += 1
+                        await center.remove([id])
+                        if candidate.ticket.isRepeating && (error as? any LocationReminderReviewRequiredError)?.requiresLocationReview != true { _ = await restartRepeat(id) }
+                        else { _ = await close(id, reason: .failed) }
+                        report.failed += 1
                     }
                 }
                 if token != sequence { break }
             }
             guard token == sequence else { continue }
+            if repeatRecovery { continue }
             // A consumed one-shot must not occupy a slot ahead of waiting reminders.
             let selected = desired.filter { candidate in
                 guard let entry = journal?.entries[candidate.ticket.identifier], entry.ticket == candidate.ticket else { return false }
@@ -473,11 +521,11 @@ struct LocationReminderReview: Sendable {
     let replacing: String?
     let completion: JSON
     init?(workspace: WorkspaceBinding, task: Record, archive: LocationPrivateArchive, place: LocationPrivatePlace,
-          transition: LocationReminderSettings.Transition, replacing: LocationReminderSettings? = nil) {
+          transition: LocationReminderSettings.Transition, repeats: Bool? = nil, replacing: LocationReminderSettings? = nil) {
         guard archive.valid, place.account == workspace.account, archive.places(for: workspace.account).contains(where: { $0 == place }),
               !task.completed, LocationReminderIdentity.uuid(task["task_generation"]),
               replacing == nil || ReminderSpec.rows(task).contains(.object(replacing!.raw)),
-              let created = LocationReminderSettings.make(device: archive.device, taskID: task.id, taskGeneration: task.string("task_generation"), place: place, transition: transition, id: replacing?.id ?? UUID().uuidString.lowercased()) else { return nil }
+              let created = LocationReminderSettings.make(device: archive.device, taskID: task.id, taskGeneration: task.string("task_generation"), place: place, transition: transition, repeats: repeats ?? replacing?.repeats ?? false, id: replacing?.id ?? UUID().uuidString.lowercased()) else { return nil }
         var fields = replacing?.raw ?? [:]
         for (key, value) in created.raw {
             if key == "location_reference" { fields[key] = .object((fields[key]?.object ?? [:]).merging(value.object) { _, fresh in fresh }) }
@@ -523,7 +571,7 @@ extension LocationReminderTicket {
         let completion: Int
         if task["completion_version"] == .null { completion = 0 }
         else { guard let number = Recurrence.number(task["completion_version"], in: 0...9_007_199_254_740_991) else { return nil }; completion = number }
-        let ticket = Self(account: account, device: settings.device, taskID: task.id, generation: settings.taskGeneration, completionVersion: completion, specID: settings.id, placeID: settings.placeID, placeRevision: settings.placeRevision, arm: settings.arm, transition: settings.transition.rawValue)
+        let ticket = Self(account: account, device: settings.device, taskID: task.id, generation: settings.taskGeneration, completionVersion: completion, specID: settings.id, placeID: settings.placeID, placeRevision: settings.placeRevision, arm: settings.arm, transition: settings.transition.rawValue, repeats: settings.repeats ? true : nil)
         return ticket.valid ? ticket : nil
     }
     static func retired(account: String, before: Record, after: Record?) -> [Self] {
@@ -610,12 +658,22 @@ struct LocationNotificationAction: Codable, Equatable, Sendable {
 
 enum LocationNotificationProof: Sendable {
     case boundary(LocationReminderCandidate)
+    case visit(LocationReminderCandidate, occurrence: String)
     case snooze(ReminderRequest)
     var source: String {
         switch self {
         case .boundary(let candidate): "la1:" + LocationReminderIdentity.digest(["boundary", candidate.ticket.identifier])
+        case .visit(let candidate, let occurrence): "la1:" + LocationReminderIdentity.digest(["visit", candidate.ticket.identifier, occurrence])
         case .snooze(let request): "la1:" + LocationReminderIdentity.digest(["snooze", request.identifier, request.event.signature, ReminderSignature.milliseconds(request.fireAt)])
         }
+    }
+    /// The system delivery date distinguishes visits; only its opaque digest enters
+    /// a spent-action source. Merely observing a visit persists no timestamp/history.
+    static func received(_ candidate: LocationReminderCandidate, deliveredAt: Date?) -> Self? {
+        guard candidate.ticket.isRepeating else { return .boundary(candidate) }
+        guard let deliveredAt, deliveredAt.timeIntervalSince1970.isFinite,
+              (1...Double(FocusSession.maximumTimestamp) / 1000).contains(deliveredAt.timeIntervalSince1970) else { return nil }
+        return .visit(candidate, occurrence: LocationReminderIdentity.digest([candidate.ticket.identifier, ReminderSignature.milliseconds(deliveredAt)]))
     }
     func candidate(account: String, tasks: [Record], archive: LocationPrivateArchive, cancellations: [String: LocationReminderTicket], actions: [String: LocationNotificationAction]) -> LocationReminderCandidate? {
         guard archive.valid, archive.allows(account: account) else { return nil }
@@ -623,7 +681,9 @@ enum LocationNotificationProof: Sendable {
         return candidates.first { candidate in
             guard cancellations[candidate.ticket.identifier] == nil, archive.journal.permitsResponse(candidate.ticket, eligible: candidates) else { return false }
             switch self {
-            case .boundary(let observed): return candidate.matches(observed)
+            case .boundary(let observed): return !candidate.ticket.isRepeating && candidate.matches(observed)
+            case .visit(let observed, let occurrence):
+                return candidate.ticket.isRepeating && occurrence.count == 64 && occurrence.allSatisfy { "0123456789abcdef".contains($0) } && candidate.matches(observed)
             case .snooze(let request):
                 return actions[request.event.id].map { $0.ticket == candidate.ticket && $0.permitsResponse && $0.matches(request) } == true
             }

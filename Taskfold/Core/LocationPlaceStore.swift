@@ -34,8 +34,8 @@ struct LocationPrivateArchive: Codable, Equatable, Sendable {
         guard keys(json, allowed: ["version","device","places","journal","allowedAccounts"]), let journal = json.object["journal"],
               keys(journal, allowed: ["version","device","entries","revoked"]), case .object(let entries)? = journal.object["entries"] else { throw LocationStorageFailure.unreadable }
         for entry in entries.values {
-            guard keys(entry, allowed: ["ticket","phase","reason"]), let ticket = entry.object["ticket"],
-                  keys(ticket, allowed: ["account","device","taskID","generation","completionVersion","specID","placeID","placeRevision","arm","transition"]) else { throw LocationStorageFailure.unreadable }
+            guard keys(entry, allowed: ["ticket","phase","reason","epoch"]), let ticket = entry.object["ticket"],
+                  keys(ticket, allowed: ["account","device","taskID","generation","completionVersion","specID","placeID","placeRevision","arm","transition","repeats"]) else { throw LocationStorageFailure.unreadable }
         }
         let archive = try JSONDecoder().decode(Self.self, from: data)
         guard archive.valid else { throw LocationStorageFailure.unreadable }; return archive
@@ -199,7 +199,14 @@ actor LocationPrivateStore {
                   Set(next.journal.revoked ?? []).isSubset(of: Set(journal.revoked ?? [])) else { throw LocationStorageFailure.changed }
             let rank: [LocationReminderJournal.Phase: Int] = [.prepared: 0, .reserved: 1, .installed: 2, .closed: 3]
             for (id, old) in next.journal.entries {
-                guard let updated = journal.entries[id], updated.ticket == old.ticket, rank[updated.phase]! >= rank[old.phase]!, old.phase != .closed || updated == old else { throw LocationStorageFailure.changed }
+                guard let updated = journal.entries[id], updated.ticket == old.ticket, old.phase != .closed || updated == old else { throw LocationStorageFailure.changed }
+                if old.ticket.isRepeating {
+                    guard let previousEpoch = old.epoch, let nextEpoch = updated.epoch,
+                          nextEpoch == previousEpoch && rank[updated.phase]! >= rank[old.phase]! ||
+                          nextEpoch == previousEpoch + 1 && old.phase != .closed && updated.phase == .prepared && [.reserved, .installed].contains(old.phase) else { throw LocationStorageFailure.changed }
+                } else {
+                    guard rank[updated.phase]! >= rank[old.phase]! else { throw LocationStorageFailure.changed }
+                }
             }
             for (id, entry) in journal.entries where next.journal.entries[id] == nil {
                 guard entry.phase == .prepared || entry.phase == .closed && entry.reason == .cancelled && journal.revoked?.contains(id) == true else { throw LocationStorageFailure.changed }
