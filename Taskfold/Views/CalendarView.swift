@@ -524,13 +524,7 @@ struct CalendarView: View {
                 }
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 3), count: 7), spacing: 3) {
                     ForEach(cells, id: \.self) { day in
-                        let inMonth = calendar.isDate(day, equalTo: month, toGranularity: .month)
-                        let count = inMonth ? open(on: day) : 0
-                        RoundedRectangle(cornerRadius: 2, style: .continuous)
-                            .fill(count == 0 ? Color.primary.opacity(0.07) : Color.taskfold.opacity(min(1, 0.35 + Double(count) * 0.2)))
-                            .aspectRatio(1, contentMode: .fit)
-                            .opacity(inMonth ? 1 : 0)
-                            .overlay { if inMonth && calendar.isDate(day, inSameDayAs: today) { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.taskfold, lineWidth: 1) } }
+                        miniMonthCell(day, month: month)
                     }
                 }
             }
@@ -547,6 +541,17 @@ struct CalendarView: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityHint("Open this month's calendar. Press Down Arrow in Year view to navigate months with the arrow keys.")
         .accessibilityAction(named: Text("Open month")) { openMonth(month) }
+    }
+
+    private func miniMonthCell(_ day: Date, month: Date) -> some View {
+        let inMonth = calendar.isDate(day, equalTo: month, toGranularity: .month)
+        let count = inMonth ? open(on: day) : 0
+        let tint: Color = count == 0 ? Color.primary.opacity(0.07) : Color.taskfold.opacity(min(1, 0.35 + Double(count) * 0.2))
+        return RoundedRectangle(cornerRadius: 2, style: .continuous)
+            .fill(tint)
+            .aspectRatio(1, contentMode: .fit)
+            .opacity(inMonth ? 1 : 0)
+            .overlay { if inMonth && calendar.isDate(day, inSameDayAs: today) { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.taskfold, lineWidth: 1) } }
     }
 
     private func openMonth(_ month: Date) {

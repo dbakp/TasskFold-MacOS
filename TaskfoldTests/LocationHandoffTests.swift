@@ -132,7 +132,7 @@ final class LocationHandoffTests: XCTestCase {
             XCTAssertEqual(request.url?.path,"/rest/v1/rpc/taskfold_location_handoff_list");XCTAssertEqual(request.httpMethod,"POST")
             XCTAssertEqual(request.value(forHTTPHeaderField:"Authorization"),"Bearer handoff-fixture-token")
             XCTAssertEqual(request.value(forHTTPHeaderField:"Cache-Control"),"no-store");XCTAssertFalse(request.httpShouldHandleCookies)
-            XCTAssertEqual(request.cachePolicy,.reloadIgnoringLocalCacheData);http.finish(200,data)
+            XCTAssertEqual(request.cachePolicy,.reloadIgnoringLocalCacheData);XCTAssertEqual(request.timeoutInterval,25);http.finish(200,data)
         };defer{HandoffHTTP.state.set(nil)}
         let response=try await LocationHandoffAPI(backend:backend).perform(.list(device:nil),account:owner,isCurrent:{true})
         XCTAssertEqual(response.records.count,1)

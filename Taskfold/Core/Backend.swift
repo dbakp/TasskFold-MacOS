@@ -261,6 +261,7 @@ final class Backend: NSObject {
         }
         extra.forEach { request.setValue($1, forHTTPHeaderField: $0) }
         if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") {
+            request.timeoutInterval = 25
             request.cachePolicy = .reloadIgnoringLocalCacheData
             request.httpShouldHandleCookies = false
             request.setValue("no-store", forHTTPHeaderField: "Cache-Control")

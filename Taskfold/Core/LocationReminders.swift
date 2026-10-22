@@ -1090,3 +1090,144 @@ struct LocationHandoffDeviceReview: Sendable {
             transition: transition, repeats: proposal.raw["repeats"] == .bool(true), identity: (ticket.specID,ticket.arm))
     }
 }
+
+#if DEBUG
+/// Exact disposable hosts only. All Backend HTTP is intercepted; no Keychain read,
+/// real account, shared backend or actual task sync participates in this fixture.
+enum LocationHandoffNativeFixture {
+    static let account = "f083cafe-8100-4000-8000-000000000001"
+    static let taskID = "f083cafe-8300-4000-8000-000000000001"
+    static let generation = "f083cafe-8400-4000-8000-000000000001"
+    static let draftID = "f083cafe-8600-4000-8000-000000000001"
+    static var enabled: Bool {
+        ["com.dbakp.taskfold.workflowtestsp1","com.dbakp.taskfold.mac.workflowtestsnotes1"].contains(Bundle.main.bundleIdentifier ?? "") &&
+        ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--location-handoff-native-fixture")
+    }
+    static var root: URL {
+        #if os(macOS)
+        URL(fileURLWithPath: "/private/tmp/taskfold-handoff-native-mac", isDirectory: true)
+        #else
+        URL.applicationSupportDirectory.appendingPathComponent("Taskfold/HandoffNativeFixture", isDirectory: true)
+        #endif
+    }
+    static var sender: Bool { ProcessInfo.processInfo.arguments.contains("--handoff-sender") }
+    @MainActor static func backend() -> Backend {
+        precondition(enabled)
+        if ProcessInfo.processInfo.arguments.contains("--handoff-reset") {
+            try? FileManager.default.removeItem(at: root)
+        }
+        UserDefaults.standard.set(false, forKey: "localMode")
+        UserDefaults.standard.set(false, forKey: ReminderPreferences.key(account))
+        UserDefaults.standard.set(false, forKey: "dailyBackups." + account)
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [LocationHandoffFixtureHTTP.self]
+        let session = try! JSONDecoder().decode(Session.self, from: JSONEncoder().encode(JSON.object([
+            "access_token": .string("synthetic-handoff-access"),"refresh_token": .string("synthetic-handoff-refresh"),"expires_in": .number(3600),
+            "user": .object(["id": .string(account),"email": .string("handoff-native@example.invalid")])
+        ])))
+        return Backend(configuration: ["URL":"https://handoff-native.invalid","Key":"synthetic-public-key"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
+    }
+    static func task() -> Record {
+        var task = Record.task(user: account); task["id"] = .string(taskID); task["task_generation"] = .string(generation)
+        task["completion_version"] = .number(0); task["title"] = .string("Prepare the studio review")
+        return task
+    }
+    static func failTaskSaveOnce() -> Bool {
+        guard enabled, ProcessInfo.processInfo.arguments.contains("--handoff-task-save-fails-once") else { return false }
+        let marker = root.appendingPathComponent("task-save-refused")
+        guard !FileManager.default.fileExists(atPath: marker.path) else { return false }
+        try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try? Data("synthetic failure consumed".utf8).write(to: marker, options: .atomic)
+        return true
+    }
+}
+private final class LocationHandoffFixtureHTTP: URLProtocol, @unchecked Sendable {
+    static let lock = NSLock()
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func stopLoading() {}
+    override func startLoading() {
+        guard LocationHandoffNativeFixture.enabled else { finish(403, .object(["message": .string("Fixture is unavailable.")])); return }
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        do {
+            let response = try serve(); finish(response.0, response.1)
+        } catch { finish(500, .object(["message": .string("The synthetic fixture could not be read.")])) }
+    }
+    private func body() throws -> [String: JSON] {
+        var data = request.httpBody ?? Data()
+        if data.isEmpty, let stream = request.httpBodyStream {
+            stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; data.append(contentsOf: bytes.prefix(count)) }
+        }
+        return try JSONDecoder().decode(JSON.self, from: data).object
+    }
+    private func serve() throws -> (Int, JSON) {
+        let fixture = LocationHandoffNativeFixture.self, now = Int(floor(Date().timeIntervalSince1970*1000))
+        let url = fixture.root.appendingPathComponent("server.json")
+        try FileManager.default.createDirectory(at: fixture.root, withIntermediateDirectories: true)
+        var state: [String: JSON]
+        if let data = try? Data(contentsOf: url) { state = try JSONDecoder().decode(JSON.self, from: data).object }
+        else {
+            state = ["records": .object([:]),"nonces": .object([:]),"putCalls": .number(0),"claimCalls": .number(0),"finishCalls": .number(0)]
+            if !fixture.sender {
+                let place = LocationPrivatePlace.make(account: fixture.account, name: "Sample design studio", latitude: 55.676098, longitude: 12.568337, radius: 250)!
+                let proposal = LocationHandoffProposal.make(account: fixture.account, task: fixture.task(), place: place, transition: .arrive, repeats: true, id: fixture.draftID)!
+                state["records"] = .object([proposal.id: .object(document(proposal, now: now))])
+            }
+        }
+        var rows = state["records"]!.object, nonces = state["nonces"]!.object
+        let arguments = try body(), operation = request.url?.lastPathComponent.replacingOccurrences(of: "taskfold_location_handoff_", with: "") ?? ""
+        guard request.url?.host == "handoff-native.invalid", request.url?.path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") == true else {
+            return (404,.object(["message":.string("Only isolated place-draft RPCs are available.")]))
+        }
+        let device = arguments["_device"] ?? .null, id = arguments["_id"]?.text ?? ""
+        var selected: [[String:JSON]] = []
+        var status = 200
+        if operation == "put" {
+            state["putCalls"] = .number(Double(state["putCalls"]!.integer+1))
+            guard let proposal = LocationHandoffProposal(account: fixture.account, raw: arguments["_request"]?.object ?? [:]) else { return (400,.object(["message":.string("Review the synthetic place first.")])) }
+            if rows[proposal.id] == nil { rows[proposal.id] = .object(document(proposal, now: now)) }
+            selected = [rows[proposal.id]!.object]
+            if ProcessInfo.processInfo.arguments.contains("--handoff-put-lost-response-once"), state["putLost"] != .bool(true) { state["putLost"] = .bool(true); status = 503 }
+        } else if operation == "list" {
+            selected = rows.values.map(\.object).sorted { $0["id"]!.text < $1["id"]!.text }
+        } else {
+            guard var row = rows[id]?.object else { return (404,.object(["message":.string("This place draft is unavailable.")])) }
+            if operation == "claim" {
+                state["claimCalls"] = .number(Double(state["claimCalls"]!.integer+1))
+                if row["state"] == .string("pending") { row["state"] = .string("claimed"); row["claim_device"] = device; nonces[id] = arguments["_nonce"] }
+                guard row["claim_device"] == device, nonces[id] == arguments["_nonce"] else { return (409,.object(["message":.string("Continue the review on its original device.")])) }
+            } else if operation == "finish" || operation == "abandon" {
+                guard row["claim_device"] == device, nonces[id] == arguments["_nonce"] else { return (409,.object(["message":.string("The saved review changed.")])) }
+                if operation == "finish" {
+                    state["finishCalls"] = .number(Double(state["finishCalls"]!.integer+1))
+                    if ProcessInfo.processInfo.arguments.contains("--handoff-finish-unavailable") { status = 503 }
+                }
+                if status == 200 { row["state"] = .string(operation == "finish" ? "imported" : "discarded"); row["available"] = .bool(false); row["payload"] = .null }
+            } else if operation == "discard" {
+                guard row["state"] == .string("pending") else { return (409,.object(["message":.string("A device review has started.")])) }
+                row["state"] = .string("discarded"); row["available"] = .bool(false); row["payload"] = .null
+            } else { return (404,.object(["message":.string("Unsupported synthetic operation.")])) }
+            rows[id] = .object(row); selected = [row]
+        }
+        state["records"] = .object(rows); state["nonces"] = .object(nonces)
+        try JSONEncoder().encode(state).write(to: url, options: .atomic)
+        if status != 200 { return (status,.object(["message":.string("The connection was interrupted. Retry to confirm the same draft.")])) }
+        selected = selected.map { raw in
+            var row = raw
+            if row["state"] == .string("claimed"), row["claim_device"] != device { row["payload"] = .null }
+            return row
+        }
+        return (200,.object(["version":.number(1),"account_id":.string(fixture.account),"server_now_ms":.number(Double(now)),"items":.array(selected.map(JSON.object))]))
+    }
+    private func document(_ proposal: LocationHandoffProposal, now: Int) -> [String:JSON] {
+        ["version":.number(1),"account_id":.string(proposal.account),"id":.string(proposal.id),"task_id":.string(proposal.taskID),"task_generation":.string(proposal.generation),
+         "completion_version":.number(Double(proposal.completion)),"authored_at_ms":.number(Double(proposal.authoredMilliseconds)),"created_at_ms":.number(Double(now)),
+         "expires_at_ms":.number(Double(now+604_800_000)),"state":.string("pending"),"claim_device":.null,"available":.bool(true),"payload":.object(proposal.payload)]
+    }
+    private func finish(_ status: Int, _ value: JSON) {
+        let data = (try? JSONEncoder().encode(value)) ?? Data()
+        client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type":"application/json"] )!, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self)
+    }
+}
+#endif

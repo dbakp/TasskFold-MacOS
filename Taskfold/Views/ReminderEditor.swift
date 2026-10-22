@@ -1,9 +1,11 @@
 import SwiftUI
+import MapKit
 
 struct TaskReminderEditor: View {
     @Environment(Store.self) private var store
     @Binding var task: Record
     @State private var editing: ReminderDraft?
+    @State private var sendingPlace: LocationHandoffSendRequest?
     @State private var message: String?
     private var rows: [JSON] { ReminderSpec.rows(task) }
     private var plannedEditable: Bool {
@@ -53,6 +55,14 @@ struct TaskReminderEditor: View {
                 if rows.count >= ReminderSpec.maximum { Text("This task has the maximum of 20 reminder settings.").font(.footnote).foregroundStyle(.secondary) }
             }
             Section {
+                if store.locationHandoffAvailable, store.record("tasks", id: task.id) != nil {
+                    Button("Send a place reminder…", systemImage: "iphone.and.arrow.forward") {
+                        sendingPlace = .init(taskID: task.id, workspace: .init(account: store.userID, generation: store.workspaceGeneration))
+                    }.disabled(task.completed).accessibilityIdentifier("reminderSendPlace")
+                    Text("Review a pin here, then save the reminder on your iPhone or iPad.").font(.footnote).foregroundStyle(.secondary)
+                } else { Text("Sign in and open a saved task to send a private place draft to iPhone or iPad.").font(.footnote).foregroundStyle(.secondary) }
+            } header: { Text("Place reminders") }
+            Section {
                 Toggle("Deliver reminders", isOn: Binding(get: { store.remindersEnabled }, set: { value in
                     if value { Task { await store.enableNotifications() } } else { store.disableNotifications() }
                 })).disabled(store.requestingNotifications || store.requestingFocusAlerts).accessibilityIdentifier("reminderDelivery")
@@ -81,8 +91,9 @@ struct TaskReminderEditor: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .task { await store.reschedule() }
-        .onChange(of: store.workspaceGeneration) { _, _ in editing = nil }
+        .onChange(of: store.workspaceGeneration) { _, _ in editing = nil; sendingPlace = nil }
         .alert("Reminder not changed", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) { Button("OK") { message = nil } } message: { Text(message ?? "") }
+        .sheet(item: $sendingPlace) { request in LocationHandoffSendView(request: request) }
         .sheet(item: $editing) { draft in
             ReminderSpecEditor(draft: draft) { spec in
                 guard store.workflowReady(draft.workspace), task.id == draft.taskID, task["task_generation"] == draft.taskGeneration, rows == draft.originalRows else { return "This task or its reminder settings changed. Cancel and reopen the reminder." }
@@ -605,3 +616,199 @@ struct ReminderAutomaticPreview: View {
         }
     }
 }
+
+#if os(macOS)
+struct LocationHandoffSendRequest: Identifiable {
+    let id = UUID()
+    let taskID: String
+    let workspace: WorkspaceBinding
+}
+
+struct LocationHandoffSendView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let request: LocationHandoffSendRequest
+    @State private var name = ""
+    @State private var query = ""
+    @State private var coordinate: CLLocationCoordinate2D?
+    @State private var viewport: CLLocationCoordinate2D?
+    @State private var camera: MapCameraPosition = .region(.init(center: .init(latitude: 0, longitude: 0), span: .init(latitudeDelta: 140, longitudeDelta: 340)))
+    @State private var radius = 250.0
+    @State private var transition = LocationReminderSettings.Transition.arrive
+    @State private var repeats = false
+    @State private var search: MKLocalSearch?
+    @State private var searchTimeout: Task<Void,Never>?
+    @State private var searchToken = UUID()
+    @State private var searching = false
+    @State private var results: [SearchResult] = []
+    @State private var prepared: LocationHandoffProposal?
+    @State private var sent: LocationHandoffRecord?
+    @State private var records: [LocationHandoffRecord] = []
+    @State private var working = false
+    @State private var confirmSend = false
+    @State private var discarding: LocationHandoffRecord?
+    @State private var message: String?
+    init(request: LocationHandoffSendRequest, initialPlace: LocationPrivatePlace? = nil) {
+        self.request = request
+        if let place = initialPlace, place.account == request.workspace.account {
+            let pin = CLLocationCoordinate2D(latitude: Double(place.latitudeE6)/1_000_000, longitude: Double(place.longitudeE6)/1_000_000)
+            _name = State(initialValue: place.name); _coordinate = State(initialValue: pin); _radius = State(initialValue: Double(place.radius))
+            _camera = State(initialValue: .region(.init(center: pin, latitudinalMeters: 3000, longitudinalMeters: 3000)))
+        }
+    }
+    private struct SearchResult: Identifiable { let id: Int; let name: String; let detail: String; let coordinate: CLLocationCoordinate2D }
+    private var current: Bool { request.workspace.matches(account: store.userID, generation: store.workspaceGeneration) && store.locationHandoffAvailable }
+    private var place: LocationPrivatePlace? {
+        let title = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let coordinate, !title.isEmpty, title.unicodeScalars.count <= 120, title.utf8.count <= 480,
+              !title.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }) else { return nil }
+        return .make(account: request.workspace.account, name: title, latitude: coordinate.latitude, longitude: coordinate.longitude, radius: Int(radius))
+    }
+    private func status(_ row: LocationHandoffRecord) -> String {
+        switch row.state {
+        case .pending: return row.available ? "Ready to review on iPhone or iPad" : "Task changed or unavailable"
+        case .claimed: return row.available ? "Review started on a device" : "Task changed or unavailable"
+        case .imported: return "Saved on a device"
+        case .discarded: return "Discarded"
+        case .expired: return "Expired"
+        }
+    }
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text(store.record("tasks", id: request.taskID)?.title ?? "Task unavailable").font(.headline).fixedSize(horizontal: false, vertical: true)
+                    Text("Choose a place here. Review and save it on the iPhone or iPad that will deliver the reminder.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                if let sent {
+                    Section {
+                        Label(status(sent), systemImage: "checkmark.circle.fill").font(.headline).foregroundStyle(.tint).accessibilityIdentifier("handoffSendSuccess")
+                        Text("Open Notifications → Place reminders → Place drafts from Mac on your device. No alert has been enabled by sending this draft.").fixedSize(horizontal: false, vertical: true)
+                        Button("Prepare another draft") { self.sent = nil; prepared = nil }.accessibilityIdentifier("handoffAnotherDraft")
+                    }
+                } else {
+                    Section {
+                        TextField("Address or place", text: $query).onSubmit { runSearch() }.accessibilityIdentifier("handoffSearchQuery")
+                        Button(searching ? "Searching…" : "Search Apple Maps") { runSearch() }.disabled(searching || query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || query.count > 500).accessibilityIdentifier("handoffSearch")
+                        ForEach(results) { result in
+                            Button { choose(result.coordinate); if name.isEmpty { name = String(result.name.prefix(120)) }; results = [] } label: {
+                                VStack(alignment: .leading, spacing: 3) { Text(result.name); Text(result.detail).font(.caption).foregroundStyle(.secondary) }.fixedSize(horizontal: false, vertical: true)
+                            }.buttonStyle(.borderless).accessibilityIdentifier("handoffSearchResult-\(result.id)")
+                        }
+                    } header: { Text("Find your place") } footer: { Text("Search sends your query and selected map area to Apple. You can also choose a pin directly on the map. No location permission is requested on this Mac.") }
+                    Section {
+                        MapReader { proxy in
+                            Map(position: $camera) {
+                                if let coordinate {
+                                    MapCircle(center: coordinate, radius: radius).foregroundStyle(.tint.opacity(0.16)).stroke(.tint, lineWidth: 2)
+                                    Annotation("Draft pin", coordinate: coordinate) { Image(systemName: "mappin.circle.fill").font(.title).foregroundStyle(.tint) }
+                                }
+                            }.mapControls { MapCompass(); MapScaleView() }
+                                .onMapCameraChange(frequency: .onEnd) { viewport = $0.region.center }
+                                .onTapGesture(coordinateSpace: .local) { point in if let pin = proxy.convert(point, from: .local) { choose(pin, moveCamera: false) } }
+                                .accessibilityLabel("Draft place map").accessibilityHint("Search for a place or move the map and choose Use map center.")
+                        }.frame(height: 210).clipShape(RoundedRectangle(cornerRadius: 14)).accessibilityIdentifier("handoffSendMap")
+                        Button("Use map center") { if let viewport { choose(viewport, moveCamera: false) } }.disabled(viewport == nil).accessibilityIdentifier("handoffMapCenter")
+                        if coordinate != nil { Label("Pin selected", systemImage: "checkmark.circle.fill").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("handoffPinSelected") }
+                        TextField("Place name", text: $name).accessibilityIdentifier("handoffPlaceName")
+                        if name.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.count > 120 { Text("Choose a name with no more than 120 characters.").foregroundStyle(.red) }
+                        Slider(value: $radius, in: 100...5000, step: 50) { Text("Area around the pin") }
+                            .accessibilityValue("\(Int(radius)) metres").accessibilityIdentifier("handoffRadius")
+                        Text("\(Int(radius)) metres around the pin").font(.caption).foregroundStyle(.secondary)
+                        Picker("Boundary", selection: $transition) { Text("Arrive").tag(LocationReminderSettings.Transition.arrive); Text("Leave").tag(LocationReminderSettings.Transition.leave) }.pickerStyle(.segmented).accessibilityIdentifier("handoffTransition")
+                        Toggle("Every matching visit until completed", isOn: $repeats).accessibilityIdentifier("handoffRepeats")
+                    } header: { Text("Review the pin and boundary") }
+                    Section {
+                        Text("Sending uploads this place’s name, pin, area and reminder choices to your private Taskfold account. Drafts are available for up to seven days. Collaborators cannot read the draft. Taskfold’s service administrators can access stored drafts.").fixedSize(horizontal: false, vertical: true)
+                        Text("Your existing saved places stay on their devices. Sending does not create a reminder or turn on alerts. Your device must review and save this draft.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    } header: { Text("Private to your account") }
+                }
+                if !records.isEmpty {
+                    Section {
+                        ForEach(records, id: \.id) { row in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(row.proposal?.raw["place_name"]?.text ?? "Place draft").font(.headline)
+                                Text(status(row)).font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("handoffSentStatus-" + row.id)
+                                if row.state == .pending {
+                                    Button("Discard pending draft", role: .destructive) { discarding = row }.accessibilityIdentifier("handoffSendDiscard-" + row.id)
+                                }
+                            }.fixedSize(horizontal: false, vertical: true)
+                        }
+                    } header: { Text("Drafts for this task") }
+                }
+                Section { Button("Refresh draft status") { Task { await reload() } }.accessibilityIdentifier("handoffSendRefresh") }
+                if working { ProgressView("Updating your place draft…") }
+            }.formStyle(.grouped).navigationTitle("Send a place reminder").accessibilityIdentifier("handoffSendForm")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button(sent == nil ? "Cancel" : "Done") { dismiss() }.disabled(working).accessibilityIdentifier("handoffSendClose") }
+                    ToolbarItem(placement: .confirmationAction) {
+                        if sent == nil { Button(prepared == nil ? "Review and send…" : "Retry sending…") { confirmSend = true }.disabled(working || !current || place == nil).keyboardShortcut(.defaultAction).accessibilityIdentifier("handoffSend") }
+                    }
+                }.disabled(working).interactiveDismissDisabled(working)
+                .task { await reload() }.onDisappear { cancelSearch() }
+                .onChange(of: name) { _, _ in prepared = nil }.onChange(of: radius) { _, _ in prepared = nil }
+                .onChange(of: transition) { _, _ in prepared = nil }.onChange(of: repeats) { _, _ in prepared = nil }
+                .onChange(of: store.workspaceGeneration) { _, _ in cancelSearch(); dismiss() }
+                .alert("Send this place draft?", isPresented: $confirmSend) {
+                    Button("Send draft") { Task { await send() } }.accessibilityIdentifier("handoffConfirmSend")
+                    Button("Keep editing", role: .cancel) {}
+                } message: { Text("Upload this reviewed place to your private Taskfold account? Open Place drafts from Mac on your iPhone or iPad to review it before saving a reminder.") }
+                .alert("Place draft", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) { Button("OK") { message = nil } } message: { Text(message ?? "") }
+                .confirmationDialog("Discard this pending draft?", isPresented: Binding(get: { discarding != nil }, set: { if !$0 { discarding = nil } }), titleVisibility: .visible) {
+                    Button("Discard draft", role: .destructive) { if let row = discarding { Task { await discard(row) } } }
+                } message: { Text("Your task is kept. A review that has already started must be finished or discarded on that device.") }
+        }.frame(minWidth: 560, idealWidth: 640, minHeight: 650, idealHeight: 820)
+    }
+    private func choose(_ pin: CLLocationCoordinate2D, moveCamera: Bool = true) {
+        guard CLLocationCoordinate2DIsValid(pin) else { return }; cancelSearch(); coordinate = pin; prepared = nil
+        if moveCamera { camera = .region(.init(center: pin, latitudinalMeters: 3000, longitudinalMeters: 3000)) }
+    }
+    private func cancelSearch() { searchToken = UUID(); search?.cancel(); searchTimeout?.cancel(); searchTimeout = nil; searching = false }
+    private func runSearch() {
+        guard current else { return }; let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !term.isEmpty, term.count <= 500 else { return }; cancelSearch(); results = []; searching = true
+        #if DEBUG
+        if LocationHandoffNativeFixture.enabled {
+            results = [.init(id: 0, name: "Sample design studio", detail: "Synthetic address for isolated acceptance", coordinate: .init(latitude: 55.676098, longitude: 12.568337))]; searching = false; return
+        }
+        #endif
+        let token = UUID(); searchToken = token
+        let parameters = MKLocalSearch.Request(); parameters.naturalLanguageQuery = term
+        if let coordinate { parameters.region = .init(center: coordinate, latitudinalMeters: 100_000, longitudinalMeters: 100_000) }
+        let operation = MKLocalSearch(request: parameters); search = operation
+        searchTimeout = Task { @MainActor in
+            do { try await Task.sleep(for: .seconds(20)); guard token == searchToken else { return }; cancelSearch(); message = "Search took too long. Try again or choose a pin on the map." } catch {}
+        }
+        Task { @MainActor in
+            do {
+                let response = try await operation.start(); guard current, token == searchToken else { return }
+                searchTimeout?.cancel(); searchTimeout = nil; searching = false
+                results = response.mapItems.prefix(12).enumerated().map { .init(id: $0.offset, name: $0.element.name ?? "Place", detail: $0.element.placemark.title ?? "", coordinate: $0.element.placemark.coordinate) }
+                if results.isEmpty { message = "No places found. Try another address or choose a pin on the map." }
+            } catch { guard current, token == searchToken else { return }; cancelSearch(); message = "Places could not be found. Try again or choose a pin on the map." }
+        }
+    }
+    @MainActor private func send() async {
+        guard current, !working else { return }; working = true; defer { working = false }
+        do {
+            if prepared == nil {
+                guard let task = store.record("tasks", id: request.taskID), let place,
+                      let proposal = LocationHandoffProposal.make(account: request.workspace.account, task: task, place: place, transition: transition, repeats: repeats) else { throw LocationStorageFailure.changed }
+                prepared = proposal
+            }
+            sent = try await store.sendLocationHandoff(prepared!, workspace: request.workspace)
+            if current { await loadRows() }
+        } catch is CancellationError {} catch { if current { message = error.localizedDescription } }
+    }
+    @MainActor private func loadRows() async {
+        do { let rows = try await store.locationHandoffs(workspace: request.workspace); if current { records = rows.filter { $0.raw["task_id"] == .string(request.taskID) } } }
+        catch is CancellationError {} catch { if current { message = error.localizedDescription } }
+    }
+    @MainActor private func reload() async { guard current, !working else { return }; working = true; defer { working = false }; await loadRows() }
+    @MainActor private func discard(_ row: LocationHandoffRecord) async {
+        guard current, !working else { return }; working = true; defer { working = false; discarding = nil }
+        do { try await store.discardLocationHandoff(row, workspace: request.workspace); if current { await loadRows() } }
+        catch is CancellationError {} catch { if current { message = error.localizedDescription } }
+    }
+}
+#endif

@@ -27,9 +27,24 @@ struct TaskfoldMacApp: App {
         _workspace = State(initialValue: Workspace(store: store))
     }
 
+    @ViewBuilder private var mainContent: some View {
+        #if DEBUG
+        if LocationHandoffNativeFixture.enabled {
+            LocationHandoffSendView(request: .init(taskID: LocationHandoffNativeFixture.taskID, workspace: .init(account: store.userID, generation: store.workspaceGeneration)))
+                .task {
+                    if ProcessInfo.processInfo.arguments.contains("--handoff-autonomous-proof") {
+                        await store.runLocationHandoffSenderProof()
+                        NSApplication.shared.terminate(nil)
+                    }
+                }
+        } else { RootView() }
+        #else
+        RootView()
+        #endif
+    }
     var body: some Scene {
         WindowGroup("Taskfold") {
-            RootView()
+            mainContent
                 .environment(store)
                 .environment(workspace)
                 .tint(tint)

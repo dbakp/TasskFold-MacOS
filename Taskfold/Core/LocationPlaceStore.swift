@@ -182,6 +182,7 @@ actor LocationPrivateStore {
     static var applicationSupport: URL {
         var root = URL.applicationSupportDirectory.appendingPathComponent("Taskfold", isDirectory: true)
         #if DEBUG
+        if LocationHandoffNativeFixture.enabled { return LocationHandoffNativeFixture.root.appendingPathComponent("private", isDirectory: true) }
         if ProcessInfo.processInfo.arguments.contains("--uitesting") {
             let lifecycle = Bundle.main.bundleIdentifier == "com.dbakp.taskfold.workflowtestsp1" && ProcessInfo.processInfo.arguments.contains("--location-workspace-fixture")
             let editor = Bundle.main.bundleIdentifier == "com.dbakp.taskfold.workflowtestsp1" && ProcessInfo.processInfo.arguments.contains("--location-editor-fixture")
