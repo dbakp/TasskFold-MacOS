@@ -384,6 +384,7 @@ struct Snapshot: Codable, Equatable, Sendable {
     var sharedCaptureReceipts: [String: String]? = nil
     /// Local cancellation outbox; never included in a portable workspace export.
     var locationRetirements: [String: LocationReminderTicket]? = nil
+    var locationActions: [String: LocationNotificationAction]? = nil
     mutating func apply(_ change: Mutation) {
         guard change.table != TaskAssignmentProvenance.table else { return }
         if change.organizationOrder != nil || change.method == "ORDER" {
@@ -506,7 +507,7 @@ extension Snapshot {
 }
 
 extension Snapshot {
-    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion, sharedCaptureReceipts, locationRetirements }
+    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion, sharedCaptureReceipts, locationRetirements, locationActions }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         tables = try row.decode([String: [Record]].self, forKey: .tables)
@@ -514,6 +515,10 @@ extension Snapshot {
         widgetCompletion = try row.decodeIfPresent(WidgetCompletionCache.self, forKey: .widgetCompletion) ?? WidgetCompletionCache()
         sharedCaptureReceipts = try row.decodeIfPresent([String: String].self, forKey: .sharedCaptureReceipts)
         locationRetirements = try row.decodeIfPresent([String: LocationReminderTicket].self, forKey: .locationRetirements)
+        locationActions = try row.decodeIfPresent([String: LocationNotificationAction].self, forKey: .locationActions)
+        guard LocationNotificationLedger.valid(locationActions ?? [:]) else {
+            throw DecodingError.dataCorruptedError(forKey: .locationActions, in: row, debugDescription: "Invalid location action ledger")
+        }
         guard LocationRetirementOutbox.valid(locationRetirements ?? [:]) else {
             throw DecodingError.dataCorruptedError(forKey: .locationRetirements, in: row, debugDescription: "Invalid location cancellation outbox")
         }

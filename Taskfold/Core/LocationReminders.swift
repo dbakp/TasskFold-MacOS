@@ -540,7 +540,11 @@ enum LocationRetirementOutbox {
     static func valid(_ jobs: [String: LocationReminderTicket]) -> Bool {
         jobs.count <= LocationReminderJournal.maximumEntries && jobs.allSatisfy { $0.key == $0.value.identifier && $0.value.valid }
     }
-    static func staging(previous: Snapshot, proposed: Snapshot, account: String, acknowledged: [LocationReminderTicket] = []) throws -> Snapshot {
+    static func staging(previous: Snapshot, proposed: Snapshot, account: String, acknowledged: [LocationReminderTicket] = [], newResponse: LocationNotificationAction? = nil) throws -> Snapshot {
+        if let response = newResponse {
+            guard response.valid, response.ticket.account == account, previous.locationActions?[response.source] == nil,
+                  proposed.locationActions?[response.source] == response else { throw LocationStorageFailure(message: "This notification action has already been applied or changed.") }
+        }
         var jobs = previous.locationRetirements ?? [:]
         guard valid(jobs), valid(proposed.locationRetirements ?? [:]) else { throw LocationStorageFailure.unreadable }
         for (id, ticket) in proposed.locationRetirements ?? [:] {
@@ -561,7 +565,111 @@ enum LocationRetirementOutbox {
         }
         for ticket in acknowledged where jobs[ticket.identifier] == ticket { jobs[ticket.identifier] = nil }
         guard valid(jobs) else { throw LocationStorageFailure(message: "Finish stopping old location reminders before changing more of them. Your task change has not been saved.") }
-        var next = proposed; next.locationRetirements = jobs.isEmpty ? nil : jobs
+        let actions = try LocationNotificationLedger.merging(previous.locationActions ?? [:], proposed.locationActions ?? [:])
+        var next = proposed; next.locationActions = actions.isEmpty ? nil : actions
+        next.locationRetirements = jobs.isEmpty ? nil : jobs
+        return next
+    }
+}
+
+
+/// One response may change work once. The ledger is local snapshot metadata, not
+/// a shared task or portable export. A snooze records an explicit future fire time,
+/// never a visit timestamp, private label or boundary geometry.
+struct LocationNotificationAction: Codable, Equatable, Sendable {
+    static let category = "taskfold.location.snooze"
+    static let prefix = "taskfold.ls1."
+    static let maximum = 2048
+    enum Kind: String, Codable, Sendable { case complete, tomorrow, snooze }
+    enum Phase: String, Codable, Sendable { case queued, reserved, installed, closed }
+    enum End: String, Codable, Sendable { case consumed, cancelled, failed, ambiguous, expired }
+    let source: String
+    let ticket: LocationReminderTicket
+    let action: Kind
+    let fireAt: Double?
+    var revision = 0
+    var phase: Phase
+    var end: End?
+    static func sourceValid(_ value: String) -> Bool { value.hasPrefix("la1:") && value.count == 68 && value.dropFirst(4).allSatisfy { "0123456789abcdef".contains($0) } }
+    var valid: Bool {
+        Self.sourceValid(source) && ticket.valid && (0...9_007_199_254_740_991).contains(revision) &&
+        (action == .snooze ? fireAt.map { $0.isFinite && (1...Double(FocusSession.maximumTimestamp) / 1000).contains($0) && $0.rounded() == $0 } == true && ((phase == .closed) == (end != nil)) : fireAt == nil && phase == .closed && end == .consumed)
+    }
+    func request(title: String) -> ReminderRequest? {
+        guard valid, action == .snooze, let fireAt else { return nil }
+        let event = DueReminder(id: source, title: title, body: "Your snoozed place reminder.", date: Date(timeIntervalSince1970: 0), taskID: ticket.taskID, specID: ticket.specID, signature: ticket.signature)
+        return ReminderRequest.make(account: ticket.account, event: event, fireAt: Date(timeIntervalSince1970: fireAt), snoozed: true)
+    }
+    func matches(_ request: ReminderRequest) -> Bool { self.request(title: request.event.title)?.matchesSnooze(request) == true }
+    var permitsResponse: Bool { action == .snooze && (phase == .reserved || phase == .installed || phase == .closed && (end == .consumed || end == .ambiguous)) }
+    func advancing(_ phase: Phase, end: End? = nil) -> Self {
+        var next = self; next.phase = phase; next.end = end; next.revision += 1; return next
+    }
+    func sameIntent(_ other: Self) -> Bool { source == other.source && ticket == other.ticket && action == other.action && fireAt == other.fireAt }
+}
+
+enum LocationNotificationProof: Sendable {
+    case boundary(LocationReminderCandidate)
+    case snooze(ReminderRequest)
+    var source: String {
+        switch self {
+        case .boundary(let candidate): "la1:" + LocationReminderIdentity.digest(["boundary", candidate.ticket.identifier])
+        case .snooze(let request): "la1:" + LocationReminderIdentity.digest(["snooze", request.identifier, request.event.signature, ReminderSignature.milliseconds(request.fireAt)])
+        }
+    }
+    func candidate(account: String, tasks: [Record], archive: LocationPrivateArchive, cancellations: [String: LocationReminderTicket], actions: [String: LocationNotificationAction]) -> LocationReminderCandidate? {
+        guard archive.valid, archive.allows(account: account) else { return nil }
+        let candidates = LocationReminderPlan(account: account, device: archive.device, tasks: tasks, places: archive.places(for: account), availableNotificationSlots: 20, allowed: true, allowSubmissions: false).eligible
+        return candidates.first { candidate in
+            guard cancellations[candidate.ticket.identifier] == nil, archive.journal.permitsResponse(candidate.ticket, eligible: candidates) else { return false }
+            switch self {
+            case .boundary(let observed): return candidate.matches(observed)
+            case .snooze(let request):
+                return actions[request.event.id].map { $0.ticket == candidate.ticket && $0.permitsResponse && $0.matches(request) } == true
+            }
+        }
+    }
+}
+
+enum LocationSnoozeTransition: Sendable { case reserve, installed, notSubmitted, failed }
+enum LocationSnoozeAcknowledgement: Sendable { case saved, retry, obsolete }
+
+enum LocationNotificationLedger {
+    static func valid(_ records: [String: LocationNotificationAction]) -> Bool {
+        records.count <= LocationNotificationAction.maximum && records.allSatisfy { $0.key == $0.value.source && $0.value.valid }
+    }
+    /// A recovered/undone snapshot cannot forget a response or rewind its state.
+    static func merging(_ previous: [String: LocationNotificationAction], _ proposed: [String: LocationNotificationAction]) throws -> [String: LocationNotificationAction] {
+        guard valid(previous), valid(proposed) else { throw LocationStorageFailure.unreadable }
+        var result = previous
+        for (id, next) in proposed {
+            if let old = previous[id] {
+                guard old.sameIntent(next), old.revision != next.revision || old == next else { throw LocationStorageFailure.changed }
+                if next.revision <= old.revision { continue }
+                guard old.phase != .closed,
+                      old.phase != .installed || next.phase == .closed,
+                      old.phase != .queued || [.reserved, .closed].contains(next.phase) else { throw LocationStorageFailure.changed }
+            }
+            result[id] = next
+        }
+        guard valid(result) else { throw LocationStorageFailure(message: "This device’s location action history is full. Your change has not been saved.") }
+        return result
+    }
+    static func reconciled(_ records: [String: LocationNotificationAction], pending: [ReminderRequest], candidates: [LocationReminderCandidate], now: Date) -> [String: LocationNotificationAction] {
+        var next = records
+        for (id, record) in records where record.action == .snooze && record.phase != .closed {
+            guard candidates.contains(where: { $0.ticket == record.ticket }) else { next[id] = record.advancing(.closed, end: .cancelled); continue }
+            let found = pending.contains { record.matches($0) }
+            switch record.phase {
+            case .queued:
+                if found { next[id] = record.advancing(.closed, end: .failed) }
+                else if (record.fireAt ?? 0) <= now.timeIntervalSince1970 { next[id] = record.advancing(.closed, end: .expired) }
+            case .reserved, .installed:
+                if !found { next[id] = record.advancing(.closed, end: record.phase == .reserved ? .ambiguous : .consumed) }
+                else if record.phase == .reserved { next[id] = record.advancing(.installed) }
+            case .closed: break
+            }
+        }
         return next
     }
 }

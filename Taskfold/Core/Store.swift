@@ -696,6 +696,9 @@ final class Store {
     }
     func startLocal() {
         guard !signingOut else { return }
+        // Re-entering the current workspace is not an account switch. Preserve its
+        // session-bound routes and already scheduled one-shot snoozes.
+        guard !localMode || !signedIn || !workspaceCacheReadable else { return }
         let firstRun = !FileManager.default.fileExists(atPath: URL.applicationSupportDirectory.appending(path: "Taskfold/local.json").path)
         if !remoteReminderTestWorkspace {
             do { try prepareReminderDeviceRetirement() } catch { remoteReminderStatus = "Device unlinking could not be saved securely. Retry remote setup." }

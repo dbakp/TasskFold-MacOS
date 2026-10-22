@@ -1,0 +1,225 @@
+{
+  "feature": "Location notification actions and durable explicit time snoozes",
+  "date": "2026-10-22",
+  "ownedRepository": "TasskFold-MacOS",
+  "status": "Implemented behind existing experimental location authoring gate; full rank 5/Px incomplete",
+  "sourceSHA256": {
+    "Taskfold/Core/LocationReminders.swift": "b80e98f9af594ada1bb065ea5d8db47c6d8b93a83058b6eb708da8ce87041d5f",
+    "Taskfold/Core/Models.swift": "091a9467b104168edf905822ed02b12be495d90f28a19cd5db536f0091b058a5",
+    "Taskfold/Core/Reminders.swift": "64ef015e744401c3eb05cc63ad85e4787502f69f8e048787ce36ff8557f57c91",
+    "Taskfold/Core/Store.swift": "2e200b5a2e82c02eddf23720c44c000b2ca8c53fc55cc3823216d3e75c7353a2",
+    "TaskfoldTests/LocationTaskDraftTests.swift": "ceebb93a5edecb6e6147a13b606488f980f8656a0c67b87c548e8691b0e20135"
+  },
+  "implementation": [
+    "Owned boundary/followup namespace routing before generic time/Focus handling; strict region receipt or one-shot UTC calendar-trigger decoding",
+    "Fresh account/session/task generation/completion, private place/journal, device consent and cancellation checks; unknown actions ignored",
+    "Open route rereads protected state and is fenced again after its asynchronous scene validation",
+    "Complete/Tomorrow co-save a local spent-response receipt atomically with normal task mutations; both current memory and last durable cache reject replay",
+    "Explicit snoozes keep a fixed target, use a separate ls1 namespace and share the serialized time/Focus/location budget; waiting target survives refresh/relaunch",
+    "Reserve before native add, acknowledge after acceptance, adopt matching pending proof after a missed acknowledgement, never automatically resubmit ambiguous/consumed opportunities",
+    "A proved no-room refusal releases its reservation to retry the same target; failed reservations never reach the OS; obsolete held additions are removed",
+    "Re-snooze consumes the former followup and creates a distinct explicit time request without changing/rearming the task boundary reference",
+    "Both private native categories require authentication for their three actions; normal iOS row explains current snooze date/time",
+    "Both Stores make re-entry into the already-readable local workspace idempotent, preserving its session/alerts while genuine switches retain cleanup",
+    "Both repos independently own validated optional local ledger models/queue semantics; no sibling build dependency, backend migration or release activation"
+  ],
+  "core": {
+    "reported": 1207,
+    "skipped": 33,
+    "actualPassed": 1174,
+    "failures": 0,
+    "newCases": 10,
+    "log": {
+      "file": "location-actions-verified-core-mac.log",
+      "sha256": "ed0a2d576d60e41f542c48b655125a0e3fb2cc56706dd8ee2e0bc07b75128738"
+    },
+    "scope": "Private consent/task/pin/cancellation response fences; durable history merge/rewind/replay rejection; ledger privacy/portable exclusion/decoding; exact native time codec refusal; queued/reserved/installed/consumed recovery; no automatic original time alert; shared-capacity deferral and native no-room race; failed reservation/missed acknowledgement; held-add workspace change. Optional live/platform fixtures remain skipped."
+  },
+  "nativeIOS": {
+    "repository": "TaskFold-iOS",
+    "bundle": "com.dbakp.taskfold.workflowtestsp1",
+    "results": [
+      {
+        "device": "phone",
+        "bundle": "location-actions-phone-framed.xcresult",
+        "summary": {
+          "file": "location-actions-phone-framed-summary.json",
+          "sha256": "30dfb036841153849dc64f63ee50f6061983592d00efee3bc238a45ceea3884a"
+        },
+        "log": {
+          "file": "location-actions-phone-framed.log",
+          "sha256": "618f014a72f7125bc74a908f9b7bbc169e5500e89cd5e8c3fbf7d76cca9d194d"
+        },
+        "actualPassed": 1,
+        "runtimeWarnings": [],
+        "nativeFixtureChecks": {
+          "copiedPayloadRejected": true,
+          "completionReplayAfterUndoIgnored": true,
+          "snoozeInstalled": true,
+          "routeRevalidated": true,
+          "snoozeReplayKeepsFireTime": true,
+          "oldSnoozeConsumed": true,
+          "snoozedResponseCreatesNewIntent": true,
+          "completeSaved": true,
+          "unknownActionIgnored": true,
+          "openExactTask": true,
+          "undoRestoredTask": true,
+          "snoozeStateExplainsCurrentAlert": true,
+          "tomorrowSaved": true,
+          "bothNativeCategoriesRegistered": true,
+          "privateActionsRequireAuthentication": true,
+          "notificationPermission": true,
+          "realTimeTrigger": true,
+          "differentActionReplayIgnored": true,
+          "undoRetainsSpentReceipt": true,
+          "completionReceiptSaved": true,
+          "snoozedOpenExactTask": true
+        },
+        "proof": {
+          "file": "location-actions-final-captures/phone-actions-proof.json",
+          "sha256": "7e47df4f0dbaa7726f316ae8ab9792c8d2f30e636af41d53af82850e79fb7a03"
+        },
+        "cleanupState": {
+          "file": "location-actions-final-captures/phone-cleanup-state.json",
+          "sha256": "32d7ea0ae2f4d2c7577c54f714feb8087e6888fe60375b98d7cf22880876a3b7"
+        }
+      },
+      {
+        "device": "ipad",
+        "bundle": "location-actions-ipad-framed.xcresult",
+        "summary": {
+          "file": "location-actions-ipad-framed-summary.json",
+          "sha256": "f44713522cc392eae3dd6d1a1a2332dc6d4a0aeafd917e3f2e9be13ff73227a6"
+        },
+        "log": {
+          "file": "location-actions-ipad-framed.log",
+          "sha256": "ec82c3e09debd99911838fa080b057f33d7b35d2e543af61ab400abe9044ee14"
+        },
+        "actualPassed": 1,
+        "runtimeWarnings": [],
+        "nativeFixtureChecks": {
+          "tomorrowSaved": true,
+          "oldSnoozeConsumed": true,
+          "differentActionReplayIgnored": true,
+          "copiedPayloadRejected": true,
+          "openExactTask": true,
+          "undoRestoredTask": true,
+          "privateActionsRequireAuthentication": true,
+          "snoozeStateExplainsCurrentAlert": true,
+          "completionReplayAfterUndoIgnored": true,
+          "snoozedOpenExactTask": true,
+          "unknownActionIgnored": true,
+          "snoozeInstalled": true,
+          "realTimeTrigger": true,
+          "completeSaved": true,
+          "snoozedResponseCreatesNewIntent": true,
+          "bothNativeCategoriesRegistered": true,
+          "snoozeReplayKeepsFireTime": true,
+          "notificationPermission": true,
+          "undoRetainsSpentReceipt": true,
+          "routeRevalidated": true,
+          "completionReceiptSaved": true
+        },
+        "proof": {
+          "file": "location-actions-final-captures/ipad-actions-proof.json",
+          "sha256": "8376f2c2a48d2c2ff75cc08c6adf51914589e7f068974a7b83fe23a0ea7ebbe9"
+        },
+        "cleanupState": {
+          "file": "location-actions-final-captures/ipad-cleanup-state.json",
+          "sha256": "32d7ea0ae2f4d2c7577c54f714feb8087e6888fe60375b98d7cf22880876a3b7"
+        }
+      }
+    ],
+    "scope": "Two actual XCTest scenarios, one per device, each with 21 asserted native-Store checks. Synthetic native region request inputs exercise Open, Tomorrow, Complete, Undo, cross-action replay, copied-trigger refusal and snooze/re-snooze. Real OS pending one-shot time requests, category authentication options, exact saved identifiers/fire times, cold relaunch and visible row state are inspected.",
+    "syntheticBoundaryInput": "An entire synthetic delivered private archive is installed atomically under a fresh identity inside the exact isolated DEBUG namespace. The normal private-store rule refusing invented delivered entries remains intact. No actual geofence was registered or delivered.",
+    "notClaimed": "The fixture calls the normal Store response handler with SDK-constructed/saved requests. It does not synthesize or claim a genuine OS UNNotificationResponse callback, notification tap/action, background/locked region event, permission/precision grant or new VoiceOver acceptance.",
+    "strictSimulatorAppSignatureVerified": true
+  },
+  "nativeMac": {
+    "result": "BUILD SUCCEEDED",
+    "log": {
+      "file": "location-actions-accepted-mac-build.log",
+      "sha256": "460babb3c3bd22a14ae7d09346d7467ae914f2d321a9ecd5f16eb247f0488f9f"
+    },
+    "scope": "Independent isolated Debug app/widget compilation with CODE_SIGNING_ALLOWED=NO; no new Mac UI/VoiceOver/distribution acceptance or Mac location service"
+  },
+  "visuals": {
+    "inspected": true,
+    "scope": "Unmodified normal-light native phone/iPad viewport screenshots after relaunch; the complete snooze row is below the navigation header and readable. Debug fixture controls are present only in the isolated app. No new dark/largest-text/spoken claim.",
+    "files": [
+      {
+        "path": "docs/location-notification-actions/ipad-snooze-after-relaunch.png",
+        "sha256": "2131c5d94bb4129d043af01e7c69b65d23fa0c378e87dbe13fd517e26e87717d"
+      },
+      {
+        "path": "docs/location-notification-actions/phone-snooze-after-relaunch.png",
+        "sha256": "df66c1f94ecfdbdf5a656b3bab9b1da4223276d80b5b50c86d84252a362b69b9"
+      }
+    ]
+  },
+  "earlierAttempts": [
+    {
+      "log": {
+        "file": "location-actions-ios-fixture-build.log",
+        "sha256": "7d78a203b27ee0b79dce87f3013753673b4b0f5ffca7b77f72d61bfd82bbe639"
+      },
+      "reason": "DEBUG helper used an unavailable ISODate name; fixed to existing Dates.day before native execution"
+    },
+    {
+      "log": {
+        "file": "location-actions-core-expanded-ios.log",
+        "sha256": "79058b9b81f45c5437e52d507d07673099550f4c8cd1ab06d680d61e819faff2"
+      },
+      "reason": "Test helper initially redeclared existing scheduler revision API; removed and used its existing read-only property"
+    },
+    {
+      "summary": {
+        "file": "location-actions-phone-summary.json",
+        "sha256": "20eebe29f5781e5ac1c0cad5ef36875448c94fc0bb143d3b5178ebe32c563a09"
+      },
+      "log": {
+        "file": "location-actions-phone.log",
+        "sha256": "6e23413804b3da4a7a8bc56ae76f611aeafca0fdbda5469bc1f35db277d941aa"
+      },
+      "reason": "Fixture attempted a newly invented delivered entry through the normal journal writer, which correctly refused it. Only the exact synthetic fixture now installs a fresh input archive; production guard preserved"
+    },
+    {
+      "summary": {
+        "file": "location-actions-phone-v2-summary.json",
+        "sha256": "25cd326069d1bdbdaa4ca6d906ba92ba74c00e01f27a5b9ae308e569830e119e"
+      },
+      "log": {
+        "file": "location-actions-phone-v2.log",
+        "sha256": "3567f0b3ec96a7fe6065d57a141baf024e5432937c562dd7f0804e98d2a68d48"
+      },
+      "reason": "Action checks passed but relaunch lost the snooze: Start local unnecessarily created a new session and cleared alerts. Fixed both real Stores to make same-workspace re-entry a no-op"
+    },
+    {
+      "summary": {
+        "file": "location-actions-ipad-polished-summary.json",
+        "sha256": "02a50debee2e05d99484de1fec6fc7b3d43cf5636df3f86e9ab73e4db93984a0"
+      },
+      "reason": "Functional checks passed, but an AX-hittable row was partially under the navigation header in its screenshot. Final tests position from observed frames and assert the complete state row is inside the visible viewport"
+    }
+  ],
+  "compatibility": "Boundary task reference6/r9 and private archive/journal formats unchanged. Snapshot adds optional validated locationActions; portable work exports exclude it, encrypted local recovery retains it. Native snoozes use new ls1 IDs/category with exact local ledger validation. Normal producers remain gated; general older-client rollout safeguards remain user-deferred.",
+  "remaining": [
+    "Genuine OS-origin followup notification callback/tap/action and capable-device boundary delivery/action acceptance, including background/locked/reinstall/precision cases",
+    "Every visit until completed",
+    "Private desktop-to-phone authoring",
+    "Public setup, broader accessibility/native Mac acceptance and safe bounded action-history reclamation/reset UX (current ledger cap 2048 fails closed)",
+    "Direct iPad Search tap while typing remains unresolved; keyboard Search retained",
+    "Other P2 work remains governed by P2_PLAN.md"
+  ],
+  "userDeferrals": [
+    "Remote server reminders/device-reinstall recovery",
+    "General older-client rollout safeguards",
+    "Distribution/signing/install/update checks",
+    "Google/Microsoft OAuth registrations and genuine provider acceptance"
+  ],
+  "cleanup": {
+    "file": "location-actions-cleanup.json",
+    "sha256": "1a09fdb21bc7b5e27766e7c237ec23ebbad36f3d8413b4f199dcf4108bc3a9f4",
+    "mainTaskfoldProcessesRemaining": 0
+  }
+}
