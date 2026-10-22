@@ -2,6 +2,10 @@
 
 Updated 22 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
 
+## Immediate priority correction
+
+The live backend has no `delete-account` endpoint although both apps expose that action. Restore and genuinely verify account removal before the next feature increment; see `ACCOUNT_REMOVAL.md`. This new P0 does not replace or shrink the advanced backlog below, and is separate from all user-deferred work.
+
 ## Priority and delivery order
 
 | Rank | Work | Delivery and acceptance |
@@ -32,7 +36,7 @@ Each repository owns a native `TaskfoldShare` extension, its sources, entitlemen
 
 The draft mailbox has a cross-process lock, atomic writes, a 64-draft capacity, a bounded 8 MB read and a 100 KB title/notes limit. It uses the existing app-group boundary and protection until first device authentication, matching the account cache/widget handoff. A workspace session change invalidates an open extension review; saved drafts remain bound to the original account. A task and its local receipt save together. A failed mailbox acknowledgement can retry without recreating a task after deletion or Undo. Shared words do not implicitly schedule, prioritize, label or assign a task.
 
-Current evidence is split by milestone. `p2-share-capture-evidence.json` retains the original mailbox, Safari, host Cancel/disk-full retry/Add and relaunch checks. `p2-share-provider-evidence.json` adds bounded/cancellable provider intake and genuine Maps capture with a quit host; its full Core suites report 1,288 iOS / 1,320 Mac cases, with 13 / 33 optional skips and no failures. `p2-tablet-share-evidence.json` adds actual iPad Maps extension/host review, durable Add/relaunch in normal light and largest-text dark layouts, plus a current iPhone regression. Captured screenshots are visually inspected. The native tests use isolated local workspaces; authenticated cloud/offline/account-switch transitions, native Mac share-menu interaction and spoken accessibility remain gates. These checks are not satisfied by a successful build. Real distribution acceptance stays deferred.
+Current evidence is split by milestone. `p2-share-capture-evidence.json` retains the original mailbox, Safari, host Cancel/disk-full retry/Add and relaunch checks. `p2-share-provider-evidence.json` adds bounded/cancellable provider intake and genuine Maps capture with a quit host; its full Core suites report 1,288 iOS / 1,320 Mac cases, with 13 / 33 optional skips and no failures. `p2-tablet-share-evidence.json` adds actual iPad Maps extension/host review, durable Add/relaunch in normal light and largest-text dark layouts, plus a current iPhone regression. Captured screenshots are visually inspected. Layout runs use isolated local workspaces; scoped real iPhone account-switch/offline-return checks now pass in `p2-share-cloud-evidence.json`; native Mac share-menu interaction, spoken accessibility and wider device/network variants remain gates. These checks are not satisfied by a successful build. Real distribution acceptance stays deferred.
 
 ## Note formatting implementation (rank 3, acceptance in progress)
 
@@ -288,3 +292,10 @@ Automatic country holiday calendars remain the primary holiday source, with expl
 Actual iPad Apple Maps capture now passes from the source extension through editable review, save with Taskfold quit, host review, explicit Add and relaunch with one durable task/receipt. Normal light and largest accessibility text in dark appearance both pass; screenshots verify readable preview-omission text and reachable Save/destination/Add/Cancel. The same current test helper passes on iPhone. Both apps own nonvisual review-form identifiers so tests scroll the actual modal rather than the source app or background list. The Maps test now targets its exact place-card Share control and waits for onboarding, avoiding the unrelated Share My Location action.
 
 `p2-tablet-share-evidence.json` records current source fingerprints, actual native results, failed initial onboarding/selector iteration and cleanup. Core/task/mailbox contracts are unchanged; this does not close cloud/offline/account-switch, live Mac or spoken-accessibility acceptance, all of rank 2/Px, or any user-deferred release/provider work.
+
+
+### 22 October — genuine cloud share isolation and offline return
+
+Two fresh real Auth accounts now pass actual iPhone Safari share intake, an open review across A → B, and offline Add across A → B → A. A stale review is refused without creating a draft/task in either account. An offline Add commits one private task/receipt and one pending command; the server remains empty while B is active. Returning to A sends exactly one task and drains its queue, with no remaining draft after relaunch. Independent authenticated server reads and private caches agree. The outage is an exact Debug-bundle/disposable-account URLSession failure, not a claim of physical airplane-mode acceptance.
+
+Actual screenshot review found save errors hidden behind the keyboard. Both apps now pin source-share errors below the header; native visibility/keyboard checks are recorded in `p2-share-cloud-evidence.json`. Mac native sharing/VoiceOver and wider device/network variants remain open. The live endpoint inventory also uncovered a separate P0 account-removal gap; `ACCOUNT_REMOVAL.md` is now the next priority. No user-deferred release/provider/remote work is reopened.

@@ -1,6 +1,6 @@
-# P0 progress — 20 October 2026
+# P0 progress — 22 October 2026
 
-**Current priority — user-directed feature expansion:** project archiving/restore, subprojects, reusable templates and reviewed multi-line capture are implemented in both apps. Remote reminders, older-client safeguards and distribution verification are explicitly deferred. See [feature guide and contracts](PROJECT_WORKFLOWS.md) and [current verification](project-workflows-evidence.json).
+**Current priority — newly verified account-removal gap:** both apps call an undeployed `delete-account` endpoint. Implement and verify genuine self-service account removal next; see [account-removal requirements](ACCOUNT_REMOVAL.md). Administrative deletion of disposable test accounts does not satisfy that action. The agreed P1 expansion remains implemented; remote reminders, general older-client safeguards, distribution verification and genuine OAuth/provider setup remain deferred.
 
 **Core feature implementation is largely complete; the full requested objective and release acceptance remain incomplete.** The original scope is the productive widget collection plus Todoist P0 foundations on both independently owned Apple apps. This is the current summary; [the original port plan](TODOIST_PORT_PLAN.md), [requirement audit](p0-requirements-audit.json) and [dated acceptance history](P0_RELEASE_STATUS.md) retain the detailed contracts and limits. Historical open items superseded by later evidence are not additional release gates.
 

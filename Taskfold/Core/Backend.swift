@@ -183,6 +183,16 @@ final class Backend: NSObject {
             let waiting = URLSessionConfiguration.ephemeral
             waiting.protocolClasses = [AuthenticationWaitingHTTP.self]
             self.http = URLSession(configuration: waiting)
+        } else if ProcessInfo.processInfo.arguments.contains("--shared-capture-offline"),
+           Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowtestssharecloud",
+           let user = session?.user, UUID(uuidString: user.id) != nil,
+           let email = user.email, email.hasPrefix("taskfold-share-capture-"), email.hasSuffix("@example.invalid"),
+           UUID(uuidString: String(email.dropFirst("taskfold-share-capture-".count).dropLast("@example.invalid".count))) != nil {
+            // Only an authenticated disposable account in the exact isolated Debug app.
+            // Real Auth/HTTP is used before and after this controlled transport outage.
+            let disconnected = URLSessionConfiguration.ephemeral
+            disconnected.protocolClasses = [ContinuityDisconnectedHTTP.self]
+            self.http = URLSession(configuration: disconnected)
         } else if ProcessInfo.processInfo.arguments.contains("--continuity-offline"),
            ["com.dbakp.taskfold.mac.p0signeduitests", "com.dbakp.taskfold.mac.backupcanceltests"].contains(Bundle.main.bundleIdentifier ?? ""),
            let user = session?.user,

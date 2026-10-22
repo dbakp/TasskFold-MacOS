@@ -1,0 +1,110 @@
+{
+  "updated": "2026-10-22",
+  "milestone": "Genuine cloud share account isolation and offline Add recovery",
+  "status": "Two genuine cloud account/offline-return cases pass, with final keyboard-visible inline-header error acceptance passing separately. Wider Px remains incomplete.",
+  "native": {
+    "bundle_scope": "Exact com.dbakp.taskfold.workflowtestssharecloud app/runner on iPhone 18 Pro Simulator, fresh real Auth accounts, no local seed mode or fake sessions.",
+    "runs": [
+      {
+        "phase": "stale-review",
+        "passed": true,
+        "serverTaskCounts": {
+          "A": 0,
+          "B": 0
+        },
+        "privateCacheTaskCounts": {
+          "A": 0,
+          "B": 0
+        },
+        "pendingCounts": {
+          "A": 0,
+          "B": 0
+        },
+        "credentialsInTextLog": false,
+        "runtimeWarnings": 0
+      },
+      {
+        "phase": "offline-return",
+        "passed": true,
+        "serverTaskCounts": {
+          "A": 1,
+          "B": 0
+        },
+        "privateCacheTaskCounts": {
+          "A": 1,
+          "B": 0
+        },
+        "pendingCounts": {
+          "A": 0,
+          "B": 0
+        },
+        "credentialsInTextLog": false,
+        "runtimeWarnings": 0
+      }
+    ],
+    "source_result_paths": [
+      "share-cloud-native-v2/stale-review.xcresult",
+      "share-cloud-native-v2/offline-return.xcresult"
+    ],
+    "offline_boundary": "Only the isolated app Backend URLSession returns notConnectedToInternet with a validated disposable account and explicit Debug flag. The source extension and test runner are not disconnected; direct server checks use real authenticated HTTP. Physical airplane mode is not claimed.",
+    "preserved": "Stale review cannot save after A \u2192 B. Offline task/receipt and one pending command survive leaving A and signing into B. B receives no draft/task and cannot drain A queue. A return drains one command to exactly one server task, with notes/source, receipt and ordinary relaunch preserved.",
+    "final_error_visibility": {
+      "result": "Passed",
+      "bundle": "share-cloud-inline-native/stale-review.xcresult",
+      "summary": "share-cloud-inline-native/stale-review-summary.json",
+      "passed": 1,
+      "skipped": 0,
+      "failures": 0,
+      "runtime_warnings": 0,
+      "checks": "Actual stale-account Save error is hittable above the visible keyboard, inline title stays visible, Save/Cancel remain reachable; fresh authenticated accounts retain zero tasks on server and in caches. Exported screenshot inspected."
+    }
+  },
+  "premium_fix": "Screenshot review showed the existing bottom-of-form error was behind the keyboard. Both owned source-share forms now pin full error text below the header, outside scrolling content. No task/mailbox/schema contract changes. iOS uses a compact inline navigation title to keep the header visible while editing. The error case passed in fresh accounts after the UI change; unchanged Core/Store offline-return safety remains established by the earlier genuine case.",
+  "core": {
+    "ios": {
+      "reported": 1288,
+      "skipped": 13,
+      "actually_run": 1275,
+      "failures": 0,
+      "log": "share-cloud-core-ios.log"
+    },
+    "mac": {
+      "reported": 1320,
+      "skipped": 33,
+      "actually_run": 1287,
+      "failures": 0,
+      "log": "share-cloud-core-mac.log"
+    }
+  },
+  "builds": {
+    "ios": "share-cloud-inline-ios-build.log: TEST BUILD SUCCEEDED",
+    "mac": "share-cloud-banner-mac-build.log: BUILD SUCCEEDED; isolated unsigned app/extension, not distribution acceptance"
+  },
+  "native_setup": "New test file explicitly registered in the owned Xcode UI-test target. Prepared exact namespace/source registration verified. Credentials stay in a mode-0600 external fixture; controller refuses wrong namespaces, exact Auth origin and unrecognized workspace sign-out. Logs checked for credential plaintext.",
+  "failed_iterations": [
+    "New UI-test source initially absent from explicit Xcode inputs; registered before any claimed execution.",
+    "First native run signed in but failed before capture during Browse navigation after a password-save service query. App activation and a confirmed Inbox screen fixed the automation. Failed summary is retained in share-cloud-native-v1/stale-review-summary.json.",
+    "Initial Swift-6 async-wait warning in the new test was corrected to await fulfillment before native acceptance."
+  ],
+  "new_p0": {
+    "client": "Both Backend.deleteAccount implementations POST /functions/v1/delete-account.",
+    "live": "Taskfold deployed function list has no delete-account; direct lookup returned Function not found.",
+    "next": "ACCOUNT_REMOVAL.md; no self-service deletion acceptance claimed."
+  },
+  "cleanup": {
+    "status": "Complete",
+    "server": "All three disposable cohorts (six users) globally signed out before explicitly scoped operator cleanup; final combined query returns zero remaining fixture users, tasks and sessions. No provider/Auth configuration or schema changed.",
+    "local": "Private credential file removed; exact isolated app/runner uninstalled. Failed recording/result and temporary preparation copy removed after preserving sanitized failure log/summary. Closed unsigned Mac product removed. No real user task/account data deleted.",
+    "removed_artifact_bytes": 75845585
+  },
+  "remaining": [
+    "Live native Mac sharing and spoken accessibility",
+    "Wider tablet/cloud/physical-network transitions; same-identity reinstall and interrupted HTTP acknowledgement are not newly proven",
+    "Newly verified P0 self-service account removal",
+    "The rest of Px and all explicit user deferrals remain unchanged"
+  ],
+  "owned_source_sha256": {
+    "Taskfold/Core/Backend.swift": "6faf3b7a58e2e49953b1396e7cc6376c2069f86ad55ea1398c7fbfe680d4a87c",
+    "TaskfoldShare/ShareViewController.swift": "51d8af361a0ac33e64acd6b99d7603563705d1f8bd2108ce5d833a355936ab33"
+  }
+}

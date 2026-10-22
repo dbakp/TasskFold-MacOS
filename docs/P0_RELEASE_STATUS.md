@@ -1,5 +1,7 @@
 # Current P0 release acceptance
 
+22 October priority correction: live backend inspection confirms the native Delete account action's `delete-account` endpoint is absent. Working self-service account removal is a new P0 gap, not part of the deferred release-signing work. See `ACCOUNT_REMOVAL.md`; the dated acceptance records below do not establish account removal.
+
 13 October signing correction: the iOS 26.5 selection failure was in the isolated test setup. Its products were ad hoc because the existing team-signing helper excluded backupcanceltests. With that identity explicitly allowlisted and real team signatures verified in installed app/extension, the same current widget passes selection, completion, automatic All clear without dismiss, unrelated task retention and normal relaunch on the retained iOS 26.5 device. One strict native test passes with zero failures/skips/structured runtime warnings. No production entity rename or fallback was needed. See `widget-team-signing-evidence.json`. Mac installed expiry and broader P0 remain open.
 
 For the concise current gate summary, see [P0 progress snapshot](P0_PROGRESS.md).

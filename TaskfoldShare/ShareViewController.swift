@@ -68,8 +68,19 @@ private struct CaptureReview: View {
                     Text("Map previews aren’t copied. Review the included text and source link.").font(.caption).foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("sharedCaptureMapNotice")
                 }
-                if let message = model.message { Text(message).foregroundStyle(.red).accessibilityIdentifier("sharedCaptureError") }
             }.formStyle(.grouped).accessibilityIdentifier("sharedCaptureReviewForm")
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if let message = model.message {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "exclamationmark.circle.fill").accessibilityHidden(true)
+                        Text(message).fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("sharedCaptureError")
+                    }.font(.callout).foregroundStyle(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 20).padding(.vertical, 12)
+                        .background(.background).overlay(alignment: .bottom) { Divider() }
+                }
+            }
             Divider()
             HStack {
                 Button("Cancel", action: cancel).keyboardShortcut(.cancelAction)
