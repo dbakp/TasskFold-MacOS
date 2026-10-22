@@ -7,7 +7,8 @@
     "test:location-handoff": "node test-location-handoff.mjs",
     "test:account-removal": "node test-account-removal.mjs",
     "test:automation": "node test-automation.mjs",
-    "test:automation-recurrence": "node test-automation-recurrence.mjs"
+    "test:automation-recurrence": "node test-automation-recurrence.mjs",
+    "test:automation-tasks": "node test-automation-tasks.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

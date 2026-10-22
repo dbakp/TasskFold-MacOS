@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-23",
+  "platform": "macOS",
+  "milestone": "Scoped task-read candidate and permanent atomic write journal; full feature in progress",
+  "baseCommit": "5eebae0202dd3a29137d241041fdd282bf577386",
+  "featureEnabled": false,
+  "migrationApplied": false,
+  "edgeFunctionDeployed": false,
+  "nativeManagementScreensExposed": false,
+  "liveKeysIssued": 0,
+  "liveTasksChanged": 0,
+  "productionWriteRPCImplemented": false,
+  "fullPxComplete": false,
+  "candidateMigration": "20261022220821_automation_task_access.sql",
+  "candidateFunction": "automation-tasks",
+  "prospectiveGatewayVerifyJWT": false,
+  "verification": {
+    "localPostgreSQL": {
+      "passed": true,
+      "assertions": 89,
+      "runtime": "Pinned PGlite 0.5.11 with real pgcrypto",
+      "command": "npm run --prefix Scripts/Database test:automation-tasks",
+      "nativeEffectSources": [
+        "20261006124947_task_generations_and_reminder_eligibility.sql: actual generation prefix before reminder-device dependencies",
+        "20261006031648_completion_revision.sql: actual revision and deletion functions",
+        "20261020194217_subtask_structure_review.sql: actual latest guarded patch and layout helper",
+        "Local bootstrap: reviewed pre-managed live merge_edit snapshot"
+      ],
+      "credentialRegressionFixtureAfterAllCandidates": true,
+      "fixtureAuthAccountsRemaining": 0
+    },
+    "mockedHandler": {
+      "passed": true,
+      "tests": 9,
+      "failures": 0,
+      "command": "deno test supabase/functions/automation-tasks/handler_test.ts",
+      "note": "No real hosted HTTP/Auth or cross-connection races."
+    },
+    "lint": {
+      "passed": true,
+      "files": 3,
+      "command": "deno lint supabase/functions/automation-tasks"
+    }
+  },
+  "implemented": [
+    "Service-only, same-transaction scoped key authorization and bounded get/list task reads",
+    "Explicit task projection; accepted-project access preserves current native RLS predicate including task-owner access loss",
+    "Private account/request journal binds operation, target/generation and payload hash with no task/body/key contents",
+    "Current key/resource reauthorization before replay discrimination/receipt; later completion cycles and task recreation cannot reapply old effects",
+    "Deferred atomic commit, same-transaction finisher, immutable result and Auth-only journal lifetime",
+    "Private definer trigger permission boundary for deferred COMMIT and Auth FK cascade; indexed key FK",
+    "HTTP canonical key-to-ID/hash binding, fixed HTTPS service RPC, no redirects, bounded input/output/deadline, no-store and safe errors"
+  ],
+  "scopeLimits": [
+    "No public mutation endpoint; actual guarded SQL effects are exercised in a harness-only private pipeline",
+    "Local dependency schema is not full hosted-policy/trigger coverage",
+    "No live DDL/functions/config/key issuance/Auth fixture/task mutation",
+    "No native UI, Simulator, real speech or new app build acceptance; native runtime source unchanged",
+    "No actual cross-connection races, cancellation/statement-lock-budget or real quota-retry delivery proof",
+    "Archived projects remain readable according to the existing policy; new write behavior is not inferred from reads"
+  ],
+  "remaining": [
+    "Production create/update/complete/delete RPCs with full native baselines/access/actor/destination validation",
+    "Default reminders and full recurring successor ownership/child/reminder reset/insert behavior",
+    "Project and section discovery, usable premium native key management/one-time review/recovery/revoke",
+    "Real disposable Auth/HTTP/API scopes/quota/revocation/race tests and native signed-in Simulator flow",
+    "Coherent apply/deploy once complete; Mac runtime/signing and user-deferred release/OAuth/remote reminders/physical-location checks stay scoped",
+    "Other automation/email/webhook/teams/wearable backlog remains active",
+    "Verify/enforce rejected-request and gateway/IP rate budgets; SQL counters currently retain successful transactions only"
+  ],
+  "iterations": [
+    "Initial local fixture lacked profile FK rows; added proper owned profiles before owner-invite/member-accept lifecycle",
+    "Role review found deferred trigger needs private definer permissions after service wrapper returns; final role-based atomic commit and rollback checks pass",
+    "One mock transport had unnecessary async; lint corrected",
+    "Replay authorization now precedes changed-request comparison; changed-target probe after access loss refuses with the same unavailable response",
+    "Finisher additionally refuses unconfirmed completion/revision or incorrect create ownership"
+  ],
+  "sources": {
+    "supabase/migrations/20261022220821_automation_task_access.sql": "876db26d2fa60d6b8b651879fab7d72faedcfb66d7ff272e1e9cfb177122d602",
+    "Scripts/Database/automation-task-bootstrap.sql": "7515f5bdec90dce6999d5ede593eb73757ecc31074490ad01c17a49bebca5771",
+    "Scripts/Database/test-automation-tasks.mjs": "8dc0fd68788307bca2c3a97adedfee6a5d1090db9b308f00087e46244afcf89a",
+    "supabase/functions/automation-tasks/index.ts": "27dc848026ad50413b50d697ef624697aa9884a8440e41d6eb02f3a4a35ac91b",
+    "supabase/functions/automation-tasks/handler.ts": "383e95251aa9ff95942ec4949e7fcd3114bfbdd67853fcbd016626af1a92c859",
+    "supabase/functions/automation-tasks/handler_test.ts": "817bedc580aeaa470811028b190f3ba3a34f313256c71858a4d17b099e43b6eb"
+  },
+  "readOnlyHostedVerification": {
+    "requestJournal": null,
+    "taskReadRPC": null,
+    "candidateMigrationVersionsPresent": [],
+    "candidateEdgeFunctionsPresent": [],
+    "existingDeleteAccount": {
+      "version": 2,
+      "bundleSHA256": "d9ce2203d6d749f33f4560c7f97cb98a0fb7e83cedc4745d205d1fc60a598b2e"
+    },
+    "note": "Metadata only: no DDL, task rows, credentials or configuration changed."
+  }
+}

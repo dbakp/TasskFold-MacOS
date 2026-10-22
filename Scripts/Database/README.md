@@ -65,3 +65,22 @@ the fixture. The credential suite loads both candidates together as well.
 These are local planner/privilege checks, not task-write, concurrency, native
 management UI, real HTTP or Simulator acceptance. The new migration remains
 unapplied; no gateway or live task is changed. Both repos own their full inputs.
+
+
+# Automation task-read and atomic-journal candidate
+
+Run `npm run --prefix Scripts/Database test:automation-tasks`. This owned runner
+uses the same pinned PGlite/pgcrypto runtime, minimal dependency schema and actual
+native generation/completion/patch/delete migrations. The pre-managed merge
+helper in its local bootstrap is a reviewed snapshot of the live definition.
+It checks 89 task-read/journal/actual-native-effect assertions, including genuine
+local authenticated/service roles and deferred COMMIT rollback, then runs the
+previous credential fixture and verifies Auth cleanup/rollback. No endpoint,
+credential or app configuration is read. All fixture identities are local only.
+
+Run `deno test supabase/functions/automation-tasks/handler_test.ts` and
+`deno lint supabase/functions/automation-tasks` for the nine mocked handler cases.
+The HTTP candidate supports get/list; production mutation wrappers and native
+management UI are still missing. No hosted deployment, real HTTP, lock race,
+Simulator user flow or full task-write acceptance is claimed. See
+`docs/AUTOMATION_API.md` and `docs/p2-automation-task-access-evidence.json`.

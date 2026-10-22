@@ -2800,3 +2800,26 @@ request claims, recurrence child/reminder copying, native management and genuine
 HTTP/Simulator acceptance remain required. No manual widget/VoiceOver/phone check
 was requested; the user's physical location-delivery check stays deferred. See
 `p2-automation-recurrence-evidence.json`. The full Px goal remains active.
+
+
+### 23 October — scoped automation reads and permanent atomic request journal
+
+Both repos independently own a private, inactive get/list task-read candidate,
+custom-key HTTP handler and atomic write-journal helpers. Reads honor existing
+accepted-project/Inbox access, including lost access to owned shared tasks, with
+same-transaction key checks and task/membership locks. The permanent journal
+prevents a request from becoming a duplicate task or later completion cycle;
+replays reauthorize before disclosing even a minimal historical result. It stores
+no task text, bodies, full responses or credentials and cascades only with its
+requesting Auth account. Deferred checks roll back unfinished claims and effects.
+
+89 local PostgreSQL assertions per repo pass with actual native guarded edit,
+delete, generation and completion routines in a harness-only service pipeline;
+the previous credential fixture passes afterward. Nine mocked HTTP cases and
+lint pass independently. The private trigger privilege fix is verified under the
+actual local service/Auth cascade boundaries. Production mutation RPCs, full
+recurring successor/default-reminder behavior, real HTTP/lock races and premium
+native management remain required. No live deployment or new Mac runtime/build
+pass is claimed; native app runtime code is unchanged. No manual phone, widget or
+VoiceOver request was needed. See `AUTOMATION_API.md` and
+`p2-automation-task-access-evidence.json`. The full Px objective remains active.

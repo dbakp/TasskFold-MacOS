@@ -416,6 +416,31 @@ Future authorized private operations can call them internally. No new app screen
 Simulator interaction, hosted DDL/function deployment or live key/task change is
 claimed. See `p2-automation-recurrence-evidence.json` for exact scope and hashes.
 
+23 October continuation: the inactive candidate now has bounded scoped get/list
+reads and a custom-key HTTP handler, plus private permanent request-journal
+helpers. Current key/account checks, task/project/accepted-membership locks and
+reads share one SQL transaction. Explicit projection/paging excludes foreign,
+pending and lost-access task data. Raw keys remain at the HTTP boundary; only
+SHA-256/key IDs enter the fixed service RPC.
+
+Write claims bind account/request ID, operation, target generation and payload
+hash without retaining task text, bodies or full responses. Exact replay must
+reauthorize the recorded resource, including before distinguishing changed
+requests. Deferred COMMIT checks and transaction IDs prevent a pending claim
+from surviving separately from its effects; results are immutable. Claims survive
+task deletion/new generations and later completion cycles, and cascade only with
+the requesting Auth account. Owner cleanup has the matching FK index.
+
+Both repos pass 89 local PostgreSQL assertions using actual native guarded SQL
+effects inside a test-only pipeline, followed by the existing credential fixture;
+nine mocked handler cases and lint also pass per repo. Private definer triggers
+handle the deferred/Auth-role permission boundary. An initial test fixture missed
+profile FK dependencies and one mock needed a lint correction; both are fixed.
+No production write RPC, hosted change, native screen or new app-runtime acceptance
+is claimed. Complete task writes/successor/reminder handling, real HTTP/lock/quota
+races and premium native management remain required. See `AUTOMATION_API.md` and
+`p2-automation-task-access-evidence.json`. All user deferrals remain unchanged.
+
 Next required before enabling the feature:
 
 1. Connect the task gateway to current task/project access checks and generation,
