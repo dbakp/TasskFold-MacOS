@@ -656,6 +656,8 @@ struct ReminderState: Sendable {
     var deliveryAuthorityAccount: String? = nil
     var timeSensitiveAllowed = false
     var locationPlan: LocationReminderPlan? = nil
+    var locationWorkspace: UUID? = nil
+    var locationContextIsCurrent: @Sendable () async -> Bool = { true }
     func permitsOriginal(_ event: DueReminder) -> Bool {
         // Interval and Time Sensitive specs are explicitly local-only; the server excludes them.
         event.kind == .focusFinish || (event.kind == .task && (event.signature.hasPrefix("r6:") || event.signature.hasPrefix("r7:") || event.signature.hasPrefix("r8:"))) || (!deliveryAuthorityUnreadable && (deliveryAuthority?.allowsLocalOriginal(account: deliveryAuthorityAccount ?? account, at: event.date) ?? true))
@@ -729,8 +731,12 @@ actor ReminderScheduler {
         if hasDesiredState { _ = await sweep() }
         return true
     }
-    private func permitsLocation(_ candidate: LocationReminderCandidate, engine: LocationReminderEngine) -> Bool {
-        guard pendingLocationEngine == nil, locationEngine === engine, let plan = desired.locationPlan, candidate.ticket.account == desired.account, plan.allowSubmissions, plan.capacity > 0 else { return false }
+    private func permitsLocation(_ candidate: LocationReminderCandidate, engine: LocationReminderEngine, workspace: UUID?) async -> Bool {
+        guard pendingLocationEngine == nil, locationEngine === engine, desired.locationWorkspace == workspace else { return false }
+        let current = desired.locationContextIsCurrent
+        guard await current() else { return false }
+        // Recheck after the external workspace validator suspends this actor.
+        guard pendingLocationEngine == nil, locationEngine === engine, desired.locationWorkspace == workspace, let plan = desired.locationPlan, candidate.ticket.account == desired.account, plan.allowSubmissions, plan.capacity > 0 else { return false }
         return plan.eligible.contains { $0.matches(candidate) }
     }
     func update(_ state: ReminderState, installing engine: LocationReminderEngine? = nil) async -> ReminderReport {
@@ -799,7 +805,7 @@ actor ReminderScheduler {
                 admission = plan.limited(to: max(0, 60 - foreign - priorityTimeSlots), submissions: true)
                 _ = await locationEngine.update(admission.limited(to: admission.capacity, submissions: false), permitsSubmission: { [weak self, weak locationEngine] candidate in
                     guard let locationEngine else { return false }
-                    return await self?.permitsLocation(candidate, engine: locationEngine) ?? false
+                    return await self?.permitsLocation(candidate, engine: locationEngine, workspace: state.locationWorkspace) ?? false
                 })
                 guard token == sequence else { continue }
                 reserved = await locationEngine.reservations(for: admission).count
@@ -847,7 +853,7 @@ actor ReminderScheduler {
                 let finalPlan = admission.limited(to: max(0, 60 - currentOther - actualTimeCount), submissions: !report.focusDeferred)
                 report.locations = await locationEngine.update(finalPlan, permitsSubmission: { [weak self, weak locationEngine] candidate in
                     guard let locationEngine else { return false }
-                    return await self?.permitsLocation(candidate, engine: locationEngine) ?? false
+                    return await self?.permitsLocation(candidate, engine: locationEngine, workspace: state.locationWorkspace) ?? false
                 })
                 guard token == sequence else { continue }
                 let after = await locationEngine.reservations(for: finalPlan).count

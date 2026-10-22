@@ -121,4 +121,86 @@ final class LocationPlaceStoreTests: XCTestCase {
         let saved = try await store.snapshot(); XCTAssertEqual(saved?.journal.entries[candidate.ticket.identifier]?.phase, .reserved)
         try await store.clearPlaces(account: account); let cleared = try await store.snapshot(); XCTAssertEqual(cleared?.journal, saved?.journal)
     }
+    func testLegacyArchiveConsentStartsOffAndExplicitGrantSurvivesRestartPrivately() async throws {
+        let root = try root(); defer { try? FileManager.default.removeItem(at: root) }
+        let store = LocationPrivateStore(applicationSupport: root), p = try place()
+        let legacy = try await store.save(p)
+        XCTAssertEqual(legacy.version, 1); XCTAssertNil(legacy.allowedAccounts); XCTAssertFalse(legacy.allows(account: account))
+        let oldBytes = try JSONEncoder().encode(legacy)
+        let read = try LocationPrivateArchive.decode(oldBytes); XCTAssertEqual(read, legacy)
+        let granted = try await store.setAllowance(account: account, enabled: true, expectedDevice: legacy.device)
+        XCTAssertEqual(granted.version, 2); XCTAssertTrue(granted.allows(account: account)); XCTAssertFalse(granted.allows(account: "other"))
+        XCTAssertEqual(granted.device, legacy.device); XCTAssertEqual(granted.places, legacy.places); XCTAssertEqual(granted.journal, legacy.journal)
+        let restarted = LocationPrivateStore(applicationSupport: root), persisted = try await restarted.snapshot()
+        XCTAssertEqual(persisted, granted)
+        let file = LocationPrivateFile(applicationSupport: root)
+        XCTAssertEqual(try file.directory.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup, true)
+        XCTAssertEqual((try FileManager.default.attributesOfItem(atPath: file.url.path)[.posixPermissions] as? NSNumber)?.intValue, 0o600)
+    }
+    func testExplicitConsentCanCreateInstallationWithoutInventingAPin() async throws {
+        let root = try root(); defer { try? FileManager.default.removeItem(at: root) }
+        let store = LocationPrivateStore(applicationSupport: root)
+        let created = try await store.setAllowance(account: account, enabled: true, expectedDevice: nil)
+        XCTAssertTrue(created.places.isEmpty); XCTAssertTrue(created.journal.entries.isEmpty); XCTAssertTrue(created.allows(account: account))
+        do { _ = try await store.setAllowance(account: "other", enabled: true, expectedDevice: nil); XCTFail("Stale missing-file review granted consent") } catch {}
+        let current = try await store.snapshot(); XCTAssertEqual(current, created)
+    }
+    func testConsentRevocationKeepsOtherAccountsPlacesAndJournal() async throws {
+        let root = try root(); defer { try? FileManager.default.removeItem(at: root) }
+        let a = LocationPrivateStore(applicationSupport: root), b = LocationPrivateStore(applicationSupport: root)
+        let first = try await a.save(try place())
+        _ = try await a.setAllowance(account: account, enabled: true, expectedDevice: first.device)
+        _ = try await b.setAllowance(account: "other", enabled: true, expectedDevice: first.device)
+        let final = try await a.setAllowance(account: account, enabled: false, expectedDevice: first.device)
+        XCTAssertFalse(final.allows(account: account)); XCTAssertTrue(final.allows(account: "other"))
+        XCTAssertEqual(final.places, first.places); XCTAssertEqual(final.journal, first.journal); XCTAssertEqual(final.device, first.device)
+        try await a.clearPlaces(account: account)
+        let empty = try await b.snapshot(); XCTAssertEqual(empty?.allowedAccounts, final.allowedAccounts)
+    }
+    func testResetRemovesAllConsentAndStaleDeviceCannotGrantAgain() async throws {
+        let root = try root(); defer { try? FileManager.default.removeItem(at: root) }
+        let store = LocationPrivateStore(applicationSupport: root)
+        let old = try await store.setAllowance(account: account, enabled: true, expectedDevice: nil)
+        let reset = try await store.resetAllPrivateData(confirmed: true)
+        XCTAssertNotEqual(old.device, reset.device); XCTAssertFalse(reset.allows(account: account))
+        let before = try Data(contentsOf: LocationPrivateFile(applicationSupport: root).url)
+        do { _ = try await store.setAllowance(account: account, enabled: true, expectedDevice: old.device); XCTFail("Old device granted consent") } catch {}
+        XCTAssertEqual(try Data(contentsOf: LocationPrivateFile(applicationSupport: root).url), before)
+    }
+    func testMalformedFutureAndDuplicateConsentNeverReplacePrivateData() async throws {
+        let root = try root(); defer { try? FileManager.default.removeItem(at: root) }
+        let store = LocationPrivateStore(applicationSupport: root), initial = try await store.save(try place())
+        let file = LocationPrivateFile(applicationSupport: root)
+        var raw = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(initial)).object
+        raw["version"] = .number(2)
+        for value in [JSON.null, .array([.string(account), .string(account)]), .array([.string(" ")]), .array([.bool(true)]), .array((0..<51).map { .string("account-" + String($0)) })] {
+            raw["allowedAccounts"] = value
+            let bytes = try JSONEncoder().encode(JSON.object(raw)); try bytes.write(to: file.url)
+            do { _ = try await store.setAllowance(account: account, enabled: true, expectedDevice: initial.device); XCTFail("Invalid consent rewritten") } catch {}
+            XCTAssertEqual(try Data(contentsOf: file.url), bytes)
+        }
+        raw["allowedAccounts"] = .array([.string(account)]); raw["version"] = .number(3)
+        let future = try JSONEncoder().encode(JSON.object(raw)); try future.write(to: file.url)
+        do { _ = try await store.setAllowance(account: account, enabled: false, expectedDevice: initial.device); XCTFail("Future private file rewritten") } catch {}
+        XCTAssertEqual(try Data(contentsOf: file.url), future)
+    }
+    func testJournalAndPlaceWritesPreserveConcurrentConsentChanges() async throws {
+        let root = try root(); defer { try? FileManager.default.removeItem(at: root) }
+        let a = LocationPrivateStore(applicationSupport: root), b = LocationPrivateStore(applicationSupport: root), p = try place()
+        let initial = try await a.save(p)
+        let settings = try XCTUnwrap(LocationReminderSettings.make(device: initial.device, taskID: UUID().uuidString.lowercased(), taskGeneration: UUID().uuidString.lowercased(), place: p, transition: .leave))
+        let task = Record(["id": .string(settings.taskID), "task_generation": .string(settings.taskGeneration)])
+        let candidate = try XCTUnwrap(LocationReminderCandidate(account: account, device: initial.device, task: task, settings: settings, place: p))
+        var journal = initial.journal; XCTAssertTrue(journal.prepare(candidate.ticket))
+        _ = try await a.setAllowance(account: account, enabled: true, expectedDevice: initial.device)
+        try await b.saveJournal(journal)
+        let renamed = try XCTUnwrap(p.editing(name: "Renamed", latitude: 55.676098, longitude: 12.568337, radius: 250))
+        _ = try await b.save(renamed, replacing: p)
+        let revoked = try await a.setAllowance(account: account, enabled: false, expectedDevice: initial.device)
+        journal.entries[candidate.ticket.identifier]?.phase = .reserved; try await b.saveJournal(journal)
+        let final = try await a.snapshot()
+        XCTAssertEqual(final?.allowedAccounts, revoked.allowedAccounts); XCTAssertFalse(final?.allows(account: account) ?? true)
+        XCTAssertEqual(final?.journal, journal); XCTAssertEqual(final?.places(for: account), [renamed])
+    }
+
 }

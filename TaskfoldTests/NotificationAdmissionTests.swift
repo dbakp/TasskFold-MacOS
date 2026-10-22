@@ -81,6 +81,12 @@ private actor AdmissionQueue: ReminderCenter, LocationReminderCenter {
     }
 }
 
+private actor AdmissionWorkspace {
+    var current = true
+    func invalidate() { current = false }
+    func isCurrent() -> Bool { current }
+}
+
 final class NotificationAdmissionTests: XCTestCase {
     let now = Date(timeIntervalSince1970: 1_791_281_600)
     let account = "joint-a"
@@ -347,4 +353,29 @@ final class NotificationAdmissionTests: XCTestCase {
         _ = await scheduler.update(.init(revision: 1, account: "joint-b", events: times(60), now: now, locationPlan: group.plan))
         let pending = await queue.snapshot(); XCTAssertEqual(pending.maximum, 60); XCTAssertEqual(pending.times.count, 60); XCTAssertTrue(pending.regions.isEmpty)
     }
+    func testLeavingAndReenteringSameAccountCannotAcceptOldWorkspaceAddition() async throws {
+        let group = try group(1), queue = AdmissionQueue(); await queue.holdRegion()
+        let (scheduler, disk) = scheduler(queue, journal: journal(group.candidates)), old = UUID(), returned = UUID()
+        let start = Task { await scheduler.update(.init(revision: 1, account: account, events: times(60), now: now, locationPlan: group.plan, locationWorkspace: old)) }
+        await queue.waitForRegion()
+        let left = Task { await scheduler.update(.init(revision: 2, account: "joint-b", events: times(60), now: now, locationWorkspace: UUID())) }
+        while await scheduler.currentRevision < 2 { await Task.yield() }
+        let back = Task { await scheduler.update(.init(revision: 3, account: account, events: times(60), now: now, locationPlan: group.plan, locationWorkspace: returned)) }
+        while await scheduler.currentRevision < 3 { await Task.yield() }
+        await queue.releaseRegion(); _ = await start.value; _ = await left.value; _ = await back.value
+        let pending = await queue.snapshot(), saved = await disk.snapshot()
+        XCTAssertTrue(pending.regions.isEmpty); XCTAssertEqual(pending.attempts, 1); XCTAssertEqual(pending.maximum, 60)
+        XCTAssertEqual(saved.entries.values.first?.reason, .cancelled); XCTAssertEqual(pending.times.count, 60)
+    }
+
+    func testWorkspaceInvalidationBeforeNextDesiredUpdateRemovesLateOSAddition() async throws {
+        let group = try group(1), queue = AdmissionQueue(), workspace = AdmissionWorkspace(); await queue.holdRegion()
+        let (scheduler, disk) = scheduler(queue, journal: journal(group.candidates))
+        let start = Task { await scheduler.update(.init(revision: 1, account: account, events: times(60), now: now, locationPlan: group.plan, locationWorkspace: UUID(), locationContextIsCurrent: { await workspace.isCurrent() })) }
+        await queue.waitForRegion(); await workspace.invalidate(); await queue.releaseRegion(); _ = await start.value
+        let pending = await queue.snapshot(), saved = await disk.snapshot()
+        XCTAssertTrue(pending.regions.isEmpty); XCTAssertEqual(pending.attempts, 1); XCTAssertEqual(pending.maximum, 60)
+        XCTAssertEqual(saved.entries.values.first?.reason, .cancelled); XCTAssertEqual(pending.times.count, 60)
+    }
+
 }

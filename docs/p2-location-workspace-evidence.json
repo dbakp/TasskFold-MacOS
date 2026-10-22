@@ -1,0 +1,208 @@
+{
+  "feature": "Private location consent and normal iOS workspace lifecycle",
+  "date": "2026-10-22",
+  "ownedRepository": "TasskFold-MacOS",
+  "status": "Rank-5 progress; full location reminders and Px remain incomplete",
+  "sourceSHA256": {
+    "Taskfold/Core/LocationPlaceStore.swift": "3c8a16701628044b80a676e1e45af5b04ee59e7bcce2292fcee98d90333f5964",
+    "Taskfold/Core/Reminders.swift": "50c7161cb80257f327981076d0af63f96226fd2ea52db6b324604f64c7c9d8ca",
+    "TaskfoldTests/LocationPlaceStoreTests.swift": "d8a768d423818964c2644f8a76e4b12cf9ae4ac4b5fb42e6f129fe50561346f5",
+    "TaskfoldTests/NotificationAdmissionTests.swift": "62852cbde6073056c9193d5e2ef2dfa7d7ebbf00d8750a16935c826444a01029"
+  },
+  "implemented": [
+    "Explicit protected account/device allowance; bounded version2 private archive, legacy version1 off, atomic grant/revoke preserving placebook/journal",
+    "Normal iOS Store bootstraps the private engine and current plan, revalidates readable private state/task/place/consent and native capability",
+    "Workspace-incarnation and external current-context callback fences, including leave/reenter and invalidation before the next scheduler update",
+    "Account changes queue empty desired delivery; workspace exit prevents refreshes from re-adding time/Focus/location alerts",
+    "Concurrent iOS refresh callers wait for latest hydration/admission before notification actions continue",
+    "Normal iOS owned pending/delivered cleanup for revoked, missing, corrupt and reset private state; unrelated requests preserved",
+    "One shared private-root resolver isolates DEBUG UI fixtures; no task location writer or automatic permission prompt"
+  ],
+  "compatibility": {
+    "privateArchive": "Fixed LocationPrivate/state-v1.json path accepts versions1/2. An explicit allowance write emits2. Old private-store readers reject2 without replacement. Version1/reset starts off. Journal format unchanged.",
+    "sharedData": "No task, reminder-reference, preference, receipt, template, widget, backend or portable-backup format change; version6 task rows remain opaque."
+  },
+  "core": {
+    "reported": 1176,
+    "skipped": 33,
+    "actualPassed": 1143,
+    "failures": 0,
+    "newCases": 8,
+    "focusedSubset": {
+      "privateStore": 16,
+      "admission": 24
+    },
+    "log": {
+      "file": "location-workspace-full-mac-final.log",
+      "sha256": "4b8633c4ca1932a7da03d2bda7069f007371b534c2c995417d8b7862d964a67b"
+    },
+    "scope": "Real filesystem consent/restart/corruption/reset/ownership tests plus modeled deterministic shared-queue interleavings. Optional external/platform fixtures remain skipped; not OS geofence delivery."
+  },
+  "nativeIOS": {
+    "repository": "TaskFold-iOS",
+    "results": [
+      {
+        "device": "phone",
+        "resultBundle": "location-workspace-phone-accepted.xcresult",
+        "log": {
+          "file": "location-workspace-phone-accepted.log",
+          "sha256": "c5a50fcd80681f8359571088a3b58aa244cbd11acae6742820db03d206c2f1a6"
+        },
+        "result": {
+          "result": "Passed",
+          "totalTestCount": 2,
+          "passedTests": 2,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "runtimeWarnings": []
+        },
+        "cases": [
+          "testNativeLocationWorkspaceConsentRevocationAndUnreadableRecovery",
+          "testReminderTimeZoneReviewCancelSaveAndRelaunch"
+        ]
+      },
+      {
+        "device": "ipad",
+        "resultBundle": "location-workspace-ipad-accepted.xcresult",
+        "log": {
+          "file": "location-workspace-ipad-accepted.log",
+          "sha256": "9161f21c5b87b3c20fc158597d11358a5dac13109608763a7d47e7e82a82970f"
+        },
+        "result": {
+          "result": "Passed",
+          "totalTestCount": 2,
+          "passedTests": 2,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "runtimeWarnings": []
+        },
+        "cases": [
+          "testNativeLocationWorkspaceConsentRevocationAndUnreadableRecovery",
+          "testPrivatePlacesKeyboardSearchReviewSaveEditRelaunchDelete"
+        ]
+      }
+    ],
+    "normalStoreProofs": {
+      "phone": {
+        "artifact": {
+          "file": "location-workspace-phone-accepted-report.json",
+          "sha256": "c1c34aa6d22079c122cdb3c9c7dd41fa8126f5a9754d238706184771aa60bc54"
+        },
+        "checks": {
+          "explicitPrivateConsentHydrates": true,
+          "normalStoreClearsOwnedOrphan": true,
+          "coalescedRefreshWaitsForHydratedInstallation": true,
+          "normalStoreClosesUnwantedSubmittedIntent": true,
+          "unreadableBootstrapDoesNotReplaceData": true,
+          "missingBootstrapDoesNotCreatePrivateData": true,
+          "workspaceSessionUnchanged": true,
+          "unreadableCleanupPreservesOtherNotifications": true,
+          "identityResetLoadsFreshEngineWithConsentOff": true,
+          "workspaceExitSuppressesTimeAndFocusPlan": true,
+          "taskTablesAndPendingMutationsUnchanged": true,
+          "nativeNotificationPermission": true,
+          "unavailableDeviceCannotGrantThroughStore": true,
+          "unreadableBootstrapFailsClosedAndCleansOwned": true,
+          "normalTaskReaderStillPreservesOpaqueLocationRow": true,
+          "unrelatedNativeRequestPreserved": true,
+          "noUnsupportedNativeLocationSubmission": true,
+          "refusalDoesNotCreatePrivateData": true,
+          "syntheticNativeRequestsRemoved": true,
+          "storeRevokesConsentDurably": true,
+          "revocationPreservesPinAndClosedJournal": true
+        },
+        "details": {
+          "registrationScope": "Unavailable-device refusal and real time-trigger namespace cleanup only; no native geofence add or delivery."
+        }
+      },
+      "ipad": {
+        "artifact": {
+          "file": "location-workspace-ipad-accepted-report.json",
+          "sha256": "2ea40cac0eb5b2991655e433fb0e08f08c78ba439c8f3e1b82a87644ea26d40d"
+        },
+        "checks": {
+          "normalTaskReaderStillPreservesOpaqueLocationRow": true,
+          "workspaceSessionUnchanged": true,
+          "missingBootstrapDoesNotCreatePrivateData": true,
+          "unreadableCleanupPreservesOtherNotifications": true,
+          "storeRevokesConsentDurably": true,
+          "noUnsupportedNativeLocationSubmission": true,
+          "unreadableBootstrapFailsClosedAndCleansOwned": true,
+          "unavailableDeviceCannotGrantThroughStore": true,
+          "coalescedRefreshWaitsForHydratedInstallation": true,
+          "revocationPreservesPinAndClosedJournal": true,
+          "syntheticNativeRequestsRemoved": true,
+          "explicitPrivateConsentHydrates": true,
+          "normalStoreClearsOwnedOrphan": true,
+          "unrelatedNativeRequestPreserved": true,
+          "normalStoreClosesUnwantedSubmittedIntent": true,
+          "nativeNotificationPermission": true,
+          "taskTablesAndPendingMutationsUnchanged": true,
+          "identityResetLoadsFreshEngineWithConsentOff": true,
+          "workspaceExitSuppressesTimeAndFocusPlan": true,
+          "unreadableBootstrapDoesNotReplaceData": true,
+          "refusalDoesNotCreatePrivateData": true
+        },
+        "details": {
+          "registrationScope": "Unavailable-device refusal and real time-trigger namespace cleanup only; no native geofence add or delivery."
+        }
+      }
+    },
+    "scope": "21 normal-Store checks per device, including real UN time-trigger namespace cleanup, synthetic raw consent/journal hydration and a synthetic in-progress exit gate. Raw archive setup is not native permission-grant acceptance. No real account switch, successful native geofence add/delivery or location notification response claim. Ordinary iPhone time-zone Save/Cancel/relaunch and iPad keyboard private-place Save/relaunch/edit/delete pass on final sources.",
+    "signing": "Final isolated Simulator app passes deep strict codesign verification; not release signing."
+  },
+  "nativeMac": {
+    "result": "Debug app/widget build succeeded, CODE_SIGNING_ALLOWED=NO",
+    "log": {
+      "file": "location-workspace-mac-current-build.log",
+      "sha256": "ae1e03fd8f986306865e0a8ec9f1177ce01db66e1278d3d4f59d90678bf37534"
+    },
+    "scope": "Independent common-model/private-archive compilation. Normal Mac Store does not install an unsupported location trigger or request location permission; native Mac runtime not rerun."
+  },
+  "earlierAttempts": [
+    {
+      "summary": {
+        "file": "location-workspace-phone-v1-summary.json",
+        "sha256": "6c6081fa6e38e148add1c3f7d1da29aa7010e8286e34d6f894fa6151ca7ebe46"
+      },
+      "log": {
+        "file": "location-workspace-phone-v1.log",
+        "sha256": "b99bcdbbd4032fdcf1c5ddd34d6e42fb7810f27b38918017d7f5f0dda74f559a"
+      },
+      "reason": "First harness resolved the expected report location before launch and timed out; a late native report passed19 checks. Fixture reset moved into the exact isolated app before bootstrap and path resolution moved after launch. This run is not accepted as a passing UI test."
+    },
+    {
+      "summary": {
+        "file": "location-workspace-time-phone-summary.json",
+        "sha256": "2b812f1ed0a222b295a690703eb11863fca66f413cd549b999b2336336bfc6c4"
+      },
+      "log": {
+        "file": "location-workspace-time-phone.log",
+        "sha256": "56a3c8c062ca88edfe48bca11bb11bffd23fbc7eeb79fffab50678516d043920"
+      },
+      "reason": "Existing reminder scroll helper targeted placeEditorForm rather than the existing reminderSpecForm. Corrected the test-only selector; final ordinary reminder flow passes."
+    }
+  ],
+  "diagnostics": "Existing compiler warnings and Simulator accessibility-loader/server console diagnostics remain; both accepted xcresult summaries report an empty runtimeWarnings list.",
+  "remaining": [
+    "Public reviewed location consent and permission controls",
+    "Task Save/autosave/Cancel/Undo plus prepare/review/consumed/changed-place/other-device states",
+    "Immediate native place-management integration and notification-category/response actions",
+    "Real capable-device Arrive/Leave registration, delivery, permission/precision recovery, protected-data/termination acceptance",
+    "Every visit until completed",
+    "Private desktop-to-phone authoring and Mac preservation/accessibility acceptance",
+    "Direct iPad Search tap while typing remains unresolved; keyboard Search is verified"
+  ],
+  "userDeferrals": [
+    "Remote server delivery and device/reinstall recovery",
+    "General older-client rollout safeguards",
+    "Distribution/signing/install/update checks",
+    "Google/Microsoft OAuth registrations and genuine provider acceptance"
+  ],
+  "cleanup": {
+    "file": "location-workspace-cleanup.json",
+    "sha256": "332657a0e015ceb15f001e49822ef0afcbf5c83977fa4d74e5a69a287ed0570f",
+    "mainTaskfoldProcessesRemaining": 0,
+    "scope": "Only exact isolated test app private namespaces and owned superseded results/products removed. Final evidence retained. Desktop widget extension remains system-managed."
+  }
+}

@@ -13,20 +13,25 @@ struct LocationPrivateArchive: Codable, Equatable, Sendable {
     var version = 1
     let device: String
     var places: [[String: JSON]] = []
+    /// Version 2 adds explicit account/device consent; version 1 has no allowance.
+    var allowedAccounts: [String]? = nil
     var journal: LocationReminderJournal
     init(device: String = UUID().uuidString.lowercased()) { self.device = device; journal = .init(device: device) }
     var valid: Bool {
         let decoded = places.compactMap(LocationPrivatePlace.init(raw:))
-        return version == 1 && LocationReminderIdentity.uuid(.string(device)) && journal.valid && journal.device == device &&
+        return (version == 1 && allowedAccounts == nil || version == 2 && allowedAccounts != nil) &&
+        (allowedAccounts.map { $0.count <= 50 && Set($0).count == $0.count && $0.allSatisfy(LocationReminderIdentity.account) } ?? true) &&
+        LocationReminderIdentity.uuid(.string(device)) && journal.valid && journal.device == device &&
         places.count <= Self.maximumPlaces && decoded.count == places.count && Set(decoded.map(\.id)).count == places.count
     }
+    func allows(account: String) -> Bool { valid && allowedAccounts?.contains(account) == true }
     func places(for account: String) -> [LocationPrivatePlace] {
         places.compactMap(LocationPrivatePlace.init(raw:)).filter { $0.account == account }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
     static func decode(_ data: Data) throws -> Self {
         let json = try JSONDecoder().decode(JSON.self, from: data)
         func keys(_ value: JSON, allowed: Set<String>) -> Bool { if case .object(let object) = value { return Set(object.keys).isSubset(of: allowed) }; return false }
-        guard keys(json, allowed: ["version","device","places","journal"]), let journal = json.object["journal"],
+        guard keys(json, allowed: ["version","device","places","journal","allowedAccounts"]), let journal = json.object["journal"],
               keys(journal, allowed: ["version","device","entries"]), case .object(let entries)? = journal.object["entries"] else { throw LocationStorageFailure.unreadable }
         for entry in entries.values {
             guard keys(entry, allowed: ["ticket","phase","reason"]), let ticket = entry.object["ticket"],
@@ -124,7 +129,36 @@ struct LocationPrivateFile: Sendable {
 actor LocationPrivateStore {
     let file: LocationPrivateFile
     init(applicationSupport: URL) { file = .init(applicationSupport: applicationSupport) }
+    /// Keep all UI-test private state outside the real installation's placebook.
+    static var applicationSupport: URL {
+        var root = URL.applicationSupportDirectory.appendingPathComponent("Taskfold", isDirectory: true)
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--uitesting") {
+            let lifecycle = Bundle.main.bundleIdentifier == "com.dbakp.taskfold.workflowtestsp1" && ProcessInfo.processInfo.arguments.contains("--location-workspace-fixture")
+            root.appendPathComponent(lifecycle ? "ui-testing-location-workspace" : "ui-testing-places", isDirectory: true)
+        }
+        #endif
+        return root
+    }
     func snapshot() throws -> LocationPrivateArchive? { try file.read() }
+    /// Explicit device consent, outside task snapshots and portable backups. Existing
+    /// v1 files load with consent off; reset mints a new installation with consent off.
+    @discardableResult func setAllowance(account: String, enabled: Bool, expectedDevice: String?) throws -> LocationPrivateArchive {
+        guard LocationReminderIdentity.account(account) else { throw LocationStorageFailure.changed }
+        return try file.transaction { current in
+            guard current?.device == expectedDevice, current != nil || enabled else { throw LocationStorageFailure.changed }
+            var next = current ?? LocationPrivateArchive()
+            var accounts = next.allowedAccounts ?? []
+            accounts.removeAll { $0 == account }
+            if enabled {
+                guard accounts.count < 50 else { throw LocationStorageFailure(message: "Location reminders are enabled for too many workspaces on this device. Turn one off before adding another.") }
+                accounts.append(account)
+            }
+            next.version = 2; next.allowedAccounts = accounts.sorted()
+            return (next, next)
+        }
+    }
+
     func places(account: String) throws -> [LocationPrivatePlace] {
         guard LocationReminderIdentity.account(account) else { throw LocationStorageFailure.unreadable }
         return try file.read()?.places(for: account) ?? []
