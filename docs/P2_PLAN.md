@@ -4,7 +4,7 @@ Updated 22 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-The live backend has no `delete-account` endpoint although both apps expose that action. Restore and genuinely verify account removal before the next feature increment; see `ACCOUNT_REMOVAL.md`. This new P0 does not replace or shrink the advanced backlog below, and is separate from all user-deferred work.
+The live backend has no `delete-account` endpoint although both apps expose that action. Native recovery and scoped Simulator confirmation/cancellation/retry/accessibility now pass; matching server deployment and genuine Auth/Storage verification remain the next priority before another feature increment; see `ACCOUNT_REMOVAL.md`. This new P0 does not replace or shrink the advanced backlog below, and is separate from all user-deferred work.
 
 ## Priority and delivery order
 
@@ -313,3 +313,10 @@ Both apps now save private retry authorization before deletion, retain confirmed
 Three actual iPhone Simulator Store cases pass: failed reply/retry, held A response across A → B, and expired authorization/conditional renewal. Checks include real encrypted backup roundtrip and Keychain key deletion, outsider preservation, private pending widget publication and stale confirmation/reopen refusal. Both full Core suites pass (iOS 1,303 reported / 13 skipped / 0 failures; Mac 1,335 / 33 / 0), including 45 account/removal cases without skips; both full apps build. `ACCOUNT_REMOVAL.md` and `p0-account-removal-recovery-evidence.json` preserve exact scope and failed harness iterations.
 
 Mac runtime reached the missing private-Keychain capability; enabling it requires a development profile deferred with signing. Existing fixture defaults stay unchanged, with explicit opt-in preparation for that future check. No weaker credential mechanism or Mac runtime pass is substituted. The service remains undeployed; real Auth/Storage byte cleanup and actual native confirmation UI/live-account tests remain required. Physical location delivery is deferred at the user's request; Simulator/Core work continues. No real account was deleted, and the full Px objective remains active.
+
+
+### 22 October — reviewed account-removal UI and accessible recovery
+
+Replaced the iOS destructive popover with a scrollable review and explicit Cancel, preserved deletion errors across intentional workspace dismissal, and made recovery available from Settings. Both independently owned apps use a concise adaptive recovery card; Mac's failed sheet retries the durable command. Final native Simulator acceptance: four phone cases (including actual VoiceOver) and one largest-text dark iPad case pass without failures/skips. Screenshot review found and corrected banner/navigation overlap before the final repeat. Both app builds pass; Mac runtime/profile and live server/Auth/Storage deletion remain open.
+
+See `ACCOUNT_REMOVAL.md` and `p0-account-removal-ui-evidence.json` for exact synthetic scope, failed iterations, speech limits and cleanup. Test apps/runners are closed/uninstalled, VoiceOver is restored, and 386,741,583 logical bytes of obsolete artifacts are pruned. No real task/account or hosted configuration changed. Full P0/Px and all user deferrals remain unchanged.

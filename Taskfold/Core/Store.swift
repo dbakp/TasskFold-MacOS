@@ -2259,16 +2259,30 @@ extension Store {
 
 struct AccountRemovalRecoveryBanner: View {
     @Environment(Store.self) private var store
+    @Environment(\.dynamicTypeSize) private var textSize
     var body: some View {
         if let status = store.accountRemovalStatus {
-            HStack(alignment: .center, spacing: 12) {
-                Label(status, systemImage: "person.crop.circle.badge.exclamationmark")
-                    .font(.callout).fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
+            let layout = textSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+                : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+            layout {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label(store.accountRemovalBusy ? "Finishing account removal…" : "Account removal paused", systemImage: "person.crop.circle.badge.exclamationmark")
+                        .font(.callout.weight(.semibold))
+                    if !store.accountRemovalBusy {
+                        Text("Remaining device copies stay saved.").font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(status)
+                .accessibilityIdentifier("accountRemovalStatus")
                 Button("Retry") { Task { await store.resumeAccountRemovals() } }
+                    .frame(minWidth: 44, minHeight: 44)
                     .disabled(store.accountRemovalBusy)
                     .accessibilityIdentifier("retryAccountRemoval")
-            }.padding().background(.regularMaterial).accessibilityIdentifier("accountRemovalRecovery")
+            }.padding().background(.regularMaterial)
         }
     }
 }

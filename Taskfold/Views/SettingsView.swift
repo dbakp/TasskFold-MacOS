@@ -11,13 +11,16 @@ struct SettingsView: View {
     @Environment(Workspace.self) private var workspace
     var body: some View {
         @Bindable var workspace = workspace
-        TabView(selection: $workspace.settingsTab) {
-            GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }.tag(SettingsTab.general)
-            MacSwipeSettings().tabItem { Label("Swipes", systemImage: "hand.draw") }.tag(SettingsTab.swipes)
-            AppearanceSettings().tabItem { Label("Appearance", systemImage: "paintpalette") }.tag(SettingsTab.appearance)
-            AccountSettings().tabItem { Label("Account", systemImage: "person.crop.circle") }.tag(SettingsTab.account)
-            ImportSettings().tabItem { Label("Import", systemImage: "square.and.arrow.down") }.tag(SettingsTab.imports)
-            AccountToolsSettings().tabItem { Label("Invitations", systemImage: "person.2") }.tag(SettingsTab.invitations)
+        VStack(spacing: 0) {
+            AccountRemovalRecoveryBanner()
+            TabView(selection: $workspace.settingsTab) {
+                GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }.tag(SettingsTab.general)
+                MacSwipeSettings().tabItem { Label("Swipes", systemImage: "hand.draw") }.tag(SettingsTab.swipes)
+                AppearanceSettings().tabItem { Label("Appearance", systemImage: "paintpalette") }.tag(SettingsTab.appearance)
+                AccountSettings().tabItem { Label("Account", systemImage: "person.crop.circle") }.tag(SettingsTab.account)
+                ImportSettings().tabItem { Label("Import", systemImage: "square.and.arrow.down") }.tag(SettingsTab.imports)
+                AccountToolsSettings().tabItem { Label("Invitations", systemImage: "person.2") }.tag(SettingsTab.invitations)
+            }
         }
         .frame(width: 620, height: 560)
         .alert("Something needs attention", isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) {
@@ -190,7 +193,7 @@ struct AccountSettings: View {
                     Button("Change Password…") { changingPassword = true }.accessibilityIdentifier("changePassword")
                     Button(sendingReset ? "Sending…" : "Send Password Reset Email") { sendReset() }.disabled(sendingReset).accessibilityIdentifier("sendPasswordReset")
                     if let resetMessage { Text(resetMessage).font(.caption).foregroundStyle(.secondary).textSelection(.enabled) }
-                    Button("Delete Account…", role: .destructive) { deletionWorkspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); deletingAccount = true }.accessibilityIdentifier("deleteAccount")
+                    Button("Delete Account…", role: .destructive) { deletionWorkspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); deletingAccount = true }.disabled(store.accountRemovalBusy || store.accountRemovalBlocked).accessibilityIdentifier("deleteAccount")
                 } header: { Text("Security") } footer: {
                     if workspace.previewsAccount { Text("Preview: these actions need a signed-in account.").font(.caption).foregroundStyle(.secondary) }
                 }

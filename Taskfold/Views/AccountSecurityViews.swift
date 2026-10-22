@@ -80,6 +80,7 @@ struct DeleteAccountSheet: View {
     @State private var understood = false
     @State private var busy = false
     @State private var message: String?
+    private var recovering: Bool { store.userID == workspace.account && store.accountRemovalBlocked }
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Label("Delete Account", systemImage: "exclamationmark.triangle.fill").font(.headline).foregroundStyle(.red)
@@ -90,18 +91,26 @@ struct DeleteAccountSheet: View {
             HStack {
                 if busy { ProgressView().controlSize(.small) }
                 Spacer()
-                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction).disabled(busy)
-                Button("Delete Account", role: .destructive) { submit() }.buttonStyle(.borderedProminent).tint(.red)
-                    .disabled(!understood || busy).accessibilityIdentifier("confirmDeleteAccount")
+                Button(recovering ? "Close" : "Cancel") { dismiss() }.keyboardShortcut(.cancelAction).disabled(busy)
+                Button(recovering ? "Retry removal" : "Delete Account", role: .destructive) { submit() }.buttonStyle(.borderedProminent).tint(.red)
+                    .disabled((!understood && !recovering) || busy || store.accountRemovalBusy).accessibilityIdentifier("confirmDeleteAccount")
             }
-        }.padding(20).frame(width: 440)
+        }.padding(20).frame(width: 440).interactiveDismissDisabled(busy)
     }
     private func submit() {
         busy = true; message = nil
         Task {
             defer { busy = false }
             do {
-                try await store.deleteAccount(expected: workspace)
+                if recovering {
+                    await store.resumeAccountRemovals()
+                    if store.userID == workspace.account && store.accountRemovalBlocked {
+                        message = store.accountRemovalStatus ?? "Account removal still needs attention. Your remaining device copies are kept."
+                        return
+                    }
+                } else {
+                    try await store.deleteAccount(expected: workspace)
+                }
                 dismiss()
             } catch { message = error.localizedDescription }
         }
