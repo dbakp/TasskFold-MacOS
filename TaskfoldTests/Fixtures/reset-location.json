@@ -1,0 +1,12 @@
+{
+  "version": 3,
+  "device": "98000000-0000-4000-8000-000000000001",
+  "places": [],
+  "allowedAccounts": [],
+  "supersedesEarlierInstallations": true,
+  "journal": {
+    "version": 1,
+    "device": "98000000-0000-4000-8000-000000000001",
+    "entries": {}
+  }
+}

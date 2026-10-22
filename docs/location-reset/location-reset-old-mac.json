@@ -1,0 +1,12 @@
+{
+  "revision": "e4d07a82420da9e1da8889c277be931c8d269964",
+  "oldPrivateSourceSHA256": "fa8e0a914369b8818d74bfa285320e90e152dcc42771778eea02d23f1602dcfc",
+  "payloadSHA256": "6aee4b9101df5da2da6bd1042a9856708329609abcb37e6b8551d97b7bf127bb",
+  "fixtureSHA256": "38a508447517aef50dbd207038eaf06deadf1aed901375f75155e6fa61af9602",
+  "actualPassed": 1,
+  "checks": [
+    "New explicit reset archive refused",
+    "Ordinary consent edit refused without overwriting bytes"
+  ],
+  "scope": "This selected previous committed prototype only; general older-client rollout remains deferred."
+}

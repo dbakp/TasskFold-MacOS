@@ -15,11 +15,16 @@ struct LocationPrivateArchive: Codable, Equatable, Sendable {
     var places: [[String: JSON]] = []
     /// Version 2 adds explicit account/device consent; version 1 has no allowance.
     var allowedAccounts: [String]? = nil
+    /// Version 3 is written only by explicit whole-installation reset. It makes
+    /// cleanup of earlier installation receipts recoverable after process loss.
+    var supersedesEarlierInstallations: Bool? = nil
     var journal: LocationReminderJournal
     init(device: String = UUID().uuidString.lowercased()) { self.device = device; journal = .init(device: device) }
     var valid: Bool {
         let decoded = places.compactMap(LocationPrivatePlace.init(raw:))
-        return (version == 1 && allowedAccounts == nil || version == 2 && allowedAccounts != nil) &&
+        return (version == 1 && allowedAccounts == nil && supersedesEarlierInstallations == nil ||
+         version == 2 && allowedAccounts != nil && supersedesEarlierInstallations == nil ||
+         version == 3 && allowedAccounts != nil && supersedesEarlierInstallations == true) &&
         (allowedAccounts.map { $0.count <= 50 && Set($0).count == $0.count && $0.allSatisfy(LocationReminderIdentity.account) } ?? true) &&
         LocationReminderIdentity.uuid(.string(device)) && journal.valid && journal.device == device &&
         places.count <= Self.maximumPlaces && decoded.count == places.count && Set(decoded.map(\.id)).count == places.count
@@ -31,7 +36,7 @@ struct LocationPrivateArchive: Codable, Equatable, Sendable {
     static func decode(_ data: Data) throws -> Self {
         let json = try JSONDecoder().decode(JSON.self, from: data)
         func keys(_ value: JSON, allowed: Set<String>) -> Bool { if case .object(let object) = value { return Set(object.keys).isSubset(of: allowed) }; return false }
-        guard keys(json, allowed: ["version","device","places","journal","allowedAccounts"]), let journal = json.object["journal"],
+        guard keys(json, allowed: ["version","device","places","journal","allowedAccounts","supersedesEarlierInstallations"]), let journal = json.object["journal"],
               keys(journal, allowed: ["version","device","entries","revoked"]), case .object(let entries)? = journal.object["entries"] else { throw LocationStorageFailure.unreadable }
         for entry in entries.values {
             guard keys(entry, allowed: ["ticket","phase","reason","epoch"]), let ticket = entry.object["ticket"],
@@ -89,7 +94,24 @@ struct LocationPrivateFile: Sendable {
     /// Used only after an explicit whole-installation reset confirmation, including for
     /// unreadable data. A fresh device identity makes all former references unavailable.
     func reset() throws -> LocationPrivateArchive {
-        try locked { let fresh = LocationPrivateArchive(); try write(fresh); return fresh }
+        try locked {
+            var fresh = LocationPrivateArchive(); fresh.version = 3; fresh.allowedAccounts = []
+            fresh.supersedesEarlierInstallations = true
+            try write(fresh); return fresh
+        }
+    }
+    /// Hold the private writer lock through the caller's atomic cache replacement.
+    /// A delayed reset/another process cannot substitute a newer installation while
+    /// an older proof is used to discard response receipts.
+    func withResetAuthority<T>(account: String, device: String, _ body: (LocationInstallationReset) throws -> T) throws -> T {
+        try locked {
+            guard let current = try read(), current.device == device else { throw LocationStorageFailure.changed }
+            let proof = try LocationInstallationReset(account: account, archive: current)
+            // Also settle a reset whose earlier rename acknowledgement was uncertain.
+            // Never discard cache receipts while private-directory durability is refused.
+            try synchronizeDirectory()
+            return try body(proof)
+        }
     }
     private func locked<T>(_ body: () throws -> T) throws -> T {
         _ = try checkedDirectory(create: true)
@@ -119,6 +141,9 @@ struct LocationPrivateFile: Sendable {
         #endif
         try handle.write(contentsOf: data); try handle.synchronize(); try handle.close()
         guard Darwin.rename(temp.path, url.path) == 0 else { throw LocationStorageFailure.unreadable }
+        try synchronizeDirectory()
+    }
+    private func synchronizeDirectory() throws {
         let folder = Darwin.open(directory.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
         guard folder >= 0 else { throw LocationStorageFailure(message: "The save may have completed. Reload places before trying again.") }
         defer { Darwin.close(folder) }
@@ -155,7 +180,7 @@ actor LocationPrivateStore {
                 guard accounts.count < 50 else { throw LocationStorageFailure(message: "Location reminders are enabled for too many workspaces on this device. Turn one off before adding another.") }
                 accounts.append(account)
             }
-            next.version = 2; next.allowedAccounts = accounts.sorted()
+            next.version = max(2, next.version); next.allowedAccounts = accounts.sorted()
             return (next, next)
         }
     }

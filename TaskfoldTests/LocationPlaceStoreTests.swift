@@ -179,7 +179,7 @@ final class LocationPlaceStoreTests: XCTestCase {
             do { _ = try await store.setAllowance(account: account, enabled: true, expectedDevice: initial.device); XCTFail("Invalid consent rewritten") } catch {}
             XCTAssertEqual(try Data(contentsOf: file.url), bytes)
         }
-        raw["allowedAccounts"] = .array([.string(account)]); raw["version"] = .number(3)
+        raw["allowedAccounts"] = .array([.string(account)]); raw["version"] = .number(4)
         let future = try JSONEncoder().encode(JSON.object(raw)); try future.write(to: file.url)
         do { _ = try await store.setAllowance(account: account, enabled: false, expectedDevice: initial.device); XCTFail("Future private file rewritten") } catch {}
         XCTAssertEqual(try Data(contentsOf: file.url), future)
