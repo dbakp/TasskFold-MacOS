@@ -588,7 +588,8 @@ enum LocationRetirementOutbox {
     static func valid(_ jobs: [String: LocationReminderTicket]) -> Bool {
         jobs.count <= LocationReminderJournal.maximumEntries && jobs.allSatisfy { $0.key == $0.value.identifier && $0.value.valid }
     }
-    static func staging(previous: Snapshot, proposed: Snapshot, account: String, acknowledged: [LocationReminderTicket] = [], newResponse: LocationNotificationAction? = nil) throws -> Snapshot {
+    static func staging(previous: Snapshot, proposed: Snapshot, account: String, acknowledged: [LocationReminderTicket] = [], newResponse: LocationNotificationAction? = nil, cleanup: LocationActionCleanup? = nil) throws -> Snapshot {
+        guard cleanup == nil || (cleanup?.account == account && newResponse == nil) else { throw LocationStorageFailure.changed }
         if let response = newResponse {
             guard response.valid, response.ticket.account == account, previous.locationActions?[response.source] == nil,
                   proposed.locationActions?[response.source] == response else { throw LocationStorageFailure(message: "This notification action has already been applied or changed.") }
@@ -613,7 +614,9 @@ enum LocationRetirementOutbox {
         }
         for ticket in acknowledged where jobs[ticket.identifier] == ticket { jobs[ticket.identifier] = nil }
         guard valid(jobs) else { throw LocationStorageFailure(message: "Finish stopping old location reminders before changing more of them. Your task change has not been saved.") }
-        let actions = try LocationNotificationLedger.merging(previous.locationActions ?? [:], proposed.locationActions ?? [:])
+        let actions = try LocationNotificationLedger.merging(
+            cleanup?.retaining(previous.locationActions ?? [:]) ?? previous.locationActions ?? [:],
+            cleanup?.retaining(proposed.locationActions ?? [:]) ?? proposed.locationActions ?? [:])
         var next = proposed; next.locationActions = actions.isEmpty ? nil : actions
         next.locationRetirements = jobs.isEmpty ? nil : jobs
         return next
@@ -693,6 +696,27 @@ enum LocationNotificationProof: Sendable {
 
 enum LocationSnoozeTransition: Sendable { case reserve, installed, notSubmitted, failed }
 enum LocationSnoozeAcknowledgement: Sendable { case saved, retry, obsolete }
+
+/// Explicit maintenance authority from a readable private journal. Only exact,
+/// permanently denied tickets may lose their spent-action records. Delivered or
+/// ambiguous one-shots and active repeats can still receive genuine responses.
+struct LocationActionCleanup: Sendable {
+    let account: String
+    let journal: LocationReminderJournal
+    init(account: String, archive: LocationPrivateArchive) throws {
+        guard LocationReminderIdentity.account(account), archive.valid else { throw LocationStorageFailure.unreadable }
+        self.account = account; journal = archive.journal
+    }
+    func permitsRemoval(_ record: LocationNotificationAction) -> Bool {
+        guard record.valid, record.ticket.account == account, record.ticket.device == journal.device,
+              let entry = journal.entries[record.ticket.identifier], entry.ticket == record.ticket, entry.phase == .closed else { return false }
+        return journal.revoked?.contains(record.ticket.identifier) == true || [.cancelled, .failed, .untracked].contains(entry.reason)
+    }
+    func retaining(_ records: [String: LocationNotificationAction]) throws -> [String: LocationNotificationAction] {
+        guard LocationNotificationLedger.valid(records) else { throw LocationStorageFailure.unreadable }
+        return records.filter { !permitsRemoval($0.value) }
+    }
+}
 
 enum LocationNotificationLedger {
     static func valid(_ records: [String: LocationNotificationAction]) -> Bool {

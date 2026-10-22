@@ -85,3 +85,10 @@ Native integration exposed that calling Start local in an already-open readable 
 The isolated iOS reviewed editor now offers Every visit until completed, defaulting to off. Version 7/reference 2/r10 and native v2 receipts distinguish it from unchanged one-shot rows. Both repos independently own journal-3 recovery epochs, repeated-trigger retention, per-delivery replay keys, compatible explicit time snoozes and cancellation/Undo fences. Mac describes the phone/tablet choice without gaining a location service.
 
 Evidence is in `p2-location-repeat-evidence.json` and the current section of `LOCATION_REMINDERS.md`. Simulator drafts, response fixtures and genuine native time snoozes pass; these do not establish real region delivery or background/locked/cold callbacks. Normal authoring remains hidden. Public setup, private desktop-to-phone authoring, accessibility and history reclamation remain open. Rank 5/Px and other documented P2 gates remain incomplete; user deferrals are unchanged.
+
+
+### 22 October — explicit ended location-action cleanup
+
+Added a confirmed maintenance action in the experimental iOS editor to clear receipts whose exact private intent is permanently denied. Ordinary writes still preserve missing receipts, and active/actionable/unknown/other-account histories remain protected. Both repos independently own the policy and tests; Mac adds no location UI/service. A retired private tombstone continues rejecting old responses after cleanup and task Undo.
+
+See `p2-location-action-cleanup-evidence.json` and `LOCATION_REMINDERS.md` for native save-failure/retry, cancellation/replay and UI evidence. This recovers capacity from known retired actions; unknown/previous-installation history, active-repeat rollover and full private identity-reset recovery remain gates. Public authoring, capable-device delivery, desktop-to-phone authoring and wider P2 acceptance remain incomplete. User-deferred remote delivery, general older-client rollout, distribution and genuine OAuth provider work stay deferred.
