@@ -253,3 +253,10 @@ Closed the known in-memory waiting gap in the combined reminder queue: ordinary 
 ### 22 October — reviewed malformed-checklist recovery
 
 The organizer now reviews missing, malformed and duplicated child references, rekeys every ambiguous occurrence and converts explicit text-only legacy items without losing their words. Recovery stays in the draft until the existing Save flow; unknown structures stay intact with bounded original-data viewing/sharing. Preparation is cancellable and off the interface thread. Added guards against replacing unknown containers and ambiguous native Mac child paths. `CHECKLIST_RECOVERY.md` and `p2-checklist-recovery-evidence.json` distinguish implemented recovery and native/Core evidence from still-open Mac live interaction, spoken/concurrent/paired acceptance and arbitrary future-format recovery. This advances the rank-3 recovery gate; independent child records, non-completable headings, wider Px and user deferrals remain unchanged.
+
+
+### 22 October — private desktop-to-phone transport foundation
+
+Added an account-private, bounded place-draft protocol and deployed its unexposed table/RPC/retention migration. Authenticated project collaborators cannot read each other's private drafts. Fixed expiry, immutable retry contents, one-device review claims, terminal geometry removal and task-incarnation/access checks are covered by independent client and local/hosted SQL checks. Normal app code makes no upload or import call, and existing device-private places stay local.
+
+`PRIVATE_LOCATION_HANDOFF.md` and `p2-location-handoff-transport-evidence.json` distinguish this foundation from the still-required native sending/review UI, durable private nonce, atomic task import receipts, relaunch/Undo recovery and paired-device acceptance. Mac gains no native location service. This does not complete desktop authoring, rank 5 or Px; real location delivery and all user-deferred release/remote/older-client/provider work remain open.

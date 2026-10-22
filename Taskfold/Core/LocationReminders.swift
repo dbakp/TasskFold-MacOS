@@ -777,3 +777,182 @@ enum LocationNotificationLedger {
         return next
     }
 }
+
+// MARK: Private desktop-to-phone place drafts
+/// A private transport proposal, never a shared task reminder or placebook row.
+/// Account context is deliberately outside the RPC body and survives UI awaits.
+struct LocationHandoffProposal: Equatable, Sendable {
+    static let maximumTime = 253_402_300_799_000
+    static let requestKeys: Set<String> = ["version","id","task_id","task_generation","completion_version","authored_at_ms","place_name","latitude_e6","longitude_e6","radius_m","transition","repeats"]
+    static let payloadKeys: Set<String> = ["place_name","latitude_e6","longitude_e6","radius_m","transition","repeats"]
+    let account: String
+    let raw: [String: JSON]
+    var id: String { raw["id"]!.text }
+    var taskID: String { raw["task_id"]!.text }
+    var generation: String { raw["task_generation"]!.text }
+    var completion: Int { raw["completion_version"]!.integer }
+    var authoredMilliseconds: Int { raw["authored_at_ms"]!.integer }
+    var payload: [String: JSON] { raw.filter { Self.payloadKeys.contains($0.key) } }
+    var payloadDigest: String {
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return SHA256.hash(data: try! encoder.encode(payload)).map { String(format: "%02x", $0) }.joined()
+    }
+    init?(account: String, raw: [String: JSON]) {
+        guard LocationReminderIdentity.uuid(.string(account)), Set(raw.keys) == Self.requestKeys, raw["version"] == .number(1),
+              ["id","task_id","task_generation"].allSatisfy({ LocationReminderIdentity.uuid(raw[$0]) }),
+              Recurrence.number(raw["completion_version"] ?? .null, in: 0...9_007_199_254_740_991) != nil,
+              Recurrence.number(raw["authored_at_ms"] ?? .null, in: 0...Self.maximumTime) != nil,
+              case .string(let name)? = raw["place_name"], !name.isEmpty, name == name.trimmingCharacters(in: .whitespacesAndNewlines),
+              name.unicodeScalars.count <= 120, name.utf8.count <= 480,
+              !name.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }),
+              Recurrence.number(raw["latitude_e6"] ?? .null, in: -90_000_000...90_000_000) != nil,
+              Recurrence.number(raw["longitude_e6"] ?? .null, in: -180_000_000...180_000_000) != nil,
+              Recurrence.number(raw["radius_m"] ?? .null, in: 100...5000) != nil,
+              LocationReminderSettings.Transition(rawValue: raw["transition"]?.text ?? "") != nil, case .bool? = raw["repeats"] else { return nil }
+        self.account = account; self.raw = raw
+    }
+    static func make(account: String, task: Record, place: LocationPrivatePlace, transition: LocationReminderSettings.Transition, repeats: Bool,
+                     now: Date = Date(), id: String = UUID().uuidString.lowercased()) -> Self? {
+        let milliseconds = floor(now.timeIntervalSince1970 * 1000)
+        guard place.account == account, !task.completed, milliseconds.isFinite, (0...Double(maximumTime)).contains(milliseconds) else { return nil }
+        let completion = task["completion_version"] == .null ? JSON.number(0) : task["completion_version"]
+        return Self(account: account, raw: ["version": .number(1),"id": .string(id),"task_id": .string(task.id),"task_generation": task["task_generation"],
+            "completion_version": completion,"authored_at_ms": .number(milliseconds),"place_name": .string(place.name),
+            "latitude_e6": .number(Double(place.latitudeE6)),"longitude_e6": .number(Double(place.longitudeE6)),"radius_m": .number(Double(place.radius)),
+            "transition": .string(transition.rawValue),"repeats": .bool(repeats)])
+    }
+    func matches(task: Record, account: String) -> Bool {
+        self.account == account && task.id == taskID && task.string("task_generation") == generation && !task.completed &&
+        (task["completion_version"] == .null ? 0 : Recurrence.number(task["completion_version"], in: 0...9_007_199_254_740_991)) == completion
+    }
+}
+
+struct LocationHandoffRecord: Equatable, Sendable {
+    enum State: String, Sendable { case pending, claimed, imported, discarded, expired }
+    static let keys: Set<String> = ["version","account_id","id","task_id","task_generation","completion_version","authored_at_ms","created_at_ms","expires_at_ms","state","claim_device","available","payload"]
+    let raw: [String: JSON]
+    let state: State
+    let proposal: LocationHandoffProposal?
+    var id: String { raw["id"]!.text }
+    var account: String { raw["account_id"]!.text }
+    var device: String? { if case .string(let value)? = raw["claim_device"] { return value }; return nil }
+    var expiresMilliseconds: Int { raw["expires_at_ms"]!.integer }
+    var available: Bool { raw["available"] == .bool(true) }
+    init?(raw: [String: JSON], account: String, device: String?, serverMilliseconds: Int) {
+        guard Set(raw.keys) == Self.keys, raw["version"] == .number(1), raw["account_id"] == .string(account),
+              LocationReminderIdentity.uuid(.string(account)), device.map({ LocationReminderIdentity.uuid(.string($0)) }) ?? true,
+              ["id","task_id","task_generation"].allSatisfy({ LocationReminderIdentity.uuid(raw[$0]) }),
+              let completion = Recurrence.number(raw["completion_version"] ?? .null, in: 0...9_007_199_254_740_991),
+              let authored = Recurrence.number(raw["authored_at_ms"] ?? .null, in: 0...LocationHandoffProposal.maximumTime),
+              let created = Recurrence.number(raw["created_at_ms"] ?? .null, in: 0...LocationHandoffProposal.maximumTime),
+              let expiry = Recurrence.number(raw["expires_at_ms"] ?? .null, in: 0...LocationHandoffProposal.maximumTime),
+              authored <= created + 300_000, created <= authored + 86_400_000, created <= serverMilliseconds + 300_000,
+              expiry > created, expiry <= created + 604_800_000,
+              let state = State(rawValue: raw["state"]?.text ?? ""), case .bool(let available)? = raw["available"],
+              raw["claim_device"] == .null || LocationReminderIdentity.uuid(raw["claim_device"]) else { return nil }
+        let claimed: String? = raw["claim_device"] == .null ? nil : raw["claim_device"]?.text
+        guard state != .pending || claimed == nil, ![State.claimed,.imported].contains(state) || claimed != nil,
+              !available || ([State.pending,.claimed].contains(state) && expiry > serverMilliseconds),
+              ![State.pending,.claimed].contains(state) || expiry > serverMilliseconds else { return nil }
+        let expectsPayload = available && (state == .pending || claimed == device && device != nil)
+        let proposal: LocationHandoffProposal?
+        if expectsPayload {
+            guard case .object(let payload)? = raw["payload"], Set(payload.keys) == LocationHandoffProposal.payloadKeys else { return nil }
+            var request = payload
+            request["version"] = .number(1); request["id"] = raw["id"]; request["task_id"] = raw["task_id"]; request["task_generation"] = raw["task_generation"]
+            request["completion_version"] = .number(Double(completion)); request["authored_at_ms"] = .number(Double(authored))
+            guard let value = LocationHandoffProposal(account: account, raw: request) else { return nil }; proposal = value
+        } else { guard raw["payload"] == .null else { return nil }; proposal = nil }
+        self.raw = raw; self.state = state; self.proposal = proposal
+    }
+}
+
+/// Persist this nonce in device-private storage BEFORE claiming. A lost response
+/// can resume only the same account/device review. It contains no geometry/name.
+struct LocationHandoffReviewTicket: Codable, Equatable, Sendable {
+    var version = 1
+    let account: String
+    let id: String
+    let device: String
+    let nonce: String
+    let taskID: String
+    let generation: String
+    let completion: Int
+    let expiresMilliseconds: Int
+    let payloadDigest: String
+    var valid: Bool {
+        version == 1 && [account,id,device,nonce,taskID,generation].allSatisfy { LocationReminderIdentity.uuid(.string($0)) } &&
+        (0...9_007_199_254_740_991).contains(completion) && (0...LocationHandoffProposal.maximumTime).contains(expiresMilliseconds) &&
+        payloadDigest.count == 64 && payloadDigest.allSatisfy { "0123456789abcdef".contains($0) }
+    }
+    init?(record: LocationHandoffRecord, device: String, nonce: String = UUID().uuidString.lowercased()) {
+        guard record.available, record.state == .pending, record.device == nil, let proposal = record.proposal else { return nil }
+        account = record.account; id = record.id; self.device = device; self.nonce = nonce; taskID = proposal.taskID; generation = proposal.generation
+        completion = proposal.completion; expiresMilliseconds = record.expiresMilliseconds; payloadDigest = proposal.payloadDigest
+        guard valid else { return nil }
+    }
+    func matches(_ record: LocationHandoffRecord) -> Bool {
+        valid && record.account == account && record.id == id && record.raw["task_id"] == .string(taskID) && record.raw["task_generation"] == .string(generation) &&
+        record.raw["completion_version"] == .number(Double(completion)) && record.expiresMilliseconds == expiresMilliseconds &&
+        (record.proposal.map { $0.payloadDigest == payloadDigest } ?? true)
+    }
+}
+
+struct LocationHandoffResponse: Sendable {
+    static let maximumBytes = 2_000_000
+    let account: String
+    let serverMilliseconds: Int
+    let records: [LocationHandoffRecord]
+    static func read(_ data: Data, account: String, device: String?) throws -> Self {
+        guard data.count <= maximumBytes, LocationReminderIdentity.uuid(.string(account)), device.map({ LocationReminderIdentity.uuid(.string($0)) }) ?? true else { throw AppFailure(message: "Private place drafts could not be read. Your tasks are unchanged.") }
+        let json = try JSONDecoder().decode(JSON.self, from: data)
+        guard case .object(let fields) = json, Set(fields.keys) == ["version","account_id","server_now_ms","items"], fields["version"] == .number(1), fields["account_id"] == .string(account),
+              let now = Recurrence.number(fields["server_now_ms"] ?? .null, in: 0...LocationHandoffProposal.maximumTime), case .array(let items)? = fields["items"], items.count <= 256 else { throw AppFailure(message: "These private place drafts need a newer Taskfold version or a fresh sign-in.") }
+        let records = items.compactMap { value -> LocationHandoffRecord? in guard case .object(let raw) = value else { return nil }; return LocationHandoffRecord(raw: raw, account: account, device: device, serverMilliseconds: now) }
+        guard records.count == items.count, Set(records.map(\.id)).count == records.count else { throw AppFailure(message: "A private place draft changed or could not be read. No reminder has been added.") }
+        return Self(account: account, serverMilliseconds: now, records: records)
+    }
+}
+
+enum LocationHandoffCommand: Sendable {
+    case put(LocationHandoffProposal), list(device: String?), claim(LocationHandoffReviewTicket), finish(LocationHandoffReviewTicket), abandon(LocationHandoffReviewTicket), discard(id: String)
+    var rpc: String {
+        switch self { case .put: "put"; case .list: "list"; case .claim: "claim"; case .finish: "finish"; case .abandon: "abandon"; case .discard: "discard" }
+    }
+    var device: String? { switch self { case .list(let device): device; case .claim(let t), .finish(let t), .abandon(let t): t.device; default: nil } }
+    func body(account: String) throws -> [String: JSON] {
+        guard LocationReminderIdentity.uuid(.string(account)), device.map({ LocationReminderIdentity.uuid(.string($0)) }) ?? true else { throw AppFailure(message: "Sign in before sending a private place draft.") }
+        switch self {
+        case .put(let proposal): guard proposal.account == account else { throw CancellationError() }; return ["_request": .object(proposal.raw)]
+        case .list(let device): return ["_device": device.map(JSON.string) ?? .null]
+        case .claim(let t), .finish(let t), .abandon(let t): guard t.valid, t.account == account else { throw CancellationError() }; return ["_id": .string(t.id),"_device": .string(t.device),"_nonce": .string(t.nonce)]
+        case .discard(let id): guard LocationReminderIdentity.uuid(.string(id)) else { throw AppFailure(message: "This private place draft is unavailable.") }; return ["_id": .string(id)]
+        }
+    }
+    func accepts(_ response: LocationHandoffResponse) -> Bool {
+        switch self {
+        case .list: return true
+        case .put(let proposal):
+            guard response.records.count == 1, let row = response.records.first else { return false }
+            return row.id == proposal.id && row.raw["task_id"] == .string(proposal.taskID) && row.raw["task_generation"] == .string(proposal.generation) &&
+                row.raw["completion_version"] == .number(Double(proposal.completion)) && row.raw["authored_at_ms"] == .number(Double(proposal.authoredMilliseconds)) && (row.proposal.map { $0 == proposal } ?? true)
+        case .claim(let t), .finish(let t), .abandon(let t):
+            guard response.records.count == 1, let row = response.records.first else { return false }
+            return t.matches(row) && row.device == t.device
+        case .discard(let id): return response.records.count == 1 && response.records.first?.id == id
+        }
+    }
+}
+
+@MainActor struct LocationHandoffAPI {
+    let backend: Backend
+    func perform(_ command: LocationHandoffCommand, account: String, isCurrent: @MainActor () -> Bool) async throws -> LocationHandoffResponse {
+        guard isCurrent(), backend.session?.user.id == account else { throw CancellationError() }
+        let incarnation = backend.reminderSessionIncarnation, body = try command.body(account: account)
+        let data = try await backend.request("/rest/v1/rpc/taskfold_location_handoff_" + command.rpc, method: "POST", body: body, expectedAccount: account)
+        guard isCurrent(), backend.reminderSessionIncarnation == incarnation, backend.session?.user.id == account else { throw CancellationError() }
+        let response = try LocationHandoffResponse.read(data, account: account, device: command.device)
+        guard command.accepts(response) else { throw AppFailure(message: "This private place draft changed. Reopen the review before continuing.") }
+        return response
+    }
+}

@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "id": "f083cafe-8600-4000-8000-000000000006",
+      "state": "claimed",
+      "payload": {
+        "repeats": false,
+        "radius_m": 250,
+        "place_name": "Synthetic private workshop",
+        "transition": "arrive",
+        "latitude_e6": 55676098,
+        "longitude_e6": 12568337
+      },
+      "task_id": "f083cafe-8400-4000-8000-000000000001",
+      "version": 1,
+      "available": true,
+      "account_id": "f083cafe-8100-4000-8000-000000000001",
+      "claim_device": "f083cafe-8700-4000-8000-000000000001",
+      "created_at_ms": 1792680438628,
+      "expires_at_ms": 1793285238628,
+      "authored_at_ms": 1792680438628,
+      "task_generation": "f083cafe-8500-4000-8000-000000000001",
+      "completion_version": 0
+    }
+  ],
+  "version": 1,
+  "account_id": "f083cafe-8100-4000-8000-000000000001",
+  "server_now_ms": 1792680438628
+}

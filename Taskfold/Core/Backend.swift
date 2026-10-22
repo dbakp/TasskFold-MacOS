@@ -145,6 +145,14 @@ private enum ProfileUploadResponseTestHold {
 }
 #endif
 
+/// Private geometry RPCs never follow a redirect, including a same-host redirect.
+/// This delegate is immutable and holds no credentials or request state.
+private final class LocationHandoffRedirectRefusal: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+    static let shared = LocationHandoffRedirectRefusal()
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
+}
+
 @MainActor
 final class Backend: NSObject {
     var session: Session?
@@ -252,8 +260,27 @@ final class Backend: NSObject {
             request.setValue("Bearer \(session.access_token)", forHTTPHeaderField: "Authorization")
         }
         extra.forEach { request.setValue($1, forHTTPHeaderField: $0) }
+        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") {
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            request.httpShouldHandleCookies = false
+            request.setValue("no-store", forHTTPHeaderField: "Cache-Control")
+        }
         if let body { request.httpBody = try JSONEncoder().encode(body) }
-        let (data, response) = try await http.data(for: request)
+        let data: Data, response: URLResponse
+        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") {
+            let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
+            let limit = LocationHandoffResponse.maximumBytes
+            var body = Data()
+            do {
+                guard incoming.expectedContentLength <= Int64(limit) else { throw AppFailure(message: "The private place draft response is too large. Your tasks are unchanged.") }
+                for try await byte in bytes {
+                    try Task.checkCancellation()
+                    guard body.count < limit else { throw AppFailure(message: "The private place draft response is too large. Your tasks are unchanged.") }
+                    body.append(byte)
+                }
+            } catch { bytes.task.cancel(); throw error }
+            data = body; response = incoming
+        } else { (data, response) = try await http.data(for: request) }
         if authenticated, generation != sessionGeneration || session?.user.id != owner { throw CancellationError() }
         if authenticated, (response as? HTTPURLResponse)?.statusCode == 401, retryAuthentication {
             try await refreshIfNeeded(force: true)

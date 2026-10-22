@@ -2681,3 +2681,10 @@ Ordinary explicit snoozes now save their exact fire instant before queue admissi
 ### 22 October — checklist recovery review
 
 Added a native grouped-form review to recover damaged/duplicated checklist references while preserving recognized content and ordering. Original data stays available and unknown formats are not guessed. Work runs off the UI actor; normal inspector save/Undo and workspace/source guards own persistence. Child lookup/replacement now refuse ambiguous references, and inline edits/addition cannot coerce legacy/unknown structures. See `CHECKLIST_RECOVERY.md` and `p2-checklist-recovery-evidence.json` for independently owned tests, offscreen production component layouts, build scope and still-open live Mac/accessibility acceptance. Wider Px and all user deferrals stay open.
+
+
+### 22 October — private desktop-to-phone transport foundation
+
+Added an account-private, bounded place-draft protocol and deployed its unexposed table/RPC/retention migration. Authenticated project collaborators cannot read each other's private drafts. Fixed expiry, immutable retry contents, one-device review claims, terminal geometry removal and task-incarnation/access checks are covered by independent client and local/hosted SQL checks. Normal app code makes no upload or import call, and existing device-private places stay local.
+
+`PRIVATE_LOCATION_HANDOFF.md` and `p2-location-handoff-transport-evidence.json` distinguish this foundation from the still-required native sending/review UI, durable private nonce, atomic task import receipts, relaunch/Undo recovery and paired-device acceptance. Mac gains no native location service. This does not complete desktop authoring, rank 5 or Px; real location delivery and all user-deferred release/remote/older-client/provider work remain open.

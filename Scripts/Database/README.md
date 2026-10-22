@@ -14,3 +14,19 @@ This optional development tool uses a pinned PGlite PostgreSQL runtime in memory
 Migration `20261021122959_assignment_provenance.sql` matches the applied shared-backend migration history. Both platform repos own identical copies, with no sibling build dependency. Apply it once per backend, not once per app.
 
 The SQL fixture tests the recording foundation separately from saved-filter integration. New assignment changes are server-recorded; missing legacy history, system actions without an account, removed actors and unverified recurring successors remain unknown. The immutable client catalog receives current-workspace rows through an optional account-fenced read; local actions use explicitly scoped cache evidence. Saved predicates, query cache/preview/grouping, native controls and widget membership are connected. Exact acceptance and remaining Mac/accessibility/concurrent gates are recorded in `docs/p2-assigned-by-filters-evidence.json`.
+
+
+# Private location handoff SQL checks
+
+From this repository, run:
+
+```sh
+npm ci --prefix Scripts/Database --ignore-scripts
+npm run --prefix Scripts/Database test:location-handoff
+```
+
+This uses the same pinned in-memory PGlite runtime with an independent minimal bootstrap. It reads no credentials, app configuration or network endpoint and creates no app/release dependency. The actual migration and 28-assertion fixture cover strict input, owner/device isolation, immutable retries, expiry/retention, revoked access, completion/incarnation and lifecycle replay. All synthetic accounts/tasks/drafts roll back; the runner checks rollback. `--write-golden` is an explicit maintainer-only runner option for regenerating the four synthetic RPC fixtures from actual PostgreSQL output; ordinary test runs never rewrite fixtures.
+
+`supabase/tests/private_location_handoffs.sql` is separately runnable as postgres against the full Taskfold schema after `20261022145128_private_location_handoffs.sql`. Preserve its single transaction, reserved `f083cafe-*` UUIDs and `example.invalid` identities. It follows the genuine owner-invites/member-accepts lifecycle instead of disabling production triggers. Do not substitute existing IDs or commit the fixture. The hosted fixture is SQL-role/JWT-claim simulation, not real Auth/PostgREST transport or mobile delivery acceptance.
+
+Both repos own identical migration copies; apply once to the shared backend. Its hourly `taskfold-location-handoff-retention` job is specific to these drafts. It does not modify other jobs or backfill real tasks. Native handoff integration remains gated as documented in `docs/PRIVATE_LOCATION_HANDOFF.md`.

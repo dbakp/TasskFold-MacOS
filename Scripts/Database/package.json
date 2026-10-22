@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:assignment": "node test-assignment.mjs"
+    "test:assignment": "node test-assignment.mjs",
+    "test:location-handoff": "node test-location-handoff.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"
