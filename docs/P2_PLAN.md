@@ -4,7 +4,7 @@ Updated 22 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal was promoted to P0 after discovering its missing server endpoint. Native recovery/UI/accessibility, the deployed service and genuine iOS/Auth/Storage happy-path verification now pass. Genuine discarded-reply recovery now passes through Retry and ordinary relaunch. Late-expiry local-copy recovery, Mac profile/runtime and wider fault/concurrency variants remain open; see `ACCOUNT_REMOVAL.md`. This new P0 does not replace or shrink the advanced backlog below, and is separate from all user-deferred work.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. The latest rank-3 work targets native note-save recovery after reproducing an iOS editor-dismissal defect on a rejected disk write. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -42,7 +42,7 @@ Current evidence is split by milestone. `p2-share-capture-evidence.json` retains
 
 Both apps now offer selection-based formatting tools, a native readable preview and original-text access. Notes stay in the existing portable description string; Apply edits a draft and the existing durable Save/Undo path remains responsible for persistence. Links accept web addresses only, without embedded credentials; previewing never fetches images, webpages or metadata. Compact task/widget previews remove supported formatting while preserving the complete saved text. Large or excessively fragmented notes retain a complete literal fallback.
 
-Phone and tablet native cancellation, selection replacement, Preview, Apply, parent Save, relaunch and largest-text dark appearance pass in the scoped cases. Mac native acceptance, concurrent/workspace-change, save-failure UI checks and VoiceOver remain open. Exact tests and limits are in `p2-note-formatting-evidence.json`. Print/PDF is tracked separately below; additional view controls and broader hierarchy acceptance remain open in rank 3.
+Phone and tablet native cancellation, selection replacement, Preview, Apply, parent Save, relaunch and largest-text dark appearance pass in the scoped cases. Scoped iOS failed-save/retry and stale-Apply acceptance now passes in `p2-note-recovery-evidence.json`. Mac native acceptance, workspace changes, broader live concurrency and VoiceOver remain open. Exact tests and limits are in `p2-note-formatting-evidence.json`. Print/PDF is tracked separately below; additional view controls and broader hierarchy acceptance remain open in rank 3.
 
 ## Native print and PDF (rank 3, acceptance in progress)
 
@@ -334,3 +334,30 @@ A normal isolated iPhone Auth → Account review → live deletion → cache era
 Two genuine iPhone Auth → Account → server deletion cases now pass after deliberately discarding the first real success acknowledgement: visible Retry and an ordinary no-fixture relaunch. A separate server observer verifies deletion and outsider preservation while the complete native cache is still retained; both recoveries use the same original authorization and erase the cache only afterward. Both app builds and 45 Core account cases per repo pass. The final seven-day review wording also passes native Cancel/cache/relaunch inspection.
 
 `p0-account-removal-lost-reply-evidence.json` states the client fault-injection scope, real backend checks, actual successful cron tick, separately aged/manual-cleaned receipt and cleanup. Late-expiry recovery of an unconfirmed attempt remains an explicit P0 gap; current code preserves local copies but cannot recover an already deleted Auth account after its receipt expires. Mac runtime/profile and wider fault/concurrency acceptance, the wider Px backlog and all user deferrals remain open. No backend configuration changed; all four disposable identities and temporary credentials are cleaned up.
+
+
+### 22 October — note editing recovery and readable failure controls
+
+The iPhone/iPad task editor now presents rejected durable saves inside its own
+sheet, keeping the formatted draft open and retryable. Previously, a simulated
+out-of-space write closed the editor behind the workspace-wide error alert.
+The new native path confirms full-cache preservation on failure, exact draft
+retention, successful Retry, unchanged other tasks and normal relaunch. An ordinary
+formatted-note Save remains accepted. A failed write does not make the unsaved
+draft durable across app termination; the successful retry is what reaches disk.
+
+Both independently owned formatting views make the whole recovery warning
+scrollable, keep Copy text outside that scroll area and dismiss the keyboard on a
+refused Apply. Formatting tools yield space while a warning is present and return
+when writing resumes. Current phone and largest-text dark iPad checks verify a
+changed saved note cannot be overwritten by stale Apply, preserve the formatted
+draft, keep Copy reachable before/after warning scrolling, and retain the newer
+saved note through Cancel and relaunch. Screenshot review caught a clipped warning
+and an inaccessible large-text Copy action before the final layout passed.
+
+`p2-note-recovery-evidence.json` records five accepted native cases across the
+scoped batches and both app builds, with exact source fingerprints and failed
+iterations. The concurrent edit is a second synthetic Store action in one local
+workspace, not real two-device sync. Clipboard activation, workspace switching,
+Mac native editing/Undo/failure and spoken accessibility remain separate gates.
+Full Px and all prior user deferrals remain active.

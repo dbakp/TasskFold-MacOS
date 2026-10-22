@@ -27,6 +27,14 @@ is deployed and real iPhone Simulator late-expiry relaunch acceptance passes.
 This is not Mac runtime/Keychain or distribution acceptance; those remain deferred
 with signing. See [account removal](ACCOUNT_REMOVAL.md) and its status-proof evidence.
 
+22 October note recovery: both owned formatters now reserve a readable scrolling
+warning area with Copy text reachable, and yield formatting tools while showing
+a failure. The Mac already restores its previous inspector draft when Apply's
+save is rejected; its current full app builds. Five scoped Simulator cases cover
+iOS task-save failure/retry, ordinary Save and stale-Apply preservation, including
+largest-text dark iPad. Native Mac editing/Undo/failure and spoken acceptance
+remain open. See `p2-note-recovery-evidence.json`; rank 3/Px stays active.
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.

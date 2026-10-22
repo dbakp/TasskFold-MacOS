@@ -97,6 +97,7 @@ struct NoteFormattingView: View {
                             else { NoteMarkupPreview(text: text).padding(20).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("noteFormatPreview") }
                         }
                     } else {
+                        if message == nil {
                         ScrollView(.horizontal) {
                             HStack(spacing: 10) {
                                 tool("Bold", "bold", .bold)
@@ -106,21 +107,27 @@ struct NoteFormattingView: View {
                                 tool("Numbered list", "list.number", .numbered)
                                 tool("Quote", "text.quote", .quote)
                                 tool("Code", "chevron.left.forwardslash.chevron.right", .code)
-                                Button { guard let span = selectedRange else { message = "Choose one text selection before adding a link."; return }; linkSelection = span; url = "https://"; message = nil; link = true } label: { Label("Link", systemImage: "link") }.accessibilityIdentifier("noteFormat-link")
+                                Button { guard let span = selectedRange else { focused = false; message = "Choose one text selection before adding a link."; return }; linkSelection = span; url = "https://"; message = nil; link = true } label: { Label("Link", systemImage: "link") }.accessibilityIdentifier("noteFormat-link")
                             }.buttonStyle(.bordered).padding(.horizontal).padding(.bottom, 10)
+                        }
                         }
                         TextEditor(text: $text, selection: $selection)
                             .font(.body).padding(.horizontal, 16).focused($focused)
                             .accessibilityLabel("Note text").accessibilityIdentifier("noteFormatText")
-                        if !focused {
+                        if !focused && message == nil {
                             Text("Select words or lines, then choose a style. Preview before applying; the original text stays available.")
                                 .font(.caption).foregroundStyle(.secondary).padding()
                         }
                     }
                     if let message {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(message).foregroundStyle(.red).accessibilityIdentifier("noteFormatError")
-                            Button("Copy text", action: copyText)
+                            ScrollView {
+                                Text(message).foregroundStyle(.red).lineLimit(nil).fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("noteFormatError")
+                            }
+                            .frame(height: textSize.isAccessibilitySize ? 160 : 120)
+                            .accessibilityIdentifier("noteFormatErrorScroll")
+                            Button("Copy text", action: copyText).frame(minHeight: 44)
                         }.padding()
                     }
                 } else { ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Close this editor and reopen notes in your current workspace. Existing saved notes are unchanged.")) }
@@ -128,11 +135,12 @@ struct NoteFormattingView: View {
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: cancel) }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Apply") { guard available else { return }; if let error = apply(text) { message = error } else { dismiss() } }
+                        Button("Apply") { guard available else { return }; if let error = apply(text) { focused = false; message = error } else { dismiss() } }
                             .disabled(!available || link).accessibilityIdentifier("applyNoteFormatting")
                     }
                 }
                 .onChange(of: store.workspaceGeneration) { _, _ in link = false; focused = false }
+                .onChange(of: focused) { _, editing in if editing { message = nil } }
                 .onChange(of: preview) { _, reading in if reading { focused = false } }
                 .interactiveDismissDisabled(text != request.original)
                 .confirmationDialog("Discard your formatting changes?", isPresented: $discard, titleVisibility: .visible) { Button("Discard changes", role: .destructive) { dismiss() } }
@@ -184,7 +192,7 @@ struct NoteFormattingView: View {
             text = edit.text
             if let range = Range(edit.selection, in: text) { selection = TextSelection(range: range) }
             message = nil; focused = true
-        } catch { message = error.localizedDescription }
+        } catch { focused = false; message = error.localizedDescription }
     }
     private func cancel() { if !available { dismiss() } else if text != request.original { discard = true } else { dismiss() } }
     private func copyText() {

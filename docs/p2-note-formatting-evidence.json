@@ -86,5 +86,10 @@
     "Print/PDF, grouping/gesture controls and hierarchy filter grammar not part of this milestone",
     "Real signing/distribution and previously deferred provider/server work remain deferred"
   ],
-  "cleanup": "Superseded full results pruned; final passing results and diagnostic/visual evidence retained. All main Taskfold test apps closed."
+  "cleanup": "Superseded full results pruned; final passing results and diagnostic/visual evidence retained. All main Taskfold test apps closed.",
+  "current_followup": {
+    "date": "2026-10-22",
+    "evidence": "p2-note-recovery-evidence.json",
+    "scope": "Scoped local iOS save failure/retry and concurrent saved-state refusal; independent shared error-layout fixes; older fields retain their original historical scope."
+  }
 }
