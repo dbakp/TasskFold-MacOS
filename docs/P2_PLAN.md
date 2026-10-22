@@ -363,132 +363,49 @@ Mac native editing/Undo/failure and spoken accessibility remain separate gates.
 Full Px and all prior user deferrals remain active.
 
 
-## Automation access — rank 6, task-operation foundation in progress
+## Automation access — rank 6, task operations implemented as an inactive candidate
 
-Both repos now independently own a candidate native/Edge/SQL credential contract.
-The native draft generates a 256-bit random secret and sends only its SHA-256
-hash for registration. The raw value is transient, deliberately non-Codable and
-redacted from diagnostic descriptions. No snapshot or portable-backup field is
-added. A retry retains the same key identity/hash; a changed retry refuses rather
-than replacing it. Metadata reads are owner-bound and paginated, with active
-keys separated from expired/revoked history.
+Both repos independently own credential management transport, private hashed-key
+storage, get/list reads and create/update/complete/reopen/reviewed-delete RPCs.
+The real HTTP handler connects those operations to actual guarded native SQL.
+Scope names are implemented; the feature remains disabled and undeployed.
+`AUTOMATION_API.md` defines the current protocol, limits and retry contract.
 
-Management verifies the real Auth subject and active matching session. Anonymous
-and signed-in clients have no direct table or privileged-RPC access. The native
-transport rejects account/server changes, fences late replies and bounds streamed
-responses without following redirects. The candidate retains gateway JWT checks
-for management. Error/metadata projection does not forward private SQL details,
-hashes or unexpected secrets. Native acknowledgement never treats an already
-revoked/expired key as a newly usable secret.
+Verified account/session checks govern credential management. Task keys authorize
+current account, scope, expiry, access and successful-operation budgets inside
+the same transaction as effects. Permanent immutable request claims bind operation,
+body hash and generation, reauthorize root and successor on replay, and roll back
+with failed effects. No raw key or task body is stored in the journal.
 
-The candidate has five task capability names: read, create, update, complete and
-delete. Expiry choices are 7/30/90/365 days. Issuance is capped at 20 active keys and
-10 new keys per UTC day; operation budgets are 60 per key/minute, 1,000 per key/day
-and 2,000 per account/day. Account/key locks serialize future effects with
-revocation; the authorization helper is private and must remain in the same SQL
-transaction as task effects. Native app sign-out does not revoke delegated tools.
-Beginning account removal revokes existing keys permanently, including after its
-retry receipt expires/prunes; Auth deletion cascades hashes, metadata and usage.
+Writes implement field-level conflict review, project/section/assignment checks,
+recursive checklist preservation and separate progress capability, locked default
+preferences, native-compatible recurrence/clocks and full reviewed cascade deletion.
+Read revisions use a private HMAC secret. Simple reminders can be authored;
+advanced/future rows survive unchanged. Portable advanced-reminder authoring still
+needs implementation rather than reducing the original feature scope.
 
-Local verification passes independently: 49 Core account/automation transport cases
-plus 16 existing private-handoff cases per repo, eight mocked management HTTP cases
-per repo, both actual PostgreSQL/PGlite credential suites and both app builds.
-These are not live API/native-screen acceptance. The candidate migration/function
-is unapplied/undeployed, no new native screen is exposed and no live key was issued.
-See `p2-automation-access-evidence.json` for exact limits and source hashes.
+23 October verification: each repo passes 101 actual local mutation SQL assertions,
+18 real loopback HTTP-to-handler-to-SQL assertions, 17 mocked handler tests, lint
+and 49 selected native transport tests. Isolated iPhone build-for-testing and
+unsigned Mac Debug build succeed. Earlier 316 date and 49 full-successor goldens
+remain the recurrence evidence; historical milestone files retain their snapshot
+context. Current checks do not prove hosted TLS/Auth/PostgREST, every production
+trigger, cross-connection races, native screens or release installation.
+A read-only hosted metadata check confirms no candidate migration, private key/
+journal/revision-secret table, task RPC or automation Edge Function is deployed.
 
-23 October: both repos also own a private, unapplied recurring-task planner.
-Its date, stable successor identity and carried rule match native completion on
-316 shared golden cases. Coverage includes daily/custom/weekly/monthly/yearly,
-schedule- and completion-based intervals, selected month dates and fifth weekdays,
-count/end limits, stable parent identities, fixed/floating time zones, DST,
-invalid legacy rules, year bounds and a historical skipped date-line day.
-Forty related Core tests pass per repo, plus both actual PostgreSQL/PGlite planner
-and combined credential/migration suites. An initial test assertion compile error
-and expected-ID fixture typo were corrected; the skipped-day comparison exposed
-and corrected calendar arithmetic before the final passes.
+Next required, in order:
 
-This planner returns only the next date/identity/rule. It does not copy a full
-successor, reset checklist/reminder state, insert tasks, implement request replay
-or expose a working API. All seven helpers are invoker functions in the private
-schema, with execution revoked from public, anonymous, signed-in and service roles.
-Future authorized private operations can call them internally. No new app screen,
-Simulator interaction, hosted DDL/function deployment or live key/task change is
-claimed. See `p2-automation-recurrence-evidence.json` for exact scope and hashes.
+1. Build premium native management, one-time secret review, interrupted enrollment
+   recovery and revoke/paging/workspace-safe cancellation in both apps.
+2. Add project/section discovery and full portable advanced-reminder authoring
+   validation; keep private location markers behind native private-place review.
+3. Establish rejected-request/IP controls, then real hosted Auth/HTTP timeout,
+   quota, revocation and concurrent-effect acceptance with disposable users.
+4. Verify signed-in phone/tablet and scoped Mac flows, then deploy the coherent
+   gateway/client together. No user release-signing or physical-location gate is reopened.
+5. Continue idempotent email intake, verified sender/recipient permissions, signed
+   webhook retries, advanced teams and the remaining wearable backlog.
 
-23 October continuation: the inactive candidate now has bounded scoped get/list
-reads and a custom-key HTTP handler, plus private permanent request-journal
-helpers. Current key/account checks, task/project/accepted-membership locks and
-reads share one SQL transaction. Explicit projection/paging excludes foreign,
-pending and lost-access task data. Raw keys remain at the HTTP boundary; only
-SHA-256/key IDs enter the fixed service RPC.
-
-Write claims bind account/request ID, operation, target generation and payload
-hash without retaining task text, bodies or full responses. Exact replay must
-reauthorize the recorded resource, including before distinguishing changed
-requests. Deferred COMMIT checks and transaction IDs prevent a pending claim
-from surviving separately from its effects; results are immutable. Claims survive
-task deletion/new generations and later completion cycles, and cascade only with
-the requesting Auth account. Owner cleanup has the matching FK index.
-
-Both repos pass 89 local PostgreSQL assertions using actual native guarded SQL
-effects inside a test-only pipeline, followed by the existing credential fixture;
-nine mocked handler cases and lint also pass per repo. Private definer triggers
-handle the deferred/Auth-role permission boundary. An initial test fixture missed
-profile FK dependencies and one mock needed a lint correction; both are fixed.
-No production write RPC, hosted change, native screen or new app-runtime acceptance
-is claimed. Complete task writes/successor/reminder handling, real HTTP/lock/quota
-races and premium native management remain required. See `AUTOMATION_API.md` and
-`p2-automation-task-access-evidence.json`. All user deferrals remain unchanged.
-
-23 October write-semantics continuation: direct, widget and bulk native
-recurrence now create for the acting workspace, preserving the source creator
-and project. This fixes the native INSERT-policy mismatch that rejected another
-creator's inherited-owner successor. The fixture now models the distinct live
-INSERT predicate instead of an all-actions project-access predicate.
-
-The unapplied candidate carries full successor/checklist IDs, resets, dates,
-recurrence/metadata and reminder filtering, plus native timed-default application.
-It aligns first-fold/first-valid-minute clocks and preserves valid explicit
-instants. Inspection found the hosted normalizer currently uses PostgreSQL's
-different gap/fold behavior; that hosted function remains unchanged. Only pure
-input-time helpers have narrow authenticated/service EXECUTE for the existing
-invoker trigger. Data/successor/default helpers stay private; schema USAGE is
-unchanged.
-
-Both repos pass 150 selected Core cases, including 316 existing date cases and
-49 new write-semantics goldens. The new SQL suite passes 84 checks, including
-actual local authenticated INSERT controls and trigger normalization; the prior
-89 journal/read checks still pass. Current isolated iPhone build-for-testing and
-unsigned Mac Debug build succeed. This is not installed/shared-cloud, new GUI,
-real HTTP, full mutation-RPC or release acceptance. See
-`p2-automation-write-semantics-evidence.json`.
-
-Deletion must preserve the current series/data contracts: the live recurrence
-self-FK has ON DELETE CASCADE, so API deletion needs all reviewed descendant
-baselines, current access/generations and row locks. New/changed descendants must
-conflict. Do not silently drop/clear links: native series identity and backup
-validation/restoration use them. Full create/update/complete/reopen/delete RPCs,
-actual preference reads, assignment/destination checks, lock/HTTP budgets and
-premium native management remain ahead. The feature remains off; the full Px
-goal and user-deferred rollout/release/remote/OAuth/physical checks stay unchanged.
-
-Next required before enabling the feature:
-
-1. Connect the task gateway to current task/project access checks and generation,
-   conflict, recurrence, default-reminder and deletion contracts. Capability names
-   are not implementations of task operations.
-2. Persist immutable request claims so response loss/replay cannot duplicate a task,
-   resurrect deleted generations or repeat a later completion cycle. Reauthorize
-   on replay; revocation/access loss must not leak a previous full task response.
-3. Build native management/review/revoke screens, one-time secret review, interrupted
-   enrollment recovery, paging and workspace-safe cancellation. Keep secrets out of
-   task stores, widgets, ordinary diagnostics and portable backups.
-4. Verify real Auth/HTTP scope refusal, quotas, revocation/concurrency and task effects
-   with disposable users; then the actual signed-in phone/tablet flow. Apply/deploy
-   once only when the gateway and client match. Mac native/signing gates stay scoped.
-5. Continue separately with idempotent email intake and signed webhook retries after
-   sender/recipient authorization, provider and delivery boundaries are established.
-
-The full automation/teams/wearable backlog and original Px objective remain active.
-No user-deferred remote reminder, release, OAuth or physical location work is reopened.
+Exact current source hashes and limits are in `p2-automation-task-mutations-evidence.json`.
+The original full Px goal remains active. All user-deferred work stays deferred.

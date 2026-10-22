@@ -1,0 +1,128 @@
+{
+  "date": "2026-10-23",
+  "platform": "macOS",
+  "milestone": "Actual atomic task-mutation RPC and HTTP gateway candidate; full feature incomplete",
+  "baseCommit": "cdf0eb73987525acbc27a69606f2fdd5525faf1f",
+  "featureEnabled": false,
+  "migrationApplied": false,
+  "edgeFunctionDeployed": false,
+  "productionWriteRPCImplemented": true,
+  "nativeManagementScreensExposed": false,
+  "fullPxComplete": false,
+  "liveKeysIssued": 0,
+  "liveTasksChanged": 0,
+  "candidateMigration": "20261022225439_automation_task_mutations.sql",
+  "operations": [
+    "get",
+    "list",
+    "create",
+    "update",
+    "complete",
+    "reopen",
+    "delete"
+  ],
+  "verification": {
+    "localPostgreSQL": {
+      "passed": true,
+      "assertions": 101,
+      "runtime": "Pinned PGlite 0.5.11 with pgcrypto; actual native guarded migrations, minimal owned dependencies",
+      "command": "npm run --prefix Scripts/Database test:automation-mutations",
+      "fixtureIdentityPrefix": "f095cafe",
+      "fixtureAuthAccountsRemaining": 0
+    },
+    "loopbackHTTP": {
+      "passed": true,
+      "assertions": 18,
+      "rpcCalls": 11,
+      "pipeline": "HTTP client -> real Deno handler -> loopback RPC adapter -> actual SQL",
+      "rawTaskKeyForwardedToRPC": false,
+      "serversClosedAfterTest": true
+    },
+    "mockedHandler": {
+      "passed": true,
+      "tests": 17,
+      "failures": 0,
+      "command": "deno test supabase/functions/automation-tasks/handler_test.ts"
+    },
+    "lint": {
+      "passed": true,
+      "files": 6
+    },
+    "nativeCore": {
+      "passed": true,
+      "tests": 49,
+      "failures": 0,
+      "filter": "AutomationAccessTests|AccountTransportTests"
+    },
+    "appBuild": {
+      "passed": true,
+      "kind": "Isolated unsigned Mac Debug build",
+      "nativeUIAcceptanceClaimed": false
+    },
+    "hostedReadOnlyMetadata": {
+      "keyTable": null,
+      "journalTable": null,
+      "revisionSecretTable": null,
+      "taskRPCCount": 0,
+      "candidateMigrationCount": 0,
+      "automationEdgeFunctions": [],
+      "dataMutation": false
+    }
+  },
+  "bounds": {
+    "readInputBytes": 8192,
+    "writeInputBytes": 1048576,
+    "responseBytes": 1048576,
+    "descriptionBytes": 512000,
+    "inputDeadlineSeconds": 2,
+    "handlerDeadlineSeconds": 15,
+    "configuredPublicSQLStatementTimeoutSeconds": 10,
+    "configuredPrivateLockTimeoutSeconds": 3,
+    "hostedTimeoutEnforcementVerified": false
+  },
+  "security": [
+    "Verified account derives native write actor; request context restored on success and error",
+    "Private hash-only credentials; no raw token at rest in SQL",
+    "Private server-generated HMAC secret for full-row opaque revisions",
+    "Atomic permanent request journal; no task text, request body or full historic response",
+    "Replay reauthorizes root and successor current access/generation",
+    "Reviewed full descendant set locked before existing native cascade",
+    "No public task table grants or FK/backup contract change"
+  ],
+  "correctedDuringVerification": [
+    "Ambiguous PL/pgSQL key reference explicitly qualified",
+    "Minimal sections fixture cascade dependency corrected",
+    "TypeScript runtime guard followed by explicit narrowed body cast",
+    "Loopback fixture expected RPC count corrected from 13 to actual 11",
+    "Three fixture lint issues corrected before final rerun"
+  ],
+  "remaining": [
+    "Premium native management/review/secure interrupted enrollment/revoke screens",
+    "Project/section discovery",
+    "Portable advanced reminder authoring validation; existing opaque rows are preserved",
+    "Rejected-request/IP traffic controls",
+    "Hosted Auth/TLS/PostgREST and actual timeout enforcement",
+    "Independent-connection revocation/access/quota/conflict races",
+    "Actual signed-in Simulator/native management flow",
+    "Coherent gateway/client deployment",
+    "Separate email/webhook/advanced-team/wearable backlog"
+  ],
+  "notClaimed": [
+    "All hosted production triggers reproduced locally",
+    "New native user-flow acceptance",
+    "Physical-device location delivery",
+    "Release signing/distribution or old-client safeguard acceptance",
+    "Full automation or Px completion"
+  ],
+  "sourceSHA256": {
+    "supabase/migrations/20261022225439_automation_task_mutations.sql": "639d3d16283892c205f4cb3af8e2ed53db2847d0ffdab986675e9e2e6a54227e",
+    "supabase/functions/automation-tasks/handler.ts": "59dbd26425bd1aaf51d5761ce482e35f5bf7fe031b6a0c2fa02637805ae68137",
+    "supabase/functions/automation-tasks/handler_test.ts": "c4317329a731e7e5279fc6c46f8cd7558436ab10c0747f1cd9062b466bcc184e",
+    "supabase/functions/automation-tasks/index.ts": "f238d03990d2da6ab7ed2a629f5c70675a6b18da50e5b313be31bb45d59634b8",
+    "Scripts/Database/test-automation-mutations.mjs": "cd76b9316c9b9dc097bb223f6f2d2d5114bbd4eae57ffbbe91b226168e90a646",
+    "Scripts/Database/automation-http-pipeline.mjs": "6de9bf005c0757f24302a660365e73147901900a430fb6b8cdc8fa2062730e34",
+    "Scripts/Database/automation-http-fixture.ts": "839e715e7c90abc603b293b40a9d7f33a00e04adc91bad6d46b168d574a1fea9",
+    "Scripts/Database/package.json": "5626059315306f83bf0f620aed1862f2802b8b8bff377765c4cf433d9a0578f0",
+    "Taskfold/Core/AutomationAccess.swift": "f670f053abab3b548197082d29fcb5e4aea6c5966270a012a980aef748731b97"
+  }
+}

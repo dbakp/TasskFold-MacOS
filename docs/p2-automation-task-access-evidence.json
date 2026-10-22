@@ -99,5 +99,8 @@
     "assertions": 89,
     "passed": true,
     "note": "Fixture INSERT predicate now matches live actor ownership. Original proof/source snapshot remains in the preceding commit; both read/journal suites rerun."
-  }
+  },
+  "sourceSnapshotCommit": "cdf0eb73987525acbc27a69606f2fdd5525faf1f",
+  "supersededBy": "p2-automation-task-mutations-evidence.json",
+  "historicalSnapshotNote": "Milestone claims and source hashes describe the recorded snapshot, not the current mutation candidate."
 }

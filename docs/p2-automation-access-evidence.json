@@ -116,5 +116,8 @@
     ],
     "measuredLogicalBytesPruned": 4966832,
     "retained": "Current automation staging/build inputs, reusable dependencies and evidence; no user data or existing desktop widget extension changed"
-  }
+  },
+  "sourceSnapshotCommit": "08355b8",
+  "supersededBy": "p2-automation-task-mutations-evidence.json",
+  "historicalSnapshotNote": "Milestone claims and source hashes describe the recorded snapshot, not the current mutation candidate."
 }

@@ -103,3 +103,19 @@ spellings are normalized. Eleven wall-time expectations are independently
 specified; other full expected outputs come from actual native algorithms.
 The helper/normalizer candidate is unapplied; no full write gateway is claimed.
 See `docs/p2-automation-write-semantics-evidence.json`.
+
+
+# Automation task-mutation candidate
+
+Run `npm run --prefix Scripts/Database test:automation-mutations`. Node and Deno
+must be installed. The runner applies actual candidate/native guarded migrations
+to pinned PGlite/pgcrypto with minimal owned dependencies. It checks 101 SQL
+assertions, then 18 loopback HTTP assertions through the real Deno handler and
+SQL (11 RPC calls). Deno is restricted to loopback network access. No hosted
+configuration, real credentials or task data are read. Synthetic `f095cafe-*`
+accounts are removed and both temporary servers close in finally cleanup.
+
+Run `deno test supabase/functions/automation-tasks/handler_test.ts` separately
+for 17 mocked handler cases. These checks do not prove hosted Auth/TLS/PostgREST,
+all production triggers, independent-connection races or native key screens.
+The mutation migration remains unapplied. See `docs/AUTOMATION_API.md`.

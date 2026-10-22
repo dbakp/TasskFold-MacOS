@@ -33,6 +33,7 @@ const fields = [
   "time_zone",
   "scheduled_at",
   "source_metadata",
+  "revision",
 ];
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -40,6 +41,7 @@ const json = (body: unknown, status = 200) =>
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "no-store",
+      "Access-Control-Allow-Origin": "*",
     },
   });
 function object(value: unknown): value is Record<string, unknown> {
@@ -105,6 +107,9 @@ function task(value: unknown): Record<string, unknown> {
       (typeof value[key] !== "string" || !uuid.test(value[key] as string))
     ) throw new Error("Invalid identity");
   }
+  if (
+    typeof value.revision !== "string" || !/^[0-9a-f]{64}$/.test(value.revision)
+  ) throw new Error("Invalid revision");
   return Object.fromEntries(fields.map((k) => [k, value[k]]));
 }
 function inputValid(
@@ -175,9 +180,128 @@ function projection(
   ) throw new Error("Invalid cursor");
   return { tasks: rows, next_cursor: value.next_cursor };
 }
+function writeInputValid(
+  action: unknown,
+  body: unknown,
+): body is Record<string, unknown> {
+  if (
+    !object(body) || typeof action !== "string" ||
+    !["create", "update", "complete", "reopen", "delete"].includes(action)
+  ) return false;
+  const common = ["id", "request_id", "task_generation", "time_zone"];
+  const keys = [
+    ...common,
+    ...(action === "create"
+      ? ["fields"]
+      : action === "update"
+      ? ["base", "fields"]
+      : action === "delete"
+      ? ["revision", "descendants"]
+      : ["base"]),
+  ].sort().join(",");
+  if (Object.keys(body).sort().join(",") !== keys) return false;
+  for (const key of ["id", "request_id"]) {
+    if (
+      typeof body[key] !== "string" || !uuid.test(body[key] as string) ||
+      body[key] === "00000000-0000-0000-0000-000000000000"
+    ) return false;
+  }
+  if (
+    body.task_generation !== null &&
+    (typeof body.task_generation !== "string" ||
+      !uuid.test(body.task_generation) ||
+      body.task_generation === "00000000-0000-0000-0000-000000000000")
+  ) return false;
+  if (action === "create" && body.task_generation === null) return false;
+  if (
+    typeof body.time_zone !== "string" || body.time_zone.length < 1 ||
+    body.time_zone.length > 128
+  ) return false;
+  if (["create", "update"].includes(action) && !object(body.fields)) {
+    return false;
+  }
+  if (
+    ["update", "complete", "reopen"].includes(action) &&
+    (!object(body.base) || !Object.hasOwn(body.base, "task_generation") ||
+      body.base.task_generation !== body.task_generation)
+  ) return false;
+  if (
+    action === "delete" &&
+    (typeof body.revision !== "string" ||
+      !/^[0-9a-f]{64}$/.test(body.revision) ||
+      !Array.isArray(body.descendants) || body.descendants.length > 1000)
+  ) return false;
+  return true;
+}
+function writeProjection(
+  value: unknown,
+  action: string,
+  body: Record<string, unknown>,
+) {
+  if (
+    !object(value) || typeof value.replayed !== "boolean" ||
+    !object(value.receipt)
+  ) throw new Error("Invalid acknowledgement");
+  const r = value.receipt;
+  if (
+    r.request_id !== body.request_id || r.task_id !== body.id ||
+    r.operation !== action || r.deleted !== (action === "delete") ||
+    typeof r.applied_at !== "string" || r.applied_at.length > 40 ||
+    !/^\d{4}-\d{2}-\d{2}T/.test(r.applied_at) ||
+    !Number.isFinite(Date.parse(r.applied_at))
+  ) throw new Error("Unconfirmed operation");
+  if (action === "delete") {
+    if (
+      r.task_generation !== null || r.completion_version !== null ||
+      r.successor_id !== null || r.successor_generation !== null
+    ) throw new Error("Invalid deletion acknowledgement");
+  } else {
+    if (
+      r.task_generation !== body.task_generation ||
+      !Number.isSafeInteger(r.completion_version) ||
+      (r.completion_version as number) < 0
+    ) throw new Error("Invalid task result");
+    if (r.successor_id !== null || r.successor_generation !== null) {
+      if (
+        action !== "complete" || typeof r.successor_id !== "string" ||
+        !uuid.test(r.successor_id) ||
+        typeof r.successor_generation !== "string" ||
+        !uuid.test(r.successor_generation)
+      ) throw new Error("Invalid successor result");
+    }
+  }
+  return {
+    replayed: value.replayed,
+    receipt: Object.fromEntries(
+      [
+        "request_id",
+        "operation",
+        "task_id",
+        "task_generation",
+        "completion_version",
+        "successor_id",
+        "successor_generation",
+        "deleted",
+        "applied_at",
+      ].map((k) => [k, r[k]]),
+    ),
+  };
+}
 export function createHandler(config: Config, dependencies: Dependencies = {}) {
   const send = dependencies.send ?? fetch;
   return async (request: Request): Promise<Response> => {
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers":
+            "authorization, content-type, x-taskfold-automation",
+          "Access-Control-Max-Age": "600",
+        },
+      });
+    }
     if (request.method !== "POST") {
       return json({ error: "Use POST for task operations." }, 405);
     }
@@ -206,6 +330,7 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
         503,
       );
     }
+    const writes = new URL(request.url).pathname.endsWith("/write");
     const deadline = AbortSignal.any([
       request.signal,
       AbortSignal.timeout(15000),
@@ -213,7 +338,7 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
     let input: unknown;
     const bodyDeadline = AbortSignal.any([deadline, AbortSignal.timeout(2000)]);
     try {
-      input = await read(request.body, 8192, bodyDeadline);
+      input = await read(request.body, writes ? 1048576 : 8192, bodyDeadline);
     } catch {
       return json({
         error: bodyDeadline.aborted
@@ -223,9 +348,16 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
     }
     if (
       !object(input) || Object.keys(input).sort().join(",") !== "action,body" ||
-      !inputValid(input.action, input.body)
-    ) return json({ error: "Use a supported task read." }, 400);
-    const action = input.action as string, body = input.body;
+      !(writes
+        ? writeInputValid(input.action, input.body)
+        : inputValid(input.action, input.body))
+    ) {
+      return json({
+        error: "Use a supported task operation on its matching route.",
+      }, 400);
+    }
+    const action = input.action as string,
+      body = input.body as Record<string, unknown>;
     const hex = raw[2],
       id = hex.slice(0, 8) + "-" + hex.slice(8, 12) + "-" + hex.slice(12, 16) +
         "-" + hex.slice(16, 20) + "-" + hex.slice(20);
@@ -236,24 +368,30 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
     ).map((b) => b.toString(16).padStart(2, "0")).join("");
     try {
       const result = await send(
-        new Request(origin + "/rest/v1/rpc/taskfold_automation_read", {
-          method: "POST",
-          redirect: "error",
-          signal: deadline,
-          headers: {
-            "Content-Type": "application/json",
-            apikey: config.serviceKey,
-            Authorization: "Bearer " + config.serviceKey,
+        new Request(
+          origin +
+            (writes
+              ? "/rest/v1/rpc/taskfold_automation_write"
+              : "/rest/v1/rpc/taskfold_automation_read"),
+          {
+            method: "POST",
+            redirect: "error",
+            signal: deadline,
+            headers: {
+              "Content-Type": "application/json",
+              apikey: config.serviceKey,
+              Authorization: "Bearer " + config.serviceKey,
+            },
+            body: JSON.stringify({
+              _key: id,
+              _hash: hash,
+              _action: action,
+              _body: body,
+            }),
           },
-          body: JSON.stringify({
-            _key: id,
-            _hash: hash,
-            _action: action,
-            _body: body,
-          }),
-        }),
+        ),
       );
-      const value = await read(result.body, 256000, deadline);
+      const value = await read(result.body, 1048576, deadline);
       if (!result.ok) {
         const codes: Record<string, [number, string]> = {
           "28000": [401, "This task key is unavailable."],
@@ -274,7 +412,11 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
         ] ?? [503, "Task operations are temporarily unavailable."];
         return json({ error: message }, status);
       }
-      return json(projection(value, action, body));
+      return json(
+        writes
+          ? writeProjection(value, action, body)
+          : projection(value, action, body),
+      );
     } catch {
       return json(
         { error: "Task operations are temporarily unavailable." },

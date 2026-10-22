@@ -2844,3 +2844,22 @@ real races and premium native management remain required; automation stays off.
 Preserve native/backup series links rather than silently dropping the inspected
 cascade contract. See `p2-automation-write-semantics-evidence.json`. All user
 deferrals and the full Px goal remain unchanged.
+
+
+### 23 October — atomic task mutation candidate and real local HTTP pipeline
+
+The inactive candidate now implements create/update/complete/reopen/delete, with
+verified native actor context, field-level guards, locked reminder preferences,
+full successors, reviewed cascade deletion and current-access replay. Opaque
+HMAC revisions protect delete reviews without publishing hidden row data.
+Scope explanations now describe Inbox access, checklist edits and reopening.
+
+Each repo independently passes 101 SQL assertions, 18 loopback HTTP-through-real-
+handler-to-SQL assertions, 17 mocked handler tests, lint and 49 selected Core
+transport tests. iPhone build-for-testing and unsigned Mac Debug build pass.
+These are synthetic local checks; no app host was opened. Three fixture lint
+issues were corrected before the final passes. Hosted metadata confirms the
+feature remains undeployed. Native key management, metadata discovery, portable
+advanced reminders, rejected-traffic controls and hosted/concurrent/native-flow
+acceptance remain. See `AUTOMATION_API.md` and the new mutation evidence. The full
+Px goal remains active; all user deferrals remain unchanged.
