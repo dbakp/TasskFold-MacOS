@@ -1,3 +1,4 @@
+import { issueProof, verifyProof } from "./proof.ts";
 type Config = { url: string; serviceKey: string };
 type Dependencies = {
   send?: (request: Request) => Promise<Response>;
@@ -72,7 +73,7 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
     if (!token) return json({ error: "Sign in to remove your account." }, 401);
     // Compatibility is not authorization. Old callers must upgrade to the
     // durable native recovery contract before starting an irreversible command.
-    if (request.headers.get("X-Taskfold-Account-Removal") !== "1") {
+    if (request.headers.get("X-Taskfold-Account-Removal") !== "2") {
       return json(
         { error: "Update Taskfold before removing your account." },
         428,
@@ -182,12 +183,48 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
       } catch {
         return json({ error: "Use an empty removal request." }, 400);
       }
+      const preparing = !!body && typeof body === "object" &&
+        !Array.isArray(body) && Object.keys(body).length === 1 &&
+        (body as { action?: unknown }).action === "prepare";
       if (
         !body || typeof body !== "object" || Array.isArray(body) ||
-        Object.keys(body).length
-      ) return json({ error: "Use an empty removal request." }, 400);
+        (!preparing && Object.keys(body).length)
+      ) return json({ error: "Use a reviewed account-removal request." }, 400);
+      const proofHeader = request.headers.get(
+        "X-Taskfold-Account-Removal-Proof",
+      );
+      let proofAccount: string | null = null;
+      if (!preparing) {
+        if (!proofHeader) {
+          return json(
+            { error: "Prepare account removal before continuing." },
+            428,
+          );
+        }
+        proofAccount = await verifyProof(
+          proofHeader,
+          origin,
+          now(),
+          (id) => rpc("proof_key", { _id: id }),
+        );
+        if (!proofAccount) {
+          throw new Refusal(
+            401,
+            "Account removal needs a valid recovery proof.",
+          );
+        }
+      }
       const hash = await digest(token), key = { _token_hash: hash };
       let authority = grant(await rpc("status", key));
+      if (authority && proofAccount && authority.account !== proofAccount) {
+        throw new Refusal(401, "Removal authorization does not match.");
+      }
+      // A durable signed proof can confirm absence after receipt expiry, but
+      // cannot authorize any destructive operation on an existing account.
+      if (
+        !authority && proofAccount &&
+        await rpc("absent", { _account: proofAccount }) === true
+      ) return json({ deleted: true });
       if (!authority) {
         const authenticated = await api(
           "/auth/v1/user",
@@ -214,6 +251,9 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
           !user?.id || !uuid.test(user.id) || claims.sub !== user.id ||
           !uuid.test(claims.session_id ?? "")
         ) throw new Refusal(401, "Sign in again to remove your account.");
+        if (proofAccount && user.id !== proofAccount) {
+          throw new Refusal(401, "Removal authorization does not match.");
+        }
         authority = grant(
           await rpc("begin", {
             ...key,
@@ -222,6 +262,15 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
           }),
         );
         if (!authority) throw new Error("Missing authorization");
+      }
+      if (preparing) {
+        const proof = await issueProof(
+          authority.account,
+          origin,
+          now(),
+          (id) => rpc("proof_key", { _id: id }),
+        );
+        return json({ prepared: true, account: authority.account, proof });
       }
       // A hash receipt is an already-authorized irreversible command, not a new
       // deletion authorized by a revoked JWT. It also confirms a lost success reply.

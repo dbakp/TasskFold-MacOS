@@ -1,6 +1,6 @@
 # Current P0 release acceptance
 
-22 October priority correction: live backend inspection confirms the native Delete account action's `delete-account` endpoint is absent. Working self-service account removal is a new P0 gap, not part of the deferred release-signing work. See `ACCOUNT_REMOVAL.md`; the dated acceptance records below do not establish account removal.
+22 October current account-removal status: matching service/protocol 2 is deployed and iPhone Simulator deletion/lost-reply recovery passes, including recovery after deliberate pruning of its exact synthetic retry receipt. Secure preparation persists a status-only proof before execution. Mac runtime/profile, pre-proof expired legacy state and wider fault/concurrency acceptance remain open; see `ACCOUNT_REMOVAL.md`. The earlier absence/deployment statements below are dated history.
 
 13 October signing correction: the iOS 26.5 selection failure was in the isolated test setup. Its products were ad hoc because the existing team-signing helper excluded backupcanceltests. With that identity explicitly allowlisted and real team signatures verified in installed app/extension, the same current widget passes selection, completion, automatic All clear without dismiss, unrelated task retention and normal relaunch on the retained iOS 26.5 device. One strict native test passes with zero failures/skips/structured runtime warnings. No production entity rename or fallback was needed. See `widget-team-signing-evidence.json`. Mac installed expiry and broader P0 remain open.
 
@@ -1245,3 +1245,14 @@ A normal isolated iPhone Auth → Account review → live deletion → cache era
 Two genuine iPhone Auth → Account → server deletion cases now pass after deliberately discarding the first real success acknowledgement: visible Retry and an ordinary no-fixture relaunch. A separate server observer verifies deletion and outsider preservation while the complete native cache is still retained; both recoveries use the same original authorization and erase the cache only afterward. Both app builds and 45 Core account cases per repo pass. The final seven-day review wording also passes native Cancel/cache/relaunch inspection.
 
 `p0-account-removal-lost-reply-evidence.json` states the client fault-injection scope, real backend checks, actual successful cron tick, separately aged/manual-cleaned receipt and cleanup. Late-expiry recovery of an unconfirmed attempt remains an explicit P0 gap; current code preserves local copies but cannot recover an already deleted Auth account after its receipt expires. Mac runtime/profile and wider fault/concurrency acceptance, the wider Px backlog and all user deferrals remain open. No backend configuration changed; all four disposable identities and temporary credentials are cleaned up.
+
+
+22 October status-proof milestone: the new private proof removes the seven-day
+receipt dependency when confirming an already-deleted account with no residual
+owned Storage metadata. New deletion still requires verified authorization. Both
+owned Core suites pass 50 cases; both server suites pass 20 cases; both apps build.
+Real expiry/pruning plus ordinary Simulator relaunch passes with cache retention
+until confirmation and outsider preservation. See
+`p0-account-removal-status-proof-evidence.json` for exact source/build/live scope.
+Mac provisioning/runtime, legacy pre-proof expiry, residual-file repair, broader
+races and all existing user deferrals remain separate. The full Px goal is active.

@@ -4,23 +4,32 @@ import Darwin
 /// Device-private recovery only. Never put this authorization in Snapshot,
 /// portable backups, an App Group, diagnostics or task metadata.
 struct AccountRemovalCommand: Codable, Equatable, Sendable {
-    var version = 1
+    var version = 2
     let id: UUID
     let account: String
     let origin: String
     let authorization: String
+    var statusProof: String?
     var confirmed = false
     init(account: String, origin: String, authorization: String) throws {
         self.id = UUID(); self.account = account; self.origin = origin; self.authorization = authorization
         guard valid else { throw AppFailure(message: "Account removal needs a valid signed-in workspace.") }
     }
     var valid: Bool {
-        guard version == 1, let accountID = UUID(uuidString: account), accountID.uuidString.lowercased() == account,
+        guard (version == 1 || version == 2), let accountID = UUID(uuidString: account), accountID.uuidString.lowercased() == account,
               let url = URL(string: origin), url.scheme == "https", url.host != nil,
               url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
               url.path.isEmpty || url.path == "/", !authorization.isEmpty, authorization.utf8.count <= 8192,
               authorization.unicodeScalars.allSatisfy({ (33...126).contains($0.value) }) else { return false }
-        return true
+        if let statusProof, !Self.validProof(statusProof) { return false }
+        return version == 1 || !confirmed || statusProof != nil
+    }
+    static func validProof(_ value: String) -> Bool {
+        value.utf8.count <= 2048 && value.range(of: #"^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]{43}\z"#, options: .regularExpression) != nil
+    }
+    func prepared(with proof: String) throws -> Self {
+        guard valid, !confirmed, Self.validProof(proof) else { throw CancellationError() }
+        var result = self; result.version = 2; result.statusProof = proof; return result
     }
 }
 
@@ -76,10 +85,17 @@ actor AccountRemovalVault {
         guard let index = commands.firstIndex(of: original) else { throw CancellationError() }
         commands[index] = replacement; try save(commands); return replacement
     }
+    /// The status proof must reach protected storage before execution can start.
+    func prepare(_ original: AccountRemovalCommand, proof: String) throws -> AccountRemovalCommand {
+        let prepared = try original.prepared(with: proof)
+        var commands = try pending()
+        guard let index = commands.firstIndex(of: original) else { throw CancellationError() }
+        commands[index] = prepared; try save(commands); return prepared
+    }
     func confirm(_ command: AccountRemovalCommand) throws -> AccountRemovalCommand {
         var commands = try pending()
-        guard let index = commands.firstIndex(where: { $0.id == command.id && $0.account == command.account }),
-              commands[index].origin == command.origin, commands[index].authorization == command.authorization else { throw CancellationError() }
+        guard command.valid, command.statusProof != nil || command.version == 1 && command.confirmed,
+              let index = commands.firstIndex(of: command) else { throw CancellationError() }
         commands[index].confirmed = true; try save(commands); return commands[index]
     }
     func finish(_ command: AccountRemovalCommand) throws {

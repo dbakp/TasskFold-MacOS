@@ -62,8 +62,12 @@ final class AccountRemovalProofHTTP: URLProtocol, @unchecked Sendable {
             AccountRemovalNativeFixture.expiring && request.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-A-renewed"
         guard AccountRemovalNativeFixture.enabled, request.url?.host == "removal-native.test",
               request.url?.path == "/functions/v1/delete-account", request.httpMethod == "POST",
-              request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal") == "1", permitted else {
+              request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal") == "2", permitted else {
             client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet)); return
+        }
+        if request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof") == nil {
+            let body: [String: JSON] = ["prepared": .bool(true), "account": .string(AccountRemovalNativeFixture.owner), "proof": .string("fixture." + String(repeating: "a", count: 43))]
+            reply(200, body: try! JSONEncoder().encode(body)); return
         }
         Self.lock.lock(); Self.requests += 1; let index = Self.requests
         if AccountRemovalNativeFixture.switching && index == 1 { Self.held = self; Self.lock.unlock(); return }

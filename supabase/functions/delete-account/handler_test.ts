@@ -1,3 +1,4 @@
+import { issueProof, verifyProof } from "./proof.ts";
 import { createHandler } from "./handler.ts";
 const owner = "f084cafe-0000-4000-8000-000000000001",
   other = "f084cafe-0000-4000-8000-000000000002",
@@ -6,6 +7,16 @@ const config = {
   url: "https://removal.test",
   serviceKey: "private-service-fixture",
 };
+const signingKey = {
+  id: "f084cafe-0000-4000-8000-000000000020",
+  key: btoa("s".repeat(32)),
+};
+const proof = await issueProof(
+  owner,
+  config.url,
+  Date.now(),
+  () => Promise.resolve(signingKey),
+);
 const token = (subject = owner) =>
   "header." + btoa(JSON.stringify({ sub: subject, session_id: session })) +
   ".signature";
@@ -14,7 +25,8 @@ const request = (body: unknown = {}, secret = token(), method = "POST") =>
     method,
     headers: {
       Authorization: "Bearer " + secret,
-      "X-Taskfold-Account-Removal": "1",
+      "X-Taskfold-Account-Removal": "2",
+      "X-Taskfold-Account-Removal-Proof": proof,
     },
     body: method === "POST" ? JSON.stringify(body) : undefined,
   });
@@ -35,6 +47,9 @@ function fixture(
     loseDeleteReply?: boolean;
     pending?: boolean;
     malformedBucket?: boolean;
+    absent?: boolean;
+    proofOutage?: boolean;
+    proofRevoked?: boolean;
   } = {},
 ) {
   const calls: string[] = [];
@@ -63,6 +78,16 @@ function fixture(
       req.headers.get("Authorization") === "Bearer " + config.serviceKey,
       "Server credentials not confined to server calls",
     );
+    if (path.endsWith("_proof_key")) {
+      if (options.proofOutage) {
+        return response({ message: "PRIVATE KEY ERROR" }, 503);
+      }
+      return response(options.proofRevoked ? null : signingKey);
+    }
+    if (path.endsWith("_absent")) {
+      assert((await req.json())._account === owner, "Wrong status account");
+      return response(options.absent ?? false);
+    }
     if (path.endsWith("_status")) {
       return response(
         options.corruptGrant
@@ -182,7 +207,8 @@ Deno.test("completed receipt confirms a lost reply without reauthenticating or d
   const f = fixture({ complete: true }), result = await f.handler(request());
   assert(result.status === 200, "Receipt unavailable");
   assert(
-    f.calls.length === 1 && f.calls[0].endsWith("_status"),
+    f.calls.length === 2 && f.calls[0].endsWith("_proof_key") &&
+      f.calls[1].endsWith("_status"),
     "Replay changed data",
   );
 });
@@ -285,7 +311,8 @@ Deno.test("malformed JSON and a stalled caller body are refused without credenti
   const f = fixture(),
     headers = {
       Authorization: "Bearer " + token(),
-      "X-Taskfold-Account-Removal": "1",
+      "X-Taskfold-Account-Removal": "2",
+      "X-Taskfold-Account-Removal-Proof": proof,
     };
   assert(
     (await f.handler(
@@ -303,7 +330,7 @@ Deno.test("malformed JSON and a stalled caller body are refused without credenti
 });
 
 Deno.test("legacy and unknown protocol callers cannot start or resume a removal", async () => {
-  for (const version of [null, "", "0", "2", "1, 1"]) {
+  for (const version of [null, "", "0", "1", "3", "2, 2"]) {
     const f = fixture({ complete: true });
     const headers = new Headers({ Authorization: "Bearer " + token() });
     if (version !== null) headers.set("X-Taskfold-Account-Removal", version);
@@ -316,4 +343,94 @@ Deno.test("legacy and unknown protocol callers cannot start or resume a removal"
       "Unsupported client reached privileged services",
     );
   }
+});
+
+Deno.test("preparation authorizes and returns a status proof without deleting anything", async () => {
+  const f = fixture(), result = await f.handler(request({ action: "prepare" }));
+  const body = await result.json();
+  assert(
+    result.status === 200 && body.prepared === true && body.account === owner,
+    "Preparation failed",
+  );
+  assert(
+    await verifyProof(
+      body.proof,
+      config.url,
+      Date.now(),
+      () => Promise.resolve(signingKey),
+    ) === owner,
+    "Invalid prepared proof",
+  );
+  assert(
+    f.calls.some((x) => x.endsWith("_begin")),
+    "Preparation skipped authorization",
+  );
+  assert(
+    !f.calls.some((x) =>
+      x.startsWith("DELETE") || x.endsWith("_files") ||
+      x.endsWith("_prepare") || x.endsWith("_complete")
+    ),
+    "Preparation deleted data",
+  );
+});
+Deno.test("expired receipt plus valid status proof confirms absence without a destructive call", async () => {
+  const f = fixture({ absent: true, auth: 401 }),
+    result = await f.handler(request());
+  assert(
+    result.status === 200 && (await result.json()).deleted === true,
+    "Durable proof failed",
+  );
+  assert(
+    f.calls.length === 3 && f.calls[2].endsWith("_absent"),
+    "Status proof accessed a destructive service",
+  );
+});
+Deno.test("status proof alone cannot remove an existing account or retarget a different account", async () => {
+  const f = fixture({ auth: 401 });
+  assert(
+    (await f.handler(request())).status === 401,
+    "Proof authorized deletion",
+  );
+  assert(
+    !f.calls.some((x) => x.endsWith("_begin") || x.startsWith("DELETE")),
+    "Proof mutated existing account",
+  );
+  const foreign = await issueProof(
+    other,
+    config.url,
+    Date.now(),
+    () => Promise.resolve(signingKey),
+  );
+  const g = fixture({ pending: true });
+  const req = request();
+  req.headers.set("X-Taskfold-Account-Removal-Proof", foreign);
+  assert((await g.handler(req)).status === 401, "Foreign proof accepted");
+  assert(
+    !g.calls.some((x) => x.startsWith("DELETE")),
+    "Foreign proof deleted data",
+  );
+});
+Deno.test("missing, revoked and tampered proofs refuse; key outages remain retryable", async () => {
+  const f = fixture();
+  const req = request();
+  req.headers.delete("X-Taskfold-Account-Removal-Proof");
+  assert(
+    (await f.handler(req)).status === 428 && f.calls.length === 0,
+    "Missing proof reached service",
+  );
+  const bad = request();
+  bad.headers.set("X-Taskfold-Account-Removal-Proof", proof + "x");
+  assert(
+    (await f.handler(bad)).status === 401 && f.calls.length === 0,
+    "Malformed proof reached service",
+  );
+  assert(
+    (await fixture({ proofRevoked: true }).handler(request())).status === 401,
+    "Revoked proof accepted",
+  );
+  const outage = await fixture({ proofOutage: true }).handler(request());
+  assert(
+    outage.status === 503 && !(await outage.text()).includes("PRIVATE"),
+    "Key outage was not retryable/private",
+  );
 });

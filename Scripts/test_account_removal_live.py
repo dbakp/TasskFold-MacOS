@@ -104,12 +104,16 @@ class Acceptance:
         self.require('LegacyClientRefused',status==428)
         status,body=self.call('/auth/v1/admin/users/'+a['id'])
         self.require('LegacyRefusalPreservesAuth',status==200 and json.loads(body)['id']==a['id'])
-        status,_=self.call(endpoint,'POST',{'account':self.state['accounts']['B']['id']},token,headers={'X-Taskfold-Account-Removal':'1'})
+        status,_=self.call(endpoint,'POST',{'account':self.state['accounts']['B']['id']},token,headers={'X-Taskfold-Account-Removal':'2'})
         self.require('CallerCannotChooseAnotherAccount',status==400)
-        status,body=self.call(endpoint,'POST',{},token,headers={'X-Taskfold-Account-Removal':'1'})
+        prepared=self.json(endpoint,'POST',{'action':'prepare'},token,{'X-Taskfold-Account-Removal':'2'})
+        self.require('LivePreparationMatchesAccount',prepared.get('prepared') is True and prepared.get('account')==a['id'] and isinstance(prepared.get('proof'),str))
+        self.state['statusProof']=prepared['proof'];self.save()
+        headers={'X-Taskfold-Account-Removal':'2','X-Taskfold-Account-Removal-Proof':prepared['proof']}
+        status,body=self.call(endpoint,'POST',{},token,headers=headers)
         self.require('LiveEndpointConfirmedDeletion',status==200 and json.loads(body).get('deleted') is True)
         self.state['ownerRemoved']=True;self.save()
-        status,body=self.call(endpoint,'POST',{},token,headers={'X-Taskfold-Account-Removal':'1'})
+        status,body=self.call(endpoint,'POST',{},token,headers=headers)
         self.require('OriginalAuthorizationRecoversSuccessAfterAuthDeletion',status==200 and json.loads(body).get('deleted') is True)
         self.verify()
     def verify(self):
@@ -128,7 +132,7 @@ class Acceptance:
         self.require('SharedHistorySurvivesAnonymously',len(comment)==1 and comment[0]['body']=='Synthetic shared history must survive' and comment[0]['author_id'] is None)
         status,denial=self.call('/storage/v1/object/avatars/'+a['id']+'/recreate.png','POST',token=a['session']['access_token'],raw=b'old JWT must not recreate data',headers={'Content-Type':'image/png'})
         self.require('StaleJWTUploadRefused',status in [401,403] or status==400 and str(json.loads(denial).get('statusCode')) in ['401','403'])
-    def watch_native_pause(self):
+    def watch_native_pause(self, expire=False):
         # Independent server verification while the native app still retains
         # its saved cache and unconfirmed private recovery command.
         marker=self.path.parent/'native-recovery-paused.json'
@@ -141,9 +145,26 @@ class Acceptance:
         else: raise RuntimeError('Native recovery pause not observed')
         self.verify()
         self.require('ServerVerifiedWhileNativeRecoveryPaused',True)
+        if expire:
+            token_hash=paused.get('authorizationHash','')
+            if len(token_hash)!=64 or any(c not in '0123456789abcdef' for c in token_hash): raise RuntimeError('Missing exact removal receipt hash')
+            ready=self.path.parent/'native-expiry-ready.json'
+            fd=os.open(ready,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
+            with os.fdopen(fd,'w') as f: json.dump({'owner':self.state['accounts']['A']['id'],'outsider':self.state['accounts']['B']['id'],'fixture':self.state['fixture'],'authorizationHash':token_hash},f)
+            deadline=time.monotonic()+45
+            while time.monotonic()<deadline:
+                try: pruned=json.loads((self.path.parent/'native-receipt-pruned.json').read_text())
+                except (FileNotFoundError,json.JSONDecodeError): pruned={}
+                if pruned.get('owner')==self.state['accounts']['A']['id'] and pruned.get('pruned') is True: break
+                time.sleep(.25)
+            else: raise RuntimeError('Exact synthetic receipt was not pruned')
+            status=self.json('/rest/v1/rpc/taskfold_account_removal_status','POST',{'_token_hash':token_hash})
+            self.require('ExpiredSyntheticReceiptIsUnavailable',status is None)
         target=self.path.parent/'native-server-verified.json'
         fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
         with os.fdopen(fd,'w') as f: json.dump({'owner':self.state['accounts']['A']['id'],'verified':True},f)
+    def watch_native_expiry_pause(self):
+        self.watch_native_pause(expire=True)
     def cleanup(self):
         # Only exact Admin-created IDs/email/metadata from this private fixture
         # may be deleted; real accounts can never be supplied as cleanup input.
@@ -162,7 +183,7 @@ class Acceptance:
         self.state['cleaned']=True;self.save()
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--private-fixture',type=Path,required=True);p.add_argument('--phase',choices=['seed','upload-probe','watch-native-pause','remove','verify','cleanup'],required=True);p.add_argument('--evidence',type=Path,required=True);a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--private-fixture',type=Path,required=True);p.add_argument('--phase',choices=['seed','upload-probe','watch-native-pause','watch-native-expiry-pause','remove','verify','cleanup'],required=True);p.add_argument('--evidence',type=Path,required=True);a=p.parse_args()
     run=Acceptance(a.private_fixture)
     try:
         getattr(run,a.phase.replace('-','_'))()

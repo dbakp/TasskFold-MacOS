@@ -836,13 +836,21 @@ final class Store {
         guard original.valid, original.origin == (try backend.accountRemovalOrigin) else { throw AppFailure(message: "Return to this account's original server to finish removal.") }
         var command = original
         if !command.confirmed {
-            do { try await backend.performAccountRemoval(command) }
+            do {
+                if command.statusProof == nil {
+                    let proof = try await backend.prepareAccountRemoval(command)
+                    command = try await accountRemovalVault.prepare(command, proof: proof)
+                }
+                try await backend.performAccountRemoval(command)
+            }
             catch is AccountRemovalAuthorizationRequired {
                 guard backend.session?.user.id == command.account else { throw AccountRemovalAuthorizationRequired() }
                 let session = backend.reminderSessionIncarnation
                 let fresh = try await backend.accountRemovalCommand(forceRefresh: backend.session?.access_token == command.authorization)
                 guard fresh.account == command.account, backend.reminderSessionIncarnation == session else { throw CancellationError() }
                 command = try await accountRemovalVault.renew(command, with: fresh)
+                let proof = try await backend.prepareAccountRemoval(command)
+                command = try await accountRemovalVault.prepare(command, proof: proof)
                 try await backend.performAccountRemoval(command)
             }
             command = try await accountRemovalVault.confirm(command)

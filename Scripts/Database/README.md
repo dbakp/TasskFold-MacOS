@@ -30,3 +30,9 @@ This uses the same pinned in-memory PGlite runtime with an independent minimal b
 `supabase/tests/private_location_handoffs.sql` is separately runnable as postgres against the full Taskfold schema after `20261022145128_private_location_handoffs.sql`. Preserve its single transaction, reserved `f083cafe-*` UUIDs and `example.invalid` identities. It follows the genuine owner-invites/member-accepts lifecycle instead of disabling production triggers. Do not substitute existing IDs or commit the fixture. The hosted fixture is SQL-role/JWT-claim simulation, not real Auth/PostgREST transport or mobile delivery acceptance.
 
 Both repos own identical migration copies; apply once to the shared backend. Its hourly `taskfold-location-handoff-retention` job is specific to these drafts. It does not modify other jobs or backfill real tasks. Native handoff integration remains gated as documented in `docs/PRIVATE_LOCATION_HANDOFF.md`.
+
+
+The account-removal runner also loads the status-proof migration and fixture using
+PGlite's real pgcrypto extension. It checks client privilege denial, retained-key
+rotation/revocation, and Auth/canonical/legacy file absence without printing keys.
+These are local schema/role tests; live expiration/relaunch evidence is separate.

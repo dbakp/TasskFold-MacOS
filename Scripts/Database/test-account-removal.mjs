@@ -1,8 +1,10 @@
+import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 import { PGlite } from '@electric-sql/pglite';
 import { readFile } from 'node:fs/promises';
-const db = new PGlite();
+const db = new PGlite({extensions:{pgcrypto}});
 try {
- for (const name of ['./account-removal-bootstrap.sql','../../supabase/migrations/20261022193804_account_removal_service.sql','../../supabase/tests/account_removal.sql']) {
+ await db.exec('create schema extensions; create extension pgcrypto with schema extensions');
+ for (const name of ['./account-removal-bootstrap.sql','../../supabase/migrations/20261022193804_account_removal_service.sql','../../supabase/migrations/20261022203333_account_removal_status_proofs.sql','../../supabase/tests/account_removal.sql','../../supabase/tests/account_removal_status_proofs.sql']) {
   await db.exec(await readFile(new URL(name,import.meta.url),'utf8'));
   console.log('PASS '+name.split('/').at(-1));
  }

@@ -38,6 +38,11 @@ final class AccountTransportTests: XCTestCase {
     func signed(_ account: String, token: String = "old") throws -> Session {
         try JSONDecoder().decode(Session.self, from: Data(("{\"access_token\":\"" + token + "\",\"refresh_token\":\"refresh\",\"expires_in\":3600,\"user\":{\"id\":\"" + account + "\"}}").utf8))
     }
+    private func replyToPreparation(_ request: URLRequest, _ transport: ScopedHTTP) -> Bool {
+        guard request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof") == nil else { return false }
+        let body: [String: JSON] = ["prepared": .bool(true), "account": .string(owner), "proof": .string("fixture." + String(repeating: "a", count: 43))]
+        transport.finish(200, try! JSONEncoder().encode(body)); return true
+    }
     @MainActor func backend(_ session: Session, save: @escaping (Session?) throws -> Void = { _ in }) -> Backend {
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [ScopedHTTP.self]
         return Backend(configuration: ["URL":"https://native-scope.test","Key":"public"], http: URLSession(configuration: config), session: session, persistSession: save)
@@ -604,15 +609,21 @@ extension AccountTransportTests {
         for body in ["", "{}", "null", "[]", "{\"deleted\":false}", "{\"deleted\":\"true\"}", "not JSON", String(repeating: " ", count: 5000) + "{\"deleted\":true}"] {
             ScopedHTTP.handler = { request, transport in
                 XCTAssertEqual(request.url?.path, "/functions/v1/delete-account")
-                XCTAssertEqual(request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal"), "1")
+                XCTAssertEqual(request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal"), "2")
                 XCTAssertEqual(request.httpMethod, "POST")
+                if self.replyToPreparation(request, transport) { return }
                 transport.finish(200, Data(body.utf8))
             }
             do { try await api.deleteAccount(); XCTFail("Unconfirmed removal accepted: " + body) }
             catch { XCTAssertTrue(error.localizedDescription.contains("did not confirm")) }
             XCTAssertEqual(api.session?.user.id, owner)
         }
-        ScopedHTTP.handler = { _, transport in transport.finish(200, Data(#"{"deleted":true}"#.utf8)) }
+        ScopedHTTP.handler = { request, transport in
+            if request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof") == nil {
+                let body: [String: JSON] = ["prepared": .bool(true), "account": .string(self.owner), "proof": .string("fixture." + String(repeating: "a", count: 43))]
+                transport.finish(200, try! JSONEncoder().encode(body))
+            } else { transport.finish(200, Data(#"{"deleted":true}"#.utf8)) }
+        }
         try await api.deleteAccount()
         // Store owns local cleanup after confirmation; the transport never clears a session.
         XCTAssertEqual(api.session?.user.id, owner)
@@ -621,7 +632,10 @@ extension AccountTransportTests {
         for destination in [other, owner] {
             let gate = HTTPGate(), started = expectation(description: "Deletion response held")
             let api = backend(try signed(owner))
-            ScopedHTTP.handler = { _, transport in gate.hold(transport); started.fulfill() }
+            ScopedHTTP.handler = { request, transport in
+                if self.replyToPreparation(request, transport) { return }
+                gate.hold(transport); started.fulfill()
+            }
             defer { ScopedHTTP.handler = nil }
             let deleting = Task { @MainActor in try await api.deleteAccount() }
             await fulfillment(of: [started], timeout: 3)
@@ -646,7 +660,7 @@ extension AccountTransportTests {
 
 extension AccountTransportTests {
     @MainActor func testPersistedRemovalUsesOriginalTokenAfterExpiryAndAnotherAccountSignIn() async throws {
-        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand()
+        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand().prepared(with: "fixture." + String(repeating: "a", count: 43))
         var next = try signed(other, token: "B-current"); next.expires_at = 0
         try await api.accept(next)
         var calls = 0
@@ -662,7 +676,7 @@ extension AccountTransportTests {
         XCTAssertEqual(calls, 1); XCTAssertEqual(api.session?.user.id, other); XCTAssertEqual(api.session?.access_token, "B-current")
     }
     @MainActor func testLostRemovalReplyRetriesExactAuthorizationWithoutRefreshingDeadSession() async throws {
-        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand()
+        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand().prepared(with: "fixture." + String(repeating: "a", count: 43))
         var calls = 0
         ScopedHTTP.handler = { request, transport in
             calls += 1
@@ -684,7 +698,7 @@ extension AccountTransportTests {
         defer { ScopedHTTP.handler = nil }
         let foreign = try AccountRemovalCommand(account: owner, origin: "https://another.test", authorization: "private-fixture")
         do { try await api.performAccountRemoval(foreign); XCTFail("Bearer reached another host") } catch {}
-        var confirmed = try await api.accountRemovalCommand(); confirmed.confirmed = true
+        var confirmed = try await api.accountRemovalCommand().prepared(with: "fixture." + String(repeating: "a", count: 43)); confirmed.confirmed = true
         try await api.performAccountRemoval(confirmed)
         XCTAssertEqual(calls, 0)
     }
@@ -693,7 +707,7 @@ extension AccountTransportTests {
 
 extension AccountTransportTests {
     @MainActor func testExplicitRemovalRefusalCanRenewOnlyCurrentAccountBeforeRetry() async throws {
-        let api = backend(try signed(owner)), original = try await api.accountRemovalCommand()
+        let api = backend(try signed(owner)), original = try await api.accountRemovalCommand().prepared(with: "fixture." + String(repeating: "a", count: 43))
         let refreshed = try JSONEncoder().encode(signed(owner, token: "renewed"))
         var calls: [String] = []
         ScopedHTTP.handler = { request, transport in
@@ -706,9 +720,34 @@ extension AccountTransportTests {
         do { try await api.performAccountRemoval(original); XCTFail("401 accepted") }
         catch { XCTAssertTrue(error is AccountRemovalAuthorizationRequired) }
         XCTAssertEqual(calls, ["/functions/v1/delete-account"], "No automatic refresh may discard the original receipt authorization")
-        let replacement = try await api.accountRemovalCommand(forceRefresh: true)
+        let replacement = try await api.accountRemovalCommand(forceRefresh: true).prepared(with: "fixture." + String(repeating: "a", count: 43))
         XCTAssertEqual(replacement.account, owner); XCTAssertEqual(replacement.authorization, "renewed")
         try await api.performAccountRemoval(replacement)
         XCTAssertEqual(calls, ["/functions/v1/delete-account", "/auth/v1/token", "/functions/v1/delete-account"])
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testExecutionWithoutPersistableProofNeverSendsRequest() async throws {
+        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand()
+        var calls = 0
+        ScopedHTTP.handler = { _, _ in calls += 1 }; defer { ScopedHTTP.handler = nil }
+        do { try await api.performAccountRemoval(command); XCTFail("Unprepared deletion sent") } catch {}
+        XCTAssertEqual(calls, 0)
+    }
+    @MainActor func testPreparationRequiresMatchingAccountAndBoundedOpaqueProof() async throws {
+        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand()
+        defer { ScopedHTTP.handler = nil }
+        for body in [#"{"prepared":true,"account":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","proof":"a.b"}"#,
+                     #"{"prepared":true,"account":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","proof":"a.b"}"#,
+                     #"{"prepared":"true"}"#, #"{"deleted":true}"#] {
+            ScopedHTTP.handler = { request, transport in
+                XCTAssertNil(request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof"))
+                let sentBody = request.httpBody ?? { let stream = request.httpBodyStream!; stream.open(); defer { stream.close() }; var data = Data(), buffer = [UInt8](repeating: 0, count: 64); while stream.hasBytesAvailable { let n = stream.read(&buffer, maxLength: buffer.count); if n <= 0 { break }; data.append(buffer, count: n) }; return data }()
+                XCTAssertEqual(sentBody, Data(#"{"action":"prepare"}"#.utf8))
+                transport.finish(200, Data(body.utf8))
+            }
+            do { _ = try await api.prepareAccountRemoval(command); XCTFail("Invalid preparation accepted") } catch {}
+        }
     }
 }

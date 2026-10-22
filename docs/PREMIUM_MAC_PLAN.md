@@ -20,6 +20,13 @@ The goal is a calm, fast native Mac app: daily actions should take few steps, na
 
 21 October print/PDF: task lists and pinned notes open an immutable native PDF review with paper/content options and explicit Save/Print. The independently owned renderer has multiline/Unicode, bounded pagination and complete-source tests; production and isolated app inputs include the printing sandbox entitlement. Native Mac Save/Print, error recovery and VoiceOver remain pending while the Mac is locked. See [print evidence](p2-print-output-evidence.json).
 
+22 October removal recovery: the Mac independently owns protocol-2 preparation,
+private proof persistence and exact-command confirmation. Core account/removal
+checks pass 50 cases; the complete isolated Mac source builds. The shared service
+is deployed and real iPhone Simulator late-expiry relaunch acceptance passes.
+This is not Mac runtime/Keychain or distribution acceptance; those remain deferred
+with signing. See [account removal](ACCOUNT_REMOVAL.md) and its status-proof evidence.
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.

@@ -409,17 +409,39 @@ final class Backend: NSObject {
         guard !sessionTransition, sessionGeneration == incarnation, let current = session, current.user.id == account else { throw CancellationError() }
         return try AccountRemovalCommand(account: account, origin: accountRemovalOrigin, authorization: current.access_token)
     }
+    /// Preparation never deletes data. Store saves the returned status proof in
+    /// its private vault before sending the separate execution request.
+    func prepareAccountRemoval(_ command: AccountRemovalCommand) async throws -> String {
+        let receipt = try await accountRemovalRequest(command, preparing: true)
+        guard receipt["prepared"] == .bool(true), receipt["account"]?.text == command.account,
+              let proof = receipt["proof"]?.text, AccountRemovalCommand.validProof(proof) else {
+            throw AppFailure(message: "The server did not confirm account removal preparation. Your local work has been kept.")
+        }
+        return proof
+    }
     /// Resumes only an app-private, durably authorized command. It deliberately
     /// does not refresh credentials, retarget to the current account or clear it.
     func performAccountRemoval(_ command: AccountRemovalCommand) async throws {
         guard command.valid, command.origin == (try accountRemovalOrigin) else { throw AppFailure(message: "Return to this account's original server to finish removal.") }
         if command.confirmed { return }
+        guard command.statusProof != nil else { throw AppFailure(message: "Prepare account removal securely before continuing.") }
+        let receipt = try await accountRemovalRequest(command, preparing: false)
+        guard receipt["deleted"] == .bool(true) else {
+            throw AppFailure(message: "The server did not confirm account removal. Your local work is still on this device. Try again.")
+        }
+        #if DEBUG && !SWIFT_PACKAGE
+        try AccountRemovalLiveReplyFault.afterConfirmed(command, currentAccount: session?.user.id, email: session?.user.email)
+        #endif
+    }
+    private func accountRemovalRequest(_ command: AccountRemovalCommand, preparing: Bool) async throws -> [String: JSON] {
+        guard command.valid, command.origin == (try accountRemovalOrigin), !command.confirmed else { throw CancellationError() }
         var outgoing = URLRequest(url: URL(string: command.origin + "/functions/v1/delete-account")!)
-        outgoing.httpMethod = "POST"; outgoing.httpBody = Data("{}".utf8); outgoing.timeoutInterval = 25
+        outgoing.httpMethod = "POST"; outgoing.httpBody = Data((preparing ? #"{"action":"prepare"}"# : "{}").utf8); outgoing.timeoutInterval = 25
         outgoing.cachePolicy = .reloadIgnoringLocalCacheData; outgoing.httpShouldHandleCookies = false
         outgoing.setValue(config["Key"], forHTTPHeaderField: "apikey")
         outgoing.setValue("Bearer " + command.authorization, forHTTPHeaderField: "Authorization")
-        outgoing.setValue("1", forHTTPHeaderField: "X-Taskfold-Account-Removal")
+        outgoing.setValue("2", forHTTPHeaderField: "X-Taskfold-Account-Removal")
+        if !preparing { outgoing.setValue(command.statusProof, forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof") }
         outgoing.setValue("application/json", forHTTPHeaderField: "Content-Type")
         outgoing.setValue("no-store", forHTTPHeaderField: "Cache-Control")
         let (bytes, response) = try await http.bytes(for: outgoing, delegate: LocationHandoffRedirectRefusal.shared)
@@ -437,20 +459,19 @@ final class Backend: NSObject {
         guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
             throw AppFailure(message: (receipt?["error"]?.text).flatMap { $0.isEmpty ? nil : String($0.prefix(500)) } ?? "Account removal could not be confirmed. Some server data may already be removed. Try again.")
         }
-        guard receipt?["deleted"] == .bool(true) else {
-            throw AppFailure(message: "The server did not confirm account removal. Your local work is still on this device. Try again.")
-        }
-        #if DEBUG && !SWIFT_PACKAGE
-        try AccountRemovalLiveReplyFault.afterConfirmed(command, currentAccount: session?.user.id, email: session?.user.email)
-        #endif
+        return receipt ?? [:]
     }
-    /// Convenience for transport callers; the Store uses the durable vault path.
+    #if SWIFT_PACKAGE
+    /// Transport-test convenience only. Production always uses Store's vault.
     func deleteAccount() async throws {
         let incarnation = sessionGeneration, account = session?.user.id
         let command = try await accountRemovalCommand()
-        try await performAccountRemoval(command)
+        let prepared = try command.prepared(with: await prepareAccountRemoval(command))
+        guard sessionGeneration == incarnation, session?.user.id == account else { throw CancellationError() }
+        try await performAccountRemoval(prepared)
         guard sessionGeneration == incarnation, session?.user.id == account else { throw CancellationError() }
     }
+    #endif
     #if canImport(UIKit)
     func google() async throws {
         guard authSession == nil else { throw CancellationError() }

@@ -1,0 +1,439 @@
+{
+  "milestone": "Durable status-only account-removal proof",
+  "date": "2026-10-22",
+  "platform": "macOS",
+  "baseCommit": "8cfd01978908a7522456fa1bdc80494266327eea",
+  "releaseAcceptanceComplete": false,
+  "deployment": {
+    "project": "zqxflydiyfjeedqvyova",
+    "function": "delete-account",
+    "version": 2,
+    "verifyJWTAtGateway": false,
+    "handlerAuthorizationRequired": true,
+    "protocol": 2,
+    "bundleSHA256": "d9ce2203d6d749f33f4560c7f97cb98a0fb7e83cedc4745d205d1fc60a598b2e",
+    "migration": "20261022203333_account_removal_status_proofs.sql"
+  },
+  "contract": {
+    "prepareBeforeExecute": true,
+    "proofSavedInPrivateKeychainBeforeExecution": true,
+    "secureWriteFailurePreventsExecution": true,
+    "proofAuthorizesDeletion": false,
+    "proofOnlyConfirmsAuthAndOwnedStorageAbsence": true,
+    "newPermanentPerAccountServerTombstones": false,
+    "inactiveSigningKeysRetainedUnlessRevoked": true,
+    "oldConfirmedLocalCommandCleanupSupported": true
+  },
+  "localVerification": {
+    "coreAccountCases": 50,
+    "coreFailures": 0,
+    "denoCases": 20,
+    "denoFailures": 0,
+    "denoLint": "passed",
+    "SQL": "passed with actual PGlite pgcrypto, privilege/rotation/revocation/absence assertions and rollback",
+    "fullAppBuild": "passed",
+    "macBuildSigningDisabled": true,
+    "fullCoreSuiteRerun": false
+  },
+  "nativeStore": {
+    "failed-reply-retry": {
+      "checks": {
+        "backupKeysExistBeforeRemoval": true,
+        "confirmedRemovalSignsOut": true,
+        "encryptedRecoveryRoundtrip": true,
+        "failedRequestKeepsCache": true,
+        "failedRequestKeepsSession": true,
+        "interruptedResultRefused": true,
+        "lateRemovedAccountCannotReopen": true,
+        "originalAuthorizationDurable": true,
+        "outsiderBackupKeyKept": true,
+        "outsiderCacheExact": true,
+        "outsiderRecoveryExact": true,
+        "ownedBackupKeyRemoved": true,
+        "ownedRecoveryRemoved": true,
+        "ownerCacheRemoved": true,
+        "pendingWidgetPrivate": true,
+        "pendingWorkspaceQuiescent": true,
+        "privatePlacesScoped": true,
+        "recoveryCommandFinished": true,
+        "reservedRecoveryOnly": true,
+        "sameAuthorizationRetried": true,
+        "staleCacheWriteRefused": true,
+        "staleConfirmationRefused": true
+      },
+      "scenario": "failed-reply-retry",
+      "scope": "Real native Store and file/Keychain cleanup with synthetic accounts and simulated endpoint replies. Fixture-owned sharing directory; not live Auth/Storage or normal App Group acceptance.",
+      "status": "passed"
+    },
+    "late-account-switch": {
+      "checks": {
+        "backupKeysExistBeforeRemoval": true,
+        "encryptedRecoveryRoundtrip": true,
+        "heldOriginalRequest": true,
+        "otherMemoryKept": true,
+        "otherSessionKept": true,
+        "otherShareKept": true,
+        "otherWidgetKept": true,
+        "outsiderBackupKeyKept": true,
+        "outsiderCacheExact": true,
+        "outsiderRecoveryExact": true,
+        "ownedBackupKeyRemoved": true,
+        "ownedRecoveryRemoved": true,
+        "ownerCacheRemoved": true,
+        "privatePlacesScoped": true,
+        "recoveryCommandFinished": true,
+        "reservedRecoveryOnly": true,
+        "staleCacheWriteRefused": true,
+        "staleConfirmationRefused": true
+      },
+      "scenario": "late-account-switch",
+      "scope": "Real native Store and file/Keychain cleanup with synthetic accounts and simulated endpoint replies. Fixture-owned sharing directory; not live Auth/Storage or normal App Group acceptance.",
+      "status": "passed"
+    },
+    "expired-authorization": {
+      "checks": {
+        "backupKeysExistBeforeRemoval": true,
+        "confirmedRemovalSignsOut": true,
+        "encryptedRecoveryRoundtrip": true,
+        "expiredAuthorizationRenewed": true,
+        "lateRemovedAccountCannotReopen": true,
+        "outsiderBackupKeyKept": true,
+        "outsiderCacheExact": true,
+        "outsiderRecoveryExact": true,
+        "ownedBackupKeyRemoved": true,
+        "ownedRecoveryRemoved": true,
+        "ownerCacheRemoved": true,
+        "privatePlacesScoped": true,
+        "recoveryCommandFinished": true,
+        "reservedRecoveryOnly": true,
+        "staleCacheWriteRefused": true,
+        "staleConfirmationRefused": true
+      },
+      "scenario": "expired-authorization",
+      "scope": "Real native Store and file/Keychain cleanup with synthetic accounts and simulated endpoint replies. Fixture-owned sharing directory; not live Auth/Storage or normal App Group acceptance.",
+      "status": "passed"
+    }
+  },
+  "nativeLive": {
+    "retry": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "serverReports": {
+        "seed": {
+          "phase": "seed",
+          "status": "passed",
+          "checks": {
+            "AIsGeneratedDisposableAccount": true,
+            "BIsGeneratedDisposableAccount": true,
+            "SharedCommentSavedThroughPublicRPC": true,
+            "AavatarsUploadSucceeded": true,
+            "AavatarsActualBytesReadable": true,
+            "Atask-attachmentsUploadSucceeded": true,
+            "Atask-attachmentsActualBytesReadable": true,
+            "BavatarsUploadSucceeded": true,
+            "BavatarsActualBytesReadable": true,
+            "Btask-attachmentsUploadSucceeded": true,
+            "Btask-attachmentsActualBytesReadable": true,
+            "RealPasswordSessionsIssued": true
+          },
+          "fixture": "e4356535-528a-4d1f-9485-ca25bb64e3a1",
+          "accounts": {
+            "A": "9e1178a2-ce15-4157-9e49-db33e82b6958",
+            "B": "50a4a937-0204-491e-bfc0-dc0f3837b2d9"
+          },
+          "probe": null,
+          "probeElapsedSeconds": null,
+          "scope": "Real deployed endpoint/Auth/REST/Storage with generated users only. upload-probe requires a separately held service-only begin transaction; it proves that controlled lock overlap, not every full endpoint/upload race or native UI."
+        },
+        "paused-server": {
+          "phase": "watch-native-pause",
+          "status": "passed",
+          "checks": {
+            "OwnerAuthHardDeleted": true,
+            "BIsGeneratedDisposableAccount": true,
+            "RemovedAuthCannotReadOwnUser": true,
+            "AavatarsActualBytesRemoved": true,
+            "Atask-attachmentsActualBytesRemoved": true,
+            "BavatarsActualBytesPreserved": true,
+            "Btask-attachmentsActualBytesPreserved": true,
+            "OutsiderIndependentTaskExactlyPreserved": true,
+            "OutsiderSharedTaskSurvivesUnassigned": true,
+            "SharedHistorySurvivesAnonymously": true,
+            "StaleJWTUploadRefused": true,
+            "ServerVerifiedWhileNativeRecoveryPaused": true
+          },
+          "fixture": "e4356535-528a-4d1f-9485-ca25bb64e3a1",
+          "accounts": {
+            "A": "9e1178a2-ce15-4157-9e49-db33e82b6958",
+            "B": "50a4a937-0204-491e-bfc0-dc0f3837b2d9"
+          },
+          "probe": null,
+          "probeElapsedSeconds": null,
+          "scope": "Real deployed endpoint/Auth/REST/Storage with generated users only. upload-probe requires a separately held service-only begin transaction; it proves that controlled lock overlap, not every full endpoint/upload race or native UI."
+        },
+        "post-server": {
+          "phase": "verify",
+          "status": "passed",
+          "checks": {
+            "OwnerAuthHardDeleted": true,
+            "BIsGeneratedDisposableAccount": true,
+            "RemovedAuthCannotReadOwnUser": true,
+            "AavatarsActualBytesRemoved": true,
+            "Atask-attachmentsActualBytesRemoved": true,
+            "BavatarsActualBytesPreserved": true,
+            "Btask-attachmentsActualBytesPreserved": true,
+            "OutsiderIndependentTaskExactlyPreserved": true,
+            "OutsiderSharedTaskSurvivesUnassigned": true,
+            "SharedHistorySurvivesAnonymously": true,
+            "StaleJWTUploadRefused": true
+          },
+          "fixture": "e4356535-528a-4d1f-9485-ca25bb64e3a1",
+          "accounts": {
+            "A": "9e1178a2-ce15-4157-9e49-db33e82b6958",
+            "B": "50a4a937-0204-491e-bfc0-dc0f3837b2d9"
+          },
+          "probe": null,
+          "probeElapsedSeconds": null,
+          "scope": "Real deployed endpoint/Auth/REST/Storage with generated users only. upload-probe requires a separately held service-only begin transaction; it proves that controlled lock overlap, not every full endpoint/upload race or native UI."
+        },
+        "cleanup": {
+          "phase": "cleanup",
+          "status": "passed",
+          "checks": {
+            "BIsGeneratedDisposableAccount": true,
+            "BavatarsFixtureFileCleanup": true,
+            "Btask-attachmentsFixtureFileCleanup": true,
+            "BDisposableAuthCleanup": true,
+            "AAuthAbsentAfterCleanup": true,
+            "BAuthAbsentAfterCleanup": true
+          },
+          "fixture": "e4356535-528a-4d1f-9485-ca25bb64e3a1",
+          "accounts": {
+            "A": "9e1178a2-ce15-4157-9e49-db33e82b6958",
+            "B": "50a4a937-0204-491e-bfc0-dc0f3837b2d9"
+          },
+          "probe": null,
+          "probeElapsedSeconds": null,
+          "scope": "Real deployed endpoint/Auth/REST/Storage with generated users only. upload-probe requires a separately held service-only begin transaction; it proves that controlled lock overlap, not every full endpoint/upload race or native UI."
+        }
+      },
+      "sameOriginalAuthorizationAndTwoGenuineSuccessReplies": true,
+      "oneAcknowledgementDiscardedInDEBUGClient": true,
+      "cacheKeptUntilIndependentServerCheck": true,
+      "finalOrdinaryRelaunchSignedOut": true,
+      "receiptPrunedBeforeRecovery": false
+    },
+    "relaunch": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "serverReports": {
+        "seed": {
+          "phase": "seed",
+          "status": "passed",
+          "checks": {
+            "AIsGeneratedDisposableAccount": true,
+            "BIsGeneratedDisposableAccount": true,
+            "SharedCommentSavedThroughPublicRPC": true,
+            "AavatarsUploadSucceeded": true,
+            "AavatarsActualBytesReadable": true,
+            "Atask-attachmentsUploadSucceeded": true,
+            "Atask-attachmentsActualBytesReadable": true,
+            "BavatarsUploadSucceeded": true,
+            "BavatarsActualBytesReadable": true,
+            "Btask-attachmentsUploadSucceeded": true,
+            "Btask-attachmentsActualBytesReadable": true,
+            "RealPasswordSessionsIssued": true
+          },
+          "fixture": "f1b5fe48-b433-4de0-886e-5e570bed333a",
+          "accounts": {
+            "A": "38109c49-1b0d-481b-9c11-c8ad63acc5fb",
+            "B": "58e642f7-ac36-4714-b0cb-8fa68023db2d"
+          },
+          "probe": null,
+          "probeElapsedSeconds": null,
+          "scope": "Real deployed endpoint/Auth/REST/Storage with generated users only. upload-probe requires a separately held service-only begin transaction; it proves that controlled lock overlap, not every full endpoint/upload race or native UI."
+        },
+        "paused-server": {
+          "phase": "watch-native-expiry-pause",
+          "status": "passed",
+          "checks": {
+            "OwnerAuthHardDeleted": true,
+            "BIsGeneratedDisposableAccount": true,
+            "RemovedAuthCannotReadOwnUser": true,
+            "AavatarsActualBytesRemoved": true,
+            "Atask-attachmentsActualBytesRemoved": true,
+            "BavatarsActualBytesPreserved": true,
+            "Btask-attachmentsActualBytesPreserved": true,
+            "OutsiderIndependentTaskExactlyPreserved": true,
+            "OutsiderSharedTaskSurvivesUnassigned": true,
+            "SharedHistorySurvivesAnonymously": true,
+            "StaleJWTUploadRefused": true,
+            "ServerVerifiedWhileNativeRecoveryPaused": true,
+            "ExpiredSyntheticReceiptIsUnavailable": true
+          },
+          "fixture": "f1b5fe48-b433-4de0-886e-5e570bed333a",
+          "accounts": {
+            "A": "38109c49-1b0d-481b-9c11-c8ad63acc5fb",
+            "B": "58e642f7-ac36-4714-b0cb-8fa68023db2d"
+          },
+          "probe": null,
+          "probeElapsedSeconds": null,
+          "scope": "Real deployed endpoint/Auth/REST/Storage with generated users only. upload-probe requires a separately held service-only begin transaction; it proves that controlled lock overlap, not every full endpoint/upload race or native UI."
+        },
+        "post-server": {
+          "phase": "verify",
+          "status": "passed",
+          "checks": {
+            "OwnerAuthHardDeleted": true,
+            "BIsGeneratedDisposableAccount": true,
+            "RemovedAuthCannotReadOwnUser": true,
+            "AavatarsActualBytesRemoved": true,
+            "Atask-attachmentsActualBytesRemoved": true,
+            "BavatarsActualBytesPreserved": true,
+            "Btask-attachmentsActualBytesPreserved": true,
+            "OutsiderIndependentTaskExactlyPreserved": true,
+            "OutsiderSharedTaskSurvivesUnassigned": true,
+            "SharedHistorySurvivesAnonymously": true,
+            "StaleJWTUploadRefused": true
+          },
+          "fixture": "f1b5fe48-b433-4de0-886e-5e570bed333a",
+          "accounts": {
+            "A": "38109c49-1b0d-481b-9c11-c8ad63acc5fb",
+            "B": "58e642f7-ac36-4714-b0cb-8fa68023db2d"
+          },
+          "probe": null,
+          "probeElapsedSeconds": null,
+          "scope": "Real deployed endpoint/Auth/REST/Storage with generated users only. upload-probe requires a separately held service-only begin transaction; it proves that controlled lock overlap, not every full endpoint/upload race or native UI."
+        },
+        "cleanup": {
+          "phase": "cleanup",
+          "status": "passed",
+          "checks": {
+            "BIsGeneratedDisposableAccount": true,
+            "BavatarsFixtureFileCleanup": true,
+            "Btask-attachmentsFixtureFileCleanup": true,
+            "BDisposableAuthCleanup": true,
+            "AAuthAbsentAfterCleanup": true,
+            "BAuthAbsentAfterCleanup": true
+          },
+          "fixture": "f1b5fe48-b433-4de0-886e-5e570bed333a",
+          "accounts": {
+            "A": "38109c49-1b0d-481b-9c11-c8ad63acc5fb",
+            "B": "58e642f7-ac36-4714-b0cb-8fa68023db2d"
+          },
+          "probe": null,
+          "probeElapsedSeconds": null,
+          "scope": "Real deployed endpoint/Auth/REST/Storage with generated users only. upload-probe requires a separately held service-only begin transaction; it proves that controlled lock overlap, not every full endpoint/upload race or native UI."
+        }
+      },
+      "sameOriginalAuthorizationAndTwoGenuineSuccessReplies": true,
+      "oneAcknowledgementDiscardedInDEBUGClient": true,
+      "cacheKeptUntilIndependentServerCheck": true,
+      "finalOrdinaryRelaunchSignedOut": true,
+      "receiptPrunedBeforeRecovery": true
+    }
+  },
+  "liveRefusals": {
+    "status": "passed",
+    "checks": {
+      "ProtocolNoneRefused": true,
+      "Protocol1Refused": true,
+      "AnonymousCannotReadSigningKey": true,
+      "SignedInCannotReadSigningKey": true,
+      "RefusalsPreserveAccount": true
+    }
+  },
+  "expiryExperiment": {
+    "exactSyntheticReceiptHash": "0db5eb90ac421010ce44422f3789ca6bfe24e655c155036186630817e6187412",
+    "syntheticAccount": "38109c49-1b0d-481b-9c11-c8ad63acc5fb",
+    "prunedAtUTC": "2026-10-22 20:35:56.007970+00",
+    "method": "Guarded exact completed synthetic receipt aged to eight days then manually pruned with the normal seven-day retention predicate; separate RPC confirmed receipt unavailable before native relaunch",
+    "sevenActualDaysElapsed": false,
+    "naturalCronPrunedThisReceipt": false
+  },
+  "securityAdvisors": {
+    "existingWarningGroupsUnchanged": 6,
+    "intentionalPrivateRLSWithoutPolicyTables": [
+      "account_removal_receipts",
+      "account_removal_proof_keys"
+    ],
+    "noNewClientAccessToProofKeysOrAbsenceRPC": true,
+    "baselineWarningsFixed": false
+  },
+  "cleanup": {
+    "credentialsRemoved": true,
+    "isolatedSimulatorAppAndRunnerUninstalled": true,
+    "pruned": [
+      {
+        "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-project-workflows-native-v2/Build/Products/Debug/Taskfold.app",
+        "logicalBytes": 52103467
+      },
+      {
+        "path": "/private/tmp/taskfold-removal-status-mac",
+        "removed": true,
+        "logicalBytes": null
+      }
+    ],
+    "measuredLogicalBytesPruned": 52103467,
+    "preserved": "Current Simulator staging/build inputs, reusable caches, actual user apps/data and retained evidence",
+    "retainedDesktopWidgetExtensions": [
+      "92987 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-p1-widget-order/Build/Products/Debug/Taskfold.app/Contents/PlugIns/TaskfoldWidgets.appex/Contents/MacOS/TaskfoldWidgets"
+    ],
+    "remainingTaskfoldAppHostsOrBuilds": []
+  },
+  "hostedCleanup": {
+    "syntheticIdentities": 4,
+    "remainingAuth": 0,
+    "remainingSessions": 0,
+    "remainingProfiles": 0,
+    "remainingProjects": 0,
+    "remainingTasks": 0,
+    "remainingFiles": 0,
+    "pendingReceipts": 0,
+    "retainedCompletedSyntheticReceipt": 1
+  },
+  "limits": [
+    "Mac native runtime/private-Keychain acceptance remains deferred with provisioning/signing",
+    "Expired pre-proof legacy commands with deleted Auth remain unprovable",
+    "Auth absent but owned Storage metadata present requires administrative repair after receipt expiry",
+    "Lost/revoked signing keys invalidate their proofs; Keychain removal is outside durable recovery",
+    "No claim of full first-authorization HTTP concurrency, versioned Storage or broader fault acceptance",
+    "Physical location delivery, remote reminders, general older-client rollout safeguards, OAuth registrations and distribution remain user-deferred",
+    "Native Simulator system WebKit duplicate-class warnings are present; no strict clean-runtime claim",
+    "Three injected-reply native Store cases preceded only the stricter newline proof guard; final 50 Core cases and current live Retry cover that guard"
+  ],
+  "sourcesSHA256": {
+    "Taskfold/Core/AccountRemoval.swift": "d87ad0f78188a1a0151aa5ea518fadd408572d6418ac46ece41b2eb430ab5326",
+    "Taskfold/Core/Backend.swift": "20b329a5989347a29c9928d1f4be002222dd289c322539b85f26d15317a24f52",
+    "Taskfold/Core/Store.swift": "d3ae6a134d6d9bde190573395b832991f627920abe9ebccfcfd4282e8377aa0b",
+    "Taskfold/AccountRemovalNativeFixture.swift": "9bf9004ba79bacd0c2370b1d6af5d99c6b05f63c8d3aeea5c7f4ffe67bee9587",
+    "TaskfoldTests/AccountRemovalTests.swift": "7cfbff176d552c5744df79741393ce153460d677199bae0ee5a2e60176e3739a",
+    "TaskfoldTests/AccountTransportTests.swift": "342aa75bcdb2a0f7dc715a45b66c34d666dca5c2bb35dafab62f00f0a9888f64",
+    "Scripts/test_account_removal_live.py": "0647105abb2bfbb6277ed1395050bb60cc19f7a16bac4f72a7f4de370ef8a6fc",
+    "Scripts/Database/test-account-removal.mjs": "33790be79b65658721da28ed01654f3caa7303c00ca864a1be4b59e7423f8b74",
+    "supabase/functions/delete-account/handler.ts": "d08ad88999f32b10b98faea882a4736bccf52326569256f72139b5fbdf01a92f",
+    "supabase/functions/delete-account/proof.ts": "c753bec7b187a50c7a3a56e4056845d1cbb20ee7ebc27ed48c42553faba48b76",
+    "supabase/functions/delete-account/handler_test.ts": "17c20a5c812cdbb8981df3c7cf8463390df18c5e99f501a106c4383ca31f6ee5",
+    "supabase/functions/delete-account/proof_test.ts": "d3e23c2587a8216292b03ab38072dc36d500601d32d2288d27a00607533e38e4",
+    "supabase/migrations/20261022203333_account_removal_status_proofs.sql": "e96fa9f54e7ab8969a8e5c77b82dcad49791a1fd8ec99b875a4476c468113a39",
+    "supabase/tests/account_removal_status_proofs.sql": "81618d8af47bcf1fb8661df3eae1452cc38d2be05cb942f78f96a5efb88d7be2",
+    "Taskfold/Views/AccountSecurityViews.swift": "6b8fb020c83b2e865020878fc1e222dfd65cee2c706b37782ac3912b471f4650"
+  },
+  "retainedArtifacts": [
+    "account-removal-status-proof-hosted-evidence.json",
+    "account-removal-status-proof-cleanup.json",
+    "account-removal-status-proof-native",
+    "account-removal-status-proof-current-build-ios.log",
+    "account-removal-status-proof-current-build-mac.log",
+    "account-removal-status-proof-retry.xcresult",
+    "account-removal-status-proof-retry-summary.json",
+    "account-removal-status-proof-retry-attachments",
+    "account-removal-status-proof-relaunch.xcresult",
+    "account-removal-status-proof-relaunch-summary.json",
+    "account-removal-status-proof-relaunch-attachments"
+  ],
+  "nativeStorePlatform": "iPhone Simulator; not Mac runtime acceptance",
+  "nativeLivePlatform": "iPhone 18 Pro Simulator, iOS 27"
+}

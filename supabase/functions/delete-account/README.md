@@ -20,7 +20,7 @@ after the original session is revoked. Only its SHA-256 token hash/account
 ID/timestamps are retained. Receipts contain no raw token, profile, task, file
 name or content; completed requests return only `{ "deleted": true }`. Hourly
 cron expiry (where available) and opportunistic begin pruning enforce retention.
-Clients must send `X-Taskfold-Account-Removal: 1`. Missing/unknown versions
+Clients must send `X-Taskfold-Account-Removal: 2`. Missing/unknown versions
 receive HTTP 428 before any privileged call, including receipt lookups. This is
 a compatibility requirement for the durable cleanup client, not caller
 authorization or the deferred general older-client editing policy.
@@ -95,3 +95,35 @@ server lock and HTTP timestamps. It verifies a pending-account lock/refusal, not
 every first-authorization visibility or full endpoint/upload interleaving. Never
 accept a delay without matching overlap timestamps. Temporary fixture
 credentials must be removed after the final independent cleanup verification.
+
+
+## Durable status recovery (protocol 2)
+
+Call POST `{"action":"prepare"}` first with the original bearer and protocol 2.
+This verifies the same real Auth/session or current receipt, fences uploads, and
+returns `prepared: true`, the exact account, and an opaque `proof`. It does not
+delete files or Auth. Persist the proof in the native private recovery vault
+before POST `{}` with `X-Taskfold-Account-Removal-Proof`. Execution still needs
+an existing seven-day authorization receipt or verified same-account Auth/session.
+A proof alone can never authorize deletion of an existing account.
+
+After a receipt expires or is pruned, the signed proof can only ask whether both
+Auth and canonical/legacy-owned Storage metadata are absent. Only verified absence
+returns `deleted: true`. Existing Auth or residual owned files cannot be silently
+treated as success. The proof is bound to the original HTTPS origin/account and
+status-only purpose; malformed/tampered/foreign/revoked proofs fail closed. Key
+service outages return retryable failure rather than requesting a new login.
+
+Signing uses a global server-only 256-bit random HMAC key, independent of service
+API-key rotation. Retain inactive keys for verification; explicitly revoking or
+losing a key invalidates its proofs. Never log/export key material or device
+proofs. The table and key/absence RPCs are inaccessible to anonymous and signed-in
+clients. No permanent per-account server tombstone is added.
+
+New local commands use version 2; confirmed legacy version-1 commands finish local
+cleanup without network. Unconfirmed legacy commands can prepare while their
+receipt or same-account authentication remains valid. Already-expired pre-proof
+commands whose Auth is gone remain unprovable; cache deletion is never guessed.
+If Auth is gone but owned file metadata remains after receipt expiry, administrative
+repair is needed before the absence proof can confirm. Mac profile/runtime and
+broader concurrency/distribution acceptance remain separate.

@@ -1,6 +1,6 @@
 # Restore working account removal
 
-Current status (22 October 2026): the matching service and migration are deployed. Real Auth/Storage/REST and a normal iPhone Simulator Account deletion/relaunch pass with disposable users. Native discarded-success-reply recovery now passes through visible Retry and ordinary relaunch. Late-expiry local-copy recovery, Mac runtime/profile and wider fault/concurrency variants remain open. The earlier candidate/gap sections below are historical; see the final deployment section and `p0-account-removal-deployment-evidence.json`.
+Current status (22 October 2026): protocol-2 service and matching migration are deployed. Both apps save a private status proof before deletion. Real iPhone Simulator recovery after deliberate expiry/pruning of its exact synthetic receipt passes on ordinary relaunch. This closes the deleted-account/lost-reply late-expiry gap for proof-bearing commands. Mac runtime/profile, already-expired pre-proof legacy commands, residual-file repair and wider fault/concurrency variants remain open. Earlier candidate/gap sections below are historical; the final status-proof milestone supersedes them only within this scope.
 
 ## Confirmed gap — 22 October 2026
 
@@ -109,3 +109,47 @@ The seven-day boundary is now stated in both native review screens. A final nati
 The normal hourly receipt job is observed running at 20:11:00 UTC, succeeding with DELETE 0. A completed synthetic receipt was then deliberately aged at 20:11:03—after that tick. Its recovery grant became unavailable immediately. A separately guarded manual execution of the exact retention predicate removed that expired test row; no nonfixture expired row was allowed into that operation. This proves the real job ran and the expiry/maintenance behavior separately, not that this expired row was removed by the natural tick or that seven actual days elapsed. The other new completed receipt matches the native authorization hash and expires normally. The job definition/schedule and service code were not changed.
 
 `p0-account-removal-lost-reply-evidence.json` records real UI summaries, source/build hashes, paused/post-recovery server checks, diagnostics, retention scope and cleanup. All private credential files and isolated app/runner sessions are removed; obsolete Mac staging/compile products are pruned (80,720,839 logical bytes). Earlier deployment/candidate evidence remains historical. Wider P0/Px and all user deferrals remain open.
+
+
+## Status-only proof and late-expiry recovery — 22 October
+
+Protocol 2 separates preparation from destructive execution. Preparation verifies
+an existing receipt or real current Auth/session, then issues an origin/account
+bound HMAC status-only proof. Each Store durably saves it to the private removal
+Keychain vault before execution. A failed secure save prevents execution. Neither
+proof nor bearer belongs in snapshots, exported backups, widgets or diagnostics.
+Execution still needs a current authorization receipt or verified same-account
+Auth/session. The proof never grants permission to delete an existing account.
+
+After the seven-day receipt expires/prunes, a valid proof can confirm only that
+Auth and canonical/legacy-owned Storage metadata are absent. Key-service outages
+remain retryable; revoked/invalid proofs cannot confirm. Signing keys are global,
+service-only random material, independent of API-key rotation; retain inactive
+keys for old proofs unless explicitly revoked. The service keeps no new permanent
+per-account tombstone. Client roles cannot read keys or invoke the absence RPC.
+
+New local commands are version 2. Confirmed version-1 commands can finish their
+already-authorized local cleanup without network. Unconfirmed legacy commands
+prepare while a valid receipt or same-account login is available. Already-expired
+pre-proof commands whose Auth is gone remain unprovable; owned residual file
+metadata after receipt expiry requires administrative repair. These paths keep
+local copies rather than guessing. Losing/revoking signing keys also invalidates
+proofs; device Keychain removal is outside durable recovery guarantees.
+
+The hosted function is version 2 (gateway JWT check stays off for deleted-account
+recovery; handler/database authorization is mandatory). Migration
+`20261022203333_account_removal_status_proofs.sql` is shared-backend applied once
+and independently owned by both repos. Local schema tests use real pgcrypto and
+check privilege denial, rotation/revocation and absence rules. Each Core suite
+passes 50 account/removal cases, including secure-save failure, stale confirmation,
+legacy decode and invalid proofs. Each Deno suite passes 20 cases. Both full apps
+build. Three isolated Simulator Store scenarios pass 22/18/16 checks.
+
+A real native lost-success-reply case retained the full cache while an independent
+observer verified server deletion and outsider preservation. A guarded operation
+aged and pruned only that exact completed synthetic receipt at 20:35:56 UTC; the
+status RPC returned no receipt. Ordinary no-fixture relaunch then confirmed via
+the private proof and erased local copies, with the same original authorization
+and no reauthentication. This deliberately manipulates the test receipt; it is
+not seven elapsed days or a claim that cron pruned it. Current-scope evidence and
+remaining acceptance are in `p0-account-removal-status-proof-evidence.json`.
