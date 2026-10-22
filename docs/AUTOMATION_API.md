@@ -108,3 +108,37 @@ wrappers, full successor/reminder semantics, explicit write-lock/time budgets,
 real concurrency/quota acceptance, project/section discovery and premium native
 key management/recovery/revoke review remain before enablement. See
 `p2-automation-task-access-evidence.json`. The full Px goal remains active.
+
+
+## Write-semantics checkpoint — 23 October
+
+The unapplied `20261022222726_automation_task_writes.sql` is a helper/normalizer
+candidate, not a production mutation endpoint. Full successor/checklist/reminder
+data and defaults match 49 shared native goldens. Native direct/widget/bulk
+completion creates for the acting workspace, preserving its source creator and
+project. The corrected local INSERT predicate verifies that distinction.
+
+Clock resolution chooses the first fold or first valid minute on the same day,
+retains a valid explicit instant, and handles half-hour gaps. The candidate
+normalizer uses that rule rather than PostgreSQL's different default. Its existing
+invoker trigger has narrow EXECUTE on the pure wall/civil-time helpers for native
+DML roles; those helpers read only supplied data and time-zone catalogs. Other
+successor/default helpers remain private. No new schema USAGE or task access is
+granted, and the hosted normalizer is unchanged.
+
+Successor construction retains estimates, attachments, labels and unknown fields;
+clears occurrence-only comments/deadline/sent state; resets nested IDs, completion,
+dates and reminders; preserves metadata; and records a new action. Valid one-shot
+absolute reminders are removed while opaque rows survive. If none remain, a
+disabled planned-time row prevents accidentally reviving a default. Manual,
+placeholder, disabled and duplicate choices retain native behavior. The future
+RPC must read preferences atomically: absence means legacy zero-minute behavior;
+unsupported documents stay opaque and skip implicit replacement. That read is not
+implemented by the pure helper.
+
+The existing deletion self-FK cascades to later occurrences. A production delete
+RPC must review/lock a complete set of descendant baselines, current generations
+and access before invoking native guarded deletion; missing/new/changed members
+conflict. Preserve native/backup link contracts. No FK or backup behavior changed
+here. Full write/reopen wrappers, real service/races and native key UI remain
+required before feature enablement. See `p2-automation-write-semantics-evidence.json`.

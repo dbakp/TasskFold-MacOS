@@ -1412,11 +1412,11 @@ enum TaskCompletion {
         let hex = Array(DueReminder.digest("com.taskfold.recurrence.v1|" + parent.lowercased() + "|" + day).prefix(32))
         return String(hex[0..<8]) + "-" + String(hex[8..<12]) + "-5" + String(hex[13..<16]) + "-a" + String(hex[17..<20]) + "-" + String(hex[20..<32])
     }
-    static func complete(_ task: Record, tasks: [Record], at now: Date = Date(), calendar input: Calendar = .current) -> [Mutation] {
+    static func complete(_ task: Record, tasks: [Record], at now: Date = Date(), calendar input: Calendar = .current, account: String? = nil) -> [Mutation] {
         guard !task.completed, !task.id.isEmpty else { return [] }
-        return toggle(task, tasks: tasks, at: now, calendar: input)
+        return toggle(task, tasks: tasks, at: now, calendar: input, account: account)
     }
-    static func toggle(_ task: Record, tasks: [Record], at now: Date = Date(), calendar input: Calendar = .current) -> [Mutation] {
+    static func toggle(_ task: Record, tasks: [Record], at now: Date = Date(), calendar input: Calendar = .current, account: String? = nil) -> [Mutation] {
         guard !task.id.isEmpty else { return [] }
         let stamp = ISO8601DateFormatter().string(from: now)
         let fields: [String: JSON] = ["completed": .bool(!task.completed), "completed_at": task.completed ? .null : .string(stamp)]
@@ -1428,6 +1428,9 @@ enum TaskCompletion {
         let day = TaskPlanner.dayKey(next, calendar: calendar), nextID = successorID(parent: parent, day: TaskPlanner.dayKey(next, calendar: calendar))
         guard !tasks.contains(where: { $0.id.lowercased() == nextID || ($0.string("recurrence_parent_id").lowercased() == parent.lowercased() && String($0.string("due_date").prefix(10)) == day) }) else { return changes }
         var copy = TaskPlanning.nextOccurrence(task, date: next, calendar: calendar)
+        // The accepted collaborator creates this occurrence in the same project;
+        // native INSERT policies require its creator to be the acting account.
+        if let account, !account.isEmpty { copy["user_id"] = .string(account) }
         copy["id"] = .string(nextID); copy["completed"] = .bool(false); copy["completed_at"] = .null; copy["completion_version"] = .number(0)
         copy["task_generation"] = .string(UUID().uuidString.lowercased())
         copy["notification_sent_at"] = .null; copy["created_at"] = .string(stamp); copy.fields.removeValue(forKey: "updated_at")

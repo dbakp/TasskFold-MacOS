@@ -10,6 +10,20 @@ final class TaskCompletionTests: XCTestCase {
             "deadline_date": .string("2026-10-24"), "duration_minutes": .number(25), "comments": .array([.object(["id": .string("old-comment"), "text": .string("Old occurrence")])]),
             "created_at": .string("2026-10-01T12:00:00Z"), "updated_at": .string("2026-10-23T12:00:00Z"), "subtasks": .array([])])
     }
+    func testSharedSeriesSuccessorBelongsToActingCollaboratorWithoutChangingParent() throws {
+        var source = task()
+        let creator = "f094cafe-0000-4000-8000-000000000001"
+        let collaborator = "f094cafe-0000-4000-8000-000000000002"
+        source["user_id"] = .string(creator); source["project_id"] = .string("f094cafe-0000-4000-8000-000000000011")
+        let changes = TaskCompletion.complete(source, tasks: [source], at: now, account: collaborator)
+        let successor = try XCTUnwrap(changes.first { $0.method == "POST" })
+        XCTAssertEqual(successor.fields["user_id"], .string(collaborator))
+        XCTAssertEqual(successor.fields["project_id"], source["project_id"])
+        XCTAssertEqual(source["user_id"], .string(creator))
+        XCTAssertNil(changes[0].fields["user_id"])
+        XCTAssertTrue(TaskCompletion.complete(source, tasks: [source, Record(successor.fields)], at: now, account: creator).allSatisfy { $0.method != "POST" })
+    }
+
     func testIndependentCompletionsUseOneStableCreateOnlySuccessorAndExplicitBaselines() throws {
         let source = task(), cph = calendar("Europe/Copenhagen")
         let first = TaskCompletion.complete(source, tasks: [source], at: now, calendar: cph)

@@ -77,7 +77,7 @@
   ],
   "sources": {
     "supabase/migrations/20261022220821_automation_task_access.sql": "876db26d2fa60d6b8b651879fab7d72faedcfb66d7ff272e1e9cfb177122d602",
-    "Scripts/Database/automation-task-bootstrap.sql": "7515f5bdec90dce6999d5ede593eb73757ecc31074490ad01c17a49bebca5771",
+    "Scripts/Database/automation-task-bootstrap.sql": "43ef03fb36c6782d9f89359528f1c4d62ecfb769cf145797991aa0c73b426f4a",
     "Scripts/Database/test-automation-tasks.mjs": "8dc0fd68788307bca2c3a97adedfee6a5d1090db9b308f00087e46244afcf89a",
     "supabase/functions/automation-tasks/index.ts": "27dc848026ad50413b50d697ef624697aa9884a8440e41d6eb02f3a4a35ac91b",
     "supabase/functions/automation-tasks/handler.ts": "383e95251aa9ff95942ec4949e7fcd3114bfbdd67853fcbd016626af1a92c859",
@@ -93,5 +93,11 @@
       "bundleSHA256": "d9ce2203d6d749f33f4560c7f97cb98a0fb7e83cedc4745d205d1fc60a598b2e"
     },
     "note": "Metadata only: no DDL, task rows, credentials or configuration changed."
+  },
+  "reverifiedAfterNativeInsertPolicyAlignment": {
+    "date": "2026-10-23",
+    "assertions": 89,
+    "passed": true,
+    "note": "Fixture INSERT predicate now matches live actor ownership. Original proof/source snapshot remains in the preceding commit; both read/journal suites rerun."
   }
 }

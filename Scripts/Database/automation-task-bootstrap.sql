@@ -17,9 +17,19 @@ language sql stable security definer set search_path='public' as $$
  union select 1 from public.project_collaborators where project_id=_project_id and user_id=_user_id and status='accepted')
 $$;
 alter table public.tasks enable row level security;
-create policy fixture_automation_task_access on public.tasks to authenticated
+-- Match the distinct live INSERT policy: project access does not let a new
+-- native row impersonate its original series creator.
+create policy fixture_automation_task_select on public.tasks for select to authenticated
+ using((project_id is null and user_id=auth.uid()) or public.has_project_access(auth.uid(),project_id));
+create policy fixture_automation_task_update on public.tasks for update to authenticated
  using((project_id is null and user_id=auth.uid()) or public.has_project_access(auth.uid(),project_id))
  with check((project_id is null and user_id=auth.uid()) or public.has_project_access(auth.uid(),project_id));
+create policy fixture_automation_task_delete on public.tasks for delete to authenticated
+ using((project_id is null and user_id=auth.uid()) or public.has_project_access(auth.uid(),project_id));
+create policy fixture_automation_task_insert on public.tasks for insert to authenticated
+ with check(user_id=auth.uid() and (project_id is null or public.has_project_access(auth.uid(),project_id)));
+-- Existing live schema USAGE is independent of per-helper EXECUTE grants.
+grant usage on schema taskfold_private to authenticated,service_role;
 grant select,insert,update,delete on public.tasks,public.projects,public.project_collaborators to authenticated;
 
 -- Read-only snapshot of the pre-managed live merge_edit function, inspected

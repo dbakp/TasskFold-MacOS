@@ -441,6 +441,38 @@ is claimed. Complete task writes/successor/reminder handling, real HTTP/lock/quo
 races and premium native management remain required. See `AUTOMATION_API.md` and
 `p2-automation-task-access-evidence.json`. All user deferrals remain unchanged.
 
+23 October write-semantics continuation: direct, widget and bulk native
+recurrence now create for the acting workspace, preserving the source creator
+and project. This fixes the native INSERT-policy mismatch that rejected another
+creator's inherited-owner successor. The fixture now models the distinct live
+INSERT predicate instead of an all-actions project-access predicate.
+
+The unapplied candidate carries full successor/checklist IDs, resets, dates,
+recurrence/metadata and reminder filtering, plus native timed-default application.
+It aligns first-fold/first-valid-minute clocks and preserves valid explicit
+instants. Inspection found the hosted normalizer currently uses PostgreSQL's
+different gap/fold behavior; that hosted function remains unchanged. Only pure
+input-time helpers have narrow authenticated/service EXECUTE for the existing
+invoker trigger. Data/successor/default helpers stay private; schema USAGE is
+unchanged.
+
+Both repos pass 150 selected Core cases, including 316 existing date cases and
+49 new write-semantics goldens. The new SQL suite passes 84 checks, including
+actual local authenticated INSERT controls and trigger normalization; the prior
+89 journal/read checks still pass. Current isolated iPhone build-for-testing and
+unsigned Mac Debug build succeed. This is not installed/shared-cloud, new GUI,
+real HTTP, full mutation-RPC or release acceptance. See
+`p2-automation-write-semantics-evidence.json`.
+
+Deletion must preserve the current series/data contracts: the live recurrence
+self-FK has ON DELETE CASCADE, so API deletion needs all reviewed descendant
+baselines, current access/generations and row locks. New/changed descendants must
+conflict. Do not silently drop/clear links: native series identity and backup
+validation/restoration use them. Full create/update/complete/reopen/delete RPCs,
+actual preference reads, assignment/destination checks, lock/HTTP budgets and
+premium native management remain ahead. The feature remains off; the full Px
+goal and user-deferred rollout/release/remote/OAuth/physical checks stay unchanged.
+
 Next required before enabling the feature:
 
 1. Connect the task gateway to current task/project access checks and generation,

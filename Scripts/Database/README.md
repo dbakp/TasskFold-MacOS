@@ -84,3 +84,22 @@ The HTTP candidate supports get/list; production mutation wrappers and native
 management UI are still missing. No hosted deployment, real HTTP, lock race,
 Simulator user flow or full task-write acceptance is claimed. See
 `docs/AUTOMATION_API.md` and `docs/p2-automation-task-access-evidence.json`.
+
+
+# Native/automation write-semantics parity
+
+Run `npm run --prefix Scripts/Database test:automation-write-semantics` for 84
+local assertions over 49 shared goldens, native-role INSERT ownership/normalizer
+grants and fixture cleanup. This is a minimal owned dependency schema plus actual
+native migrations, not full hosted-trigger or HTTP acceptance. The prior
+`test:automation-tasks` still passes 89 checks after matching the distinct live
+INSERT policy.
+
+`AutomationWriteSemanticsTests` uses the same data through native planning,
+default and completion code. Only explicit `TASKFOLD_WRITE_SEMANTICS_EXPORT`
+maintainer mode exports synthetic deterministic goldens to a chosen file;
+ordinary tests never rewrite inputs. Generation/action UUIDs and timestamp
+spellings are normalized. Eleven wall-time expectations are independently
+specified; other full expected outputs come from actual native algorithms.
+The helper/normalizer candidate is unapplied; no full write gateway is claimed.
+See `docs/p2-automation-write-semantics-evidence.json`.

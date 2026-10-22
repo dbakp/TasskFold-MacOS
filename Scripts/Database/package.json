@@ -8,7 +8,8 @@
     "test:account-removal": "node test-account-removal.mjs",
     "test:automation": "node test-automation.mjs",
     "test:automation-recurrence": "node test-automation-recurrence.mjs",
-    "test:automation-tasks": "node test-automation-tasks.mjs"
+    "test:automation-tasks": "node test-automation-tasks.mjs",
+    "test:automation-write-semantics": "node test-automation-write-semantics.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

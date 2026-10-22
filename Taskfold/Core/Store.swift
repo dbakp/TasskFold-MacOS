@@ -1117,7 +1117,7 @@ final class Store {
         let changes = ids.filter { record("tasks", id: $0) != nil }.map { Mutation(table: "tasks", recordID: $0, method: "DELETE", fields: [:]) }
         if !changes.isEmpty { commit(changes) }
     }
-    func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks) }
+    func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks, account: userID) }
     private func historyChanges(_ changes: [Mutation]) -> [Mutation] {
         changes.map { change in
             if change.table == "tasks", change.method == "POST" {
@@ -1797,7 +1797,7 @@ extension Store {
         }
         for interval in [-3600.0, -1800.0, -900.0] {
             guard let task = snapshot.tables["tasks"]?.first else { continue }
-            for change in TaskCompletion.toggle(task, tasks: tasks, at: now.addingTimeInterval(interval)) {
+            for change in TaskCompletion.toggle(task, tasks: tasks, at: now.addingTimeInterval(interval), account: userID) {
                 snapshot.apply(change); TaskActivity.recordLocal(change, before: task, after: record("tasks", id: task.id), snapshot: &snapshot, account: userID, now: now.addingTimeInterval(interval))
             }
         }
@@ -1918,7 +1918,7 @@ extension Store {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--completion-cycle-fixture") else { return }
         seedWidgetActionFixture()
         guard let root = tasks.first else { return }
-        let changes = TaskCompletion.complete(root, tasks: tasks)
+        let changes = TaskCompletion.complete(root, tasks: tasks, account: userID)
         for change in changes { snapshot.apply(change); snapshot.pending.append(change) }
         if ProcessInfo.processInfo.arguments.contains("--edited-occurrence-fixture"), let creation = changes.last, creation.method == "POST" {
             let edit = Mutation(table: "tasks", recordID: creation.recordID, method: "PATCH", fields: ["title": .string("Saved occurrence draft")], baseline: ["title": creation.fields["title"] ?? .null])

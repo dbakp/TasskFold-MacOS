@@ -2823,3 +2823,24 @@ native management remain required. No live deployment or new Mac runtime/build
 pass is claimed; native app runtime code is unchanged. No manual phone, widget or
 VoiceOver request was needed. See `AUTOMATION_API.md` and
 `p2-automation-task-access-evidence.json`. The full Px objective remains active.
+
+
+### 23 October — shared recurrence ownership and write-semantics alignment
+
+Direct, widget and bulk completion now create recurring successors for the acting
+workspace, preserving their source creator/project. This fixes the collaborator
+INSERT-policy mismatch. Both repos independently own the source and faithful local
+INSERT-policy fixture. The private candidate carries full checklist/reminder/
+metadata/default semantics and native first-fold/first-valid-minute clocks.
+Only pure input-time helpers get narrow native DML-role grants; no hosted change.
+
+150 selected Core cases per repo pass, including 316 old date and 49 new full
+write goldens. Each new SQL suite passes 84 assertions, including native-role
+INSERT controls and normalization; the preceding 89 journal/read checks pass.
+Isolated iPhone build-for-testing and unsigned Mac Debug build succeed. This is
+not Mac GUI, installed shared-cloud, real HTTP or release acceptance. No test app
+host was launched. Full writes/reopen, preference reads, reviewed cascade locks,
+real races and premium native management remain required; automation stays off.
+Preserve native/backup series links rather than silently dropping the inspected
+cascade contract. See `p2-automation-write-semantics-evidence.json`. All user
+deferrals and the full Px goal remain unchanged.

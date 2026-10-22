@@ -579,7 +579,7 @@ enum TaskSelectionPlan {
                 working[id] = value
             case .completion(let completed, let date):
                 if value.completed != completed {
-                    let changes = TaskCompletion.toggle(value, tasks: prospective, at: date, calendar: calendar)
+                    let changes = TaskCompletion.toggle(value, tasks: prospective, at: date, calendar: calendar, account: workspace.account)
                     for change in changes {
                         if change.recordID == id, change.method == "PATCH" { completionIDs[id] = change.id; for (key, field) in change.fields { value[key] = field } }
                         else { extras.append(change); if change.method == "POST" { prospective.append(Record(change.fields)) } }

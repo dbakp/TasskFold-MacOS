@@ -15,6 +15,22 @@ final class WidgetActionTests: XCTestCase {
     private func publish(_ disk: WidgetActionDisk, _ snapshot: Snapshot, account: String = "a") throws {
         try disk.publish(JSONEncoder().encode(WidgetProjection.payload(tasks: snapshot.tables["tasks"] ?? [], projects: [], account: account, completionTokens: WidgetCompletion.tokens(snapshot))))
     }
+    func testSharedRecurringWidgetCompletionCreatesForItsBoundAccount() throws {
+        var value = snapshot(), source = task()
+        source["user_id"] = .string("b"); source["project_id"] = .string("p")
+        source["is_recurring"] = .bool(true); source["recurrence_pattern"] = .object(["type": .string("daily")])
+        value.tables["tasks"] = [source]
+        value.tables["projects"] = [Record(["id": .string("p"), "name": .string("Shared"), "user_id": .string("b")])]
+        WidgetCompletion.prepare(&value)
+        guard case .complete(let changes) = WidgetCompletion.plan(try request(value), snapshot: value, account: "a") else {
+            return XCTFail("The current shared-task request should complete")
+        }
+        let successor = try XCTUnwrap(changes.first { $0.method == "POST" })
+        XCTAssertEqual(successor.fields["user_id"], .string("a"))
+        XCTAssertEqual(successor.fields["project_id"], .string("p"))
+        XCTAssertEqual(value.tables["tasks"]?.first?["user_id"], .string("b"))
+    }
+
     func testCompletionFeedbackIsScopedBoundedAndCompatibleWithOldCaches() throws {
         var value = snapshot()
         value.tables["tasks"]?[0]["project_id"] = .string("p")

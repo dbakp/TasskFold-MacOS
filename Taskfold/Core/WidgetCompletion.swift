@@ -73,7 +73,7 @@ enum WidgetCompletion {
         if task.completed { return .saved }
         guard !ProjectOrganization.archived(task.string("project_id"), in: snapshot.tables["projects"] ?? []) else { return .stale }
         guard snapshot.widgetCompletion.states[task.id.lowercased()]?.token == request.token else { return .stale }
-        return .complete(TaskCompletion.complete(task, tasks: snapshot.tables["tasks"] ?? [], at: request.createdAt, calendar: calendar))
+        return .complete(TaskCompletion.complete(task, tasks: snapshot.tables["tasks"] ?? [], at: request.createdAt, calendar: calendar, account: account))
     }
     private static func instant(_ value: String) -> String {
         let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

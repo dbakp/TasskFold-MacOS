@@ -457,6 +457,7 @@ final class MixedSelectionTests: XCTestCase {
         let changes = try plan([request("Main", .completion(true, date), source: recurring), request("leaf", .completion(true, date), source: recurring)], roots: [recurring])
         XCTAssertEqual(changes.filter { $0.recordID == "r" }.count, 1)
         let successor = try XCTUnwrap(changes.first { $0.method == "POST" }); XCTAssertEqual(successor.fields["due_date"], .string("2026-10-22"))
+        XCTAssertEqual(successor.fields["user_id"], .string(workspace.account), "Bulk completion creates for the acting workspace, preserving its foreign-owned parent")
         let saved = apply(changes, source: recurring)
         let original = try XCTUnwrap(saved.tables["tasks"]?.first { $0.id == "r" }); XCTAssertTrue(original.completed)
         XCTAssertTrue(try index(original).items.first { $0.source.title == "leaf" }!.source.completed)
