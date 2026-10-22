@@ -363,7 +363,7 @@ Mac native editing/Undo/failure and spoken accessibility remain separate gates.
 Full Px and all prior user deferrals remain active.
 
 
-## Automation access — rank 6, credential foundation in progress
+## Automation access — rank 6, task-operation foundation in progress
 
 Both repos now independently own a candidate native/Edge/SQL credential contract.
 The native draft generates a 256-bit random secret and sends only its SHA-256
@@ -396,6 +396,25 @@ per repo, both actual PostgreSQL/PGlite credential suites and both app builds.
 These are not live API/native-screen acceptance. The candidate migration/function
 is unapplied/undeployed, no new native screen is exposed and no live key was issued.
 See `p2-automation-access-evidence.json` for exact limits and source hashes.
+
+23 October: both repos also own a private, unapplied recurring-task planner.
+Its date, stable successor identity and carried rule match native completion on
+316 shared golden cases. Coverage includes daily/custom/weekly/monthly/yearly,
+schedule- and completion-based intervals, selected month dates and fifth weekdays,
+count/end limits, stable parent identities, fixed/floating time zones, DST,
+invalid legacy rules, year bounds and a historical skipped date-line day.
+Forty related Core tests pass per repo, plus both actual PostgreSQL/PGlite planner
+and combined credential/migration suites. An initial test assertion compile error
+and expected-ID fixture typo were corrected; the skipped-day comparison exposed
+and corrected calendar arithmetic before the final passes.
+
+This planner returns only the next date/identity/rule. It does not copy a full
+successor, reset checklist/reminder state, insert tasks, implement request replay
+or expose a working API. All seven helpers are invoker functions in the private
+schema, with execution revoked from public, anonymous, signed-in and service roles.
+Future authorized private operations can call them internally. No new app screen,
+Simulator interaction, hosted DDL/function deployment or live key/task change is
+claimed. See `p2-automation-recurrence-evidence.json` for exact scope and hashes.
 
 Next required before enabling the feature:
 

@@ -48,3 +48,20 @@ expiry/revocation, successful-operation quotas, metadata paging, permanent remov
 revocation and Auth cascades. It reads no app configuration or credentials and
 contacts no live service. This does not prove task operations, real concurrent
 HTTP, a deployed migration or native management screens.
+
+
+# Automation recurring-task planner candidate
+
+Run `npm run --prefix Scripts/Database test:automation-recurrence` from this repo.
+It applies the actual private planner migration to an isolated pinned PGlite
+PostgreSQL runtime with pgcrypto, then compares all 316 shared golden cases.
+`swift test --filter 'AutomationRecurrenceParityTests|TaskCompletionTests|RecurrenceTests'`
+independently compares the same fixture with this app's actual native completion
+implementation and runs its existing recurrence/completion regressions. The
+runner also checks all helper execute grants, invoker/empty-search-path settings,
+invalid clocks and independence from the connection's TimeZone. It never rewrites
+the fixture. The credential suite loads both candidates together as well.
+
+These are local planner/privilege checks, not task-write, concurrency, native
+management UI, real HTTP or Simulator acceptance. The new migration remains
+unapplied; no gateway or live task is changed. Both repos own their full inputs.

@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 const db = new PGlite({ extensions: { pgcrypto } });
 try {
  await db.exec('create schema extensions; create extension pgcrypto with schema extensions');
- for (const name of ['./account-removal-bootstrap.sql','../../supabase/migrations/20261022193804_account_removal_service.sql','../../supabase/migrations/20261022212224_automation_access.sql','../../supabase/tests/automation_access.sql']) {
+ for (const name of ['./account-removal-bootstrap.sql','../../supabase/migrations/20261022193804_account_removal_service.sql','../../supabase/migrations/20261022212224_automation_access.sql','../../supabase/migrations/20261022215836_automation_recurrence_plan.sql','../../supabase/tests/automation_access.sql']) {
   await db.exec(await readFile(new URL(name,import.meta.url),'utf8'));
   console.log('PASS '+name.split('/').at(-1));
  }

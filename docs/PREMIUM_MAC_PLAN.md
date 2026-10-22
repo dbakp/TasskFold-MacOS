@@ -2781,3 +2781,22 @@ A normal isolated iPhone Auth → Account review → live deletion → cache era
 Two genuine iPhone Auth → Account → server deletion cases now pass after deliberately discarding the first real success acknowledgement: visible Retry and an ordinary no-fixture relaunch. A separate server observer verifies deletion and outsider preservation while the complete native cache is still retained; both recoveries use the same original authorization and erase the cache only afterward. Both app builds and 45 Core account cases per repo pass. The final seven-day review wording also passes native Cancel/cache/relaunch inspection.
 
 `p0-account-removal-lost-reply-evidence.json` states the client fault-injection scope, real backend checks, actual successful cron tick, separately aged/manual-cleaned receipt and cleanup. Late-expiry recovery of an unconfirmed attempt remains an explicit P0 gap; current code preserves local copies but cannot recover an already deleted Auth account after its receipt expires. Mac runtime/profile and wider fault/concurrency acceptance, the wider Px backlog and all user deferrals remain open. No backend configuration changed; all four disposable identities and temporary credentials are cleaned up.
+
+
+### 23 October — private automation recurrence planner
+
+Both repos independently own the unapplied server-side recurrence planner and the
+same 316 golden inputs/expected dates, stable occurrence identities and carried
+rules. Each app's actual native completion agrees with the planner; all 40 related
+Core cases pass per repo, as do both PostgreSQL/PGlite planner and combined
+credential/migration suites. Explicit-zone arithmetic fixes the historical skipped
+calendar-day mismatch found during comparison; count/end limits, month clamping,
+selected dates, fifth weekdays, DST and rule metadata are covered.
+
+The candidate remains inactive/private. This is next-date/identity/rule planning,
+not a full successor write or a usable task API. No new app UI/runtime, hosted
+change or Mac signing/runtime acceptance is claimed. Full task access, immutable
+request claims, recurrence child/reminder copying, native management and genuine
+HTTP/Simulator acceptance remain required. No manual widget/VoiceOver/phone check
+was requested; the user's physical location-delivery check stays deferred. See
+`p2-automation-recurrence-evidence.json`. The full Px goal remains active.
