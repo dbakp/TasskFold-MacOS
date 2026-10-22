@@ -36,3 +36,15 @@ The account-removal runner also loads the status-proof migration and fixture usi
 PGlite's real pgcrypto extension. It checks client privilege denial, retained-key
 rotation/revocation, and Auth/canonical/legacy file absence without printing keys.
 These are local schema/role tests; live expiration/relaunch evidence is separate.
+
+
+# Automation credential candidate checks
+
+Run `npm run --prefix Scripts/Database test:automation` from this repository. The
+owned runner uses the pinned PostgreSQL/PGlite runtime and an isolated minimal
+Auth/removal bootstrap, then the actual candidate migration and rollback fixture.
+It checks private privileges, live-session/account fences, immutable registration,
+expiry/revocation, successful-operation quotas, metadata paging, permanent removal
+revocation and Auth cascades. It reads no app configuration or credentials and
+contacts no live service. This does not prove task operations, real concurrent
+HTTP, a deployed migration or native management screens.

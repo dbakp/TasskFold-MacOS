@@ -4,7 +4,7 @@ Updated 22 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. The latest rank-3 work targets native note-save recovery after reproducing an iOS editor-dismissal defect on a rejected disk write. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access, beginning with the private credential/session/scope contract before task operations and native management are enabled. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -361,3 +361,58 @@ iterations. The concurrent edit is a second synthetic Store action in one local
 workspace, not real two-device sync. Clipboard activation, workspace switching,
 Mac native editing/Undo/failure and spoken accessibility remain separate gates.
 Full Px and all prior user deferrals remain active.
+
+
+## Automation access — rank 6, credential foundation in progress
+
+Both repos now independently own a candidate native/Edge/SQL credential contract.
+The native draft generates a 256-bit random secret and sends only its SHA-256
+hash for registration. The raw value is transient, deliberately non-Codable and
+redacted from diagnostic descriptions. No snapshot or portable-backup field is
+added. A retry retains the same key identity/hash; a changed retry refuses rather
+than replacing it. Metadata reads are owner-bound and paginated, with active
+keys separated from expired/revoked history.
+
+Management verifies the real Auth subject and active matching session. Anonymous
+and signed-in clients have no direct table or privileged-RPC access. The native
+transport rejects account/server changes, fences late replies and bounds streamed
+responses without following redirects. The candidate retains gateway JWT checks
+for management. Error/metadata projection does not forward private SQL details,
+hashes or unexpected secrets. Native acknowledgement never treats an already
+revoked/expired key as a newly usable secret.
+
+The candidate has five task capability names: read, create, update, complete and
+delete. Expiry choices are 7/30/90/365 days. Issuance is capped at 20 active keys and
+10 new keys per UTC day; operation budgets are 60 per key/minute, 1,000 per key/day
+and 2,000 per account/day. Account/key locks serialize future effects with
+revocation; the authorization helper is private and must remain in the same SQL
+transaction as task effects. Native app sign-out does not revoke delegated tools.
+Beginning account removal revokes existing keys permanently, including after its
+retry receipt expires/prunes; Auth deletion cascades hashes, metadata and usage.
+
+Local verification passes independently: 49 Core account/automation transport cases
+plus 16 existing private-handoff cases per repo, eight mocked management HTTP cases
+per repo, both actual PostgreSQL/PGlite credential suites and both app builds.
+These are not live API/native-screen acceptance. The candidate migration/function
+is unapplied/undeployed, no new native screen is exposed and no live key was issued.
+See `p2-automation-access-evidence.json` for exact limits and source hashes.
+
+Next required before enabling the feature:
+
+1. Connect the task gateway to current task/project access checks and generation,
+   conflict, recurrence, default-reminder and deletion contracts. Capability names
+   are not implementations of task operations.
+2. Persist immutable request claims so response loss/replay cannot duplicate a task,
+   resurrect deleted generations or repeat a later completion cycle. Reauthorize
+   on replay; revocation/access loss must not leak a previous full task response.
+3. Build native management/review/revoke screens, one-time secret review, interrupted
+   enrollment recovery, paging and workspace-safe cancellation. Keep secrets out of
+   task stores, widgets, ordinary diagnostics and portable backups.
+4. Verify real Auth/HTTP scope refusal, quotas, revocation/concurrency and task effects
+   with disposable users; then the actual signed-in phone/tablet flow. Apply/deploy
+   once only when the gateway and client match. Mac native/signing gates stay scoped.
+5. Continue separately with idempotent email intake and signed webhook retries after
+   sender/recipient authorization, provider and delivery boundaries are established.
+
+The full automation/teams/wearable backlog and original Px objective remain active.
+No user-deferred remote reminder, release, OAuth or physical location work is reopened.

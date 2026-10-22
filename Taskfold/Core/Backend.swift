@@ -270,7 +270,7 @@ final class Backend: NSObject {
             request.setValue("Bearer \(session.access_token)", forHTTPHeaderField: "Authorization")
         }
         extra.forEach { request.setValue($1, forHTTPHeaderField: $0) }
-        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") {
+        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || path == "/functions/v1/automation-keys" {
             request.timeoutInterval = 25
             request.cachePolicy = .reloadIgnoringLocalCacheData
             request.httpShouldHandleCookies = false
@@ -278,15 +278,15 @@ final class Backend: NSObject {
         }
         if let body { request.httpBody = try JSONEncoder().encode(body) }
         let data: Data, response: URLResponse
-        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") {
+        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || path == "/functions/v1/automation-keys" {
             let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
-            let limit = LocationHandoffResponse.maximumBytes
+            let limit = path == "/functions/v1/automation-keys" ? 256000 : LocationHandoffResponse.maximumBytes
             var body = Data()
             do {
-                guard incoming.expectedContentLength <= Int64(limit) else { throw AppFailure(message: "The private place draft response is too large. Your tasks are unchanged.") }
+                guard incoming.expectedContentLength <= Int64(limit) else { throw AppFailure(message: path == "/functions/v1/automation-keys" ? "The automation-key response is too large. Reload your keys and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
                 for try await byte in bytes {
                     try Task.checkCancellation()
-                    guard body.count < limit else { throw AppFailure(message: "The private place draft response is too large. Your tasks are unchanged.") }
+                    guard body.count < limit else { throw AppFailure(message: path == "/functions/v1/automation-keys" ? "The automation-key response is too large. Reload your keys and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
                     body.append(byte)
                 }
             } catch { bytes.task.cancel(); throw error }
@@ -391,6 +391,35 @@ final class Backend: NSObject {
     }
     func sendPasswordReset(email: String) async throws {
         _ = try await request("/auth/v1/recover", method: "POST", body: ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())], authenticated: false)
+    }
+    private func automationReceipt(action: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
+        guard !sessionTransition, session?.user.id == account, AutomationKey.canonicalID(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/functions/v1/automation-keys", method: "POST", body: ["action": .string(action), "body": .object(body)],
+                                     extra: ["X-Taskfold-Automation": "1"], expectedAccount: account)
+        guard let receipt = try? JSONDecoder().decode([String: JSON].self, from: data), receipt["account"] == .string(account) else { throw AutomationKey.invalid }
+        return receipt
+    }
+    func automationKeyPage(account: String, origin: String, cursor: String? = nil, includeInactive: Bool = false) async throws -> AutomationKeyPage {
+        var body: [String: JSON] = ["limit": .number(50), "include_inactive": .bool(includeInactive)]
+        if let cursor { guard AutomationKey.canonicalID(cursor) else { throw AutomationKey.invalid }; body["cursor"] = .string(cursor) }
+        return try AutomationKeyPage(await automationReceipt(action: "list", body: body, account: account, origin: origin), account: account)
+    }
+    func registerAutomationKey(_ draft: AutomationKeyDraft) async throws -> AutomationKey {
+        let receipt = try await automationReceipt(action: "create", body: draft.body, account: draft.account, origin: draft.origin)
+        guard case .object(let row) = receipt["key"] else { throw AutomationKey.invalid }
+        let key = try AutomationKey(row)
+        guard key.id == draft.id, key.name == draft.name, Set(key.scopes) == Set(draft.scopes),
+              abs(key.expires.timeIntervalSince(key.created) - Double(draft.days) * 86400) < 0.01 else { throw AutomationKey.invalid }
+        guard key.active(at: Date()) else { throw AppFailure(message: "This key is no longer active. Reload your keys and create a new one.") }
+        return key
+    }
+    func revokeAutomationKey(id: String, account: String, origin: String) async throws -> AutomationKey {
+        guard AutomationKey.canonicalID(id) else { throw AutomationKey.invalid }
+        let receipt = try await automationReceipt(action: "revoke", body: ["id": .string(id)], account: account, origin: origin)
+        guard case .object(let row) = receipt["key"] else { throw AutomationKey.invalid }
+        let key = try AutomationKey(row)
+        guard key.id == id, key.revoked != nil else { throw AutomationKey.invalid }
+        return key
     }
     var accountRemovalOrigin: String {
         get throws {

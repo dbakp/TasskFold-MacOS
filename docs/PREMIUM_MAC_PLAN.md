@@ -35,6 +35,14 @@ iOS task-save failure/retry, ordinary Save and stale-Apply preservation, includi
 largest-text dark iPad. Native Mac editing/Undo/failure and spoken acceptance
 remain open. See `p2-note-recovery-evidence.json`; rank 3/Px stays active.
 
+22 October automation foundation: the Mac independently owns native secret/hash
+and metadata types, account-fenced management transport and matching candidate
+Edge/SQL controls. Both apps build; each owned Core account/automation suite passes
+49 cases and the existing private-handoff suite 16, plus eight mocked HTTP cases
+and local SQL checks. No migration/function/key/UI is enabled on the live service.
+Task operations, native management and real acceptance remain in progress before
+release; see `p2-automation-access-evidence.json` and the rank-6 plan.
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.

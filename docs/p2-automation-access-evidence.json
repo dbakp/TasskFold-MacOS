@@ -1,0 +1,120 @@
+{
+  "date": "2026-10-22",
+  "milestone": "Automation credential foundation; feature in progress",
+  "platform": "macOS",
+  "baseCommit": "a13b45a79f7f50842a0a8acea1ca2786a7bdea3f",
+  "featureEnabled": false,
+  "migrationApplied": false,
+  "edgeFunctionDeployed": false,
+  "nativeManagementScreensExposed": false,
+  "liveKeysIssued": 0,
+  "taskOperationsImplemented": false,
+  "fullPxComplete": false,
+  "candidateMigration": "20261022212224_automation_access.sql",
+  "implemented": [
+    "Native 256-bit system entropy and stable registration identity/hash; raw secret non-Codable and debug-redacted",
+    "Account/origin-bound native management transport, late-response fencing, no cookies/cache/redirects, response bound",
+    "Metadata-only service projection; real Auth subject and live SQL session validation; no editable metadata authorization",
+    "Private tables and service-only management wrapper; retained immutable key identity prevents retry renewal/un-revocation",
+    "Active/inactive metadata pages bounded to 100 rows; owner-bound keyset cursor",
+    "Scoped private transactional authorization helper, expiry, revocation and UTC usage windows",
+    "Existing keys permanently revoked on start of account removal; key metadata/hash/usage cascade on Auth deletion"
+  ],
+  "quotas": {
+    "activeKeys": 20,
+    "newKeysPerUTCDate": 10,
+    "keyRequestsPerMinute": 60,
+    "keyRequestsPerUTCDate": 1000,
+    "accountRequestsPerUTCDate": 2000
+  },
+  "scopeNames": [
+    "tasks:read",
+    "tasks:create",
+    "tasks:update",
+    "tasks:complete",
+    "tasks:delete"
+  ],
+  "scopeNamesAreTaskImplementations": false,
+  "verification": {
+    "coreAccountAutomationCasesPerRepo": 49,
+    "existingHandoffRegressionCasesPerRepo": 16,
+    "coreFailures": 0,
+    "coreSkips": 0,
+    "mockHTTPPerRepo": 8,
+    "mockHTTPFailures": 0,
+    "denoLint": "passed in each repo",
+    "SQL": "owned actual migration and PostgreSQL/PGlite role/fixture rollback passes per repo",
+    "appBuilds": "Both full Debug apps pass; Mac signing disabled, iOS Simulator build-for-testing uses existing team identity",
+    "noNewNativeUIOrSpeechAcceptance": true
+  },
+  "liveReadOnlyCheck": {
+    "keyTable": null,
+    "managementRPC": null,
+    "candidateMigrationApplied": false,
+    "project": "zqxflydiyfjeedqvyova"
+  },
+  "advisors": {
+    "scope": "Preimplementation read-only current project security baseline; candidate not applied",
+    "existingWarningGroups": 6,
+    "baselineWarningsFixed": false,
+    "expectedPrivateRLSTablesWithoutClientPolicies": [
+      "automation_keys",
+      "automation_account_usage"
+    ]
+  },
+  "developmentFindings": [
+    "Local service wrapper initially lacked schema USAGE in the independent bootstrap; candidate now grants service-only schema USAGE without table access",
+    "Scope/quotas/session checks run under account then Auth/key locks; clock windows refreshed after lock acquisition",
+    "Added permanent key revocation on removal begin to prevent receipt pruning from restoring existing integration access",
+    "Client rejects inactive registration acknowledgements rather than displaying a revoked token as usable"
+  ],
+  "remaining": [
+    "Task-operation gateway and existing access/generation/conflict/recurrence/default-reminder/deletion semantics",
+    "Permanent idempotent operation claims and genuine concurrent revocation/effects acceptance",
+    "Native one-time review/revoke/enrollment/paging/workspace flows",
+    "Hosted migration/HTTP/disposable-account verification, deployment and actual native API acceptance",
+    "Email/webhook/team/wearable ranks and all existing user deferrals"
+  ],
+  "sourcesSHA256": {
+    "Taskfold/Core/AutomationAccess.swift": "5fd05bd4eb350fb93f97efdd740aab52a7912ec1a690051e7b24db324d199620",
+    "Taskfold/Core/Backend.swift": "33a7a7240140578e6e609f178d19e5ab213bece8f1168948708d5c70f0847424",
+    "TaskfoldTests/AutomationAccessTests.swift": "bec081dd74475b425aedcc677c1f61b032deea11687aae1c9b5413a0971bebbd",
+    "Taskfold.xcodeproj/project.pbxproj": "e0c07affe3bbfe5c384695bfb34ba0fcdc9973abb664cfd4f015daae40e2081b",
+    "Package.swift": "af9c7c0631cd9f4e14c8b2cc06243274bea54f88174b9e6951f38a0b5f2d333e",
+    "Scripts/Database/test-automation.mjs": "0a7d1a98506fc18e9b17186a98aae3860e6a0cb04a0f0a9033c186d32f60ce90",
+    "Scripts/Database/package.json": "91ded7bb5f9505914130ab5a443485f92c7b719f7e4a699a0d9da9f29be1cec2",
+    "supabase/migrations/20261022212224_automation_access.sql": "fa99b465eb59908864591ba05613d4b660cd0302df1a60565a400ea880b50f23",
+    "supabase/tests/automation_access.sql": "96d7930c98c2f0bc403bfbcde4856e5d5b95bf26cd61a4ad5f05da65725816ea",
+    "supabase/functions/automation-keys/index.ts": "f2ee0429ffe477e80c4c4338ce7d48ad6c4ef604f8b80aa953edcdd362ae3d95",
+    "supabase/functions/automation-keys/handler.ts": "ff229fe39600c1e1036e59686eb18a3a3564ea32c733eb480fb010fdbdf9efd5",
+    "supabase/functions/automation-keys/handler_test.ts": "26c1784e20e25ff3d2762206fa5d98aea5063bbf9224f0bd5727b116d098a021"
+  },
+  "artifactsRoot": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance",
+  "retainedArtifacts": [
+    "automation-access-core-ios.log",
+    "automation-access-core-mac.log",
+    "automation-access-handoff-core-ios.log",
+    "automation-access-handoff-core-mac.log",
+    "automation-access-deno-ios.log",
+    "automation-access-deno-mac.log",
+    "automation-access-sql-ios.log",
+    "automation-access-sql-mac.log",
+    "automation-access-current-build-ios.log",
+    "automation-access-current-build-mac.log"
+  ],
+  "rawSecretsOrCredentialsInEvidence": false,
+  "cleanup": {
+    "TaskfoldAppHostsOrBuilds": [],
+    "appsLaunchedForThisMilestone": 0,
+    "realAuthCredentialsCreated": false,
+    "liveAPIKeysCreated": false,
+    "pruned": [
+      {
+        "path": "/private/tmp/taskfold-note-recovery-ios",
+        "logicalBytes": 4966832
+      }
+    ],
+    "measuredLogicalBytesPruned": 4966832,
+    "retained": "Current automation staging/build inputs, reusable dependencies and evidence; no user data or existing desktop widget extension changed"
+  }
+}
