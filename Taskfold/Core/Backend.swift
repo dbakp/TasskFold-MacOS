@@ -392,15 +392,60 @@ final class Backend: NSObject {
     func sendPasswordReset(email: String) async throws {
         _ = try await request("/auth/v1/recover", method: "POST", body: ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())], authenticated: false)
     }
-    /// A successful HTTP status alone does not confirm completed account removal.
-    /// The account/session guards in request also reject a reply from a prior sign-in.
-    func deleteAccount() async throws {
-        let data = try await request("/functions/v1/delete-account", method: "POST", body: [:])
-        guard data.count <= 4096,
-              let receipt = try? JSONDecoder().decode([String: JSON].self, from: data),
-              receipt["deleted"] == .bool(true) else {
+    var accountRemovalOrigin: String {
+        get throws {
+            guard var url = URLComponents(string: baseURL), url.scheme == "https", url.host != nil,
+                  url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
+                  url.path.isEmpty || url.path == "/" else { throw AppFailure(message: "The account server configuration is unavailable.") }
+            url.path = ""; return url.string!
+        }
+    }
+    /// Refresh only before saving a new removal command. Uncertain-result retries
+    /// must keep the original token even after expiry or Auth user removal.
+    func accountRemovalCommand(forceRefresh: Bool = false) async throws -> AccountRemovalCommand {
+        guard !sessionTransition, let account = session?.user.id else { throw AppFailure(message: "Sign in to remove your account.") }
+        let incarnation = sessionGeneration
+        try await refreshIfNeeded(force: forceRefresh)
+        guard !sessionTransition, sessionGeneration == incarnation, let current = session, current.user.id == account else { throw CancellationError() }
+        return try AccountRemovalCommand(account: account, origin: accountRemovalOrigin, authorization: current.access_token)
+    }
+    /// Resumes only an app-private, durably authorized command. It deliberately
+    /// does not refresh credentials, retarget to the current account or clear it.
+    func performAccountRemoval(_ command: AccountRemovalCommand) async throws {
+        guard command.valid, command.origin == (try accountRemovalOrigin) else { throw AppFailure(message: "Return to this account's original server to finish removal.") }
+        if command.confirmed { return }
+        var outgoing = URLRequest(url: URL(string: command.origin + "/functions/v1/delete-account")!)
+        outgoing.httpMethod = "POST"; outgoing.httpBody = Data("{}".utf8); outgoing.timeoutInterval = 25
+        outgoing.cachePolicy = .reloadIgnoringLocalCacheData; outgoing.httpShouldHandleCookies = false
+        outgoing.setValue(config["Key"], forHTTPHeaderField: "apikey")
+        outgoing.setValue("Bearer " + command.authorization, forHTTPHeaderField: "Authorization")
+        outgoing.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        outgoing.setValue("no-store", forHTTPHeaderField: "Cache-Control")
+        let (bytes, response) = try await http.bytes(for: outgoing, delegate: LocationHandoffRedirectRefusal.shared)
+        var data = Data()
+        do {
+            guard response.expectedContentLength <= 4096 else { throw AppFailure(message: "The server did not confirm account removal. Try again.") }
+            for try await byte in bytes {
+                try Task.checkCancellation()
+                guard data.count < 4096 else { throw AppFailure(message: "The server did not confirm account removal. Try again.") }
+                data.append(byte)
+            }
+        } catch { bytes.task.cancel(); throw error }
+        let receipt = try? JSONDecoder().decode([String: JSON].self, from: data)
+        if (response as? HTTPURLResponse)?.statusCode == 401 { throw AccountRemovalAuthorizationRequired() }
+        guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
+            throw AppFailure(message: (receipt?["error"]?.text).flatMap { $0.isEmpty ? nil : String($0.prefix(500)) } ?? "Account removal could not be confirmed. Some server data may already be removed. Try again.")
+        }
+        guard receipt?["deleted"] == .bool(true) else {
             throw AppFailure(message: "The server did not confirm account removal. Your local work is still on this device. Try again.")
         }
+    }
+    /// Convenience for transport callers; the Store uses the durable vault path.
+    func deleteAccount() async throws {
+        let incarnation = sessionGeneration, account = session?.user.id
+        let command = try await accountRemovalCommand()
+        try await performAccountRemoval(command)
+        guard sessionGeneration == incarnation, session?.user.id == account else { throw CancellationError() }
     }
     #if canImport(UIKit)
     func google() async throws {

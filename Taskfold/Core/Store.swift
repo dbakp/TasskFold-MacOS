@@ -1,4 +1,5 @@
 import SwiftUI
+import Security
 import Network
 import UserNotifications
 #if os(iOS)
@@ -208,7 +209,7 @@ final class Store {
     var todoistImportFixture: Bool { false }
     #endif
     var workspaceGeneration: UUID { accountGeneration }
-    var sharedCaptureAvailable: Bool { workspaceCacheReadable && (signedIn || localMode) && !signingOut && !userID.isEmpty }
+    var sharedCaptureAvailable: Bool { !accountRemovalBlocked && workspaceCacheReadable && (signedIn || localMode) && !signingOut && !userID.isEmpty }
     var backupWarning: String?
     @ObservationIgnored private var dailyBackupRunning = false
     var dailyBackupsEnabled: Bool {
@@ -219,10 +220,10 @@ final class Store {
         let account = userID
         let folder = cacheURL.deletingLastPathComponent().appending(path: "Backups", directoryHint: .isDirectory)
             .appending(path: WorkspaceBackup.stableID("vault", account), directoryHint: .isDirectory)
-        return BackupVault(directory: folder, account: account, key: { try BackupVault.deviceKey(account: account) })
+        return BackupVault(directory: folder, account: account, key: { try BackupVault.deviceKey(account: account) }, removalGate: UUID(uuidString: account) == nil ? nil : AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: account))
     }
     func makeRecoveryBackup(kind: String = "Manual") async throws -> RecoveryEntry {
-        guard signedIn || localMode, !userID.isEmpty else { throw BackupFailure(message: "Open a workspace before backing it up.") }
+        guard !accountRemovalBlocked, !signingOut, signedIn || localMode, !userID.isEmpty else { throw BackupFailure(message: "Open a workspace before backing it up.") }
         let vault = backupVault, before = snapshot, generation = accountGeneration
         let entry = try await Task.detached(priority: .utility) { try vault.save(before, kind: kind) }.value
         guard generation == accountGeneration else { throw BackupFailure(message: "The workspace changed. The backup belongs to the previous workspace.") }
@@ -230,7 +231,7 @@ final class Store {
         return entry
     }
     private func scheduleDailyBackup() {
-        guard (signedIn || localMode), !userID.isEmpty, dailyBackupsEnabled, !dailyBackupRunning else { return }
+        guard !accountRemovalBlocked, !signingOut, (signedIn || localMode), !userID.isEmpty, dailyBackupsEnabled, !dailyBackupRunning else { return }
         let vault = backupVault, before = snapshot, generation = accountGeneration
         dailyBackupRunning = true
         Task {
@@ -353,7 +354,7 @@ final class Store {
     func allowsWidgetRecordLink(_ url: URL) -> Bool {
         WidgetRecordLink.allows(url, account: userID, available: workspaceCacheReadable && (signedIn || localMode))
     }
-    var focusAvailable: Bool { workspaceCacheReadable && (signedIn || localMode) }
+    var focusAvailable: Bool { !accountRemovalBlocked && !signingOut && workspaceCacheReadable && (signedIn || localMode) }
     var focusSession: FocusSession? { FocusSessionChange.session(in: focusRecord, account: userID) }
     @discardableResult func changeFocus(_ session: FocusSession?, expected: Record?, workspace: WorkspaceBinding) -> Bool {
         guard workspace.matches(account: userID, generation: workspaceGeneration), workspaceCacheReadable, signedIn || localMode,
@@ -479,6 +480,9 @@ final class Store {
     var pendingCount: Int { snapshot.pending.count + ConversationOutbox.rows(snapshot, account: userID).filter { $0.string("state") != "draft" }.count }
     var cacheURL: URL {
         #if DEBUG
+        if AccountRemovalNativeFixture.enabled { return AccountRemovalNativeFixture.dataRoot.appendingPathComponent(userID + ".json") }
+        #endif
+        #if DEBUG
         if LocationHandoffNativeFixture.enabled { return LocationHandoffNativeFixture.root.appendingPathComponent("task-cache.json") }
         #endif
         let folder = URL.applicationSupportDirectory.appending(path: "Taskfold", directoryHint: .isDirectory)
@@ -488,7 +492,8 @@ final class Store {
         #if DEBUG
         // This local-only fixture must never read another app's stored cloud credentials.
         // Keep authenticated test variants and every normal app launch on the existing path.
-        if LocationHandoffNativeFixture.enabled { backend = LocationHandoffNativeFixture.backend() }
+        if AccountRemovalNativeFixture.enabled { backend = AccountRemovalNativeFixture.backend() }
+        else if LocationHandoffNativeFixture.enabled { backend = LocationHandoffNativeFixture.backend() }
         else if let bundle = Bundle.main.bundleIdentifier,
            (bundle == "com.dbakp.taskfold.mac.p0grammaruitests" || bundle == "com.dbakp.taskfold.mac.p0widgethosts" || bundle.hasPrefix("com.dbakp.taskfold.mac.workflowtests")),
            ProcessInfo.processInfo.arguments.contains("--uitesting"),
@@ -587,7 +592,12 @@ final class Store {
         var durable = snapshot
         durable.locationImports = try LocationHandoffImportLedger.staging(previous: previous, proposed: durable)
         durable.timeSnoozes = try stagedTimeSnoozes(previous: previous, proposed: durable, newIntent: timeSnooze)
-        try JSONEncoder().encode(durable).write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        let data = try JSONEncoder().encode(durable)
+        if UUID(uuidString: userID) != nil {
+            try AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).writable {
+                try data.write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            }
+        } else { try data.write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
         snapshot = durable
         publishWidgetSnapshot()
         #if DEBUG
@@ -609,7 +619,7 @@ final class Store {
     private func publishWidgetSnapshot(scheduleCapacityRefresh: Bool = true) {
         publishSharedCaptureWorkspace()
         guard let disk = try? widgetActionDisk() else { return }
-        let account = signedIn || localMode ? userID : ""
+        let account = sharedCaptureAvailable ? userID : ""
         let busy = CalendarBusyStore.shared; busy.bind(account: account)
         let current = widgetCalendarWindow.flatMap { value -> CalendarCapacityWindow? in
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
@@ -633,7 +643,7 @@ final class Store {
 
     /// Calendar reads remain in the app. Publication never blocks a durable task save.
     func refreshWidgetCapacity() async {
-        let account = signedIn || localMode ? userID : ""
+        let account = sharedCaptureAvailable ? userID : ""
         guard !account.isEmpty, workspaceCacheReadable else { return }
         let request = UUID(), generation = accountGeneration
         capacityRequest = (request, account)
@@ -650,6 +660,9 @@ final class Store {
     }
 
     private func widgetActionDisk() throws -> WidgetActionDisk {
+        #if DEBUG
+        if AccountRemovalNativeFixture.enabled { return WidgetActionDisk(directory: AccountRemovalNativeFixture.sharedRoot) }
+        #endif
         #if DEBUG
         if calendarContextFixtureEnabled || clockWindowFixtureEnabled || datePhraseFixtureEnabled || assigneePatternFixtureEnabled {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "CalendarContextTests", directoryHint: .isDirectory))
@@ -754,16 +767,130 @@ final class Store {
     func authenticated() async {
         // A newer authenticated session supersedes an in-flight sign-out.
         guard backend.session != nil else { return }
+        if let account = backend.session?.user.id, UUID(uuidString: account) != nil, AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: account).removed {
+            do { try await backend.clearSession() } catch { return }
+            resetRemovedWorkspaceIfSignedOut(); return
+        }
         googleAvatarURL = backend.session?.user.googleAvatarURL; avatarMetadataLoaded = false
         accountGeneration = UUID(); localMode = false; signedIn = true; syncConflict = nil; focusSyncConflict = nil
         CalendarBusyStore.shared.bind(account: userID)
         UserDefaults.standard.set(false, forKey: "localMode")
         snapshot = Snapshot(); undoStack = []; redoStack = []; load(); Task { await refreshRemoteReminderRegistration(); await sync() }
     }
+    @ObservationIgnored private lazy var accountRemovalVault = AccountRemovalVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".account-removal"))
+    private(set) var accountRemovalStatus: String?
+    private var removalPendingAccounts = Set<String>()
+    private var removalRecoveryRunning = false
+    var accountRemovalBusy: Bool { signingOut || removalRecoveryRunning }
+    var accountRemovalBlocked: Bool {
+        !localMode && (removalPendingAccounts.contains(userID) || UserDefaults.standard.bool(forKey: "accountRemoval.pending." + userID) ||
+            UUID(uuidString: userID) != nil && AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).removed)
+    }
+    /// The only new-account entry point is an explicit destructive confirmation.
+    func deleteAccount(expected: WorkspaceBinding) async throws {
+        guard expected.matches(account: userID, generation: workspaceGeneration), !localMode, !signingOut, !removalRecoveryRunning,
+              let account = backend.session?.user.id, account == expected.account, UUID(uuidString: account) != nil else { throw AppFailure(message: "Sign in and finish the current account action first.") }
+        signingOut = true; defer { signingOut = false; publishWidgetSnapshot(); Task { await reschedule() } }
+        try persist()
+        let incarnation = backend.reminderSessionIncarnation
+        let origin = try backend.accountRemovalOrigin
+        var command = try await accountRemovalVault.command(account: account, origin: origin)
+        if command == nil {
+            let fresh = try await backend.accountRemovalCommand()
+            guard backend.reminderSessionIncarnation == incarnation, backend.session?.user.id == account else { throw CancellationError() }
+            command = try await accountRemovalVault.begin(fresh)
+        }
+        guard let command else { throw CancellationError() }
+        markRemovalPending(command.account)
+        do { try await finishAccountRemoval(command) }
+        catch { accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish."; throw error }
+    }
+    /// Runs on launch and by explicit Retry, including after ordinary sign-out.
+    /// Only commands that already reached this app's private vault may resume.
+    func resumeAccountRemovals() async {
+        guard !removalRecoveryRunning, !signingOut else { return }
+        removalRecoveryRunning = true; defer { removalRecoveryRunning = false; Task { await reschedule() } }
+        do {
+            let commands = try await accountRemovalVault.pending()
+            guard !commands.isEmpty else { return }
+            var needsAttention = false
+            for command in commands {
+                markRemovalPending(command.account)
+                do { try await finishAccountRemoval(command) }
+                catch { needsAttention = true }
+            }
+            if needsAttention { accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish." }
+        } catch { accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish." }
+    }
+    private func markRemovalPending(_ account: String) {
+        removalPendingAccounts.insert(account)
+        UserDefaults.standard.set(true, forKey: "accountRemoval.pending." + account)
+        accountRemovalStatus = "Finishing account removal…"
+        if userID == account {
+            accountGeneration = UUID(); undoStack = []; redoStack = []
+            CalendarBusyStore.shared.bind(account: "")
+            publishWidgetSnapshot()
+        }
+    }
+    private func finishAccountRemoval(_ original: AccountRemovalCommand) async throws {
+        guard original.valid, original.origin == (try backend.accountRemovalOrigin) else { throw AppFailure(message: "Return to this account's original server to finish removal.") }
+        var command = original
+        if !command.confirmed {
+            do { try await backend.performAccountRemoval(command) }
+            catch is AccountRemovalAuthorizationRequired {
+                guard backend.session?.user.id == command.account else { throw AccountRemovalAuthorizationRequired() }
+                let session = backend.reminderSessionIncarnation
+                let fresh = try await backend.accountRemovalCommand(forceRefresh: backend.session?.access_token == command.authorization)
+                guard fresh.account == command.account, backend.reminderSessionIncarnation == session else { throw CancellationError() }
+                command = try await accountRemovalVault.renew(command, with: fresh)
+                try await backend.performAccountRemoval(command)
+            }
+            command = try await accountRemovalVault.confirm(command)
+        }
+        // All paths and keys below derive from the confirmed command, never from
+        // whichever account may have become active while network/Keychain awaited.
+        let account = command.account
+        let root = cacheURL.deletingLastPathComponent()
+        let gate = AccountRemovalDisk(directory: root, account: account)
+        let vault = BackupVault(directory: root.appendingPathComponent("Backups").appendingPathComponent(WorkspaceBackup.stableID("vault", account)), account: account,
+            key: { try BackupVault.deviceKey(account: account) }, removalGate: gate)
+        try gate.removeCache()
+        let privateRoot = LocationPrivateStore.applicationSupport
+        if privateRoot != root { try AccountRemovalDisk(directory: privateRoot, account: account).removeCache() }
+        try await LocationPrivateStore(applicationSupport: privateRoot).removeAccountData(account)
+        #if os(iOS)
+        // Reject a hydration that read the old archive before this cleanup.
+        // The next serialized reschedule installs the current workspace's engine.
+        locationRefreshID = UUID(); locationArchive = nil; locationEngine = nil
+        #endif
+        try widgetActionDisk().removeAccount(account)
+        try sharedCaptureDisk().removeAccount(account)
+        try await CalendarBusyStore.shared.eraseAccount(account)
+        try await Task.detached(priority: .utility) { try vault.removeAll(); try BackupVault.removeDeviceKey(account: account) }.value
+        for key in ["dailyBackups." + account, ReminderPreferences.timeSensitiveKey(account), FocusFinish.preferenceKey(account)] { UserDefaults.standard.removeObject(forKey: key) }
+        if backend.session?.user.id == account {
+            // Confirmed Auth removal covers every incarnation of this account.
+            // Backend's conditional clear still protects a concurrent B sign-in.
+            do { try await backend.clearSession() } catch is CancellationError { }
+            resetRemovedWorkspaceIfSignedOut()
+        }
+        try await accountRemovalVault.finish(command)
+        removalPendingAccounts.remove(account)
+        UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + account)
+        accountRemovalStatus = nil
+    }
+    private func resetRemovedWorkspaceIfSignedOut() {
+        guard backend.session == nil else { return }
+        googleAvatarURL = nil; avatarMetadataLoaded = false
+        accountGeneration = UUID(); signedIn = false; localMode = false
+        UserDefaults.standard.set(false, forKey: "localMode")
+        snapshot = Snapshot(); error = nil; undoStack = []; redoStack = []; lastSync = nil; syncConflict = nil; focusSyncConflict = nil; accessRecoveryPending = false
+        CalendarBusyStore.shared.bind(account: ""); publishWidgetSnapshot(); clearScheduledReminders()
+    }
     private(set) var signingOut = false
     func signOut() async {
         guard !signingOut else { return }
-        signingOut = true; defer { signingOut = false }
+        signingOut = true; defer { signingOut = false; publishWidgetSnapshot(); Task { await reschedule() } }
 
         let leavingSnoozeEpochKey = timeSnoozeEpochKey
         // The account-specific cache and unsent queue stay on disk for the next sign-in.
@@ -786,7 +913,7 @@ final class Store {
     }
     @discardableResult
     func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil, sharedCaptureReceipt: SharedCaptureDraft? = nil) -> Bool {
-        guard !signingOut else { return false }
+        guard !signingOut, !accountRemovalBlocked else { error = "Finish account removal before changing this workspace."; return false }
         guard !changes.contains(where: { $0.table == "tasks" && $0.recordID.hasPrefix("subtask:") }) else {
             error = "Open this subtask's details to make this change."; return false
         }
@@ -1043,7 +1170,7 @@ final class Store {
         if LocationHandoffNativeFixture.enabled { return }
         #endif
         consumeWidgetCompletions()
-        guard signedIn, !localMode, online, !syncing else { return }
+        guard !signingOut, !accountRemovalBlocked, signedIn, !localMode, online, !syncing else { return }
         if syncConflict != nil || focusSyncConflict != nil { await syncConversations(); return }
         syncing = true; let generation = accountGeneration, account = userID
         var sending: Mutation?
@@ -1389,7 +1516,7 @@ final class Store {
     private var reminderPreferenceKey: String { ReminderPreferences.key(userID) }
     var remindersEnabled: Bool {
         _ = reminderPreferenceRevision
-        guard signedIn || localMode, !userID.isEmpty else { return false }
+        guard !signingOut, !accountRemovalBlocked, signedIn || localMode, !userID.isEmpty else { return false }
         return ReminderPreferences.enabled(account: userID, fixture: userID == "ui-testing" || userID == "preview")
     }
     var timeSensitiveRemindersEnabled: Bool {
@@ -2124,6 +2251,142 @@ extension Store {
         } catch {
             let report: [String:JSON] = ["passed":.bool(false),"checks":.array(checks.map(JSON.string)),"error":.string(error.localizedDescription)]
             try? JSONEncoder().encode(report).write(to: LocationHandoffNativeFixture.root.appendingPathComponent("sender-proof.json"), options: .atomic)
+        }
+    }
+}
+#endif
+
+
+struct AccountRemovalRecoveryBanner: View {
+    @Environment(Store.self) private var store
+    var body: some View {
+        if let status = store.accountRemovalStatus {
+            HStack(alignment: .center, spacing: 12) {
+                Label(status, systemImage: "person.crop.circle.badge.exclamationmark")
+                    .font(.callout).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Button("Retry") { Task { await store.resumeAccountRemovals() } }
+                    .disabled(store.accountRemovalBusy)
+                    .accessibilityIdentifier("retryAccountRemoval")
+            }.padding().background(.regularMaterial).accessibilityIdentifier("accountRemovalRecovery")
+        }
+    }
+}
+
+#if DEBUG
+extension Store {
+    func runAccountRemovalNativeProof() async {
+        guard AccountRemovalNativeFixture.enabled else { return }
+        var checks: [String: Bool] = [:]
+        func require(_ key: String, _ value: Bool) throws {
+            checks[key] = value
+            if !value { throw AppFailure(message: "Native removal proof failed: " + key) }
+        }
+        do {
+            let account = AccountRemovalNativeFixture.owner, outside = AccountRemovalNativeFixture.other
+            let io = CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "") + ".account-removal")
+            let old = try await accountRemovalVault.pending()
+            try require("reservedRecoveryOnly", old.allSatisfy { $0.account == account || $0.account == outside })
+            try io.remove(key: "unfinished-removals-v1")
+            var a = Record.task(user: account); a["title"] = .string("Synthetic owner work")
+            snapshot = Snapshot(tables: ["tasks": [a]])
+            localMode = false; signedIn = true; workspaceCacheReadable = true
+            removalPendingAccounts = []; accountRemovalStatus = nil
+            try persist()
+            let aCache = cacheURL, before = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
+            var b = Record.task(user: outside); b["title"] = .string("Keep outsider work")
+            var bSnapshot = Snapshot(tables: ["tasks": [b]])
+            bSnapshot.pending = [Mutation(table: "tasks", recordID: b.id, method: "POST", fields: b.fields)]
+            let bCache = aCache.deletingLastPathComponent().appendingPathComponent(outside + ".json")
+            try JSONEncoder().encode(bSnapshot).write(to: bCache, options: .atomic)
+            var bBytes = try Data(contentsOf: bCache)
+            let ownedVault = backupVault.directory
+            let outsiderVault = ownedVault.deletingLastPathComponent().appendingPathComponent(WorkspaceBackup.stableID("vault", outside))
+            let ownBackup = backupVault
+            let ownEntry = try ownBackup.save(snapshot, kind: "Synthetic")
+            let outsideBackup = BackupVault(directory: outsiderVault, account: outside, key: { try BackupVault.deviceKey(account: outside) })
+            let outsideEntry = try outsideBackup.save(bSnapshot, kind: "Synthetic")
+            let outsideCiphertext = try Data(contentsOf: outsideBackup.file(outsideEntry))
+            try require("encryptedRecoveryRoundtrip", try ownBackup.load(ownEntry).snapshot == snapshot && outsideBackup.load(outsideEntry).snapshot == bSnapshot)
+            try require("backupKeysExistBeforeRemoval", AccountRemovalNativeFixture.backupKeyStatus(account) == errSecSuccess && AccountRemovalNativeFixture.backupKeyStatus(outside) == errSecSuccess)
+            let places = LocationPrivateStore(applicationSupport: LocationPrivateStore.applicationSupport)
+            let pinA = LocationPrivatePlace.make(account: account, name: "Synthetic A", latitude: 55, longitude: 12, radius: 200)!
+            let pinB = LocationPrivatePlace.make(account: outside, name: "Keep B", latitude: 56, longitude: 13, radius: 250)!
+            _ = try await places.save(pinA); _ = try await places.save(pinB)
+            let shares = try sharedCaptureDisk()
+            let aWorkspace = SharedCaptureWorkspace(account: account, generation: workspaceGeneration, label: "Synthetic A")
+            try shares.publish(aWorkspace); try shares.save(SharedCaptureDraft(workspace: aWorkspace, content: .init(title: "Synthetic A draft")))
+            for invalid in [WorkspaceBinding(account: outside, generation: workspaceGeneration), WorkspaceBinding(account: account, generation: UUID())] {
+                do { try await deleteAccount(expected: invalid); throw AppFailure(message: "Stale confirmation was accepted") }
+                catch { try require("staleConfirmationRefused", AccountRemovalProofHTTP.count == 0 && !accountRemovalBlocked) }
+            }
+            if AccountRemovalNativeFixture.switching {
+                let deleting = Task { try await self.deleteAccount(expected: WorkspaceBinding(account: account, generation: workspaceGeneration)) }
+                for _ in 0..<300 {
+                    if AccountRemovalProofHTTP.count > 0 { break }
+                    try await Task.sleep(for: .milliseconds(10))
+                }
+                try require("heldOriginalRequest", AccountRemovalProofHTTP.count == 1)
+                try await backend.accept(AccountRemovalNativeFixture.session(outside))
+                await authenticated()
+                bBytes = try Data(contentsOf: bCache)
+                let active = snapshot
+                let context = SharedCaptureWorkspace(account: outside, generation: workspaceGeneration, label: backend.session?.user.email ?? "Taskfold workspace")
+                try shares.publish(context); let draft = try SharedCaptureDraft(workspace: context, content: .init(title: "Keep B draft")); try shares.save(draft)
+                AccountRemovalProofHTTP.release(); try await deleting.value
+                try require("otherSessionKept", backend.session?.user.id == outside && signedIn && userID == outside)
+                try require("otherMemoryKept", snapshot == active)
+                let activeWidget = try JSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data!)
+                try require("otherWidgetKept", activeWidget["account"] == .string(outside) && activeWidget["tasks"]?.list.contains(where: { $0.object["title"] == .string("Keep outsider work") }) == true)
+                try require("otherShareKept", try shares.workspace() == context && shares.drafts(account: outside) == [draft])
+            } else if AccountRemovalNativeFixture.expiring {
+                try await deleteAccount(expected: WorkspaceBinding(account: account, generation: workspaceGeneration))
+                try require("expiredAuthorizationRenewed", AccountRemovalProofHTTP.count == 2 && AccountRemovalProofHTTP.refreshCount == 1)
+                try require("confirmedRemovalSignsOut", backend.session == nil && !signedIn)
+            } else {
+                do { try await deleteAccount(expected: WorkspaceBinding(account: account, generation: workspaceGeneration)); throw AppFailure(message: "Synthetic failure was accepted") }
+                catch { try require("interruptedResultRefused", AccountRemovalProofHTTP.count == 1) }
+                let diagnosticEncoder = JSONEncoder(); diagnosticEncoder.outputFormatting = [.sortedKeys, .prettyPrinted]
+                try diagnosticEncoder.encode(before).write(to: AccountRemovalNativeFixture.root.appendingPathComponent("before-cache.json"))
+                let afterFailure = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: aCache))
+                try diagnosticEncoder.encode(afterFailure).write(to: AccountRemovalNativeFixture.root.appendingPathComponent("after-cache.json"))
+                try require("failedRequestKeepsCache", afterFailure == before)
+                try require("failedRequestKeepsSession", backend.session?.user.id == account && signedIn)
+                let pausedWidget = try JSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data!)
+                try require("pendingWidgetPrivate", pausedWidget["account"] == .string("") && pausedWidget["tasks"]?.list.isEmpty == true)
+                let restarted = AccountRemovalVault(io: io), pending = try await restarted.pending()
+                try require("originalAuthorizationDurable", pending.count == 1 && pending.first?.authorization == "synthetic-A" && pending.first?.confirmed == false)
+                try require("pendingWorkspaceQuiescent", accountRemovalBlocked && !commit([Mutation(table: "tasks", recordID: a.id, method: "PATCH", fields: ["title": .string("Must not save")])]))
+                await resumeAccountRemovals()
+                try require("sameAuthorizationRetried", AccountRemovalProofHTTP.count == 2)
+                try require("confirmedRemovalSignsOut", backend.session == nil && !signedIn)
+            }
+            try require("ownerCacheRemoved", !FileManager.default.fileExists(atPath: aCache.path))
+            try require("outsiderCacheExact", try Data(contentsOf: bCache) == bBytes)
+            try require("ownedRecoveryRemoved", !FileManager.default.fileExists(atPath: ownedVault.path))
+            try require("outsiderRecoveryExact", try Data(contentsOf: outsideBackup.file(outsideEntry)) == outsideCiphertext && outsideBackup.load(outsideEntry).snapshot == bSnapshot)
+            try require("ownedBackupKeyRemoved", AccountRemovalNativeFixture.backupKeyStatus(account) == errSecItemNotFound)
+            try require("outsiderBackupKeyKept", AccountRemovalNativeFixture.backupKeyStatus(outside) == errSecSuccess)
+            let archive = try await places.snapshot()
+            try require("privatePlacesScoped", archive?.places(for: account).isEmpty == true && archive?.places(for: outside) == [pinB])
+            let remaining = try await accountRemovalVault.pending()
+            try require("recoveryCommandFinished", remaining.isEmpty && accountRemovalStatus == nil)
+            try require("staleCacheWriteRefused", AccountRemovalDisk(directory: aCache.deletingLastPathComponent(), account: account).removed)
+            if !AccountRemovalNativeFixture.switching {
+                try await backend.accept(AccountRemovalNativeFixture.session(account))
+                await authenticated()
+                try require("lateRemovedAccountCannotReopen", backend.session == nil && !signedIn)
+            }
+            // Explicitly remove only the synthetic outsider's test key/session
+            // after preservation is proved; do not leave credentials behind.
+            try BackupVault.removeDeviceKey(account: outside)
+            if backend.session?.user.id == outside { try await backend.clearSession() }
+            let result: [String: Any] = ["status": "passed", "scenario": AccountRemovalNativeFixture.switching ? "late-account-switch" : AccountRemovalNativeFixture.expiring ? "expired-authorization" : "failed-reply-retry", "checks": checks, "scope": "Real native Store and file/Keychain cleanup with synthetic accounts and simulated endpoint replies. Fixture-owned sharing directory; not live Auth/Storage or normal App Group acceptance."]
+            try JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]).write(to: AccountRemovalNativeFixture.result, options: .atomic)
+        } catch {
+            let result: [String: Any] = ["status": "failed", "checks": checks, "error": error.localizedDescription]
+            try? FileManager.default.createDirectory(at: AccountRemovalNativeFixture.root, withIntermediateDirectories: true)
+            try? JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]).write(to: AccountRemovalNativeFixture.result, options: .atomic)
         }
     }
 }

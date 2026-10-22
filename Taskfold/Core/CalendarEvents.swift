@@ -100,6 +100,11 @@ struct EmptyPlannerCalendarProvider: PlannerCalendarProviding {
             deviceStatus=status;revision += 1
         } catch { guard token == accountGeneration else { return }; status = "Could not connect calendars: " + error.localizedDescription;deviceStatus=status }
     }
+    func eraseAccount(_ account:String) async throws {
+        if self.account==account { bind(account:"") }
+        try await links?.eraseAccount(account)
+        for suffix in [".connected", ".selected", ".titles"] { defaults.removeObject(forKey:"planner.calendar."+account+suffix) }
+    }
     func disconnect() {
         generation = UUID(); accountGeneration = UUID(); connected = false; ready = false; events = []; calendars = []; selected = []; if links?.active != true { showTitles = false }
         for suffix in (links?.active == true ? [".connected", ".selected"] : [".connected", ".selected", ".titles"]) { defaults.removeObject(forKey: key + suffix) }

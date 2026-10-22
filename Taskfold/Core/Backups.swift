@@ -484,6 +484,7 @@ struct BackupVault: Sendable {
     var account: String
     var key: @Sendable () throws -> SymmetricKey
     var retention = 20
+    var removalGate: AccountRemovalDisk? = nil
     private static let lock = NSRecursiveLock()
     func entries() throws -> [RecoveryEntry] {
         Self.lock.lock(); defer { Self.lock.unlock() }
@@ -492,6 +493,10 @@ struct BackupVault: Sendable {
         return try JSONDecoder().decode([RecoveryEntry].self, from: Data(contentsOf: url)).sorted { $0.createdAt > $1.createdAt }
     }
     func save(_ snapshot: Snapshot, kind: String, now: Date = Date()) throws -> RecoveryEntry {
+        if let gate = removalGate {
+            var unguarded = self; unguarded.removalGate = nil
+            return try gate.writable { try unguarded.save(snapshot, kind: kind, now: now) }
+        }
         Self.lock.lock(); defer { Self.lock.unlock() }
         let backup = WorkspaceBackup.make(snapshot, account: account, now: now)
         let plaintext = try JSONEncoder().encode(RecoveryPayload(workspace: backup, snapshot: snapshot))
@@ -521,6 +526,17 @@ struct BackupVault: Sendable {
         catch { throw BackupFailure(message: "This recovery backup is damaged or its device key is unavailable.") }
     }
     func file(_ entry: RecoveryEntry) -> URL { directory.appendingPathComponent(entry.id.uuidString.lowercased() + ".taskfoldbackup") }
+    /// Called after the deletion tombstone; delayed saves cannot recreate this vault.
+    func removeAll() throws {
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
+    }
+    static func removeDeviceKey(account: String) throws {
+        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: "com.taskfold.recovery.v1", kSecAttrAccount as String: account]
+        let status = SecItemDelete(query as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw BackupFailure(message: "The account was removed, but its device backup key still needs cleanup. Unlock this device and retry removal.") }
+    }
     static func deviceKey(account: String) throws -> SymmetricKey {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "com.taskfold.recovery.v1", kSecAttrAccount as String: account]
         var read = query; read[kSecReturnData as String] = true

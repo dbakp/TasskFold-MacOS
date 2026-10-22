@@ -162,6 +162,7 @@ struct AccountSettings: View {
     @State private var changingEmail = false
     @State private var changingPassword = false
     @State private var deletingAccount = false
+    @State private var deletionWorkspace: WorkspaceBinding?
     @State private var resetMessage: String?
     @State private var sendingReset = false
     var body: some View {
@@ -189,7 +190,7 @@ struct AccountSettings: View {
                     Button("Change Password…") { changingPassword = true }.accessibilityIdentifier("changePassword")
                     Button(sendingReset ? "Sending…" : "Send Password Reset Email") { sendReset() }.disabled(sendingReset).accessibilityIdentifier("sendPasswordReset")
                     if let resetMessage { Text(resetMessage).font(.caption).foregroundStyle(.secondary).textSelection(.enabled) }
-                    Button("Delete Account…", role: .destructive) { deletingAccount = true }.accessibilityIdentifier("deleteAccount")
+                    Button("Delete Account…", role: .destructive) { deletionWorkspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); deletingAccount = true }.accessibilityIdentifier("deleteAccount")
                 } header: { Text("Security") } footer: {
                     if workspace.previewsAccount { Text("Preview: these actions need a signed-in account.").font(.caption).foregroundStyle(.secondary) }
                 }
@@ -220,7 +221,7 @@ struct AccountSettings: View {
         .onChange(of: store.signedIn) { _, signedIn in if signedIn && !store.localMode { showLogin = false } }
         .sheet(isPresented: $changingEmail) { ChangeEmailSheet() }
         .sheet(isPresented: $changingPassword) { ChangePasswordSheet() }
-        .sheet(isPresented: $deletingAccount) { DeleteAccountSheet() }
+        .sheet(isPresented: $deletingAccount) { if let request = deletionWorkspace { DeleteAccountSheet(workspace: request) } }
         .sheet(isPresented: $showLogin) {
             VStack(spacing: 0) {
                 HStack { Spacer(); Button("Close") { showLogin = false }.keyboardShortcut(.cancelAction) }.padding(12)

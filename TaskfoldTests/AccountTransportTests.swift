@@ -642,3 +642,72 @@ extension AccountTransportTests {
         XCTAssertEqual(api.session?.access_token, "old")
     }
 }
+
+extension AccountTransportTests {
+    @MainActor func testPersistedRemovalUsesOriginalTokenAfterExpiryAndAnotherAccountSignIn() async throws {
+        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand()
+        var next = try signed(other, token: "B-current"); next.expires_at = 0
+        try await api.accept(next)
+        var calls = 0
+        ScopedHTTP.handler = { request, transport in
+            calls += 1
+            XCTAssertEqual(request.url?.path, "/functions/v1/delete-account")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer old")
+            XCTAssertFalse(request.httpShouldHandleCookies)
+            transport.finish(200, Data(#"{"deleted":true}"#.utf8))
+        }
+        defer { ScopedHTTP.handler = nil }
+        try await api.performAccountRemoval(command)
+        XCTAssertEqual(calls, 1); XCTAssertEqual(api.session?.user.id, other); XCTAssertEqual(api.session?.access_token, "B-current")
+    }
+    @MainActor func testLostRemovalReplyRetriesExactAuthorizationWithoutRefreshingDeadSession() async throws {
+        let api = backend(try signed(owner)), command = try await api.accountRemovalCommand()
+        var calls = 0
+        ScopedHTTP.handler = { request, transport in
+            calls += 1
+            XCTAssertEqual(request.url?.path, "/functions/v1/delete-account")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer old")
+            if calls == 1 { transport.finish(503, Data(#"{"error":"Reply lost; retry"}"#.utf8)) }
+            else { transport.finish(200, Data(#"{"deleted":true}"#.utf8)) }
+        }
+        defer { ScopedHTTP.handler = nil }
+        do { try await api.performAccountRemoval(command); XCTFail("Lost result was accepted") } catch {}
+        api.session?.expires_at = 0
+        try await api.performAccountRemoval(command)
+        XCTAssertEqual(calls, 2); XCTAssertEqual(api.session?.access_token, "old")
+    }
+    @MainActor func testRemovalCommandCannotSendItsBearerToChangedServerAndConfirmedRecoveryNeedsNoNetwork() async throws {
+        let api = backend(try signed(owner))
+        var calls = 0
+        ScopedHTTP.handler = { _, transport in calls += 1; transport.finish(200, Data(#"{"deleted":true}"#.utf8)) }
+        defer { ScopedHTTP.handler = nil }
+        let foreign = try AccountRemovalCommand(account: owner, origin: "https://another.test", authorization: "private-fixture")
+        do { try await api.performAccountRemoval(foreign); XCTFail("Bearer reached another host") } catch {}
+        var confirmed = try await api.accountRemovalCommand(); confirmed.confirmed = true
+        try await api.performAccountRemoval(confirmed)
+        XCTAssertEqual(calls, 0)
+    }
+}
+
+
+extension AccountTransportTests {
+    @MainActor func testExplicitRemovalRefusalCanRenewOnlyCurrentAccountBeforeRetry() async throws {
+        let api = backend(try signed(owner)), original = try await api.accountRemovalCommand()
+        let refreshed = try JSONEncoder().encode(signed(owner, token: "renewed"))
+        var calls: [String] = []
+        ScopedHTTP.handler = { request, transport in
+            let path = request.url!.path; calls.append(path)
+            if path == "/auth/v1/token" { transport.finish(200, refreshed) }
+            else if request.value(forHTTPHeaderField: "Authorization") == "Bearer old" { transport.finish(401, Data(#"{"error":"Sign in again"}"#.utf8)) }
+            else { XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer renewed"); transport.finish(200, Data(#"{"deleted":true}"#.utf8)) }
+        }
+        defer { ScopedHTTP.handler = nil }
+        do { try await api.performAccountRemoval(original); XCTFail("401 accepted") }
+        catch { XCTAssertTrue(error is AccountRemovalAuthorizationRequired) }
+        XCTAssertEqual(calls, ["/functions/v1/delete-account"], "No automatic refresh may discard the original receipt authorization")
+        let replacement = try await api.accountRemovalCommand(forceRefresh: true)
+        XCTAssertEqual(replacement.account, owner); XCTAssertEqual(replacement.authorization, "renewed")
+        try await api.performAccountRemoval(replacement)
+        XCTAssertEqual(calls, ["/functions/v1/delete-account", "/auth/v1/token", "/functions/v1/delete-account"])
+    }
+}

@@ -29,7 +29,8 @@ struct TaskfoldMacApp: App {
 
     @ViewBuilder private var mainContent: some View {
         #if DEBUG
-        if LocationHandoffNativeFixture.enabled {
+        if AccountRemovalNativeFixture.enabled { AccountRemovalProofView() }
+        else if LocationHandoffNativeFixture.enabled {
             LocationHandoffSendView(request: .init(taskID: LocationHandoffNativeFixture.taskID, workspace: .init(account: store.userID, generation: store.workspaceGeneration)))
                 .task {
                     if ProcessInfo.processInfo.arguments.contains("--handoff-autonomous-proof") {
@@ -45,6 +46,13 @@ struct TaskfoldMacApp: App {
     var body: some Scene {
         WindowGroup("Taskfold") {
             mainContent
+                .safeAreaInset(edge: .top, spacing: 0) { AccountRemovalRecoveryBanner().environment(store) }
+                .task {
+                    #if DEBUG
+                    if AccountRemovalNativeFixture.enabled { return }
+                    #endif
+                    await store.resumeAccountRemovals()
+                }
                 .environment(store)
                 .environment(workspace)
                 .tint(tint)

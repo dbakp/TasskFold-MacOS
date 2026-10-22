@@ -119,6 +119,21 @@ public final class WidgetActionDisk: @unchecked Sendable {
     public func publish(_ data: Data) throws {
         try locked { try data.write(to: directory.appendingPathComponent("widget.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
     }
+    public func removeAccount(_ account: String) throws {
+        try locked {
+            var pending = try queue(); pending.requests.removeAll { $0.account == account }; try write(pending)
+            let projection = directory.appendingPathComponent("widget.json")
+            if FileManager.default.fileExists(atPath: projection.path) {
+                let current = try JSONDecoder().decode(Projection.self, from: Data(contentsOf: projection))
+                if current.account == account { try FileManager.default.removeItem(at: projection) }
+            }
+            let feedback = directory.appendingPathComponent("widget-feedback-dismissal.json")
+            if FileManager.default.fileExists(atPath: feedback.path),
+               try JSONDecoder().decode(FeedbackDismissal.self, from: Data(contentsOf: feedback)).account == account {
+                try FileManager.default.removeItem(at: feedback)
+            }
+        }
+    }
     public func clearProjection() throws {
         try locked {
             let url = directory.appendingPathComponent("widget.json")

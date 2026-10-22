@@ -169,6 +169,14 @@ final class SharedCaptureDisk: @unchecked Sendable {
         try data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
     }
+    func removeAccount(_ account: String) throws {
+        try locked {
+            var state = try read()
+            state.drafts.removeAll { $0.workspace.account == account }
+            if state.workspace?.account == account { state.workspace = nil }
+            try write(state)
+        }
+    }
     func publish(_ workspace: SharedCaptureWorkspace?) throws {
         try workspace?.validate()
         try locked { var state = try read(); state.workspace = workspace; try write(state) }

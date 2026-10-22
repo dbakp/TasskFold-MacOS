@@ -180,6 +180,9 @@ actor LocationPrivateStore {
     init(applicationSupport: URL) { file = .init(applicationSupport: applicationSupport) }
     /// Keep all UI-test private state outside the real installation's placebook.
     static var applicationSupport: URL {
+        #if DEBUG && !SWIFT_PACKAGE
+        if AccountRemovalNativeFixture.enabled { return AccountRemovalNativeFixture.dataRoot }
+        #endif
         var root = URL.applicationSupportDirectory.appendingPathComponent("Taskfold", isDirectory: true)
         #if DEBUG
         if LocationHandoffNativeFixture.enabled { return LocationHandoffNativeFixture.root.appendingPathComponent("private", isDirectory: true) }
@@ -197,6 +200,7 @@ actor LocationPrivateStore {
     @discardableResult func setAllowance(account: String, enabled: Bool, expectedDevice: String?) throws -> LocationPrivateArchive {
         guard LocationReminderIdentity.account(account) else { throw LocationStorageFailure.changed }
         return try file.transaction { current in
+            guard !AccountRemovalDisk(directory: file.directory.deletingLastPathComponent(), account: account).removed else { throw LocationStorageFailure.changed }
             guard current?.device == expectedDevice, current != nil || enabled else { throw LocationStorageFailure.changed }
             var next = current ?? LocationPrivateArchive()
             var accounts = next.allowedAccounts ?? []
@@ -216,7 +220,8 @@ actor LocationPrivateStore {
         return try file.read()?.places(for: account) ?? []
     }
     @discardableResult func save(_ place: LocationPrivatePlace, replacing original: LocationPrivatePlace? = nil) throws -> LocationPrivateArchive {
-        try file.transaction { current in
+        return try file.transaction { current in
+            guard !AccountRemovalDisk(directory: file.directory.deletingLastPathComponent(), account: place.account).removed else { throw LocationStorageFailure.changed }
             var next = current ?? LocationPrivateArchive()
             if let index = next.places.firstIndex(where: { $0["id"] == .string(place.id) }) {
                 if next.places[index] == place.raw { return (next, next) } // Idempotent retry after an uncertain commit.
@@ -246,6 +251,7 @@ actor LocationPrivateStore {
     /// another acknowledged preparation or rewinding a submitted/closed one-shot.
     func saveJournal(_ journal: LocationReminderJournal) throws {
         try file.transaction { current in
+            guard journal.entries.values.allSatisfy({ !AccountRemovalDisk(directory: file.directory.deletingLastPathComponent(), account: $0.ticket.account).removed }) else { throw LocationStorageFailure.changed }
             guard var next = current, journal.valid, journal.device == next.device, journal.version >= next.journal.version,
                   Set(next.journal.revoked ?? []).isSubset(of: Set(journal.revoked ?? [])) else { throw LocationStorageFailure.changed }
             let rank: [LocationReminderJournal.Phase: Int] = [.prepared: 0, .reserved: 1, .installed: 2, .closed: 3]
@@ -265,6 +271,20 @@ actor LocationPrivateStore {
             next.journal = journal; return (next, ())
         }
     }
+    func removeAccountData(_ account: String) throws {
+        guard LocationReminderIdentity.account(account) else { throw LocationStorageFailure.changed }
+        try file.transaction { current in
+            guard var next = current else { return (LocationPrivateArchive(), ()) }
+            next.places.removeAll { $0["account"] == .string(account) }
+            next.allowedAccounts?.removeAll { $0 == account }
+            next.handoffReviews = next.handoffReviews?.filter { $0.value.account != account }
+            next.handoffEpochs?[account] = nil
+            let ids = Set(next.journal.entries.filter { $0.value.ticket.account == account }.map(\.key))
+            next.journal.entries = next.journal.entries.filter { !ids.contains($0.key) }
+            next.journal.revoked?.removeAll { ids.contains($0) }
+            return (next, ())
+        }
+    }
     func resetAllPrivateData(confirmed: Bool) throws -> LocationPrivateArchive {
         guard confirmed else { throw LocationStorageFailure.changed }; return try file.reset()
     }
@@ -275,7 +295,8 @@ extension LocationPrivateStore {
     /// The returned nonce and import identities have reached protected disk before
     /// a caller is allowed to make the first remote Claim.
     func reserveHandoffReview(_ record: LocationHandoffRecord, expectedDevice: String?) throws -> LocationHandoffReviewTicket {
-        try file.transaction { current in
+        return try file.transaction { current in
+            guard !AccountRemovalDisk(directory: file.directory.deletingLastPathComponent(), account: record.account).removed else { throw LocationStorageFailure.changed }
             guard current?.device == expectedDevice, record.available else { throw LocationStorageFailure.changed }
             var next = current ?? LocationPrivateArchive()
             let key = record.account + "|" + record.id
@@ -300,7 +321,8 @@ extension LocationPrivateStore {
     /// Called only after an explicit review/save action. Stable IDs make a retry
     /// after an uncertain private-file commit reuse the same pin and reminder.
     func saveReviewedHandoffPlace(_ ticket: LocationHandoffReviewTicket, proposal: LocationHandoffProposal) throws -> LocationPrivateArchive {
-        try file.transaction { current in
+        return try file.transaction { current in
+            guard !AccountRemovalDisk(directory: file.directory.deletingLastPathComponent(), account: ticket.account).removed else { throw LocationStorageFailure.changed }
             guard var next = current, next.device == ticket.device, next.handoffReviews?[ticket.key] == ticket,
                   let place = ticket.reviewedPlace(proposal) else { throw LocationStorageFailure.changed }
             if let existing = next.places.first(where: { $0["id"] == .string(place.id) }) {

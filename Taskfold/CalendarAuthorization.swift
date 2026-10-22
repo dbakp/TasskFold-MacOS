@@ -170,6 +170,10 @@ import AppKit
             session?.cancel();continuation?.resume(throwing:CancellationError())
         }
     }
+    func eraseAccount(_ account:String) async throws {
+        if owner==account { bind(owner:"") }
+        for service in CalendarService.allCases { try await vault.remove(owner:account,service:service) }
+    }
     func disconnect(owner:String,service:CalendarService) async throws {
         guard self.owner==owner,!owner.isEmpty else {throw CancellationError()}
         cancel(service:service);active.removeValue(forKey:service)?.lease.cancel()

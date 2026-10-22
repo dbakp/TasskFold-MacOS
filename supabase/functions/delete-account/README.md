@@ -21,7 +21,10 @@ name or content; completed requests return only `{ "deleted": true }`. Hourly
 cron expiry (where available) and opportunistic begin pruning enforce retention.
 A native client must securely retain the same authorization for uncertain-result
 retries; automatic refresh can otherwise lose access after successful Auth
-removal. This native retry lifecycle is still outstanding.
+removal. Both native Store paths now persist the original authorization in a
+device-private Keychain vault, conditionally renew only after explicit
+authorization refusal, and retain confirmed cleanup progress. Genuine Mac
+profile/Keychain and live HTTP/UI acceptance remain outstanding.
 
 Files are removed through Storage's API before Auth hard deletion. Ownership
 comes from the service-only manifest, with owner-null UUID-prefix compatibility

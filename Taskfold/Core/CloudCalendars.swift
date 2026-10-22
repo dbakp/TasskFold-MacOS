@@ -192,6 +192,10 @@ struct CalendarAccountIdentity:Codable,Equatable,Sendable {var id:String;var lab
     func discard(_ pending:UUID)
     func cancel(service:CalendarService?)
     func disconnect(owner:String,service:CalendarService) async throws
+    func eraseAccount(_ owner:String) async throws
+}
+extension CalendarAuthorizing {
+    func eraseAccount(_ owner:String) async throws { for service in CalendarService.allCases { try await disconnect(owner:owner,service:service) } }
 }
 @MainActor final class UnavailableCalendarAuthorization:CalendarAuthorizing {
     var configured:Set<CalendarService> {[]}
@@ -203,6 +207,7 @@ struct CalendarAccountIdentity:Codable,Equatable,Sendable {var id:String;var lab
     func discard(_ pending:UUID) {}
     func cancel(service:CalendarService?) {}
     func disconnect(owner:String,service:CalendarService) async throws {}
+    func eraseAccount(_ owner:String) async throws { for service in CalendarService.allCases { try await disconnect(owner:owner,service:service) } }
 }
 struct LinkedCalendarProfile:Identifiable,Equatable,Sendable {
     var service:CalendarService
@@ -293,6 +298,14 @@ struct LinkedCalendarWindow:Sendable {
     }
     private func matches(_ owner:String,_ generation:UUID)->Bool {self.owner==owner && self.generation==generation}
     private func current(_ owner:String,_ generation:UUID)->Bool {matches(owner,generation) && !Task.isCancelled}
+    func eraseAccount(_ account:String) async throws {
+        if owner==account { bind(owner:"") }
+        try await authorizer.eraseAccount(account)
+        for service in CalendarService.allCases {
+            let prefix="planner.linked."+account+"."+service.rawValue
+            defaults.removeObject(forKey:prefix+".identity");defaults.removeObject(forKey:prefix+".selected")
+        }
+    }
     private func key(_ service:CalendarService)->String {"planner.linked."+owner+"."+service.rawValue}
     private func mutated() {reads.values.forEach{$0.cancel()};reads=[:];revision+=1;changed?()}
     private func persist(_ profile:LinkedCalendarProfile) {defaults.set(profile.identity.id,forKey:key(profile.service)+".identity");defaults.set(profile.selected.sorted(),forKey:key(profile.service)+".selected")}

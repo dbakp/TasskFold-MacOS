@@ -1,7 +1,12 @@
 import Foundation
 
 extension Store {
-    func sharedCaptureDisk() throws -> SharedCaptureDisk { try SharedCaptureDisk.system() }
+    func sharedCaptureDisk() throws -> SharedCaptureDisk {
+        #if DEBUG
+        if AccountRemovalNativeFixture.enabled { return SharedCaptureDisk(directory: AccountRemovalNativeFixture.sharedRoot) }
+        #endif
+        return try SharedCaptureDisk.system()
+    }
     func publishSharedCaptureWorkspace() {
         do {
             let active = sharedCaptureAvailable

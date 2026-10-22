@@ -93,5 +93,7 @@
     "testHostsLaunched": false,
     "newLargeBuildArtifacts": false
   },
-  "scope": "Does not close account deletion P0, full Px, or user-deferred remote/distribution/older-client/provider work."
+  "scope": "Does not close account deletion P0, full Px, or user-deferred remote/distribution/older-client/provider work.",
+  "nativeScopeNote": "Historical strict-response client snapshot at 234c0b9. Current native lifecycle verification is recorded separately.",
+  "currentNativeEvidence": "p0-account-removal-recovery-evidence.json"
 }
