@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-22",
+  "platform": "mac",
+  "status": "candidate_not_deployed_p0_open",
+  "sourceSHA256": {
+    "Taskfold/Core/Backend.swift": "4157ce8658cd3c47c62acdb4114b75e83ce10bd6d44936f1e4da18ab2e1b1a13",
+    "TaskfoldTests/AccountTransportTests.swift": "ae22475a89499aa287b66ff5db4b21afc8f13c8c6e80a1083edcb40ac1e51993",
+    "Scripts/Database/package.json": "9ff5b95830933600b9b089c14d1a23d45a3e9e5ca6140fbb5aab6b2fbe72a01e",
+    "Scripts/Database/account-removal-bootstrap.sql": "d0fde0b552dca69c4019b2eddc77e60d8aff6eb52d3ea9a1fa6a24891b88d6aa",
+    "Scripts/Database/test-account-removal.mjs": "ee84c7e619497ae50dc89adea8ec9a47dd8963a5652ba6e1c3ef066ff56f0634",
+    "supabase/migrations/20261022174058_account_removal_service.sql": "93dd54c808919926a6546ba59d696086234b91b80cc728136e8fcd4d6fc5474c",
+    "supabase/tests/account_removal.sql": "ba9bfa5ace88ef76db1e8878bd793c88f5269da45a781a724ee32ae5b646e9ab",
+    "supabase/tests/account_removal_hosted.sql": "67738b34e560b70130248ae019e9dfe84db76088094c31a31923997e2ebf3caf",
+    "supabase/functions/delete-account/README.md": "d96f8e82d0da55f3af5e8f55a51b74b9a03fae183035a0d2e069bf691932fd2c",
+    "supabase/functions/delete-account/handler.ts": "a03c43c7bf68146652b8161e65a55599dc4ea4ed30e15efcef7e20db360a4631",
+    "supabase/functions/delete-account/handler_test.ts": "7556587edd86d9b5bbdbf8b755eac59597bded57319e7085142fc946e465813c",
+    "supabase/functions/delete-account/index.ts": "6a2984da710407dca8b73ff27bf5124f26dd4cee44336212c95482962b393251"
+  },
+  "ownedChecks": {
+    "deno": {
+      "passed": 12,
+      "failed": 0,
+      "transport": "mocked"
+    },
+    "localSQL": {
+      "passed": [
+        "bootstrap",
+        "candidate migration",
+        "role/session/FK/storage-policy fixture",
+        "full rollback"
+      ],
+      "database": "PGlite 0.5.11 minimal schema"
+    },
+    "CoreAccountTransport": {
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0,
+      "newCases": 3
+    }
+  },
+  "logSHA256": {
+    "deno": "3498472067203e8e2ecae64903848b03c27963bf38022c95a30c14466712417f",
+    "sql": "8d2e2e4dbcc8dabdb1d22ceae7c22f85f72ee4c82a4e798872c50bc608ea710c",
+    "core": "684f87d98063ea2cceb1674521a25287e361d24f222d944420e446dfbe49bae6"
+  },
+  "hostedRollback": {
+    "candidateMigrationAndActualSchemaFixture": "passed",
+    "reservedIdentityPrefix": "f084cafe-",
+    "fixtureUsersAfter": 0,
+    "fixtureFilesAfter": 0,
+    "candidateReceiptTableAfter": null,
+    "candidateRPCsAfter": 0,
+    "schedulerAvailable": "pg_cron",
+    "scope": "Actual hosted triggers, roles, FKs and Storage policy checks in one rolled-back transaction. Storage metadata only, no file bytes. No live Auth Admin or Storage removal HTTP."
+  },
+  "failedIterations": [
+    "Local fixture omitted invitation trigger; corrected bootstrap",
+    "Deno mock send type incompatible with typeof fetch; narrowed injectable Request transport",
+    "Hosted fixture omitted required profile IDs; corrected fixture",
+    "Hosted Storage direct-delete protection refused fixture; replaced metadata deletion with savepoint rollback, no trigger disabled",
+    "README added after Deno formatting; formatted and rechecked"
+  ],
+  "baselineAdvisors": {
+    "security": [
+      "extension_in_public",
+      "pg_graphql_anon_table_exposed",
+      "pg_graphql_authenticated_table_exposed",
+      "anon_security_definer_function_executable",
+      "authenticated_security_definer_function_executable",
+      "auth_leaked_password_protection"
+    ],
+    "performance": [
+      "unindexed_foreign_keys",
+      "auth_rls_initplan",
+      "unused_index",
+      "table_bloat",
+      "auth_db_connections_absolute"
+    ],
+    "scope": "Existing hosted schema before candidate deployment. Not a clean advisory claim; new candidate explicitly limits administrative RPCs and indexes relevant inviter/member FKs."
+  },
+  "remaining": [
+    "secure original-token native retry and confirmed-progress persistence",
+    "account-scoped native quiescence and current-device cleanup",
+    "accurate final confirmation copy",
+    "controlled migration/function deployment with handler authentication",
+    "actual Auth/Storage HTTP and native disposable owner/outsider acceptance",
+    "simultaneous hosted upload/removal race",
+    "versioned storage removal if enabled in future"
+  ],
+  "cleanup": {
+    "persistentHostedChange": false,
+    "realAccountsDeleted": false,
+    "testHostsLaunched": false,
+    "newLargeBuildArtifacts": false
+  },
+  "scope": "Does not close account deletion P0, full Px, or user-deferred remote/distribution/older-client/provider work."
+}

@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "test:assignment": "node test-assignment.mjs",
-    "test:location-handoff": "node test-location-handoff.mjs"
+    "test:location-handoff": "node test-location-handoff.mjs",
+    "test:account-removal": "node test-account-removal.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

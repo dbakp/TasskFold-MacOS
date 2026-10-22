@@ -595,3 +595,50 @@ extension AccountTransportTests {
         do{_ = try await api.send(change);XCTFail("Unconfirmed goal choice was acknowledged")}catch{XCTAssertTrue(error.localizedDescription.contains("did not confirm"))}
     }
 }
+
+
+extension AccountTransportTests {
+    @MainActor func testAccountRemovalRequiresExplicitBooleanConfirmation() async throws {
+        let api = backend(try signed(owner))
+        defer { ScopedHTTP.handler = nil }
+        for body in ["", "{}", "null", "[]", "{\"deleted\":false}", "{\"deleted\":\"true\"}", "not JSON", String(repeating: " ", count: 5000) + "{\"deleted\":true}"] {
+            ScopedHTTP.handler = { request, transport in
+                XCTAssertEqual(request.url?.path, "/functions/v1/delete-account")
+                XCTAssertEqual(request.httpMethod, "POST")
+                transport.finish(200, Data(body.utf8))
+            }
+            do { try await api.deleteAccount(); XCTFail("Unconfirmed removal accepted: " + body) }
+            catch { XCTAssertTrue(error.localizedDescription.contains("did not confirm")) }
+            XCTAssertEqual(api.session?.user.id, owner)
+        }
+        ScopedHTTP.handler = { _, transport in transport.finish(200, Data(#"{"deleted":true}"#.utf8)) }
+        try await api.deleteAccount()
+        // Store owns local cleanup after confirmation; the transport never clears a session.
+        XCTAssertEqual(api.session?.user.id, owner)
+    }
+    @MainActor func testDelayedRemovalCannotConfirmForAnotherAccountOrNewSignIn() async throws {
+        for destination in [other, owner] {
+            let gate = HTTPGate(), started = expectation(description: "Deletion response held")
+            let api = backend(try signed(owner))
+            ScopedHTTP.handler = { _, transport in gate.hold(transport); started.fulfill() }
+            defer { ScopedHTTP.handler = nil }
+            let deleting = Task { @MainActor in try await api.deleteAccount() }
+            await fulfillment(of: [started], timeout: 3)
+            try await api.accept(signed(destination, token: "new"))
+            gate.release(200, Data(#"{"deleted":true}"#.utf8))
+            do { try await deleting.value; XCTFail("Old response confirmed a newer workspace") }
+            catch { XCTAssertTrue(error is CancellationError) }
+            XCTAssertEqual(api.session?.user.id, destination)
+            XCTAssertEqual(api.session?.access_token, "new")
+        }
+    }
+    @MainActor func testRemovalRefusalPreservesSessionAndDoesNotReportSuccess() async throws {
+        let api = backend(try signed(owner))
+        ScopedHTTP.handler = { _, transport in transport.finish(503, Data(#"{"error":"Retry removal"}"#.utf8)) }
+        defer { ScopedHTTP.handler = nil }
+        do { try await api.deleteAccount(); XCTFail("Refused removal reported success") }
+        catch { XCTAssertEqual(error.localizedDescription, "Retry removal") }
+        XCTAssertEqual(api.session?.user.id, owner)
+        XCTAssertEqual(api.session?.access_token, "old")
+    }
+}

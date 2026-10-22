@@ -392,9 +392,15 @@ final class Backend: NSObject {
     func sendPasswordReset(email: String) async throws {
         _ = try await request("/auth/v1/recover", method: "POST", body: ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())], authenticated: false)
     }
-    /// Asks the backend to delete the account and its data. Requires the `delete-account` edge function.
+    /// A successful HTTP status alone does not confirm completed account removal.
+    /// The account/session guards in request also reject a reply from a prior sign-in.
     func deleteAccount() async throws {
-        _ = try await request("/functions/v1/delete-account", method: "POST", body: [:])
+        let data = try await request("/functions/v1/delete-account", method: "POST", body: [:])
+        guard data.count <= 4096,
+              let receipt = try? JSONDecoder().decode([String: JSON].self, from: data),
+              receipt["deleted"] == .bool(true) else {
+            throw AppFailure(message: "The server did not confirm account removal. Your local work is still on this device. Try again.")
+        }
     }
     #if canImport(UIKit)
     func google() async throws {
