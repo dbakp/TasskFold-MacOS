@@ -2,7 +2,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { readFile } from 'node:fs/promises';
 const db = new PGlite();
 try {
- for (const name of ['./account-removal-bootstrap.sql','../../supabase/migrations/20261022174058_account_removal_service.sql','../../supabase/tests/account_removal.sql']) {
+ for (const name of ['./account-removal-bootstrap.sql','../../supabase/migrations/20261022193804_account_removal_service.sql','../../supabase/tests/account_removal.sql']) {
   await db.exec(await readFile(new URL(name,import.meta.url),'utf8'));
   console.log('PASS '+name.split('/').at(-1));
  }

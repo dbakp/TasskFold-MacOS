@@ -604,6 +604,7 @@ extension AccountTransportTests {
         for body in ["", "{}", "null", "[]", "{\"deleted\":false}", "{\"deleted\":\"true\"}", "not JSON", String(repeating: " ", count: 5000) + "{\"deleted\":true}"] {
             ScopedHTTP.handler = { request, transport in
                 XCTAssertEqual(request.url?.path, "/functions/v1/delete-account")
+                XCTAssertEqual(request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal"), "1")
                 XCTAssertEqual(request.httpMethod, "POST")
                 transport.finish(200, Data(body.utf8))
             }

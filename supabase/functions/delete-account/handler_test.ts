@@ -12,7 +12,10 @@ const token = (subject = owner) =>
 const request = (body: unknown = {}, secret = token(), method = "POST") =>
   new Request("https://edge.test", {
     method,
-    headers: { Authorization: "Bearer " + secret },
+    headers: {
+      Authorization: "Bearer " + secret,
+      "X-Taskfold-Account-Removal": "1",
+    },
     body: method === "POST" ? JSON.stringify(body) : undefined,
   });
 const assert = (value: unknown, message: string) => {
@@ -279,7 +282,11 @@ Deno.test("service authentication outages remain retryable and invalid bucket pa
   );
 });
 Deno.test("malformed JSON and a stalled caller body are refused without credentials reaching any service", async () => {
-  const f = fixture(), headers = { Authorization: "Bearer " + token() };
+  const f = fixture(),
+    headers = {
+      Authorization: "Bearer " + token(),
+      "X-Taskfold-Account-Removal": "1",
+    };
   assert(
     (await f.handler(
       new Request("https://edge.test", { method: "POST", headers, body: "{" }),
@@ -293,4 +300,20 @@ Deno.test("malformed JSON and a stalled caller body are refused without credenti
   );
   assert((await f.handler(req)).status === 408, "Stalled body not bounded");
   assert(f.calls.length === 0, "Rejected bodies touched service");
+});
+
+Deno.test("legacy and unknown protocol callers cannot start or resume a removal", async () => {
+  for (const version of [null, "", "0", "2", "1, 1"]) {
+    const f = fixture({ complete: true });
+    const headers = new Headers({ Authorization: "Bearer " + token() });
+    if (version !== null) headers.set("X-Taskfold-Account-Removal", version);
+    const result = await f.handler(
+      new Request("https://edge.test", { method: "POST", headers, body: "{}" }),
+    );
+    assert(result.status === 428, "Unsupported client was accepted");
+    assert(
+      f.calls.length === 0,
+      "Unsupported client reached privileged services",
+    );
+  }
 });

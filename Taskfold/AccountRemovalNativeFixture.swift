@@ -60,7 +60,8 @@ final class AccountRemovalProofHTTP: URLProtocol, @unchecked Sendable {
         let permitted = request.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-A" ||
             AccountRemovalNativeFixture.expiring && request.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-A-renewed"
         guard AccountRemovalNativeFixture.enabled, request.url?.host == "removal-native.test",
-              request.url?.path == "/functions/v1/delete-account", request.httpMethod == "POST", permitted else {
+              request.url?.path == "/functions/v1/delete-account", request.httpMethod == "POST",
+              request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal") == "1", permitted else {
             client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet)); return
         }
         Self.lock.lock(); Self.requests += 1; let index = Self.requests

@@ -419,6 +419,7 @@ final class Backend: NSObject {
         outgoing.cachePolicy = .reloadIgnoringLocalCacheData; outgoing.httpShouldHandleCookies = false
         outgoing.setValue(config["Key"], forHTTPHeaderField: "apikey")
         outgoing.setValue("Bearer " + command.authorization, forHTTPHeaderField: "Authorization")
+        outgoing.setValue("1", forHTTPHeaderField: "X-Taskfold-Account-Removal")
         outgoing.setValue("application/json", forHTTPHeaderField: "Content-Type")
         outgoing.setValue("no-store", forHTTPHeaderField: "Cache-Control")
         let (bytes, response) = try await http.bytes(for: outgoing, delegate: LocationHandoffRedirectRefusal.shared)

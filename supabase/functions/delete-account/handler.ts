@@ -70,6 +70,15 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
       request.headers.get("Authorization") ?? "",
     )?.[1];
     if (!token) return json({ error: "Sign in to remove your account." }, 401);
+    // Compatibility is not authorization. Old callers must upgrade to the
+    // durable native recovery contract before starting an irreversible command.
+    if (request.headers.get("X-Taskfold-Account-Removal") !== "1") {
+      return json(
+        { error: "Update Taskfold before removing your account." },
+        428,
+      );
+    }
+
     let origin: string;
     try {
       const url = new URL(config.url);
