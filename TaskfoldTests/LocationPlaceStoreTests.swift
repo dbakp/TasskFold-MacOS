@@ -203,4 +203,21 @@ final class LocationPlaceStoreTests: XCTestCase {
         XCTAssertEqual(final?.journal, journal); XCTAssertEqual(final?.places(for: account), [renamed])
     }
 
+    func testRealFileRevocationCannotBeRewoundOrCleared() async throws {
+        let root = try root(); defer { try? FileManager.default.removeItem(at: root) }
+        let store = LocationPrivateStore(applicationSupport: root), pin = try place(), initial = try await store.save(pin)
+        var task = Record.task(user: account); task["title"] = .string("Receipt retirement proof")
+        let settings = try XCTUnwrap(LocationReminderSettings.make(device: initial.device, taskID: task.id, taskGeneration: task.string("task_generation"), place: pin, transition: .leave))
+        let ticket = try XCTUnwrap(LocationReminderTicket.bound(account: account, task: task, settings: settings))
+        var old = initial.journal; XCTAssertTrue(old.prepare(ticket)); try await store.saveJournal(old)
+        old.entries[ticket.identifier]?.phase = .reserved; try await store.saveJournal(old)
+        old.entries[ticket.identifier]?.phase = .closed; old.entries[ticket.identifier]?.reason = .delivered; try await store.saveJournal(old)
+        var revoked = old; revoked.version = 2; revoked.revoked = [ticket.identifier]; try await store.saveJournal(revoked)
+        do { try await store.saveJournal(old); XCTFail("Revocation downgraded") } catch {}
+        var cleared = revoked; cleared.revoked = []
+        do { try await store.saveJournal(cleared); XCTFail("Revocation cleared") } catch {}
+        let restarted = LocationPrivateStore(applicationSupport: root), read = try await restarted.snapshot()
+        XCTAssertEqual(read?.journal, revoked); XCTAssertFalse(read?.journal.permitsResponse(ticket, eligible: []) ?? true)
+    }
+
 }

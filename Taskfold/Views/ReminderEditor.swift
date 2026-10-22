@@ -34,6 +34,12 @@ struct TaskReminderEditor: View {
                             Text(status(spec) + (spec.timeSensitive ? " · Time Sensitive" : "")).font(.footnote).foregroundStyle(.secondary)
                             if !spec.locallyEditable { Text("This reminder uses another delivery channel. Its settings are preserved; this app delivers only local notifications.").font(.footnote).foregroundStyle(.secondary) }
                         }
+                    } else if let location = LocationReminderSettings(raw: value.object) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label(location.transition == .arrive ? "Arrival reminder" : "Departure reminder", systemImage: "mappin.and.ellipse")
+                            Text("Uses a private place on its originating iPhone or iPad. Review the place and delivery there.").font(.footnote).foregroundStyle(.secondary)
+                            Button("Delete location reminder", role: .destructive) { remove(index) }.buttonStyle(.borderless).frame(minHeight: 44)
+                        }
                     } else if ReminderSpec(row: value) == nil {
                         VStack(alignment: .leading, spacing: 8) {
                             Label("Unsupported reminder", systemImage: "lock.shield")

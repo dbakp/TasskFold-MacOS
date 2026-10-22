@@ -32,7 +32,7 @@ struct LocationPrivateArchive: Codable, Equatable, Sendable {
         let json = try JSONDecoder().decode(JSON.self, from: data)
         func keys(_ value: JSON, allowed: Set<String>) -> Bool { if case .object(let object) = value { return Set(object.keys).isSubset(of: allowed) }; return false }
         guard keys(json, allowed: ["version","device","places","journal","allowedAccounts"]), let journal = json.object["journal"],
-              keys(journal, allowed: ["version","device","entries"]), case .object(let entries)? = journal.object["entries"] else { throw LocationStorageFailure.unreadable }
+              keys(journal, allowed: ["version","device","entries","revoked"]), case .object(let entries)? = journal.object["entries"] else { throw LocationStorageFailure.unreadable }
         for entry in entries.values {
             guard keys(entry, allowed: ["ticket","phase","reason"]), let ticket = entry.object["ticket"],
                   keys(ticket, allowed: ["account","device","taskID","generation","completionVersion","specID","placeID","placeRevision","arm","transition"]) else { throw LocationStorageFailure.unreadable }
@@ -135,7 +135,8 @@ actor LocationPrivateStore {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--uitesting") {
             let lifecycle = Bundle.main.bundleIdentifier == "com.dbakp.taskfold.workflowtestsp1" && ProcessInfo.processInfo.arguments.contains("--location-workspace-fixture")
-            root.appendPathComponent(lifecycle ? "ui-testing-location-workspace" : "ui-testing-places", isDirectory: true)
+            let editor = Bundle.main.bundleIdentifier == "com.dbakp.taskfold.workflowtestsp1" && ProcessInfo.processInfo.arguments.contains("--location-editor-fixture")
+            root.appendPathComponent(editor ? "ui-testing-location-editor" : lifecycle ? "ui-testing-location-workspace" : "ui-testing-places", isDirectory: true)
         }
         #endif
         return root
@@ -194,13 +195,14 @@ actor LocationPrivateStore {
     /// another acknowledged preparation or rewinding a submitted/closed one-shot.
     func saveJournal(_ journal: LocationReminderJournal) throws {
         try file.transaction { current in
-            guard var next = current, journal.valid, journal.device == next.device else { throw LocationStorageFailure.changed }
+            guard var next = current, journal.valid, journal.device == next.device, journal.version >= next.journal.version,
+                  Set(next.journal.revoked ?? []).isSubset(of: Set(journal.revoked ?? [])) else { throw LocationStorageFailure.changed }
             let rank: [LocationReminderJournal.Phase: Int] = [.prepared: 0, .reserved: 1, .installed: 2, .closed: 3]
             for (id, old) in next.journal.entries {
                 guard let updated = journal.entries[id], updated.ticket == old.ticket, rank[updated.phase]! >= rank[old.phase]!, old.phase != .closed || updated == old else { throw LocationStorageFailure.changed }
             }
             for (id, entry) in journal.entries where next.journal.entries[id] == nil {
-                guard entry.phase == .prepared else { throw LocationStorageFailure.changed }
+                guard entry.phase == .prepared || entry.phase == .closed && entry.reason == .cancelled && journal.revoked?.contains(id) == true else { throw LocationStorageFailure.changed }
             }
             next.journal = journal; return (next, ())
         }

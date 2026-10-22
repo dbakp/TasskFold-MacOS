@@ -731,6 +731,13 @@ actor ReminderScheduler {
         if hasDesiredState { _ = await sweep() }
         return true
     }
+    func retireLocations(_ tickets: [LocationReminderTicket]) async -> Bool {
+        guard pendingLocationEngine == nil, let locationEngine else { return tickets.isEmpty }
+        let result = await locationEngine.retire(tickets)
+        sequence += 1
+        if hasDesiredState { _ = await sweep() }
+        return result
+    }
     private func permitsLocation(_ candidate: LocationReminderCandidate, engine: LocationReminderEngine, workspace: UUID?) async -> Bool {
         guard pendingLocationEngine == nil, locationEngine === engine, desired.locationWorkspace == workspace else { return false }
         let current = desired.locationContextIsCurrent

@@ -1,0 +1,193 @@
+{
+  "feature": "Reviewed private location task drafts and intent retirement",
+  "date": "2026-10-22",
+  "ownedRepository": "TasskFold-MacOS",
+  "status": "Experimental rank-5 implementation; full location/Px objective remains incomplete",
+  "sourceSHA256": {
+    "Taskfold/Core/LocationReminders.swift": "84233adfc84051e03acdbac36ef283ac222f2b31992ea156c1f5e805e36dcdbe",
+    "Taskfold/Core/LocationPlaceStore.swift": "4d0367264323208a4f14c800a2dadb3ea9207128dc95ae7fd0d7bf283355a4e9",
+    "Taskfold/Core/Reminders.swift": "9cfcde6be7b79b231d84bed0f49636f09176f4069ad43d5864fc71c8130e9396",
+    "Taskfold/Views/ReminderEditor.swift": "4881d819fdf5da56aecb61186fc40d139b3ca3b0f9dcacbc8a3e7f5ae6892a4b",
+    "TaskfoldTests/LocationReminderTests.swift": "b2cf77f634e9e7209dc619ef48782cce28d554d6586ab2e25804a7a9168bb7e6",
+    "TaskfoldTests/LocationPlaceStoreTests.swift": "5e133d5a613b9f86ccc1ada8e57952134c03d83b4492a3f8fde8b3c7a7f28e08",
+    "TaskfoldTests/LocationTaskDraftTests.swift": "69b890991f89726504cac7f6466adf02f58c0bd0e489b806fb603b43b59b0061"
+  },
+  "implementation": [
+    "Memory-only reviewed pin/task/workspace proposal; explicit Arrive/Leave; task receives opaque reference only",
+    "Done changes a task draft; parent Save persists first, revalidates and prepares only on a permitted/capable device; off/unsupported saves remain unarmed",
+    "Public task authoring still hidden; exact DEBUG bundle/flags and local ui-testing workspace required for nonempty review saves",
+    "Serialized prepared/installed retirement, late-add fencing and retire-before-prepare cancelled tombstones",
+    "Private journal version2 bounded monotonic revoked identifiers invalidate delivered receipts without rewriting closed history; revocations cannot be removed/downgraded",
+    "Normal iOS mutation/Undo/Redo queue and retry retirement; failed retirement remains suppressed for the current session",
+    "Immediate iOS private-place mutation reconciliation, permission helper with explicit When In Use and no updates/Always request",
+    "iOS row states and asynchronous save guards; Mac owns preservation/arrival-departure summary/deletion independently"
+  ],
+  "core": {
+    "reported": 1190,
+    "skipped": 33,
+    "actualPassed": 1157,
+    "failures": 0,
+    "newCases": 14,
+    "log": {
+      "file": "location-draft-full-mac.log",
+      "sha256": "a4c053e832012f00ca5be76251b4818026b903be5bcea43e4465a165ee8b46a6"
+    },
+    "scope": "Draft conflict/privacy/duplicate/limit/extension checks; held-add retirement interleavings; pre-prepare cancellation; failure suppression; delivered-receipt revocation; real-file monotonicity. Optional live/platform fixtures remain skipped."
+  },
+  "nativeIOS": {
+    "repository": "TaskFold-iOS",
+    "results": [
+      {
+        "device": "phone",
+        "bundle": "location-draft-phone-polished.xcresult",
+        "log": {
+          "file": "location-draft-phone-polished.log",
+          "sha256": "288c06e1735675936e22cc088d31ede85d843108912e4842f69c5c130c865507"
+        },
+        "result": {
+          "result": "Passed",
+          "totalTestCount": 2,
+          "passedTests": 2,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "runtimeWarnings": []
+        }
+      },
+      {
+        "device": "ipad",
+        "bundle": "location-draft-ipad-polished.xcresult",
+        "log": {
+          "file": "location-draft-ipad-polished.log",
+          "sha256": "5b3dbc7f04c52dcf60faf72f0ed8b4d4e4c21f136927d9648bbef4a540300b22"
+        },
+        "result": {
+          "result": "Passed",
+          "totalTestCount": 2,
+          "passedTests": 2,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "runtimeWarnings": []
+        }
+      }
+    ],
+    "closedIntentProofs": {
+      "phone": {
+        "artifact": {
+          "file": "phone-private-journal-after-undo-redo.json",
+          "sha256": "f30a06a8cd5dafc350bbd601b9d1801eccd3ac9012f484ef221f741bf6df192c"
+        },
+        "journalVersion": 2,
+        "entries": 1,
+        "revoked": 1,
+        "phase": "closed",
+        "reason": "cancelled",
+        "scope": "Synthetic inactive preparation, then real task removal/Undo/Redo through Store. Not actual geofence registration."
+      },
+      "ipad": {
+        "artifact": {
+          "file": "ipad-private-journal-after-undo-redo.json",
+          "sha256": "94b9fb975342b53ae77b76681e81930dbab44c82d9e19804a77cf5ec0e01124d"
+        },
+        "journalVersion": 2,
+        "entries": 1,
+        "revoked": 1,
+        "phase": "closed",
+        "reason": "cancelled",
+        "scope": "Synthetic inactive preparation, then real task removal/Undo/Redo through Store. Not actual geofence registration."
+      }
+    },
+    "cases": [
+      "testLocationDraftCancelSaveRelaunchAndUndo",
+      "testLocationDraftLargestTextDarkCancel"
+    ],
+    "scope": "Real iPhone/iPad editor/store/cache/file flows: draft/parent Cancel, unarmed Save, relaunch, task JSON excludes private pin, synthetic inactive preparation, removal, Undo/Redo, closed/revoked persistence. Dark largest-text selection/cancellation and unmodified viewport captures. No native geofence add/delivery/action or successful location-permission grant acceptance.",
+    "signature": "Final isolated Simulator app passes deep strict codesign verification; not release signing."
+  },
+  "nativeMac": {
+    "result": "Debug app/widget build succeeded with CODE_SIGNING_ALLOWED=NO",
+    "log": {
+      "file": "location-draft-mac-build.log",
+      "sha256": "f21d0e813adaf53f38d7285de633698f028068df4039c7b1fdf41de5d1b677b2"
+    },
+    "scope": "Compilation and independent Core coverage. New Mac row not accepted as native rendered/spoken behavior; no Mac location permission/trigger added."
+  },
+  "visualReview": {
+    "captures": [
+      {
+        "file": "ipad-dark-largest-review.png",
+        "sha256": "ce4921f28c4a8f063731890ca114ed145832e0dedd05446c725c4677ade92181"
+      },
+      {
+        "file": "ipad-light-review.png",
+        "sha256": "64e006a6fc18df03050c3d83830eb8f1a8e2cb6ed605bfaf7f9020b733bbb022"
+      },
+      {
+        "file": "phone-dark-largest-review.png",
+        "sha256": "51d53c69625fb8890d91f57cb3e7170e611a419305bd606affe6d493d67bbc02"
+      },
+      {
+        "file": "phone-light-review.png",
+        "sha256": "3d9c9ea9579ea519e0a444e76ad3245a7a32711853b43b6a062c2a0e959aa7ee"
+      }
+    ],
+    "observed": "Inspected final phone/tablet light and largest-text dark captures. Short accessibility title, full-size inline direction choices, wrapping private name, visible selected state and clearer pin. Viewport edges can show partial scroll content; captures are not whole-form pages or speech proof.",
+    "polish": "Earlier passing large-text capture had a truncated title and undersized segmented choice; both corrected before final accepted runs."
+  },
+  "earlierFailedAttempts": [
+    {
+      "summary": {
+        "file": "location-draft-phone-v1-summary.json",
+        "sha256": "c8a025f0f1cd2a447034f6275a9d3dcfb1304b573bd74f29e152cbd156821107"
+      },
+      "log": {
+        "file": "location-draft-phone-v1.log",
+        "sha256": "37641a45d570fdda3888fb7b82b527e329b3d8533f2bc4e4a7d879ce9e3287e5"
+      },
+      "reason": "After reminder deletion the Back action was unavailable. Location row buttons were separated with borderless styles and return-to-editor validation was added; subsequent normal flows pass."
+    },
+    {
+      "summary": {
+        "file": "location-draft-phone-v2-summary.json",
+        "sha256": "08eb54429cac21e517668ffd42e8b0e9ed81e0a3017651b487bc85aedadff73e"
+      },
+      "log": {
+        "file": "location-draft-phone-v2.log",
+        "sha256": "6fb8ab9d3013877e7ea33ec9e1b708deef6c8edb2ceaa1b0ab5c8695311438ee"
+      },
+      "reason": "Normal menu exposes human-readable Undo & redo/Undo/Redo labels without the source identifiers. The test now uses actual native labels."
+    },
+    {
+      "summary": {
+        "file": "location-draft-ipad-v1-summary.json",
+        "sha256": "44af6135b4490e137ea5a60915ff3b0ddcdb3f4ffb0f582a4f17a73c313108b0"
+      },
+      "log": {
+        "file": "location-draft-ipad-v1.log",
+        "sha256": "e59512c9d81a3b5d8d54e7d501c649f9017e941dfe29a8e755e0d2d0c9d99c41"
+      },
+      "reason": "Normal flow passed; largest-text case timed out reading an offscreen lazy status row. Test now reveals that row before checking it."
+    }
+  ],
+  "diagnostics": "Existing compiler and Simulator accessibility-loader/server diagnostics remain in logs. Both final xcresult summaries report no runtime warnings.",
+  "compatibility": "Only the device-private journal adds version2/revoked. Archive versions1/2 remain readable. Older private readers refuse new nested fields without replacing them. Proposed task reference6/receipt r9 bytes unchanged and ReminderSpec stays opaque. No backend/shared migration, remote activation or normal release writer.",
+  "remaining": [
+    "Durable task-commit-to-private-retirement handoff and process-loss acceptance: pending retries are currently memory-only",
+    "Native location category/response origin validation, Open/Complete/Tomorrow/Snooze and replay handling",
+    "Capable-device region registration/delivery, permission/precision recovery and physical protected-data/reinstall checks",
+    "Every visit until completed",
+    "Private desktop-to-phone authoring",
+    "Public setup/permission flow, task-save failure and concurrent pin/workspace acceptance, legacy task identities, VoiceOver/native Mac acceptance",
+    "Direct iPad Search tap while typing remains unresolved; keyboard Search retained"
+  ],
+  "userDeferrals": [
+    "Remote server reminders/device-reinstall recovery",
+    "General older-client rollout safeguards",
+    "Distribution/signing/install/update checks",
+    "Google/Microsoft OAuth registrations and genuine provider acceptance"
+  ],
+  "cleanup": {
+    "file": "location-draft-cleanup.json",
+    "sha256": "c554612125c8a326a85f243d77c6e1b3694a873dcaed0fe51123c1ac8b6f462a",
+    "mainTaskfoldProcessesRemaining": 0
+  }
+}

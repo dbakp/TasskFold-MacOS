@@ -407,4 +407,73 @@ final class LocationReminderTests: XCTestCase {
         XCTAssertTrue(plan.eligible.isEmpty)
     }
 
+    func testExplicitRetirementClosesPreparedAndCannotReviveAfterRedo() async throws {
+        let p = try place(), t = task(), setting = try settings(place: p)
+        let candidate = try XCTUnwrap(LocationReminderCandidate(account: account, device: device, task: t, settings: setting, place: p))
+        let disk = LocationJournalStore(.init(device: device)), center = LocationCenterFixture()
+        let engine = LocationReminderEngine(journal: .init(device: device), center: center, persist: { try await disk.save($0) })
+        let prepared = await engine.prepare(candidate.ticket); XCTAssertTrue(prepared)
+        let retired = await engine.retire([candidate.ticket]); XCTAssertTrue(retired)
+        var record = t; record["reminder_specs"] = .array([.object(setting.raw)])
+        let plan = LocationReminderPlan(account: account, device: device, tasks: [record], places: [p], availableNotificationSlots: 60, allowed: true)
+        _ = await engine.update(plan)
+        let saved = await disk.state(), counts = await center.counts()
+        XCTAssertEqual(saved.entries[candidate.ticket.identifier]?.reason, .cancelled); XCTAssertEqual(saved.revoked, [candidate.ticket.identifier]); XCTAssertEqual(counts.0, 0)
+    }
+    func testExplicitRetirementDuringNativeAddRemovesLateRegistration() async throws {
+        let p = try place(), t = task(), setting = try settings(place: p)
+        let candidate = try XCTUnwrap(LocationReminderCandidate(account: account, device: device, task: t, settings: setting, place: p))
+        let disk = LocationJournalStore(.init(device: device)), center = LocationCenterFixture(); await center.holdAdd()
+        let engine = LocationReminderEngine(journal: .init(device: device), center: center, persist: { try await disk.save($0) })
+        _ = await engine.prepare(candidate.ticket)
+        var record = t; record["reminder_specs"] = .array([.object(setting.raw)])
+        let plan = LocationReminderPlan(account: account, device: device, tasks: [record], places: [p], availableNotificationSlots: 60, allowed: true)
+        let running = Task { await engine.update(plan) }; await center.waitForAdd(); let revision = await engine.intentRevision()
+        let retiring = Task { await engine.retire([candidate.ticket]) }
+        while await engine.intentRevision() == revision { await Task.yield() }
+        await center.releaseAdd(); _ = await running.value; let result = await retiring.value; XCTAssertTrue(result)
+        let counts = await center.counts(), saved = await disk.state()
+        XCTAssertEqual(counts.1, 0); XCTAssertEqual(saved.entries[candidate.ticket.identifier]?.reason, .cancelled); XCTAssertEqual(saved.revoked, [candidate.ticket.identifier])
+    }
+    func testRetirementRevokesDeliveredResponseWithoutRewritingClosedHistory() async throws {
+        let p = try place(), t = task(), setting = try settings(place: p)
+        let candidate = try XCTUnwrap(LocationReminderCandidate(account: account, device: device, task: t, settings: setting, place: p))
+        var journal = LocationReminderJournal(device: device); _ = journal.prepare(candidate.ticket)
+        journal.entries[candidate.ticket.identifier]?.phase = .closed; journal.entries[candidate.ticket.identifier]?.reason = .delivered
+        XCTAssertTrue(journal.permitsResponse(candidate.ticket, eligible: [candidate]))
+        let disk = LocationJournalStore(journal), center = LocationCenterFixture()
+        let engine = LocationReminderEngine(journal: journal, center: center, persist: { try await disk.save($0) })
+        let result = await engine.retire([candidate.ticket]); XCTAssertTrue(result)
+        let saved = await disk.state()
+        XCTAssertEqual(saved.entries, journal.entries); XCTAssertEqual(saved.version, 2); XCTAssertFalse(saved.permitsResponse(candidate.ticket, eligible: [candidate]))
+        let restarted = try JSONDecoder().decode(LocationReminderJournal.self, from: JSONEncoder().encode(saved))
+        XCTAssertTrue(restarted.valid); XCTAssertFalse(restarted.permitsResponse(candidate.ticket, eligible: [candidate]))
+    }
+
+    func testRetireBeforePreparationPersistsCancellationAndRefusesLatePrepare() async throws {
+        let p = try place(), t = task(), setting = try settings(place: p)
+        let candidate = try XCTUnwrap(LocationReminderCandidate(account: account, device: device, task: t, settings: setting, place: p))
+        let disk = LocationJournalStore(.init(device: device)), center = LocationCenterFixture()
+        let engine = LocationReminderEngine(journal: .init(device: device), center: center, persist: { try await disk.save($0) })
+        let retired = await engine.retire([candidate.ticket]); XCTAssertTrue(retired)
+        let late = await engine.prepare(candidate.ticket); XCTAssertFalse(late)
+        let saved = await disk.state(); XCTAssertEqual(saved.entries[candidate.ticket.identifier]?.phase, .closed); XCTAssertEqual(saved.revoked, [candidate.ticket.identifier])
+        let counts = await center.counts(); XCTAssertEqual(counts.0, 0)
+    }
+
+    func testFailedRetirementStaysSuppressedUntilDurableRetry() async throws {
+        let p = try place(), t = task(), setting = try settings(place: p)
+        let candidate = try XCTUnwrap(LocationReminderCandidate(account: account, device: device, task: t, settings: setting, place: p))
+        var journal = LocationReminderJournal(device: device); _ = journal.prepare(candidate.ticket)
+        let disk = LocationJournalStore(journal), center = LocationCenterFixture(); await disk.fail([1])
+        let engine = LocationReminderEngine(journal: journal, center: center, persist: { try await disk.save($0) })
+        let failed = await engine.retire([candidate.ticket]); XCTAssertFalse(failed)
+        var record = t; record["reminder_specs"] = .array([.object(setting.raw)])
+        let plan = LocationReminderPlan(account: account, device: device, tasks: [record], places: [p], availableNotificationSlots: 60, allowed: true)
+        _ = await engine.update(plan)
+        let counts = await center.counts(); XCTAssertEqual(counts.0, 0)
+        let retry = await engine.retire([candidate.ticket]); XCTAssertTrue(retry)
+        let saved = await disk.state(); XCTAssertEqual(saved.entries[candidate.ticket.identifier]?.reason, .cancelled)
+    }
+
 }
