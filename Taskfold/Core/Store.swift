@@ -131,6 +131,8 @@ final class Store {
     #endif
     @ObservationIgnored private let reminderScheduler = ReminderScheduler()
     @ObservationIgnored private var reminderRevision = 0
+    @ObservationIgnored private var reminderRefreshTask: Task<Void, Never>?
+    @ObservationIgnored private var reminderRefreshRequest = 0
     private var reminderPreferenceRevision = 0
     @ObservationIgnored private var reminderDeviceLifecycle: ReminderDeviceLifecycle?
     @ObservationIgnored private lazy var reminderAppIdentity = ReminderAppIdentity.signed()
@@ -558,7 +560,7 @@ final class Store {
         }
         catch { self.error = "Could not read saved tasks: \(error.localizedDescription)"; if let disk = try? widgetActionDisk() { try? disk.clearProjection() } }
     }
-    func persist() throws {
+    func persist(acceptingTimeSnooze timeSnooze: TimeSnoozeIntent? = nil) throws {
         #if DEBUG
         if savedFilterFixtureFailNextPersist {
             savedFilterFixtureFailNextPersist = false
@@ -570,7 +572,11 @@ final class Store {
         #endif
         WidgetCompletion.prepare(&snapshot)
         try FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try JSONEncoder().encode(snapshot).write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        let previous = FileManager.default.fileExists(atPath: cacheURL.path) ? try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) : Snapshot()
+        var durable = snapshot
+        durable.timeSnoozes = try stagedTimeSnoozes(previous: previous, proposed: durable, newIntent: timeSnooze)
+        try JSONEncoder().encode(durable).write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        snapshot = durable
         publishWidgetSnapshot()
         #if DEBUG
         if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-diagnostics"), Bundle.main.bundleIdentifier?.contains(".workflowtests") == true {
@@ -747,6 +753,7 @@ final class Store {
         guard !signingOut else { return }
         signingOut = true; defer { signingOut = false }
 
+        let leavingSnoozeEpochKey = timeSnoozeEpochKey
         // The account-specific cache and unsent queue stay on disk for the next sign-in.
         do {
             try persist(); try prepareReminderDeviceRetirement(); accountGeneration = UUID()
@@ -755,6 +762,7 @@ final class Store {
             // A newer sign-in owns the session; do not clear its workspace or show an old error.
             return
         } catch { self.error = error.localizedDescription; return }
+        UserDefaults.standard.set(UUID().uuidString.lowercased(), forKey: leavingSnoozeEpochKey)
         googleAvatarURL = nil; avatarMetadataLoaded = false
         accountGeneration = UUID(); backend.session = nil; signedIn = false; localMode = false
         UserDefaults.standard.set(false, forKey: "localMode")
@@ -1420,12 +1428,27 @@ final class Store {
         Task { await reschedule() }
     }
     private func reminderState() -> ReminderState {
+        let generation = accountGeneration
         reminderRevision += 1
         var events = remindersEnabled ? DueReminder.events(tasks: activeTasks) : []
         if focusAlertsEnabled, let event = focusFinishEvent { events.append(event) }
-        return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events, validationTasks: remindersEnabled ? activeTasks : [], deliveryAuthority: reminderAuthority, deliveryAuthorityUnreadable: reminderAuthorityUnreadable, deliveryAuthorityAccount: remoteReminderTestWorkspace ? reminderAuthorityAccount : nil, timeSensitiveAllowed: timeSensitiveRemindersEnabled && systemTimeSensitiveAllowed)
+        return ReminderState(revision: reminderRevision, account: remindersEnabled || focusAlertsEnabled ? userID : "", events: events, validationTasks: remindersEnabled ? activeTasks : [], deliveryAuthority: reminderAuthority, deliveryAuthorityUnreadable: reminderAuthorityUnreadable, deliveryAuthorityAccount: remoteReminderTestWorkspace ? reminderAuthorityAccount : nil, timeSensitiveAllowed: timeSensitiveRemindersEnabled && systemTimeSensitiveAllowed, queuedTimeSnoozes: queuedTimeSnoozes, timeSnoozeTransition: { [weak self] request, transition in await self?.transitionTimeSnooze(request, transition: transition, generation: generation) ?? .obsolete })
     }
     func reschedule() async {
+        reminderRefreshRequest &+= 1
+        if let current = reminderRefreshTask { await current.value; return }
+        let work = Task { [weak self] in
+            guard let self else { return }
+            while true {
+                let request = self.reminderRefreshRequest
+                await self.refreshScheduledReminders()
+                if request == self.reminderRefreshRequest { self.reminderRefreshTask = nil; return }
+            }
+        }
+        reminderRefreshTask = work
+        await work.value
+    }
+    private func refreshScheduledReminders() async {
         ReminderCategory.register(minutes: reminderSnoozeMinutes)
         refreshCalendarContext()
         await refreshRemoteReminderRegistration()
@@ -1433,6 +1456,8 @@ final class Store {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         guard generation == accountGeneration else { return }
         systemTimeSensitiveAllowed = settings.timeSensitiveSetting == .enabled
+        await reconcileTimeSnoozes(generation: generation)
+        guard generation == accountGeneration else { return }
         let state = reminderState()
         let report = await reminderScheduler.update(state)
         guard generation == accountGeneration, state.revision == reminderRevision, report.revision == state.revision else { return }
@@ -1464,6 +1489,7 @@ final class Store {
         else { reminderStatus = "\(report.scheduled) upcoming \(report.scheduled == 1 ? "reminder" : "reminders") scheduled on this device." }
     }
     func disableNotifications() {
+        UserDefaults.standard.set(UUID().uuidString.lowercased(), forKey: timeSnoozeEpochKey)
         do { try prepareReminderDeviceRetirement() } catch { remoteReminderStatus = "Device unlinking could not be saved securely. Retry remote setup." }
         UserDefaults.standard.set(false, forKey: reminderPreferenceKey); reminderPreferenceRevision += 1
         if focusAlertsEnabled { Task { await reschedule() } } else { clearScheduledReminders() }
@@ -1504,17 +1530,10 @@ final class Store {
             }
         case let action where ReminderSnooze.minutes(action: action) != nil:
             guard let minutes = ReminderSnooze.minutes(action: action) else { return nil }
-            let generation = accountGeneration, account = userID
+            let generation = accountGeneration
             await reschedule()
             guard generation == accountGeneration, validReminder(info) != nil else { return nil }
-            if let report = await reminderScheduler.snooze(account: account, taskID: event.taskID, specID: event.specID, signature: event.signature, minutes: minutes, originalAt: event.date), generation == accountGeneration {
-                switch report.snoozeOutcome {
-                case .scheduled?: reminderStatus = "Snoozed for \(ReminderSnooze.label(minutes)) on this device."
-                case .waitingForSpace?: reminderStatus = "There’s no room for the snoozed alert yet. Keep Taskfold open to retry."
-                case .failed?: reminderStatus = "The snooze could not be scheduled. Open the task to try again."
-                case .obsolete?, nil: break
-                }
-            }
+            await saveTimeSnooze(event: event, minutes: minutes, generation: generation)
         case let action where action.hasPrefix("taskfold.snooze."): return nil
         default: return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: task.id, specID: event.specID, signature: event.signature, originalAt: event.date)
         }
@@ -1954,5 +1973,86 @@ extension Store {
         guard SubtaskTree.referencePath(feedback.taskID) != nil else { return true }
         guard let selection = try? hierarchySelection(for: task) else { return false }
         return WidgetCompletion.routeContext(selection.item) == feedback.routeContext
+    }
+}
+
+extension Store {
+    private var timeSnoozeEpochKey: String { "taskfold.timeSnoozeEpoch." + userID }
+    private var timeSnoozeEpoch: String { UserDefaults.standard.string(forKey: timeSnoozeEpochKey) ?? "" }
+    private var queuedTimeSnoozes: [ReminderRequest] {
+        guard sharedCaptureAvailable, remindersEnabled else { return [] }
+        let entries = (snapshot.timeSnoozes ?? [:]).values.filter { $0.phase == .queued }
+        guard !entries.isEmpty else { return [] }
+        let tasks = activeTasks, epoch = timeSnoozeEpoch, now = Date()
+        return entries.compactMap { $0.request(account: userID, epoch: epoch, tasks: tasks, now: now) }
+    }
+    private func reconcileTimeSnoozes(generation: UUID) async {
+        guard sharedCaptureAvailable, let original = snapshot.timeSnoozes, !original.isEmpty else { return }
+        let pending = await UNUserNotificationCenter.current().pendingNotificationRequests().compactMap(SystemReminderCenter.decode)
+        guard generation == accountGeneration, snapshot.timeSnoozes == original else { return }
+        let next = TimeSnoozeOutbox.reconciling(original, account: userID, epoch: timeSnoozeEpoch, tasks: activeTasks,
+            enabled: remindersEnabled, pending: pending)
+        guard next != original else { return }
+        snapshot.timeSnoozes = next
+        do { try persist() } catch { snapshot.timeSnoozes = original; reminderStatus = "Snooze recovery could not be saved. It will retry when Taskfold opens." }
+    }
+    private func transitionTimeSnooze(_ request: ReminderRequest, transition: LocationSnoozeTransition, generation: UUID) async -> LocationSnoozeAcknowledgement {
+        guard generation == accountGeneration, sharedCaptureAvailable, remindersEnabled else { return .obsolete }
+        let tasks = activeTasks, epoch = timeSnoozeEpoch, now = Date()
+        guard let entry = snapshot.timeSnoozes?.values.first(where: { entry in
+            entry.phase != .closed && entry.request(account: userID, epoch: epoch, tasks: tasks, now: now)?.matchesSnooze(request) == true
+        }) else { return .obsolete }
+        let phase: TimeSnoozeIntent.Phase
+        switch transition {
+        case .reserve: guard entry.phase == .queued else { return .obsolete }; phase = .reserved
+        case .installed: guard entry.phase == .reserved else { return .obsolete }; phase = .installed
+        case .notSubmitted: guard entry.phase == .reserved else { return .obsolete }; phase = .queued
+        case .failed: phase = .closed
+        }
+        snapshot.timeSnoozes?[entry.id] = entry.changing(to: phase)
+        do { try persist(); return .saved }
+        catch { snapshot.timeSnoozes?[entry.id] = entry; return .retry }
+    }
+    /// Save the explicit fire instant before admission. Native submission cannot
+    /// begin until its reservation also reaches the durable cache.
+    private func saveTimeSnooze(event: DueReminder, minutes: Int, generation: UUID) async {
+        guard generation == accountGeneration, sharedCaptureAvailable, remindersEnabled, ReminderSnooze.validMinutes(minutes) else { return }
+        if timeSnoozeEpoch.isEmpty { UserDefaults.standard.set(UUID().uuidString.lowercased(), forKey: timeSnoozeEpochKey) }
+        let request = ReminderRequest.make(account: userID, event: event,
+            fireAt: Date(timeIntervalSince1970: ceil(Date().timeIntervalSince1970 + Double(minutes * 60))), snoozed: true)
+        guard let intent = TimeSnoozeIntent(request: request, epoch: timeSnoozeEpoch) else { return }
+        let old = snapshot
+        let tasks = activeTasks, epoch = timeSnoozeEpoch, now = Date()
+        // Another explicit snooze replaces this reminder's earlier waiting intent.
+        for entry in (snapshot.timeSnoozes ?? [:]).values where entry.phase != .closed &&
+            entry.request(account: userID, epoch: epoch, tasks: tasks, now: now)?.identifier == request.identifier {
+            snapshot.timeSnoozes?[entry.id] = entry.changing(to: .closed)
+        }
+        if snapshot.timeSnoozes == nil { snapshot.timeSnoozes = [:] }
+        snapshot.timeSnoozes?[intent.id] = intent
+        do { try persist(acceptingTimeSnooze: intent) }
+        catch { snapshot = old; reminderStatus = "The snooze could not be saved. Open the task to try again."; return }
+        await reschedule()
+        guard generation == accountGeneration, let saved = snapshot.timeSnoozes?[intent.id] else { return }
+        switch saved.phase {
+        case .installed: reminderStatus = "Snoozed for \(ReminderSnooze.label(minutes)) on this device."
+        case .queued: reminderStatus = "Snooze saved for \(request.fireAt.formatted(date: .abbreviated, time: .shortened)). Waiting for notification space; Taskfold will retry when opened."
+        case .reserved: reminderStatus = "Confirming your saved snooze. Taskfold will check it when opened."
+        case .closed: reminderStatus = "This snooze could not be scheduled. Open the task to review its reminder."
+        }
+    }
+}
+
+
+extension Store {
+    private func stagedTimeSnoozes(previous: Snapshot, proposed: Snapshot, newIntent: TimeSnoozeIntent?) throws -> [String: TimeSnoozeIntent]? {
+        if let newIntent { guard newIntent.account == userID, newIntent.epoch == timeSnoozeEpoch else { throw AppFailure(message: "Your workspace changed before the snooze was saved.") } }
+        var next = try TimeSnoozeOutbox.staging(previous: previous.timeSnoozes ?? [:], proposed: proposed.timeSnoozes ?? [:], newIntent: newIntent)
+        guard !next.isEmpty else { return nil }
+        let tasks = activeTasks, epoch = timeSnoozeEpoch, now = Date()
+        for entry in next.values where entry.phase != .closed && (!remindersEnabled || entry.request(account: userID, epoch: epoch, tasks: tasks, now: now) == nil) {
+            next[entry.id] = entry.changing(to: .closed)
+        }
+        return next.isEmpty ? nil : next
     }
 }

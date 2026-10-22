@@ -1,0 +1,170 @@
+{
+  "milestone": "Durable ordinary time snoozes waiting for native notification space",
+  "date": "2026-10-22",
+  "repository": "TasskFold-MacOS",
+  "status": "Implemented and verified within scoped Core and iPhone/iPad Simulator acceptance; wider Px remains incomplete",
+  "parentCommit": "01916534a68de3d46ea52e415e66d4237cf93abf",
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "96fdfb5da1257fd7ff35b5c3b32575be439758adf898426b3a87154b268f2790",
+    "Taskfold/Core/Reminders.swift": "38ca6c119faa310534e70887c7d5b6c9af1a7c02d4d9e644a1e122b6e6e9ccbe",
+    "Taskfold/Core/Store.swift": "5de3959518069af6c048de8d184ab202a34661b1a34b9f4f07848473e2b8bd4e",
+    "TaskfoldTests/TimeSnoozeTests.swift": "dc8813c54a21e50919c10ad28d9b55d20b7ccd14e5a10adb99924d8b06b4dc05"
+  },
+  "contracts": {
+    "cache": "Additive optional timeSnoozes metadata, maximum128 version1 records. Identity/account/delivery epoch/task/spec/signature/original instant/chosen fire instant/phase/revision only; no titles, notes, credentials or geometry.",
+    "transport": "No task, shared backend, preference schema or native notification format changes. Metadata is excluded from portable work exports, sync mutations and widget payloads. Existing encrypted account recovery can retain it.",
+    "authority": "New intents require explicit current notification input. Local app preferences hold a separately allocated delivery epoch, rotated on delivery disable or successful sign-out. This is not a credential or secure hardware identity.",
+    "recovery": "Persist chosen instant before admission; persist reservation before native add. Only proven noRoom returns to queued. Exact pending native proof adopts installed request. Ambiguous absent reserved submission closes; installed/delivered/missing requests never rearm. No catch-up after expiry.",
+    "mutations": "Durable revisions merge with the last saved cache; missing/older restored metadata cannot introduce a new queued alert or rewind existing state. Current accessible tasks/occurrence plus epoch/account/delivery checks close obsolete intents. Expired records free bounded capacity before new admission.",
+    "performance": "Current Store caches accessible-task projection, epoch and clock once per recovery pass; Mac refresh hydration/admission now coalesces like iOS."
+  },
+  "core": {
+    "reported": 1253,
+    "skipped": 33,
+    "actualPassed": 1220,
+    "failures": 0,
+    "newTimeSnoozeCases": 10,
+    "log": {
+      "file": "time-snooze-final-mac.log",
+      "sha256": "4e984af670a65db9dd0086e14e7680c094cbc0510c62d074e597ff4f62cdea54"
+    },
+    "scope": [
+      "Actual temporary-file snapshot roundtrip and fresh scheduler after queue saturation",
+      "Reservation save refusal prevents native add",
+      "Native noRoom retries; other refusal closes",
+      "Reserved exact native proof versus missing/mismatched proof",
+      "Installed acknowledgement refusal and adoption without resubmission",
+      "Task deletion/completion/generation, account/epoch/disabled cancellation and Undo protection",
+      "Replacement of earlier native snooze without moving chosen deadline",
+      "Expiry/no catch-up; maximum128 and expired-capacity reclamation",
+      "Stale recovery cannot introduce or rewind an intent; conflicting revisions refuse",
+      "Malformed/future local records refused; portable backup omits recovery"
+    ]
+  },
+  "combinedActualCorePassed": 2428,
+  "native": {
+    "actualPassingExecutions": 3,
+    "distinctTestMethods": 1,
+    "runs": [
+      {
+        "result": "time-snooze-final-phone.xcresult",
+        "actualPassed": 1,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "time-snooze-final-phone-summary.json",
+          "sha256": "9865357f119ce2c94cb0da2e53259c886bdd6f00ed7ef87825a140fa401c281b"
+        },
+        "log": {
+          "file": "time-snooze-final-phone.log",
+          "sha256": "5ffb58f708b221501075254e237790c743b691afb00ce25f5c89eb0f77cf0c14"
+        }
+      },
+      {
+        "result": "time-snooze-ipad.xcresult",
+        "actualPassed": 1,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "time-snooze-ipad-summary.json",
+          "sha256": "869298d466fc514dced171e38c302de0dd33d01e14e6ba7534fb6a847421e45d"
+        },
+        "log": {
+          "file": "time-snooze-ipad.log",
+          "sha256": "52de8aa3f93cead4f66d7d4ef54936c47efe48e10f987f70cfa356851d5143b2"
+        }
+      },
+      {
+        "result": "time-snooze-phone-v2.xcresult",
+        "resultPrunedAfterExport": true,
+        "actualPassed": 1,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "time-snooze-phone-v2-summary.json",
+          "sha256": "51e85bef52c35de52f9f0495cd4c1b6952776ae373e4dd6a6d33e62ad4b6950e"
+        },
+        "log": {
+          "file": "time-snooze-phone-v2.log",
+          "sha256": "b07272c599d014d3897be0d43173c4a61f096c4f163fbf15e07a9cba7023f07f"
+        }
+      }
+    ],
+    "scope": "Exact disposable DEBUG app and synthetic notification input routed through normal Store handler. Genuine app-owned native pending queue filled with60 unrelated synthetic reservations, normal task refresh may add its own request. Real cache-write failure injection preserves snapshot. Explicit snooze durably remains queued; full app termination/relaunch keeps fire instant. Releasing native capacity installs exactly one matching ordinary snooze at the same time. Task tables unchanged. Third launch explicitly closes only test intent/removes blockers.",
+    "limits": "Synthetic action input is not a real OS-delivered action or timer delivery. iPad and first phone run precede only the Store projection-caching optimization; final phone and final Mac build include current Store. No visual redesign or new production screen.",
+    "macBuild": {
+      "result": "BUILD SUCCEEDED",
+      "signed": false,
+      "log": {
+        "file": "time-snooze-mac-optimized-build.log",
+        "sha256": "a2f23e4e7fc110f39b54186e763d20a83119fbfa2b04806c2dc368f77424ee33"
+      },
+      "scope": "Current independently owned Mac app and extensions compile; Mac desktop is locked, no live Mac Notification Center/action/accessibility acceptance claimed."
+    },
+    "retainedPhoneAndTabletExecutions": 2
+  },
+  "initialFailedNativeRun": {
+    "summary": {
+      "file": "time-snooze-phone-failed-summary.json",
+      "sha256": "03f432fb4c6d7dafde0c7ba1160321070663504a4c9eddcd2b2b681d15d5365e"
+    },
+    "log": {
+      "file": "time-snooze-phone.log",
+      "sha256": "842e7611a7d4bbe6ba62f9e166514a62814b1d9ba35712e6da0a33cc0b3e3976"
+    },
+    "reason": "Test demanded exactly60 pending requests while normal reminder refresh could add the task original. Test now proves at least60 and exercises actual capacity deferral; production queue limit remains60."
+  },
+  "capturesSHA256": {
+    "docs/time-snooze-recovery/phone-recovered.png": "d13153e9c56e4deed43e0a4812b99b5099803d589e10385f4a9816f4cab47d25",
+    "docs/time-snooze-recovery/phone-recovered.json": "93814434f41db28996eda2b5dcc1c4098a1aa688acdc21d5152669cc566f6e4e",
+    "docs/time-snooze-recovery/ipad-recovered.png": "5b3310b6bc4f2dc3586bec36e552a60f5eab3ea836e5b983202a822bef9cafb6",
+    "docs/time-snooze-recovery/ipad-recovered.json": "aa265fa9aeb615add0441ca4b3b494944b6ac2e80893c272092ce1b61a362cfd"
+  },
+  "captureScope": "Unmodified synthetic native fixture screenshots and actual saved recovery snapshots. Phone/iPad layouts inspected; screenshots are scoped fixture evidence, not spoken/physical delivery proof.",
+  "cleanup": {
+    "installations": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1",
+        "status": "removed exact isolated test installation"
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner",
+        "status": "removed exact isolated test installation"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1",
+        "status": "removed exact isolated test installation"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner",
+        "status": "removed exact isolated test installation"
+      },
+      {
+        "product": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-project-workflows-native-v2/Build/Products/Debug/Taskfold.app",
+        "status": "removed exact unsigned isolated Mac product"
+      }
+    ],
+    "obsoleteResultsPruned": [
+      "time-snooze-phone.xcresult",
+      "time-snooze-phone-v2.xcresult"
+    ],
+    "mainTaskfoldAppsRunning": [],
+    "preserved": "Current accepted results, exported snapshots/captures, every log/summary, source and reusable build caches; real app installations and all real task data untouched"
+  },
+  "openAcceptance": [
+    "Actual notification UI action/delivery walkthrough for this new ordinary waiting path, physical/background delivery and Mac live UI/VoiceOver are not proven here.",
+    "Same-installation restart only; reinstall, OS app-data/backup migration, hardware power loss, general downgrade/older-client rollout and remote delivery remain outside this milestone.",
+    "No promise of submission while the app stays closed and native queue has no room. Opening after chosen fire instant does not produce a catch-up alert.",
+    "Location physical permission/region/delivery/callback acceptance, private desktop-to-phone authoring and wider remaining Px remain open."
+  ],
+  "userDeferrals": [
+    "Remote server reminders and device/reinstall delivery recovery",
+    "General older-client rollout safeguards",
+    "Distribution/release signing and install/update acceptance",
+    "Genuine Google/Microsoft OAuth registrations/provider acceptance"
+  ]
+}

@@ -385,6 +385,8 @@ struct Snapshot: Codable, Equatable, Sendable {
     /// Local cancellation outbox; never included in a portable workspace export.
     var locationRetirements: [String: LocationReminderTicket]? = nil
     var locationActions: [String: LocationNotificationAction]? = nil
+    /// Device-bound time snooze recovery; excluded from portable workspace exports.
+    var timeSnoozes: [String: TimeSnoozeIntent]? = nil
     mutating func apply(_ change: Mutation) {
         guard change.table != TaskAssignmentProvenance.table else { return }
         if change.organizationOrder != nil || change.method == "ORDER" {
@@ -507,7 +509,7 @@ extension Snapshot {
 }
 
 extension Snapshot {
-    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion, sharedCaptureReceipts, locationRetirements, locationActions }
+    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion, sharedCaptureReceipts, locationRetirements, locationActions, timeSnoozes }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         tables = try row.decode([String: [Record]].self, forKey: .tables)
@@ -516,6 +518,10 @@ extension Snapshot {
         sharedCaptureReceipts = try row.decodeIfPresent([String: String].self, forKey: .sharedCaptureReceipts)
         locationRetirements = try row.decodeIfPresent([String: LocationReminderTicket].self, forKey: .locationRetirements)
         locationActions = try row.decodeIfPresent([String: LocationNotificationAction].self, forKey: .locationActions)
+        timeSnoozes = try row.decodeIfPresent([String: TimeSnoozeIntent].self, forKey: .timeSnoozes)
+        guard TimeSnoozeOutbox.valid(timeSnoozes ?? [:]) else {
+            throw DecodingError.dataCorruptedError(forKey: .timeSnoozes, in: row, debugDescription: "Invalid time snooze recovery")
+        }
         guard LocationNotificationLedger.valid(locationActions ?? [:]) else {
             throw DecodingError.dataCorruptedError(forKey: .locationActions, in: row, debugDescription: "Invalid location action ledger")
         }

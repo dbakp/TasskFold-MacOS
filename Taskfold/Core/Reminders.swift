@@ -659,6 +659,8 @@ struct ReminderState: Sendable {
     var timeSensitiveAllowed = false
     var locationPlan: LocationReminderPlan? = nil
     var locationSnoozes: [ReminderRequest] = []
+    var queuedTimeSnoozes: [ReminderRequest] = []
+    var timeSnoozeTransition: @Sendable (ReminderRequest, LocationSnoozeTransition) async -> LocationSnoozeAcknowledgement = { _, _ in .obsolete }
     var locationValidationEvents: [DueReminder] = []
     var locationPendingIDs: Set<String> = []
     var locationSnoozeTransition: @Sendable (ReminderRequest, LocationSnoozeTransition) async -> LocationSnoozeAcknowledgement = { _, _ in .obsolete }
@@ -796,9 +798,10 @@ actor ReminderScheduler {
                 return ReminderRequest.make(account:state.account,event:event,fireAt:old.fireAt,snoozed:true)
             }
             var requests = state.account.isEmpty ? [] : state.events.filter { $0.date > state.now && state.permitsOriginal($0) }.map { ReminderRequest.make(account: state.account, event: $0) }
-            requests += retained.filter { old in !snoozes.contains(where: { $0.identifier == old.identifier }) }
+            requests += retained.filter { old in !snoozes.contains(where: { $0.identifier == old.identifier }) && !state.queuedTimeSnoozes.contains(where: { $0.identifier == old.identifier }) }
             requests += snoozes
             requests += state.locationSnoozes.filter { queued in queued.snoozed && queued.fireAt > state.now && queued.valid(state: state) && !requests.contains(where: { $0.identifier == queued.identifier }) }
+            requests += state.queuedTimeSnoozes.filter { queued in queued.snoozed && queued.fireAt > state.now && queued.valid(state: state) && !requests.contains(where: { $0.identifier == queued.identifier }) }
             // A synced task cannot opt another device/account into elevated presentation.
             requests = requests.map { request in
                 var request = request
@@ -852,6 +855,11 @@ actor ReminderScheduler {
                     continue
                 }
                 let location = LocationReminderTicket.isLocationSignature(request.event.signature)
+                let durableTime = !location && state.queuedTimeSnoozes.contains { $0.matchesSnooze(request) }
+                if durableTime {
+                    guard await state.timeSnoozeTransition(request, .reserve) == .saved else { report.failed(request); continue }
+                    guard token == sequence else { break }
+                }
                 if location {
                     guard await state.locationSnoozeTransition(request, .reserve) == .saved else { report.failed(request); continue }
                     guard token == sequence else { break }
@@ -864,15 +872,22 @@ actor ReminderScheduler {
                         let ack = await state.locationSnoozeTransition(request, .installed)
                         if ack == .obsolete { await center.remove([request.identifier]); continue }
                     }
+                    if durableTime {
+                        let ack = await state.timeSnoozeTransition(request, .installed)
+                        guard token == sequence else { if ack == .obsolete { await center.remove([request.identifier]) }; continue }
+                        if ack == .obsolete { await center.remove([request.identifier]); continue }
+                    }
                     report.accepted(request); if request.snoozed { acceptedSnoozes.insert(request.identifier) }
                 }
                 catch ReminderSchedulingFailure.noRoom {
+                    if durableTime, await state.timeSnoozeTransition(request, .notSubmitted) != .saved { report.failed(request); continue }
                     if location, await state.locationSnoozeTransition(request, .notSubmitted) != .saved { report.failed(request); continue }
                     if request.snoozed { report.deferredSnoozes.append(request) }
                     capacityBlocked = true
                     if request.event.kind == .focusFinish { report.focusDeferred = true } else { report.deferred += 1 }
                 }
                 catch {
+                    if durableTime { _ = await state.timeSnoozeTransition(request, .failed) }
                     if location { _ = await state.locationSnoozeTransition(request, .failed) }
                     report.failed(request)
                 }
@@ -1192,5 +1207,88 @@ enum ReminderSnooze {
         if minutes == 60 { return "1 hour" }
         if minutes % 60 == 0 { return "\(minutes / 60) hours" }
         return "\(minutes) minutes"
+    }
+}
+
+/// Device-local recovery for explicitly requested ordinary time snoozes. No title,
+/// notes, geometry or credentials are stored. An ambiguous submission never rearms.
+struct TimeSnoozeIntent: Codable, Equatable, Sendable {
+    enum Phase: String, Codable, Sendable { case queued, reserved, installed, closed }
+    var version = 1
+    let id: String
+    let account: String
+    let epoch: String
+    let taskID: String
+    let specID: String
+    let signature: String
+    let originalAt: Double
+    let fireAt: Double
+    var phase: Phase = .queued
+    var revision = 0
+    var valid: Bool {
+        func text(_ value: String, limit: Int) -> Bool {
+            !value.isEmpty && value.utf8.count <= limit && !value.unicodeScalars.contains { CharacterSet.controlCharacters.contains($0) }
+        }
+        return version == 1 && LocationReminderIdentity.uuid(.string(id)) && LocationReminderIdentity.uuid(.string(epoch)) &&
+            LocationReminderIdentity.account(account) && text(taskID, limit: 200) && text(specID, limit: 200) &&
+            text(signature, limit: 4096) && !LocationReminderTicket.isLocationSignature(signature) &&
+            originalAt.isFinite && fireAt.isFinite && (0...253_402_300_799).contains(originalAt) &&
+            (0...253_402_300_799).contains(fireAt) && revision >= 0 && revision <= 1000
+    }
+    init?(request: ReminderRequest, epoch: String, id: String = UUID().uuidString.lowercased()) {
+        guard request.snoozed, request.event.kind == .task else { return nil }
+        self.id = id; account = request.account; self.epoch = epoch
+        taskID = request.event.taskID; specID = request.event.specID; signature = request.event.signature
+        originalAt = request.event.date.timeIntervalSince1970; fireAt = request.fireAt.timeIntervalSince1970
+        guard valid else { return nil }
+    }
+    func request(account: String, epoch: String, tasks: [Record], now: Date, calendar: Calendar = .current) -> ReminderRequest? {
+        guard valid, self.account == account, self.epoch == epoch, fireAt > now.timeIntervalSince1970,
+              let event = DueReminder.validated(tasks: tasks, taskID: taskID, specID: specID, signature: signature,
+                  originalAt: Date(timeIntervalSince1970: originalAt), calendar: calendar) else { return nil }
+        return .make(account: account, event: event, fireAt: Date(timeIntervalSince1970: fireAt), snoozed: true)
+    }
+    func sameIntent(_ other: Self) -> Bool {
+        var a = self, b = other; a.phase = .queued; b.phase = .queued; a.revision = 0; b.revision = 0
+        return a == b
+    }
+    func changing(to phase: Phase) -> Self { var next = self; next.phase = phase; next.revision += 1; return next }
+}
+
+enum TimeSnoozeOutbox {
+    static let maximum = 128
+    static func valid(_ entries: [String: TimeSnoozeIntent]) -> Bool {
+        entries.count <= maximum && entries.allSatisfy { $0.key == $0.value.id && $0.value.valid }
+    }
+    /// Local writes, Undo, sync and encrypted recovery may not rewind an intent.
+    /// Only explicit notification input can introduce a new record.
+    static func staging(previous: [String: TimeSnoozeIntent], proposed: [String: TimeSnoozeIntent], newIntent: TimeSnoozeIntent? = nil, now: Date = Date()) throws -> [String: TimeSnoozeIntent] {
+        guard valid(previous), proposed.count <= maximum + (newIntent == nil ? 0 : 1), proposed.allSatisfy({ $0.key == $0.value.id && $0.value.valid }), now.timeIntervalSince1970.isFinite else { throw AppFailure(message: "Snooze recovery could not be read. Your tasks have not been replaced.") }
+        if let newIntent { guard newIntent.valid, newIntent.phase == .queued, newIntent.revision == 0, proposed[newIntent.id] == newIntent else { throw AppFailure(message: "The new snooze could not be saved. Open its task to try again.") } }
+        var next = previous.filter { $0.value.fireAt > now.timeIntervalSince1970 }
+        for (id, value) in proposed where value.fireAt > now.timeIntervalSince1970 {
+            if let old = next[id] {
+                guard old.sameIntent(value), old.revision != value.revision || old == value else { throw AppFailure(message: "This snooze changed. Reopen its task before retrying.") }
+                if value.revision > old.revision { next[id] = value }
+            } else if let newIntent, newIntent == value, newIntent.phase == .queued, newIntent.revision == 0 {
+                next[id] = value
+            }
+            // An imported/undone cache cannot introduce an unsubmitted alert.
+        }
+        guard valid(next) else { throw AppFailure(message: "Too many snoozes are waiting. Review your reminders before snoozing another alert.") }
+        return next
+    }
+    static func reconciling(_ entries: [String: TimeSnoozeIntent], account: String, epoch: String, tasks: [Record], enabled: Bool, pending: [ReminderRequest], now: Date = Date(), calendar: Calendar = .current) -> [String: TimeSnoozeIntent] {
+        entries.mapValues { entry in
+            guard entry.phase != .closed else { return entry }
+            guard enabled, let request = entry.request(account: account, epoch: epoch, tasks: tasks, now: now, calendar: calendar) else { return entry.changing(to: .closed) }
+            if entry.phase == .queued && pending.contains(where: { $0.matchesSnooze(request) }) { return entry.changing(to: .installed) }
+            if entry.phase == .reserved {
+                return entry.changing(to: pending.contains { $0.matchesSnooze(request) } ? .installed : .closed)
+            }
+            // Installed requests belong to the OS. Missing/delivered ones never retry.
+            if entry.phase == .installed && !pending.contains(where: { $0.matchesSnooze(request) }) { return entry.changing(to: .closed) }
+            return entry
+        }
     }
 }
