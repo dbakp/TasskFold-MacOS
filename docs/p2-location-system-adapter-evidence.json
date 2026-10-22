@@ -1,0 +1,259 @@
+{
+  "feature": "iOS native location adapter and iPad keyboard place-editing acceptance",
+  "date": "2026-10-22",
+  "scope": "Rank-5 implementation progress. No normal app location-reminder choice/write path, geofence registration, response routing or completed Px claim.",
+  "implementation": [
+    "Native circular arrival/departure one-shot request creation with generic body and geometry-free/name-free opaque receipt",
+    "Native trigger, category, identifier, direction, repeat flag, private boundary and strict receipt inspection; altered boundary cannot match the desired candidate",
+    "Typed device-allowance, service capability, existing location authorization, precision, maximum-radius, notification authorization and capacity refusals; no permission request or continuous updates in the adapter",
+    "Allowance/cancellation checks around OS add, location-only pending cleanup, explicit delivered-alert pruning API for future coordinator",
+    "Exact DEBUG isolated fixture uses real native framework objects and real UNUserNotificationCenter for supported queue operations; no real tasks/accounts are mutated"
+  ],
+  "nativePhone": {
+    "result": {
+      "result": "Passed",
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    "log": {
+      "file": "location-native-system-phone-accepted.log",
+      "sha256": "5dc03f9022694ca00c6e3229ad23cecd69c1cd84814b90a23d0521419c1f8e3e"
+    },
+    "selectedCases": [
+      "testNativeLocationRequestCodec",
+      "testNativeLocationUnavailableDeviceRefusesRegistration"
+    ],
+    "codec": {
+      "checks": {
+        "changedNativeBoundaryDoesNotMatch": true,
+        "repeatedTriggerRefused": true,
+        "nativeArriveRoundtrip": true,
+        "missingTriggerRefused": true,
+        "bothDirectionsRefused": true,
+        "timeTriggerRefused": true,
+        "nativeArrivalTriggerFields": true,
+        "receiptHasNoPrivatePlace": true,
+        "nativeLeaveRoundtrip": true,
+        "foreignIdentifierRefused": true,
+        "futureReceiptRefused": true,
+        "nativeDepartureTriggerFields": true,
+        "fractionalRadiusRefused": true,
+        "deviceAllowanceRefused": true
+      },
+      "details": {},
+      "artifact": {
+        "file": "location-native-system-codec-accepted-report.json",
+        "sha256": "b42e5006b2c9cb6cc0d242ede13aac083b69952923fecc0556c48664905c1cb7"
+      }
+    },
+    "unavailableDevice": {
+      "checks": {
+        "nativeLeaveRoundtrip": true,
+        "repeatedTriggerRefused": true,
+        "futureReceiptRefused": true,
+        "deviceAllowanceRefused": true,
+        "receiptHasNoPrivatePlace": true,
+        "nativeArriveRoundtrip": true,
+        "timeTriggerRefused": true,
+        "fractionalRadiusRefused": true,
+        "durableExplicitPreparation": true,
+        "unrelatedRequestSurvivesRefusal": true,
+        "unrelatedRequestSurvivesNamespaceCleanup": true,
+        "nativeArrivalTriggerFields": true,
+        "foreignIdentifierRefused": true,
+        "systemNotificationPermission": true,
+        "nativeAdapterRefusesUnavailableDevice": true,
+        "noLocationRequestQueued": true,
+        "refusedIntentClosedDurably": true,
+        "systemRegionMonitoringUnavailable": true,
+        "changedNativeBoundaryDoesNotMatch": true,
+        "missingTriggerRefused": true,
+        "nativeDepartureTriggerFields": true,
+        "bothDirectionsRefused": true
+      },
+      "details": {
+        "addFailure": {
+          "code": 1,
+          "reason": "unavailable",
+          "message": "Location reminders are unavailable on this device.",
+          "domain": "Taskfold.LocationSystemFailure"
+        },
+        "nativeObservation": {
+          "pending": 0,
+          "unrecognized": 0
+        },
+        "registrationReport": {
+          "deferred": 0,
+          "unreadable": false,
+          "failed": 1,
+          "installed": 0
+        },
+        "environment": {
+          "regionMonitoringAvailable": false,
+          "accuracy": 0,
+          "maximumRadius": 2128000,
+          "servicesEnabled": true,
+          "authorization": 4
+        }
+      },
+      "artifact": {
+        "file": "location-native-system-refusal-accepted-report.json",
+        "sha256": "a506291c37ec164b13823bfebdef79e41f482100e3697d168979f6e003bb1a41"
+      }
+    },
+    "scope": "14 native object-format checks plus 22 actual unavailable-device checks; this is not positive geofence registration or delivery."
+  },
+  "environmentFollowup": {
+    "result": {
+      "result": "Passed",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    "log": {
+      "file": "location-native-system-environment.log",
+      "sha256": "c6c939ff1103624501b12aad7460e31c497b6651a92c91ac68805d45e074fbbb"
+    },
+    "scope": "Final change only adds explicit service/permission environment diagnostics to the already passing refusal path. Format-only code path is unchanged.",
+    "observed": {
+      "regionMonitoringAvailable": false,
+      "accuracy": 0,
+      "maximumRadius": 2128000,
+      "servicesEnabled": true,
+      "authorization": 4
+    }
+  },
+  "durableRefusalJournal": {
+    "artifact": {
+      "file": "location-native-system-refusal-synthetic-journal.json",
+      "sha256": "c17e8f933ab8ff39a42695fcf4b2f1bf4c509c91cccc160af30925b766059a75"
+    },
+    "places": 1,
+    "entries": 1,
+    "phase": "closed",
+    "reason": "failed",
+    "account": "native-proof",
+    "scope": "Actual iOS app private file after native adapter refused unavailable region monitoring; no automatic rearm and no queued geofence"
+  },
+  "ipadKeyboardFlow": {
+    "result": {
+      "result": "Passed",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    "log": {
+      "file": "location-places-tablet-keyboard-v2.log",
+      "sha256": "fc570cdba41e3448843962c1efcd40b4870efc1afeb3db26957d239794ecc71a"
+    },
+    "case": "testPrivatePlacesKeyboardSearchReviewSaveEditRelaunchDelete",
+    "verified": [
+      "Native keyboard Search returns synthetic result",
+      "Explicitly scroll lazy selected-pin label into view",
+      "Save exact E6 coordinates/radius to private file",
+      "Relaunch retains place and installation identity",
+      "Rename preserves boundary revision",
+      "Radius edit changes revision",
+      "Delete removes place",
+      "Task tables stay unchanged"
+    ],
+    "limitations": "Direct Search taps with the keyboard active remain unresolved. Native app inspection is unavailable while the Mac is locked; no new unlock/manual test was requested."
+  },
+  "core": {
+    "ios": {
+      "reported": 1114,
+      "skipped": 13,
+      "passed": 1101,
+      "failed": 0,
+      "log": {
+        "file": "location-native-system-core-ios-final.log",
+        "sha256": "732706cb8ad6ebaacfbe02fabca4f4b11e5d57f5299175d81bbadc65eb2c5f30"
+      }
+    },
+    "mac": {
+      "rerunThisMilestone": false,
+      "reason": "Documentation-only update; Mac code/data contract unchanged from its independently verified private-store milestone",
+      "previousEvidence": "p2-location-place-storage-evidence.json"
+    }
+  },
+  "positiveRegistration": {
+    "accepted": false,
+    "OSGeofenceAddAttempted": false,
+    "reason": "Current Simulator reports region monitoring unavailable even with Location Services on, When In Use authorization and full accuracy. Native adapter fails before UNUserNotificationCenter.add for the location request.",
+    "test": "testNativeLocationPendingRegistrationAndDurableConsumption",
+    "scope": "Earlier selected runs failed at this prerequisite. The case now explicitly skips when the system says unsupported, and was not selected among the passing Simulator cases. Positive registration/readback, delivery and response actions remain required on a capable environment."
+  },
+  "budget": {
+    "defensiveNativeLimit": 60,
+    "coordinatedTimeFocusLocationAdmissionImplemented": false,
+    "scope": "A free-space query is not a serialized shared-budget transaction"
+  },
+  "mac": {
+    "sourceChanged": false,
+    "locationPermissionAdded": false,
+    "nativeAdapterDependencyOnIOSRepo": false,
+    "status": "Own private model/store unchanged. Mac location-trigger API is unavailable; native unsupported-reference editing/acceptance remains open."
+  },
+  "normalAppWiring": {
+    "locationChoice": false,
+    "version6Writer": false,
+    "deviceConsent": false,
+    "taskSaveCancelUndo": false,
+    "locationSystemAdapterConnected": false,
+    "responseActionsConnected": false
+  },
+  "openWork": [
+    "Resolve direct iPad Search touch activation while typing",
+    "Connect default-off device/account consent and permission recovery to normal task Save/Cancel/Undo",
+    "Serialized joint time/Focus/location admission and delivered cleanup across account transitions",
+    "Native OS response origin/replay validation and Open/Complete/Tomorrow/Snooze",
+    "Positive native registration/readback and physical delivery/background/locked/reinstall acceptance; precision/radius/authorization branches need capable-device checks",
+    "Every visit until completed mode",
+    "Private desktop-to-phone authoring/handoff",
+    "Remaining automation/teams/wearables and other P2_PLAN.md requirements"
+  ],
+  "failedIterations": [
+    "iPad keyboard flow initially looked for Pin selected outside the lazy form viewport; the test now scrolls to the label and the full flow passes",
+    "Direct Search touch trials with plain/borderless controls and alternate keyboard-dismissal behavior did not establish a fix; speculative production changes were reverted",
+    "Initial native registration proof had only a generic failure; separate per-mode reports and typed native reasons exposed the region-capability prerequisite. No permission/precision bypass was added."
+  ],
+  "limitations": "Native request objects and real unavailable-device refusal do not prove successful geofence scheduling/delivery. The real unrelated time request proves scoped preservation only. The normal scheduler, task save/Cancel, actions, every-visit mode and private desktop authoring are still unfinished.",
+  "userDeferred": [
+    "Remote server reminders/device-reinstall recovery",
+    "General older-client rollout safeguards",
+    "Distribution signing/install-update verification",
+    "Genuine Google/Microsoft OAuth/provider acceptance"
+  ],
+  "sources": {
+    "trigger": "https://developer.apple.com/documentation/usernotifications/unlocationnotificationtrigger",
+    "radius": "https://developer.apple.com/documentation/corelocation/cllocationmanager/maximumregionmonitoringdistance",
+    "accuracy": "https://developer.apple.com/documentation/corelocation/cllocationmanager/accuracyauthorization"
+  },
+  "goal": "Active; entire P2_PLAN.md scope remains the objective. This is not completion of remaining Px.",
+  "ownedSourceSHA256": {
+    "Taskfold/Core/LocationReminders.swift": "57b4b3a6c2f08adbeae69ad486657694f903eccaeff5e71f67fa06a46f01e6c6",
+    "Taskfold/Core/LocationPlaceStore.swift": "13a523d975a3c55de3b9e13438c5bb68352f0425abacf28291dbbccf868cc4c3",
+    "Package.swift": "1193a11f2862baa788beb8ea263f163dd6b2384609ffdb6f9dcb7f10df7b0a15",
+    "Taskfold.xcodeproj/project.pbxproj": "8846198bf9e517a7611b32d2994a38ca8081f5ceffa460c7f8e040f8c7c997be"
+  },
+  "iosImplementation": {
+    "repository": "https://github.com/dbakp/TaskFold-iOS",
+    "branch": "codex/location-system-adapter",
+    "source": "Taskfold/Core/SystemLocationReminders.swift",
+    "sha256": "48d680f535fb6444c412856e71df58c2bde014153146691b31dcd3dc514177f4"
+  },
+  "cleanup": {
+    "ownedMainTestAppsClosed": true,
+    "syntheticPrivateNamespacesRemovedAfterCapturingProof": true,
+    "seededSimulatorLocationPermissionReset": true,
+    "obsoleteIntermediateResultsReclaimedMB": 102.6,
+    "acceptedResultsLogsAndSyntheticReportsRetained": true
+  }
+}

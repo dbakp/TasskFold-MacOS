@@ -177,3 +177,8 @@ Next in rank 5: reviewed Arrive/Leave notifications on iPhone/iPad, using the sy
 ### 22 October — protected place storage and native picker
 
 Advanced reminder work now includes an independently owned atomic private place/journal store in each app and an iOS map/search/radius/management component. The picker remains behind an exact isolated debug route while task save/cancel, consent, OS delivery and action routing are unfinished. Every-visit mode and private desktop-to-phone authoring remain in scope. Current implementation and checks are separated in `LOCATION_REMINDERS.md` and `p2-location-place-storage-evidence.json`; this is progress on rank 5, not completion of location reminders or remaining Px.
+
+
+### 22 October — native location adapter and iPad keyboard flow
+
+iOS now owns native location-trigger construction/inspection, typed permission/capability/capacity refusals and scoped cleanup. Actual native format and unavailable-device paths pass in the isolated Simulator, with durable refusal closure and unrelated-alert preservation. The Simulator reports region monitoring unavailable; positive registration/delivery is still open. iPad keyboard Search now passes the full private-place save/relaunch/edit/delete flow; direct Search taps while typing remain unresolved. Normal task location UI and the coordinated time/Focus/location scheduler are still unfinished, alongside repeated visits and private desktop-to-phone authoring. This is rank-5 progress, not full Px completion. See `p2-location-system-adapter-evidence.json` and `LOCATION_REMINDERS.md`.

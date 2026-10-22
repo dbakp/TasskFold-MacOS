@@ -2603,3 +2603,8 @@ Location reminder work now has an independently compiled device-private data/lif
 ## 22 October — protected private place storage
 
 The Mac now owns the protected, account-scoped place/journal file store independently of iOS, including bounded reads, atomic coordinated writes, backup exclusion, stable installation identity and stale-edit/journal protection. Native Mac location UI/permission requests remain absent because the system trigger is unavailable here. The iOS picker is tested only through its isolated debug entry; complete mobile reminder wiring, every-visit mode and private desktop-to-phone authoring remain open. See `p2-location-place-storage-evidence.json` for filesystem/build checks and their limits.
+
+
+## 22 October — iOS native location adapter boundary
+
+The iOS repository now owns its system location-trigger adapter and native format/unavailable-device checks. The Mac's independently owned shared model/store and opaque version-6 behavior are unchanged; this is a documentation-only Mac update, with no Mac location permission, iOS source dependency or release assertion. iPad keyboard place editing is verified, while direct Search taps and positive geofence registration/delivery remain open. Normal consent/task/action wiring, shared notification admission, every-visit mode and desktop-to-phone authoring remain unfinished. See `p2-location-system-adapter-evidence.json`.
