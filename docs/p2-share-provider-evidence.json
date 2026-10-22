@@ -1,0 +1,119 @@
+{
+  "updated": "2026-10-22",
+  "milestone": "Bounded share-provider intake and Apple Maps text/link compatibility",
+  "status": "Implemented; 17 new provider/intake cases, both complete Core suites and final-source Maps/Safari native product tests pass. Wider acceptance remains open.",
+  "contract": {
+    "mailbox_version": 1,
+    "provider_deadline_seconds": 20,
+    "deadline_scope": "One absolute intake deadline reused across attachments; completed review is not timed out.",
+    "cancel": "Cancel/dismissal cancels the waiting reader; one locked gate ignores late completion. Underlying NSItemProvider work is OS-owned and cannot be cancelled via loadItem.",
+    "maps": "Exact ancillary-only com.apple.mapkit.map-item provider stays unread; acceptance requires a separate validated web link. Review explicitly states preview omission.",
+    "limits_unchanged": "4 extension items, 8 providers, one unique HTTP(S) URL, 100 KB combined text including separators, 8192 source-URL bytes. Unknown attachments and invalid/partial intake refuse the whole selection. No page or map-object fetch/decode.",
+    "editable_fields": "Disabled while loading/saving so late intake cannot overwrite edits."
+  },
+  "observed_maps_formats": [
+    [
+      [
+        "com.apple.mapkit.map-item"
+      ],
+      [
+        "public.url"
+      ],
+      [
+        "public.plain-text"
+      ]
+    ]
+  ],
+  "core": {
+    "new_provider_cases": 9,
+    "new_intake_cases": 8,
+    "ios": {
+      "reported": 1288,
+      "skipped": 13,
+      "actually_run": 1275,
+      "failures": 0,
+      "log": "share-intake-full-ios.log"
+    },
+    "mac": {
+      "reported": 1320,
+      "skipped": 33,
+      "actually_run": 1287,
+      "failures": 0,
+      "log": "share-intake-full-mac.log"
+    },
+    "coverage": [
+      "Real Foundation plain-text/URL decoding",
+      "Silent/missing/failed source, cancellation before/after start, late callback and concurrent independent reads",
+      "One shared deadline; no later attachment budget restart or partial success",
+      "Maps preview remains unread; map-only and unknown/mixed formats fail",
+      "Aggregate attributed text byte limits include separators; local-file links remain refused"
+    ]
+  },
+  "native": {
+    "maps": {
+      "result": "Passed",
+      "bundle": "share-maps-acceptance.xcresult",
+      "summary": "share-maps-acceptance-summary.json",
+      "product_tests": 1,
+      "diagnostic_tests_excluded": 1,
+      "runtime_warnings": 0,
+      "scope": "Actual Apple Maps share of synthetic public place, review editable literal title, source HTTPS Maps URL, save while containing host quit, cold host review/Add, ordinary relaunch, exact one saved task, source/notes preservation, receipt persisted, handled draft absent, no due date and default priority. Duplicate shared text equal to source URL is handled by existing suggested-content semantics.",
+      "visual": "Exported real extension screenshot inspected: readable native title/source form and unobstructed Cancel/Save. Preview-omission caption lies below current keyboard viewport; full caption layout and spoken accessibility remain unverified."
+    },
+    "builds": {
+      "ios": "share-intake-final-build.log: TEST BUILD SUCCEEDED",
+      "mac": "share-intake-native-mac-final.log: BUILD SUCCEEDED; unsigned isolated Debug app and native extension, not distribution verification"
+    },
+    "safari_and_host_regression": {
+      "result": "Passed",
+      "bundle": "share-regression.xcresult",
+      "product_tests": 2,
+      "diagnostic_tests_excluded": 1,
+      "runtime_warnings": 0,
+      "scope": "Safari Cancel saves no draft; edited link survives save with host quit and normal launch. Host review Cancel, injected disk-full Save failure/retry, durable exact one task/receipt, mailbox acknowledgement and relaunch pass. This run predates only the final loading-field disable and test wait/notice assertions; final-source source-app rerun recorded separately."
+    },
+    "final_source": {
+      "bundle": "share-intake-final.xcresult",
+      "summary": "share-intake-final-summary.json",
+      "product_cases_passed": [
+        "testMapsShareExtensionPreservesPublicTextAndLinkThroughColdHostAdd",
+        "testSafariShareExtensionSavesReviewedLinkDraft"
+      ],
+      "failed_product_cases": 0,
+      "runtime_warnings": 0,
+      "suite_result": "Failed solely in temporary Shortcuts cleanup diagnostic, which missed a confirmation popover; do not count this suite as an overall pass.",
+      "notice": "Maps test verifies the explicit preview-omission notice exists. Final loading/saving field disable compiled in both apps; final-source Maps/Safari review/save/relaunch pass.",
+      "cleanup_followup": "share-shortcuts-cleanup-v2.xcresult passed; see cleanup scope. The earlier failed suite result is retained unchanged."
+    }
+  },
+  "failed_iterations": [
+    "First Maps probe met Maps notifications onboarding; Not Now declined without requesting permission.",
+    "Second Maps probe reproduced unsupported map-item rejection with Save disabled.",
+    "Two format-diagnostic probes retained the same failure; DEBUG was not defined in the Share target, so exact disposable bundle guard was used temporarily, then removed.",
+    "First final UI-test compilation failed because a local Add button shadowed XCTest add(attachment); renamed variable, successful rebuild before native run.",
+    "Final-source suite product cases both passed, but temporary Shortcuts cleanup failed because its Delete Shortcut confirmation was a popover, not an alert. Select-based exact-owned-item cleanup was prepared separately without changing product code."
+  ],
+  "remaining": [
+    "Native Mac share-menu layout/interaction and spoken accessibility",
+    "Tablet source extension acceptance and large text",
+    "Real cloud/offline/account-switch transitions",
+    "More third-party app formats; no claim of arbitrary file/map object support",
+    "All user-deferred release/signing, general older-client rollout, remote reminders and genuine OAuth provider work remain deferred"
+  ],
+  "cleanup": {
+    "status": "Complete",
+    "removed_bytes": 159881284,
+    "scope": "Two empty synthetic Shortcuts removed with Select and exact names; No Shortcuts baseline restored. Isolated phone app/runner uninstalled, closed unsigned Mac test app product removed, four obsolete failed probe result bundles and temporary helper files removed. Summaries/logs and final source acceptance evidence retained. No main Taskfold test process remains running. No production account, task or workspace deleted.",
+    "native_cleanup": "share-shortcuts-cleanup-v2.xcresult: one diagnostic case passed, zero failures.",
+    "failed_cleanup_attempts": [
+      "Context-menu attempt missed popover confirmation.",
+      "First Select-based attempt queried cells before the source UI had finished appearing; waiting for the exact cells fixed the diagnostic."
+    ],
+    "test_source": "Temporary Shortcuts probe/cleanup methods absent from both owned repositories; staged test file restored to owned source after cleanup."
+  },
+  "owned_source_sha256": {
+    "Taskfold/Core/SharedCapture.swift": "c03d70f6e65fd4fcf2866563e5e302f5c1096f22c5054c493cded22d1772d75f",
+    "TaskfoldShare/ShareViewController.swift": "3142e1f72f3be4363602bfc04bff21553c9b0e0736686d0c2e9c3cfd9ca9a782",
+    "TaskfoldTests/SharedCaptureProviderTests.swift": "4cbf44decd348119bd32795809996b9f614d0b69973a1bf2f9700098eacdca57"
+  }
+}

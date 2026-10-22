@@ -206,3 +206,103 @@ final class SharedCaptureDisk: @unchecked Sendable {
         }
     }
 }
+
+/// A single caller-owned deadline spans all attachments. Cancellation and late
+/// producer callbacks race through one gate; neither can resume a reader twice.
+/// NSItemProvider owns its underlying work; loadItem has no cancellable Progress.
+enum SharedCaptureProvider {
+    static func read(_ provider: NSItemProvider, type: String, deadline: ContinuousClock.Instant) async throws -> NSSecureCoding {
+        try Task.checkCancellation()
+        guard ContinuousClock.now < deadline else { throw SharedCaptureFailure("The source app took too long. Close sharing and try again.") }
+        let gate = Gate()
+        let value = try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                guard gate.install(continuation) else { return }
+                let timer = Task {
+                    do {
+                        try await Task.sleep(until: deadline, clock: .continuous)
+                        gate.finish(.failure(SharedCaptureFailure("The source app took too long. Close sharing and try again.")))
+                    } catch {}
+                }
+                gate.attach(timer)
+                guard gate.active else { return }
+                provider.loadItem(forTypeIdentifier: type, options: nil) { item, error in
+                    if error != nil { gate.finish(.failure(SharedCaptureFailure("The source app couldn’t provide this item. Close sharing and try again."))) }
+                    else if let item { gate.finish(.success(item)) }
+                    else { gate.finish(.failure(SharedCaptureFailure("The source app did not include readable content."))) }
+                }
+            }
+        } onCancel: { gate.finish(.failure(CancellationError())) }
+        try Task.checkCancellation()
+        return value
+    }
+    private final class Gate: @unchecked Sendable {
+        private let lock = NSLock()
+        private var completed = false
+        private var pending: Result<NSSecureCoding, Error>?
+        private var continuation: CheckedContinuation<NSSecureCoding, Error>?
+        private var timer: Task<Void, Never>?
+        var active: Bool { lock.lock(); defer { lock.unlock() }; return !completed }
+        func install(_ value: CheckedContinuation<NSSecureCoding, Error>) -> Bool {
+            lock.lock()
+            if completed { let result = pending ?? .failure(CancellationError()); pending = nil; lock.unlock(); value.resume(with: result); return false }
+            continuation = value; lock.unlock(); return true
+        }
+        func attach(_ value: Task<Void,Never>) {
+            lock.lock(); let cancel = completed; if !cancel { timer = value }; lock.unlock()
+            if cancel { value.cancel() }
+        }
+        func finish(_ result: Result<NSSecureCoding,Error>) {
+            lock.lock(); guard !completed else { lock.unlock(); return }
+            completed = true
+            let reader = continuation; continuation = nil
+            if reader == nil { pending = result }
+            let deadline = timer; timer = nil; lock.unlock()
+            deadline?.cancel(); reader?.resume(with: result)
+        }
+    }
+}
+
+/// Only text and one web link become a draft. Known ancillary Maps previews
+/// remain unread, and are omitted only when the place also supplies a valid link.
+/// Any other unsupported attachment still refuses the entire intake.
+struct SharedCaptureIntake: Sendable {
+    let content: SharedCaptureContent
+    let omittedMapPreview: Bool
+    static func read(_ items: [NSExtensionItem], deadline: ContinuousClock.Instant = .now.advanced(by: .seconds(20))) async throws -> Self {
+        try Task.checkCancellation()
+        guard !items.isEmpty, items.count <= 4 else { throw SharedCaptureFailure("Share text or one web link at a time.") }
+        var texts: [String] = [], links: [String] = [], pageTitle = "", count = 0, mapPreviews = 0
+        for item in items {
+            if pageTitle.isEmpty { pageTitle = item.attributedTitle?.string ?? "" }
+            if let text = item.attributedContentText?.string, !text.isEmpty {
+                guard text.utf8.count <= SharedCaptureContent.maximumTextBytes else { throw SharedCaptureFailure("Share no more than 100 KB of text at a time.") }
+                texts.append(text)
+            }
+            for provider in item.attachments ?? [] {
+                count += 1
+                guard count <= 8 else { throw SharedCaptureFailure("Share text or one web link at a time.") }
+                if provider.hasItemConformingToTypeIdentifier("public.url") {
+                    let value = try await SharedCaptureProvider.read(provider, type: "public.url", deadline: deadline)
+                    let link = try SharedCaptureItem.webLink(value)
+                    if !links.contains(link) { links.append(link) }
+                } else if provider.hasItemConformingToTypeIdentifier("public.plain-text") {
+                    let value = try await SharedCaptureProvider.read(provider, type: "public.plain-text", deadline: deadline)
+                    let text = try SharedCaptureItem.text(value)
+                    if !texts.contains(text) { texts.append(text) }
+                } else if provider.registeredTypeIdentifiers == ["com.apple.mapkit.map-item"] {
+                    mapPreviews += 1 // Do not ask the provider to decode the opaque object.
+                } else { throw SharedCaptureFailure("This version captures text and web links. Share a text selection or link instead of a file.") }
+                guard texts.reduce(0, { $0 + $1.utf8.count }) <= SharedCaptureContent.maximumTextBytes, links.count <= 1 else {
+                    throw SharedCaptureFailure("Share no more than 100 KB of text and one web link at a time.")
+                }
+            }
+        }
+        try Task.checkCancellation()
+        guard ContinuousClock.now < deadline else { throw SharedCaptureFailure("The source app took too long. Close sharing and try again.") }
+        guard mapPreviews == 0 || !links.isEmpty else { throw SharedCaptureFailure("Share a web link for this place instead of a map file.") }
+        guard !texts.isEmpty || !links.isEmpty else { throw SharedCaptureFailure("The source app did not include text or a web link.") }
+        let content = try SharedCaptureContent.suggested(text: SharedCaptureContent.combine(texts), pageTitle: pageTitle, source: links.first ?? "")
+        return Self(content: content, omittedMapPreview: mapPreviews > 0)
+    }
+}

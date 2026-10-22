@@ -7,6 +7,7 @@ import AppKit
     @Published var notes = ""
     @Published var source = ""
     @Published var workspace: SharedCaptureWorkspace?
+    @Published var omittedMapPreview = false
     @Published var loading = true
     @Published var saving = false
     @Published var message: String?
@@ -15,46 +16,19 @@ import AppKit
     var canSave: Bool { !loading && !saving && workspace != nil && (try? content()) != nil }
     private func content() throws -> SharedCaptureContent { try SharedCaptureContent(title: title, notes: notes, source: source) }
     func load(_ items: [NSExtensionItem]) async {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(20))
         do {
+            try Task.checkCancellation()
             workspace = try SharedCaptureDisk.system().workspace()
             guard workspace != nil else { throw SharedCaptureFailure("Open Taskfold and choose a workspace, then share again.") }
-            guard !items.isEmpty, items.count <= 4 else { throw SharedCaptureFailure("Share text or one web link at a time.") }
-            var texts: [String] = [], links: [String] = []
-            var pageTitle = "", count = 0
-            for item in items {
-                if pageTitle.isEmpty { pageTitle = item.attributedTitle?.string ?? "" }
-                if let text = item.attributedContentText?.string, !text.isEmpty { texts.append(text) }
-                for provider in item.attachments ?? [] {
-                    count += 1
-                    guard count <= 8 else { throw SharedCaptureFailure("Share text or one web link at a time.") }
-                    if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
-                        let value = try await load(provider, type: UTType.url.identifier)
-                        let link = try SharedCaptureItem.webLink(value)
-                        if !links.contains(link) { links.append(link) }
-                    } else if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
-                        let value = try await load(provider, type: UTType.plainText.identifier)
-                        let text = try SharedCaptureItem.text(value)
-                        if !texts.contains(text) { texts.append(text) }
-                    } else { throw SharedCaptureFailure("This version captures text and web links. Share a text selection or link instead of a file.") }
-                    guard texts.reduce(0, { $0 + $1.utf8.count }) <= SharedCaptureContent.maximumTextBytes, links.count <= 1 else {
-                        throw SharedCaptureFailure("Share no more than 100 KB of text and one web link at a time.")
-                    }
-                }
-            }
-            guard !texts.isEmpty || !links.isEmpty else { throw SharedCaptureFailure("The source app did not include text or a web link.") }
-            let content = try SharedCaptureContent.suggested(text: SharedCaptureContent.combine(texts), pageTitle: pageTitle, source: links.first ?? "")
+            let intake = try await SharedCaptureIntake.read(items, deadline: deadline)
+            try Task.checkCancellation()
+            let content = intake.content
+            omittedMapPreview = intake.omittedMapPreview
             title = content.title; notes = content.notes; source = content.source
-        } catch { message = error.localizedDescription; workspace = nil }
+        } catch is CancellationError { workspace = nil }
+        catch { message = error.localizedDescription; workspace = nil }
         loading = false
-    }
-    private func load(_ provider: NSItemProvider, type: String) async throws -> NSSecureCoding {
-        try await withCheckedThrowingContinuation { continuation in
-            provider.loadItem(forTypeIdentifier: type, options: nil) { item, error in
-                if let error { continuation.resume(throwing: error) }
-                else if let item { continuation.resume(returning: item) }
-                else { continuation.resume(throwing: SharedCaptureFailure("The source app did not include readable content.")) }
-            }
-        }
     }
     func save() throws {
         guard let workspace, canSave else { throw SharedCaptureFailure("Review the title and source link before saving.") }
@@ -87,7 +61,12 @@ private struct CaptureReview: View {
                         TextField("Notes", text: $model.notes, axis: .vertical).lineLimit(3...8).accessibilityIdentifier("sharedCaptureNotes")
                         TextField("Source link (optional)", text: $model.source, axis: .vertical).accessibilityIdentifier("sharedCaptureSource").autocorrectionDisabled()
                     }
+                    .disabled(model.loading || model.saving)
                     if !model.loading, let error = validationMessage { Text(error).font(.caption).foregroundStyle(.red) }
+                }
+                if model.omittedMapPreview {
+                    Text("Map previews aren’t copied. Review the included text and source link.").font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("sharedCaptureMapNotice")
                 }
                 if let message = model.message { Text(message).foregroundStyle(.red).accessibilityIdentifier("sharedCaptureError") }
             }.formStyle(.grouped)
@@ -109,6 +88,7 @@ private struct CaptureReview: View {
 @objc(ShareViewController)
 final class ShareViewController: NSViewController {
     private let model = CaptureModel()
+    private var readTask: Task<Void,Never>?
     override func loadView() {
         let host = NSHostingView(rootView: CaptureReview(model: model, cancel: { [weak self] in self?.cancel() }, save: { [weak self] in self?.save() }))
         host.frame = NSRect(x: 0, y: 0, width: 440, height: 500); view = host
@@ -116,9 +96,11 @@ final class ShareViewController: NSViewController {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-        Task { await model.load(extensionContext?.inputItems as? [NSExtensionItem] ?? []) }
+        readTask = Task { await model.load(extensionContext?.inputItems as? [NSExtensionItem] ?? []) }
     }
-    private func cancel() { extensionContext?.cancelRequest(withError: NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError)) }
+    override func viewWillDisappear() { super.viewWillDisappear(); readTask?.cancel() }
+    deinit { readTask?.cancel() }
+    private func cancel() { readTask?.cancel(); extensionContext?.cancelRequest(withError: NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError)) }
     private func save() {
         do { try model.save(); extensionContext?.completeRequest(returningItems: nil) }
         catch { model.message = error.localizedDescription }
