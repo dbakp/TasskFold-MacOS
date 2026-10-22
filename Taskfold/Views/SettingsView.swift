@@ -56,6 +56,11 @@ struct GeneralSettings: View {
                 Section("Date phrases") { DatePhrasePreferencesView() }
                 Section("Automatic reminders") { ReminderAutomaticPreferencesView() }
                 Section("Snooze") { ReminderSnoozePreferencesView() }
+                Section("Place reminders") {
+                    Label("Set up on iPhone or iPad", systemImage: "mappin.and.ellipse")
+                    Text("Open Notifications → Place reminders in Taskfold on the device that will deliver the alert. Saved pins stay on that device. Your task’s reminder settings are preserved on this Mac.")
+                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
                 Section("Remote reminders") { RemoteReminderRegistrationView() }
             } else {
                 Text("Open a workspace to change date and reminder preferences.")

@@ -236,3 +236,10 @@ See `p2-location-action-cleanup-evidence.json` and `LOCATION_REMINDERS.md` for n
 Added a confirmed whole-device private reset to the experimental iOS Places flow. It writes a fresh consent-off private identity and durable reset receipt before clearing old action records; normal hydration finishes cleanup after a failed cache save or relaunch. A private writer lock and identity revalidation prevent stale reset proofs from deleting newer receipts. Tasks and unrelated time/Focus alerts are retained; old references require review. Both repos independently own the private archive-3 format and policy; Mac adds no location service or reset UI.
 
 Exact native process-loss, selected previous-reader, Core and screenshot evidence is in `p2-location-reset-evidence.json` and `LOCATION_REMINDERS.md`. This closes the explicit reset/capacity-recovery implementation gap, not public authoring or genuine physical delivery/permission/account-switch acceptance. Wider location/P2 work and all user deferrals remain open.
+
+
+### 22 October — normal place-reminder setup preview
+
+Normal iOS Notifications and task Reminders now link to central Place reminders setup. It provides explicit separate consent, actual device-capability/status feedback, saved-place/reset/history management and refresh after system settings. Capable devices expose reviewed task authoring as a preview; raw restored rows still cannot prepare alerts. Unsupported devices retain time delivery and can revoke existing private consent. Revocation write refusal has explicit session-only feedback and an off-retry action. Exact test-only producers remain separately isolated. Mac adds read-only phone/tablet setup guidance.
+
+See `p2-location-setup-evidence.json` and the current `LOCATION_REMINDERS.md` section for normal Simulator navigation/no-write/large-text, real private-file lock refusal/retry, editor regression and Mac build scope. Positive capable-device permission/delivery/callback acceptance, spoken accessibility, private desktop-to-phone authoring and wider P2 work remain open; this does not complete rank 5/Px or reopen user-deferred release/remote/provider work.

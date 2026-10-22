@@ -1,0 +1,173 @@
+{
+  "milestone": "Normal place-reminder setup and capable-device authoring preview",
+  "date": "2026-10-22",
+  "repository": "TasskFold-MacOS",
+  "status": "Setup implementation accepted within Simulator scope; location and wider Px acceptance incomplete",
+  "parentCommit": "3eae3b60d2226ec45442ae25390cce401447fa39",
+  "sourceSHA256": {
+    "Taskfold/Views/SettingsView.swift": "68b62197da97c82290b6cfa65c7e3a336a989ca44abc59d5e35e3d8167b09792"
+  },
+  "behavior": [
+    "Normal iOS Notifications and task reminder navigation to explicit device/workspace setup; non-prompting read-only refresh does not create private identity.",
+    "Actual SDK region-monitoring capability gates normal task authoring. Capability is not permission or successful delivery. Exact isolated test producers retain a separate fixture gate.",
+    "Separate task delivery and private location consent; saved places/reset and confirmed ended-history maintenance; settings return refresh.",
+    "Existing consent can be revoked even with task delivery off and region support unavailable. Real writer-lock refusal keeps stored bytes intact, explains session-only stop and exposes durable retry.",
+    "Mac independently owns phone/tablet setup guidance; no native Mac location service."
+  ],
+  "contracts": "No private archive, task, snapshot, notification format or backend change. Previous-reader checks were not rerun for this UI milestone.",
+  "core": {
+    "reported": 1243,
+    "skipped": 33,
+    "actualPassed": 1210,
+    "failures": 0,
+    "log": {
+      "file": "location-setup-full-mac.log",
+      "sha256": "762ce399d6caf85c4f635eb02273fef24e52c703bc4e1a407650f62b5867ad69"
+    },
+    "scope": "Regression suite; not evidence of physical SDK delivery or live accessibility."
+  },
+  "combinedActualCorePassed": 2408,
+  "native": {
+    "runs": [
+      {
+        "result": "location-setup-phone-v3.xcresult",
+        "actualPassed": 2,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "location-setup-phone-v3-summary.json",
+          "sha256": "114695bd370357c85c8772798343beb4768ab84728524b53b0cde1cd42249da6"
+        },
+        "log": {
+          "file": "location-setup-phone-v3.log",
+          "sha256": "c2831a9401b3116bf23d0075796adbc5dec79fabf7b23d00ab9f053484bfb3d9"
+        }
+      },
+      {
+        "result": "location-setup-ipad.xcresult",
+        "actualPassed": 2,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "location-setup-ipad-summary.json",
+          "sha256": "43720364bc07d3ae5d18ba3a44c998143f457cc24e915f9d03c86058583d959e"
+        },
+        "log": {
+          "file": "location-setup-ipad.log",
+          "sha256": "5ac1255a336c2a796ad90282e6c28e1237fded66401a164015646083aca23e21"
+        }
+      },
+      {
+        "result": "location-setup-revoke-phone.xcresult",
+        "actualPassed": 1,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "location-setup-revoke-phone-summary.json",
+          "sha256": "3d79e0c6cd673a13ff3549b4650ded86f0a19fb083efab72bc9febbe8bd103f6"
+        },
+        "log": {
+          "file": "location-setup-revoke-phone.log",
+          "sha256": "497183bfc2dd503529c1e99eddc3826ca6bb8d8cbc010730888ad787bc287b0f"
+        }
+      },
+      {
+        "result": "location-setup-final-phone.xcresult",
+        "actualPassed": 1,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "location-setup-final-phone-summary.json",
+          "sha256": "3b250885f398c0783232289ec6de332333f73070aacf94bfa4bc036218633299"
+        },
+        "log": {
+          "file": "location-setup-final-phone.log",
+          "sha256": "544917caca77576a962b6bf970338e77e34e628650e89c50f6d997f1e886e057"
+        }
+      }
+    ],
+    "actualPassed": 6,
+    "distinctMethods": 4,
+    "scope": "iPhone/iPad normal read-only setup, no private identity/task writes, maintenance Cancel/no-op, relaunch, largest dark text; existing repeat-editor draft Save/Cancel/relaunch/Undo/Redo/codec regression; normal revocation refusal/retry/relaunch.",
+    "revocationFixture": "Synthetic archive consent only, no native permission grant and no location editor fixture flag. XCTest holds the actual private writer lock, then releases it before public Retry.",
+    "sourceProgression": "Base layout and repeat cases precede the revocation fix. Revocation test includes unsupported/off consent revocation and retry. Final phone read-only test includes final Open app settings label and re-review disclosure; these final copy changes did not rerun the full earlier UI matrix.",
+    "macBuild": {
+      "result": "BUILD SUCCEEDED",
+      "signed": false,
+      "scope": "Unsigned isolated Debug app and extensions; no live Mac guidance/VoiceOver acceptance claimed.",
+      "log": {
+        "file": "location-setup-mac-build.log",
+        "sha256": "9b8830c2bff4d7d7776599dc4434a55a301c03997e3546cb69487f0ce0964907"
+      }
+    }
+  },
+  "supersededFailures": [
+    {
+      "summary": {
+        "file": "location-setup-phone-first-summary.json",
+        "sha256": "9dc32c915a1b2c79f007193bb977eebb025141542489b78a4500df1cd63d5dc2"
+      },
+      "reason": "Largest-text Settings navigation link offscreen; test now scrolls."
+    },
+    {
+      "summary": {
+        "file": "location-setup-phone-v2-summary.json",
+        "sha256": "43a39b3c01d630d3db8fc400b0296f7bbd5964a96c858e68487d3dae68107c87"
+      },
+      "reason": "Test StaticText hit-test invalid activation point and virtualized unsupported text after scrolling; test uses Form bounds and reveals the text again."
+    }
+  ],
+  "capturesSHA256": {
+    "docs/location-setup/phone-current.png": "1e9b509f53cb95ac1857c4629236b1242008acfb72e0d7c608ca4b0052e15452",
+    "docs/location-setup/phone-maintenance.png": "3362180c70d99491245e54df87aa17cf52bc20d1298089469861aebd0905b347",
+    "docs/location-setup/phone-largest-dark.png": "bbe346b77bb6b32107901f8f5e381171d965be78395bf9b2a1dc836767ad06aa",
+    "docs/location-setup/ipad-setup.png": "2f168a1de04700e46bac4876e7bd2ff034ed23eaeec8049e7f97f7876b9d3e46",
+    "docs/location-setup/phone-revocation-retry.png": "71198333a0958a73dadcc4dc4de883134823b73e36c9fdfbb479a3f75845c5d9"
+  },
+  "captureReview": "Current phone screenshot inspected after final copy; prior phone largest dark, iPad normal and revocation retry screenshots visually inspected. Forms scroll; no claim that all content fits in one screen.",
+  "cleanup": {
+    "isolatedInstallations": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1",
+        "status": "removed exact isolated test installation"
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner",
+        "status": "removed exact isolated test installation"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1",
+        "status": "removed exact isolated test installation"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner",
+        "status": "removed exact isolated test installation"
+      },
+      {
+        "product": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-project-workflows-native-v2/Build/Products/Debug/Taskfold.app",
+        "status": "removed exact unsigned test product"
+      }
+    ],
+    "prunedFailedResultBundles": [
+      "location-setup-phone.xcresult",
+      "location-setup-phone-v2.xcresult"
+    ],
+    "mainTaskfoldAppsRunning": [],
+    "preserved": "Accepted results, all logs, source, reusable build caches, unrelated data and real installations"
+  },
+  "openAcceptance": [
+    "No physical iPhone available. Positive native permission/precision, actual region registration, OS-origin arrival/departure delivery and background/locked/cold callbacks remain unverified.",
+    "Spoken setup accessibility and private desktop-to-phone authoring remain open.",
+    "Wider P2/Px remains incomplete."
+  ],
+  "userDeferrals": [
+    "Remote server reminders/device/reinstall delivery recovery",
+    "General older-client rollout safeguards",
+    "Release signing/distribution/installation/update acceptance",
+    "Genuine Google/Microsoft OAuth registrations and provider acceptance"
+  ]
+}
