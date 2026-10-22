@@ -574,6 +574,7 @@ final class Store {
         try FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         let previous = FileManager.default.fileExists(atPath: cacheURL.path) ? try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) : Snapshot()
         var durable = snapshot
+        durable.locationImports = try LocationHandoffImportLedger.staging(previous: previous, proposed: durable)
         durable.timeSnoozes = try stagedTimeSnoozes(previous: previous, proposed: durable, newIntent: timeSnooze)
         try JSONEncoder().encode(durable).write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         snapshot = durable

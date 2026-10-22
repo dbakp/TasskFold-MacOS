@@ -18,13 +18,21 @@ struct LocationPrivateArchive: Codable, Equatable, Sendable {
     /// Version 3 is written only by explicit whole-installation reset. It makes
     /// cleanup of earlier installation receipts recoverable after process loss.
     var supersedesEarlierInstallations: Bool? = nil
+    /// Version 4 adds device-private review nonces and fixed import identities.
+    var handoffReviews: [String: LocationHandoffReviewTicket]? = nil
+    /// Turning consent off/on invalidates an unfinished imported preparation.
+    var handoffEpochs: [String: String]? = nil
     var journal: LocationReminderJournal
     init(device: String = UUID().uuidString.lowercased()) { self.device = device; journal = .init(device: device) }
     var valid: Bool {
         let decoded = places.compactMap(LocationPrivatePlace.init(raw:))
         return (version == 1 && allowedAccounts == nil && supersedesEarlierInstallations == nil ||
          version == 2 && allowedAccounts != nil && supersedesEarlierInstallations == nil ||
-         version == 3 && allowedAccounts != nil && supersedesEarlierInstallations == true) &&
+         version == 3 && allowedAccounts != nil && supersedesEarlierInstallations == true ||
+         version == 4 && allowedAccounts != nil && supersedesEarlierInstallations != false && handoffReviews != nil && handoffEpochs != nil) &&
+        (version == 4 || handoffReviews == nil && handoffEpochs == nil) &&
+        (handoffEpochs.map { $0.count <= 256 && $0.allSatisfy { LocationReminderIdentity.account($0.key) && LocationReminderIdentity.uuid(.string($0.value)) } } ?? true) &&
+        (handoffReviews.map { $0.count <= 256 && $0.allSatisfy { $0.key == $0.value.key && $0.value.valid && $0.value.device == device } } ?? true) &&
         (allowedAccounts.map { $0.count <= 50 && Set($0).count == $0.count && $0.allSatisfy(LocationReminderIdentity.account) } ?? true) &&
         LocationReminderIdentity.uuid(.string(device)) && journal.valid && journal.device == device &&
         places.count <= Self.maximumPlaces && decoded.count == places.count && Set(decoded.map(\.id)).count == places.count
@@ -36,11 +44,17 @@ struct LocationPrivateArchive: Codable, Equatable, Sendable {
     static func decode(_ data: Data) throws -> Self {
         let json = try JSONDecoder().decode(JSON.self, from: data)
         func keys(_ value: JSON, allowed: Set<String>) -> Bool { if case .object(let object) = value { return Set(object.keys).isSubset(of: allowed) }; return false }
-        guard keys(json, allowed: ["version","device","places","journal","allowedAccounts","supersedesEarlierInstallations"]), let journal = json.object["journal"],
+        guard keys(json, allowed: ["version","device","places","journal","allowedAccounts","supersedesEarlierInstallations","handoffReviews","handoffEpochs"]), let journal = json.object["journal"],
               keys(journal, allowed: ["version","device","entries","revoked"]), case .object(let entries)? = journal.object["entries"] else { throw LocationStorageFailure.unreadable }
         for entry in entries.values {
             guard keys(entry, allowed: ["ticket","phase","reason","epoch"]), let ticket = entry.object["ticket"],
                   keys(ticket, allowed: ["account","device","taskID","generation","completionVersion","specID","placeID","placeRevision","arm","transition","repeats"]) else { throw LocationStorageFailure.unreadable }
+        }
+        if let reviews = json.object["handoffReviews"], reviews != .null {
+            guard case .object(let values) = reviews else { throw LocationStorageFailure.unreadable }
+            for value in values.values {
+                guard keys(value, allowed: ["version","account","id","device","nonce","taskID","generation","completion","expiresMilliseconds","payloadDigest","placeID","placeRevision","specID","arm"]) else { throw LocationStorageFailure.unreadable }
+            }
         }
         let archive = try JSONDecoder().decode(Self.self, from: data)
         guard archive.valid else { throw LocationStorageFailure.unreadable }; return archive
@@ -113,6 +127,16 @@ struct LocationPrivateFile: Sendable {
             return try body(proof)
         }
     }
+    /// Hold the private writer lock while the task/receipt cache commits. A reset,
+    /// deleted pin or changed review cannot race the authority used for that commit.
+    func withHandoffAuthority<T>(_ ticket: LocationHandoffReviewTicket, proposal: LocationHandoffProposal, _ body: (LocationPrivateArchive) throws -> T) throws -> T {
+        try locked {
+            guard let current = try read(), current.device == ticket.device, current.handoffReviews?[ticket.key] == ticket,
+                  let place = ticket.reviewedPlace(proposal), current.places.contains(place.raw) else { throw LocationStorageFailure.changed }
+            try synchronizeDirectory()
+            return try body(current)
+        }
+    }
     private func locked<T>(_ body: () throws -> T) throws -> T {
         _ = try checkedDirectory(create: true)
         let descriptor = Darwin.open(directory.appendingPathComponent("writer.lock").path, O_CREAT | O_RDWR | O_NOFOLLOW, 0o600)
@@ -181,6 +205,7 @@ actor LocationPrivateStore {
                 accounts.append(account)
             }
             next.version = max(2, next.version); next.allowedAccounts = accounts.sorted()
+            if next.handoffEpochs?[account] != nil { next.handoffEpochs?[account] = UUID().uuidString.lowercased() }
             return (next, next)
         }
     }
@@ -241,5 +266,61 @@ actor LocationPrivateStore {
     }
     func resetAllPrivateData(confirmed: Bool) throws -> LocationPrivateArchive {
         guard confirmed else { throw LocationStorageFailure.changed }; return try file.reset()
+    }
+}
+
+
+extension LocationPrivateStore {
+    /// The returned nonce and import identities have reached protected disk before
+    /// a caller is allowed to make the first remote Claim.
+    func reserveHandoffReview(_ record: LocationHandoffRecord, expectedDevice: String?) throws -> LocationHandoffReviewTicket {
+        try file.transaction { current in
+            guard current?.device == expectedDevice, record.available else { throw LocationStorageFailure.changed }
+            var next = current ?? LocationPrivateArchive()
+            let key = record.account + "|" + record.id
+            if let existing = next.handoffReviews?[key] {
+                guard existing.matches(record), record.device == nil || record.device == existing.device else { throw LocationStorageFailure.changed }
+                return (next, existing)
+            }
+            guard let ticket = LocationHandoffReviewTicket(record: record, device: next.device), (next.handoffReviews?.count ?? 0) < 256 else {
+                throw LocationStorageFailure(message: "This draft cannot start a new review. Resume it on its original device or finish a saved review first.")
+            }
+            next.version = 4; next.allowedAccounts = next.allowedAccounts ?? []
+            if next.handoffEpochs == nil { next.handoffEpochs = [:] }
+            if next.handoffEpochs?[record.account] == nil {
+                guard (next.handoffEpochs?.count ?? 0) < 256 else { throw LocationStorageFailure(message: "This device’s private draft accounts are full.") }
+                next.handoffEpochs?[record.account] = UUID().uuidString.lowercased()
+            }
+            if next.handoffReviews == nil { next.handoffReviews = [:] }
+            next.handoffReviews?[key] = ticket
+            return (next, ticket)
+        }
+    }
+    /// Called only after an explicit review/save action. Stable IDs make a retry
+    /// after an uncertain private-file commit reuse the same pin and reminder.
+    func saveReviewedHandoffPlace(_ ticket: LocationHandoffReviewTicket, proposal: LocationHandoffProposal) throws -> LocationPrivateArchive {
+        try file.transaction { current in
+            guard var next = current, next.device == ticket.device, next.handoffReviews?[ticket.key] == ticket,
+                  let place = ticket.reviewedPlace(proposal) else { throw LocationStorageFailure.changed }
+            if let existing = next.places.first(where: { $0["id"] == .string(place.id) }) {
+                guard existing == place.raw else { throw LocationStorageFailure.changed }
+            } else {
+                guard next.places.count < LocationPrivateArchive.maximumPlaces else { throw LocationStorageFailure(message: "This device can save up to 50 places. Remove a place before adding another.") }
+                next.places.append(place.raw)
+            }
+            return (next, next)
+        }
+    }
+    /// Never forget the nonce until the server acknowledges a matching terminal
+    /// state. A failed acknowledgement remains resumable after process loss.
+    func acknowledgeHandoff(_ ticket: LocationHandoffReviewTicket, terminal: LocationHandoffRecord) throws {
+        guard ticket.matches(terminal), [.imported,.discarded,.expired].contains(terminal.state),
+              terminal.device == nil || terminal.device == ticket.device else { throw LocationStorageFailure.changed }
+        try file.transaction { current in
+            guard var next = current, next.device == ticket.device else { throw LocationStorageFailure.changed }
+            if let existing = next.handoffReviews?[ticket.key] { guard existing == ticket else { throw LocationStorageFailure.changed } }
+            next.handoffReviews?[ticket.key] = nil
+            return (next, ())
+        }
     }
 }

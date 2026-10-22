@@ -167,6 +167,10 @@ struct LocationReminderPlan: Sendable {
         self.eligible = eligible; self.capacity = capacity; self.allowSubmissions = allowSubmissions
     }
     func repeatingOnly() -> Self { Self(eligible: eligible.filter { $0.ticket.isRepeating }, capacity: capacity, allowSubmissions: allowSubmissions) }
+    func respectingHandoffConsent(_ receipts: [String: LocationHandoffImportReceipt], archive: LocationPrivateArchive) -> Self {
+        guard LocationHandoffImportLedger.valid(receipts), archive.valid else { return .empty }
+        return Self(eligible: eligible.filter { LocationHandoffImportLedger.permitsDelivery($0, receipts: receipts, archive: archive) }, capacity: capacity, allowSubmissions: allowSubmissions)
+    }
     func scoped(to account: String) -> Self {
         guard LocationReminderIdentity.account(account) else { return .empty }
         return Self(eligible: eligible.filter { $0.ticket.account == account }, capacity: capacity, allowSubmissions: allowSubmissions)
@@ -521,11 +525,11 @@ struct LocationReminderReview: Sendable {
     let replacing: String?
     let completion: JSON
     init?(workspace: WorkspaceBinding, task: Record, archive: LocationPrivateArchive, place: LocationPrivatePlace,
-          transition: LocationReminderSettings.Transition, repeats: Bool? = nil, replacing: LocationReminderSettings? = nil) {
+          transition: LocationReminderSettings.Transition, repeats: Bool? = nil, replacing: LocationReminderSettings? = nil, identity: (id: String, arm: String)? = nil) {
         guard archive.valid, place.account == workspace.account, archive.places(for: workspace.account).contains(where: { $0 == place }),
               !task.completed, LocationReminderIdentity.uuid(task["task_generation"]),
               replacing == nil || ReminderSpec.rows(task).contains(.object(replacing!.raw)),
-              let created = LocationReminderSettings.make(device: archive.device, taskID: task.id, taskGeneration: task.string("task_generation"), place: place, transition: transition, repeats: repeats ?? replacing?.repeats ?? false, id: replacing?.id ?? UUID().uuidString.lowercased()) else { return nil }
+              let created = LocationReminderSettings.make(device: archive.device, taskID: task.id, taskGeneration: task.string("task_generation"), place: place, transition: transition, repeats: repeats ?? replacing?.repeats ?? false, id: identity?.id ?? replacing?.id ?? UUID().uuidString.lowercased(), arm: identity?.arm ?? UUID().uuidString.lowercased()) else { return nil }
         var fields = replacing?.raw ?? [:]
         for (key, value) in created.raw {
             if key == "location_reference" { fields[key] = .object((fields[key]?.object ?? [:]).merging(value.object) { _, fresh in fresh }) }
@@ -707,7 +711,7 @@ struct LocationInstallationReset: Sendable {
     let account: String
     let device: String
     init(account: String, archive: LocationPrivateArchive) throws {
-        guard LocationReminderIdentity.account(account), archive.valid, archive.version == 3,
+        guard LocationReminderIdentity.account(account), archive.valid, (archive.version == 3 || archive.version == 4),
               archive.supersedesEarlierInstallations == true else { throw LocationStorageFailure.changed }
         self.account = account; device = archive.device
     }
@@ -870,7 +874,7 @@ struct LocationHandoffRecord: Equatable, Sendable {
 /// Persist this nonce in device-private storage BEFORE claiming. A lost response
 /// can resume only the same account/device review. It contains no geometry/name.
 struct LocationHandoffReviewTicket: Codable, Equatable, Sendable {
-    var version = 1
+    var version = 2
     let account: String
     let id: String
     let device: String
@@ -880,8 +884,13 @@ struct LocationHandoffReviewTicket: Codable, Equatable, Sendable {
     let completion: Int
     let expiresMilliseconds: Int
     let payloadDigest: String
+    let placeID: String
+    let placeRevision: String
+    let specID: String
+    let arm: String
+    var key: String { account + "|" + id }
     var valid: Bool {
-        version == 1 && [account,id,device,nonce,taskID,generation].allSatisfy { LocationReminderIdentity.uuid(.string($0)) } &&
+        version == 2 && [account,id,device,nonce,taskID,generation,placeID,placeRevision,specID,arm].allSatisfy { LocationReminderIdentity.uuid(.string($0)) } &&
         (0...9_007_199_254_740_991).contains(completion) && (0...LocationHandoffProposal.maximumTime).contains(expiresMilliseconds) &&
         payloadDigest.count == 64 && payloadDigest.allSatisfy { "0123456789abcdef".contains($0) }
     }
@@ -889,6 +898,8 @@ struct LocationHandoffReviewTicket: Codable, Equatable, Sendable {
         guard record.available, record.state == .pending, record.device == nil, let proposal = record.proposal else { return nil }
         account = record.account; id = record.id; self.device = device; self.nonce = nonce; taskID = proposal.taskID; generation = proposal.generation
         completion = proposal.completion; expiresMilliseconds = record.expiresMilliseconds; payloadDigest = proposal.payloadDigest
+        placeID = UUID().uuidString.lowercased(); placeRevision = UUID().uuidString.lowercased()
+        specID = UUID().uuidString.lowercased(); arm = UUID().uuidString.lowercased()
         guard valid else { return nil }
     }
     func matches(_ record: LocationHandoffRecord) -> Bool {
@@ -954,5 +965,128 @@ enum LocationHandoffCommand: Sendable {
         let response = try LocationHandoffResponse.read(data, account: account, device: command.device)
         guard command.accepts(response) else { throw AppFailure(message: "This private place draft changed. Reopen the review before continuing.") }
         return response
+    }
+}
+
+
+/// A local task-cache receipt, written in the same atomic replacement as the task.
+/// No private nonce, label, coordinates or full proposal enters the workspace cache.
+struct LocationHandoffImportReceipt: Codable, Equatable, Sendable {
+    var version = 1
+    let reviewID: String
+    let expiresMilliseconds: Int
+    let ticket: LocationReminderTicket
+    let recoveryEpoch: String?
+    var key: String { ticket.account + "|" + reviewID }
+    var valid: Bool { version == 1 && LocationReminderIdentity.uuid(.string(reviewID)) &&
+        (0...LocationHandoffProposal.maximumTime).contains(expiresMilliseconds) && ticket.valid && LocationReminderIdentity.uuid(.string(ticket.account)) &&
+        (recoveryEpoch.map { LocationReminderIdentity.uuid(.string($0)) } ?? true) }
+    init?(review: LocationHandoffReviewTicket, task: Record, settings: LocationReminderSettings, recoveryEpoch: String? = nil) {
+        guard review.valid, settings.id == review.specID, settings.arm == review.arm, settings.device == review.device,
+              settings.placeID == review.placeID, settings.placeRevision == review.placeRevision,
+              settings.taskID == review.taskID, settings.taskGeneration == review.generation,
+              !task.completed, ReminderSpec.rows(task).contains(.object(settings.raw)),
+              let ticket = LocationReminderTicket.bound(account: review.account, task: task, settings: settings),
+              ticket.completionVersion == review.completion else { return nil }
+        reviewID = review.id; expiresMilliseconds = review.expiresMilliseconds; self.ticket = ticket; self.recoveryEpoch = recoveryEpoch
+        guard valid else { return nil }
+    }
+    /// Resume only the still-saved reviewed reference. A private journal entry or
+    /// retirement/revocation always takes precedence, including after Undo/Redo.
+    func recoveryCandidate(account: String, tasks: [Record], archive: LocationPrivateArchive, cancellations: [String: LocationReminderTicket]) -> LocationReminderCandidate? {
+        guard valid, ticket.account == account, archive.valid, archive.device == ticket.device, archive.allows(account: account),
+              let recoveryEpoch, archive.handoffEpochs?[account] == recoveryEpoch,
+              archive.journal.entries[ticket.identifier] == nil, archive.journal.revoked?.contains(ticket.identifier) != true,
+              cancellations[ticket.identifier] == nil else { return nil }
+        let matches = tasks.filter { $0.id == ticket.taskID }
+        guard matches.count == 1, let task = matches.first, !task.completed,
+              let settings = ReminderSpec.rows(task).compactMap({ LocationReminderSettings(raw: $0.object) }).first(where: { $0.id == ticket.specID }),
+              let place = archive.places(for: account).first(where: { $0.id == ticket.placeID && $0.revision == ticket.placeRevision }),
+              let candidate = LocationReminderCandidate(account: account, device: archive.device, task: task, settings: settings, place: place),
+              candidate.ticket == ticket else { return nil }
+        return candidate
+    }
+    func matches(_ review: LocationHandoffReviewTicket) -> Bool {
+        valid && review.valid && reviewID == review.id && expiresMilliseconds == review.expiresMilliseconds &&
+        ticket.account == review.account && ticket.device == review.device && ticket.taskID == review.taskID &&
+        ticket.generation == review.generation && ticket.completionVersion == review.completion && ticket.specID == review.specID &&
+        ticket.arm == review.arm && ticket.placeID == review.placeID && ticket.placeRevision == review.placeRevision
+    }
+}
+
+/// A monotonic device-local record: Undo, sync and snapshot restoration cannot erase
+/// a saved import. Never reclaim by an untrusted wall clock and then allow a replay.
+enum LocationHandoffImportLedger {
+    static let maximum = 4096
+    static func valid(_ rows: [String: LocationHandoffImportReceipt]) -> Bool {
+        rows.count <= maximum && rows.allSatisfy { $0.key == $0.value.key && $0.value.valid }
+    }
+    static func permitsDelivery(_ candidate: LocationReminderCandidate, receipts: [String: LocationHandoffImportReceipt], archive: LocationPrivateArchive) -> Bool {
+        guard receipts.count <= maximum else { return false }
+        let imports = receipts.values.filter { $0.ticket == candidate.ticket }
+        guard !imports.isEmpty else { return true } // A separately reviewed fresh arm has its own journal authority.
+        guard imports.count == 1, let receipt = imports.first, receipt.valid, let epoch = receipt.recoveryEpoch else { return false }
+        return archive.device == candidate.ticket.device && archive.allows(account: candidate.ticket.account) && archive.handoffEpochs?[candidate.ticket.account] == epoch
+    }
+    static func staging(previous: Snapshot, proposed: Snapshot, accepting receipt: LocationHandoffImportReceipt? = nil) throws -> [String: LocationHandoffImportReceipt]? {
+        var records = previous.locationImports ?? [:]
+        guard valid(records), valid(proposed.locationImports ?? [:]) else { throw LocationStorageFailure.unreadable }
+        if let receipt {
+            guard receipt.valid, records[receipt.key] == nil, proposed.locationImports?[receipt.key] == receipt,
+                  let saved = proposed.tables["tasks"]?.filter({ $0.id == receipt.ticket.taskID }), saved.count == 1,
+                  !saved[0].completed,
+                  let settings = ReminderSpec.rows(saved[0]).compactMap({ LocationReminderSettings(raw: $0.object) }).first(where: { $0.id == receipt.ticket.specID }),
+                  LocationReminderTicket.bound(account: receipt.ticket.account, task: saved[0], settings: settings) == receipt.ticket,
+                  !(previous.tables["tasks"] ?? []).contains(where: { task in
+                      task.id == receipt.ticket.taskID && ReminderSpec.rows(task).contains(.object(settings.raw))
+                  }) else { throw LocationStorageFailure(message: "This place draft was already saved or changed. No second reminder was added.") }
+        }
+        for (key, record) in proposed.locationImports ?? [:] {
+            guard records[key] == nil || records[key] == record else { throw LocationStorageFailure.changed }
+            records[key] = record
+        }
+        guard valid(records) else { throw LocationStorageFailure(message: "This device’s saved place-draft history is full. Your task has not changed.") }
+        return records.isEmpty ? nil : records
+    }
+}
+
+extension LocationHandoffReviewTicket {
+    func matches(_ proposal: LocationHandoffProposal) -> Bool {
+        valid && proposal.account == account && proposal.id == id && proposal.taskID == taskID && proposal.generation == generation &&
+        proposal.completion == completion && proposal.payloadDigest == payloadDigest
+    }
+    func reviewedPlace(_ proposal: LocationHandoffProposal) -> LocationPrivatePlace? {
+        guard matches(proposal) else { return nil }
+        return LocationPrivatePlace(raw: ["version": .number(1), "id": .string(placeID), "revision": .string(placeRevision),
+            "account": .string(account), "name": proposal.raw["place_name"]!, "latitude_e6": proposal.raw["latitude_e6"]!,
+            "longitude_e6": proposal.raw["longitude_e6"]!, "radius_m": proposal.raw["radius_m"]!])
+    }
+    func reviewedSettings(_ proposal: LocationHandoffProposal) -> LocationReminderSettings? {
+        guard let place = reviewedPlace(proposal), let transition = LocationReminderSettings.Transition(rawValue: proposal.raw["transition"]!.text) else { return nil }
+        return .make(device: device, taskID: taskID, taskGeneration: generation, place: place, transition: transition,
+            repeats: proposal.raw["repeats"] == .bool(true), id: specID, arm: arm)
+    }
+}
+
+
+/// A visible, memory-only review; server Claim and a protected header precede it.
+/// Task/permission changes are not inferred from receiving or decoding this value.
+struct LocationHandoffDeviceReview: Sendable {
+    let ticket: LocationHandoffReviewTicket
+    let proposal: LocationHandoffProposal
+    let baseline: Record
+    let workspace: WorkspaceBinding
+    init?(ticket: LocationHandoffReviewTicket, claimed: LocationHandoffRecord, task: Record, workspace: WorkspaceBinding) {
+        guard ticket.matches(claimed), claimed.state == .claimed, claimed.device == ticket.device, claimed.available,
+              let proposal = claimed.proposal, ticket.matches(proposal), proposal.matches(task: task, account: workspace.account) else { return nil }
+        self.ticket = ticket; self.proposal = proposal; baseline = task; self.workspace = workspace
+    }
+    func preparing(task: Record, archive: LocationPrivateArchive, workspace: WorkspaceBinding) -> LocationReminderReview? {
+        guard self.workspace == workspace, ticket.matches(proposal), proposal.matches(task: task, account: workspace.account),
+              ReminderSpec.rows(baseline) == ReminderSpec.rows(task), archive.device == ticket.device,
+              archive.handoffReviews?[ticket.key] == ticket, let place = ticket.reviewedPlace(proposal), archive.places.contains(place.raw),
+              let transition = LocationReminderSettings.Transition(rawValue: proposal.raw["transition"]!.text) else { return nil }
+        return LocationReminderReview(workspace: workspace, task: task, archive: archive, place: place,
+            transition: transition, repeats: proposal.raw["repeats"] == .bool(true), identity: (ticket.specID,ticket.arm))
     }
 }

@@ -387,6 +387,8 @@ struct Snapshot: Codable, Equatable, Sendable {
     var locationActions: [String: LocationNotificationAction]? = nil
     /// Device-bound time snooze recovery; excluded from portable workspace exports.
     var timeSnoozes: [String: TimeSnoozeIntent]? = nil
+    /// Monotonic import receipts; excluded from shared rows and portable backups.
+    var locationImports: [String: LocationHandoffImportReceipt]? = nil
     mutating func apply(_ change: Mutation) {
         guard change.table != TaskAssignmentProvenance.table else { return }
         if change.organizationOrder != nil || change.method == "ORDER" {
@@ -509,7 +511,7 @@ extension Snapshot {
 }
 
 extension Snapshot {
-    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion, sharedCaptureReceipts, locationRetirements, locationActions, timeSnoozes }
+    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion, sharedCaptureReceipts, locationRetirements, locationActions, timeSnoozes, locationImports }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         tables = try row.decode([String: [Record]].self, forKey: .tables)
@@ -519,6 +521,10 @@ extension Snapshot {
         locationRetirements = try row.decodeIfPresent([String: LocationReminderTicket].self, forKey: .locationRetirements)
         locationActions = try row.decodeIfPresent([String: LocationNotificationAction].self, forKey: .locationActions)
         timeSnoozes = try row.decodeIfPresent([String: TimeSnoozeIntent].self, forKey: .timeSnoozes)
+        locationImports = try row.decodeIfPresent([String: LocationHandoffImportReceipt].self, forKey: .locationImports)
+        guard LocationHandoffImportLedger.valid(locationImports ?? [:]) else {
+            throw DecodingError.dataCorruptedError(forKey: .locationImports, in: row, debugDescription: "Invalid private place import history")
+        }
         guard TimeSnoozeOutbox.valid(timeSnoozes ?? [:]) else {
             throw DecodingError.dataCorruptedError(forKey: .timeSnoozes, in: row, debugDescription: "Invalid time snooze recovery")
         }

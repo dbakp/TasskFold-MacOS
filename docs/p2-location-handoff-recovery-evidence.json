@@ -1,0 +1,85 @@
+{
+  "milestone": "Durable private location review and atomic receiving-save recovery",
+  "date": "2026-10-22",
+  "repository": "TasskFold-MacOS",
+  "status": "Protected storage/models and iOS receiving Store commands implemented; no sending/receiving UI or real paired HTTP/native Save acceptance; rank 5/Px incomplete",
+  "parentCommit": "fd71ad7f894baa45aa76b97c0477e092e0e058d1",
+  "sourceSHA256": {
+    "Taskfold/Core/LocationPlaceStore.swift": "0abd776dc17cadd06d9ca24e8df56af58bae6aa378cbc468a08e2679bf02d6ac",
+    "Taskfold/Core/LocationReminders.swift": "508029552a0960ee3ce6bd076db05d4e1b77c55fe9b2242bb63857d099b3b93b",
+    "Taskfold/Core/Models.swift": "16c2649c5a8e04183144f9f6632e4f957a4448652e0eeff6d0feef8a6d9d6d78",
+    "Taskfold/Core/Store.swift": "83544bf949f26c9873c62e3442d46887bc5cf21b97995f329ed99189fd4dc949",
+    "TaskfoldTests/LocationHandoffRecoveryTests.swift": "8a31fbf163776556e5f52443398ab1d5c0d4f019f195e250459f135088346925"
+  },
+  "contracts": {
+    "privateArchive": 4,
+    "privateReviewHeader": 2,
+    "localTaskImportReceipt": 1,
+    "serverTransport": "Unchanged v1, no migration or backend mutation this milestone",
+    "limits": {
+      "protectedReviewHeaders": 256,
+      "consentEpochAccounts": 256,
+      "monotonicImportReceipts": 4096
+    },
+    "private": "Nonce/fixed import identities and consent epochs live in protected non-App-Group backup-excluded private file; geometry first saved only after explicit reviewed Save. No private permission enabled by reservation.",
+    "cache": "Task and receipt atomic replacement; both current app writers merge durable receipts across Undo/sync/snapshot replacement. Receipt has no name/nonce/coordinates; portable export excludes it. No wall-clock reclamation.",
+    "recovery": "Exact saved task/incarnation/reference, current private pin/device/consent epoch, no cancellation, no previous/revoked journal entry. Existing intents keep their own replay semantics. Fresh native admission also checks epoch to reject in-flight prepares after off/on. Off-at-Save receipt cannot later activate after enable.",
+    "acknowledgement": "Only matching server terminal response deletes matching protected header. Retry may finish metadata after task Undo, never rewrite task. Inbox command retries ack but still fetches other drafts if retry fails. Remote Finish not triggered solely by relaunch."
+  },
+  "core": {
+    "reported": 1303,
+    "skipped": 33,
+    "actualPassed": 1270,
+    "failures": 0,
+    "newRecoveryCases": 20,
+    "log": {
+      "file": "location-handoff-recovery-verified-mac.log",
+      "sha256": "8add7c489774a07f851bf9ceaf02d2b634a0414756613095e1c6beb0e55b44e1"
+    },
+    "scope": [
+      "Real temporary protected files: reservation/restart preserves nonce and fixed pin/spec/arm identities before any remote Claim",
+      "Lost claim response and claimed/other-device refusal, stale identity and unknown header byte preservation",
+      "Stable idempotent reviewed pin Save, changed-payload refusal, no consent/journal arming from reservation or pin save",
+      "Writer lock held across task commit; concurrent reset refusal and post-reset stale proof rejection",
+      "Real temporary atomic task-cache roundtrip; task+receipt coherence, Undo and snapshot replacement retain replay denial",
+      "Injected task write failure leaves original task cache, resumable protected header/pin and no prepared journal",
+      "Matching terminal acknowledgement retry preserves pin/journal; mismatched/live response cannot erase nonce",
+      "Concurrent reminder/completion/incarnation/workspace edits refuse stale review while harmless title edit survives",
+      "Malformed/missing/completed/duplicated task cannot certify an import; conflicting/full4096 ledger and full256 private header store refuse without forgetting history",
+      "Portable backup and shared task JSON exclude private nonce, geometry and local receipt map",
+      "Legacy private versions1/2/3 upgrade preserves identity/consent/journal/reset authority",
+      "Exact committed receipt recovers interrupted preparation, including after ack removed header; existing prepared/reserved/installed/closed/revoked intents or cancellation never become import replays",
+      "Consent off/on rotates epoch; matching old prepared candidate fails plan filtering and pre-submission gate; Save while off never gains future preparation authority",
+      "Same draft UUID is separately account-keyed with independent nonces"
+    ]
+  },
+  "nativeBuild": {
+    "passed": true,
+    "log": {
+      "file": "location-handoff-recovery-build-verified-mac.log",
+      "sha256": "208262276e23ad7c696c8c526833fbb15f631848437ee8ebc1819fe7c3bfed3c"
+    },
+    "scope": "Independent app/extension Debug compilation with four owned changed native Swift inputs. iOS Simulator target only; Mac unsigned isolated build only. Existing staging differences limited to isolation app-group/keychain/test bundle guards. No native runtime Save/UI/geofence claim."
+  },
+  "earlierChecks": "Focused13 and intermediate20-case full suites passed; final source additionally checks consent epochs at current plan and native admission and bounds recovery to current eligible references. Final full suites/builds above supersede those earlier results. No failing final check.",
+  "cleanup": {
+    "mainTaskfoldAppsRunning": [],
+    "newNativeSessionsStarted": 0,
+    "unsignedIsolatedMacProductRemoved": true,
+    "realInstallationsAccountsTasksPermissions": "Untouched",
+    "storage": "Temporary per-test private/cache files removed; final logs and reusable build caches retained."
+  },
+  "remaining": [
+    "Native Mac authoring/status and phone inbox/review UI with explicit upload disclosure and complete cancel/error/accessibility behavior",
+    "Real Auth/PostgREST paired device, offline/claim/Save/Finish process-loss and native Store runtime acceptance",
+    "Receiving acknowledgement retry currently starts from explicit inbox command, not automatic network work at every launch",
+    "Safe bounded import-history reclamation and terminal/absent-header maintenance; full bounds refuse new imports instead of losing replay protection",
+    "Actual capable-device region delivery and background/locked/cold callback acceptance; wider Px"
+  ],
+  "userDeferrals": [
+    "Remote server reminders/device-reinstall delivery recovery",
+    "General older-client rollout safeguards",
+    "Release signing/distribution/install/update acceptance",
+    "Genuine Google/Microsoft OAuth registration/provider acceptance"
+  ]
+}
