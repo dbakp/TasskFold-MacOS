@@ -105,4 +105,108 @@ final class LocationTaskDraftTests: XCTestCase {
         journal.revoked = ["taskfold.location.unknown"]; XCTAssertFalse(journal.valid)
     }
 
+    func retirementFixture() throws -> (Snapshot, Record, LocationReminderTicket) {
+        let (task, archive, pin, workspace) = try fixture()
+        let review = try XCTUnwrap(LocationReminderReview(workspace: workspace, task: task, archive: archive, place: pin, transition: .arrive))
+        let saved = try XCTUnwrap(review.applying(to: task, archive: archive, workspace: workspace))
+        return (Snapshot(tables: ["tasks": [saved]]), saved, try XCTUnwrap(LocationReminderTicket.bound(account: account, task: saved, settings: review.settings)))
+    }
+    func testCancellationIsInSameSnapshotAsRemovalAndSurvivesDecode() throws {
+        let (before, _, ticket) = try retirementFixture()
+        let next = try LocationRetirementOutbox.staging(previous: before, proposed: Snapshot(), account: account)
+        let recovered = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(next))
+        XCTAssertEqual(recovered.locationRetirements, [ticket.identifier: ticket]); XCTAssertNil(recovered.tables["tasks"])
+        let text = String(decoding: try JSONEncoder().encode(recovered), as: UTF8.self)
+        for key in ["Secret private pin", "latitude", "longitude", "radius"] { XCTAssertFalse(text.contains(key)) }
+        XCTAssertFalse(String(decoding: try WorkspaceBackup.make(recovered, account: account).data(), as: UTF8.self).contains("locationRetirements"))
+    }
+    func testUndoAndLaterSnapshotReplacementCannotDropCancellation() throws {
+        let (before, _, ticket) = try retirementFixture()
+        let removed = try LocationRetirementOutbox.staging(previous: before, proposed: Snapshot(), account: account)
+        let undone = try LocationRetirementOutbox.staging(previous: removed, proposed: before, account: account)
+        XCTAssertEqual(undone.tables, before.tables); XCTAssertEqual(undone.locationRetirements?[ticket.identifier], ticket)
+        let replaced = try LocationRetirementOutbox.staging(previous: undone, proposed: before, account: account)
+        XCTAssertEqual(replaced.locationRetirements, undone.locationRetirements)
+        let acked = try LocationRetirementOutbox.staging(previous: replaced, proposed: replaced, account: account, acknowledged: [ticket])
+        XCTAssertNil(acked.locationRetirements)
+        XCTAssertEqual(acked.tables, before.tables)
+    }
+    func testFailedTaskSaveLeavesPreviousIntentAndOutboxUnchanged() throws {
+        let (before, _, ticket) = try retirementFixture()
+        let proposed = try LocationRetirementOutbox.staging(previous: before, proposed: Snapshot(), account: account)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true); defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appendingPathComponent("tasks.json"); try JSONEncoder().encode(before).write(to: file, options: .atomic)
+        // Force failure before the atomic task/outbox replacement can take effect.
+        XCTAssertThrowsError(try JSONEncoder().encode(proposed).write(to: directory.appendingPathComponent("missing/tasks.json"), options: .atomic))
+        let recovered = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: file))
+        XCTAssertEqual(recovered, before); XCTAssertNil(recovered.locationRetirements)
+        XCTAssertEqual(proposed.locationRetirements?[ticket.identifier], ticket)
+    }
+    func testCompletionWithoutVersionBumpStillRetiresWhileTitleEditDoesNot() throws {
+        let (before, task, ticket) = try retirementFixture()
+        var completed = task; completed["completed"] = .bool(true)
+        let changed = try LocationRetirementOutbox.staging(previous: before, proposed: Snapshot(tables: ["tasks": [completed]]), account: account)
+        XCTAssertEqual(changed.locationRetirements?[ticket.identifier], ticket)
+        var renamed = task; renamed["title"] = .string("New title")
+        XCTAssertNil(try LocationRetirementOutbox.staging(previous: before, proposed: Snapshot(tables: ["tasks": [renamed]]), account: account).locationRetirements)
+    }
+    func testInvalidOutboxFailsClosedAndLegacySnapshotsDecode() throws {
+        let (before, _, ticket) = try retirementFixture()
+        var bad = before; bad.locationRetirements = ["wrong": ticket]
+        XCTAssertThrowsError(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(bad)))
+        XCTAssertThrowsError(try LocationRetirementOutbox.staging(previous: bad, proposed: before, account: account))
+        let legacy = try JSONDecoder().decode(Snapshot.self, from: Data(#"{"tables":{},"pending":[]}"#.utf8))
+        XCTAssertNil(legacy.locationRetirements)
+    }
+    func testOutboxBoundRefusesOverflowWithoutDiscardingExistingJobs() throws {
+        let (before, task, ticket) = try retirementFixture()
+        var full = before; full.locationRetirements = [:]
+        for _ in 0..<LocationReminderJournal.maximumEntries {
+            let copy = LocationReminderTicket(account: account, device: device, taskID: task.id, generation: ticket.generation, completionVersion: 0,
+                specID: UUID().uuidString.lowercased(), placeID: ticket.placeID, placeRevision: ticket.placeRevision, arm: UUID().uuidString.lowercased(), transition: "arrive")
+            full.locationRetirements?[copy.identifier] = copy
+        }
+        XCTAssertThrowsError(try LocationRetirementOutbox.staging(previous: full, proposed: Snapshot(), account: account))
+        XCTAssertEqual(full.locationRetirements?.count, LocationReminderJournal.maximumEntries)
+        let releasing = try XCTUnwrap(full.locationRetirements?.values.first)
+        XCTAssertEqual(try LocationRetirementOutbox.staging(previous: full, proposed: Snapshot(), account: account, acknowledged: [releasing]).locationRetirements?.count, LocationReminderJournal.maximumEntries)
+    }
+    func testCrashRecoveryReplaysPrivateRetirementBeforeAndAfterJournalSave() async throws {
+        let (before, _, ticket) = try retirementFixture()
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = LocationPrivateFile(applicationSupport: directory)
+        var archive = LocationPrivateArchive(device: device); XCTAssertTrue(archive.journal.prepare(ticket))
+        try file.transaction { _ in (archive, ()) }
+        let store = LocationPrivateStore(applicationSupport: directory)
+        let removed = try LocationRetirementOutbox.staging(previous: before, proposed: Snapshot(), account: account)
+        // Recovered raw task rows may already have been restored by Undo.
+        let restored = try LocationRetirementOutbox.staging(previous: removed, proposed: before, account: account)
+        let cache = directory.appendingPathComponent("cache.json"); try JSONEncoder().encode(restored).write(to: cache, options: .atomic)
+        for _ in 0..<2 {
+            // First restart: private write has not happened. Second: it happened,
+            // but the process ended before acknowledging the snapshot outbox.
+            let disk = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cache))
+            let privateState = try XCTUnwrap(file.read())
+            let engine = LocationReminderEngine(journal: privateState.journal, center: LocationRetirementRecoveryCenter(), persist: { try await store.saveJournal($0) })
+            let retired = await engine.retire(Array(disk.locationRetirements!.values)); XCTAssertTrue(retired)
+            XCTAssertEqual(try file.read()?.journal.entries[ticket.identifier]?.phase, .closed)
+            XCTAssertEqual(try file.read()?.journal.revoked, [ticket.identifier])
+            let rearmed = await engine.prepare(ticket); XCTAssertFalse(rearmed)
+        }
+        let disk = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cache))
+        let acked = try LocationRetirementOutbox.staging(previous: disk, proposed: disk, account: account, acknowledged: [ticket])
+        try JSONEncoder().encode(acked).write(to: cache, options: .atomic)
+        XCTAssertNil(try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cache)).locationRetirements)
+        XCTAssertEqual(acked.tables, before.tables)
+    }
+
+}
+
+private actor LocationRetirementRecoveryCenter: LocationReminderCenter {
+    func observe() async throws -> LocationReminderObservation { .init(pending: []) }
+    func remove(_ identifiers: [String]) async {}
+    func removeAllOwned() async {}
+    func add(_ candidate: LocationReminderCandidate) async throws { XCTFail("Recovery must never submit an old intent") }
 }

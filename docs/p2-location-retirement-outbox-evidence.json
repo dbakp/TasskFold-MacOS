@@ -1,0 +1,130 @@
+{
+  "feature": "Durable task-to-private-journal location cancellation handoff",
+  "date": "2026-10-22",
+  "ownedRepository": "TasskFold-MacOS",
+  "status": "Process-termination handoff implemented and verified; experimental location authoring and full rank 5/Px remain incomplete",
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "b6dcc314538b1da53aef78e3dc8d7547f2fdeb0c88e6b357c3211f9cdfcd2fb7",
+    "Taskfold/Core/LocationReminders.swift": "2a5627518efbd08f35b19cad36af03ad40756630a9b2784beeab4ef26d1a2176",
+    "TaskfoldTests/LocationTaskDraftTests.swift": "70b6225117ed7b2ebc0b775de3d8439e72e66d4ea2e3e7cc5cd83f9fd4f67583"
+  },
+  "implementation": [
+    "Optional bounded validated cancellation-only outbox, encoded atomically with the iOS task snapshot; no place names, coordinates or radius",
+    "Central iOS persistence compares the last durable task cache with proposed rows, covering local commands, Undo/Redo, synced changes and restore/recovery writes",
+    "Outstanding jobs survive proposed snapshot replacement; acknowledgment is a separate atomic task-cache save after serialized private retirement",
+    "Native location admission remains suppressed while jobs are pending; account-generation check prevents acknowledging against another workspace after an await",
+    "Unreadable private authority retains pending work; readable missing/replaced private installations have no authority for former tickets and need no replacement private file",
+    "Portable workspace exports exclude local cancellation metadata; encrypted account-bound local recovery snapshots retain it",
+    "Both independently owned models validate/read the optional field; Mac gains no native location service or iOS outbox producer/consumer",
+    "Completion without a completion-version bump now also retires its bound intent"
+  ],
+  "core": {
+    "reported": 1197,
+    "skipped": 33,
+    "actualPassed": 1164,
+    "failures": 0,
+    "newCases": 7,
+    "log": {
+      "file": "location-outbox-full-mac.log",
+      "sha256": "bf8bb5428a8b43bb4d76ea029edf0a8a20069157411fda3c8ce5502234888f16"
+    },
+    "scope": "Atomic snapshot round-trip/privacy/export exclusion; Undo/snapshot replacement; refusal before file replacement; completed rows without version bump; malformed/legacy decoding; 2048-job bound; real-file private retirement replay before and after journal save. Existing missing/unreadable private-file and engine retirement suites also pass. Optional live/platform cases remain skipped."
+  },
+  "nativeIOS": {
+    "repository": "TaskFold-iOS",
+    "bundle": "com.dbakp.taskfold.workflowtestsp1",
+    "device": "iPhone Simulator",
+    "results": [
+      {
+        "bundle": "location-outbox-phone-v2.xcresult",
+        "summary": {
+          "file": "location-outbox-phone-v2-summary.json",
+          "sha256": "543172b4958b1b287eaf014435f1bd65a0d275b7c243b9ac9f2491c0e182c805"
+        },
+        "log": {
+          "file": "location-outbox-phone-v2.log",
+          "sha256": "7918f2c29a9784adbdb7c584c9410ec7aaac8bf2be4f9e8aa96c7c14219c55fe"
+        },
+        "actualPassed": 3,
+        "runtimeWarnings": []
+      },
+      {
+        "bundle": "location-outbox-phone-final.xcresult",
+        "summary": {
+          "file": "location-outbox-phone-final-summary.json",
+          "sha256": "1359ae0e61ef0aea21418b3bef41ea4d4c378991a837a1da2a6dc6fae85f58a7"
+        },
+        "log": {
+          "file": "location-outbox-phone-final.log",
+          "sha256": "fd0390f9e0cfbcc5a43c028dbae8642c4cd7aa222893a7c2a226b834ee3bef6e"
+        },
+        "actualPassed": 2,
+        "runtimeWarnings": []
+      }
+    ],
+    "scope": "Three native scenarios, five executions. Baseline run: normal draft Save/Cancel/removal/Undo/Redo plus both termination boundaries. Final targeted run strengthens the acknowledged boundary to require actual revoked membership before termination and adds unreadable-journal refusal/preservation, repair and recovery at the before-write boundary.",
+    "fixtureVersionNote": "The baseline result predates only the final test-assertion/fixture strengthening; all production sources are unchanged between accepted runs. The final targeted run uses the recorded current UI-test source.",
+    "terminationMechanism": "Exact isolated DEBUG hold before scheduler retirement or before task-cache acknowledgement, then XCTest app termination and relaunch without the hold. It exercises process loss, not hardware power loss.",
+    "syntheticInput": "Explicit inactive prepared intent with ordinary/location delivery off; no successful region-monitoring registration or real boundary event is claimed.",
+    "finalState": {
+      "pendingCancellations": 0,
+      "restoredReferencePresent": true,
+      "sameArmAsClosedIntent": true,
+      "phase": "closed",
+      "reason": "cancelled",
+      "revoked": true
+    },
+    "finalStateProof": {
+      "file": "location-outbox-final-state.json",
+      "sha256": "4ff1951ccd45bc4f822b80fe81a802ca04d9db19cdc1568ff35e0a80bf76463b"
+    },
+    "privateProof": {
+      "file": "location-outbox-final-private-proof.json",
+      "sha256": "436ad17451ea025ca13e06d23cf0b734128fb7a688d17b6a33673a667b7f4e32"
+    },
+    "runtimeWarnings": [],
+    "strictSimulatorAppSignatureVerified": true
+  },
+  "nativeMac": {
+    "result": "BUILD SUCCEEDED",
+    "log": {
+      "file": "location-outbox-mac-build.log",
+      "sha256": "f19289b9267a8f8f211e86a579f5392f19dadab05ad84e070f573225b425e8a7"
+    },
+    "configuration": "Independent isolated Debug app/widget build with CODE_SIGNING_ALLOWED=NO; not release/distribution or a new Mac UI/VoiceOver acceptance"
+  },
+  "earlierAttempt": {
+    "log": {
+      "file": "location-outbox-phone.log",
+      "sha256": "75c40118a55275520d53795241a95b1f8339ae203d99680123a02f26229be1ad"
+    },
+    "reason": "Initial iOS build rejected an async call in a Boolean autoclosure; changed to an awaited local result before branching. No tests passed or counted from that build."
+  },
+  "compatibility": "Task reference6, r9 receipts and private archive/journal formats unchanged in this milestone. Snapshot adds only optional locationRetirements. Legacy snapshots default to nil; malformed/out-of-bounds jobs refuse decoding. Public editor remains gated. General older-client rollout safeguards remain user-deferred.",
+  "verificationLimits": [
+    "No new physical-device/capable-region delivery, permission grant, protected-data/reinstall, native response-action or VoiceOver acceptance",
+    "The unreadable-state native check uses a disposable corrupted private file, then restores its original synthetic bytes; it does not repair or overwrite unreadable real user data",
+    "No new power-loss/fsync guarantee for the existing atomic task-cache writer",
+    "No live cloud sync was exercised; the tested persistence helper is used by its ordinary iOS sync/recovery save path",
+    "Readable missing-file behavior is covered by existing Core storage checks and the inspected Store branch; this native run targets unreadable-file preservation, not a new missing-file acceptance"
+  ],
+  "remaining": [
+    "Native location category/origin validation and Open/Complete/Tomorrow/Snooze with replay and workspace fences",
+    "Every visit until completed",
+    "Private desktop-to-phone authoring",
+    "Public setup, capable-device delivery and permission/precision recovery, broader accessibility/native Mac acceptance",
+    "Direct iPad Search tap while typing remains unresolved; keyboard Search retained",
+    "Other P2 items remain governed by P2_PLAN.md"
+  ],
+  "userDeferrals": [
+    "Remote server reminders/device-reinstall recovery",
+    "General older-client rollout safeguards",
+    "Distribution/signing/install/update checks",
+    "Google/Microsoft OAuth registrations and genuine provider acceptance"
+  ],
+  "cleanup": {
+    "file": "location-outbox-cleanup.json",
+    "sha256": "7994fbe88d8179ecdf5b2376aafa1a4ab208fc3cda4fc4e2efcb588820f90af2",
+    "mainTaskfoldProcessesRemaining": 0
+  }
+}

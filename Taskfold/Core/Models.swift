@@ -382,6 +382,8 @@ struct Snapshot: Codable, Equatable, Sendable {
     var pending: [Mutation] = []
     var widgetCompletion = WidgetCompletionCache()
     var sharedCaptureReceipts: [String: String]? = nil
+    /// Local cancellation outbox; never included in a portable workspace export.
+    var locationRetirements: [String: LocationReminderTicket]? = nil
     mutating func apply(_ change: Mutation) {
         guard change.table != TaskAssignmentProvenance.table else { return }
         if change.organizationOrder != nil || change.method == "ORDER" {
@@ -504,13 +506,17 @@ extension Snapshot {
 }
 
 extension Snapshot {
-    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion, sharedCaptureReceipts }
+    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion, sharedCaptureReceipts, locationRetirements }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         tables = try row.decode([String: [Record]].self, forKey: .tables)
         pending = try row.decode([Mutation].self, forKey: .pending)
         widgetCompletion = try row.decodeIfPresent(WidgetCompletionCache.self, forKey: .widgetCompletion) ?? WidgetCompletionCache()
         sharedCaptureReceipts = try row.decodeIfPresent([String: String].self, forKey: .sharedCaptureReceipts)
+        locationRetirements = try row.decodeIfPresent([String: LocationReminderTicket].self, forKey: .locationRetirements)
+        guard LocationRetirementOutbox.valid(locationRetirements ?? [:]) else {
+            throw DecodingError.dataCorruptedError(forKey: .locationRetirements, in: row, debugDescription: "Invalid location cancellation outbox")
+        }
     }
 }
 

@@ -527,7 +527,41 @@ extension LocationReminderTicket {
         return ticket.valid ? ticket : nil
     }
     static func retired(account: String, before: Record, after: Record?) -> [Self] {
-        let kept = after.map { task in ReminderSpec.rows(task).compactMap { LocationReminderSettings(raw: $0.object) }.filter(\.enabled).compactMap { bound(account: account, task: task, settings: $0) } } ?? []
+        let kept = (after?.completed == false ? after : nil).map { task in ReminderSpec.rows(task).compactMap { LocationReminderSettings(raw: $0.object) }.filter(\.enabled).compactMap { bound(account: account, task: task, settings: $0) } } ?? []
         return ReminderSpec.rows(before).compactMap { LocationReminderSettings(raw: $0.object) }.compactMap { bound(account: account, task: before, settings: $0) }.filter { !kept.contains($0) }
+    }
+}
+
+/// Cancellation-only intent, saved atomically with the task snapshot. It cannot
+/// prepare or authorize a notification and contains no place name or geometry.
+/// Keep acknowledged jobs until their removal is itself durably saved; replaying
+/// retirement after a crash is idempotent, including an already-closed receipt.
+enum LocationRetirementOutbox {
+    static func valid(_ jobs: [String: LocationReminderTicket]) -> Bool {
+        jobs.count <= LocationReminderJournal.maximumEntries && jobs.allSatisfy { $0.key == $0.value.identifier && $0.value.valid }
+    }
+    static func staging(previous: Snapshot, proposed: Snapshot, account: String, acknowledged: [LocationReminderTicket] = []) throws -> Snapshot {
+        var jobs = previous.locationRetirements ?? [:]
+        guard valid(jobs), valid(proposed.locationRetirements ?? [:]) else { throw LocationStorageFailure.unreadable }
+        for (id, ticket) in proposed.locationRetirements ?? [:] {
+            guard jobs[id] == nil || jobs[id] == ticket else { throw LocationStorageFailure.changed }
+            jobs[id] = ticket
+        }
+        if previous.tables["tasks"] != proposed.tables["tasks"] {
+            let after = Dictionary(grouping: proposed.tables["tasks"] ?? [], by: \.id)
+            for before in previous.tables["tasks"] ?? [] {
+                // Duplicate task IDs cannot certify that an old intent is still current.
+                let current = after[before.id].flatMap { $0.count == 1 ? $0.first : nil }
+                if current == before { continue }
+                for ticket in LocationReminderTicket.retired(account: account, before: before, after: current) {
+                    guard jobs[ticket.identifier] == nil || jobs[ticket.identifier] == ticket else { throw LocationStorageFailure.changed }
+                    jobs[ticket.identifier] = ticket
+                }
+            }
+        }
+        for ticket in acknowledged where jobs[ticket.identifier] == ticket { jobs[ticket.identifier] = nil }
+        guard valid(jobs) else { throw LocationStorageFailure(message: "Finish stopping old location reminders before changing more of them. Your task change has not been saved.") }
+        var next = proposed; next.locationRetirements = jobs.isEmpty ? nil : jobs
+        return next
     }
 }
