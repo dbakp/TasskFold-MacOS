@@ -91,7 +91,7 @@ private struct SharedDraftReview: View {
                         Button("Cancel", role: .cancel) { dismiss() }
                     }
                     if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("sharedDraftError") }
-                }.formStyle(.grouped)
+                }.formStyle(.grouped).accessibilityIdentifier("sharedDraftReviewForm")
             } else { ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Reopen shared drafts in your current workspace.")) }
         }.onAppear { title = draft.content.title; notes = draft.content.notes; source = draft.content.source }
     }

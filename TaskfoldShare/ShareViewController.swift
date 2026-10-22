@@ -69,7 +69,7 @@ private struct CaptureReview: View {
                         .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("sharedCaptureMapNotice")
                 }
                 if let message = model.message { Text(message).foregroundStyle(.red).accessibilityIdentifier("sharedCaptureError") }
-            }.formStyle(.grouped)
+            }.formStyle(.grouped).accessibilityIdentifier("sharedCaptureReviewForm")
             Divider()
             HStack {
                 Button("Cancel", action: cancel).keyboardShortcut(.cancelAction)

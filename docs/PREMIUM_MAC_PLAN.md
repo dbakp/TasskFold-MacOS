@@ -2709,3 +2709,10 @@ Connected Mac saved-task authoring/search/map/review/send/status/pending-discard
 Continuing the highest outstanding share-capture acceptance work uncovered an actual Apple Maps compatibility issue: its separate opaque preview previously rejected otherwise readable text and URL providers. Both apps now leave that exact ancillary preview unread, accept only its valid text/link companion, and explain the omission in review. Unknown attachments still refuse the whole selection. One 20-second provider budget spans every attachment; cancellation and late responses cannot revive a dismissed review. Neither mailbox version nor task schema changes.
 
 `SHARE_CAPTURE.md` and `p2-share-provider-evidence.json` record the independent Core suites, real source-app checks and remaining native/account/accessibility gates. This increment does not close all of rank 2/Px or any user-deferred release, provider, older-client or remote-reminder work.
+
+
+### 22 October — iPad share review and large-text acceptance
+
+Actual iPad Apple Maps capture now passes from the source extension through editable review, save with Taskfold quit, host review, explicit Add and relaunch with one durable task/receipt. Normal light and largest accessibility text in dark appearance both pass; screenshots verify readable preview-omission text and reachable Save/destination/Add/Cancel. The same current test helper passes on iPhone. Both apps own nonvisual review-form identifiers so tests scroll the actual modal rather than the source app or background list. The Maps test now targets its exact place-card Share control and waits for onboarding, avoiding the unrelated Share My Location action.
+
+`p2-tablet-share-evidence.json` records current source fingerprints, actual native results, failed initial onboarding/selector iteration and cleanup. Core/task/mailbox contracts are unchanged; this does not close cloud/offline/account-switch, live Mac or spoken-accessibility acceptance, all of rank 2/Px, or any user-deferred release/provider work.
