@@ -30,6 +30,7 @@ else:
     link_inputs = [str(x) for x in objects]
 view = (repo / 'Taskfold/Views/ReminderEditor.swift').read_text()
 view = '@testable import TaskfoldCore\nimport SwiftUI\n' + view[view.index('struct ReminderDraft:'):view.index('struct ReminderSystemSettingsButton:')]
+view += '\n' + (repo/'Taskfold/Views/HolidayCalendarReview.swift').read_text() + '\n'
 preview = r'''
 @testable import TaskfoldCore
 import SwiftUI
@@ -79,6 +80,6 @@ with tempfile.TemporaryDirectory(prefix='taskfold-interval-preview-') as folder:
 images = sorted(a.output.glob('interval-*.png'))
 if len(images) != 4:
     raise RuntimeError('Expected top and bottom of the actual scrollable editor in light/dark')
-proof = {'sourceSHA256': {f: hashlib.sha256((repo/f).read_bytes()).hexdigest() for f in ['Taskfold/Views/ReminderEditor.swift', 'Taskfold/Core/ReminderIntervalSchedule.swift', 'Taskfold/Core/Reminders.swift']}, 'images': {x.name: hashlib.sha256(x.read_bytes()).hexdigest() for x in images}, 'scope': 'Actual Mac ReminderSpecEditor compiled against this repository\'s tested Core. Read-only synthetic interval, offscreen top/bottom light/dark. No full app interaction, recording or notification delivery acceptance.'}
+proof = {'sourceSHA256': {f: hashlib.sha256((repo/f).read_bytes()).hexdigest() for f in ['Taskfold/Views/ReminderEditor.swift', 'Taskfold/Core/ReminderIntervalSchedule.swift', 'Taskfold/Core/Reminders.swift', 'Taskfold/Core/HolidayCalendar.swift', 'Taskfold/Views/HolidayCalendarReview.swift']}, 'images': {x.name: hashlib.sha256(x.read_bytes()).hexdigest() for x in images}, 'scope': 'Actual Mac ReminderSpecEditor compiled against this repository\'s tested Core. Read-only synthetic interval, offscreen top/bottom light/dark. No full app interaction, recording or notification delivery acceptance.'}
 (a.output/'manifest.json').write_text(json.dumps(proof, indent=2)+'\n')
 print('Rendered four actual Mac editor component previews')

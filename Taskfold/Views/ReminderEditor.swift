@@ -106,6 +106,7 @@ struct TaskReminderEditor: View {
     }
     private func status(_ spec: ReminderSpec) -> String {
         if !spec.enabled { return "Off" }
+        if let holiday = spec.holidaySchedule, !holiday.base.dates(after: Date(), limit: 1).isEmpty, ReminderCivilDay.current(Date(), zone: holiday.base.calendar.timeZone).map({ $0 > holiday.policy.lastDay }) == true { return "Review holiday dates to continue beyond " + String(holiday.policy.year) }
         guard let date = spec.date(task: task, calendar: .current) else { return ["recurring", "interval"].contains(spec.kind) ? "This schedule has ended" : "Waiting for a planned date" }
         if date <= Date() { return "This reminder time has passed" }
         let time = date.formatted(date: .abbreviated, time: .shortened)
@@ -140,6 +141,8 @@ struct ReminderSpecEditor: View {
     @State private var repeatText: String
     @FocusState private var repeatFocused: Bool
     @State private var choosingTimeZone = false
+    @State private var holidayPolicy: ReminderHolidayPolicy?
+    @State private var choosingHolidays = false
     @State private var sourceZone: String
     @State private var message: String?
     @State private var intervalText: String
@@ -165,6 +168,7 @@ struct ReminderSpecEditor: View {
         let minute = draft.spec.schedule.flatMap { Int($0.time.suffix(2)) } ?? source.component(.minute, from: initial)
         _repeatClock = State(initialValue: utc.date(from: DateComponents(year: 2000, month: 1, day: 1, hour: hour, minute: minute))!)
         _repeatText = State(initialValue: draft.spec.schedule?.expression ?? "every week")
+        _holidayPolicy = State(initialValue: draft.spec.holidaySchedule?.policy)
         _sourceZone = State(initialValue: initialZone)
         _timeSensitive = State(initialValue: draft.spec.timeSensitive)
         _enabled = State(initialValue: draft.spec.enabled)
@@ -231,10 +235,18 @@ struct ReminderSpecEditor: View {
                                 if let error = selectTimeZone(TimeZone.current.identifier) { message = error }
                             }.frame(minHeight: 44).accessibilityIdentifier("reminderUseCurrentZone")
                         }
-                        if let schedule = recurringSchedule, !schedule.dates(after: previewNow, limit: 1).isEmpty {
+                        Button { repeatFocused = false; choosingHolidays = true } label: {
+                            Label(holidayPolicy.map { "Holiday dates · " + String($0.year) } ?? "Add holiday policy", systemImage: "calendar.badge.minus").frame(minHeight: 44)
+                        }.accessibilityIdentifier("reminderHolidayDates")
+                        if let policy = holidayPolicy {
+                            Text(policy.source + " · " + policy.region).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            Text(policy.mode == .skip ? "Skip excluded dates" : "Move to next available day").font(.footnote)
+                            Text("Alerts stop at the end of this reviewed year. Review new dates to continue.").font(.footnote).foregroundStyle(.secondary)
+                        }
+                        if let schedule = recurringSchedule, !calendarDates(after: previewNow, limit: 1).isEmpty {
                             Text(schedule.summary).font(.footnote).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("reminderRepeatSummary")
                             Text("Upcoming alerts").font(.headline)
-                            let rows = ReminderClockPreview.rows(schedule, after: previewNow, displayZone: .current)
+                            let rows = ReminderClockPreview.rows(schedule, after: previewNow, displayZone: .current, dates: calendarDates(after: previewNow, limit: 5))
                             ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text((index == 0 ? "Next · " : "") + row.sourceText + " · " + sourceZone.replacingOccurrences(of: "_", with: " "))
@@ -265,13 +277,15 @@ struct ReminderSpecEditor: View {
                         if enabled && date <= Date() { Text("Choose a future time, or turn this reminder off.").foregroundStyle(.red) }
                     }
                 }
+            }.navigationDestination(isPresented: $choosingHolidays) {
+                HolidayCalendarReview(policy: holidayPolicy, year: holidayReviewYear) { holidayPolicy = $0 }
             }.formStyle(.grouped).accessibilityIdentifier("reminderSpecForm").navigationTitle(draft.index == nil ? "Add reminder" : "Edit reminder")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("reminderCancel") }
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { apply() }.disabled((kind == "absolute" && enabled && date <= Date()) || (kind == "recurring" && (recurringSchedule == nil || (enabled && recurringSchedule?.dates(after: Date(), limit: 1).isEmpty == true))) || (kind == "interval" && (intervalSchedule == nil || (enabled && intervalSchedule?.dates(after: previewNow, limit: 1).isEmpty == true)))).accessibilityIdentifier("reminderSave") }
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { apply() }.disabled((kind == "absolute" && enabled && date <= Date()) || (kind == "recurring" && (recurringSchedule == nil || (enabled && calendarDates(after: Date(), limit: 1).isEmpty))) || (kind == "interval" && (intervalSchedule == nil || (enabled && intervalSchedule?.dates(after: previewNow, limit: 1).isEmpty == true)))).accessibilityIdentifier("reminderSave") }
             }
         }
         .task {
@@ -377,6 +391,18 @@ struct ReminderSpecEditor: View {
         var utc = Calendar(identifier: .gregorian); utc.timeZone = TimeZone(secondsFromGMT: 0)!
         return ReminderCalendarSchedule.make(repeatText, time: String(format: "%02d:%02d", utc.component(.hour, from: repeatClock), utc.component(.minute, from: repeatClock)), start: TaskPlanner.dayKey(date, calendar: c), zone: sourceZone)
     }
+    private var holidayReviewYear: Int {
+        guard let schedule = recurringSchedule, let next = schedule.dates(after: Date(), limit: 1).first else { return recurringCalendar.component(.year, from: Date()) }
+        return schedule.calendar.component(.year, from: next)
+    }
+    private func calendarDates(after now: Date, limit: Int) -> [Date] {
+        guard let schedule = recurringSchedule else { return [] }
+        if let policy = holidayPolicy {
+            var fields = schedule.raw; fields["holiday_policy"] = .object(policy.raw)
+            return ReminderHolidaySchedule(raw: fields)?.dates(after: now, limit: limit) ?? []
+        }
+        return schedule.dates(after: now, limit: limit)
+    }
     private func apply() {
         // The sheet may have stayed open past its chosen time since the button rendered.
         guard kind != "absolute" || !enabled || date > Date() else { message = "Choose a future time, or turn this reminder off."; return }
@@ -385,12 +411,12 @@ struct ReminderSpecEditor: View {
             guard let schedule = intervalSchedule, !enabled || !schedule.dates(after: Date(), limit: 1).isEmpty else { message = "Choose a valid interval with a future alert, or turn delivery off."; return }
             changed = .interval(schedule, id: draft.spec.id, enabled: enabled)
         } else if kind == "recurring" {
-            guard let schedule = recurringSchedule, !enabled || !schedule.dates(after: Date(), limit: 1).isEmpty else { message = "Choose a valid calendar rule with a future occurrence."; return }
+            guard let schedule = recurringSchedule, !enabled || !calendarDates(after: Date(), limit: 1).isEmpty else { message = "Choose a valid calendar rule with a future occurrence."; return }
             changed = .recurring(schedule, id: draft.spec.id, enabled: enabled)
         } else { changed = kind == "absolute" ? .absolute(date, id: draft.spec.id) : .relative(before ? -minutes : minutes, id: draft.spec.id, enabled: enabled) }
         var spec = draft.spec.mergingSettings(from: changed)
         spec.raw["enabled"] = .bool(enabled)
-        guard let presented = spec.settingTimeSensitive(timeSensitive) else { message = "This reminder cannot use the selected presentation. Cancel and reopen its settings."; return }
+        guard let calendarSpec = spec.settingHolidayPolicy(kind == "recurring" ? holidayPolicy : nil), let presented = calendarSpec.settingTimeSensitive(timeSensitive) else { message = "This reminder cannot use the selected presentation. Cancel and reopen its settings."; return }
         if let error = save(presented) { message = error; return }
         dismiss()
     }

@@ -20,7 +20,30 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
     var absolute: Date? { TaskPlanning.instant(raw["at"]?.text ?? "") }
     var kind: String { raw["kind"]?.text ?? "" }
     var schedule: ReminderCalendarSchedule? { kind == "recurring" ? ReminderCalendarSchedule(raw: raw) : nil }
+    var holidaySchedule: ReminderHolidaySchedule? { (raw["version"] == .number(5) || raw["version"] == .number(4) && raw["schedule_version"] == .number(5)) ? ReminderHolidaySchedule(raw: raw) : nil }
     var intervalSchedule: ReminderIntervalSchedule? { kind == "interval" ? ReminderIntervalSchedule(raw: raw["interval_schedule"]?.object ?? [:]) : nil }
+    func settingHolidayPolicy(_ policy: ReminderHolidayPolicy?) -> ReminderSpec? {
+        let sensitive = timeSensitive
+        guard let base = settingTimeSensitive(false) else { return nil }
+        var fields = base.raw
+        if let policy {
+            guard base.kind == "recurring", base.locallyEditable else { return nil }
+            var payload = fields["holiday_policy"]?.object ?? [:]
+            if policy.origin == nil { payload.removeValue(forKey: "origin") }
+            for (key, value) in policy.raw {
+                if key == "origin", let origin = policy.origin, let previous = payload[key], CountryHolidayCalendar.Origin(raw: previous.object) == origin {
+                    var preserved = previous.object
+                    for (field, updated) in value.object { preserved[field] = updated }
+                    payload[key] = .object(preserved)
+                } else { payload[key] = value }
+            }
+            fields["version"] = .number(5); fields["holiday_policy"] = .object(payload)
+        } else {
+            if fields["version"] == .number(5) { fields["version"] = .number(2) }
+            fields.removeValue(forKey: "holiday_policy")
+        }
+        return ReminderSpec(row: .object(fields))?.settingTimeSensitive(sensitive)
+    }
     var timeSensitive: Bool { raw["version"] == .number(4) && raw["presentation"] == .string("time-sensitive") }
     /// Version 4 wraps an otherwise validated local schedule. Previous readers keep it opaque.
     func settingTimeSensitive(_ value: Bool) -> ReminderSpec? {
@@ -38,7 +61,7 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
         let row = row.object
         if row["version"] == .number(4) {
             guard row["presentation"] == .string("time-sensitive"),
-                  [JSON.number(1), .number(2), .number(3)].contains(row["schedule_version"] ?? .null),
+                  [JSON.number(1), .number(2), .number(3), .number(5)].contains(row["schedule_version"] ?? .null),
                   row["channels"] == .array([.string("local")]),
                   row["id"]?.text.lowercased() != Self.plannedID else { return nil }
             var base = row; base["version"] = row["schedule_version"]
@@ -46,7 +69,7 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
             guard let validated = ReminderSpec(row: .object(base)) else { return nil }
             self = validated; raw = row; return
         }
-        guard [JSON.number(1), .number(2), .number(3)].contains(row["version"] ?? .null), UUID(uuidString: row["id"]?.text ?? "") != nil,
+        guard [JSON.number(1), .number(2), .number(3), .number(5)].contains(row["version"] ?? .null), UUID(uuidString: row["id"]?.text ?? "") != nil,
               row["enabled"] == nil || row["enabled"] == .bool(true) || row["enabled"] == .bool(false),
               case .array(let channels)? = row["channels"], !channels.isEmpty,
               channels.allSatisfy({ ["local", "push", "email"].contains($0.text) }) else { return nil }
@@ -54,7 +77,7 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
         switch kind {
         case "relative": guard row["version"] == .number(1), row["anchor"] == .string("planned"), offset != nil else { return nil }
         case "absolute": guard row["version"] == .number(1), absolute != nil, TimeZone(identifier: row["time_zone"]?.text ?? "") != nil else { return nil }
-        case "recurring": guard row["version"] == .number(2), row["channels"] == .array([.string("local")]), schedule != nil else { return nil }
+        case "recurring": guard [JSON.number(2), .number(5)].contains(row["version"] ?? .null), row["channels"] == .array([.string("local")]), schedule != nil, row["version"] != .number(5) || holidaySchedule != nil else { return nil }
         case "interval": guard row["version"] == .number(3), row["channels"] == .array([.string("local")]), intervalSchedule != nil else { return nil }
         default: return nil
         }
@@ -75,6 +98,7 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
         ReminderSpec(row: .object(["version": .number(3), "id": .string(id), "kind": .string("interval"), "channels": .array([.string("local")]), "enabled": .bool(enabled), "interval_schedule": .object(schedule.raw)]))!
     }
     var semanticKey: String {
+        if let holidaySchedule { return "holidays|" + holidaySchedule.semanticFields.map { "\($0.utf8.count):\($0)" }.joined() }
         if let intervalSchedule { return "interval|" + intervalSchedule.semanticFields.map { "\($0.utf8.count):\($0)" }.joined() }
         if let schedule { return "recurring|" + schedule.semanticFields.map { "\($0.utf8.count):\($0)" }.joined() }
         return kind + "|" + (kind == "relative" ? String(offset ?? 0) : absolute.map(ReminderSignature.milliseconds) ?? "")
@@ -82,6 +106,7 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
     var local: Bool { raw["channels"]?.list.contains(.string("local")) == true }
     var locallyEditable: Bool { raw["channels"] == .array([.string("local")]) }
     var label: String {
+        if let holidaySchedule { return holidaySchedule.base.summary + " · " + holidaySchedule.base.time + (holidaySchedule.policy.mode == .skip ? " · skip holidays" : " · move around holidays") }
         if let intervalSchedule { return intervalSchedule.summary }
         if let schedule { return schedule.summary + " · " + schedule.time }
         if kind == "absolute", let date = absolute { return date.formatted(date: .abbreviated, time: .shortened) }
@@ -90,6 +115,7 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
         return "\(abs(offset)) min \(offset < 0 ? "before" : "after")"
     }
     func date(task: Record, calendar: Calendar, now: Date = Date()) -> Date? {
+        if let holidaySchedule { return holidaySchedule.dates(after: now, limit: 1).first }
         if let intervalSchedule { return intervalSchedule.dates(after: now, limit: 1).first }
         if let schedule { return schedule.dates(after: now, limit: 1).first }
         if kind == "absolute" { return absolute }
@@ -149,6 +175,12 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
             for (key, value) in raw["interval_schedule"]?.object ?? [:] where !known.contains(key) { payload[key] = value }
             result.raw["interval_schedule"] = .object(payload)
         }
+        if raw["holiday_policy"] != nil, replacement.raw["holiday_policy"]?.object.isEmpty == false {
+            let known = Set(["version", "year", "dates", "source", "region", "digest", "mode", "avoid_weekends"])
+            var payload = replacement.raw["holiday_policy"]!.object
+            for (key, value) in raw["holiday_policy"]!.object where !known.contains(key) { payload[key] = value }
+            result.raw["holiday_policy"] = .object(payload)
+        }
         return result
     }
     static func successorRows(_ rows: [JSON]) -> [JSON] {
@@ -162,7 +194,7 @@ struct ReminderSpec: Equatable, Identifiable, Sendable {
 /// Proleptic Gregorian civil dates. UTC seconds are an arithmetic representation,
 /// never the reminder's actual fire instant. No locale cutover or skipped zone day
 /// may change weekday/interval/count semantics.
-private struct ReminderCivilDay: Comparable {
+struct ReminderCivilDay: Comparable, Hashable {
     let year: Int, month: Int, day: Int
     var key: String { String(format: "%04d-%02d-%02d", year, month, day) }
     static func monthLength(_ year: Int, _ month: Int) -> Int {
@@ -302,7 +334,7 @@ struct ReminderCalendarSchedule: Equatable, Sendable {
         if rule.string("type") == "yearly", rule["monthOfYear"] == .null { return nil }
         guard day.first(rule) == day, instant(on: day) != nil else { return nil }
     }
-    private func instant(on day: ReminderCivilDay) -> Date? {
+    func instant(on day: ReminderCivilDay) -> Date? {
         let zone = TimeZone(identifier: timeZone)!, wall = Double(day.serial * 86400 + Int(time.prefix(2))! * 3600 + Int(time.suffix(2))! * 60)
         let offsets = Set(stride(from: -36, through: 36, by: 6).map { zone.secondsFromGMT(for: Date(timeIntervalSince1970: wall + Double($0 * 3600))) })
         // Match adjacent actual offsets. Earliest exact match is the first autumn fold;
@@ -440,8 +472,8 @@ enum ReminderClockPreview {
         let sourceOffset: Int
         let deviceOffset: Int
     }
-    static func rows(_ schedule: ReminderCalendarSchedule, after now: Date, displayZone: TimeZone, limit: Int = 5, locale: Locale = .current) -> [Row] {
-        let dates = schedule.dates(after: now, limit: min(5, max(0, limit)))
+    static func rows(_ schedule: ReminderCalendarSchedule, after now: Date, displayZone: TimeZone, limit: Int = 5, locale: Locale = .current, dates: [Date]? = nil) -> [Row] {
+        let dates = Array((dates ?? schedule.dates(after: now, limit: min(5, max(0, limit)))).prefix(min(5, max(0, limit))))
         let source = schedule.calendar.timeZone
         func formatter(_ zone: TimeZone) -> DateFormatter {
             let f = DateFormatter(); f.locale = locale
@@ -491,6 +523,10 @@ enum ReminderSignature {
         if spec.timeSensitive, let base = spec.settingTimeSensitive(false) {
             let fields = ["taskfold.reminder.v7", make(task: task, spec: base, date: date), "time-sensitive"]
             return "r7:" + DueReminder.digest(fields.map { "\($0.utf8.count):\($0)" }.joined())
+        }
+        if let schedule = spec.holidaySchedule {
+            let fields = ["taskfold.reminder.v8", task.id.lowercased(), spec.id] + schedule.semanticFields + ["local", "1", milliseconds(date), String(task["completion_version"].integer), task.string("task_generation").lowercased()]
+            return "r8:" + DueReminder.digest(fields.map { "\($0.utf8.count):\($0)" }.joined())
         }
         let generation = task.string("task_generation").lowercased()
         if let schedule = spec.intervalSchedule {
@@ -553,7 +589,9 @@ struct DueReminder: Equatable, Sendable {
         var result: [DueReminder] = []
         for task in tasks {
             for spec in specifications(task, channels: channels) {
-                if let schedule = spec.intervalSchedule {
+                if let schedule = spec.holidaySchedule {
+                    for date in schedule.dates(after: now) { result.append(event(task: task, spec: spec, date: date)) }
+                } else if let schedule = spec.intervalSchedule {
                     for date in schedule.dates(after: now) { result.append(event(task: task, spec: spec, date: date)) }
                 } else if let schedule = spec.schedule {
                     for date in schedule.dates(after: now) { result.append(event(task: task, spec: spec, date: date)) }
@@ -568,7 +606,9 @@ struct DueReminder: Equatable, Sendable {
         guard let task = tasks.first(where: { $0.id == taskID }),
               let spec = specifications(task, channels: ["local"]).first(where: { $0.id == specID }) else { return nil }
         let date: Date?
-        if let schedule = spec.intervalSchedule {
+        if let schedule = spec.holidaySchedule {
+            guard let originalAt, schedule.contains(originalAt) else { return nil }; date = originalAt
+        } else if let schedule = spec.intervalSchedule {
             guard let originalAt, schedule.contains(originalAt) else { return nil }; date = originalAt
         } else if let schedule = spec.schedule {
             guard let originalAt, schedule.contains(originalAt) else { return nil }; date = originalAt
@@ -611,7 +651,7 @@ struct ReminderState: Sendable {
     var timeSensitiveAllowed = false
     func permitsOriginal(_ event: DueReminder) -> Bool {
         // Interval and Time Sensitive specs are explicitly local-only; the server excludes them.
-        event.kind == .focusFinish || (event.kind == .task && (event.signature.hasPrefix("r6:") || event.signature.hasPrefix("r7:"))) || (!deliveryAuthorityUnreadable && (deliveryAuthority?.allowsLocalOriginal(account: deliveryAuthorityAccount ?? account, at: event.date) ?? true))
+        event.kind == .focusFinish || (event.kind == .task && (event.signature.hasPrefix("r6:") || event.signature.hasPrefix("r7:") || event.signature.hasPrefix("r8:"))) || (!deliveryAuthorityUnreadable && (deliveryAuthority?.allowsLocalOriginal(account: deliveryAuthorityAccount ?? account, at: event.date) ?? true))
     }
     func validated(_ event: DueReminder) -> DueReminder? {
         if let matching = events.first(where: { $0.kind == event.kind && $0.taskID == event.taskID && $0.specID == event.specID && $0.hasSignature(event.signature) }) { return matching }

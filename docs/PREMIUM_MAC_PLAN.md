@@ -2587,3 +2587,11 @@ Added an owned native named-zone chooser and source/device clock comparison for 
 ## 21 October — opt-in Time Sensitive presentation
 
 Added native reminder-level presentation and an independent default-off device/workspace allowance. Actual system support is read before queue construction; unavailable/disabled support keeps normal content. Pending/snoozed requests update without shifting dates, while a task presentation edit invalidates old actions. Version-4 local-only settings are preserved opaquely by the selected previous reader. Current Mac provisioning cannot sign this new capability; unsigned compilation and offscreen production-view checks are explicitly separate from genuine native capability/Focus/distribution acceptance. Exact evidence and broader open work are in `p2-reminder-presentation-evidence.json` and `REMINDER_PRESENTATION.md`.
+
+
+## 21 October — reviewed holiday calendar reminders
+
+Added owned bounded calendar-file parsing, reviewed source/year/region and explicit Skip/Move/weekend policies for independent calendar reminders. Scheduling keeps source clocks, original count/end limits and task planning separate; shifted collisions coalesce and exact receipt validation includes the policy. Both apps preserve unknown previous-reader settings and portable backup/queue data. The native review keeps source labels visible and uses ordinary navigation. Exact Core/native/render outcomes and remaining Mac/file-provider/VoiceOver/notification acceptance are in `p2-holiday-reminders-evidence.json`; the contract is in `HOLIDAY_REMINDERS.md`. No country provider, remote reminder, release signing or role policy is enabled.
+
+
+Holiday reminders now offer automatic country/year calendars first, with explicit regional Public filtering, reviewed offline snapshots and optional all-day calendar-file import. Both production Core and native Mac editor compile independently. Offscreen component rendering is separate from native interaction; the locked Mac and deferred Time Sensitive signing still prevent that acceptance. Provider commercial sponsorship is a release dependency. See `HOLIDAY_REMINDERS.md` and `p2-holiday-reminders-evidence.json`; rank 5 and remaining Px work stay open.

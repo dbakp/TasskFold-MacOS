@@ -26,6 +26,7 @@ else:
     link = [str(x) for x in sorted((modules.parent/'TaskfoldCore.build').glob('*.swift.o'))]
 view = (repo/'Taskfold/Views/ReminderEditor.swift').read_text()
 view = '@testable import TaskfoldCore\nimport SwiftUI\nimport AppKit\n' + view[view.index('struct ReminderDraft:'):view.index('struct ReminderSystemSettingsButton:')]
+view += '\n' + (repo/'Taskfold/Views/HolidayCalendarReview.swift').read_text() + '\n'
 fixture = r'''
 private extension ReminderTimeZonePicker {
     init(previewSelection: String, previewQuery: String) {
@@ -83,6 +84,6 @@ with tempfile.TemporaryDirectory(prefix='taskfold-travel-preview-') as folder:
 images = sorted(a.output.glob('*.png'))
 if len(images) != 6:
     raise RuntimeError('Expected six light/dark editor/picker component captures')
-proof = {'sourceSHA256': {f: hashlib.sha256((repo/f).read_bytes()).hexdigest() for f in ['Taskfold/Core/Reminders.swift', 'Taskfold/Views/ReminderEditor.swift']}, 'images': {x.name: hashlib.sha256(x.read_bytes()).hexdigest() for x in images}, 'scope': 'Production Mac editor/picker bodies with read-only synthetic state, tested owned Core, offscreen light/dark rendering. Picker query seeded by fixture-only extension. Window chrome/native interaction/VoiceOver/notification delivery not accepted by these components.'}
+proof = {'sourceSHA256': {f: hashlib.sha256((repo/f).read_bytes()).hexdigest() for f in ['Taskfold/Core/Reminders.swift', 'Taskfold/Views/ReminderEditor.swift', 'Taskfold/Core/HolidayCalendar.swift', 'Taskfold/Views/HolidayCalendarReview.swift']}, 'images': {x.name: hashlib.sha256(x.read_bytes()).hexdigest() for x in images}, 'scope': 'Production Mac editor/picker bodies with read-only synthetic state, tested owned Core, offscreen light/dark rendering. Picker query seeded by fixture-only extension. Window chrome/native interaction/VoiceOver/notification delivery not accepted by these components.'}
 (a.output/'manifest.json').write_text(json.dumps(proof, indent=2)+'\n')
 print('Rendered six actual reminder travel/zone-picker components')
