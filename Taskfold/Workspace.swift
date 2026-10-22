@@ -675,7 +675,7 @@ extension Workspace {
     static func subtaskPath(_ id: String) -> [String]? {
         SubtaskTree.referencePath(id)
     }
-    static func childKey(_ value: JSON, index: Int) -> String { value.object["id"]?.text.isEmpty == false ? value.object["id"]!.text : "@\(index)" }
+    static func childKey(_ value: JSON, index: Int) -> String { SubtaskTree.childKey(value, index: index) }
     func childID(parent: String, value: JSON, index: Int) -> String {
         SubtaskTree.reference(parent: parent, key: Self.childKey(value, index: index))
     }
@@ -684,8 +684,8 @@ extension Workspace {
         guard let path = Self.subtaskPath(id) else { return store.record("tasks", id: id) }
         guard var item = store.record("tasks", id: path[0]) else { return nil }
         for key in path.dropFirst() {
-            guard let pair = item["subtasks"].list.enumerated().first(where: { Self.childKey($0.element, index: $0.offset) == key }) else { return nil }
-            item = Record(pair.element.object)
+            guard let index = SubtaskTree.uniqueChildIndex(item["subtasks"], key: key) else { return nil }
+            item = Record(item["subtasks"].list[index].object)
         }
         item["id"] = .string(id)
         return item
@@ -703,7 +703,7 @@ extension Workspace {
     static func replacing(_ root: Record, path: [String], value: Record?) -> Record? {
         guard let key = path.first else { return value }
         var list = root["subtasks"].list
-        guard let index = list.enumerated().first(where: { childKey($0.element, index: $0.offset) == key })?.offset else { return nil }
+        guard let index = SubtaskTree.uniqueChildIndex(root["subtasks"], key: key) else { return nil }
         if path.count == 1 {
             if var value {
                 value.fields["id"] = list[index].object["id"]

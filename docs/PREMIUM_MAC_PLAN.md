@@ -2676,3 +2676,8 @@ See `p2-location-setup-evidence.json` and the current `LOCATION_REMINDERS.md` se
 ### 22 October — durable waiting snoozes
 
 Ordinary explicit snoozes now save their exact fire instant before queue admission. Added bounded local recovery, durable submission reservations, monotonic cancellation/Undo protection and separately stored delivery epochs; Mac hydration/admission is coalesced to avoid treating an in-flight reservation as a failed restart. Current native/Core checks and precise limits live in `p2-time-snooze-recovery-evidence.json` and `REMINDER_SNOOZE.md`. Live Mac Notification Center/physical interaction remains unverified while the desktop is locked. No visual redesign, remote activation or release/provider work is implied.
+
+
+### 22 October — checklist recovery review
+
+Added a native grouped-form review to recover damaged/duplicated checklist references while preserving recognized content and ordering. Original data stays available and unknown formats are not guessed. Work runs off the UI actor; normal inspector save/Undo and workspace/source guards own persistence. Child lookup/replacement now refuse ambiguous references, and inline edits/addition cannot coerce legacy/unknown structures. See `CHECKLIST_RECOVERY.md` and `p2-checklist-recovery-evidence.json` for independently owned tests, offscreen production component layouts, build scope and still-open live Mac/accessibility acceptance. Wider Px and all user deferrals stay open.

@@ -257,6 +257,7 @@ struct TaskInspectorForm: View {
             }
             if workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty {
             Section("Subtasks") {
+                let childIndices = SubtaskTree.uniqueChildIndices(draft["subtasks"])
                         SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID), saveAndOpen: { children, path in
                     let previous = draft
                     draft["subtasks"] = children
@@ -266,7 +267,7 @@ struct TaskInspectorForm: View {
                     return true
                 })
                 ForEach(Array(draft["subtasks"].list.enumerated()), id: \.offset) { index, value in
-                    let title = value.object["title"]?.text ?? ""
+                    let title = SubtaskTree.inlineTitle(value)
                     let completed = value.object["completed"]?.flag == true
                     let accessibleTitle = title.isEmpty ? "untitled subtask" : title
                     HStack {
@@ -276,7 +277,7 @@ struct TaskInspectorForm: View {
                             .accessibilityLabel((completed ? "Reopen " : "Complete ") + accessibleTitle)
                             .accessibilityValue(completed ? "Completed" : "Not completed")
                             .accessibilityIdentifier("subtaskCompletion-\(index)")
-                        TextField("Subtask", text: Binding(get: { draft["subtasks"].list[index].object["title"]?.text ?? "" }, set: { title in var list = draft["subtasks"].list; var item = list[index].object; item["title"] = .string(title); list[index] = .object(item); draft["subtasks"] = .array(list) }), prompt: Text("Subtask"), axis: .vertical)
+                        TextField("Subtask", text: Binding(get: { SubtaskTree.inlineTitle(draft["subtasks"].list[index]) }, set: { title in var list = draft["subtasks"].list; var item = list[index].object; item["title"] = .string(title); list[index] = .object(item); draft["subtasks"] = .array(list) }), prompt: Text("Subtask"), axis: .vertical)
                             .labelsHidden().textFieldStyle(.plain)
                         Button {
                             saveNow()
@@ -284,10 +285,11 @@ struct TaskInspectorForm: View {
                             workspace.open(workspace.childID(parent: taskID, value: value, index: index))
                         } label: { Image(systemName: "sidebar.trailing") }
                             .buttonStyle(.borderless).accessibilityLabel("Open details for " + accessibleTitle)
+                            .disabled(childIndices[Workspace.childKey(value, index: index)] != index)
                         Button { var list = draft["subtasks"].list; list.remove(at: index); draft["subtasks"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove " + accessibleTitle)
-                    }
+                    }.disabled(!SubtaskTree.inlineEditable(value))
                 }
-                HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).accessibilityIdentifier("addSubtask").labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).accessibilityLabel("Add subtask").disabled(subtask.trimmingCharacters(in: .whitespaces).isEmpty || workspace.taskDepth(taskID) >= SubtaskTree.maximumDepth) }
+                HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).accessibilityIdentifier("addSubtask").labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).accessibilityLabel("Add subtask").disabled(!SubtaskTree.hasListContainer(draft["subtasks"]) || subtask.trimmingCharacters(in: .whitespaces).isEmpty || workspace.taskDepth(taskID) >= SubtaskTree.maximumDepth) }
             }
             }
             Section("Attachments") {

@@ -1,0 +1,10 @@
+{
+  "images": {
+    "recovery-light.png": "2294119560d73ba8deb583abda5bdab4150c76a1d58e940778c55e4279a12b9f",
+    "recovery-dark.png": "f79840493130933d4d446bec17d2342fa26ef5c8f8de8f3aff2f655f70b118ad"
+  },
+  "sourceSHA256": {
+    "Taskfold/Views/SubtaskOrganizer.swift": "b35b5d747628aa3af90956af7f78fb3b79dd1ae32d881c63358c5f8ed0c89217"
+  },
+  "scope": "Actual production review component with data-only review fixture, default native tint, offscreen AppKit light/dark layout. No accounts, real Store, input, recovery mutation, Share action or full-app accessibility acceptance."
+}

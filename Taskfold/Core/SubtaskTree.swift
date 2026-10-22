@@ -2,9 +2,35 @@ import Foundation
 
 /// Checklist operations retain every field and move whole branches by identity.
 enum SubtaskTree {
-    struct Failure: LocalizedError {
+    struct Failure: LocalizedError, Sendable {
         let message: String
         var errorDescription: String? { message }
+    }
+    static func hasListContainer(_ value: JSON) -> Bool { if value == .null { return true }; if case .array = value { return true }; return false }
+    static func inlineEditable(_ value: JSON) -> Bool { if case .object(let fields) = value, case .string? = fields["title"] { return true }; return false }
+    static func inlineTitle(_ value: JSON) -> String { if case .string(let text) = value { return text }; return value.object["title"]?.text ?? "" }
+    static func childKey(_ value: JSON, index: Int) -> String { value.object["id"]?.text.isEmpty == false ? value.object["id"]!.text : "@\(index)" }
+    /// Legacy positional paths remain readable, but neither duplicated references
+    /// nor unknown/text-only nodes may become an arbitrary editable child.
+    static func uniqueChildIndex(_ value: JSON, key: String) -> Int? {
+        guard case .array(let rows) = value else { return nil }
+        var found: Int?
+        for (index, row) in rows.enumerated() where childKey(row, index: index) == key {
+            guard found == nil, inlineEditable(row) else { return nil }; found = index
+        }
+        return found
+    }
+    /// One pass for a whole rendered inspector, instead of rescanning all siblings
+    /// for each row's enabled state.
+    static func uniqueChildIndices(_ value: JSON) -> [String: Int] {
+        guard case .array(let rows) = value else { return [:] }
+        var counts: [String: Int] = [:], result: [String: Int] = [:]
+        for (index, row) in rows.enumerated() {
+            let key = childKey(row, index: index)
+            counts[key, default: 0] += 1
+            if counts[key] == 1 && inlineEditable(row) { result[key] = index } else { result[key] = nil }
+        }
+        return result
     }
     static let maximumDepth = 10
     static let readableDepth = 32
@@ -140,6 +166,7 @@ enum SubtaskTree {
         return replacing(value, parent: item.parent, rows: siblings(value, parent: item.parent).filter { $0.object["id"]?.text != id })
     }
     static func adding(_ value: JSON, title: String, parent: String? = nil, baseDepth: Int = 0) throws -> JSON {
+        guard hasListContainer(value) else { throw Failure(message: "Open Organize subtasks to review this checklist before adding items. Its original content is unchanged.") }
         let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !title.isEmpty else { throw Failure(message: "Give the subtask a name.") }
         guard baseDepth >= 0, baseDepth < maximumDepth else { throw Failure(message: "Subtasks can be nested up to 10 levels.") }
@@ -308,7 +335,7 @@ struct TaskHierarchyIndex {
     private static let editable: Set<String> = ["title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "subtasks", "comments", "attachments"]
     private static func failure(_ message: String) -> SubtaskTree.Failure { SubtaskTree.Failure(message: message) }
     private static func validIdentity(_ id: String) -> Bool {
-        !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && id.unicodeScalars.count <= 400 && !id.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) })
+        ChecklistRecovery.validIdentity(id)
     }
 
     init(roots: [Record], projects: [Record], workspace: WorkspaceBinding) throws {
@@ -644,5 +671,121 @@ extension TaskSelectionPlan {
             return Mutation(table: "tasks", recordID: id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: original))
         }
         return patches + inserts
+    }
+}
+
+/// Explicit, lossless recovery of recognizable checklist content. Never guesses
+/// unknown node formats or silently drops a field/branch to make a tree editable.
+enum ChecklistRecovery {
+    static let maximumItems = 10_000
+    static let maximumBytes = 2_100_000
+    enum Reason: String, Sendable { case missing, duplicate, invalid, textOnly }
+    struct Change: Identifiable, Equatable, Sendable {
+        let path: [Int]
+        let title: String
+        let reason: Reason
+        var id: String { path.map(String.init).joined(separator: ".") }
+        var depth: Int { max(0, path.count - 1) }
+    }
+    struct Review: Equatable, Sendable {
+        let source: JSON
+        let proposed: JSON
+        let changes: [Change]
+        let itemCount: Int
+        func applying(to current: JSON) throws -> JSON {
+            guard current == source else { throw SubtaskTree.Failure(message: "This checklist changed. Cancel and reopen it before recovering subtasks.") }
+            return proposed
+        }
+    }
+    static func validIdentity(_ id: String) -> Bool {
+        !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && id.unicodeScalars.count <= 400 &&
+            !id.unicodeScalars.contains { CharacterSet.controlCharacters.contains($0) }
+    }
+    /// Bound opaque metadata as well as the visible tree before rendering a review.
+    static func originalData(_ source: JSON) throws -> Data {
+        var nodes = 0, remaining = maximumBytes
+        func charge(_ count: Int) throws {
+            guard count <= remaining else { throw SubtaskTree.Failure(message: "This checklist is too large to recover here. Its original content is kept in the task and workspace backups.") }
+            remaining -= count
+        }
+        func visit(_ value: JSON, depth: Int) throws {
+            try Task.checkCancellation()
+            nodes += 1
+            guard nodes <= 100_000, depth <= 128 else { throw SubtaskTree.Failure(message: "This checklist is too complex to recover here. Your saved content is unchanged.") }
+            try charge(8)
+            switch value {
+            case .string(let text): try charge(text.utf8.count)
+            case .number(let number): guard number.isFinite else { throw SubtaskTree.Failure(message: "This checklist contains unreadable data. Your saved content is unchanged.") }
+            case .array(let values): for child in values { try visit(child, depth: depth + 1) }
+            case .object(let fields): for (key, child) in fields { try charge(key.utf8.count); try visit(child, depth: depth + 1) }
+            case .null, .bool: break
+            }
+        }
+        try visit(source, depth: 0)
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .prettyPrinted, .withoutEscapingSlashes]
+        let data = try encoder.encode(source)
+        guard data.count <= maximumBytes else { throw SubtaskTree.Failure(message: "This checklist is too large to recover here. Its original content is kept in the task and workspace backups.") }
+        return data
+    }
+    static func review(_ source: JSON, baseDepth: Int = 0, makeID: () -> String = { UUID().uuidString.lowercased() }) throws -> Review {
+        _ = try originalData(source)
+        guard baseDepth >= 0, baseDepth < SubtaskTree.readableDepth, source == .null || { if case .array = source { return true }; return false }() else {
+            throw SubtaskTree.Failure(message: "This checklist uses an unfamiliar format. View its original data; recovery has not changed it.")
+        }
+        var counts: [String: Int] = [:], count = 0
+        func inspect(_ values: [JSON], depth: Int) throws {
+            guard values.isEmpty || depth + baseDepth < SubtaskTree.readableDepth else { throw SubtaskTree.Failure(message: "This checklist is too deeply nested to recover here. Your saved content is unchanged.") }
+            for value in values {
+                try Task.checkCancellation()
+                count += 1
+                guard count <= maximumItems else { throw SubtaskTree.Failure(message: "Recover up to 10,000 subtasks at once. Your saved checklist is unchanged.") }
+                if case .string = value { continue } // Legacy text-only checklist item.
+                guard case .object(let fields) = value, case .string? = fields["title"] else {
+                    throw SubtaskTree.Failure(message: "A subtask uses an unfamiliar format. View its original data; recovery has not changed it.")
+                }
+                if case .string(let id)? = fields["id"], validIdentity(id) { counts[id, default: 0] += 1 }
+                if let children = fields["subtasks"], children != .null {
+                    guard case .array(let rows) = children else { throw SubtaskTree.Failure(message: "A nested checklist uses an unfamiliar format. View its original data; recovery has not changed it.") }
+                    try inspect(rows, depth: depth + 1)
+                }
+            }
+        }
+        try inspect(source.list, depth: 0)
+        var reserved = Set(counts.keys), changes: [Change] = []
+        func fresh() throws -> String {
+            for _ in 0..<64 {
+                let id = makeID()
+                guard UUID(uuidString: id)?.uuidString.lowercased() == id else { continue }
+                if reserved.insert(id).inserted { return id }
+            }
+            throw SubtaskTree.Failure(message: "New subtask references could not be prepared. Your checklist is unchanged; try again.")
+        }
+        func recover(_ values: [JSON], path: [Int]) throws -> [JSON] {
+            try values.enumerated().map { index, value in
+                try Task.checkCancellation()
+                let position = path + [index]
+                if case .string(let text) = value {
+                    changes.append(Change(path: position, title: text, reason: .textOnly))
+                    return .object(["id": .string(try fresh()), "title": .string(text), "completed": .bool(false)])
+                }
+                var fields = value.object
+                let identity = fields["id"], id = identity?.text ?? ""
+                let reason: Reason?
+                if identity == nil || identity == .null || identity == .string("") { reason = .missing }
+                else if case .string = identity, validIdentity(id) { reason = counts[id, default: 0] > 1 ? .duplicate : nil }
+                else { reason = .invalid }
+                if let reason {
+                    fields["id"] = .string(try fresh())
+                    changes.append(Change(path: position, title: fields["title"]!.text, reason: reason))
+                }
+                if case .array(let children)? = fields["subtasks"] { fields["subtasks"] = .array(try recover(children, path: position)) }
+                return .object(fields)
+            }
+        }
+        let proposed: JSON = .array(try recover(source.list, path: []))
+        _ = try originalData(proposed) // A recovered result must remain editable on its next opening.
+        let root = Record(["id": .string("checklist-recovery-root"), "title": .string("Checklist"), "subtasks": proposed])
+        _ = try TaskHierarchyIndex(roots: [root], projects: [], workspace: WorkspaceBinding(account: "checklist-review", generation: UUID()))
+        return Review(source: source, proposed: proposed, changes: changes, itemCount: count)
     }
 }

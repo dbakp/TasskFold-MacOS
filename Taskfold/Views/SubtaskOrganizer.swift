@@ -28,7 +28,13 @@ private struct SubtaskOrganizer: View {
     @State private var originalTaskID: String
     @State private var draft: JSON
     @State private var binding: WorkspaceBinding?
+    @State private var preparing = true
+    @State private var prepared = false
     @State private var loadError: String?
+    @State private var recovery: ChecklistRecovery.Review?
+    @State private var recoveredCount: Int?
+    @State private var originalText: String?
+    @State private var showingOriginal = false
     @State private var message: String?
     @State private var newTitle = ""
     @State private var addingTo: String?
@@ -40,15 +46,25 @@ private struct SubtaskOrganizer: View {
         _children = children; self.taskID = taskID; self.baseDepth = baseDepth; self.projectID = projectID; self.saveAndOpen = saveAndOpen
         _source = State(initialValue: children.wrappedValue)
         _originalTaskID = State(initialValue: taskID)
-        do { _draft = State(initialValue: try SubtaskTree.prepared(children.wrappedValue)); _loadError = State(initialValue: nil) }
-        catch { _draft = State(initialValue: .array([])); _loadError = State(initialValue: error.localizedDescription) }
+        _draft = State(initialValue: .array([]))
     }
     private var items: [SubtaskTree.Item] { SubtaskTree.outline(draft) }
     var body: some View {
         NavigationStack {
             Form {
-                if let loadError { Section { Text(loadError).foregroundStyle(.secondary) } }
-                else {
+                if preparing {
+                    Section { ProgressView("Reading checklist…").accessibilityIdentifier("preparingChecklist") }
+                } else if let recovery {
+                    ChecklistRecoveryReview(review: recovery, recover: applyRecovery, original: showOriginal)
+                } else if let loadError {
+                    Section {
+                        Text(loadError).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("subtaskRecoveryRefusal")
+                        Button("View original data", action: showOriginal).accessibilityIdentifier("viewOriginalChecklist")
+                    }
+                } else {
+                    if let recoveredCount {
+                        Section { Text("\(recoveredCount) subtasks recovered in this draft. Save when you’re ready.").font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("subtaskRecoveryDraftNotice") }
+                    }
                     Section {
                         ForEach(items) { item in
                             HStack(alignment: .center, spacing: 8) {
@@ -101,12 +117,13 @@ private struct SubtaskOrganizer: View {
                     } footer: { Text(helpText) }
                 }
                 if let message { Section { Text(message).foregroundStyle(.red).accessibilityIdentifier("subtaskOrganizerError") } }
-            }.formStyle(.grouped)
+            }.formStyle(.grouped).accessibilityIdentifier("subtaskOrganizerForm")
             .navigationTitle("Organize subtasks")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction) }
-                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).keyboardShortcut("s", modifiers: .command).disabled(loadError != nil || items.contains { $0.record.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }).accessibilityIdentifier("saveSubtaskOrganizer") }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction).accessibilityIdentifier("cancelSubtaskOrganizer") }
+                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).keyboardShortcut("s", modifiers: .command).disabled(preparing || recovery != nil || loadError != nil || items.contains { $0.record.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }).accessibilityIdentifier("saveSubtaskOrganizer") }
             }
+            .sheet(isPresented: $showingOriginal) { if let originalText { OriginalChecklistView(text: originalText) } }
             #if os(iOS)
             .sheet(item: $editingChild) { request in
                 TaskEditor(task: SubtaskTree.detailDraft(request.record, project: projectID), embeddedSave: { edited in
@@ -133,7 +150,40 @@ private struct SubtaskOrganizer: View {
         #if os(macOS)
         .frame(minWidth: 580, idealWidth: 660, minHeight: 440, idealHeight: 600)
         #endif
-        .onAppear { if binding == nil { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) } }
+        .task { await prepare() }
+    }
+    @MainActor private func prepare() async {
+        guard !prepared else { return }; prepared = true
+        let workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+        binding = workspace
+        let input = source, depth = baseDepth
+        let job = Task.detached(priority: .userInitiated) { () -> Result<ChecklistRecovery.Review, SubtaskTree.Failure> in
+            do { return .success(try ChecklistRecovery.review(input, baseDepth: depth)) }
+            catch { return .failure(SubtaskTree.Failure(message: error.localizedDescription)) }
+        }
+        let result = await withTaskCancellationHandler(operation: { await job.value }, onCancel: { job.cancel() })
+        guard !Task.isCancelled else { return }
+        preparing = false
+        guard workspace.matches(account: store.userID, generation: store.workspaceGeneration), taskID == originalTaskID, children == input else {
+            loadError = "The task or workspace changed. Cancel and reopen this checklist."; return
+        }
+        switch result {
+        case .success(let review): recovery = review.changes.isEmpty ? nil : review; draft = review.changes.isEmpty ? review.proposed : .array([])
+        case .failure(let error): loadError = error.localizedDescription
+        }
+    }
+    private func showOriginal() {
+        do { originalText = String(decoding: try ChecklistRecovery.originalData(source), as: UTF8.self); showingOriginal = true }
+        catch { message = error.localizedDescription }
+    }
+    private func applyRecovery() {
+        guard let recovery, binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true,
+              taskID == originalTaskID else { message = "The task or workspace changed. Cancel and reopen this checklist."; return }
+        do {
+            draft = try recovery.applying(to: children)
+            recoveredCount = recovery.changes.count
+            self.recovery = nil; loadError = nil; message = nil
+        } catch { message = error.localizedDescription }
     }
     private var helpText: String {
         let actions = "Move a subtask with all of its children. Indent places it inside the subtask above; Outdent places it after its parent. "
@@ -156,7 +206,7 @@ private struct SubtaskOrganizer: View {
     }
     private func save() { commit(opening: nil) }
     private func commit(opening childID: String?) {
-        guard binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true,
+        guard !preparing, recovery == nil, loadError == nil, binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true,
               taskID == originalTaskID, children == source else {
             message = "The task or workspace changed. Cancel and reopen the organizer to keep the latest work."; return
         }
@@ -171,5 +221,65 @@ private struct SubtaskOrganizer: View {
             } else { children = saved }
             dismiss()
         } catch { message = error.localizedDescription }
+    }
+}
+
+// MARK: Checklist recovery review
+/// Pure review content shared by the native organizer and component layout checks.
+struct ChecklistRecoveryReview: View {
+    let review: ChecklistRecovery.Review
+    let recover: () -> Void
+    let original: () -> Void
+    var body: some View {
+        Section {
+            Label("Make this checklist editable", systemImage: "list.bullet.clipboard").font(.headline)
+            Text("Recovery keeps the checklist’s text, details, order and completion. It gives affected subtasks separate references so changes reach the right item.")
+                .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            Text("\(review.changes.count) of \(review.itemCount) subtasks need recovery.").font(.subheadline.weight(.medium))
+                .accessibilityIdentifier("subtaskRecoverySummary")
+        } footer: {
+            Text("Text-only checklist items become open subtasks. Existing shortcuts to recovered items need to be opened again. No task is saved at this step.")
+        }
+        Section("Review affected subtasks") {
+            ForEach(review.changes) { change in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(change.title.isEmpty ? "Untitled subtask" : change.title).fixedSize(horizontal: false, vertical: true)
+                    Text(reason(change.reason)).font(.caption).foregroundStyle(.secondary)
+                }.padding(.leading, CGFloat(min(change.depth, 4)) * 12)
+                .accessibilityElement(children: .combine)
+            }
+        }
+        Section {
+            Button("Recover in this draft", action: recover).frame(minHeight: 44).accessibilityIdentifier("applySubtaskRecovery")
+            Button("View original data", action: original).frame(minHeight: 44).accessibilityIdentifier("viewOriginalChecklist")
+        }
+    }
+    private func reason(_ reason: ChecklistRecovery.Reason) -> String {
+        switch reason {
+        case .missing: "Missing reference"
+        case .duplicate: "Shared reference — each affected item gets its own"
+        case .invalid: "Unreadable reference"
+        case .textOnly: "Text-only checklist item"
+        }
+    }
+}
+
+private struct OriginalChecklistView: View {
+    let text: String
+    @Environment(\.dismiss) private var dismiss
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                Text(verbatim: text).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading).padding().accessibilityIdentifier("originalChecklistData")
+            }.navigationTitle("Original checklist")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() }.accessibilityIdentifier("closeOriginalChecklist") }
+                ToolbarItem(placement: .primaryAction) { ShareLink(item: text) { Label("Share original", systemImage: "square.and.arrow.up") } }
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 560, minHeight: 440)
+        #endif
     }
 }

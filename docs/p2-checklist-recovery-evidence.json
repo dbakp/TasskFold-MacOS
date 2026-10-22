@@ -1,0 +1,199 @@
+{
+  "milestone": "Reviewed damaged checklist identity recovery and lossless legacy text conversion",
+  "date": "2026-10-22",
+  "repository": "TasskFold-MacOS",
+  "status": "Implemented within current recovery/native scope; wider rank3 and Px remain incomplete",
+  "parentCommit": "f2d556b99b5e1213b2db6448dd50cabc38878bd5",
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "5d987d96eed7cab9267d4a2024f53641479c562e79f9aff007986e49ddef9260",
+    "Taskfold/Views/SubtaskOrganizer.swift": "b35b5d747628aa3af90956af7f78fb3b79dd1ae32d881c63358c5f8ed0c89217",
+    "TaskfoldTests/ChecklistRecoveryTests.swift": "61793b93fbf1bb9bfe35d15826cef2aa54e0a517c59a11e454cc87da588742fd",
+    "Taskfold/Views/TaskInspector.swift": "ad6d4d7538b071e97cee4224926d892fb3660507097d017b8312a9fce41f1409",
+    "Taskfold/Workspace.swift": "b37c71817a05fc023151de32f030fb09431f5c86b74e2c12ba3ee6e4a4bcb148",
+    "Scripts/render_checklist_recovery.py": "dbb4e2bc7d8a715749abeb2efd901ad5f402f917b7bfef11be54f264b75a84eb"
+  },
+  "behavior": {
+    "review": "Missing/null/empty/malformed/oversized/control-character and duplicated child references require explicit review; all occurrences of duplicate references are regenerated. Unique valid legacy identities remain unchanged. Raw strings become named open subtasks after explicit review.",
+    "preservation": "Object fields other than affected id values, order, nesting, completion, notes, scheduling, assignments, labels, discussions, attachments and unknown metadata preserved. No guessed title or partial salvage of unknown structures.",
+    "save": "Prepare is cancellable/off-main-actor. Review/Apply has no task write. Source/task/workspace guards before apply/save. iOS organizer Save updates parent draft and parent Save persists; Mac uses existing inspector save/Undo. Original data is bounded literal JSON with explicit system Share action.",
+    "bounds": "10000 checklist nodes,32 total child levels including base depth,100000 JSON values,128 JSON levels,2.1MB encoded original AND proposed data; full TaskHierarchyIndex/reference-storage validation. UUID allocation reserves all existing valid references and has64 retries. Refusal returns no partial proposed tree.",
+    "inlineSafety": "Legacy raw strings remain readable and non-object inline edits are disabled. Adding refuses an unknown non-list container, including keyboard handler. Mac child read/replacement refuses duplicate and positional collisions/unknown nodes; inspector enabled-state lookup is linear for the complete sibling list.",
+    "contracts": "No new backend, task schema, shared table/field, permission, file type, sibling build dependency or notification/cache format. Existing standard subtask IDs/objects and durable Store mutations are used. General older-client rollout remains deferred; no selected previous reader rerun claimed."
+  },
+  "core": {
+    "reported": 1267,
+    "skipped": 33,
+    "actualPassed": 1234,
+    "failures": 0,
+    "newRecoveryCases": 14,
+    "log": {
+      "file": "checklist-recovery-final-verified-mac.log",
+      "sha256": "8fcf0916a03b506c310d4c6a1611990030020f1f03964ac014277d5cd6ee3ff9"
+    },
+    "scope": [
+      "Every duplicate occurrence rekeyed across nesting; all non-ID fields and ordering preserved",
+      "Missing/null/empty/numeric/boolean/array/whitespace/control/401-character references; valid400-scalar legacy identity retained",
+      "Raw string conversion and full original JSON roundtrip",
+      "Whole-review refusal for unknown node/title/children/root formats",
+      "Cancelled/changed-source review cannot apply; worker cancellation yields no partial proposal",
+      "Allocator collision with any saved identity and invalid/repeated allocator refusal",
+      "Depth/base-depth, payload,nonfinite values and item limits refuse without truncation",
+      "Recovered complete hierarchy/filter shape valid; old ambiguous child route absent",
+      "Actual Snapshot mutation/serialization and reversal preserve exact original damaged tree",
+      "Inline/root-container safety; matching Mac single/bulk path primitives reject ambiguity",
+      "Expanded legacy output must fit its next organizer opening"
+    ]
+  },
+  "combinedActualCorePassed": 2456,
+  "native": {
+    "retainedPassingExecutions": 5,
+    "distinctMethods": 3,
+    "runs": [
+      {
+        "result": "checklist-recovery-final-phone.xcresult",
+        "actualPassed": 3,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "checklist-recovery-final-phone-summary.json",
+          "sha256": "be8bff1ad2fc9667f6294a265b1764663ecd52aac50b9d04e7b3e62324c670fe"
+        },
+        "log": {
+          "file": "checklist-recovery-final-phone.log",
+          "sha256": "fa988d78f84062f3508e2d660c7935f13603acdf88006f98419f6c897982bf7e"
+        }
+      },
+      {
+        "result": "checklist-recovery-ipad-v2.xcresult",
+        "actualPassed": 2,
+        "failures": 0,
+        "runtimeWarnings": [],
+        "summary": {
+          "file": "checklist-recovery-ipad-v2-summary.json",
+          "sha256": "4cbf815baf7aff667d89ceb924ffadfe1d91461e8c69a658ce21bdf0736d35fe"
+        },
+        "log": {
+          "file": "checklist-recovery-ipad-v2.log",
+          "sha256": "c647c12229f9e842c627811ce36b62148c8fafd04ec93a87a0aae0f26f9d3b26"
+        }
+      }
+    ],
+    "scope": "Exact isolated iPhone/iPad local fixtures. Review/Original viewing/Apply/Cancel preserve saved root; organizer Save still only edits parent draft; parent Save changes only recovered subtree content/IDs within tested fields. Actual saved JSON proves5 unique IDs with stable ID preserved, original duplicates absent, semantic non-ID content equal including converted strings. Normal relaunch no longer offers recovery. Unknown nested structures retain exact cache bytes on cancel; Save remains disabled. Existing organizer Cancel/move/save/relaunch regression passes on phone. iPad recovery full flow uses largest accessibility text and dark appearance; unknown refusal case uses default light.",
+    "sourceProgression": "Phone includes asynchronous preparation and inline/path safeguards. Tablet adds final proposed-output bound and test-only scrolling of virtualized static text. A later bulk lookup helper is used only by Mac inspector; final Core suites and Mac build compile/test it. iOS tested recovery behavior is unchanged by that unused helper.",
+    "limits": "Native Save failure, real concurrent/cloud/workspace-switch walkthroughs, Share destination/upload, spoken VoiceOver and real Mac app interaction were not exercised for this milestone. Primitive Snapshot reversal is not a claim of a new full native Undo walkthrough.",
+    "macBuild": {
+      "result": "BUILD SUCCEEDED",
+      "signed": false,
+      "log": {
+        "file": "checklist-recovery-final-verified-mac-build.log",
+        "sha256": "85b9c5253cb92394c9dd0a403362618c2c699af3f8e1ea9e28984423a18e0631"
+      },
+      "scope": "Current isolated Mac app/extensions compile. Computer-use recheck reports Mac locked; no unlock request or live Mac UI acceptance claimed."
+    },
+    "macComponent": {
+      "productionView": "Taskfold/Views/SubtaskOrganizer.swift review component",
+      "dataModel": "Read-only review values fixture; Core/Store not loaded by renderer",
+      "manifest": {
+        "file": "checklist-recovery-final-mac-previews/manifest.json",
+        "sha256": "0592d98847cfd7feca23d8fac98fae51c106c48a90f62caccd81da652a325783"
+      },
+      "scope": "Production component offscreen AppKit light/dark layout, default native tint, no account/credentials/input or mutation."
+    }
+  },
+  "earlierRuns": {
+    "initialPhone": {
+      "summary": {
+        "file": "checklist-recovery-initial-phone-summary.json",
+        "sha256": "48a7bac1dbcbeb96547d1f43d203f99ef62d6091dc16aaf205c8affb39bfa1ef"
+      },
+      "log": {
+        "file": "checklist-recovery-phone.log",
+        "sha256": "fb96d71c5ff9f0cc6d90934c605b954367ce1b3a1ed2f084669ace4bb02dd0d0"
+      },
+      "actualPassed": 2,
+      "resultPruned": true,
+      "scope": "Superseded synchronous preparation version; not counted in retained5."
+    },
+    "firstTablet": {
+      "summary": {
+        "file": "checklist-recovery-ipad-first-summary.json",
+        "sha256": "025149467a8f7079706eba3b8626e7bdce6b53972e9fd8b645983e30ad0893dd"
+      },
+      "log": {
+        "file": "checklist-recovery-ipad.log",
+        "sha256": "dff861be08826589e562f3021edc3cec92e5ffd883b9daabac95b4e8d74a2b67"
+      },
+      "hierarchy": {
+        "file": "checklist-recovery-ipad-first-hierarchy.txt",
+        "sha256": "ab2eebeb2c6c36ff9c52c0981ef42253732a1a0033347c76a71b224d52bce662"
+      },
+      "reason": "Largest-text review summary was below native visible/virtualized area. UI hierarchy confirms review/body present; test now scrolls until static text exists and scrolls upward to draft notice. Product font size unchanged."
+    },
+    "firstCore": {
+      "log": {
+        "file": "checklist-recovery-focused-ios.log",
+        "sha256": "ac0268353fc8f06cf2b72026479ae96a3308af491ead8b72666cae36c4b8be03"
+      },
+      "reason": "Generic JSON depth64 rejected supported32-level checklist with opaque nested metadata. Raised generic bound128, retaining actual checklist depth32; final nesting test passes."
+    }
+  },
+  "capturesSHA256": {
+    "docs/checklist-recovery/phone-review.png": "b594b7f6324584134599692325ef086dbff3695ebb0cee784ed5d0af1710d6db",
+    "docs/checklist-recovery/phone-unfamiliar.png": "134e17822b6206d2b167a504a55f4f6725c1a2e18bf170cce0b4ae7c139483cd",
+    "docs/checklist-recovery/phone-saved.json": "6968d40ed0c3ce24b0b33291d94fc08790a61ea473858c6d914ae0f1b29b85bb",
+    "docs/checklist-recovery/ipad-largest-dark.png": "e13f207fdfcc2d9e22a4f8ce400ba1a57ebf81ab0d092d0dca17fe7923526453",
+    "docs/checklist-recovery/ipad-relaunch.png": "7adf6164c6865aceb4248e61992fda2488f7b635debd4a4208368ca0d573ebab",
+    "docs/checklist-recovery/ipad-saved.json": "9b58f0f42d2fc0e926cb26b98c331f6231d25f737d6108a953d1e13fe6f74be0",
+    "docs/checklist-recovery/mac-recovery-light.png": "2294119560d73ba8deb583abda5bdab4150c76a1d58e940778c55e4279a12b9f",
+    "docs/checklist-recovery/mac-recovery-dark.png": "f79840493130933d4d446bec17d2342fa26ef5c8f8de8f3aff2f655f70b118ad",
+    "docs/checklist-recovery/mac-manifest.json": "0592d98847cfd7feca23d8fac98fae51c106c48a90f62caccd81da652a325783"
+  },
+  "visualReview": "Phone review/refusal, iPad largest dark review and relaunch, Mac light/dark components inspected. Natural scroll viewports may cut content at an edge; no claim all text/rows fit one screen. Captures contain synthetic work only.",
+  "cleanup": {
+    "installations": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1",
+        "status": "removed exact isolated test host/runner"
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner",
+        "status": "removed exact isolated test host/runner"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1",
+        "status": "removed exact isolated test host/runner"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsp1.uitests.xctrunner",
+        "status": "removed exact isolated test host/runner"
+      },
+      {
+        "product": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/BuildCache/mac-project-workflows-native-v2/Build/Products/Debug/Taskfold.app",
+        "status": "removed exact unsigned isolated Mac product"
+      }
+    ],
+    "supersededArtifactsPruned": [
+      "checklist-recovery-phone.xcresult",
+      "checklist-recovery-ipad.xcresult",
+      "checklist-recovery-ipad-first-captures",
+      "checklist-recovery-mac-previews"
+    ],
+    "mainTaskfoldAppsRunning": [],
+    "preserved": "Current accepted results, all logs/summaries, selected failure hierarchy, final captures/source and reusable build caches. Real accounts, task data, app installations and system-managed widget processes untouched."
+  },
+  "remaining": [
+    "Unfamiliar future formats remain preserved/read-only; no automatic guessing or partial salvage. Oversized data remains in original task/backup.",
+    "Live Mac interaction/Undo, spoken accessibility, paired cloud/offline concurrency, wider localization and independent-child-record/headings contracts remain open.",
+    "Location physical permission/region/delivery/callback and private desktop-to-phone authoring, other remaining ranks and full Px remain incomplete."
+  ],
+  "userDeferrals": [
+    "Remote server reminders/device-reinstall delivery recovery",
+    "General older-client rollout safeguards",
+    "Release signing/distribution/install/update acceptance",
+    "Genuine Google/Microsoft OAuth registrations/provider acceptance"
+  ]
+}
