@@ -1,0 +1,172 @@
+{
+  "feature": "Device-private location reminder data and one-shot lifecycle foundation",
+  "date": "2026-10-22",
+  "scope": "Concrete rank-5 foundation progress; location reminders are not exposed or written by either app. This is not full location/Todoist/Px completion.",
+  "core": {
+    "ios": {
+      "reported": 1104,
+      "skipped": 13,
+      "failed": 0,
+      "passed": 1091,
+      "newLocationCases": 26,
+      "log": {
+        "file": "location-full-ios-final3.log",
+        "sha256": "c2f187584888ec5054c36f561c9572233f05f3b22e4ee9c0f4996d908801bb35"
+      }
+    },
+    "mac": {
+      "reported": 1136,
+      "skipped": 33,
+      "failed": 0,
+      "passed": 1103,
+      "newLocationCases": 26,
+      "log": {
+        "file": "location-full-mac-final3.log",
+        "sha256": "f6c8655f75e0c0a217d5ab71d65a6aab2cd139f56911cd0409d92f9f6c38ae38"
+      }
+    }
+  },
+  "newCases": [
+    "testPrivatePlaceValidationQuantizationAndBoundaryRevision",
+    "testSharedSettingsAndNotificationReceiptsContainNoPlaceGeometryOrLabel",
+    "testStrictOneShotEnvelopeAndOpaqueNativeReaderPreservation",
+    "testSettingTogglePreservesUnknownFutureFieldsAndDuplicateIgnoresArm",
+    "testPlanRejectsWrongAccountDeviceRevisionCompletionAndClonedTask",
+    "testPlanDeduplicatesFailsAmbiguousRowsAndUsesCombinedCapacity",
+    "testJournalRequiresExplicitFreshIntentAndRejectsMalformedStates",
+    "testExplicitPreparationIsDurableDoesNotTouchOSBeforeHydrationAndCannotRepeatNonce",
+    "testReservationIsDurableBeforeOSAddAndExistingRequestIsNeverResubmitted",
+    "testSyncedOrRestoredRowWithoutPreparedIntentCannotArm",
+    "testStorageFailureBeforeSubmissionCannotArmThenSafeFirstAttemptCanRecover",
+    "testPostAddWriteFailureRecoversExistingOSRequestWithoutAnotherSubmission",
+    "testMissingSubmittedRequestIsConsumedEvenWhenNotificationWasDismissed",
+    "testCrashAmbiguityDoesNotRearmAndGenuineResponseStillBindsCurrentTask",
+    "testOSRefusalAndUntrackedRequestsDoNotBecomeAutomaticRetries",
+    "testUnreadableJournalAndOSQueryFailureRemoveOnlyOwnedLocationRequests",
+    "testAccountSwitchDuringOSAddRemovesLateRegistrationAndRejectsItsResponse",
+    "testConsumedOneShotFreesCapacityForWaitingReminderWithoutRearmingItself",
+    "testApplicationRegionCapAndPriorityDoNotUseCurrentLocation",
+    "testAccountSwitchDuringDurableReservationCannotSubmitOldRequest",
+    "testDeliveredObservationConsumesPendingRaceAndCompletionRevisionRejectsOldReceipt",
+    "testMismatchedOSBoundaryIsCancelledWithoutSilentlyReplacingIt",
+    "testPreparedTaskDraftCanWaitForSaveWithoutBecomingAnOSRegistration",
+    "testCleanupPassCanReleaseOldRegionsWithoutSubmittingPreparedIntents",
+    "testHistoryBoundRefusesNewIntentInsteadOfEvictingConsumedNonce",
+    "testPortableBackupRetainsOpaqueReferenceButCannotMoveDeviceIntentToRestoredTask"
+  ],
+  "builds": {
+    "ios": {
+      "log": {
+        "file": "location-foundation-native-ios-final2.log",
+        "sha256": "57d8bf9bd8a0c4691580a9753ea1f2045f3c46a1b6e9b261c51f019c4b178362"
+      },
+      "scope": "Native app compilation/link only; no location UI, permission or OS registration exercised",
+      "signing": "Existing isolated Simulator signing",
+      "strictDeepSignatureVerification": "Passed for final isolated Simulator product"
+    },
+    "mac": {
+      "log": {
+        "file": "location-foundation-native-mac-final2.log",
+        "sha256": "298ed4a72d60ca0be62a706c42b48a175a62de62bde80605e0ece688f7bc7418"
+      },
+      "scope": "Native app compilation/link only; no location UI, permission or OS registration exercised",
+      "signing": "Unsigned; distribution/signing remains user-deferred"
+    }
+  },
+  "previousReaders": {
+    "ios": {
+      "revision": "93e3aea2b27a11f299b6e94235e90efce52309f0",
+      "oldReminderSourceSHA256": "c25488bd47215761b7f8abd71c588a4055e5f59b5f0b35e1ef69083e69a395ca",
+      "fixtureSHA256": "92d9ae28438812b2dd6cebf7ec5b911f07a98475aa4e3945809d28f30d60b991",
+      "passed": 1,
+      "checks": [
+        "unsupported rather than planned-time reinterpretation",
+        "title/planned-toggle edits preserve opaque location reference",
+        "exact saved record and opaque reminder-row roundtrip",
+        "recurring successor retains opaque settings",
+        "no substitute notifications"
+      ],
+      "scope": "This selected previous native Core reader only; no claim all older versions enforce new behavior."
+    },
+    "mac": {
+      "revision": "30d69092b5baa26e1bc969f7205957b001c48a2b",
+      "oldReminderSourceSHA256": "c25488bd47215761b7f8abd71c588a4055e5f59b5f0b35e1ef69083e69a395ca",
+      "fixtureSHA256": "92d9ae28438812b2dd6cebf7ec5b911f07a98475aa4e3945809d28f30d60b991",
+      "passed": 1,
+      "checks": [
+        "unsupported rather than planned-time reinterpretation",
+        "title/planned-toggle edits preserve opaque location reference",
+        "exact saved record and opaque reminder-row roundtrip",
+        "recurring successor retains opaque settings",
+        "no substitute notifications"
+      ],
+      "scope": "This selected previous native Core reader only; no claim all older versions enforce new behavior."
+    }
+  },
+  "implemented": [
+    "Strict bounded private-place model; integer-millionth coordinates, 100\u20135000 metre radius, private labels and explicit geometry revisions",
+    "Proposed version-6 local-only reference bound to original device/task/incarnation/place/revision/arm/transition; one-shot only in this prototype",
+    "Taskfold-authored task references and receipts omit private geometry/name; unknown reference fields survive toggles",
+    "Actual portable backup and queued snapshot roundtrip preserve opaque settings but cannot move the private intent to remapped tasks",
+    "Single actor serializes explicit intent preparation with acknowledged registration-state persistence",
+    "No OS reconciliation before an explicit hydrated plan; no automatic arming merely from received/restored references",
+    "Reservation acknowledgement precedes injected OS add; installed and ambiguous submission recovery never resubmits the same one-shot",
+    "Late OS additions and persistence races are fenced after account/desired-state switches",
+    "Priority/capacity planning, duplicate geometry and case-normalized ambiguous IDs, app cap20, and cleanup-only mode for future combined 60-request admission",
+    "Closed one-shots free capacity but retain tombstones; cap2048 refuses new intent rather than forgetting history"
+  ],
+  "notImplemented": [
+    "Native protected/excluded-from-backup place/journal file store; current persistence checks use an acknowledged memory-backed test store",
+    "Native place search/map/radius/management and explicit device consent UI",
+    "Every-visit until completed mode and repeated-trigger/receipt semantics; current prototype supports only repeats:false",
+    "Private desktop-to-phone authoring/handoff, which remains an explicit Todoist parity gap",
+    "Actual iOS system-center adapter, permission/precision/radius availability gating and joint time/Focus/location admission",
+    "Actual OS Open/Complete/Tomorrow/Snooze routing and replay protection",
+    "Actual location notification delivery, background/locked/reinstall behavior, native accessibility and full layout acceptance"
+  ],
+  "currentAppWiring": {
+    "locationChoiceExposed": false,
+    "prototypeRowsWritten": false,
+    "locationPermissionsRequested": false,
+    "backgroundTrackingAdded": false,
+    "existingReminderReaderAndStoreAndEditorUnchanged": true,
+    "currentReaderBehavior": "Version6 remains an unsupported opaque row, preserved without a planned-time fallback"
+  },
+  "platformSources": {
+    "trigger": "https://developer.apple.com/documentation/usernotifications/unlocationnotificationtrigger",
+    "accuracy": "https://developer.apple.com/documentation/corelocation/cllocationmanager/accuracyauthorization",
+    "todoistLocation": "https://www.todoist.com/help/todoist/features/use-location-reminders-in-todoist-uGcwH2AJ6",
+    "scope": "Official Apple documentation plus installed iOS SDK availability header checked; official Todoist guide checked only for location capabilities, not a fresh full parity audit",
+    "installedHeaderSHA256": "a798366a68aaecbe34ec16c8a8402d2f2cea1f00cf86340516584b2872b3cf7a"
+  },
+  "failedIterations": [
+    "First focused test compilation exposed a test-helper access-level mismatch and await inside XCTest autoclosures; corrected test code before acceptance.",
+    "A clone-binding assertion initially used TaskPlanning.nextOccurrence, which prepares fields before TaskCompletion assigns successor identity. Replaced it with actual TaskCompletion successor creation; opaque row preservation and refusal on the new task now pass."
+  ],
+  "limitations": "Protocol fakes and codec roundtrips prove model/ordering behavior under their contracts, not physical persistence, OS arrival events or background delivery. Native builds are compile evidence only. Selected previous readers do not prove universal older-client rollout enforcement.",
+  "userDeferred": [
+    "Remote server reminders/device-reinstall recovery",
+    "General older-client rollout safeguards",
+    "Distribution signing/install-update verification",
+    "Genuine Google/Microsoft OAuth/provider acceptance"
+  ],
+  "remainingGoal": "The complete P2_PLAN.md scope and LOCATION_REMINDERS.md native/repeated/desktop parity requirements remain open.",
+  "ownedSourceSHA256": {
+    "Taskfold/Core/LocationReminders.swift": "1c5edc06f7f8540c8186dbe4a8f3d071087ac08c6b467a8801fb94879ecf0dd6",
+    "TaskfoldTests/LocationReminderTests.swift": "034c7d049c66c053f1a65aed170109a078e5f052702f22f900c77fa61c39a028",
+    "Scripts/test_location_old_reader.py": "82d6ccd042ddcfb5e17e830a1a4995909a2b21be96196ba7d22e248136e6b957",
+    "Scripts/fixtures/OldLocationReaderTests.swift": "92d9ae28438812b2dd6cebf7ec5b911f07a98475aa4e3945809d28f30d60b991",
+    "Package.swift": "52c6ccf72e977d7f8dfffd358eb7800effef7a9329633fe8adfb8e0179d51af1",
+    "Taskfold.xcodeproj/project.pbxproj": "e88b12e20721520c3f3f884a279d82d95b68acb5b2e561e9bbbdd54b0d8ae714",
+    "Taskfold/Core/Reminders.swift": "c25488bd47215761b7f8abd71c588a4055e5f59b5f0b35e1ef69083e69a395ca",
+    "Taskfold/Core/Store.swift": "51929cc9ac38622aee4427f32faf39d0457ec848be7f615e15c72c84f87db4f6",
+    "Taskfold/Views/ReminderEditor.swift": "092e51d1abec7da07df81faf7ec13a019b0a7b80389fecf0b5a309432a186f46",
+    "Taskfold/Info.plist": "186b53a66e038e9102ab065fcbece82f0f23e6f3bf0b2d5a995cbc78b7e54dcd"
+  },
+  "cleanup": {
+    "mainTaskfoldProcessesRunning": 0,
+    "nativeUIOrLocationPermissionOpened": false,
+    "obsoleteUnsignedOwnedMacProductReclaimedMB": 45.8,
+    "acceptedLogsAndBuildObjectsRetained": true
+  }
+}

@@ -2595,3 +2595,6 @@ Added owned bounded calendar-file parsing, reviewed source/year/region and expli
 
 
 Holiday reminders now offer automatic country/year calendars first, with explicit regional Public filtering, reviewed offline snapshots and optional all-day calendar-file import. Both production Core and native Mac editor compile independently. Offscreen component rendering is separate from native interaction; the locked Mac and deferred Time Sensitive signing still prevent that acceptance. Provider commercial sponsorship is a release dependency. See `HOLIDAY_REMINDERS.md` and `p2-holiday-reminders-evidence.json`; rank 5 and remaining Px work stay open.
+
+
+Location reminder work now has an independently compiled device-private data/lifecycle foundation. The iOS system location-notification trigger is unavailable on macOS: the intended Mac UI must preserve and explain phone/tablet references without requesting Mac location permission. No app UI or OS trigger is enabled yet. See `LOCATION_REMINDERS.md` for the complete storage, shared-budget, save/Cancel, native response and acceptance requirements, and `p2-location-reminder-foundation-evidence.json` for current checks.
