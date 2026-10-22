@@ -32,8 +32,8 @@ struct LocationPrivatePlace: Equatable, Sendable {
     }
     /// A rename does not change a boundary. Moving/resizing a place invalidates existing
     /// references until the user reviews and arms each affected reminder again.
-    func editing(name: String, latitude: Double, longitude: Double, radius: Int) -> Self? {
-        guard let proposed = Self.make(account: account, name: name, latitude: latitude, longitude: longitude, radius: radius, id: id) else { return nil }
+    func editing(name: String, latitude: Double, longitude: Double, radius: Int, revision proposedRevision: String = UUID().uuidString.lowercased()) -> Self? {
+        guard let proposed = Self.make(account: account, name: name, latitude: latitude, longitude: longitude, radius: radius, id: id, revision: proposedRevision) else { return nil }
         var fields = raw
         for (key, value) in proposed.raw { fields[key] = value }
         if proposed.geometry == geometry { fields["revision"] = .string(revision) }

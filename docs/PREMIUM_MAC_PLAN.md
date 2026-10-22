@@ -2598,3 +2598,8 @@ Holiday reminders now offer automatic country/year calendars first, with explici
 
 
 Location reminder work now has an independently compiled device-private data/lifecycle foundation. The iOS system location-notification trigger is unavailable on macOS: the intended Mac UI must preserve and explain phone/tablet references without requesting Mac location permission. No app UI or OS trigger is enabled yet. See `LOCATION_REMINDERS.md` for the complete storage, shared-budget, save/Cancel, native response and acceptance requirements, and `p2-location-reminder-foundation-evidence.json` for current checks.
+
+
+## 22 October — protected private place storage
+
+The Mac now owns the protected, account-scoped place/journal file store independently of iOS, including bounded reads, atomic coordinated writes, backup exclusion, stable installation identity and stale-edit/journal protection. Native Mac location UI/permission requests remain absent because the system trigger is unavailable here. The iOS picker is tested only through its isolated debug entry; complete mobile reminder wiring, every-visit mode and private desktop-to-phone authoring remain open. See `p2-location-place-storage-evidence.json` for filesystem/build checks and their limits.
