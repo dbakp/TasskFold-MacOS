@@ -97,7 +97,8 @@ enum LocationReminderIdentity {
 }
 
 struct LocationReminderTicket: Codable, Equatable, Sendable {
-    static let prefix = "taskfold.location.v1."
+    static let namespace = "taskfold.location."
+    static let prefix = namespace + "v1."
     let account: String
     let device: String
     let taskID: String
@@ -148,6 +149,17 @@ struct LocationReminderPlan: Sendable {
     let allowSubmissions: Bool
     var candidates: [LocationReminderCandidate] { Array(eligible.prefix(capacity)) }
     var deferred: Int { max(0, eligible.count - capacity) }
+    static var empty: Self { Self(eligible: [], capacity: 0, allowSubmissions: false) }
+    private init(eligible: [LocationReminderCandidate], capacity: Int, allowSubmissions: Bool) {
+        self.eligible = eligible; self.capacity = capacity; self.allowSubmissions = allowSubmissions
+    }
+    func scoped(to account: String) -> Self {
+        guard LocationReminderIdentity.account(account) else { return .empty }
+        return Self(eligible: eligible.filter { $0.ticket.account == account }, capacity: capacity, allowSubmissions: allowSubmissions)
+    }
+    func limited(to slots: Int, submissions: Bool) -> Self {
+        Self(eligible: eligible, capacity: min(capacity, max(0, slots)), allowSubmissions: allowSubmissions && submissions)
+    }
     init(account: String, device: String, tasks: [Record], places: [LocationPrivatePlace], availableNotificationSlots: Int, allowed: Bool, allowSubmissions: Bool = true) {
         self.allowSubmissions = allowSubmissions
         guard allowed, LocationReminderIdentity.account(account), LocationReminderIdentity.uuid(.string(device)) else { eligible = []; capacity = 0; return }
@@ -232,6 +244,7 @@ struct LocationReminderReport: Equatable, Sendable {
 /// silently recreated: dismissal, crash, permission loss and delivery can look alike.
 /// A deliberate new arm nonce is the only way to create another one-shot opportunity.
 actor LocationReminderEngine {
+    nonisolated let deviceIdentity: String?
     private let center: any LocationReminderCenter
     private let persist: @Sendable (LocationReminderJournal) async throws -> Void
     private var journal: LocationReminderJournal?
@@ -239,12 +252,13 @@ actor LocationReminderEngine {
     private var capacity = 0
     private var hasDesired = false
     private var allowSubmissions = false
+    private var permitsSubmission: @Sendable (LocationReminderCandidate) async -> Bool = { _ in true }
     private var preparations: [(LocationReminderTicket, CheckedContinuation<Bool, Never>)] = []
     private var sequence: UInt64 = 0
     private var running = false
     private var waiters: [CheckedContinuation<LocationReminderReport, Never>] = []
     init(journal: LocationReminderJournal?, center: any LocationReminderCenter, persist: @escaping @Sendable (LocationReminderJournal) async throws -> Void) {
-        self.journal = journal?.valid == true ? journal : nil; self.center = center; self.persist = persist
+        self.journal = journal?.valid == true ? journal : nil; deviceIdentity = self.journal?.device; self.center = center; self.persist = persist
     }
     func snapshot() -> LocationReminderJournal? { journal }
     func intentRevision() -> UInt64 { sequence }
@@ -255,12 +269,25 @@ actor LocationReminderEngine {
             if !running { running = true; Task { await self.drain() } }
         }
     }
-    func update(_ plan: LocationReminderPlan) async -> LocationReminderReport {
+    func reservations(for plan: LocationReminderPlan) -> [LocationReminderCandidate] {
+        Array(plan.eligible.filter { candidate in
+            guard let entry = journal?.entries[candidate.ticket.identifier], entry.ticket == candidate.ticket else { return false }
+            return entry.phase != .closed
+        }.prefix(plan.capacity))
+    }
+    func update(_ plan: LocationReminderPlan, permitsSubmission: @escaping @Sendable (LocationReminderCandidate) async -> Bool = { _ in true }) async -> LocationReminderReport {
+        self.permitsSubmission = permitsSubmission
         hasDesired = true; desired = plan.eligible; capacity = plan.capacity; allowSubmissions = plan.allowSubmissions; sequence &+= 1
         return await withCheckedContinuation { continuation in
             waiters.append(continuation)
             if !running { running = true; Task { await self.drain() } }
         }
+    }
+    private func maySubmit(_ candidate: LocationReminderCandidate, token: UInt64) async -> Bool {
+        guard token == sequence else { return false }
+        let validator = permitsSubmission
+        let allowed = await validator(candidate)
+        return token == sequence && allowed
     }
     private func save(_ changed: LocationReminderJournal) async -> Bool {
         guard changed.valid else { return false }
@@ -285,9 +312,12 @@ actor LocationReminderEngine {
                 if finish(LocationReminderReport()) { return }; continue
             }
             let token = sequence
-            let available = desired.filter { journal?.entries[$0.ticket.identifier]?.phase != .closed }
+            let available = desired.filter { candidate in
+                guard let entry = journal?.entries[candidate.ticket.identifier], entry.ticket == candidate.ticket else { return false }
+                return entry.phase != .closed
+            }
             let targets = Array(available.prefix(capacity))
-            var report = LocationReminderReport(deferred: max(0, available.count - targets.count))
+            var report = LocationReminderReport(failed: journal.map { state in desired.filter { state.entries[$0.ticket.identifier]?.ticket != $0.ticket }.count } ?? 0, deferred: max(0, available.count - targets.count))
             guard let state = journal else {
                 await center.removeAllOwned()
                 guard token == sequence else { continue }
@@ -304,7 +334,7 @@ actor LocationReminderEngine {
             }
             guard token == sequence else { continue }
             let targetIDs = Set(targets.map { $0.ticket.identifier })
-            let unexpected = observation.pending.filter { !targetIDs.contains($0.ticket.identifier) }.map { $0.ticket.identifier } + observation.unrecognized.filter { $0.hasPrefix("taskfold.location.") }
+            let unexpected = observation.pending.filter { !targetIDs.contains($0.ticket.identifier) }.map { $0.ticket.identifier } + observation.unrecognized.filter { $0.hasPrefix(LocationReminderTicket.namespace) }
             await center.remove(unexpected)
             guard token == sequence else { continue }
             for (identifier, entry) in state.entries where entry.phase != .closed && entry.phase != .prepared && !targetIDs.contains(identifier) {
@@ -339,12 +369,20 @@ actor LocationReminderEngine {
                     await center.remove([id]); _ = await close(id, reason: .untracked); report.failed += 1
                 } else {
                     guard allowSubmissions else { report.deferred += 1; continue }
+                    guard await maySubmit(candidate, token: token) else {
+                        if token != sequence { break }; report.deferred += 1; continue
+                    }
                     var next = journal!; next.entries[id]?.phase = .reserved
                     guard await save(next) else { report.failed += 1; continue }
                     guard token == sequence else { break }
+                    guard await maySubmit(candidate, token: token) else {
+                        _ = await close(id, reason: .cancelled)
+                        if token != sequence { break }; continue
+                    }
                     do {
                         try await center.add(candidate)
-                        if token != sequence {
+                        let permitted = await maySubmit(candidate, token: token)
+                        if !permitted {
                             await center.remove([id]); _ = await close(id, reason: .cancelled); break
                         }
                         next = journal!; next.entries[id]?.phase = .installed
@@ -357,7 +395,10 @@ actor LocationReminderEngine {
             }
             guard token == sequence else { continue }
             // A consumed one-shot must not occupy a slot ahead of waiting reminders.
-            let selected = desired.filter { journal?.entries[$0.ticket.identifier]?.phase != .closed }.prefix(capacity).map { $0.ticket.identifier }
+            let selected = desired.filter { candidate in
+                guard let entry = journal?.entries[candidate.ticket.identifier], entry.ticket == candidate.ticket else { return false }
+                return entry.phase != .closed
+            }.prefix(capacity).map { $0.ticket.identifier }
             if Array(selected) != targets.map({ $0.ticket.identifier }) { continue }
             if finish(report) { return }
         }

@@ -1450,6 +1450,7 @@ final class Store {
         if !focusAlertsEnabled { focusAlertStatus = "Finish alerts are off on this device." }
         else if report.focusFailure { focusAlertStatus = "The finish alert could not be scheduled. Open Focus to retry." }
         else if report.focusScheduled { focusAlertStatus = "A finish alert is scheduled on this device." }
+        else if report.focusDeferred { focusAlertStatus = "There’s no room for the finish alert yet. Taskfold will retry while this session is running." }
         else if focusSyncConflict != nil { focusAlertStatus = "Review the session changes before a finish alert can be scheduled." }
         else if focusSession?.finished(at: Date()) == true { focusAlertStatus = "Start another session to receive its finish alert." }
         else { focusAlertStatus = "Start or resume a session to schedule its finish alert." }
@@ -1504,9 +1505,12 @@ final class Store {
             await reschedule()
             guard generation == accountGeneration, validReminder(info) != nil else { return nil }
             if let report = await reminderScheduler.snooze(account: account, taskID: event.taskID, specID: event.specID, signature: event.signature, minutes: minutes, originalAt: event.date), generation == accountGeneration {
-                if report.failures > 0 { reminderStatus = "The snooze could not be scheduled. Open the task to try again." }
-                else if report.deferred > 0 { reminderStatus = "The nearest 60 reminders are scheduled. This snooze may be deferred until Taskfold refreshes." }
-                else { reminderStatus = "\(report.scheduled) upcoming \(report.scheduled == 1 ? "reminder" : "reminders") scheduled on this device." }
+                switch report.snoozeOutcome {
+                case .scheduled?: reminderStatus = "Snoozed for \(ReminderSnooze.label(minutes)) on this device."
+                case .waitingForSpace?: reminderStatus = "There’s no room for the snoozed alert yet. Keep Taskfold open to retry."
+                case .failed?: reminderStatus = "The snooze could not be scheduled. Open the task to try again."
+                case .obsolete?, nil: break
+                }
             }
         case let action where action.hasPrefix("taskfold.snooze."): return nil
         default: return ReminderTaskRoute(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), taskID: task.id, specID: event.specID, signature: event.signature, originalAt: event.date)

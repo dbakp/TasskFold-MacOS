@@ -1,0 +1,197 @@
+{
+  "feature": "Shared time/Focus/snooze/location notification admission",
+  "date": "2026-10-22",
+  "status": "Rank-5 progress; location app wiring and full Px remain incomplete",
+  "ownedRepository": "TasskFold-MacOS",
+  "sourceSHA256": {
+    "Taskfold/Core/LocationReminders.swift": "f0df68e3026cdc5668b6d720bb77ccf4e2d68dc9a0f446c2b20312f183c1cb25",
+    "Taskfold/Core/Reminders.swift": "4665f1a36839c3bcb02d40f37707151e13ad19886eaa4055fe2c0b7ded3c479c",
+    "Taskfold/Core/Store.swift": "d5f5a37b98cab2fe90828c694acac104de7d08ce22524ae3cc036e6cda9cc8fe",
+    "TaskfoldTests/NotificationAdmissionTests.swift": "576a15f44dfb52dc4d58dd1eb04b6802dd7fe837478155f51052f1c54247fa3f"
+  },
+  "behavior": [
+    "One serialized admission drain; location cleanup before time additions before location submissions",
+    "Priority: Focus, explicit snoozes, up to20 durable location intents, ordinary dates",
+    "Outside pending identifiers consume capacity even without a location engine; unrelated entries preserved",
+    "Candidate account/plan/installation fences around persistence/native add; same-device actor reused",
+    "Consumed/refused intents release capacity in the same drain; no silent one-shot rearm",
+    "Native full queue defers; snooze acknowledgement matches its requested account/task/occurrence/deadline"
+  ],
+  "dataCompatibility": "Runtime scheduler state/report changes only. No task, backup, preference or receipt schema change; taskfold.location.v1 identifier bytes unchanged.",
+  "core": {
+    "reported": 1168,
+    "skipped": 33,
+    "actualPassed": 1135,
+    "failures": 0,
+    "newAdmissionCases": 22,
+    "log": {
+      "file": "shared-admission-full-mac-scoped.log",
+      "sha256": "fbe5049fe80c9d84e95eeb64a0e86be14426f3c280e24818f11c988b167bc2c6"
+    },
+    "scope": "Modeled shared queue records peak after each mutation; deterministic held-write/add interleavings. Optional external fixtures and platform-limited cases remain skipped."
+  },
+  "nativeIOS": {
+    "repository": "TaskFold-iOS",
+    "results": [
+      {
+        "bundle": "shared-admission-native-scoped.xcresult",
+        "log": {
+          "file": "shared-admission-native-scoped.log",
+          "sha256": "892f55e704c2b21ccd17c7bc18456693f3970cc89b9e7cb975c77cac83d5369e"
+        },
+        "result": {
+          "result": "Passed",
+          "totalTestCount": 2,
+          "passedTests": 2,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "runtimeWarnings": []
+        }
+      },
+      {
+        "bundle": "shared-admission-unavailable-scoped.xcresult",
+        "log": {
+          "file": "shared-admission-unavailable-scoped.log",
+          "sha256": "0d02b2999e6c695bab7f09565c742f24cdda2de6c30facd206b760b331cf4c87"
+        },
+        "result": {
+          "result": "Passed",
+          "totalTestCount": 1,
+          "passedTests": 1,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "runtimeWarnings": []
+        }
+      }
+    ],
+    "proofReports": {
+      "codec": {
+        "artifact": {
+          "file": "shared-admission-codec-scoped-report.json",
+          "sha256": "c9d048bf693791e2a4b510a8fd026a08eaeaf69a2aeac9a7f759b8a390ee7faa"
+        },
+        "checks": {
+          "deviceAllowanceRefused": true,
+          "futureReceiptRefused": true,
+          "nativeDepartureTriggerFields": true,
+          "missingTriggerRefused": true,
+          "locationOutsideTimeFocusDecoder": true,
+          "bothDirectionsRefused": true,
+          "nativeArriveRoundtrip": true,
+          "timeTriggerRefused": true,
+          "changedNativeBoundaryDoesNotMatch": true,
+          "fractionalRadiusRefused": true,
+          "nativeLeaveRoundtrip": true,
+          "repeatedTriggerRefused": true,
+          "receiptHasNoPrivatePlace": true,
+          "nativeArrivalTriggerFields": true,
+          "foreignIdentifierRefused": true
+        },
+        "details": {}
+      },
+      "capacity": {
+        "artifact": {
+          "file": "shared-admission-capacity-scoped-report.json",
+          "sha256": "1430b656879f75e32e8b1c0fc661bdba48d7d0453a4c2752453994be79af72a2"
+        },
+        "checks": {
+          "probeNotQueued": true,
+          "nativeTimeCapacityRefused": true,
+          "realQueueAtCapacity": true,
+          "foreignRequestsPreserved": true,
+          "fixtureRequestsRemoved": true,
+          "systemNotificationPermission": true
+        },
+        "details": {
+          "afterCleanup": 0,
+          "initialPending": 0,
+          "afterRefusal": 60,
+          "atCapacity": 60
+        }
+      },
+      "refusal": {
+        "artifact": {
+          "file": "shared-admission-refusal-scoped-report.json",
+          "sha256": "ff38126944d38eede7be4bcba8e4f3f054dfb8f856bc7ba5d9d680bb17b498e6"
+        },
+        "checks": {
+          "nativeArriveRoundtrip": true,
+          "missingTriggerRefused": true,
+          "locationOutsideTimeFocusDecoder": true,
+          "nativeArrivalTriggerFields": true,
+          "repeatedTriggerRefused": true,
+          "deviceAllowanceRefused": true,
+          "receiptHasNoPrivatePlace": true,
+          "bothDirectionsRefused": true,
+          "futureReceiptRefused": true,
+          "unrelatedRequestSurvivesRefusal": true,
+          "refusedIntentClosedDurably": true,
+          "foreignIdentifierRefused": true,
+          "unrelatedRequestSurvivesNamespaceCleanup": true,
+          "nativeForeignInventory": true,
+          "fractionalRadiusRefused": true,
+          "systemRegionMonitoringUnavailable": true,
+          "nativeAdapterRefusesUnavailableDevice": true,
+          "nativeLeaveRoundtrip": true,
+          "noLocationRequestQueued": true,
+          "nativeDepartureTriggerFields": true,
+          "timeTriggerRefused": true,
+          "changedNativeBoundaryDoesNotMatch": true,
+          "durableExplicitPreparation": true,
+          "systemNotificationPermission": true
+        },
+        "details": {
+          "nativeObservation": {
+            "unrecognized": 0,
+            "pending": 0
+          },
+          "environment": {
+            "regionMonitoringAvailable": false,
+            "authorization": 0,
+            "servicesEnabled": true,
+            "accuracy": 0,
+            "maximumRadius": 2128000
+          },
+          "addFailure": {
+            "code": 1,
+            "message": "Location reminders are unavailable on this device.",
+            "domain": "Taskfold.LocationSystemFailure",
+            "reason": "unavailable"
+          },
+          "registrationReport": {
+            "failed": 1,
+            "deferred": 0,
+            "unreadable": false,
+            "installed": 0
+          }
+        }
+      }
+    },
+    "signature": "Simulator app deep strict codesign verification passed; not release signing",
+    "scope": "Real native object codec15, unsupported-device refusal24 and time-capacity6 checks. Capacity queue0->60->60->0; no successful native geofence registration or delivery claimed. First final invocation included an incorrect unavailable-test selector; only its2 actual cases are accepted. Correct unavailable case then ran separately and passed."
+  },
+  "nativeMac": {
+    "log": {
+      "file": "shared-admission-mac-scoped-build.log",
+      "sha256": "6dcda60a1b08433c38265b15071ebd18ded8a63f00eed9b9deaf566a66704fe4"
+    },
+    "result": "Debug app/widget build succeeded, CODE_SIGNING_ALLOWED=NO",
+    "scope": "Compilation only; no new Mac runtime or distribution assertion"
+  },
+  "diagnostics": "Existing unrelated compiler warnings and Simulator accessibility-loader console diagnostics remain. Both selected xcresult summaries report no runtime warnings.",
+  "remaining": [
+    "Normal Store private-engine bootstrap/account lifecycle/explicit consent and location plans",
+    "Task Save/Cancel/autosave/Undo and supported editing states",
+    "Genuine location response validation/actions and capable-device arrival/departure delivery",
+    "Every visit until completed",
+    "Private desktop-to-phone authoring",
+    "Direct iPad Search tap while typing",
+    "Deferred snooze outbox is not durable before OS acceptance"
+  ],
+  "deferredByUser": [
+    "Remote server reminders and device/reinstall recovery",
+    "General older-client rollout safeguards",
+    "Release/distribution signing and install/update checks",
+    "Genuine Google/Microsoft OAuth registrations/acceptance"
+  ]
+}

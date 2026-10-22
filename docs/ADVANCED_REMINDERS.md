@@ -45,3 +45,8 @@ These are synthetic acceptance/component captures. Scrolling crops are expected;
 
 
 Country calendars now fetch automatically through Nager.Holidays Community v4, with nationwide/regional Public filtering and reviewed offline year snapshots. Calendar files remain secondary. See `HOLIDAY_REMINDERS.md` for source limits, privacy, refresh and commercial sponsorship requirements. This is not a silent multi-year subscription or completed rank-5 acceptance.
+
+
+### 22 October — shared notification admission
+
+Both independently owned schedulers now coordinate an optional location engine with the existing time/Focus queue. Cleanup precedes additions; durable location intents reserve at most 20 slots; Focus and explicit snoozes have priority; all other native pending requests consume capacity. Account/installation changes fence late work, and a full native queue produces waiting feedback instead of false snooze success. Normal Store location bootstrap/consent/task/action wiring remains unfinished and the location editor stays hidden. Every-visit mode, private desktop-to-phone authoring and positive capable-device location delivery remain open. See `LOCATION_REMINDERS.md` and `p2-notification-admission-evidence.json`; this milestone does not complete rank 5 or Px.

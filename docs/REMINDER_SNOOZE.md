@@ -76,3 +76,8 @@ xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -de
 ```
 
 Wait for each command to finish. Preserve result bundles/logs before removing the temporary app/device. This unsigned Simulator procedure does not test signed physical deployment.
+
+
+## 22 October — shared capacity and precise acknowledgement
+
+Explicit snoozes now precede ordinary dates and new location admissions in the shared queue; Focus finish alerts remain first. A snooze response reports the requested alert's exact account/task/occurrence/fire-time outcome, so unrelated queue failures or deferred dates cannot produce a false success/waiting message. A newer snooze deadline supersedes an in-flight older one. A full native queue produces waiting feedback and preserves existing unrelated requests. Deferred snoozes remain in memory until native acceptance; the message asks the person to keep Taskfold open to retry. Accepted native snoozes retain their existing restart behavior. This adds no task, preference, receipt or backup format. See `p2-notification-admission-evidence.json` for current deterministic and native-capacity checks; this checkpoint does not rerun the historical delivery walks above.

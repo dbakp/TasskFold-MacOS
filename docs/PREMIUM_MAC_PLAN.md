@@ -2608,3 +2608,8 @@ The Mac now owns the protected, account-scoped place/journal file store independ
 ## 22 October — iOS native location adapter boundary
 
 The iOS repository now owns its system location-trigger adapter and native format/unavailable-device checks. The Mac's independently owned shared model/store and opaque version-6 behavior are unchanged; this is a documentation-only Mac update, with no Mac location permission, iOS source dependency or release assertion. iPad keyboard place editing is verified, while direct Search taps and positive geofence registration/delivery remain open. Normal consent/task/action wiring, shared notification admission, every-visit mode and desktop-to-phone authoring remain unfinished. See `p2-location-system-adapter-evidence.json`.
+
+
+### 22 October — shared notification admission
+
+Both independently owned schedulers now coordinate an optional location engine with the existing time/Focus queue. Cleanup precedes additions; durable location intents reserve at most 20 slots; Focus and explicit snoozes have priority; all other native pending requests consume capacity. Account/installation changes fence late work, and a full native queue produces waiting feedback instead of false snooze success. Normal Store location bootstrap/consent/task/action wiring remains unfinished and the location editor stays hidden. Every-visit mode, private desktop-to-phone authoring and positive capable-device location delivery remain open. See `LOCATION_REMINDERS.md` and `p2-notification-admission-evidence.json`; this milestone does not complete rank 5 or Px.

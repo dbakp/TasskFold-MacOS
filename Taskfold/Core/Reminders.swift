@@ -633,6 +633,12 @@ struct ReminderRequest: Equatable, Sendable {
         let id = (event.kind == .focusFinish ? FocusFinish.prefix : prefix) + DueReminder.digest(account + "|" + event.taskID.lowercased() + "|" + event.specID + (event.calendarOccurrence ? "|" + ReminderSignature.milliseconds(event.date) : ""))
         return Self(identifier: id + (snoozed ? ".snooze" : ""), account: account, event: event, fireAt: fireAt ?? event.date, snoozed: snoozed)
     }
+    func matchesSnooze(_ other: Self) -> Bool {
+        snoozed && other.snoozed && identifier == other.identifier && account == other.account &&
+        event.kind == other.event.kind && event.taskID == other.event.taskID && event.specID == other.event.specID &&
+        event.hasSignature(other.event.signature) && abs(event.date.timeIntervalSince(other.event.date)) < 0.001 &&
+        abs(fireAt.timeIntervalSince(other.fireAt)) < 0.001
+    }
     func valid(state: ReminderState) -> Bool { account == state.account && state.validated(event) != nil }
     func valid(account: String, events: [DueReminder]) -> Bool {
         self.account == account && events.contains { $0.taskID == event.taskID && $0.specID == event.specID && $0.hasSignature(event.signature) && $0.kind == event.kind }
@@ -649,6 +655,7 @@ struct ReminderState: Sendable {
     var deliveryAuthorityUnreadable = false
     var deliveryAuthorityAccount: String? = nil
     var timeSensitiveAllowed = false
+    var locationPlan: LocationReminderPlan? = nil
     func permitsOriginal(_ event: DueReminder) -> Bool {
         // Interval and Time Sensitive specs are explicitly local-only; the server excludes them.
         event.kind == .focusFinish || (event.kind == .task && (event.signature.hasPrefix("r6:") || event.signature.hasPrefix("r7:") || event.signature.hasPrefix("r8:"))) || (!deliveryAuthorityUnreadable && (deliveryAuthority?.allowsLocalOriginal(account: deliveryAuthorityAccount ?? account, at: event.date) ?? true))
@@ -659,6 +666,7 @@ struct ReminderState: Sendable {
         return DueReminder.validated(tasks: validationTasks, taskID: event.taskID, specID: event.specID, signature: event.signature, originalAt: event.date, calendar: calendar)
     }
 }
+enum ReminderSnoozeOutcome: Sendable { case scheduled, waitingForSpace, failed, obsolete }
 struct ReminderReport: Equatable, Sendable {
     var revision: Int
     var scheduled = 0
@@ -666,10 +674,20 @@ struct ReminderReport: Equatable, Sendable {
     var failures = 0
     var focusScheduled = false
     var focusFailure = false
+    var focusDeferred = false
+    var locations: LocationReminderReport? = nil
+    var reservedLocationSlots = 0
+    var otherPendingSlots = 0
+    var snoozeOutcome: ReminderSnoozeOutcome? = nil
+    var acceptedSnoozes: [ReminderRequest] = []
+    var deferredSnoozes: [ReminderRequest] = []
+    var failedSnoozes: [ReminderRequest] = []
     mutating func accepted(_ request: ReminderRequest) {
+        if request.snoozed { acceptedSnoozes.append(request) }
         if request.event.kind == .focusFinish { focusScheduled = true } else { scheduled += 1 }
     }
     mutating func failed(_ request: ReminderRequest) {
+        if request.snoozed { failedSnoozes.append(request) }
         if request.event.kind == .focusFinish { focusFailure = true } else { failures += 1 }
     }
 }
@@ -678,28 +696,64 @@ protocol ReminderCenter: Sendable {
     func removeInvalid(_ state: ReminderState) async
     func remove(_ identifiers: [String]) async
     func add(_ request: ReminderRequest) async throws
+    /// All pending identifiers outside decodable time/Focus requests, including
+    /// malformed owned requests. Their capacity cannot be assumed to be free.
+    func occupiedOutsideTimeAndFocus() async -> [String]
+}
+extension ReminderCenter {
+    func occupiedOutsideTimeAndFocus() async -> [String] { [] }
 }
 
-/// A single drain serializes notification mutations even across suspension and account changes.
+/// One drain admits time, snoozed, Focus and optional location requests. Location
+/// cleanup precedes time admission; new geofences wait until time capacity is freed.
 actor ReminderScheduler {
     private let center: any ReminderCenter
+    private var locationEngine: LocationReminderEngine?
+    private var pendingLocationEngine: LocationReminderEngine?
     private var desired = ReminderState(revision: -1, account: "", events: [])
+    private var hasDesiredState = false
     var currentRevision: Int { desired.revision }
+    func intentRevision() -> Int { sequence }
     private var sequence = 0
     private var running = false
     private var snoozes: [ReminderRequest] = []
     private var waiters: [CheckedContinuation<ReminderReport, Never>] = []
-    init(center: any ReminderCenter = SystemReminderCenter()) { self.center = center }
-    func update(_ state: ReminderState) async -> ReminderReport {
+    init(center: any ReminderCenter = SystemReminderCenter(), locationEngine: LocationReminderEngine? = nil) {
+        self.center = center; self.locationEngine = locationEngine
+    }
+    func prepareLocation(_ ticket: LocationReminderTicket) async -> Bool {
+        guard pendingLocationEngine == nil, let locationEngine, locationEngine.deviceIdentity == ticket.device,
+              await locationEngine.prepare(ticket) else { return false }
+        guard pendingLocationEngine == nil, self.locationEngine === locationEngine else { return false }
+        sequence += 1
+        if hasDesiredState { _ = await sweep() }
+        return true
+    }
+    private func permitsLocation(_ candidate: LocationReminderCandidate, engine: LocationReminderEngine) -> Bool {
+        guard pendingLocationEngine == nil, locationEngine === engine, let plan = desired.locationPlan, candidate.ticket.account == desired.account, plan.allowSubmissions, plan.capacity > 0 else { return false }
+        return plan.eligible.contains { $0.matches(candidate) }
+    }
+    func update(_ state: ReminderState, installing engine: LocationReminderEngine? = nil) async -> ReminderReport {
         guard state.revision > desired.revision else { return ReminderReport(revision: desired.revision) }
-        desired = state; sequence += 1
+        if let engine {
+            // Keep the current journal actor for the same installation. A newly read
+            // snapshot may predate an in-flight reservation or acknowledgement.
+            if let current = locationEngine, current.deviceIdentity == engine.deviceIdentity { pendingLocationEngine = nil }
+            else { pendingLocationEngine = engine }
+        }
+        desired = state; hasDesiredState = true; sequence += 1
         return await sweep()
     }
     func snooze(account: String, taskID: String, specID: String, signature: String, minutes: Int = 60, now: Date = Date(), originalAt: Date? = nil) async -> ReminderReport? {
         guard ReminderSnooze.validMinutes(minutes), now.timeIntervalSince1970.isFinite, account == desired.account, let event = desired.events.first(where: { $0.kind == .task && $0.taskID == taskID && $0.specID == specID && $0.hasSignature(signature) }) ?? DueReminder.validated(tasks: desired.validationTasks, taskID: taskID, specID: specID, signature: signature, originalAt: originalAt, calendar: desired.calendar) else { return nil }
         let request = ReminderRequest.make(account: account, event: event, fireAt: now.addingTimeInterval(TimeInterval(minutes) * 60), snoozed: true)
         snoozes.removeAll { $0.identifier == request.identifier }; snoozes.append(request); sequence += 1
-        return await sweep()
+        var report = await sweep()
+        if report.acceptedSnoozes.contains(where: { $0.matchesSnooze(request) }) { report.snoozeOutcome = .scheduled }
+        else if report.failedSnoozes.contains(where: { $0.matchesSnooze(request) }) { report.snoozeOutcome = .failed }
+        else if report.deferredSnoozes.contains(where: { $0.matchesSnooze(request) }) { report.snoozeOutcome = .waitingForSpace }
+        else { report.snoozeOutcome = .obsolete }
+        return report
     }
     private func sweep() async -> ReminderReport {
         await withCheckedContinuation { continuation in
@@ -710,6 +764,7 @@ actor ReminderScheduler {
     private func drain() async {
         while true {
             let token = sequence, state = desired
+            if let replacement = pendingLocationEngine { locationEngine = replacement; pendingLocationEngine = nil }
             let existing = await center.pending()
             guard token == sequence else { continue }
             snoozes.removeAll { !$0.valid(state: state) || $0.fireAt <= state.now }
@@ -728,24 +783,80 @@ actor ReminderScheduler {
             }
             requests.sort {
                 if $0.event.kind != $1.event.kind { return $0.event.kind == .focusFinish }
+                if $0.snoozed != $1.snoozed { return $0.snoozed }
                 return $0.fireAt == $1.fireAt ? $0.identifier < $1.identifier : $0.fireAt < $1.fireAt
             }
-            var report = ReminderReport(revision: state.revision, deferred: max(0, requests.count - 60))
-            requests = Array(requests.prefix(60))
             await center.removeInvalid(state)
             guard token == sequence else { continue }
+            let plan = (state.locationPlan ?? .empty).scoped(to: state.account)
+            var admission = plan
+            let priorityTimeSlots = requests.filter { $0.event.kind == .focusFinish || $0.snoozed }.count
+            var outside = await center.occupiedOutsideTimeAndFocus()
+            guard token == sequence else { continue }
+            var reserved = 0
+            if let locationEngine {
+                let foreign = outside.filter { !$0.hasPrefix(LocationReminderTicket.namespace) }.count
+                admission = plan.limited(to: max(0, 60 - foreign - priorityTimeSlots), submissions: true)
+                _ = await locationEngine.update(admission.limited(to: admission.capacity, submissions: false), permitsSubmission: { [weak self, weak locationEngine] candidate in
+                    guard let locationEngine else { return false }
+                    return await self?.permitsLocation(candidate, engine: locationEngine) ?? false
+                })
+                guard token == sequence else { continue }
+                reserved = await locationEngine.reservations(for: admission).count
+                outside = await center.occupiedOutsideTimeAndFocus()
+                guard token == sequence else { continue }
+            }
+            let other = locationEngine == nil ? outside.count : outside.filter { !$0.hasPrefix(LocationReminderTicket.namespace) }.count
+            let existingLocations = locationEngine == nil ? 0 : outside.filter { $0.hasPrefix(LocationReminderTicket.namespace) }.count
+            let timeLimit = max(0, 60 - other - max(reserved, existingLocations))
+            let deferred = requests.dropFirst(timeLimit)
+            var report = ReminderReport(revision: state.revision, deferred: deferred.filter { $0.event.kind == .task }.count,
+                focusDeferred: deferred.contains { $0.event.kind == .focusFinish }, reservedLocationSlots: reserved, otherPendingSlots: other)
+            report.deferredSnoozes = deferred.filter(\.snoozed)
+            requests = Array(requests.prefix(timeLimit))
             let expected = Set(requests.map(\.identifier))
             await center.remove(existing.map(\.identifier).filter { !expected.contains($0) })
             guard token == sequence else { continue }
             var acceptedSnoozes = Set<String>()
+            var capacityBlocked = false
             for request in requests {
                 if token != sequence { break }
                 if existing.contains(request) { report.accepted(request); if request.snoozed { acceptedSnoozes.insert(request.identifier) }; continue }
+                if capacityBlocked {
+                    if request.snoozed { report.deferredSnoozes.append(request) }
+                    if request.event.kind == .focusFinish { report.focusDeferred = true } else { report.deferred += 1 }
+                    continue
+                }
                 do { try await center.add(request); report.accepted(request); if request.snoozed { acceptedSnoozes.insert(request.identifier) } }
+                catch ReminderSchedulingFailure.noRoom {
+                    if request.snoozed { report.deferredSnoozes.append(request) }
+                    capacityBlocked = true
+                    if request.event.kind == .focusFinish { report.focusDeferred = true } else { report.deferred += 1 }
+                }
                 catch { report.failed(request) }
             }
             guard token == sequence else { continue }
             snoozes.removeAll { acceptedSnoozes.contains($0.identifier) }
+            let latestOutside = await center.occupiedOutsideTimeAndFocus()
+            guard token == sequence else { continue }
+            let currentOther = locationEngine == nil ? latestOutside.count : latestOutside.filter { !$0.hasPrefix(LocationReminderTicket.namespace) }.count
+            if currentOther != other { continue }
+            if let locationEngine {
+                let actualTimeCount = await center.pending().count
+                guard token == sequence else { continue }
+                let finalPlan = admission.limited(to: max(0, 60 - currentOther - actualTimeCount), submissions: !report.focusDeferred)
+                report.locations = await locationEngine.update(finalPlan, permitsSubmission: { [weak self, weak locationEngine] candidate in
+                    guard let locationEngine else { return false }
+                    return await self?.permitsLocation(candidate, engine: locationEngine) ?? false
+                })
+                guard token == sequence else { continue }
+                let after = await locationEngine.reservations(for: finalPlan).count
+                guard token == sequence else { continue }
+                // Failed/consumed one-shots release their reserved time slots in this
+                // same drain rather than leaving the queue artificially underfilled.
+                if after != reserved { continue }
+                report.reservedLocationSlots = after
+            }
             let completions = waiters; waiters = []; running = false
             for completion in completions { completion.resume(returning: report) }
             return
@@ -753,6 +864,10 @@ actor ReminderScheduler {
     }
 }
 
+enum ReminderSchedulingFailure: LocalizedError {
+    case noRoom
+    var errorDescription: String? { "There’s no room for another alert yet. Taskfold will retry when space is available." }
+}
 struct SystemReminderCenter: ReminderCenter {
     private var center: UNUserNotificationCenter { .current() }
     static func decode(_ request: UNNotificationRequest) -> ReminderRequest? {
@@ -775,6 +890,9 @@ struct SystemReminderCenter: ReminderCenter {
         return decoded
     }
     func pending() async -> [ReminderRequest] { await center.pendingNotificationRequests().compactMap(Self.decode) }
+    func occupiedOutsideTimeAndFocus() async -> [String] {
+        await center.pendingNotificationRequests().filter { Self.decode($0) == nil }.map(\.identifier)
+    }
     func removeInvalid(_ state: ReminderState) async {
         func stale(_ request: UNNotificationRequest) -> Bool {
             // Touch only Taskfold's reminder category and versioned namespace.
@@ -803,6 +921,8 @@ struct SystemReminderCenter: ReminderCenter {
         return content
     }
     func add(_ request: ReminderRequest) async throws {
+        let current = await center.pendingNotificationRequests()
+        guard current.count < 60 || current.contains(where: { $0.identifier == request.identifier }) else { throw ReminderSchedulingFailure.noRoom }
         // An explicit UTC instant preserves both sides of a daylight-saving fold.
         try await center.add(UNNotificationRequest(identifier: request.identifier, content: Self.content(for: request), trigger: Self.trigger(at: request.fireAt)))
     }

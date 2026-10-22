@@ -182,3 +182,8 @@ Advanced reminder work now includes an independently owned atomic private place/
 ### 22 October — native location adapter and iPad keyboard flow
 
 iOS now owns native location-trigger construction/inspection, typed permission/capability/capacity refusals and scoped cleanup. Actual native format and unavailable-device paths pass in the isolated Simulator, with durable refusal closure and unrelated-alert preservation. The Simulator reports region monitoring unavailable; positive registration/delivery is still open. iPad keyboard Search now passes the full private-place save/relaunch/edit/delete flow; direct Search taps while typing remain unresolved. Normal task location UI and the coordinated time/Focus/location scheduler are still unfinished, alongside repeated visits and private desktop-to-phone authoring. This is rank-5 progress, not full Px completion. See `p2-location-system-adapter-evidence.json` and `LOCATION_REMINDERS.md`.
+
+
+### 22 October — shared notification admission
+
+Both independently owned schedulers now coordinate an optional location engine with the existing time/Focus queue. Cleanup precedes additions; durable location intents reserve at most 20 slots; Focus and explicit snoozes have priority; all other native pending requests consume capacity. Account/installation changes fence late work, and a full native queue produces waiting feedback instead of false snooze success. Normal Store location bootstrap/consent/task/action wiring remains unfinished and the location editor stays hidden. Every-visit mode, private desktop-to-phone authoring and positive capable-device location delivery remain open. See `LOCATION_REMINDERS.md` and `p2-notification-admission-evidence.json`; this milestone does not complete rank 5 or Px.
