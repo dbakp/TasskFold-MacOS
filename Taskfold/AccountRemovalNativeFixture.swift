@@ -3,6 +3,7 @@ import Foundation
 import SwiftUI
 import Darwin
 import Security
+import CryptoKit
 
 /// Reserved synthetic native Store proof. Never enabled by a normal/release bundle.
 enum AccountRemovalNativeFixture {
@@ -82,6 +83,45 @@ struct AccountRemovalProofView: View {
             await store.runAccountRemovalNativeProof()
             Darwin.exit(0)
         }
+    }
+}
+/// DEBUG acceptance only: discard one genuine successful HTTP acknowledgement
+/// after the server acted, before Store can confirm the persisted command.
+/// Neither credentials nor a fake success response are written or produced.
+enum AccountRemovalLiveReplyFault {
+    struct Trace: Codable {
+        var version = 1
+        var account: String
+        var origin: String
+        var authorizationHashes: [String]
+        var serverConfirmedResponses = 0
+        var discardedAcknowledgements = 0
+    }
+    static let filename = "account-removal-live-reply-proof.json"
+    static var url: URL { URL.applicationSupportDirectory.appendingPathComponent("Taskfold", isDirectory: true).appendingPathComponent(filename) }
+    static func afterConfirmed(_ command: AccountRemovalCommand, currentAccount: String?, email: String?) throws {
+        guard ["com.dbakp.taskfold.workflowtestsremoval", "com.dbakp.taskfold.mac.workflowtestsremoval"].contains(Bundle.main.bundleIdentifier ?? ""),
+              command.origin == "https://zqxflydiyfjeedqvyova.supabase.co" else { return }
+        let enabled = ProcessInfo.processInfo.arguments.contains("--account-removal-live-drop-reply")
+        let exists = FileManager.default.fileExists(atPath: url.path)
+        guard enabled || exists else { return }
+        var trace: Trace
+        if exists {
+            trace = try JSONDecoder().decode(Trace.self, from: Data(contentsOf: url))
+            guard trace.version == 1, trace.account == command.account, trace.origin == command.origin,
+                  trace.serverConfirmedResponses < 8 else { return }
+        } else {
+            guard enabled, currentAccount == command.account,
+                  let email, email.hasPrefix("taskfold-removal-live-"), email.hasSuffix("@example.invalid") else { return }
+            trace = Trace(account: command.account, origin: command.origin, authorizationHashes: [])
+        }
+        trace.authorizationHashes.append(SHA256.hash(data: Data(command.authorization.utf8)).map { String(format: "%02x", $0) }.joined())
+        trace.serverConfirmedResponses += 1
+        let discard = enabled && trace.discardedAcknowledgements == 0
+        if discard { trace.discardedAcknowledgements = 1 }
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try JSONEncoder().encode(trace).write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        if discard { throw URLError(.networkConnectionLost) }
     }
 }
 #endif

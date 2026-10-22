@@ -85,7 +85,7 @@ struct DeleteAccountSheet: View {
         VStack(alignment: .leading, spacing: 14) {
             Label("Delete Account", systemImage: "exclamationmark.triangle.fill").font(.headline).foregroundStyle(.red)
             Text("This permanently removes your Taskfold account, profile, owned projects and tasks, and uploaded files. Other people’s tasks stay; comments on surviving shared tasks may remain anonymously.").font(.callout)
-            Text("Saved account data and recovery backups on this Mac are erased after server confirmation. Exported files and copies on other devices are not erased. If interrupted, removal resumes when you reopen Taskfold. Export your workspace first if you want a copy.").font(.callout).foregroundStyle(.secondary)
+            Text("Saved account data and recovery backups on this Mac are erased after server confirmation. Exported files and copies on other devices are not erased. If the connection is interrupted, reopen Taskfold within seven days to recover the server’s confirmation. Export your workspace first if you want a copy.").font(.callout).foregroundStyle(.secondary)
             Toggle("I understand this is permanent", isOn: $understood).accessibilityIdentifier("deleteUnderstood")
             if let message { Text(message).font(.callout).foregroundStyle(.red).textSelection(.enabled).accessibilityIdentifier("accountMessage") }
             HStack {

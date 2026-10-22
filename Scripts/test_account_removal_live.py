@@ -128,6 +128,22 @@ class Acceptance:
         self.require('SharedHistorySurvivesAnonymously',len(comment)==1 and comment[0]['body']=='Synthetic shared history must survive' and comment[0]['author_id'] is None)
         status,denial=self.call('/storage/v1/object/avatars/'+a['id']+'/recreate.png','POST',token=a['session']['access_token'],raw=b'old JWT must not recreate data',headers={'Content-Type':'image/png'})
         self.require('StaleJWTUploadRefused',status in [401,403] or status==400 and str(json.loads(denial).get('statusCode')) in ['401','403'])
+    def watch_native_pause(self):
+        # Independent server verification while the native app still retains
+        # its saved cache and unconfirmed private recovery command.
+        marker=self.path.parent/'native-recovery-paused.json'
+        deadline=time.monotonic()+150
+        while time.monotonic()<deadline:
+            try: paused=json.loads(marker.read_text())
+            except (FileNotFoundError,json.JSONDecodeError): paused={}
+            if paused.get('owner')==self.state['accounts']['A']['id'] and paused.get('cachePreserved') is True: break
+            time.sleep(.25)
+        else: raise RuntimeError('Native recovery pause not observed')
+        self.verify()
+        self.require('ServerVerifiedWhileNativeRecoveryPaused',True)
+        target=self.path.parent/'native-server-verified.json'
+        fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
+        with os.fdopen(fd,'w') as f: json.dump({'owner':self.state['accounts']['A']['id'],'verified':True},f)
     def cleanup(self):
         # Only exact Admin-created IDs/email/metadata from this private fixture
         # may be deleted; real accounts can never be supplied as cleanup input.
@@ -146,7 +162,7 @@ class Acceptance:
         self.state['cleaned']=True;self.save()
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--private-fixture',type=Path,required=True);p.add_argument('--phase',choices=['seed','upload-probe','remove','verify','cleanup'],required=True);p.add_argument('--evidence',type=Path,required=True);a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--private-fixture',type=Path,required=True);p.add_argument('--phase',choices=['seed','upload-probe','watch-native-pause','remove','verify','cleanup'],required=True);p.add_argument('--evidence',type=Path,required=True);a=p.parse_args()
     run=Acceptance(a.private_fixture)
     try:
         getattr(run,a.phase.replace('-','_'))()

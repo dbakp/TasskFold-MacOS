@@ -440,6 +440,9 @@ final class Backend: NSObject {
         guard receipt?["deleted"] == .bool(true) else {
             throw AppFailure(message: "The server did not confirm account removal. Your local work is still on this device. Try again.")
         }
+        #if DEBUG && !SWIFT_PACKAGE
+        try AccountRemovalLiveReplyFault.afterConfirmed(command, currentAccount: session?.user.id, email: session?.user.email)
+        #endif
     }
     /// Convenience for transport callers; the Store uses the durable vault path.
     func deleteAccount() async throws {
