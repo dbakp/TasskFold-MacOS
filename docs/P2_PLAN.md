@@ -4,7 +4,7 @@ Updated 23 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; scoped clipboard/spoken secret controls now pass; native recovery and the remaining spoken checks remain in progress. Hosted server-session expiry and temporary encryption-key restoration now pass in both repo-owned services; native reauthentication and wider spoken acceptance remain open. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; scoped clipboard/spoken secret controls now pass; native recovery and the remaining spoken checks remain in progress. Hosted server-session expiry and temporary encryption-key restoration now pass in both repo-owned services; hosted same-account webhook, queued-task and API-key recovery now pass on phone/tablet; wider spoken acceptance remains open. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -1192,3 +1192,29 @@ credentials and installed test apps are removed. Mac runtime, queued edit/delete
 and held-sync variants, API-key-specific hosted renewal, Google selection and
 wider spoken checks remain open. The advanced backlog is not complete; all user
 deferrals remain unchanged. Normal automation/webhook feature entries stay gated.
+
+
+## Hosted API-key sign-in recovery — 23 October
+
+The remaining API-key-specific native renewal check now passes on iPhone and
+iPad Simulator (one test each, no failures or skips). Actual Auth, HTTPS and OS
+Keychain are used. After synthetic server-session expiry, wrong password and
+Cancel preserve setup; same-account renewal and Continue return to the original
+concealed key. Server comparisons verify one key with unchanged ID, secret hash,
+permissions, expiry and counters, plus an unchanged complete saved-task
+fingerprint. Normal relaunch recovers that setup with renewed credentials; native
+acknowledgement and revocation persist through another relaunch.
+
+No product defect was found, and Release behavior is unchanged. The iOS repo
+extends its exact Debug host allowlists and owns the native test/controller; both
+repos retain independent unchanged production services. This does not claim Mac
+runtime, Google selection, natural JWT expiry, all queued-edit variants or wider
+spoken acceptance. Exact runs, reviewed masked screenshots, source fingerprints
+and verified test-app/preview cleanup are in
+`p2-hosted-api-key-reauthentication-evidence.json`. Core and Mac app code are
+unchanged; their previous committed suite/build evidence remains applicable.
+
+Next feature implementation: idempotent email-to-task intake, followed by advanced
+teams and wearable clients. Provider/domain configuration remains undecided; live
+mail delivery must stay gated until configured and verified. Full Px remains
+active, and all existing user deferrals stay unchanged.

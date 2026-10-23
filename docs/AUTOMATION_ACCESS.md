@@ -293,3 +293,29 @@ credentials and installed test apps are removed. Mac runtime, queued edit/delete
 and held-sync variants, API-key-specific hosted renewal, Google selection and
 wider spoken checks remain open. The advanced backlog is not complete; all user
 deferrals remain unchanged. Normal automation/webhook feature entries stay gated.
+
+
+## Hosted API-key sign-in recovery — 23 October
+
+The remaining API-key-specific native renewal check now passes on iPhone and
+iPad Simulator (one test each, no failures or skips). Actual Auth, HTTPS and OS
+Keychain are used. After synthetic server-session expiry, wrong password and
+Cancel preserve setup; same-account renewal and Continue return to the original
+concealed key. Server comparisons verify one key with unchanged ID, secret hash,
+permissions, expiry and counters, plus an unchanged complete saved-task
+fingerprint. Normal relaunch recovers that setup with renewed credentials; native
+acknowledgement and revocation persist through another relaunch.
+
+No product defect was found, and Release behavior is unchanged. The iOS repo
+extends its exact Debug host allowlists and owns the native test/controller; both
+repos retain independent unchanged production services. This does not claim Mac
+runtime, Google selection, natural JWT expiry, all queued-edit variants or wider
+spoken acceptance. Exact runs, reviewed masked screenshots, source fingerprints
+and verified test-app/preview cleanup are in
+`p2-hosted-api-key-reauthentication-evidence.json`. Core and Mac app code are
+unchanged; their previous committed suite/build evidence remains applicable.
+
+Next feature implementation: idempotent email-to-task intake, followed by advanced
+teams and wearable clients. Provider/domain configuration remains undecided; live
+mail delivery must stay gated until configured and verified. Full Px remains
+active, and all existing user deferrals stay unchanged.
