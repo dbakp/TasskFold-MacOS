@@ -1,0 +1,191 @@
+{
+  "date": "2026-10-23",
+  "scope": "Actual Simulator Keychain with synthetic intercepted HTTP and synthetic account sessions; Mac compilation only",
+  "source_sha256": {
+    "Taskfold.xcodeproj/project.pbxproj": "03f9bd6452848c284db1a84067cc2a8b698b155e33ed26f62f4fef826644706a",
+    "Taskfold/Views/EmailCaptureView.swift": "ffe50fdd08f55339e0bedd633d2dbf3f58ef58f7b80ad3a87a282ff6aa9f48da",
+    "Taskfold/Views/EmailCaptureKeychainFixture.swift": "67b246705be77ff7253d71700e490acb237e2677be67d2968c8ecf6f1e2a971a",
+    "Taskfold/Core/EmailCapture.swift": "2683ea3254a344af4f81d918196fd37e367e3018b23cb2a01e77500f3a54527a",
+    "Taskfold/Core/Backend.swift": "fe65343a22cb6bfeff7f29e8eadec76e102108c95b78fe3f27be43b4c2802519",
+    "Taskfold/Core/Store.swift": "3b362ca7dfbb47b272c671086f20e281f494cb5ca9e21004c38d4105d587d08f"
+  },
+  "results": {
+    "phone": {
+      "tests": 3,
+      "failures": 0,
+      "appearance": "normal light"
+    },
+    "tablet": {
+      "tests": 3,
+      "failures": 0,
+      "appearance": "accessibility XXXL dark"
+    },
+    "ios_build": "TEST BUILD SUCCEEDED",
+    "mac_build": "BUILD SUCCEEDED"
+  },
+  "proofs": {
+    "phone": {
+      "proofs": [
+        {
+          "attachment": "520D14A9-87FB-4A4C-8F74-7E84654FD764.txt",
+          "text": "account=A saved=0 pending=none requests=0 created=0 total=0 identity=match files=clean policy=absent"
+        },
+        {
+          "attachment": "5FC2EB1C-A923-488D-BBC5-85B2F9C6B4D3.txt",
+          "text": "account=A saved=0 pending=create requests=1 created=1 total=1 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "67C0CD94-7E8B-400B-8BE1-023284F2AF7A.txt",
+          "text": "account=A saved=0 pending=create requests=1 created=1 total=1 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "6ACB97B9-AB0D-4C4C-861B-B2248509462F.txt",
+          "text": "account=A saved=0 pending=none requests=0 created=0 total=0 identity=match files=clean policy=absent"
+        },
+        {
+          "attachment": "850A5762-69A1-49F6-A767-E701B16963B1.txt",
+          "text": "account=A saved=1 pending=none requests=2 created=1 total=1 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "9F57A811-157E-4D7B-AF42-76225DEA6950.txt",
+          "text": "account=A saved=1 pending=none requests=2 created=1 total=1 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "B79F6629-A6D0-460E-8ECD-C49A89039B1D.txt",
+          "text": "account=A saved=1 pending=none requests=2 created=1 total=2 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "C01DE743-1BC0-47BE-9062-3C43F4A2EAED.txt",
+          "text": "account=B saved=0 pending=none requests=0 created=0 total=1 identity=match files=clean policy=absent"
+        },
+        {
+          "attachment": "C020E58B-01F7-4D5D-875F-CF33F8BF330C.txt",
+          "text": "account=B saved=1 pending=none requests=1 created=1 total=2 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "C300D077-E6A1-4C4C-AF7D-639EB8C5F190.txt",
+          "text": "account=A saved=0 pending=create requests=1 created=1 total=1 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "CCE05D3F-56A0-4658-958F-708F6A9B301D.txt",
+          "text": "account=A saved=1 pending=none requests=2 created=1 total=1 identity=match files=clean policy=device-only"
+        }
+      ]
+    },
+    "tablet": {
+      "proofs": [
+        {
+          "attachment": "34D8BA89-E4AE-478C-A5FE-E0E322D55C5E.txt",
+          "text": "account=A saved=0 pending=create requests=1 created=1 total=1 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "5D2970B8-758B-4215-BFA6-9F7644624BA8.txt",
+          "text": "account=A saved=1 pending=none requests=2 created=1 total=2 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "672835AE-1653-40D8-96A7-27C0D44D76C5.txt",
+          "text": "account=A saved=1 pending=none requests=2 created=1 total=1 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "6F315C45-91CA-4097-BB94-6799F50AA8F4.txt",
+          "text": "account=B saved=1 pending=none requests=1 created=1 total=2 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "875059B5-EBCA-43EE-AAF2-7578C91D2987.txt",
+          "text": "account=A saved=0 pending=create requests=1 created=1 total=1 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "909DF139-4F57-4C3D-B2E7-18AB521849B9.txt",
+          "text": "account=A saved=0 pending=none requests=0 created=0 total=0 identity=match files=clean policy=absent"
+        },
+        {
+          "attachment": "92047D82-1BC7-4D5B-81F1-3BAA02D81E31.txt",
+          "text": "account=A saved=1 pending=none requests=2 created=1 total=1 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "B6AC70F0-73E8-4D74-AECA-89D8445820F2.txt",
+          "text": "account=A saved=0 pending=none requests=0 created=0 total=0 identity=match files=clean policy=absent"
+        },
+        {
+          "attachment": "BC5374D7-FDA7-4F9F-AC83-756B13186505.txt",
+          "text": "account=A saved=1 pending=none requests=2 created=1 total=1 identity=match files=clean policy=device-only"
+        },
+        {
+          "attachment": "BE2CA48A-FA77-42C3-8616-277E6BE0E96D.txt",
+          "text": "account=B saved=0 pending=none requests=0 created=0 total=1 identity=match files=clean policy=absent"
+        },
+        {
+          "attachment": "E5838E61-D54B-4570-96CC-D51C8E245C86.txt",
+          "text": "account=A saved=0 pending=create requests=1 created=1 total=1 identity=match files=clean policy=device-only"
+        }
+      ]
+    }
+  },
+  "screenshots": {
+    "phone-keychain-recovery.png": "5fb4f347d8b26e55610c196b02a379befd89a271c26c909a1e730989b70f57f4",
+    "tablet-keychain-recovery.png": "b80be222befca3c20ce1981ef82061667349225d4e3710287a74356938710da9"
+  },
+  "review": "Both screenshots visually inspected: persistent message and recovery controls readable, including largest-text tablet. Debug diagnostics are isolated-only.",
+  "finding": "Initial phone run could not reach off-screen Retry; persistent top recovery panel fixes the product flow. Original Retry existence assertion retained. Fresh audit clears old output before reading.",
+  "checks": [
+    "Actual production vault and device-only Data Protection Keychain attributes",
+    "Pending and confirmed setup persist through process termination/relaunch",
+    "Original hash-only HTTP request body unchanged on retry; one address created",
+    "Independent synthetic A/B private records and return to A",
+    "Both synthetic private records removed and verified empty; actual queried item absent",
+    "No plaintext capability in owned fixture metadata files"
+  ],
+  "limits": [
+    "HTTP server and account sessions are synthetic, not genuine hosted Auth or provider delivery",
+    "Second-write error is injected around actual Keychain IO, not OS permission denial",
+    "File scan is limited to owned fixture directory, not whole device",
+    "Mac runtime/Keychain and physical locked/denied behavior unverified",
+    "Hosted reauthentication, wider concurrency/network/clipboard and human spoken checks remain",
+    "Core/Backend/Store/SQL unchanged; previous committed domain evidence retained without rerunning unrelated suites"
+  ],
+  "configuration": "No provider/domain configured or deployed; feature remains disabled; user will configure later",
+  "cleanup": {
+    "scope": "Owned isolated email test artifacts only",
+    "devices": [
+      {
+        "id": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "owned_app_and_runner_absent": true
+      },
+      {
+        "id": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "owned_app_and_runner_absent": true
+      }
+    ],
+    "removed": [
+      {
+        "name": "EmailKeychainPhone.xcresult",
+        "bytes": 52770026
+      },
+      {
+        "name": "EmailKeychainTablet.xcresult",
+        "bytes": 1669284
+      },
+      {
+        "name": "EmailKeychainPhoneFinal.xcresult",
+        "bytes": 1714004
+      },
+      {
+        "name": "EmailKeychainTabletFinal.xcresult",
+        "bytes": 2386512
+      },
+      {
+        "name": "EmailKeychainPhoneAttachments",
+        "bytes": 887474
+      },
+      {
+        "name": "EmailKeychainTabletAttachments",
+        "bytes": 1551546
+      },
+      {
+        "name": "APIRenewalNativeHost",
+        "bytes": 7331327
+      }
+    ],
+    "retained": "Safe proofs/screenshots in both repos; small logs/signing receipts and reusable build caches retained"
+  }
+}

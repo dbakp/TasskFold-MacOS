@@ -14,6 +14,10 @@ struct EmailCaptureView: View {
     @Environment(\.scenePhase) private var phase
     @Environment(\.dismiss) private var dismiss
     @State private var model: EmailCaptureModel?
+    @State private var startupFailure: String?
+    #if DEBUG
+    @State private var keychainProof = "Not checked"
+    #endif
     @State private var composing = false
     @State private var destructive: EmailRoute?
     @State private var replacing: EmailRoute?
@@ -25,7 +29,7 @@ struct EmailCaptureView: View {
     var body: some View {
         Group {
             if let model, model.current { management(model) }
-            else { ContentUnavailableView("Sign in to capture email", systemImage: "envelope", description: Text("Email addresses belong to your synced account.")) }
+            else { ContentUnavailableView(startupFailure == nil ? "Sign in to capture email" : "Private setup unavailable", systemImage: "envelope", description: Text(startupFailure ?? "Email addresses belong to your synced account.")) }
         }
         .navigationTitle("Email to Taskfold")
         #if os(iOS)
@@ -71,7 +75,7 @@ struct EmailCaptureView: View {
     private func start() async {
         #if DEBUG
         if fixture && EmailCaptureFixture.enabled {
-            guard model == nil else { return }; let value = EmailCaptureFixture.model(); model = value; await value.load(); return
+            guard model == nil else { return }; do { let value = try await EmailCaptureFixture.model(); model = value; await value.load() } catch { startupFailure = "Private setup could not be opened. Try again." }; return
         }
         #endif
         guard model == nil, EmailCaptureAvailability.enabled, store.signedIn, !store.localMode, !store.signingOut, !store.accountRemovalBlocked, let origin = try? store.backend.accountRemovalOrigin else { return }
@@ -84,25 +88,21 @@ struct EmailCaptureView: View {
     private func leave() { model?.close(); model = nil; revealed = nil; copied = nil; composing = false; reauthentication = nil }
     private func management(_ model: EmailCaptureModel) -> some View {
         Form {
+            #if DEBUG
+            if EmailCaptureKeychainFixture.enabled {
+                Section("Secure-storage check") {
+                    Button("Verify private recovery") { keychainProof = "Checking…"; Task { do { keychainProof = try await EmailCaptureKeychainFixture.audit() } catch { keychainProof = "Verification failed" } } }.accessibilityIdentifier("verifyEmailKeychain")
+                    Text(keychainProof).font(.caption).dynamicTypeSize(...DynamicTypeSize.xxxLarge).accessibilityIdentifier("emailKeychainProof")
+                }
+            }
+            #endif
             Section {
                 Label("A quieter way to capture", systemImage: "envelope.badge").font(.headline)
                 Text("Forward an email from your verified account address. Its subject becomes the task title, and its full plain text becomes the note.").foregroundStyle(.secondary)
                 Text("Attachments are not imported. Email never sets dates, priority or assignment.").font(.callout).foregroundStyle(.secondary)
             }
             if !model.available {
-                Section { Label("Email capture is not available yet", systemImage: "clock"); Text("Your tasks stay saved. Existing addresses can still be paused or revoked after refreshing their status.").font(.callout).foregroundStyle(.secondary) }
-            }
-            if let message = model.message {
-                Section { Label(message, systemImage: "exclamationmark.circle").fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("emailCaptureNotice")
-                    if model.needsSignIn { Button("Sign in again") { reauthentication = try? store.backend.reauthenticationContext(account: model.account) } }
-                }
-            }
-            if let pending = model.pending {
-                Section("Unfinished change") {
-                    Text(pending.action == "create" || pending.action == "rotate" ? "Your private setup is saved on this device. Retry to check whether the address was created." : "Retry the saved action to confirm its status.")
-                    Button("Retry saved action") { Task { await model.retry() } }.accessibilityIdentifier("retryEmailSetup")
-                    if pending.draft != nil { Button("Discard setup", role: .destructive) { discarding = true } }
-                }
+                Section { Label(model.message == nil ? "Email capture is not available yet" : "Email capture needs attention", systemImage: model.message == nil ? "clock" : "exclamationmark.circle"); Text("Your tasks stay saved. Existing addresses can still be paused or revoked after refreshing their status.").font(.callout).foregroundStyle(.secondary) }
             }
             Section("Your addresses") {
                 let routes = model.routes.filter { $0.state != "revoked" }
@@ -116,7 +116,33 @@ struct EmailCaptureView: View {
         }
         .disabled(model.busy)
         .overlay { if model.busy { ProgressView().padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14)) } }
+        .safeAreaInset(edge: .top, spacing: 0) { recoveryNotice(model) }
         .onChange(of: model.pending?.id) { _, _ in revealed = nil; copied = nil }
+    }
+    @ViewBuilder private func recoveryNotice(_ model: EmailCaptureModel) -> some View {
+        if model.pending != nil || model.message != nil {
+            VStack(alignment: .leading, spacing: 10) {
+                Label(model.pending == nil ? (model.message ?? "") : "Your unfinished change is saved on this device.", systemImage: "exclamationmark.circle")
+                    .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("emailCaptureNotice")
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 16) { recoveryActions(model) }.fixedSize(horizontal: true, vertical: false)
+                    VStack(alignment: .leading, spacing: 10) { recoveryActions(model) }
+                }
+            }
+            .font(.callout).padding(.horizontal, 20).padding(.vertical, 12).frame(maxWidth: .infinity, alignment: .leading)
+            .background(.background).overlay(alignment: .bottom) { Divider() }.disabled(model.busy)
+        }
+    }
+    @ViewBuilder private func recoveryActions(_ model: EmailCaptureModel) -> some View {
+        if model.needsSignIn {
+            Button("Sign in again") { reauthentication = try? store.backend.reauthenticationContext(account: model.account) }
+        } else if model.pending != nil {
+            Button("Retry saved action") { Task { await model.retry() } }.accessibilityIdentifier("retryEmailSetup")
+        }
+        if !model.needsSignIn && model.pending == nil {
+            Button("Refresh status") { Task { await model.load() } }.accessibilityIdentifier("refreshEmailNotice")
+        }
+        if model.pending?.draft != nil { Button("Discard setup", role: .destructive) { discarding = true } }
     }
     private func addressRow(_ route: EmailRoute, _ model: EmailCaptureModel) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -192,11 +218,12 @@ private struct EmailCaptureComposer: View {
 #if DEBUG
 /// Exact isolated Simulator host only. No network, real account or task writes.
 @MainActor enum EmailCaptureFixture {
-    static var enabled: Bool {
+    nonisolated static var enabled: Bool {
         ["com.dbakp.taskfold.workflowtestswebhooks", "com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--email-capture-testing")
     }
-    static func model() -> EmailCaptureModel {
+    static func model() async throws -> EmailCaptureModel {
         precondition(enabled)
+        if EmailCaptureKeychainFixture.enabled { return try await EmailCaptureKeychainFixture.makeModel() }
         return EmailCaptureModel(account: "f0e1cafe-0000-4000-8000-000000000001", origin: "https://backend.example", service: EmailCaptureFixturePeer(), vault: EmailAddressVault(io: EmailCaptureFixtureMemory()), isCurrent: { true })
     }
 }

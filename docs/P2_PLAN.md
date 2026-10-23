@@ -1316,3 +1316,22 @@ sender/receipt integration, source links and scheduled inactive-account maintena
 Extra verified senders and real domain migration/re-enrollment acceptance remain
 open. Provider/domain configuration stays deferred. Rank 6, advanced teams,
 wearable clients, remaining Px and all existing user deferrals stay in scope.
+
+
+## Email private recovery — 23 October, scoped Simulator acceptance
+
+Production device-only Keychain recovery now passes on signed iPhone and largest-
+text dark iPad Simulator hosts: lost reply, injected confirmation-write failure,
+process relaunch, unchanged retry identity, separate synthetic account sessions,
+and verified removal of both owned private records. Three scoped UI cases per
+device pass. Recovery messages/actions stay visible after a phone walkthrough
+found the old Form could hide Retry. Both independent apps build; this is not
+Mac runtime or genuine hosted account/provider acceptance. See
+`p2-email-keychain-recovery-evidence.json` and `EMAIL_CAPTURE.md`.
+
+Next: genuine hosted native recovery/reauthentication and verified provider
+adapter preparation, then source links, scheduled maintenance and additional
+verified senders. Provider/domain configuration remains deferred by the user;
+keep email delivery and its native release flag disabled. Advanced teams and
+wearable clients remain in the full ranked backlog; existing release deferrals
+stay in force.

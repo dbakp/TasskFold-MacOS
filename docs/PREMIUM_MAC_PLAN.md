@@ -3707,3 +3707,16 @@ change. `EMAIL_CAPTURE.md` orders the remaining journal/route permissions, provi
 bridge and native setup/recovery work. Keep native setup consistent with the
 existing app, and do not display an address as usable before verified provider
 configuration. Full intake and Px remain open.
+
+
+## Email recovery controls — 23 October
+
+The Mac-owned email view now keeps recovery messages and Retry/Discard or Sign in
+actions in a persistent adaptive panel. The isolated Debug fixture can use the
+actual device-only vault; its source is independently owned in this repository.
+The current Mac Debug app compiles successfully. Companion iPhone/iPad Simulator
+Keychain recovery and visible-action checks pass, with safe evidence and reviewed
+screenshots retained locally in this repo. These are not Mac runtime or Mac
+Keychain acceptance. `p2-email-keychain-recovery-evidence.json` records the exact
+scope. Provider/domain configuration is deferred, delivery remains disabled, and
+the full Px backlog and user release deferrals remain active.

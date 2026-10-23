@@ -12,7 +12,7 @@ configuration and real signed-delivery acceptance.
 | Content and retry contract | Bounded plain text; transparent attachment omissions; a stable provider-delivery/route identity separate from content fingerprint | Implemented independently in each repo; ten Deno tests and lint pass per repo |
 | Atomic intake journal and routes | One committed task per verified delivery; changed-content replays conflict; paused/revoked or unauthorized destinations refuse delivery; quotas and account-removal fencing | Implemented as a disabled local candidate; current protocol-2 evidence includes 119 intake and 40 real PostgreSQL concurrency checks per repo; hosted/provider/native acceptance remains open |
 | Provider adapter and management gateway | Verify signed provider requests before trusting normalized sender/receipt data; authorize current native sessions; bounded body/read/deadlines and admission; no raw credentials in receipts | Native management gateway locally implemented; verified provider adapter and hosted/native acceptance remain open; configuration follows later |
-| Native setup and recovery | Clear address/destination review, trusted senders, pause/rotate/revoke, account-bound private setup/retry, understandable delivery status and accessible controls | Native candidate implemented; scoped Simulator walkthrough and recovery tests recorded below; real Keychain/hosted/Mac/spoken acceptance remains open |
+| Native setup and recovery | Clear address/destination review, trusted senders, pause/rotate/revoke, account-bound private setup/retry, understandable delivery status and accessible controls | Native candidate implemented; scoped Simulator walkthrough and recovery tests recorded below; scoped real Simulator Keychain now passes; hosted/Mac/spoken acceptance remains open |
 | Real delivery acceptance | Actual provider retries, sender spoof refusal, current membership changes, native relaunch/account isolation and recovery | Open; requires later provider/domain configuration |
 
 ## Implemented internal contract
@@ -246,8 +246,8 @@ accessible name and value; this is not a human VoiceOver listening acceptance.
 
 Verification and screenshots are recorded in `p2-email-native-setup-evidence.json`.
 The Simulator walkthrough uses a strictly gated synthetic peer/memory vault, not
-real Auth, email delivery or the production private Keychain path. Native Keychain
-relaunch/error acceptance, hosted end-to-end Auth/recovery, Mac runtime, wider
+real Auth, email delivery or the production private Keychain path. At that milestone, native Keychain relaunch/error acceptance was open; the scoped
+Simulator pass is recorded below. Hosted end-to-end Auth/recovery, Mac runtime, wider
 project/account variants and spoken accessibility remain gates. The durable binding section below now implements explicit retirement and
 re-enrollment before domain changes. Hosted migration acceptance stays open;
 changing the environment variable alone is not a rollout procedure.
@@ -337,3 +337,32 @@ flag. Changing an environment variable alone is never a domain migration. This
 candidate's explicit retire-and-re-enroll rule is now implemented; real hosted
 migration/re-enrollment acceptance remains open. It does not close the user's
 separately deferred general old-client editing/upgrade safeguards.
+
+
+## Simulator private recovery — 23 October 2026
+
+The signed isolated iPhone and iPad hosts now exercise the production email vault
+and actual Simulator Data Protection Keychain, using the production Backend with
+intercepted synthetic HTTP. A lost response and an injected second-write failure
+after a successful response both preserve the pending operation through process
+termination. Retry submits the identical original body and creates no second
+address. Confirmed private setup survives another relaunch. Two synthetic account
+sessions keep separate private copies; returning to the first preserves its setup.
+The tests query actual item attributes for unlocked-this-device-only protection
+and no synchronization, then remove both owned test records and verify absence.
+
+The phone run exposed off-screen recovery actions in the lazy Form. The message
+and Retry/Discard controls now remain in a persistent top panel, adapting their
+layout to text size. Final acceptance is three UI cases with zero failures on each
+device, including the existing review/cancel/conceal/pause/resume regression. The
+phone is normal light; the tablet uses largest accessibility text and dark mode.
+Both recovery screenshots were visually reviewed; their secure-storage diagnostic
+section exists only in the exact isolated Debug host. Both independent apps build.
+
+This is not hosted Auth/account switching or provider delivery acceptance. The
+confirmation error is an injected IO fault around the real Keychain, not an observed
+OS denial. The plaintext check covers only the owned fixture metadata directory,
+not the entire device. Mac runtime/Keychain, actual locked/denied storage, hosted
+reauthentication, wider network/concurrency, clipboard and human spoken checks
+remain open. No live configuration or native release flag is enabled. Exact safe
+proofs and source fingerprints are in `p2-email-keychain-recovery-evidence.json`.
