@@ -4,16 +4,22 @@ export type AdmissionConfig = {
   serviceKey: string;
   forwardedForMode?: string;
 };
-// Enabling this mode requires a real hosted spoof/append probe first. An unset mode or
-// malformed last hop fails closed; other forwarding headers are ignored.
+// This project’s hosted probe verifies a gateway-rewritten first hop and the
+// independent Cloudflare header. Require agreement; retire the unstable last hop.
 export function forwardedIP(
   request: Request,
   mode: string | undefined,
 ): string | null {
-  if (mode !== "supabase-append-v1") return null;
-  const header = request.headers.get("X-Forwarded-For");
-  if (!header || header.length > 2048) return null;
-  const text = header.split(",").at(-1)!.trim();
+  if (mode !== "supabase-cloudflare-v1") return null;
+  const chain = request.headers.get("X-Forwarded-For"),
+    cf = request.headers.get("CF-Connecting-IP");
+  if (!chain || chain.length > 2048 || !cf || cf.length > 64) return null;
+  const first = canonicalAutomationIP(chain.split(",")[0].trim()),
+    confirmed = canonicalAutomationIP(cf.trim());
+  return first !== null && first === confirmed ? first : null;
+}
+export function canonicalAutomationIP(text: string): string | null {
+  if (!text || text.length > 64) return null;
   if (/^\d{1,3}(\.\d{1,3}){3}$/.test(text)) {
     const parts = text.split(".");
     if (parts.some((p) => Number(p) > 255 || p !== String(Number(p)))) {

@@ -4,7 +4,7 @@ import { createHandler as keys } from "../automation-keys/handler.ts";
 const config = {
   url: "https://admission.test",
   serviceKey: "synthetic-private-service",
-  forwardedForMode: "supabase-append-v1",
+  forwardedForMode: "supabase-cloudflare-v1",
 };
 const assert = (condition: unknown, message = "Assertion failed") => {
   if (!condition) throw new Error(message);
@@ -15,18 +15,36 @@ const request = (
 ) =>
   new Request("https://edge.test", {
     method: "POST",
-    headers: { Authorization: authorization, "X-Forwarded-For": ip },
+    headers: {
+      Authorization: authorization,
+      "X-Forwarded-For": ip,
+      "CF-Connecting-IP": ip.split(",")[0].trim(),
+    },
     body: '{"action":"list","body":{}}',
   });
 const reply = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status });
 const allow = { allowed: true, retry_after: 0, limited_by: null };
-Deno.test("forwarded identity requires the explicit trusted append contract and canonicalizes only its last hop", () => {
+Deno.test("forwarded identity requires the verified matching client-header pair and canonicalizes the first hop", () => {
   assert(forwardedIP(request(), undefined) === null);
   assert(forwardedIP(request(), "other") === null);
   assert(
+    forwardedIP(request(), "supabase-append-v1") === null,
+    "Retired proxy-hop mode accepted",
+  );
+  const mismatch = request();
+  mismatch.headers.set("CF-Connecting-IP", "192.0.2.11");
+  assert(forwardedIP(mismatch, config.forwardedForMode) === null);
+  const missing = request();
+  missing.headers.delete("CF-Connecting-IP");
+  assert(forwardedIP(missing, config.forwardedForMode) === null);
+  const duplicates = request();
+  duplicates.headers.set("CF-Connecting-IP", "192.0.2.10,192.0.2.10");
+  assert(forwardedIP(duplicates, config.forwardedForMode) === null);
+
+  assert(
     forwardedIP(
-      request("Bearer x", "spoofed, 192.0.2.10"),
+      request("Bearer x", "192.0.2.10, ignored-proxy"),
       config.forwardedForMode,
     ) === "192.0.2.10",
   );
@@ -41,7 +59,7 @@ Deno.test("forwarded identity requires the explicit trusted append contract and 
       "192.0.2.999",
       "192.000.2.10",
       "192.0.2.10:80",
-      "192.0.2.10,",
+      ", 192.0.2.10",
       "[2001:db8::1]",
       "fe80::1%en0",
       "garbage",
@@ -80,7 +98,7 @@ Deno.test("admission forwards only domain-separated HMACs to fixed no-redirect R
   assert(await gate(request()) === null);
   assert(
     await gate(
-      request("bEaReR synthetic-credential", "pretend, 192.0.2.10"),
+      request("bEaReR synthetic-credential", "192.0.2.10, ignored-proxy"),
     ) === null,
   );
   assert(calls.length === 2, "Positive grant cached");
@@ -230,7 +248,10 @@ Deno.test("both production handler factories admit before task validation, live 
     });
     const req = new Request("https://edge.test", {
       method: "POST",
-      headers: { "X-Forwarded-For": "192.0.2.10" },
+      headers: {
+        "X-Forwarded-For": "192.0.2.10",
+        "CF-Connecting-IP": "192.0.2.10",
+      },
       body: new ReadableStream({
         cancel() {
           cancelled = true;

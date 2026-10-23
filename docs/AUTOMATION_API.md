@@ -21,8 +21,8 @@ Capabilities are `tasks:read`, `tasks:create`, `tasks:update`, `tasks:complete`
 (including reopen) and `tasks:delete`. Checklist progress also requires complete.
 Keys last 7/30/90/365 days; issuance allows 20 active keys and 10 new keys per
 UTC day. Successful-operation budgets are 60/key/minute, 1,000/key/day and
-2,000/account/day. A separate admission budget covers rejected traffic; its IP
-trust contract still needs a real hosted probe before enablement.
+2,000/account/day. A separate admission budget covers rejected traffic; its checked client-header pair is now verified on this project.
+The feature remains disabled pending the remaining hosted lifecycle acceptance.
 
 Reads allow 8,192 input bytes; writes and responses allow 1,048,576 bytes.
 Input has a two-second deadline and the handler a 15-second overall deadline.
@@ -284,16 +284,32 @@ Cached denials avoid repeat database work and cancel the unconsumed body. This
 is function-level admission protection; it cannot prevent provider invocation
 charges or substitute for upstream network/DDoS controls.
 
-**Deployment prerequisite:** `TASKFOLD_AUTOMATION_FORWARDED_FOR_MODE` must remain
-unset until a hosted spoof/append probe proves the project's actual gateway adds
-an authoritative client IP as the last `X-Forwarded-For` hop. The implemented mode
-is `supabase-append-v1`. An unset/unknown mode, missing/malformed last hop, unsafe
-origin or missing service credential fails closed. Earlier forwarded prefixes,
-`X-Real-IP`, `CF-Connecting-IP` and caller-asserted key IDs do not select the budget.
-IPv4/IPv6 spelling is canonicalized; only complete credential HMACs are counted,
-so knowing another key's public UUID cannot consume its credential budget.
-The mode has **not** been enabled or verified on the hosted service. Proxy
-semantics cannot be inferred solely from a header's syntactic shape.
+**Verified project-specific proxy contract:** the hosted probe found three
+forwarding hops. The first matched the stable `CF-Connecting-IP` identity; the last
+changed between otherwise identical requests. The previously unenabled
+`supabase-append-v1` assumption was rejected and is now refused by the code.
+The supported mode is `supabase-cloudflare-v1`: require a canonical first
+`X-Forwarded-For` address and an identical canonical `CF-Connecting-IP`. Missing,
+malformed, duplicate/comma-separated confirmation, mismatched pair, unknown mode
+or unsafe server configuration fails closed. Other claimed client-IP headers and
+later proxy hops do not choose the budget. IPv4/IPv6 spelling is canonicalized.
+
+A short-lived signature-authenticated diagnostic endpoint verified the actual
+production extractor from the Mac's request and a relayed Edge-server request,
+with distinct identities. Forged single/multiple XFF values and six alternate
+headers did not replace the first identity; the CF override request received a
+403 before the diagnostic handler. The production pair stayed matched in all
+successful cases. This is evidence for this project and these paths, not a
+universal rule about arbitrary reverse proxies. Re-probe after changing ingress.
+Cloudflare documents special Worker/stacked-proxy behavior; requests whose pair
+disagrees are refused rather than silently selecting an unconfirmed address.
+
+All diagnostic functions were deleted and the original six deployed functions
+kept their versions. The mode is still **unset**, all nine automation migrations
+remain unapplied, and neither automation endpoint is deployed. Header identity
+is admission input; it never replaces task-key/Auth account authorization.
+Only complete credential HMACs select a credential budget, so a public key UUID
+cannot consume a different secret's credential allowance.
 
 Local verification per repo: 157 actual admission SQL assertions, 221 portable
 reminder and 101 mutation assertions, 140 loopback HTTP assertions, 40 Deno tests
@@ -310,3 +326,34 @@ Sources checked: [Supabase rate limiting](https://supabase.com/docs/guides/funct
 The published IP discussion identifies the header; it does not prove this project's
 current overwrite/append trust behavior. No new external limiter provider or
 client-facing API is enabled by this checkpoint.
+
+
+### Hosted header and independent-connection checkpoint
+
+The actual hosted parser check passes 13 assertions. Its P-256 private signing
+key stays in the runner's memory; requests expire after 60 seconds, the endpoint
+expires after 15 minutes, and final deletion is positively checked. Responses use
+keyed fingerprints and coarse booleans only. Raw addresses, tokens and task data
+are not persisted in the evidence. The relay is restricted to the same temporary
+endpoint and a signed direct child, so it cannot become an arbitrary proxy.
+
+Each repository independently passes 20 real PostgreSQL 17.6 assertions in a
+network-isolated container: three batches of 12 distinct backend connections
+race for the final global, IP or credential slot; exactly one wins and 11 are
+denied. Counts never overshoot, task exhaustion leaves management capacity, and
+an actual advisory-lock wait raises 55P03 within the configured bound, allocates
+no rows, and recovers after release. These are actual independent PostgreSQL
+connections, not PGlite's serialized queue. The image is digest-pinned, no host
+port/user file is mounted, data uses tmpfs, and the owned container is removed.
+This is local PostgreSQL concurrency, not hosted PostgREST/task-effect acceptance.
+
+Both repositories also pass the 221 portable/101 mutation/140 loopback checks,
+46 Deno tests (including six diagnostic tests) and lint. The HTTP fixture now
+models the matching header pair. See `p2-automation-hosted-ingress-evidence.json`.
+Next: task mutation/revocation/membership races, hosted Auth/session/key lifecycle,
+timeout behavior and native management acceptance before coherent deployment.
+The full Px goal and all user-deferred work remain active/unchanged.
+
+[Cloudflare header reference](https://developers.cloudflare.com/fundamentals/reference/http-headers/)
+provides the header and Worker context; the project-specific probe supplies the
+actual behavior evidence. The old last-hop assumption was never enabled.

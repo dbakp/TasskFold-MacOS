@@ -121,5 +121,9 @@
     "ingressTableExists": false,
     "admitRPCExists": false
   },
-  "userDeferralsUnchanged": true
+  "userDeferralsUnchanged": true,
+  "historicalSnapshot": true,
+  "verifiedAtCommit": "0148b7e5aa257cad7eb601a249fa43e74bba8a2b",
+  "sourceIdentitySupersededBy": "p2-automation-hosted-ingress-evidence.json",
+  "sourceIdentityNote": "The unenabled/unverified last-hop assumption in this snapshot was rejected by the later hosted probe. The current candidate requires matching first XFF and CF identities."
 }

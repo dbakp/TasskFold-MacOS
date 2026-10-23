@@ -2955,3 +2955,18 @@ assertions, 140 actual loopback HTTP checks, 40 Deno tests and lint. No live
 candidate or proxy mode was enabled. Actual hosted header trust, concurrent locks,
 Auth/timeout/native acceptance and provider-level network controls remain open.
 See `p2-automation-ingress-evidence.json`. Full Px and user deferrals remain active.
+
+
+### 23 October — actual proxy identity and PostgreSQL contention
+
+Hosted signed diagnostics rejected the unstable final proxy hop and verified a
+matching first-XFF/CF client identity from two sources. The candidate now requires
+that pair; the prior mode is refused. All diagnostic endpoints were deleted,
+existing functions are unchanged, and the mode/API/migrations stay disabled.
+Both repos independently pass 20 real PostgreSQL 17.6 contention assertions,
+including three 12-backend final-slot races and a genuine bounded advisory wait,
+plus 221 portable/101 mutation/140 loopback assertions, 46 Deno tests and lint.
+Owned temporary databases are removed and Docker is restored to its initial Off
+state. `p2-automation-hosted-ingress-evidence.json` distinguishes actual hosted
+header proof and local independent-connection proof from remaining task-effect/
+hosted Auth/PostgREST/timeout/native/clipboard acceptance. Full Px remains active.

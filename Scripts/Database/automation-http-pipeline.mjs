@@ -22,8 +22,10 @@ export async function checkHttpPipeline(db, account, uuid) {
   let rpcCalls = 0, admissionCalls = 0;
   // This real-clock HTTP proof should not start near a fixed-window boundary.
   // Detailed rollover assertions use the owner-only explicit-clock SQL algorithm.
-  const remaining=60000-Date.now()%60000;
-  if(remaining<15000)await new Promise(resolve=>setTimeout(resolve,remaining+100));
+  const remaining = 60000 - Date.now() % 60000;
+  if (remaining < 15000) {
+    await new Promise((resolve) => setTimeout(resolve, remaining + 100));
+  }
   try {
     await db.query(
       "insert into taskfold_private.automation_keys(id,user_id,name,token_hash,scopes,ttl_days,expires_at) values($1,$2,'Local HTTP fixture',$3,array['tasks:read','tasks:create','tasks:update','tasks:complete','tasks:delete'],30,clock_timestamp()+interval '1 day')",
@@ -142,6 +144,7 @@ export async function checkHttpPipeline(db, account, uuid) {
             Authorization: "Bearer " + secret,
             "X-Taskfold-Automation": "1",
             "X-Forwarded-For": "192.0.2.10",
+            "CF-Connecting-IP": "192.0.2.10",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ action, body }),

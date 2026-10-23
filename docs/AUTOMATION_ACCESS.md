@@ -118,6 +118,6 @@ per UTC minute are independent of task-route limits and of successful key issuan
 or permanent cancellation-history budgets. A rejection preserves the native private
 recovery state for an explicit retry. The server returns a safe `429`/Retry-After or
 fail-closed `503`. Gateway JWT rejections that occur before Edge invocation remain
-provider behavior. The explicit proxy trust mode is unset until real hosted probing;
+provider behavior. The matching client-header mode is now verified on the project but remains unset;
 see `AUTOMATION_API.md` and `p2-automation-ingress-evidence.json`. No deployment or
 normal entry enablement occurred.

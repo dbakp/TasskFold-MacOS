@@ -425,8 +425,11 @@ Next required, in order:
    task/management global, IP and full-credential budgets. Each repo passes 157
    admission SQL assertions, 140 real loopback checks, 40 Deno tests and lint;
    existing 221 portable/101 mutation regressions pass. Its explicit IP trust mode
-   stays unset. Next: prove the actual hosted proxy append/overwrite contract,
-   then hosted Auth/HTTP timeout, quota, revocation and concurrent-effect acceptance
+   stays unset. The hosted proxy check now passes: use the first XFF address only
+   when it matches CF-Connecting-IP; the old last-hop mode is retired. Real local
+   PostgreSQL 17.6 contention passes 20 checks per repo, including 12-connection
+   final-slot races and actual advisory-lock timeouts. Next: task-effect races and
+   hosted Auth/HTTP timeout, quota, revocation and concurrent-effect acceptance
    with disposable users. Function-level admission does not close provider-level
    invocation billing or network protection.
 4. Verify signed-in phone/tablet and scoped Mac flows, then deploy the coherent
@@ -470,3 +473,17 @@ candidate was applied/deployed; the explicit forwarding mode is not yet verified
 or enabled. Local fixed-clock SQL and controlled loopback results are scoped in
 `p2-automation-ingress-evidence.json`; real multi-connection races, upstream trust,
 hosted native/clipboard acceptance and full Px remain open. User deferrals persist.
+
+
+23 October hosted-ingress checkpoint: the signed, expiring diagnostic verified the
+production matching-header extractor from two network sources and was deleted.
+It rejected the unstable final-hop assumption; no previous forwarding mode had
+been enabled. Actual mode configuration, automation endpoints and all nine
+candidate migrations remain absent. Both repos now own the authenticated probe,
+its six tests and a digest-pinned PostgreSQL 17.6 independent-connection runner.
+Each passes 20 real contention checks, the existing 221 portable/101 mutation/
+140 HTTP regressions, 46 Deno tests and lint. Test databases were removed and the
+initially stopped Docker runtime restored. Evidence and limits:
+`p2-automation-hosted-ingress-evidence.json`. This closes the observed header
+contract and local admission-contention checks; it does not close task-effect
+races, hosted Auth/PostgREST/timeout/native/clipboard acceptance or the full Px goal.

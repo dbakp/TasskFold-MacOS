@@ -1,0 +1,247 @@
+{
+  "date": "2026-10-23",
+  "platform": "macOS",
+  "baseCommit": "0148b7e5aa257cad7eb601a249fa43e74bba8a2b",
+  "milestone": "Hosted project header verification and real PostgreSQL admission concurrency; feature remains inactive",
+  "featureEnabled": false,
+  "migrationApplied": false,
+  "automationEndpointsDeployed": false,
+  "trustModeConfigured": false,
+  "realTasksChanged": 0,
+  "hostedKeysIssued": 0,
+  "fullPxComplete": false,
+  "supportedMode": "supabase-cloudflare-v1",
+  "retiredMode": "supabase-append-v1",
+  "hostedProbe": {
+    "project": "zqxflydiyfjeedqvyova",
+    "date": "2026-10-23T01:51:15.005Z",
+    "probe": "taskfold-ip-probe-b83f91a522a3",
+    "checks": {
+      "uniqueTemporarySlug": true,
+      "authenticatedDirectProbe": true,
+      "lastHopCanonical": true,
+      "lastHopPublicOnHostRequest": true,
+      "keyedFingerprintOnly": true,
+      "badSignatureRejected": true,
+      "expiredSignedRequestRejected": true,
+      "spoofedSingleStillAuthenticated": true,
+      "secondNetworkProbeAuthenticated": true,
+      "forgedHeaderRequestsCompleted": true,
+      "repeatedCleanRequestCompleted": true,
+      "actualProductionHeaderPairMatchesAcrossBothNetworks": true,
+      "atLeastOneNonSpoofableSource": true
+    },
+    "productionAPIEnabled": false,
+    "realTasksChanged": 0,
+    "probeDeleted": true,
+    "lastHTTPStatus": 200,
+    "lastResponseBytes": 1146,
+    "headerBehavior": {
+      "baselineHopCount": 3,
+      "spoofedHopCount": 3,
+      "spoofedPrefixRetained": false,
+      "spoofedLastIsInjected": false,
+      "relayHopCount": 3
+    },
+    "phase": "relay",
+    "alternateHeaderStatus": {
+      "X-Real-IP": 200,
+      "CF-Connecting-IP": 403,
+      "Forwarded": 200,
+      "True-Client-IP": 200,
+      "X-Client-IP": 200,
+      "X-Envoy-External-Address": 200,
+      "X-SB-Client-IP": 200
+    },
+    "identitySurvey": {
+      "xff_first": {
+        "present": true,
+        "public": true,
+        "stableAcrossClean": true,
+        "unchangedByForgedHeaders": true,
+        "differentOnSecondNetwork": true,
+        "secondNetworkSpoofRejected": true,
+        "trustedCandidate": true
+      },
+      "xff_last": {
+        "present": true,
+        "public": true,
+        "stableAcrossClean": false,
+        "unchangedByForgedHeaders": false,
+        "differentOnSecondNetwork": true,
+        "secondNetworkSpoofRejected": true,
+        "trustedCandidate": false
+      },
+      "x_real_ip": {
+        "present": false,
+        "public": false,
+        "stableAcrossClean": true,
+        "unchangedByForgedHeaders": false,
+        "differentOnSecondNetwork": false,
+        "secondNetworkSpoofRejected": false,
+        "trustedCandidate": false
+      },
+      "cf_connecting_ip": {
+        "present": true,
+        "public": true,
+        "stableAcrossClean": true,
+        "unchangedByForgedHeaders": true,
+        "differentOnSecondNetwork": true,
+        "secondNetworkSpoofRejected": true,
+        "trustedCandidate": true
+      },
+      "true_client_ip": {
+        "present": false,
+        "public": false,
+        "stableAcrossClean": true,
+        "unchangedByForgedHeaders": false,
+        "differentOnSecondNetwork": false,
+        "secondNetworkSpoofRejected": false,
+        "trustedCandidate": false
+      },
+      "x_client_ip": {
+        "present": false,
+        "public": false,
+        "stableAcrossClean": true,
+        "unchangedByForgedHeaders": false,
+        "differentOnSecondNetwork": false,
+        "secondNetworkSpoofRejected": false,
+        "trustedCandidate": false
+      },
+      "envoy_external": {
+        "present": false,
+        "public": false,
+        "stableAcrossClean": true,
+        "unchangedByForgedHeaders": false,
+        "differentOnSecondNetwork": false,
+        "secondNetworkSpoofRejected": false,
+        "trustedCandidate": false
+      },
+      "sb_client_ip": {
+        "present": false,
+        "public": false,
+        "stableAcrossClean": true,
+        "unchangedByForgedHeaders": false,
+        "differentOnSecondNetwork": false,
+        "secondNetworkSpoofRejected": false,
+        "trustedCandidate": false
+      }
+    },
+    "verifiedCandidates": [
+      "xff_first",
+      "cf_connecting_ip"
+    ],
+    "productionPairVerified": true,
+    "trustedLastHopVerified": false,
+    "assertions": 13
+  },
+  "hostedCleanup": {
+    "diagnosticEndpointsRemaining": 0,
+    "automationEndpointsPresent": false,
+    "existingVersionsUnchanged": true,
+    "trustModeConfigured": false
+  },
+  "realPostgresConcurrency": {
+    "date": "2026-10-23T01:52:48.747Z",
+    "image": "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+    "checks": {
+      "privateRuntimeReady": true,
+      "matchesHostedPostgres17_6": true,
+      "globalExactlyOneWins": true,
+      "globalElevenDenied": true,
+      "globalSeparateConnections": true,
+      "globalNeverOvershoots": true,
+      "ManagementIndependentOfSaturatedTaskRoute": true,
+      "ipExactlyOneWins": true,
+      "ipElevenDenied": true,
+      "ipSeparateConnections": true,
+      "ipNeverOvershoots": true,
+      "credentialExactlyOneWins": true,
+      "credentialElevenDenied": true,
+      "credentialSeparateConnections": true,
+      "credentialNeverOvershoots": true,
+      "ActualAdvisoryWaitTimesOut": true,
+      "WaitIsBounded": true,
+      "TimedOutAdmissionAllocatesNoRows": true,
+      "AdmissionRecoversAfterHolderRelease": true,
+      "SyntheticRowsCleared": true
+    },
+    "hostedAcceptance": false,
+    "realTasksChanged": 0,
+    "containerRemoved": true,
+    "phase": "lock-timeout",
+    "postgresVersion": 170006,
+    "concurrentBatches": [
+      {
+        "dimension": "global",
+        "connections": 12,
+        "accepted": 1,
+        "denied": 11,
+        "finalCounter": 1200
+      },
+      {
+        "dimension": "ip",
+        "connections": 12,
+        "accepted": 1,
+        "denied": 11,
+        "finalCounter": 120
+      },
+      {
+        "dimension": "credential",
+        "connections": 12,
+        "accepted": 1,
+        "denied": 11,
+        "finalCounter": 120
+      }
+    ],
+    "assertions": 20
+  },
+  "regressions": {
+    "portableSQLAssertions": 221,
+    "nativeReaderGoldens": 131,
+    "mutationSQLAssertions": 101,
+    "loopbackHTTPAssertions": 140,
+    "denoTests": 46,
+    "lintFiles": 6,
+    "passedBothRepos": true
+  },
+  "cleanup": {
+    "ownedContainersRemaining": 0,
+    "diagnosticEndpointsRemaining": 0,
+    "privateSigningKeyPersisted": false,
+    "rawIPOrFingerprintsInEvidence": false,
+    "temporaryProbeStagesRemoved": true,
+    "dockerInitiallyStopped": true,
+    "dockerRestoredStopped": true,
+    "retainedRuntimeCache": "Pinned PostgreSQL image ~107 MB for remaining real task-race tests; unrelated images/data preserved"
+  },
+  "unverified": [
+    "Actual task mutation/replay/revocation/membership races",
+    "Hosted PostgREST/Auth/session/key lifecycle and timeout/cancel propagation",
+    "Hosted native management/clipboard acceptance",
+    "Other ingress routes or changed proxy topology",
+    "Coherent automation deployment/enablement and broader remaining Px"
+  ],
+  "failedIterations": [
+    "Last-hop hypothesis failed: project rewrites a three-hop chain whose last proxy identity varies. Retired mode remained unconfigured.",
+    "Expanded diagnostic response needed a larger bounded schema; forged CF-header requests return non-JSON 403 before the handler, now recorded by status without reading the error page.",
+    "Initial zero-length diagnostic HMAC promise rejected before request handling; key import is now lazy after configuration checks.",
+    "Docker pg_isready could observe the temporary initdb server; the runner now waits for completed initialization and final-server readiness. All failed owned fixtures were removed."
+  ],
+  "sourceSHA256": {
+    "supabase/functions/_shared/automation-admission.ts": "8d8eeb3965ed33c20892b42772a3e103c8a40464c7769c9be68eadaaad735865",
+    "supabase/functions/_shared/automation-admission_test.ts": "1478d6f54d659b909f25e5c12d77b73aa8f0f920f13f4747b376586d79c789e6",
+    "Scripts/Database/automation-http-fixture.ts": "16143174d75b96787da2c2b5e0ed5ec56e5b8137fb3483376352d37db78751c7",
+    "Scripts/Database/automation-http-pipeline.mjs": "0df3a06ca3a664fd03c9b18f2d25b7185b1ed41549e18f41b7d692268815fbe2",
+    "Scripts/Database/test-automation-ingress-concurrency.mjs": "8a53916438800bf558718be647d34abdfdeb9f02ee2efc2a76766b4f21e64749",
+    "Scripts/Diagnostics/automation-ingress-probe.ts": "5f0366f7cf0390284f1b0c131252d77521f101e27ea19483b527a3b66a29f3af",
+    "Scripts/Diagnostics/automation-ingress-probe_test.ts": "58f4d0ae88fe9b887087f467ce0298d7fdf9062e97de95f638edc8d782eed960",
+    "Scripts/Diagnostics/test-automation-ingress-hosted.mjs": "d7180a60af00932e106c43a9b13790c6133833df075300b1b4cef385920aa881"
+  },
+  "liveMetadata": {
+    "automationCandidateMigrationCount": 0,
+    "automationKeysTableExists": false,
+    "admissionTableExists": false
+  },
+  "userDeferralsUnchanged": true
+}
