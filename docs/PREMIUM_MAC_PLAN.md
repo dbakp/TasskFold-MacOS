@@ -3805,3 +3805,13 @@ the native OS peer boundary is injected, so real paired/background/cloud deliver
 is still open. The Watch flag remains off and target unembedded. Mac source and
 build ownership are unchanged; prior receipt compatibility evidence is not a new
 Mac runtime result. The full ranked backlog and all user deferrals remain active.
+
+
+### Watch review candidate — 24 October
+
+The iOS-owned companion now offers explicit edited Inbox copies of parked Watch
+actions, retaining immutable originals and fencing changed destinations. Fifty
+focused cases and an isolated 42 mm native Save/repeat/relaunch check pass. Mac
+code, release inputs and native behavior are unchanged; this is progress tracking
+only. Watch remains disabled/unembedded pending paired/hardware/cloud, capacity
+recovery and wider native acceptance. No full rank/Px completion is claimed.

@@ -1507,3 +1507,27 @@ remain open. The feature flag stays off; no full Watch or Px completion is claim
 See iOS-owned `WATCH_COMPANION.md` and `p2-watch-connection-evidence.json`. Mac
 receives ordinary guarded task sync; it gains no Watch target dependency. All
 remaining email/team/native acceptance work and user deferrals retain scope.
+
+
+## Watch pending-action review — 24 October, candidate
+
+The Watch now offers deliberate review of actions parked after an account/phone
+change or a stale refusal. Users see the original workspace and words, can edit
+the copy, and explicitly save a new Inbox capture to the displayed current
+workspace. A completion request is never retargeted into a completion elsewhere.
+The destination is frozen for the open review and checked again at save. Original
+commands remain immutable; private recovery metadata prevents repeated copies,
+including after receipt, discard or relaunch. Existing ambiguous saves carry an
+explicit duplicate warning. Cancelling leaves work untouched.
+
+Ten recovery cases and the prior 40 focused cases pass, with no skips/failures.
+The actual 42 mm Watch Simulator review screen was inspected and its native Save
+button exercised: one new capture, exact original retained, a second tap refused,
+and the real private archive unchanged across relaunch. This isolated DEBUG
+fixture uses synthetic work with transport disabled; it does not prove paired
+phone delivery or modal dismissal/VoiceOver. Both Watch configurations and the
+actual iPhone app compile. The Watch flag remains off and the target unembedded.
+Capacity/reset fencing, paired/background and cloud acceptance, wider input/
+VoiceOver/hardware, resources and embedding remain open. Existing email/team/
+other Px work and user deferrals retain scope. See iOS-owned
+`p2-watch-recovery-evidence.json` and `WATCH_COMPANION.md`.
