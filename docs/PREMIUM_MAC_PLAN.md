@@ -3006,3 +3006,14 @@ and iPad UI acceptance passes two cases each: real one-minute expiry, newer-copy
 preservation, background hiding and finish/relaunch recovery cleanup. The Mac
 profile/runtime dependency stays deferred. Exact scope is in
 `p2-automation-native-clipboard-evidence.json`; normal product entry remains off.
+
+
+23 October automation deadline checkpoint: each independent server source passes
+80 actual hosted checks, plus 53 Deno/55 cancellation/221 portable/101 mutation/
+140 HTTP checks and lint. Management has explicit 3s lock/10s statement budgets;
+caller cancellation reaches readers and Auth/RPC. Unknown write replies preserve
+the same retry intent. Both hosted disconnect cases committed, and exact retries
+produced a single effect; disconnection never implies rollback. Main remains off.
+The empty test branch is retained only for immediate phone/tablet native hosted
+acceptance, then deleted; no Mac app launched and signing-dependent runtime stays
+deferred. Exact identity, cleanup and limits: `p2-automation-timeout-evidence.json`.

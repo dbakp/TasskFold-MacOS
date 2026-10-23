@@ -8,39 +8,55 @@ type Dependencies = {
   admit?: Admission;
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-const json = (value: unknown, status = 200) =>
+const json = (
+  value: unknown,
+  status = 200,
+  extraHeaders: Record<string, string> = {},
+) =>
   new Response(JSON.stringify(value), {
     status,
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "no-store",
+      ...extraHeaders,
     },
   });
-async function read(body: ReadableStream<Uint8Array> | null, maximum: number) {
-  if (!body) return null;
-  const reader = body.getReader(), chunks: Uint8Array[] = [];
+async function read(
+  stream: ReadableStream<Uint8Array> | null,
+  maximum: number,
+  signal: AbortSignal,
+): Promise<unknown> {
+  if (!stream) throw new Error("Missing JSON");
+  const reader = stream.getReader(), chunks: Uint8Array[] = [];
   let size = 0;
+  const abort = () => {
+    void reader.cancel().catch(() => {});
+  };
+  signal.addEventListener("abort", abort, { once: true });
   try {
+    if (signal.aborted) throw new Error("Deadline");
     while (true) {
-      const item = await reader.read();
-      if (item.done) break;
-      size += item.value.length;
+      const part = await reader.read();
+      if (signal.aborted) throw new Error("Deadline");
+      if (part.done) break;
+      size += part.value.length;
       if (size > maximum) throw new Error("Body limit");
-      chunks.push(item.value);
+      chunks.push(part.value);
     }
+    const data = new Uint8Array(size);
+    let offset = 0;
+    for (const part of chunks) {
+      data.set(part, offset);
+      offset += part.length;
+    }
+    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(data));
   } catch (error) {
-    await reader.cancel();
+    void reader.cancel().catch(() => {});
     throw error;
+  } finally {
+    signal.removeEventListener("abort", abort);
+    reader.releaseLock();
   }
-  const bytes = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.length;
-  }
-  return size
-    ? JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes))
-    : null;
 }
 const scopes = [
   "tasks:read",
@@ -89,6 +105,11 @@ function metadata(value: unknown) {
     ].map((key) => [key, row[key]]),
   );
 }
+function uncertainResult(action: unknown): string {
+  return ["create", "cancel", "revoke"].includes(action as string)
+    ? "Could not confirm the result. Retry the same action with the same key ID."
+    : "Automation access is temporarily unavailable. Try again.";
+}
 export function createHandler(config: Config, dependencies: Dependencies = {}) {
   const send = dependencies.send ?? fetch;
   const admit = dependencies.admit ?? createAdmission(config, "keys", send);
@@ -119,41 +140,24 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
         503,
       );
     }
-    const controller = new AbortController();
-    const deadline = setTimeout(
-      () => controller.abort(),
-      Math.max(1, 15000 - (performance.now() - started)),
-    );
+    const deadline = AbortSignal.any([
+      request.signal,
+      AbortSignal.timeout(Math.max(1, 15000 - (performance.now() - started))),
+    ]);
+    let input: { action?: unknown; body?: unknown } | undefined;
     try {
-      let input: { action?: unknown; body?: unknown };
-      const reader = request.body?.getReader();
-      let timeout = false;
-      const timer = setTimeout(() => {
-        timeout = true;
-        void reader?.cancel().catch(() => {});
-      }, 2000);
+      const bodyDeadline = AbortSignal.any([
+        deadline,
+        AbortSignal.timeout(2000),
+      ]);
       try {
-        // A bounded, timed reader also covers chunked callers without Content-Length.
-        const stream = reader
-          ? new ReadableStream<Uint8Array>({
-            async pull(destination) {
-              const part = await reader.read();
-              if (part.done) destination.close();
-              else destination.enqueue(part.value);
-            },
-            cancel() {
-              return reader.cancel();
-            },
-          })
-          : null;
-        input = await read(stream, 8192) as typeof input;
+        input = await read(request.body, 8192, bodyDeadline) as typeof input;
       } catch {
-        return json({ error: "Use a bounded automation-key request." }, 400);
-      } finally {
-        clearTimeout(timer);
-      }
-      if (timeout) {
-        return json({ error: "The request took too long. Try again." }, 408);
+        return json({
+          error: bodyDeadline.aborted
+            ? "The request took too long. Try again."
+            : "Use a bounded automation-key request.",
+        }, bodyDeadline.aborted ? 408 : 400);
       }
       if (
         !input || typeof input !== "object" || Array.isArray(input) ||
@@ -181,7 +185,7 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
           new Request(origin + path, {
             method: value === undefined ? "GET" : "POST",
             redirect: "error",
-            signal: controller.signal,
+            signal: deadline,
             headers: {
               apikey: config.serviceKey,
               Authorization: "Bearer " + bearer,
@@ -190,16 +194,22 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
             body: value === undefined ? undefined : JSON.stringify(value),
           }),
         );
+        const parsed = await read(result.body, 256000, deadline);
         return {
           status: result.status,
-          value: await read(result.body, 256000),
+          value: parsed && typeof parsed === "object" && !Array.isArray(parsed)
+            ? parsed as Record<string, unknown>
+            : {},
         };
       };
       const user = await api("/auth/v1/user", token);
       if (user.status === 401 || user.status === 403) {
         return json({ error: "Sign in again to manage automation keys." }, 401);
       }
-      if (user.status !== 200 || !user.value || !uuid.test(user.value.id)) {
+      if (
+        user.status !== 200 || typeof user.value.id !== "string" ||
+        !uuid.test(user.value.id)
+      ) {
         throw new Error("Auth unavailable");
       }
       let claims: { sub?: unknown; session_id?: unknown };
@@ -239,7 +249,9 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
           },
       );
       if (result.status < 200 || result.status >= 300) {
-        const code = result.value?.code;
+        const code = typeof result.value.code === "string"
+          ? result.value.code
+          : "";
         const status = ({
           "28000": 401,
           "42501": 403,
@@ -258,11 +270,22 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
             "The automation-key limit was reached. Revoke an unused key, or try again later.",
           503: "Automation access is temporarily unavailable. Try again.",
         };
-        return json({
-          error: status === 429 && input.action === "cancel"
-            ? "Too many new setup cancellations today. Retry this discard later; existing keys can still be revoked."
-            : messages[status],
-        }, status);
+        return json(
+          {
+            error: status === 429 && input.action === "cancel"
+              ? "Too many new setup cancellations today. Retry this discard later; existing keys can still be revoked."
+              : status === 503
+              ? uncertainResult(input.action)
+              : messages[status],
+          },
+          status,
+          ["40P01", "40001", "55P03", "57014"].includes(code)
+            ? {
+              "Retry-After": "1",
+              "Access-Control-Expose-Headers": "Retry-After",
+            }
+            : {},
+        );
       }
       if (!result.value || result.value.account !== user.value.id) {
         throw new Error("Owner mismatch");
@@ -300,10 +323,8 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
       return json({ account: user.value.id, key });
     } catch {
       return json({
-        error: "Automation access is temporarily unavailable. Try again.",
+        error: uncertainResult(input?.action),
       }, 503);
-    } finally {
-      clearTimeout(deadline);
     }
   };
 }

@@ -1,3 +1,4 @@
+import { checkHostedDeadlines } from "./automation-hosted-deadlines.mjs";
 // Real Auth -> Edge -> PostgREST acceptance. Only a data-excluding preview branch.
 // Credentials are read from an owner-private CLI export, never arguments or output.
 import assert from "node:assert/strict";
@@ -84,11 +85,12 @@ async function request(
   method = "POST",
   apiKey = anon,
   extra = {},
+  signal = AbortSignal.timeout(25000),
 ) {
   const response = await fetch(origin + path, {
     method,
     redirect: "error",
-    signal: AbortSignal.timeout(25000),
+    signal,
     headers: {
       apikey: apiKey,
       Authorization: "Bearer " + token,
@@ -108,6 +110,7 @@ async function request(
     status: response.status,
     value,
     cache: response.headers.get("Cache-Control"),
+    retry: response.headers.get("Retry-After"),
   };
 }
 const manage = (token, action, body) =>
@@ -395,6 +398,32 @@ try {
     "cancelled-existing-key-refused",
     (await task(readonly.secret, "get", { id: target })).status === 401,
   );
+  if (process.argv.includes("--deadlines")) {
+    receipt.phase = "hosted-deadlines";
+    await checkHostedDeadlines({
+      request,
+      manage,
+      task,
+      service,
+      account: users[0],
+      token: a.token,
+      taskSecret: key.secret,
+      credential,
+      check,
+      receipt,
+      sendWithAbort: (route, token, action, body, signal) =>
+        request(
+          "/functions/v1/" +
+            (route === "keys" ? keysSlug : tasksSlug + "/write"),
+          token,
+          { action, body },
+          "POST",
+          anon,
+          { "X-Taskfold-Automation": "1" },
+          signal,
+        ),
+    });
+  }
   receipt.phase = "session-revocation";
   check(
     "real-signout",

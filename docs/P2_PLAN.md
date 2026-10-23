@@ -4,7 +4,7 @@ Updated 23 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access, beginning with the private credential/session/scope contract before task operations and native management are enabled. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Native signed-in phone/tablet management against the hosted service is next, while signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -408,8 +408,7 @@ Next required, in order:
    including real independent-process lock tests, 55 cancellation SQL assertions,
    the credential regression, 101 mutation/18 loopback checks and ten management
    handler tests. Current three-scenario Simulator results and exact limits are in
-   `p2-automation-enrollment-cancellation-evidence.json`. Actual Mac Keychain/UI,
-   clipboard lifecycle and hosted/concurrent acceptance remain. No candidate is
+   `p2-automation-enrollment-cancellation-evidence.json`. Mac Keychain/UI/clipboard acceptance remains deferred with signing. Local iPhone/iPad clipboard acceptance passes four UI cases; both repo-owned server sources now pass 80 hosted lifecycle/deadline checks. Native signed-in phone/tablet hosted management remains next. No candidate is
    enabled or deployed. The normal entry stays hidden.
 
 2. Project/section discovery now implements read-scoped current-access paging,
@@ -430,7 +429,7 @@ Next required, in order:
    PostgreSQL 17.6 contention passes 20 checks per repo, including 12-connection
    final-slot races and actual advisory-lock timeouts. Local task-effect races now
    pass 99 additional real PostgreSQL checks per repo, including actual HTTP
-   contention/retry behavior. Real hosted Auth/Edge/PostgREST lifecycle now passes 42 checks from each repo-owned source. Next: hosted timeout/cancellation and native Keychain/clipboard acceptance with disposable users. Function-level admission does not close provider-level
+   contention/retry behavior. Real hosted Auth/Edge/PostgREST lifecycle now passes 42 checks from each repo-owned source. Next: native signed-in phone/tablet hosted management with disposable users; Mac runtime remains deferred with signing. Function-level admission does not close provider-level
    invocation billing or network protection.
 4. Verify signed-in phone/tablet and scoped Mac flows, then deploy the coherent
    gateway/client together. No user release-signing or physical-location gate is reopened.
@@ -548,3 +547,27 @@ not a runtime pass. Next independent work: hosted timeout/cancellation and the
 remaining automation intake backlog. Native management against a hosted service
 remains required before coherent API/client enablement. No release/provider/remote
 or physical-location dependency is reopened. Full Px remains active.
+
+
+23 October deadline and uncertain-result checkpoint: each repo-owned hosted source
+passes 80 checks. Actual PostgREST management/task write statement timeouts fire
+at approximately ten seconds and roll back their key/task/journal effects. A
+known account lock produces a management refusal after approximately three
+seconds, with no key; exact retry creates one. Private deadlines and service-only
+wrapper permissions were read back. All 53 Deno tests, 55 cancellation SQL,
+221 portable/101 mutation/140 local HTTP checks and lint pass per repo.
+
+The hosted gateway did not roll back either controlled client-disconnected write:
+both committed. Retrying the same key ID/task request recovered exactly one
+effect. Key management now propagates caller cancellation to Auth/RPC and bounded
+response readers; uncertain write copy explicitly preserves the retry identity.
+The tenth inactive candidate sets management-only lock/statement deadlines. No
+main migration, endpoint or normal native entry was enabled.
+
+The empty, nonpersistent acceptance branch is retained for the immediate next
+phone/tablet native hosted check: `faa2f628-7c48-4db5-b57a-218672229442` /
+`janyfroruofnmpxvhwfn`. All temporary endpoints and synthetic users were removed;
+SQL confirms zero users/tasks/keys/journals/deadline controls. Its private CLI
+connection export stays outside Git. Delete the branch after this next acceptance
+work; never merge it. No app host was launched this turn. Exact proof and limits:
+`p2-automation-timeout-evidence.json`. Full Px remains active.

@@ -34,6 +34,156 @@ const assert = (ok: unknown, message: string) => {
 };
 const response = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status });
+
+Deno.test("caller cancellation closes a stalled key body before Auth", async () => {
+  const controller = new AbortController();
+  const began = performance.now();
+  let cancelled = false, calls = 0;
+  const body = new ReadableStream<Uint8Array>({
+    pull() {
+      queueMicrotask(() => controller.abort());
+    },
+    cancel() {
+      cancelled = true;
+    },
+  });
+  const handler = createHandler(config, {
+    admit: () => Promise.resolve(null),
+    send: () => {
+      calls++;
+      return Promise.resolve(response({}));
+    },
+  });
+  const result = await handler(
+    new Request("https://edge.test", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: "Bearer " + token(),
+        "X-Taskfold-Automation": "1",
+      },
+      body,
+      duplex: "half",
+    } as RequestInit),
+  );
+  assert(
+    result.status === 408 && cancelled && calls === 0 &&
+      performance.now() - began < 1000,
+    "Cancelled input reached Auth or retained its stream",
+  );
+});
+Deno.test("caller cancellation reaches both Auth and key RPC without confirming an uncertain mutation", async () => {
+  for (const stage of ["auth", "rpc"]) {
+    const controller = new AbortController();
+    const began = performance.now();
+    let calls = 0, cancelled = false;
+    const handler = createHandler(config, {
+      admit: () => Promise.resolve(null),
+      send: (req) => {
+        calls++;
+        if (stage === "rpc" && req.url.endsWith("/auth/v1/user")) {
+          return Promise.resolve(response({ id: owner }));
+        }
+        return new Promise((_resolve, reject) => {
+          req.signal.addEventListener("abort", () => {
+            cancelled = true;
+            reject(Error("PRIVATE upstream diagnostic"));
+          }, { once: true });
+          queueMicrotask(() => controller.abort());
+        });
+      },
+    });
+    const result = await handler(
+      new Request(request("create", { id: keyID }), {
+        signal: controller.signal,
+      }),
+    );
+    const text = await result.text();
+    assert(
+      result.status === 503 && cancelled && performance.now() - began < 1000 &&
+        calls === (stage === "auth" ? 1 : 2),
+      "Cancellation was detached from upstream work",
+    );
+    assert(
+      text.includes("same key ID") && !text.includes("PRIVATE"),
+      "Uncertain change lost its retry identity or exposed diagnostics",
+    );
+  }
+});
+Deno.test("stalled Auth response body is cancelled even when transport does not wire its stream to the signal", async () => {
+  const controller = new AbortController();
+  let cancelled = false, calls = 0, pulls = 0;
+  const handler = createHandler(config, {
+    admit: () => Promise.resolve(null),
+    send: () => {
+      calls++;
+      return Promise.resolve(
+        new Response(
+          new ReadableStream<Uint8Array>({
+            pull(destination) {
+              if (pulls++ === 0) {
+                destination.enqueue(new TextEncoder().encode('{"id":'));
+              } else queueMicrotask(() => controller.abort());
+            },
+            cancel() {
+              cancelled = true;
+            },
+          }),
+        ),
+      );
+    },
+  });
+  const result = await handler(
+    new Request(request(), { signal: controller.signal }),
+  );
+  assert(
+    result.status === 503 && cancelled && calls === 1,
+    "Stalled Auth response retained work or reached RPC",
+  );
+});
+Deno.test("oversized upstream reply cannot hang on an unresolved cancellation acknowledgement", async () => {
+  let cancelled = false;
+  const handler = createHandler(config, {
+    admit: () => Promise.resolve(null),
+    send: () =>
+      Promise.resolve(
+        new Response(
+          new ReadableStream<Uint8Array>({
+            start(destination) {
+              destination.enqueue(new Uint8Array(256001));
+            },
+            cancel() {
+              cancelled = true;
+              return new Promise(() => {});
+            },
+          }),
+        ),
+      ),
+  });
+  const result = await handler(request());
+  assert(
+    result.status === 503 && cancelled,
+    "Oversized stream was not promptly rejected and cancelled",
+  );
+});
+Deno.test("temporary management failures expose a retry hint and preserve the exact key intent", async () => {
+  for (const code of ["40P01", "40001", "55P03", "57014"]) {
+    const f = fixture({ code });
+    const result = await f.handler(request("create", { id: keyID }));
+    assert(
+      result.status === 503 && result.headers.get("Retry-After") === "1",
+      "Missing bounded management retry",
+    );
+    assert(
+      result.headers.get("Cache-Control") === "no-store",
+      "Cached uncertain result",
+    );
+    assert(
+      (await result.text()).includes("same key ID"),
+      "Retry could mint a second key",
+    );
+  }
+});
 function fixture(
   options: {
     auth?: number;

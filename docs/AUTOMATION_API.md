@@ -25,9 +25,7 @@ UTC day. Successful-operation budgets are 60/key/minute, 1,000/key/day and
 The feature remains disabled pending the remaining hosted lifecycle acceptance.
 
 Reads allow 8,192 input bytes; writes and responses allow 1,048,576 bytes.
-Input has a two-second deadline and the handler a 15-second overall deadline.
-The public RPCs configure ten-second statement budgets; private operations use
-three-second lock waits. Actual hosted enforcement remains unverified: see
+Input readers have a two-second deadline and handlers a 15-second execution budget, including admission. These are handler budgets, not an end-to-end upload/startup SLA. Resource and management RPCs configure ten-second statement budgets and three-second private lock waits; admission has its tighter limits below. Hosted management/task-write enforcement is now verified on the isolated branch (80 checks per repo source); see
 [Supabase timeouts](https://supabase.com/docs/guides/database/postgres/timeouts)
 and [PostgREST transaction settings](https://docs.postgrest.org/en/stable/references/transactions.html).
 Redirects are refused, responses are no-store, and explicit Bearer requests have
@@ -280,8 +278,7 @@ returns a minimal `429` with `Retry-After` (1–60 seconds), no-store headers an
 private budget dimension. Invalid credentials share these same budgets. A failed
 limiter/configuration returns `503` and never authorizes work. Admission has a
 two-second network/stream deadline and 2048-byte response bound; this time is
-included in the handlers' existing total time budget. Hosted DB timeout
-propagation and concurrent lock behavior still require actual acceptance.
+included in the handlers' existing total time budget. Actual hosted management/task-write deadlines and exact interrupted-request retries are now verified below. Independent admission contention has its separate PostgreSQL evidence; provider invocation/billing and pre-handler upload protection are not established by these function limits.
 
 The private counter table stores route/dimension, HMAC fingerprint, minute,
 count and expiry only. It contains no raw IP, token, account or task payload.
@@ -438,3 +435,34 @@ result strings. It does not replace Keychain or the pasteboard. Metadata request
 still use the owned URLProtocol fixture; these tests do not claim hosted native
 acceptance. Mac builds, but private-Keychain/runtime remains deferred with signing.
 See `p2-automation-native-clipboard-evidence.json`.
+
+
+### Hosted deadlines and uncertain outcomes — 23 October
+
+`20261023031416_automation_management_deadlines.sql` adds only management's
+three-second private lock wait and ten-second public statement budget. Function
+security, grants, identity locks and all transaction semantics remain intact.
+Key-management readers now share the caller cancellation signal and remaining
+15-second execution deadline across input/Auth/RPC responses. Oversized or aborted
+streams are cancelled without waiting for an untrusted cancellation promise.
+
+Both repo-owned sources pass 80 actual hosted checks. A held account lock refused
+management after about 3.3 seconds; PostgREST returned SQLSTATE `57014` after about
+10.1 seconds, and Edge projected a safe `503`/`Retry-After: 1`. Task write deadlines
+also left zero task/journal rows. Exact retries produced one effect. Test-only
+service fixtures inject waits into the empty branch; they are not production
+migrations and live under `Scripts/Diagnostics`.
+
+**Disconnection does not prove rollback.** Both controlled disconnected requests
+committed in the hosted gateway. Retry the exact same action/key ID or task
+request ID/body/baseline until its result is known. Unknown write responses now
+say this explicitly, including malformed/lost upstream replies. Do not generate
+a fresh intent to resolve an uncertain one. Native enrollment already preserves
+its private pending draft until confirmed acknowledgement or discard.
+
+Run the owned hosted runner with `--deadlines` only after applying its test-only
+`automation-timeout-fixture.sql` to a fresh data-excluding acceptance branch. The
+runner's branch guard and private CLI credential input remain required. See
+`p2-automation-timeout-evidence.json` for results, scope and the branch retained
+for immediate native acceptance. Main stays unchanged; native hosted UI and
+signing-dependent Mac runtime remain open.

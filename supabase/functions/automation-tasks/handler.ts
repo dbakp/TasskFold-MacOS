@@ -516,7 +516,7 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
         const code = object(value) && typeof value.code === "string"
           ? value.code
           : "";
-        if (["40P01", "40001", "55P03"].includes(code)) {
+        if (["40P01", "40001", "55P03", "57014"].includes(code)) {
           return json(
             {
               error: writes
@@ -546,7 +546,12 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
         };
         const [status, message] = codes[
           object(value) && typeof value.code === "string" ? value.code : ""
-        ] ?? [503, "Task operations are temporarily unavailable."];
+        ] ?? [
+          503,
+          writes
+            ? "Could not confirm the result. Retry with the same request ID."
+            : "Task operations are temporarily unavailable.",
+        ];
         return json({ error: message }, status);
       }
       return json(
@@ -556,7 +561,11 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
       );
     } catch {
       return json(
-        { error: "Task operations are temporarily unavailable." },
+        {
+          error: writes
+            ? "Could not confirm the result. Retry with the same request ID."
+            : "Task operations are temporarily unavailable.",
+        },
         503,
       );
     }

@@ -54,6 +54,7 @@ try {
       "../../supabase/migrations/20261022193804_account_removal_service.sql",
       "../../supabase/migrations/20261022212224_automation_access.sql",
       "../../supabase/migrations/20261023002825_automation_enrollment_cancellation.sql",
+      "../../supabase/migrations/20261023031416_automation_management_deadlines.sql",
     ]
   ) {
     await db.exec(await readFile(new URL(path, import.meta.url), "utf8"));

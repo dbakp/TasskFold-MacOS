@@ -46,6 +46,7 @@ export async function loadAutomationPostgresSchema(execute) {
       "20261023010559_automation_destinations.sql",
       "20261023011251_automation_portable_reminders.sql",
       "20261023012417_automation_ingress_limits.sql",
+      "20261023031416_automation_management_deadlines.sql",
     ]
   ) await load("../../supabase/migrations/" + file);
   await execute(

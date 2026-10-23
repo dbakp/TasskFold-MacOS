@@ -717,7 +717,7 @@ Deno.test("section response binds every row and page to the requested project", 
 });
 
 Deno.test("transaction contention has a safe bounded retry hint and never exposes PostgreSQL details", async () => {
-  for (const code of ["40P01", "40001", "55P03"]) {
+  for (const code of ["40P01", "40001", "55P03", "57014"]) {
     const f = fixture({ code, message: "PRIVATE SQL", details: secret }, 400);
     const reply = await f.handler(request());
     assert(reply.status === 503, "Contention was not retryable");
