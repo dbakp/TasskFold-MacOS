@@ -384,6 +384,7 @@ struct Snapshot: Codable, Equatable, Sendable {
     var sharedCaptureReceipts: [String: String]? = nil
     /// Device-private, monotonic wearable mutation proofs; excluded from exports and sync.
     var wearableReceipts: [String: WearableMutationReceipt]? = nil
+    var wearableReceiptGeneration: UInt64? = nil
     /// Local cancellation outbox; never included in a portable workspace export.
     var locationRetirements: [String: LocationReminderTicket]? = nil
     var locationActions: [String: LocationNotificationAction]? = nil
@@ -513,13 +514,14 @@ extension Snapshot {
 }
 
 extension Snapshot {
-    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion, sharedCaptureReceipts, wearableReceipts, locationRetirements, locationActions, timeSnoozes, locationImports }
+    private enum CodingKeys: String, CodingKey { case tables, pending, widgetCompletion, sharedCaptureReceipts, wearableReceipts, wearableReceiptGeneration, locationRetirements, locationActions, timeSnoozes, locationImports }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         tables = try row.decode([String: [Record]].self, forKey: .tables)
         pending = try row.decode([Mutation].self, forKey: .pending)
         widgetCompletion = try row.decodeIfPresent(WidgetCompletionCache.self, forKey: .widgetCompletion) ?? WidgetCompletionCache()
         sharedCaptureReceipts = try row.decodeIfPresent([String: String].self, forKey: .sharedCaptureReceipts)
+        wearableReceiptGeneration = try row.decodeIfPresent(UInt64.self, forKey: .wearableReceiptGeneration)
         wearableReceipts = try row.decodeIfPresent([String: WearableMutationReceipt].self, forKey: .wearableReceipts)
         guard WearableReceiptLedger.valid(wearableReceipts ?? [:]) else {
             throw DecodingError.dataCorruptedError(forKey: .wearableReceipts, in: row, debugDescription: "Invalid private wearable receipts")

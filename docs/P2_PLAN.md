@@ -1531,3 +1531,44 @@ Capacity/reset fencing, paired/background and cloud acceptance, wider input/
 VoiceOver/hardware, resources and embedding remain open. Existing email/team/
 other Px work and user deferrals retain scope. See iOS-owned
 `p2-watch-recovery-evidence.json` and `WATCH_COMPANION.md`.
+
+
+## Watch capacity recovery — 24 October, candidate
+
+Full Watch action history now publishes an explicit capacity state and leads to
+Watch connection in iPhone Account settings. A confirmed restart preserves task
+rows and unsent changes, clears the full private receipt history, and advances
+a durable generation fence in the same atomic account-cache write. The receiver
+requires a fresh phone/epoch binding before accepting another action. Restoring
+an older peer archive cannot restore old authority; failure to save the rotated
+peer also refuses old commands. The current physical peer receives a reconnect
+notice where application-context delivery is available. This callback is tested
+locally; genuine paired delivery is still open.
+
+Both repos independently preserve the generation through ordinary Undo, restore
+and merge, reject unauthorized advancement, and ignore receipt baselines predating
+a reset. The marker is private and excluded from portable backups. Startup/account
+checks, an exact reviewed workspace/generation, full capacity and an atomic save
+are required for restart. Old pending Watch actions remain immutable for review;
+reviewed new Inbox copies can save after reconnect. No original completion is
+silently retargeted. The Watch warns about full history and disables new capture/
+completion controls until capacity returns.
+
+Verification: 57 focused iOS cases and nine independent Mac cases pass. Full iOS
+suites execute 1,463 cases (13 existing optional skips), Mac 1,447 (33 optional
+skips), without failures. Signed isolated iPhone runs pass 16 real Store/codec/file
+checks plus three cold-relaunch checks, with only OS peer identity injected.
+Native recovery confirmation was also exercised: Cancel preserves exact cache
+bytes; Confirm advances once, reclaims all 4,096 receipts, keeps task rows and the
+sync queue, and shows readable reconnect guidance with Restart disabled. The
+actual iPhone, Mac and Watch Debug/Release targets compile. No new Mac runtime UI
+acceptance or paired/cloud/hardware result is claimed.
+
+The shipping flag remains off and the Watch target unembedded. Older clients do
+not enforce this new marker; the already-deferred old-client rollout safeguards
+remain a release gate. Paired live/background delivery, cloud-account/write
+acceptance, wider native review/edit/dictation/VoiceOver/layout, hardware-storage,
+icons/resources and embedding remain open. The full email/teams/Wear OS/native
+backlog and all user deferrals keep scope. See iOS-owned
+`p2-watch-capacity-evidence.json` and Mac-owned
+`p2-watch-capacity-compatibility-evidence.json`.

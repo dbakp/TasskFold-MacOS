@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-24",
+  "status": "candidate; not shipped",
+  "sourcesSHA256": {
+    "Taskfold/Core/Models.swift": "b8b2c654f5709cd5dce5e11c8715db559dae62c9564eda50cc91afa09339500f",
+    "Taskfold/Core/Store.swift": "6b077d7cec1107bd6875f10a3a2070dd7e19e1901c7d735dbb45f78aa7f53dd5",
+    "Taskfold/Core/WearableReceipts.swift": "d06365b025a65dbe9be7e81ec38e5fff5766a9133649a3da71bb256d5a9e973c",
+    "TaskfoldTests/WearableReceiptTests.swift": "77a07a84e86b44a442c408e3a5df359f6ceae395a5249720b6773ca7f36b4657"
+  },
+  "fullSuite": {
+    "total": 1447,
+    "skipped": 33,
+    "failures": 0
+  },
+  "focusedCases": 9,
+  "nativeBuild": true,
+  "sharedSchema": "Optional private UInt64 wearableReceiptGeneration, legacy nil means zero; durable cache staging owns monotonicity. Portable backups omit it. Wire commands unchanged. Watch Snapshot gains optional actionHistoryFull.",
+  "oldClientRolloutSafeguardStillDeferred": true,
+  "remaining": [
+    "Real paired live/background delivery and OS cold launch",
+    "Cloud-account and queued-write acceptance",
+    "Wider native review/modal/edit/dictation/VoiceOver/layout checks",
+    "Hardware lock/storage behavior, icons/resources and embedding",
+    "Other email/team/Wear OS/Px scope and existing user deferrals"
+  ],
+  "cleanup": {
+    "isolatedPhoneAppUninstalled": true,
+    "initialPhoneBootedStatePreserved": true,
+    "ownedTemporaryHostPruned": true,
+    "reusableCachesRetained": true,
+    "realTaskOrServiceChanges": false
+  },
+  "nativeMacRuntimeClaimed": false,
+  "ownsOnlyMacPersistenceAndCompatibility": true,
+  "noIPhoneRepositoryBuildDependency": true
+}

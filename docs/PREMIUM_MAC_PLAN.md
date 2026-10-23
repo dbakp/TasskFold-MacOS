@@ -3815,3 +3815,15 @@ focused cases and an isolated 42 mm native Save/repeat/relaunch check pass. Mac
 code, release inputs and native behavior are unchanged; this is progress tracking
 only. Watch remains disabled/unembedded pending paired/hardware/cloud, capacity
 recovery and wider native acceptance. No full rank/Px completion is claimed.
+
+
+### Watch capacity recovery compatibility — 24 October
+
+Mac independently decodes and monotonically preserves the private Watch history
+generation during normal cache saves, Undo and restore; it has no Watch reset UI
+or iOS build dependency. Nine receipt cases and all 1,447 Mac cases (33 existing
+optional skips) finish without failures; the actual Mac target builds. The
+companion's explicit atomic reset/reconnect/review flow passes 19 signed local
+iPhone assertions plus native confirmation/cancellation checks. Watch remains
+disabled/unembedded pending genuine paired/cloud/hardware/native acceptance.
+Existing rollout, distribution and other user deferrals remain in place.

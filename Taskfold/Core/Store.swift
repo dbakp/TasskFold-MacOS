@@ -611,7 +611,7 @@ final class Store {
         var durable = snapshot
         durable.locationImports = try LocationHandoffImportLedger.staging(previous: previous, proposed: durable)
         durable.timeSnoozes = try stagedTimeSnoozes(previous: previous, proposed: durable, newIntent: timeSnooze)
-        durable.wearableReceipts = try WearableReceiptLedger.staging(previous: previous, proposed: durable)
+        durable = try WearableReceiptLedger.applying(previous: previous, proposed: durable)
         let data = try JSONEncoder().encode(durable)
         if UUID(uuidString: userID) != nil {
             try AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).writable {
