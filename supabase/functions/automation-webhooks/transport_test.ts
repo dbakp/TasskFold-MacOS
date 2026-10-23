@@ -431,6 +431,35 @@ Deno.test("webhook actual TLS and HTTP receiver behavior", async (t) => {
         },
       );
       await t.step(
+        "final authorization runs after TLS and can stop every HTTP byte",
+        async () => {
+          const before = hits.length;
+          let checked = false;
+          const denied = await send(target, message, {
+            beforeWrite: () => {
+              checked = true;
+              return Promise.reject(Error("Access was removed"));
+            },
+          });
+          assert(
+            checked && denied.outcome === "retry" && hits.length === before,
+            "No task/header request reaches receiver after denied authorization",
+          );
+          let allowed = false;
+          const accepted = await send(target, message, {
+            beforeWrite: () => {
+              allowed = true;
+              return Promise.resolve();
+            },
+          });
+          assert(
+            allowed && accepted.outcome === "delivered" &&
+              hits.length === before + 1,
+            "Authorized TLS socket sends once",
+          );
+        },
+      );
+      await t.step(
         "bad certificate hostname and untrusted CA fail without a request body",
         async () => {
           const before = hits.length;

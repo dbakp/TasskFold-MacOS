@@ -134,7 +134,7 @@ function receipt(value: unknown) {
       !/^\d{4}-\d{2}-\d{2}T/.test(value) || !Number.isFinite(Date.parse(value))
     ) throw Error("Invalid receipt date");
   }
-  return Object.fromEntries(
+  const projected = Object.fromEntries(
     [
       "id",
       "revision",
@@ -149,6 +149,133 @@ function receipt(value: unknown) {
       "verified_at",
       "revoked_at",
     ].map((key) => [key, row[key]]),
+  );
+  if (row.delivery !== undefined) {
+    projected.delivery = deliverySummary(row.delivery);
+  }
+  return projected;
+}
+const errorCodes = [
+  "quota",
+  "configuration",
+  "refused",
+  "gone",
+  "temporary",
+  "expired",
+  "attempts_exhausted",
+  "connection_unavailable",
+  "resource_unavailable",
+  "account_unavailable",
+];
+function deliverySummary(value: unknown) {
+  const row = record(value);
+  if (row.version !== 1) throw Error("Unsupported delivery summary");
+  for (
+    const name of ["pending", "retained_bytes", "missed", "delivered", "failed"]
+  ) {
+    if (
+      !Number.isSafeInteger(row[name]) || (row[name] as number) < 0 ||
+      (row[name] as number) > 2147483647
+    ) throw Error("Invalid delivery count");
+  }
+  if (
+    (row.pending as number) > 256 ||
+    (row.retained_bytes as number) > 33554432 ||
+    !(row.capture_issue === null ||
+      ["event_quota", "queue_capacity", "payload_too_large"].includes(
+        row.capture_issue as string,
+      )) ||
+    !(row.blocked_reason === null ||
+      ["configuration", "refused", "gone"].includes(
+        row.blocked_reason as string,
+      )) ||
+    !(row.last_error === null || errorCodes.includes(row.last_error as string))
+  ) throw Error("Invalid delivery state");
+  for (
+    const name of [
+      "missed_since",
+      "missed_until",
+      "last_success",
+      "last_failure",
+    ]
+  ) {
+    if (
+      row[name] !== null &&
+      (typeof row[name] !== "string" || (row[name] as string).length > 40 ||
+        !Number.isFinite(Date.parse(row[name] as string)))
+    ) throw Error("Invalid delivery time");
+  }
+  return Object.fromEntries(
+    [
+      "version",
+      "pending",
+      "retained_bytes",
+      "missed",
+      "capture_issue",
+      "missed_since",
+      "missed_until",
+      "blocked_reason",
+      "last_error",
+      "last_success",
+      "last_failure",
+      "delivered",
+      "failed",
+    ].map((name) => [name, row[name]]),
+  );
+}
+function eventReceipt(value: unknown) {
+  const row = record(value);
+  if (
+    [row.id, row.task_id, row.task_generation].some((id) =>
+      typeof id !== "string" || !uuid.test(id)
+    ) || ![...events, "task.removed"].includes(row.type as string) ||
+    !["pending", "leased", "failed", "delivered", "cancelled", "expired"]
+      .includes(row.status as string)
+  ) throw Error("Invalid delivery history");
+  for (
+    const name of ["parts", "parts_delivered", "attempts", "manual_retries"]
+  ) {
+    if (
+      !Number.isSafeInteger(row[name]) || (row[name] as number) < 0 ||
+      (row[name] as number) > 2147483647
+    ) throw Error("Invalid delivery progress");
+  }
+  if (
+    (row.parts as number) < 1 || (row.parts as number) > 94 ||
+    (row.parts_delivered as number) > (row.parts as number) ||
+    (row.manual_retries as number) > 3 ||
+    !(row.error === null || errorCodes.includes(row.error as string)) ||
+    !(row.http_status === null ||
+      Number.isInteger(row.http_status) && (row.http_status as number) >= 100 &&
+        (row.http_status as number) <= 599)
+  ) throw Error("Invalid delivery outcome");
+  for (
+    const name of ["created_at", "expires_at", "next_attempt_at", "finished_at"]
+  ) {
+    if (
+      !(name === "finished_at" && row[name] === null) &&
+      (typeof row[name] !== "string" || (row[name] as string).length > 40 ||
+        !Number.isFinite(Date.parse(row[name] as string)))
+    ) throw Error("Invalid delivery history date");
+  }
+  return Object.fromEntries(
+    [
+      "id",
+      "task_id",
+      "task_generation",
+      "type",
+      "status",
+      "created_at",
+      "expires_at",
+      "finished_at",
+      "next_attempt_at",
+      "parts",
+      "parts_delivered",
+      "attempts",
+      "manual_retries",
+      "error",
+      "http_status",
+    ].map((name) => [name, row[name]]),
   );
 }
 function decodedSecret(text: unknown) {
@@ -195,6 +322,32 @@ function projection(
   const subscription = receipt(value.subscription);
   if (subscription.id !== body.id) throw Error("Wrong setup");
   const output: Record<string, unknown> = { account, subscription };
+  if (action === "history") {
+    if (!Array.isArray(value.events) || value.events.length > 50) {
+      throw Error("Invalid history page");
+    }
+    const rows = value.events.map(eventReceipt),
+      ids = rows.map((row) => row.id);
+    if (
+      new Set(ids).size !== ids.length ||
+      !(value.next_cursor === null || value.next_cursor === ids.at(-1))
+    ) throw Error("Invalid history cursor");
+    output.events = rows;
+    output.next_cursor = value.next_cursor;
+  }
+  if (action === "retry_delivery") {
+    const event = eventReceipt(value.event), retry = record(value.retry);
+    if (
+      event.id !== body.event_id || retry.event_id !== body.event_id ||
+      retry.request_id !== body.request_id || retry.applied !== true
+    ) throw Error("Retry unconfirmed");
+    output.event = event;
+    output.retry = {
+      event_id: body.event_id,
+      request_id: body.request_id,
+      applied: true,
+    };
+  }
   if (["pause", "resume"].includes(action)) {
     const command = record(value.command);
     if (command.request_id !== body.request_id || command.applied !== true) {
@@ -301,6 +454,8 @@ export function createWebhookHandler(
           "revoke",
           "cancel",
           "verify",
+          "history",
+          "retry_delivery",
         ].includes(input.action as string)
       ) throw new Refusal(400);
       if (
@@ -317,6 +472,24 @@ export function createWebhookHandler(
           Object.keys(body).sort().join(",") !== "attempt_id,id" ||
           typeof body.attempt_id !== "string" || !uuid.test(body.attempt_id) ||
           body.attempt_id === nil
+        ) throw new Refusal(400);
+      } else if (action === "history") {
+        if (
+          Object.keys(body).some((key) =>
+            !["id", "cursor", "limit"].includes(key)
+          ) ||
+          body.cursor !== undefined &&
+            (typeof body.cursor !== "string" || !uuid.test(body.cursor)) ||
+          body.limit !== undefined &&
+            (!Number.isInteger(body.limit) || (body.limit as number) < 1 ||
+              (body.limit as number) > 50)
+        ) throw new Refusal(400);
+      } else if (action === "retry_delivery") {
+        if (
+          Object.keys(body).sort().join(",") !== "event_id,id,request_id" ||
+          [body.event_id, body.request_id].some((value) =>
+            typeof value !== "string" || !uuid.test(value) || value === nil
+          )
         ) throw new Refusal(400);
       } else if (["pause", "resume"].includes(action)) {
         if (

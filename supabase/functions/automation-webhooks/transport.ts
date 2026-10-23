@@ -171,7 +171,11 @@ export function createWebhookTransport(dependencies: Dependencies = {}) {
   return async function deliver(
     destination: string,
     message: WebhookMessage,
-    options: { signal?: AbortSignal; challenge?: boolean } = {},
+    options: {
+      signal?: AbortSignal;
+      challenge?: boolean;
+      beforeWrite?: () => Promise<void>;
+    } = {},
   ): Promise<WebhookResult> {
     const signal = AbortSignal.any([
       AbortSignal.timeout(10000),
@@ -206,13 +210,17 @@ export function createWebhookTransport(dependencies: Dependencies = {}) {
       return { outcome: "refused" };
     }
     const pinned = addresses[0];
+    let socket: Awaited<ReturnType<typeof connectWebhookSocket>> | undefined;
     try {
-      const socket = await connect(
+      socket = await connect(
         pinned.address,
         target.port,
         target.hostname,
         signal,
       );
+      // The dispatcher rechecks its lease/current permissions after DNS/TLS,
+      // immediately before any signed header or task-content byte is written.
+      if (options.beforeWrite) await abortable(options.beforeWrite(), signal);
       const result = await postWebhook(
         socket,
         target,
@@ -243,6 +251,9 @@ export function createWebhookTransport(dependencies: Dependencies = {}) {
       }
       return { outcome: "refused", status };
     } catch {
+      try {
+        socket?.close();
+      } catch { /* Already closed by the HTTP reader. */ }
       return { outcome: "retry" };
     }
   };

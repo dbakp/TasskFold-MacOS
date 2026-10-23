@@ -630,3 +630,19 @@ Next: the actual task-change outbox and leased dispatcher, including large-task
 payloads, current-permission revalidation, retries and failure history; then native
 setup/status/recovery and hosted acceptance. Full webhooks/Px remain unfinished.
 Details: `WEBHOOKS.md`; evidence: `p2-webhook-subscriptions-evidence.json`.
+
+
+23 October webhook outbox checkpoint: each repo now owns transactional capture,
+immutable complete snapshots/multipart frames, bounded per-subscription queues,
+leases, final after-TLS authorization, dispatcher, retry/history APIs and payload
+retention cleanup. Local source checks pass 143 SQL assertions, 35 actual PostgreSQL
+17.6 assertions with five observed barriers, and 40 Deno tests/eight TLS substeps.
+Task edits remain responsive during outstanding network leases; old workers cannot
+acknowledge a recovered lease, and lost access/removal blocks final sending.
+
+No real tasks changed and no remote schema, endpoint or scheduler was deployed.
+Owned PostgreSQL containers/TLS fixtures are removed. No Taskfold app was launched;
+Docker remains on for unrelated workloads. Next: native setup/status/recovery UX
+(including quota-gap guidance), secure scheduling and hosted end-to-end acceptance.
+Full webhooks/Px remains active; email intake, advanced teams and wearables follow.
+See `WEBHOOKS.md` and `p2-webhook-outbox-evidence.json` for limits and exact proof.

@@ -579,3 +579,135 @@ Deno.test("webhook HTTP state controls require a baseline and preserve the comma
     );
   }
 });
+
+const deliveryFixture = () => ({
+  version: 1,
+  pending: 1,
+  retained_bytes: 120,
+  missed: 2,
+  capture_issue: "event_quota",
+  missed_since: "2026-10-23T05:00:00Z",
+  missed_until: "2026-10-23T05:01:00Z",
+  blocked_reason: null,
+  last_error: null,
+  last_success: null,
+  last_failure: null,
+  delivered: 3,
+  failed: 0,
+  payload: "PRIVATE PAYLOAD",
+});
+const eventFixture = () => ({
+  id: id(81),
+  task_id: id(82),
+  task_generation: id(83),
+  type: "task.updated",
+  status: "failed",
+  created_at: "2026-10-23T05:00:00Z",
+  expires_at: "2026-10-24T05:00:00Z",
+  next_attempt_at: "2026-10-23T05:01:00Z",
+  finished_at: "2026-10-23T05:02:00Z",
+  parts: 1,
+  parts_delivered: 0,
+  attempts: 12,
+  manual_retries: 0,
+  error: "temporary",
+  http_status: 503,
+  payload: "PRIVATE PAYLOAD",
+  endpoint,
+});
+Deno.test("webhook HTTP delivery history and quota warnings project metadata only", async () => {
+  const f = await fixture({
+    result: (_action, value) => ({
+      ...value,
+      subscription: { ...receipt(), delivery: deliveryFixture() },
+      events: [eventFixture()],
+      next_cursor: id(81),
+      payload: "PRIVATE PAYLOAD",
+    }),
+  });
+  const response = await f.handler(
+    request("history", { id: subscription, limit: 1 }),
+  );
+  const result = await answer(response), text = JSON.stringify(result);
+  assert(
+    response.status === 200 && result.events.length === 1 &&
+      result.next_cursor === id(81) &&
+      result.subscription.delivery.missed === 2,
+    "Bounded history and capture warning reach native API",
+  );
+  assert(
+    !text.includes("PRIVATE") && !text.includes("private-destination"),
+    "No task payload, secret or destination from metadata projection",
+  );
+  assert(f.counts().deliveries === 0, "History makes no receiver request");
+});
+Deno.test("webhook HTTP manual delivery retry requires and confirms the same intent", async () => {
+  const body = { id: subscription, event_id: id(81), request_id: id(84) };
+  const f = await fixture({
+    result: (_action, value) => ({
+      ...value,
+      event: eventFixture(),
+      retry: {
+        event_id: id(81),
+        request_id: id(84),
+        applied: true,
+        secret: "PRIVATE",
+      },
+    }),
+  });
+  assert(
+    (await f.handler(
+          request("retry_delivery", { id: subscription, event_id: id(81) }),
+        )).status === 400 && f.calls.length === 0,
+    "No retry without durable identity",
+  );
+  const response = await f.handler(request("retry_delivery", body));
+  const result = await answer(response);
+  assert(
+    response.status === 200 && result.retry.request_id === body.request_id &&
+      JSON.stringify(f.calls[0].value) === JSON.stringify(body),
+    "Exact retry intent forwarded",
+  );
+  assert(
+    !JSON.stringify(result).includes("PRIVATE") && f.counts().deliveries === 0,
+    "Retry only queues, never exposes retained payload",
+  );
+  const wrong = await fixture({
+    result: (_action, value) => ({
+      ...value,
+      event: eventFixture(),
+      retry: { event_id: id(81), request_id: id(85), applied: true },
+    }),
+  });
+  assert(
+    (await wrong.handler(request("retry_delivery", body))).status === 503,
+    "Wrong receipt fails closed",
+  );
+});
+Deno.test("webhook HTTP history rejects unbounded requests and corrupt progress", async () => {
+  const f = await fixture();
+  for (
+    const body of [{ id: subscription, limit: 51 }, {
+      id: subscription,
+      cursor: "bad",
+    }, { id: subscription, payload: true }]
+  ) {
+    assert(
+      (await f.handler(request("history", body))).status === 400,
+      "Invalid page refused",
+    );
+  }
+  assert(f.calls.length === 0, "Invalid pages never reach SQL");
+  const wrong = await fixture({
+    result: (_action, value) => ({
+      ...value,
+      events: [{ ...eventFixture(), parts_delivered: 2 }],
+      next_cursor: null,
+    }),
+  });
+  assert(
+    (await wrong.handler(request("history", { id: subscription }))).status ===
+      503,
+    "Corrupt metadata fails closed",
+  );
+});

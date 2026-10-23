@@ -1,9 +1,10 @@
 # Task-change webhooks — inactive implementation
 
 Updated 23 October 2026. Rank 6 remains in progress. The delivery transport, receiver-secret envelope,
-private subscription schema, receiver-proof protocol and management handler are
-implemented in each repo independently as inactive candidates. There is no
-native webhook screen, task-change outbox or scheduled dispatcher yet. No real task data was sent and nothing was enabled on
+private subscription schema, receiver-proof protocol, management handler,
+transactional task-change outbox and leased dispatcher are implemented in each repo
+independently as inactive candidates. Native screens, secure scheduling and hosted
+end-to-end queue acceptance remain open. No real task data was sent and nothing was enabled on
 main. This milestone is a necessary part of automatic task-change delivery, not a
 replacement for that feature.
 
@@ -28,10 +29,9 @@ registries and must be maintained as allocations change.
 The whole attempt, including signing, DNS, connection, handshake, write and
 challenge response, has a ten-second budget; caller cancellation also closes the
 owned socket. A late DNS/connection result cannot send data after cancellation.
-The current transport accepts at most 256 KiB of UTF-8 payload. Final event
-projection and large-task handling must be resolved with the outbox contract;
-do not silently truncate supported task content or treat this provisional bound
-as proof that every API task fits a webhook event.
+The transport accepts at most 256 KiB of UTF-8 payload per request. The outbox
+uses complete multipart events for larger supported snapshots; see the protocol
+and explicit capture limits below.
 
 The bounded HTTP/1 parser accepts HTTP/1.0 or 1.1, at most four interim responses,
 16 KiB cumulative headers, 8 KiB lines and 64 KiB total response wire data.
@@ -261,3 +261,88 @@ Exact current source hashes, hosted outcomes, rejected iterations and cleanup:
 References: [Deno TLS upgrade](https://docs.deno.com/api/deno/network/),
 [IANA IPv4 special addresses](https://www.iana.org/assignments/iana-ipv4-special-registry/),
 [IANA IPv6 special addresses](https://www.iana.org/assignments/iana-ipv6-special-registry/).
+
+## Durable queue and worker candidate — 23 October
+
+Committed task changes now capture immutable events in the same transaction.
+Rollback leaves no event. Only verified subscriptions capture content; Pending
+setups never do. Paused subscriptions retain bounded changes but cannot deliver.
+Task projection is explicit, includes full notes and nested subtasks, and excludes
+internal reminder markers. Completion/reopening emits both an update and the
+corresponding completion/reopening event when subscribed. Nested edits update
+the root. Deletes and exits from a selected scope carry only the old task ID,
+generation and project ID; they do not disclose the new private location.
+
+The service-only dispatcher claims a 45-second lease, with at most one message
+in flight per subscription. It skips busy queues. It prepares the immutable packet,
+then rechecks account, removal state, project membership, current task identity/location,
+subscription revision, expiry and budgets after the receiver TLS handshake and
+before any HTTP bytes. No database lock spans receiver I/O. A change after that
+last authorization cannot recall an already transmitted request. Delivery is
+at least once: receiver acceptance followed by a lost acknowledgement may repeat
+that same event/part. Receivers must deduplicate, not assume exactly-once delivery.
+The queue does not promise global transaction-commit order.
+
+Events expire after 24 hours. Delivered/cancelled/expired payloads are erased and
+release retained capacity; failed payloads remain available until expiry or revoke.
+Terminal metadata is pruned after seven days. Revocation and account removal
+prevent sending; physical Auth deletion cascades private queue data. Lease recovery
+keeps the immutable body and stable message identity; stale acknowledgements cannot
+consume a replacement lease.
+
+### Complete large-task protocol
+
+A JSON event of at most 250,000 UTF-8 bytes is sent unchanged, signed with its
+logical event ID. Larger events, up to 16 MiB, split encoded bytes into 180,000-byte
+chunks. Each request remains below the transport's 262,144-byte ceiling. The frame
+contains `version: 1`, `type: taskfold.event.part`, logical `event_id`, `part_id`,
+zero-based `part_index`, `part_count`, `encoding: base64`, full-event `sha256`
+and chunk `data`. The stable part ID uses the first 128 bits of SHA-256 of
+`event_id + ":" + part_index`, formatted as a UUID. The request signature and event
+header use that part ID. Retries preserve body and part ID, with a fresh signing
+timestamp. Advance to the next part requires durable acknowledgement.
+
+Receivers must verify each request signature, deduplicate by subscription and
+message/part ID, store bounded parts under their logical event ID, join decoded
+bytes in order, verify the full SHA-256 and only then decode/parse/apply the event.
+Partial snapshots must never be applied. SQL tests reconstruct Unicode notes from
+three real generated parts without loss; worker tests separately preserve exact
+part bytes and reject mismatched identities. This is not yet a hosted end-to-end
+receiver acceptance or a receiver SDK.
+
+### Bounded delivery and recovery
+
+Per subscription: 500 captured events and 32 MiB captured per UTC day; 256 pending
+events and 32 MiB retained payload; 60 authorized HTTP sends per minute and 1,000
+per UTC day. Each part has 12 authorized attempts, exponential backoff and bounded
+Retry-After guidance. Pre-authorization TLS/DNS failures do not charge an authorized
+send, but all work remains bounded by event expiry and worker execution limits.
+Failed events permit at most three explicit manual retries. A durable retry command
+keeps event/part IDs and cannot resubmit an old successful command.
+
+Capture overflow or a legacy snapshot above 16 MiB leaves a cumulative warning
+with cause and times rather than truncating content or deliberately failing a task
+save. Native delivery summaries include these warnings, pending/retained totals,
+blocked state, safe last error and cumulative delivered/failed totals. History is
+paged at 1–50 redacted metadata records. It never returns event bodies, encrypted
+secrets or endpoint paths/query strings. Receiver refusal/gone blocks further sends
+until a deliberate Resume; replaying an older Resume cannot clear a newer block.
+Missing/corrupt master keys defer delivery for five minutes without sending.
+
+The worker uses a separate private 64-hex credential and a server enable flag
+(default off), accepts no caller-chosen recipient or event, and caps execution at
+55 seconds/eight claims. Its response contains counters only; its delivered count
+counts acknowledged messages/parts, while the subscription delivered total counts
+complete logical events. Master configuration is shared with enrollment and pinned
+to validated versions. Never put service, master or worker credentials in native apps.
+
+### Remaining enablement gates
+
+No scheduler is installed, no new remote schema/endpoint was deployed, and the
+ordinary app entry remains disabled. Native setup, secret copying, delivery warnings,
+resync guidance and recovery controls still need implementation and acceptance.
+In particular, quota gaps need a clear user-facing recovery path before enablement;
+a delivery-history API alone does not finish that UX. Secure scheduled invocation,
+hosted Auth/PostgREST-to-receiver acceptance, key/configuration recovery and account
+switch/relaunch checks remain open. These local results do not complete webhooks
+or the remaining Px backlog. Exact scoped proof: `p2-webhook-outbox-evidence.json`.
