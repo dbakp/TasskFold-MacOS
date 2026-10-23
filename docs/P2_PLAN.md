@@ -1267,3 +1267,25 @@ is the premium native address setup/vault/recovery flow. Provider adapter,
 additional verified senders, source links, scheduled maintenance and real delivery
 remain open. See `EMAIL_CAPTURE.md` and `p2-email-routes-gateway-evidence.json`.
 Full rank 6/Px remains active and user deferrals are unchanged.
+
+
+## Native email setup — 23 October, candidate and scoped acceptance
+
+Both apps independently own destination/sender review, concealed addresses,
+expiring local Copy, pause/resume, replacement and revocation, using the existing
+account settings patterns. Device-only private storage durably records one pending
+action before sending; lost replies and failed private saves retain the exact
+setup. Workspace/session changes reject late replies, and account removal cleans
+the private email vault. The fixed native HTTP path is bounded, refuses redirects
+and disables cookies/cache. A versioned 256-bit address convention agrees across
+Swift and the internal Web Crypto helper. Production feature flags remain off.
+
+Scoped model/vault/HTTP tests and phone/tablet synthetic-peer walkthrough evidence
+are in `p2-email-native-setup-evidence.json`, with exact counts and limitations.
+The real private-Keychain path, hosted native recovery, Mac runtime and spoken
+acceptance remain open; source/build success does not close those gates. Provider
+adapter/attestation, source links, scheduled cleanup and additional verified senders
+remain unfinished. Active-address domain migration is not yet an accepted rollout.
+Provider/domain configuration stays deferred by the user. The full Px objective,
+advanced teams, wearable clients and all existing release/provider deferrals remain
+in scope; rank 6 is not complete.

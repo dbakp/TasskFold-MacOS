@@ -1,0 +1,244 @@
+{
+  "date": "2026-10-23",
+  "scope": "Gated native email setup, private recovery and alias contract; source and scoped local acceptance",
+  "deployed": false,
+  "releaseFeatureFlagEnabled": false,
+  "liveEmailSent": false,
+  "realDataChanged": false,
+  "fullEmailIntakeComplete": false,
+  "sourceSha256": {
+    "Package.swift": "e3c6edfb77161fae029d648cc2f26ef5e83ad4be5609d9119cbe17f16fbf5c8f",
+    "Taskfold.xcodeproj/project.pbxproj": "00891ee7750c7ab1dd4990ac8bb75055565e1a8d091f13dfe84516a91d87d1c5",
+    "Taskfold/Core/EmailCapture.swift": "4acc058f72e3000b92ce4c46bce789aff891f0d9d8bb67b09710e6a893991109",
+    "Taskfold/Views/EmailCaptureView.swift": "9c55d6c68ff87118a8da70b9f988d911d6d442516218abdf674f607476b97038",
+    "Taskfold/Core/Backend.swift": "a7e6467f39ae53ba827985bf13fc193b3f7820e4da9c215e200c97f518e5f258",
+    "Taskfold/Core/Store.swift": "3b362ca7dfbb47b272c671086f20e281f494cb5ca9e21004c38d4105d587d08f",
+    "TaskfoldTests/EmailCaptureTests.swift": "00f30849abfb5ddbcccb26cc4f0974a5327369c49569e659419a896c834d7ac9",
+    "supabase/functions/_shared/email-alias.ts": "91a8a40a5cb15d03eb990d31dc7f05b6d5f2f5785831b86c20961a75de691008",
+    "supabase/functions/_shared/email-alias_test.ts": "dcb6fccdadc7ce0dc86a38af779996a97cbda5c9e0053a7c580c2c500de1e8fc",
+    "supabase/functions/email-routes/handler.ts": "a11e42278f5f7c78889da019338afce713826ae386312d67ddfdd3673ee98ab8",
+    "Taskfold/Views/SettingsView.swift": "8201f9bd8eed371e35a0f98213ab75d2a127b5d0feed2c4c2b1c3a1b9e2c9d3c"
+  },
+  "scopedCore": {
+    "executed": 22,
+    "failures": 0,
+    "logSha256": "2e7d48e5c17a668a842289c3e11d2e58e69fe557ff12b29fafbe3dfa2854adc9",
+    "cases": [
+      "testAccountErasureAndRevokedPruningPreserveOtherAccounts",
+      "testAliasContractAndRedaction",
+      "testCancelSetupPersistsTerminalIntentBeforeRetry",
+      "testCreatePersistsThenRevealsOnlyConfirmedAddress",
+      "testDisabledConfigurationAndExpiredSessionConcealAddresses",
+      "testDiscardLostCreationRevokesItAndDoesNotExposeAddress",
+      "testDraftValidationAndMailboxBounds",
+      "testFailedPrivateSaveNeverSendsCreation",
+      "testHTTPRefusesForeignOwnerAndOversizeStreamWithoutConfirming",
+      "testHTTPUsesBoundedPrivateFixedRouteAndReviewedDomain",
+      "testLostResponseRelaunchRetriesSameIdentity",
+      "testOperationValidationAndPrivateDescription",
+      "testOtherDeviceCanManageButCannotRevealOrResumeUnknownAddress",
+      "testPauseResumeRotateAndRevokeKeepPrivateVaultAligned",
+      "testPrivateSaveFailureAfterServerCommitRetainsRetry",
+      "testRefreshResolvesSupersededControlWithoutErasingLiveAddress",
+      "testRetryRefreshesWhenAnotherWindowAlreadyFinished",
+      "testSeparateVaultActorsSerializeCompetingSetupsUsingProcessLock",
+      "testVaultFencesAccountOriginCancellationAndCompetingSetup",
+      "testVaultRetainsExactSetupBeforeNetworkAndAcrossActors",
+      "testWorkspaceChangeDiscardsLateResponseButKeepsPrivateRecovery",
+      "testWrongReceiptNeverConfirmsSecretOrClearsRecovery"
+    ]
+  },
+  "fullCoreRegression": {
+    "executed": 1431,
+    "optionalSkipped": 33,
+    "failures": 0,
+    "logSha256": "ea143c8b65e284097c5144dd72fa5956bc5bc1abd46c97ad764d4fca4fcd103d",
+    "scope": "Complete suite before the final cross-window retry-refresh correction and its added case; final 22-case email suite includes that correction. UI-only changes follow separately."
+  },
+  "edgeTests": {
+    "executed": 34,
+    "failures": 0,
+    "aliasCases": 3,
+    "gatewayCases": 22,
+    "admissionCases": 9,
+    "logSha256": "71f6564b6273fa1f07bd290ac08ec6aa4f69a15fcb69ae636d44f4e64758905c",
+    "lintAndFormatCheck": true
+  },
+  "httpPostgres": {
+    "date": "2026-10-23T16:03:36.338Z",
+    "checks": {
+      "HTTP list reports database disabled": true,
+      "HTTP disabled create refused": true,
+      "HTTP create reaches actual service-role SQL": true,
+      "HTTP create does not reveal alias hash": true,
+      "HTTP exact create retry": true,
+      "gateway-created route captures one actual task": true,
+      "HTTP pause persists": true,
+      "HTTP paused route refuses capture": true,
+      "HTTP resume persists": true,
+      "HTTP stale pause conflicts": true,
+      "HTTP cannot list another account routes": true,
+      "HTTP foreign route cannot be revoked": true,
+      "HTTP atomic rotation returns both route identities": true,
+      "HTTP exact rotation retry": true,
+      "rotation prevents old address delivery": true,
+      "HTTP cancellation before setup": true,
+      "HTTP late cancelled create conflicts": true,
+      "HTTP SQL fences expired native session despite successful Auth": true,
+      "gateway actions never duplicate captured task": true,
+      "gateway actions preserve task note": true
+    },
+    "hostedAcceptance": false,
+    "realDataChanged": false,
+    "postgresVersion": 170006,
+    "passed": true,
+    "gatewayStopped": true,
+    "bridgeStopped": true,
+    "containerRemoved": true
+  },
+  "appBuild": {
+    "passed": true,
+    "platform": "macOS Debug unsigned, no runtime claim",
+    "logSha256": "556f46e41f1eb80bbba97ad6ac191f8cdf873885d14cf97955d8f81dd834ef97"
+  },
+  "simulatorUI": {
+    "phone": {
+      "passed": true,
+      "cases": 1,
+      "failures": 0,
+      "device": "iPhone 18 Pro",
+      "appearance": "default text, light",
+      "logSha256": "f5638040f77f077fa8d4b0bd5b9dc54dfde43b48912277875f5bc3a3ae659074",
+      "actions": [
+        "Review sender accessibility name/value",
+        "Cancel leaves no address",
+        "Explicit create",
+        "Concealed address",
+        "Reveal and hide independently",
+        "Pause",
+        "Resume"
+      ],
+      "peer": "Synthetic in-memory peer and vault; no real email/Auth/Keychain path"
+    },
+    "tablet": {
+      "passed": true,
+      "cases": 1,
+      "failures": 0,
+      "device": "iPad Pro 13-inch (M5)",
+      "appearance": "accessibility XXXL, dark",
+      "logSha256": "511de2615ad98f4c700d11e3f316946164fa6dcc02b0007b03dc2260a5389d82",
+      "actions": [
+        "Review sender accessibility name/value",
+        "Cancel leaves no address",
+        "Explicit create",
+        "Concealed address",
+        "Reveal and hide independently",
+        "Pause",
+        "Resume"
+      ],
+      "peer": "Synthetic in-memory peer and vault; no real email/Auth/Keychain path"
+    }
+  },
+  "reviewedScreenshots": {
+    "docs/email-capture/phone-concealed.png": {
+      "sha256": "264fb437f020a8d216e91d2bc63a28a0ce29d328eb4a4286c8f1a7864f62f263",
+      "visuallyInspected": true
+    },
+    "docs/email-capture/phone-review.png": {
+      "sha256": "f079c2e84c634fa828244c5e8d05bfbb8f26351e5f834db10732346e5f38a3c4",
+      "visuallyInspected": true
+    },
+    "docs/email-capture/tablet-paused.png": {
+      "sha256": "e04f933e9776bc4379d40f94ea9746304236c4a26a926cd3bd49d912119d5617",
+      "visuallyInspected": true
+    },
+    "docs/email-capture/tablet-review.png": {
+      "sha256": "d82111e8c6b1bdbe790a939926fcadac0fa3f7f5ad3008181f93ce2b6708a7db",
+      "visuallyInspected": true
+    }
+  },
+  "visualLimits": "Phone review and concealed list readable; tablet dark largest text scrolls through form. Tablet review capture shows its first viewport, with the allowed-sender row at the bottom; test verifies its explicit accessible value. This is not full spoken or Mac visual acceptance.",
+  "signing": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "corrections": [
+    "Added independent borderless actions after actual phone reveal also activated Pause in a Form row.",
+    "Added adaptive spacing/vertical fallback for row controls.",
+    "Applied the private bounded/no-cookie/no-redirect HTTP path and 401 handling to the new endpoint; dedicated Backend tests prove its bounds and account/origin fencing.",
+    "Fixed retry refresh after another window finishes the pending operation; current 22-case suite includes it.",
+    "Corrected the synthetic composer sender and explicit accessible sender value; updated test to target the combined semantic control rather than nonexistent child text.",
+    "Rebuilt for the actual ARM simulator after mismatched x86 AppAuth test linking; production source was unaffected.",
+    "Restored real development identity after ad-hoc test signing prevented unrelated Store secure-storage recovery; email UI fixture still uses an in-memory vault.",
+    "Stopped only obsolete failure diagnostics after the recorded known row-action failure; retained its log, then verified corrected runs."
+  ],
+  "cleanup": {
+    "date": "2026-10-23",
+    "simulatorApps": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "testAppAndRunnerAbsent": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "testAppAndRunnerAbsent": true
+      }
+    ],
+    "removedArtifacts": [
+      "EmailNativePhone.xcresult",
+      "EmailNativePhoneFixed.xcresult",
+      "EmailNativePhoneAccepted.xcresult",
+      "EmailNativePhoneVerified.xcresult",
+      "EmailNativeTablet.xcresult",
+      "EmailNativeTabletFinal.xcresult",
+      "EmailNativeTabletAccepted.xcresult",
+      "EmailNativeTabletVerified.xcresult",
+      "EmailNativePhoneFinalAttachments",
+      "EmailNativePhoneAcceptedAttachments",
+      "EmailNativePhoneVerifiedAttachments",
+      "EmailNativeTabletAttachments",
+      "EmailNativeTabletFinalAttachments",
+      "EmailNativeTabletAcceptedAttachments",
+      "EmailNativeTabletVerifiedAttachments",
+      "APIRenewalNativeHost"
+    ],
+    "hostedChanges": false,
+    "ownedDatabaseContainersAbsent": true
+  },
+  "remaining": [
+    "Real email-vault Keychain relaunch/error runtime acceptance",
+    "Hosted end-to-end native Auth/reauthentication/recovery/account isolation",
+    "Mac native runtime and visual/keyboard/VoiceOver acceptance",
+    "Human spoken acceptance and private clipboard runtime checks",
+    "Wider project/multi-window/network cases",
+    "Verified provider signature/MIME/sender/original-receipt integration",
+    "Source links",
+    "Scheduled inactive-account cleanup",
+    "Additional verified senders",
+    "Supported active-address domain migration/re-enrollment",
+    "Provider/domain configuration later, as requested"
+  ],
+  "simulatorUITestSourceSha256": "92188c741980aa3f6590ca9e31f296c24f047adb1216a1d07720ec9ca1719563",
+  "simulatorProduct": "Owned iOS companion product; this does not claim Mac runtime acceptance."
+}

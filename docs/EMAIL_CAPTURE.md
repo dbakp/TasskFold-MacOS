@@ -12,7 +12,7 @@ configuration and real signed-delivery acceptance.
 | Content and retry contract | Bounded plain text; transparent attachment omissions; a stable provider-delivery/route identity separate from content fingerprint | Implemented independently in each repo; ten Deno tests and lint pass per repo |
 | Atomic intake journal and routes | One committed task per verified delivery; changed-content replays conflict; paused/revoked or unauthorized destinations refuse delivery; quotas and account-removal fencing | Implemented as a disabled local candidate; 119 functional and 32 real PostgreSQL concurrency checks per repo pass; hosted/provider/native acceptance remains open |
 | Provider adapter and management gateway | Verify signed provider requests before trusting normalized sender/receipt data; authorize current native sessions; bounded body/read/deadlines and admission; no raw credentials in receipts | Native management gateway locally implemented; verified provider adapter and hosted/native acceptance remain open; configuration follows later |
-| Native setup and recovery | Clear address/destination review, trusted senders, pause/rotate/revoke, account-bound private setup/retry, understandable delivery status and accessible controls | Open; retain current app typography, spacing and privacy controls |
+| Native setup and recovery | Clear address/destination review, trusted senders, pause/rotate/revoke, account-bound private setup/retry, understandable delivery status and accessible controls | Native candidate implemented; scoped Simulator walkthrough and recovery tests recorded below; real Keychain/hosted/Mac/spoken acceptance remains open |
 | Real delivery acceptance | Actual provider retries, sender spoof refusal, current membership changes, native relaunch/account isolation and recovery | Open; requires later provider/domain configuration |
 
 ## Implemented internal contract
@@ -148,9 +148,9 @@ uncertain request must retain its setup and revision, rather than generating a n
 address or assuming success. Rotation validates both returned identities.
 
 Raw address secrets never enter this management request. Only `alias_hash` is
-forwarded to SQL. Native generation, the precise versioned alias/hash convention,
-private Keychain storage, account-bound recovery and address presentation remain
-next work; do not claim these exist yet. Delivery metadata is projected through a
+forwarded to SQL. The native milestone below now implements generation, the versioned alias/hash
+convention, private storage, account-bound recovery and address presentation;
+real Keychain/hosted acceptance remains open. Delivery metadata is projected through a
 bounded allowlist so hashes, aliases, private/future SQL fields and diagnostics
 cannot escape. Responses are `Cache-Control: no-store`.
 
@@ -183,6 +183,77 @@ platform forwarding, a deployed function or native UI acceptance. Owned gateway,
 bridge and database processes are stopped after each run. Exact results and
 source hashes are in `p2-email-routes-gateway-evidence.json`.
 
-Next: premium native address setup and account-bound private recovery, then the
-verified provider adapter and later domain/provider configuration. Extra verified
+The native candidate below now implements address setup and private recovery.
+Next: its remaining acceptance, the verified provider adapter and later
+domain/provider configuration. Extra verified
 senders, source links and scheduled inactive-account maintenance remain open.
+
+## Native address setup and private recovery — candidate
+
+Both apps now independently own `EmailCapture.swift` and `EmailCaptureView.swift`.
+Account settings presents **Email to Taskfold** only when the bundle metadata
+`TaskfoldEmailCaptureEnabled` is explicitly true. That flag remains absent in both
+production inputs; no live feature or server deployment is enabled here.
+
+The native form reviews the name, Inbox/project destination and current account
+sender before explicit Create. Its controls cover concealed/revealed addresses,
+local-only expiring Copy, pause/resume, replacement and terminal revocation.
+Destructive actions explain their effects and require confirmation. Cancel before
+Create performs no request. A paused address keeps its status visible; an address
+whose private copy is unavailable on another device can still be paused, revoked
+or replaced. Resume requires the current device's matching private address/domain.
+Large-text controls wrap vertically when horizontal space is insufficient. Multiple
+buttons in one Form row explicitly use independent borderless actions.
+
+Version-1 addresses use 32 cryptographically random bytes rendered as 64 lowercase
+hex digits, then `@` and the configured canonical domain. Domain length is bounded
+to 189 ASCII bytes, preserving the 254-byte mailbox limit. The shared adapter
+helper and Swift compute SHA-256 over compact UTF-8 JSON
+`["taskfold-email-alias",1,address]`. Only that digest enters management requests.
+A Swift/Python/Web Crypto vector agrees. The helper is a recipient-format contract,
+not provider/sender attestation or an inbound endpoint.
+
+The app-only `EmailAddressVault` uses the existing device-only, unlocked Keychain
+IO and a process file lock. Its bounded versioned envelope checks account, original
+server, identities and draft integrity. One pending action is saved before each
+network mutation; setup/replacement keeps the exact original time, identity and
+hash. Retries recover that action after a lost reply or private-save failure,
+without generating another address. Discard first durably records revision-zero
+revocation of the new address, then sends it. A delayed setup cannot override the
+server's cancellation tombstone. An interrupted rotation may already have retired
+the old address; the confirmation states that explicitly.
+
+Only confirmed receipts enter the local address catalogue. Foreign/wrong receipts
+cannot confirm an address or clear recovery. Auth, workspace and session-incarnation
+guards reject late results, and cancellation leases protect vault writes. Closing
+or changing account clears the model's private in-memory state while preserving
+unfinished recovery for the original account/server. A fresh snapshot can resolve
+a superseded control without falsely reporting it applied or erasing a still-live
+address. Retry also refreshes when another window has already finished the action.
+Confirmed revocations prune local aliases, and account-removal cleanup includes
+the email vault without touching another account's copy.
+
+The native Backend uses the fixed email-routes path with streamed response bounds
+of 512,000 bytes, a 25-second request limit, no cache/cookies and redirect refusal.
+It retains expected-account checks across Auth refresh/retry. Private addresses
+never enter task snapshots, widgets, exports or Taskfold backups. Reveal is explicit,
+conceals on inactivity, and does not read the capability through accessibility.
+iOS Copy is local-only and expires after one minute; Mac Copy uses the current
+host only plus concealed/transient clipboard types and clears after one minute
+only if the clipboard has not since changed. Sender review exposes an explicit
+accessible name and value; this is not a human VoiceOver listening acceptance.
+
+Verification and screenshots are recorded in `p2-email-native-setup-evidence.json`.
+The Simulator walkthrough uses a strictly gated synthetic peer/memory vault, not
+real Auth, email delivery or the production private Keychain path. Native Keychain
+relaunch/error acceptance, hosted end-to-end Auth/recovery, Mac runtime, wider
+project/account variants and spoken accessibility remain gates. Domain changes
+with active routes need a migration/re-enrollment rule and hosted acceptance;
+changing the environment variable alone is not an accepted rollout procedure.
+
+Next work remains trusted provider/MIME/sender/receipt integration, source links,
+scheduled inactive-account maintenance and the remaining native/hosted acceptance.
+Additional verified senders remain unfinished. The user will configure the provider
+and domain later; keep delivery and the native release flag disabled until the
+required integration and acceptance are ready. Rank 6 and the full Px goal remain
+active, followed by advanced teams and wearable clients as ranked in `P2_PLAN.md`.

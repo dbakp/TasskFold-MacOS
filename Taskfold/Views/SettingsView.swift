@@ -162,6 +162,7 @@ struct AccountSettings: View {
     @State private var uploading = false
     @State private var avatarWorkspace: WorkspaceBinding?
     @State private var avatarUploadID = UUID()
+    @State private var emailCapture = false
     @State private var webhookAccess = false
     @State private var automationAccess = false
     @State private var changingEmail = false
@@ -200,6 +201,9 @@ struct AccountSettings: View {
                     if workspace.previewsAccount { Text("Preview: these actions need a signed-in account.").font(.caption).foregroundStyle(.secondary) }
                 }
             }
+            if EmailCaptureAvailability.enabled && store.signedIn && !store.localMode {
+                Section("Email capture") { Button("Email to Taskfold…", systemImage: "envelope") { emailCapture = true }.accessibilityIdentifier("emailCapture") }
+            }
             if WebhookAccessAvailability.enabled && store.signedIn && !store.localMode {
                 Section("Task connections") { Button("Task connections…", systemImage: "arrow.triangle.branch") { webhookAccess = true }.accessibilityIdentifier("webhookAccess") }
             }
@@ -232,6 +236,7 @@ struct AccountSettings: View {
         .onChange(of: workspace.signInRequested) { _, _ in consumeSignInRequest() }
         .onChange(of: store.localMode) { _, local in if !local && store.signedIn { showLogin = false } }
         .onChange(of: store.signedIn) { _, signedIn in if signedIn && !store.localMode { showLogin = false } }
+        .sheet(isPresented: $emailCapture) { NavigationStack { EmailCaptureView() } }
         .sheet(isPresented: $webhookAccess) { NavigationStack { WebhookAccessView() } }
         .sheet(isPresented: $automationAccess) { NavigationStack { AutomationAccessView() } }
         .sheet(isPresented: $changingEmail) { ChangeEmailSheet() }

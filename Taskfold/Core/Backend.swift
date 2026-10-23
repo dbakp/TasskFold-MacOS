@@ -321,7 +321,7 @@ final class Backend: NSObject {
             request.setValue("Bearer \(session.access_token)", forHTTPHeaderField: "Authorization")
         }
         extra.forEach { request.setValue($1, forHTTPHeaderField: $0) }
-        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks"].contains(path) {
+        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes"].contains(path) {
             request.timeoutInterval = 25
             request.cachePolicy = .reloadIgnoringLocalCacheData
             request.httpShouldHandleCookies = false
@@ -329,15 +329,15 @@ final class Backend: NSObject {
         }
         if let body { request.httpBody = try JSONEncoder().encode(body) }
         let data: Data, response: URLResponse
-        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks"].contains(path) {
+        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes"].contains(path) {
             let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
-            let limit = ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks"].contains(path) ? 256000 : LocationHandoffResponse.maximumBytes
+            let limit = path == "/functions/v1/email-routes" ? 512000 : (["/functions/v1/automation-keys", "/functions/v1/automation-webhooks"].contains(path) ? 256000 : LocationHandoffResponse.maximumBytes)
             var body = Data()
             do {
-                guard incoming.expectedContentLength <= Int64(limit) else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
+                guard incoming.expectedContentLength <= Int64(limit) else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
                 for try await byte in bytes {
                     try Task.checkCancellation()
-                    guard body.count < limit else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
+                    guard body.count < limit else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
                     body.append(byte)
                 }
             } catch { bytes.task.cancel(); throw error }
@@ -352,7 +352,7 @@ final class Backend: NSObject {
             let error = (try? JSONDecoder().decode(Record.self, from: data)) ?? Record()
             let status = (response as? HTTPURLResponse)?.statusCode
             if authenticated, status == 401,
-               ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks"].contains(path) {
+               ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes"].contains(path) {
                 throw AccountSessionAuthorizationRequired()
             }
             // Raw Auth responses use error_code (code may be numeric HTTP status).
@@ -494,6 +494,13 @@ final class Backend: NSObject {
         return true
     }
     #endif
+    func emailRouteReceipt(action: String, body: [String: JSON], domain: String?, account: String, origin: String) async throws -> [String: JSON] {
+        guard !sessionTransition, session?.user.id == account, EmailCaptureValue.id(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        var headers = ["X-Taskfold-Email": "1"]
+        if let domain { guard EmailCaptureValue.domain(domain) else { throw EmailCaptureValue.invalid }; headers["X-Taskfold-Email-Domain"] = domain }
+        let data = try await request("/functions/v1/email-routes", method: "POST", body: ["action": .string(action), "body": .object(body)], extra: headers, expectedAccount: account)
+        guard let result = try? JSONDecoder().decode([String: JSON].self, from: data), result["account"] == .string(account) else { throw EmailCaptureValue.invalid }; return result
+    }
     func webhookReceipt(action: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
         guard !sessionTransition, session?.user.id == account, AutomationKey.canonicalID(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
         #if DEBUG

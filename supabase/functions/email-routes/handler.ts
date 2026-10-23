@@ -35,17 +35,8 @@ const name = (value: unknown): value is string =>
   typeof value === "string" && !!value.trim() &&
   Array.from(value.trim()).length <= 80 &&
   new TextEncoder().encode(value).length <= 320 && !/\p{Cc}/u.test(value);
-export function emailInboundDomain(value: string | undefined): string | null {
-  // Configuration is a bare, canonical public DNS name, never a URL or mailbox.
-  if (!value || value.length > 253 || value !== value.toLowerCase()) {
-    return null;
-  }
-  const labels = value.split(".");
-  if (labels.length < 2 || !/^[a-z]{2,63}$/.test(labels.at(-1)!)) return null;
-  return labels.every((p) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(p))
-    ? value
-    : null;
-}
+export { emailAliasDomain as emailInboundDomain } from "../_shared/email-alias.ts";
+import { emailAliasDomain as emailInboundDomain } from "../_shared/email-alias.ts";
 function setup(value: unknown) {
   const row = object(value);
   if (

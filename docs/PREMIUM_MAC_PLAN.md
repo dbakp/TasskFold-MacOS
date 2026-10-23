@@ -59,6 +59,14 @@ Keychain recovery and real provider/native acceptance remain next; this mileston
 does not change app UI or enable email. See
 [gateway evidence](p2-email-routes-gateway-evidence.json).
 
+23 October native email setup: the Mac independently owns the gated account-settings
+sheet, confirmed private-address vault, durable interrupted-action recovery and
+bounded Backend transport. The Mac source builds, and scoped Core checks cover
+privacy, account/session fencing, failed saves and cross-window recovery. Companion
+phone/tablet fixture walkthroughs do not prove Mac runtime or real Keychain use;
+those and hosted/spoken acceptance remain open. No release flag or live delivery
+is enabled. See [native setup evidence](p2-email-native-setup-evidence.json).
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.
