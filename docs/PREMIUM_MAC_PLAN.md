@@ -3795,3 +3795,13 @@ no Watch transport or target dependency. The 26 iPhone local native assertions
 are companion evidence, not a Mac runtime or cloud-account result. Paired receiver
 authority/projection and complete wearable acceptance remain open; see
 `p2-watch-phone-save-evidence.json` and the full ranked backlog.
+
+
+### 24 October — iOS-owned Watch connection candidate
+
+The companion repo now implements paired authority, Today projection and receiver
+lifecycle hooks. Its 40 focused checks and 53 signed local iPhone assertions pass;
+the native OS peer boundary is injected, so real paired/background/cloud delivery
+is still open. The Watch flag remains off and target unembedded. Mac source and
+build ownership are unchanged; prior receipt compatibility evidence is not a new
+Mac runtime result. The full ranked backlog and all user deferrals remain active.

@@ -1491,3 +1491,19 @@ are durable peer/workspace authority, Today projection, lifecycle invalidation
 and the paired receiver, then full acceptance before embedding. Rank 7 and full
 Px remain active alongside the remaining email/teams/voice/native gates and
 existing user deferrals.
+
+
+## Watch connection and Today projection — 24 October, candidate
+
+The iOS repo now owns durable peer/workspace authority, a production paired
+receiver, bounded Today projection and startup/signout hooks. Definitive
+connection refusal conceals cached Watch content while retaining immutable
+pending intents. A relaunch check found and removed an accidental dependency on
+notification snooze settings. Forty focused cases and 53 properly signed local
+iPhone assertions pass. Peer identity is injected in native tests: actual paired
+transport/background delivery, cloud accounts, parked-intent recovery UI,
+capacity/reset recovery, hardware/VoiceOver/input/layout and embedding/resources
+remain open. The feature flag stays off; no full Watch or Px completion is claimed.
+See iOS-owned `WATCH_COMPANION.md` and `p2-watch-connection-evidence.json`. Mac
+receives ordinary guarded task sync; it gains no Watch target dependency. All
+remaining email/team/native acceptance work and user deferrals retain scope.
