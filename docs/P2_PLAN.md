@@ -1358,3 +1358,23 @@ Next: genuine hosted native email recovery and verified provider/MIME/sender
 integration, source links and additional verified senders. User provider/domain
 configuration remains deferred. Advanced teams, wearable clients, wider acceptance
 and the full ranked Px objective remain active with the existing release deferrals.
+
+
+## Hosted email management — 23 October, scoped acceptance
+
+The unchanged gateway and email SQL pass 36 genuine hosted checks per repository
+on an owned, nonpersistent no-data preview: actual password Auth and confirmed
+accounts, strict protocol/domain review, exact setup retry, complete route-row
+preservation, account isolation, real server-session expiry and renewal, pause/
+resume, rotation/retry, revocation and cancellation. A saved synthetic task remains
+unchanged. Direct native RPC/provider-attestation bypass is refused. Hosted
+advisors report no email-object findings; other preview advisories are retained.
+The preview, synthetic accounts/function/environment and private connection files
+are removed after testing. Main and production flags are unchanged.
+
+This closes the scoped hosted management boundary, not native app UI/relaunch or
+real mail delivery. Next: native hosted email setup/recovery using the real vault
+and reauthentication flow; verified provider/MIME/sender integration, source links
+and extra verified senders remain. Provider/domain configuration is still deferred
+by the user. Advanced teams, wearable clients and wider acceptance remain in the
+full Px goal. See `p2-email-hosted-management-evidence.json` and `EMAIL_CAPTURE.md`.

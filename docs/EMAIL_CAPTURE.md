@@ -11,7 +11,7 @@ configuration and real signed-delivery acceptance.
 | --- | --- | --- |
 | Content and retry contract | Bounded plain text; transparent attachment omissions; a stable provider-delivery/route identity separate from content fingerprint | Implemented independently in each repo; ten Deno tests and lint pass per repo |
 | Atomic intake journal and routes | One committed task per verified delivery; changed-content replays conflict; paused/revoked or unauthorized destinations refuse delivery; quotas and account-removal fencing | Implemented as a disabled local candidate; current protocol-2 evidence includes 119 intake and 40 real PostgreSQL concurrency checks per repo; hosted/provider/native acceptance remains open |
-| Provider adapter and management gateway | Verify signed provider requests before trusting normalized sender/receipt data; authorize current native sessions; bounded body/read/deadlines and admission; no raw credentials in receipts | Native management gateway locally implemented; verified provider adapter and hosted/native acceptance remain open; configuration follows later |
+| Provider adapter and management gateway | Verify signed provider requests before trusting normalized sender/receipt data; authorize current native sessions; bounded body/read/deadlines and admission; no raw credentials in receipts | Hosted management/session recovery now passes; verified provider adapter and native UI acceptance remain open; configuration follows later |
 | Native setup and recovery | Clear address/destination review, trusted senders, pause/rotate/revoke, account-bound private setup/retry, understandable delivery status and accessible controls | Native candidate implemented; scoped Simulator walkthrough and recovery tests recorded below; scoped real Simulator Keychain now passes; hosted/Mac/spoken acceptance remains open |
 | Real delivery acceptance | Actual provider retries, sender spoof refusal, current membership changes, native relaunch/account isolation and recovery | Open; requires later provider/domain configuration |
 
@@ -124,7 +124,7 @@ pre-existing minimal-fixture findings remain. This is not a production database
 audit. All owned containers were removed. Exact checks, source hashes, candidate
 corrections and limits are in `p2-email-intake-journal-evidence.json`.
 
-Still required: hosted/native acceptance of the management gateway, signed provider/MIME
+Still required: native UI recovery acceptance of the management gateway, signed provider/MIME
 adapter with attested sender and original receipt time, native alias generation
 and private vault/recovery/UI, additional sender verification, source links,
 hosted scheduling and hosted/native/provider acceptance. Provider/domain
@@ -133,7 +133,8 @@ configuration stays deferred by the user. Full email intake and Px remain open.
 ## Native-management gateway — local candidate
 
 `supabase/functions/email-routes` now implements the native management HTTP
-boundary. It is not deployed and is not an inbound-mail/provider endpoint.
+boundary. It is not deployed to main. Disposable preview acceptance is recorded below;
+it is not an inbound-mail/provider endpoint.
 Keep the platform's default JWT verification enabled. The handler verifies the
 bearer through live Auth, matches its subject, extracts its native session, and
 calls only `taskfold_email_routes` with service credentials. SQL rechecks the
@@ -441,3 +442,44 @@ evidence remains scoped as recorded. Exact sources/results and limits are in
 `p2-email-maintenance-evidence.json`. Next work is genuine hosted native recovery
 and verified provider/MIME/sender integration, source links and additional verified
 senders. Provider/domain configuration stays deferred; email and full Px remain open.
+
+
+## Hosted management and session recovery — 23 October 2026
+
+The unchanged production gateway and email SQL now pass 36 checks against a
+disposable, nonpersistent Supabase preview branch created **without copied data**.
+Each repository's own gateway source is deployed for its run, with platform JWT
+verification enabled and the real forwarded-IP admission boundary. Two actual
+confirmed synthetic Auth accounts and one saved synthetic task exercise the real
+Auth → HTTPS gateway → PostgREST → database path. No mock HTTP, minted JWT or
+replacement handler is used. The preview alone uses `mail.example.invalid` and
+`synthetic-adapter`; these settings are not a usable email service.
+
+The walkthrough verifies concealed metadata projection/no-store, exact setup
+retry with an unchanged complete route row, changed-body conflict, and refusal of
+another account's list/mutation/replay access. It expires the original actual
+server session through its `auth.sessions.not_after`, verifies that its unchanged
+bearer cannot mutate, refuses a wrong password, and signs in again through actual
+password Auth. The new session retries the original setup with the same complete
+route fingerprint. Pause and retry, reviewed resume, rotation and retry, terminal
+revocation and cancel-before-create all persist. Old sessions remain refused.
+Native roles cannot bypass management or attest provider delivery through direct
+RPC calls. The full pre-existing synthetic task snapshot remains unchanged.
+
+This is controlled server-session expiry, not natural wall-clock JWT expiry. It
+proves hosted service recovery, not the native model's sign-in sheet, process
+relaunch, clipboard, VoiceOver or Mac runtime. Those native gates remain open.
+Real provider signatures/MIME, sender and original-recipient/receipt attestation,
+source links, additional verified senders and hosted retention enablement remain
+separate work. Email intake and the full Px objective are not complete.
+
+Official hosted advisors report no findings for email objects; existing preview
+advisories are retained in the evidence rather than described as a clean whole-
+project audit. The harness disables preview capture, removes both synthetic users
+and their data, removes its function/environment values and private staging files.
+The owned preview branch and local connection file are then removed and absence
+verified. No main deployment, production feature flag or real mail delivery is
+enabled. Exact source hashes, checks and cleanup are recorded in
+`p2-email-hosted-management-evidence.json`. The reusable guarded harness is
+`Scripts/Diagnostics/test-email-routes-hosted.mjs`; it refuses main, persistent,
+data-bearing and unrelated branches.

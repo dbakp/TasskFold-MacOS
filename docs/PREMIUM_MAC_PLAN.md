@@ -3734,3 +3734,16 @@ libpq mode is accepted. No global scheduler settings or hosted jobs are changed.
 App/UI sources are unchanged; no new Mac runtime claim is made.
 `p2-email-maintenance-evidence.json` retains exact evidence. Provider/domain setup
 and full email/Px acceptance remain open with the existing user deferrals.
+
+
+## Hosted email management recovery — 23 October
+
+This repo's unchanged gateway source and common email migrations now pass 36
+actual hosted management/session-recovery checks on an owned no-data preview.
+Actual password sign-in and server-session renewal preserve the original full
+route fingerprint and saved synthetic task. Pause/resume, rotation/retry, terminal
+revocation, account boundaries and direct native RPC denial pass. The harness and
+evidence are independently owned here. No Mac app source changes or Mac runtime/
+Keychain acceptance are claimed; native hosted UI recovery is next. The owned
+preview and synthetic resources are removed; main, provider configuration and
+release flags stay unchanged. See `p2-email-hosted-management-evidence.json`.
