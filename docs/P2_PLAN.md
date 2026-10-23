@@ -411,8 +411,12 @@ Next required, in order:
    clipboard lifecycle and hosted/concurrent acceptance remain. No candidate is
    enabled or deployed. The normal entry stays hidden.
 
-2. Add project/section discovery and full portable advanced-reminder authoring
-   validation; keep private location markers behind native private-place review.
+2. Project/section discovery now implements read-scoped current-access paging,
+   archive availability, native order and hidden-parent privacy. Each repo passes
+   72 actual destination SQL assertions, the existing 101 task-mutation checks,
+   25 real loopback HTTP assertions and 21 handler tests/lint. Full portable
+   advanced-reminder authoring validation is next; keep private location markers
+   behind native private-place review.
 3. Establish rejected-request/IP controls, then real hosted Auth/HTTP timeout,
    quota, revocation and concurrent-effect acceptance with disposable users.
 4. Verify signed-in phone/tablet and scoped Mac flows, then deploy the coherent
@@ -424,3 +428,12 @@ Current native/cancellation hashes and limits are in
 `p2-automation-enrollment-cancellation-evidence.json`; the mutation milestone
 retains its separately scoped SQL/HTTP proof.
 The original full Px goal remains active. All user-deferred work stays deferred.
+
+
+23 October destination checkpoint: the candidate remains disabled and undeployed.
+The 92 selected Core checks per repo include automation transport, location draft,
+region engine and notification admission contracts. They are local Core tests,
+not positive OS region registration/delivery or a fresh Simulator UI walkthrough.
+The user deferred physical-iPhone delivery again; continue available Simulator work
+without reopening that gate. Exact scope and fingerprints are recorded in
+`p2-automation-destinations-evidence.json`. All other user deferrals remain intact.

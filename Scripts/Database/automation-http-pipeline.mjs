@@ -53,6 +53,11 @@ export async function checkHttpPipeline(db, account, uuid) {
         } else if (req.url === "/rest/v1/rpc/taskfold_automation_write") {
           query =
             "select public.taskfold_automation_write($1,$2,$3,$4::jsonb) value";
+        } else if (
+          req.url === "/rest/v1/rpc/taskfold_automation_destinations"
+        ) {
+          query =
+            "select public.taskfold_automation_destinations($1,$2,$3,$4::jsonb) value";
         } else throw new Error("Unexpected service route");
         const result = (await db.query(query, [
           body._key,
@@ -135,6 +140,25 @@ export async function checkHttpPipeline(db, account, uuid) {
         cache: reply.headers.get("Cache-Control"),
       };
     };
+    const destinations = await call("projects", {});
+    same(destinations.status, 200);
+    same(destinations.value.inbox, {
+      name: "Inbox",
+      project_id: null,
+      section_id: null,
+    });
+    same(
+      destinations.value.projects.every((p) =>
+        typeof p.name === "string" && typeof p.accepts_tasks === "boolean"
+      ),
+      true,
+    );
+    const destination = destinations.value.projects[0].id;
+    const sections = await call("sections", { project_id: destination });
+    same(sections.status, 200);
+    same(sections.value.project_id, destination);
+    same(Array.isArray(sections.value.sections), true);
+    same((await call("sections", { project_id: uuid(99999) })).status, 404);
     const create = {
       id: target,
       request_id: request,
@@ -197,7 +221,7 @@ export async function checkHttpPipeline(db, account, uuid) {
     same(removed.status, 200);
     same(removed.value.receipt.deleted, true);
     same((await call("get", { id: target })).status, 404);
-    same(rpcCalls, 11);
+    same(rpcCalls, 14);
     return checks;
   } finally {
     if (child && child.exitCode === null) {

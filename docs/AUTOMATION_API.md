@@ -51,6 +51,37 @@ Each task includes `task_generation`, `completion_version` and a 64-hex `revisio
 The revision is an opaque HMAC of the complete canonical row using a private
 server secret, including unprojected fields; do not compute or interpret it.
 
+## Project and section discovery
+
+On the read route, `projects` accepts optional `limit` (1–50, default 25) and
+`after` project UUID. It returns `projects`, `next_cursor`, and the account’s
+`inbox: { "name": "Inbox", "project_id": null, "section_id": null }` destination.
+Each project includes only `id`, `name`, `color`, nullable `order_index`, nullable
+`parent_id`, `parent_unavailable`, `is_archived`, `ancestor_archived` and
+`accepts_tasks`. A shared child never discloses an inaccessible parent’s UUID;
+that case returns null parent plus `parent_unavailable: true`.
+
+`sections` requires `project_id` and accepts optional `limit`/`after` section UUID.
+It returns `project_id`, `sections`, and `next_cursor`. Each section includes only
+`id`, `project_id`, `name`, and nullable `order_index`. Inbox has no sections;
+use null project and section IDs when creating an Inbox task. An unsectioned
+project task uses the selected project UUID and null section ID.
+
+Both actions require `tasks:read`, recheck current owner/accepted membership,
+and share quota/authorization and resource locks in one transaction. Pending
+invitations are excluded. Cursors are reauthorized and section cursors must still
+belong to the selected project. Pages use ascending UUIDs; after collecting pages,
+use `order_index` within the project hierarchy or section list to reproduce the
+native order. Pagination reads current data, not a frozen snapshot: restart if a
+cursor is deleted or becomes unavailable.
+
+Archived projects/sections remain readable. `accepts_tasks` describes archive
+state, not the key’s create permission or a reservation: a subsequent write still
+requires its own capability and current destination validation. Future/unknown
+columns, owner identities, membership details and source metadata are never
+projected. These actions use the existing read input/response bounds, deadlines,
+no-store handling and safe errors. No project/section mutations are exposed.
+
 ## Mutation contract
 
 Every body includes a fresh `request_id`, target `id`, `task_generation` and

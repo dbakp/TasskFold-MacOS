@@ -11,7 +11,8 @@
     "test:automation-tasks": "node test-automation-tasks.mjs",
     "test:automation-write-semantics": "node test-automation-write-semantics.mjs",
     "test:automation-mutations": "node test-automation-mutations.mjs",
-    "test:automation-cancellation": "node test-automation-cancellation.mjs"
+    "test:automation-cancellation": "node test-automation-cancellation.mjs",
+    "test:automation-destinations": "node test-automation-destinations.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

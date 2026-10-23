@@ -564,3 +564,150 @@ Deno.test("browser preflight exposes only bearer protocol and no credential cook
     "Authorized browser read missing CORS",
   );
 });
+
+const projectRow = (projectID = id) => ({
+  id: projectID,
+  name: "Synthetic project",
+  color: "purple",
+  order_index: 4,
+  parent_id: null,
+  parent_unavailable: false,
+  is_archived: false,
+  ancestor_archived: false,
+  accepts_tasks: true,
+});
+const projectPage = (
+  rows: unknown[] = [projectRow()],
+  next: string | null = null,
+) => ({
+  projects: rows,
+  next_cursor: next,
+  inbox: { name: "Inbox", project_id: null, section_id: null },
+});
+Deno.test("destination actions use only the fixed hashed-key RPC and reviewed projection", async () => {
+  const f = fixture({
+    ...projectPage([{
+      ...projectRow(),
+      owner_email: "PRIVATE",
+      source_metadata: { private: true },
+    }]),
+    private: "PRIVATE",
+  });
+  const result = await f.handler(request("projects", {}));
+  assert(result.status === 200, "Project page rejected");
+  assert(
+    !JSON.stringify(await result.json()).includes("PRIVATE"),
+    "Private project fields escaped",
+  );
+  assert(
+    f.calls[0].url ===
+      "https://task-api.test/rest/v1/rpc/taskfold_automation_destinations",
+    "Wrong destination RPC",
+  );
+  const sent = await f.calls[0].text();
+  assert(
+    !sent.includes(secret) && sent.includes(keyID),
+    "Wrong credential transport",
+  );
+  assert(
+    result.headers.get("Cache-Control") === "no-store",
+    "Cached destinations",
+  );
+});
+Deno.test("destination input rejects ambiguous Inbox, foreign envelope fields and invalid paging before service", async () => {
+  const f = fixture();
+  for (
+    const [action, body] of [
+      ["sections", {}],
+      ["sections", { project_id: null }],
+      ["projects", { project_id: id }],
+      ["projects", { owner: owner }],
+      ["projects", { limit: 0 }],
+      ["projects", { limit: 51 }],
+      ["projects", { limit: 1.5 }],
+      ["projects", { after: null }],
+      ["sections", { project_id: id, after: "nope" }],
+    ] as const
+  ) {
+    assert(
+      (await f.handler(request(action, body))).status === 400,
+      "Invalid destinations accepted",
+    );
+  }
+  const wrongRoute = request("projects", {});
+  assert(
+    (await f.handler(new Request("https://edge.test/write", wrongRoute)))
+      .status === 400,
+    "Discovery accepted on write route",
+  );
+  assert(f.calls.length === 0, "Invalid request reached service");
+});
+Deno.test("destination response rejects inconsistent archive, hidden parent and pagination metadata", async () => {
+  for (
+    const page of [
+      projectPage([{ ...projectRow(), is_archived: true }]),
+      projectPage([{
+        ...projectRow(),
+        parent_id: owner,
+        parent_unavailable: true,
+      }]),
+      projectPage([{ ...projectRow(), order_index: 1.5 }]),
+      projectPage([projectRow(), projectRow()]),
+      projectPage([projectRow()], owner),
+      {
+        ...projectPage(),
+        inbox: { name: "Inbox", project_id: owner, section_id: null },
+      },
+      { ...projectPage(), next_cursor: undefined },
+    ]
+  ) {
+    assert(
+      (await fixture(page).handler(request("projects", {}))).status === 503,
+      "Invalid metadata accepted",
+    );
+  }
+  const f = fixture(projectPage([projectRow()], id));
+  assert(
+    (await f.handler(request("projects", { limit: 1 }))).status === 200,
+    "Valid next page rejected",
+  );
+  assert(
+    (await fixture(projectPage()).handler(request("projects", { after: id })))
+      .status === 503,
+    "Cursor order not checked",
+  );
+});
+Deno.test("section response binds every row and page to the requested project", async () => {
+  const section = { id, project_id: owner, name: "Section", order_index: null };
+  const page = {
+    project_id: owner,
+    sections: [{ ...section, user_id: "PRIVATE" }],
+    next_cursor: null,
+  };
+  const result = await fixture(page).handler(
+    request("sections", { project_id: owner }),
+  );
+  assert(result.status === 200, "Valid section rejected");
+  assert(
+    !JSON.stringify(await result.json()).includes("PRIVATE"),
+    "Section owner escaped",
+  );
+  for (
+    const broken of [{ ...page, project_id: id }, {
+      ...page,
+      sections: [{ ...section, project_id: id }],
+    }]
+  ) {
+    assert(
+      (await fixture(broken).handler(
+        request("sections", { project_id: owner }),
+      )).status === 503,
+      "Cross-project section accepted",
+    );
+  }
+  assert(
+    (await fixture({ project_id: owner, sections: [], next_cursor: null })
+      .handler(request("sections", { project_id: owner }))).status === 200,
+    "Empty sections rejected",
+  );
+});

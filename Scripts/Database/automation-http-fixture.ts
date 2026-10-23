@@ -16,6 +16,7 @@ const handler = createHandler({
       ![
         "/rest/v1/rpc/taskfold_automation_read",
         "/rest/v1/rpc/taskfold_automation_write",
+        "/rest/v1/rpc/taskfold_automation_destinations",
       ].includes(path)
     ) throw new Error("Unexpected fixture RPC");
     return await fetch(

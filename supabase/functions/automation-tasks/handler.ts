@@ -117,6 +117,25 @@ function inputValid(
   body: unknown,
 ): body is Record<string, unknown> {
   if (!object(body)) return false;
+  if (action === "projects" || action === "sections") {
+    if (
+      Object.keys(body).some((k) =>
+        !["after", "limit", "project_id"].includes(k)
+      )
+    ) return false;
+    if (action === "projects" && Object.hasOwn(body, "project_id")) {
+      return false;
+    }
+    if (
+      action === "sections" &&
+      (typeof body.project_id !== "string" || !uuid.test(body.project_id))
+    ) return false;
+    return (!Object.hasOwn(body, "after") ||
+      (typeof body.after === "string" && uuid.test(body.after))) &&
+      (!Object.hasOwn(body, "limit") ||
+        (Number.isInteger(body.limit) && (body.limit as number) >= 1 &&
+          (body.limit as number) <= 50));
+  }
   if (action === "get") {
     return Object.keys(body).join(",") === "id" &&
       typeof body.id === "string" && uuid.test(body.id);
@@ -145,11 +164,94 @@ function inputValid(
   ) return false;
   return true;
 }
+// Project only reviewed destination metadata, never owner/member/source fields.
+function destinationProjection(
+  value: unknown,
+  action: string,
+  body: Record<string, unknown>,
+) {
+  if (!object(value)) throw new Error("Invalid destinations");
+  const key = action === "projects" ? "projects" : "sections";
+  const raw = value[key];
+  if (
+    !Array.isArray(raw) ||
+    raw.length > ((body.limit as number | undefined) ?? 25)
+  ) throw new Error("Invalid destination page");
+  const fields = action === "projects"
+    ? [
+      "id",
+      "name",
+      "color",
+      "order_index",
+      "parent_id",
+      "parent_unavailable",
+      "is_archived",
+      "ancestor_archived",
+      "accepts_tasks",
+    ]
+    : ["id", "project_id", "name", "order_index"];
+  const rows = raw.map((row) => {
+    if (
+      !object(row) || fields.some((f) => !Object.hasOwn(row, f)) ||
+      typeof row.id !== "string" || !uuid.test(row.id) ||
+      typeof row.name !== "string" ||
+      (row.order_index !== null && !Number.isSafeInteger(row.order_index))
+    ) throw new Error("Invalid destination");
+    if (action === "projects") {
+      if (
+        (row.color !== null && typeof row.color !== "string") ||
+        (row.parent_id !== null &&
+          (typeof row.parent_id !== "string" || !uuid.test(row.parent_id))) ||
+        [
+          "parent_unavailable",
+          "is_archived",
+          "ancestor_archived",
+          "accepts_tasks",
+        ].some((f) => typeof row[f] !== "boolean") ||
+        (row.parent_unavailable && row.parent_id !== null) ||
+        row.accepts_tasks !== !(row.is_archived || row.ancestor_archived)
+      ) throw new Error("Invalid project");
+    } else if (row.project_id !== body.project_id) {
+      throw new Error("Wrong project");
+    }
+    return Object.fromEntries(fields.map((f) => [f, row[f]]));
+  });
+  const ids = rows.map((r) => r.id as string);
+  if (
+    ids.some((id, i) =>
+      (i > 0 && id <= ids[i - 1]) ||
+      (typeof body.after === "string" && id <= body.after)
+    ) ||
+    (value.next_cursor !== null &&
+      (ids.length !== ((body.limit as number | undefined) ?? 25) ||
+        value.next_cursor !== ids.at(-1)))
+  ) throw new Error("Invalid destination cursor");
+  if (action === "sections") {
+    if (value.project_id !== body.project_id) throw new Error("Wrong project");
+    return {
+      project_id: body.project_id,
+      sections: rows,
+      next_cursor: value.next_cursor,
+    };
+  }
+  if (
+    !object(value.inbox) || value.inbox.name !== "Inbox" ||
+    value.inbox.project_id !== null || value.inbox.section_id !== null
+  ) throw new Error("Invalid Inbox");
+  return {
+    projects: rows,
+    inbox: { name: "Inbox", project_id: null, section_id: null },
+    next_cursor: value.next_cursor,
+  };
+}
 function projection(
   value: unknown,
   action: string,
   body: Record<string, unknown>,
 ) {
+  if (action === "projects" || action === "sections") {
+    return destinationProjection(value, action, body);
+  }
   if (!object(value)) throw new Error("Invalid response");
   if (action === "get") {
     const row = task(value.task);
@@ -372,6 +474,8 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
           origin +
             (writes
               ? "/rest/v1/rpc/taskfold_automation_write"
+              : action === "projects" || action === "sections"
+              ? "/rest/v1/rpc/taskfold_automation_destinations"
               : "/rest/v1/rpc/taskfold_automation_read"),
           {
             method: "POST",

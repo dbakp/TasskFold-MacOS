@@ -18,7 +18,7 @@ enum AutomationScope: String, CaseIterable, Codable, Sendable {
 
     var detail: String {
         switch self {
-        case .read: return "Read this account’s Inbox and accessible project tasks."
+        case .read: return "Read this account’s Inbox, accessible tasks, and project and section names."
         case .create: return "Add tasks to Inbox and active projects you can access."
         case .update: return "Change task details, planning, labels, assignments and checklist structure."
         case .complete: return "Change task and checklist progress, including recurring tasks."

@@ -80,7 +80,7 @@ try {
   );
   await load("./automation-task-bootstrap.sql");
   await db.exec(
-    "alter table public.projects add column is_archived boolean not null default false,add column ancestor_archived boolean not null default false;create table public.sections(id uuid primary key,project_id uuid references public.projects(id) on delete cascade,name text)",
+    "alter table public.projects add column is_archived boolean not null default false,add column ancestor_archived boolean not null default false,add column color text,add column order_index integer,add column parent_id uuid;create table public.sections(id uuid primary key,project_id uuid references public.projects(id) on delete cascade,name text,order_index integer)",
   );
   const gen = await readFile(
     new URL(
@@ -117,6 +117,7 @@ try {
       "20261022222726_automation_task_writes.sql",
       "20261022225439_automation_task_mutations.sql",
       "20261023002825_automation_enrollment_cancellation.sql",
+      "20261023010559_automation_destinations.sql",
     ]
   ) await load("../../supabase/migrations/" + file);
   await db.exec(

@@ -2914,3 +2914,17 @@ inspected. This is not actual multi-process Mac Keychain/UI, hosted Auth/SQL rac
 clipboard lifetime or release acceptance. Candidates remain unapplied/undeployed
 and normal entry hidden. See `p2-automation-enrollment-cancellation-evidence.json`.
 The full Px goal and all user deferrals remain active/unchanged.
+
+
+### 23 October — automation destination discovery checkpoint
+
+The inactive API now discovers accessible projects and sections, with native order,
+archive availability, explicit Inbox routing and hidden-parent privacy. Both read
+pages and cursor continuation reauthorize current access; sections cannot cross
+project boundaries. The native permission summary includes project/section names.
+Each repository independently passes 72 destination SQL, 101 mutation SQL, 25 real
+loopback HTTP, 21 handler and 92 selected Core checks, plus lint. No live migration,
+key, task or API deployment changed. Hosted/race acceptance and portable advanced
+reminder authoring remain open. Real iPhone location delivery remains deferred;
+these Core reminder checks do not close it. See
+`p2-automation-destinations-evidence.json`. The full Px goal remains active.
