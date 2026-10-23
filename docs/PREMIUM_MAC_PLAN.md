@@ -2886,3 +2886,31 @@ clipboard lifecycle, safe uncertain-request cancellation, metadata discovery and
 advanced reminders remain before enablement. The entry stays hidden in normal
 builds; the API remains undeployed. See `AUTOMATION_ACCESS.md` and the native
 management evidence. Full Px and all user deferrals remain unchanged.
+
+
+### 23 October — durable key discard and independent-process coordination
+
+Uncertain setup can now be discarded without creating a key first. The candidate
+service revokes an existing owned key or records a permanent private owner/ID
+block against late creation. It discloses no foreign key state and consumes no
+issuance allowance. Unknown cancellation history is separately bounded to 100/day;
+existing retries and owned-key revocation remain available at that bound.
+
+Both native apps save a version-2 private discard intent before contacting the
+service. Reply loss/relaunch retries Discard, never Create; stale Save cannot clear
+the intent, and the exact prior private reader refuses it. Stable empty files
+coordinate all private enrollment operations across processes, with short bounded
+waits, cancellation checks and no-follow regular-file validation. Receipt and
+foreground checks refresh recovery; reveal state belongs to a specific key ID.
+
+74 Core checks pass independently per repo, including real independent-process
+competition/crash/symlink cases against an owned synthetic adapter. Each repo also
+passes 55 cancellation SQL assertions, the updated credential regression, 101
+mutation plus 18 loopback assertions and ten management handler tests/lint. Both
+app builds pass. Three actual-Keychain/local-protocol scenarios pass on each iPhone
+and iPad Simulator, including failed creation, lost discard reply and relaunch
+without another creation. Recovery layouts have one clear action and were visually
+inspected. This is not actual multi-process Mac Keychain/UI, hosted Auth/SQL races,
+clipboard lifetime or release acceptance. Candidates remain unapplied/undeployed
+and normal entry hidden. See `p2-automation-enrollment-cancellation-evidence.json`.
+The full Px goal and all user deferrals remain active/unchanged.

@@ -116,6 +116,7 @@ try {
       "20261022220821_automation_task_access.sql",
       "20261022222726_automation_task_writes.sql",
       "20261022225439_automation_task_mutations.sql",
+      "20261023002825_automation_enrollment_cancellation.sql",
     ]
   ) await load("../../supabase/migrations/" + file);
   await db.exec(

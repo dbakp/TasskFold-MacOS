@@ -124,5 +124,8 @@
     "obsoleteOwnedArtifactsRemovedBytes": 223690242,
     "verifiedResultBundlesPreserved": true,
     "buildCachesPreserved": true
-  }
+  },
+  "sourceSnapshotCommit": "45a3edb9513883c842523ed08e5dcedec516252d",
+  "supersededBy": "p2-automation-enrollment-cancellation-evidence.json",
+  "historicalSnapshotNote": "Counts, source hashes and images describe this committed checkpoint. Current discard/coordination proof is recorded separately."
 }

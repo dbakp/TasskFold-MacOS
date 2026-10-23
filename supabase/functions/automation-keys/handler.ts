@@ -144,11 +144,23 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
       if (
         !input || typeof input !== "object" || Array.isArray(input) ||
         Object.keys(input).sort().join(",") !== "action,body" ||
-        !["list", "create", "revoke"].includes(input.action as string) ||
+        !["list", "create", "revoke", "cancel"].includes(
+          input.action as string,
+        ) ||
         !input.body || typeof input.body !== "object" ||
         Array.isArray(input.body)
       ) {
         return json({ error: "Use a supported automation-key action." }, 400);
+      }
+      if (input.action === "cancel") {
+        const body = input.body as Record<string, unknown>;
+        if (
+          Object.keys(body).join(",") !== "id" || typeof body.id !== "string" ||
+          !uuid.test(body.id) ||
+          body.id === "00000000-0000-0000-0000-000000000000"
+        ) {
+          return json({ error: "Review the key settings and try again." }, 400);
+        }
       }
       const api = async (path: string, bearer: string, value?: unknown) => {
         const result = await send(
@@ -195,14 +207,22 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
         return json({ error: "Sign in again to manage automation keys." }, 401);
       }
       const result = await api(
-        "/rest/v1/rpc/taskfold_automation_keys",
+        input.action === "cancel"
+          ? "/rest/v1/rpc/taskfold_automation_cancel_key"
+          : "/rest/v1/rpc/taskfold_automation_keys",
         config.serviceKey,
-        {
-          _account: user.value.id,
-          _session: claims.session_id,
-          _action: input.action,
-          _body: input.body,
-        },
+        input.action === "cancel"
+          ? {
+            _account: user.value.id,
+            _session: claims.session_id,
+            _id: (input.body as { id: string }).id,
+          }
+          : {
+            _account: user.value.id,
+            _session: claims.session_id,
+            _action: input.action,
+            _body: input.body,
+          },
       );
       if (result.status < 200 || result.status >= 300) {
         const code = result.value?.code;
@@ -211,20 +231,38 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
           "42501": 403,
           "22023": 400,
           "23505": 409,
+          "PT409": 409,
           "PT429": 429,
         } as Record<string, number>)[code] ?? 503;
         const messages: Record<number, string> = {
           401: "Sign in again to manage automation keys.",
           403: "That key is unavailable in this account.",
           400: "Review the key settings and try again.",
-          409: "This key request already has different settings.",
-          429: "The automation-key limit was reached. Revoke an unused key, or try again later.",
+          409:
+            "This key setup was discarded or already has different settings. Create a new key.",
+          429:
+            "The automation-key limit was reached. Revoke an unused key, or try again later.",
           503: "Automation access is temporarily unavailable. Try again.",
         };
-        return json({ error: messages[status] }, status);
+        return json({
+          error: status === 429 && input.action === "cancel"
+            ? "Too many new setup cancellations today. Retry this discard later; existing keys can still be revoked."
+            : messages[status],
+        }, status);
       }
       if (!result.value || result.value.account !== user.value.id) {
         throw new Error("Owner mismatch");
+      }
+      if (input.action === "cancel") {
+        if (
+          result.value.id !== (input.body as { id: string }).id ||
+          result.value.cancelled !== true
+        ) throw new Error("Cancellation unconfirmed");
+        return json({
+          account: user.value.id,
+          id: result.value.id,
+          cancelled: true,
+        });
       }
       if (input.action === "list") {
         if (

@@ -125,3 +125,31 @@ extension AutomationAccessTests {
         XCTAssertEqual(api.session?.user.id, owner)
     }
 }
+
+extension AutomationAccessTests {
+    @MainActor func testCancellationRequiresMatchingPositiveReceipt() async throws {
+        let api = try backend(); defer { AutomationHTTP.handler = nil }
+        for receipt: [String: JSON] in [
+            ["account": .string(other), "id": .string(keyID), "cancelled": .bool(true)],
+            ["account": .string(owner), "id": .string(other), "cancelled": .bool(true)],
+            ["account": .string(owner), "id": .string(keyID), "cancelled": .bool(false)],
+            ["account": .string(owner), "id": .string(keyID), "cancelled": .string("true")],
+            ["account": .string(owner), "id": .string(keyID)]
+        ] {
+            let reply = try JSONEncoder().encode(receipt)
+            AutomationHTTP.handler = { _, transport in transport.finish(reply) }
+            do { try await api.cancelAutomationKey(id: keyID, account: owner, origin: origin); XCTFail("Unconfirmed cancellation accepted") } catch { }
+        }
+        let reply = try JSONEncoder().encode(["account": JSON.string(owner), "id": .string(keyID), "cancelled": .bool(true)])
+        AutomationHTTP.handler = { _, transport in transport.finish(reply) }
+        try await api.cancelAutomationKey(id: keyID, account: owner, origin: origin)
+    }
+    @MainActor func testCancellationCannotSendForAnotherAccountOrOrigin() async throws {
+        let api = try backend(); var calls = 0
+        AutomationHTTP.handler = { _, _ in calls += 1 }; defer { AutomationHTTP.handler = nil }
+        for (account, server) in [(other, origin), (owner, "https://foreign.test")] {
+            do { try await api.cancelAutomationKey(id: keyID, account: account, origin: server); XCTFail("Foreign cancellation sent") } catch { }
+        }
+        XCTAssertEqual(calls, 0)
+    }
+}

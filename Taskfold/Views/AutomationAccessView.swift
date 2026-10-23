@@ -27,9 +27,9 @@ struct AutomationAccessView: View {
     @State private var model: AutomationAccessModel?
     @State private var composing = false
     @State private var revoking: AutomationKey?
-    @State private var revokeSetup = false
-    @State private var revealed = false
-    @State private var copied = false
+    @State private var discardSetup = false
+    @State private var revealedID: String?
+    @State private var copiedID: String?
     var body: some View {
         Group {
             if let model, model.current {
@@ -62,17 +62,20 @@ struct AutomationAccessView: View {
         }
         .onChange(of: store.workspaceGeneration) { _, _ in leave() }
         .onChange(of: store.signingOut) { _, value in if value { leave() } }
-        .onChange(of: phase) { _, _ in revealed = false; copied = false }
-        .onDisappear { model?.close(); model = nil; revealed = false }
+        .onChange(of: phase) { _, value in
+            revealedID = nil; copiedID = nil
+            if value == .active { Task { await model?.refreshRecovery() } }
+        }
+        .onDisappear { model?.close(); model = nil; revealedID = nil }
         .sheet(isPresented: $composing) {
             if let model { AutomationKeyComposer(model: model) }
         }
         .confirmationDialog("Revoke this key?", isPresented: Binding(get: { revoking != nil }, set: { if !$0 { revoking = nil } }), titleVisibility: .visible) {
             if let key = revoking { Button("Revoke key", role: .destructive) { revoking = nil; Task { await model?.revoke(key) } } }
         } message: { Text("Tools using this key will lose access immediately. Your tasks stay unchanged.") }
-        .confirmationDialog("Revoke unfinished key?", isPresented: $revokeSetup, titleVisibility: .visible) {
-            Button("Revoke and discard setup", role: .destructive) { Task { await model?.revokePending() } }
-        } message: { Text("Setup stays recoverable until revocation is confirmed. If it was never sent, finish setup first, then revoke it.") }
+        .confirmationDialog("Discard this key setup?", isPresented: $discardSetup, titleVisibility: .visible) {
+            Button("Discard setup", role: .destructive) { Task { await model?.discardPending() } }
+        } message: { Text("Any key from this setup will stop working, even if it was still being created. Your tasks stay unchanged.") }
         .privacySensitive()
         .overlay {
             if phase != .active { Rectangle().fill(.background).overlay { Label("Automation access", systemImage: "lock.fill").foregroundStyle(.secondary) } }
@@ -85,7 +88,7 @@ struct AutomationAccessView: View {
         return "Copying keeps the key on this device’s clipboard for up to one minute. It is not included in task exports or backups."
         #endif
     }
-    private func leave() { model?.close(); composing = false; revoking = nil; revokeSetup = false; revealed = false; dismiss() }
+    private func leave() { model?.close(); composing = false; revoking = nil; discardSetup = false; revealedID = nil; dismiss() }
     private func management(_ model: AutomationAccessModel) -> some View {
         Form {
             Section {
@@ -113,31 +116,35 @@ struct AutomationAccessView: View {
                     if model.secret != nil {
                         Text("Save your key somewhere safe").font(.headline)
                         Text("This is your only chance to copy it. Taskfold cannot show it again after you finish setup.").foregroundStyle(.secondary)
-                        if revealed, phase == .active, let secret = model.secret {
+                        if revealedID == draft.id, phase == .active, let secret = model.secret {
                             Text(verbatim: secret).font(.system(.caption, design: .monospaced))
                                 .accessibilityLabel("Automation key, " + secret).accessibilityIdentifier("automationRevealedSecret")
                         } else {
                             Text("•••• •••• •••• ••••").font(.system(.body, design: .monospaced)).accessibilityLabel("Key hidden")
                         }
                         HStack {
-                            Button(revealed ? "Hide key" : "Reveal key", systemImage: revealed ? "eye.slash" : "eye") { revealed.toggle() }
+                            Button(revealedID == draft.id ? "Hide key" : "Reveal key", systemImage: revealedID == draft.id ? "eye.slash" : "eye") { revealedID = revealedID == draft.id ? nil : draft.id }
                                 .accessibilityIdentifier("automationReveal")
                             Spacer()
-                            Button(copied ? "Copied" : "Copy key", systemImage: copied ? "checkmark" : "document.on.document") {
+                            Button(copiedID == draft.id ? "Copied" : "Copy key", systemImage: copiedID == draft.id ? "checkmark" : "document.on.document") {
                                 guard phase == .active, let secret = model.secret else { return }
-                                copied = AutomationSecretClipboard.copy(secret)
+                                copiedID = AutomationSecretClipboard.copy(secret) ? draft.id : nil
                             }.accessibilityIdentifier("automationCopy")
                         }
                         Button("I’ve saved my key", systemImage: "checkmark.shield") {
-                            revealed = false; copied = false; Task { await model.acknowledgeSaved() }
+                            revealedID = nil; copiedID = nil; Task { await model.acknowledgeSaved() }
                         }.accessibilityIdentifier("automationFinish")
                     } else {
-                        Text("Key setup needs attention").font(.headline)
-                        Text("Continue with the same key to confirm whether it was created. Closing this screen keeps setup secure on this device.").foregroundStyle(.secondary)
-                        Button("Continue setup", systemImage: "arrow.clockwise") { Task { await model.resume() } }.accessibilityIdentifier("automationResume")
+                        Text(model.discarding ? "Discard setup needs attention" : "Key setup needs attention").font(.headline)
+                        Text(model.discarding ? "Your discard request is saved on this device. Retry to finish; this setup won’t create another key." : "Continue with the same key to confirm whether it was created. Closing this screen keeps setup secure on this device.").foregroundStyle(.secondary)
+                        Button(model.discarding ? "Retry discard" : "Continue setup", systemImage: "arrow.clockwise") { Task { await model.resume() } }.accessibilityIdentifier("automationResume")
                     }
-                    Button("Revoke and discard setup", role: .destructive) { revokeSetup = true }.accessibilityIdentifier("automationRevokeSetup")
-                } header: { Text("Finish setup") } footer: { Text(clipboardNotice) }
+                    if !model.discarding {
+                        Button("Discard setup", role: .destructive) { discardSetup = true }.accessibilityIdentifier("automationDiscardSetup")
+                    }
+                } header: { Text("Finish setup") } footer: {
+                    Text(model.secret != nil ? clipboardNotice : model.discarding ? "This request stays safely saved until discard is confirmed." : "Closing this screen keeps setup secure on this device.")
+                }
             }
             Section {
                 Toggle("Show expired and revoked keys", isOn: Binding(get: { model.includesInactive }, set: { value in model.selectHistory(value); Task { await model.load(includeInactive: value) } }))
@@ -273,7 +280,7 @@ private struct AutomationKeyComposer: View {
     static var root: URL { URL.applicationSupportDirectory.appendingPathComponent("AutomationManagementFixture", isDirectory: true) }
     static func makeModel() async throws -> AutomationAccessModel {
         precondition(enabled)
-        let vault = AutomationEnrollmentVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "") + ".automation-fixture"))
+        let vault = AutomationEnrollmentVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "") + ".automation-fixture"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("AutomationEnrollmentFixtureLocks", isDirectory: true))
         if ProcessInfo.processInfo.arguments.contains("--automation-management-reset") {
             try await vault.removeAccount(account, origin: "https://automation-management.test")
             if FileManager.default.fileExists(atPath: root.path) { try FileManager.default.removeItem(at: root) }
@@ -322,9 +329,23 @@ private final class AutomationManagementHTTP: URLProtocol, @unchecked Sendable {
                 state["last_list_inactive"] = body["include_inactive"]
                 let visible = rows.filter { body["include_inactive"] == .bool(true) || $0["revoked_at"] == .null }
                 result["keys"] = .array(visible.map { .object($0.filter { $0.key != "token_hash" }) }); result["next_cursor"] = .null
+            } else if action == "cancel" {
+                state["cancel_attempts"] = .number(Double((state["cancel_attempts"]?.integer ?? 0) + 1))
+                guard let id = body["id"]?.text, AutomationKey.canonicalID(id) else { throw AutomationKey.invalid }
+                var cancelled = state["cancelled_ids"]?.list ?? []
+                if !cancelled.contains(.string(id)) { cancelled.append(.string(id)) }
+                state["cancelled_ids"] = .array(cancelled)
+                if let index = rows.firstIndex(where: { $0["id"] == .string(id) }) { rows[index]["revoked_at"] = .string(format.string(from: now)) }
+                result["id"] = .string(id); result["cancelled"] = .bool(true)
             } else if action == "create" {
+                state["create_attempts"] = .number(Double((state["create_attempts"]?.integer ?? 0) + 1))
+                if ProcessInfo.processInfo.arguments.contains("--automation-management-fail-before-create") {
+                    try JSONEncoder().encode(state).write(to: file, options: .atomic)
+                    throw URLError(.notConnectedToInternet)
+                }
                 let id = body["id"]?.text ?? ""
                 guard AutomationKey.canonicalID(id), body["token_hash"]?.text.count == 64 else { throw AutomationKey.invalid }
+                guard !(state["cancelled_ids"]?.list.contains(.string(id)) ?? false) else { throw AutomationKey.invalid }
                 if let old = rows.first(where: { $0["id"] == .string(id) }) {
                     guard old["token_hash"] == body["token_hash"] else { throw AutomationKey.invalid }
                     result["key"] = .object(old.filter { $0.key != "token_hash" })
@@ -340,8 +361,10 @@ private final class AutomationManagementHTTP: URLProtocol, @unchecked Sendable {
             state["keys"] = .array(rows.map { .object($0) })
             let lost = action == "create" && ProcessInfo.processInfo.arguments.contains("--automation-management-lose-reply") && state["lost_reply"] != .bool(true)
             if lost { state["lost_reply"] = .bool(true) }
+            let lostCancel = action == "cancel" && ProcessInfo.processInfo.arguments.contains("--automation-management-discard-lost-reply") && state["lost_cancel_reply"] != .bool(true)
+            if lostCancel { state["lost_cancel_reply"] = .bool(true) }
             try JSONEncoder().encode(state).write(to: file, options: .atomic)
-            if lost { throw URLError(.networkConnectionLost) }
+            if lost || lostCancel { throw URLError(.networkConnectionLost) }
             let reply = try JSONEncoder().encode(result)
             client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
             client?.urlProtocol(self, didLoad: reply); client?.urlProtocolDidFinishLoading(self)

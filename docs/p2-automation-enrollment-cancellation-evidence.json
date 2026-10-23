@@ -1,0 +1,167 @@
+{
+  "date": "2026-10-23",
+  "platform": "macOS",
+  "baseCommit": "45a3edb9513883c842523ed08e5dcedec516252d",
+  "milestone": "Durable discard of uncertain key enrollment and independent-process recovery coordination; full feature incomplete",
+  "featureEnabled": false,
+  "normalReleaseEntryExposed": false,
+  "migrationApplied": false,
+  "edgeFunctionDeployed": false,
+  "hostedKeysIssued": 0,
+  "realTasksChanged": 0,
+  "fullPxComplete": false,
+  "candidateMigration": "20261023002825_automation_enrollment_cancellation.sql",
+  "implementation": [
+    "Service-only current Auth/session cancellation; owned existing key revoked or owner/ID late INSERT permanently refused",
+    "Unknown cancellations return same minimal receipt as foreign IDs without foreign effects or metadata",
+    "Permanent private owner/ID/timestamp-only tombstones, RLS/no direct client or service table grants, Auth cascade and owner/date index",
+    "Separate 100 new tombstones per UTC day; existing retry and owned-key revocation bypass this cap; no key issuance consumed",
+    "Private version-2 discard intent saved before network; restart retries cancellation and never registration",
+    "Stale Save acknowledgement cannot erase discard intent; only confirmed cancellation/revocation clears it",
+    "Stable zero-content lock files, account-bound no-follow regular-file checks, bounded/cancellable two-second waits, no unlink during normal operation",
+    "Current recovery rechecked after registration and on foreground reactivation; reveal/copy state bound to key ID",
+    "One recovery action and context-appropriate explanatory footer"
+  ],
+  "verification": {
+    "core": {
+      "passed": true,
+      "tests": 74,
+      "failures": 0,
+      "command": "swift test --filter 'AutomationEnrollment|AutomationAccessTests|AccountTransportTests'",
+      "includesIndependentProcessTests": 2,
+      "includesExactPriorReaderExcerpt": true,
+      "processAdapter": "Test-only synthetic atomic file item, not production Keychain",
+      "processChecks": [
+        "Two real independent xctest processes race widened empty reads and return the same ID/hash",
+        "Held-lock timeout, SIGKILL releases kernel lock, symlink target remains unchanged"
+      ],
+      "temporaryProcessFixtureDirectoriesRemaining": 0
+    },
+    "localSQL": {
+      "passed": true,
+      "assertions": 55,
+      "command": "npm run --prefix Scripts/Database test:automation-cancellation",
+      "runtime": "Pinned PGlite 0.5.11 with pgcrypto, actual candidate functions/trigger",
+      "scope": "Sequential operation orders, real service role cancellation, expired/mismatched sessions, ban, quota, foreign privacy, ACL/RLS/indexes and Auth cascades; not independent connections"
+    },
+    "credentialRegression": {
+      "passed": true,
+      "newMigrationLoaded": true,
+      "command": "npm run --prefix Scripts/Database test:automation"
+    },
+    "taskRegression": {
+      "passed": true,
+      "newMigrationLoaded": true,
+      "sqlAssertions": 101,
+      "loopbackHTTPAssertions": 18,
+      "command": "npm run --prefix Scripts/Database test:automation-mutations"
+    },
+    "managementHandler": {
+      "passed": true,
+      "tests": 10,
+      "failures": 0,
+      "lintPassed": true,
+      "scope": "Mocked Auth/RPC transport; fixed cancellation route/identity and strict positive receipt projection"
+    },
+    "build": {
+      "passed": true,
+      "kind": "Isolated unsigned Mac Debug build"
+    },
+    "nativeUI": {
+      "performed": false,
+      "tests": [],
+      "scope": "Actual native view, Backend transport and Simulator Keychain with owned metadata URLProtocol; no hosted Auth/SQL",
+      "finalDiscardScenario": {},
+      "macOSNativeInteractionClaimed": false,
+      "clipboardLifetimeOrVoiceOverAcceptanceClaimed": false
+    },
+    "visualInspection": {
+      "safeIOSImages": {},
+      "MacVisualAcceptanceClaimed": false
+    },
+    "hostedReadOnlyMetadata": {
+      "keys": null,
+      "cancellations": null,
+      "cancelRPCCount": 0,
+      "cancellationMigrationCount": 0,
+      "liveMutation": false
+    }
+  },
+  "bounds": {
+    "privateEnvelopeBytes": 4096,
+    "productionProcessLockWaitSeconds": 2,
+    "publicSQLStatementTimeoutSeconds": 10,
+    "privateSQLLockTimeoutSeconds": 3,
+    "newUnknownCancellationRowsPerUTCAccountDay": 100,
+    "hostedTimeoutEnforcementVerified": false
+  },
+  "legacyPrivateReader": {
+    "source": "Exact envelope excerpt from baseCommit Taskfold/Core/AutomationAccess.swift, type renamed in tests",
+    "normalV1RecoveryAccepted": true,
+    "discardV2RecoveryRefusedWithoutOverwrite": true,
+    "notClaimed": "Whole older app or user-deferred older-client task edit enforcement"
+  },
+  "fixtureIsolation": {
+    "nativeBundles": [
+      "com.dbakp.taskfold.workflowtestsp1",
+      "com.dbakp.taskfold.mac.workflowtestsp1"
+    ],
+    "requiresDebugLocalModeUITesting": true,
+    "liveAuthFixtureRefused": true,
+    "nativeAddressDomain": "example.invalid",
+    "SQLIdentityPrefix": "f098cafe",
+    "nativeAccount": "f096cafe-1111-4111-8111-000000000001",
+    "processAccount": "f097cafe-0000-4000-8000-000000000001",
+    "tasksOrBackupsReceiveSecret": false,
+    "SQLReceivesRawKey": false,
+    "testAppProcessesClosed": true
+  },
+  "correctedDuringVerification": [
+    "Native test executor initially treated Mach-O test bundle as executable; workers now use actual xctest launcher and prove entry via readiness/results",
+    "One Deno test callback needed an explicit resolved Promise for lint",
+    "An attempted oversized legacy fixture used an invalid server host and was rejected before storage; removed that unreachable fixture; existing corrupt/oversized recovery refusal remains tested"
+  ],
+  "remaining": [
+    "Actual multi-process Mac Keychain, Mac UI and broader accessibility/VoiceOver",
+    "Clipboard copy/expiry/ownership lifecycle and real private-scene snapshots",
+    "Hosted Auth/TLS/PostgREST cancellation, revocation and actual independent-connection races/timeout enforcement",
+    "Rejected-request/IP controls",
+    "Project/section discovery and portable advanced reminder authoring",
+    "Coherent candidate deployment",
+    "Separate email/webhook/advanced-team/wearable backlog"
+  ],
+  "userDeferralsUnchanged": [
+    "Remote reminders",
+    "Older-client task editing safeguards",
+    "Release signing/distribution",
+    "Google/Microsoft calendar OAuth registration",
+    "Physical location delivery"
+  ],
+  "documentationReview": {
+    "changelog": "https://supabase.com/changelog.md",
+    "relevantNotice": "https://supabase.com/changelog/cbc-tls-ciphers-deprecated",
+    "triggerReference": "https://www.postgresql.org/docs/17/trigger-definition.html",
+    "newSDKDependencies": false
+  },
+  "cleanup": {
+    "obsoleteOwnedArtifactBytesRemoved": 7564177,
+    "verifiedResultsAndUsefulBuildCachesPreserved": true
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/AutomationAccess.swift": "f56409a182059756d772bd58814bf2d81e5be554400f82da58fd0562dc99786b",
+    "Taskfold/Core/Backend.swift": "8c29e21256b6ea07869a92e1bbc8db42406b0d2f801dcc8331975500c0697ab3",
+    "Taskfold/Core/Store.swift": "a67a95f85c6d326cd00980ee9a8e1d2220048766ac46df814fdb04bbcf8812c8",
+    "Taskfold/Views/AutomationAccessView.swift": "207fdc38eebffd9ed0ed37e72f8a105485a26070896c64213b9c5c621947367b",
+    "TaskfoldTests/AutomationAccessTests.swift": "3795498b2f02f2eb325c6434c5db17db9eaeffda2d510f67540a723da577179a",
+    "TaskfoldTests/AutomationEnrollmentTests.swift": "059e849223e1d9092423759cd8965a7985eaabe9547ab8626b729fecd59d391c",
+    "TaskfoldTests/AutomationEnrollmentProcessTests.swift": "b6a00365ce88d68c16d77eb8a3fe194784bc1d911aeba5f344795baec5856694",
+    "TaskfoldTests/LegacyAutomationEnrollmentV1Reader.swift": "f77857bb299cbc8e873a75c266882d8ca3f039bc06eb469148c9ad0e30962a62",
+    "supabase/migrations/20261023002825_automation_enrollment_cancellation.sql": "4ee55a85d54a627900239e5e1a6a656cc75633da84dce9b754682482124b7cf1",
+    "supabase/functions/automation-keys/handler.ts": "1f929a7782e375ba997b593715b940c21c09f6fb7e6cab9b5e8290fe974281a8",
+    "supabase/functions/automation-keys/handler_test.ts": "08aae921ce0854f502929038e265fd6a71454bb928b0cd0834e148117778769b",
+    "Scripts/Database/test-automation-cancellation.mjs": "ee015cf718503cebc1e51aed2d8233716103cde3eafba7e79efd7cc11fc29742",
+    "Scripts/Database/test-automation-mutations.mjs": "81d6c575282a7693d22e580e18da95b00a3a8f753ceaacde1fb5db4207e60f12",
+    "Scripts/Database/test-automation.mjs": "e0c3222a209e554fcbd8b8efb5e7b7920f4aa942322503add2fc468b446ab4a3",
+    "Scripts/Database/package.json": "f3123c3e1c6acdac326b0c1a4735aace0772dea0c041f070f79cee264dc7eec8"
+  }
+}

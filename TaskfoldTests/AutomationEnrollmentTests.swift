@@ -15,6 +15,9 @@ private final class EnrollmentMemoryIO: CalendarSecureItemIO, @unchecked Sendabl
     var row: AutomationKey?
     var loseReply = false
     var failRevoke = false
+    var cancelledIDs = Set<String>()
+    var failBeforeCreate = false
+    var loseCancelReply = false
     var onRegister: (() -> Void)?
     var held: CheckedContinuation<Void, Never>?
     var hold = false
@@ -28,6 +31,7 @@ private final class EnrollmentMemoryIO: CalendarSecureItemIO, @unchecked Sendabl
     }
     func registerAutomationKey(_ draft: AutomationKeyDraft) async throws -> AutomationKey {
         submitted.append(draft)
+        if failBeforeCreate || cancelledIDs.contains(draft.id) { throw AutomationKey.invalid }
         row = try Self.key(draft)
         if hold { await withCheckedContinuation { held = $0; onRegister?() } }
         if loseReply { throw URLError(.networkConnectionLost) }
@@ -39,6 +43,12 @@ private final class EnrollmentMemoryIO: CalendarSecureItemIO, @unchecked Sendabl
         var fields = Self.fields(id: row.id, name: row.name, scopes: row.scopes)
         fields["revoked_at"] = .string(ISO8601DateFormatter().string(from: Date()))
         let result = try AutomationKey(fields); self.row = result; return result
+    }
+    func cancelAutomationKey(id: String, account: String, origin: String) async throws {
+        if failRevoke { throw URLError(.notConnectedToInternet) }
+        if row?.id == id { _ = try await revokeAutomationKey(id: id, account: account, origin: origin) }
+        cancelledIDs.insert(id)
+        if loseCancelReply { loseCancelReply = false; throw URLError(.networkConnectionLost) }
     }
     static func fields(id: String, name: String = "Build script", scopes: [AutomationScope] = [.read]) -> [String: JSON] {
         let formatter = ISO8601DateFormatter(), now = Date()
@@ -103,12 +113,12 @@ private final class EnrollmentMemoryIO: CalendarSecureItemIO, @unchecked Sendabl
     func testRevocationIsConfirmedBeforeRecoveryCanBeDiscarded() async throws {
         let io = EnrollmentMemoryIO(), service = EnrollmentService(), vault = AutomationEnrollmentVault(io: io), value = model(service, vault)
         await value.create(name: "Build script", scopes: [.read], days: 30)
-        service.failRevoke = true; await value.revokePending()
-        XCTAssertNotNil(value.pending); XCTAssertNotNil(value.secret)
-        service.failRevoke = false; io.failRemove = true; await value.revokePending()
+        service.failRevoke = true; await value.discardPending()
+        XCTAssertNotNil(value.pending); XCTAssertNil(value.secret)
+        service.failRevoke = false; io.failRemove = true; await value.discardPending()
         XCTAssertNil(value.secret); XCTAssertNotNil(value.pending); XCTAssertNotNil(value.message)
-        XCTAssertNotNil(value.keys.first?.revoked)
-        io.failRemove = false; await value.revokePending()
+        XCTAssertNotNil(service.row?.revoked); XCTAssertTrue(value.keys.isEmpty)
+        io.failRemove = false; await value.discardPending()
         XCTAssertNil(value.pending)
         let stored = try await vault.pending(account: account, origin: origin); XCTAssertNil(stored)
     }
@@ -210,6 +220,82 @@ private final class EnrollmentMemoryIO: CalendarSecureItemIO, @unchecked Sendabl
         XCTAssertEqual(stillSaved?.body, draft.body)
         try await vault.removeAccount(account, origin: origin)
         let removed = try await vault.pending(account: account, origin: origin); XCTAssertNil(removed)
+    }
+
+    func testNeverCreatedSetupCanBeDiscardedWithoutRegistration() async throws {
+        let service = EnrollmentService(), vault = AutomationEnrollmentVault(io: EnrollmentMemoryIO()), value = model(service, vault)
+        service.failBeforeCreate = true
+        await value.create(name: "Offline tool", scopes: [.read], days: 30)
+        let id = try XCTUnwrap(value.pending?.id)
+        XCTAssertNil(service.row); XCTAssertNil(value.secret)
+        await value.discardPending()
+        XCTAssertNil(value.pending); XCTAssertTrue(service.cancelledIDs.contains(id)); XCTAssertEqual(service.submitted.count, 1)
+        let saved = try await vault.pending(account: account, origin: origin); XCTAssertNil(saved)
+    }
+    func testLateRegistrationCannotRevealAReviewFinishedElsewhere() async throws {
+        let service = EnrollmentService(), vault = AutomationEnrollmentVault(io: EnrollmentMemoryIO()), value = model(service, vault)
+        service.hold = true
+        let started = expectation(description: "Registration held before receipt")
+        service.onRegister = { started.fulfill() }
+        let work = Task { await value.create(name: "Build script", scopes: [.read], days: 30) }
+        await fulfillment(of: [started], timeout: 3)
+        let draft = try XCTUnwrap(value.pending)
+        try await vault.finish(draft, lease: CalendarReadLease())
+        service.held?.resume(); await work.value
+        XCTAssertNil(value.secret); XCTAssertNil(value.pending)
+    }
+    func testReactivationReadsAnotherProcessesFinishedRecovery() async throws {
+        let service = EnrollmentService(), vault = AutomationEnrollmentVault(io: EnrollmentMemoryIO()), value = model(service, vault)
+        await value.create(name: "Build script", scopes: [.read], days: 30)
+        let draft = try XCTUnwrap(value.pending); XCTAssertNotNil(value.secret)
+        try await vault.finish(draft, lease: CalendarReadLease())
+        await value.refreshRecovery()
+        XCTAssertNil(value.secret); XCTAssertNil(value.pending)
+    }
+
+    func testDiscardLostReplyResumesCancellationAfterRelaunchWithoutCreating() async throws {
+        let io = EnrollmentMemoryIO(), service = EnrollmentService(), vault = AutomationEnrollmentVault(io: io)
+        service.failBeforeCreate = true; service.loseCancelReply = true
+        let first = model(service, vault)
+        await first.create(name: "Offline tool", scopes: [.read], days: 30)
+        let id = try XCTUnwrap(first.pending?.id)
+        await first.discardPending()
+        XCTAssertTrue(first.discarding); XCTAssertNotNil(first.pending); XCTAssertNil(first.secret)
+        first.close()
+        let reopened = model(service, AutomationEnrollmentVault(io: io)); await reopened.load()
+        XCTAssertTrue(reopened.discarding); XCTAssertEqual(reopened.pending?.id, id)
+        await reopened.resume()
+        XCTAssertNil(reopened.pending); XCTAssertNil(reopened.secret)
+        XCTAssertEqual(service.submitted.count, 1); XCTAssertTrue(service.cancelledIDs.contains(id)); XCTAssertNil(service.row)
+    }
+    func testDiscardPreparationMustBeSecureBeforeSendingCancellation() async throws {
+        let io = EnrollmentMemoryIO(), service = EnrollmentService(), vault = AutomationEnrollmentVault(io: io), value = model(service, vault)
+        await value.create(name: "Build script", scopes: [.read], days: 30)
+        io.failWrite = true; await value.discardPending()
+        XCTAssertTrue(service.cancelledIDs.isEmpty); XCTAssertNotNil(value.pending); XCTAssertNotNil(value.message)
+        let recovery = try await vault.recovery(account: account, origin: origin); XCTAssertEqual(recovery?.cancelling, false)
+    }
+    func testDiscardIntentCannotBeErasedByStaleSaveAcknowledgement() async throws {
+        let service = EnrollmentService(), vault = AutomationEnrollmentVault(io: EnrollmentMemoryIO()), value = model(service, vault)
+        await value.create(name: "Build script", scopes: [.read], days: 30)
+        let draft = try XCTUnwrap(value.pending)
+        try await vault.prepareCancellation(draft, lease: CalendarReadLease())
+        await value.acknowledgeSaved()
+        XCTAssertTrue(value.discarding); XCTAssertNotNil(value.pending); XCTAssertNil(value.secret)
+        let recovery = try await vault.recovery(account: account, origin: origin); XCTAssertEqual(recovery?.cancelling, true)
+        await value.resume(); XCTAssertNil(value.pending); XCTAssertEqual(service.submitted.count, 1)
+    }
+    func testPriorReaderPreservesButCannotResumeDurableDiscardIntent() async throws {
+        let io = EnrollmentMemoryIO(), vault = AutomationEnrollmentVault(io: io), draft = try draft(), lease = CalendarReadLease()
+        _ = try await vault.begin(draft, lease: lease)
+        let original = try XCTUnwrap(io.read(key: "enrollment-v1." + account))
+        XCTAssertEqual(try JSONDecoder().decode(LegacyAutomationEnrollmentV1Reader.self, from: original).draft().body, draft.body)
+        try await vault.prepareCancellation(draft, lease: lease)
+        let discarding = try XCTUnwrap(io.read(key: "enrollment-v1." + account))
+        let legacy = try JSONDecoder().decode(LegacyAutomationEnrollmentV1Reader.self, from: discarding)
+        XCTAssertThrowsError(try legacy.draft())
+        let current = try await vault.recovery(account: account, origin: origin)
+        XCTAssertTrue(current?.cancelling == true); XCTAssertEqual(current?.draft.body, draft.body)
     }
 
 }

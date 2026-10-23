@@ -399,12 +399,18 @@ Next required, in order:
 1. Finish hosted native management and lifecycle/accessibility acceptance. Both
    apps now implement the gated premium screens, one-time hidden/reveal/copy review,
    app-only device Keychain recovery and revoke/paging/workspace-safe cancellation.
-   All 63 selected Core tests pass per repo. Two actual-Keychain/local-protocol
-   scenarios pass on each iPhone and iPad Simulator, including relaunch/retry,
-   revocation/history and largest-text switch actions. Mac native interaction,
-   clipboard lifecycle, independent-process coordination and safe cancellation of
-   never-created uncertain keys remain. Exact scope is in
-   `p2-automation-native-management-evidence.json`.
+   Both apps now persist discard intent before a cancellation request and cannot
+   resume creation after reply loss/relaunch. The service either revokes an owned
+   existing key or permanently blocks late creation for the account/ID. Stable
+   empty lock files coordinate private recovery across processes; an exact prior
+   private reader refuses the new discard state. Each repo passes 74 Core checks,
+   including real independent-process lock tests, 55 cancellation SQL assertions,
+   the credential regression, 101 mutation/18 loopback checks and ten management
+   handler tests. Current three-scenario Simulator results and exact limits are in
+   `p2-automation-enrollment-cancellation-evidence.json`. Actual Mac Keychain/UI,
+   clipboard lifecycle and hosted/concurrent acceptance remain. No candidate is
+   enabled or deployed. The normal entry stays hidden.
+
 2. Add project/section discovery and full portable advanced-reminder authoring
    validation; keep private location markers behind native private-place review.
 3. Establish rejected-request/IP controls, then real hosted Auth/HTTP timeout,
@@ -414,5 +420,7 @@ Next required, in order:
 5. Continue idempotent email intake, verified sender/recipient permissions, signed
    webhook retries, advanced teams and the remaining wearable backlog.
 
-Exact current source hashes and limits are in `p2-automation-task-mutations-evidence.json`.
+Current native/cancellation hashes and limits are in
+`p2-automation-enrollment-cancellation-evidence.json`; the mutation milestone
+retains its separately scoped SQL/HTTP proof.
 The original full Px goal remains active. All user-deferred work stays deferred.

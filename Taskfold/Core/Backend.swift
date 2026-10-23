@@ -421,6 +421,11 @@ final class Backend: NSObject {
         guard key.id == id, key.revoked != nil else { throw AutomationKey.invalid }
         return key
     }
+    func cancelAutomationKey(id: String, account: String, origin: String) async throws {
+        guard AutomationKey.canonicalID(id) else { throw AutomationKey.invalid }
+        let receipt = try await automationReceipt(action: "cancel", body: ["id": .string(id)], account: account, origin: origin)
+        guard receipt["id"] == .string(id), receipt["cancelled"] == .bool(true) else { throw AutomationKey.invalid }
+    }
     var accountRemovalOrigin: String {
         get throws {
             guard var url = URLComponents(string: baseURL), url.scheme == "https", url.host != nil,

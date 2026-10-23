@@ -2,6 +2,7 @@ import Foundation
 import CryptoKit
 import Security
 import Observation
+import Darwin
 
 enum AutomationScope: String, CaseIterable, Codable, Sendable {
     case read = "tasks:read", create = "tasks:create", update = "tasks:update", complete = "tasks:complete", delete = "tasks:delete"
@@ -128,12 +129,14 @@ private struct AutomationEnrollmentEnvelope: Codable {
     let scopes: [AutomationScope]
     let days: Int
     let secret: String
-    init(_ draft: AutomationKeyDraft) {
-        version = 1; id = draft.id; account = draft.account; origin = draft.origin
+    let cancellationRequested: Bool?
+    init(_ draft: AutomationKeyDraft, cancelling: Bool = false) {
+        version = cancelling ? 2 : 1; id = draft.id; account = draft.account; origin = draft.origin
         name = draft.name; scopes = draft.scopes; days = draft.days; secret = draft.secretForOneTimeReview
+        cancellationRequested = cancelling
     }
     func draft() throws -> AutomationKeyDraft {
-        guard version == 1, AutomationKey.canonicalID(id), Set(scopes).count == scopes.count,
+        guard (version == 1 && cancellationRequested != true || version == 2 && cancellationRequested == true), AutomationKey.canonicalID(id), Set(scopes).count == scopes.count,
               secret.utf8.count == 83, secret.hasPrefix("tfk_v1_" + id.replacingOccurrences(of: "-", with: "") + "_") else { throw AutomationKey.invalid }
         let encoded = String(secret.suffix(43)).replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/") + "="
         guard let bytes = Data(base64Encoded: encoded) else { throw AutomationKey.invalid }
@@ -144,16 +147,58 @@ private struct AutomationEnrollmentEnvelope: Codable {
     }
 }
 
-/// One unfinished enrollment per account, serialized across all management
-/// windows. A different server cannot read, replace or acknowledge its secret.
+struct AutomationEnrollmentRecovery: Sendable {
+    let draft: AutomationKeyDraft
+    let cancelling: Bool
+}
+struct AutomationEnrollmentDiscardPending: LocalizedError {
+    var errorDescription: String? { "This key setup is being discarded. Retry discard to finish." }
+}
+
+/// A stable, zero-content lock file coordinates independent app processes. Never
+/// unlink it while the app is installed: replacing its inode defeats flock.
+struct AutomationEnrollmentProcessLock: Sendable {
+    let directory: URL?
+    var timeout: TimeInterval = 2
+    func withExclusive<T>(account: String, check: () throws -> Void = { try Task.checkCancellation() }, _ operation: () throws -> T) throws -> T {
+        try check()
+        guard AutomationKey.canonicalID(account) else { throw AutomationKey.invalid }
+        guard let directory else { return try operation() }
+        do { try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700]) }
+        catch { throw Self.unavailable }
+        let fd = Darwin.open(directory.appendingPathComponent(account + ".lock").path, O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW, mode_t(0o600))
+        guard fd >= 0 else { throw Self.unavailable }
+        defer { Darwin.close(fd) }
+        var state = stat()
+        guard fstat(fd, &state) == 0, state.st_mode & S_IFMT == S_IFREG else { throw Self.unavailable }
+        let deadline = ContinuousClock.now.advanced(by: .milliseconds(Int(max(0.1, min(5, timeout)) * 1000)))
+        while flock(fd, LOCK_EX | LOCK_NB) != 0 {
+            guard errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR else { throw Self.unavailable }
+            try check()
+            guard ContinuousClock.now < deadline else { throw Self.unavailable }
+            usleep(20_000)
+        }
+        defer { flock(fd, LOCK_UN) }
+        try check()
+        return try operation()
+    }
+    private static var unavailable: AppFailure { AppFailure(message: "Another key setup is busy or unavailable. Try again shortly. Your unfinished setup has been kept.") }
+}
+
+/// One unfinished enrollment per account, serialized across windows and app
+/// processes. A different server cannot read, replace or acknowledge its secret.
 actor AutomationEnrollmentVault {
     private let io: any CalendarSecureItemIO
-    init(io: any CalendarSecureItemIO) { self.io = io }
+    private let processLock: AutomationEnrollmentProcessLock
+    init(io: any CalendarSecureItemIO, coordinationDirectory: URL? = nil) {
+        precondition(coordinationDirectory != nil || !(io is CalendarKeychainIO), "Keychain enrollment requires process coordination")
+        self.io = io; self.processLock = AutomationEnrollmentProcessLock(directory: coordinationDirectory)
+    }
     private func key(_ account: String) throws -> String {
         guard AutomationKey.canonicalID(account) else { throw AutomationKey.invalid }
         return "enrollment-v1." + account
     }
-    func pending(account: String, origin: String) throws -> AutomationKeyDraft? {
+    private func readRecovery(account: String, origin: String) throws -> AutomationEnrollmentRecovery? {
         let stored: Data?
         do { stored = try io.read(key: key(account)) }
         catch { throw Self.unavailable }
@@ -161,36 +206,55 @@ actor AutomationEnrollmentVault {
         guard stored.count <= 4096, let envelope = try? JSONDecoder().decode(AutomationEnrollmentEnvelope.self, from: stored),
               let draft = try? envelope.draft(), draft.account == account else { throw Self.unavailable }
         guard draft.origin == origin else { throw AppFailure(message: "Return to this account’s original server to finish setting up its key.") }
-        return draft
+        return AutomationEnrollmentRecovery(draft: draft, cancelling: envelope.cancellationRequested == true)
+    }
+    func recovery(account: String, origin: String) throws -> AutomationEnrollmentRecovery? {
+        try processLock.withExclusive(account: account) { try readRecovery(account: account, origin: origin) }
+    }
+    func pending(account: String, origin: String) throws -> AutomationKeyDraft? { try recovery(account: account, origin: origin)?.draft }
+    func prepareCancellation(_ draft: AutomationKeyDraft, lease: CalendarReadLease) throws {
+        try processLock.withExclusive(account: draft.account, check: { try lease.check() }) {
+            guard let old = try readRecovery(account: draft.account, origin: draft.origin), old.draft.id == draft.id, old.draft.body == draft.body else { throw CancellationError() }
+            if old.cancelling { return }
+            let data = try JSONEncoder().encode(AutomationEnrollmentEnvelope(draft, cancelling: true))
+            guard data.count <= 4096 else { throw Self.unavailable }
+            try lease.check()
+            do { try io.write(data, key: key(draft.account)) } catch { throw Self.unavailable }
+        }
     }
     func begin(_ draft: AutomationKeyDraft, lease: CalendarReadLease) throws -> AutomationKeyDraft {
-        try lease.check()
-        if let old = try pending(account: draft.account, origin: draft.origin) { return old }
-        let data = try JSONEncoder().encode(AutomationEnrollmentEnvelope(draft))
-        guard data.count <= 4096 else { throw Self.unavailable }
-        try lease.check()
-        do { try io.write(data, key: key(draft.account)) }
-        catch { throw Self.unavailable }
-        return draft
+        try processLock.withExclusive(account: draft.account, check: { try lease.check() }) {
+            if let old = try readRecovery(account: draft.account, origin: draft.origin) { return old.draft }
+            let data = try JSONEncoder().encode(AutomationEnrollmentEnvelope(draft))
+            guard data.count <= 4096 else { throw Self.unavailable }
+            try lease.check()
+            do { try io.write(data, key: key(draft.account)) }
+            catch { throw Self.unavailable }
+            return draft
+        }
     }
-    /// Explicit save acknowledgement or confirmed revocation only. A stale
-    /// window must never erase a newer enrollment's recovery.
-    func finish(_ draft: AutomationKeyDraft, lease: CalendarReadLease) throws {
-        try lease.check()
-        guard let saved = try pending(account: draft.account, origin: draft.origin) else { return }
-        guard saved.id == draft.id, saved.body == draft.body else { throw CancellationError() }
-        try lease.check()
-        do { try io.remove(key: key(draft.account)) }
-        catch { throw Self.unavailable }
+    /// Explicit save acknowledgement or confirmed cancellation/revocation only.
+    /// A stale process cannot erase a newer enrollment's recovery.
+    func finish(_ draft: AutomationKeyDraft, lease: CalendarReadLease, cancelled: Bool = false) throws {
+        try processLock.withExclusive(account: draft.account, check: { try lease.check() }) {
+            guard let saved = try readRecovery(account: draft.account, origin: draft.origin) else { return }
+            guard saved.draft.id == draft.id, saved.draft.body == draft.body else { throw CancellationError() }
+            guard !saved.cancelling || cancelled else { throw AutomationEnrollmentDiscardPending() }
+            try lease.check()
+            do { try io.remove(key: key(draft.account)) }
+            catch { throw Self.unavailable }
+        }
     }
     /// Invoked only by confirmed account-removal cleanup, never ordinary sign-out.
     func removeAccount(_ account: String, origin: String) throws {
-        let location = try key(account)
-        guard let data = try io.read(key: location) else { return }
-        guard data.count <= 4096, let envelope = try? JSONDecoder().decode(AutomationEnrollmentEnvelope.self, from: data),
-              let draft = try? envelope.draft(), draft.account == account else { throw Self.unavailable }
-        guard draft.origin == origin else { return } // A confirmed removal on another server is not authority here.
-        try io.remove(key: location)
+        try processLock.withExclusive(account: account) {
+            let location = try key(account)
+            guard let data = try io.read(key: location) else { return }
+            guard data.count <= 4096, let envelope = try? JSONDecoder().decode(AutomationEnrollmentEnvelope.self, from: data),
+                  let draft = try? envelope.draft(), draft.account == account else { throw Self.unavailable }
+            guard draft.origin == origin else { return }
+            try io.remove(key: location)
+        }
     }
     private static var unavailable: AppFailure {
         AppFailure(message: "Key setup could not be read or saved securely. Unlock this device and try again. Any unfinished setup has been kept.")
@@ -201,6 +265,7 @@ actor AutomationEnrollmentVault {
     func automationKeyPage(account: String, origin: String, cursor: String?, includeInactive: Bool) async throws -> AutomationKeyPage
     func registerAutomationKey(_ draft: AutomationKeyDraft) async throws -> AutomationKey
     func revokeAutomationKey(id: String, account: String, origin: String) async throws -> AutomationKey
+    func cancelAutomationKey(id: String, account: String, origin: String) async throws
 }
 extension Backend: AutomationKeyService {}
 
@@ -217,6 +282,7 @@ extension Backend: AutomationKeyService {}
     private(set) var nextCursor: String?
     private(set) var pending: AutomationKeyDraft?
     private(set) var confirmed: AutomationKey?
+    private(set) var discarding = false
     private(set) var busy = false
     private(set) var loaded = false
     private(set) var message: String?
@@ -234,7 +300,7 @@ extension Backend: AutomationKeyService {}
     var current: Bool { !closed && isCurrent() }
     private func reviewID(_ draft: AutomationKeyDraft) -> String { draft.origin + "|" + draft.account + "|" + draft.id }
     var secret: String? {
-        guard let draft = pending, current, confirmed?.id == draft.id, confirmed?.active(at: Date()) == true,
+        guard let draft = pending, current, !discarding, confirmed?.id == draft.id, confirmed?.active(at: Date()) == true,
               !AutomationEnrollmentReview.shared.finished.contains(reviewID(draft)) else { return nil }
         return draft.secretForOneTimeReview
     }
@@ -256,8 +322,8 @@ extension Backend: AutomationKeyService {}
         await perform {
             let cursor = more ? self.nextCursor : nil
             guard !more || cursor != nil else { return }
-            let saved = try await self.vault.pending(account: self.account, origin: self.origin)
-            try self.check(); self.pending = saved; self.confirmed = nil
+            let saved = try await self.vault.recovery(account: self.account, origin: self.origin)
+            try self.check(); self.pending = saved?.draft; self.discarding = saved?.cancelling ?? false; self.confirmed = nil
             let page = try await self.service.automationKeyPage(account: self.account, origin: self.origin, cursor: cursor, includeInactive: includeInactive)
             try self.check()
             if more {
@@ -278,31 +344,69 @@ extension Backend: AutomationKeyService {}
                 throw AppFailure(message: "Another key setup is already waiting. Review its name and permissions before continuing.")
             }
             let key = try await self.service.registerAutomationKey(saved)
-            try self.check(); self.confirmed = key; self.upsert(key)
+            try await self.accept(key, draft: saved)
         }
     }
     func resume() async {
         await perform {
-            guard let draft = try await self.vault.pending(account: self.account, origin: self.origin) else { self.pending = nil; self.confirmed = nil; return }
-            try self.check()
+            guard let saved = try await self.vault.recovery(account: self.account, origin: self.origin) else { self.pending = nil; self.confirmed = nil; self.discarding = false; return }
+            let draft = saved.draft
+            try self.check(); self.discarding = saved.cancelling
             guard let presented = self.pending, presented.id == draft.id, presented.body == draft.body else {
                 self.pending = draft; self.confirmed = nil
                 throw AppFailure(message: "Key setup changed in another window. Review its name and permissions before continuing.")
             }
+            if saved.cancelling { self.confirmed = nil; try await self.finishDiscard(draft); return }
             let key = try await self.service.registerAutomationKey(draft)
-            try self.check(); self.confirmed = key; self.upsert(key)
+            try await self.accept(key, draft: draft)
+        }
+    }
+    private func accept(_ key: AutomationKey, draft: AutomationKeyDraft) async throws {
+        try check()
+        let saved = try await vault.recovery(account: account, origin: origin)
+        try check(); discarding = saved?.cancelling ?? false
+        guard saved?.draft.id == draft.id, saved?.draft.body == draft.body, pending?.id == draft.id, !discarding else {
+            pending = saved?.draft; confirmed = nil
+            throw AppFailure(message: "Key setup changed in another window. Review it before continuing.")
+        }
+        confirmed = key; upsert(key)
+    }
+    func refreshRecovery() async {
+        await perform {
+            let previous = self.confirmed, old = self.pending
+            self.confirmed = nil
+            let saved = try await self.vault.recovery(account: self.account, origin: self.origin)
+            try self.check(); self.pending = saved?.draft; self.discarding = saved?.cancelling ?? false
+            if saved?.draft.id == old?.id, saved?.draft.body == old?.body, !self.discarding { self.confirmed = previous }
         }
     }
     func acknowledgeSaved() async {
         await perform {
             guard let draft = self.pending, self.confirmed?.id == draft.id, self.secret != nil else { throw AutomationKey.invalid }
-            try await self.vault.finish(draft, lease: self.lease)
+            do { try await self.vault.finish(draft, lease: self.lease) }
+            catch is AutomationEnrollmentDiscardPending { self.confirmed = nil; self.discarding = true; throw AutomationEnrollmentDiscardPending() }
             AutomationEnrollmentReview.shared.finished.insert(self.reviewID(draft))
             try self.check(); self.pending = nil; self.confirmed = nil
         }
     }
     func revoke(_ key: AutomationKey) async { await revokeID(key.id) }
-    func revokePending() async { if let id = pending?.id { await revokeID(id) } }
+    func discardPending() async {
+        await perform {
+            guard let draft = self.pending else { return }
+            self.confirmed = nil
+            try await self.vault.prepareCancellation(draft, lease: self.lease)
+            try self.check(); self.discarding = true
+            try await self.finishDiscard(draft)
+        }
+    }
+    private func finishDiscard(_ draft: AutomationKeyDraft) async throws {
+        try await service.cancelAutomationKey(id: draft.id, account: account, origin: origin)
+        try check()
+        AutomationEnrollmentReview.shared.finished.insert(reviewID(draft))
+        confirmed = nil; keys.removeAll { $0.id == draft.id }
+        try await vault.finish(draft, lease: lease, cancelled: true)
+        try check(); pending = nil; discarding = false
+    }
     private func revokeID(_ id: String) async {
         await perform {
             let key = try await self.service.revokeAutomationKey(id: id, account: self.account, origin: self.origin)
@@ -310,8 +414,8 @@ extension Backend: AutomationKeyService {}
             if let draft = self.pending, draft.id == key.id {
                 AutomationEnrollmentReview.shared.finished.insert(self.reviewID(draft))
                 self.confirmed = nil // Never reveal after confirmed revocation, even if secure cleanup fails.
-                try await self.vault.finish(draft, lease: self.lease)
-                try self.check(); self.pending = nil
+                try await self.vault.finish(draft, lease: self.lease, cancelled: true)
+                try self.check(); self.pending = nil; self.discarding = false
             }
         }
     }

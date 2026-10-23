@@ -245,3 +245,79 @@ Deno.test("oversized and stalled caller bodies are bounded before authentication
   assert((await f.handler(req)).status === 408, "Stalled body not bounded");
   assert(f.calls.length === 0, "Unbounded input reached Auth");
 });
+
+Deno.test("cancel uses verified owner/session and fixed RPC; projects only confirmed cancellation", async () => {
+  let count = 0;
+  const handler = createHandler(config, {
+    send: async (req) => {
+      count++;
+      if (req.url.endsWith("/auth/v1/user")) {
+        return response({ id: owner, user_metadata: { account: other } });
+      }
+      assert(
+        req.url === config.url + "/rest/v1/rpc/taskfold_automation_cancel_key",
+        "Wrong cancellation RPC",
+      );
+      assert(
+        req.headers.get("Authorization") === "Bearer " + config.serviceKey,
+        "No service authorization",
+      );
+      const body = await req.json();
+      assert(
+        JSON.stringify(body) ===
+          JSON.stringify({ _account: owner, _session: session, _id: keyID }),
+        "Unverified/extra cancellation identity",
+      );
+      return response({
+        account: owner,
+        id: keyID,
+        cancelled: true,
+        secret: "PRIVATE",
+        token_hash: "PRIVATE",
+      });
+    },
+  });
+  const result = await handler(request("cancel", { id: keyID }));
+  assert(result.status === 200 && count === 2, "Cancellation failed");
+  assert(
+    JSON.stringify(await result.json()) ===
+      JSON.stringify({ account: owner, id: keyID, cancelled: true }),
+    "Private cancellation fields exposed",
+  );
+});
+Deno.test("cancel refuses malformed intent before Auth and unconfirmed receipts after Auth", async () => {
+  for (
+    const body of [{}, { id: keyID, account: other }, { id: "bad" }, {
+      id: "00000000-0000-0000-0000-000000000000",
+    }]
+  ) {
+    const f = fixture();
+    assert(
+      (await f.handler(request("cancel", body))).status === 400 &&
+        f.calls.length === 0,
+      "Malformed cancellation sent",
+    );
+  }
+  for (
+    const receipt of [
+      { account: other, id: keyID, cancelled: true },
+      { account: owner, id: other, cancelled: true },
+      { account: owner, id: keyID, cancelled: false },
+      { account: owner, id: keyID, cancelled: "true" },
+      { account: owner, id: keyID },
+    ]
+  ) {
+    const handler = createHandler(config, {
+      send: (req) =>
+        Promise.resolve(
+          req.url.endsWith("/auth/v1/user")
+            ? response({ id: owner })
+            : response(receipt),
+        ),
+    });
+    assert(
+      (await handler(request("cancel", { id: keyID }))).status === 503,
+      "Unconfirmed cancellation acknowledged",
+    );
+  }
+});

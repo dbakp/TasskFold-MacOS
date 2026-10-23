@@ -119,3 +119,20 @@ Run `deno test supabase/functions/automation-tasks/handler_test.ts` separately
 for 17 mocked handler cases. These checks do not prove hosted Auth/TLS/PostgREST,
 all production triggers, independent-connection races or native key screens.
 The mutation migration remains unapplied. See `docs/AUTOMATION_API.md`.
+
+
+# Automation enrollment cancellation candidate
+
+Run `npm run --prefix Scripts/Database test:automation-cancellation` for 55 real
+local PostgreSQL assertions using pinned PGlite/pgcrypto. The test loads actual
+credential/cancellation migrations, checks both operation orders, immutable retry,
+late creation refusal, no issuance at cancellation, the separate 100/day new-history
+bound, existing retry/revocation at the bound, foreign-account privacy, session/ban
+checks, ACL/RLS/indexes and Auth cascades. Reserved `f098cafe-*` accounts are removed.
+No app configuration, real task, raw secret or hosted credential is read.
+
+`test:automation` and `test:automation-mutations` also load the new candidate,
+covering credential regressions and existing task effects/loopback HTTP. Deno's
+management handler suite separately verifies fixed cancellation RPC arguments
+and rejects false/mismatched receipts. These are not hosted Auth/TLS/PostgREST
+or independent-connection database race acceptance. The migration stays unapplied.

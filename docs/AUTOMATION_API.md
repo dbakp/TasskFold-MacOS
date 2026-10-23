@@ -129,3 +129,26 @@ acceptance; then signed-in native flows and coherent deployment. Email intake,
 webhooks and advanced teams remain separate unfinished work. See
 `p2-automation-task-mutations-evidence.json`. The full Px objective remains active;
 user-deferred physical-location, release, old-client and remote-reminder work stays deferred.
+
+
+## Cancelling unfinished native enrollment
+
+The native-JWT `automation-keys` candidate also accepts `cancel` with exactly
+`{ "id": "<UUID>" }`. It verifies the current Auth subject/session and calls only
+`taskfold_automation_cancel_key`. A confirmed reply is exactly
+`{ "account": "<verified UUID>", "id": "<requested UUID>", "cancelled": true }`.
+False, missing, mismatched or malformed receipts do not finish local recovery.
+
+Cancellation and creation use the same account transaction mutex. If a key already
+exists for this account, cancellation permanently revokes it; otherwise a private
+owner/ID tombstone rejects any later INSERT. Foreign IDs yield the same minimal
+receipt without exposing or changing foreign keys. Tombstones contain no raw key,
+hash, name, scopes or task data, have RLS and no client/service table grants, and
+cascade only with their Auth account. There is no retention pruning that could
+revive a late request. An owner/date index bounds the 100-new-tombstones/day check;
+existing cancellation retries and owned-key revocation remain available at that
+limit. This history is independent of the ten-key issuance budget.
+
+The candidate migration `20261023002825_automation_enrollment_cancellation.sql`
+remains unapplied. Local tests cover both operation orders and authorization;
+real cross-connection Auth/PostgREST races and gateway/IP controls remain open.
