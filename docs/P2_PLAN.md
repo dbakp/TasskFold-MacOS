@@ -4,7 +4,7 @@ Updated 23 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/scheduling and full native acceptance are next. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery acceptance now passes; secure scheduling and full native hosted acceptance are next. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -736,3 +736,43 @@ No real tasks, hosted services, release signing or device privacy settings chang
 Next: secure hosted scheduling and end-to-end native Auth/webhook delivery, plus
 remaining clipboard/spoken checks. Full webhooks/Px and the email/team/wearable
 backlog remain open; user release/provider/reminder deferrals stay in force.
+
+
+## Hosted delivery acceptance — 23 October
+
+All 61 checks pass independently for each repository’s service source. Format,
+Node syntax and receiver Deno type checks pass. No native app build was needed
+for these diagnostic-only additions.
+
+The owned diagnostics now exercise actual password Auth, scoped task writes,
+Edge management, PostgREST, private outbox capture and pinned TLS delivery on a
+no-data disposable preview branch. Both repositories own their runner, receiver
+and SQL fixtures. The receiver checks exact HMAC bytes, stable message IDs,
+immutable retries and absence of native Authorization/API-key/cookie headers.
+
+The runner covers create/update/complete/reopen/delete, full Unicode multipart
+notes and checksum reassembly, pause/resume replay, retry/backoff, sign-out,
+receiver refusal and explicit recovery, pending versus accepted project access,
+membership removal, retained owner access and account-removal cancellation.
+Project memberships are service-seeded synthetic fixtures: invitation acceptance
+through the native app is outside this milestone. Branch history lacks the
+main database's independently installed native base, so a guarded fixture bridge
+supplies inspected base fields/grants/helpers. Common feature migrations from
+6 October onward are hashed unchanged; earlier platform histories differ.
+
+Run `prepare-webhook-hosted.mjs <owner-private-connection-json> <schema-receipt>`,
+then `test-webhook-delivery-hosted.mjs <connection> <receipt> <result>` from this
+repository's Scripts/Diagnostics. Setup checks API and database hosts against the
+same owned, nonpersistent, no-data branch and refuses main. The runner deploys
+only the five test functions, uses random ephemeral secrets and synthetic users,
+and removes them in finally. Delete the owned preview branch afterward and remove
+the private connection file. Do not run overlapping tests on the same branch.
+The private JSON uses Supabase branch connection fields SUPABASE_URL,
+SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY and POSTGRES_URL; never commit it.
+
+This is hosted service acceptance, not an app-native UI walkthrough or secure
+scheduled invocation. Main schema, endpoints and ordinary app feature gates stay
+disabled. Secure scheduling, native hosted account/relaunch acceptance and the
+remaining clipboard/spoken checks are next. Remote-reminder, old-client and release
+signing/distribution deferrals are unchanged. Full webhooks/Px remains unfinished.
+Exact results and limitations: `p2-webhook-hosted-delivery-evidence.json`.
