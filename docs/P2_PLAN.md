@@ -1244,8 +1244,26 @@ Each repo passes 119 functional checks, 32 real PostgreSQL concurrency checks an
 43 existing webhook-fixture compatibility checks. Local advisors have no findings
 for the new email objects; unrelated minimal-fixture findings remain.
 
-This does not enable email or complete rank 6. Next: trusted gateway and native
-address setup/recovery, then verified provider integration once configured.
+This does not enable email or complete rank 6. The management gateway milestone below now passes locally. Native
+address setup/recovery and verified provider integration remain next.
 Additional verified senders, source links, scheduled inactive-account maintenance
 and hosted/native/live-mail acceptance remain open. See `EMAIL_CAPTURE.md` and
 `p2-email-intake-journal-evidence.json`. All existing user deferrals remain in force.
+
+
+## Email route gateway — 23 October, local acceptance
+
+Both repositories independently own a strict native-management handler using live
+Auth plus SQL session/account checks, the existing durable management admission
+budget, bounded/cancellable input and upstream reads, and filtered no-store
+receipts. Missing configuration preserves list/pause/revoke while refusing new
+setup. Enabling actions bind the reviewed domain; uncertain changes retain the
+same setup/revision for retry. Raw aliases never enter management requests.
+
+Each repo passes 22 handler and nine existing admission tests, plus 20 HTTP-to-real
+PostgreSQL checks with a synthetic local Auth adapter. Nothing is deployed; this
+does not prove hosted Auth/forwarding or native UI behavior. Next implementation
+is the premium native address setup/vault/recovery flow. Provider adapter,
+additional verified senders, source links, scheduled maintenance and real delivery
+remain open. See `EMAIL_CAPTURE.md` and `p2-email-routes-gateway-evidence.json`.
+Full rank 6/Px remains active and user deferrals are unchanged.

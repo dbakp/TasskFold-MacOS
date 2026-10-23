@@ -51,6 +51,14 @@ private native setup/recovery, source links, provider integration and real deliv
 remain open; provider/domain configuration stays deferred. See
 [email intake evidence](p2-email-intake-journal-evidence.json).
 
+23 October email gateway: the independently owned, undeployed native-management
+handler passes 22 gateway plus nine admission cases and 20 HTTP-to-PostgreSQL
+checks with synthetic Auth. Address secrets remain out of management requests;
+missing configuration preserves pause/revoke. Premium native setup, private
+Keychain recovery and real provider/native acceptance remain next; this milestone
+does not change app UI or enable email. See
+[gateway evidence](p2-email-routes-gateway-evidence.json).
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.

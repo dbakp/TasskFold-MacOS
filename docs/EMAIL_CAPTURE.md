@@ -11,7 +11,7 @@ configuration and real signed-delivery acceptance.
 | --- | --- | --- |
 | Content and retry contract | Bounded plain text; transparent attachment omissions; a stable provider-delivery/route identity separate from content fingerprint | Implemented independently in each repo; ten Deno tests and lint pass per repo |
 | Atomic intake journal and routes | One committed task per verified delivery; changed-content replays conflict; paused/revoked or unauthorized destinations refuse delivery; quotas and account-removal fencing | Implemented as a disabled local candidate; 119 functional and 32 real PostgreSQL concurrency checks per repo pass; hosted/provider/native acceptance remains open |
-| Provider adapter and management gateway | Verify signed provider requests before trusting normalized sender/receipt data; authorize current native sessions; bounded body/read/deadlines and admission; no raw credentials in receipts | Open; provider/domain configuration will follow later |
+| Provider adapter and management gateway | Verify signed provider requests before trusting normalized sender/receipt data; authorize current native sessions; bounded body/read/deadlines and admission; no raw credentials in receipts | Native management gateway locally implemented; verified provider adapter and hosted/native acceptance remain open; configuration follows later |
 | Native setup and recovery | Clear address/destination review, trusted senders, pause/rotate/revoke, account-bound private setup/retry, understandable delivery status and accessible controls | Open; retain current app typography, spacing and privacy controls |
 | Real delivery acceptance | Actual provider retries, sender spoof refusal, current membership changes, native relaunch/account isolation and recovery | Open; requires later provider/domain configuration |
 
@@ -123,8 +123,66 @@ pre-existing minimal-fixture findings remain. This is not a production database
 audit. All owned containers were removed. Exact checks, source hashes, candidate
 corrections and limits are in `p2-email-intake-journal-evidence.json`.
 
-Still required: authenticated management/admission gateway, signed provider/MIME
+Still required: hosted/native acceptance of the management gateway, signed provider/MIME
 adapter with attested sender and original receipt time, native alias generation
 and private vault/recovery/UI, additional sender verification, source links,
 scheduled maintenance and hosted/native/provider acceptance. Provider/domain
 configuration stays deferred by the user. Full email intake and Px remain open.
+
+## Native-management gateway — local candidate
+
+`supabase/functions/email-routes` now implements the native management HTTP
+boundary. It is not deployed and is not an inbound-mail/provider endpoint.
+Keep the platform's default JWT verification enabled. The handler verifies the
+bearer through live Auth, matches its subject, extracts its native session, and
+calls only `taskfold_email_routes` with service credentials. SQL rechecks the
+session/account under locks. Anonymous accounts and client-supplied owner/sender
+claims are refused. No privileged credential is included in a response or client.
+
+The request is POST with `X-Taskfold-Email: 1` and a strict JSON envelope
+`{action, body}`. Actions are list, create, pause, resume, revoke and rotate.
+Bodies use the journal's exact schemas; revoke with revision zero is the durable
+cancel-before-create path. Native code must persist the same setup ID, alias hash,
+original requested time and reviewed settings before sending. Repeating an
+uncertain request must retain its setup and revision, rather than generating a new
+address or assuming success. Rotation validates both returned identities.
+
+Raw address secrets never enter this management request. Only `alias_hash` is
+forwarded to SQL. Native generation, the precise versioned alias/hash convention,
+private Keychain storage, account-bound recovery and address presentation remain
+next work; do not claim these exist yet. Delivery metadata is projected through a
+bounded allowlist so hashes, aliases, private/future SQL fields and diagnostics
+cannot escape. Responses are `Cache-Control: no-store`.
+
+`TASKFOLD_EMAIL_INBOUND_DOMAIN` is a canonical bare lowercase DNS name. List
+advertises a usable domain only when that configuration and the database enable
+flag are both present. New setup, rotation and resume require
+`X-Taskfold-Email-Domain` to match the domain reviewed by the native caller. A
+configuration change returns a conflict instead of silently changing the reviewed
+address. Missing configuration still allows authenticated list, pause and revoke.
+The native vault must retain and compare the address's original domain; domain
+migration/re-enrollment remains part of native/provider acceptance. Merely setting
+this variable is not proof that mail delivery works.
+
+Management shares the existing durable `keys` admission bucket with API-key and
+webhook management: 600 global requests, 60 per IP and 60 per credential per
+minute. Independent cold workers cannot multiply the allowance. Verified gateway
+forwarding is required; raw IPs/bearers are HMAC-fingerprinted before admission.
+Missing forwarding configuration fails closed. This is separate from the future
+provider/rejected-mail admission policy. Input is limited to 8 KiB and two seconds;
+upstream responses are limited to 512,000 bytes and the overall request to 15
+seconds including admission time. Caller cancellation/deadlines stop reads and
+upstream work without claiming an uncertain mutation succeeded. Retries retain
+explicit identity instructions; lock/deadlock failures include a retry hint.
+
+Each repo passes 22 gateway cases and nine existing admission cases, plus 20
+HTTP-to-actual-PostgreSQL 17.6 integration checks. Integration uses a synthetic Auth
+adapter and loopback-only bridge, while exercising unchanged production handler,
+shared durable admission and service-role SQL. It does not prove hosted Auth,
+platform forwarding, a deployed function or native UI acceptance. Owned gateway,
+bridge and database processes are stopped after each run. Exact results and
+source hashes are in `p2-email-routes-gateway-evidence.json`.
+
+Next: premium native address setup and account-bound private recovery, then the
+verified provider adapter and later domain/provider configuration. Extra verified
+senders, source links and scheduled inactive-account maintenance remain open.
