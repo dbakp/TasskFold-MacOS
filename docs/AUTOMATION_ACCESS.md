@@ -222,3 +222,47 @@ entries and main services remain disabled. Email intake, advanced teams and
 wearables remain open; full Px is not complete. Remote reminders, older-client
 rollout safeguards, distribution verification, OAuth registration/provider
 acceptance and physical location-reminder delivery remain deferred by the user.
+
+
+## Hosted sign-in recovery and profile continuity — 23 October
+
+A real no-data preview Auth response exposed a wire-format gap: a refused refresh
+returned HTTP 400 with numeric `code: 400`, `error_code: "session_expired"` and a
+message. The client previously checked only string `code`, which classified that
+response as a generic failure and omitted **Sign in again**. Both apps now prefer
+a nonempty `error_code`, falling back to the normalized string `code` format.
+Only the existing four recognized session reasons and allowed error statuses
+request sign-in; unknown reasons, throttling and server failures retain their
+separate classification. Message text never determines session expiry.
+
+Optional profile hydration now saves updated user details without entering the
+full sign-in acceptance path. It keeps the current account/session incarnation,
+open connection leases and pending explicit authentication attempt. After awaiting
+persistence it rechecks the account incarnation and updates only profile metadata
+on the latest live credentials, preserving tokens renewed during the save.
+Full sign-in, sign-out and account changes retain their original invalidation.
+
+The old profile path failed a regression with three assertions. The old raw Auth
+parser failed five assertions, including a conflicting-field case. Both independent
+transport suites now pass 55 cases. The full suites passed after the profile fix
+(iOS-owned: 1,376 executed, 13 optional skips; Mac-owned: 1,408 executed, 33 optional
+skips; zero failures); the final localized wire-parser change is covered by the
+subsequent full transport suites. Both native app targets compile independently.
+
+The iOS repo owns `--native-reauthentication` in its guarded hosted controller and
+`testHostedWebhookReauthenticationPreservesSetupWorkAndUndo`. It uses actual
+password Auth, HTTPS management, OS Keychain, native task capture, Undo/Redo and
+normal relaunch. The controller expires only disposable users' server sessions via
+`not_after`; it does not mint or edit JWTs, advance device clocks, or claim natural
+wall-clock access-token expiry. It compares the complete original connection and
+saved-task fingerprints, verifies a new real server session, and checks persisted
+Undo/Redo. Its app-specific lost-reply flag discards one actual successful setup
+response; all subsequent replies are real. The mode leaves the webhook scheduler
+inactive. Exact runs, corrections, cleanup and acceptance limits are recorded in
+`p2-hosted-connection-reauthentication-evidence.json`.
+
+This does not close the full advanced backlog. Native API-key hosted renewal,
+queued-edit recovery across renewal, real Google selection, Mac runtime/Keychain
+and wider spoken consent/history remain separate checks. Email intake, advanced
+teams and wearables remain open. Normal feature entries and main services remain
+disabled; all existing user deferrals remain unchanged.

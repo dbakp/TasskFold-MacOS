@@ -941,3 +941,83 @@ extension AccountTransportTests {
         XCTAssertEqual(calls,0);XCTAssertEqual(saves,0);XCTAssertEqual(api.session?.access_token,"old")
     }
 }
+
+
+extension AccountTransportTests {
+    @MainActor func testProfileRefreshKeepsConnectionScopeAndPendingSignInCurrent() async throws {
+        var saved:Session?
+        let api=backend(try signed(owner),save:{saved=$0}),context=try api.reauthenticationContext(account:owner)
+        let attempt=api.beginAuthentication()
+        ScopedHTTP.handler={request,transport in
+            XCTAssertEqual(request.url?.path,"/auth/v1/user")
+            transport.finish(200,Data(("{\"id\":\""+self.owner+"\",\"email\":\"profile@example.invalid\"}").utf8))
+        };defer{ScopedHTTP.handler=nil;api.endAuthentication(attempt)}
+        try await api.refreshUser()
+        XCTAssertEqual(api.reminderSessionIncarnation,context.incarnation)
+        XCTAssertNoThrow(try api.requireReauthentication(context))
+        XCTAssertNoThrow(try api.requireAuthentication(attempt))
+        XCTAssertEqual(api.session?.user.email,"profile@example.invalid")
+        XCTAssertEqual(saved?.user.email,"profile@example.invalid")
+        XCTAssertEqual(api.session?.access_token,"old")
+    }
+    @MainActor func testLateProfileRefreshCannotWriteAfterSameAccountReentry() async throws {
+        let gate=HTTPGate(),started=expectation(description:"Profile response held")
+        var saves=0
+        let api=backend(try signed(owner),save:{_ in saves += 1})
+        ScopedHTTP.handler={_,transport in gate.hold(transport);started.fulfill()};defer{ScopedHTTP.handler=nil}
+        let waiting=Task { @MainActor in try await api.refreshUser() }
+        await fulfillment(of:[started],timeout:3)
+        try await api.accept(signed(owner,token:"new-entry"))
+        gate.release(200,Data(("{\"id\":\""+owner+"\",\"email\":\"stale@example.invalid\"}").utf8))
+        do {try await waiting.value;XCTFail("Late profile accepted")}catch{XCTAssertTrue(error is CancellationError)}
+        XCTAssertEqual(saves,1);XCTAssertEqual(api.session?.access_token,"new-entry");XCTAssertNil(api.session?.user.email)
+    }
+}
+
+
+extension AccountTransportTests {
+    @MainActor func testProfileRefreshKeepsTokensRenewedWhileMetadataSaveWaits() async throws {
+        let started=expectation(description:"Metadata save held")
+        var release:CheckedContinuation<Void,Never>?
+        let config=URLSessionConfiguration.ephemeral;config.protocolClasses=[ScopedHTTP.self]
+        let api=Backend(configuration:["URL":"https://native-scope.test","Key":"public"],http:URLSession(configuration:config),session:try signed(owner),persistSession:{value in
+            if value?.access_token == "old" {await withCheckedContinuation {release=$0;started.fulfill()}}
+        })
+        let fresh=try JSONEncoder().encode(signed(owner,token:"fresh"))
+        ScopedHTTP.handler={request,transport in
+            if request.url?.path == "/auth/v1/user" {transport.finish(200,Data(("{\"id\":\""+self.owner+"\",\"email\":\"profile@example.invalid\"}").utf8))}
+            else {transport.finish(200,fresh)}
+        };defer{ScopedHTTP.handler=nil}
+        let generation=api.reminderSessionIncarnation
+        let profile=Task { @MainActor in try await api.refreshUser() }
+        await fulfillment(of:[started],timeout:3)
+        try await api.refreshIfNeeded(force:true)
+        XCTAssertEqual(api.session?.access_token,"fresh")
+        release?.resume();try await profile.value
+        XCTAssertEqual(api.session?.access_token,"fresh");XCTAssertEqual(api.session?.user.email,"profile@example.invalid")
+        XCTAssertEqual(api.reminderSessionIncarnation,generation)
+    }
+}
+
+
+extension AccountTransportTests {
+    @MainActor func testRawAuthWireErrorCodeRequiresReauthentication() async throws {
+        for (status,reason,legacy,required) in [
+            (400,"session_expired","400",true),(400,"session_not_found","400",true),
+            (400,"refresh_token_not_found","400",true),(422,"refresh_token_already_used","422",true),
+            (400,"unknown_reason","session_expired",false),(429,"session_expired","429",false),
+            (500,"session_expired","500",false)
+        ] {
+            let api=backend(try signed(owner))
+            ScopedHTTP.handler={request,transport in
+                if request.url?.path == "/auth/v1/token" {
+                    let code=Int(legacy).map{JSON.number(Double($0))} ?? .string(legacy)
+                    transport.finish(status,try! JSONEncoder().encode(["code":code,"error_code":.string(reason),"msg":.string("Session wording must not control classification")]))
+                } else {transport.finish(401,Data("{}".utf8))}
+            }
+            do {_=try await api.webhookReceipt(action:"list",body:[:],account:owner,origin:"https://native-scope.test");XCTFail("Expired request accepted")}
+            catch {XCTAssertEqual(error is AccountSessionAuthorizationRequired,required,"Raw Auth reason: \(reason), status \(status)")}
+            ScopedHTTP.handler=nil
+        }
+    }
+}

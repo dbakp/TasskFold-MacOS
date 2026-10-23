@@ -352,9 +352,12 @@ final class Backend: NSObject {
                ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks"].contains(path) {
                 throw AccountSessionAuthorizationRequired()
             }
+            // Raw Auth responses use error_code (code may be numeric HTTP status).
+            // Retain support for normalized string-code responses, without using msg.
+            let authCode = error.string("error_code").isEmpty ? error.string("code") : error.string("error_code")
             if !authenticated, path == "/auth/v1/token?grant_type=refresh_token",
                [400, 401, 422].contains(status ?? 0),
-               ["refresh_token_not_found", "refresh_token_already_used", "session_expired", "session_not_found"].contains(error.string("code")) {
+               ["refresh_token_not_found", "refresh_token_already_used", "session_expired", "session_not_found"].contains(authCode) {
                 throw AccountSessionAuthorizationRequired()
             }
             let message = ["msg", "message", "error_description", "error"].map { error.string($0) }.first { !$0.isEmpty }
@@ -431,7 +434,15 @@ final class Backend: NSObject {
         let user = try JSONDecoder().decode(Session.User.self, from: data)
         guard generation == sessionGeneration, var current = session, current.user.id == user.id else { throw CancellationError() }
         current.user = user
-        try await accept(current)
+        // Profile hydration is not a new sign-in. Keep current account leases,
+        // pending browser authentication and connection recovery contexts alive.
+        // The existing credential writer orders this save with token refreshes.
+        try await saveSession(current)
+        guard generation == sessionGeneration, var live = session, live.user.id == user.id else { throw CancellationError() }
+        // A token renewal may finish while profile persistence is awaiting I/O.
+        // Update only metadata on the latest live credentials.
+        live.user = user
+        session = live
     }
 
     func signIn(email: String, password: String, signup: Bool, reauthenticating context: AccountReauthentication? = nil, willCommit: (() -> Void)? = nil) async throws -> Bool {
