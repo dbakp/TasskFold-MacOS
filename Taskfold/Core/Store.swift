@@ -777,6 +777,7 @@ final class Store {
         UserDefaults.standard.set(false, forKey: "localMode")
         snapshot = Snapshot(); undoStack = []; redoStack = []; load(); Task { await refreshRemoteReminderRegistration(); await sync() }
     }
+    @ObservationIgnored lazy var automationEnrollmentVault = AutomationEnrollmentVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".automation-enrollment"))
     @ObservationIgnored private lazy var accountRemovalVault = AccountRemovalVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".account-removal"))
     private(set) var accountRemovalStatus: String?
     private var removalPendingAccounts = Set<String>()
@@ -882,6 +883,7 @@ final class Store {
             do { try await backend.clearSession() } catch is CancellationError { }
             resetRemovedWorkspaceIfSignedOut()
         }
+        try await automationEnrollmentVault.removeAccount(account, origin: command.origin)
         try await accountRemovalVault.finish(command)
         removalPendingAccounts.remove(account)
         UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + account)

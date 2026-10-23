@@ -2863,3 +2863,26 @@ feature remains undeployed. Native key management, metadata discovery, portable
 advanced reminders, rejected-traffic controls and hosted/concurrent/native-flow
 acceptance remain. See `AUTOMATION_API.md` and the new mutation evidence. The full
 Px goal remains active; all user deferrals remain unchanged.
+
+
+### 23 October — native automation access and private enrollment recovery
+
+Mac now owns its Account entry, permissions/expiry composer, hidden one-time
+review, inactive history, paging and confirmed revoke controls. Before registration,
+a dedicated app-only device Keychain envelope retains the exact draft. Lost replies
+resume the same ID/hash; saved acknowledgement or confirmed revocation clears it.
+Workspace/session leases fence late replies. Another window cannot erase newer
+recovery or silently register changed permissions, and saved/revoked review retires
+other windows’ reveal state. Confirmed account removal cleans its private item.
+
+63 Core/transport checks pass independently per repo, including 14 new enrollment
+cases. Isolated iPhone build-for-testing and unsigned Mac Debug build succeed.
+Two actual-Keychain, synthetic-protocol UI scenarios pass on each iPhone and iPad
+Simulator with no failures/skips. Masked review and dark largest-text layouts are
+visually inspected; concrete Delete switches toggle on/off and Cancel leaves no
+enrollment. These are iOS reference checks, not Mac UI, hosted Auth/SQL or clipboard
+expiry acceptance. Mac native interaction, independent-process coordination,
+clipboard lifecycle, safe uncertain-request cancellation, metadata discovery and
+advanced reminders remain before enablement. The entry stays hidden in normal
+builds; the API remains undeployed. See `AUTOMATION_ACCESS.md` and the native
+management evidence. Full Px and all user deferrals remain unchanged.

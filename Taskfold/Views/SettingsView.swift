@@ -162,6 +162,7 @@ struct AccountSettings: View {
     @State private var uploading = false
     @State private var avatarWorkspace: WorkspaceBinding?
     @State private var avatarUploadID = UUID()
+    @State private var automationAccess = false
     @State private var changingEmail = false
     @State private var changingPassword = false
     @State private var deletingAccount = false
@@ -198,6 +199,11 @@ struct AccountSettings: View {
                     if workspace.previewsAccount { Text("Preview: these actions need a signed-in account.").font(.caption).foregroundStyle(.secondary) }
                 }
             }
+            if AutomationAccessAvailability.enabled && store.signedIn && !store.localMode {
+                Section("Connected tools") {
+                    Button("Automation access…", systemImage: "key.horizontal") { automationAccess = true }.accessibilityIdentifier("automationAccess")
+                }
+            }
             Section("Data") {
                 LabeledContent("Storage", value: !store.signedIn ? "No workspace open" : store.localMode ? "This Mac" : "Synced account and this Mac")
                 if store.signedIn && !store.localMode {
@@ -222,6 +228,7 @@ struct AccountSettings: View {
         .onChange(of: workspace.signInRequested) { _, _ in consumeSignInRequest() }
         .onChange(of: store.localMode) { _, local in if !local && store.signedIn { showLogin = false } }
         .onChange(of: store.signedIn) { _, signedIn in if signedIn && !store.localMode { showLogin = false } }
+        .sheet(isPresented: $automationAccess) { NavigationStack { AutomationAccessView() } }
         .sheet(isPresented: $changingEmail) { ChangeEmailSheet() }
         .sheet(isPresented: $changingPassword) { ChangePasswordSheet() }
         .sheet(isPresented: $deletingAccount) { if let request = deletionWorkspace { DeleteAccountSheet(workspace: request) } }

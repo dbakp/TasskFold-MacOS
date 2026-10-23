@@ -396,8 +396,15 @@ journal/revision-secret table, task RPC or automation Edge Function is deployed.
 
 Next required, in order:
 
-1. Build premium native management, one-time secret review, interrupted enrollment
-   recovery and revoke/paging/workspace-safe cancellation in both apps.
+1. Finish hosted native management and lifecycle/accessibility acceptance. Both
+   apps now implement the gated premium screens, one-time hidden/reveal/copy review,
+   app-only device Keychain recovery and revoke/paging/workspace-safe cancellation.
+   All 63 selected Core tests pass per repo. Two actual-Keychain/local-protocol
+   scenarios pass on each iPhone and iPad Simulator, including relaunch/retry,
+   revocation/history and largest-text switch actions. Mac native interaction,
+   clipboard lifecycle, independent-process coordination and safe cancellation of
+   never-created uncertain keys remain. Exact scope is in
+   `p2-automation-native-management-evidence.json`.
 2. Add project/section discovery and full portable advanced-reminder authoring
    validation; keep private location markers behind native private-place review.
 3. Establish rejected-request/IP controls, then real hosted Auth/HTTP timeout,

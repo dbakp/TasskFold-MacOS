@@ -1,8 +1,8 @@
 # Automation task API — inactive candidate
 
 The owned candidate implements scoped reads and create, update, complete, reopen
-and reviewed delete operations. It is not deployed or enabled. Native key
-management and hosted acceptance remain required before public availability.
+and reviewed delete operations. It is not deployed or enabled. Native management screens and device-private setup recovery are implemented
+as a gated candidate; hosted acceptance remains required before availability.
 
 ## Authentication and transport
 
@@ -122,8 +122,8 @@ dependencies; it does not reproduce every hosted trigger. Reserved `f095cafe-*`
 fixtures and example.invalid accounts are removed; local servers close afterward.
 No app host is launched by these backend checks.
 
-Remaining before enablement: premium native create/review/recovery/revoke screens;
-project/section discovery; portable advanced reminder authoring; rejected-request
+Remaining before enablement: hosted native create/review/recovery/revoke acceptance
+(see `AUTOMATION_ACCESS.md`); project/section discovery; portable advanced reminder authoring; rejected-request
 controls; real hosted Auth/TLS/PostgREST, timeout, concurrency, quota and revocation
 acceptance; then signed-in native flows and coherent deployment. Email intake,
 webhooks and advanced teams remain separate unfinished work. See

@@ -124,5 +124,8 @@
     "Scripts/Database/automation-http-fixture.ts": "839e715e7c90abc603b293b40a9d7f33a00e04adc91bad6d46b168d574a1fea9",
     "Scripts/Database/package.json": "5626059315306f83bf0f620aed1862f2802b8b8bff377765c4cf433d9a0578f0",
     "Taskfold/Core/AutomationAccess.swift": "f670f053abab3b548197082d29fcb5e4aea6c5966270a012a980aef748731b97"
-  }
+  },
+  "sourceSnapshotCommit": "84d086599bde40a705ec124a9d71887a70716b87",
+  "supersededForNativeAccessBy": "p2-automation-native-management-evidence.json",
+  "historicalSnapshotNote": "Task SQL/HTTP proofs remain the mutation milestone. Its native source hashes describe this recorded commit; current native management is verified separately."
 }

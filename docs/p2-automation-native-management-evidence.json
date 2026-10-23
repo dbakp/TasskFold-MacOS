@@ -1,0 +1,128 @@
+{
+  "date": "2026-10-23",
+  "platform": "macOS",
+  "milestone": "Gated native automation-key management and private interrupted enrollment recovery; full feature incomplete",
+  "baseCommit": "84d086599bde40a705ec124a9d71887a70716b87",
+  "featureEnabled": false,
+  "releaseEntryEnabledInInfo": false,
+  "migrationAppliedByThisMilestone": false,
+  "edgeFunctionDeployedByThisMilestone": false,
+  "hostedKeysIssued": 0,
+  "realTasksChanged": 0,
+  "fullPxComplete": false,
+  "implementation": [
+    "Native Account entry and permission/expiry composer, inactive metadata history, pagination and revoke confirmation",
+    "Hidden-by-default one-time reveal/copy/save review and inactive-scene cover",
+    "App-only device Keychain envelope saved before registration; exact-ID/hash retry after reply loss",
+    "Only dedicated private envelope Codable; no task/widget/backup/defaults secret persistence",
+    "Serialized account/original-origin recovery; stale-ID finish refusal and confirmed account-removal cleanup connection",
+    "Current workspace/backend session lease; closed views and account changes cannot reveal late replies",
+    "Cross-window saved/revoked reveal retirement; competing or replaced scopes require fresh review before a request",
+    "Device-only clipboard options and conditional Mac one-minute cleanup; clipboard OS lifecycle acceptance remains open"
+  ],
+  "verification": {
+    "core": {
+      "passed": true,
+      "tests": 63,
+      "enrollmentTests": 14,
+      "failures": 0,
+      "command": "swift test --filter 'AutomationEnrollmentTests|AutomationAccessTests|AccountTransportTests'",
+      "io": "Memory IO failure/race fixtures; actual native Backend URLProtocol transport tests are separate existing cases"
+    },
+    "build": {
+      "passed": true,
+      "kind": "Isolated unsigned Mac Debug build"
+    },
+    "nativeUI": {
+      "performed": false,
+      "macOSInteractionClaimed": false,
+      "hostedAuthOrSQLClaimed": false,
+      "scope": "Actual view, actual Backend management transport and OS Keychain; owned synthetic metadata URLProtocol, not hosted Auth/SQL",
+      "tests": [],
+      "checks": [],
+      "clipboardCopyOrExpiryAcceptanceClaimed": false,
+      "VoiceOverListeningClaimed": false,
+      "testIdentifiers": [
+        "TaskfoldUITests/TaskfoldUITests/testAutomationKeyLostReplyRecoveryAndRevocation",
+        "TaskfoldUITests/TaskfoldUITests/testAutomationPermissionReviewAtLargestText"
+      ]
+    },
+    "visualInspection": {
+      "iOSOwnedImages": {},
+      "scope": "Masked review and scrolling dark largest-text permission layouts; no claim all content fits one viewport",
+      "macOSVisualAcceptanceClaimed": false
+    },
+    "hostedMetadataReadOnly": {
+      "keys": null,
+      "journal": null,
+      "revisionSecret": null,
+      "automationRPCs": 0,
+      "candidateMigrations": 0,
+      "automationEdgeFunctions": [],
+      "liveDataMutation": false
+    }
+  },
+  "fixtureIsolation": {
+    "debugOnly": true,
+    "exactBundles": [
+      "com.dbakp.taskfold.workflowtestsp1",
+      "com.dbakp.taskfold.mac.workflowtestsp1"
+    ],
+    "requiresUITestingAndLocalMode": true,
+    "refusesLiveAuthFixture": true,
+    "ordinaryRemovalRecoverySkipped": true,
+    "account": "f096cafe-1111-4111-8111-000000000001",
+    "addressDomain": "example.invalid",
+    "origin": "https://automation-management.test",
+    "http": "All fixture management requests intercepted by owned URLProtocol; no hosted management request",
+    "persistentServerFixture": "Metadata and token hash only in owned app support directory",
+    "privateRecovery": "Actual app-only Keychain on iOS Simulator, separate fixture service",
+    "finalRecovery": "Largest-text scenario starts with successful Keychain reset/read and cancels without registration",
+    "testAppProcessesClosed": true,
+    "finalSyntheticServerKeys": 0
+  },
+  "correctedDuringVerification": [
+    "iOS source initially assigned to wrong Xcode target; moved to app source phase",
+    "Fixture Swift JSON compactMap typing and numeric accessor corrected",
+    "Unsupported XCTest lastMatch query corrected",
+    "Lazy Form controls require scrolling before existence/hittability assertions",
+    "History initially tapped row label; actual switch is targeted and its On value asserted",
+    "Keyboard dismissal added for readable largest-text review",
+    "Actual nested Delete switch is activated rather than treating partial row visibility as control acceptance",
+    "Competing and replaced recovery drafts now require their current permissions to be reviewed before registration",
+    "Confirmed account cleanup now matches original server as well as account; foreign-origin enrollment is preserved"
+  ],
+  "remaining": [
+    "Hosted signed-in management/recovery/revoke and ordinary Account-entry acceptance",
+    "Native Mac controls and actual private Keychain interaction",
+    "Independent-process secure-enrollment coordination and crash/cancellation races",
+    "Native clipboard copy/expiry/ownership preservation and broader accessibility/VoiceOver",
+    "Safe cancellation of an uncertain never-created key without first finishing enrollment; current flow explicitly resumes then revokes",
+    "Project/section discovery and portable advanced reminder authoring",
+    "Rejected-request controls and hosted Auth/TLS/PostgREST/timeouts/quota/revocation/concurrent task effects",
+    "Coherent deployment; email/webhook/advanced-team/wearable backlog"
+  ],
+  "userDeferralsUnchanged": [
+    "Remote reminders",
+    "Older-client editing safeguards",
+    "Release signing/distribution",
+    "Real Google/Microsoft OAuth registrations",
+    "Physical location delivery"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/AutomationAccess.swift": "7bf7bfd4bedb014272df81941c67333d5af0f457ae98e54a0944c525ff0fb349",
+    "Taskfold/Core/Store.swift": "b7ab280c940db34f9f48ebc366338e90c5736bc5fabc71e2ca50de1d80c8d379",
+    "Taskfold/Views/AutomationAccessView.swift": "33ef8b125574273ce8dfdea4f292c4db08f49ef00eaf3044f95716ef83bfff70",
+    "Taskfold/TaskfoldMacApp.swift": "f9d4c63ad172a30d8647daa02bdf50d742f40f6ff46517d675ca040b03b61c3e",
+    "Taskfold/Views/SettingsView.swift": "3550b1a6dc6bc466c96ddecf60a7a85ee0f3346fe0206408635e254ca5c5785e",
+    "TaskfoldTests/AutomationEnrollmentTests.swift": "e9fc381f57865c43b9f8cf9f8228cf129bddfb956d2f55fad29b71eca85b6180",
+    "Taskfold.xcodeproj/project.pbxproj": "be8c2cf8de9e2189bf7ebefc80dfc6bda8cc0aca08f9ead50fd0ccb829be766e"
+  },
+  "nativeManagementScreensImplemented": true,
+  "normalReleaseEntryExposed": false,
+  "cleanup": {
+    "obsoleteOwnedArtifactsRemovedBytes": 223690242,
+    "verifiedResultBundlesPreserved": true,
+    "buildCachesPreserved": true
+  }
+}
