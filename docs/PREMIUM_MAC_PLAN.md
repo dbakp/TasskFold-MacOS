@@ -3747,3 +3747,21 @@ evidence are independently owned here. No Mac app source changes or Mac runtime/
 Keychain acceptance are claimed; native hosted UI recovery is next. The owned
 preview and synthetic resources are removed; main, provider configuration and
 release flags stay unchanged. See `p2-email-hosted-management-evidence.json`.
+
+
+## Email same-account recovery correction — 23 October
+
+The independently owned Mac view now records the accepted backend session before
+resetting its sign-in sheet/model, preventing a late observer from clearing the
+restored screen. It uses the established workspace-bound sync-resume path. The
+current Mac Debug app compiles. Companion iPhone and largest-text dark iPad
+complete genuine hosted Auth/Keychain/relaunch/account-isolation/revocation
+workflows with no failures or skips; sixteen server assertions preserve complete
+task fingerprints and original address identity. This remains iOS runtime proof,
+not Mac Keychain/runtime acceptance. Diagnostic cleanup is restricted to the exact
+isolated Simulator bundle and never appears in shipping Mac flows.
+
+Both final concealed screenshots are reviewed; test-only cleanup/resource evidence
+is in `p2-email-native-hosted-recovery-evidence.json`. Provider/domain setup, Mac
+runtime, spoken/wider variants and the full teams/wearables backlog remain open.
+The original app email flag and main service stay disabled/unchanged.

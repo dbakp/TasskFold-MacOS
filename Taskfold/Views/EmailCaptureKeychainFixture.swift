@@ -11,9 +11,52 @@ enum EmailCaptureKeychainFixture {
     static var account: String { ProcessInfo.processInfo.arguments.contains("--email-keychain-other-account") ? b : a }
     static var service: String { (Bundle.main.bundleIdentifier ?? "invalid") + ".email-addresses" }
     static var root: URL { URL.applicationSupportDirectory.appendingPathComponent("EmailKeychainFixture", isDirectory: true) }
+    static var orphanCleanupRequested: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--email-hosted-orphan-cleanup") }
+    private static func orphanAccounts() throws -> [String] {
+        let values = ProcessInfo.processInfo.arguments.filter { $0.hasPrefix("--email-orphan-account=") }.map { String($0.dropFirst("--email-orphan-account=".count)) }
+        guard !values.isEmpty, values.count <= 16, Set(values).count == values.count, values.allSatisfy(EmailCaptureValue.id) else { throw EmailCaptureValue.invalid }
+        return values
+    }
+    @MainActor private static func orphanOrigin() throws -> String {
+        #if targetEnvironment(simulator)
+        guard Bundle.main.bundleIdentifier == "com.dbakp.taskfold.workflowtestswebhooks" else { throw EmailCaptureValue.invalid }
+        let origin = try Store.shared.backend.accountRemovalOrigin
+        guard origin.hasPrefix("https://"), origin.hasSuffix(".supabase.co"), !origin.contains("zqxflydiyfjeedqvyova") else { throw EmailCaptureValue.invalid }
+        return origin
+        #else
+        throw EmailCaptureValue.invalid
+        #endif
+    }
+    @MainActor static var hostedCleanupEnabled: Bool {
+        #if targetEnvironment(simulator)
+        return Bundle.main.bundleIdentifier == "com.dbakp.taskfold.workflowtestswebhooks" && ProcessInfo.processInfo.arguments.contains("--email-hosted-testing") && EmailCaptureAvailability.enabled
+        #else
+        return false
+        #endif
+    }
+    @MainActor static func removeHostedPrivateSetup() async -> String {
+        guard hostedCleanupEnabled else { return "Cleanup unavailable" }
+        let store = Store.shared, account = Store.shared.userID
+        guard store.signedIn, !store.localMode, let email = store.backend.session?.user.email,
+              email.hasPrefix("taskfold-email-"), email.hasSuffix("@example.invalid"),
+              let origin = try? store.backend.accountRemovalOrigin,
+              origin.hasPrefix("https://"), origin.hasSuffix(".supabase.co"), !origin.contains("zqxflydiyfjeedqvyova") else { return "Cleanup unavailable" }
+        do {
+            let saved = try await store.emailAddressVault.recovery(account: account, origin: origin)
+            guard saved.addresses.isEmpty, saved.pending == nil else { return "Revoke test addresses first" }
+            try await store.emailAddressVault.removeAccount(account, origin: origin)
+            let empty = try await store.emailAddressVault.recovery(account: account, origin: origin)
+            guard empty.addresses.isEmpty, empty.pending == nil else { return "Cleanup failed" }
+            return "Private test setup cleared"
+        } catch { return "Cleanup failed" }
+    }
     @MainActor static func makeModel() async throws -> EmailCaptureModel {
         precondition(enabled)
         let actual = Store.shared.emailAddressVault
+        if orphanCleanupRequested {
+            let origin = try orphanOrigin()
+            for id in try orphanAccounts() { try await actual.removeAccount(id, origin: origin) }
+        }
         if ProcessInfo.processInfo.arguments.contains("--email-keychain-reset") {
             try await actual.removeAccount(a, origin: origin); try await actual.removeAccount(b, origin: origin)
             let aa = try await actual.recovery(account: a, origin: origin), bb = try await actual.recovery(account: b, origin: origin)
@@ -31,6 +74,16 @@ enum EmailCaptureKeychainFixture {
     }
     @MainActor static func audit() async throws -> String {
         precondition(enabled)
+        if orphanCleanupRequested {
+            let ids = try orphanAccounts(), origin = try orphanOrigin()
+            for id in ids {
+                let value = try await Store.shared.emailAddressVault.recovery(account: id, origin: origin)
+                guard value.addresses.isEmpty, value.pending == nil else { throw EmailCaptureValue.invalid }
+                let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: "email-addresses-v1." + id, kSecAttrSynchronizable as String: false, kSecUseDataProtectionKeychain as String: true]
+                guard SecItemCopyMatching(query as CFDictionary, nil) == errSecItemNotFound else { throw EmailCaptureValue.invalid }
+            }
+            return "orphan=cleared accounts=\(ids.count) policy=absent"
+        }
         let saved = try await Store.shared.emailAddressVault.recovery(account: account, origin: origin)
         let server = try EmailKeychainHTTP.snapshot()
         let rows = server["rows"]?.object ?? [:], requests = server["requests"]?.object ?? [:]

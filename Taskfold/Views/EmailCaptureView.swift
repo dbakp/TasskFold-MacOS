@@ -26,6 +26,7 @@ struct EmailCaptureView: View {
     @State private var copied: String?
     @State private var copyFailed = false
     @State private var reauthentication: AccountReauthentication?
+    @State private var restoredIncarnation: UUID?
     var body: some View {
         Group {
             if let model, model.current { management(model) }
@@ -42,7 +43,8 @@ struct EmailCaptureView: View {
         .onChange(of: store.workspaceGeneration) { _, _ in leave() }
         .onChange(of: store.signingOut) { _, value in if value { leave() } }
         .onChange(of: store.accountRemovalBlocked) { _, value in if value { leave() } }
-        .onChange(of: store.backend.reminderSessionIncarnation) { _, _ in
+        .onChange(of: store.backend.reminderSessionIncarnation) { _, value in
+            if restoredIncarnation == value { return }
             if let context = reauthentication, store.backend.session?.user.id == context.account { return }; leave()
         }
         .onChange(of: phase) { _, value in revealed = nil; copied = nil; if value == .active { Task { await model?.load() } } }
@@ -51,7 +53,10 @@ struct EmailCaptureView: View {
         .sheet(item: $reauthentication) { context in
             ConnectionSignInSheet(backend: store.backend, context: context, email: store.backend.session?.user.email ?? store.email) {
                 guard store.backend.session?.user.id == context.account else { leave(); return }
-                model?.close(); model = nil; reauthentication = nil; Task { await start() }
+                restoredIncarnation = store.backend.reminderSessionIncarnation
+                let workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+                model?.close(); model = nil; reauthentication = nil
+                Task { await start(); if !fixture { await store.resumeSyncAfterSignIn(workspace: workspace) } }
             }
         }
         .confirmationDialog("Revoke this address?", isPresented: Binding(get: { destructive != nil }, set: { if !$0 { destructive = nil } }), titleVisibility: .visible) {
@@ -83,7 +88,7 @@ struct EmailCaptureView: View {
         let value = EmailCaptureModel(account: binding.account, origin: origin, service: store.backend, vault: store.emailAddressVault) {
             store.signedIn && !store.localMode && !store.signingOut && !store.accountRemovalBlocked && binding.matches(account: store.userID, generation: store.workspaceGeneration) && store.backend.reminderSessionIncarnation == incarnation
         }
-        model = value; await value.load()
+        restoredIncarnation = incarnation; model = value; await value.load()
     }
     private func leave() { model?.close(); model = nil; revealed = nil; copied = nil; composing = false; reauthentication = nil }
     private func management(_ model: EmailCaptureModel) -> some View {
@@ -113,7 +118,16 @@ struct EmailCaptureView: View {
             }
             Section { Button { revealed = nil; copied = nil; Task { await model.load() } } label: { Label("Refresh status", systemImage: "arrow.clockwise") }.disabled(model.busy) }
             Section { Text("Private addresses stay on this device and are excluded from Taskfold backups. On another device, replace an address if its private copy is unavailable. Changing your verified account email stops capture from the old sender.").font(.footnote).foregroundStyle(.secondary) }
+            #if DEBUG
+            if EmailCaptureKeychainFixture.hostedCleanupEnabled {
+                Section("Isolated test cleanup") {
+                    Button("Clear test private setup") { keychainProof = "Checking…"; Task { keychainProof = await EmailCaptureKeychainFixture.removeHostedPrivateSetup() } }.accessibilityIdentifier("clearHostedEmailPrivateSetup")
+                    Text(keychainProof).accessibilityIdentifier("hostedEmailCleanupProof")
+                }
+            }
+            #endif
         }
+        .accessibilityIdentifier("emailCaptureForm")
         .disabled(model.busy)
         .overlay { if model.busy { ProgressView().padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14)) } }
         .safeAreaInset(edge: .top, spacing: 0) { recoveryNotice(model) }

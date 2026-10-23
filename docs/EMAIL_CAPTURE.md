@@ -12,7 +12,7 @@ configuration and real signed-delivery acceptance.
 | Content and retry contract | Bounded plain text; transparent attachment omissions; a stable provider-delivery/route identity separate from content fingerprint | Implemented independently in each repo; ten Deno tests and lint pass per repo |
 | Atomic intake journal and routes | One committed task per verified delivery; changed-content replays conflict; paused/revoked or unauthorized destinations refuse delivery; quotas and account-removal fencing | Implemented as a disabled local candidate; current protocol-2 evidence includes 119 intake and 40 real PostgreSQL concurrency checks per repo; hosted/provider/native acceptance remains open |
 | Provider adapter and management gateway | Verify signed provider requests before trusting normalized sender/receipt data; authorize current native sessions; bounded body/read/deadlines and admission; no raw credentials in receipts | Hosted management/session recovery now passes; verified provider adapter and native UI acceptance remain open; configuration follows later |
-| Native setup and recovery | Clear address/destination review, trusted senders, pause/rotate/revoke, account-bound private setup/retry, understandable delivery status and accessible controls | Native candidate implemented; scoped Simulator walkthrough and recovery tests recorded below; scoped real Simulator Keychain now passes; hosted/Mac/spoken acceptance remains open |
+| Native setup and recovery | Clear address/destination review, trusted senders, pause/rotate/revoke, account-bound private setup/retry, understandable delivery status and accessible controls | Native candidate implemented; scoped Simulator walkthrough and recovery tests recorded below; scoped real Simulator Keychain and hosted native recovery now pass; Mac/spoken/wider acceptance remains open |
 | Real delivery acceptance | Actual provider retries, sender spoof refusal, current membership changes, native relaunch/account isolation and recovery | Open; requires later provider/domain configuration |
 
 ## Implemented internal contract
@@ -152,7 +152,7 @@ address or assuming success. Rotation validates both returned identities.
 Raw address secrets never enter this management request. Only `alias_hash` is
 forwarded to SQL. The native milestone below now implements generation, the versioned alias/hash
 convention, private storage, account-bound recovery and address presentation;
-real Keychain/hosted acceptance remains open. Delivery metadata is projected through a
+scoped Simulator Keychain/hosted native recovery now pass below; wider acceptance remains open. Delivery metadata is projected through a
 bounded allowlist so hashes, aliases, private/future SQL fields and diagnostics
 cannot escape. Responses are `Cache-Control: no-store`.
 
@@ -483,3 +483,81 @@ enabled. Exact source hashes, checks and cleanup are recorded in
 `p2-email-hosted-management-evidence.json`. The reusable guarded harness is
 `Scripts/Diagnostics/test-email-routes-hosted.mjs`; it refuses main, persistent,
 data-bearing and unrelated branches.
+
+
+## Native hosted recovery — 23 October 2026
+
+The actual signed iPhone and iPad Simulator apps now complete the hosted email
+walkthrough using production password Auth, HTTPS management, the device-only
+Keychain vault and ordinary app navigation. Each device has one complete passing
+UI case with **zero failures and zero skips**, plus eight server assertions.
+Phone uses normal light appearance; iPad uses largest accessibility text and dark
+appearance. Both recovered/concealed screenshots were visually reviewed; tall
+large-text content scrolls in the native sheet. No native HTTP/Auth/storage
+replacement is used for this walkthrough. The staged test host alone enables the
+email bundle flag; both original app configurations keep it absent/off.
+
+Each run saves one synthetic task and creates a private address. The controller
+expires that account's real server sessions through `auth.sessions.not_after`,
+then the app saves an unfinished Pause action before receiving authorization
+refusal. Wrong-password refusal and Cancel retain that intent. Same-account
+renewal uses the actual sign-in sheet and a new real server session; Retry applies
+the original Pause. The complete original route fingerprint is unchanged before
+retry, and its identity/destination/hash/sender/creation metadata remain unchanged
+through subsequent controls. The complete saved task fingerprint stays unchanged.
+
+Ordinary process termination/relaunch restores renewed sign-in and the original
+private copy, still concealed. Resume is confirmed on the server. Actual Sign out
+and sign-in to the second account show an empty email list; returning to the
+first account restores its private copy. Terminal revocation, private-item removal
+and another relaunch leave no private setup. Final Sign out closes each test app.
+The server verifies the intended revisions and full task preservation throughout.
+
+### Product correction
+
+The first largest-text iPad run exposed an actual lifecycle defect: successful
+renewal could return to “Sign in to capture email.” A late session-change observer
+cleared the newly restored model after the sign-in sheet had reset its context.
+Both independently owned views now record the accepted session incarnation before
+resetting the sheet/model, and on model creation. The observer recognizes that
+already-restored session, matching the established automation/webhook pattern.
+Successful same-account renewal also resumes Store sync through the existing
+workspace-bound method. Current-account/generation guards remain enforced.
+
+A later UI-test navigation failure came from a system Save Password prompt
+consuming a Settings tap. The test now rechecks the destination and retries after
+prompt dismissal, as the existing automation tests do. No product navigation or
+Auth response is replaced to satisfy the test. The final complete workflows run
+again with fresh accounts and include an explicit empty-state account check.
+
+### Isolated cleanup and evidence
+
+The exact Debug Simulator host exposes a test-only private-item cleanup control.
+It accepts only synthetic account emails and a non-main hosted origin, and normally
+requires all addresses/intents already cleared by revocation. It does not appear
+in shipping app flows. An explicit diagnostic orphan mode removes only an operator
+account-ID allowlist from this isolated app's own email Keychain service, after
+validating each record's original origin; actual Security queries verify item
+absence. This is cleanup instrumentation, not native functional acceptance.
+
+An earlier controller timed out during long locked-Mac system-prompt waits and
+cleaned its server fixtures. Both device orphan-cleanup cases then passed with
+no skips before clean reinstall and fresh full workflows. The harness now retains
+a safe account-ID cleanup manifest and allows a bounded 90-minute native run.
+Its password-bearing handoff remains owner-private and is removed after the run.
+Raw test archives/input logs are pruned after retaining safe summaries and the two
+concealed screenshots. Both updated default hosted harnesses also pass their
+36-case regressions. Hosted advisors return no email-object findings; existing
+preview findings are retained rather than called a clean project audit.
+
+Both actual app sources build; Mac is compilation only. Core, Backend, Store and
+SQL sources are unchanged, so this milestone does not rerun or replace their
+previous committed suites. Exact sources, result counts, controller assertions,
+cleanup and limitations are in `p2-email-native-hosted-recovery-evidence.json`.
+
+This is controlled server-session expiry, not natural JWT expiry, real provider
+delivery, Mac Keychain/runtime, hardware locked/denied storage, human VoiceOver or
+all network/concurrency variants. Provider/MIME/sender/envelope/receipt integration,
+source links and additional verified senders remain open. User provider/domain
+configuration remains deferred, production delivery stays disabled, and advanced
+teams/wearables remain in the full ranked Px goal.

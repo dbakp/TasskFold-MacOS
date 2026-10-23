@@ -1378,3 +1378,63 @@ and reauthentication flow; verified provider/MIME/sender integration, source lin
 and extra verified senders remain. Provider/domain configuration is still deferred
 by the user. Advanced teams, wearable clients and wider acceptance remain in the
 full Px goal. See `p2-email-hosted-management-evidence.json` and `EMAIL_CAPTURE.md`.
+
+
+## Advanced team implementation prerequisites — source audit, 23 October
+
+Current project sharing has a deliberately small permission contract. The
+invitation guard accepts only owner-created pending `collaborator` invitations
+and prevents changing their role later
+(`20261022193804_account_removal_service.sql`).
+`automation_lock_project` authorizes an accepted project collaborator, while
+`automation_writable_project` adds archive checks; neither currently represents
+team admin/member/guest or read-only roles. No team-membership or project-folder
+tables are present in the current migrations. These findings describe the current
+project-sharing model, not a completed team implementation or an existing grant
+to unsupported roles.
+
+Implementation order for the advanced team portion of rank 6:
+
+1. Define durable team/project ownership and explicit role/invitation/transfer
+   records, including what happens when the creator leaves or removes an account.
+   Preserve existing personal-project and invitation behavior.
+2. Enforce the new role authority at every server write boundary: native guarded
+   mutations, direct Data API writes, API credentials, email delivery and shared
+   content. Test role changes, revocation, concurrent writes and membership loss
+   using actual database authorization, including older clients.
+3. Add the native team switcher, project folders and reviewed admin/member actions
+   in each independently owned app after those permissions and ownership rules
+   work. Retain account/workspace fencing, offline drafts and clear recovery.
+4. Verify account removal, backups, activity attribution, widget privacy and
+   transfer/revocation against the new ownership model before rollout. The user's
+   general older-client rollout safeguards and distribution work remain deferred;
+   enabling new team roles must respect that dependency.
+
+Email provider integration and native recovery remain their own ongoing work.
+This audit does not change the ranked full Px scope or claim team features shipped.
+
+
+## Native hosted email recovery — 23 October, scoped acceptance
+
+Production native sign-in, management and device-only Keychain recovery now pass
+a complete iPhone and largest-text dark iPad workflow with zero failures/skips.
+Sixteen actual server assertions confirm unchanged task fingerprints, original
+address identity, controlled session expiry/new-session renewal, durable Pause
+retry, Resume and terminal revocation. Ordinary relaunch and actual account
+leave/return preserve the private copy; the other account shows an empty list.
+Both final cases clear their private test setup and sign out.
+
+The iPad walkthrough found a real late-session-observer race; both views now
+recognize the session already restored by the sheet before resetting state, and
+resume workspace-bound sync. Both apps build; this does not claim Mac runtime.
+An unrelated system-password-prompt tap was corrected in test navigation. Full
+walkthroughs were rerun with fresh accounts after explicit orphan-record cleanup.
+The default hosted harness retains its 36 passing regression checks per repo.
+See `p2-email-native-hosted-recovery-evidence.json` and `EMAIL_CAPTURE.md`.
+
+Next: verified provider adapter/MIME/sender and original-envelope/receipt
+integration, source links and additional verified senders, with provider/domain
+configuration still deferred by the user. Mac/private fault/spoken/wider native
+acceptance remains scoped separately. Advanced team permissions/ownership,
+folders/admin and wearable clients remain active; existing release deferrals stay
+in force. No main service or shipping email feature is enabled.
