@@ -3784,3 +3784,14 @@ and protected outbox. The iPhone projection and atomic save/receipt bridge are n
 no paired task save is claimed. The Mac app has no new dependency or changed code.
 Future iPhone saves will use ordinary guarded task sync. This documentation update
 does not claim Mac runtime acceptance or close the remaining Px objective.
+
+
+### 24 October — monotonic private wearable receipts
+
+Mac now independently owns the compatible private cache metadata and preservation
+guard. Its four new receipt cases and full 1,442-case suite (33 optional skips)
+finish without failures; the actual Mac app/widget build also passes. It gains
+no Watch transport or target dependency. The 26 iPhone local native assertions
+are companion evidence, not a Mac runtime or cloud-account result. Paired receiver
+authority/projection and complete wearable acceptance remain open; see
+`p2-watch-phone-save-evidence.json` and the full ranked backlog.

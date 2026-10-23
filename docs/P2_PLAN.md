@@ -1472,3 +1472,22 @@ Simulator. See the iOS-owned `docs/WATCH_COMPANION.md` and
 This proceeds alongside the still-open verified email adapter/senders/source links,
 advanced team authorization/ownership and wider acceptance. Provider/domain and
 existing remote/release/calendar/location deferrals remain intact; full Px is active.
+
+
+## Watch iPhone save path — 24 October, rank 7 in progress
+
+The iPhone command planner now connects to normal Store mutations and an atomic,
+private receipt saved with the task/queue. Lost replies cannot duplicate captures
+or re-complete work after Undo/recreation. Both independently owned app caches
+preserve the new private metadata monotonically and exclude it from portable
+backups/shared rows. Receipt-capacity reset/fencing remains a pre-shipping gate.
+
+All 26 isolated native local Store/cache/relaunch assertions pass. The full iOS
+suites execute 1,434 cases (13 existing optional skips), Mac 1,442 (33 skips),
+with no failures. Both apps and the moved-source Watch target build. No genuine
+cloud-account or paired-delivery result is claimed. See
+`p2-watch-phone-save-evidence.json` and the iOS-owned `WATCH_COMPANION.md`. Next
+are durable peer/workspace authority, Today projection, lifecycle invalidation
+and the paired receiver, then full acceptance before embedding. Rank 7 and full
+Px remain active alongside the remaining email/teams/voice/native gates and
+existing user deferrals.
