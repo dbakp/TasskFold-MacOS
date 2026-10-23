@@ -1,0 +1,122 @@
+{
+  "date": "2026-10-23",
+  "platformSource": "macOS",
+  "milestone": "Actual handheld clipboard expiry, replacement preservation and reveal/recovery lifecycle",
+  "productionBehaviorChanged": false,
+  "normalEntryEnabled": false,
+  "realTasksChanged": 0,
+  "hostedKeysIssued": 0,
+  "verification": {
+    "iPhoneSimulator": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792724983.214,
+      "passedTests": 2,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792724777.872,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 2
+    },
+    "iPadSimulator": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+            "deviceName": "iPad Pro 13-inch (M5)",
+            "modelName": "iPad Pro 13-inch (M5)",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 2,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792725041.555,
+      "passedTests": 2,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792724838.001,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 2
+    },
+    "iOSAppBuild": true,
+    "macOSAppBuild": true,
+    "macOSRuntimeClaimed": false,
+    "realOSClipboardExpiry": "Default production 60-second UIPasteboard expiration, observed after 62 seconds; no shortened clock or clipboard stub",
+    "cases": [
+      "Create using actual app-only Simulator Keychain and owned metadata transport",
+      "Reveal then Home/reactivate; secret stays hidden on return",
+      "Copy through actual view action and confirm Copied feedback",
+      "Observe OS expiration to nil after its real lifetime",
+      "Replace with a unique synthetic value; earlier key expiry preserves it",
+      "Finish setup, terminate and relaunch without reset; neither setup recovery nor reveal returns"
+    ],
+    "probePrivacy": "Only fixed pass/fail strings reach the synthetic debug UI; no key, clipboard contents or hash is exported",
+    "cleanup": "XCTest defers terminate both test hosts; replacement probe clears only its own unique sample after observing preservation"
+  },
+  "isolation": {
+    "debugOnly": true,
+    "requiresExactDisposableBundle": true,
+    "requiresLocalMode": true,
+    "requiresExplicitFixtureAndClipboardFlags": true,
+    "network": "Existing owned URLProtocol metadata fixture; no real Auth session or hosted API",
+    "privateStorage": "Actual Simulator Keychain; synthetic account/service only"
+  },
+  "limitations": [
+    "Mac private-Keychain/runtime and general-pasteboard acceptance remain deferred with signing",
+    "Hosted timeout/cancellation and hosted native end-to-end acceptance remain open",
+    "No physical device, VoiceOver or cross-device clipboard transfer acceptance is claimed",
+    "Full Px remains incomplete and all user deferrals remain unchanged"
+  ],
+  "artifacts": {
+    "phone": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/automation-clipboard-phone-first.xcresult",
+    "tablet": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/automation-clipboard-ipad-first.xcresult",
+    "iosBuild": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/automation-clipboard-build-ios.log",
+    "macBuild": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/automation-clipboard-build-mac.log"
+  },
+  "sourceSHA256": {
+    "Taskfold/Views/AutomationAccessView.swift": "ae0de2864057ac758f39448674030217bb0af6567ec15dd4a16122d58fa23541"
+  }
+}

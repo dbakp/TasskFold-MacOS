@@ -1,6 +1,6 @@
 # Remaining product backlog
 
-Updated 22 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
+Updated 23 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
 
 ## Immediate priority correction
 
@@ -530,3 +530,21 @@ rows. The acceptance branch is deleted and its private connection export removed
 state and exact limits are recorded in `p2-automation-hosted-lifecycle-evidence.json`.
 This supersedes the earlier staging-failure status; native UI, Keychain/clipboard
 and hosted timeout/cancellation gates remain open. Full Px is not complete.
+
+
+23 October native clipboard checkpoint: two actual UI scenarios pass on each of
+the iPhone and iPad Simulators (four passes, no failures or skips). They copy
+through the real view, observe the production one-minute OS expiration, preserve
+a later synthetic clipboard entry, hide the revealed key after background/return,
+and finish/relaunch without setup recovery returning. The clipboard probe is
+DEBUG-only, restricted to the exact disposable local fixture and an additional
+explicit flag. It reports fixed states, never clipboard/key contents, and clears
+only its own replacement sample. The actual Simulator Keychain remains in use;
+metadata HTTP uses the existing owned fixture. Both app targets build.
+
+`p2-automation-native-clipboard-evidence.json` records the exact results and limits.
+Mac private-Keychain/runtime is still deferred with signing; the Mac compile is
+not a runtime pass. Next independent work: hosted timeout/cancellation and the
+remaining automation intake backlog. Native management against a hosted service
+remains required before coherent API/client enablement. No release/provider/remote
+or physical-location dependency is reopened. Full Px remains active.

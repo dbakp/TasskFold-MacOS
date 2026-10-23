@@ -30,6 +30,9 @@ struct AutomationAccessView: View {
     @State private var discardSetup = false
     @State private var revealedID: String?
     @State private var copiedID: String?
+    #if DEBUG
+    @State private var clipboardProof = "Clipboard check not started"
+    #endif
     var body: some View {
         Group {
             if let model, model.current {
@@ -129,8 +132,19 @@ struct AutomationAccessView: View {
                             Button(copiedID == draft.id ? "Copied" : "Copy key", systemImage: copiedID == draft.id ? "checkmark" : "document.on.document") {
                                 guard phase == .active, let secret = model.secret else { return }
                                 copiedID = AutomationSecretClipboard.copy(secret) ? draft.id : nil
+                                #if DEBUG
+                                if copiedID != nil, fixture, AutomationManagementFixture.clipboardTesting {
+                                    clipboardProof = "Checking clipboard expiry"
+                                    Task { clipboardProof = await AutomationManagementFixture.checkClipboard(secret: secret) }
+                                }
+                                #endif
                             }.accessibilityIdentifier("automationCopy")
                         }
+                        #if DEBUG
+                        if fixture, AutomationManagementFixture.clipboardTesting {
+                            Text(clipboardProof).accessibilityIdentifier("automationClipboardProof")
+                        }
+                        #endif
                         Button("I’ve saved my key", systemImage: "checkmark.shield") {
                             revealedID = nil; copiedID = nil; Task { await model.acknowledgeSaved() }
                         }.accessibilityIdentifier("automationFinish")
@@ -276,6 +290,46 @@ private struct AutomationKeyComposer: View {
             UserDefaults.standard.bool(forKey: "localMode") && !ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test") &&
             ProcessInfo.processInfo.arguments.contains("--automation-management-fixture") &&
             ["com.dbakp.taskfold.workflowtestsp1", "com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "")
+    }
+    static var clipboardTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--automation-clipboard-testing") }
+    /// Real system pasteboard observation, restricted to the synthetic local host.
+    /// Only a fixed result reaches accessibility; no secret or clipboard text is exported.
+    static func checkClipboard(secret: String) async -> String {
+        guard clipboardTesting else { return "Clipboard check unavailable" }
+        #if os(iOS)
+        let initial = UIPasteboard.general.string
+        #else
+        let initial = NSPasteboard.general.string(forType: .string)
+        #endif
+        guard initial == secret else { return "Clipboard copy failed" }
+        let replace = ProcessInfo.processInfo.arguments.contains("--automation-clipboard-replace")
+        let sample = "Synthetic Taskfold clipboard replacement " + UUID().uuidString
+        if replace {
+            #if os(iOS)
+            UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: sample]], options: [.localOnly: true, .expirationDate: Date().addingTimeInterval(300)])
+            #else
+            NSPasteboard.general.prepareForNewContents(with: .currentHostOnly)
+            guard NSPasteboard.general.setString(sample, forType: .string) else { return "Clipboard replacement failed" }
+            #endif
+        }
+        do { try await Task.sleep(for: .seconds(62)) }
+        catch { return "Clipboard check cancelled" }
+        #if os(iOS)
+        let value = UIPasteboard.general.string
+        #else
+        let value = NSPasteboard.general.string(forType: .string)
+        #endif
+        if replace {
+            guard value == sample else { return "New clipboard content was lost" }
+            // Clear only this probe's own synthetic sample after observing it.
+            #if os(iOS)
+            UIPasteboard.general.items = []
+            #else
+            NSPasteboard.general.clearContents()
+            #endif
+            return "New clipboard content preserved"
+        }
+        return value == nil ? "Copied key expired" : "Copied key did not expire"
     }
     static var root: URL { URL.applicationSupportDirectory.appendingPathComponent("AutomationManagementFixture", isDirectory: true) }
     static func makeModel() async throws -> AutomationAccessModel {

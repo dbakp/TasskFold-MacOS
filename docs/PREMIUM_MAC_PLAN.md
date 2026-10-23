@@ -2998,3 +2998,11 @@ keys, journals and temporary endpoints are removed; branch deletion and private 
 Main remains unchanged and the native entry stays gated. Mac native Keychain,
 clipboard and UI lifecycle plus hosted timeout/cancellation are still required.
 Evidence: `p2-automation-hosted-lifecycle-evidence.json`.
+
+
+23 October credential clipboard follow-up: the Mac app compiles its own guarded
+clipboard probe; no Mac runtime/Keychain/pasteboard pass is claimed. Actual iPhone
+and iPad UI acceptance passes two cases each: real one-minute expiry, newer-copy
+preservation, background hiding and finish/relaunch recovery cleanup. The Mac
+profile/runtime dependency stays deferred. Exact scope is in
+`p2-automation-native-clipboard-evidence.json`; normal product entry remains off.

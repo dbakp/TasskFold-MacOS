@@ -421,3 +421,20 @@ migrations passed. That repair and candidate deployment never touched main.
 See `p2-automation-hosted-lifecycle-evidence.json` for exact proof and cleanup.
 This closes the basic hosted lifecycle gate. Native app management/Keychain/
 clipboard testing and hosted timeout/cancellation acceptance remain separate.
+
+
+### Native handheld clipboard acceptance — 23 October
+
+The isolated iPhone and iPad each pass both clipboard UI scenarios, with zero
+failures/skips. The production copy action uses its normal one-minute lifetime;
+the fixture observes the real system pasteboard at 62 seconds. A second case
+replaces the copied key with a unique synthetic value and verifies that expiry
+preserves that newer content before removing only the probe's own sample. Both
+cases also verify background hiding and finish/relaunch without key recovery.
+
+The additional probe is compiled only in DEBUG, requires the existing exact
+synthetic local host plus `--automation-clipboard-testing`, and exposes only fixed
+result strings. It does not replace Keychain or the pasteboard. Metadata requests
+still use the owned URLProtocol fixture; these tests do not claim hosted native
+acceptance. Mac builds, but private-Keychain/runtime remains deferred with signing.
+See `p2-automation-native-clipboard-evidence.json`.
