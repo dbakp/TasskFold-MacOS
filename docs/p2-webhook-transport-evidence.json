@@ -1,0 +1,109 @@
+{
+  "date": "2026-10-23",
+  "platformSource": "macOS",
+  "baseCommit": "4aa309f8be1beb2832ad5eb49aebd8c736e38059",
+  "milestone": "Pinned-IP signed webhook transport and encrypted receiver-secret foundation",
+  "fullWebhookFeatureComplete": false,
+  "fullPxComplete": false,
+  "nativeAppBehaviorChanged": false,
+  "mainMigrationsApplied": false,
+  "mainEndpointsEnabled": false,
+  "realTasksChanged": 0,
+  "local": {
+    "testsPassed": 11,
+    "tlsHttpStepsPassed": 7,
+    "failures": 0,
+    "format": true,
+    "lint": true,
+    "types": true,
+    "runnerSyntax": true,
+    "log": "webhook-transport-mac-checks.log"
+  },
+  "actualHostedRun": {
+    "date": "2026-10-23T05:00:02.995Z",
+    "branchId": "0cf4a469-8d5b-4b7e-9672-b1025634595a",
+    "project": "nonwqoqushkdyjuhftzm",
+    "realTasksChanged": 0,
+    "passed": true,
+    "checks": {
+      "sender-requires-private-token": true,
+      "receiver-requires-signature": true,
+      "secretEnvelope": true,
+      "delivery": true,
+      "challenge": true,
+      "redirect": true,
+      "gone": true,
+      "retry": true,
+      "oversize": true
+    },
+    "outcomes": {
+      "delivery": {
+        "outcome": "delivered",
+        "status": 200
+      },
+      "challenge": {
+        "outcome": "delivered",
+        "status": 200
+      },
+      "redirect": {
+        "outcome": "refused",
+        "status": 302
+      },
+      "gone": {
+        "outcome": "gone",
+        "status": 410
+      },
+      "retry": {
+        "outcome": "retry",
+        "status": 429
+      },
+      "oversize": {
+        "outcome": "refused",
+        "status": 200
+      }
+    },
+    "diagnostics": {
+      "dns": "RESOLVED"
+    }
+  },
+  "sourceHashes": {
+    "supabase/functions/automation-webhooks/transport_test.ts": "bd0f07ca5201d25b45897ad1e8128cbb18aeb01399539c2494e1e7312a7a57f6",
+    "supabase/functions/automation-webhooks/socket.ts": "1611d0daeffae727b529fb33c58a29bcf5fea9ebbd3d4c3a14395e781572cc37",
+    "supabase/functions/automation-webhooks/socket_test.ts": "024a9dc60706987e6d909e7eebd0b77261c1b4386c72565fe5a6f389c512ba15",
+    "supabase/functions/automation-webhooks/secret.ts": "2c74c7f4051aa92d1f8b7b0f92e69bfae4f07424065fa965e1ac7b6e91a64da1",
+    "supabase/functions/automation-webhooks/deno.json": "e21d64e061a61d3dfaa342b09bef5fac4e19a112942e42d3770e69f972a33433",
+    "supabase/functions/automation-webhooks/deno.lock": "126a6925947d55d70530530120c55b1046acdc1fbcaea7db048ffcd489f20c04",
+    "supabase/functions/automation-webhooks/transport.ts": "14d9da1aa7d12ed7c851946de565eda7ac3cf7d80900fd9995ca9df4f342a687",
+    "Scripts/Diagnostics/webhook-transport-probe.ts": "3822b2f71f694f9144878195820a66d45403918714818da3fc8db509f414353a",
+    "Scripts/Diagnostics/test-webhook-transport-hosted.mjs": "90a83ded011934584c69796740b39dd9415b254d9945b8bd101d29df01d5b3a7"
+  },
+  "cleanup": {
+    "branchDeleted": true,
+    "branchAbsenceVerified": true,
+    "privateTokenFileRemoved": true,
+    "privateConnectionExportCreated": false,
+    "remainingTestUsers": 0,
+    "remainingTestTasks": 0,
+    "localTlsFixturesRemoved": true,
+    "nativeAppsLaunched": 0
+  },
+  "rejectedIterations": [
+    "Initial service-JWT literal comparison rejected the harness before transport; separate private acceptance token now authenticates the sender.",
+    "Node HTTPS shim lost original hostname during a pinned-IP request, producing hosted HandshakeFailure despite local TLS success. Replaced by Deno.connect -> Deno.startTls and explicit handshake.",
+    "Branch historical migration replay failed; only network/crypto was tested. No database replay repair or main modification was performed."
+  ],
+  "limits": [
+    "No subscription/outbox/dispatcher schema or native webhook management is implemented yet.",
+    "Probe signed echo proves transport, not arbitrary-recipient ownership verification.",
+    "TLS loopback fixtures substitute only dial route and test CA at the I/O boundary. Actual hosted requests use public DNS/IPs and normal platform trust.",
+    "Current payload bound is 256 KiB; complete event projection/large-task handling remains to be implemented without silent truncation.",
+    "Runtime/server master provisioning, rotation and recovery remain open.",
+    "Mac native private-Keychain/runtime remains deferred with signing."
+  ],
+  "mainReadback": {
+    "automationMigrations": 0,
+    "webhookMigrations": 0,
+    "webhookEndpointsPresent": false,
+    "existingFunctionsUnchanged": true
+  }
+}

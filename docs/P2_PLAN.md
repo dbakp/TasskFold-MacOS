@@ -4,7 +4,7 @@ Updated 23 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; webhook delivery is next, while signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Authorized subscriptions/outbox/dispatcher and native controls are next; signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -593,3 +593,19 @@ results, harness hashes, failed iterations and limits are recorded in
 runtime remains deferred. Main API/migrations and the ordinary native entry stay
 off. Next independent feature work is webhook delivery, followed by verified email
 intake, advanced teams and wearables; full Px remains active.
+
+
+23 October webhook transport checkpoint: each repo independently passes 11 local
+tests (seven TLS/HTTP substeps), lint/types/format checks and nine actual hosted
+checks. Delivery pins a checked public IP, then upgrades that socket with the
+original TLS hostname; signed bodies, bounded responses, retry hints and encrypted
+receiver-secret envelopes work in the hosted runtime. A locally passing Node HTTPS
+approach was rejected after hosted handshake failure; the direct path replaces it.
+No native app UI or production schema changed. The temporary branch and private
+acceptance token are removed, and main has no webhook endpoint or migration.
+
+This completes the transport foundation only. Next: authorized subscriptions,
+recipient verification and a durable task-change outbox/dispatcher, then native
+setup, delivery status and recovery controls. Full automatic webhooks and the
+remaining email/team/wearable backlog are still open. Complete requirements and
+limits: `WEBHOOKS.md`; exact proof: `p2-webhook-transport-evidence.json`.

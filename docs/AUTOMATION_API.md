@@ -499,3 +499,19 @@ tablet cohort after an unusable Simulator; `baseline-tablet` accepts only fully
 revoked prior keys, never an active or pending credential. Delete the acceptance
 branch and restore the staged configuration afterward. The Mac repo owns its
 backend code independently and does not build against this iOS harness.
+
+
+23 October webhook transport checkpoint: each repo independently passes 11 local
+tests (seven TLS/HTTP substeps), lint/types/format checks and nine actual hosted
+checks. Delivery pins a checked public IP, then upgrades that socket with the
+original TLS hostname; signed bodies, bounded responses, retry hints and encrypted
+receiver-secret envelopes work in the hosted runtime. A locally passing Node HTTPS
+approach was rejected after hosted handshake failure; the direct path replaces it.
+No native app UI or production schema changed. The temporary branch and private
+acceptance token are removed, and main has no webhook endpoint or migration.
+
+This completes the transport foundation only. Next: authorized subscriptions,
+recipient verification and a durable task-change outbox/dispatcher, then native
+setup, delivery status and recovery controls. Full automatic webhooks and the
+remaining email/team/wearable backlog are still open. Complete requirements and
+limits: `WEBHOOKS.md`; exact proof: `p2-webhook-transport-evidence.json`.
