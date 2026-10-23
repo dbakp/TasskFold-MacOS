@@ -1,5 +1,12 @@
-type Config = { url: string; serviceKey: string };
-type Dependencies = { send?: (request: Request) => Promise<Response> };
+import {
+  type Admission,
+  createAdmission,
+} from "../_shared/automation-admission.ts";
+type Config = { url: string; serviceKey: string; forwardedForMode?: string };
+type Dependencies = {
+  send?: (request: Request) => Promise<Response>;
+  admit?: Admission;
+};
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const json = (value: unknown, status = 200) =>
   new Response(JSON.stringify(value), {
@@ -84,7 +91,11 @@ function metadata(value: unknown) {
 }
 export function createHandler(config: Config, dependencies: Dependencies = {}) {
   const send = dependencies.send ?? fetch;
+  const admit = dependencies.admit ?? createAdmission(config, "keys", send);
   return async (request: Request): Promise<Response> => {
+    const started = performance.now();
+    const blocked = await admit(request);
+    if (blocked) return blocked;
     if (request.method !== "POST") {
       return json({ error: "Use POST to manage automation keys." }, 405);
     }
@@ -109,7 +120,10 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
       );
     }
     const controller = new AbortController();
-    const deadline = setTimeout(() => controller.abort(), 15000);
+    const deadline = setTimeout(
+      () => controller.abort(),
+      Math.max(1, 15000 - (performance.now() - started)),
+    );
     try {
       let input: { action?: unknown; body?: unknown };
       const reader = request.body?.getReader();

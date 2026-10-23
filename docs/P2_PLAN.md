@@ -421,8 +421,14 @@ Next required, in order:
    assertions plus 170 selected Core tests pass per repo. Private location markers
    stay behind native private-place review. Next: rejected-request controls and
    hosted acceptance, without reopening user-deferred work.
-3. Establish rejected-request/IP controls, then real hosted Auth/HTTP timeout,
-   quota, revocation and concurrent-effect acceptance with disposable users.
+3. Rejected-request admission now covers both handler entry points with independent
+   task/management global, IP and full-credential budgets. Each repo passes 157
+   admission SQL assertions, 140 real loopback checks, 40 Deno tests and lint;
+   existing 221 portable/101 mutation regressions pass. Its explicit IP trust mode
+   stays unset. Next: prove the actual hosted proxy append/overwrite contract,
+   then hosted Auth/HTTP timeout, quota, revocation and concurrent-effect acceptance
+   with disposable users. Function-level admission does not close provider-level
+   invocation billing or network protection.
 4. Verify signed-in phone/tablet and scoped Mac flows, then deploy the coherent
    gateway/client together. No user release-signing or physical-location gate is reopened.
 5. Continue idempotent email intake, verified sender/recipient permissions, signed
@@ -453,3 +459,14 @@ fixed absolute reminders, matching native behavior. This does not deploy/enable
 the API, fetch provider calendars or prove OS delivery. The 170 Core checks are
 native-reader/scheduling contracts, not a new Simulator UI walkthrough. Evidence:
 `p2-automation-portable-reminders-evidence.json`. The full Px goal stays active.
+
+
+23 October admission checkpoint: durable admission commits independently of task
+failures, with short-lived HMAC-only counters, bounded pruning, route-separated
+capacity and negative-only worker caches. Invalid/malformed requests are charged
+before validation; cached denials never grant access. Production entry points use
+the gate by default, and unknown proxy configuration fails closed. No hosted
+candidate was applied/deployed; the explicit forwarding mode is not yet verified
+or enabled. Local fixed-clock SQL and controlled loopback results are scoped in
+`p2-automation-ingress-evidence.json`; real multi-connection races, upstream trust,
+hosted native/clipboard acceptance and full Px remain open. User deferrals persist.

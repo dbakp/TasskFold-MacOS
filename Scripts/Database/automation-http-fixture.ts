@@ -9,6 +9,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 const handler = createHandler({
   url: "https://automation-http-fixture.invalid",
   serviceKey: "synthetic-loopback-service",
+  forwardedForMode: "supabase-append-v1",
 }, {
   send: async (request) => {
     const path = new URL(request.url).pathname;
@@ -17,6 +18,7 @@ const handler = createHandler({
         "/rest/v1/rpc/taskfold_automation_read",
         "/rest/v1/rpc/taskfold_automation_write",
         "/rest/v1/rpc/taskfold_automation_destinations",
+        "/rest/v1/rpc/taskfold_automation_admit",
       ].includes(path)
     ) throw new Error("Unexpected fixture RPC");
     return await fetch(

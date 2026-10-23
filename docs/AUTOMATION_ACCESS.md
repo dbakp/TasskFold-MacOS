@@ -110,3 +110,14 @@ HTTP checks run with the new migration loaded. The two process cases launch real
 independent xctest workers against a test-only synthetic atomic-item adapter;
 they cover competing writes, bounded lock failure, process death and symlink
 refusal. They do not prove actual multi-process Mac Keychain or SQL races.
+
+
+The inactive key-management handler now uses the shared admission gate before
+body parsing or its live Auth call. Its 600 global / 60 IP / 60 credential attempts
+per UTC minute are independent of task-route limits and of successful key issuance
+or permanent cancellation-history budgets. A rejection preserves the native private
+recovery state for an explicit retry. The server returns a safe `429`/Retry-After or
+fail-closed `503`. Gateway JWT rejections that occur before Edge invocation remain
+provider behavior. The explicit proxy trust mode is unset until real hosted probing;
+see `AUTOMATION_API.md` and `p2-automation-ingress-evidence.json`. No deployment or
+normal entry enablement occurred.

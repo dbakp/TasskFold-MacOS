@@ -120,6 +120,7 @@ try {
       "20261023002825_automation_enrollment_cancellation.sql",
       "20261023010559_automation_destinations.sql",
       "20261023011251_automation_portable_reminders.sql",
+      "20261023012417_automation_ingress_limits.sql",
     ]
   ) await load("../../supabase/migrations/" + file);
   await db.exec(

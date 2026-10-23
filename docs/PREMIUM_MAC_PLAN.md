@@ -2942,3 +2942,16 @@ HTTP checks, 170 selected Core tests and lint. No live keys/tasks or deployment
 changed. API-specific metadata bounds and remaining hosted/race/native-UI gates
 are explicit in `p2-automation-portable-reminders-evidence.json`. The full Px goal
 and all user deferrals remain active; abuse controls and hosted acceptance follow.
+
+
+### 23 October — durable rejected-request admission checkpoint
+
+Both inactive automation handlers now gate requests before Auth, body parsing or
+task work. Independent task/management route limits count global/IP/full-credential
+attempts, including invalid requests, using short-lived keyed fingerprints only.
+Separate commits survive later task rollback; negative-only caches reduce repeated
+limiter calls. Each repo passes 157 admission SQL, 221 portable and 101 mutation
+assertions, 140 actual loopback HTTP checks, 40 Deno tests and lint. No live
+candidate or proxy mode was enabled. Actual hosted header trust, concurrent locks,
+Auth/timeout/native acceptance and provider-level network controls remain open.
+See `p2-automation-ingress-evidence.json`. Full Px and user deferrals remain active.

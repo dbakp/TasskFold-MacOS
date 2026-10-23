@@ -1,0 +1,125 @@
+{
+  "date": "2026-10-23",
+  "platform": "macOS",
+  "baseCommit": "254532e1ac7e19b0310887311f6e3034107f5712",
+  "milestone": "Independent durable admission for valid and rejected automation attempts",
+  "featureEnabled": false,
+  "migrationApplied": false,
+  "edgeFunctionsDeployed": false,
+  "proxyTrustModeEnabled": false,
+  "proxyTrustVerified": false,
+  "realTasksChanged": 0,
+  "hostedKeysIssued": 0,
+  "fullPxComplete": false,
+  "candidateMigration": "20261023012417_automation_ingress_limits.sql",
+  "verification": {
+    "admissionSQL": {
+      "passed": true,
+      "assertions": 157,
+      "runtime": "Pinned PGlite 0.5.11; actual service-facing wrapper with current clock, actual owner-only algorithm with fixed clock for limits/rollover",
+      "checks": [
+        "Actual service-role public RPC",
+        "Route/IP/credential budgets and saturated global cardinality",
+        "Task exhaustion independent of key management",
+        "Rejected admissions remain charged; later independent failure cannot erase count",
+        "Minute reset and bounded TTL sweep",
+        "Client/service table ACL, private explicit-clock execute refusal, RLS and no raw payload columns"
+      ],
+      "notProven": "Independent PostgreSQL connections and hosted lock/statement budgets"
+    },
+    "mutationRegression": {
+      "passed": true,
+      "assertions": 101,
+      "loadsAllNineAutomationCandidates": true
+    },
+    "portableReminderRegression": {
+      "passed": true,
+      "assertions": 221,
+      "nativeReaderGoldens": 131
+    },
+    "realLoopbackHTTP": {
+      "passed": true,
+      "assertions": 140,
+      "resourceRPCCalls": 19,
+      "admissionRPCCalls": 121,
+      "checks": [
+        "Default production gate factory and actual SQL before task effects",
+        "Malformed operations consume remaining IP allowance",
+        "429/no-store/Retry-After at limit",
+        "Negative cache avoids another admission RPC",
+        "Rejected/rate-limited malformed operations never reach task SQL"
+      ],
+      "proxy": "Controlled local fixture, not hosted header-trust proof"
+    },
+    "deno": {
+      "passed": true,
+      "tests": 40,
+      "existingIsolatedHandlerTests": 31,
+      "newAdmissionTests": 9,
+      "checks": [
+        "Explicit proxy contract and IP canonicalization",
+        "Fixed RPC with domain-separated full-value HMACs",
+        "No positive cache, bounded dimension-specific negative cache and expiry",
+        "Fail-closed outages/configuration/oversized or inconsistent responses",
+        "Two-second stream cancellation",
+        "Both production factories guard before Auth/body/task work"
+      ]
+    },
+    "lint": {
+      "passed": true,
+      "files": 8
+    }
+  },
+  "limitsPerUTCMinute": {
+    "tasks": {
+      "global": 1200,
+      "ip": 120,
+      "credential": 120
+    },
+    "keys": {
+      "global": 600,
+      "ip": 60,
+      "credential": 60
+    }
+  },
+  "privacy": {
+    "rawIPStored": false,
+    "rawTokenStored": false,
+    "accountOrTaskPayloadStored": false,
+    "hmacKey": "Existing server-only service credential; never returned",
+    "retention": "Three-minute expiry; bounded 128-row sweep on allowed calls; bounded stale idle rows"
+  },
+  "unverified": [
+    "Hosted X-Forwarded-For append/spoof trust contract",
+    "Real concurrent PostgreSQL locks and races",
+    "Hosted Auth/TLS/PostgREST and timeout/cancel propagation",
+    "Provider invocation billing / upstream DDoS protection",
+    "Hosted native management, clipboard and broader acceptance",
+    "Coherent deployment and enablement"
+  ],
+  "failedIterations": [
+    "Admission transport initially declared the broader fetch overload instead of Request-only dependency; type corrected",
+    "New tests initially required explicit nonnull receipt narrowing; assertions corrected"
+  ],
+  "sourceSHA256": {
+    "supabase/migrations/20261023012417_automation_ingress_limits.sql": "d13ec1c00c09d509c9a23283480c6cf0a88dc67a3cba5e0321fed11396f22469",
+    "supabase/functions/_shared/automation-admission.ts": "d7ba914bf10eebeed3dccb44d2be98e499c4f1f4ff3be3069f03195710830179",
+    "supabase/functions/_shared/automation-admission_test.ts": "3f03f5eb481c6df8c2aa9f60798a127ca513eb9b39cc98fd60aee7440f41e538",
+    "supabase/functions/automation-tasks/handler.ts": "444ca0f482edfe36733095436fe3db642c46dee3b0cb9acae6b1cf1d5e622235",
+    "supabase/functions/automation-tasks/handler_test.ts": "0376a4a7b4e17088c245f234c94d0d0daed293a6d4d3049c7112e9ea8799a520",
+    "supabase/functions/automation-tasks/index.ts": "372ed38c911916e4ddf979a94a7528516eac1e577a67f604322993ce24fd089c",
+    "supabase/functions/automation-keys/handler.ts": "33cdf597cb84bbeffe1ab5fe74adac7bfdc2d6c2688413f91878352f905cd72f",
+    "supabase/functions/automation-keys/handler_test.ts": "ad2ec01fe7ed7cf1fd5f32a82fc704ebad65093782449dd30be2d05788c327cf",
+    "supabase/functions/automation-keys/index.ts": "fbf48999a4352372885951e49b4d60d95fea511557e2129e7f2b450196d88c6f",
+    "Scripts/Database/test-automation-ingress.mjs": "33d2be083389230ec8f9f1f02fb1f6f02eef33c365d083c0d8bb38601726e3ef",
+    "Scripts/Database/test-automation-mutations.mjs": "67b2ec0375537f4203d97a2984a6594ed0c04f4aa3aaa8bfdc074e97330b187c",
+    "Scripts/Database/automation-http-pipeline.mjs": "abf259da3262a4edccf77fd9366575435f2903e5f242dbad2361baba3d9825c6",
+    "Scripts/Database/automation-http-fixture.ts": "1de3ccf4d81a6e5634326d03da6b63322b3ab848855f76150b23bc2395189a11"
+  },
+  "liveMetadataReadback": {
+    "migrationApplied": false,
+    "ingressTableExists": false,
+    "admitRPCExists": false
+  },
+  "userDeferralsUnchanged": true
+}

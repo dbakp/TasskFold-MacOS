@@ -21,7 +21,8 @@ Capabilities are `tasks:read`, `tasks:create`, `tasks:update`, `tasks:complete`
 (including reopen) and `tasks:delete`. Checklist progress also requires complete.
 Keys last 7/30/90/365 days; issuance allows 20 active keys and 10 new keys per
 UTC day. Successful-operation budgets are 60/key/minute, 1,000/key/day and
-2,000/account/day. Rejected traffic still needs gateway/IP controls.
+2,000/account/day. A separate admission budget covers rejected traffic; its IP
+trust contract still needs a real hosted probe before enablement.
 
 Reads allow 8,192 input bytes; writes and responses allow 1,048,576 bytes.
 Input has a two-second deadline and the handler a 15-second overall deadline.
@@ -200,8 +201,8 @@ fixtures and example.invalid accounts are removed; local servers close afterward
 No app host is launched by these backend checks.
 
 Remaining before enablement: hosted native create/review/recovery/revoke acceptance
-(see `AUTOMATION_ACCESS.md`); rejected-request
-controls; real hosted Auth/TLS/PostgREST, timeout, concurrency, quota and revocation
+(see `AUTOMATION_ACCESS.md`); verify the admission proxy-header contract and budgets;
+real hosted Auth/TLS/PostgREST, timeout, concurrency, quota and revocation
 acceptance; then signed-in native flows and coherent deployment. Email intake,
 webhooks and advanced teams remain separate unfinished work. See
 `p2-automation-task-mutations-evidence.json`. The full Px objective remains active;
@@ -239,3 +240,73 @@ tests. The SQL runner loads all eight automation candidates in order. Source
 fingerprints and exact scope are in `p2-automation-portable-reminders-evidence.json`.
 Hosted delivery/races, native UI acceptance for this permission-copy change, abuse
 controls and coherent deployment remain open. The API stays disabled/undeployed.
+
+
+## Admission limits — inactive candidate
+
+Both production handler factories now admit every non-OPTIONS request before
+reading its body, checking task credentials or invoking live Auth/task operations.
+The service-only admission RPC commits separately from task effects, so later
+input/Auth/access/conflict failures do not erase this admission charge. Existing
+successful account/key quotas and immutable retry claims remain independent.
+
+| Per fixed UTC minute | Task route | Key management route |
+| --- | ---: | ---: |
+| Route-wide admission attempts | 1200 | 600 |
+| Canonical client IP | 120 | 60 |
+| Complete credential fingerprint | 120 | 60 |
+
+Management and task budgets are independent; exhausting the task route cannot
+consume management/revocation capacity. Every admission RPC first consumes its
+global allowance, then its IP allowance, then its credential allowance. A denial
+returns a minimal `429` with `Retry-After` (1–60 seconds), no-store headers and no
+private budget dimension. Invalid credentials share these same budgets. A failed
+limiter/configuration returns `503` and never authorizes work. Admission has a
+two-second network/stream deadline and 2048-byte response bound; this time is
+included in the handlers' existing total time budget. Hosted DB timeout
+propagation and concurrent lock behavior still require actual acceptance.
+
+The private counter table stores route/dimension, HMAC fingerprint, minute,
+count and expiry only. It contains no raw IP, token, account or task payload.
+HMAC-SHA256 uses the server service credential with distinct IP/credential domains;
+raw values never reach the admission RPC. Key rotation resets these transient
+fingerprints, not durable account/key usage. There are no direct client/service
+table grants; RLS is enabled. A route-local transaction lock makes its three
+budgets atomic. Expired non-global counters are pruned in batches of at most 128
+on allowed admission calls, with a three-minute expiry and global allocation cap.
+Idle stale rows remain bounded until later traffic; there is no task/history
+retention change. The owner-only explicit-clock helper enables deterministic
+rollover tests; the service entry always selects the server clock after its lock.
+
+Workers cache only negative decisions, at most 1024 entries for at most the
+reported minute remainder. Positive grants always consult the shared store.
+Cached denials avoid repeat database work and cancel the unconsumed body. This
+is function-level admission protection; it cannot prevent provider invocation
+charges or substitute for upstream network/DDoS controls.
+
+**Deployment prerequisite:** `TASKFOLD_AUTOMATION_FORWARDED_FOR_MODE` must remain
+unset until a hosted spoof/append probe proves the project's actual gateway adds
+an authoritative client IP as the last `X-Forwarded-For` hop. The implemented mode
+is `supabase-append-v1`. An unset/unknown mode, missing/malformed last hop, unsafe
+origin or missing service credential fails closed. Earlier forwarded prefixes,
+`X-Real-IP`, `CF-Connecting-IP` and caller-asserted key IDs do not select the budget.
+IPv4/IPv6 spelling is canonicalized; only complete credential HMACs are counted,
+so knowing another key's public UUID cannot consume its credential budget.
+The mode has **not** been enabled or verified on the hosted service. Proxy
+semantics cannot be inferred solely from a header's syntactic shape.
+
+Local verification per repo: 157 actual admission SQL assertions, 221 portable
+reminder and 101 mutation assertions, 140 loopback HTTP assertions, 40 Deno tests
+and lint. The HTTP run uses the actual default gate and real SQL; its controlled
+loopback proxy is not evidence about Supabase's hosted header trust. The older
+31 operation-specific handler unit tests explicitly bypass admission so their
+transport/projection checks remain isolated; nine additional admission tests cover
+both default factory entry points, fail-closed behavior, HMAC projection, caches
+and body cancellation/deadlines. See `p2-automation-ingress-evidence.json`.
+
+Sources checked: [Supabase rate limiting](https://supabase.com/docs/guides/functions/examples/rate-limiting),
+[Data API security](https://supabase.com/docs/guides/api/securing-your-api), and
+[Supabase client-IP discussion](https://github.com/orgs/supabase/discussions/7884).
+The published IP discussion identifies the header; it does not prove this project's
+current overwrite/append trust behavior. No new external limiter provider or
+client-facing API is enabled by this checkpoint.

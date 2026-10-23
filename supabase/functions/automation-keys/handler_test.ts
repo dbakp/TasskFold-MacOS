@@ -85,7 +85,13 @@ function fixture(
         : { account: options.account ?? owner, key },
     );
   };
-  return { handler: createHandler(config, { send }), calls };
+  return {
+    handler: createHandler(config, {
+      admit: () => Promise.resolve(null),
+      send,
+    }),
+    calls,
+  };
 }
 Deno.test("method, missing/legacy protocol, anonymous and malformed body fail before service calls", async () => {
   const f = fixture();
@@ -249,6 +255,7 @@ Deno.test("oversized and stalled caller bodies are bounded before authentication
 Deno.test("cancel uses verified owner/session and fixed RPC; projects only confirmed cancellation", async () => {
   let count = 0;
   const handler = createHandler(config, {
+    admit: () => Promise.resolve(null),
     send: async (req) => {
       count++;
       if (req.url.endsWith("/auth/v1/user")) {
@@ -308,6 +315,7 @@ Deno.test("cancel refuses malformed intent before Auth and unconfirmed receipts 
     ]
   ) {
     const handler = createHandler(config, {
+      admit: () => Promise.resolve(null),
       send: (req) =>
         Promise.resolve(
           req.url.endsWith("/auth/v1/user")

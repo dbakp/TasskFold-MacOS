@@ -58,6 +58,7 @@ const request = (action = "get", body: unknown = { id }, token = secret) =>
 function fixture(value: unknown = { task: task() }, status = 200) {
   const calls: Request[] = [];
   const handler = createHandler(config, {
+    admit: () => Promise.resolve(null),
     send: (req) => {
       calls.push(req.clone());
       return Promise.resolve(response(value, status));
@@ -261,6 +262,7 @@ Deno.test("oversized and invalid UTF-8 incoming streams refuse before service", 
 });
 Deno.test("upstream body bound, redirects/network errors and server configuration fail closed", async () => {
   const oversized = createHandler(config, {
+    admit: () => Promise.resolve(null),
     send: () =>
       Promise.resolve(
         response({ task: { ...task(), description: "x".repeat(1048577) } }),
@@ -271,6 +273,7 @@ Deno.test("upstream body bound, redirects/network errors and server configuratio
     "Oversized response accepted",
   );
   const failure = createHandler(config, {
+    admit: () => Promise.resolve(null),
     send: () => {
       throw new Error("PRIVATE SERVICE FAILURE " + secret);
     },
@@ -290,6 +293,7 @@ Deno.test("upstream body bound, redirects/network errors and server configuratio
   ) {
     let called = false;
     const handler = createHandler({ ...config, url }, {
+      admit: () => Promise.resolve(null),
       send: () => {
         called = true;
         throw new Error();

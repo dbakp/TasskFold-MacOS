@@ -1,5 +1,12 @@
-type Config = { url: string; serviceKey: string };
-type Dependencies = { send?: (request: Request) => Promise<Response> };
+import {
+  type Admission,
+  createAdmission,
+} from "../_shared/automation-admission.ts";
+type Config = { url: string; serviceKey: string; forwardedForMode?: string };
+type Dependencies = {
+  send?: (request: Request) => Promise<Response>;
+  admit?: Admission;
+};
 const uuid = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
 const fields = [
   "id",
@@ -391,7 +398,11 @@ function writeProjection(
 }
 export function createHandler(config: Config, dependencies: Dependencies = {}) {
   const send = dependencies.send ?? fetch;
+  const admit = dependencies.admit ?? createAdmission(config, "tasks", send);
   return async (request: Request): Promise<Response> => {
+    const started = performance.now();
+    const blocked = await admit(request);
+    if (blocked) return blocked;
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
@@ -435,7 +446,7 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
     const writes = new URL(request.url).pathname.endsWith("/write");
     const deadline = AbortSignal.any([
       request.signal,
-      AbortSignal.timeout(15000),
+      AbortSignal.timeout(Math.max(1, 15000 - (performance.now() - started))),
     ]);
     let input: unknown;
     const bodyDeadline = AbortSignal.any([deadline, AbortSignal.timeout(2000)]);

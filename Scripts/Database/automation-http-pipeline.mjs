@@ -19,7 +19,11 @@ export async function checkHttpPipeline(db, account, uuid) {
   const secret = "tfk_v1_" + key.replaceAll("-", "") +
     "_AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8";
   const hash = createHash("sha256").update(secret).digest("hex");
-  let rpcCalls = 0;
+  let rpcCalls = 0, admissionCalls = 0;
+  // This real-clock HTTP proof should not start near a fixed-window boundary.
+  // Detailed rollover assertions use the owner-only explicit-clock SQL algorithm.
+  const remaining=60000-Date.now()%60000;
+  if(remaining<15000)await new Promise(resolve=>setTimeout(resolve,remaining+100));
   try {
     await db.query(
       "insert into taskfold_private.automation_keys(id,user_id,name,token_hash,scopes,ttl_days,expires_at) values($1,$2,'Local HTTP fixture',$3,array['tasks:read','tasks:create','tasks:update','tasks:complete','tasks:delete'],30,clock_timestamp()+interval '1 day')",
@@ -44,6 +48,19 @@ export async function checkHttpPipeline(db, account, uuid) {
         const text = Buffer.concat(chunks).toString("utf8");
         assert(!text.includes(secret), "Raw authorization secret reached RPC");
         const body = JSON.parse(text);
+        if (req.url === "/rest/v1/rpc/taskfold_automation_admit") {
+          assert.equal(body._route, "tasks");
+          assert(/^[a-f0-9]{64}$/.test(body._ip_hash));
+          assert(/^[a-f0-9]{64}$/.test(body._credential_hash));
+          admissionCalls++;
+          const admitted = (await db.query(
+            "select public.taskfold_automation_admit($1,$2,$3) value",
+            [body._route, body._ip_hash, body._credential_hash],
+          )).rows[0].value;
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(admitted));
+          return;
+        }
         assert.equal(body._key, key);
         assert.equal(body._hash, hash);
         rpcCalls++;
@@ -124,6 +141,7 @@ export async function checkHttpPipeline(db, account, uuid) {
           headers: {
             Authorization: "Bearer " + secret,
             "X-Taskfold-Automation": "1",
+            "X-Forwarded-For": "192.0.2.10",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ action, body }),
@@ -139,6 +157,7 @@ export async function checkHttpPipeline(db, account, uuid) {
         status: reply.status,
         value: JSON.parse(text),
         cache: reply.headers.get("Cache-Control"),
+        retry: reply.headers.get("Retry-After"),
       };
     };
     const destinations = await call("projects", {});
@@ -278,6 +297,46 @@ export async function checkHttpPipeline(db, account, uuid) {
     same(removed.value.receipt.deleted, true);
     same((await call("get", { id: target })).status, 404);
     same(rpcCalls, 19);
+    const admittedBefore = admissionCalls;
+    let invalidAllowed = 0, blocked;
+    for (let i = 0; i < 130; i++) {
+      const attempt = await call("invalid-operation", {});
+      if (attempt.status === 429) {
+        blocked = attempt;
+        break;
+      }
+      same(
+        attempt.status,
+        400,
+        "Malformed operation is rejected after admission",
+      );
+      invalidAllowed++;
+    }
+    same(
+      invalidAllowed,
+      120 - admittedBefore,
+      "Rejected requests consume the same IP admission window",
+    );
+    same(blocked?.status, 429);
+    same(blocked?.cache, "no-store");
+    same(Number(blocked?.retry) > 0, true);
+    const deniedCalls = admissionCalls;
+    same((await call("invalid-operation", {})).status, 429);
+    same(
+      admissionCalls,
+      deniedCalls,
+      "Cached negative decision avoids another database call",
+    );
+    same(
+      rpcCalls,
+      19,
+      "Malformed and rate-limited attempts never reach task SQL",
+    );
+    same(
+      admissionCalls >= rpcCalls,
+      true,
+      "Every resource operation was durably admitted first",
+    );
     return checks;
   } finally {
     if (child && child.exitCode === null) {
