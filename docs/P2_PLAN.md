@@ -860,3 +860,35 @@ preview branch are removed after proof. Typed-password action logs are redacted;
 raw Xcode result archives are pruned after exporting summaries and safe images.
 Exact scope, versioned runs, source hashes and cleanup:
 `p2-webhook-native-hosted-evidence.json`.
+
+
+## Native clipboard and spoken secret review — 23 October
+
+Six scoped cases pass: three each on iPhone and iPad Simulator.
+
+The receiver-secret Reveal and Copy controls now use independent button targets
+inside the Form. Previously, tapping Copy could also activate Reveal and expose
+the raw value in the accessibility tree. The regression checks both directions:
+Reveal must leave the clipboard untouched, and Copy must keep the value masked.
+Backgrounding conceals a revealed value; continuing setup requires another
+explicit Reveal.
+
+The local acceptance host uses a synthetic in-memory service and enrollment
+vault. Clipboard and VoiceOver observations use the real Simulator OS services,
+not substitute clipboard or speech implementations. The Debug-only probe is
+restricted to exact isolated bundle IDs and explicit test arguments. It observes
+the real one-minute expiry, preserves newer clipboard content, and reports only
+fixed outcome strings. It never exports a receiver secret.
+
+The spoken check traverses the masked value and Reveal/Copy buttons with the
+actual VoiceOver service, activates Copy, and revisits the updated Copied control.
+This verifies its spoken label; it does not claim an automatic announcement on
+label change. The test restores VoiceOver's original state afterward.
+
+This is separate from the earlier hosted Auth/receiver/Keychain acceptance.
+Mac source has the same button fix and compiles independently; Mac pasteboard
+and spoken runtime acceptance remain open. Hardware clipboard handoff, native
+HTTP-loss/offline/token-expiry/master-key recovery, and the wider consent/history
+spoken walkthrough remain outside this round. Normal feature entries and main
+webhook schema/endpoints remain disabled. Exact results and cleanup:
+`p2-webhook-clipboard-speech-evidence.json`.

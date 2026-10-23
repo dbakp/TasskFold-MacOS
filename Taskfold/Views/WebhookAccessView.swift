@@ -29,6 +29,9 @@ struct WebhookAccessView: View {
     @State private var discard = false
     @State private var revealed = false
     @State private var copied = false
+    #if DEBUG
+    @State private var clipboardProof = "Clipboard check not started"
+    #endif
     var body: some View {
         Group {
             if let model, model.current { management(model) }
@@ -100,8 +103,18 @@ struct WebhookAccessView: View {
                         HStack {
                             Button(revealed ? "Hide secret" : "Reveal secret") { revealed.toggle() }.accessibilityIdentifier("webhookReveal")
                             Spacer()
-                            Button(copied ? "Copied" : "Copy secret") { if phase == .active, let current = model.secret { copied = WebhookClipboard.copy(current) } }.accessibilityIdentifier("webhookCopy")
-                        }
+                            Button(copied ? "Copied" : "Copy secret") {
+                                if phase == .active, let current = model.secret {
+                                    copied = WebhookClipboard.copy(current)
+                                    #if DEBUG
+                                    if copied && WebhookManagementFixture.clipboardTesting { clipboardProof = "Checking clipboard expiry"; Task { clipboardProof = await WebhookManagementFixture.checkClipboard(secret:current) } }
+                                    #endif
+                                }
+                            }.accessibilityIdentifier("webhookCopy")
+                        }.buttonStyle(.borderless)
+                        #if DEBUG
+                        if WebhookManagementFixture.clipboardTesting { Text(clipboardProof).font(.caption).accessibilityIdentifier("webhookClipboardProof") }
+                        #endif
                         Text("Copy stays on this device. The clipboard expires after one minute while Taskfold is open unless you copy something else.").font(.caption).foregroundStyle(.secondary)
                         Button("I’ve saved the secret") { revealed = false; copied = false; Task { await model.acknowledgeSaved() } }.accessibilityIdentifier("webhookAcknowledge")
                     } else {
@@ -276,6 +289,45 @@ private struct WebhookHistoryView: View {
 /// opt-in recovery fixture uses the real Backend and private OS Keychain.
 @MainActor enum WebhookManagementFixture {
     static var enabled: Bool { WebhookAccessAvailability.enabled && ProcessInfo.processInfo.arguments.contains("--uitesting") && UserDefaults.standard.bool(forKey:"localMode") && !ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test") }
+    static var clipboardTesting: Bool { enabled && ["com.dbakp.taskfold.workflowtestswebhooks","com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--webhook-clipboard-testing") }
+    /// Observe the real system pasteboard; expose only a fixed result in the
+    /// allowlisted local Debug host. Never export the copied value.
+    static func checkClipboard(secret:String) async -> String {
+        guard clipboardTesting else { return "Clipboard check unavailable" }
+        #if os(iOS)
+        let original = UIPasteboard.general.string
+        #else
+        let original = NSPasteboard.general.string(forType:.string)
+        #endif
+        guard original == secret else { return "Clipboard copy failed" }
+        let replace = ProcessInfo.processInfo.arguments.contains("--webhook-clipboard-replace")
+        let sample = "Synthetic Taskfold clipboard replacement " + UUID().uuidString
+        if replace {
+            #if os(iOS)
+            UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic:sample]],options:[.localOnly:true,.expirationDate:Date().addingTimeInterval(300)])
+            #else
+            NSPasteboard.general.prepareForNewContents(with:.currentHostOnly)
+            guard NSPasteboard.general.setString(sample,forType:.string) else { return "Clipboard replacement failed" }
+            #endif
+        }
+        do { try await Task.sleep(for:.seconds(62)) } catch { return "Clipboard check cancelled" }
+        #if os(iOS)
+        let value = UIPasteboard.general.string
+        #else
+        let value = NSPasteboard.general.string(forType:.string)
+        #endif
+        if replace {
+            guard value == sample else { return "New clipboard content was lost" }
+            // Remove only this probe's own sample, after preserving it past expiry.
+            #if os(iOS)
+            UIPasteboard.general.items = []
+            #else
+            NSPasteboard.general.clearContents()
+            #endif
+            return "New clipboard content preserved"
+        }
+        return value == nil ? "Copied secret expired" : "Copied secret did not expire"
+    }
     static func makeModel() async throws -> WebhookAccessModel { if ProcessInfo.processInfo.arguments.contains("--webhook-keychain-testing") { return try await WebhookKeychainFixture.makeModel() }; return WebhookAccessModel(account:WebhookFixtureService.account,origin:"https://backend.example",service:WebhookFixtureService(),vault:WebhookEnrollmentVault(io:WebhookFixtureMemory()),isCurrent:{true}) }
 }
 private final class WebhookFixtureMemory: CalendarSecureItemIO, @unchecked Sendable {
