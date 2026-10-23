@@ -3448,3 +3448,52 @@ properties. This round's scoped outcomes and baseline failure are recorded in
 Mac gesture/pasteboard/Keychain runtime acceptance remains open.
 Normal feature entry and main API enablement remain unchanged and disabled.
 The full Px objective and its existing user deferrals remain in force.
+
+
+## Hosted session and encryption recovery — 23 October
+
+Both independently owned server sources pass 50 hosted checks each, plus 29
+handler/dispatcher tests each. Cleanup readback confirms zero synthetic users,
+tasks, subscriptions and queued events, no owned functions or secrets, and an
+inactive scheduler; both preview branches and private connection files are removed.
+
+The hosted delivery runner now supports `--service-recovery` in each repository.
+It uses that repository's handler, dispatcher and migrations on a separate,
+non-persistent preview with no copied data. Temporary fault entrypoints use the
+real factories with an empty master catalog or a one-bit change to each master.
+They require the exact acceptance project at runtime. Production sources gain no
+fault flag, and normal app entries and the main service stay disabled.
+
+The runner expires a disposable account's actual server session through its
+`not_after` value. List, create and revoke must refuse the existing token; a new
+password sign-in must reconfirm the same enrollment without replacing its
+ciphertext, identity or expiry. This checks server session expiry, not elapsed
+JWT lifetime, native refresh-token handling or a user-facing reauthentication flow.
+
+Missing and incorrect masters must refuse receiver verification, preserve the
+pending enrollment and keep authenticated metadata/cleanup available. Restoring
+the original master must finish the same unexpired verification attempt. New
+creation with no master must leave no row, and discarding it must remain possible.
+
+For delivery, each fault defers one actual task event for the real five-minute
+backoff without contacting the receiver. History must show a pending event and a
+safe configuration issue, with no task text. Pause/resume keeps the event's payload
+fingerprint, and the normal dispatcher must not immediately release the queue.
+The runner waits for the original real deadline;
+the normal dispatcher must then deliver each original event once to the HMAC-
+checking TLS receiver. The complete received bytes must match the original
+payload SHA-256, and history must confirm delivery. The encrypted secret
+and its original validity period must not change. Revoke must still work while a
+master is unavailable. This is restoration of the original key, not recovery of
+an irretrievably lost key or a key-rotation implementation.
+
+The first draft of this test incorrectly expected a terminal failure; inspection
+confirmed the existing SQL intentionally retains a pending event for five minutes.
+The corrected test checks that contract without changing the SQL or shortening its
+clock. A second test-setup correction gives the two delivery scenarios separate
+accounts: pausing intentionally retains new events, so sharing an account had
+correctly queued an extra event. Both preliminary failures are harness assumptions,
+not product regressions; their synthetic resources were cleaned before rerunning. Exact independent runs, source hashes and cleanup are recorded in
+`p2-webhook-service-recovery-evidence.json`. Native reauthentication, Mac runtime,
+wider consent/history speech, email intake, advanced teams and wearable clients
+remain open. Existing user deferrals remain in force; full Px is not complete.
