@@ -4,7 +4,7 @@ Updated 23 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; native fault variants and clipboard/spoken checks remain next. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; scoped clipboard/spoken secret controls now pass; native recovery and the remaining spoken checks remain in progress. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -892,3 +892,50 @@ HTTP-loss/offline/token-expiry/master-key recovery, and the wider consent/histor
 spoken walkthrough remain outside this round. Normal feature entries and main
 webhook schema/endpoints remain disabled. Exact results and cleanup:
 `p2-webhook-clipboard-speech-evidence.json`.
+
+
+## Hosted native recovery acceptance — 23 October
+
+Two scoped native cases pass, one per device. The tablet retry keeps the exact
+saved intent after an interrupted UI run; the hosted fingerprint stays unchanged.
+
+This runtime/controller round uses iOS-owned app and diagnostic inputs. The
+commands below describe that iOS verification; Mac runtime remains unaccepted.
+
+The isolated native recovery runner now covers a committed create whose reply
+never reaches the enrollment model, a retry during a controlled webhook-service
+outage, and normal recovery after terminating/relaunching the app. The successful
+create is real HTTPS through Auth, Edge and PostgREST; the Debug-only hook throws
+`networkConnectionLost` after decoding that actual account-bound receipt. It does
+not replace the API with a fixture peer. The outage hook refuses webhook calls
+locally before sending; ordinary Auth and task sync still use their real service.
+These are controlled client fault injections, not physical radio loss or a TCP
+reset at the server. Both hooks require an exact isolated bundle, explicit flags,
+a disposable UUID email account and a non-main Supabase origin. They are absent
+from Release. The fault proof contains only account/setup UUIDs and a boolean.
+
+A private controller inspects the hosted subscription at commit, after the
+outage and after normal retry. There must be exactly one subscription for the
+disposable account, with the same ID, revision, settings, encrypted secret,
+creation time and expiry. Receiver proof and an actual native-created task then
+exercise the recovered secret through scheduled delivery, native history and
+revocation. The Mac app owns its matching hook source and builds independently;
+Mac Keychain/AppKit runtime acceptance is still deferred.
+
+The existing `--native` mode continues to require its four normal delivery and
+account-isolation cases. `--native-recovery` instead requires the recovery case
+on both phone and tablet, using the same guarded no-data branch setup, private
+controller files, signing helper and cleanup procedure. Run
+`testHostedWebhookLostCreateResponseRecoversAcrossRelaunch` sequentially on both
+devices before finishing that controller.
+
+The walkthrough also exposed a presentation follow-up: an error notice can sit
+above the automatically scrolled pending setup. Bring new failures into view
+before enabling this feature; the current test explicitly scrolls to inspect it.
+Session-expiry recovery, server master-key failure/recovery and the wider
+consent/history spoken walkthrough remain open before normal enablement.
+Email intake, advanced teams and wearables remain on the full Px backlog.
+Remote reminders, older-client safeguards, distribution/OAuth registration and
+physical location acceptance remain deferred. Main schema/endpoints and normal
+feature entries remain disabled. Exact outcomes and cleanup:
+`p2-webhook-native-recovery-evidence.json`.

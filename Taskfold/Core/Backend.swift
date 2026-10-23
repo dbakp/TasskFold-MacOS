@@ -158,6 +158,7 @@ final class Backend: NSObject {
     var session: Session?
     #if DEBUG
     private var discardedTodoistResponse = false
+    private var discardedWebhookCreateResponse = false
     #endif
     #if canImport(UIKit)
     private var authSession: ASWebAuthenticationSession?
@@ -399,10 +400,46 @@ final class Backend: NSObject {
         guard let receipt = try? JSONDecoder().decode([String: JSON].self, from: data), receipt["account"] == .string(account) else { throw AutomationKey.invalid }
         return receipt
     }
+    #if DEBUG
+    /// Controlled faults only in the isolated native host, on a disposable Auth
+    /// account and a non-main Supabase origin. Never available in Release.
+    private func webhookRecoveryTesting(account: String, origin: String) -> Bool {
+        let args = ProcessInfo.processInfo.arguments
+        guard ["com.dbakp.taskfold.workflowtestswebhooks", "com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? ""),
+              args.contains("--webhook-management-testing"), !args.contains("--uitesting"),
+              session?.user.id == account, let email = session?.user.email,
+              email.hasPrefix("taskfold-webhook-"), email.hasSuffix("@example.invalid"),
+              UUID(uuidString:String(email.dropFirst("taskfold-webhook-".count).dropLast("@example.invalid".count))) != nil,
+              let host = URL(string:origin)?.host, host != "zqxflydiyfjeedqvyova.supabase.co",
+              host.range(of:#"^[a-z]{20}\.supabase\.co$"#,options:.regularExpression) != nil else { return false }
+        return true
+    }
+    #endif
     func webhookReceipt(action: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
         guard !sessionTransition, session?.user.id == account, AutomationKey.canonicalID(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        #if DEBUG
+        if webhookRecoveryTesting(account:account,origin:origin), ProcessInfo.processInfo.arguments.contains("--webhook-recovery-offline") {
+            throw URLError(.notConnectedToInternet)
+        }
+        #endif
         let data = try await request("/functions/v1/automation-webhooks", method: "POST", body: ["action": .string(action), "body": .object(body)], extra: ["X-Taskfold-Automation": "1"], expectedAccount: account)
         guard let receipt = try? JSONDecoder().decode([String: JSON].self, from: data), receipt["account"] == .string(account) else { throw WebhookValue.invalid }
+        #if DEBUG
+        if !discardedWebhookCreateResponse, action == "create", webhookRecoveryTesting(account:account,origin:origin),
+           ProcessInfo.processInfo.arguments.contains("--webhook-discard-create-response"),
+           body["name"]?.text.hasPrefix("Native recovery receiver ") == true,
+           let id = body["id"]?.text, AutomationKey.canonicalID(id),
+           case .object(let row) = receipt["subscription"], row["id"] == .string(id), row["state"] == .string("pending") {
+            // Real HTTPS and server commit have completed. Discard that actual
+            // receipt before the enrollment model receives it; no fake API peer.
+            let proof:[String:JSON] = ["account":.string(account), "id":.string(id), "realSuccessDiscarded":.bool(true)]
+            let folder = FileManager.default.urls(for:.applicationSupportDirectory,in:.userDomainMask)[0].appendingPathComponent("Taskfold",isDirectory:true)
+            try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+            try JSONEncoder().encode(proof).write(to:folder.appendingPathComponent("webhook-recovery-proof.json"),options:.atomic)
+            discardedWebhookCreateResponse = true
+            throw URLError(.networkConnectionLost)
+        }
+        #endif
         return receipt
     }
     func automationKeyPage(account: String, origin: String, cursor: String? = nil, includeInactive: Bool = false) async throws -> AutomationKeyPage {
