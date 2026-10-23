@@ -108,8 +108,9 @@ these limits against provider costs before enabling delivery.
 Receipts become eligible for pruning after both creation and original receipt
 are older than 30 days; revoked routes require no remaining receipts. Old setup
 cancellations are also prunable. Activity and an administrative RPC perform
-bounded per-account cleanup. Scheduled maintenance for inactive accounts remains
-required; this is not a promise of exact automatic 30-day deletion. Seven-day
+bounded per-account cleanup. The inactive-account scheduler below now prepares bounded automatic cleanup;
+hosted scheduling acceptance remains required. This is not a promise of exact
+automatic 30-day deletion. Seven-day
 input/setup windows prevent unchanged ancient requests recreating work after
 pruning. The journal stores identity hashes, timestamps and task generation, not
 another email body, raw alias or provider payload.
@@ -126,7 +127,7 @@ corrections and limits are in `p2-email-intake-journal-evidence.json`.
 Still required: hosted/native acceptance of the management gateway, signed provider/MIME
 adapter with attested sender and original receipt time, native alias generation
 and private vault/recovery/UI, additional sender verification, source links,
-scheduled maintenance and hosted/native/provider acceptance. Provider/domain
+hosted scheduling and hosted/native/provider acceptance. Provider/domain
 configuration stays deferred by the user. Full email intake and Px remain open.
 
 ## Native-management gateway — local candidate
@@ -187,7 +188,8 @@ source hashes are in `p2-email-routes-gateway-evidence.json`.
 The native candidate below now implements address setup and private recovery.
 Next: its remaining acceptance, the verified provider adapter and later
 domain/provider configuration. Extra verified
-senders, source links and scheduled inactive-account maintenance remain open.
+senders and source links remain open; inactive-account maintenance is prepared
+locally below and still needs hosted scheduling acceptance.
 
 ## Native address setup and private recovery — candidate
 
@@ -253,7 +255,7 @@ re-enrollment before domain changes. Hosted migration acceptance stays open;
 changing the environment variable alone is not a rollout procedure.
 
 Next work remains trusted provider/MIME/sender/receipt integration, source links,
-scheduled inactive-account maintenance and the remaining native/hosted acceptance.
+hosted scheduling and the remaining native/hosted acceptance.
 Additional verified senders remain unfinished. The user will configure the provider
 and domain later; keep delivery and the native release flag disabled until the
 required integration and acceptance are ready. Rank 6 and the full Px goal remain
@@ -366,3 +368,76 @@ not the entire device. Mac runtime/Keychain, actual locked/denied storage, hoste
 reauthentication, wider network/concurrency, clipboard and human spoken checks
 remain open. No live configuration or native release flag is enabled. Exact safe
 proofs and source fingerprints are in `p2-email-keychain-recovery-evidence.json`.
+
+
+## Inactive-account retention — 23 October 2026
+
+`20261023182542_email_inactive_maintenance.sql` prepares an operator-only cron job
+for accounts that do not reopen Taskfold. Applying it installs
+`taskfold-email-maintenance` on a five-minute schedule **inactive**, with private
+state protected by RLS and no native, anonymous or service-role privileges. It
+needs no provider, network request, credentials or active email delivery.
+
+Each run visits at most 20 eligible accounts using a durable UUID cursor that
+wraps. Busy accounts are skipped and revisited instead of blocking every account
+after them. The transaction uses the same account advisory lock as delivery, route
+management and account removal. An overlapping run returns busy. Per account it
+deletes at most 500 records from each of three metadata tables: deliveries older
+than 30 days by **both** creation and original receipt time; revoked routes older
+than 30 days with no retained deliveries; and old setup-cancellation tombstones.
+Active/paused routes, recent metadata and task content are untouched. A row lock
+is skipped; a later deletion lock timeout rolls back that account's entire batch,
+including its counters, without preventing other accounts from progressing.
+
+This is eventual bounded maintenance, not a guarantee of deletion exactly at
+30 days. A large backlog or busy account can require more runs. Unchanged ancient
+delivery/setup requests still fail the existing seven-day admission windows after
+pruning; cleanup cannot recreate a deleted task or cancelled setup. Health retains
+only aggregate counts and timestamps, plus the private continuation cursor.
+
+### Operator configuration, after hosted acceptance
+
+Enable the pg_cron extension before applying this migration. Inspect the installed
+inactive job and private state before enabling it. Use a database-operator session:
+
+```sql
+select taskfold_private.configure_email_maintenance(true);
+-- To stop it, without erasing retained metadata:
+select taskfold_private.configure_email_maintenance(false);
+-- Inspect aggregate health:
+select enabled, last_run_at, last_counts from taskfold_private.email_maintenance;
+```
+
+The supported engine mode is pg_cron's libpq connection mode. Its command sets a
+20-second statement deadline **before** the cleanup SELECT; a timeout inside a
+function alone would not bound the outer statement. Upstream pg_cron's background-
+worker executor arms its deadline before executing that command, so configuration
+explicitly refuses `cron.use_background_workers=on`. A later mode change also
+refuses cleanup and publishes `unsupported_scheduler` health. Disabling always
+works. This migration never changes global scheduler settings or other jobs.
+Do not switch an existing project's scheduler mode without reviewing its other
+jobs; background-worker support with a separately bounded worker identity remains
+future work if the hosted environment requires that mode. Manual calls should
+also set their statement deadline before invoking the function.
+
+### Acceptance
+
+Each independently owned repo passes 70 actual PostgreSQL checks: retention clocks,
+metadata limits, cursor wrap, unchanged task snapshots, ancient replay rejection,
+account fencing, overlapping runs, row locks, rollback after partial deletion and
+atomic configuration failure. Official local advisors report no email findings;
+five existing minimal-fixture findings remain. Fourteen additional checks per repo
+use actual upstream pg_cron 1.6.8, compiled from a pinned commit/archive, with no
+new Docker image or build cache. A temporary one-second fixture schedule runs
+the unchanged cleanup command, proves deletion/preservation and disablement, then
+a deliberately sleeping fixture query proves the SET-before-SELECT deadline. A
+separate actual background-worker fixture proves configuration and runtime refusal.
+The ordinary intake concurrency regression still passes 43 checks per repo.
+
+All owned build/database containers and temporary extension files are removed.
+No hosted migration, job enablement, provider configuration or real task mutation
+occurred. App sources are unchanged in this milestone; earlier native build/UI
+evidence remains scoped as recorded. Exact sources/results and limits are in
+`p2-email-maintenance-evidence.json`. Next work is genuine hosted native recovery
+and verified provider/MIME/sender integration, source links and additional verified
+senders. Provider/domain configuration stays deferred; email and full Px remain open.

@@ -1,0 +1,510 @@
+{
+  "date": "2026-10-23",
+  "status": "Disabled locally accepted candidate; no hosted migration or enablement",
+  "repository": "TasskFold-MacOS",
+  "base_commit": "0ddba12ea2d73bf4bdec7da3f7bdbfca8125fd4d",
+  "source_sha256": {
+    "supabase/migrations/20261023182542_email_inactive_maintenance.sql": "340281d7368f06efc207e2c7cee484c3c380381bd12970473bd298e17182d354",
+    "Scripts/Database/test-email-maintenance.mjs": "334cd5ad2a6155483c4cab1ee4ededbcdcaa1672049473e90a09d4abc4fbb13c",
+    "Scripts/Database/test-email-maintenance-cron.mjs": "d5b53de39fb12351b76fa3ed23bbeed561bd677a7a95e327d9d64f526b9f8b7e",
+    "Scripts/Database/postgres-cron-fixture.mjs": "3eb78533a4e2be6d0679a0a5569202ffefbf8c35b373cdb3a6dbb85840d3e0b5",
+    "Scripts/Database/postgres-fixture.mjs": "c9d7c8a019927b2c63b75518fed8bbd778d9fab454d5a520a0c2891e48e3a923",
+    "Scripts/Database/package.json": "aee3ac7c6e4d1a673e69330bb2c59ae72000c8ad14625d43ce80aa906ede2286",
+    "Scripts/Database/email-intake-schema.mjs": "b5a5fa0efd8d26e651c24b260f904b9b47e0c8ae0d8d8d914e59083d0ad2af47"
+  },
+  "results": {
+    "database": {
+      "date": "2026-10-23T18:36:30.409Z",
+      "image": "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+      "checks": {
+        "installed inactive": true,
+        "bounded five minute schedule": true,
+        "cron deadline precedes invocation": true,
+        "disabled invocation": true,
+        "anon cannot execute run_email_maintenance()": true,
+        "anon cannot execute configure_email_maintenance(boolean)": true,
+        "anon cannot execute email_maintenance_accounts(uuid,timestamptz)": true,
+        "anon cannot read private state": true,
+        "anon actual invocation denied": true,
+        "authenticated cannot execute run_email_maintenance()": true,
+        "authenticated cannot execute configure_email_maintenance(boolean)": true,
+        "authenticated cannot execute email_maintenance_accounts(uuid,timestamptz)": true,
+        "authenticated cannot read private state": true,
+        "authenticated actual invocation denied": true,
+        "service_role cannot execute run_email_maintenance()": true,
+        "service_role cannot execute configure_email_maintenance(boolean)": true,
+        "service_role cannot execute email_maintenance_accounts(uuid,timestamptz)": true,
+        "service_role cannot read private state": true,
+        "service_role actual invocation denied": true,
+        "null enable refused": true,
+        "operator enables both scheduler and worker": true,
+        "real route setup succeeds": true,
+        "real delivery succeeds": true,
+        "inactive receipt removed": true,
+        "ancient delivery after pruning refused": true,
+        "pruning never changes saved task": true,
+        "both receipt clocks must expire": true,
+        "fresh-created and fresh-received receipts retained": true,
+        "active and paused routes retained": true,
+        "old empty revoked route pruned": true,
+        "old cancellation pruned": true,
+        "revoked route with receipt retained": true,
+        "recent revoked route retained": true,
+        "recent cancellation retained": true,
+        "expired setup cancellation removed": true,
+        "unchanged ancient setup cannot revive after pruning": true,
+        "receipt work capped at 500": true,
+        "cancellation work capped at 500": true,
+        "route waits for final receipt": true,
+        "cursor wraps and drains receipt remainder": true,
+        "drained old revoked route removed": true,
+        "cancellation remainder pruned": true,
+        "revoked route work capped at 500": true,
+        "revoked route remainder revisited": true,
+        "twenty accounts maximum": true,
+        "cursor leaves seven for next run": true,
+        "second range drains remaining accounts": true,
+        "empty job is safe": true,
+        "busy account skipped": true,
+        "other account progresses": true,
+        "busy account records untouched": true,
+        "busy account revisited after release": true,
+        "blocked deletion account skipped": true,
+        "rolled back receipt not counted": true,
+        "other account continues after rollback": true,
+        "partial receipt deletion rolled back": true,
+        "retry after blocked deletion removes receipt": true,
+        "retry after blocked deletion removes route": true,
+        "overlapping tick refused": true,
+        "live operation observes maintenance account lock": true,
+        "live operation continues after cleanup commit": true,
+        "locked metadata row retained": true,
+        "unlocked metadata row revisited": true,
+        "disabled again leaves eligible records": true,
+        "disable preserves metadata": true,
+        "no task changes across all runs": true,
+        "monitoring contains aggregates only": true,
+        "scheduler failure surfaced": true,
+        "scheduler failure rolls back enabled state": true,
+        "official advisors no email warning or error": true
+      },
+      "hostedAcceptance": false,
+      "cron": "SQL scheduling contract shim; actual pg_cron timer not exercised",
+      "postgresVersion": 170006,
+      "accountBarrier": {
+        "pid": 1094,
+        "event": "advisory",
+        "blockers": [
+          1081
+        ]
+      },
+      "advisors": {
+        "ran": true,
+        "source": "supabase db advisors --type all",
+        "result": [
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+          },
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+          },
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+          },
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+          },
+          {
+            "name": "function_search_path_mutable",
+            "title": "Function Search Path Mutable",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "SECURITY"
+            ],
+            "description": "Detects functions where the search_path parameter is not set.",
+            "detail": "Function `public.is_project_owner` has a role mutable search_path",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+            "metadata": {
+              "name": "is_project_owner",
+              "type": "function",
+              "schema": "public"
+            },
+            "cache_key": "function_search_path_mutable_public_is_project_owner_8f50cf28f66c9989c028839a0b8123dc"
+          }
+        ],
+        "emailFindings": []
+      },
+      "passed": true,
+      "containerRemoved": true
+    },
+    "actual_cron": {
+      "date": "2026-10-23T18:36:29.319Z",
+      "checks": {
+        "actual extension version": true,
+        "actual installed cron job inactive": true,
+        "actual timer invokes cleanup successfully": true,
+        "inactive old record removed by timer": true,
+        "recent record retained by timer": true,
+        "timer writes private aggregate health": true,
+        "disabled timer performs no further cleanup": true,
+        "actual job remains inactive": true,
+        "actual timer enforces SET before query deadline": true,
+        "actual background worker mode refused": true,
+        "unsupported mode keeps state and job inactive": true,
+        "mode change after enablement blocks cleanup": true,
+        "unsupported mode retains old metadata": true,
+        "unsupported mode publishes aggregate health": true
+      },
+      "hostedAcceptance": false,
+      "cronSource": {
+        "version": "1.6.8",
+        "commit": "5cedfa472ccc83567aa23ec645925ed8489a7797",
+        "sha256": "cba185da9308d2c624ded35a596937ce391badd60665ab6badc55bd8e78a1e94",
+        "url": "https://codeload.github.com/citusdata/pg_cron/tar.gz/5cedfa472ccc83567aa23ec645925ed8489a7797"
+      },
+      "librarySha256": "8ed4a893679a9f74bcd3bc19e2a64eac98190533287917c05808f9fdba982e4f",
+      "postgresVersion": 170006,
+      "connectionFixtureRemoved": true,
+      "passed": true,
+      "containerRemoved": true
+    },
+    "intake_concurrency": {
+      "date": "2026-10-23T18:33:18.645Z",
+      "image": "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+      "checks": {
+        "domain-change-before-create result": true,
+        "stale worker creates no route after domain change": true,
+        "create-before-domain-change result": true,
+        "configuration sees newly committed enrollment after lock wait": true,
+        "configuration cannot revoke concurrent native setup": true,
+        "explicit re-enrollment binds changed domain": true,
+        "actual paused route prevents provider change": true,
+        "actual PostgreSQL refuses snapshot-isolated configuration": true,
+        "actual delivery refuses mismatched verified envelope domain": true,
+        "wrong recipient domain cannot create task": true,
+        "old delivery RPC refuses service role": true,
+        "all exact concurrent retries accepted": true,
+        "exactly one worker creates": true,
+        "eleven workers acknowledge original": true,
+        "concurrent retry task count": true,
+        "concurrent retry journal count": true,
+        "conflicting concurrent replay has one winner": true,
+        "conflicting concurrent replay refuses loser": true,
+        "conflict cannot duplicate task": true,
+        "actual PostgreSQL key matches JS contract": true,
+        "actual PostgreSQL Unicode fingerprint matches JS contract": true,
+        "journal failure refuses whole transaction": true,
+        "task generation and receipt all rolled back": true,
+        "same request can retry after rollback": true,
+        "cancel-before-create result": true,
+        "cancelled race creates no route": true,
+        "pause-before-delivery result": true,
+        "delivery-before-pause result": true,
+        "committed delivery precedes later pause": true,
+        "later replay sees paused state": true,
+        "membership-removal-before-delivery result": true,
+        "membership race creates no Inbox fallback": true,
+        "archive-before-delivery result": true,
+        "project-delete-before-delivery result": true,
+        "Auth-email-change-before-delivery result": true,
+        "verification-removal-before-delivery result": true,
+        "session-expiry-before-management result": true,
+        "provider capture independent of native sign-in expiry": true,
+        "account-removal-before-delivery result": true,
+        "quota race has one accepted final slot": true,
+        "quota race refuses other final slot": true,
+        "quota race exact receipt bound": true,
+        "official advisors no new email warnings or errors": true
+      },
+      "barriers": [
+        {
+          "label": "domain-change-before-create",
+          "pid": 267,
+          "event": "transactionid",
+          "blockers": [
+            254
+          ]
+        },
+        {
+          "label": "create-before-domain-change",
+          "pid": 309,
+          "event": "transactionid",
+          "blockers": [
+            296
+          ]
+        },
+        {
+          "label": "cancel-before-create",
+          "pid": 612,
+          "event": "advisory",
+          "blockers": [
+            599
+          ]
+        },
+        {
+          "label": "pause-before-delivery",
+          "pid": 646,
+          "event": "advisory",
+          "blockers": [
+            633
+          ]
+        },
+        {
+          "label": "delivery-before-pause",
+          "pid": 681,
+          "event": "advisory",
+          "blockers": [
+            668
+          ]
+        },
+        {
+          "label": "membership-removal-before-delivery",
+          "pid": 746,
+          "event": "transactionid",
+          "blockers": [
+            732
+          ]
+        },
+        {
+          "label": "archive-before-delivery",
+          "pid": 787,
+          "event": "transactionid",
+          "blockers": [
+            774
+          ]
+        },
+        {
+          "label": "project-delete-before-delivery",
+          "pid": 821,
+          "event": "transactionid",
+          "blockers": [
+            809
+          ]
+        },
+        {
+          "label": "Auth-email-change-before-delivery",
+          "pid": 850,
+          "event": "transactionid",
+          "blockers": [
+            836
+          ]
+        },
+        {
+          "label": "verification-removal-before-delivery",
+          "pid": 885,
+          "event": "transactionid",
+          "blockers": [
+            871
+          ]
+        },
+        {
+          "label": "session-expiry-before-management",
+          "pid": 919,
+          "event": "transactionid",
+          "blockers": [
+            906
+          ]
+        },
+        {
+          "label": "account-removal-before-delivery",
+          "pid": 960,
+          "event": "transactionid",
+          "blockers": [
+            947
+          ]
+        }
+      ],
+      "hostedAcceptance": false,
+      "containerRemoved": true,
+      "postgresVersion": 170006,
+      "advisors": {
+        "ran": true,
+        "source": "supabase db advisors --type all",
+        "result": [
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+          },
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+          },
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+          },
+          {
+            "name": "auth_rls_initplan",
+            "title": "Auth RLS Initialization Plan",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "PERFORMANCE"
+            ],
+            "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+            "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+            "metadata": {
+              "name": "tasks",
+              "type": "table",
+              "schema": "public"
+            },
+            "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+          },
+          {
+            "name": "function_search_path_mutable",
+            "title": "Function Search Path Mutable",
+            "level": "WARN",
+            "facing": "EXTERNAL",
+            "categories": [
+              "SECURITY"
+            ],
+            "description": "Detects functions where the search_path parameter is not set.",
+            "detail": "Function `public.is_project_owner` has a role mutable search_path",
+            "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+            "metadata": {
+              "name": "is_project_owner",
+              "type": "function",
+              "schema": "public"
+            },
+            "cache_key": "function_search_path_mutable_public_is_project_owner_8f50cf28f66c9989c028839a0b8123dc"
+          }
+        ],
+        "emailFindings": []
+      },
+      "passed": true
+    }
+  },
+  "invariants": [
+    "At most 20 eligible accounts per tick, durable cursor with wrap and busy-account revisits",
+    "At most 500 deletions per metadata table per account, protected by existing account fence",
+    "Both receipt clocks must exceed 30 days; active/paused routes and task content preserved",
+    "Row-lock skip and per-account partial-deletion rollback; aggregate counters match committed work",
+    "Existing seven-day admission windows still reject ancient delivery and setup after pruning",
+    "No native/anonymous/service-role table or EXECUTE privileges; operator configuration only",
+    "Inactive install; no network, aliases, email bodies or credentials in command/state/health",
+    "Actual libpq cron timer, disablement and SET-before-query timeout verified",
+    "Background-worker mode refused at configuration and runtime, including enabled state carried across mode change"
+  ],
+  "limits": [
+    "Local synthetic PostgreSQL 17.6 and upstream pg_cron 1.6.8, not hosted Supabase acceptance",
+    "Contract suite models cron metadata/functions; separate actual-engine suite proves scheduling",
+    "Timer uses one-second synthetic schedule; migration retains five-minute production schedule",
+    "Deadline fault shortens only fixture timeout to 50ms and sleeps; migration deadline is 20 seconds",
+    "Background-worker execution requires future separately bounded identity support if hosted project uses that mode; no global setting changed",
+    "Batch bounds and busy work mean eventual deletion, not an exact 30-day purge guarantee",
+    "Provider/MIME/sender integration, hosted native recovery/reauthentication, source links and additional senders remain",
+    "No app/UI changes this milestone; native builds and spoken/Mac acceptance are not implied",
+    "Full Px including advanced teams/wearables and all user release deferrals remains active"
+  ],
+  "documentation": [
+    "https://supabase.com/docs/guides/cron",
+    "https://supabase.com/docs/guides/cron/quickstart",
+    "https://github.com/citusdata/pg_cron/releases/tag/v1.6.8",
+    "https://github.com/citusdata/pg_cron/blob/5cedfa472ccc83567aa23ec645925ed8489a7797/src/pg_cron.c"
+  ],
+  "cleanup": "All owned runtime/build containers and temporary extension directories removed; no new Docker image/build cache; unrelated containers/caches preserved"
+}

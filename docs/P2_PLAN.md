@@ -1335,3 +1335,26 @@ verified senders. Provider/domain configuration remains deferred by the user;
 keep email delivery and its native release flag disabled. Advanced teams and
 wearable clients remain in the full ranked backlog; existing release deferrals
 stay in force.
+
+
+## Email inactive-account maintenance — 23 October, local acceptance
+
+Both repos independently prepare an inactive, operator-only five-minute cleanup
+job. It visits at most 20 accounts and deletes at most 500 eligible records per
+metadata table/account, preserves task content and fresh retry identity, skips
+busy work and wraps its durable cursor. Partial-account rollback and existing
+account-removal/intake fencing are verified. Each repo passes 70 actual PostgreSQL
+checks, 14 actual pg_cron timer/deadline/mode checks and the 43-case intake
+concurrency regression. Temporary containers and compiled extension files are
+removed; no hosted service or job is enabled.
+
+The deadline is verified in libpq scheduler mode; background-worker mode is
+explicitly refused at configuration and runtime rather than implying a bound its
+executor does not supply. Hosted environment acceptance remains open. Do not
+change a project's global scheduler settings to bypass this gate. Exact evidence
+is in `p2-email-maintenance-evidence.json`; operator steps are in `EMAIL_CAPTURE.md`.
+
+Next: genuine hosted native email recovery and verified provider/MIME/sender
+integration, source links and additional verified senders. User provider/domain
+configuration remains deferred. Advanced teams, wearable clients, wider acceptance
+and the full ranked Px objective remain active with the existing release deferrals.

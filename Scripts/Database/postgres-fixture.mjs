@@ -8,7 +8,10 @@ export const postgresImage =
   "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94";
 export const literal = (value) =>
   "'" + String(value).replaceAll("'", "''") + "'";
-export async function createPostgresFixture({ advisors = false } = {}) {
+export async function createPostgresFixture(
+  { advisors = false, cronDirectory = null, cronBackgroundWorkers = false } =
+    {},
+) {
   const name = "taskfold-task-pg-" + randomUUID().slice(0, 8),
     label = randomUUID(),
     holders = new Set();
@@ -192,12 +195,30 @@ export async function createPostgresFixture({ advisors = false } = {}) {
       "com.taskfold.fixture=" + label,
       "-e",
       "POSTGRES_HOST_AUTH_METHOD=trust",
+      ...(cronDirectory
+        ? [
+          "--mount",
+          `type=bind,src=${cronDirectory}/pg_cron.so,dst=/usr/local/lib/postgresql/pg_cron.so,readonly`,
+          "--mount",
+          `type=bind,src=${cronDirectory}/extension,dst=/usr/local/share/postgresql/extension,readonly`,
+        ]
+        : []),
       postgresImage,
       "postgres",
       "-c",
       "max_connections=40",
       "-c",
       "shared_buffers=32MB",
+      ...(cronDirectory
+        ? [
+          "-c",
+          "shared_preload_libraries=pg_cron",
+          "-c",
+          "cron.database_name=postgres",
+          "-c",
+          `cron.use_background_workers=${cronBackgroundWorkers ? "on" : "off"}`,
+        ]
+        : []),
     ], { timeout: 15000 });
     created = true;
     let ready = false;

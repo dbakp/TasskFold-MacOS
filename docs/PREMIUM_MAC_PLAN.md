@@ -3720,3 +3720,17 @@ screenshots retained locally in this repo. These are not Mac runtime or Mac
 Keychain acceptance. `p2-email-keychain-recovery-evidence.json` records the exact
 scope. Provider/domain configuration is deferred, delivery remains disabled, and
 the full Px backlog and user release deferrals remain active.
+
+
+## Email inactive-account maintenance — 23 October
+
+This repo now independently owns the disabled, operator-only scheduled retention
+candidate and its actual PostgreSQL/pg_cron acceptance. Seventy database checks,
+fourteen timer/deadline/mode checks and forty-three intake-concurrency regression
+checks pass. Task snapshots remain unchanged; only eligible retry metadata is
+pruned. The actual engine test found that background-worker mode cannot inherit
+a deadline set within its job command, so that mode is explicitly refused while
+libpq mode is accepted. No global scheduler settings or hosted jobs are changed.
+App/UI sources are unchanged; no new Mac runtime claim is made.
+`p2-email-maintenance-evidence.json` retains exact evidence. Provider/domain setup
+and full email/Px acceptance remain open with the existing user deferrals.
