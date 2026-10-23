@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-23",
+  "thisRepo": "TasskFold-MacOS",
+  "scope": "First internal email-intake content and retry-identity component",
+  "userDecision": "No inbound provider/domain available; prepare for later configuration",
+  "sourceHashes": {
+    "supabase/functions/_shared/email-content.ts": "00fa101257242e674bc797f7078d923eb30e64c7995ef41133821337078c2107",
+    "supabase/functions/_shared/email-content_test.ts": "a15e6c231faa1315dd4bd411435a0e63384597f9962d14daf998e86efe82eabe"
+  },
+  "tests": {
+    "command": "deno test supabase/functions/_shared/email-content_test.ts",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "lint": "Passed"
+  },
+  "initialLintCorrection": "Replaced intentional control-character regular expressions flagged by no-control-regex with explicit character-code validation. All content tests passed before and after the correction.",
+  "implemented": [
+    "Strict versioned bounded UTF-8 content schema",
+    "Plain text/Unicode/indentation preservation and line-ending normalization",
+    "Honest omitted-attachment count, no file retrieval",
+    "Control/header injection and unknown authorization/destination-field rejection",
+    "Versioned provider receipt plus route delivery key, separate content fingerprint for replay conflicts"
+  ],
+  "notImplemented": [
+    "Authenticated provider adapter and public gateway",
+    "Atomic journal/task creation and replay enforcement",
+    "Route management, verified sender/destination authorization, quotas and account-removal integration",
+    "Native setup/recovery UI",
+    "Real configured email delivery and app-rendering acceptance"
+  ],
+  "deployed": false,
+  "databaseChanged": false,
+  "realMailSentOrReceived": false,
+  "tasksChanged": false,
+  "fullFeatureComplete": false
+}

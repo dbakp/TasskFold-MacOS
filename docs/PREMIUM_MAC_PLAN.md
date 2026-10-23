@@ -3664,3 +3664,14 @@ Next feature implementation: idempotent email-to-task intake, followed by advanc
 teams and wearable clients. Provider/domain configuration remains undecided; live
 mail delivery must stay gated until configured and verified. Full Px remains
 active, and all existing user deferrals stay unchanged.
+
+
+## Email intake preparation — 23 October
+
+Provider/domain configuration is deferred by the user; feature preparation
+continues. This repo now independently owns the bounded content/retry component
+and its ten passing Deno tests plus lint, with no app, database or live delivery
+change. `EMAIL_CAPTURE.md` orders the remaining journal/route permissions, provider
+bridge and native setup/recovery work. Keep native setup consistent with the
+existing app, and do not display an address as usable before verified provider
+configuration. Full intake and Px remain open.

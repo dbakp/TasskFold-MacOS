@@ -1215,6 +1215,19 @@ and verified test-app/preview cleanup are in
 unchanged; their previous committed suite/build evidence remains applicable.
 
 Next feature implementation: idempotent email-to-task intake, followed by advanced
-teams and wearable clients. Provider/domain configuration remains undecided; live
+teams and wearable clients. The user will configure the provider/domain later; live
 mail delivery must stay gated until configured and verified. Full Px remains
 active, and all existing user deferrals stay unchanged.
+
+
+## Email intake preparation — 23 October
+
+The user has deferred provider/domain setup and authorized preparation now. The
+first independently owned server component normalizes bounded plain text and
+provides a provider-receipt/route key separate from content fingerprint, so the
+next atomic journal can distinguish safe retries from changed-content conflicts.
+Both repos pass ten Deno cases and lint. This milestone sends no mail, creates no
+task and exposes no endpoint. Native setup, sender/recipient authorization, quota
+and journal enforcement, provider integration and real delivery remain open.
+`EMAIL_CAPTURE.md` gives the ordered contract and gates;
+`p2-email-content-evidence.json` records exact scope.
