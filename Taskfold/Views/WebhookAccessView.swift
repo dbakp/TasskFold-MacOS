@@ -82,7 +82,6 @@ struct WebhookAccessView: View {
                     Text("Send task changes to a trusted receiver. Choose its reach, verify the connection, and see how delivery is doing.").foregroundStyle(.secondary)
                 }.padding(.vertical,8)
             }
-            if let notice = model.message { Section { Label(notice,systemImage:"exclamationmark.circle").fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("webhookNotice") } }
             if let action = model.uncertainAction {
                 Section("Action awaiting confirmation") {
                     Text("\(actionTitle(action)) was not confirmed. Retry the same request, or reload the server’s current status before choosing another action.")
@@ -136,7 +135,11 @@ struct WebhookAccessView: View {
                 if model.busy { ProgressView("Confirming…") }
             }
         }
+        .accessibilityIdentifier("webhookManagementForm")
         .formStyle(.grouped)
+        .safeAreaInset(edge:.top,spacing:0) {
+            if let notice = model.message { WebhookNotice(message:notice,identifier:"webhookNotice") }
+        }
         .disabled(model.busy)
         .onChange(of:model.pending?.draft.id) { old,new in
             Task { @MainActor in
@@ -222,6 +225,22 @@ private struct WebhookComposer: View {
         .overlay { if phase != .active || !model.current { Rectangle().fill(.background).overlay { Label("Task connections",systemImage:"lock.fill").foregroundStyle(.secondary) } } }
     }
 }
+/// Keep failed-action feedback visible without moving keyboard or VoiceOver
+/// focus, even when the form restores a pending setup's scroll position.
+private struct WebhookNotice: View {
+    let message: String
+    let identifier: String
+    var body: some View {
+        HStack(alignment:.top,spacing:10) {
+            Image(systemName:"exclamationmark.circle").foregroundStyle(.secondary).dynamicTypeSize(...DynamicTypeSize.xxxLarge).accessibilityHidden(true)
+            Text(message).fixedSize(horizontal:false,vertical:true).frame(maxWidth:.infinity,alignment:.leading).accessibilityIdentifier(identifier)
+        }
+        .font(.callout)
+        .padding(.horizontal,20).padding(.vertical,12)
+        .background(.background)
+        .overlay(alignment:.bottom) { Divider() }
+    }
+}
 private struct WebhookHistoryView: View {
     let model: WebhookAccessModel
     let connection: WebhookConnection
@@ -233,7 +252,6 @@ private struct WebhookHistoryView: View {
         NavigationStack {
             List {
                 Section { Text("Delivery records expire after seven days. Payloads expire after 24 hours. A failed part can be retried up to three times without changing its identity.").foregroundStyle(.secondary) }
-                if let message = model.message { Section { Text(message) } }
                 if let recovery = current.delivery.recovery { Section { Label(recovery,systemImage:"exclamationmark.circle") } }
                 if model.historyID == connection.id {
                     if model.history.isEmpty { ContentUnavailableView("No delivery records",systemImage:"tray",description:Text("New changes appear here after this receiver is verified.")) }
@@ -256,7 +274,14 @@ private struct WebhookHistoryView: View {
                 Button("Reload history") { Task { await model.loadHistory(current) } }.disabled(model.busy)
                 if model.busy { ProgressView("Loading…") }
             }
+            .accessibilityIdentifier("webhookHistoryForm")
+            .safeAreaInset(edge:.top,spacing:0) {
+                if let notice = model.message { WebhookNotice(message:notice,identifier:"webhookHistoryNotice") }
+            }
             .navigationTitle("Delivery history")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar { ToolbarItem(placement:.confirmationAction) { Button("Done") { dismiss() } } }
             .task { await model.loadHistory(connection) }
             .confirmationDialog("Retry this delivery?",isPresented:Binding(get:{retry != nil},set:{if !$0 { retry = nil }}),titleVisibility:.visible) {
@@ -289,6 +314,7 @@ private struct WebhookHistoryView: View {
 /// opt-in recovery fixture uses the real Backend and private OS Keychain.
 @MainActor enum WebhookManagementFixture {
     static var enabled: Bool { WebhookAccessAvailability.enabled && ProcessInfo.processInfo.arguments.contains("--uitesting") && UserDefaults.standard.bool(forKey:"localMode") && !ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test") }
+    static var noticeTesting: Bool { enabled && ["com.dbakp.taskfold.workflowtestswebhooks","com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--webhook-notice-testing") }
     static var clipboardTesting: Bool { enabled && ["com.dbakp.taskfold.workflowtestswebhooks","com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--webhook-clipboard-testing") }
     /// Observe the real system pasteboard; expose only a fixed result in the
     /// allowlisted local Debug host. Never export the copied value.
@@ -342,6 +368,8 @@ private final class WebhookFixtureMemory: CalendarSecureItemIO, @unchecked Senda
     private let eventID = "f0b2cafe-0000-4000-8000-000000000031"
     private var rows: [String:[String:JSON]] = [:]
     private var retried = false
+    private var failedCreates = 0
+    private var failedHistory = false
     init() { var row = subscription(id:existing,name:"Design handoff",origin:"https://receiver.example",scope:"inbox",project:.null,events:[.string("task.created")],days:30);row["state"] = .string("active");rows[existing] = row }
     private func delivery(_ warning:Bool) -> JSON { .object(["version":.number(1),"pending":.number(retried ? 1 : 0),"retained_bytes":.number(200),"missed":.number(warning ? 3 : 0),"capture_issue":warning ? .string("event_quota") : .null,"missed_since":.null,"missed_until":.null,"blocked_reason":.null,"last_error":.null,"last_success":.null,"last_failure":.null,"delivered":.number(4),"failed":.number(1)]) }
     private func subscription(id:String,name:String,origin:String,scope:String,project:JSON,events:[JSON],days:Int) -> [String:JSON] {
@@ -353,6 +381,10 @@ private final class WebhookFixtureMemory: CalendarSecureItemIO, @unchecked Senda
         if action == "list" { return ["account":.string(account),"subscriptions":.array(rows.values.sorted{$0["name"]!.text < $1["name"]!.text}.map(JSON.object)),"next_cursor":.null] }
         let id = body["id"]?.text ?? ""
         if action == "create", rows[id] == nil { rows[id] = subscription(id:id,name:body["name"]!.text,origin:WebhookValue.receiverOrigin(body["endpoint"]!.text)!,scope:body["scope"]!.text,project:body["project_id"]!,events:body["events"]!.list,days:[30,90,365].first { body["ttl_days"] == .number(Double($0)) } ?? 30) }
+        if WebhookManagementFixture.noticeTesting {
+            if action == "create", failedCreates < 2 { failedCreates += 1; throw URLError(.networkConnectionLost) }
+            if action == "history", !failedHistory { failedHistory = true; throw URLError(.notConnectedToInternet) }
+        }
         if action == "cancel" { rows.removeValue(forKey:id);return ["account":.string(account),"id":.string(id),"cancelled":.bool(true)] }
         guard var row = rows[id] else { throw WebhookValue.invalid }
         if action == "pause" { row["state"] = .string("paused") }

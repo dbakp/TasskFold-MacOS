@@ -1,0 +1,292 @@
+{
+  "date": "2026-10-23",
+  "scope": "Pinned native connection/history failures with local synthetic service",
+  "fullPxComplete": false,
+  "fullWebhooksComplete": false,
+  "normalEntryEnabled": false,
+  "runtimeRepo": "TaskFold-iOS",
+  "localServiceAndVault": "In-memory fixture; no hosted Auth/HTTP/Keychain claim",
+  "acceptedCases": {
+    "passed": 8,
+    "skipped": 0,
+    "perDevice": [
+      "Repeated failed setup remains visible before/after scrolling; third retry recovers with secret still masked",
+      "Same setup recovery at largest accessibility text in dark appearance",
+      "History failure clears after successful reload; copy does not claim a missing draft was saved",
+      "Actual VoiceOver reads pinned failure after form scrolling"
+    ]
+  },
+  "runs": {
+    "phone": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+            "deviceName": "iPhone 18 Pro",
+            "modelName": "iPhone 18 Pro",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 4,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792753400.446,
+      "passedTests": 4,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792753210.676,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 4
+    },
+    "tablet": {
+      "devicesAndConfigurations": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+            "deviceName": "iPad Pro 13-inch (M5)",
+            "modelName": "iPad Pro 13-inch (M5)",
+            "osBuildNumber": "24A434",
+            "osVersion": "27.0",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 4,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "finishTime": 1792753369.219,
+      "passedTests": 4,
+      "result": "Passed",
+      "runtimeWarnings": [],
+      "skippedTests": 0,
+      "startTime": 1792753210.676,
+      "statistics": [],
+      "testFailures": [],
+      "title": "Test - Taskfold",
+      "topInsights": [],
+      "totalTestCount": 4
+    }
+  },
+  "actualSpeech": {
+    "phone": {
+      "utterances": [
+        "Taskfold Local Webhook Test Task connections Heading",
+        "This action was not confirmed. Your setup has been kept. Reload "
+      ],
+      "source": "XCUIVoiceOverService.Output.utterance"
+    },
+    "tablet": {
+      "utterances": [
+        "Taskfold Local Webhook Test Task connections Heading",
+        "This action was not confirmed. Your setup has been kept. Reload "
+      ],
+      "source": "XCUIVoiceOverService.Output.utterance"
+    }
+  },
+  "images": {
+    "phone-largest-text": {
+      "path": "webhook-notice-proof/phone-largest-text.png",
+      "sha256": "75c0f5cf47cb97a50ebf0ebe4411afc0bed95f878075bbc0dfc16af86ba2f41d"
+    },
+    "phone-history-recovered": {
+      "path": "webhook-notice-proof/phone-history-recovered.png",
+      "sha256": "2b67eb37ec6479bed454543e3dbd733589b891f18df69a2ef4b6a7864d934e94"
+    },
+    "phone-history-error": {
+      "path": "webhook-notice-proof/phone-history-error.png",
+      "sha256": "6f8c63da91178cfc9e3fd4fb78770400fc492e05c42e663f1a4fa66bb73cf147"
+    },
+    "tablet-largest-text": {
+      "path": "webhook-notice-proof/tablet-largest-text.png",
+      "sha256": "5392517fa3e33c7af36a341d4f907c2a01bf37e9fdb91fa96f79c3a79abb594b"
+    },
+    "tablet-history-recovered": {
+      "path": "webhook-notice-proof/tablet-history-recovered.png",
+      "sha256": "516e1ad52dacb53f36eec256085965ed3b8a7feee755c32a25a43db433dac410"
+    },
+    "tablet-history-error": {
+      "path": "webhook-notice-proof/tablet-history-error.png",
+      "sha256": "c24ca83ec8db4068bd397a76b0b83e4f1002cbe5c5c750dc03e7c619026f17ca"
+    }
+  },
+  "visualReview": [
+    "Phone/tablet largest text: full message wraps, decorative icon capped without capping text",
+    "Phone/tablet history: explicit inline heading visible, error remains above scrollable content",
+    "Controls remain reachable; successful retry/reload removes error"
+  ],
+  "earlierRuns": {
+    "webhook-notice-phone-v2": {
+      "result": "Failed",
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "failures": [
+        {
+          "test": "testWebhookFailureNoticeStaysVisibleThroughRetries()",
+          "message": "XCTAssertTrue failed"
+        }
+      ]
+    },
+    "webhook-notice-phone-v3": {
+      "result": "Passed",
+      "passedTests": 4,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "failures": []
+    },
+    "webhook-notice-phone": {
+      "result": "Failed",
+      "passedTests": 0,
+      "failedTests": 3,
+      "skippedTests": 0,
+      "failures": [
+        {
+          "test": "testWebhookFailureNoticeAtLargestText()",
+          "message": "XCTAssertGreaterThanOrEqual failed: (\"0.0\") is less than (\"115.0\")"
+        },
+        {
+          "test": "testWebhookFailureNoticeStaysVisibleThroughRetries()",
+          "message": "XCTAssertGreaterThanOrEqual failed: (\"0.0\") is less than (\"115.0\")"
+        },
+        {
+          "test": "testWebhookHistoryFailureNoticeClearsOnReload()",
+          "message": "XCTAssertGreaterThanOrEqual failed: (\"62.0\") is less than (\"183.0\")"
+        }
+      ]
+    },
+    "webhook-notice-tablet-v2": {
+      "result": "Passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "failures": []
+    },
+    "webhook-notice-tablet-v3": {
+      "result": "Passed",
+      "passedTests": 4,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "failures": []
+    },
+    "webhook-notice-tablet": {
+      "result": "Failed",
+      "passedTests": 0,
+      "failedTests": 3,
+      "skippedTests": 0,
+      "failures": [
+        {
+          "test": "testWebhookFailureNoticeAtLargestText()",
+          "message": "XCTAssertGreaterThanOrEqual failed: (\"0.0\") is less than (\"85.0\")"
+        },
+        {
+          "test": "testWebhookFailureNoticeStaysVisibleThroughRetries()",
+          "message": "XCTAssertGreaterThanOrEqual failed: (\"0.0\") is less than (\"85.0\")"
+        },
+        {
+          "test": "testWebhookHistoryFailureNoticeClearsOnReload()",
+          "message": "XCTAssertGreaterThanOrEqual failed: (\"358.0\") is less than (\"473.0\")"
+        }
+      ]
+    }
+  },
+  "earlierFindings": [
+    "Initial combined container was unsuitable for text geometry; identifier now targets the message text itself",
+    "Static text touch hit-testing failed after scrolling despite visible screenshots; frame/label checks plus actual VoiceOver reading verify the passive message instead",
+    "Eight v3 cases passed; visual review then prompted the icon cap and explicit history title, both verified again in v4"
+  ],
+  "builds": {
+    "iOS": "webhook-notice-ios-v4-build.log: TEST BUILD SUCCEEDED",
+    "Mac": "webhook-notice-mac-v4-build.log: BUILD SUCCEEDED; runtime not accepted"
+  },
+  "signing": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "limits": [
+    "No automatic live-error announcement claim",
+    "Mac AppKit/Keychain runtime remains open",
+    "Hosted session-expiry and server master-key failure/recovery remain open",
+    "Wider consent/history speech acceptance remains open",
+    "Email intake, advanced teams and wearable clients remain unfinished"
+  ],
+  "deferred": [
+    "Remote reminders",
+    "Older-client safeguards",
+    "Distribution/signing/install-update checks",
+    "OAuth registration/provider acceptance",
+    "Physical location-reminder delivery"
+  ],
+  "mainChanged": false,
+  "cloudResourcesCreated": false,
+  "realTasksChanged": 0,
+  "cleanup": {
+    "completed": true,
+    "devices": {
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": {
+        "VoiceOverOffRestored": true,
+        "ownedAppAndRunnerUninstalled": true
+      },
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": {
+        "VoiceOverOffRestored": true,
+        "ownedAppAndRunnerUninstalled": true
+      }
+    },
+    "ownedSourceHostAndRawArchivesRemoved": true,
+    "prunedMiB": 657.2,
+    "smallReviewedImagesRetained": true,
+    "usefulIOSBuildCacheRetained": true,
+    "noCloudCleanupNeeded": true
+  },
+  "thisRepo": "TasskFold-MacOS",
+  "thisPlatformRuntimeAccepted": false,
+  "sourceSha256AtCheckpoint": {
+    "Taskfold/Views/WebhookAccessView.swift": "38146ee81032565b879e7eafc94c6a2c701043e5bca573401f4441ef4fc80508",
+    "Taskfold/Core/WebhookAccess.swift": "ab7171f8eb2b859ee98957a3cf15c3681138be67339d174de1c636b861980b21"
+  }
+}

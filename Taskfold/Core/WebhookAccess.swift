@@ -202,7 +202,7 @@ extension Backend: WebhookService {}
     private func check() throws { try lease.check(); guard current else { throw CancellationError() } }
     private func perform(_ action: () async throws -> Void) async {
         guard current, !busy else { return }; busy = true; message = nil; defer { busy = false }
-        do { try check(); try await action() } catch is CancellationError { } catch { if current { message = "This action was not confirmed. Your setup has been kept. Reload or retry the same action." } }
+        do { try check(); try await action() } catch is CancellationError { } catch { if current { message = pending == nil ? "This action was not confirmed. Reload to check the latest status, or retry the same action." : "This action was not confirmed. Your setup has been kept. Reload or retry the same action." } }
     }
     private func call(_ action: String, _ body: [String: JSON]) async throws -> [String: JSON] { try check(); let r = try await service.webhookReceipt(action:action,body:body,account:account,origin:origin); try check(); guard r["account"] == .string(account) else { throw WebhookValue.invalid }; return r }
     private func connection(_ r: [String: JSON], id: String) throws -> WebhookConnection { guard case .object(let fields) = r["subscription"] else { throw WebhookValue.invalid }; let c = try WebhookConnection(fields); guard c.id == id else { throw WebhookValue.invalid }; return c }

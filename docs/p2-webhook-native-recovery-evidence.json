@@ -320,5 +320,9 @@
     "webhookSchemaAbsent": true,
     "webhookSchedulerInactive": true
   },
-  "presentationFollowup": "New errors can sit above the automatically scrolled pending setup; make them visible before enablement."
+  "presentationFollowup": "New errors can sit above the automatically scrolled pending setup; make them visible before enablement.",
+  "presentationFollowupResolvedBy": {
+    "evidence": "p2-webhook-notice-evidence.json",
+    "scope": "Pinned error presentation verified on iPhone/iPad Simulator; independent Mac build only"
+  }
 }

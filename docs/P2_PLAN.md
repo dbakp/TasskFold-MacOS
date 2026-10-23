@@ -931,7 +931,9 @@ devices before finishing that controller.
 
 The walkthrough also exposed a presentation follow-up: an error notice can sit
 above the automatically scrolled pending setup. Bring new failures into view
-before enabling this feature; the current test explicitly scrolls to inspect it.
+before enabling this feature; that round explicitly scrolled to inspect it.
+The persistent-feedback milestone below resolves this presentation issue on iOS;
+Mac source compiles but its runtime acceptance remains open.
 Session-expiry recovery, server master-key failure/recovery and the wider
 consent/history spoken walkthrough remain open before normal enablement.
 Email intake, advanced teams and wearables remain on the full Px backlog.
@@ -939,3 +941,36 @@ Remote reminders, older-client safeguards, distribution/OAuth registration and
 physical location acceptance remain deferred. Main schema/endpoints and normal
 feature entries remain disabled. Exact outcomes and cleanup:
 `p2-webhook-native-recovery-evidence.json`.
+
+
+## Persistent connection feedback — 23 October
+
+Eight scoped iPhone/iPad Simulator cases pass on the final source. Actual
+VoiceOver reads the pinned failure after scrolling, and its original Off state
+is restored. Screenshots at largest text and in history were visually reviewed.
+
+Connection-action and delivery-history errors now sit below the navigation bar
+in a safe-area banner, outside the scrolling form/list. Pending-setup restoration
+and ordinary scrolling cannot move the message offscreen. The banner reserves
+space instead of covering the retry/review controls, uses system text/background
+styles, wraps at large text sizes, and exposes the message as one readable text
+element. Only the decorative icon has a size cap; message text keeps the full
+accessibility scale. History uses an explicit compact title on iOS. There is no programmatic keyboard or VoiceOver focus change.
+
+Successful retry or reload removes the banner through the existing model state.
+Unconfirmed setup still says its draft was kept; history/control errors without
+a pending setup instead ask the user to reload the latest status or retry the
+same action. This does not claim that an unconfirmed request failed on the server.
+The enrollment, secret-review and idempotency contracts are unchanged.
+
+The local Debug fixture deliberately loses two create replies after storing one
+in-memory row, then succeeds, and refuses the first history load before recovery.
+It requires the exact isolated bundle, local test mode and explicit notice flag.
+It does not exercise hosted Auth, HTTP, Keychain or server recovery; those results
+remain in the earlier hosted evidence. This round accepts presentation only.
+Mac owns the same view/model change and compiles independently; Mac runtime,
+automatic spoken announcements and the wider spoken walkthrough remain open.
+Normal feature entry and main webhook service remain disabled.
+
+Exact layout/retry checks, source revisions and cleanup:
+`p2-webhook-notice-evidence.json`.
