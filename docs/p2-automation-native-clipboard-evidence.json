@@ -118,5 +118,7 @@
   },
   "sourceSHA256": {
     "Taskfold/Views/AutomationAccessView.swift": "ae0de2864057ac758f39448674030217bb0af6567ec15dd4a16122d58fa23541"
-  }
+  },
+  "actionIndependenceCorrectedBy": "p2-automation-review-controls-evidence.json",
+  "scopeLimitAtOriginalCheckpoint": "Expiry/replacement and lifecycle checks did not assert that Reveal leaves the clipboard untouched or Copy leaves the raw value masked."
 }

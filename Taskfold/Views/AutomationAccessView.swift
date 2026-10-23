@@ -139,7 +139,7 @@ struct AutomationAccessView: View {
                                 }
                                 #endif
                             }.accessibilityIdentifier("automationCopy")
-                        }
+                        }.buttonStyle(.borderless)
                         #if DEBUG
                         if fixture, AutomationManagementFixture.clipboardTesting {
                             Text(clipboardProof).accessibilityIdentifier("automationClipboardProof")

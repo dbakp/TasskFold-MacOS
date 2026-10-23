@@ -3420,3 +3420,31 @@ Normal feature entry and main webhook service remain disabled.
 
 Exact layout/retry checks, source revisions and cleanup:
 `p2-webhook-notice-evidence.json`.
+
+
+## Independent key-review actions — 23 October
+
+Four scoped cases pass on the corrected source: two each on iPhone/iPad
+Simulator. The unchanged baseline failed before the button-style correction.
+
+The API-key review row now gives Reveal/Hide and Copy independent borderless
+button targets in each app. The unchanged iOS baseline failed the strengthened
+regression: tapping Reveal started the clipboard probe. This confirmed that the
+Form row could invoke Copy as well. The fix changes only that row's button style;
+it preserves enrollment, permissions, secret storage and clipboard policy.
+
+The native regression now requires Reveal to leave the clipboard probe untouched,
+backgrounding to conceal the raw value after an actual background/suspended state,
+and Copy to leave every accessible label/value free of the raw key prefix. It
+rechecks masking after the real one-minute pasteboard expiry or preservation of
+newer clipboard content. Acknowledgement and normal relaunch still check actual
+private OS Keychain cleanup. The API peer is synthetic and exact-host guarded;
+these runs issue no hosted credential and modify no real task or account.
+
+The earlier clipboard milestone did not assert action independence or masking
+immediately after Copy. Its historical green results therefore do not prove those
+properties. This round's scoped outcomes and baseline failure are recorded in
+`p2-automation-review-controls-evidence.json`. Mac source builds independently;
+Mac gesture/pasteboard/Keychain runtime acceptance remains open.
+Normal feature entry and main API enablement remain unchanged and disabled.
+The full Px objective and its existing user deferrals remain in force.
