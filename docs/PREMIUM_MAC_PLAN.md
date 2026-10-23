@@ -3055,3 +3055,24 @@ recipient verification and a durable task-change outbox/dispatcher, then native
 setup, delivery status and recovery controls. Full automatic webhooks and the
 remaining email/team/wearable backlog are still open. Complete requirements and
 limits: `WEBHOOKS.md`; exact proof: `p2-webhook-transport-evidence.json`.
+
+
+23 October webhook subscription checkpoint: private account-bound setup and
+receiver-secret proof are implemented independently in both repos. Echo endpoints
+cannot connect; verification needs an HMAC proof not present in its request.
+Fresh session/project checks, expiry, superseded attempts and revocation guard
+activation. Setup/discard history is permanent for the Auth lifetime; removal
+blocks survive receipt pruning and physical Auth deletion cleans the private rows.
+
+Pause/Resume now has a revision baseline and durable command identity. A delayed
+old Pause retry cannot override a newer Resume. Per-source checks pass: 83 SQL,
+43 actual PostgreSQL 17.6 assertions with eight observed barriers, and 26 Deno
+tests (seven TLS/HTTP substeps), plus lint/types/format. Main schema/endpoints remain
+off. These scoped local checks do not replace hosted Auth/PostgREST/receiver or
+native UI acceptance. Temporary databases/TLS files are removed; Docker stays on
+because it is serving another project. No Taskfold host was launched.
+
+Next: the actual task-change outbox and leased dispatcher, including large-task
+payloads, current-permission revalidation, retries and failure history; then native
+setup/status/recovery and hosted acceptance. Full webhooks/Px remain unfinished.
+Details: `WEBHOOKS.md`; evidence: `p2-webhook-subscriptions-evidence.json`.

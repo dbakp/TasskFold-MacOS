@@ -4,7 +4,7 @@ Updated 23 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Authorized subscriptions/outbox/dispatcher and native controls are next; signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and native controls are next; signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -609,3 +609,24 @@ recipient verification and a durable task-change outbox/dispatcher, then native
 setup, delivery status and recovery controls. Full automatic webhooks and the
 remaining email/team/wearable backlog are still open. Complete requirements and
 limits: `WEBHOOKS.md`; exact proof: `p2-webhook-transport-evidence.json`.
+
+
+23 October webhook subscription checkpoint: private account-bound setup and
+receiver-secret proof are implemented independently in both repos. Echo endpoints
+cannot connect; verification needs an HMAC proof not present in its request.
+Fresh session/project checks, expiry, superseded attempts and revocation guard
+activation. Setup/discard history is permanent for the Auth lifetime; removal
+blocks survive receipt pruning and physical Auth deletion cleans the private rows.
+
+Pause/Resume now has a revision baseline and durable command identity. A delayed
+old Pause retry cannot override a newer Resume. Per-source checks pass: 83 SQL,
+43 actual PostgreSQL 17.6 assertions with eight observed barriers, and 26 Deno
+tests (seven TLS/HTTP substeps), plus lint/types/format. Main schema/endpoints remain
+off. These scoped local checks do not replace hosted Auth/PostgREST/receiver or
+native UI acceptance. Temporary databases/TLS files are removed; Docker stays on
+because it is serving another project. No Taskfold host was launched.
+
+Next: the actual task-change outbox and leased dispatcher, including large-task
+payloads, current-permission revalidation, retries and failure history; then native
+setup/status/recovery and hosted acceptance. Full webhooks/Px remain unfinished.
+Details: `WEBHOOKS.md`; evidence: `p2-webhook-subscriptions-evidence.json`.

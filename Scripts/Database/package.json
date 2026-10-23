@@ -15,7 +15,9 @@
     "test:automation-destinations": "node test-automation-destinations.mjs",
     "test:automation-ingress": "node test-automation-ingress.mjs",
     "test:automation-ingress-concurrency": "node test-automation-ingress-concurrency.mjs",
-    "test:automation-task-concurrency": "node test-automation-task-concurrency.mjs"
+    "test:automation-task-concurrency": "node test-automation-task-concurrency.mjs",
+    "test:webhook-subscriptions": "node test-webhook-subscriptions.mjs",
+    "test:webhook-concurrency": "node test-webhook-concurrency.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

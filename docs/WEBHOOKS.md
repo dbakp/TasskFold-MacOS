@@ -1,9 +1,9 @@
 # Task-change webhooks — inactive implementation
 
-Updated 23 October 2026. Rank 6 remains in progress. The delivery transport and
-receiver-secret envelope are implemented in each repo independently. There is no
-public webhook handler, native webhook screen, subscription schema, outbox or
-scheduled dispatcher yet. No real task data was sent and nothing was enabled on
+Updated 23 October 2026. Rank 6 remains in progress. The delivery transport, receiver-secret envelope,
+private subscription schema, receiver-proof protocol and management handler are
+implemented in each repo independently as inactive candidates. There is no
+native webhook screen, task-change outbox or scheduled dispatcher yet. No real task data was sent and nothing was enabled on
 main. This milestone is a necessary part of automatic task-change delivery, not a
 replacement for that feature.
 
@@ -72,18 +72,135 @@ private server table. Versioned master keys belong in server secret configuratio
 never in SQL, native app resources, logs or exports. Production key provisioning,
 rotation and recovery remain required; acceptance used disposable fixture keys.
 
+## Subscription and receiver-proof implementation
+
+`20261023050732_webhook_subscriptions.sql` adds only private subscription,
+verification, cancellation, command-receipt and removal-marker tables. All enable
+RLS and deny direct access, including to the service role. A fixed service-only
+RPC checks the account and live Auth session within every transaction, using the
+existing account mutex and Auth locks. The public SQL wrapper is invoker-only;
+its private implementation owns the narrowly required privileges, has an empty
+search path and a three-second lock budget. The RPC has a ten-second statement
+budget. No client receives access to an internal verification-result action.
+
+Scopes are all readable work, Inbox, or one exact readable project; events are
+created, updated, completed, reopened and deleted. Scope selection does not grant
+project access. Project ownership/accepted membership is checked at create,
+begin/finish verification and new Resume actions. The dispatcher will also need
+to check current task/project access before every send. A successfully verified
+subscription alone does not implement task delivery.
+
+Lifecycle states are Pending, Active, Paused, Revoked and derived Expired. Setup
+IDs/settings are immutable. Retrying the same creation preserves its first secret
+envelope, expiry and current state, even when the service re-encrypts the same
+secret with a fresh nonce. A conflicting intent is refused. Discard-before-create
+writes an account-bound permanent tombstone; a late creation cannot resurrect it.
+Revocation erases the encrypted secret and stays terminal. Only deleting the Auth
+account can remove setup/command/cancellation history. Starting account removal
+also writes a permanent private block for a surviving Auth row; pruning an older
+removal receipt cannot allow it to enroll a new webhook or resume an old one.
+Physical Auth deletion cascades every private record, including that marker.
+
+Management metadata contains the destination origin, never its path/query or
+secret. The separate owned Details action permits explicit destination review.
+Historical metadata remains revocable if an address becomes nonpublic; network
+address authorization still runs before any verification request.
+
+| Application limit | Budget |
+| --- | --- |
+| Live setups, including pending/paused | 5 per account |
+| New setup identities | 10 per UTC day |
+| New verification attempts | 6 per rolling minute, 60 per UTC day |
+| New Pause/Resume command receipts | 200 per UTC day |
+| Unknown setup cancellation tombstones | 100 per UTC day |
+| Setup lifetime | 30, 90 or 365 days |
+
+Exact retries are free of new-identity budgets. Existing revoke/discard remains
+available at these issuance/control limits. HTTP ingress shares the independently
+bounded key-management admission budget; it is separate from application limits.
+
+Pause/Resume requires `{id, request_id, revision}`. Each state transition advances
+the subscription revision. A new command with an old baseline needs review;
+retrying an already applied command returns its durable acknowledgement and the
+CURRENT metadata. An old Pause retry after a newer Resume cannot pause the
+connection again. Command identity/result history is immutable for the Auth
+account lifetime; it cannot be pruned into a new actionable request. Revocation
+is inherently terminal and continues to require only the setup ID.
+
+### Receiver verification protocol
+
+The native-generated receiver secret is `tfwh_v1_<43 canonical base64url chars>`.
+Decode the suffix to its 32 entropy bytes before HMAC use. Creation sends it only
+to the authenticated Edge service, which hashes it for immutable-intent comparison
+and encrypts it before SQL; raw secret text never reaches SQL or the response.
+The server owns a versioned master catalog, configured only with
+`TASKFOLD_WEBHOOK_MASTER_KEYS` (a JSON map of up to three version names to 64
+lowercase hex characters encoding 32 master-key bytes) and `TASKFOLD_WEBHOOK_CURRENT_MASTER_VERSION`.
+Keep old versions while their envelopes remain in use. Missing/invalid masters
+fail creation/verification closed while authenticated list/revoke/discard remains
+available. Production provisioning, rotation and recovery still require acceptance.
+
+Verify takes `{id, attempt_id}`. SQL creates a random 256-bit nonce valid for at
+most five minutes. Retrying that same attempt retains its nonce/expiry; a new
+attempt cancels older outstanding callbacks. The service decrypts the owned
+secret and sends a signed, content-free request:
+
+```json
+{"version":1,"type":"taskfold.webhook.verify","subscription_id":"<UUID>","attempt_id":"<UUID>","challenge":"<64 hex nonce>"}
+```
+
+The receiver must return exactly `challenge` and `proof`. Proof is lowercase hex
+HMAC-SHA256 over the UTF-8 bytes `verify.v1.<subscription-uuid>.<attempt-uuid>.<nonce>`,
+using the decoded receiver secret. The expected proof is never sent in the
+request. Ordinary echo endpoints, wrong keys/nonces/attempts, malformed JSON and
+extra response fields fail verification. WebCrypto verifies the signature rather
+than comparing secret-derived strings. The transport's original signed-message
+protocol and bounded challenge reader still apply.
+
+Only the service can submit the validated result. SQL rechecks the live session,
+current project access, pending state, attempt identity and expiry before
+activation. Superseded/revoked/expired attempts stay terminal. A caller can never
+supply `finish_verify` or a trusted `outcome` through the HTTP envelope. The
+handler has a 25-second total budget, an 8 KiB/two-second input bound, bounded
+upstream reads, request cancellation and safe status/retry projection. Unknown
+writes preserve the same setup/attempt/command identities for recovery. This
+service is an undeployed candidate, not a new public intake endpoint.
+
+### Current verification and limits
+
+Each repo independently passes 83 local SQL checks and 43 real PostgreSQL 17.6
+checks. Eight observed lock barriers cover concurrent exact/conflicting enrollment,
+12 workers competing for the last five slots, both revoke/proof orders, sign-out,
+expiry, membership removal and account removal. Actual command retries confirm
+that an old Pause cannot override a newer Resume. Immutable histories reject
+pruning/rewrite while Auth exists and cascade cleanly after physical removal.
+
+The current Deno suite passes 26 tests (15 handler tests and 11 transport/wire
+regressions, including seven actual TLS/HTTP substeps), plus format/lint/type
+checks. Handler tests inject owned Auth/RPC/receiver responses; SQL tests execute
+the actual candidate against the recorded minimal dependency schema. They do not
+prove hosted Auth/PostgREST/receiver integration, native secret recovery, spoken
+accessibility, master-key operations or distribution. The earlier nine-per-source
+hosted transport proof remains separate; it does not enable this management API.
+
+All owned database containers and generated TLS fixtures are removed. Docker was
+started from Off; other-project containers are now running, so Docker stays on
+and those containers are untouched. No cloud test branch, account or credential
+export was created for this milestone. Main readback confirms the new migration,
+subscription table and webhook endpoint remain absent. No native app launched.
+Exact source hashes, scope, checks and cleanup: `p2-webhook-subscriptions-evidence.json`.
+
 ## Remaining implementation and acceptance
 
-1. Add private subscription/enrollment and durable outbox migrations with server
-   authorization, fresh account/session checks, scopes, bounded quotas and
-   account-removal cleanup. Capture actual native and API task changes, including
+1. Subscription/enrollment authorization, scopes, quotas and removal cleanup are
+   implemented above. Add the durable task-change outbox with its own bounded
+   capture/delivery quotas. Capture actual native and API task changes, including
    completion/reopen, recurrence, nested changes and deletion; define the complete
    event payload and large-task behavior. Do not silently drop events or break
    ordinary task editing when a receiver stops working.
-2. Require recipient verification before sending task content. Persist a bounded,
-   expiring challenge and verify the receiver's response; the current probe's
-   synthetic signed echo is transport acceptance, not production enrollment or
-   proof that a user owns an arbitrary endpoint.
+2. Secret-possession verification is implemented above. Complete actual hosted
+   Auth/PostgREST/receiver and native private-setup/retry acceptance; the historical
+   synthetic signed echo remains transport proof, not this enrollment acceptance.
 3. Implement a leased dispatcher with immutable event/attempt identities,
    transactional claims/acknowledgements, bounded backoff, retry history and
    recovery after worker interruption. Recheck current ownership, project access,
@@ -108,7 +225,8 @@ checks remain deferred as agreed.
 
 ## Evidence and reproduction
 
-Each repo passes 11 local tests (seven actual TLS/HTTP substeps), formatting,
+The earlier transport-only checkpoint passed 11 local tests per repo (seven
+actual TLS/HTTP substeps), formatting,
 lint, type checking and runner syntax. Its own deployed source independently
 passes nine hosted checks: sender/receiver authentication refusal, encrypted
 secret round trip, signed delivery, challenge readback, redirect refusal, gone,
