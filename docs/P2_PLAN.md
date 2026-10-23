@@ -1438,3 +1438,18 @@ configuration still deferred by the user. Mac/private fault/spoken/wider native
 acceptance remains scoped separately. Advanced team permissions/ownership,
 folders/admin and wearable clients remain active; existing release deferrals stay
 in force. No main service or shipping email feature is enabled.
+
+
+## Provider-independent MIME decoding — 23 October
+
+The next rank-6 email stage now decodes actual bounded RFC822 bytes into the
+existing task-content/retry contract. Plain/HTML alternatives, international
+encodings and explicit attachment omissions work without network permissions;
+encrypted/image-only unsupported cases and excessive structure fail explicitly.
+Both repo-owned implementations pass 18 new MIME cases plus 41 existing
+content/alias/management cases. No provider is selected, configured or enabled.
+`EMAIL_CAPTURE.md`, the module README and `p2-email-mime-evidence.json` retain exact
+limits and verification. Verified signed event/envelope/sender/receipt integration,
+ingress budgets, delivery, source links and extra verified senders remain open.
+Team permissions/ownership and wearable clients remain in the full backlog;
+existing user deferrals and broader native acceptance are unchanged.

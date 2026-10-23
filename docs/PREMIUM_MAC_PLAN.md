@@ -3765,3 +3765,13 @@ Both final concealed screenshots are reviewed; test-only cleanup/resource eviden
 is in `p2-email-native-hosted-recovery-evidence.json`. Provider/domain setup, Mac
 runtime, spoken/wider variants and the full teams/wearables backlog remain open.
 The original app email flag and main service stay disabled/unchanged.
+
+
+### 23 October — independent email MIME preparation
+
+The Mac repository now owns its bounded RFC822/HTML decoder and frozen dependency
+lock. It passes 18 new MIME checks plus 41 existing email checks without runtime
+permissions, alongside lint/types/format. This changes server preparation only;
+no native UI or Mac runtime result is claimed. Provider/domain configuration and
+real signed delivery remain deferred/open, with production capture disabled.
+See `p2-email-mime-evidence.json` and `EMAIL_CAPTURE.md`.

@@ -23,8 +23,9 @@ HTTP endpoint, authentication mechanism or task writer. Version 1 accepts exactl
 UTF-8 bytes; plain text is at most 60,000 bytes. Oversize input fails instead of
 being silently truncated. Binary controls, header line breaks, ill-formed Unicode,
 unknown fields/versions and mail without readable subject/body fail explicitly.
-A verified adapter must decode MIME and unfold subject headers before calling it.
-HTML-only mail must not become a silent empty task; adapter handling remains open.
+The independently owned `email-mime/mod.ts` helper now decodes MIME and folded
+subjects before calling this contract, including a bounded readable HTML fallback.
+Its actual provider integration and signed-delivery acceptance remain open.
 
 The subject becomes a trimmed title, falling back to “Email task” only when a
 readable body exists. The complete plain-text body preserves whitespace and
@@ -561,3 +562,38 @@ all network/concurrency variants. Provider/MIME/sender/envelope/receipt integrat
 source links and additional verified senders remain open. User provider/domain
 configuration remains deferred, production delivery stays disabled, and advanced
 teams/wearables remain in the full ranked Px goal.
+
+
+## Bounded MIME and HTML decoding — 23 October
+
+Both repositories now own `supabase/functions/_shared/email-mime`: a pinned,
+locked, provider-independent RFC822 decoder feeding the existing content/key
+contract. It decodes international subjects and bodies, prefers a plain
+alternative and converts HTML-only mail into readable text without fetching
+resources. Images, embedded content and HTML link targets are excluded; link
+labels remain text. Inline file parts and forwarded messages count as omitted
+attachments instead of being imported or recursively expanded. Encrypted root
+mail and image-only HTML are explicitly unsupported.
+
+Raw bytes, aggregate headers, MIME width/depth, HTML conversion and decoded
+content have independent limits. An HTML depth/width omission causes refusal,
+not a successful clipped note. The parser normalizes recoverable input, including
+final body newlines and encoded header whitespace; it is not a byte-preserving
+archive or strict validator of every malformed RFC message. Charset decoding
+can replace undecodable bytes. The module README records those exact limits.
+
+Eighteen synthetic MIME cases plus the existing 41 content/alias/gateway cases
+pass independently in each repo (59 each), using the frozen dependency lock,
+cached imports and no runtime permission grants. Lint, types and format pass.
+These are local decoder/regression checks, not genuine provider delivery or a new
+native walkthrough. No UI, database, account, production configuration or deployed
+function changes. See `p2-email-mime-evidence.json` for hashes and exact scope.
+
+The verified provider adapter must still authenticate the original event/envelope,
+attest sender and receipt time, bound downloads and apply ingress admission before
+calling this helper, then commit through the existing atomic journal. Header
+From/To/Date/Message-ID and Authentication-Results are never trusted identities.
+Actual provider delivery/retries, source links, additional verified senders and
+wider native acceptance remain open. Provider/domain configuration stays deferred
+and shipping capture stays disabled. Advanced teams and wearable clients remain
+in the full Px objective.

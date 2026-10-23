@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-23",
+  "scope": "Provider-independent MIME decoding feeding existing content/delivery identity contract",
+  "platformRepository": "mac",
+  "checks": {
+    "mime": 18,
+    "existingContent": 10,
+    "existingAlias": 3,
+    "existingManagementGateway": 28,
+    "passed": 59,
+    "failed": 0,
+    "skipped": 0,
+    "frozenLock": true,
+    "cachedOnly": true,
+    "runtimePermissionGrants": [],
+    "typecheck": true,
+    "lint": true,
+    "format": true
+  },
+  "runtime": "deno 2.8.3 (stable, release, aarch64-apple-darwin)\nv8 14.9.207.2-rusty\ntypescript 6.0.3",
+  "sources": {
+    "supabase/functions/_shared/email-mime/mod.ts": "bd19f8779a26883c63a1922e920ef9b1cec29730f94153e5f366796086b85dd3",
+    "supabase/functions/_shared/email-mime/mod_test.ts": "8c0653e6182e8731cbdb40166d750eca9bdf2d07562895e1dd350414a25b306d",
+    "supabase/functions/_shared/email-mime/deno.json": "a7e8ba5aa11b242662014be9a3e9f2fc0c461808e00964ceb9c749b9014c4100",
+    "supabase/functions/_shared/email-mime/deno.lock": "98676911527bad0f3f509fc8ceea77a736e0a2092eb312b09c9a1a5cf0e58db0",
+    "supabase/functions/_shared/email-mime/README.md": "80937e9961a26e69fbab8e99a02c5eba0b6c2b81d861e915fdd63398489adf1f"
+  },
+  "dependencyPins": {
+    "npm:html-to-text@10.0.1": "10.0.1",
+    "npm:postal-mime@4.1.4": "4.1.4"
+  },
+  "resolvedNpmEntries": 15,
+  "limits": {
+    "rawBytes": 1048576,
+    "aggregateHeaderBytes": 32768,
+    "mimeParts": 128,
+    "mimeDepth": 16,
+    "htmlBytes": 200000,
+    "htmlDepth": 64,
+    "htmlChildrenPerElement": 5000,
+    "decodedSubjectBytes": 512,
+    "decodedTextBytes": 60000,
+    "attachments": 100
+  },
+  "coverage": [
+    "Folded RFC2047, quoted-printable, base64, Unicode and ISO-8859-1",
+    "Plain alternative, HTML conversion, skipped scripts/styles/resources and link-target exclusion",
+    "Image-only and encrypted root refusal, ambiguous root types refused",
+    "Exact raw/attachment/decoded budgets and structural/HTML rejection without accepting clipped notes",
+    "Private files/forwarded message omission notices and no nested sender promotion",
+    "No trusted identities derived from From/To/Date/Message-ID/Authentication-Results",
+    "Stable provider-receipt key across changes; changed decoded content gets different fingerprint",
+    "Task command-like instructions remain inert text; errors exclude raw parser diagnostics"
+  ],
+  "mainChanged": false,
+  "databaseChanged": false,
+  "nativeSourcesChanged": false,
+  "productionCaptureEnabled": false,
+  "deploymentPerformed": false,
+  "realTaskDataChanged": 0,
+  "providerDeliveryClaimed": false,
+  "nativeAcceptanceClaimed": false,
+  "limitations": [
+    "Internal module, not an authenticated provider endpoint or task writer",
+    "Ingress download budget/deadline/admission and signed original event/envelope/sender/receipt integration remain open",
+    "Permissive MIME normalization and potential charset replacement; not byte-exact archival or strict full RFC validation",
+    "HTML becomes readable text, skips images/embedded content/targets; not browser layout preservation",
+    "Provider/domain configuration deferred, genuine provider acceptance not possible yet",
+    "Source links, extra verified senders, wider native/fault/accessibility acceptance, advanced teams and wearable clients remain open"
+  ],
+  "references": [
+    "https://github.com/postalsys/postal-mime",
+    "https://github.com/html-to-text/node-html-to-text/blob/master/packages/html-to-text/README.md",
+    "https://supabase.com/docs/guides/functions/dependencies",
+    "https://supabase.com/changelog.md"
+  ]
+}
