@@ -29,7 +29,8 @@ struct TaskfoldMacApp: App {
 
     @ViewBuilder private var mainContent: some View {
         #if DEBUG
-        if AutomationManagementFixture.enabled { NavigationStack { AutomationAccessView(fixture: true) } }
+        if WebhookManagementFixture.enabled { NavigationStack { WebhookAccessView(fixture: true) } }
+        else if AutomationManagementFixture.enabled { NavigationStack { AutomationAccessView(fixture: true) } }
         else if AccountRemovalNativeFixture.enabled { AccountRemovalProofView() }
         else if LocationHandoffNativeFixture.enabled {
             LocationHandoffSendView(request: .init(taskID: LocationHandoffNativeFixture.taskID, workspace: .init(account: store.userID, generation: store.workspaceGeneration)))

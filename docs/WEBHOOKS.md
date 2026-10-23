@@ -3,8 +3,8 @@
 Updated 23 October 2026. Rank 6 remains in progress. The delivery transport, receiver-secret envelope,
 private subscription schema, receiver-proof protocol, management handler,
 transactional task-change outbox and leased dispatcher are implemented in each repo
-independently as inactive candidates. Native screens, secure scheduling and hosted
-end-to-end queue acceptance remain open. No real task data was sent and nothing was enabled on
+independently as inactive candidates. Gated native screens are now implemented; native acceptance, secure scheduling
+and hosted end-to-end queue acceptance remain open. No real task data was sent and nothing was enabled on
 main. This milestone is a necessary part of automatic task-change delivery, not a
 replacement for that feature.
 
@@ -339,10 +339,67 @@ to validated versions. Never put service, master or worker credentials in native
 ### Remaining enablement gates
 
 No scheduler is installed, no new remote schema/endpoint was deployed, and the
-ordinary app entry remains disabled. Native setup, secret copying, delivery warnings,
-resync guidance and recovery controls still need implementation and acceptance.
+ordinary app entry remains disabled. Native setup, secret review/copy, delivery warnings, reconciliation guidance and
+recovery controls now have a gated implementation; their full acceptance is open.
 In particular, quota gaps need a clear user-facing recovery path before enablement;
 a delivery-history API alone does not finish that UX. Secure scheduled invocation,
 hosted Auth/PostgREST-to-receiver acceptance, key/configuration recovery and account
 switch/relaunch checks remain open. These local results do not complete webhooks
 or the remaining Px backlog. Exact scoped proof: `p2-webhook-outbox-evidence.json`.
+
+
+## Native task connections — 23 October (acceptance in progress)
+
+Each app independently owns a gated **Task connections** screen in Account.
+Setup reviews a receiver name/address, Inbox/one-project/all-accessible reach,
+event choices and expiry, with explicit trust consent before creating a setup.
+The review explains full-note/checklist delivery, shared work included in broad
+scope, and bounded paused capture. The receiver secret starts hidden, can be
+revealed/copied with device-only clipboard options, and is retired after explicit
+save acknowledgement. Receiver verification is a separate action; setup alone
+never means connected. Pause/Resume and Revoke have their own controls, with
+revocation confirmation explaining the in-flight request boundary.
+
+Interrupted setup is retained exclusively in an app-private secure-item envelope,
+coordinated across processes. Exact settings/ID/secret retry, durable discard
+before cancellation, original-server binding and account-removal cleanup are
+implemented. View/workspace/backend-session leases fence late results; inactive
+root and modal screens cover private content. One unfinished setup per account
+prevents competing windows from silently replacing a secret.
+
+Delivery history pages only redacted metadata. It shows status, part progress,
+attempts, last issue, optional event/task references and reviewed manual retry.
+Uncertain state/retry actions preserve their command identity until retry or an
+explicit reload of server state. Queue-gap warnings explain that missing changes
+require fresh task reconciliation by the receiver; Resume cannot replay them.
+Counts are cumulative. There is no automatic resync or warning-dismissal claim.
+
+The native client uses its fixed account server, authenticated session fence,
+no cookies/redirects, no-store policy, a 25-second request timeout and a 256,000-byte
+response bound. No native app receives service/master/worker credentials. Both
+ordinary entries remain off behind a separate `TaskfoldWebhooksEnabled` gate.
+Local source checks and Simulator view fixtures do not prove hosted receiver
+integration, OS Keychain recovery or Mac runtime behavior. Secure scheduling and
+hosted/native end-to-end acceptance remain required before enablement; full
+webhooks and the remaining Px backlog stay active. Exact verification is recorded
+in `p2-webhook-native-evidence.json` after this milestone’s checks.
+
+
+Native checkpoint verification: 44 focused Core tests pass per owned repository;
+11 webhook cases were rechecked after the final wording change. Both complete app
+inputs build. Four scoped UI tests pass on iPhone 18 Pro and iPad Pro 13-inch (M5),
+iOS 27 Simulator: reviewed setup/secret/verification and failed-delivery retry,
+plus largest-text dark Cancel. The phone now scrolls from secret acknowledgement
+to its connection. Final screenshots are visually reviewed; toolbar labels fit
+ordinary phone width. These are synthetic in-memory service/storage checks, not
+hosted or OS Keychain acceptance. An unrelated recovery banner in the unsigned
+Store host remains outside this accepted scope. Clipboard expiry, spoken checks,
+live account/relaunch/Keychain and native Mac runtime remain open.
+
+Both disposable Simulator apps and runners are closed and uninstalled. About
+1.05 GB of redundant artifacts from these attempts is removed; current useful
+build caches, final accepted results, screenshots and text logs are retained.
+No real tasks or hosted services changed. Main webhooks stays disabled. Next:
+genuine private-storage/native service acceptance and secure hosted scheduling/
+delivery checks, then email intake, advanced teams and wearables. Evidence:
+`p2-webhook-native-evidence.json`; full Px stays active.

@@ -777,6 +777,7 @@ final class Store {
         UserDefaults.standard.set(false, forKey: "localMode")
         snapshot = Snapshot(); undoStack = []; redoStack = []; load(); Task { await refreshRemoteReminderRegistration(); await sync() }
     }
+    @ObservationIgnored lazy var webhookEnrollmentVault = WebhookEnrollmentVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".webhook-enrollment"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("WebhookEnrollmentLocks", isDirectory: true))
     @ObservationIgnored lazy var automationEnrollmentVault = AutomationEnrollmentVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".automation-enrollment"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("AutomationEnrollmentLocks", isDirectory: true))
     @ObservationIgnored private lazy var accountRemovalVault = AccountRemovalVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".account-removal"))
     private(set) var accountRemovalStatus: String?
@@ -884,6 +885,7 @@ final class Store {
             resetRemovedWorkspaceIfSignedOut()
         }
         try await automationEnrollmentVault.removeAccount(account, origin: command.origin)
+        try await webhookEnrollmentVault.removeAccount(account, origin: command.origin)
         try await accountRemovalVault.finish(command)
         removalPendingAccounts.remove(account)
         UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + account)

@@ -1,0 +1,165 @@
+{
+  "date": "2026-10-23",
+  "platformSource": "macOS",
+  "baseCommit": "534d867f3adab2768b530fbe29bfd7c84ea0ca29",
+  "milestone": "Gated task-connection setup, private interrupted enrollment, receiver verification and delivery recovery screens",
+  "fullWebhookFeatureComplete": false,
+  "fullPxComplete": false,
+  "releaseEntryEnabled": false,
+  "realTasksChanged": 0,
+  "sourceSha256": {
+    "Taskfold/Core/WebhookAccess.swift": "7922368522df54caa86ab57b6bc24a1b7ea8676fbae8ae7dc70b5d9989fbdd48",
+    "Taskfold/Views/WebhookAccessView.swift": "b6a1e3249e3495c248d365b730dc29278ef539e209999898cf65b49c05920e6d",
+    "Taskfold/Core/Backend.swift": "c3c5b24cc73cf4ac0a15fd84413872d6a9a755d2621e65aa47c6b16d9282bd46",
+    "Taskfold/Core/Store.swift": "d3b8876183cccc9209f233b85b541a715a9d9164698574bf0296f41e6e337834",
+    "TaskfoldTests/WebhookAccessTests.swift": "1fbbd6c2f6fecddc5ec9883375ea6d97e59357922bc6fa847c5b17c70079cf8c",
+    "Package.swift": "b42a69eaeca37eebfc6e09eb4196401b80c2c826615a8d79289526169084409f",
+    "Taskfold.xcodeproj/project.pbxproj": "ee087a8f51f2544746897b82bfae335a08e6e25c11367f9076ef0ba1b0155097"
+  },
+  "core": {
+    "focusedSuiteTests": 44,
+    "failures": 0,
+    "newWebhookTests": 11,
+    "finalCopyOnlyChangeRecheckedWebhookTests": 11,
+    "regressionSuite": [
+      "AutomationAccessTests",
+      "AutomationEnrollmentTests"
+    ],
+    "logSha256": "0d451da452bfd72c6bb1e56af0db1677df8ca9d49baea54656b216ab019f656f",
+    "finalLogSha256": "4906a64d5c984b8b24d46c8af95672ee378532bfdad2a40ddf89337779b305a4",
+    "scope": "Secure-item memory IO, competing setup/cancellation/origin fences, wrong/late account replies, exact command retry, bounded metadata/history, actual native Backend URLProtocol route/cookies/no-store/timeout/account/response-bound checks. These do not prove OS Keychain or hosted integration."
+  },
+  "build": {
+    "passed": true,
+    "kind": "Independent full Mac Debug app, unsigned"
+  },
+  "simulatorUI": {
+    "platform": "iOS only",
+    "host": "com.dbakp.taskfold.workflowtestswebhooks",
+    "macRuntimeClaimed": false,
+    "hostedAuthOrReceiverClaimed": false,
+    "osKeychainClaimed": false,
+    "serviceAndStorage": "Synthetic in-memory WebhookService and secure-item IO, real production SwiftUI view and model. Backend URLProtocol tested separately. An unrelated account-recovery banner remains visible in the unsigned Store host; this is not accepted secure-storage behavior.",
+    "results": [
+      {
+        "device": "iPhone 18 Pro",
+        "os": "27.0",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "result": "Passed"
+      },
+      {
+        "device": "iPad Pro 13-inch (M5)",
+        "os": "27.0",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "result": "Passed"
+      }
+    ],
+    "checks": [
+      "History displays part progress and permanent capture-gap guidance",
+      "Reviewed retry updates same synthetic event to Pending",
+      "Name/address/trust input; Create requires consent",
+      "Secret hidden by default, reveal/hide, explicit saved acknowledgement",
+      "Verification after acknowledgement; saved connection brought into view on phone",
+      "Largest accessibility text in dark appearance; trust control reachable, Cancel keeps setup absent"
+    ],
+    "visualReview": "Final phone history, trust review and largest-text screenshots inspected; tablet history/largest-text inspected. Toolbar labels shortened to avoid ordinary-phone truncation.",
+    "initialFindings": [
+      "Automation must target actual switch thumb, not its broad SwiftUI label",
+      "Off-screen text fields must be checked before list virtualization removes them",
+      "Acknowledging the secret needed an explicit scroll transition to its connection row"
+    ],
+    "screenshots": "iOS screenshots owned by TaskFold-iOS; no native Mac screenshots claimed"
+  },
+  "cleanup": {
+    "stoppedOldFinalizers": [
+      "webhook-native-phone-v4"
+    ],
+    "removed": [
+      {
+        "name": "webhook-native-phone.xcresult",
+        "bytes": 196244501
+      },
+      {
+        "name": "webhook-native-phone-v2.xcresult",
+        "bytes": 67486193
+      },
+      {
+        "name": "webhook-native-phone-v3.xcresult",
+        "bytes": 194038581
+      },
+      {
+        "name": "webhook-native-phone-v4.xcresult",
+        "bytes": 230309970
+      },
+      {
+        "name": "webhook-native-phone-v5.xcresult",
+        "bytes": 1928207
+      },
+      {
+        "name": "webhook-native-ipad.xcresult",
+        "bytes": 67830889
+      },
+      {
+        "name": "webhook-native-ipad-v2.xcresult",
+        "bytes": 193120714
+      },
+      {
+        "name": "webhook-native-ipad-v3.xcresult",
+        "bytes": 67799908
+      },
+      {
+        "name": "webhook-native-ipad-v4.xcresult",
+        "bytes": 2764756
+      },
+      {
+        "name": "webhook-native-ipad-v5.xcresult",
+        "bytes": 2774506
+      },
+      {
+        "name": "webhook-native-ios-host",
+        "bytes": 5110296
+      },
+      {
+        "name": "webhook-native-ipad-v5-images",
+        "bytes": 2044019
+      },
+      {
+        "name": "webhook-native-phone-v5-images",
+        "bytes": 1188800
+      },
+      {
+        "name": "webhook-native-ipad-v4-images",
+        "bytes": 2036181
+      },
+      {
+        "name": "webhook-native-ipad-attachments",
+        "bytes": 4
+      },
+      {
+        "name": "webhook-native-ipad-attachments-all",
+        "bytes": 19395186
+      }
+    ],
+    "simulatorHostsClosed": [
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378"
+    ],
+    "currentBuildCachesRetained": true,
+    "acceptedV6ResultsRetained": true,
+    "bytesPruned": 1054072711
+  },
+  "remainingGates": [
+    "Genuine OS Keychain create/relaunch/cancel cleanup and process races in an installed host",
+    "Native backend/Auth/receiver end-to-end, account switch and workspace disappearance acceptance",
+    "Copy/clipboard expiry and spoken accessibility for these new controls",
+    "Native Mac runtime remains deferred with signing",
+    "Secure scheduling, hosted queue/receiver delivery and key/configuration recovery",
+    "No automatic resync or dismissal of cumulative capture-gap warnings; receiver reconciliation remains manual",
+    "Full email intake, teams and wearables backlog remains active"
+  ],
+  "remoteBackendChanges": false
+}
