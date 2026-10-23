@@ -1225,9 +1225,27 @@ active, and all existing user deferrals stay unchanged.
 The user has deferred provider/domain setup and authorized preparation now. The
 first independently owned server component normalizes bounded plain text and
 provides a provider-receipt/route key separate from content fingerprint, so the
-next atomic journal can distinguish safe retries from changed-content conflicts.
+atomic journal can distinguish safe retries from changed-content conflicts.
 Both repos pass ten Deno cases and lint. This milestone sends no mail, creates no
-task and exposes no endpoint. Native setup, sender/recipient authorization, quota
-and journal enforcement, provider integration and real delivery remain open.
+task and exposes no endpoint. The later database milestone below adds route authorization, quotas and journal
+enforcement. Native setup, trusted provider integration and real delivery remain open.
 `EMAIL_CAPTURE.md` gives the ordered contract and gates;
 `p2-email-content-evidence.json` records exact scope.
+
+
+## Email intake journal — 23 October, local acceptance
+
+The disabled database candidate now atomically saves one task per verified
+provider receipt, preserves retries across user edits/deletion, and supports
+account-bound route pause/resume, rotation, revocation and setup cancellation.
+Current confirmed Auth email is the only approved sender. Destination permission,
+account removal, sender changes and quotas are checked under transaction locks.
+Each repo passes 119 functional checks, 32 real PostgreSQL concurrency checks and
+43 existing webhook-fixture compatibility checks. Local advisors have no findings
+for the new email objects; unrelated minimal-fixture findings remain.
+
+This does not enable email or complete rank 6. Next: trusted gateway and native
+address setup/recovery, then verified provider integration once configured.
+Additional verified senders, source links, scheduled inactive-account maintenance
+and hosted/native/live-mail acceptance remain open. See `EMAIL_CAPTURE.md` and
+`p2-email-intake-journal-evidence.json`. All existing user deferrals remain in force.

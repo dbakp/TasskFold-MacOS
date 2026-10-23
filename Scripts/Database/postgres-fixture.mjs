@@ -1,4 +1,4 @@
-// Owned local PostgreSQL runtime. No host port, mounted user files or credentials.
+// Owned synthetic PostgreSQL runtime. No public ports, mounted user files or credentials.
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { randomUUID } from "node:crypto";
@@ -8,7 +8,7 @@ export const postgresImage =
   "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94";
 export const literal = (value) =>
   "'" + String(value).replaceAll("'", "''") + "'";
-export async function createPostgresFixture() {
+export async function createPostgresFixture({ advisors = false } = {}) {
   const name = "taskfold-task-pg-" + randomUUID().slice(0, 8),
     label = randomUUID(),
     holders = new Set();
@@ -178,7 +178,8 @@ export async function createPostgresFixture() {
       "--detach",
       "--rm",
       "--network",
-      "none",
+      advisors ? "bridge" : "none",
+      ...(advisors ? ["--publish", "127.0.0.1::5432"] : []),
       "--tmpfs",
       "/var/lib/postgresql/data:rw,size=256m",
       "--memory",
@@ -227,7 +228,26 @@ export async function createPostgresFixture() {
     if (serverVersion !== 170006) {
       throw new Error("Unexpected PostgreSQL version");
     }
-    return { raw, scalar, value, hold, waitForLock, close, serverVersion };
+    return {
+      raw,
+      scalar,
+      value,
+      hold,
+      waitForLock,
+      close,
+      serverVersion,
+      // Optional read-only CLI advisors on this exact owned fixture. Explicit
+      // opt-in publishes an ephemeral loopback-only port; no user data.
+      advisors: async () => {
+        if (!advisors) {
+          throw new Error("Advisor probe requires explicit fixture opt-in");
+        }
+        return (await import("./postgres-advisors.mjs")).runPostgresAdvisors(
+          name,
+          label,
+        );
+      },
+    };
   } catch (error) {
     await close();
     throw error;

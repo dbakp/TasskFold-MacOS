@@ -43,6 +43,14 @@ and local SQL checks. No migration/function/key/UI is enabled on the live servic
 Task operations, native management and real acceptance remain in progress before
 release; see `p2-automation-access-evidence.json` and the rank-6 plan.
 
+23 October email journal: the Mac owns a disabled database candidate for atomic
+receipt/task creation and account-bound route lifecycle. Local validation passes
+119 functional, 32 real PostgreSQL concurrency and 43 existing fixture-compatibility
+checks. No hosted migration, endpoint or native UI is enabled. Trusted gateway,
+private native setup/recovery, source links, provider integration and real delivery
+remain open; provider/domain configuration stays deferred. See
+[email intake evidence](p2-email-intake-journal-evidence.json).
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.
