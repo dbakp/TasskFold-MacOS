@@ -149,3 +149,39 @@ properties. This round's scoped outcomes and baseline failure are recorded in
 Mac gesture/pasteboard/Keychain runtime acceptance remains open.
 Normal feature entry and main API enablement remain unchanged and disabled.
 The full Px objective and its existing user deferrals remain in force.
+
+
+## Concealed review after an unconfirmed action — 23 October
+
+Both apps now remove the previous secret-review confirmation when a connection
+operation reports an error. The exact private enrollment stays in its existing
+account/server-bound vault; an uncertain webhook control keeps its original
+retry intent. Successful control retry alone does not reveal the secret again.
+Continuing enrollment can reconfirm the same setup, and its native Reveal/Copy
+state resets so the raw value requires another deliberate Reveal tap.
+
+Connection requests still attempt one automatic credential renewal. A repeated
+401 on the two management routes, or a documented invalid/expired refresh-session
+code, now produces a fixed sign-in message instead of server details. The notice
+says a private setup was kept only when one exists. Rate limiting, server failures
+and unknown refresh errors are not treated as confirmed session expiry. A rejected
+refresh from a superseded account/session becomes cancellation, so it cannot
+request sign-in for the newly active account. This does not log out the user,
+remove tasks or erase recovery.
+
+The regression failed on the unchanged iOS key and webhook models (two cases,
+five failed assertions). Both full Core suites now pass (iOS-owned: 1,365 cases,
+13 optional skips; Mac-owned: 1,397 cases, 33 optional skips; no failures).
+Four iPhone/iPad native checks pass, with no skips, and their normal/largest-text
+screenshots are visually inspected. Exact results and the verification limits are
+recorded in `p2-connection-review-failure-evidence.json`. Native cases use the
+production view/model with an exact isolated Debug-only, in-memory service refusal;
+transport cases separately exercise real URLSession through a synthetic peer on
+the Mac-hosted Core test target.
+They do not claim hosted native expiry/refresh acceptance or an in-place sign-in
+sheet. That end-to-end recovery walkthrough, wider consent/history speech, Mac
+runtime, email intake, advanced teams and wearables remain open. Normal automation
+entries and main services stay disabled, and all user deferrals remain unchanged.
+
+The refresh classifications use the provider's structured `code` field, following
+the [Supabase Auth error-code reference](https://supabase.com/docs/guides/auth/debugging/error-codes). No matching against server message text is used.

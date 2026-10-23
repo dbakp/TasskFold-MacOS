@@ -19,6 +19,38 @@ private func eventRow() -> [String:JSON] { ["id":.string(wid(31)),"task_id":.str
     func webhookReceipt(action:String,body:[String:JSON],account:String,origin:String) async throws -> [String:JSON] { calls.append((action,body)); return try await reply?(action,body) ?? ["account":.string(account),"subscriptions":.array([]),"next_cursor":.null] }
 }
 final class WebhookAccessTests: XCTestCase {
+    @MainActor func testFailedControlConcealsConfirmedSecretWithoutDiscardingSetup() async throws {
+        for authorizationFailure in [false,true] {
+            let io = WebhookMemory(), vault = WebhookEnrollmentVault(io:io), service = WebhookMock()
+            service.reply = { _,body in var row = connection(); row["id"] = body["id"]; return ["account":.string(wa),"subscription":.object(row)] }
+            let model = WebhookAccessModel(account:wa,origin:wo,service:service,vault:vault,isCurrent:{true})
+            await model.create(name:"Design pipeline",endpoint:"https://receiver.example/events",scope:"inbox",project:nil,events:[.created],days:30)
+            let draft = try XCTUnwrap(model.pending?.draft), confirmed = try XCTUnwrap(model.confirmed)
+            XCTAssertTrue(model.secret != nil)
+            let stored = io.data
+            service.reply = { _,_ in if authorizationFailure { throw AccountSessionAuthorizationRequired() }; throw URLError(.notConnectedToInternet) }
+            await model.control("verify",connection:confirmed)
+            XCTAssertTrue(model.secret == nil,"Unconfirmed actions must remove the previous reveal permission")
+            XCTAssertNil(model.confirmed)
+            XCTAssertEqual(model.message?.contains("Sign in again"),authorizationFailure)
+            XCTAssertTrue(io.data == stored,"The private recovery envelope must remain unchanged")
+            XCTAssertTrue(model.pending?.draft.body == draft.body)
+            XCTAssertEqual(model.uncertainAction,"verify")
+            let intent = try XCTUnwrap(service.calls.last?.1)
+            service.reply = { action,body in
+                var row = connection(); row["id"] = body["id"]
+                var reply:[String:JSON] = ["account":.string(wa),"subscription":.object(row)]
+                if action == "verify" { reply["verification"] = .object(["attempt_id":body["attempt_id"]!,"outcome":.string("retry")]) }
+                return reply
+            }
+            await model.retryControl()
+            XCTAssertTrue(service.calls.last?.1 == intent,"The uncertain operation must keep its original intent")
+            XCTAssertTrue(model.secret == nil,"Retry confirmation is not fresh enrollment review")
+            await model.resumeSetup()
+            XCTAssertTrue(model.secret != nil)
+            XCTAssertTrue(service.calls.last?.1 == draft.body)
+        }
+    }
     private func draft(_ id:Int=21) throws -> WebhookDraft { try WebhookDraft(account:wa,origin:wo,name:"Design pipeline",endpoint:"https://receiver.example/events?private=fixture",scope:"inbox",project:nil,events:[.created],days:30,id:UUID(uuidString:wid(id))!,entropy:{Data(0..<32)}) }
     func testSecretValidationAndRedaction() throws {
         let d = try draft(); XCTAssertEqual(d.secret,"tfwh_v1_AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8")

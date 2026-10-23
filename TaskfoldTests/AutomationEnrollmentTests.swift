@@ -15,6 +15,7 @@ private final class EnrollmentMemoryIO: CalendarSecureItemIO, @unchecked Sendabl
     var row: AutomationKey?
     var loseReply = false
     var failRevoke = false
+    var authorizationFailure = false
     var cancelledIDs = Set<String>()
     var failBeforeCreate = false
     var loseCancelReply = false
@@ -38,6 +39,7 @@ private final class EnrollmentMemoryIO: CalendarSecureItemIO, @unchecked Sendabl
         return row!
     }
     func revokeAutomationKey(id: String, account: String, origin: String) async throws -> AutomationKey {
+        if authorizationFailure { throw AccountSessionAuthorizationRequired() }
         if failRevoke { throw URLError(.notConnectedToInternet) }
         guard let row, row.id == id else { throw AutomationKey.invalid }
         var fields = Self.fields(id: row.id, name: row.name, scopes: row.scopes)
@@ -59,6 +61,26 @@ private final class EnrollmentMemoryIO: CalendarSecureItemIO, @unchecked Sendabl
     static func key(_ draft: AutomationKeyDraft) throws -> AutomationKey { try AutomationKey(fields(id: draft.id, name: draft.name, scopes: draft.scopes)) }
 }
 @MainActor final class AutomationEnrollmentTests: XCTestCase {
+    func testFailedRevocationConcealsConfirmedKeyWithoutDiscardingRecovery() async throws {
+        for authorizationFailure in [false,true] {
+            let io = EnrollmentMemoryIO(), service = EnrollmentService(), vault = AutomationEnrollmentVault(io:io)
+            let value = model(service,vault)
+            await value.create(name:"Build script",scopes:[.read],days:30)
+            let draft = try XCTUnwrap(value.pending), key = try XCTUnwrap(value.confirmed)
+            XCTAssertTrue(value.secret != nil)
+            service.failRevoke = true; service.authorizationFailure = authorizationFailure
+            await value.revoke(key)
+            XCTAssertTrue(value.secret == nil,"Unconfirmed revocation must remove the previous reveal permission")
+            XCTAssertNil(value.confirmed)
+            XCTAssertEqual(value.message?.contains("Sign in again"),authorizationFailure)
+            let saved = try await vault.pending(account:account,origin:origin)
+            XCTAssertTrue(saved?.body == draft.body,"The exact private setup must remain recoverable")
+            service.authorizationFailure = false
+            await value.resume()
+            XCTAssertTrue(value.secret != nil)
+            XCTAssertTrue(service.submitted.last?.body == draft.body)
+        }
+    }
     let account = "f096cafe-0000-4000-8000-000000000001"
     let other = "f096cafe-0000-4000-8000-000000000002"
     let origin = "https://automation-enrollment.test"

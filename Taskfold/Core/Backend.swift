@@ -11,6 +11,11 @@ struct AppFailure: LocalizedError {
     var errorDescription: String? { message }
 }
 
+/// A rejected session requires explicit sign-in; never surface server details.
+struct AccountSessionAuthorizationRequired: LocalizedError {
+    var errorDescription: String? { "Sign in again to continue." }
+}
+
 /// Explain transport interruptions without presenting internal networking codes.
 /// This describes already-persisted sync work, not an unsaved editor draft.
 enum SyncStatus {
@@ -300,6 +305,16 @@ final class Backend: NSObject {
         }
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let error = (try? JSONDecoder().decode(Record.self, from: data)) ?? Record()
+            let status = (response as? HTTPURLResponse)?.statusCode
+            if authenticated, status == 401,
+               ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks"].contains(path) {
+                throw AccountSessionAuthorizationRequired()
+            }
+            if !authenticated, path == "/auth/v1/token?grant_type=refresh_token",
+               [400, 401, 422].contains(status ?? 0),
+               ["refresh_token_not_found", "refresh_token_already_used", "session_expired", "session_not_found"].contains(error.string("code")) {
+                throw AccountSessionAuthorizationRequired()
+            }
             let message = ["msg", "message", "error_description", "error"].map { error.string($0) }.first { !$0.isEmpty }
             throw AppFailure(message: message ?? "The server could not complete this request. Please try again.")
         }
@@ -335,12 +350,19 @@ final class Backend: NSObject {
         #endif
         return data
     }
+    private func refreshResult(_ task: Task<Session, Error>, generation: UUID, account: String) async throws -> Session {
+        do { return try await task.value }
+        catch {
+            guard generation == sessionGeneration, session?.user.id == account else { throw CancellationError() }
+            throw error
+        }
+    }
     func refreshIfNeeded(force: Bool = false) async throws {
         guard let current = session else { throw AppFailure(message: "Please sign in again.") }
         guard force || current.expires_at < Date().timeIntervalSince1970 + 90 else { return }
         let generation = sessionGeneration
         if let refreshTask {
-            let next = try await refreshTask.value
+            let next = try await refreshResult(refreshTask, generation:generation, account:current.user.id)
             guard generation == sessionGeneration, session?.user.id == current.user.id, next.user.id == current.user.id else { throw CancellationError() }
             session = next; return
         }
@@ -356,7 +378,7 @@ final class Backend: NSObject {
         }
         refreshTask = task
         defer { if refreshID == id { refreshTask = nil; refreshID = nil } }
-        let next = try await task.value
+        let next = try await refreshResult(task, generation:generation, account:current.user.id)
         guard generation == sessionGeneration, session?.user.id == current.user.id else { throw CancellationError() }
         session = next
     }

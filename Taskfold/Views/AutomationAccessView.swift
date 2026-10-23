@@ -63,6 +63,7 @@ struct AutomationAccessView: View {
             }
             model = value; await value.load()
         }
+        .onChange(of:model?.confirmed?.id) { _,id in if id == nil { revealedID = nil; copiedID = nil } }
         .onChange(of: store.workspaceGeneration) { _, _ in leave() }
         .onChange(of: store.signingOut) { _, value in if value { leave() } }
         .onChange(of: phase) { _, value in

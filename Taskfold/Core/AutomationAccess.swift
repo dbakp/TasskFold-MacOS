@@ -312,7 +312,12 @@ extension Backend: AutomationKeyService {}
         defer { busy = false }
         do { try check(); try await operation() }
         catch is CancellationError { }
-        catch { if current { message = error.localizedDescription } }
+        catch { if current {
+            confirmed = nil
+            if error is AccountSessionAuthorizationRequired {
+                message = pending == nil ? "Sign in again to continue. Your tasks stay saved." : "Sign in again to continue. Your private setup has been kept on this device."
+            } else { message = error.localizedDescription }
+        } }
     }
     func selectHistory(_ value: Bool) {
         guard current, !busy else { return }

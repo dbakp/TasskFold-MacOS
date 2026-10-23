@@ -55,6 +55,7 @@ struct WebhookAccessView: View {
             }
             model = value; await value.load()
         }
+        .onChange(of:model?.confirmed?.id) { _,id in if id == nil { revealed = false; copied = false } }
         .onChange(of:store.workspaceGeneration) { _,_ in leave() }
         .onChange(of:store.backend.reminderSessionIncarnation) { _,_ in leave() }
         .onChange(of:store.signingOut) { _,v in if v { leave() } }
@@ -314,6 +315,7 @@ private struct WebhookHistoryView: View {
 /// opt-in recovery fixture uses the real Backend and private OS Keychain.
 @MainActor enum WebhookManagementFixture {
     static var enabled: Bool { WebhookAccessAvailability.enabled && ProcessInfo.processInfo.arguments.contains("--uitesting") && UserDefaults.standard.bool(forKey:"localMode") && !ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test") }
+    static var authorizationTesting: Bool { enabled && ["com.dbakp.taskfold.workflowtestswebhooks","com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--webhook-authorization-testing") }
     static var noticeTesting: Bool { enabled && ["com.dbakp.taskfold.workflowtestswebhooks","com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--webhook-notice-testing") }
     static var clipboardTesting: Bool { enabled && ["com.dbakp.taskfold.workflowtestswebhooks","com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--webhook-clipboard-testing") }
     /// Observe the real system pasteboard; expose only a fixed result in the
@@ -381,6 +383,7 @@ private final class WebhookFixtureMemory: CalendarSecureItemIO, @unchecked Senda
         if action == "list" { return ["account":.string(account),"subscriptions":.array(rows.values.sorted{$0["name"]!.text < $1["name"]!.text}.map(JSON.object)),"next_cursor":.null] }
         let id = body["id"]?.text ?? ""
         if action == "create", rows[id] == nil { rows[id] = subscription(id:id,name:body["name"]!.text,origin:WebhookValue.receiverOrigin(body["endpoint"]!.text)!,scope:body["scope"]!.text,project:body["project_id"]!,events:body["events"]!.list,days:[30,90,365].first { body["ttl_days"] == .number(Double($0)) } ?? 30) }
+        if WebhookManagementFixture.authorizationTesting, action == "verify" { throw AccountSessionAuthorizationRequired() }
         if WebhookManagementFixture.noticeTesting {
             if action == "create", failedCreates < 2 { failedCreates += 1; throw URLError(.networkConnectionLost) }
             if action == "history", !failedHistory { failedHistory = true; throw URLError(.notConnectedToInternet) }

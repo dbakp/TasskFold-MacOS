@@ -751,3 +751,89 @@ extension AccountTransportTests {
         }
     }
 }
+
+extension AccountTransportTests {
+    @MainActor func testConnectionRefreshReplaysTheOriginalIntentOnlyOnce() async throws {
+        for path in ["/functions/v1/automation-webhooks", "/functions/v1/automation-keys"] {
+            var refreshed = 0, requests = 0, intents: [[String:JSON]] = []
+            let api = backend(try signed(owner)), next = try JSONEncoder().encode(signed(owner,token:"renewed"))
+            ScopedHTTP.handler = { request, transport in
+                if request.url?.path == "/auth/v1/token" { refreshed += 1; transport.finish(200,next); return }
+                XCTAssertEqual(request.url?.path,path)
+                requests += 1
+                var data = request.httpBody ?? Data()
+                if let stream = request.httpBodyStream {
+                    stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating:0,count:4096)
+                    while stream.hasBytesAvailable { let n = stream.read(&bytes,maxLength:bytes.count); if n <= 0 { break }; data.append(bytes,count:n) }
+                }
+                if let body = try? JSONDecoder().decode([String:JSON].self,from:data) { intents.append(body) }
+                if requests == 1 { transport.finish(401,Data(#"{"message":"Expired"}"#.utf8)) }
+                else {
+                    XCTAssertEqual(request.value(forHTTPHeaderField:"Authorization"),"Bearer renewed")
+                    transport.finish(200,try! JSONEncoder().encode(["account":JSON.string(self.owner)]))
+                }
+            }
+            defer { ScopedHTTP.handler = nil }
+            let fields:[String:JSON] = ["id":.string(UUID().uuidString.lowercased()),"name":.string("Synthetic connection")]
+            if path.hasSuffix("webhooks") { _ = try await api.webhookReceipt(action:"create",body:fields,account:owner,origin:"https://native-scope.test") }
+            else { _ = try await api.request(path,method:"POST",body:["action":.string("create"),"body":.object(fields)],extra:["X-Taskfold-Automation":"1"],expectedAccount:owner) }
+            XCTAssertEqual(refreshed,1); XCTAssertEqual(requests,2); XCTAssertEqual(intents.count,2)
+            XCTAssertTrue(intents.first == intents.last,"Automatic renewal must replay the original intent")
+            XCTAssertEqual(api.session?.user.id,owner)
+        }
+    }
+    @MainActor func testConnectionRepeated401RequiresSignInWithoutExposingServerDetails() async throws {
+        for path in ["/functions/v1/automation-webhooks", "/functions/v1/automation-keys"] {
+            var renewals = 0, requests = 0
+            let api = backend(try signed(owner)), next = try JSONEncoder().encode(signed(owner,token:"renewed"))
+            ScopedHTTP.handler = { request, transport in
+                if request.url?.path == "/auth/v1/token" { renewals += 1; transport.finish(200,next) }
+                else { requests += 1; transport.finish(401,Data(#"{"message":"PRIVATE SERVER DETAIL"}"#.utf8)) }
+            }
+            defer { ScopedHTTP.handler = nil }
+            do { _ = try await api.request(path,method:"POST",body:["action":.string("list")],expectedAccount:owner); XCTFail("Rejected session accepted") }
+            catch { XCTAssertTrue(error is AccountSessionAuthorizationRequired); XCTAssertFalse(error.localizedDescription.contains("PRIVATE")) }
+            XCTAssertEqual(renewals,1); XCTAssertEqual(requests,2)
+            XCTAssertEqual(api.session?.user.id,owner,"Authorization failure must not discard the saved account")
+        }
+    }
+    @MainActor func testRevokedRefreshCodesRequireSignInButTransientFailuresDoNot() async throws {
+        for (status,code,requiresSignIn) in [
+            (400,"refresh_token_not_found",true),(400,"refresh_token_already_used",true),
+            (400,"session_expired",true),(422,"session_not_found",true),
+            (400,"unexpected_failure",false),(429,"over_request_rate_limit",false),
+            (500,"session_expired",false)
+        ] {
+            let api = backend(try signed(owner)); var refreshes = 0, requests = 0
+            ScopedHTTP.handler = { request, transport in
+                if request.url?.path == "/auth/v1/token" {
+                    refreshes += 1
+                    transport.finish(status,try! JSONEncoder().encode(["code":code,"message":"PRIVATE AUTH DETAIL"]))
+                } else { requests += 1; transport.finish(401,Data(#"{"message":"Expired"}"#.utf8)) }
+            }
+            defer { ScopedHTTP.handler = nil }
+            do { _ = try await api.webhookReceipt(action:"list",body:[:],account:owner,origin:"https://native-scope.test"); XCTFail("Renewal failure accepted") }
+            catch { XCTAssertEqual(error is AccountSessionAuthorizationRequired,requiresSignIn); if requiresSignIn { XCTAssertFalse(error.localizedDescription.contains("PRIVATE")) } }
+            XCTAssertEqual(refreshes,1); XCTAssertEqual(requests,1)
+            XCTAssertEqual(api.session?.access_token,"old")
+        }
+    }
+    @MainActor func testLateRejectedConnectionRefreshCannotAffectAnotherAccount() async throws {
+        let gate = HTTPGate(), started = expectation(description:"Old account's refresh started")
+        let api = backend(try signed(owner)), otherSession = try JSONEncoder().encode(signed(other,token:"other"))
+        var requests = 0
+        ScopedHTTP.handler = { request, transport in
+            if request.url?.query?.contains("refresh_token") == true { gate.hold(transport); started.fulfill() }
+            else if request.url?.path == "/auth/v1/token" { transport.finish(200,otherSession) }
+            else { requests += 1; XCTAssertEqual(request.value(forHTTPHeaderField:"Authorization"),"Bearer old"); transport.finish(401,Data("{}".utf8)) }
+        }
+        defer { ScopedHTTP.handler = nil }
+        let old = Task { @MainActor in try await api.webhookReceipt(action:"list",body:[:],account:self.owner,origin:"https://native-scope.test") }
+        await fulfillment(of:[started],timeout:3)
+        _ = try await api.signIn(email:"synthetic@example.invalid",password:"synthetic",signup:false)
+        gate.release(400,Data(#"{"code":"refresh_token_not_found"}"#.utf8))
+        do { _ = try await old.value; XCTFail("Old request must not recover under a different account") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(api.session?.user.id,other); XCTAssertEqual(requests,1)
+    }
+}
