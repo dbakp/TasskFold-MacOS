@@ -128,6 +128,23 @@ allowance, OS settings and normal fallback. This API does not enable Critical
 Alerts or remote delivery, expose private places, or modify task planning dates
 to accommodate a reminder's holiday policy.
 
+## Busy transactions and safe retries
+
+PostgreSQL deadlock (`40P01`), serialization (`40001`) and unavailable-lock
+(`55P03`) responses now project a safe `503`, `Retry-After: 1`, no-store and a
+browser-readable retry header. Private SQL diagnostics never reach the caller.
+Writes explicitly say to retry with the **same request ID**. Keep the original
+body/generation/baseline for that retry: a transient rollback can be followed by
+a real `409` if another client changed or replaced the task. At that point fetch
+the current task and review a new intent instead of forcing the old edit.
+
+The native identity mutex remains intact. An atomic native delete/recreate can
+form a lock cycle with a waiting automation edit. The verified actual PostgreSQL
+case rolls the edit back, leaves the replacement intact and returns the retry
+hint; an exact HTTP retry then refuses the old generation with `409`. Successful
+operation quota and the retry journal remain unchanged by both failures, while
+the separately committed admission budget counts both attempts.
+
 ## Mutation contract
 
 Every body includes a fresh `request_id`, target `id`, `task_generation` and
@@ -357,3 +374,29 @@ The full Px goal and all user-deferred work remain active/unchanged.
 [Cloudflare header reference](https://developers.cloudflare.com/fundamentals/reference/http-headers/)
 provides the header and Worker context; the project-specific probe supplies the
 actual behavior evidence. The old last-hop assumption was never enabled.
+
+
+### Independent task-operation concurrency checkpoint
+
+Both repos now pass 99 real PostgreSQL 17.6 assertions. Controlled transactions
+hold a real account/task/membership lock until `pg_stat_activity` and
+`pg_blocking_pids` show the workers waiting on that exact holder; separate backend
+PIDs are recorded before release. These cases verify duplicate retries, competing
+request bodies, disjoint and overlapping edits, one recurring successor, both
+revocation/write orders, new-key exact retries, membership withdrawal, generation
+replacement, newly linked descendants in a deletion review and concurrent
+minute/day/account quotas. Failed work leaves no stranded journal claim.
+
+The generation-replacement case also exercises the actual Deno handler and actual
+admission/task SQL through an owned loopback adapter. Its observed `40P01` becomes
+HTTP `503`/Retry-After 1, and the identical request then yields `409`; the new row
+survives. The local schema includes tracked native guards and all nine automation
+candidates with minimal dependency tables, not every hosted trigger. These results
+do not replace hosted Auth/PostgREST/native-account acceptance. Evidence and exact
+barriers: `p2-automation-task-concurrency-evidence.json`.
+
+Hosted acceptance is being prepared in a separate branch with production data
+excluded. Its historical setup replay stopped after 28 older migrations, before
+any automation candidate; that staging reproducibility issue must be diagnosed
+before using it for account tests. The main database and deployed functions have
+not been changed by the task-race work. No automation candidate is enabled.

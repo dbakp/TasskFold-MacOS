@@ -2970,3 +2970,22 @@ Owned temporary databases are removed and Docker is restored to its initial Off
 state. `p2-automation-hosted-ingress-evidence.json` distinguishes actual hosted
 header proof and local independent-connection proof from remaining task-effect/
 hosted Auth/PostgREST/timeout/native/clipboard acceptance. Full Px remains active.
+
+
+### 23 October — actual task-write contention and retry semantics
+
+Each repo passes 99 real PostgreSQL 17.6 checks with observed lock barriers and
+independent backends: exact retries, conflicting identities/fields, recurring
+completion, both revoke/write orders, membership removal, replacement generations,
+linked deletion review and minute/day/account quotas. Actual HTTP exercises a
+40P01 rollback and exact 503 → 409 retry while preserving replacement content.
+The gateway now returns a safe one-second retry hint without private SQL details;
+SQL identity/access/journal safeguards remain unchanged. Existing 221 portable/
+101 mutation/140 HTTP regressions, 48 Deno tests and lint pass. Owned local test
+hosts/databases are closed and Docker restored Off. Main API/migrations stay off.
+
+A data-excluding hosted acceptance branch was created, but its older migration
+replay stopped after 28 entries. Repair that staging setup before hosted account
+checks, then delete the branch; never merge it. Exact branch identity, proof and
+remaining gates are in `p2-automation-task-concurrency-evidence.json`. This is
+progress toward full Px, not a claim of hosted or release completion.

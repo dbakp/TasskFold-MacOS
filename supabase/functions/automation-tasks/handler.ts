@@ -42,13 +42,18 @@ const fields = [
   "source_metadata",
   "revision",
 ];
-const json = (body: unknown, status = 200) =>
+const json = (
+  body: unknown,
+  status = 200,
+  extraHeaders: Record<string, string> = {},
+) =>
   new Response(JSON.stringify(body), {
     status,
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "no-store",
       "Access-Control-Allow-Origin": "*",
+      ...extraHeaders,
     },
   });
 function object(value: unknown): value is Record<string, unknown> {
@@ -508,6 +513,23 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
       );
       const value = await read(result.body, 1048576, deadline);
       if (!result.ok) {
+        const code = object(value) && typeof value.code === "string"
+          ? value.code
+          : "";
+        if (["40P01", "40001", "55P03"].includes(code)) {
+          return json(
+            {
+              error: writes
+                ? "Task data is busy. Retry with the same request ID."
+                : "Task data is busy. Try again shortly.",
+            },
+            503,
+            {
+              "Retry-After": "1",
+              "Access-Control-Expose-Headers": "Retry-After",
+            },
+          );
+        }
         const codes: Record<string, [number, string]> = {
           "28000": [401, "This task key is unavailable."],
           "42501": [403, "This key does not allow that action."],

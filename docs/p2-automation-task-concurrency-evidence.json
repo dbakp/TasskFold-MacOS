@@ -1,0 +1,302 @@
+{
+  "date": "2026-10-23",
+  "platform": "macOS",
+  "baseCommit": "1de199e0233d41578f44b1c004f0483771695458",
+  "milestone": "Real concurrent task operations and explicit transient retry handling",
+  "featureEnabled": false,
+  "mainMigrationsApplied": false,
+  "mainEndpointsDeployed": false,
+  "realTasksChanged": 0,
+  "hostedKeysIssued": 0,
+  "fullPxComplete": false,
+  "actualPostgresRun": {
+    "date": "2026-10-23T02:26:46.162Z",
+    "image": "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+    "checks": {
+      "duplicate-all-queued-on-account-lock": true,
+      "duplicate-independent-backends": true,
+      "duplicate-all-acknowledged": true,
+      "duplicate-one-effect": true,
+      "duplicate-three-replays": true,
+      "duplicate-identical-receipt": true,
+      "duplicate-one-task": true,
+      "duplicate-one-journal": true,
+      "identity-all-queued-on-account-lock": true,
+      "identity-independent-backends": true,
+      "identity-one-writer": true,
+      "identity-one-conflict": true,
+      "read-000102-12": true,
+      "identity-winner-preserved": true,
+      "create-103": true,
+      "read-000103-15": true,
+      "disjoint-all-queued-on-account-lock": true,
+      "disjoint-independent-backends": true,
+      "disjoint-both-accepted": true,
+      "read-000103-19": true,
+      "disjoint-both-fields-retained": true,
+      "same-field-all-queued-on-account-lock": true,
+      "same-field-independent-backends": true,
+      "same-field-one-writer": true,
+      "same-field-one-conflict": true,
+      "create-104": true,
+      "read-000104-26": true,
+      "complete-all-queued-on-account-lock": true,
+      "complete-independent-backends": true,
+      "completion-one-effect": true,
+      "completion-stale-cycle-refused": true,
+      "completion-one-successor": true,
+      "read-000104-32": true,
+      "completion-revision-one": true,
+      "revoke-true-distinct-blocked-sessions": true,
+      "revoke-true-first-accepted": true,
+      "revoke-true-later-outcome": true,
+      "revoke-true-task-count": true,
+      "revoked-key-replay-true": true,
+      "revoke-false-distinct-blocked-sessions": true,
+      "revoke-false-first-accepted": true,
+      "revoke-false-later-outcome": true,
+      "revoke-false-task-count": true,
+      "revoked-key-replay-false": true,
+      "new-key-can-review-retry": true,
+      "create-107": true,
+      "read-000107-46": true,
+      "membership-observed-real-row-block": true,
+      "withdrawn-member-write-refused": true,
+      "withdrawn-member-task-absent": true,
+      "withdrawn-member-replay-refused": true,
+      "departed-creator-read-refused": true,
+      "create-109": true,
+      "read-000109-53": true,
+      "database-deadlock-reached-real-handler": true,
+      "actual-deadlock-is-retryable-http-503": true,
+      "actual-deadlock-retry-after": true,
+      "actual-deadlock-no-store": true,
+      "actual-deadlock-copy-reuses-request-id": true,
+      "deadlock-rolls-back-success-quota": true,
+      "deadlock-leaves-no-journal": true,
+      "exact-request-retry-detects-new-generation": true,
+      "failed-exact-retry-still-no-claim": true,
+      "exact-retry-preserves-success-quota": true,
+      "both-failed-attempts-charge-admission": true,
+      "read-000109-65": true,
+      "replacement-content-safe": true,
+      "create-110": true,
+      "read-000110-68": true,
+      "unreviewed-new-descendant-refuses-delete": true,
+      "cascade-review-preserves-both-rows": true,
+      "read-000110-71": true,
+      "read-000111-72": true,
+      "fresh-reviewed-cascade-accepted": true,
+      "reviewed-cascade-deletes-exact-family": true,
+      "quota-minute-all-queued-on-account-lock": true,
+      "quota-minute-independent-backends": true,
+      "minute-one-within-budget": true,
+      "minute-three-over-budget": true,
+      "minute-one-task-only": true,
+      "minute-one-journal-only": true,
+      "minute-counter-never-overshoots": true,
+      "quota-day-all-queued-on-account-lock": true,
+      "quota-day-independent-backends": true,
+      "day-one-within-budget": true,
+      "day-three-over-budget": true,
+      "day-one-task-only": true,
+      "day-one-journal-only": true,
+      "day-counter-never-overshoots": true,
+      "quota-account-all-queued-on-account-lock": true,
+      "quota-account-independent-backends": true,
+      "account-one-within-budget": true,
+      "account-three-over-budget": true,
+      "account-one-task-only": true,
+      "account-one-journal-only": true,
+      "account-counter-never-overshoots": true,
+      "no-stranded-claims": true,
+      "synthetic-accounts-removed": true,
+      "owned-key-history-cascaded": true
+    },
+    "barriers": [
+      {
+        "case": "duplicate",
+        "holderPid": 242,
+        "blockedPids": [
+          294,
+          291,
+          296,
+          293
+        ],
+        "observedBeforeRelease": true
+      },
+      {
+        "case": "identity",
+        "holderPid": 358,
+        "blockedPids": [
+          383,
+          384
+        ],
+        "observedBeforeRelease": true
+      },
+      {
+        "case": "disjoint",
+        "holderPid": 435,
+        "blockedPids": [
+          463,
+          460
+        ],
+        "observedBeforeRelease": true
+      },
+      {
+        "case": "same-field",
+        "holderPid": 491,
+        "blockedPids": [
+          518,
+          517
+        ],
+        "observedBeforeRelease": true
+      },
+      {
+        "case": "complete",
+        "holderPid": 561,
+        "blockedPids": [
+          587,
+          586
+        ],
+        "observedBeforeRelease": true
+      },
+      {
+        "case": "revoke-before-write",
+        "blockedPids": [
+          652,
+          673
+        ],
+        "observedBeforeRelease": true
+      },
+      {
+        "case": "write-before-revoke",
+        "blockedPids": [
+          722,
+          743
+        ],
+        "observedBeforeRelease": true
+      },
+      {
+        "case": "quota-minute",
+        "holderPid": 1078,
+        "blockedPids": [
+          1124,
+          1127,
+          1129,
+          1125
+        ],
+        "observedBeforeRelease": true
+      },
+      {
+        "case": "quota-day",
+        "holderPid": 1210,
+        "blockedPids": [
+          1264,
+          1262,
+          1259,
+          1260
+        ],
+        "observedBeforeRelease": true
+      },
+      {
+        "case": "quota-account",
+        "holderPid": 1342,
+        "blockedPids": [
+          1392,
+          1397,
+          1394,
+          1396
+        ],
+        "observedBeforeRelease": true
+      }
+    ],
+    "realTasksChanged": 0,
+    "hostedAcceptance": false,
+    "containerRemoved": true,
+    "phase": "cleanup",
+    "postgresVersion": 170006,
+    "atomicReplacement": {
+      "sqlStates": [
+        "40P01",
+        "PT409"
+      ],
+      "firstHTTPStatus": 503,
+      "retryAfter": "1",
+      "exactRetryStatus": 409,
+      "replacementGenerationPreserved": true,
+      "admissionCalls": 2,
+      "resourceCalls": 2
+    },
+    "assertions": 99
+  },
+  "verification": {
+    "taskConcurrencyAssertions": 99,
+    "passed": true,
+    "nativeSchema": "Tracked native generation/completion/guarded-subtask/preference routines plus minimal owned dependency schema; all nine actual automation candidates",
+    "controlledOverlap": "Workers observed by application_name, pg_stat_activity and pg_blocking_pids against a known held lock, before release",
+    "realHTTPCase": "Actual Deno task handler + actual admission + task RPC on PostgreSQL 17.6; loopback adapter, not PostgREST",
+    "regressions": {
+      "portableSQL": 221,
+      "nativeReminderGoldens": 131,
+      "mutationSQL": 101,
+      "loopbackHTTP": 140,
+      "denoTests": 48,
+      "lintFiles": 6,
+      "passedBothRepos": true
+    }
+  },
+  "implementationChange": [
+    "Typed 40P01/40001/55P03 temporary failures return safe 503 and Retry-After 1",
+    "Writes direct a retry with the same request ID; reads use plain temporary-busy copy",
+    "No SQL identity/generation mutex, access, journal or quota guard weakened"
+  ],
+  "cleanup": {
+    "ownedContainersRemaining": 0,
+    "ownedHTTPHostsRemaining": 0,
+    "dockerRestoredStopped": true,
+    "noAppHostLaunched": true,
+    "syntheticAuthRowsRemoved": true
+  },
+  "unverified": [
+    "Every hosted native trigger and managed Auth behavior",
+    "Hosted PostgREST/TLS timeout/cancel propagation",
+    "Hosted native key lifecycle and clipboard acceptance",
+    "Other remaining Px capabilities"
+  ],
+  "staging": {
+    "branchId": "859b1e42-dac6-494a-be4d-df279d914853",
+    "projectRef": "ntbwkyhruxepackrxpph",
+    "parentProjectRef": "zqxflydiyfjeedqvyova",
+    "name": "codex-automation-acceptance-20261023",
+    "withData": false,
+    "persistent": false,
+    "status": "MIGRATIONS_FAILED",
+    "compute": "ACTIVE_HEALTHY",
+    "postgres": "17.11",
+    "appliedMigrations": 28,
+    "lastAppliedVersion": "20251203213110",
+    "nextMainMigration": "20260911123547 collaboration_foundation",
+    "automationCandidatesApplied": 0,
+    "purpose": "Repair historical replay, verify hosted API with disposable users, then delete; never merge to main",
+    "credentialsExcluded": true
+  },
+  "mainMetadata": {
+    "postgres": "17.6",
+    "automationCandidateMigrations": 0,
+    "automationKeysTableExists": false
+  },
+  "failedIterations": [
+    "Initial fixture expected only 404/409 for a single-transaction native delete/recreate. Actual PostgreSQL returned 40P01 and preserved the replacement. Added real HTTP retry proof and retained the identity mutex.",
+    "Test helper declarations were moved to function scope and unused async/const details corrected before final lint."
+  ],
+  "sourceSHA256": {
+    "supabase/functions/automation-tasks/handler.ts": "836769346355634e785c3f520b452a09f8e6507ba316f66151c60017978569c3",
+    "supabase/functions/automation-tasks/handler_test.ts": "44787c1ddd5d3d9b09e342da2a0faacafc3add341846ae5db8e2f0affe26cc5f",
+    "Scripts/Database/postgres-fixture.mjs": "8af8d24486f63faadc4204626f972ebf9094bdc5b43aecf6d5bc1b5eb9fc906f",
+    "Scripts/Database/postgres-http-fixture.mjs": "e444e0b46f03216cedd015e771197ffa388686d5640218653736b008caf7bae2",
+    "Scripts/Database/automation-postgres-schema.mjs": "afcb9dbd6fa905dd5d981bbe0deaa501bdbe2bcd9e32979cf5adce5d4e6e3ff3",
+    "Scripts/Database/test-automation-task-concurrency.mjs": "0239cc6c4ad76ec7ff092b749b1a888f8b771d77f2f3980331797c2c6fb1426c"
+  },
+  "userDeferralsUnchanged": true
+}

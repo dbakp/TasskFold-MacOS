@@ -715,3 +715,43 @@ Deno.test("section response binds every row and page to the requested project", 
     "Empty sections rejected",
   );
 });
+
+Deno.test("transaction contention has a safe bounded retry hint and never exposes PostgreSQL details", async () => {
+  for (const code of ["40P01", "40001", "55P03"]) {
+    const f = fixture({ code, message: "PRIVATE SQL", details: secret }, 400);
+    const reply = await f.handler(request());
+    assert(reply.status === 503, "Contention was not retryable");
+    assert(reply.headers.get("Retry-After") === "1", "Missing retry bound");
+    assert(
+      reply.headers.get("Access-Control-Expose-Headers") === "Retry-After",
+      "Browser cannot read retry hint",
+    );
+    assert(
+      reply.headers.get("Cache-Control") === "no-store",
+      "Cached contention",
+    );
+    assert(
+      !JSON.stringify(await reply.json()).includes("PRIVATE"),
+      "Private diagnostics escaped",
+    );
+  }
+});
+Deno.test("write contention directs an exact request-ID retry", async () => {
+  const f = fixture({ code: "40P01", message: "PRIVATE" }, 400);
+  const input = new Request(
+    "https://edge.test/write",
+    request("create", {
+      request_id: owner,
+      id,
+      task_generation: owner,
+      time_zone: "UTC",
+      fields: { title: "Synthetic busy request" },
+    }),
+  );
+  const response = await f.handler(input);
+  assert(response.status === 503, "Write contention status changed");
+  assert(
+    (await response.json()).error.includes("same request ID"),
+    "Write retry would lose its idempotent identity",
+  );
+});

@@ -14,7 +14,8 @@
     "test:automation-cancellation": "node test-automation-cancellation.mjs",
     "test:automation-destinations": "node test-automation-destinations.mjs",
     "test:automation-ingress": "node test-automation-ingress.mjs",
-    "test:automation-ingress-concurrency": "node test-automation-ingress-concurrency.mjs"
+    "test:automation-ingress-concurrency": "node test-automation-ingress-concurrency.mjs",
+    "test:automation-task-concurrency": "node test-automation-task-concurrency.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

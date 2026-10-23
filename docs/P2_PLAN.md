@@ -428,8 +428,10 @@ Next required, in order:
    stays unset. The hosted proxy check now passes: use the first XFF address only
    when it matches CF-Connecting-IP; the old last-hop mode is retired. Real local
    PostgreSQL 17.6 contention passes 20 checks per repo, including 12-connection
-   final-slot races and actual advisory-lock timeouts. Next: task-effect races and
-   hosted Auth/HTTP timeout, quota, revocation and concurrent-effect acceptance
+   final-slot races and actual advisory-lock timeouts. Local task-effect races now
+   pass 99 additional real PostgreSQL checks per repo, including actual HTTP
+   contention/retry behavior. Next: repair the isolated branch's historical setup
+   replay, then hosted Auth/HTTP timeout, key lifecycle and native acceptance
    with disposable users. Function-level admission does not close provider-level
    invocation billing or network protection.
 4. Verify signed-in phone/tablet and scoped Mac flows, then deploy the coherent
@@ -487,3 +489,28 @@ initially stopped Docker runtime restored. Evidence and limits:
 `p2-automation-hosted-ingress-evidence.json`. This closes the observed header
 contract and local admission-contention checks; it does not close task-effect
 races, hosted Auth/PostgREST/timeout/native/clipboard acceptance or the full Px goal.
+
+
+23 October task-operation contention: each repo independently passes 99 actual
+PostgreSQL 17.6 checks, 221 portable/101 mutation/140 HTTP regressions, 48 Deno tests
+and lint. Real controlled blockers prove requests overlap before effects. Native
+identity coordination remains unchanged; transient contention now exposes a safe
+one-second retry hint. An actual deadlock rolls back the waiting edit; its exact
+retry refuses the replaced generation. Root/child deletion review and all three
+successful-operation quota layers remain atomic. Owned databases and HTTP hosts
+were removed and Docker restored to Off. No new app host was launched.
+
+A nonpersistent, data-excluding Supabase acceptance branch has been created:
+`859b1e42-dac6-494a-be4d-df279d914853` / project `ntbwkyhruxepackrxpph`.
+Its compute is healthy (PostgreSQL 17.11), but historical migration replay is
+`MIGRATIONS_FAILED` after version `20251203213110` (28 applied). The next main
+migration is `20260911123547` / collaboration_foundation. No new automation
+migration or test account has been applied there. Diagnose and repair that staged
+replay before hosted tests; delete the acceptance branch after testing and never
+merge it into main. Keep all branch credentials outside Git and chat. The main
+project remains PostgreSQL 17.6 with zero automation candidates applied.
+
+`p2-automation-task-concurrency-evidence.json` records actual local proof and the
+separate staging state. Full Px and all user deferrals remain active. Hosted
+Auth/PostgREST/timeout/native/clipboard work remains required; local proof does
+not close those gates.
