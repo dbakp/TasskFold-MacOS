@@ -208,6 +208,7 @@ struct SyncFooter: View {
                 }
                 Spacer(minLength: 0)
                 if store.syncConflict != nil { Button("Review") { reviewing = true }.buttonStyle(.link).font(.caption).accessibilityIdentifier("reviewSyncConflict") }
+                else if store.canSignInForSync && store.focusSyncConflict == nil { SyncSignInButton().buttonStyle(.link).font(.caption) }
                 else if store.notice != nil && store.focusSyncConflict == nil { Button("Retry") { Task { await store.sync() } }.buttonStyle(.link).font(.caption) }
             }
             .font(.caption).foregroundStyle(.secondary)
@@ -221,7 +222,7 @@ struct SyncFooter: View {
     }
     private var presentation: SyncStatus.Presentation {
         SyncStatus.presentation(local: store.localMode, online: store.online, syncing: store.syncing,
-                                needsAttention: store.notice != nil, pending: store.pendingCount, lastSync: store.lastSync)
+                                needsAttention: store.notice != nil || store.canSignInForSync, pending: store.pendingCount, lastSync: store.lastSync)
     }
     private var symbol: String { presentation.symbol }
     private var status: String { presentation.title }

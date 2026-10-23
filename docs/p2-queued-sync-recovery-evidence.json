@@ -1,0 +1,259 @@
+{
+  "date": "2026-10-23",
+  "thisRepo": "TasskFold-MacOS",
+  "productionBehaviorChanged": true,
+  "scope": "Same-account task-sync recovery from the native sync warning, without resetting the workspace",
+  "production": {
+    "confirmedTypedRefusalOnly": true,
+    "workspaceBoundRecoveryAndDeferredRetry": true,
+    "fullAccountEntryResetUsed": false,
+    "connectionSettingsRenewalAlsoRetriesTaskSync": true
+  },
+  "core": {
+    "executed": 1410,
+    "skipped": 33,
+    "failed": 0,
+    "focusedSyncStatusTests": 6,
+    "focusedFailures": 0
+  },
+  "builds": {
+    "iosAppAndUITests": "Passed, signed isolated Simulator build",
+    "macApp": "Passed, independent unsigned compile; no Mac runtime acceptance"
+  },
+  "native": {
+    "runtimeRepo": "TaskFold-iOS",
+    "test": "testHostedQueuedEditsSurviveRelaunchAndSameAccountRenewal",
+    "runs": {
+      "phone": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792765943.523,
+        "passedTests": 1,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792765824.783,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      },
+      "tablet": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+              "deviceName": "iPad Pro 13-inch (M5)",
+              "modelName": "iPad Pro 13-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 1,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792766077.766,
+        "passedTests": 1,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792765956.276,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 1
+      }
+    },
+    "assertions": [
+      "Actual password Auth, HTTPS task sync and OS Keychain",
+      "Original saved task full server fingerprint unchanged",
+      "Actual synthetic server sessions expired using not_after",
+      "New native task saved locally while real Auth refresh is refused",
+      "Complete persisted queued mutation identical after relaunch and wrong-password refusal plus Cancel",
+      "Same-account renewal automatically drains the task queue from the list sync action",
+      "Exactly two server task rows: original plus one queued task with unchanged ID, task_generation and title",
+      "New actual server session verified",
+      "Normal relaunch uses saved renewed credentials and does not show account-entry sign-in"
+    ],
+    "controlledCondition": "Debug Simulator host only: --sync-refresh-due changes only the local refresh scheduling timestamp to zero for a UUID-named disposable account and non-main preview origin. Token bytes remain actual. This is not natural JWT wall-clock-expiry acceptance.",
+    "screenshots": [
+      "screenshots/queued-sync-recovery/phone-recovered.png",
+      "screenshots/queued-sync-recovery/tablet-recovered.png"
+    ],
+    "visuallyReviewed": true
+  },
+  "hostedService": {
+    "date": "2026-10-23T14:27:48.601Z",
+    "project": "naoflyywpmubftfepwuu",
+    "branchId": "90d5e2f8-569c-4b53-9f3d-c9ec6d05342d",
+    "checks": {
+      "unsigned-worker-rejected": true,
+      "unsigned-receiver-rejected": true,
+      "private-inspection-rejected": true,
+      "two-real-auth-sessions": true,
+      "native-phone-queue-baseline": true,
+      "native-phone-actual-server-sessions-expired": true,
+      "native-phone-queue-absent": true,
+      "native-phone-queue-recovered": true,
+      "native-phone-queued-reauthentication-ui-completed": true,
+      "native-tablet-queue-baseline": true,
+      "native-tablet-actual-server-sessions-expired": true,
+      "native-tablet-queue-absent": true,
+      "native-tablet-queue-recovered": true,
+      "native-tablet-queued-reauthentication-ui-completed": true
+    },
+    "realTasksChanged": 0,
+    "mainChanged": false,
+    "scheduledInvocationClaimed": false,
+    "sourceHashes": {
+      "supabase/functions/automation-webhooks/challenge.ts": "a63e02b59c7e701216861e240d49e79eae6e79f088d3317f33758325466520fc",
+      "supabase/functions/automation-webhooks/deno.json": "e21d64e061a61d3dfaa342b09bef5fac4e19a112942e42d3770e69f972a33433",
+      "supabase/functions/automation-webhooks/deno.lock": "126a6925947d55d70530530120c55b1046acdc1fbcaea7db048ffcd489f20c04",
+      "supabase/functions/automation-webhooks/handler.ts": "f4aa19ad0382e8224ada2f6977ade9e63c55e4563b0131162f21b4bc8f445edf",
+      "supabase/functions/automation-webhooks/handler_test.ts": "9be958b21b06e72871f0bc6d6afab614ce0041ff43e81fd6e8b7b674337f2e55",
+      "supabase/functions/automation-webhooks/index.ts": "5cf334e5f4be518c0228346e82d27dbb369a4dcd5927cf1a22cf103f75ce8bd4",
+      "supabase/functions/automation-webhooks/master-config.ts": "26363393ae9ebd079f0fe8a01ee0e5d629e57be46260e68d58e0869bd854744a",
+      "supabase/functions/automation-webhooks/schedule-auth.ts": "3aa743898ca5c9dd0e80bff07cdbfca7969504d0acefc1b48cbfc4f485d414a0",
+      "supabase/functions/automation-webhooks/schedule-auth_test.ts": "59478acf50ef037e01ebefbdc044fdf00f5c88cf82a827342649a3c4d3409f71",
+      "supabase/functions/automation-webhooks/secret.ts": "2c74c7f4051aa92d1f8b7b0f92e69bfae4f07424065fa965e1ac7b6e91a64da1",
+      "supabase/functions/automation-webhooks/socket.ts": "1611d0daeffae727b529fb33c58a29bcf5fea9ebbd3d4c3a14395e781572cc37",
+      "supabase/functions/automation-webhooks/socket_test.ts": "024a9dc60706987e6d909e7eebd0b77261c1b4386c72565fe5a6f389c512ba15",
+      "supabase/functions/automation-webhooks/transport.ts": "7c3b4ef94cafa46e9bed833307261c5708a33db1ff2946703ea8b1f3f1241bdd",
+      "supabase/functions/automation-webhooks/transport_test.ts": "30c9d1ebb80455bd01ab560df2774adfc137d9b8985ced4ae7648079387777e3",
+      "supabase/functions/automation-webhooks/worker.ts": "baa08d5749b5249afbd6b20e8cd1862a18274ae5c2a97c9b2b0b36ca5eb8fda9",
+      "supabase/functions/automation-webhooks/worker_test.ts": "c09f0132c3ac4f5c0efb9698a1d6ca71c87d83679f3948d2f812e521b5d3133d",
+      "supabase/functions/automation-keys/handler.ts": "2c1529714b7df36c4a674a2d8a15d177d5a5c4f3fd4e14a2fdc7e945b3849892",
+      "supabase/functions/automation-keys/handler_test.ts": "e7dff738665a2f1a5a1a4c331c464016c478fd7f2fd41646c51b7073092f36d1",
+      "supabase/functions/automation-keys/index.ts": "fbf48999a4352372885951e49b4d60d95fea511557e2129e7f2b450196d88c6f",
+      "supabase/functions/automation-tasks/handler.ts": "f404678fd8861481bbfea8223336a3acca274a93ae38caa26eb76be851e920b3",
+      "supabase/functions/automation-tasks/handler_test.ts": "6e76322be40979249925f5a5e9c6fa174994c123266696eee069fec0d0cc3852",
+      "supabase/functions/automation-tasks/index.ts": "372ed38c911916e4ddf979a94a7528516eac1e577a67f604322993ce24fd089c",
+      "supabase/functions/_shared/automation-admission.ts": "8d8eeb3965ed33c20892b42772a3e103c8a40464c7769c9be68eadaaad735865",
+      "supabase/functions/_shared/automation-admission_test.ts": "1478d6f54d659b909f25e5c12d77b73aa8f0f920f13f4747b376586d79c789e6",
+      "supabase/functions/dispatch-webhooks/index.ts": "516827ab9c09b4a479d36c6580abe03bfbf5e431dc65b47fcd6e503874251b9a",
+      "Scripts/Diagnostics/prepare-webhook-hosted.mjs": "6c27cc832ef49f8b06290240a0f930261e3caf0370640f7db49af942d08b5e21",
+      "Scripts/Diagnostics/test-webhook-delivery-hosted.mjs": "e13c38ac83244b23e871269e844004383a3021896fde0d91122d469c3d91fd1d",
+      "Scripts/Diagnostics/webhook-hosted-base.sql": "922bc4b4435762b4a57b53f448ca245656dcbe36ab9deb3c1ae6eeee0837401c",
+      "Scripts/Diagnostics/webhook-hosted-receiver.sql": "e2cca4ac6f2186caf37c3282b925b7d03cac06e488abb21f01e01a558ac48080",
+      "Scripts/Diagnostics/webhook-hosted-receiver.ts": "e518e833fd09bb3a6241c944fc3b55cdd780d849884ef614947104bc27d515b1",
+      "Scripts/Diagnostics/webhook-native-hosted.mjs": "c184e875214d35ca993cfa1b03d9d06b1618112b1d42aa3e5ed95af59bf66200",
+      "Scripts/Diagnostics/webhook-service-recovery.mjs": "f7ce641f8eb32dc700256229190ae6aa83fceeb8b58fc649d40884dfb5645a5b"
+    },
+    "cleanup": {
+      "users": true,
+      "functions": true,
+      "secrets": true,
+      "files": true
+    },
+    "phase": "passed",
+    "passed": true
+  },
+  "diagnosticOnlySourceDifference": {
+    "path": "Scripts/Diagnostics/webhook-native-hosted.mjs",
+    "loadedSHA256": "c184e875214d35ca993cfa1b03d9d06b1618112b1d42aa3e5ed95af59bf66200",
+    "currentSHA256": "7e5c601b23556661c6d750ebb43cf61eb8cbab271e6510f464262ea583e6b916",
+    "onlyDifferenceVerified": "Startup console message now correctly states that queued-recovery mode leaves scheduling inactive. No fixture/control/test behavior changed; actual result records scheduledInvocationClaimed=false."
+  },
+  "cleanup": {
+    "branch": {
+      "branchId": "90d5e2f8-569c-4b53-9f3d-c9ec6d05342d",
+      "project": "naoflyywpmubftfepwuu",
+      "ownedBranchDeleted": true,
+      "absenceVerified": true,
+      "mainStillPresent": true
+    },
+    "devices": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "ownedAppsUninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "ownedAppsUninstalled": true
+      }
+    ],
+    "privateCredentialsAndIPCRemoved": true,
+    "ownedArtifactsPruned": [
+      {
+        "path": "QueuedSyncNativeHost",
+        "logicalBytesRemoved": 7237365
+      },
+      {
+        "path": "queued-sync-mac",
+        "logicalBytesRemoved": 529097641
+      },
+      {
+        "path": "queued-sync-phone.xcresult",
+        "logicalBytesRemoved": 1056252
+      },
+      {
+        "path": "queued-sync-tablet.xcresult",
+        "logicalBytesRemoved": 1251244
+      },
+      {
+        "path": "queued-sync-phone-attachments",
+        "logicalBytesRemoved": 210952
+      },
+      {
+        "path": "queued-sync-tablet-attachments",
+        "logicalBytesRemoved": 185438
+      },
+      {
+        "path": "taskfold-queued-auth",
+        "logicalBytesRemoved": 2294
+      }
+    ],
+    "currentIOSBuildCacheRetained": true,
+    "macTaskfoldProcessesRunning": 0
+  },
+  "remaining": [
+    "Hosted API-key-specific renewal",
+    "Real Google account selection",
+    "Mac runtime/Keychain and new sidebar recovery visual acceptance",
+    "Queued PATCH/DELETE and conflict variants, banner renewal with live Undo history without restart, and held in-flight sync timing",
+    "Wider consent/history spoken acceptance",
+    "Remaining advanced email/team/wearable backlog"
+  ],
+  "deferralsUnchanged": [
+    "Remote reminders",
+    "Older-client rollout safeguards",
+    "Distribution verification",
+    "Calendar OAuth/provider acceptance",
+    "Physical location delivery"
+  ]
+}

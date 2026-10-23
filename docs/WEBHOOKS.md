@@ -857,3 +857,30 @@ queued-edit recovery across renewal, real Google selection, Mac runtime/Keychain
 and wider spoken consent/history remain separate checks. Email intake, advanced
 teams and wearables remain open. Normal feature entries and main services remain
 disabled; all existing user deferrals remain unchanged.
+
+
+## Queued task sync after sign-in renewal — 23 October
+
+Both apps now offer **Sign in again** directly beside a confirmed expired-session
+sync warning, explaining that edits remain saved on the device. The action uses
+the existing same-account sheet and avoids the full workspace-entry reset. Success
+retries the saved queue; a workspace-bound deferred retry also handles renewal
+finishing during an older sync. Account changes, sign-out and account removal
+invalidate recovery. Renewal in connection settings also retries task sync.
+
+Actual hosted iPhone and iPad Simulator checks pass without skips: a native create
+stays queued through refused refresh, restart, wrong password and Cancel, then
+automatically syncs with its original ID/generation after renewal. The original
+saved task's complete server fingerprint stays unchanged, the server contains
+only one matching queued task, and normal relaunch uses renewed Keychain
+credentials. Only the local Debug refresh-due timestamp is controlled; this does
+not claim natural JWT expiry or exactly one network invocation. Both independent
+Core suites pass (iOS: 1,378 executed, 13 optional skips; Mac: 1,410 executed,
+33 optional skips; zero failures), and both app targets compile.
+
+See `p2-queued-sync-recovery-evidence.json` for exact runs, reviewed images, the
+diagnostic-only startup-log correction, cleanup and limits. The temporary branch,
+credentials and installed test apps are removed. Mac runtime, queued edit/delete
+and held-sync variants, API-key-specific hosted renewal, Google selection and
+wider spoken checks remain open. The advanced backlog is not complete; all user
+deferrals remain unchanged. Normal automation/webhook feature entries stay gated.

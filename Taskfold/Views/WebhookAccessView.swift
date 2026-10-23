@@ -87,8 +87,12 @@ struct WebhookAccessView: View {
     private func restoredSignIn() {
         guard let account = model?.account, signInBackend.session?.user.id == account else { leave(); return }
         restoredIncarnation = signInBackend.reminderSessionIncarnation
+        let workspace = WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration)
         model?.close(); model = nil; reauthentication = nil
-        Task { await startModel() }
+        Task {
+            await startModel()
+            if !fixture { await store.resumeSyncAfterSignIn(workspace:workspace) }
+        }
     }
     private func startModel() async {
             guard model == nil else { return }

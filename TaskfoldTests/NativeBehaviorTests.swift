@@ -453,6 +453,13 @@ final class SyncStatusTests: XCTestCase {
         }
         XCTAssertTrue(SyncStatus.failureMessage(URLError(.notConnectedToInternet)).contains("reconnect"))
     }
+    func testConfirmedSessionRefusalOffersRecoveryWithoutSuggestingLostChanges() {
+        XCTAssertEqual(SyncStatus.failureMessage(AccountSessionAuthorizationRequired()),
+                       "Sign in again to sync. Your changes are saved on this device.")
+        // Similar words in a storage/server error must not imply an expired session.
+        XCTAssertEqual(SyncStatus.failureMessage(AppFailure(message: "session_expired")),
+                       "Sync paused: session_expired")
+    }
     func testUnrelatedFailuresKeepTheirExplanation() {
         XCTAssertEqual(SyncStatus.failureMessage(AppFailure(message: "Sign in to sync your tasks.")), "Sync paused: Sign in to sync your tasks.")
         let error = NSError(domain: "Storage", code: URLError.notConnectedToInternet.rawValue, userInfo: [NSLocalizedDescriptionKey: "Could not save changes"])

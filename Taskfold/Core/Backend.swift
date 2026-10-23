@@ -45,6 +45,9 @@ enum SyncStatus {
         return Presentation(title: "Waiting to sync", symbol: "icloud")
     }
     static func failureMessage(_ error: Error) -> String {
+        if error is AccountSessionAuthorizationRequired {
+            return "Sign in again to sync. Your changes are saved on this device."
+        }
         let failure = error as NSError
         if failure.domain == NSURLErrorDomain {
             switch failure.code {

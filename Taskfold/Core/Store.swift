@@ -160,6 +160,24 @@ final class Store {
     var online = true
     var error: String?
     var notice: String?
+    /// A confirmed Auth refusal is scoped to this workspace, never inferred from text.
+    private(set) var syncSignInWorkspace: WorkspaceBinding?
+    private var syncAfterSignInRequested: WorkspaceBinding?
+    var canSignInForSync: Bool {
+        syncSignInWorkspace?.matches(account:userID,generation:workspaceGeneration) == true &&
+        signedIn && !localMode && !signingOut && !accountRemovalBlocked
+    }
+    func syncSignInContext() throws -> AccountReauthentication {
+        guard canSignInForSync else { throw CancellationError() }
+        return try backend.reauthenticationContext(account:userID)
+    }
+    func resumeSyncAfterSignIn(workspace: WorkspaceBinding) async {
+        guard workspace.matches(account:userID,generation:workspaceGeneration), signedIn,
+              !localMode, !signingOut, !accountRemovalBlocked else { return }
+        syncSignInWorkspace = nil
+        if syncing { syncAfterSignInRequested = workspace; return }
+        await sync()
+    }
     var accessRecoveryPending = false
     private var accessRecoveryNoticeKey: String { "taskfold.accessRecoveryPending." + userID.lowercased() }
     func acknowledgeAccessRecovery() {
@@ -186,7 +204,8 @@ final class Store {
     var conversationFixtureRevision = 0
     #endif
     private let monitor = NWPathMonitor()
-    private var accountGeneration = UUID() { didSet { conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
+    private var accountGeneration = UUID() { didSet {
+        syncSignInWorkspace = nil; syncAfterSignInRequested = nil; conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
     @ObservationIgnored private var consumingWidgetActions = false
     @ObservationIgnored var sharedCapturePublishedWorkspace: SharedCaptureWorkspace?
     @ObservationIgnored var sharedCapturePublicationReady = false
@@ -1186,7 +1205,13 @@ final class Store {
         if syncConflict != nil || focusSyncConflict != nil { await syncConversations(); return }
         syncing = true; let generation = accountGeneration, account = userID
         var sending: Mutation?
-        defer { syncing = false }
+        defer {
+            syncing = false
+            if let retry = syncAfterSignInRequested {
+                syncAfterSignInRequested = nil
+                Task { await self.resumeSyncAfterSignIn(workspace: retry) }
+            }
+        }
         do {
             while let mutation = snapshot.pending.first {
                 sending = mutation
@@ -1213,6 +1238,7 @@ final class Store {
         } catch {
             if let mutation = sending, await recoverUnavailableProject(mutation, generation: generation, account: account) { return }
             if generation == accountGeneration {
+                syncSignInWorkspace = error is AccountSessionAuthorizationRequired ? WorkspaceBinding(account:account,generation:generation) : nil
                 notice = SyncStatus.failureMessage(error)
                 if error.localizedDescription.contains("TASKFOLD_FOCUS_CONFLICT:"), let mutation = sending,
                    mutation.table == FocusSessionChange.table,
@@ -1254,6 +1280,8 @@ final class Store {
             }
             return
         }
+        guard generation == accountGeneration else { return }
+        syncSignInWorkspace = nil
         notice = widgetActionStatus
         // Edits made while fetching are still queued; flush after this sync releases its lock.
         if !snapshot.pending.isEmpty { Task { await self.sync() } }

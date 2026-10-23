@@ -110,6 +110,34 @@ struct ConnectionSignInSheet: View {
     }
 }
 
+
+/// Reuses same-account renewal without the full account-entry workspace reset.
+struct SyncSignInButton: View {
+    @Environment(Store.self) private var store
+    @State private var request: Request?
+    private struct Request: Identifiable {
+        let context: AccountReauthentication
+        let workspace: WorkspaceBinding
+        var id: UUID { context.id }
+    }
+    var body: some View {
+        Button("Sign in again") {
+            guard let context = try? store.syncSignInContext() else { return }
+            request = Request(context:context,workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))
+        }
+        .disabled(store.syncing || !store.canSignInForSync)
+        .accessibilityIdentifier("syncSignIn")
+        .sheet(item:$request) { value in
+            ConnectionSignInSheet(backend:store.backend,context:value.context,email:store.backend.session?.user.email ?? store.email) {
+                Task { await store.resumeSyncAfterSignIn(workspace:value.workspace) }
+            }
+        }
+        .onChange(of:store.workspaceGeneration) { _,_ in request = nil }
+        .onChange(of:store.signingOut) { _,value in if value { request = nil } }
+        .onChange(of:store.accountRemovalBlocked) { _,value in if value { request = nil } }
+    }
+}
+
 #if DEBUG
 /// Exact isolated native host only. Real Backend/URLSession, synthetic HTTP and
 /// memory-only credentials/vaults; no provider browser or hosted Auth claim.
