@@ -496,10 +496,10 @@ final class Backend: NSObject {
     #endif
     func emailRouteReceipt(action: String, body: [String: JSON], domain: String?, account: String, origin: String) async throws -> [String: JSON] {
         guard !sessionTransition, session?.user.id == account, EmailCaptureValue.id(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
-        var headers = ["X-Taskfold-Email": "1"]
+        var headers = ["X-Taskfold-Email": "2"]
         if let domain { guard EmailCaptureValue.domain(domain) else { throw EmailCaptureValue.invalid }; headers["X-Taskfold-Email-Domain"] = domain }
         let data = try await request("/functions/v1/email-routes", method: "POST", body: ["action": .string(action), "body": .object(body)], extra: headers, expectedAccount: account)
-        guard let result = try? JSONDecoder().decode([String: JSON].self, from: data), result["account"] == .string(account) else { throw EmailCaptureValue.invalid }; return result
+        guard let result = try? JSONDecoder().decode([String: JSON].self, from: data), result["protocol"] == .number(2), result["account"] == .string(account) else { throw EmailCaptureValue.invalid }; return result
     }
     func webhookReceipt(action: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
         guard !sessionTransition, session?.user.id == account, AutomationKey.canonicalID(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }

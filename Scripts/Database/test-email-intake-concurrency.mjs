@@ -31,13 +31,16 @@ const draft = (n, extra = {}) => ({
   id: id(n),
   name: "Synthetic race " + n,
   alias_hash: hash(n),
+  domain: "mail.example.invalid",
   project_id: null,
   requested_at: stamp,
   ...extra,
 });
 const manage = (action, body = {}, owner = a, session = sa) =>
   `public.taskfold_email_routes(${lit(owner)},${lit(session)},${lit(action)},${
-    doc(body)
+    doc(
+      action === "resume" ? { ...body, domain: "mail.example.invalid" } : body,
+    )
   })`;
 const content = {
   title: 'Concurrent email 📝 "Review"',
@@ -45,16 +48,21 @@ const content = {
   attachmentCount: 0,
 };
 const receivedByDelivery = new Map();
-const deliver = (n = 21, receipt = "same", extra = {}) => {
+const deliver = (
+  n = 21,
+  receipt = "same",
+  extra = {},
+  recipientDomain = "mail.example.invalid",
+) => {
   const key = n + ":" + receipt;
   if (!receivedByDelivery.has(key)) {
     receivedByDelivery.set(key, new Date().toISOString());
   }
-  return `public.taskfold_email_deliver(${lit(hash(n))},'synthetic-adapter',${
-    lit(receipt)
-  },${lit(receivedByDelivery.get(key))},'race-a@example.invalid',${
-    doc({ ...content, ...extra })
-  })`;
+  return `public.taskfold_email_deliver_v2(${lit(hash(n))},${
+    lit(recipientDomain)
+  },'synthetic-adapter',${lit(receipt)},${
+    lit(receivedByDelivery.get(key))
+  },'race-a@example.invalid',${doc({ ...content, ...extra })})`;
 };
 const app = (prefix) =>
   "email-" + prefix.toLowerCase() + "-" + randomUUID().slice(0, 8);
@@ -96,9 +104,107 @@ try {
       lit(b)
     });insert into public.profiles(user_id)values(${lit(a)}),(${
       lit(b)
-    });update taskfold_private.email_intake_config set enabled=true,provider='synthetic-adapter'`,
+    });update taskfold_private.email_intake_config set enabled=true,provider='synthetic-adapter',domain='mail.example.invalid'`,
+  );
+  let configurationHolder = await pg.hold(
+    "select public.taskfold_email_configure('synthetic-adapter','capture.example.invalid',true)",
+  );
+  await barrier(
+    "domain-change-before-create",
+    configurationHolder,
+    manage("create", draft(91)),
+    "PT409",
+  );
+  same(
+    "stale worker creates no route after domain change",
+    await pg.scalar(
+      "select to_jsonb(count(*)::int) from taskfold_private.email_routes",
+    ),
+    0,
+  );
+  await ok(
+    "public.taskfold_email_configure('synthetic-adapter','mail.example.invalid',true)",
+  );
+  configurationHolder = await pg.hold("select " + manage("create", draft(91)));
+  await barrier(
+    "create-before-domain-change",
+    configurationHolder,
+    "public.taskfold_email_configure('synthetic-adapter','capture.example.invalid',true)",
+    "PT409",
+  );
+  same(
+    "configuration sees newly committed enrollment after lock wait",
+    await pg.scalar(
+      "select to_jsonb(domain) from taskfold_private.email_intake_config",
+    ),
+    "mail.example.invalid",
+  );
+  same(
+    "configuration cannot revoke concurrent native setup",
+    await pg.scalar(
+      "select to_jsonb(state) from taskfold_private.email_routes where id=" +
+        lit(id(91)),
+    ),
+    "active",
+  );
+  await ok(manage("revoke", { id: id(91), revision: 1 }));
+  await ok(
+    "public.taskfold_email_configure('synthetic-adapter','capture.example.invalid',true)",
+  );
+  same(
+    "explicit re-enrollment binds changed domain",
+    (await ok(
+      manage("create", draft(92, { domain: "capture.example.invalid" })),
+    )).route.alias_domain,
+    "capture.example.invalid",
+  );
+  await ok(manage("pause", { id: id(92), revision: 1 }));
+  same(
+    "actual paused route prevents provider change",
+    (await pg.value(
+      "public.taskfold_email_configure('different-adapter','capture.example.invalid',false)",
+    )).code,
+    "PT409",
+  );
+  let isolationCode;
+  try {
+    await pg.raw(
+      "begin isolation level repeatable read;select public.taskfold_email_configure('synthetic-adapter','capture.example.invalid',false);commit",
+    );
+  } catch (error) {
+    isolationCode = error.code;
+  }
+  same(
+    "actual PostgreSQL refuses snapshot-isolated configuration",
+    isolationCode,
+    "25000",
+  );
+  await ok(manage("revoke", { id: id(92), revision: 2 }));
+  await ok(
+    "public.taskfold_email_configure('synthetic-adapter','mail.example.invalid',true)",
   );
   await ok(manage("create", draft(21)));
+  same(
+    "actual delivery refuses mismatched verified envelope domain",
+    (await pg.value(
+      deliver(21, "domain-mismatch", {}, "capture.example.invalid"),
+    )).code,
+    "PT404",
+  );
+  same(
+    "wrong recipient domain cannot create task",
+    await pg.scalar("select to_jsonb(count(*)::int) from public.tasks"),
+    0,
+  );
+  same(
+    "old delivery RPC refuses service role",
+    (await pg.value(
+      "public.taskfold_email_deliver(" + lit(hash(21)) +
+        ",'synthetic-adapter','old-wire',now(),'race-a@example.invalid'," +
+        doc(content) + ")",
+    )).code,
+    "42501",
+  );
   const workers = await Promise.all(
     Array.from({ length: 12 }, () => pg.value(deliver())),
   );

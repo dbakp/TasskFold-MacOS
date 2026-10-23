@@ -1285,7 +1285,34 @@ are in `p2-email-native-setup-evidence.json`, with exact counts and limitations.
 The real private-Keychain path, hosted native recovery, Mac runtime and spoken
 acceptance remain open; source/build success does not close those gates. Provider
 adapter/attestation, source links, scheduled cleanup and additional verified senders
-remain unfinished. Active-address domain migration is not yet an accepted rollout.
+remain unfinished. The durable-domain milestone below implements a retire-and-re-enroll rule;
+real hosted migration acceptance remains open.
 Provider/domain configuration stays deferred by the user. The full Px objective,
 advanced teams, wearable clients and all existing release/provider deferrals remain
 in scope; rank 6 is not complete.
+
+
+## Email domain binding — 23 October, protocol 2 candidate
+
+The database now records each address's immutable domain and authorizes reviewed
+create/resume/replacement under its configuration lock. A stale worker cannot
+silently enroll against a different domain. Configuration changes require explicit
+revocation of live/paused addresses; disabling alone cannot bypass the rule. A
+service-only helper and trigger refuse unsafe changes, including unsupported
+snapshot-isolated operator transactions. Pre-binding unknown-domain addresses are
+retired without altering tasks or delivery receipts. Native/gateway protocol 2
+requires bound receipts and preserves safe pause/revoke on configuration mismatch.
+Delivery v2 additionally checks the provider-attested original recipient domain;
+old hash-only delivery is disabled rather than guessing a domain.
+
+Per repo: 57 migration/config checks, 119 intake checks, 43 real PostgreSQL
+concurrency checks (12 observed barriers), 26 real SQL HTTP checks, 40 Edge cases
+and 28 native Core cases pass. Both apps build; scoped phone and large-text dark
+tablet protocol-2 fixture walks pass. No cloud change or feature activation occurs.
+See `p2-email-domain-evidence.json` and `EMAIL_CAPTURE.md` for exact limits.
+
+Next: real private-Keychain/hosted recovery acceptance and trusted provider/MIME/
+sender/receipt integration, source links and scheduled inactive-account maintenance.
+Extra verified senders and real domain migration/re-enrollment acceptance remain
+open. Provider/domain configuration stays deferred. Rank 6, advanced teams,
+wearable clients, remaining Px and all existing user deferrals stay in scope.

@@ -10,7 +10,7 @@ configuration and real signed-delivery acceptance.
 | Stage | Required result | Current state |
 | --- | --- | --- |
 | Content and retry contract | Bounded plain text; transparent attachment omissions; a stable provider-delivery/route identity separate from content fingerprint | Implemented independently in each repo; ten Deno tests and lint pass per repo |
-| Atomic intake journal and routes | One committed task per verified delivery; changed-content replays conflict; paused/revoked or unauthorized destinations refuse delivery; quotas and account-removal fencing | Implemented as a disabled local candidate; 119 functional and 32 real PostgreSQL concurrency checks per repo pass; hosted/provider/native acceptance remains open |
+| Atomic intake journal and routes | One committed task per verified delivery; changed-content replays conflict; paused/revoked or unauthorized destinations refuse delivery; quotas and account-removal fencing | Implemented as a disabled local candidate; current protocol-2 evidence includes 119 intake and 40 real PostgreSQL concurrency checks per repo; hosted/provider/native acceptance remains open |
 | Provider adapter and management gateway | Verify signed provider requests before trusting normalized sender/receipt data; authorize current native sessions; bounded body/read/deadlines and admission; no raw credentials in receipts | Native management gateway locally implemented; verified provider adapter and hosted/native acceptance remain open; configuration follows later |
 | Native setup and recovery | Clear address/destination review, trusted senders, pause/rotate/revoke, account-bound private setup/retry, understandable delivery status and accessible controls | Native candidate implemented; scoped Simulator walkthrough and recovery tests recorded below; real Keychain/hosted/Mac/spoken acceptance remains open |
 | Real delivery acceptance | Actual provider retries, sender spoof refusal, current membership changes, native relaunch/account isolation and recovery | Open; requires later provider/domain configuration |
@@ -139,7 +139,7 @@ calls only `taskfold_email_routes` with service credentials. SQL rechecks the
 session/account under locks. Anonymous accounts and client-supplied owner/sender
 claims are refused. No privileged credential is included in a response or client.
 
-The request is POST with `X-Taskfold-Email: 1` and a strict JSON envelope
+The request is POST with `X-Taskfold-Email: 2` and a strict JSON envelope
 `{action, body}`. Actions are list, create, pause, resume, revoke and rotate.
 Bodies use the journal's exact schemas; revoke with revision zero is the durable
 cancel-before-create path. Native code must persist the same setup ID, alias hash,
@@ -155,13 +155,14 @@ bounded allowlist so hashes, aliases, private/future SQL fields and diagnostics
 cannot escape. Responses are `Cache-Control: no-store`.
 
 `TASKFOLD_EMAIL_INBOUND_DOMAIN` is a canonical bare lowercase DNS name. List
-advertises a usable domain only when that configuration and the database enable
-flag are both present. New setup, rotation and resume require
+advertises a usable domain only when that configuration agrees with the database
+domain and the database enable flag is true. New setup, rotation and resume require
 `X-Taskfold-Email-Domain` to match the domain reviewed by the native caller. A
 configuration change returns a conflict instead of silently changing the reviewed
 address. Missing configuration still allows authenticated list, pause and revoke.
-The native vault must retain and compare the address's original domain; domain
-migration/re-enrollment remains part of native/provider acceptance. Merely setting
+The native vault retains and compares the address's original domain with the
+server route. The durable binding section below defines the configuration rule;
+real hosted migration/re-enrollment acceptance remains open. Merely setting
 this variable is not proof that mail delivery works.
 
 Management shares the existing durable `keys` admission bucket with API-key and
@@ -247,9 +248,9 @@ Verification and screenshots are recorded in `p2-email-native-setup-evidence.jso
 The Simulator walkthrough uses a strictly gated synthetic peer/memory vault, not
 real Auth, email delivery or the production private Keychain path. Native Keychain
 relaunch/error acceptance, hosted end-to-end Auth/recovery, Mac runtime, wider
-project/account variants and spoken accessibility remain gates. Domain changes
-with active routes need a migration/re-enrollment rule and hosted acceptance;
-changing the environment variable alone is not an accepted rollout procedure.
+project/account variants and spoken accessibility remain gates. The durable binding section below now implements explicit retirement and
+re-enrollment before domain changes. Hosted migration acceptance stays open;
+changing the environment variable alone is not a rollout procedure.
 
 Next work remains trusted provider/MIME/sender/receipt integration, source links,
 scheduled inactive-account maintenance and the remaining native/hosted acceptance.
@@ -257,3 +258,82 @@ Additional verified senders remain unfinished. The user will configure the provi
 and domain later; keep delivery and the native release flag disabled until the
 required integration and acceptance are ready. Rank 6 and the full Px goal remain
 active, followed by advanced teams and wearable clients as ranked in `P2_PLAN.md`.
+
+## Durable domain binding — protocol 2 candidate
+
+The migration `20261023162006_email_domain_binding.sql` makes the database domain
+and each route's `alias_domain` authoritative. A reviewed domain is mandatory in
+create and resume bodies and in a rotation's replacement setup. The native header
+is now `X-Taskfold-Email: 2`; management success receipts declare numeric `protocol: 2`.
+The gateway and both native clients reject old/unbound receipts rather than
+inferring a domain. Native private-address reveal requires the saved address,
+route receipt and currently available configured domain to agree.
+
+The function's `TASKFOLD_EMAIL_INBOUND_DOMAIN` remains a fail-closed deployment
+cross-check. List advertises capture only when it agrees with the database domain.
+A stale worker still permits authenticated pause/revoke, but cannot enroll or
+resume an address for its old domain. SQL checks the reviewed domain under the
+same configuration-row lock used for task capture; checking the header alone
+would leave a configuration race between HTTP validation and the database write.
+
+`taskfold_email_configure(provider, domain, enabled)` is an operator-only,
+service-role RPC. Native/anonymous roles have no EXECUTE, and the app-facing
+handler cannot dispatch configuration actions. Domain syntax is canonical ASCII
+DNS with the same mailbox length bounds; format validation does not prove DNS,
+provider ownership or real delivery. No provider secret is stored in these fields.
+Service clients use the privileged configuration helper; ordinary Data API
+clients still have no direct table access. Database-owner administrative writes
+remain guarded by the trigger described below.
+
+Changing domain or provider requires explicit revocation of every live address,
+including paused addresses. Disabling capture alone cannot bypass this guard.
+Changing the enable flag while retaining domain/provider is allowed, so operators
+can stop capture without erasing saved tasks or route metadata. A database trigger
+also guards direct administrative UPDATE. Configuration must run in a normal
+read-committed transaction; snapshot-isolated operator transactions are refused
+instead of potentially missing a concurrent enrollment. A partial live-route index
+keeps this check separate from retained history.
+
+Delivery now uses the service-only `taskfold_email_deliver_v2` RPC, requiring the
+verified original recipient domain as well as the alias hash. The domain must
+match both the stored route and current configuration before any receipt/task
+write. This prevents a reused opaque hash from admitting old-domain mail. The
+provider adapter must attest the SMTP envelope recipient; a sender-controlled To
+header is not proof. The old delivery RPC loses its service-role grant and its
+private implementation refuses callers instead of guessing a domain. Native roles
+cannot call the new endpoint even with plausible sender/domain claims. No inbound
+provider endpoint is deployed or enabled by this candidate.
+
+The migration disables the old configuration and retires pre-binding addresses
+whose domains cannot be recovered from hashes. It never guesses their domain or
+changes an existing task/delivery receipt. Known retired routes retain their old
+domain; unknown retired rows expose explicit null. Legacy pending setup can be
+reviewed and discarded, without showing an unbound capability or silently creating
+another address. The private native envelope stays version 1 because it already
+stored the original domain; the wire contract changes to version 2.
+
+Configuration and enrollment share the config-row lock. Actual PostgreSQL tests
+prove both orders: a domain change committed first refuses stale setup; enrollment
+committed first prevents configuration from missing that newly committed live
+address. The trigger is volatile, consistent with PostgreSQL's
+[fresh-query snapshot behavior](https://www.postgresql.org/docs/17/xfunc-volatility.html),
+and rejects unsupported snapshot isolation. Other task/account locks retain their
+existing order; the configuration guard never acquires account or task locks.
+
+Each repo passes 57 migration/configuration checks, the existing 119 intake checks,
+43 actual PostgreSQL concurrency checks with 12 observed blocking barriers, 26
+HTTP-to-PostgreSQL checks, 40 Edge cases and 28 focused native Core cases. Official
+local advisors report no email-object findings; five existing minimal-fixture
+findings remain. Phone and largest-text dark tablet synthetic-peer workflows also
+pass with protocol 2; they do not prove real Keychain/hosted/provider acceptance.
+Exact source hashes, results and remaining gates are recorded in
+`p2-email-domain-evidence.json`.
+
+Rollout remains disabled. After the remaining acceptance, apply the migration,
+configure the privileged database values while capture is disabled, deploy the
+matching protocol-2 gateway/environment and native client, and verify the actual
+provider/DNS/authenticated delivery before enabling capture or the native feature
+flag. Changing an environment variable alone is never a domain migration. This
+candidate's explicit retire-and-re-enroll rule is now implemented; real hosted
+migration/re-enrollment acceptance remains open. It does not close the user's
+separately deferred general old-client editing/upgrade safeguards.

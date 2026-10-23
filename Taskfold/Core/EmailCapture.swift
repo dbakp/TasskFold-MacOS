@@ -46,11 +46,11 @@ struct EmailAddressDraft: Sendable, CustomStringConvertible, CustomDebugStringCo
         try self.init(account: row.account, origin: row.origin, domain: row.domain, name: row.name, project: row.project, id: uuid, now: date, entropy: { bytes })
         guard self.id == row.id, self.requestedAt == row.requestedAt else { throw EmailCaptureValue.invalid }
     }
-    var body: [String: JSON] { ["id": .string(id), "name": .string(name), "project_id": project.map(JSON.string) ?? .null, "alias_hash": .string(hash), "requested_at": .string(requestedAt)] }
+    var body: [String: JSON] { ["id": .string(id), "name": .string(name), "domain": .string(domain), "project_id": project.map(JSON.string) ?? .null, "alias_hash": .string(hash), "requested_at": .string(requestedAt)] }
 }
 struct EmailRoute: Identifiable, Equatable, Sendable {
     let id: String, name: String, sender: String, state: String
-    let project: String?, rotatedTo: String?
+    let project: String?, rotatedTo: String?, domain: String?
     let revision: Int
     init(_ row: [String: JSON]) throws {
         guard let id = row["id"]?.text, EmailCaptureValue.id(id), let name = row["name"]?.text, WebhookValue.name(name),
@@ -59,6 +59,8 @@ struct EmailRoute: Identifiable, Equatable, Sendable {
         for key in ["created_at", "updated_at", "accept_after"] { guard WebhookValue.date(row[key]) != nil else { throw EmailCaptureValue.invalid } }
         func optionalID(_ key: String) throws -> String? { if row[key] == .null { return nil }; guard let value = row[key]?.text, EmailCaptureValue.id(value) else { throw EmailCaptureValue.invalid }; return value }
         let revision = try WebhookValue.count(row, "revision"); guard revision > 0 else { throw EmailCaptureValue.invalid }
+        if row["alias_domain"] == .null && state == "revoked" { domain = nil }
+        else { guard let value = row["alias_domain"]?.text, EmailCaptureValue.domain(value) else { throw EmailCaptureValue.invalid }; domain = value }
         self.id = id; self.name = name; self.sender = sender; self.state = state; self.revision = revision; project = try optionalID("project_id"); rotatedTo = try optionalID("rotated_to")
     }
 }
@@ -84,7 +86,7 @@ struct EmailAddressOperation: Sendable, CustomStringConvertible, CustomDebugStri
     var body: [String: JSON] {
         if action == "create" { return draft!.body }
         var body: [String: JSON] = ["id": .string(id), "revision": .number(Double(revision))]
-        if action == "rotate" { body["replacement"] = .object(draft!.body) }; return body
+        if action == "rotate" { body["replacement"] = .object(draft!.body) }; if action == "resume" { body["domain"] = .string(domain!) }; return body
     }
     fileprivate var signature: [String] { [action, id, String(revision), domain ?? "", draft?.hash ?? "", draft?.requestedAt ?? "", draft?.name ?? "", draft?.project ?? ""] }
 }
@@ -183,7 +185,7 @@ extension Backend: EmailCaptureService {}
     func close() { closed = true; lease.cancel(); addresses = []; pending = nil; routes = []; available = false; domain = nil; message = nil }
     private func check() throws { try lease.check(); guard current else { throw CancellationError() } }
     func address(for route: EmailRoute) -> String? {
-        guard current, !needsSignIn, route.state != "revoked", pending == nil, available, let draft = addresses.first(where: { $0.id == route.id && $0.domain == domain }) else { return nil }; return draft.address
+        guard current, !needsSignIn, route.state != "revoked", pending == nil, available, let draft = addresses.first(where: { $0.id == route.id && $0.domain == domain && $0.domain == route.domain }) else { return nil }; return draft.address
     }
     private func perform(_ work: () async throws -> Void) async {
         guard current, !busy else { return }; busy = true; message = nil; defer { busy = false }
@@ -192,7 +194,7 @@ extension Backend: EmailCaptureService {}
         }
     }
     private func call(_ action: String, _ body: [String: JSON], domain: String? = nil) async throws -> [String: JSON] {
-        try check(); let result = try await service.emailRouteReceipt(action: action, body: body, domain: domain, account: account, origin: origin); try check(); guard result["account"] == .string(account) else { throw EmailCaptureValue.invalid }; needsSignIn = false; return result
+        try check(); let result = try await service.emailRouteReceipt(action: action, body: body, domain: domain, account: account, origin: origin); try check(); guard result["protocol"] == .number(2), result["account"] == .string(account) else { throw EmailCaptureValue.invalid }; needsSignIn = false; return result
     }
     private func recover() async throws { let value = try await vault.recovery(account: account, origin: origin); try check(); addresses = value.addresses; pending = value.pending }
     func load() async { await perform { try await self.recover(); try await self.reload() } }
@@ -244,7 +246,7 @@ extension Backend: EmailCaptureService {}
         } else {
             guard case .object(let fields) = result["route"] else { throw EmailCaptureValue.invalid }; let row = try EmailRoute(fields)
             guard row.id == (op.draft?.id ?? op.id) else { throw EmailCaptureValue.invalid }
-            if let draft = op.draft { guard row.name == draft.name, row.project == draft.project else { throw EmailCaptureValue.invalid } }
+            if let draft = op.draft { guard row.name == draft.name, row.project == draft.project, row.domain == draft.domain else { throw EmailCaptureValue.invalid } }
             if op.action == "rotate" { guard case .object(let oldFields) = result["replaced"] else { throw EmailCaptureValue.invalid }; let old = try EmailRoute(oldFields); guard old.id == op.id, old.state == "revoked", old.rotatedTo == row.id else { throw EmailCaptureValue.invalid } }
             if op.action == "pause" { guard row.state == "paused" else { throw EmailCaptureValue.invalid } }
             if op.action == "resume" { guard row.state == "active" else { throw EmailCaptureValue.invalid } }

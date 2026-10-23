@@ -28,6 +28,7 @@ const setup = (n) => ({
   name: "Workflow inbox",
   project_id: null,
   alias_hash: hash(n),
+  domain: "mail.example.invalid",
   requested_at: stamp,
 });
 let db, bridge, child, gateway;
@@ -42,13 +43,18 @@ async function call(action, body = {}, bearer = token()) {
     method: "POST",
     headers: {
       Authorization: "Bearer " + bearer,
-      "X-Taskfold-Email": "1",
+      "X-Taskfold-Email": "2",
       "X-Taskfold-Email-Domain": "mail.example.invalid",
       "X-Forwarded-For": "198.51.100.10",
       "CF-Connecting-IP": "198.51.100.10",
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ action, body }),
+    body: JSON.stringify({
+      action,
+      body: action === "resume"
+        ? { ...body, domain: "mail.example.invalid" }
+        : body,
+    }),
     signal: AbortSignal.timeout(20000),
   });
   return { status: result.status, value: await result.json() };
@@ -148,7 +154,7 @@ try {
   result = await call("create", setup(21));
   same("HTTP disabled create refused", result.status, 503);
   await db.raw(
-    "update taskfold_private.email_intake_config set enabled=true,provider='synthetic-adapter'",
+    "update taskfold_private.email_intake_config set enabled=true,provider='synthetic-adapter',domain='mail.example.invalid'",
   );
   result = await call("create", setup(21));
   same("HTTP create reaches actual service-role SQL", [
@@ -173,9 +179,9 @@ try {
   const receivedAt = new Date().toISOString();
   const deliver = () =>
     db.value(
-      `public.taskfold_email_deliver(${
+      `public.taskfold_email_deliver_v2(${
         literal(hash(21))
-      },'synthetic-adapter','receipt_1',${
+      },'mail.example.invalid','synthetic-adapter','receipt_1',${
         literal(receivedAt)
       },'intake-a@example.invalid',${literal(JSON.stringify(content))}::jsonb)`,
     );
@@ -241,12 +247,55 @@ try {
   same(
     "HTTP cancellation before setup",
     (await call("revoke", { id: id(23), revision: 0 })).value,
-    { account: owner, id: id(23), cancelled: true },
+    { protocol: 2, account: owner, id: id(23), cancelled: true },
   );
   same(
     "HTTP late cancelled create conflicts",
     (await call("create", setup(23))).status,
     409,
+  );
+  same(
+    "HTTP can revoke final old-domain route",
+    (await call("revoke", { id: id(22), revision: 1 })).status,
+    200,
+  );
+  await db.value(
+    "public.taskfold_email_configure('synthetic-adapter','capture.example.invalid',true)",
+  );
+  const staleList = await call("list");
+  same("HTTP stale worker advertises unavailable instead of wrong domain", [
+    staleList.status,
+    staleList.value.available,
+    staleList.value.domain,
+  ], [200, false, null]);
+  same(
+    "HTTP stale worker cannot commit an old-domain setup",
+    (await call("create", setup(24))).status,
+    409,
+  );
+  const enrolled = await db.value(
+    `public.taskfold_email_routes(${literal(owner)},${
+      literal(session)
+    },'create',${
+      literal(
+        JSON.stringify({ ...setup(25), domain: "capture.example.invalid" }),
+      )
+    }::jsonb)`,
+  );
+  same(
+    "current-domain enrollment remains possible",
+    enrolled.value?.route?.alias_domain,
+    "capture.example.invalid",
+  );
+  same(
+    "HTTP stale worker retains pause safety control",
+    (await call("pause", { id: id(25), revision: 1 })).value.route?.state,
+    "paused",
+  );
+  same(
+    "HTTP stale worker retains revoke safety control",
+    (await call("revoke", { id: id(25), revision: 2 })).value.route?.state,
+    "revoked",
   );
   await db.raw(
     `update auth.sessions set not_after=clock_timestamp()-interval '1 second' where id=${

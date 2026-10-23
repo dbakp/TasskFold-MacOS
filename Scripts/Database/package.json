@@ -23,7 +23,8 @@
     "test:webhook-scheduler": "node test-webhook-scheduler.mjs",
     "test:email-intake": "node test-email-intake.mjs",
     "test:email-intake-concurrency": "node test-email-intake-concurrency.mjs",
-    "test:email-routes-http": "node test-email-routes-http.mjs"
+    "test:email-routes-http": "node test-email-routes-http.mjs",
+    "test:email-domain": "node test-email-domain.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

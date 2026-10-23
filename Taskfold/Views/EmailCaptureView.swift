@@ -210,21 +210,21 @@ private final class EmailCaptureFixtureMemory: CalendarSecureItemIO, @unchecked 
     private var rows: [String: [String: JSON]] = [:]
     func emailRouteReceipt(action: String, body: [String: JSON], domain: String?, account: String, origin: String) async throws -> [String: JSON] {
         precondition(EmailCaptureFixture.enabled)
-        if action == "list" { return ["account": .string(account), "available": .bool(true), "domain": .string("mail.example.invalid"), "routes": .array(rows.values.map(JSON.object))] }
+        if action == "list" { return ["protocol": .number(2), "account": .string(account), "available": .bool(true), "domain": .string("mail.example.invalid"), "routes": .array(rows.values.map(JSON.object))] }
         let id = body["id"]!.text
         func row(_ draft: [String: JSON]) -> [String: JSON] {
-            ["id": draft["id"]!, "name": draft["name"]!, "project_id": draft["project_id"]!, "sender_email": .string("workshop@example.invalid"), "state": .string("active"), "revision": .number(1), "created_at": .string("2026-10-23T16:00:00Z"), "updated_at": .string("2026-10-23T16:00:00Z"), "accept_after": .string("2026-10-23T16:00:00Z"), "rotated_to": .null]
+            ["id": draft["id"]!, "alias_domain": draft["domain"]!, "name": draft["name"]!, "project_id": draft["project_id"]!, "sender_email": .string("workshop@example.invalid"), "state": .string("active"), "revision": .number(1), "created_at": .string("2026-10-23T16:00:00Z"), "updated_at": .string("2026-10-23T16:00:00Z"), "accept_after": .string("2026-10-23T16:00:00Z"), "rotated_to": .null]
         }
         if action == "create", rows[id] == nil { rows[id] = row(body) }
-        if action == "revoke", rows[id] == nil { return ["account": .string(account), "id": .string(id), "cancelled": .bool(true)] }
+        if action == "revoke", rows[id] == nil { return ["protocol": .number(2), "account": .string(account), "id": .string(id), "cancelled": .bool(true)] }
         if action == "rotate" {
             let draft = body["replacement"]!.object, replacementID = draft["id"]!.text
             rows[id]?["state"] = .string("revoked"); rows[id]?["rotated_to"] = .string(replacementID); rows[replacementID] = row(draft)
-            return ["account": .string(account), "route": .object(rows[replacementID]!), "replaced": .object(rows[id]!)]
+            return ["protocol": .number(2), "account": .string(account), "route": .object(rows[replacementID]!), "replaced": .object(rows[id]!)]
         }
         if ["pause", "resume", "revoke"].contains(action) { rows[id]?["state"] = .string(action == "pause" ? "paused" : action == "resume" ? "active" : "revoked"); rows[id]?["revision"] = .number(Double(body["revision"]!.integer + 1)) }
         guard let result = rows[id] else { throw EmailCaptureValue.invalid }
-        return ["account": .string(account), "route": .object(result)]
+        return ["protocol": .number(2), "account": .string(account), "route": .object(result)]
     }
 }
 #endif

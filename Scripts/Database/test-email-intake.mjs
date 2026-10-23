@@ -35,7 +35,9 @@ const manage = (action, body = {}, owner = a, session = sa) =>
     owner,
     session,
     action,
-    JSON.stringify(body),
+    JSON.stringify(
+      action === "resume" ? { ...body, domain: "mail.example.invalid" } : body,
+    ),
   ]);
 const stamp = new Date().toISOString();
 const receivedByDelivery = new Map();
@@ -43,6 +45,7 @@ const draft = (n, extra = {}) => ({
   id: id(n),
   name: "Synthetic inbox " + n,
   alias_hash: hash(n),
+  domain: "mail.example.invalid",
   project_id: null,
   requested_at: stamp,
   ...extra,
@@ -67,7 +70,7 @@ const deliver = (n = 21, receipt = "receipt_1", extra = {}) => {
     receivedByDelivery.set(n + ":" + receipt, args.received);
   }
   return value(
-    "select public.taskfold_email_deliver($1,$2,$3,$4,$5,$6::jsonb)",
+    "select public.taskfold_email_deliver_v2($1,'mail.example.invalid',$2,$3,$4,$5,$6::jsonb)",
     [
       args.alias,
       args.provider,
@@ -114,7 +117,7 @@ try {
     0,
   );
   await db.exec(
-    "update taskfold_private.email_intake_config set enabled=true,provider='synthetic-adapter'",
+    "update taskfold_private.email_intake_config set enabled=true,provider='synthetic-adapter',domain='mail.example.invalid'",
   );
   await refuses(
     "unknown session refused",

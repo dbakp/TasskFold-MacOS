@@ -15,24 +15,25 @@ private func edraft(_ byte: UInt8 = 0) throws -> EmailAddressDraft { try EmailAd
     var suspended: CheckedContinuation<Void, Never>?
     var suspendCreate = false
     var afterCreate: (() -> Void)?
+    var protocolVersion = 2
     func row(_ body: [String: JSON], state: String = "active", revision: Int = 1) -> [String: JSON] {
-        ["id": body["id"]!, "name": body["name"]!, "project_id": body["project_id"]!, "sender_email": .string("owner@example.invalid"), "state": .string(state), "revision": .number(Double(revision)), "created_at": .string("2026-10-23T16:00:00.000Z"), "updated_at": .string("2026-10-23T16:00:00.000Z"), "accept_after": .string("2026-10-23T16:00:00.000Z"), "rotated_to": .null]
+        ["id": body["id"]!, "alias_domain": body["domain"]!, "name": body["name"]!, "project_id": body["project_id"]!, "sender_email": .string("owner@example.invalid"), "state": .string(state), "revision": .number(Double(revision)), "created_at": .string("2026-10-23T16:00:00.000Z"), "updated_at": .string("2026-10-23T16:00:00.000Z"), "accept_after": .string("2026-10-23T16:00:00.000Z"), "rotated_to": .null]
     }
     func emailRouteReceipt(action: String, body: [String: JSON], domain: String?, account: String, origin: String) async throws -> [String: JSON] {
         calls.append((action, body, domain)); if authFailure { throw AccountSessionAuthorizationRequired() }
-        if action == "list" { return ["account": .string(account), "available": .bool(enabled), "domain": enabled ? .string("mail.example.invalid") : .null, "routes": .array(rows.values.map(JSON.object))] }
+        if action == "list" { return ["protocol": .number(Double(protocolVersion)), "account": .string(account), "available": .bool(enabled), "domain": enabled ? .string("mail.example.invalid") : .null, "routes": .array(rows.values.map(JSON.object))] }
         if suspendCreate { await withCheckedContinuation { suspended = $0 }; suspendCreate = false }
         let id = body["id"]!.text
         if action == "create" { if rows[id] == nil { rows[id] = row(body) }; if loseCreate { loseCreate = false; throw URLError(.networkConnectionLost) } }
-        if action == "revoke", rows[id] == nil { return ["account": .string(account), "id": .string(id), "cancelled": .bool(true)] }
+        if action == "revoke", rows[id] == nil { return ["protocol": .number(Double(protocolVersion)), "account": .string(account), "id": .string(id), "cancelled": .bool(true)] }
         if action == "rotate" {
             let replacement = body["replacement"]!.object; let newID = replacement["id"]!.text
             rows[id]?["state"] = .string("revoked"); rows[id]?["rotated_to"] = .string(newID); rows[newID] = row(replacement)
-            return ["account": .string(account), "route": .object(rows[newID]!), "replaced": .object(rows[id]!)]
+            return ["protocol": .number(Double(protocolVersion)), "account": .string(account), "route": .object(rows[newID]!), "replaced": .object(rows[id]!)]
         }
         if ["pause", "resume", "revoke"].contains(action) { rows[id]?["state"] = .string(action == "pause" ? "paused" : action == "resume" ? "active" : "revoked"); rows[id]?["revision"] = .number(Double(body["revision"]!.integer + 1)) }
         if action == "create" { afterCreate?() }; var value = rows[id]!; if malformed { value["id"] = .string(eb) }
-        return ["account": .string(account), "route": .object(value)]
+        return ["protocol": .number(Double(protocolVersion)), "account": .string(account), "route": .object(value)]
     }
 }
 final class EmailCaptureTests: XCTestCase {
@@ -209,8 +210,8 @@ extension EmailCaptureTests {
         let backend = try emailBackend(), draft = try edraft(); var calls = 0
         defer { EmailHTTP.handler = nil }
         EmailHTTP.handler = { request, peer in
-            calls += 1; XCTAssertEqual(request.url?.absoluteString, eo + "/functions/v1/email-routes"); XCTAssertEqual(request.httpMethod, "POST"); XCTAssertEqual(request.value(forHTTPHeaderField: "X-Taskfold-Email-Domain"), draft.domain); XCTAssertEqual(request.value(forHTTPHeaderField: "X-Taskfold-Email"), "1"); XCTAssertEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-store"); XCTAssertFalse(request.httpShouldHandleCookies); XCTAssertEqual(request.timeoutInterval, 25)
-            peer.finish(try! JSONEncoder().encode(["account": JSON.string(ea)]))
+            calls += 1; XCTAssertEqual(request.url?.absoluteString, eo + "/functions/v1/email-routes"); XCTAssertEqual(request.httpMethod, "POST"); XCTAssertEqual(request.value(forHTTPHeaderField: "X-Taskfold-Email-Domain"), draft.domain); XCTAssertEqual(request.value(forHTTPHeaderField: "X-Taskfold-Email"), "2"); XCTAssertEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-store"); XCTAssertFalse(request.httpShouldHandleCookies); XCTAssertEqual(request.timeoutInterval, 25)
+            peer.finish(try! JSONEncoder().encode(["protocol": JSON.number(2), "account": JSON.string(ea)]))
         }
         _ = try await backend.emailRouteReceipt(action: "create", body: draft.body, domain: draft.domain, account: ea, origin: eo); XCTAssertEqual(calls, 1)
         do { _ = try await backend.emailRouteReceipt(action: "list", body: [:], domain: nil, account: eb, origin: eo); XCTFail() } catch {}
@@ -219,7 +220,7 @@ extension EmailCaptureTests {
     }
     @MainActor func testHTTPRefusesForeignOwnerAndOversizeStreamWithoutConfirming() async throws {
         let backend = try emailBackend(); defer { EmailHTTP.handler = nil }
-        EmailHTTP.handler = { _, peer in peer.finish(try! JSONEncoder().encode(["account": JSON.string(eb)])) }
+        EmailHTTP.handler = { _, peer in peer.finish(try! JSONEncoder().encode(["protocol": JSON.number(2), "account": JSON.string(eb)])) }
         do { _ = try await backend.emailRouteReceipt(action: "list", body: [:], domain: nil, account: ea, origin: eo); XCTFail() } catch {}
         EmailHTTP.handler = { _, peer in peer.finish(Data(repeating: 32, count: 512001)) }
         do { _ = try await backend.emailRouteReceipt(action: "list", body: [:], domain: nil, account: ea, origin: eo); XCTFail() } catch {}
@@ -235,5 +236,43 @@ extension EmailCaptureTests {
         await first.retry(); XCTAssertNil(first.pending)
         await second.retry(); XCTAssertNil(second.pending); XCTAssertEqual(second.routes.count, 1); XCTAssertNotNil(second.address(for: second.routes[0]))
         XCTAssertEqual(peer.calls.filter { $0.0 == "create" }.count, 2)
+    }
+}
+extension EmailCaptureTests {
+    func testReviewedDomainIsExplicitInSetupAndResume() throws {
+        let draft = try edraft(); XCTAssertEqual(draft.body["domain"], .string(draft.domain))
+        let op = try EmailAddressOperation(action:"resume",id:draft.id,revision:1,domain:draft.domain)
+        XCTAssertEqual(op.body["domain"],.string(draft.domain))
+    }
+    @MainActor func testActiveReceiptRequiresDomainWhileRevokedLegacyMayBeUnknown() throws {
+        let peer = EmailPeer(), draft = try edraft(); var row = peer.row(draft.body); row.removeValue(forKey:"alias_domain")
+        XCTAssertThrowsError(try EmailRoute(row));row["alias_domain"] = .null;XCTAssertThrowsError(try EmailRoute(row))
+        row["state"] = .string("revoked");XCTAssertNil(try EmailRoute(row).domain)
+        row["state"] = .string("active");row["alias_domain"] = .string(draft.domain);XCTAssertEqual(try EmailRoute(row).domain,draft.domain)
+    }
+    @MainActor func testPrivateAddressCannotBeRevealedAgainstDifferentReceiptDomain() async throws {
+        let peer = EmailPeer(), model = EmailCaptureModel(account:ea,origin:eo,service:peer,vault:EmailAddressVault(io:EmailMemory()),isCurrent:{true})
+        await model.load();await model.create(name:"Workflow inbox",project:nil);let id=model.routes[0].id
+        peer.rows[id]?["alias_domain"] = .string("other.example.invalid");await model.load();XCTAssertNil(model.address(for:model.routes[0]))
+    }
+    @MainActor func testLegacyProtocolCannotPopulateNativeModel() async throws {
+        let peer = EmailPeer();peer.protocolVersion=1
+        let model = EmailCaptureModel(account:ea,origin:eo,service:peer,vault:EmailAddressVault(io:EmailMemory()),isCurrent:{true})
+        await model.load();XCTAssertTrue(model.routes.isEmpty);XCTAssertFalse(model.available);XCTAssertNotNil(model.message)
+    }
+    @MainActor func testBackendRequiresVersionTwoReceipt() async throws {
+        let backend=try emailBackend();defer{EmailHTTP.handler=nil}
+        EmailHTTP.handler={_,peer in peer.finish(try! JSONEncoder().encode(["account":JSON.string(ea),"protocol":JSON.number(1)]))}
+        do{_ = try await backend.emailRouteReceipt(action:"list",body:[:],domain:nil,account:ea,origin:eo);XCTFail()}catch{}
+    }
+}
+extension EmailCaptureTests {
+    @MainActor func testRetiredLegacyPendingSetupCanBeDiscardedWithoutGuessingDomain() async throws {
+        let peer=EmailPeer();peer.loseCreate=true
+        let model=EmailCaptureModel(account:ea,origin:eo,service:peer,vault:EmailAddressVault(io:EmailMemory()),isCurrent:{true})
+        await model.load();await model.create(name:"Workflow inbox",project:nil);let id=try XCTUnwrap(model.pending?.id)
+        peer.rows[id]?["state"] = .string("revoked");peer.rows[id]?["alias_domain"] = .null;peer.rows[id]?["revision"] = .number(2)
+        await model.load();await model.retry();XCTAssertNotNil(model.pending);XCTAssertFalse(model.available)
+        await model.discardSetup();XCTAssertNil(model.pending);XCTAssertEqual(model.routes.first?.state,"revoked");XCTAssertEqual(peer.rows.count,1)
     }
 }

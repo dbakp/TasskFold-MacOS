@@ -40,8 +40,17 @@ import { emailAliasDomain as emailInboundDomain } from "../_shared/email-alias.t
 function setup(value: unknown) {
   const row = object(value);
   if (
-    !exact(row, ["id", "name", "alias_hash", "project_id", "requested_at"]) ||
+    !exact(row, [
+      "id",
+      "name",
+      "alias_hash",
+      "domain",
+      "project_id",
+      "requested_at",
+    ]) ||
     !identity(row.id) || !name(row.name) ||
+    typeof row.domain !== "string" ||
+    emailInboundDomain(row.domain) !== row.domain ||
     typeof row.alias_hash !== "string" ||
     !/^[a-f0-9]{64}$/.test(row.alias_hash) ||
     !(row.project_id === null || identity(row.project_id)) ||
@@ -60,11 +69,18 @@ function command(action: unknown, value: unknown) {
         row,
         action === "rotate"
           ? ["id", "revision", "replacement"]
+          : action === "resume"
+          ? ["id", "revision", "domain"]
           : ["id", "revision"],
       ) ||
       !identity(row.id) || !Number.isInteger(row.revision) ||
       Number(row.revision) < (action === "revoke" ? 0 : 1) ||
       Number(row.revision) > 2147483646
+    ) throw Error();
+    if (
+      action === "resume" &&
+      (typeof row.domain !== "string" ||
+        emailInboundDomain(row.domain) !== row.domain)
     ) throw Error();
     if (action === "rotate" && setup(row.replacement).id === row.id) {
       throw Error();
@@ -84,12 +100,16 @@ function receipt(value: unknown) {
     !Number.isInteger(row.revision) || Number(row.revision) < 1 ||
     Number(row.revision) > 2147483647 ||
     !(row.rotated_to === null || identity(row.rotated_to)) ||
+    !(row.alias_domain === null && row.state === "revoked" ||
+      typeof row.alias_domain === "string" &&
+        emailInboundDomain(row.alias_domain) === row.alias_domain) ||
     !["created_at", "updated_at", "accept_after"].every((key) => date(row[key]))
   ) throw Error();
   // Deliberate projection: never return hashes, raw aliases or future SQL fields.
   return Object.fromEntries(
     [
       "id",
+      "alias_domain",
       "name",
       "project_id",
       "sender_email",
@@ -187,7 +207,7 @@ export function createEmailRoutesHandler(
       request.headers.get("Authorization") ?? "",
     )?.[1];
     if (!token) return refuse("Sign in to manage email addresses.", 401);
-    if (request.headers.get("X-Taskfold-Email") !== "1") {
+    if (request.headers.get("X-Taskfold-Email") !== "2") {
       return refuse("Update Taskfold to manage email addresses.", 428);
     }
     let origin: string;
@@ -283,7 +303,10 @@ export function createEmailRoutesHandler(
       }
       if (
         ["create", "resume", "rotate"].includes(action as string) &&
-        request.headers.get("X-Taskfold-Email-Domain") !== domain
+        (request.headers.get("X-Taskfold-Email-Domain") !== domain ||
+          (action === "rotate"
+              ? setup(body.replacement).domain
+              : body.domain) !== domain)
       ) {
         return json({
           error:
@@ -334,7 +357,9 @@ export function createEmailRoutesHandler(
           ["40P01", "40001", "55P03", "57014"].includes(code),
         );
       }
-      if (result.value.account !== user.value.id) throw Error();
+      if (
+        result.value.account !== user.value.id || result.value.protocol !== 2
+      ) throw Error();
       if (action === "list") {
         if (
           typeof result.value.available !== "boolean" ||
@@ -345,8 +370,16 @@ export function createEmailRoutesHandler(
         if (new Set(routes.map((r) => r.id)).size !== routes.length) {
           throw Error();
         }
-        const available = result.value.available && domain !== null;
+        const databaseDomain = result.value.domain;
+        if (
+          !(databaseDomain === null && result.value.available === false ||
+            typeof databaseDomain === "string" &&
+              emailInboundDomain(databaseDomain) === databaseDomain)
+        ) throw Error();
+        const available = result.value.available && domain !== null &&
+          databaseDomain === domain;
         return json({
+          protocol: 2,
           account: user.value.id,
           available,
           domain: available ? domain : null,
@@ -355,7 +388,12 @@ export function createEmailRoutesHandler(
       }
       if (action === "revoke" && result.value.cancelled === true) {
         if (body.revision !== 0 || result.value.id !== body.id) throw Error();
-        return json({ account: user.value.id, id: body.id, cancelled: true });
+        return json({
+          protocol: 2,
+          account: user.value.id,
+          id: body.id,
+          cancelled: true,
+        });
       }
       const route = receipt(result.value.route);
       const expected = action === "rotate" ? setup(body.replacement) : body;
@@ -368,7 +406,8 @@ export function createEmailRoutesHandler(
       if (
         ["create", "rotate"].includes(action as string) &&
         (route.name !== (expected.name as string).trim() ||
-          route.project_id !== expected.project_id)
+          route.project_id !== expected.project_id ||
+          route.alias_domain !== expected.domain)
       ) throw Error();
       if (action === "rotate") {
         const replaced = receipt(result.value.replaced);
@@ -376,9 +415,9 @@ export function createEmailRoutesHandler(
           replaced.id !== body.id || replaced.state !== "revoked" ||
           replaced.rotated_to !== route.id
         ) throw Error();
-        return json({ account: user.value.id, route, replaced });
+        return json({ protocol: 2, account: user.value.id, route, replaced });
       }
-      return json({ account: user.value.id, route });
+      return json({ protocol: 2, account: user.value.id, route });
     } catch {
       return json({
         error: action === "list"

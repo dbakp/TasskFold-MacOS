@@ -67,6 +67,14 @@ phone/tablet fixture walkthroughs do not prove Mac runtime or real Keychain use;
 those and hosted/spoken acceptance remain open. No release flag or live delivery
 is enabled. See [native setup evidence](p2-email-native-setup-evidence.json).
 
+23 October durable email domain: protocol 2 binds the private address, database
+route and reviewed domain. Configuration cannot race a new enrollment or replace
+a live/paused address's domain/provider. Legacy unknown-domain routes retire
+without task/journal changes. The Mac independently owns matching SQL/gateway/Core
+and native decoding; its app builds and scoped checks pass. Companion Simulator
+walks do not establish Mac runtime/Keychain/spoken acceptance. No live service or
+release flag is enabled; see [domain evidence](p2-email-domain-evidence.json).
+
 ## Delivery rules
 
 - Build and validate each milestone, then commit and push completed changes to this repository. Installed-host and provisioned-release acceptance are separate gates; preserve the user’s existing installed Mac app.

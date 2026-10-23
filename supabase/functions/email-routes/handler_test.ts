@@ -15,6 +15,7 @@ const setup = (routeID = id) => ({
   id: routeID,
   name: "Design inbox",
   alias_hash: "a".repeat(64),
+  domain: config.inboundDomain,
   project_id: null,
   requested_at: stamp,
 });
@@ -23,6 +24,7 @@ const route = (routeID = id, state = "active", revision = 1) => ({
   name: "Design inbox",
   project_id: null,
   sender_email: "owner@example.test",
+  alias_domain: config.inboundDomain,
   state,
   revision,
   rotated_to: null,
@@ -37,17 +39,28 @@ const request = (action = "list", body: unknown = {}, bearer = token()) =>
     method: "POST",
     headers: {
       Authorization: "Bearer " + bearer,
-      "X-Taskfold-Email": "1",
+      "X-Taskfold-Email": "2",
       "X-Taskfold-Email-Domain": config.inboundDomain,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ action, body }),
+    body: JSON.stringify({
+      action,
+      body: action === "resume"
+        ? { ...body as Record<string, unknown>, domain: config.inboundDomain }
+        : body,
+    }),
   });
 const assert = (value: unknown, detail: string) => {
   if (!value) throw Error(detail);
 };
 function harness(
-  result: unknown = { account: owner, available: true, routes: [route()] },
+  result: unknown = {
+    protocol: 2,
+    account: owner,
+    available: true,
+    domain: config.inboundDomain,
+    routes: [route()],
+  },
   cfg = config,
 ) {
   const calls: Request[] = [];
@@ -303,8 +316,10 @@ Deno.test("subject mismatch, malformed JWT/session and anonymous Auth refuse SQL
 });
 Deno.test("list strips private/future SQL fields and rejects foreign/duplicate/broken receipts", async () => {
   const result = await harness({
+    protocol: 2,
     account: owner,
     available: true,
+    domain: config.inboundDomain,
     routes: [{ ...route(), alias_hash: "PRIVATE", raw_alias: "PRIVATE" }],
     provider_secret: "PRIVATE",
   }).handler(request());
@@ -316,22 +331,40 @@ Deno.test("list strips private/future SQL fields and rejects foreign/duplicate/b
   );
   for (
     const value of [
-      { account: next, available: true, routes: [] },
-      { account: owner, available: "true", routes: [] },
-      { account: owner, available: true, routes: [route(), route()] },
       {
+        protocol: 2,
+        account: next,
+        available: true,
+        domain: config.inboundDomain,
+        routes: [],
+      },
+      { protocol: 2, account: owner, available: "true", routes: [] },
+      {
+        protocol: 2,
         account: owner,
         available: true,
+        domain: config.inboundDomain,
+        routes: [route(), route()],
+      },
+      {
+        protocol: 2,
+        account: owner,
+        available: true,
+        domain: config.inboundDomain,
         routes: [{ ...route(), revision: 0 }],
       },
       {
+        protocol: 2,
         account: owner,
         available: true,
+        domain: config.inboundDomain,
         routes: [{ ...route(), state: "unknown" }],
       },
       {
+        protocol: 2,
         account: owner,
         available: true,
+        domain: config.inboundDomain,
         routes: [{ ...route(), created_at: "invalid" }],
       },
     ]
@@ -366,14 +399,23 @@ Deno.test("missing domain/disabled DB never advertises an address; pause/revoke 
     );
   }
   for (const [action, state] of [["pause", "paused"], ["revoke", "revoked"]]) {
-    h = harness({ account: owner, route: route(id, state, 2) }, cfg);
+    h = harness(
+      { protocol: 2, account: owner, route: route(id, state, 2) },
+      cfg,
+    );
     assert(
       (await h.handler(request(action, { id, revision: 1 }))).status === 200 &&
         h.calls.length === 2,
       "missing domain blocked safety action",
     );
   }
-  result = await harness({ account: owner, available: false, routes: [] })
+  result = await harness({
+    protocol: 2,
+    account: owner,
+    available: false,
+    domain: null,
+    routes: [],
+  })
     .handler(request());
   value = await result.json();
   assert(
@@ -382,7 +424,11 @@ Deno.test("missing domain/disabled DB never advertises an address; pause/revoke 
   );
 });
 Deno.test("create forwards hash-only setup and preserves exact retry identity", async () => {
-  const { handler, calls } = harness({ account: owner, route: route() });
+  const { handler, calls } = harness({
+    protocol: 2,
+    account: owner,
+    route: route(),
+  });
   assert(
     (await handler(request("create", setup()))).status === 200,
     "create failed",
@@ -402,20 +448,28 @@ Deno.test("pause/resume/revoke must acknowledge expected address and state", asy
     ]]
   ) {
     assert(
-      (await harness({ account: owner, route: route(id, state, 2) }).handler(
+      (await harness({
+        protocol: 2,
+        account: owner,
+        route: route(id, state, 2),
+      }).handler(
         request(action, { id, revision: 1 }),
       )).status === 200,
       "action failed",
     );
     assert(
-      (await harness({ account: owner, route: route(next, state, 2) }).handler(
+      (await harness({
+        protocol: 2,
+        account: owner,
+        route: route(next, state, 2),
+      }).handler(
         request(action, { id, revision: 1 }),
       )).status === 503,
       "wrong address acknowledged",
     );
   }
   assert(
-    (await harness({ account: owner, route: route() }).handler(
+    (await harness({ protocol: 2, account: owner, route: route() }).handler(
       request("pause", { id, revision: 1 }),
     )).status === 503,
     "wrong state acknowledged",
@@ -430,6 +484,7 @@ Deno.test("cancel-before-create requires matching ID and revision zero", async (
     ]] as const
   ) {
     const result = await harness({
+      protocol: 2,
       account: owner,
       id: resultID,
       cancelled: true,
@@ -448,7 +503,12 @@ Deno.test("rotation validates both replacement and terminal old-route receipt", 
     revision: 1,
     replacement: setup(next),
   });
-  const result = await harness({ account: owner, route: route(next), replaced })
+  const result = await harness({
+    protocol: 2,
+    account: owner,
+    route: route(next),
+    replaced,
+  })
     .handler(command);
   assert(result.status === 200, "rotation failed");
   for (
@@ -458,7 +518,12 @@ Deno.test("rotation validates both replacement and terminal old-route receipt", 
     }, { ...replaced, id: next }]
   ) {
     assert(
-      (await harness({ account: owner, route: route(next), replaced: bad })
+      (await harness({
+        protocol: 2,
+        account: owner,
+        route: route(next),
+        replaced: bad,
+      })
         .handler(
           request("rotate", { id, revision: 1, replacement: setup(next) }),
         )).status === 503,
@@ -623,4 +688,73 @@ Deno.test("setup, rotation and resume bind the reviewed domain", async () => {
       "changed domain reached SQL",
     );
   }
+});
+Deno.test("legacy wire protocol is refused before Auth", async () => {
+  const { handler, calls } = harness();
+  const req = request();
+  req.headers.set("X-Taskfold-Email", "1");
+  assert(
+    (await handler(req)).status === 428 && calls.length === 0,
+    "old client reached Auth",
+  );
+});
+Deno.test("database and configured worker domains must agree before advertising capture", async () => {
+  const result = await harness({
+    protocol: 2,
+    account: owner,
+    available: true,
+    domain: "other.example.test",
+    routes: [route()],
+  }).handler(request());
+  const value = await result.json();
+  assert(
+    result.status === 200 && value.available === false &&
+      value.domain === null && value.routes.length === 1,
+    "stale worker advertised wrong domain or hid safety controls",
+  );
+});
+Deno.test("active metadata without a bound domain is never accepted", async () => {
+  for (const alias_domain of [undefined, null, "WRONG.example.test"]) {
+    const result = await harness({
+      protocol: 2,
+      account: owner,
+      available: true,
+      domain: config.inboundDomain,
+      routes: [{ ...route(), alias_domain }],
+    }).handler(request());
+    assert(result.status === 503, "unbound active route accepted");
+  }
+  const result = await harness({
+    protocol: 2,
+    account: owner,
+    available: true,
+    domain: config.inboundDomain,
+    routes: [{ ...route(id, "revoked"), alias_domain: null }],
+  }).handler(request());
+  assert(
+    result.status === 200,
+    "retired unknown legacy address cannot be reviewed safely",
+  );
+});
+Deno.test("legacy database response cannot confirm a version two operation", async () => {
+  const result = await harness({ account: owner, route: route() }).handler(
+    request("create", setup()),
+  );
+  assert(result.status === 503, "old database receipt confirmed new setup");
+});
+Deno.test("returned address domain must match reviewed creation/replacement", async () => {
+  const result = await harness({
+    protocol: 2,
+    account: owner,
+    route: { ...route(), alias_domain: "other.example.test" },
+  }).handler(request("create", setup()));
+  assert(result.status === 503, "wrong domain confirmed address");
+});
+Deno.test("reviewed domain cannot be substituted inside the body", async () => {
+  const { handler, calls } = harness();
+  const req = request("create", { ...setup(), domain: "other.example.test" });
+  assert(
+    (await handler(req)).status === 409 && calls.length === 1,
+    "domain mismatch reached SQL",
+  );
 });
