@@ -16,6 +16,17 @@ struct AccountSessionAuthorizationRequired: LocalizedError {
     var errorDescription: String? { "Sign in again to continue." }
 }
 
+/// An explicit sign-in can renew only this account, server and session incarnation.
+struct AccountReauthentication: Identifiable, Sendable {
+    let id = UUID()
+    let account: String
+    let origin: String
+    let incarnation: UUID
+}
+struct AccountReauthenticationMismatch: LocalizedError {
+    var errorDescription: String? { "Use the same Taskfold account to continue." }
+}
+
 /// Explain transport interruptions without presenting internal networking codes.
 /// This describes already-persisted sync work, not an unsaved editor draft.
 enum SyncStatus {
@@ -173,6 +184,7 @@ final class Backend: NSObject {
     private var sessionGeneration = UUID()
     private var sessionTransition = false
     private var authenticationAttempt: UUID?
+    private var reauthenticationAttempt: (context: UUID, attempt: UUID)?
     private var cancelAuthenticationBrowser: (() -> Void)?
     /// Changes on sign-in/sign-out, and stays stable across ordinary token refresh.
     var reminderSessionIncarnation: UUID { sessionGeneration }
@@ -236,8 +248,38 @@ final class Backend: NSObject {
     }
     private func cancelAuthentication() {
         authenticationAttempt = nil
+        reauthenticationAttempt = nil
         let cancel = cancelAuthenticationBrowser; cancelAuthenticationBrowser = nil
         cancel?()
+    }
+    func reauthenticationContext(account: String) throws -> AccountReauthentication {
+        guard !sessionTransition, session?.user.id == account, AutomationKey.canonicalID(account) else { throw CancellationError() }
+        return AccountReauthentication(account:account,origin:try accountRemovalOrigin,incarnation:sessionGeneration)
+    }
+    func requireReauthentication(_ context: AccountReauthentication?) throws {
+        guard let context else { return }
+        guard !sessionTransition, session?.user.id == context.account, sessionGeneration == context.incarnation,
+              context.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+    }
+    func startAuthentication(reauthenticating context: AccountReauthentication?, cancelBrowser: (() -> Void)? = nil) throws -> UUID {
+        try requireReauthentication(context)
+        let attempt = beginAuthentication(cancelBrowser:cancelBrowser)
+        if let context { reauthenticationAttempt = (context.id,attempt) }
+        return attempt
+    }
+    func cancelReauthentication(_ context: AccountReauthentication) {
+        guard let current = reauthenticationAttempt, current.context == context.id, current.attempt == authenticationAttempt else { return }
+        cancelAuthentication()
+    }
+    func acceptAuthentication(_ next: Session, attempt: UUID, reauthenticating context: AccountReauthentication?, willCommit: (() -> Void)? = nil) async throws {
+        try requireAuthentication(attempt)
+        try requireReauthentication(context)
+        if let context, next.user.id != context.account { throw AccountReauthenticationMismatch() }
+        try Task.checkCancellation()
+        // From this point the existing serialized credential write must finish.
+        // The sheet disables cancellation for that short commit phase.
+        willCommit?()
+        try await accept(next)
     }
     func clearSession() async throws {
         cancelAuthentication()
@@ -392,8 +434,9 @@ final class Backend: NSObject {
         try await accept(current)
     }
 
-    func signIn(email: String, password: String, signup: Bool) async throws -> Bool {
-        let attempt = beginAuthentication(); defer { endAuthentication(attempt) }
+    func signIn(email: String, password: String, signup: Bool, reauthenticating context: AccountReauthentication? = nil, willCommit: (() -> Void)? = nil) async throws -> Bool {
+        guard context == nil || !signup else { throw CancellationError() }
+        let attempt = try startAuthentication(reauthenticating:context); defer { endAuthentication(attempt) }
         let path = signup ? "/auth/v1/signup" : "/auth/v1/token?grant_type=password"
         let data = try await request(path, method: "POST", body: ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()), "password": .string(password)], authenticated: false)
         try requireAuthentication(attempt)
@@ -401,7 +444,7 @@ final class Backend: NSObject {
             if signup { return false }
             throw AppFailure(message: "The sign-in response was incomplete. Please try again.")
         }
-        try await accept(next)
+        try await acceptAuthentication(next,attempt:attempt,reauthenticating:context,willCommit:willCommit)
         return true
     }
     /// Changes the signed-in user's email (Supabase sends a confirmation) or password.
@@ -572,9 +615,9 @@ final class Backend: NSObject {
     }
     #endif
     #if canImport(UIKit)
-    func google() async throws {
+    func google(reauthenticating context: AccountReauthentication? = nil, willCommit: (() -> Void)? = nil) async throws {
         guard authSession == nil else { throw CancellationError() }
-        let attempt = beginAuthentication { [weak self] in self?.authSession?.cancel(); self?.authSession = nil }
+        let attempt = try startAuthentication(reauthenticating:context,cancelBrowser: { [weak self] in self?.authSession?.cancel(); self?.authSession = nil })
         defer { endAuthentication(attempt) }
         var bytes = [UInt8](repeating: 0, count: 32)
         guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { throw AppFailure(message: "Could not start secure sign-in.") }
@@ -595,7 +638,7 @@ final class Backend: NSObject {
         let data = try await request("/auth/v1/token?grant_type=pkce", method: "POST", body: ["auth_code": .string(code), "code_verifier": .string(verifier)], authenticated: false)
         try requireAuthentication(attempt)
         let next = try JSONDecoder().decode(Session.self, from: data)
-        try await accept(next)
+        try await acceptAuthentication(next,attempt:attempt,reauthenticating:context,willCommit:willCommit)
     }
     #endif
     #if canImport(UIKit)

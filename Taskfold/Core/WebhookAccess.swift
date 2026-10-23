@@ -180,6 +180,7 @@ extension Backend: WebhookService {}
     private(set) var confirmed: WebhookConnection?
     private(set) var busy = false
     private(set) var message: String?
+    private(set) var needsSignIn = false
     private(set) var nextCursor: String?
     private(set) var history: [WebhookHistoryEvent] = []
     private(set) var historyCursor: String?
@@ -187,7 +188,8 @@ extension Backend: WebhookService {}
     private(set) var includesInactive = false
     private(set) var uncertainAction: String?
     private var uncertainBody: [String: JSON]?
-    private let account: String, origin: String
+    let account: String
+    private let origin: String
     @ObservationIgnored private let service: any WebhookService
     @ObservationIgnored private let vault: WebhookEnrollmentVault
     @ObservationIgnored private let isCurrent: () -> Bool
@@ -205,11 +207,12 @@ extension Backend: WebhookService {}
         do { try check(); try await action() } catch is CancellationError { } catch { if current {
             confirmed = nil
             if error is AccountSessionAuthorizationRequired {
-                message = pending == nil ? "Sign in again to continue. Your tasks stay saved." : "Sign in again to continue. Your private setup has been kept on this device."
-            } else { message = pending == nil ? "This action was not confirmed. Reload to check the latest status, or retry the same action." : "This action was not confirmed. Your setup has been kept. Reload or retry the same action." }
+                needsSignIn = true
+                message = pending == nil ? "Sign in again to continue. Your tasks stay saved." : "Sign in again. Your setup is saved."
+            } else { message = pending == nil ? "Action not confirmed. Reload to check its status." : "Action not confirmed. Your setup is saved." }
         } }
     }
-    private func call(_ action: String, _ body: [String: JSON]) async throws -> [String: JSON] { try check(); let r = try await service.webhookReceipt(action:action,body:body,account:account,origin:origin); try check(); guard r["account"] == .string(account) else { throw WebhookValue.invalid }; return r }
+    private func call(_ action: String, _ body: [String: JSON]) async throws -> [String: JSON] { try check(); let r = try await service.webhookReceipt(action:action,body:body,account:account,origin:origin); try check(); guard r["account"] == .string(account) else { throw WebhookValue.invalid }; needsSignIn = false; return r }
     private func connection(_ r: [String: JSON], id: String) throws -> WebhookConnection { guard case .object(let fields) = r["subscription"] else { throw WebhookValue.invalid }; let c = try WebhookConnection(fields); guard c.id == id else { throw WebhookValue.invalid }; return c }
     private func upsert(_ c: WebhookConnection) { if let n = connections.firstIndex(where:{$0.id == c.id}) { connections[n] = c } else { connections.insert(c,at:0) } }
     func load(more: Bool = false, includeInactive: Bool? = nil) async {

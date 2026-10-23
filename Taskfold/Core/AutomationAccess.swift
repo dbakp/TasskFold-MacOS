@@ -286,6 +286,7 @@ extension Backend: AutomationKeyService {}
     private(set) var busy = false
     private(set) var loaded = false
     private(set) var message: String?
+    private(set) var needsSignIn = false
     private(set) var includesInactive = false
     let account: String
     let origin: String
@@ -315,7 +316,8 @@ extension Backend: AutomationKeyService {}
         catch { if current {
             confirmed = nil
             if error is AccountSessionAuthorizationRequired {
-                message = pending == nil ? "Sign in again to continue. Your tasks stay saved." : "Sign in again to continue. Your private setup has been kept on this device."
+                needsSignIn = true
+                message = pending == nil ? "Sign in again to continue. Your tasks stay saved." : "Sign in again. Your setup is saved."
             } else { message = error.localizedDescription }
         } }
     }
@@ -336,6 +338,7 @@ extension Backend: AutomationKeyService {}
                 guard page.keys.allSatisfy({ !old.contains($0.id) }) else { throw AutomationKey.invalid }
                 self.keys += page.keys
             } else { self.keys = page.keys }
+            self.needsSignIn = false
             self.nextCursor = page.nextCursor; self.includesInactive = includeInactive; self.loaded = true
         }
     }
@@ -374,7 +377,7 @@ extension Backend: AutomationKeyService {}
             pending = saved?.draft; confirmed = nil
             throw AppFailure(message: "Key setup changed in another window. Review it before continuing.")
         }
-        confirmed = key; upsert(key)
+        needsSignIn = false; confirmed = key; upsert(key)
     }
     func refreshRecovery() async {
         await perform {
@@ -406,7 +409,7 @@ extension Backend: AutomationKeyService {}
     }
     private func finishDiscard(_ draft: AutomationKeyDraft) async throws {
         try await service.cancelAutomationKey(id: draft.id, account: account, origin: origin)
-        try check()
+        try check(); needsSignIn = false
         AutomationEnrollmentReview.shared.finished.insert(reviewID(draft))
         confirmed = nil; keys.removeAll { $0.id == draft.id }
         try await vault.finish(draft, lease: lease, cancelled: true)
@@ -415,7 +418,7 @@ extension Backend: AutomationKeyService {}
     private func revokeID(_ id: String) async {
         await perform {
             let key = try await self.service.revokeAutomationKey(id: id, account: self.account, origin: self.origin)
-            try self.check(); self.upsert(key)
+            try self.check(); self.needsSignIn = false; self.upsert(key)
             if let draft = self.pending, draft.id == key.id {
                 AutomationEnrollmentReview.shared.finished.insert(self.reviewID(draft))
                 self.confirmed = nil // Never reveal after confirmed revocation, even if secure cleanup fails.

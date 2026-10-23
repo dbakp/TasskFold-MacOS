@@ -185,3 +185,40 @@ entries and main services stay disabled, and all user deferrals remain unchanged
 
 The refresh classifications use the provider's structured `code` field, following
 the [Supabase Auth error-code reference](https://supabase.com/docs/guides/auth/debugging/error-codes). No matching against server message text is used.
+
+
+## In-place connection sign-in recovery — 23 October
+
+Automation keys and task connections now offer **Sign in again** after a confirmed
+session refusal. The native sheet renews only the current account, on the same
+server and session incarnation. A response for a different account is rejected
+before credentials are saved. Stale contexts and late cancelled requests cannot
+replace the active session; cancelling an older sheet cannot cancel a newer sign-in.
+Cancel remains available while the request is pending and is disabled only during
+the serialized credential save. Password errors stay visible above the form,
+including at the largest accessibility text size.
+
+Successful renewal rebuilds the connection manager against the new session and
+its existing private enrollment vault. It deliberately avoids the full account-entry
+Store reset, preserving the current workspace and Undo state by construction.
+Continuing setup retries the original enrollment; it returns to a masked review
+and never reveals a secret automatically. The native synthetic peer rejects any
+changed enrollment body, including changed private material. Delivery-history
+notices also offer the same recovery action after dismissing history.
+
+Both independent Core suites pass (iOS-owned: 1,372 executed, 13 optional skips;
+Mac-owned: 1,404 executed, 33 optional skips; no failures). Subsequent focused runs
+cover the final concise feedback copy and an additional foreign-origin/signup guard.
+iPhone/iPad native results and reviewed screenshots are recorded in
+`p2-connection-reauthentication-evidence.json`. Each app owns its source and project
+inputs; the Mac app compiles independently.
+
+The native fixture uses the production Backend and real URLSession through a
+synthetic HTTP peer, with memory-only credentials and enrollment storage. It does
+not establish genuine hosted Auth, Keychain persistence, Google account-selection,
+cached/queued-work or Undo runtime acceptance. Those remain separate acceptance
+work, alongside Mac runtime and wider consent/history speech. Normal feature
+entries and main services remain disabled. Email intake, advanced teams and
+wearables remain open; full Px is not complete. Remote reminders, older-client
+rollout safeguards, distribution verification, OAuth registration/provider
+acceptance and physical location-reminder delivery remain deferred by the user.

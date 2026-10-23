@@ -104,10 +104,10 @@ final class WebAuthAnchor: NSObject, ASWebAuthenticationPresentationContextProvi
 }
 
 extension Backend {
-    func googleOnMac() async throws {
+    func googleOnMac(reauthenticating context: AccountReauthentication? = nil, willCommit: (() -> Void)? = nil) async throws {
         let anchor = WebAuthAnchor.shared
         guard anchor.session == nil else { throw CancellationError() }
-        let attempt = beginAuthentication { anchor.session?.cancel(); anchor.session = nil }
+        let attempt = try startAuthentication(reauthenticating:context,cancelBrowser: { anchor.session?.cancel(); anchor.session = nil })
         defer { endAuthentication(attempt) }
         var bytes = [UInt8](repeating: 0, count: 32)
         guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { throw AppFailure(message: "Could not start secure sign-in.") }
@@ -131,6 +131,6 @@ extension Backend {
         let data = try await request("/auth/v1/token?grant_type=pkce", method: "POST", body: ["auth_code": .string(code), "code_verifier": .string(verifier)], authenticated: false)
         try requireAuthentication(attempt)
         let next = try JSONDecoder().decode(Session.self, from: data)
-        try await accept(next)
+        try await acceptAuthentication(next,attempt:attempt,reauthenticating:context,willCommit:willCommit)
     }
 }

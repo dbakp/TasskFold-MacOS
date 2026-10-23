@@ -24,6 +24,12 @@ struct AutomationAccessView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var phase
+    #if DEBUG
+    @State private var signInFixture: ConnectionReauthenticationFixture?
+    #endif
+    @State private var authenticationBackend: Backend?
+    @State private var reauthentication: AccountReauthentication?
+    @State private var restoredIncarnation: UUID?
     @State private var model: AutomationAccessModel?
     @State private var composing = false
     @State private var revoking: AutomationKey?
@@ -45,25 +51,10 @@ struct AutomationAccessView: View {
         #else
         .frame(minWidth: 520, idealWidth: 620, minHeight: 480)
         #endif
-        .task {
-            #if DEBUG
-            if fixture && AutomationManagementFixture.enabled {
-                do { let value = try await AutomationManagementFixture.makeModel(); model = value; await value.load() }
-                catch { /* Secure-storage failure leaves the fixture unavailable. */ }
-                return
-            }
-            #endif
-            guard model == nil, store.signedIn, !store.localMode, !store.signingOut, !store.accountRemovalBlocked,
-                  AutomationAccessAvailability.enabled, let origin = try? store.backend.accountRemovalOrigin else { return }
-            let binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
-            let backendSession = store.backend.reminderSessionIncarnation
-            let value = AutomationAccessModel(account: binding.account, origin: origin, service: store.backend, vault: store.automationEnrollmentVault) {
-                store.signedIn && !store.localMode && !store.signingOut && !store.accountRemovalBlocked &&
-                binding.matches(account: store.userID, generation: store.workspaceGeneration) && store.backend.reminderSessionIncarnation == backendSession
-            }
-            model = value; await value.load()
-        }
+        .task { await startModel() }
+        .onChange(of:store.accountRemovalBlocked) { _,blocked in if blocked { leave() } }
         .onChange(of:model?.confirmed?.id) { _,id in if id == nil { revealedID = nil; copiedID = nil } }
+        .onChange(of:signInBackend.reminderSessionIncarnation) { _,value in sessionChanged(value) }
         .onChange(of: store.workspaceGeneration) { _, _ in leave() }
         .onChange(of: store.signingOut) { _, value in if value { leave() } }
         .onChange(of: phase) { _, value in
@@ -71,6 +62,9 @@ struct AutomationAccessView: View {
             if value == .active { Task { await model?.refreshRecovery() } }
         }
         .onDisappear { model?.close(); model = nil; revealedID = nil }
+        .sheet(item:$reauthentication,onDismiss:{ if model?.current == false { restoredSignIn() } }) { context in
+            ConnectionSignInSheet(backend:signInBackend,context:context,email:signInBackend.session?.user.email ?? store.email) { restoredSignIn() }
+        }
         .sheet(isPresented: $composing) {
             if let model { AutomationKeyComposer(model: model) }
         }
@@ -92,7 +86,53 @@ struct AutomationAccessView: View {
         return "Copying keeps the key on this device’s clipboard for up to one minute. It is not included in task exports or backups."
         #endif
     }
-    private func leave() { model?.close(); composing = false; revoking = nil; discardSetup = false; revealedID = nil; dismiss() }
+    private var signInBackend: Backend { authenticationBackend ?? store.backend }
+    private func beginSignIn(account: String) {
+        guard let context = try? signInBackend.reauthenticationContext(account:account) else { leave(); return }
+        reauthentication = context
+    }
+    private func sessionChanged(_ incarnation: UUID) {
+        if restoredIncarnation == incarnation { return }
+        if let context = reauthentication, signInBackend.session?.user.id == context.account { return }
+        leave()
+    }
+    private func restoredSignIn() {
+        guard let account = model?.account, signInBackend.session?.user.id == account else { leave(); return }
+        restoredIncarnation = signInBackend.reminderSessionIncarnation
+        model?.close(); model = nil; reauthentication = nil
+        Task { await startModel() }
+    }
+    private func startModel() async {
+            guard model == nil else { return }
+            #if DEBUG
+            if fixture && ConnectionReauthenticationFixture.enabled {
+                do {
+                    let source = try signInFixture ?? ConnectionReauthenticationFixture(); signInFixture = source
+                    authenticationBackend = source.backend; restoredIncarnation = source.backend.reminderSessionIncarnation
+                    let value = source.automationModel(); model = value; await value.load()
+                } catch { /* The exact isolated fixture remains unavailable on failure. */ }
+                return
+            }
+            #endif
+            #if DEBUG
+            if fixture && AutomationManagementFixture.enabled {
+                do { let value = try await AutomationManagementFixture.makeModel(); model = value; await value.load() }
+                catch { /* Secure-storage failure leaves the fixture unavailable. */ }
+                return
+            }
+            #endif
+            guard model == nil, store.signedIn, !store.localMode, !store.signingOut, !store.accountRemovalBlocked,
+                  AutomationAccessAvailability.enabled, let origin = try? store.backend.accountRemovalOrigin else { return }
+            authenticationBackend = store.backend; restoredIncarnation = store.backend.reminderSessionIncarnation
+            let binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+            let backendSession = store.backend.reminderSessionIncarnation
+            let value = AutomationAccessModel(account: binding.account, origin: origin, service: store.backend, vault: store.automationEnrollmentVault) {
+                store.signedIn && !store.localMode && !store.signingOut && !store.accountRemovalBlocked &&
+                binding.matches(account: store.userID, generation: store.workspaceGeneration) && store.backend.reminderSessionIncarnation == backendSession
+            }
+            model = value; await value.load()
+    }
+    private func leave() { reauthentication = nil; model?.close(); composing = false; revoking = nil; discardSetup = false; revealedID = nil; dismiss() }
     private func management(_ model: AutomationAccessModel) -> some View {
         Form {
             Section {
@@ -105,6 +145,7 @@ struct AutomationAccessView: View {
             if let message = model.message {
                 Section {
                     Label(message, systemImage: "exclamationmark.circle").foregroundStyle(.secondary).accessibilityIdentifier("automationNotice")
+                    if model.needsSignIn { Button("Sign in again") { beginSignIn(account:model.account) }.accessibilityIdentifier("connectionSignIn") }
                     Button("Try again") { Task { await model.load(includeInactive: model.includesInactive) } }
                 }
             }
@@ -287,7 +328,9 @@ private struct AutomationKeyComposer: View {
 @MainActor enum AutomationManagementFixture {
     static let account = "f096cafe-1111-4111-8111-000000000001"
     static var enabled: Bool {
-        AutomationAccessAvailability.enabled && ProcessInfo.processInfo.arguments.contains("--uitesting") &&
+        if ConnectionReauthenticationFixture.enabled && ProcessInfo.processInfo.arguments.contains("--automation-management-fixture") { return true }
+
+        return AutomationAccessAvailability.enabled && ProcessInfo.processInfo.arguments.contains("--uitesting") &&
             UserDefaults.standard.bool(forKey: "localMode") && !ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test") &&
             ProcessInfo.processInfo.arguments.contains("--automation-management-fixture") &&
             ["com.dbakp.taskfold.workflowtestsp1", "com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? "")

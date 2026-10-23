@@ -837,3 +837,107 @@ extension AccountTransportTests {
         XCTAssertEqual(api.session?.user.id,other); XCTAssertEqual(requests,1)
     }
 }
+
+extension AccountTransportTests {
+    @MainActor func testReauthenticationAcceptsOnlyTheOriginalAccountAndInvalidatesOldScope() async throws {
+        var saves = 0, committing = false
+        let api = backend(try signed(owner),save:{ _ in saves += 1 })
+        let context = try api.reauthenticationContext(account:owner), next = try JSONEncoder().encode(signed(owner,token:"renewed"))
+        ScopedHTTP.handler = { _,transport in transport.finish(200,next) }; defer { ScopedHTTP.handler = nil }
+        let accepted = try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:context,willCommit:{committing=true}); XCTAssertTrue(accepted)
+        XCTAssertTrue(committing); XCTAssertEqual(saves,1); XCTAssertEqual(api.session?.user.id,owner); XCTAssertEqual(api.session?.access_token,"renewed")
+        XCTAssertNotEqual(api.reminderSessionIncarnation,context.incarnation)
+        XCTAssertThrowsError(try api.requireReauthentication(context))
+    }
+    @MainActor func testReauthenticationRejectsOtherAccountBeforeCredentialWrite() async throws {
+        var saves = 0, committing = false
+        let api = backend(try signed(owner),save:{ _ in saves += 1 }), next = try JSONEncoder().encode(signed(other,token:"wrong"))
+        let context = try api.reauthenticationContext(account:owner)
+        ScopedHTTP.handler = { _,transport in transport.finish(200,next) }; defer { ScopedHTTP.handler = nil }
+        do { _ = try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:context,willCommit:{committing=true}); XCTFail("Other account accepted") }
+        catch { XCTAssertTrue(error is AccountReauthenticationMismatch) }
+        XCTAssertFalse(committing); XCTAssertEqual(saves,0); XCTAssertEqual(api.session?.user.id,owner); XCTAssertEqual(api.session?.access_token,"old")
+        XCTAssertEqual(api.reminderSessionIncarnation,context.incarnation)
+    }
+    @MainActor func testStaleReauthenticationIsRefusedBeforeNetworkAndCannotCancelNewSignIn() async throws {
+        let api = backend(try signed(owner)), context = try api.reauthenticationContext(account:owner)
+        let next = try JSONEncoder().encode(signed(other,token:"other"));var requests=0
+        ScopedHTTP.handler = { _,transport in requests += 1;transport.finish(200,next) }; defer { ScopedHTTP.handler = nil }
+        _ = try await api.signIn(email:"other@example.invalid",password:"fixture",signup:false)
+        api.cancelReauthentication(context)
+        do { _ = try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:context);XCTFail("Stale context sent") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(requests,1);XCTAssertEqual(api.session?.user.id,other)
+    }
+    @MainActor func testCancelledReauthenticationCannotCommitEvenIfHTTPStillReplies() async throws {
+        let gate=HTTPGate(),started=expectation(description:"Reauthentication is waiting")
+        var saves=0
+        let api=backend(try signed(owner),save:{_ in saves += 1}),context=try api.reauthenticationContext(account:owner)
+        ScopedHTTP.handler={_,transport in gate.hold(transport);started.fulfill()};defer{ScopedHTTP.handler=nil}
+        let waiting=Task { @MainActor in try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:context) }
+        await fulfillment(of:[started],timeout:3)
+        api.cancelReauthentication(context)
+        gate.release(200,try JSONEncoder().encode(signed(owner,token:"late")))
+        do { _=try await waiting.value;XCTFail("Cancelled sign-in committed") } catch {XCTAssertTrue(error is CancellationError)}
+        XCTAssertEqual(saves,0);XCTAssertEqual(api.session?.access_token,"old");XCTAssertEqual(api.reminderSessionIncarnation,context.incarnation)
+    }
+    @MainActor func testOldReauthenticationCancellationDoesNotCancelNewAttempt() async throws {
+        let firstGate=HTTPGate(),secondGate=HTTPGate(),firstReady=expectation(description:"First attempt"),secondReady=expectation(description:"Second attempt")
+        var requests=0,saves=0
+        let api=backend(try signed(owner),save:{_ in saves += 1}),first=try api.reauthenticationContext(account:owner),second=try api.reauthenticationContext(account:owner)
+        ScopedHTTP.handler={_,transport in requests += 1;if requests==1 {firstGate.hold(transport);firstReady.fulfill()} else {secondGate.hold(transport);secondReady.fulfill()}};defer{ScopedHTTP.handler=nil}
+        let a=Task { @MainActor in try await api.signIn(email:"synthetic@example.invalid",password:"first",signup:false,reauthenticating:first) }
+        await fulfillment(of:[firstReady],timeout:3)
+        let b=Task { @MainActor in try await api.signIn(email:"synthetic@example.invalid",password:"second",signup:false,reauthenticating:second) }
+        await fulfillment(of:[secondReady],timeout:3)
+        api.cancelReauthentication(first)
+        firstGate.release(200,try JSONEncoder().encode(signed(owner,token:"old-attempt")))
+        do {_=try await a.value;XCTFail("Superseded sign-in accepted")} catch {XCTAssertTrue(error is CancellationError)}
+        secondGate.release(200,try JSONEncoder().encode(signed(owner,token:"new-attempt")))
+        let accepted=try await b.value;XCTAssertTrue(accepted);XCTAssertEqual(api.session?.access_token,"new-attempt");XCTAssertEqual(saves,1)
+    }
+    @MainActor func testReauthenticationCommitCallbackPrecedesHeldCredentialWrite() async throws {
+        let started=expectation(description:"Credential commit is held")
+        var committing=false,release:CheckedContinuation<Void,Never>?
+        let configuration=URLSessionConfiguration.ephemeral;configuration.protocolClasses=[ScopedHTTP.self]
+        let api=Backend(configuration:["URL":"https://native-scope.test","Key":"public"],http:URLSession(configuration:configuration),session:try signed(owner),persistSession:{_ in
+            XCTAssertTrue(committing);await withCheckedContinuation { release=$0;started.fulfill() }
+        })
+        let context=try api.reauthenticationContext(account:owner),data=try JSONEncoder().encode(signed(owner,token:"renewed"))
+        ScopedHTTP.handler={_,transport in transport.finish(200,data)};defer{ScopedHTTP.handler=nil}
+        let saving=Task { @MainActor in try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:context,willCommit:{committing=true}) }
+        await fulfillment(of:[started],timeout:3)
+        api.cancelReauthentication(context) // Committing has retired only this authentication attempt.
+        XCTAssertEqual(api.session?.access_token,"old")
+        release?.resume();let accepted=try await saving.value
+        XCTAssertTrue(accepted);XCTAssertEqual(api.session?.access_token,"renewed")
+    }
+    @MainActor func testFailedReauthenticationSaveKeepsAccountAndAllowsFreshScopedRetry() async throws {
+        var fail=true
+        let api=backend(try signed(owner),save:{_ in if fail {throw AppFailure(message:"Synthetic credential write failure")}})
+        let original=try api.reauthenticationContext(account:owner),data=try JSONEncoder().encode(signed(owner,token:"renewed"))
+        ScopedHTTP.handler={_,transport in transport.finish(200,data)};defer{ScopedHTTP.handler=nil}
+        do {_=try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:original);XCTFail("Failed credential write accepted")}catch{}
+        XCTAssertEqual(api.session?.access_token,"old");XCTAssertEqual(api.session?.user.id,owner)
+        let retry=try api.reauthenticationContext(account:owner);fail=false
+        let accepted=try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:false,reauthenticating:retry)
+        XCTAssertTrue(accepted);XCTAssertEqual(api.session?.access_token,"renewed")
+    }
+}
+
+extension AccountTransportTests {
+    @MainActor func testReauthenticationRefusesForeignOriginAndSignupBeforeNetwork() async throws {
+        var calls = 0, saves = 0
+        let api = backend(try signed(owner),save:{_ in saves += 1})
+        let valid = try api.reauthenticationContext(account:owner)
+        let foreign = AccountReauthentication(account:owner,origin:"https://other.test",incarnation:api.reminderSessionIncarnation)
+        let existing = api.beginAuthentication()
+        ScopedHTTP.handler = {_,transport in calls += 1;transport.finish(500,Data())};defer{ScopedHTTP.handler=nil;api.endAuthentication(existing)}
+        for (scope,signup) in [(foreign,false),(valid,true)] {
+            do {_ = try await api.signIn(email:"synthetic@example.invalid",password:"fixture",signup:signup,reauthenticating:scope);XCTFail("Invalid renewal scope sent")}
+            catch {XCTAssertTrue(error is CancellationError)}
+            XCTAssertNoThrow(try api.requireAuthentication(existing),"Refusal must not cancel an unrelated sign-in")
+        }
+        XCTAssertEqual(calls,0);XCTAssertEqual(saves,0);XCTAssertEqual(api.session?.access_token,"old")
+    }
+}

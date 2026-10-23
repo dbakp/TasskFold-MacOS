@@ -21,10 +21,17 @@ struct WebhookAccessView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var phase
+    #if DEBUG
+    @State private var signInFixture: ConnectionReauthenticationFixture?
+    #endif
+    @State private var authenticationBackend: Backend?
+    @State private var reauthentication: AccountReauthentication?
+    @State private var restoredIncarnation: UUID?
     @State private var model: WebhookAccessModel?
     @State private var startupFailure: String?
     @State private var composing = false
     @State private var selected: WebhookConnection?
+    @State private var signInAfterHistory = false
     @State private var revoking: WebhookConnection?
     @State private var discard = false
     @State private var revealed = false
@@ -43,26 +50,21 @@ struct WebhookAccessView: View {
         #else
         .frame(minWidth:560,idealWidth:660,minHeight:500)
         #endif
-        .task {
-            #if DEBUG
-            if fixture && WebhookManagementFixture.enabled { do { let value = try await WebhookManagementFixture.makeModel(); model = value; await value.load() } catch { startupFailure = "The isolated secure-storage check could not start." }; return }
-            #endif
-            guard model == nil, WebhookAccessAvailability.enabled, store.signedIn, !store.localMode, !store.signingOut, !store.accountRemovalBlocked,
-                  let origin = try? store.backend.accountRemovalOrigin else { return }
-            let binding = WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration), session = store.backend.reminderSessionIncarnation
-            let value = WebhookAccessModel(account:binding.account,origin:origin,service:store.backend,vault:store.webhookEnrollmentVault) {
-                store.signedIn && !store.localMode && !store.signingOut && !store.accountRemovalBlocked && binding.matches(account:store.userID,generation:store.workspaceGeneration) && store.backend.reminderSessionIncarnation == session
-            }
-            model = value; await value.load()
-        }
+        .task { await startModel() }
+        .onChange(of:store.accountRemovalBlocked) { _,blocked in if blocked { leave() } }
         .onChange(of:model?.confirmed?.id) { _,id in if id == nil { revealed = false; copied = false } }
         .onChange(of:store.workspaceGeneration) { _,_ in leave() }
-        .onChange(of:store.backend.reminderSessionIncarnation) { _,_ in leave() }
+        .onChange(of:signInBackend.reminderSessionIncarnation) { _,value in sessionChanged(value) }
         .onChange(of:store.signingOut) { _,v in if v { leave() } }
         .onChange(of:phase) { _,v in revealed = false; copied = false; model?.conceal(); if v == .active { Task { await model?.load() } } }
         .onDisappear { model?.close(); model = nil; revealed = false; copied = false }
+        .sheet(item:$reauthentication,onDismiss:{ if model?.current == false { restoredSignIn() } }) { context in
+            ConnectionSignInSheet(backend:signInBackend,context:context,email:signInBackend.session?.user.email ?? store.email) { restoredSignIn() }
+        }
         .sheet(isPresented:$composing) { if let model { WebhookComposer(model:model,projects:store.projects) } }
-        .sheet(item:$selected) { c in if let model { WebhookHistoryView(model:model,connection:c) } }
+        .sheet(item:$selected,onDismiss:{
+            if signInAfterHistory { signInAfterHistory = false; if let model { beginSignIn(account:model.account) } }
+        }) { c in if let model { WebhookHistoryView(model:model,connection:c,requestSignIn:{signInAfterHistory = true}) } }
         .confirmationDialog("Revoke this connection?",isPresented:Binding(get:{revoking != nil},set:{if !$0 { revoking = nil }}),titleVisibility:.visible) {
             if let c = revoking { Button("Revoke connection",role:.destructive) { revoking = nil; Task { await model?.control("revoke",connection:c) } } }
         } message: { Text("Future delivery will stop and queued task content will be erased. A request already sent cannot be recalled. Your tasks stay saved.") }
@@ -72,9 +74,56 @@ struct WebhookAccessView: View {
         .privacySensitive()
         .overlay { if phase != .active { Rectangle().fill(.background).overlay { Label("Task connections",systemImage:"lock.fill").foregroundStyle(.secondary) } } }
     }
-    private func leave() { model?.close(); composing = false; selected = nil; revoking = nil; dismiss() }
+    private var signInBackend: Backend { authenticationBackend ?? store.backend }
+    private func beginSignIn(account: String) {
+        guard let context = try? signInBackend.reauthenticationContext(account:account) else { leave(); return }
+        reauthentication = context
+    }
+    private func sessionChanged(_ incarnation: UUID) {
+        if restoredIncarnation == incarnation { return }
+        if let context = reauthentication, signInBackend.session?.user.id == context.account { return }
+        leave()
+    }
+    private func restoredSignIn() {
+        guard let account = model?.account, signInBackend.session?.user.id == account else { leave(); return }
+        restoredIncarnation = signInBackend.reminderSessionIncarnation
+        model?.close(); model = nil; reauthentication = nil
+        Task { await startModel() }
+    }
+    private func startModel() async {
+            guard model == nil else { return }
+            #if DEBUG
+            if fixture && ConnectionReauthenticationFixture.enabled {
+                do {
+                    let source = try signInFixture ?? ConnectionReauthenticationFixture(); signInFixture = source
+                    authenticationBackend = source.backend; restoredIncarnation = source.backend.reminderSessionIncarnation
+                    let value = source.webhookModel(); model = value; await value.load()
+                } catch { /* The exact isolated fixture remains unavailable on failure. */ }
+                return
+            }
+            #endif
+            #if DEBUG
+            if fixture && WebhookManagementFixture.enabled { do { let value = try await WebhookManagementFixture.makeModel(); model = value; await value.load() } catch { startupFailure = "The isolated secure-storage check could not start." }; return }
+            #endif
+            guard model == nil, WebhookAccessAvailability.enabled, store.signedIn, !store.localMode, !store.signingOut, !store.accountRemovalBlocked,
+                  let origin = try? store.backend.accountRemovalOrigin else { return }
+            authenticationBackend = store.backend; restoredIncarnation = store.backend.reminderSessionIncarnation
+            let binding = WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration), session = store.backend.reminderSessionIncarnation
+            let value = WebhookAccessModel(account:binding.account,origin:origin,service:store.backend,vault:store.webhookEnrollmentVault) {
+                store.signedIn && !store.localMode && !store.signingOut && !store.accountRemovalBlocked && binding.matches(account:store.userID,generation:store.workspaceGeneration) && store.backend.reminderSessionIncarnation == session
+            }
+            model = value; await value.load()
+    }
+    private func leave() { reauthentication = nil; model?.close(); composing = false; selected = nil; revoking = nil; dismiss() }
     private func management(_ model: WebhookAccessModel) -> some View {
         ScrollViewReader { proxy in
+        VStack(spacing:0) {
+            if let notice = model.message {
+                VStack(alignment:.leading,spacing:0) {
+                    WebhookNotice(message:notice,identifier:"webhookNotice")
+                    if model.needsSignIn { Button("Sign in again") { beginSignIn(account:model.account) }.buttonStyle(.borderedProminent).padding(.horizontal,16).padding(.bottom,10).accessibilityIdentifier("connectionSignIn") }
+                }.frame(maxWidth:.infinity,alignment:.leading).background(.background)
+            }
         Form {
             Section {
                 VStack(alignment:.leading,spacing:10) {
@@ -138,9 +187,6 @@ struct WebhookAccessView: View {
         }
         .accessibilityIdentifier("webhookManagementForm")
         .formStyle(.grouped)
-        .safeAreaInset(edge:.top,spacing:0) {
-            if let notice = model.message { WebhookNotice(message:notice,identifier:"webhookNotice") }
-        }
         .disabled(model.busy)
         .onChange(of:model.pending?.draft.id) { old,new in
             Task { @MainActor in
@@ -149,6 +195,7 @@ struct WebhookAccessView: View {
                 if new != nil { proxy.scrollTo("webhookPending",anchor:.top) }
                 else if let old, model.connections.contains(where:{$0.id == old}) { proxy.scrollTo(old,anchor:.top) }
             }
+        }
         }
         }
     }
@@ -245,12 +292,20 @@ private struct WebhookNotice: View {
 private struct WebhookHistoryView: View {
     let model: WebhookAccessModel
     let connection: WebhookConnection
+    let requestSignIn: () -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var phase
     @State private var retry: WebhookHistoryEvent?
     private var current: WebhookConnection { model.connections.first{$0.id == connection.id} ?? connection }
     var body: some View {
         NavigationStack {
+            VStack(spacing:0) {
+                if let notice = model.message {
+                    VStack(alignment:.leading,spacing:0) {
+                        WebhookNotice(message:notice,identifier:"webhookHistoryNotice")
+                        if model.needsSignIn { Button("Sign in again") { requestSignIn(); dismiss() }.buttonStyle(.borderedProminent).padding(.horizontal,16).padding(.bottom,10).accessibilityIdentifier("connectionSignIn") }
+                    }.frame(maxWidth:.infinity,alignment:.leading).background(.background)
+                }
             List {
                 Section { Text("Delivery records expire after seven days. Payloads expire after 24 hours. A failed part can be retried up to three times without changing its identity.").foregroundStyle(.secondary) }
                 if let recovery = current.delivery.recovery { Section { Label(recovery,systemImage:"exclamationmark.circle") } }
@@ -276,8 +331,6 @@ private struct WebhookHistoryView: View {
                 if model.busy { ProgressView("Loading…") }
             }
             .accessibilityIdentifier("webhookHistoryForm")
-            .safeAreaInset(edge:.top,spacing:0) {
-                if let notice = model.message { WebhookNotice(message:notice,identifier:"webhookHistoryNotice") }
             }
             .navigationTitle("Delivery history")
             #if os(iOS)
