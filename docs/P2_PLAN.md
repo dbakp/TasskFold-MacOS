@@ -4,7 +4,7 @@ Updated 23 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery and signed scheduled invocation now pass; full native hosted acceptance is next. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; native fault variants and clipboard/spoken checks remain next. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -822,3 +822,41 @@ in finally. Clean the branch afterward even if a run is interrupted. Ordinary
 native feature entries and the main service remain disabled pending native
 hosted acceptance. No reminder scheduler or deferred release capability is armed.
 Exact results and limits: `p2-webhook-scheduler-evidence.json`.
+
+
+## Native hosted receiver acceptance — 23 October
+
+The signed iPhone/iPad Simulator app now exercises real password Auth, the
+production Store/Backend transport and private OS Keychain, the hosted receiver
+proof, native task capture, signed minute dispatch and the real history response.
+The controller configures the app-generated receiver secret through an owner-only
+local channel. It never supplies a mock UI response or intercepts app HTTP.
+Normal relaunch keeps the same unfinished setup; acknowledgement, verification,
+delivery history and revocation complete through the actual service. Switching
+A → B → A hides A's unfinished setup in B and recovers it only in A.
+
+Four scoped native cases pass across iPhone 18 Pro and iPad Pro 13-inch (M5),
+iOS 27 Simulator: one delivery/relaunch and one account-isolation case per device.
+The controller confirms both exact native-created task titles at the HMAC-checked
+receiver. Phone and tablet runs are sequential because this disposable receiver
+uses one configured secret at a time. The final tablet screen also confirms the
+wording fix: “1 of 1 part · 1 attempt”. Both independent app inputs build.
+
+This round uses the iOS app and iOS-owned service source. It is not Mac AppKit
+runtime or hardware Keychain acceptance; that remains deferred with signing.
+Nor does ordinary successful-create relaunch prove genuine native HTTP-loss,
+offline, token-expiry or master-key recovery. Earlier lost-reply Keychain checks
+used a synthetic HTTP peer and remain separately scoped. Those native fault
+variants and clipboard/spoken checks remain open before normal enablement.
+Email intake, advanced teams and wearables remain on the full Px backlog.
+Main schema, endpoints and ordinary feature gates stay disabled; no real tasks
+or deferred reminder/distribution capabilities changed.
+
+The no-data branch's recorded web base omits native table grants. The fixture
+bridge now mirrors the inspected main CRUD grants on tasks/projects/memberships,
+sections/profiles/labels; it changes no RLS policies and never runs on main.
+The temporary apps/runners, accounts, functions, Vault worker credential and
+preview branch are removed after proof. Typed-password action logs are redacted;
+raw Xcode result archives are pruned after exporting summaries and safe images.
+Exact scope, versioned runs, source hashes and cleanup:
+`p2-webhook-native-hosted-evidence.json`.

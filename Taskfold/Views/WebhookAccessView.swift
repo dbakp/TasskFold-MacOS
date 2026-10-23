@@ -228,7 +228,7 @@ private struct WebhookHistoryView: View {
                         VStack(alignment:.leading,spacing:8) {
                             HStack { Text(WebhookEvent(rawValue:event.type)?.title ?? "Removed from scope").font(.headline); Spacer(); Text(event.status.capitalized).foregroundStyle(.secondary) }
                             Text(event.created.formatted(date:.abbreviated,time:.shortened)).font(.caption).foregroundStyle(.secondary)
-                            Text("\(event.partsDelivered) of \(event.parts) parts · \(event.attempts) attempts").font(.caption).monospacedDigit()
+                            Text("\(event.partsDelivered) of \(event.parts) \(event.parts == 1 ? "part" : "parts") · \(event.attempts) \(event.attempts == 1 ? "attempt" : "attempts")").font(.caption).monospacedDigit()
                             if let error = event.error { Text("Last issue: " + errorTitle(error)).font(.callout).foregroundStyle(.secondary) }
                             DisclosureGroup("Reference") {
                                 Text("Event: " + event.id).textSelection(.enabled).font(.system(.caption,design:.monospaced)).fixedSize(horizontal:false,vertical:true)

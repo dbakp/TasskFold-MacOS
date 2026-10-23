@@ -3,7 +3,7 @@
 -- No production data or server secrets are copied. Source feature migrations
 -- load unchanged after this base. Never run this fixture bridge on main.
 -- Native base grants inspected on main; preview web history omits them.
-grant select,insert,update,delete on public.projects,public.project_collaborators to authenticated,service_role;
+grant select,insert,update,delete on public.tasks,public.projects,public.project_collaborators,public.sections,public.profiles,public.labels to authenticated,service_role;
 create schema taskfold_private;
 revoke all on schema taskfold_private from public,anon;
 grant usage on schema taskfold_private to authenticated,service_role;
