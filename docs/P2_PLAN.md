@@ -430,9 +430,7 @@ Next required, in order:
    PostgreSQL 17.6 contention passes 20 checks per repo, including 12-connection
    final-slot races and actual advisory-lock timeouts. Local task-effect races now
    pass 99 additional real PostgreSQL checks per repo, including actual HTTP
-   contention/retry behavior. Next: repair the isolated branch's historical setup
-   replay, then hosted Auth/HTTP timeout, key lifecycle and native acceptance
-   with disposable users. Function-level admission does not close provider-level
+   contention/retry behavior. Real hosted Auth/Edge/PostgREST lifecycle now passes 42 checks from each repo-owned source. Next: hosted timeout/cancellation and native Keychain/clipboard acceptance with disposable users. Function-level admission does not close provider-level
    invocation billing or network protection.
 4. Verify signed-in phone/tablet and scoped Mac flows, then deploy the coherent
    gateway/client together. No user release-signing or physical-location gate is reopened.
@@ -514,3 +512,21 @@ project remains PostgreSQL 17.6 with zero automation candidates applied.
 separate staging state. Full Px and all user deferrals remain active. Hosted
 Auth/PostgREST/timeout/native/clipboard work remains required; local proof does
 not close those gates.
+
+
+23 October hosted lifecycle checkpoint: the empty acceptance branch recovered
+from its historical replay failure. The branch-only repair recreated the owner
+insert policy, restored the six original tables' recorded CRUD grants and kept
+the repaired migration's original identity. Its own collaboration verification
+passed; rebase then applied all 82 main migrations. All nine exact automation
+candidates applied on that branch only (91 entries total). Main is unchanged.
+
+Each repo-owned hosted runner independently passes 42 checks through real Auth,
+Edge Functions and PostgREST: enrollment/retry, cancellation before and after
+creation, account isolation, service-wrapper protection, scoped access, paging,
+task CRUD/completion/reopen, exact replay, sign-out and revocation. Temporary
+endpoints and users were removed; SQL confirms zero test users/tasks/keys/journal
+rows. The acceptance branch is deleted and its private connection export removed. Final cleanup
+state and exact limits are recorded in `p2-automation-hosted-lifecycle-evidence.json`.
+This supersedes the earlier staging-failure status; native UI, Keychain/clipboard
+and hosted timeout/cancellation gates remain open. Full Px is not complete.

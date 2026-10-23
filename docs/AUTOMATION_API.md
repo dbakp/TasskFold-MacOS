@@ -400,3 +400,24 @@ excluded. Its historical setup replay stopped after 28 older migrations, before
 any automation candidate; that staging reproducibility issue must be diagnosed
 before using it for account tests. The main database and deployed functions have
 not been changed by the task-race work. No automation candidate is enabled.
+
+
+### Hosted lifecycle acceptance — 23 October
+
+`Scripts/Diagnostics/test-automation-hosted.mjs` now owns a real hosted runner in
+each repo. It refuses main, persistent, data-bearing and unrelated branches; reads
+credentials only from an owner-private CLI JSON export; uses unique temporary
+endpoints and two synthetic confirmed accounts; and removes its users/endpoints/
+local stage in `finally`. Summary output contains named booleans and statuses,
+never tokens, hashes, passwords or response bodies.
+
+Both platform-source runs pass 42 checks through Auth, Edge and PostgREST,
+including denied scope/account access, private RPC protection, one-time enrollment
+retry, permanent discarded-setup refusal, paging, task mutations, exact replay,
+real session revocation and delegated-key revocation. The empty branch required
+a historical policy/grant replay repair before its 82 baseline plus nine candidate
+migrations passed. That repair and candidate deployment never touched main.
+
+See `p2-automation-hosted-lifecycle-evidence.json` for exact proof and cleanup.
+This closes the basic hosted lifecycle gate. Native app management/Keychain/
+clipboard testing and hosted timeout/cancellation acceptance remain separate.

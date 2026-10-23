@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-23",
+  "platformSource": "macOS",
+  "milestone": "Real hosted Auth, Edge, PostgREST and lifecycle acceptance",
+  "result": {
+    "date": "2026-10-23T02:59:25.103Z",
+    "checks": {
+      "synthetic-user-0": true,
+      "real-password-session-1": true,
+      "synthetic-user-1": true,
+      "real-password-session-2": true,
+      "empty-owner-list": true,
+      "verified-native-session-enrolls": true,
+      "only-public-key-metadata": true,
+      "lost-enrollment-reply-retry": true,
+      "other-account-cannot-revoke": true,
+      "other-account-list-empty": true,
+      "cancel-before-create": true,
+      "late-create-permanently-refused": true,
+      "read-key-enrolls": true,
+      "read-scope-cannot-create": true,
+      "hosted-create": true,
+      "hosted-no-store": true,
+      "exact-request-replay": true,
+      "current-owner-projection": true,
+      "read-key-can-get": true,
+      "second-account-key-enrolls": true,
+      "second-account-task-isolation": true,
+      "native-cannot-bypass-service-wrapper": true,
+      "hosted-key-page-cursor": true,
+      "hosted-key-second-page": true,
+      "real-destination-discovery": true,
+      "hosted-update": true,
+      "edit-persisted": true,
+      "hosted-complete": true,
+      "completion-persisted": true,
+      "hosted-reopen": true,
+      "reopen-persisted": true,
+      "cancel-existing-key": true,
+      "cancelled-existing-key-refused": true,
+      "real-signout": true,
+      "old-native-session-management-refused": true,
+      "delegated-key-survives-native-signout": true,
+      "real-password-session-3": true,
+      "new-native-session-lists-key": true,
+      "reviewed-hosted-delete": true,
+      "deleted-task-unavailable": true,
+      "owner-revokes-key": true,
+      "revoked-key-cannot-replay": true
+    },
+    "realTasksChanged": 0,
+    "productionEnabled": false,
+    "cleanup": {
+      "users": true,
+      "functions": true,
+      "files": true
+    },
+    "project": "ntbwkyhruxepackrxpph",
+    "branchId": "859b1e42-dac6-494a-be4d-df279d914853",
+    "phase": "passed",
+    "lastHTTPStatus": 200,
+    "assertions": 42,
+    "passed": true
+  },
+  "staging": {
+    "branchId": "859b1e42-dac6-494a-be4d-df279d914853",
+    "projectRef": "ntbwkyhruxepackrxpph",
+    "withData": false,
+    "historicalMigrations": 82,
+    "automationCandidates": 9,
+    "postgres": "17.11",
+    "branchDeletionRequested": true,
+    "branchAbsenceVerified": true,
+    "mergedToMain": false,
+    "privateConnectionExportRemoved": true
+  },
+  "historicalReplayRepair": {
+    "error": "Duplicate projects_insert_owner policy",
+    "branchOnlyChanges": [
+      "Drop the existing owner insert policy directly before its historical recreation",
+      "Restore SELECT/INSERT/UPDATE/DELETE on the six original public tables to the same roles already granted them on main",
+      "Record repaired collaboration migration with its original version and name before rebase"
+    ],
+    "verification": "Historical savepoint collaboration verification passed, then all 82 baseline migrations replayed",
+    "productionHistoryChanged": false
+  },
+  "failedIterations": [
+    "Initial branch replay failed on duplicate policy; repaired replay then exposed omitted table CRUD grants. Both fixed on empty staging only.",
+    "First rebase attempted the differently named repair again and encountered an existing trigger. Restoring original migration name allowed all 82 migrations to pass.",
+    "A migration history insert collided within one second; transaction rolled back. Subsequent candidate history entries were normalized to source timestamps.",
+    "First hosted fixture used the read route for a write. Corrected to /write; both final platform-source runs pass 42 checks."
+  ],
+  "limitations": [
+    "These are hosted tests of each repo-owned handler source, not native app UI tests",
+    "Hosted timeout/cancellation and wider concurrency across the managed stack remain open",
+    "Native Keychain/clipboard lifecycle and device/workspace UI acceptance remain open",
+    "Full Px is incomplete; user deferrals remain unchanged"
+  ],
+  "mainVerification": {
+    "automationMigrations": 0,
+    "automationKeysTable": null,
+    "realDataChanged": 0
+  },
+  "sourceSHA256": "d8304a22a0d01525b5fdd0da88cbcc7122dd5192bbe34ee10776476e5d4a747b"
+}

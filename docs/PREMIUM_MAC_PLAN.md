@@ -2989,3 +2989,12 @@ replay stopped after 28 entries. Repair that staging setup before hosted account
 checks, then delete the branch; never merge it. Exact branch identity, proof and
 remaining gates are in `p2-automation-task-concurrency-evidence.json`. This is
 progress toward full Px, not a claim of hosted or release completion.
+
+
+23 October hosted automation checkpoint: both repo-owned backend sources pass
+42 real Auth/Edge/PostgREST checks each. The branch-only historical replay repair
+allowed all 82 baseline and nine candidate migrations to pass. Test users, tasks,
+keys, journals and temporary endpoints are removed; branch deletion and private connection export removal verified.
+Main remains unchanged and the native entry stays gated. Mac native Keychain,
+clipboard and UI lifecycle plus hosted timeout/cancellation are still required.
+Evidence: `p2-automation-hosted-lifecycle-evidence.json`.
