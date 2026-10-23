@@ -466,3 +466,36 @@ runner's branch guard and private CLI credential input remain required. See
 `p2-automation-timeout-evidence.json` for results, scope and the branch retained
 for immediate native acceptance. Main stays unchanged; native hosted UI and
 signing-dependent Mac runtime remain open.
+
+
+### Signed-in hosted native acceptance — 23 October
+
+Two actual UI cases pass on each iPhone and iPad Simulator using real disposable
+Auth accounts, canonical hosted endpoints, PostgREST and the normal app Store,
+Backend and Keychain. The tests cover masked copy, ordinary cold-launch Auth and
+private pending-key recovery, acknowledgement, persisted revoke/history, and
+A → B → A isolation. Eight independent server checks confirm exactly two new A
+keys per device, no B keys, and all keys revoked. A previously completed/revoked
+tablet run is checkpointed separately. No production app code changed for this
+checkpoint. Harness fixes address system password prompts and compact-sheet
+navigation; the phone and final tablet harness hashes are recorded separately.
+
+The nonpersistent acceptance branch, canonical test endpoints and private fixture
+credentials are now removed. Main remains unchanged and feature-gated off. This
+closes the scoped phone/tablet hosted acceptance gate; it does not prove physical
+device secure hardware, Mac private-Keychain runtime or release installation.
+See `p2-automation-native-hosted-evidence.json`. Mac runtime remains deferred with
+signing; webhooks, verified email intake, teams and wearables remain unfinished.
+
+To repeat, prepare a fresh data-excluding acceptance branch with all inactive
+automation candidates. The iOS-owned diagnostic helper
+`Scripts/Diagnostics/prepare-automation-native.mjs` accepts `prepare`, `verify`
+and `cleanup`, an owner-private CLI connection JSON and a sanitized output path.
+It refuses main/unowned branches. Point only the isolated host's staged public
+backend configuration at that branch. Run both hosted UI methods from
+`AutomationManagementUITests.swift` on each Simulator, then verify exact key
+cardinality/revocation before cleanup. `replace-tablet` can retire only the owned
+tablet cohort after an unusable Simulator; `baseline-tablet` accepts only fully
+revoked prior keys, never an active or pending credential. Delete the acceptance
+branch and restore the staged configuration afterward. The Mac repo owns its
+backend code independently and does not build against this iOS harness.

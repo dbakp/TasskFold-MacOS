@@ -4,7 +4,7 @@ Updated 23 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Native signed-in phone/tablet management against the hosted service is next, while signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; webhook delivery is next, while signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -571,3 +571,25 @@ SQL confirms zero users/tasks/keys/journals/deadline controls. Its private CLI
 connection export stays outside Git. Delete the branch after this next acceptance
 work; never merge it. No app host was launched this turn. Exact proof and limits:
 `p2-automation-timeout-evidence.json`. Full Px remains active.
+
+
+23 October signed-in native hosted checkpoint: both iPhone and iPad pass two UI
+scenarios each (four passes, zero failures/skips) through real Auth, canonical
+Edge Functions and PostgREST with the normal Store/Backend/Simulator Keychain.
+Ordinary cold relaunch preserves sign-in and recovers the same private enrollment;
+acknowledgement removes pending recovery, revocation persists, and A → B → A
+keeps unfinished setup with its owning account. Independent hosted readback passes
+eight checks, requiring exactly two new A keys per device, zero B keys and every
+key revoked. One earlier fully revoked tablet key is an explicit baseline, not a
+retry duplicate. Final harness refinements handle only tablet system-password
+interruptions, scrolling and navigation; production app sources did not change.
+
+The retained acceptance branch is now deleted (absence verified), canonical test
+endpoints/users removed, and SQL confirms zero users/tasks/profiles/keys/journals/
+deadline controls. Private native credentials and the connection export are
+removed. This supersedes the preceding retained-branch checkpoint. Exact native
+results, harness hashes, failed iterations and limits are recorded in
+`p2-automation-native-hosted-evidence.json`. Mac signing-dependent private-Keychain/
+runtime remains deferred. Main API/migrations and the ordinary native entry stay
+off. Next independent feature work is webhook delivery, followed by verified email
+intake, advanced teams and wearables; full Px remains active.

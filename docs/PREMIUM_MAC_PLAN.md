@@ -3017,3 +3017,25 @@ produced a single effect; disconnection never implies rollback. Main remains off
 The empty test branch is retained only for immediate phone/tablet native hosted
 acceptance, then deleted; no Mac app launched and signing-dependent runtime stays
 deferred. Exact identity, cleanup and limits: `p2-automation-timeout-evidence.json`.
+
+
+23 October signed-in native hosted checkpoint: both iPhone and iPad pass two UI
+scenarios each (four passes, zero failures/skips) through real Auth, canonical
+Edge Functions and PostgREST with the normal Store/Backend/Simulator Keychain.
+Ordinary cold relaunch preserves sign-in and recovers the same private enrollment;
+acknowledgement removes pending recovery, revocation persists, and A → B → A
+keeps unfinished setup with its owning account. Independent hosted readback passes
+eight checks, requiring exactly two new A keys per device, zero B keys and every
+key revoked. One earlier fully revoked tablet key is an explicit baseline, not a
+retry duplicate. Final harness refinements handle only tablet system-password
+interruptions, scrolling and navigation; production app sources did not change.
+
+The retained acceptance branch is now deleted (absence verified), canonical test
+endpoints/users removed, and SQL confirms zero users/tasks/profiles/keys/journals/
+deadline controls. Private native credentials and the connection export are
+removed. This supersedes the preceding retained-branch checkpoint. Exact native
+results, harness hashes, failed iterations and limits are recorded in
+`p2-automation-native-hosted-evidence.json`. Mac signing-dependent private-Keychain/
+runtime remains deferred. Main API/migrations and the ordinary native entry stay
+off. Next independent feature work is webhook delivery, followed by verified email
+intake, advanced teams and wearables; full Px remains active.
