@@ -20,7 +20,7 @@ enum AutomationScope: String, CaseIterable, Codable, Sendable {
         switch self {
         case .read: return "Read this account’s Inbox, accessible tasks, and project and section names."
         case .create: return "Add tasks to Inbox and active projects you can access."
-        case .update: return "Change task details, planning, labels, assignments and checklist structure."
+        case .update: return "Change task details, planning, portable reminders, labels, assignments and checklist structure."
         case .complete: return "Change task and checklist progress, including recurring tasks."
         case .delete: return "Remove tasks and linked occurrences included in a current deletion review."
         }

@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 import { checkHttpPipeline } from "./automation-http-pipeline.mjs";
+import { checkPortableReminders } from "./automation-portable-reminders.mjs";
 const db = new PGlite({ extensions: { pgcrypto } });
 let checks = 0;
 const same = (a, b, n) => {
@@ -118,6 +119,7 @@ try {
       "20261022225439_automation_task_mutations.sql",
       "20261023002825_automation_enrollment_cancellation.sql",
       "20261023010559_automation_destinations.sql",
+      "20261023011251_automation_portable_reminders.sql",
     ]
   ) await load("../../supabase/migrations/" + file);
   await db.exec(
@@ -735,6 +737,10 @@ try {
       "select has_table_privilege('service_role','taskfold_private.automation_revision_secret','SELECT')",
     ),
     false,
+  );
+  const portable = await checkPortableReminders(db, a, id);
+  console.log(
+    `PASS ${portable.checks} portable reminder assertions including ${portable.goldenCases} native-reader goldens.`,
   );
   const httpChecks = await checkHttpPipeline(db, a, id);
   same(httpChecks >= 18, true, "Actual local HTTP/SQL pipeline checks");

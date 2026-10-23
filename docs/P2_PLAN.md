@@ -380,9 +380,10 @@ with failed effects. No raw key or task body is stored in the journal.
 Writes implement field-level conflict review, project/section/assignment checks,
 recursive checklist preservation and separate progress capability, locked default
 preferences, native-compatible recurrence/clocks and full reviewed cascade deletion.
-Read revisions use a private HMAC secret. Simple reminders can be authored;
-advanced/future rows survive unchanged. Portable advanced-reminder authoring still
-needs implementation rather than reducing the original feature scope.
+Read revisions use a private HMAC secret. Portable relative/fixed/calendar/interval/
+holiday reminders and Time Sensitive wrappers can now be authored and edited.
+Future/private rows and extensions remain protected. Native-reader goldens and
+actual writes cover the new formats; hosted acceptance remains required.
 
 23 October verification: each repo passes 101 actual local mutation SQL assertions,
 18 real loopback HTTP-to-handler-to-SQL assertions, 17 mocked handler tests, lint
@@ -414,9 +415,12 @@ Next required, in order:
 2. Project/section discovery now implements read-scoped current-access paging,
    archive availability, native order and hidden-parent privacy. Each repo passes
    72 actual destination SQL assertions, the existing 101 task-mutation checks,
-   25 real loopback HTTP assertions and 21 handler tests/lint. Full portable
-   advanced-reminder authoring validation is next; keep private location markers
-   behind native private-place review.
+   25 real loopback HTTP assertions and 21 handler tests/lint at that checkpoint.
+   Portable advanced-reminder validation now follows in the next candidate: 131
+   native-reader goldens, 221 portable SQL assertions, 101 mutation and 31 loopback
+   assertions plus 170 selected Core tests pass per repo. Private location markers
+   stay behind native private-place review. Next: rejected-request controls and
+   hosted acceptance, without reopening user-deferred work.
 3. Establish rejected-request/IP controls, then real hosted Auth/HTTP timeout,
    quota, revocation and concurrent-effect acceptance with disposable users.
 4. Verify signed-in phone/tablet and scoped Mac flows, then deploy the coherent
@@ -437,3 +441,15 @@ not positive OS region registration/delivery or a fresh Simulator UI walkthrough
 The user deferred physical-iPhone delivery again; continue available Simulator work
 without reopening that gate. Exact scope and fingerprints are recorded in
 `p2-automation-destinations-evidence.json`. All other user deferrals remain intact.
+
+
+23 October portable reminder authoring: all implemented portable schedule kinds
+now support API create/edit/remove, including nested child reminders. Current
+field-level merge semantics preserve disjoint stale edits and refuse overlapping
+ones. Unknown/private rows remain exact, and extension values cannot be dropped
+while changing a supported row. Reminder recurrence and task recurrence remain
+separate; root and child successors preserve independent schedules and drop only
+fixed absolute reminders, matching native behavior. This does not deploy/enable
+the API, fetch provider calendars or prove OS delivery. The 170 Core checks are
+native-reader/scheduling contracts, not a new Simulator UI walkthrough. Evidence:
+`p2-automation-portable-reminders-evidence.json`. The full Px goal stays active.

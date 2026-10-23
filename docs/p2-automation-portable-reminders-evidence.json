@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-23",
+  "platform": "macOS",
+  "baseCommit": "d3432bd835684f9ea62ab4246c9f4847e2be8b76",
+  "milestone": "Portable advanced reminder authoring in inactive automation candidate",
+  "featureEnabled": false,
+  "migrationApplied": false,
+  "edgeFunctionDeployed": false,
+  "realTasksChanged": 0,
+  "hostedKeysIssued": 0,
+  "fullPxComplete": false,
+  "candidateMigration": "20261023011251_automation_portable_reminders.sql",
+  "implemented": [
+    "Native version 2 calendar, 3 elapsed interval, 5 holiday snapshot and version 4 Time Sensitive wrappers",
+    "Create/edit/explicit removal under current native guards, planning baselines and scopes",
+    "Exact preservation of future/private location rows; no API rearming",
+    "Extension-value preservation at row/rule/interval/holiday/origin levels",
+    "Root and child successor retention; fixed absolute removal; no changes to task recurrence",
+    "Permission description mentions portable reminders"
+  ],
+  "verification": {
+    "nativeReaderGoldens": {
+      "cases": 131,
+      "passed": true,
+      "oracle": "Actual ReminderSpec, ReminderCalendarSchedule, ReminderIntervalSchedule and ReminderHolidayPolicy native readers; deterministic synthetic JSON; exported once then independently verified by both native test suites",
+      "scope": "Selected positive/negative rule, anchor, DST/skipped-day, range, holiday, wrapper and envelope inputs; not exhaustive over Foundation/PostgreSQL timezone database differences"
+    },
+    "portableSQL": {
+      "assertions": 221,
+      "passed": true,
+      "includesGoldens": true,
+      "checks": [
+        "Actual creates and edits of all advanced formats",
+        "Overlapping stale edit refusal and disjoint stale field preservation",
+        "Root/child successor settings and fixed-absolute removal",
+        "Explicit supported-row removal",
+        "Private/future carry-forward; modification/removal/new authoring refusal",
+        "Row and nested extension retention/refusal",
+        "Malformed schedules roll back task/journal/quota effects",
+        "No direct client/service helper execution"
+      ]
+    },
+    "mutationRegression": {
+      "assertions": 101,
+      "passed": true,
+      "loadsAllEightAutomationCandidates": true
+    },
+    "realLoopbackHTTP": {
+      "assertions": 31,
+      "rpcCalls": 19,
+      "passed": true,
+      "scope": "Actual Deno handler plus actual SQL through synthetic loopback adapter; advanced create/read/edit/invalid-create included"
+    },
+    "lint": {
+      "passed": true,
+      "files": 2
+    },
+    "nativeCore": {
+      "tests": 170,
+      "failures": 0,
+      "passed": true,
+      "command": "swift test --filter 'AutomationReminderValidationTests|AutomationWriteSemanticsTests|ReminderTests|ReminderIntervalScheduleTests|IntervalReminderTests|ReminderTravelTests|ReminderPresentationTests|HolidayCalendarTests|AutomationAccessTests'",
+      "scope": "Actual Core compile/readers/schedule contracts; not native app UI or physical notification delivery"
+    }
+  },
+  "apiSpecificBounds": [
+    "Global existing write/response one MiB and at most 20 reminder rows",
+    "Holiday source and region authoring labels are each at most 160 Unicode code points; native grapheme-count labels can have a different bound",
+    "Native/PostgreSQL named timezone databases may differ; hosted acceptance remains open"
+  ],
+  "liveMetadataReadback": {
+    "migrationApplied": false,
+    "portableValidatorExists": false,
+    "privateKeysExist": false
+  },
+  "unverified": [
+    "Hosted Auth/TLS/PostgREST and full production triggers",
+    "Real concurrent quota/revocation/membership/effect races",
+    "API rejection/IP controls and gateway timeouts",
+    "Native UI/accessibility acceptance for updated permission wording",
+    "Hosted management/clipboard lifecycle",
+    "Coherent deployment and enablement"
+  ],
+  "userDeferralsUnchanged": [
+    "Real iPhone positive geofence delivery",
+    "Remote reminders",
+    "Older-client editing safeguards rollout",
+    "Release signing/distribution/installation/update verification",
+    "Google/Microsoft OAuth registrations"
+  ],
+  "failedIterations": [
+    "Initial stale-edit fixture changed a different field; native merge correctly accepted it. Fixture now separately verifies disjoint preservation and same-clock conflict."
+  ],
+  "sourceSHA256": {
+    "supabase/migrations/20261023011251_automation_portable_reminders.sql": "648e2e32944d91bbea245e86ae0bddcf9f7646dec3181a20a542a0fbcad46ce6",
+    "Scripts/Database/automation-portable-reminders.mjs": "3ab820d4b5c3f8bbc8233e1b350eefc3b7327e0f145563a87e91043604763c99",
+    "Scripts/Database/test-automation-mutations.mjs": "88bce4724d100d5b34f5d828e6eec4cfef2f68575890e902ba93d173a5ee42b9",
+    "Scripts/Database/automation-http-pipeline.mjs": "c5d6849dc6c6c6cc7afe918a78542cb1db6f73816b9d2effc45db8be2a5507ad",
+    "TaskfoldTests/AutomationReminderValidationTests.swift": "c6266690cd153599897d07143f41aa83736a385c296e95215e35226ffcb05063",
+    "TaskfoldTests/Fixtures/automation-reminder-validation.json": "1bdfa174a4f80302ae1a3d265e9d2852bc3b31e1faeaa9a6a2fd4c5a52a5a0b2",
+    "Taskfold/Core/AutomationAccess.swift": "ea6c005d78d9bc57cbc306ddb6d30f5630d6b8ee14b7c0b0914144897dbfa298"
+  }
+}

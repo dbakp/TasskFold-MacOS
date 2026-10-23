@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 // Invoked only by the owned local mutation runner before fixture cleanup.
 export async function checkHttpPipeline(db, account, uuid) {
   let checks = 0, server, child;
@@ -159,6 +160,61 @@ export async function checkHttpPipeline(db, account, uuid) {
     same(sections.value.project_id, destination);
     same(Array.isArray(sections.value.sections), true);
     same((await call("sections", { project_id: uuid(99999) })).status, 404);
+    const reminderFixture = JSON.parse(
+      await readFile(
+        new URL(
+          "../../TaskfoldTests/Fixtures/automation-reminder-validation.json",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    );
+    const schedules = ["calendar-sensitive", "interval-normal", "holiday-move"]
+      .map((name, i) => ({
+        ...reminderFixture.cases.find((r) => r.name === name).spec,
+        id: uuid(21000 + i),
+      }));
+    const portable = await call("create", {
+      id: uuid(451),
+      task_generation: uuid(20451),
+      request_id: uuid(20452),
+      time_zone: "UTC",
+      fields: {
+        title: "HTTP portable reminder proof",
+        reminder_specs: schedules,
+      },
+    }, true);
+    same(portable.status, 200);
+    const portableRead = await call("get", { id: uuid(451) });
+    same(portableRead.status, 200);
+    same(portableRead.value.task.reminder_specs, schedules);
+    const edited = structuredClone(schedules);
+    edited[1].interval_schedule.every_minutes = 30;
+    const portableEdit = await call("update", {
+      id: uuid(451),
+      task_generation: uuid(20451),
+      request_id: uuid(20453),
+      time_zone: "UTC",
+      base: portableRead.value.task,
+      fields: { reminder_specs: edited },
+    }, true);
+    same(portableEdit.status, 200);
+    same(
+      (await call("get", { id: uuid(451) })).value.task.reminder_specs,
+      edited,
+    );
+    const invalid = structuredClone(edited);
+    invalid[1].interval_schedule.every_minutes = 4;
+    same(
+      (await call("create", {
+        id: uuid(452),
+        task_generation: uuid(20452),
+        request_id: uuid(20454),
+        time_zone: "UTC",
+        fields: { title: "Invalid HTTP reminder", reminder_specs: invalid },
+      }, true)).status,
+      400,
+    );
     const create = {
       id: target,
       request_id: request,
@@ -221,7 +277,7 @@ export async function checkHttpPipeline(db, account, uuid) {
     same(removed.status, 200);
     same(removed.value.receipt.deleted, true);
     same((await call("get", { id: target })).status, 404);
-    same(rpcCalls, 14);
+    same(rpcCalls, 19);
     return checks;
   } finally {
     if (child && child.exitCode === null) {

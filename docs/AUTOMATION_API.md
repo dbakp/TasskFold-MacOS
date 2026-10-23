@@ -82,6 +82,51 @@ columns, owner identities, membership details and source metadata are never
 projected. These actions use the existing read input/response bounds, deadlines,
 no-store handling and safe errors. No project/section mutations are exposed.
 
+## Portable reminder authoring
+
+`reminder_specs` uses the native versioned array, at most 20 rows with distinct
+UUIDs. New supported schedules can be added, edited or explicitly removed under
+the create/update capability. Apply the existing full planning/reminder baseline
+and normal conflict-review contract. Independent reminder schedules never create
+successor tasks; task recurrence remains a separate setting.
+
+| Version | Schedule fields | Validation |
+| --- | --- | --- |
+| 1 | `kind: relative`, `anchor: planned`, integer `offset_minutes`; or `kind: absolute`, explicit ISO `at`, named `time_zone` | Existing native relative/fixed contract; offsets −10080…10080. |
+| 2 | `kind: recurring`, `start_day`, minute-only `time`, named `time_zone`, `recurrence` | Daily/custom/weekly/monthly/yearly native calendar rules; first selected anchor; optional count 1…999 and civil end. No from-completion clock. |
+| 3 | `kind: interval`, `interval_schedule` | Whole `start_ms`, `every_minutes` 5…10080, nullable count 1…999 and nullable inclusive `until_ms` not before start. Milliseconds must be within Gregorian years 1…9999. |
+| 5 | Version-2 fields plus `holiday_policy` | Explicit finite holiday-year snapshot; skip or next-day mode. |
+| 4 | Supported base row with `version: 4`, `schedule_version: 1/2/3/5`, `presentation: time-sensitive` | Explicit local-only wrapper; no nested wrapper and no reserved planned identity. |
+
+Versions 2/3/5 and wrappers require exactly `["local"]` channels. They accept an
+optional Boolean `enabled`; native default is true. The reserved planned reminder
+UUID remains relative-at-plan only. Calendar clocks must be `HH:mm`, use a named
+source zone (no GMT offset-style name), and begin on a valid selected civil day;
+a completely skipped day is refused. The app's scheduler handles daylight-saving
+folds/gaps and queue admission. No delivery permission or guarantee is implied.
+
+Holiday policies contain `version: 1`, `year`, sorted unique same-year `dates`
+(up to 366), `source`, `region`, lowercase 64-hex `digest`, `mode: skip/next-day`
+and Boolean `avoid_weekends`. API-authored source/region labels are nonblank and
+bounded to 160 Unicode code points each. Optional `origin` is `nager-v4` with an
+uppercase two-letter `country` and optional matching subdivision (e.g. `US-CA`).
+The caller supplies a reviewed snapshot: the API neither fetches a country
+calendar nor verifies that an asserted provider digest proves provenance. Native
+country-calendar review and updates remain the source for automatic calendars.
+
+Unrecognized/future or private location rows can only be carried forward exactly;
+tools cannot add, rearm, disable, alter or remove them. Supported rows may also
+carry extension fields. When editing a supported row, retain extension values from
+the baseline, including recurrence, interval, holiday-policy and origin extensions.
+Dropping/changing those unknown values is refused. Explicitly removing an entire
+supported row is allowed. This preserves newer-reader data while permitting edits
+to all implemented portable schedule kinds, including child checklist reminders.
+
+Time Sensitive remains a presentation request, subject to the device/workspace
+allowance, OS settings and normal fallback. This API does not enable Critical
+Alerts or remote delivery, expose private places, or modify task planning dates
+to accommodate a reminder's holiday policy.
+
 ## Mutation contract
 
 Every body includes a fresh `request_id`, target `id`, `task_generation` and
@@ -106,9 +151,10 @@ UTF-8 bytes. Strict bounds/types and destination/member checks apply.
 Project moves clear old section and recursive assignees before reviewing any
 explicit replacements. Checklist updates preserve omitted nested children and
 opaque/read-only data; authoring completion progress requires complete scope.
-Simple relative/absolute reminder authoring is supported. Existing advanced or
-future rows are preserved exactly; portable advanced-reminder authoring remains
-a feature gap. Private location markers require native private-place review.
+Portable relative, absolute, calendar, elapsed-interval and holiday-aware reminders
+can be authored and edited, including Time Sensitive wrappers. Future/private rows
+are preserved exactly; private location markers require native private-place review.
+See the schedule contract below.
 
 Timed defaults read and lock the actor's preferences atomically; unsupported
 future documents remain opaque. Recurring completion uses native-compatible
@@ -154,7 +200,7 @@ fixtures and example.invalid accounts are removed; local servers close afterward
 No app host is launched by these backend checks.
 
 Remaining before enablement: hosted native create/review/recovery/revoke acceptance
-(see `AUTOMATION_ACCESS.md`); project/section discovery; portable advanced reminder authoring; rejected-request
+(see `AUTOMATION_ACCESS.md`); rejected-request
 controls; real hosted Auth/TLS/PostgREST, timeout, concurrency, quota and revocation
 acceptance; then signed-in native flows and coherent deployment. Email intake,
 webhooks and advanced teams remain separate unfinished work. See
@@ -183,3 +229,13 @@ limit. This history is independent of the ten-key issuance budget.
 The candidate migration `20261023002825_automation_enrollment_cancellation.sql`
 remains unapplied. Local tests cover both operation orders and authorization;
 real cross-connection Auth/PostgREST races and gateway/IP controls remain open.
+
+
+23 October portable-reminder checkpoint: 131 synthetic native-reader cases match
+SQL classification in both independently owned repositories. Each repo additionally
+passes 221 portable SQL assertions (including those cases), the existing 101
+mutation checks and 31 actual loopback HTTP assertions, plus 170 selected Core
+tests. The SQL runner loads all eight automation candidates in order. Source
+fingerprints and exact scope are in `p2-automation-portable-reminders-evidence.json`.
+Hosted delivery/races, native UI acceptance for this permission-copy change, abuse
+controls and coherent deployment remain open. The API stays disabled/undeployed.

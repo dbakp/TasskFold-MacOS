@@ -2928,3 +2928,17 @@ key, task or API deployment changed. Hosted/race acceptance and portable advance
 reminder authoring remain open. Real iPhone location delivery remains deferred;
 these Core reminder checks do not close it. See
 `p2-automation-destinations-evidence.json`. The full Px goal remains active.
+
+
+### 23 October — portable advanced reminder authoring checkpoint
+
+The inactive automation candidate now creates/edits/removes native calendar,
+elapsed interval and holiday schedules, including Time Sensitive wrappers and
+child reminders. Supported-row edits retain unknown extension values; future and
+private location rows require exact carry-forward. Task recurrence stays separate,
+with native root/child successor behavior. Each repo passes 131 native-reader
+goldens inside 221 portable SQL assertions, 101 mutation and 31 real loopback
+HTTP checks, 170 selected Core tests and lint. No live keys/tasks or deployment
+changed. API-specific metadata bounds and remaining hosted/race/native-UI gates
+are explicit in `p2-automation-portable-reminders-evidence.json`. The full Px goal
+and all user deferrals remain active; abuse controls and hosted acceptance follow.
