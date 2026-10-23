@@ -1,4 +1,5 @@
 import SwiftUI
+import CryptoKit
 #if os(iOS)
 import UIKit
 #else
@@ -21,6 +22,7 @@ struct WebhookAccessView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var phase
     @State private var model: WebhookAccessModel?
+    @State private var startupFailure: String?
     @State private var composing = false
     @State private var selected: WebhookConnection?
     @State private var revoking: WebhookConnection?
@@ -30,7 +32,7 @@ struct WebhookAccessView: View {
     var body: some View {
         Group {
             if let model, model.current { management(model) }
-            else { ContentUnavailableView("Sign in to connect a receiver",systemImage:"arrow.triangle.branch",description:Text("Connections belong to your synced account.")) }
+            else { ContentUnavailableView(startupFailure == nil ? "Sign in to connect a receiver" : "Private setup unavailable",systemImage:"arrow.triangle.branch",description:Text(startupFailure ?? "Connections belong to your synced account.")) }
         }
         .navigationTitle("Task connections")
         #if os(iOS)
@@ -40,7 +42,7 @@ struct WebhookAccessView: View {
         #endif
         .task {
             #if DEBUG
-            if fixture && WebhookManagementFixture.enabled { let value = WebhookManagementFixture.makeModel(); model = value; await value.load(); return }
+            if fixture && WebhookManagementFixture.enabled { do { let value = try await WebhookManagementFixture.makeModel(); model = value; await value.load() } catch { startupFailure = "The isolated secure-storage check could not start." }; return }
             #endif
             guard model == nil, WebhookAccessAvailability.enabled, store.signedIn, !store.localMode, !store.signingOut, !store.accountRemovalBlocked,
                   let origin = try? store.backend.accountRemovalOrigin else { return }
@@ -270,11 +272,11 @@ private struct WebhookHistoryView: View {
 }
 
 #if DEBUG
-/// Exact isolated host only. This exercises the production view/model with
-/// synthetic service responses, not hosted integration or Keychain acceptance.
+/// Exact isolated host only. The default peer/storage are in memory; the
+/// opt-in recovery fixture uses the real Backend and private OS Keychain.
 @MainActor enum WebhookManagementFixture {
     static var enabled: Bool { WebhookAccessAvailability.enabled && ProcessInfo.processInfo.arguments.contains("--uitesting") && UserDefaults.standard.bool(forKey:"localMode") && !ProcessInfo.processInfo.arguments.contains("--live-auth-ui-test") }
-    static func makeModel() -> WebhookAccessModel { WebhookAccessModel(account:WebhookFixtureService.account,origin:"https://backend.example",service:WebhookFixtureService(),vault:WebhookEnrollmentVault(io:WebhookFixtureMemory()),isCurrent:{true}) }
+    static func makeModel() async throws -> WebhookAccessModel { if ProcessInfo.processInfo.arguments.contains("--webhook-keychain-testing") { return try await WebhookKeychainFixture.makeModel() }; return WebhookAccessModel(account:WebhookFixtureService.account,origin:"https://backend.example",service:WebhookFixtureService(),vault:WebhookEnrollmentVault(io:WebhookFixtureMemory()),isCurrent:{true}) }
 }
 private final class WebhookFixtureMemory: CalendarSecureItemIO, @unchecked Sendable {
     private var bytes: [String:Data] = [:]
@@ -312,6 +314,97 @@ private final class WebhookFixtureMemory: CalendarSecureItemIO, @unchecked Senda
         if action == "history" { reply["events"] = .array(id == existing ? [event()]:[]);reply["next_cursor"] = .null }
         if action == "retry_delivery" { reply["event"] = event();reply["retry"] = .object(["event_id":body["event_id"]!,"request_id":body["request_id"]!,"applied":.bool(true)]) }
         return reply
+    }
+}
+#endif
+
+#if DEBUG
+/// Real native Backend and OS Keychain, synthetic HTTP peer. The file contains
+/// metadata and irreversible intent hashes only, never receiver secrets.
+@MainActor private enum WebhookKeychainFixture {
+    static let origin = "https://webhook-management.test"
+    static let a = "f0b3cafe-0000-4000-8000-000000000001", b = "f0b3cafe-0000-4000-8000-000000000002"
+    static func makeModel() async throws -> WebhookAccessModel {
+        precondition(WebhookManagementFixture.enabled && ProcessInfo.processInfo.arguments.contains("--webhook-keychain-testing"))
+        let account = ProcessInfo.processInfo.arguments.contains("--webhook-keychain-other-account") ? b : a
+        let vault = Store.shared.webhookEnrollmentVault
+        if ProcessInfo.processInfo.arguments.contains("--webhook-keychain-reset") {
+            try await vault.removeAccount(a,origin:origin); try await vault.removeAccount(b,origin:origin)
+            let root = URL.applicationSupportDirectory.appendingPathComponent("WebhookKeychainFixture",isDirectory:true)
+            if FileManager.default.fileExists(atPath:root.path) { try FileManager.default.removeItem(at:root) }
+        }
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [WebhookKeychainHTTP.self]
+        let session = try JSONDecoder().decode(Session.self,from:JSONSerialization.data(withJSONObject:["access_token":"synthetic-webhook-"+account,"refresh_token":"synthetic-refresh","expires_at":Date().addingTimeInterval(3600).timeIntervalSince1970,"user":["id":account,"email":"webhook-fixture@example.invalid"]]))
+        let backend = Backend(configuration:["URL":origin,"Key":"synthetic-public"],http:URLSession(configuration:config),session:session,persistSession:{_ in})
+        return WebhookAccessModel(account:account,origin:origin,service:backend,vault:vault,isCurrent:{true})
+    }
+}
+private final class WebhookKeychainHTTP: URLProtocol, @unchecked Sendable {
+    private static let lock = NSLock()
+    override class func canInit(with request:URLRequest)->Bool { true }
+    override class func canonicalRequest(for request:URLRequest)->URLRequest { request }
+    override func stopLoading() {}
+    override func startLoading() {
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        do {
+            let arguments = ProcessInfo.processInfo.arguments
+            guard ["com.dbakp.taskfold.workflowtestswebhooks","com.dbakp.taskfold.mac.workflowtestsp1"].contains(Bundle.main.bundleIdentifier ?? ""), arguments.contains("--uitesting"),arguments.contains("--webhook-management-testing"),arguments.contains("--webhook-keychain-testing"),
+                  request.url?.absoluteString == "https://webhook-management.test/functions/v1/automation-webhooks",request.httpMethod == "POST",request.value(forHTTPHeaderField:"X-Taskfold-Automation") == "1", !request.httpShouldHandleCookies else { throw URLError(.unsupportedURL) }
+            let account = arguments.contains("--webhook-keychain-other-account") ? "f0b3cafe-0000-4000-8000-000000000002":"f0b3cafe-0000-4000-8000-000000000001"
+            guard request.value(forHTTPHeaderField:"Authorization") == "Bearer synthetic-webhook-"+account else { throw URLError(.userAuthenticationRequired) }
+            var data = request.httpBody
+            if data == nil, let stream = request.httpBodyStream {
+                stream.open();defer{stream.close()};var result = Data(), buffer = [UInt8](repeating:0,count:1024)
+                while stream.hasBytesAvailable { let n = stream.read(&buffer,maxLength:buffer.count);guard n >= 0,result.count+n <= 8192 else { throw WebhookValue.invalid };if n == 0 {break};result.append(buffer,count:n) };data = result
+            }
+            guard let data,data.count <= 8192,let input = try? JSONDecoder().decode([String:JSON].self,from:data),case .object(let body) = input["body"] else { throw WebhookValue.invalid }
+            let root = URL.applicationSupportDirectory.appendingPathComponent("WebhookKeychainFixture",isDirectory:true)
+            try FileManager.default.createDirectory(at:root,withIntermediateDirectories:true,attributes:[.posixPermissions:0o700])
+            let file = root.appendingPathComponent("metadata.json")
+            var state = FileManager.default.fileExists(atPath:file.path) ? try JSONDecoder().decode([String:JSON].self,from:Data(contentsOf:file)) : [:]
+            var rows = state["connections"]?.list.compactMap{v->[String:JSON]? in if case .object(let r) = v{return r};return nil} ?? []
+            let action = input["action"]?.text ?? "", id = body["id"]?.text ?? ""
+            var reply: [String:JSON] = ["account":.string(account)]
+            var failed = false
+            func bump(_ key:String) { state[key] = .number(Double((state[key]?.integer ?? 0)+1)) }
+            if action == "list" {
+                bump("list_attempts");state["last_list_account"] = .string(account)
+                reply["subscriptions"] = .array(rows.filter{$0["fixture_account"] == .string(account) && (body["include_inactive"] == .bool(true) || $0["state"] != .string("revoked"))}.map{.object($0.filter{$0.key != "fixture_account"})});reply["next_cursor"] = .null
+            } else if action == "create" {
+                bump("create_attempts")
+                guard AutomationKey.canonicalID(id),let secret = body["secret"]?.text,secret.hasPrefix("tfwh_v1_"),secret.utf8.count == 51 else { throw WebhookValue.invalid }
+                let encoder = JSONEncoder();encoder.outputFormatting = [.sortedKeys]
+                let hash = SHA256.hash(data:try encoder.encode(body)).map{String(format:"%02x",$0)}.joined()
+                var hashes = state["intent_hashes"]?.object ?? [:]
+                if let old = hashes[id] { guard old == .string(hash) else { throw WebhookValue.invalid } } else { hashes[id] = .string(hash) }
+                state["intent_hashes"] = .object(hashes)
+                let cancelled = state["cancelled"]?.list ?? []
+                guard !cancelled.contains(.string(id)) else { throw WebhookValue.invalid }
+                if arguments.contains("--webhook-keychain-fail-before-create") { failed = true }
+                else if let old = rows.first(where:{$0["id"] == .string(id)}) { guard old["fixture_account"] == .string(account) else { throw WebhookValue.invalid };reply["subscription"] = .object(old.filter{$0.key != "fixture_account"}) }
+                else {
+                    let stamp = Date(), f = ISO8601DateFormatter(), days = [30,90,365].first{body["ttl_days"] == .number(Double($0))} ?? 30
+                    let delivery: JSON = .object(["version":.number(1),"pending":.number(0),"retained_bytes":.number(0),"missed":.number(0),"capture_issue":.null,"missed_since":.null,"missed_until":.null,"blocked_reason":.null,"last_error":.null,"last_success":.null,"last_failure":.null,"delivered":.number(0),"failed":.number(0)])
+                    let row: [String:JSON] = ["id":.string(id),"revision":.string(UUID().uuidString.lowercased()),"name":body["name"]!,"origin":.string(WebhookValue.receiverOrigin(body["endpoint"]!.text)!),"scope":body["scope"]!,"project_id":body["project_id"]!,"events":body["events"]!,"state":.string("pending"),"created_at":.string(f.string(from:stamp)),"expires_at":.string(f.string(from:stamp.addingTimeInterval(Double(days)*86400))),"verified_at":.null,"revoked_at":.null,"delivery":delivery,"fixture_account":.string(account)]
+                    rows.append(row);reply["subscription"] = .object(row.filter{$0.key != "fixture_account"})
+                }
+                if !failed,arguments.contains("--webhook-keychain-lose-reply"),state["lost_create"] != .bool(true) { state["lost_create"] = .bool(true);failed = true }
+            } else if action == "cancel" {
+                guard AutomationKey.canonicalID(id) else { throw WebhookValue.invalid };bump("cancel_attempts")
+                var cancelled = state["cancelled"]?.list ?? [];if !cancelled.contains(.string(id)) {cancelled.append(.string(id))};state["cancelled"] = .array(cancelled)
+                if let n = rows.firstIndex(where:{$0["id"] == .string(id) && $0["fixture_account"] == .string(account)}) { rows[n]["state"] = .string("revoked") }
+                reply["id"] = .string(id);reply["cancelled"] = .bool(true)
+                if arguments.contains("--webhook-keychain-lose-cancel"),state["lost_cancel"] != .bool(true) { state["lost_cancel"] = .bool(true);failed = true }
+            } else if action == "revoke",let n = rows.firstIndex(where:{$0["id"] == .string(id) && $0["fixture_account"] == .string(account)}) {
+                rows[n]["state"] = .string("revoked");rows[n]["revoked_at"] = .string(ISO8601DateFormatter().string(from:Date()));rows[n]["revision"] = .string(UUID().uuidString.lowercased());reply["subscription"] = .object(rows[n].filter{$0.key != "fixture_account"});bump("revoke_attempts")
+            } else { throw URLError(.unsupportedURL) }
+            state["connections"] = .array(rows.map(JSON.object));let encoded = try JSONEncoder().encode(state)
+            guard !String(decoding:encoded,as:UTF8.self).contains("tfwh_v1_") else { throw WebhookValue.invalid }
+            try encoded.write(to:file,options:.atomic)
+            if failed { throw URLError(.networkConnectionLost) }
+            let result = try JSONEncoder().encode(reply)
+            client?.urlProtocol(self,didReceive:HTTPURLResponse(url:request.url!,statusCode:200,httpVersion:nil,headerFields:["Content-Type":"application/json"])!,cacheStoragePolicy:.notAllowed);client?.urlProtocol(self,didLoad:result);client?.urlProtocolDidFinishLoading(self)
+        } catch { client?.urlProtocol(self,didFailWithError:error) }
     }
 }
 #endif

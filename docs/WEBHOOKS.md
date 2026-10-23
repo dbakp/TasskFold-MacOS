@@ -378,8 +378,9 @@ The native client uses its fixed account server, authenticated session fence,
 no cookies/redirects, no-store policy, a 25-second request timeout and a 256,000-byte
 response bound. No native app receives service/master/worker credentials. Both
 ordinary entries remain off behind a separate `TaskfoldWebhooksEnabled` gate.
-Local source checks and Simulator view fixtures do not prove hosted receiver
-integration, OS Keychain recovery or Mac runtime behavior. Secure scheduling and
+The earlier in-memory view checks did not prove native private storage. Signed
+iOS Keychain recovery now has scoped acceptance below; hosted receiver integration
+and Mac runtime remain unaccepted. Secure scheduling and
 hosted/native end-to-end acceptance remain required before enablement; full
 webhooks and the remaining Px backlog stay active. Exact verification is recorded
 in `p2-webhook-native-evidence.json` after this milestone’s checks.
@@ -403,3 +404,36 @@ No real tasks or hosted services changed. Main webhooks stays disabled. Next:
 genuine private-storage/native service acceptance and secure hosted scheduling/
 delivery checks, then email intake, advanced teams and wearables. Evidence:
 `p2-webhook-native-evidence.json`; full Px stays active.
+
+
+## Signed private-storage recovery — 23 October
+
+The opt-in native check now uses the production `Backend.webhookReceipt`,
+URLSession and `Store.webhookEnrollmentVault` with the actual private OS Keychain.
+The synthetic HTTP peer intercepts only the fixed owned test URL; its persistent
+file contains metadata and one-way intent hashes, never receiver secrets. This
+extends the earlier in-memory view check rather than substituting a mock vault
+for recovery. The ordinary feature entry remains disabled.
+
+Eight scoped checks pass across signed iPhone 18 Pro and iPad Pro 13-inch (M5),
+iOS 27 Simulator. Lost-create recovery keeps the same setup ID, settings and
+secret across a process restart and creates one connection. Saved acknowledgement
+and revocation clear the private draft across a fresh successful read. A durable
+discard survives a lost cancellation reply; another fixed account cannot see it,
+and returning to the first account restores Retry discard. A final restart after
+retry has no setup. Signatures and embedded Simulator application/App Group
+identities are verified with the existing development certificate.
+
+The correctly signed host also has no account-removal recovery banner. The banner
+visible in the historical unsigned screenshots is not a product-state acceptance
+finding. Both independent app inputs build; no Mac runtime or hardware Keychain
+security is inferred from Simulator tests. Live Auth account changes and hosted
+receiver integration are still unaccepted. Exact proof and limits:
+`p2-webhook-keychain-evidence.json`.
+
+The disposable Simulator apps/runners are closed and removed. Superseded owned
+source/results are pruned; useful current caches and accepted results are kept.
+No real tasks, hosted services, release signing or device privacy settings changed.
+Next: secure hosted scheduling and end-to-end native Auth/webhook delivery, plus
+remaining clipboard/spoken checks. Full webhooks/Px and the email/team/wearable
+backlog remain open; user release/provider/reminder deferrals stay in force.

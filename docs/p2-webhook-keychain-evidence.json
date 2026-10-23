@@ -1,0 +1,188 @@
+{
+  "date": "2026-10-23",
+  "platformSource": "macOS",
+  "baseCommit": "5cbb3a627a3d774dcb7a6068aaa89b7c8a787ddf",
+  "milestone": "Genuine signed Simulator private Keychain recovery through native Backend transport",
+  "fullWebhookFeatureComplete": false,
+  "fullPxComplete": false,
+  "normalEntryEnabled": false,
+  "remoteBackendChanged": false,
+  "realTasksChanged": 0,
+  "sourceSha256": {
+    "Taskfold/Views/WebhookAccessView.swift": "0c45e1ecd837dd588956cb3b2740bcba39b69c4e8533c79296bf7125ea7bf0ae",
+    "Taskfold/Core/WebhookAccess.swift": "7922368522df54caa86ab57b6bc24a1b7ea8676fbae8ae7dc70b5d9989fbdd48",
+    "Taskfold/Core/Backend.swift": "c3c5b24cc73cf4ac0a15fd84413872d6a9a755d2621e65aa47c6b16d9282bd46",
+    "Taskfold/Core/Store.swift": "d3b8876183cccc9209f233b85b541a715a9d9164698574bf0296f41e6e337834"
+  },
+  "verification": {
+    "runtimePlatform": "iOS only",
+    "osKeychainUsed": true,
+    "privateVault": "Store.webhookEnrollmentVault and CalendarKeychainIO, per-account process coordination; real Keychain survives process termination",
+    "nativeRequestPath": "Actual Backend.webhookReceipt and URLSession; exact isolated URLProtocol intercepts HTTP byte boundary",
+    "httpPeer": "Synthetic local peer, persistent metadata/intent hashes only, no hosted Auth/PostgREST or receiver acceptance",
+    "devices": {
+      "phone": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+              "deviceName": "iPhone 18 Pro",
+              "modelName": "iPhone 18 Pro",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 4,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792738870.227,
+        "passedTests": 4,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792738703.516,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 4
+      },
+      "ipad": {
+        "devicesAndConfigurations": [
+          {
+            "device": {
+              "architecture": "arm64",
+              "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+              "deviceName": "iPad Pro 13-inch (M5)",
+              "modelName": "iPad Pro 13-inch (M5)",
+              "osBuildNumber": "24A434",
+              "osVersion": "27.0",
+              "platform": "iOS Simulator"
+            },
+            "expectedFailures": 0,
+            "failedTests": 0,
+            "passedTests": 4,
+            "skippedTests": 0,
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ],
+        "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "finishTime": 1792738869.29,
+        "passedTests": 4,
+        "result": "Passed",
+        "runtimeWarnings": [],
+        "skippedTests": 0,
+        "startTime": 1792738704.44,
+        "statistics": [],
+        "testFailures": [],
+        "title": "Test - Taskfold",
+        "topInsights": [],
+        "totalTestCount": 4
+      }
+    },
+    "signing": {
+      "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "Taskfold.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true,
+        "simulatorIdentityAndAppGroupVerified": true
+      },
+      "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      },
+      "TaskfoldUITests-Runner.app": {
+        "team": "3UZ4C73FM2",
+        "strictSignatureVerified": true
+      }
+    },
+    "checks": [
+      "Unknown create result retains private Keychain setup, hides secret until confirmation",
+      "Relaunch retries exactly the original ID/settings/secret; intent hash unchanged, one connection after two creates",
+      "Saved acknowledgement clears private setup; fresh successful Keychain/list read after relaunch finds no draft",
+      "Discard intent persists before cancellation; lost cancellation response survives restart and retries idempotently",
+      "Other fixed account sees no original draft or connection; returning to original account restores Retry discard",
+      "Revocation clears an unfinished secret; successful fresh read after relaunch has no recovery",
+      "Synthetic peer metadata contains no tfwh_v1_ plaintext secrets",
+      "Correctly signed host has no unrelated account-removal recovery banner"
+    ],
+    "macRuntimeClaimed": false,
+    "liveAuthAccountSwitchClaimed": false,
+    "simulatorHardwareSecurityClaimed": false
+  },
+  "build": {
+    "fullIndependentMacDebugApp": true,
+    "isolatedIOSBuildForTesting": true
+  },
+  "cleanup": {
+    "simulatorHostsClosed": [
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378"
+    ],
+    "ownedAppsUninstalled": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestswebhooks"
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestswebhooks.uitests.xctrunner"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestswebhooks"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestswebhooks.uitests.xctrunner"
+      }
+    ],
+    "removed": [
+      {
+        "name": "webhook-native-clean-host",
+        "bytes": 5111874
+      },
+      {
+        "name": "webhook-keychain-phone-v1.xcresult",
+        "bytes": 781600
+      },
+      {
+        "name": "webhook-keychain-ipad-v1.xcresult",
+        "bytes": 764664
+      }
+    ],
+    "currentKeychainHostAndBuildCachesRetained": true
+  },
+  "remainingGates": [
+    "Hosted native Auth/service/receiver lifecycle, live account/workspace changes",
+    "Secure scheduled dispatcher and actual hosted outbox/multipart/retry delivery",
+    "Clipboard expiry and spoken accessibility for new webhook controls",
+    "Broader process/fault/device variants; native Mac private Keychain/runtime remains deferred with signing",
+    "Email intake, advanced teams and wearable backlog; full Px remains active"
+  ]
+}
