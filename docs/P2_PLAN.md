@@ -1453,3 +1453,22 @@ limits and verification. Verified signed event/envelope/sender/receipt integrati
 ingress budgets, delivery, source links and extra verified senders remain open.
 Team permissions/ownership and wearable clients remain in the full backlog;
 existing user deferrals and broader native acceptance are unchanged.
+
+
+## Apple Watch candidate — 24 October, rank 7 in progress
+
+The iOS repository now owns a real, independently buildable Watch target with
+Today, reviewed capture, Pending and a protected atomic outbox. Its immutable
+commands bind phone/Watch installations, account/epoch and task incarnation/token;
+only an exact saved receipt acknowledges work. Sixteen contract/archive cases pass.
+The isolated 42 mm Simulator app launches and its Today layout is visually reviewed.
+The target remains unembedded: phone projection, atomic task/receipt saves and full
+paired acceptance are next. No iPhone task mutation or wearable completion is
+claimed. Native input, VoiceOver, wider layouts and hardware background/protection
+acceptance remain open; Apple does not support background user-info transfer in
+Simulator. See the iOS-owned `docs/WATCH_COMPANION.md` and
+`docs/p2-watch-client-evidence.json`. The Mac build gains no Watch dependency.
+
+This proceeds alongside the still-open verified email adapter/senders/source links,
+advanced team authorization/ownership and wider acceptance. Provider/domain and
+existing remote/release/calendar/location deferrals remain intact; full Px is active.

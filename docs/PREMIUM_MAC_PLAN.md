@@ -3775,3 +3775,12 @@ permissions, alongside lint/types/format. This changes server preparation only;
 no native UI or Mac runtime result is claimed. Provider/domain configuration and
 real signed delivery remain deferred/open, with production capture disabled.
 See `p2-email-mime-evidence.json` and `EMAIL_CAPTURE.md`.
+
+
+### 24 October — companion Watch candidate owned by iOS
+
+The iOS repository starts rank 7 with its own Watch target, native candidate screens
+and protected outbox. The iPhone projection and atomic save/receipt bridge are next;
+no paired task save is claimed. The Mac app has no new dependency or changed code.
+Future iPhone saves will use ordinary guarded task sync. This documentation update
+does not claim Mac runtime acceptance or close the remaining Px objective.
