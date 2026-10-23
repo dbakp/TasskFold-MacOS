@@ -136,3 +136,10 @@ covering credential regressions and existing task effects/loopback HTTP. Deno's
 management handler suite separately verifies fixed cancellation RPC arguments
 and rejects false/mismatched receipts. These are not hosted Auth/TLS/PostgREST
 or independent-connection database race acceptance. The migration stays unapplied.
+
+
+`npm run test:webhook-scheduler` loads the actual candidate scheduler migration
+with local cron/net/Vault stubs. It checks disabled installation, operator-only
+control, bounded signed requests, one-use admission, rotation, expiry and
+disable/re-enable invalidation. This is not hosted scheduled-invocation proof;
+use the guarded hosted diagnostic with `--scheduler` for that.

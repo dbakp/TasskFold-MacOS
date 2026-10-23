@@ -360,7 +360,8 @@ Deno.test("webhook actual TLS and HTTP receiver behavior", async (t) => {
         hits.push({
           host: req.headers.host,
           path: req.url,
-          sni: (req.socket as TLSSocket).servername || undefined,
+          sni: (req.socket as TLSSocket & { servername?: string }).servername ||
+            undefined,
           body,
           headers: req.headers,
         });

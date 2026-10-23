@@ -4,7 +4,7 @@ Updated 23 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery acceptance now passes; secure scheduling and full native hosted acceptance are next. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery and signed scheduled invocation now pass; full native hosted acceptance is next. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -776,3 +776,49 @@ disabled. Secure scheduling, native hosted account/relaunch acceptance and the
 remaining clipboard/spoken checks are next. Remote-reminder, old-client and release
 signing/distribution deferrals are unchanged. Full webhooks/Px remains unfinished.
 Exact results and limitations: `p2-webhook-hosted-delivery-evidence.json`.
+
+
+## Signed automatic dispatch — 23 October
+
+Both repo-owned service copies pass 73 hosted checks, including actual minute
+dispatch, one-use proof admission, transport health and no delivery on the next
+tick after disable. Each also passes 42 local SQL checks and 45 worker/transport
+tests (8 real TLS steps). Main remains unchanged.
+
+The candidate `20261023074744_webhook_scheduler.sql` owns a disabled minute
+job and operator-only configuration/state. No migration enables delivery.
+The scheduler resolves `taskfold_webhook_worker_token` from Vault at each tick,
+binds its HMAC to the project, timestamp and random nonce, and enqueues only a
+90-second signed proof. The Edge worker verifies it before service-only atomic
+admission; a consumed nonce cannot start another run. Disable/reconfigure clears
+pending proofs. An already admitted worker may finish its bounded run; use
+subscription pause/revoke for the existing per-delivery authorization fence.
+The existing private bearer path remains for trusted operator
+invocation, but the cron request never contains that reusable credential.
+
+This design accounts for a hosted platform constraint: pg_net's queue/result
+objects have PUBLIC grants owned by supabase_admin. A postgres REVOKE reports
+success with a warning but cannot remove those grants. They are not exposed by
+the Data API by default; do not expose the net schema or grant untrusted database
+login access. A copied signed tick cannot change the destination, extend its
+validity or bypass its one-use admission. SQL login roles remain a trusted
+infrastructure boundary. See Supabase's [pg_net permission guidance](https://supabase.com/docs/guides/troubleshooting/revoking-access-to-pg_net-objects-has-no-effect-0bbc16).
+
+Only the database operator can call configure_webhook_scheduler(project_ref,
+true/false). Enabling requires the matching dedicated 64-character lowercase hex
+worker credential in Vault and the Edge worker environment. Disable requires no
+credential. The job uses a fixed HTTPS Supabase dispatch path, a 60-second network
+timeout and a 55-second enqueue interval floor; durable outbox leases protect
+actual delivery. State retains request ID, queue time and prior transport status,
+never response bodies or task content. A network timeout is not a delivery receipt:
+inspect per-event history for confirmation. Health is refreshed on the next tick;
+it can lag by a minute, and pg_net response retention is finite.
+
+Use the existing hosted runner's fourth argument `--scheduler` to test actual
+minute dispatch and the next disabled tick, in addition to the full delivery
+suite. It generates its credential inside Vault without a secret SQL literal,
+arms only the owned no-data branch, then disables cron and removes the credential
+in finally. Clean the branch afterward even if a run is interrupted. Ordinary
+native feature entries and the main service remain disabled pending native
+hosted acceptance. No reminder scheduler or deferred release capability is armed.
+Exact results and limits: `p2-webhook-scheduler-evidence.json`.

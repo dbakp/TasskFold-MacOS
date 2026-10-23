@@ -1,3 +1,4 @@
+import { admitScheduledWebhook } from "./schedule-auth.ts";
 import { abortable } from "./socket.ts";
 import { openWebhookSecret, type WebhookSecretEnvelope } from "./secret.ts";
 import { createWebhookTransport } from "./transport.ts";
@@ -137,6 +138,9 @@ export function createWebhookWorker(
   const workerMessage = encoder.encode("taskfold.webhook.worker.v1");
   let expected: Promise<ArrayBuffer> | undefined;
   const authenticated = async (header: string | null) => {
+    if (header?.startsWith("Taskfold-Schedule ")) {
+      return await admitScheduledWebhook(header, config, send);
+    }
     const supplied = /^Bearer ([a-f0-9]{64})$/.exec(header ?? "")?.[1];
     if (!supplied || !/^[a-f0-9]{64}$/.test(config.workerToken)) return false;
     expected ??= crypto.subtle.importKey(

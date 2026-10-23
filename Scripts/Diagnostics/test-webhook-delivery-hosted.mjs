@@ -17,7 +17,9 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-const [connectionPath, schemaReceiptPath, output] = process.argv.slice(2);
+const [connectionPath, schemaReceiptPath, output, mode] = process.argv.slice(2);
+assert(mode === undefined || mode === "--scheduler", "Unknown fixture mode");
+const scheduled = mode === "--scheduler";
 assert(
   connectionPath && schemaReceiptPath && output,
   "Supply private connection, schema receipt and output",
@@ -112,13 +114,39 @@ const check = (name, value) => {
 };
 const anon = config.SUPABASE_ANON_KEY,
   service = config.SUPABASE_SERVICE_ROLE_KEY,
-  workerToken = randomBytes(32).toString("hex"),
   controlToken = randomBytes(32).toString("hex"),
   secret = randomBytes(32),
   master = randomBytes(32).toString("hex");
+let workerToken = randomBytes(32).toString("hex");
 const stage = await mkdtemp(join(tmpdir(), "taskfold-webhook-hosted-")),
   users = [],
   deployed = [];
+async function database(sql) {
+  const target = new URL(config.POSTGRES_URL);
+  assert(
+    ["postgres:", "postgresql:"].includes(target.protocol) &&
+      ((target.hostname === `db.${project}.supabase.co` &&
+        target.username === "postgres") ||
+        (/^aws-[0-9]+-[a-z0-9-]+\.pooler\.supabase\.com$/.test(
+          target.hostname,
+        ) && decodeURIComponent(target.username) === `postgres.${project}`)),
+    "Database must match owned preview",
+  );
+  const file = join(stage, "private-query.sql");
+  await writeFile(file, sql, { mode: 0o600 });
+  return JSON.parse(
+    await cli([
+      "db",
+      "query",
+      "--db-url",
+      config.POSTGRES_URL,
+      "--file",
+      file,
+      "--output",
+      "json",
+    ]),
+  ).rows;
+}
 const receiverSlug = "webhook-acceptance-receiver",
   environment = {
     TASKFOLD_AUTOMATION_FORWARDED_FOR_MODE: "supabase-cloudflare-v1",
@@ -330,6 +358,22 @@ const payload = (row) => JSON.parse(row.body);
 let failure;
 try {
   result.phase = "deploy";
+  if (scheduled) {
+    check(
+      "scheduler-installed-inactive",
+      (await database(
+        "select not active as ok from cron.job where jobname='taskfold-webhook-dispatch'",
+      ))[0].ok,
+    );
+    // Generate inside the database: no token literal in SQL, files or cron logs.
+    await database(
+      "select vault.create_secret(encode(extensions.gen_random_bytes(32),'hex'),'taskfold_webhook_worker_token') as id",
+    );
+    workerToken = (await database(
+      "select decrypted_secret as token from vault.decrypted_secrets where name='taskfold_webhook_worker_token'",
+    ))[0].token;
+    environment.TASKFOLD_WEBHOOK_WORKER_TOKEN = workerToken;
+  }
   await mkdir(join(stage, "supabase/functions"), {
     recursive: true,
     mode: 0o700,
@@ -715,6 +759,96 @@ try {
     "real-project-owner-still-receives",
     (await send()).delivered === 1 && (await inspect(ownerHook)).length === 1,
   );
+  if (scheduled) {
+    result.phase = "scheduled-delivery";
+    const schedulerHook = await hook(a);
+    check(
+      "native-cannot-invoke-scheduler",
+      (await database(
+        "select not has_function_privilege('authenticated','taskfold_private.invoke_webhook_worker()','execute') as ok",
+      ))[0].ok,
+    );
+    await database(
+      `select taskfold_private.configure_webhook_scheduler('${project}',true)`,
+    );
+    await createTask(ka, { title: "Actual cron delivery proof" });
+    const limit = Date.now() + 95000;
+    let messages = [];
+    while (Date.now() < limit) {
+      messages = await inspect(schedulerHook);
+      if (messages.length) break;
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    check("real-cron-delivers-without-manual-worker", messages.length === 1);
+    check(
+      "scheduled-event-is-exact-task",
+      payload(messages[0]).task.title === "Actual cron delivery proof",
+    );
+    const responseLimit = Date.now() + 15000;
+    while (Date.now() < responseLimit) {
+      const ready = (await database(
+        "select exists(select 1 from net._http_response r join taskfold_private.webhook_scheduler s on s.last_request_id=r.id) as ok",
+      ))[0].ok;
+      if (ready) break;
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    check(
+      "signed-tick-admitted-only-once",
+      (await database(
+        "select consumed_at is not null and not taskfold_private.admit_webhook_schedule(scheduled_nonce,scheduled_issued) as ok from taskfold_private.webhook_scheduler",
+      ))[0].ok,
+    );
+    check(
+      "native-api-cannot-read-transient-queue",
+      (await api(
+        "/rest/v1/http_request_queue?select=id",
+        a.token,
+        undefined,
+        "GET",
+        anon,
+        { "Accept-Profile": "net" },
+      )).status === 406,
+    );
+    await database(
+      "select taskfold_private.invoke_webhook_worker() is null as throttled",
+    );
+    const health = (await database(
+      "select last_request_id is not null as queued,last_response_code,last_response_timed_out from taskfold_private.webhook_scheduler",
+    ))[0];
+    check(
+      "scheduled-http-success-visible",
+      health.queued && health.last_response_code === 200 &&
+        health.last_response_timed_out === false,
+    );
+    check(
+      "actual-cron-run-succeeded",
+      (await database(
+        "select exists(select 1 from cron.job_run_details r join cron.job j using(jobid) where j.jobname='taskfold-webhook-dispatch' and r.status='succeeded') as ok",
+      ))[0].ok,
+    );
+    await database(
+      "select taskfold_private.configure_webhook_scheduler(null,false)",
+    );
+    await createTask(ka, { title: "Disabled cron must not deliver" });
+    const nextTick = Math.floor(Date.now() / 60000) * 60000 + 65000;
+    while (Date.now() < nextTick) {
+      await new Promise((r) =>
+        setTimeout(r, Math.min(2000, nextTick - Date.now()))
+      );
+    }
+    check(
+      "disabled-cron-does-not-deliver-next-tick",
+      (await inspect(schedulerHook)).length === 1,
+    );
+    check(
+      "scheduler-off-after-test",
+      (await database(
+        "select not active as ok from cron.job where jobname='taskfold-webhook-dispatch'",
+      ))[0].ok,
+    );
+    await control(a, schedulerHook, "revoke");
+    result.scheduledInvocationClaimed = true;
+  }
   result.phase = "removal";
   let removal = await hook(b);
   await createTask(kb, { title: "Removal must cancel before delivery" });
@@ -750,6 +884,20 @@ try {
   result.passed = false;
   result.failure = { phase: result.phase, message: error.message };
 } finally {
+  if (scheduled) {
+    try {
+      await database(
+        "select taskfold_private.configure_webhook_scheduler(null,false)",
+      );
+      await database(
+        "delete from vault.secrets where name='taskfold_webhook_worker_token' returning id",
+      );
+      result.cleanup.scheduler = true;
+    } catch {
+      result.cleanup.scheduler = false;
+      result.cleanupError = "Scheduler cleanup failed";
+    }
+  }
   for (const user of users) {
     try {
       const r = await api(

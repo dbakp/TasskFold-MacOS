@@ -19,7 +19,8 @@
     "test:webhook-subscriptions": "node test-webhook-subscriptions.mjs",
     "test:webhook-concurrency": "node test-webhook-concurrency.mjs",
     "test:webhook-outbox": "node test-webhook-outbox.mjs",
-    "test:webhook-outbox-concurrency": "node test-webhook-outbox-concurrency.mjs"
+    "test:webhook-outbox-concurrency": "node test-webhook-outbox-concurrency.mjs",
+    "test:webhook-scheduler": "node test-webhook-scheduler.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"
