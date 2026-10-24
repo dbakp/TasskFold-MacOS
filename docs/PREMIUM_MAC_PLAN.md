@@ -4895,3 +4895,59 @@ persistent core caches remain intact.
 
 The independent iOS runtime evidence is at `TaskFold-iOS` commit
 `80dff267d9bda5fafba2559e57b90ae3e2735ffd`. This is an evidence reference only; Mac build inputs remain independent.
+
+
+## Shared reminder controls — 25 October 2026
+
+Gated team task Details now opens Shared reminders. The existing native settings
+editor is reused for relative/planned, fixed-time, repeating calendar, elapsed
+interval, reviewed holiday and Time Sensitive choices. Apply returns the complete
+list to the iOS parent task draft; the Mac inspector uses its scoped autosave.
+The shared sheet has no notification-permission, remote-delivery or private-place
+setup controls. Device delivery stays opt-in separately. Existing private/future
+and non-local-channel rows are shown generically and retained unchanged; their
+names, geometry and hidden payloads are not displayed or resolved.
+
+A bounded task-local review preserves unique reminder identities and the existing
+20-choice service limit. Unknown list shapes stay read-only. Only recognized,
+local portable rows can be changed or removed. Appending to an implicit empty
+list retains the existing planned alert; removing the last editable choice adds
+an explicit disabled planned row so it cannot reactivate an implicit alert.
+Duplicate enabled schedules and stale child-editor row snapshots are rejected
+without a partial change. Future row/rule/interval/holiday/origin extension fields
+survive known-setting and schedule-kind changes, matching the current service
+contract. No server migration, permission or endpoint changes are introduced.
+
+The shared list owns a private editor checkpoint. The nested settings editor
+reports its unfinished fields (including text that does not yet parse) to that
+same checkpoint. On access loss it hides editing controls, blocks Done/time-zone/
+holiday callbacks and retains the settings sheet with verified preservation
+feedback. Cancel during ordinary editing clears only the child draft; Cancel on
+the shared list leaves the parent task unchanged. Changed reminder/label sheets
+block interactive dismissal, and access-loss Close requires a successful flush
+rather than assuming an absent first revision means no preservation failure.
+Empty unchanged sheets close their unused editor session. Recovery remains a
+private record/export; it never grants authority or automatically replays reminder
+settings into a shared task.
+
+Each independent repository passes 157 reminder/planning checks (eight new cases)
+and 131 label/workspace/checklist/recovery regressions. The model checks exercise
+portable variants, extension retention, locked rows, legacy defaults, limits,
+identity/shape failures and atomic stale-input rejection. Build and native device
+results are recorded in `p2-team-reminders-evidence.json`. Initial native harness
+corrections use the Time Sensitive switch thumb plus a value-change assertion,
+and keep phone task-editor taps clear of the isolated debug bottom toolbar.
+
+Team rollout stays off. Source/native tests use synthetic accounts and intercepted
+networking; no real task or provider configuration changes. Mac interaction and
+VoiceOver, broader live account/concurrency/fault and nested holiday/time-zone
+acceptance, remaining task field adapters, independent child records and the full
+ranked/Px objective stay open. All user-deferred release/provider/device work
+remains deferred.
+
+Native acceptance: all five selected checks pass without skips on both iPhone
+and iPad Simulator. Six reminder screenshots were inspected and retained with
+result summaries in the iOS repository. The Mac app builds independently; Mac
+runtime and spoken checks are not claimed. Temporary host apps/runners and stage
+build/results are removed after preserving evidence; baseline simulator states
+and reusable core caches are retained.

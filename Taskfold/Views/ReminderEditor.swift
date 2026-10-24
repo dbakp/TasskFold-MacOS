@@ -143,10 +143,19 @@ struct ReminderDraft: Identifiable {
     let originalRows: [JSON]
     var id: String { spec.id }
 }
+struct ReminderSpecEditingContext {
+    let current: () -> Bool
+    let capture: (JSON) -> Void
+    let closed: () -> Void
+    let preserve: () -> Void
+    let status: () -> String
+    var revokeFixture: (() -> Void)? = nil
+}
 struct ReminderSpecEditor: View {
     @Environment(\.dynamicTypeSize) private var textSize
     @Environment(\.dismiss) private var dismiss
     let draft: ReminderDraft
+    let context: ReminderSpecEditingContext?
     let save: (ReminderSpec) -> String?
     @State private var kind: String
     @State private var minutes: Int
@@ -170,8 +179,8 @@ struct ReminderSpecEditor: View {
     @State private var previewNow = Date()
     private enum IntervalField: Hashable { case minutes, count }
     @FocusState private var intervalFocused: IntervalField?
-    init(draft: ReminderDraft, save: @escaping (ReminderSpec) -> String?) {
-        self.draft = draft; self.save = save
+    init(draft: ReminderDraft, context: ReminderSpecEditingContext? = nil, save: @escaping (ReminderSpec) -> String?) {
+        self.draft = draft; self.save = save; self.context = context
         _kind = State(initialValue: draft.spec.kind)
         _minutes = State(initialValue: abs(draft.spec.offset ?? -10))
         _before = State(initialValue: (draft.spec.offset ?? -10) <= 0)
@@ -194,6 +203,11 @@ struct ReminderSpecEditor: View {
         _countText = State(initialValue: String(draft.spec.intervalSchedule?.count ?? 5))
         _limitedEnd = State(initialValue: draft.spec.intervalSchedule?.until != nil)
         _end = State(initialValue: draft.spec.intervalSchedule?.until ?? (draft.spec.intervalSchedule?.start ?? Date().addingTimeInterval(3600)).addingTimeInterval(86400))
+    }
+    private var available: Bool { context?.current() ?? true }
+    private var checkpointState: JSON {
+        guard context != nil else { return .null }
+        return .object(["kind": .string(kind), "minutes": .number(Double(minutes)), "before": .bool(before), "date": .number(date.timeIntervalSince1970), "enabled": .bool(enabled), "time_sensitive": .bool(timeSensitive), "repeat_clock": .number(repeatClock.timeIntervalSince1970), "repeat_text": .string(repeatText), "time_zone": .string(sourceZone), "holiday_policy": holidayPolicy.map { .object($0.raw) } ?? .null, "interval_text": .string(intervalText), "limited_count": .bool(limitedCount), "count_text": .string(countText), "limited_end": .bool(limitedEnd), "end": .number(end.timeIntervalSince1970)])
     }
     var body: some View {
         NavigationStack {
@@ -294,17 +308,39 @@ struct ReminderSpecEditor: View {
                         if enabled && date <= Date() { Text("Choose a future time, or turn this reminder off.").foregroundStyle(.red) }
                     }
                 }
+                #if DEBUG
+                if let revoke = context?.revokeFixture {
+                    Section { Button("Change test role to viewer", action: revoke).accessibilityIdentifier("revokeTeamReminderSettingsFixture") }
+                }
+                #endif
             }.navigationDestination(isPresented: $choosingHolidays) {
-                HolidayCalendarReview(policy: holidayPolicy, year: holidayReviewYear) { holidayPolicy = $0 }
-            }.formStyle(.grouped).accessibilityIdentifier("reminderSpecForm").navigationTitle(draft.index == nil ? "Add reminder" : "Edit reminder")
+                HolidayCalendarReview(policy: holidayPolicy, year: holidayReviewYear) { if available { holidayPolicy = $0 } }
+            }
+            .opacity(available ? 1 : 0).accessibilityHidden(!available).disabled(!available)
+            .overlay(alignment: .topLeading) {
+                if !available {
+                    ScrollView { VStack(alignment: .leading, spacing: 16) {
+                        Label("Reminder editing paused", systemImage: "lock.shield").font(.title2)
+                        Text("Project access changed. Close these settings before reopening the task.")
+                        Text(context?.status() ?? "Your settings are kept in this editor.").accessibilityIdentifier("teamReminderSettingsRecoveryStatus")
+                        Button("Retry preserving edit") { context?.capture(checkpointState); context?.preserve() }
+                    }.frame(maxWidth: .infinity, alignment: .leading).padding(24) }.background(.background).accessibilityIdentifier("teamReminderSettingsPaused")
+                }
+            }
+            .formStyle(.grouped).accessibilityIdentifier("reminderSpecForm").navigationTitle(draft.index == nil ? "Add reminder" : "Edit reminder")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("reminderCancel") }
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { apply() }.disabled((kind == "absolute" && enabled && date <= Date()) || (kind == "recurring" && (recurringSchedule == nil || (enabled && calendarDates(after: Date(), limit: 1).isEmpty))) || (kind == "interval" && (intervalSchedule == nil || (enabled && intervalSchedule?.dates(after: previewNow, limit: 1).isEmpty == true)))).accessibilityIdentifier("reminderSave") }
+                ToolbarItem(placement: .cancellationAction) { Button(available ? "Cancel" : "Close") { dismiss() }.accessibilityIdentifier("reminderCancel") }
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { apply() }.disabled(!available || (kind == "absolute" && enabled && date <= Date()) || (kind == "recurring" && (recurringSchedule == nil || (enabled && calendarDates(after: Date(), limit: 1).isEmpty))) || (kind == "interval" && (intervalSchedule == nil || (enabled && intervalSchedule?.dates(after: previewNow, limit: 1).isEmpty == true)))).accessibilityIdentifier("reminderSave") }
             }
         }
+        .onChange(of: checkpointState) { _, value in context?.capture(value) }
+        .onChange(of: available) { _, value in
+            if !value { context?.capture(checkpointState); context?.preserve(); choosingHolidays = false; choosingTimeZone = false; repeatFocused = false; intervalFocused = nil }
+        }
+        .onDisappear { if available { context?.closed() } else { context?.preserve() } }
         .task {
             while !Task.isCancelled {
                 previewNow = Date()
@@ -395,6 +431,7 @@ struct ReminderSpecEditor: View {
         return ReminderIntervalSchedule(start: date, everyMinutes: minutes, count: limitedCount ? Int(countText.trimmingCharacters(in: .whitespacesAndNewlines)) : nil, until: limitedEnd ? end : nil)
     }
     private func selectTimeZone(_ zone: String) -> String? {
+        guard available else { return "Project access changed. Your draft is kept privately." }
         do {
             let moved = try ReminderTimeZones.movingCivilDay(date, from: sourceZone, to: zone)
             date = moved; sourceZone = zone; return nil
@@ -421,6 +458,7 @@ struct ReminderSpecEditor: View {
         return schedule.dates(after: now, limit: limit)
     }
     private func apply() {
+        guard available else { context?.capture(checkpointState); context?.preserve(); return }
         // The sheet may have stayed open past its chosen time since the button rendered.
         guard kind != "absolute" || !enabled || date > Date() else { message = "Choose a future time, or turn this reminder off."; return }
         let changed: ReminderSpec

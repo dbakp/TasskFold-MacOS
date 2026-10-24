@@ -69,6 +69,7 @@ struct TaskInspectorForm: View {
     @State private var teamDraftCaptured = false
     private var isTeamTask: Bool { teamDraft != nil }
     private var quickExclusions: Set<String> { isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : [] }
+    @State private var teamReminders: TeamTaskRemindersRequest?
     @State private var teamLabels: TeamTaskLabelsRequest?
     @State private var teamAssignee: TeamTaskAssigneeRequest?
     @State private var selectedTeamName: String?
@@ -152,6 +153,7 @@ struct TaskInspectorForm: View {
                 }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}.accessibilityIdentifier("editorAccessStopped")
             }
         }
+        .sheet(item: $teamReminders) { TeamTaskRemindersEditor(request: $0) }
         .sheet(item: $teamLabels) { TeamTaskLabelsEditor(request: $0) }
         .sheet(item: $teamAssignee) { TeamTaskAssigneePicker(request: $0) }
         .sheet(item: $subtaskOrganizing) { SubtaskOrganizerPresentation(request: $0) }
@@ -303,7 +305,11 @@ struct TaskInspectorForm: View {
                 }
                 if Workspace.subtaskPath(taskID) == nil {
                 RecurrenceEditor(task: $draft).disabled(isTeamTask)
-                Button("Reminders…", systemImage: "bell") { showingReminders = true }.disabled(isTeamTask).accessibilityIdentifier("taskReminders")
+                if isTeamTask {
+                    Button("Shared reminders…", systemImage: "bell", action: openTeamReminders).accessibilityIdentifier("taskTeamReminders")
+                } else {
+                    Button("Reminders…", systemImage: "bell") { showingReminders = true }.accessibilityIdentifier("taskReminders")
+                }
                 } else {
                     Text("Manage repeating schedules and reminders on the parent task.").font(.caption).foregroundStyle(.secondary)
                 }
@@ -536,6 +542,17 @@ struct TaskInspectorForm: View {
         saveTask?.cancel()
         guard editorAvailable else {checkpoint();return}
         saveTask = Task { try? await Task.sleep(for: .milliseconds(600)); guard !Task.isCancelled else { return }; saveNow() }
+    }
+    private func openTeamReminders() {
+        guard editorAvailable, let captured = teamDraft else { return }
+        let opening = draft["reminder_specs"]
+        teamReminders = TeamTaskRemindersRequest(teamDraft: captured, record: draft, sourceIdentity: sourceContext?.identity ?? .null, current: { editorAvailable }, apply: { value in
+            guard editorAvailable, draft["reminder_specs"] == opening else { return "Reminders changed while this editor was open. Close it and review the current choices." }
+            if value == opening { return nil }
+            draft["reminder_specs"] = value
+            guard saveNow() else { return "Your reminder edit remains in this task draft. Reopen its current details before saving again." }
+            return nil
+        })
     }
     private func openTeamLabels() {
         guard editorAvailable, let captured = teamDraft else { return }

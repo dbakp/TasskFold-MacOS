@@ -115,7 +115,7 @@ struct TeamTaskLabelsEditor: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(available ? "Cancel" : "Close") {
                         if available { if session?.finish() != false { finished = true; dismiss() } }
-                        else { checkpoint(); if session?.latest == nil || session?.flush() == true { finished = true; dismiss() } }
+                        else { checkpoint(); if session == nil || session?.flush() == true { finished = true; dismiss() } }
                     }.accessibilityIdentifier("cancelTeamLabels")
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -142,7 +142,11 @@ struct TeamTaskLabelsEditor: View {
         .onChange(of: draft) { _, _ in checkpoint() }
         .onChange(of: adding) { _, _ in checkpoint() }
         .onChange(of: available) { _, value in if !value { checkpoint(); stopped = true; nameFocused = false; _ = session?.flush() } }
-        .onDisappear { checkpoint() }
+        .interactiveDismissDisabled(draft.changed || !adding.isEmpty || session?.failure != nil)
+        .onDisappear {
+            if !finished, !draft.changed && adding.isEmpty, session?.failure == nil { _ = session?.finish(); finished = true }
+            else { checkpoint() }
+        }
     }
     private func add() {
         guard available, session != nil else { return }

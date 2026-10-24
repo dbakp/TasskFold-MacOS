@@ -2950,6 +2950,21 @@ extension Store {
                 privateTask["title"] = .string("Private test work"); privateTask["labels"] = .array([.string("Private project label")])
                 tasks = [row, privateTask]; projects.append(privateProject)
             }
+            if ProcessInfo.processInfo.arguments.contains("--team-reminder-testing") {
+                var local = ReminderSpec.relative(-5, id: "ec240000-0000-4000-8000-000000000021").raw
+                local["future_row"] = .object(["keep": .bool(true)])
+                var other = ReminderSpec.relative(-45, id: "ec240000-0000-4000-8000-000000000024").raw; other["channels"] = .array([.string("email")])
+                row["reminder_specs"] = .array([.object(local),
+                    .object(["id": .string("ec240000-0000-4000-8000-000000000022"), "version": .number(99), "kind": .string("future"), "hidden": .string("Hidden future instructions")]),
+                    .object(["id": .string("ec240000-0000-4000-8000-000000000023"), "version": .number(77), "kind": .string("location"), "place_label": .string("Private studio"), "latitude_e6": .number(1), "longitude_e6": .number(2)]), .object(other)])
+                row["reminders"] = .array([.string("legacy-time-cue")]); row["due_date"] = .string(Dates.day(Date().addingTimeInterval(86400))); row["due_time"] = .string("09:00"); row["time_zone"] = .string("UTC")
+                let privateProject = Record(["id": .string("ec240000-0000-4000-8000-000000000026"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Private reminder project")])
+                var privateTask = Record.task(user: TeamEditorNativeFixture.account, project: privateProject.id)
+                privateTask["id"] = .string("ec240000-0000-4000-8000-000000000025"); privateTask["title"] = .string("Personal reminder proof")
+                privateTask["reminder_specs"] = .array([.object(ReminderSpec.relative(-15, id: "ec240000-0000-4000-8000-000000000027").raw)])
+                tasks = [row, privateTask]; projects.append(privateProject)
+            }
+            tasks[0] = row
             snapshot = Snapshot(tables: ["tasks": tasks, "projects": projects, "labels": labels])
             snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: nil, pending: [], tasks: [row])
             try persist()
