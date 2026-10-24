@@ -793,3 +793,144 @@ extension BackupVault {
         return entry
     }
 }
+
+/// A device-private editor checkpoint, never an instruction to modify its source.
+struct TaskEditorRecovery: Codable, Equatable, Sendable {
+    let version: Int
+    let id: UUID
+    let revision: UInt64
+    let account: String
+    let origin: String?
+    let createdAt: Date
+    let original: Record
+    let draft: Record
+    let extras: [String: JSON]
+    let labels: [Record]
+    init(id: UUID = UUID(), revision: UInt64 = 1, account: String, origin: String?, original: Record, draft: Record, extras: [String: JSON] = [:], labels: [Record] = [], now: Date = Date()) throws {
+        self.version=1;self.id=id;self.revision=revision;self.account=account;self.origin=origin;self.original=original;self.draft=draft;self.extras=extras;self.labels=labels;createdAt=now
+        try validate()
+    }
+    func validate() throws {
+        guard version==1, revision>0, revision<=9_007_199_254_740_991, !account.isEmpty, account.count<=200, !draft.id.isEmpty, original.id==draft.id, createdAt.timeIntervalSince1970.isFinite else {throw BackupFailure(message:"This saved edit needs a supported Taskfold version. Its original is kept.")}
+        if let origin {
+            guard let url=URLComponents(string:origin),url.scheme=="https",url.host?.isEmpty==false,url.user==nil,url.password==nil,url.path.isEmpty,url.query==nil,url.fragment==nil else {throw BackupFailure(message:"This saved edit has an invalid workspace address.")}
+        }
+    }
+    static func requireNewTaskPlan(_ plan: RestorePlan) throws {
+        guard plan.added==1,plan.updated==0,plan.kept==0,plan.changes.count==1,
+              let change=plan.changes.first,change.table=="tasks",change.method=="POST",change.insertOnly==true,
+              change.fields["project_id"] == nil || change.fields["project_id"] == .null,
+              change.fields["assigned_to"] == nil || change.fields["assigned_to"] == .null else {
+            throw BackupFailure(message:"This recovery must create one new Inbox task. Existing tasks will not be replaced. Your original edit is kept.")
+        }
+    }
+    var copyID: String {WorkspaceBackup.stableID("editor-recovery-copy",id.uuidString.lowercased())}
+    static let copyNotice="Recover as a separate Inbox task. The shared original is never changed. Assignments, reminders, shared history, pins, project links and unsupported fields are not replayed; the full original edit remains encrypted on this device. Remote attachments may still require their original access."
+    /// Review creates one independent task with stable identities; existing rows
+    /// are never updated, even if a recovery identifier unexpectedly collides.
+    func copyBackup(current: Snapshot) throws -> WorkspaceBackup {
+        try validate()
+        guard ![original.id.lowercased(),draft.id.lowercased()].contains(copyID), !(current.tables["tasks"] ?? []).contains(where:{$0.id.lowercased()==copyID}) else {throw BackupFailure(message:"A task with this recovery identity is already present. It has not been changed; your saved edit is kept.")}
+        let fields: Set<String>=["title","description","completed","priority","due_date","due_time","time_zone","deadline_date","duration_minutes","attachments","labels","subtasks"]
+        let off=JSON.array([.object(ReminderSpec.relative(0,id:ReminderSpec.plannedID,enabled:false).raw)])
+        var count=0
+        func clean(_ source: Record, path: String, depth: Int) throws -> Record {
+            count+=1
+            guard depth<=SubtaskTree.maximumDepth,count<=10000 else {throw BackupFailure(message:"This saved edit is too large for an Inbox copy in this version. The full original is kept for export.")}
+            var row=Record(source.fields.filter{fields.contains($0.key)})
+            row["id"] = .string(depth==0 ? copyID:WorkspaceBackup.stableID(id.uuidString.lowercased(),"child:"+path))
+            row["assigned_to"] = .null;row["reminders"] = .array([]);row["reminder_specs"] = off
+            row["labels"] = .array(source["labels"].list.compactMap { value in
+                let name=labels.first{$0.id==value.text || $0.name==value.text}?.name ?? (UUID(uuidString:value.text)==nil ? value.text:"")
+                return name.isEmpty ? nil:.string(name)
+            })
+            row["subtasks"] = .array(try source["subtasks"].list.enumerated().map { index,value in
+                let child:Record
+                switch value {
+                case .string(let title):child=Record(["title":.string(title),"completed":.bool(false)])
+                case .object(let fields):child=Record(fields)
+                default:throw BackupFailure(message:"A checklist item cannot be copied in this version. The original edit is kept for export.")
+                }
+                guard case .string = child["title"] else {throw BackupFailure(message:"A checklist item needs repair before it can be copied. The original edit is kept.")}
+                return .object(try clean(child,path:path+"/"+String(index),depth:depth+1).fields)
+            })
+            return row
+        }
+        var task=Record.task(user:account)
+        for (key,value) in try clean(draft,path:"",depth:0).fields {task[key]=value}
+        task["title"] = .string(draft.title.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty ? "Recovered task edit":draft.title)
+        task["project_id"] = .null;task["section_id"] = .null;task["completed"] = .bool(false);task["completed_at"] = .null
+        task["created_at"] = .string(ISO8601DateFormatter().string(from:createdAt))
+        task["task_generation"] = .string(WorkspaceBackup.stableID("editor-recovery-generation",id.uuidString.lowercased()))
+        task["source_metadata"] = .object(["editor_recovery_v1":.string(id.uuidString.lowercased())])
+        // Preserve authored recurrence, but never its old server bookkeeping.
+        for key in ["is_recurring","recurrence_pattern","recurrence_end_date"] where draft.fields[key] != nil {task[key]=draft[key]}
+        let backup=WorkspaceBackup.make(Snapshot(tables:["tasks":[task]]),account:account,now:createdAt)
+        try backup.validate()
+        return backup
+    }
+}
+
+extension BackupVault {
+    private var editorDirectory: URL {directory.appendingPathComponent("Unsent task edits",isDirectory:true)}
+    func editorFile(_ id: UUID) -> URL {editorDirectory.appendingPathComponent(id.uuidString.lowercased()+".taskfoldedit")}
+    func editorEntries() throws -> [PreservedWorkspaceFile] {
+        Self.lock.lock();defer {Self.lock.unlock()}
+        guard FileManager.default.fileExists(atPath:editorDirectory.path) else {return []}
+        let files=try FileManager.default.contentsOfDirectory(at:editorDirectory,includingPropertiesForKeys:[.contentModificationDateKey])
+        guard files.count<=2000 else {throw BackupFailure(message:"There are too many saved edits to list. All originals are kept.")}
+        return try files.compactMap {file in
+            guard file.pathExtension=="taskfoldedit",let id=UUID(uuidString:file.deletingPathExtension().lastPathComponent) else {return nil}
+            return PreservedWorkspaceFile(id:id,createdAt:try file.resourceValues(forKeys:[.contentModificationDateKey]).contentModificationDate ?? .distantPast)
+        }.sorted{$0.createdAt>$1.createdAt}
+    }
+    func editorDraft(_ id: UUID, origin: String?) throws -> TaskEditorRecovery {
+        if let gate=removalGate {
+            guard gate.account==account else {throw CancellationError()}
+            var unguarded=self;unguarded.removalGate=nil
+            return try gate.writable {try unguarded.editorDraft(id,origin:origin)}
+        }
+        Self.lock.lock();defer {Self.lock.unlock()}
+        do {
+            let ciphertext=try Self.boundedFile(editorFile(id),limit:WorkspaceBackup.maximumBytes+1024)
+            let data=try AES.GCM.open(AES.GCM.SealedBox(combined:ciphertext),using:key())
+            let value=try JSONDecoder().decode(TaskEditorRecovery.self,from:data)
+            try value.validate()
+            guard value.id==id,value.account==account,value.origin==origin else {throw BackupFailure(message:"This edit belongs to another workspace. Its original is kept.")}
+            return value
+        } catch let error as BackupFailure {throw error}
+        catch {throw BackupFailure(message:"This saved edit is damaged or its device key is unavailable. Its original file is kept.")}
+    }
+    func saveEditorDraft(_ value: TaskEditorRecovery) throws {
+        try value.validate()
+        guard value.account==account else {throw BackupFailure(message:"This edit belongs to another account.")}
+        if let gate=removalGate {
+            guard gate.account==account else {throw CancellationError()}
+            var unguarded=self;unguarded.removalGate=nil
+            return try gate.writable {try unguarded.saveEditorDraft(value)}
+        }
+        let secret=try key()
+        Self.lock.lock();defer {Self.lock.unlock()}
+        var verifier=self;verifier.key={secret}
+        if FileManager.default.fileExists(atPath:editorFile(value.id).path) {
+            let saved=try verifier.editorDraft(value.id,origin:value.origin)
+            guard saved.original.id==value.original.id, saved.original["task_generation"]==value.original["task_generation"], saved.original["project_id"]==value.original["project_id"], saved.extras["source_identity"]==value.extras["source_identity"] else {throw BackupFailure(message:"This saved edit belongs to a different task version. Its original is kept.")}
+            guard saved.revision<=value.revision else {return} // A delayed older save cannot replace newer work.
+            if saved.revision==value.revision {
+                guard saved==value else {throw BackupFailure(message:"Two versions of this edit need review. The saved original is unchanged.")}
+                return
+            }
+        }
+        let plaintext=try JSONEncoder().encode(value)
+        guard plaintext.count<=WorkspaceBackup.maximumBytes else {throw BackupFailure(message:"This edit exceeds the 256 MB recovery limit. Keep this window open.")}
+        guard let ciphertext=try AES.GCM.seal(plaintext,using:secret).combined else {throw BackupFailure(message:"This edit could not be encrypted. Keep this window open.")}
+        try FileManager.default.createDirectory(at:editorDirectory,withIntermediateDirectories:true)
+        let staging=editorDirectory.appendingPathComponent("staging-"+UUID().uuidString.lowercased()+".taskfoldstage")
+        defer {try? FileManager.default.removeItem(at:staging)}
+        try ciphertext.write(to:staging,options:[.atomic,.completeFileProtectionUntilFirstUserAuthentication])
+        let persisted=try Self.boundedFile(staging,limit:WorkspaceBackup.maximumBytes+1024)
+        let verified=try JSONDecoder().decode(TaskEditorRecovery.self,from:AES.GCM.open(AES.GCM.SealedBox(combined:persisted),using:secret))
+        guard verified==value else {throw BackupFailure(message:"The saved edit could not be verified. Keep this window open.")}
+        guard Darwin.rename(staging.path,editorFile(value.id).path)==0 else {throw BackupFailure(message:"The verified edit could not replace its previous version. Keep this window open and retry.")}
+    }
+}

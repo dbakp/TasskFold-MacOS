@@ -319,6 +319,15 @@ final class Store {
         notice = "Original file preserved. Restore a recovery copy or wait for cloud sync."
         Task { await reschedule(); await sync() }
     }
+    func preserveEditorEdit(_ value: TaskEditorRecovery, workspace: WorkspaceBinding) async throws {
+        guard workspace.matches(account:userID,generation:workspaceGeneration), value.account==userID,
+              !accountRemovalBlocked,!signingOut,signedIn || localMode else {throw CancellationError()}
+        let origin=localMode ? nil:try backend.accountRemovalOrigin
+        guard value.origin==origin else {throw CancellationError()}
+        let vault=backupVault
+        try await Task.detached(priority:.utility) {try vault.saveEditorDraft(value)}.value
+        guard workspace.matches(account:userID,generation:workspaceGeneration),!accountRemovalBlocked,!signingOut else {throw CancellationError()}
+    }
     private func scheduleDailyBackup() {
         guard workspaceCacheDecoded, !accountRemovalBlocked, !signingOut, (signedIn || localMode), !userID.isEmpty, dailyBackupsEnabled, !dailyBackupRunning else { return }
         let vault = backupVault, before = snapshot, generation = accountGeneration
@@ -335,12 +344,13 @@ final class Store {
         }
     }
     /// The reviewed snapshot must still be current after the encrypted checkpoint is written.
-    func restore(_ backup: WorkspaceBackup, policy: RestorePolicy, reviewed: Snapshot, generation: UUID) async throws -> RestorePlan {
+    func restore(_ backup: WorkspaceBackup, policy: RestorePolicy, reviewed: Snapshot, generation: UUID, onlyNewTask: Bool = false) async throws -> RestorePlan {
         guard activeTeamMask==nil else {throw BackupFailure(message:"Finish the project-access recovery before restoring another workspace. Your saved work is kept.")}
         guard workspaceCacheDecoded else {throw BackupFailure(message:"This device’s saved workspace could not be read. Its original file is protected and needs repair before it can be replaced.")}
         guard generation == accountGeneration, snapshot == reviewed, signedIn || localMode else { throw BackupFailure(message: "Your workspace changed. Refresh the restore preview before continuing.") }
         guard !syncing else { throw BackupFailure(message: "Wait for sync to finish, then refresh the restore preview.") }
         let plan = try backup.plan(current: reviewed, account: userID, policy: policy)
+        if onlyNewTask {try TaskEditorRecovery.requireNewTaskPlan(plan)}
         guard plan.total > 0 else { return plan }
         _ = try await makeRecoveryBackup(kind: "Before restore")
         guard generation == accountGeneration, snapshot == reviewed, !syncing else { throw BackupFailure(message: "Your workspace changed while the recovery copy was saved. Refresh the preview before continuing.") }

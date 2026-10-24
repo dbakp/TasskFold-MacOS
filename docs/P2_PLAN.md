@@ -2164,3 +2164,21 @@ draft → relaunch checks on iPhone and largest-text dark iPad. Native disk proo
 confirm zero shared tasks/comments/mentions and one matching authored draft. The
 existing iPhone offline-send/relaunch regression also passes. Mac runtime and
 VoiceOver remain open. Owned test apps, builds and Mac registration are removed.
+
+
+## Editor recovery vault and reviewed Inbox copy — 24 October, rank 6 in progress
+
+The independent recovery mechanism now preserves full editor records and extra
+state in encrypted per-account/backend checkpoints with revision/source fences.
+Saved edits can be reviewed as a separate insert-only Inbox task or exported in
+full for repair. Originals, shared history and permissions are not replayed;
+assignments/reminders are off in the copy. See EDITOR_RECOVERY.md and platform
+evidence for verified scope. This is the recovery foundation: live iOS editor and
+Mac inspector capture/invalidation, pending-save/quit handoff and child editor
+acceptance remain to be connected. The full Px goal remains active.
+
+Verification: 111 relevant core tests pass in this repository, with a successful
+Debug app/extension build. Mac runtime and VoiceOver acceptance remain open.
+Live editor capture/invalidation and inspector autosave handoff remain unfinished.
+Owned isolated test apps/builds/results were removed after preserving evidence;
+2.25 GiB of temporary files reclaimed. No Mac test app was launched this stage.

@@ -21,12 +21,14 @@ struct RestoreReviewRequest: Identifiable {
     var snapshot: Snapshot
     let generation: UUID
     let account: String
+    var onlyNewTask = false
 }
 
 @MainActor @Observable
 private final class BackupUI {
     var history: [RecoveryEntry] = []
     var preserved: [PreservedWorkspaceFile] = []
+    var editorEdits: [PreservedWorkspaceFile] = []
     var exportFilename = "Taskfold-backup"
     var confirmingRepair = false
     var didConfirmRepair: (() -> Void)?
@@ -198,10 +200,24 @@ struct BackupTools: View {
             if let request = model.pickerSession.request, request.workspace != owner.workspaceGeneration { model.cancelPicker() }
             model.didSelectFile = { [weak model] url, generation in if let model { Self.readFile(url, generation: generation, store: owner, ui: model) } }
             model.didCloseReview = { [weak model] in if let model { Task { await Self.refreshHistory(store: owner, ui: model) } } }
-            ui.history=[]; ui.preserved=[]
+            ui.history=[]; ui.preserved=[]; ui.editorEdits=[]
             daily = store.dailyBackupsEnabled; await refreshHistory()
         }
 
+        if !ui.editorEdits.isEmpty {
+            Section {
+                ForEach(ui.editorEdits) { entry in
+                    Menu {
+                        Button("Review Inbox copy") { openEditorEdit(entry,exportOriginal:false) }.accessibilityIdentifier("editorRecoveryReview-"+entry.id.uuidString.lowercased())
+                        Button("Export original edit") { openEditorEdit(entry,exportOriginal:true) }
+                    } label: {
+                        Label("Unsent edit · " + entry.createdAt.formatted(date:.abbreviated,time:.shortened),systemImage:"doc.badge.clock")
+                    }.disabled(busy).accessibilityIdentifier("editorRecovery-"+entry.id.uuidString.lowercased())
+                }
+            } header: {Text("Unsent task edits")} footer: {
+                Text("Full edits stay encrypted on this device, separately from daily copies. Review a separate Inbox copy, or export the original privately for repair. Original-edit files are not portable workspace backups.")
+            }
+        }
         if !ui.preserved.isEmpty {
             Section {
                 ForEach(ui.preserved) { entry in
@@ -314,6 +330,24 @@ struct BackupTools: View {
             } else { preview(payload.workspace) }
         }
     }
+    private func openEditorEdit(_ entry: PreservedWorkspaceFile, exportOriginal: Bool) {
+        let vault=store.backupVault, generation=store.workspaceGeneration, account=store.userID
+        run {
+            let origin=store.localMode ? nil:try store.backend.accountRemovalOrigin
+            let value=try await Task.detached(priority:.utility) {try vault.editorDraft(entry.id,origin:origin)}.value
+            guard generation==store.workspaceGeneration,account==store.userID else {throw CancellationError()}
+            if exportOriginal {
+                let data=try await Task.detached(priority:.utility) {try JSONEncoder().encode(value)}.value
+                guard generation==store.workspaceGeneration else {throw CancellationError()}
+                ui.exportFilename="Taskfold-original-edit";document=WorkspaceDocument(data:data);exporting=true
+            } else {
+                let snapshot=store.snapshot
+                let backup=try await Task.detached(priority:.userInitiated) {try value.copyBackup(current:snapshot)}.value
+                guard generation==store.workspaceGeneration,account==store.userID,store.snapshot==snapshot else {throw BackupFailure(message:"Your workspace changed. Review this saved edit again.")}
+                review=RestoreReviewRequest(backup:backup,snapshot:snapshot,generation:generation,account:account,onlyNewTask:true)
+            }
+        }
+    }
     private func refreshHistory() async { await Self.refreshHistory(store: store, ui: ui) }
     private static func refreshHistory(store: Store, ui: BackupUI) async {
         let vault = store.backupVault, generation = store.workspaceGeneration
@@ -326,6 +360,10 @@ struct BackupTools: View {
             let preserved = try await Task.detached(priority: .utility) { try vault.preservedFiles() }.value
             if generation == store.workspaceGeneration { ui.preserved = preserved }
         } catch { failures.append(error.localizedDescription) }
+        do {
+            let edits=try await Task.detached(priority:.utility) {try vault.editorEntries()}.value
+            if generation==store.workspaceGeneration {ui.editorEdits=edits}
+        } catch {failures.append(error.localizedDescription)}
         if generation == store.workspaceGeneration, !failures.isEmpty { store.backupWarning = "Some recovery files could not be read: " + failures.joined(separator: " ") }
 
     }
@@ -349,7 +387,7 @@ struct RestoreReview: View {
     @State private var message: String?
     @State private var finished = false
     private var changed: Bool { request.generation != store.workspaceGeneration || request.account != store.userID || request.snapshot != store.snapshot }
-    private var plan: Result<RestorePlan, Error> { Result { try request.backup.plan(current: request.snapshot, account: request.account, policy: policy) } }
+    private var plan: Result<RestorePlan, Error> { Result { let result=try request.backup.plan(current: request.snapshot, account: request.account, policy: policy);if request.onlyNewTask {try TaskEditorRecovery.requireNewTaskPlan(result)};return result } }
     private func countRow(_ label: String, value: Int, identifier: String) -> some View {
         LabeledContent(label, value: "\(value)")
             .accessibilityElement(children: .ignore)
@@ -361,10 +399,23 @@ struct RestoreReview: View {
         NavigationStack {
             Form {
                 Section {
-                    Label("Review your restore", systemImage: "arrow.counterclockwise.circle.fill").font(.title2.weight(.semibold)).foregroundStyle(Color.taskfold)
+                    Label(request.onlyNewTask ? "Review your recovered edit":"Review your restore", systemImage: "arrow.counterclockwise.circle.fill").font(.title2.weight(.semibold)).foregroundStyle(Color.taskfold)
                     if let date = TaskPlanning.instant(request.backup.createdAt) { LabeledContent("Backup created", value: date.formatted(date: .abbreviated, time: .shortened)) }
-                    Picker("Matching records", selection: $policy) { ForEach(RestorePolicy.allCases) { Text($0.title).tag($0) } }.accessibilityIdentifier("restorePolicy")
+                    if !request.onlyNewTask { Picker("Matching records", selection: $policy) { ForEach(RestorePolicy.allCases) { Text($0.title).tag($0) } }.accessibilityIdentifier("restorePolicy") }
+                    if request.onlyNewTask {Text(TaskEditorRecovery.copyNotice).font(.callout).foregroundStyle(.secondary).accessibilityIdentifier("editorRecoveryNotice")}
                     Text(policy == .keepCurrent ? "Add missing work and keep the records already in this workspace." : "Add missing work and restore matching records to the values in this backup.").font(.callout).foregroundStyle(.secondary)
+                }
+                if request.onlyNewTask, let task=request.backup.tables["tasks"]?.first {
+                    Section("Recovered task") {
+                        Text(task.title).font(.headline).accessibilityIdentifier("editorRecoveryTitle")
+                        if !task.string("description").isEmpty {
+                            Text(String(task.string("description").prefix(4000))).textSelection(.enabled).accessibilityIdentifier("editorRecoveryNotes")
+                            if task.string("description").count>4000 {Text("Preview shortened; the full notes remain in the copy and original edit.").font(.caption).foregroundStyle(.secondary)}
+                        }
+                        if !task.string("due_date").isEmpty {LabeledContent("Planned",value:task.string("due_date")+" "+task.string("due_time"))}
+                        LabeledContent("Checklist",value:"\(task["subtasks"].list.count) main items")
+                        LabeledContent("Files",value:String(task["attachments"].list.count))
+                    }
                 }
                 switch plan {
                 case .success(let value):
@@ -394,14 +445,14 @@ struct RestoreReview: View {
                 if case .success(let value) = plan {
                     VStack(spacing: 0) {
                         Divider()
-                        Button(busy ? "Saving recovery copy…" : "Restore \(value.total) \(value.total == 1 ? "record" : "records")") {
+                        Button(busy ? "Saving recovery copy…" : request.onlyNewTask ? "Recover to Inbox" : "Restore \(value.total) \(value.total == 1 ? "record" : "records")") {
                             busy = true
                             Task {
                                 defer { busy = false }
                                 do {
-                                    let restored = try await store.restore(request.backup, policy: policy, reviewed: request.snapshot, generation: request.generation)
+                                    let restored = try await store.restore(request.backup, policy: policy, reviewed: request.snapshot, generation: request.generation, onlyNewTask:request.onlyNewTask)
                                     finished = true
-                                    message = "Restored \(restored.total) \(restored.total == 1 ? "record" : "records"). Your recovery copy is available in Backups & restore."
+                                    message = request.onlyNewTask ? "A new task was added to Inbox. Your full original edit remains in Unsent task edits." : "Restored \(restored.total) \(restored.total == 1 ? "record" : "records"). Your recovery copy is available in Backups & restore."
                                 } catch { message = error.localizedDescription }
                             }
                         }.disabled(busy || changed || store.syncing || value.total == 0).accessibilityIdentifier("restoreApply")
@@ -410,13 +461,13 @@ struct RestoreReview: View {
                     }.background(.regularMaterial)
                 }
             }
-            .navigationTitle("Restore backup")
+            .navigationTitle(request.onlyNewTask ? "Recover task edit":"Restore backup")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(busy) } }
             .interactiveDismissDisabled(busy)
-            .alert(finished ? "Restore complete" : "Restore could not finish", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+            .alert(finished ? (request.onlyNewTask ? "Task recovered":"Restore complete") : "Restore could not finish", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
                 Button("OK") { message = nil; if finished { dismiss() } }
             } message: { Text(message ?? "") }
         }

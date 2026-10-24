@@ -4222,3 +4222,17 @@ Independent verification: 105 selected core tests and a complete unsigned Debug
 app/extension build pass. iPhone/iPad runtime proof is scoped to the iOS app; Mac
 runtime and spoken acceptance remain open. Temporary builds/registration are
 removed. Ordinary inspector recovery remains the next part of this work.
+
+
+### Saved editor checkpoints and reviewed recovery — 24 October
+
+Encrypted editor checkpoints and native Inbox-copy review are implemented in this
+repo with independent source, tests and build verification. The current Mac
+inspector does not yet hand unsent edits to this vault automatically. Admission,
+autosave cancellation, pending-save/quit protection and native runtime/VoiceOver
+acceptance remain next; the broader rank-6 and Px scope stays open. See
+EDITOR_RECOVERY.md and per-platform evidence for the verified boundary.
+
+Verification: 111 relevant core tests pass in this repository, with a successful
+Debug app/extension build. Mac runtime and VoiceOver acceptance remain open.
+Live editor capture/invalidation and inspector autosave handoff remain unfinished.

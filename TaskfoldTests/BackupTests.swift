@@ -586,3 +586,98 @@ extension BackupTests {
         XCTAssertTrue(try vault.preservedFiles().isEmpty)
     }
 }
+
+extension BackupTests {
+    private func editRecovery(_ revision: UInt64 = 1, id: UUID = UUID(), title: String = "Private unsent title") throws -> TaskEditorRecovery {
+        var before=Record.task(user:owner,project:projectID);before["id"] = .string(taskID);before["title"] = .string("Shared original")
+        var draft=before;draft["title"] = .string(title);draft["description"] = .string("Unsent rich notes **kept**")
+        draft["assigned_to"] = .string(other);draft["due_date"] = .string("2026-10-30");draft["duration_minutes"] = .number(45)
+        draft["attachments"] = .array([.object(["id":.string(UUID().uuidString.lowercased()),"name":.string("brief.txt"),"url":.string("data:text/plain;base64,YQ=="),"type":.string("text/plain"),"size":.number(1)])])
+        draft["future_extension"] = .object(["opaque":.array([.string("Keep full original")])])
+        draft["subtasks"] = .array([.object(["id":.string(UUID().uuidString.lowercased()),"title":.string("Checklist draft"),"assigned_to":.string(other),"description":.string("Child notes"),"completed":.bool(true)]),.string("Legacy child")])
+        return try TaskEditorRecovery(id:id,revision:revision,account:owner,origin:"https://editor.example",original:before,draft:draft,extras:["pin":.bool(true),"unsubmitted_comment":.string("Not sent yet")],now:Date(timeIntervalSince1970:1792800000))
+    }
+    func testEditorArchivePreservesFullDraftExtrasPrivatelyAndSeparatelyFromRetention() throws {
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:root)}
+        let key=SymmetricKey(size:.bits256),value=try editRecovery(),vault=BackupVault(directory:root,account:owner,key:{key},retention:1)
+        try vault.saveEditorDraft(value)
+        XCTAssertEqual(try vault.editorDraft(value.id,origin:value.origin),value)
+        XCTAssertFalse(String(decoding:try Data(contentsOf:vault.editorFile(value.id)),as:UTF8.self).contains("Private unsent title"))
+        for _ in 0..<3 {_=try vault.save(Snapshot(),kind:"Daily")}
+        XCTAssertEqual(try vault.editorDraft(value.id,origin:value.origin),value)
+        XCTAssertEqual(try vault.editorEntries().map(\.id),[value.id])
+        XCTAssertEqual(try vault.editorDraft(value.id,origin:value.origin).extras["unsubmitted_comment"],.string("Not sent yet"))
+        try vault.removeAll();XCTAssertFalse(FileManager.default.fileExists(atPath:vault.editorFile(value.id).path))
+    }
+    func testEditorArchiveRejectsOtherAccountOriginKeyAndDamagedCiphertext() throws {
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:root)}
+        let key=SymmetricKey(size:.bits256),value=try editRecovery(),vault=BackupVault(directory:root,account:owner,key:{key})
+        try vault.saveEditorDraft(value)
+        XCTAssertThrowsError(try vault.editorDraft(value.id,origin:nil))
+        XCTAssertThrowsError(try vault.editorDraft(value.id,origin:"https://other.example"))
+        var wrong=vault;wrong.account=other;XCTAssertThrowsError(try wrong.editorDraft(value.id,origin:value.origin))
+        wrong=vault;wrong.key={SymmetricKey(size:.bits256)};XCTAssertThrowsError(try wrong.editorDraft(value.id,origin:value.origin))
+        var data=try Data(contentsOf:vault.editorFile(value.id));data[data.count-1] ^= 1;try data.write(to:vault.editorFile(value.id))
+        XCTAssertThrowsError(try vault.editorDraft(value.id,origin:value.origin))
+        XCTAssertThrowsError(try vault.saveEditorDraft(value))
+        XCTAssertEqual(try Data(contentsOf:vault.editorFile(value.id)),data)
+    }
+    func testLateEditorSaveCannotReplaceNewerRevisionOrCrossOrigin() throws {
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:root)}
+        let key=SymmetricKey(size:.bits256),one=try editRecovery(),vault=BackupVault(directory:root,account:owner,key:{key})
+        let two=try TaskEditorRecovery(id:one.id,revision:2,account:owner,origin:one.origin,original:one.original,draft:one.draft,extras:["latest":.bool(true)],now:one.createdAt)
+        try vault.saveEditorDraft(two);try vault.saveEditorDraft(one)
+        XCTAssertEqual(try vault.editorDraft(one.id,origin:one.origin),two)
+        let conflict=try TaskEditorRecovery(id:one.id,revision:2,account:owner,origin:one.origin,original:one.original,draft:one.original,now:one.createdAt)
+        XCTAssertThrowsError(try vault.saveEditorDraft(conflict))
+        let otherOrigin=try TaskEditorRecovery(id:one.id,revision:3,account:owner,origin:"https://other.example",original:one.original,draft:one.draft)
+        XCTAssertThrowsError(try vault.saveEditorDraft(otherOrigin))
+        XCTAssertEqual(try vault.editorDraft(one.id,origin:one.origin),two)
+        var changedSource=one.original;changedSource["task_generation"] = .string(UUID().uuidString.lowercased())
+        let retarget=try TaskEditorRecovery(id:one.id,revision:3,account:owner,origin:one.origin,original:changedSource,draft:one.draft)
+        XCTAssertThrowsError(try vault.saveEditorDraft(retarget))
+        var bad=one.draft;bad["unencodable"] = .number(.infinity)
+        let unencodable=try TaskEditorRecovery(id:one.id,revision:3,account:owner,origin:one.origin,original:one.original,draft:bad)
+        XCTAssertThrowsError(try vault.saveEditorDraft(unencodable))
+        XCTAssertEqual(try vault.editorDraft(one.id,origin:one.origin),two)
+        XCTAssertThrowsError(try TaskEditorRecovery(account:owner,origin:"https://",original:one.original,draft:one.draft))
+    }
+    func testEditorRecoveryPlansOnlyANewInboxCopyWithFreshChildrenAndRemindersOff() throws {
+        let value=try editRecovery(),current=Snapshot(tables:["tasks":[value.original]])
+        let backup=try value.copyBackup(current:current),task=try XCTUnwrap(backup.tables["tasks"]?.first)
+        XCTAssertNotEqual(task.id,value.original.id);XCTAssertEqual(task.string("project_id"),"")
+        XCTAssertEqual(task["assigned_to"],.null);XCTAssertEqual(task.string("description"),value.draft.string("description"))
+        XCTAssertEqual(task["attachments"],value.draft["attachments"]);XCTAssertEqual(task["duration_minutes"],.number(45))
+        XCTAssertNil(task.fields["future_extension"])
+        XCTAssertEqual(ReminderSpec(row:task["reminder_specs"].list[0])?.enabled,false)
+        let children=task["subtasks"].list
+        XCTAssertEqual(children.count,2);XCTAssertNotEqual(children[0].object["id"],value.draft["subtasks"].list[0].object["id"])
+        XCTAssertEqual(children[0].object["assigned_to"],.null);XCTAssertEqual(children[0].object["completed"],.bool(true))
+        XCTAssertEqual(children[1].object["title"],.string("Legacy child"))
+        let plan=try backup.plan(current:current,account:owner,policy:.backupValues)
+        try TaskEditorRecovery.requireNewTaskPlan(plan)
+        XCTAssertThrowsError(try TaskEditorRecovery.requireNewTaskPlan(RestorePlan()))
+        var unsafe=plan;unsafe.changes[0].method="PATCH";XCTAssertThrowsError(try TaskEditorRecovery.requireNewTaskPlan(unsafe))
+        XCTAssertEqual(plan.changes.count,1);XCTAssertEqual(plan.changes[0].method,"POST");XCTAssertEqual(plan.changes[0].insertOnly,true)
+        XCTAssertNotEqual(plan.changes[0].recordID,value.original.id)
+        XCTAssertEqual(try value.copyBackup(current:current).tables,backup.tables)
+        XCTAssertThrowsError(try value.copyBackup(current:Snapshot(tables:["tasks":[task]])))
+    }
+    func testUncopyableEditorDraftStillRoundTripsWithoutDiscardingUnknownFields() throws {
+        let value=try editRecovery();var draft=value.draft;draft["subtasks"] = .array([.number(3)])
+        let invalid=try TaskEditorRecovery(account:owner,origin:nil,original:value.original,draft:draft)
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:root)}
+        let key=SymmetricKey(size:.bits256),vault=BackupVault(directory:root,account:owner,key:{key})
+        try vault.saveEditorDraft(invalid)
+        XCTAssertEqual(try vault.editorDraft(invalid.id,origin:nil).draft,draft)
+        XCTAssertThrowsError(try invalid.copyBackup(current:Snapshot()))
+    }
+    func testRemovedAccountStopsEditorWritersAndReadersBeforeKeyAccess() throws {
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:root)}
+        let gate=AccountRemovalDisk(directory:root,account:owner),value=try editRecovery()
+        let vault=BackupVault(directory:root.appendingPathComponent("Backups"),account:owner,key:{XCTFail("Removed account must not acquire or recreate a key");throw CancellationError()},removalGate:gate)
+        try gate.removeCache()
+        XCTAssertThrowsError(try vault.saveEditorDraft(value));XCTAssertThrowsError(try vault.editorDraft(value.id,origin:value.origin))
+        XCTAssertFalse(FileManager.default.fileExists(atPath:vault.directory.path))
+    }
+}
