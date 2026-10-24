@@ -3838,3 +3838,12 @@ renders are recorded. Manual navigation/edit/dictation/spoken checks remain open
 because the Mac stayed locked. Mac source/build inputs are unchanged in this
 milestone; no new Mac runtime or full-suite result is claimed. Watch stays
 disabled/unembedded, and all broader Px gates and user deferrals retain scope.
+
+
+### Email adapter preparation — 24 October
+
+The Mac repo independently owns the signed-envelope/composition module and its
+PostgreSQL pipeline harness. Its 114 Deno cases and 27 real PostgreSQL checks pass;
+no public entrypoint, durable email admission, provider configuration, native UI or
+deployment is added. Source links/additional senders, genuine provider acceptance,
+remaining native checks, Watch/team work and existing user deferrals stay open.

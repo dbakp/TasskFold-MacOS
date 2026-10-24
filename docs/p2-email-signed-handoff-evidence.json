@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-24",
+  "status": "internal candidate; not a deployable mail endpoint",
+  "sourcesSHA256": {
+    "Scripts/Database/test-email-ingress-journal.mjs": "5643854adc1cbffd61c0e2335f28806ad2cef01962e69b9903eff6cac48e63b3",
+    "supabase/functions/_shared/email-ingress/README.md": "76d63b8cfff91d2f3fc9d63244f0b52aaf21ac860667ce2a602d5b5e29f56e7b",
+    "supabase/functions/_shared/email-ingress/deno.json": "a7e8ba5aa11b242662014be9a3e9f2fc0c461808e00964ceb9c749b9014c4100",
+    "supabase/functions/_shared/email-ingress/deno.lock": "98676911527bad0f3f509fc8ceea77a736e0a2092eb312b09c9a1a5cf0e58db0",
+    "supabase/functions/_shared/email-ingress/fixtures.ts": "a355c47cf0607fe8d2fcd0f9b59697934c0040372d9c6f11c37a6b20b7baa8dc",
+    "supabase/functions/_shared/email-ingress/handler.ts": "6c49cb73a2fa2b2e483a1a1b5532b1b0b4bca221a3c47bb0ff933b1e5c7a3f93",
+    "supabase/functions/_shared/email-ingress/journal_fixture.ts": "6c172dd905e8117931a24a28e25cc70bf252526c28b17eda69b2e0980232680e",
+    "supabase/functions/_shared/email-ingress/mod.ts": "bf014f5443fd3708587db6051d2415331f2c731d053e5e1ee81ec2ad7fa98521",
+    "supabase/functions/_shared/email-ingress/mod_test.ts": "003cdd8cfd7696aeb6c3b5de890ea8a67250f2d0102402fb38ac9639e74c3805"
+  },
+  "deno": {
+    "newCases": 55,
+    "regressionCases": 59,
+    "total": 114,
+    "failed": 0,
+    "skipped": 0,
+    "cachedOnly": true,
+    "frozenLock": true,
+    "runtimePermissionsGranted": [],
+    "lint": true,
+    "format": true,
+    "typeCheck": true,
+    "version": "2.8.3"
+  },
+  "postgres": {
+    "version": 170006,
+    "checks": {
+      "disabled enrollment remains closed": true,
+      "native route enrollment succeeds": true,
+      "signed envelope hashes the actual recipient": true,
+      "MIME From cannot replace verified sender": true,
+      "MIME Message-ID cannot replace original receipt": true,
+      "actual service journal accepts signed decoded mail": true,
+      "first acceptance is not replay": true,
+      "exact delivery retry reuses receipt": true,
+      "one task after repeated delivery": true,
+      "saved task matches decoded words": true,
+      "changed decoded content conflicts": true,
+      "changed original receipt time conflicts": true,
+      "another verified sender still cannot use route": true,
+      "recipient domain remains independently enforced": true,
+      "deleted-task replay acknowledges original receipt": true,
+      "replay cannot recreate deleted work": true,
+      "pause route succeeds": true,
+      "paused route refuses delivery": true,
+      "resume route succeeds": true,
+      "old new-receipt mail cannot backfill resumed route": true,
+      "anonymous cannot invoke delivery": true,
+      "authenticated cannot invoke service-only delivery": true,
+      "receipt table remains private": true,
+      "revoke route succeeds": true,
+      "revoked route refuses delivery": true,
+      "rejected deliveries create no tasks": true,
+      "official advisors no email warnings or errors": true
+    },
+    "count": 27,
+    "passed": true,
+    "ownedContainerRemoved": true,
+    "pipelineScope": "Actual signed-message handler preparation with injected admissions/capture-only delivery; resulting arguments then accepted/refused by real PostgreSQL service journal. Not public/provider HTTP delivery.",
+    "emailAdvisorWarningsOrErrors": 0,
+    "otherFixtureAdvisorFindings": 5
+  },
+  "securityReview": {
+    "signatureBindsAudienceProviderKeyTimestampAndExactBody": true,
+    "nativeMetadataOrMailHeadersNeverAuthorizeSender": true,
+    "configurationAndSignedBytesSnapshotted": true,
+    "sealedHandlePreventsCopiedUnverifiedEnvelope": true,
+    "senderAndRecipientStillEnforcedByRealJournal": true,
+    "serviceOnlyExecutionAndPrivateReceiptsTested": true,
+    "noNewSchemaGrantOrAuthSetting": true,
+    "noServiceCredentialInModuleOrNativeApps": true,
+    "existingMimeVersionsPinned": true
+  },
+  "acceptanceLimits": {
+    "realProviderVerification": false,
+    "SPFDKIMDMARCImplementation": false,
+    "durableEmailIngressAdmission": false,
+    "publicEntrypoint": false,
+    "configuredProviderOrDomain": false,
+    "realEmailDelivery": false,
+    "nativeUIAcceptance": false,
+    "deployment": false,
+    "liveDataChanges": false
+  },
+  "remaining": [
+    "Trusted provider-specific event, original-message download, sender/receipt attestation and genuine delivery/retry tests",
+    "Independent durable email admission including trusted gateway/IP and concurrent in-flight limits",
+    "Source links and additional verified sender enrollment",
+    "Wider native/accessibility acceptance",
+    "Advanced teams, Watch and rest of full Px scope; all user deferrals retained"
+  ],
+  "referencesReviewed": [
+    "https://supabase.com/changelog.md",
+    "https://supabase.com/changelog/cbc-tls-ciphers-deprecated",
+    "https://supabase.com/docs/guides/functions/auth#external-webhooks",
+    "https://supabase.com/docs/guides/functions/secrets"
+  ]
+}

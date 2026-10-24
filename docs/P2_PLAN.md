@@ -1616,3 +1616,44 @@ remains off and the target unembedded. Earlier paired/background/cloud/storage,
 input/layout/VoiceOver, icons/resources and embedding gates, the broader email/
 teams/Wear OS/native backlog and every user deferral retain scope. This closes
 neither rank 7 nor the full Px objective.
+
+
+## Signed email handoff — 24 October, internal preparation
+
+Each repo now independently owns `_shared/email-ingress`, an internal composition
+layer with no serving entrypoint, deployment configuration or service credential.
+A future trusted provider adapter can sign a strict bounded original-envelope
+handoff. HMAC binds exact bytes, deployment audience, immutable provider namespace,
+key ID and attempt time. Original delivery ID/receipt time remain unchanged across
+retries. Sender/domain/receipt facts come from the signed adapter attestation,
+never MIME From/To/Date/Message-ID/Authentication-Results headers. This does not
+implement real provider, SPF, DKIM or DMARC verification; the signer must establish
+those facts under a reviewed provider-specific policy before attesting them.
+
+The handler requires explicit admission before reading and again after signature
+verification but before MIME parsing. It has no permissive production default.
+The existing native/API budgets cannot stand in for independent durable email
+admission. A sealed verified handle feeds the existing pinned MIME normalizer and
+prepares only the arguments of the service-only atomic email journal. Missing or
+uncertain journal proof cannot become a success response. Headers, raw bytes,
+chunk count and deadlines are independently bounded; errors expose no mail,
+aliases, signatures, credentials or upstream messages. No message download occurs.
+
+Both repo-owned Deno suites pass 114 cases each (55 new handoff/composition cases
+plus the prior 59 MIME/content/alias/management cases), without failures or skips.
+Frozen cached dependencies and no runtime permission grants are used. Lint,
+format and type checks pass. Each independent real PostgreSQL fixture passes 27
+checks using actual signed-message preparation followed by the existing journal:
+exact retries, changed content/time, sender/domain rejection, deletion safety,
+pause/resume/revocation and service-only access. This is a staged local pipeline,
+not a deployed provider HTTP service; preparation admissions are injected. Official
+read-only advisors report no email warnings/errors in those owned fixtures; other
+fixture findings remain recorded. Both containers are removed.
+
+Provider/domain configuration remains deferred. Real provider verification,
+message download/admission wiring, durable shared email budgets/in-flight bounds,
+genuine delivery/retry acceptance, source links, additional verified senders and
+wider native/accessibility checks remain open. No SQL, native app, live account,
+release flag or deployed function changed. Watch/advanced-team/other Px work and
+all user deferrals retain scope. See `p2-email-signed-handoff-evidence.json` and the
+module README; this is neither rank-6 nor full-Px completion.
