@@ -135,6 +135,7 @@ private struct BackupPickerSheet: View {
 
 /// Each platform owns this native form, its export document and restore preview.
 struct BackupTools: View {
+    @State private var showingTeamDrafts=false
     @Environment(Store.self) private var store
     @Environment(BackupUI.self) private var ui
     private var history: [RecoveryEntry] { get { ui.history } nonmutating set { ui.history = newValue } }
@@ -146,6 +147,9 @@ struct BackupTools: View {
     private var message: String? { get { ui.message } nonmutating set { ui.message = newValue } }
     var body: some View {
         Section {
+            Button("Saved team drafts",systemImage:"doc.text") {showingTeamDrafts=true}
+                .disabled(store.teamDraftVault == nil).accessibilityIdentifier("savedTeamDrafts")
+                .sheet(isPresented:$showingTeamDrafts){SavedTeamDraftsView()}
             Button("Back up now", systemImage: "externaldrive.badge.checkmark") { run { _ = try await store.makeRecoveryBackup(); await refreshHistory(); message = "Recovery copy saved on this device." } }
                 .accessibilityIdentifier("backupNow")
             Button("Export workspace", systemImage: "square.and.arrow.up") {

@@ -40,6 +40,12 @@ try {
     await loadTeamCompletionRebaseSchema(pg.raw,{base:false});
     report.rebaseMigrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+teamCompletionRebaseMigration,import.meta.url))).digest('hex');
   }
+  if(process.env.TASKFOLD_TEAM_PROVISIONAL_REGRESSION === '1') {
+    if(!report.rebaseMigrationSHA256)throw new Error('Load rebase capabilities before provisional retirement regression');
+    const {loadTeamProvisionalRetirementSchema,teamProvisionalRetirementMigration}=await import('./team-provisional-retirement-schema.mjs');
+    await loadTeamProvisionalRetirementSchema(pg.raw,{base:false});
+    report.retirementMigrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+teamProvisionalRetirementMigration,import.meta.url))).digest('hex');
+  }
   report.completionMigrationSHA256 = createHash("sha256").update(
     await readFile(
       new URL(

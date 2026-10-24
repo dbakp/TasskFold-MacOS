@@ -76,3 +76,7 @@ Still required: edited-provisional-draft and related-cohort reconciliation,
 current-role workspace/cache refresh and privacy, remaining collaboration adapters,
 premium organization UI and consolidated native acceptance before enabling teams.
 Full Px scope and the user's release/provider/hardware deferrals remain unchanged.
+
+Follow-up: TEAM_PROVISIONAL_DRAFTS.md adds safe parking of direct edits/comments
+on an unused provisional generation after a recorded completion. Compound and
+unrecorded cases remain in progress. Counts above describe the rebase stage.

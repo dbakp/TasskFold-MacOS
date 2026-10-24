@@ -531,4 +531,164 @@ final class TeamCompletionTests: XCTestCase {
         }
     }
 
+    private func retirementFixture() throws -> (Mutation,[String:JSON],[String:JSON]) {
+        let url=try XCTUnwrap(Bundle.module.url(forResource:"team-provisional-retirement-v1",withExtension:"json",subdirectory:"Fixtures"))
+        let root=try JSONDecoder().decode([String:JSON].self,from:Data(contentsOf:url)),body=root["body"]!.object
+        let source=Record(body["record"]!.object),id=try XCTUnwrap(UUID(uuidString:body["request_id"]!.text))
+        let scope=TeamTaskEditScope(account:root["account"]!.text,origin:origin,team:body["team_id"]!.text,project:body["project_id"]!.text)
+        let forecast=try TeamCompletion.complete(source,tasks:[source],scope:scope,at:TaskPlanning.instant(body["completed_at"]!.text)!,zone:body["input_zone"]!.text,id:id)
+        var proposed=forecast.teamCompletion!.proposed;proposed?["task_generation"]=body["next_generation"]!
+        let command=TeamCompletion(scope:scope,operation:.complete,source:source,completedAt:body["completed_at"]!.text,inputZone:body["input_zone"]!.text,seriesID:body["series_id"]!.text,seriesGeneration:body["series_generation"]!.text,seriesProject:body["series_project_id"]!.text,nextGeneration:body["next_generation"]!.text,proposed:proposed,related:nil)
+        return(TeamCompletion.header(command,id:id),body,root["retirement"]!.object)
+    }
+    private func editedDraftSnapshot(_ header:Mutation) throws -> Snapshot {
+        var local=projected(header);let command=header.teamCompletion!,next=command.proposed!
+        let fields:[String:JSON] = ["title":.string("My unsent design notes"),"description":.string("Keep every edited instruction")]
+        let scope=command.scope
+        let change=try scope.capturing(Mutation(table:"tasks",recordID:next.id,method:"PATCH",fields:fields,baseline:TaskCompletionRevision.editBaseline(for:fields,from:next),teamTaskScope:scope),existing:next)
+        local.apply(change);local.pending.append(change)
+        let comment=try SharedCommentChange(account:scope.account,taskID:next.id,taskGeneration:next.string("task_generation"),projectID:scope.project,body:"Keep this comment draft")
+        try ConversationOutbox.enqueue(comment.record,into:&local)
+        return local
+    }
+    private func draftVault(_ draft:TeamCompletionDraft,directory:URL,key:SymmetricKey) -> TeamCompletionDraftVault {
+        TeamCompletionDraftVault(directory:directory,account:draft.scope.account,origin:draft.scope.origin,key:{key})
+    }
+    func testRetirementProofParksOwnDraftWithoutChangingSharedOccurrence() throws {
+        let(header,body,raw)=try retirementFixture(),proof=try TeamCompletionDraft.Retirement(raw,for:header)
+        XCTAssertEqual(try header.teamCompletion!.body(for:header),body)
+        var local=try editedDraftSnapshot(header)
+        let unrelated=Mutation(table:"labels",recordID:UUID().uuidString.lowercased(),method:"POST",fields:["name":.string("Independent work")])
+        local.apply(unrelated);local.pending.append(unrelated)
+        let candidate=try XCTUnwrap(TeamCompletionDraft.Candidate(review:proof.review,snapshot:local)),before=local
+        let next=try XCTUnwrap(candidate.parking(local,proof:proof))
+        XCTAssertEqual(next.pending,[unrelated]);XCTAssertEqual(next.tables["labels"],local.tables["labels"])
+        XCTAssertEqual(next.tables["tasks"]?.first{$0.id == proof.currentProposed?.id},proof.currentProposed)
+        XCTAssertEqual(candidate.draft.record.title,"My unsent design notes");XCTAssertEqual(candidate.draft.edits,[local.pending[1]])
+        XCTAssertEqual(candidate.draft.conversations,local.tables[ConversationOutbox.table]);XCTAssertTrue(next.tables[ConversationOutbox.table]?.isEmpty == true)
+        XCTAssertEqual(local,before);XCTAssertEqual(candidate.draft.original,header)
+        XCTAssertTrue(candidate.draft.text.contains("Keep this comment draft"))
+    }
+    func testRetirementProofRejectsWrongScopeOrLiveGeneration() throws {
+        let(header,_,raw)=try retirementFixture()
+        for key in ["account","team_id","project_id","request_id","task_id","task_generation"] {
+            var invalid=raw;invalid[key] = .string(UUID().uuidString.lowercased());XCTAssertThrowsError(try TeamCompletionDraft.Retirement(invalid,for:header))
+        }
+        var invalid=raw;invalid["generation_unavailable"] = .bool(false);XCTAssertThrowsError(try TeamCompletionDraft.Retirement(invalid,for:header))
+        invalid=raw;var row=raw["current_proposed"]!.object;row["task_generation"]=header.teamCompletion!.proposed!["task_generation"];invalid["current_proposed"] = .object(row)
+        XCTAssertThrowsError(try TeamCompletionDraft.Retirement(invalid,for:header))
+        invalid=raw;var review=raw["review"]!.object;review["state"] = .string("unrecorded");review["receipt"] = .null;invalid["review"] = .object(review)
+        XCTAssertThrowsError(try TeamCompletionDraft.Retirement(invalid,for:header))
+    }
+    func testMixedBatchesRootEditsAndCompoundHistoryStayQueuedForReview() throws {
+        let(header,_,raw)=try retirementFixture(),proof=try TeamCompletionDraft.Retirement(raw,for:header),command=header.teamCompletion!
+        let deletion=Mutation(table:"tasks",recordID:command.proposed!.id,method:"DELETE",fields:[:])
+        let batch=TeamTaskBatch.header(TeamTaskBatch(account:command.scope.account,origin:origin,team:command.scope.team,operation:.delete,restores:nil,items:[deletion]))
+        let root=Mutation(table:"tasks",recordID:header.recordID,method:"PATCH",fields:["title":.string("Related root work")])
+        for related in [batch,root,try command.inverse(of:header)] {
+            var local=try editedDraftSnapshot(header);local.pending.append(related);let exact=local
+            XCTAssertNil(TeamCompletionDraft.Candidate(review:proof.review,snapshot:local));XCTAssertEqual(local,exact)
+        }
+    }
+    func testDeletedProvisionalDraftPreservesLastEditedRowAndDeletionIntent() throws {
+        let(header,_,raw)=try retirementFixture(),proof=try TeamCompletionDraft.Retirement(raw,for:header),command=header.teamCompletion!
+        var local=try editedDraftSnapshot(header);let row=try XCTUnwrap(local.tables["tasks"]?.first{$0.id == command.proposed!.id})
+        let deletion=Mutation(table:"tasks",recordID:row.id,method:"DELETE",fields:[:],baseline:row.fields,teamTaskScope:command.scope)
+        local.apply(deletion);local.pending.append(deletion)
+        let candidate=try XCTUnwrap(TeamCompletionDraft.Candidate(review:proof.review,snapshot:local)),parked=try XCTUnwrap(candidate.parking(local,proof:proof))
+        XCTAssertTrue(candidate.draft.markedForDeletion);XCTAssertEqual(candidate.draft.record,row);XCTAssertEqual(candidate.draft.edits.last,deletion)
+        XCTAssertEqual(parked.tables["tasks"]?.first{$0.id == row.id},proof.currentProposed);XCTAssertTrue(parked.pending.isEmpty)
+    }
+    func testNewEditsDuringRetirementCannotBeDroppedFromSnapshot() throws {
+        let(header,_,raw)=try retirementFixture(),proof=try TeamCompletionDraft.Retirement(raw,for:header)
+        var local=try editedDraftSnapshot(header);let candidate=try XCTUnwrap(TeamCompletionDraft.Candidate(review:proof.review,snapshot:local))
+        local.tables["tasks"]?[1]["description"] = .string("New work after draft was saved")
+        let exact=local;XCTAssertNil(candidate.parking(local,proof:proof));XCTAssertEqual(local,exact)
+        local=try editedDraftSnapshot(header);local.tables["tasks"]?[0]["description"] = .string("Unexplained root draft")
+        XCTAssertNil(TeamCompletionDraft.Candidate(review:proof.review,snapshot:local))
+    }
+    func testUnknownOrForeignCommentIntentsCannotBeDiscarded() throws {
+        let(header,_,raw)=try retirementFixture(),proof=try TeamCompletionDraft.Retirement(raw,for:header)
+        var local=try editedDraftSnapshot(header)
+        local.tables[ConversationOutbox.table]![0]["account"] = .string(UUID().uuidString.lowercased())
+        XCTAssertNil(TeamCompletionDraft.Candidate(review:proof.review,snapshot:local))
+        local=try editedDraftSnapshot(header);var intent=local.tables[ConversationOutbox.table]![0]["intent"].object;intent["kind"] = .string("future-comment-protocol")
+        local.tables[ConversationOutbox.table]![0]["intent"] = .object(intent)
+        XCTAssertNil(TeamCompletionDraft.Candidate(review:proof.review,snapshot:local))
+    }
+    func testDraftVaultIsEncryptedScopedAndDeduplicatesRetry() throws {
+        let(header,_,raw)=try retirementFixture(),proof=try TeamCompletionDraft.Retirement(raw,for:header),local=try editedDraftSnapshot(header)
+        let draft=try XCTUnwrap(TeamCompletionDraft.Candidate(review:proof.review,snapshot:local)).draft
+        let directory=FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-draft-vault-"+UUID().uuidString,isDirectory:true);defer{try? FileManager.default.removeItem(at:directory)}
+        let key=SymmetricKey(size:.bits256),vault=draftVault(draft,directory:directory,key:key)
+        XCTAssertEqual(try vault.save(draft),draft);XCTAssertEqual(try vault.load(draft.id),draft)
+        XCTAssertFalse(String(decoding:try Data(contentsOf:vault.file(draft.id)),as:UTF8.self).contains(draft.record.title))
+        let same=TeamCompletionDraft(version:draft.version,id:UUID(),createdAt:Date().addingTimeInterval(30),original:draft.original,record:draft.record,markedForDeletion:draft.markedForDeletion,edits:draft.edits,conversations:draft.conversations)
+        XCTAssertEqual(try vault.save(same).id,draft.id);XCTAssertEqual(try vault.entries().count,1)
+        var wrong=vault;wrong=TeamCompletionDraftVault(directory:directory,account:draft.scope.account,origin:"https://other.example",key:{key});XCTAssertThrowsError(try wrong.load(draft.id))
+        wrong=TeamCompletionDraftVault(directory:directory,account:UUID().uuidString.lowercased(),origin:origin,key:{key});XCTAssertThrowsError(try wrong.load(draft.id))
+        let different=SymmetricKey(size:.bits256);wrong=TeamCompletionDraftVault(directory:directory,account:draft.scope.account,origin:origin,key:{different});XCTAssertThrowsError(try wrong.load(draft.id))
+    }
+    func testRecoveryRotationCannotEvictDraftButAccountVaultRemovalIncludesIt() throws {
+        let(header,_,raw)=try retirementFixture(),proof=try TeamCompletionDraft.Retirement(raw,for:header),local=try editedDraftSnapshot(header)
+        let draft=try XCTUnwrap(TeamCompletionDraft.Candidate(review:proof.review,snapshot:local)).draft
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-draft-removal-"+UUID().uuidString,isDirectory:true);defer{try? FileManager.default.removeItem(at:root)}
+        let key=SymmetricKey(size:.bits256),own=root.appendingPathComponent("own"),other=root.appendingPathComponent("other")
+        try FileManager.default.createDirectory(at:other,withIntermediateDirectories:true);try Data("Other account".utf8).write(to:other.appendingPathComponent("untouched"))
+        let vault=draftVault(draft,directory:own.appendingPathComponent("Team drafts"),key:key)
+        try vault.save(draft);var backup=BackupVault(directory:own,account:draft.scope.account,key:{key});backup.retention=1
+        _=try backup.save(local,kind:"Before review");_=try backup.save(local,kind:"Manual")
+        XCTAssertEqual(try vault.load(draft.id),draft);try backup.removeAll()
+        XCTAssertFalse(FileManager.default.fileExists(atPath:vault.file(draft.id).path));XCTAssertEqual(try Data(contentsOf:other.appendingPathComponent("untouched")),Data("Other account".utf8))
+    }
+    func testDraftShelfNeverSilentlyExpiresOrEvictsOlderWork() throws {
+        let(header,_,raw)=try retirementFixture(),proof=try TeamCompletionDraft.Retirement(raw,for:header)
+        let draft=try XCTUnwrap(TeamCompletionDraft.Candidate(review:proof.review,snapshot:editedDraftSnapshot(header))).draft
+        let directory=FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-draft-limit-"+UUID().uuidString,isDirectory:true);defer{try? FileManager.default.removeItem(at:directory)}
+        let vault=draftVault(draft,directory:directory,key:SymmetricKey(size:.bits256))
+        var first:TeamCompletionDraft?
+        for n in 0..<20 {var record=draft.record;record["title"] = .string("Preserved draft "+String(n));let copy=TeamCompletionDraft(version:1,id:UUID(),createdAt:Date(timeIntervalSince1970:Double(n)),original:draft.original,record:record,markedForDeletion:false,edits:draft.edits,conversations:draft.conversations);try vault.save(copy);if n==0 {first=copy}}
+        XCTAssertThrowsError(try vault.save(draft));XCTAssertEqual(try vault.entries().count,20);XCTAssertEqual(try vault.load(first!.id),first)
+        try vault.remove(first!.id);XCTAssertEqual(try vault.entries().count,19);try vault.save(draft);XCTAssertEqual(try vault.entries().count,20)
+    }
+    func testDefaultSharedTextOmitsSupersededPrivateTextButHistoryIsRetained() throws {
+        let(header,_,raw)=try retirementFixture(),proof=try TeamCompletionDraft.Retirement(raw,for:header),command=header.teamCompletion!
+        var local=try editedDraftSnapshot(header)
+        var first=local.pending[1];first.fields["description"] = .string("Earlier confidential scratch text");local.pending.insert(first,at:1);local.pending[1].id=UUID()
+        let draft=try XCTUnwrap(TeamCompletionDraft.Candidate(review:proof.review,snapshot:local)).draft
+        XCTAssertFalse(draft.text.contains("Earlier confidential scratch text"));XCTAssertTrue(draft.historyText.contains("Earlier confidential scratch text"))
+        XCTAssertTrue(draft.text.contains("Keep every edited instruction"));XCTAssertEqual(draft.record["task_generation"],command.proposed?["task_generation"])
+    }
+    @MainActor func testRetirementTransportBindsOriginalBodyAndBoundsProof() async throws {
+        let(header,body,reply)=try retirementFixture(),api=try backend(header.teamCompletion!.scope.account)
+        var requests:[URLRequest]=[]
+        CompletionHTTP.handler={request,peer in requests.append(request);peer.finish(try! JSONEncoder().encode(reply))};defer{CompletionHTTP.handler=nil}
+        let proof=try await api.retireTeamProvisional(header,expectedAccount:header.teamCompletion!.scope.account)
+        XCTAssertTrue(proof.review.isRecorded);XCTAssertEqual(requests.count,1)
+        let request=try XCTUnwrap(requests.first);XCTAssertEqual(request.url?.path,"/rest/v1/rpc/taskfold_retire_team_provisional");XCTAssertEqual(request.timeoutInterval,25);XCTAssertFalse(request.httpShouldHandleCookies)
+        XCTAssertEqual(request.value(forHTTPHeaderField:"Cache-Control"),"no-store");XCTAssertEqual(try JSONDecoder().decode([String:JSON].self,from:XCTUnwrap(request.httpBody))["_body"],.object(body))
+        do{_=try await api.retireTeamProvisional(header,expectedAccount:UUID().uuidString.lowercased());XCTFail("Wrong account retirement")}catch{XCTAssertTrue(error is CancellationError)}
+        CompletionHTTP.handler={_,peer in peer.finish(Data(repeating:32,count:2_000_001))}
+        do{_=try await api.retireTeamProvisional(header,expectedAccount:header.teamCompletion!.scope.account);XCTFail("Oversized retirement")}catch{XCTAssertTrue(error.localizedDescription.contains("too large"))}
+    }
+
+    func testDraftParkingDoesNotInventWorkForUntouchedOrLiveOwnOccurrences() throws {
+        let(header,_,raw)=try retirementFixture(),proof=try TeamCompletionDraft.Retirement(raw,for:header)
+        XCTAssertNil(TeamCompletionDraft.Candidate(review:proof.review,snapshot:projected(header)))
+        let(own,_,reply)=try cancellationFixture(recorded:true),review=try TeamCompletion.Review(reply,for:own)
+        let ownLocal=try editedDraftSnapshot(own);XCTAssertNil(TeamCompletionDraft.Candidate(review:review,snapshot:ownLocal))
+    }
+    func testDraftVaultRejectsOversizeAndTamperingWithoutEvictingSavedWork() throws {
+        let(header,_,raw)=try retirementFixture(),proof=try TeamCompletionDraft.Retirement(raw,for:header)
+        let draft=try XCTUnwrap(TeamCompletionDraft.Candidate(review:proof.review,snapshot:editedDraftSnapshot(header))).draft
+        let directory=FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-draft-integrity-"+UUID().uuidString,isDirectory:true);defer{try? FileManager.default.removeItem(at:directory)}
+        let vault=draftVault(draft,directory:directory,key:SymmetricKey(size:.bits256));try vault.save(draft)
+        var large=draft.record;large["description"] = .string(String(repeating:"x",count:16_000_001))
+        let oversized=TeamCompletionDraft(version:1,id:UUID(),createdAt:Date(),original:draft.original,record:large,markedForDeletion:false,edits:draft.edits,conversations:draft.conversations)
+        XCTAssertThrowsError(try vault.save(oversized));XCTAssertEqual(try vault.entries(),[draft])
+        var bytes=try Data(contentsOf:vault.file(draft.id));bytes[bytes.count-1] ^= 1;try bytes.write(to:vault.file(draft.id))
+        XCTAssertThrowsError(try vault.load(draft.id));XCTAssertThrowsError(try vault.entries())
+        XCTAssertTrue(FileManager.default.fileExists(atPath:vault.file(draft.id).path))
+    }
+
 }

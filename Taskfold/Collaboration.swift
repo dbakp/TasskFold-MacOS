@@ -1,4 +1,9 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 extension Workspace {
     static func clearingAssignments(_ task: Record) -> Record {
@@ -279,12 +284,18 @@ private struct TeamCompletionReviewContent: View {
     private var command:TeamCompletion {review.mutation.teamCompletion!}
     var body:some View {
         let preview=review.previewRebase(store.snapshot)
+        let park=TeamCompletionDraft.Candidate(review:review,snapshot:store.snapshot)
         NavigationStack {
             Form {
                 Section {
                     Label("Your work is saved",systemImage:"checkmark.icloud").font(.headline).foregroundStyle(Color.taskfold)
                     Text(command.source.title).font(.headline)
                     Text(review.isCancelled ? "This saved action was cancelled. Keep the synced task to continue." : review.isRecorded ? "This action was recorded. Check the current task below before continuing sync." : "This action has no recorded result yet. You can check again or retry the same saved action.").foregroundStyle(.secondary)
+                }
+                if park != nil {
+                    Section("Keep your edited next task") {
+                        Text("Save your local edits and comment drafts separately on this device, keep the shared task unchanged, and let sync continue. Saved team drafts are available in Backups & restore.").foregroundStyle(.secondary)
+                    }
                 }
                 Section("Your saved action") {
                     Label(command.operation == .complete ? "Complete task" : "Reopen task",systemImage:command.operation == .complete ? "checkmark.circle":"arrow.uturn.backward.circle")
@@ -310,7 +321,7 @@ private struct TeamCompletionReviewContent: View {
                     }
                 }
                 Section {
-                    if (review.isRecorded && !canContinue) || (!review.isRecorded && !canUseSynced) {Text("Additional task changes are saved on this device. They need a separate review before sync can resume.").foregroundStyle(.secondary)}
+                    if park == nil && ((review.isRecorded && !canContinue) || (!review.isRecorded && !canUseSynced)) {Text("Additional task changes are saved on this device. They need a separate review before sync can resume.").foregroundStyle(.secondary)}
                     if !review.isRecorded && !review.isCancelled {Text("Retry keeps your original action and completion time. If the task changed, your work stays saved for review.").foregroundStyle(.secondary)}
                     if !review.isRecorded {Text("Use synced task cancels only this saved action and removes its untouched local next occurrence. A recovery copy is saved first. Related edits and comment drafts stay protected.").foregroundStyle(.secondary)}
                     if !review.isRecorded && !review.canEditCurrent && review.task != nil {Text("Editing is not available for this task right now. You can keep the synced version or check again after project access changes.").foregroundStyle(.secondary)}
@@ -325,11 +336,16 @@ private struct TeamCompletionReviewContent: View {
             .safeAreaInset(edge:.bottom) {
                 VStack(spacing:10) {
                     Divider()
+                    if park != nil {
+                        Button("Keep edits as draft") {
+                            checking=true;Task {let success=await store.parkTeamCompletionDraft(review);checking=false;if success {dismiss()} else {message=store.error ?? "Your draft remains saved for review.";store.error=nil}}
+                        }.buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("parkTeamCompletionDraft")
+                    }
                     if let _=preview {
                         Button(command.operation == .complete ? "Complete current task":"Reopen current task") {resolve(rebase:true)}
                             .buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("rebaseTeamCompletion")
                     }
-                    if !review.isCancelled {
+                    if !review.isCancelled && park == nil {
                         if review.isRecorded {
                             Button("Continue sync") {continueReview()}.buttonStyle(.borderedProminent).disabled(!canContinue || checking).accessibilityIdentifier("continueTeamCompletionReview")
                         } else {
@@ -374,5 +390,101 @@ private struct TeamCompletionReviewContent: View {
             if !task.string("description").isEmpty {Text(task.string("description")).textSelection(.enabled)}
             if !task.string("due_date").isEmpty {LabeledContent("Planned date",value:task.string("due_date"))}
         } else {Text(missing).foregroundStyle(.secondary)}
+    }
+}
+
+struct SavedTeamDraftsView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var drafts:[TeamCompletionDraft]=[]
+    @State private var loadedScope=""
+    @State private var message:String?
+    @State private var deleting:TeamCompletionDraft?
+    @State private var copiedKey:String?
+    @State private var copyReset:UUID?
+    private var scopeKey:String {store.teamDraftVault.map{$0.account+"|"+$0.origin} ?? ""}
+    var body:some View {
+        NavigationStack {
+            List {
+                Section {
+                    Text("These edits stay on this device and are never sent automatically. Open a draft to copy its text when you’re ready to use it.").foregroundStyle(.secondary)
+                }
+                if scopeKey == loadedScope && !scopeKey.isEmpty {
+                    ForEach(drafts) {draft in
+                        NavigationLink {
+                            Form {
+                                Section("Saved text preview") {Text(previewText(draft.text)).textSelection(.enabled);Text("Copy or share includes the full saved text.").foregroundStyle(.secondary)}
+                                if !draft.historyText.isEmpty {Section {DisclosureGroup("Earlier saved text changes") {Text(previewText(draft.historyText)).textSelection(.enabled);Button(copiedKey == draft.id.uuidString+"history" ? "Copied":"Copy earlier text"){copy(draft.historyText,key:draft.id.uuidString+"history")};ShareLink("Share earlier text",item:draft.historyText)}}}
+                                Section("Saved task details") {
+                                    LabeledContent("State",value:draft.record.completed ? "Completed":"Open")
+                                    if case .number(let p)=draft.record["priority"],(1...4).contains(p) {LabeledContent("Priority",value:"P\(Int(p))")}
+                                    if !draft.record.string("due_date").isEmpty {LabeledContent("Planned date",value:draft.record.string("due_date"))}
+                                    if !draft.record.string("due_time").isEmpty {LabeledContent("Planned time",value:draft.record.string("due_time"))}
+                                    if !draft.record.string("deadline_date").isEmpty {LabeledContent("Deadline",value:draft.record.string("deadline_date"))}
+                                    if draft.record["duration_minutes"].integer>0 {LabeledContent("Estimate",value:"\(draft.record["duration_minutes"].integer) minutes")}
+                                    LabeledContent("Attachments retained",value:String(draft.record["attachments"].list.count))
+                                    LabeledContent("Reminder choices retained",value:String(draft.record["reminder_specs"].list.count))
+                                }
+                                Section {Text("The full task details and earlier edits remain in this encrypted draft. Copying text never changes a shared task.").foregroundStyle(.secondary)}
+                                Button(copiedKey == draft.id.uuidString ? "Copied":"Copy saved text",systemImage:"doc.on.doc"){copy(draft.text,key:draft.id.uuidString)}.accessibilityIdentifier("copyTeamDraftText")
+                                ShareLink("Share saved text",item:draft.text).accessibilityIdentifier("shareTeamDraftText")
+                            }.formStyle(.grouped).navigationTitle(draft.record.title)
+                        } label: {
+                            VStack(alignment:.leading,spacing:5) {
+                                Text(draft.record.title).font(.headline).lineLimit(2)
+                                Text(draft.createdAt.formatted(date:.abbreviated,time:.shortened)).font(.caption).foregroundStyle(.secondary)
+                                Text("\(draft.edits.count) saved changes · \(draft.conversations.count) comment drafts").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }.swipeActions {Button("Delete",role:.destructive){deleting=draft}}
+                        .contextMenu {Button("Delete saved draft",role:.destructive){deleting=draft}}
+                    }
+                    if drafts.isEmpty {Text("No saved team drafts.").foregroundStyle(.secondary)}
+                } else if scopeKey.isEmpty {Text("Open the original signed-in workspace to view its saved team drafts.").foregroundStyle(.secondary)}
+                if let message {Text(message).foregroundStyle(.secondary)}
+            }
+            .navigationTitle("Saved team drafts")
+            .toolbar {ToolbarItem(placement:.confirmationAction){Button("Done"){dismiss()}}}
+            .task(id:scopeKey){await reload()}
+            .confirmationDialog("Delete saved draft?",isPresented:Binding(get:{deleting != nil},set:{if !$0 {deleting=nil}})) {
+                Button("Delete saved draft",role:.destructive){if let draft=deleting {Task {await remove(draft)}}}
+                Button("Cancel",role:.cancel){deleting=nil}
+            } message:{Text("This removes only the saved copy on this device. Shared tasks stay unchanged.")}
+        }
+        #if os(macOS)
+        .frame(minWidth:560,minHeight:520)
+        #endif
+        .onChange(of:store.workspaceGeneration){_,_ in drafts=[];dismiss()}
+        .onChange(of:scopeKey){_,_ in drafts=[];loadedScope="";dismiss()}
+    }
+    private func copy(_ text:String,key:String) {
+        #if os(macOS)
+        NSPasteboard.general.clearContents();NSPasteboard.general.setString(text,forType:.string)
+        #else
+        UIPasteboard.general.string=text
+        #endif
+        let reset=UUID();copiedKey=key;copyReset=reset
+        Task {try? await Task.sleep(for:.seconds(3));if copyReset == reset {copiedKey=nil}}
+    }
+    private func previewText(_ text:String) -> String {String(String.UnicodeScalarView(text.unicodeScalars.prefix(12000)))}
+    private func reload() async {
+        drafts=[];message=nil;loadedScope=""
+        let scope=scopeKey,generation=store.workspaceGeneration
+        guard let vault=store.teamDraftVault else {return}
+        do {
+            let values=try await Task.detached(priority:.utility){try vault.entries()}.value
+            guard generation == store.workspaceGeneration,scope == scopeKey else {return}
+            drafts=values;loadedScope=scope
+        } catch {
+            guard generation == store.workspaceGeneration,scope == scopeKey else {return}
+            message="Saved drafts could not be opened on this device. Your saved files are kept."
+        }
+    }
+    private func remove(_ draft:TeamCompletionDraft) async {
+        let scope=scopeKey,generation=store.workspaceGeneration
+        guard let vault=store.teamDraftVault,draft.scope.account == vault.account,draft.scope.origin == vault.origin else {return}
+        do {try await Task.detached(priority:.utility){try vault.remove(draft.id)}.value
+            guard generation == store.workspaceGeneration,scope == scopeKey else {return}
+            deleting=nil;await reload()
+        } catch {if generation == store.workspaceGeneration,scope == scopeKey {message="This saved draft could not be removed. It is still kept on this device."}}
     }
 }

@@ -2050,3 +2050,25 @@ Next: explicit reconciliation of authored provisional drafts/related cohorts,
 current-role workspace refresh/privacy, remaining collaboration adapters, premium
 native organization UI and consolidated native acceptance. Full Px scope and the
 user's existing release/provider/hardware deferrals remain intact.
+
+
+## Saved provisional drafts — 24 October, rank 6 in progress
+
+A recorded completion that adopted another occurrence can now park direct edits,
+local deletion and comment drafts from its unused provisional generation. A full
+Recovery copy and separate encrypted draft precede a durable generation fence;
+only then are selected callbacks removed and the current shared rows acknowledged.
+The Saved team drafts shelf exposes task details and copy/share controls without
+automatic replay or retention eviction. Scope/cleanup gates protect private files.
+Purely provisional history cannot poison fresh canonical creation or valid Undo.
+
+Each repo passes 375 database checks (56 retirement + 319 regressions), 351 selected
+Swift tests (13 new; includes 44 backup tests), and unsigned Debug app/extension
+builds. Owned containers/builds and temporary Mac registration are removed. See
+TEAM_PROVISIONAL_DRAFTS.md and provisional evidence. Team editing stays disabled;
+no hosted/runtime/visual/distribution acceptance is claimed.
+
+Next: unrecorded and compound/root/batch draft cohorts, explicit full-detail
+reapplication, current-role workspace refresh/privacy, remaining collaboration
+adapters, premium native organization UI and consolidated native acceptance. The
+full Px goal and existing user release/provider/hardware deferrals remain intact.

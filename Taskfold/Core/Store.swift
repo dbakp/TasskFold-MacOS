@@ -241,6 +241,11 @@ final class Store {
             .appending(path: WorkspaceBackup.stableID("vault", account), directoryHint: .isDirectory)
         return BackupVault(directory: folder, account: account, key: { try BackupVault.deviceKey(account: account) }, removalGate: UUID(uuidString: account) == nil ? nil : AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: account))
     }
+    var teamDraftVault: TeamCompletionDraftVault? {
+        guard signedIn,!localMode,!signingOut,!accountRemovalBlocked,TeamProjectValue.id(userID),let origin=try? backend.accountRemovalOrigin else {return nil}
+        let vault=backupVault
+        return TeamCompletionDraftVault(directory:vault.directory.appendingPathComponent("Team drafts",isDirectory:true).appendingPathComponent(WorkspaceBackup.stableID("origin",origin),isDirectory:true),account:userID,origin:origin,key:vault.key,removalGate:vault.removalGate)
+    }
     func makeRecoveryBackup(kind: String = "Manual") async throws -> RecoveryEntry {
         guard !accountRemovalBlocked, !signingOut, signedIn || localMode, !userID.isEmpty else { throw BackupFailure(message: "Open a workspace before backing it up.") }
         let vault = backupVault, before = snapshot, generation = accountGeneration
@@ -1364,6 +1369,31 @@ final class Store {
         }
         #endif
     }
+    @discardableResult func parkTeamCompletionDraft(_ expected:TeamCompletion.Review) async -> Bool {
+        let generation=accountGeneration,account=userID,before=snapshot
+        guard syncConflict?.completionReview == expected,let candidate=TeamCompletionDraft.Candidate(review:expected,snapshot:before),let vault=teamDraftVault,
+              candidate.draft.scope.account == account,candidate.draft.scope.origin == vault.origin else {return false}
+        do {
+            _=try await makeRecoveryBackup(kind:"Before saving team draft")
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,syncConflict?.completionReview == expected else {return false}
+            _=try await Task.detached(priority:.utility){try vault.save(candidate.draft)}.value
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,syncConflict?.completionReview == expected else {return false}
+            let proof=try await backend.retireTeamProvisional(expected.mutation,expectedAccount:account)
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,syncConflict?.completionReview == expected else {return false}
+            guard let next=candidate.parking(snapshot,proof:proof) else {
+                syncConflict=SyncConflict(mutation:expected.mutation,remote:proof.review.task ?? expected.mutation.teamCompletion!.source,completionReview:proof.review)
+                error="Your draft is saved. The shared task changed; check the current review before continuing.";return false
+            }
+            snapshot=next
+            do {try persist()} catch {snapshot=before;throw error}
+            undoStack=[];redoStack=[];syncConflict=nil;notice="Edits kept in Saved team drafts. Sync can continue."
+            Task {await sync()};return true
+        } catch {
+            guard generation == accountGeneration else {return false}
+            self.error=SyncStatus.failureMessage(error);return false
+        }
+    }
+
     @discardableResult func cancelTeamCompletionReview(_ expected:TeamCompletion.Review) async -> Bool {
         await resolveTeamCompletionReview(expected,rebase:false)
     }
