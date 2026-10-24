@@ -573,6 +573,13 @@ final class Backend: NSObject {
         let raw = try await teamProjectReceipt(action: "review_structure", body: ["team_id": .string(team), "project_id": .string(project), "operation": .string(action.rawValue)], account: account, origin: origin)
         return try TeamProjectStructureReview(raw, account: account, origin: origin, team: team, project: project, action: action)
     }
+    func teamProjectHierarchyReview(team: String, project: String, parent: String?, action: TeamProjectCommand.Action, account: String, origin: String) async throws -> TeamProjectHierarchyReview {
+        guard action.hierarchical, TeamProjectValue.id(team), TeamProjectValue.id(project), parent == nil || TeamProjectValue.id(parent!) else { throw TeamProjectCommand.invalid }
+        let body: [String: JSON] = ["team_id": .string(team), "project_id": .string(project), "parent_id": parent.map(JSON.string) ?? .null, "operation": .string(action.rawValue)]
+        let reviewed = try TeamProjectHierarchyReview(await teamProjectReceipt(action: "review_hierarchy", body: body, account: account, origin: origin), account: account, origin: origin, team: team, project: project, action: action)
+        guard reviewed.parent == parent else { throw TeamProjectCommand.invalid }
+        return reviewed
+    }
     func teamProjectCommand(_ command: TeamProjectCommand) async throws -> TeamProjectCommandReceipt {
         try command.confirmed(await teamProjectReceipt(action: command.action.rawValue, body: command.body, account: command.account, origin: command.origin))
     }

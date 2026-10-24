@@ -3,9 +3,11 @@ import Observation
 
 struct TeamProjectCommand: ReviewedTeamCommand, CustomStringConvertible, CustomDebugStringConvertible {
     enum Action: String, Codable, CaseIterable, Sendable {
-        case create, settings, rename, archive, unarchive, setAccess = "set_access", resetAccess = "reset_access"
-        var title: String { switch self { case .rename: "Rename project"; case .archive: "Archive project"; case .unarchive: "Reopen project"; case .create: "New project"; case .settings: "Project settings"; case .setAccess: "Project access"; case .resetAccess: "Reset to team permissions" } }
-        var success: String { switch self { case .create: "Project created"; case .settings: "Project settings saved"; case .rename: "Project renamed"; case .archive: "Project archived"; case .unarchive: "Project reopened"; case .setAccess, .resetAccess: "Project access updated" } }
+        case create, settings, rename, archive, unarchive, move, createSubproject = "create_subproject", setAccess = "set_access", resetAccess = "reset_access"
+        var title: String { switch self { case .move: "Move project"; case .createSubproject: "New subproject"; case .rename: "Rename project"; case .archive: "Archive project"; case .unarchive: "Reopen project"; case .create: "New project"; case .settings: "Project settings"; case .setAccess: "Project access"; case .resetAccess: "Reset to team permissions" } }
+        var success: String { switch self { case .move: "Project moved"; case .createSubproject: "Subproject created"; case .create: "Project created"; case .settings: "Project settings saved"; case .rename: "Project renamed"; case .archive: "Project archived"; case .unarchive: "Project reopened"; case .setAccess, .resetAccess: "Project access updated" } }
+        var creation: Bool { self == .create || self == .createSubproject }
+        var hierarchical: Bool { self == .move || self == .createSubproject }
         var structural: Bool { self == .archive || self == .unarchive }
     }
     static let storagePrefix = "team-project-command-v1."
@@ -23,7 +25,7 @@ struct TeamProjectCommand: ReviewedTeamCommand, CustomStringConvertible, CustomD
     var expires: Date { issued.addingTimeInterval(900) }
     var canRetry: Bool { retryable(at: Date()) }
     func retryable(at now: Date) -> Bool { issued <= now.addingTimeInterval(60) && expires >= now }
-    init(account: String, origin: String, action: Action, team: String, project: String, teamRevision: Double, revision: Double? = nil, name: String? = nil, visibility: TeamProjectVisibility? = nil, folder: String? = nil, user: String? = nil, role: TeamProjectRole? = nil, review: TeamProjectStructureReview? = nil, requestID: UUID = UUID(), issuedAt: Date = Date()) throws {
+    init(account: String, origin: String, action: Action, team: String, project: String, teamRevision: Double, revision: Double? = nil, name: String? = nil, visibility: TeamProjectVisibility? = nil, folder: String? = nil, user: String? = nil, role: TeamProjectRole? = nil, review: TeamProjectStructureReview? = nil, hierarchy: TeamProjectHierarchyReview? = nil, requestID: UUID = UUID(), issuedAt: Date = Date()) throws {
         guard folder == nil || visibility != nil else { throw Self.invalid }
         let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         var body: [String: JSON] = ["team_id": .string(team), "project_id": .string(project), "team_revision": .number(teamRevision), "request_id": .string(requestID.uuidString.lowercased()), "issued_at": .string(formatter.string(from: issuedAt))]
@@ -36,14 +38,18 @@ struct TeamProjectCommand: ReviewedTeamCommand, CustomStringConvertible, CustomD
             guard action.structural, review.account == account, review.origin == origin, review.team == team, review.project == project, review.action == action, review.teamRevision == teamRevision, review.revision == revision else { throw Self.invalid }
             body["tree_token"] = .string(review.token); body["affected_count"] = .number(Double(review.count))
         }
+        if let hierarchy {
+            guard action.hierarchical, hierarchy.account == account, hierarchy.origin == origin, hierarchy.team == team, hierarchy.project == project, hierarchy.action == action, hierarchy.teamRevision == teamRevision, hierarchy.revision == revision else { throw Self.invalid }
+            body.merge(hierarchy.commandFields) { _, b in b }
+        }
         try self.init(account: account, origin: origin, action: action, body: body)
     }
     init(account: String, origin: String, action: Action, body: [String: JSON]) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         var keys: Set<String> = ["team_id", "project_id", "team_revision", "request_id", "issued_at"]
-        if action != .create { keys.insert("revision"); let r = try TeamProjectValue.revision(body["revision"]); guard r < 9_007_199_254_740_991 else { throw Self.invalid } }
-        if action == .create || action == .rename { keys.insert("name"); _ = try TeamOrganizationValue.name(body["name"]) }
-        if action == .create || action == .settings {
+        if !action.creation { keys.insert("revision"); let r = try TeamProjectValue.revision(body["revision"]); guard r < 9_007_199_254_740_991 else { throw Self.invalid } }
+        if action.creation || action == .rename { keys.insert("name"); _ = try TeamOrganizationValue.name(body["name"]) }
+        if action.creation || action == .settings {
             keys.formUnion(["visibility", "folder_id"])
             guard let value = body["visibility"]?.text, TeamProjectVisibility(rawValue: value) != nil else { throw Self.invalid }
             _ = try TeamProjectValue.optionalID(body["folder_id"])
@@ -51,6 +57,17 @@ struct TeamProjectCommand: ReviewedTeamCommand, CustomStringConvertible, CustomD
         if action.structural {
             keys.formUnion(["tree_token", "affected_count"])
             guard case .string(let token)? = body["tree_token"], TeamProjectStructureReview.validToken(token), case .number(let count)? = body["affected_count"], count >= 1, count <= 1000, count.rounded(.down) == count else { throw Self.invalid }
+        }
+        if action.hierarchical {
+            keys.formUnion(["parent_id", "parent_revision", "tree_token", "affected_count", "destination_archived", "is_archived"])
+            let parent = try TeamProjectValue.optionalID(body["parent_id"])
+            guard parent != body["project_id"]?.text, action != .createSubproject || parent != nil,
+                  case .bool(let destinationArchived)? = body["destination_archived"], case .bool(let archived)? = body["is_archived"],
+                  case .string(let token)? = body["tree_token"], TeamProjectStructureReview.validToken(token),
+                  case .number(let count)? = body["affected_count"], count >= 1, count <= 1000, count.rounded(.down) == count else { throw Self.invalid }
+            if parent == nil { guard body["parent_revision"] == .null, !destinationArchived else { throw Self.invalid } }
+            else { _ = try TeamProjectValue.revision(body["parent_revision"]) }
+            if action == .createSubproject { guard count == 1, !archived else { throw Self.invalid } }
         }
         if action == .setAccess { keys.insert("role"); guard let value = body["role"]?.text, TeamProjectRole(rawValue: value) != nil else { throw Self.invalid } }
         guard Set(body.keys) == keys, try JSONEncoder().encode(body).count <= 16_384,
@@ -67,10 +84,13 @@ struct TeamProjectCommand: ReviewedTeamCommand, CustomStringConvertible, CustomD
     }
     func confirmed(_ raw: [String: JSON]) throws -> TeamProjectCommandReceipt {
         guard raw["protocol"] == .number(1), raw["account"] == .string(account), raw["team_id"] == body["team_id"], raw["id"] == body["project_id"], raw["request_id"] == body["request_id"], raw["team_revision"] == body["team_revision"] else { throw Self.invalid }
-        let expected = action == .create ? 1 : try TeamProjectValue.revision(body["revision"]) + 1
+        let expected = action.creation ? 1 : try TeamProjectValue.revision(body["revision"]) + 1
         guard try TeamProjectValue.revision(raw["revision"]) == expected else { throw Self.invalid }
         if action.structural {
             guard let state = try TeamProjectArchiveState.read(raw), state.own == (action == .archive), !state.inherited || action == .archive, raw["affected_count"] == body["affected_count"] else { throw Self.invalid }
+        }
+        if action.hierarchical {
+            guard raw["project_hierarchy_protocol"] == .number(1), raw["parent_id"] == body["parent_id"], raw["affected_count"] == body["affected_count"], raw["is_archived"] == body["is_archived"], raw["ancestor_archived"] == body["destination_archived"] else { throw Self.invalid }
         }
         return TeamProjectCommandReceipt(raw: raw)
     }
@@ -92,6 +112,36 @@ struct TeamProjectStructureReview: Equatable, Sendable {
         self.account = account; self.origin = origin; self.team = team; self.project = project; self.action = action
         self.token = token; self.count = Int(count); self.archive = archive
         revision = try TeamProjectValue.revision(raw["revision"]); teamRevision = try TeamProjectValue.revision(raw["team_revision"])
+    }
+}
+/// Exact source branch and destination as verified by the service. The review
+/// carries no hidden ancestor names and is not itself a pending write.
+struct TeamProjectHierarchyReview: Equatable, Sendable {
+    let account: String, origin: String, team: String, project: String
+    let action: TeamProjectCommand.Action
+    let revision: Double?, teamRevision: Double
+    let parent: String?, parentRevision: Double?
+    let token: String, count: Int
+    let destinationArchived: Bool, archived: Bool
+    init(_ raw: [String: JSON], account: String, origin: String, team: String, project: String, action: TeamProjectCommand.Action) throws {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard action.hierarchical, TeamProjectValue.id(team), TeamProjectValue.id(project), raw["protocol"] == .number(1), raw["project_hierarchy_protocol"] == .number(1), raw["account"] == .string(account), raw["team_id"] == .string(team), raw["id"] == .string(project), raw["operation"] == .string(action.rawValue),
+              case .string(let token)? = raw["tree_token"], TeamProjectStructureReview.validToken(token),
+              case .number(let count)? = raw["affected_count"], count >= 1, count <= 1000, count.rounded(.down) == count,
+              case .bool(let destinationArchived)? = raw["destination_archived"], case .bool(let archived)? = raw["is_archived"] else { throw TeamProjectCommand.invalid }
+        let parent = try TeamProjectValue.optionalID(raw["parent_id"])
+        guard parent != project, action != .createSubproject || (parent != nil && count == 1 && !archived) else { throw TeamProjectCommand.invalid }
+        if parent == nil { guard raw["parent_revision"] == .null, !destinationArchived else { throw TeamProjectCommand.invalid }; parentRevision = nil }
+        else { parentRevision = try TeamProjectValue.revision(raw["parent_revision"]) }
+        if action == .createSubproject { guard raw["revision"] == .null else { throw TeamProjectCommand.invalid }; revision = nil }
+        else { revision = try TeamProjectValue.revision(raw["revision"]) }
+        self.account = account; self.origin = origin; self.team = team; self.project = project; self.action = action
+        self.parent = parent; self.token = token; self.count = Int(count); self.destinationArchived = destinationArchived; self.archived = archived
+        teamRevision = try TeamProjectValue.revision(raw["team_revision"])
+    }
+    var commandFields: [String: JSON] {
+        ["parent_id": parent.map(JSON.string) ?? .null, "parent_revision": parentRevision.map(JSON.number) ?? .null,
+         "tree_token": .string(token), "affected_count": .number(Double(count)), "destination_archived": .bool(destinationArchived), "is_archived": .bool(archived)]
     }
 }
 struct TeamProjectCommandReceipt: Equatable, Sendable { let raw: [String: JSON]; var project: String { raw["id"]!.text } }

@@ -14,15 +14,22 @@ private final class ProjectCommandIO: CalendarSecureItemIO, @unchecked Sendable 
     func teamProjectCommand(_ command: TeamProjectCommand) async throws -> TeamProjectCommandReceipt {
         calls.append(command)
         if hold { await withCheckedContinuation { continuation = $0 } }
-        var raw: [String: JSON] = ["protocol": .number(1), "account": .string(foreign ? pmGuest : command.account), "team_id": .string(command.team), "id": .string(command.project), "request_id": .string(command.id), "team_revision": command.body["team_revision"]!, "revision": .number(command.action == .create ? 1 : Double(command.body["revision"]!.integer + 1))]
+        var raw: [String: JSON] = ["protocol": .number(1), "account": .string(foreign ? pmGuest : command.account), "team_id": .string(command.team), "id": .string(command.project), "request_id": .string(command.id), "team_revision": command.body["team_revision"]!, "revision": .number(command.action.creation ? 1 : Double(command.body["revision"]!.integer + 1))]
         if command.action.structural { raw["project_state_protocol"] = .number(1); raw["is_archived"] = .bool(command.action == .archive); raw["ancestor_archived"] = .bool(false); raw["affected_count"] = command.body["affected_count"] }
+        if command.action.hierarchical { raw["project_hierarchy_protocol"] = .number(1); raw["parent_id"] = command.body["parent_id"]; raw["affected_count"] = command.body["affected_count"]; raw["is_archived"] = command.body["is_archived"]; raw["ancestor_archived"] = command.body["destination_archived"] }
         let result = applied[command.id] ?? TeamProjectCommandReceipt(raw: raw); applied[command.id] = result
         if loseReply { loseReply = false; throw URLError(.networkConnectionLost) }; return result
     }
 }
 final class TeamProjectManagementTests: XCTestCase {
     func command(_ action: TeamProjectCommand.Action = .create, now: Date = Date()) throws -> TeamProjectCommand {
-        try .init(account: pmAccount, origin: pmOrigin, action: action, team: pmTeam, project: pmProject, teamRevision: 3, revision: action == .create ? nil : 2, name: action == .create || action == .rename ? "Reading room" : nil, visibility: [.create, .settings].contains(action) ? .private : nil, user: [.setAccess, .resetAccess].contains(action) ? pmMember : nil, role: action == .setAccess ? .viewer : nil, review: action.structural ? review(action) : nil, issuedAt: now)
+        try .init(account: pmAccount, origin: pmOrigin, action: action, team: pmTeam, project: pmProject, teamRevision: 3, revision: action.creation ? nil : 2, name: action.creation || action == .rename ? "Reading room" : nil, visibility: action.creation || action == .settings ? .private : nil, user: [.setAccess, .resetAccess].contains(action) ? pmMember : nil, role: action == .setAccess ? .viewer : nil, review: action.structural ? review(action) : nil, hierarchy: action.hierarchical ? hierarchy(action) : nil, issuedAt: now)
+    }
+    func hierarchyRaw(_ action: TeamProjectCommand.Action = .move) -> [String: JSON] {
+        ["protocol": .number(1), "project_hierarchy_protocol": .number(1), "account": .string(pmAccount), "team_id": .string(pmTeam), "id": .string(pmProject), "operation": .string(action.rawValue), "team_revision": .number(3), "revision": action.creation ? .null : .number(2), "parent_id": .string(pmMember), "parent_revision": .number(5), "tree_token": .string(String(repeating: "b", count: 64)), "affected_count": .number(action.creation ? 1 : 4), "destination_archived": .bool(true), "is_archived": .bool(false)]
+    }
+    func hierarchy(_ action: TeamProjectCommand.Action = .move, raw: [String: JSON]? = nil) throws -> TeamProjectHierarchyReview {
+        try .init(raw ?? hierarchyRaw(action), account: pmAccount, origin: pmOrigin, team: pmTeam, project: pmProject, action: action)
     }
     func reviewRaw(_ action: TeamProjectCommand.Action = .archive) -> [String: JSON] {
         ["protocol": .number(1), "project_state_protocol": .number(1), "account": .string(pmAccount), "team_id": .string(pmTeam), "id": .string(pmProject), "operation": .string(action.rawValue), "team_revision": .number(3), "revision": .number(2), "tree_token": .string(String(repeating: "a", count: 64)), "affected_count": .number(4), "is_archived": .bool(action == .unarchive), "ancestor_archived": .bool(false)]
@@ -42,7 +49,7 @@ final class TeamProjectManagementTests: XCTestCase {
         var p = raw(); p["projects"] = .array([.object(row ?? raw())]); p["next_cursor"] = .null; p["task_writes_enabled"] = .bool(false)
         return try .init(p, account: pmAccount, origin: pmOrigin, team: pmTeam, after: nil)
     }
-    func testSevenActionsHaveExactStableBodiesAndPrivateRoundTrip() throws {
+    func testNineActionsHaveExactStableBodiesAndPrivateRoundTrip() throws {
         for action in TeamProjectCommand.Action.allCases {
             let command = try command(action), restored = try JSONDecoder().decode(TeamProjectCommand.self, from: JSONEncoder().encode(command))
             XCTAssertEqual(command, restored); XCTAssertEqual(command.id, restored.id)
@@ -193,6 +200,76 @@ final class TeamProjectManagementTests: XCTestCase {
         model.close(); model = TeamProjectCommandModel(account: pmAccount, origin: pmOrigin, vault: vault, service: peer, isCurrent: { true })
         await model.load(); await model.retry()
         XCTAssertEqual(peer.calls, [command, command]); XCTAssertEqual(peer.applied.count, 1); XCTAssertNil(model.pending); XCTAssertEqual(model.success, "Project archived")
+    }
+
+    func testHierarchyReviewRejectsPartialMalformedOrCrossScopeValues() throws {
+        for action: TeamProjectCommand.Action in [.move, .createSubproject] {
+            let original = hierarchyRaw(action)
+            for key in original.keys { var value = original; value.removeValue(forKey: key); XCTAssertThrowsError(try hierarchy(action, raw: value), key) }
+            for patch: [String: JSON] in [["project_hierarchy_protocol": .number(2)], ["account": .string(pmGuest)], ["team_id": .string(pmGuest)], ["id": .string(pmGuest)], ["operation": .string("rename")], ["parent_id": .string(pmProject)], ["parent_revision": .number(0)], ["tree_token": .string("unreviewed")], ["affected_count": .number(1001)], ["affected_count": .number(1.5)], ["destination_archived": .string("true")], ["is_archived": .number(0)]] {
+                XCTAssertThrowsError(try hierarchy(action, raw: original.merging(patch) { _, b in b }))
+            }
+        }
+        for patch: [String: JSON] in [["revision": .number(1)], ["affected_count": .number(2)], ["is_archived": .bool(true)], ["parent_id": .null, "parent_revision": .null, "destination_archived": .bool(false)]] {
+            XCTAssertThrowsError(try hierarchy(.createSubproject, raw: hierarchyRaw(.createSubproject).merging(patch) { _, b in b }))
+        }
+        let top: [String: JSON] = ["parent_id": .null, "parent_revision": .null, "destination_archived": .bool(false)]
+        XCTAssertNil(try hierarchy(raw: hierarchyRaw().merging(top) { _, b in b }).parent)
+        for patch: [String: JSON] in [["parent_id": .null], ["parent_id": .null, "parent_revision": .null]] {
+            XCTAssertThrowsError(try hierarchy(raw: hierarchyRaw().merging(patch) { _, b in b }))
+        }
+    }
+    func testHierarchyReviewCannotBeReusedAcrossAccountProjectActionOrRevision() throws {
+        let reviewed = try hierarchy()
+        for (account, origin, team, project, revision, action) in [(pmGuest,pmOrigin,pmTeam,pmProject,2.0,TeamProjectCommand.Action.move),(pmAccount,"https://other.example",pmTeam,pmProject,2.0,.move),(pmAccount,pmOrigin,pmGuest,pmProject,2.0,.move),(pmAccount,pmOrigin,pmTeam,pmGuest,2.0,.move),(pmAccount,pmOrigin,pmTeam,pmProject,3.0,.move),(pmAccount,pmOrigin,pmTeam,pmProject,2.0,.archive)] {
+            XCTAssertThrowsError(try TeamProjectCommand(account: account, origin: origin, action: action, team: team, project: project, teamRevision: 3, revision: revision, hierarchy: reviewed))
+        }
+        XCTAssertThrowsError(try TeamProjectCommand(account: pmAccount, origin: pmOrigin, action: .move, team: pmTeam, project: pmProject, teamRevision: 4, revision: 2, hierarchy: reviewed))
+        for action: TeamProjectCommand.Action in [.move, .createSubproject] {
+            let original = try command(action)
+            for patch: [String: JSON] in [["parent_id": .string(pmProject)], ["affected_count": .number(0)], ["parent_revision": .null], ["is_archived": .string("false")], ["destination_archived": .null], ["tree_token": .string("B".padding(toLength: 64, withPad: "B", startingAt: 0))]] {
+                XCTAssertThrowsError(try TeamProjectCommand(account: pmAccount, origin: pmOrigin, action: action, body: original.body.merging(patch) { _, b in b }))
+            }
+        }
+    }
+    func testHierarchyProjectionIsOptionalButCannotPublishPartialOrHiddenParentIdentity() throws {
+        XCTAssertNil(try detail().access.hierarchy)
+        let group: [String: JSON] = ["project_hierarchy_protocol": .number(1), "parent_id": .string(pmMember), "parent_unavailable": .bool(false)]
+        XCTAssertEqual(try detail(raw().merging(group) { _, b in b }).access.hierarchy?.parent, pmMember)
+        XCTAssertEqual(try detail(raw().merging(group.merging(["parent_id": .null, "parent_unavailable": .bool(true)]) { _, b in b }) { _, b in b }).access.hierarchy?.parentUnavailable, true)
+        for key in group.keys { var patch = group; patch.removeValue(forKey: key); XCTAssertThrowsError(try detail(raw().merging(patch) { _, b in b })) }
+        for patch: [String: JSON] in [["parent_unavailable": .bool(true)], ["parent_id": .string(pmProject)], ["project_hierarchy_protocol": .number(2)]] {
+            XCTAssertThrowsError(try detail(raw().merging(group.merging(patch) { _, b in b }) { _, b in b }))
+        }
+    }
+    func testActualSQLHierarchyReviewsAndReceipts() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-project-hierarchy-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let value = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url)); var actions = Set<String>()
+        for row in value["reviews"]!.list.map(\.object) {
+            let action = try XCTUnwrap(TeamProjectCommand.Action(rawValue: row["body"]!.object["operation"]!.text)), result = row["result"]!.object
+            let reviewed = try TeamProjectHierarchyReview(result, account: row["account"]!.text, origin: pmOrigin, team: result["team_id"]!.text, project: result["id"]!.text, action: action)
+            XCTAssertEqual(reviewed.parent, try TeamProjectValue.optionalID(row["body"]!.object["parent_id"]))
+        }
+        for row in value["commands"]!.list.map(\.object) {
+            let action = try XCTUnwrap(TeamProjectCommand.Action(rawValue: row["action"]!.text)); actions.insert(action.rawValue)
+            let command = try TeamProjectCommand(account: row["account"]!.text, origin: pmOrigin, action: action, body: row["body"]!.object)
+            XCTAssertEqual(try command.confirmed(row["result"]!.object).project, command.project)
+            for patch: [String: JSON] in [["project_hierarchy_protocol": .number(2)], ["parent_id": .string(command.project)], ["affected_count": .number(1001)], ["is_archived": .string("false")], ["ancestor_archived": .string("true")]] {
+                XCTAssertThrowsError(try command.confirmed(row["result"]!.object.merging(patch) { _, b in b }))
+            }
+        }
+        XCTAssertEqual(actions, ["move", "create_subproject"])
+    }
+    @MainActor func testLostHierarchyRepliesKeepExactDestinationAcrossRelaunch() async throws {
+        for action: TeamProjectCommand.Action in [.move, .createSubproject] {
+            let io = ProjectCommandIO(), vault = TeamProjectCommandVault(io: io), peer = ProjectCommandPeer(); peer.loseReply = true
+            let command = try command(action)
+            var model = TeamProjectCommandModel(account: pmAccount, origin: pmOrigin, vault: vault, service: peer, isCurrent: { true })
+            await model.send(command); XCTAssertEqual(model.pending, command); XCTAssertNil(model.receipt)
+            model.close(); model = TeamProjectCommandModel(account: pmAccount, origin: pmOrigin, vault: vault, service: peer, isCurrent: { true })
+            await model.load(); await model.retry()
+            XCTAssertEqual(peer.calls, [command, command]); XCTAssertEqual(peer.applied.count, 1); XCTAssertNil(model.pending); XCTAssertEqual(model.success, action.success)
+        }
     }
 
 }

@@ -40,10 +40,20 @@ try {
   await loadTeamProjectSchema(pg.raw);
   const presentationSource = await readFile(new URL("../../supabase/migrations/20261024163752_team_project_presentation.sql",import.meta.url),"utf8");
   await pg.raw(presentationSource);
-  if (process.env.TASKFOLD_TEST_PROJECT_ARCHIVING === "1") {
+  const withHierarchy = process.env.TASKFOLD_TEST_PROJECT_HIERARCHY === "1";
+  if (withHierarchy) {
+    const original = await readFile(new URL("../../supabase/migrations/20261020174132_project_workflow_foundation.sql",import.meta.url),"utf8");
+    await pg.raw(original.slice(original.indexOf("create function taskfold_private.guard_project_organization()"),original.indexOf("create table public.project_templates")));
+  }
+  if (withHierarchy || process.env.TASKFOLD_TEST_PROJECT_ARCHIVING === "1") {
     const archiveSource = await readFile(new URL("../../supabase/migrations/20261024172109_team_project_archiving.sql",import.meta.url),"utf8");
     await pg.raw(archiveSource);
     report.archivingMigrationSHA256 = createHash("sha256").update(archiveSource).digest("hex");
+  }
+  if (withHierarchy) {
+    const source = await readFile(new URL("../../supabase/migrations/20261024182336_team_project_hierarchy.sql",import.meta.url),"utf8");
+    await pg.raw(source);
+    report.teamHierarchyMigrationSHA256 = createHash("sha256").update(source).digest("hex");
   }
   report.presentationMigrationSHA256 = createHash("sha256").update(presentationSource).digest("hex");
   report.migrationSHA256 = createHash("sha256").update(

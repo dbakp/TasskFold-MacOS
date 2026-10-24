@@ -24,6 +24,10 @@ try {
  report.inspectedHierarchyDependencySHA256=createHash('sha256').update(dependency).digest('hex');
  await pg.raw(await readFile(new URL('../../supabase/migrations/20261024163752_team_project_presentation.sql',import.meta.url),'utf8'));
  await pg.raw(source);
+ const withHierarchy=process.env.TASKFOLD_TEST_PROJECT_HIERARCHY==='1';
+ const disableTeamHierarchy=withHierarchy?'alter table public.projects disable trigger taskfold_team_project_organization;':'';
+ const enableTeamHierarchy=withHierarchy?'alter table public.projects enable trigger taskfold_team_project_organization;':'';
+ if(withHierarchy){const hierarchySource=await readFile(new URL('../../supabase/migrations/20261024182336_team_project_hierarchy.sql',import.meta.url),'utf8');await pg.raw(hierarchySource);report.teamHierarchyMigrationSHA256=createHash('sha256').update(hierarchySource).digest('hex');}
  report.migrationSHA256=createHash('sha256').update(source).digest('hex');
  // Minimal field that the real boundary expects from the later task-edit migration.
  // Task edits stay disabled; the actual access epoch/boundary SQL is unchanged.
@@ -115,15 +119,15 @@ try {
  await pg.raw(`insert into public.projects(id,user_id,name) values(${lit(newChild)},${lit(people.creator.id)},'New child');insert into taskfold_private.team_content_projects(project_id,team_id) values(${lit(newChild)},${lit(team)});update public.projects set parent_id=${lit(root)} where id=${lit(newChild)}`);
  check('added descendant invalidates review token',(await rpc('owner','archive',stale)).code,'PT409');
  // A private/foreign or personal descendant injected by trusted operator is rejected in full.
- await pg.raw(`alter table public.projects disable trigger aa_taskfold_workspace_link;update public.projects set parent_id=${lit(root)} where id=${lit(personal)};alter table public.projects enable trigger aa_taskfold_workspace_link`);
+ await pg.raw(`alter table public.projects disable trigger aa_taskfold_workspace_link;${disableTeamHierarchy}update public.projects set parent_id=${lit(root)} where id=${lit(personal)};alter table public.projects enable trigger aa_taskfold_workspace_link;${enableTeamHierarchy}`);
  check('personal descendant blocks review',(await review()).code,'42501');
- await pg.raw(`alter table public.projects disable trigger aa_taskfold_workspace_link;update public.projects set parent_id=null where id=${lit(personal)};update public.projects set parent_id=${lit(root)} where id=${lit(other)};alter table public.projects enable trigger aa_taskfold_workspace_link`);
+ await pg.raw(`alter table public.projects disable trigger aa_taskfold_workspace_link;${disableTeamHierarchy}update public.projects set parent_id=null where id=${lit(personal)};update public.projects set parent_id=${lit(root)} where id=${lit(other)};alter table public.projects enable trigger aa_taskfold_workspace_link;${enableTeamHierarchy}`);
  check('foreign descendant blocks review',(await review()).code,'42501');
  await pg.raw(`update public.projects set parent_id=null where id=${lit(other)}`);
  // Corrupt old data is not traversed indefinitely. Trusted fixture bypass only.
- await pg.raw(`alter table public.projects disable trigger taskfold_project_organization;update public.projects set parent_id=${lit(child)} where id=${lit(root)};alter table public.projects enable trigger taskfold_project_organization`);
+ await pg.raw(`alter table public.projects disable trigger taskfold_project_organization;${disableTeamHierarchy}update public.projects set parent_id=${lit(child)} where id=${lit(root)};alter table public.projects enable trigger taskfold_project_organization;${enableTeamHierarchy}`);
  check('corrupt cycle fails bounded review',(await review()).code,'54000');
- await pg.raw(`alter table public.projects disable trigger taskfold_project_organization;update public.projects set parent_id=null where id=${lit(root)};alter table public.projects enable trigger taskfold_project_organization`);
+ await pg.raw(`alter table public.projects disable trigger taskfold_project_organization;${disableTeamHierarchy}update public.projects set parent_id=null where id=${lit(root)};alter table public.projects enable trigger taskfold_project_organization;${enableTeamHierarchy}`);
  // Archive is narrowing/recovery even with setup paused, team archived and budget full.
  const recovery=await request('archive');
  await pg.raw(`update taskfold_private.team_config set enabled=false;update taskfold_private.teams set state='archived',usage_day=current_date,day_operations=2000 where id=${lit(team)}`);
@@ -176,7 +180,7 @@ try {
  // Production hierarchy already bounds normal writes. Prove the reviewed
  // handler also rejects a pre-existing over-deep branch without partial edits.
  const deep=Array.from({length:21},()=>randomUUID());
- await pg.raw('begin;alter table public.projects disable trigger taskfold_project_organization;'+deep.map(id=>`insert into public.projects(id,user_id,name) values(${lit(id)},${lit(people.creator.id)},'Depth proof');insert into taskfold_private.team_content_projects(project_id,team_id) values(${lit(id)},${lit(team)});`).join('')+deep.slice(1).map((id,i)=>`update public.projects set parent_id=${lit(deep[i])} where id=${lit(id)};`).join('')+'alter table public.projects enable trigger taskfold_project_organization;commit;');
+ await pg.raw('begin;alter table public.projects disable trigger taskfold_project_organization;'+disableTeamHierarchy+deep.map(id=>`insert into public.projects(id,user_id,name) values(${lit(id)},${lit(people.creator.id)},'Depth proof');insert into taskfold_private.team_content_projects(project_id,team_id) values(${lit(id)},${lit(team)});`).join('')+deep.slice(1).map((id,i)=>`update public.projects set parent_id=${lit(deep[i])} where id=${lit(id)};`).join('')+'alter table public.projects enable trigger taskfold_project_organization;'+enableTeamHierarchy+'commit;');
  check('over-deep existing branch is rejected',(await review('owner','archive',deep[0])).code,'54000');
  // Existing whole-team cleanup keeps its distinct trusted transaction scope.
  // Empty synthetic project only: no retained task/file custody to clean here.

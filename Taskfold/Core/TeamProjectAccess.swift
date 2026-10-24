@@ -59,6 +59,18 @@ struct TeamProjectArchiveState: Equatable, Sendable {
     }
 }
 
+struct TeamProjectHierarchy: Equatable, Sendable {
+    let parent: String?
+    let parentUnavailable: Bool
+    static func read(_ row: [String: JSON], project: String) throws -> Self? {
+        if ["project_hierarchy_protocol", "parent_id", "parent_unavailable"].allSatisfy({ row[$0] == nil }) { return nil }
+        guard row["project_hierarchy_protocol"] == .number(1), case .bool(let unavailable)? = row["parent_unavailable"] else { throw TeamProjectValue.invalid }
+        let parent = try TeamProjectValue.optionalID(row["parent_id"])
+        guard parent != project, !unavailable || parent == nil else { throw TeamProjectValue.invalid }
+        return Self(parent: parent, parentUnavailable: unavailable)
+    }
+}
+
 /// Context is part of the value: a caller must not reuse it in another account,
 /// server or workspace. A creator UUID never implies any of these permissions.
 struct TeamProjectAccess: Equatable, Sendable {
@@ -76,6 +88,7 @@ struct TeamProjectAccess: Equatable, Sendable {
     let canManageAccess: Bool
     let name: String?
     let archive: TeamProjectArchiveState?
+    let hierarchy: TeamProjectHierarchy?
     var canEditTasks: Bool { false } // Enable after complete commands and workspace refresh acceptance.
 
     init(detail: [String: JSON], account: String, origin: String, team: String, project: String) throws {
@@ -90,6 +103,7 @@ struct TeamProjectAccess: Equatable, Sendable {
               case .bool(false)? = row["can_edit_tasks"], case .bool(let manage)? = row["can_manage_access"],
               manage == (role == .manager) else { throw TeamProjectValue.invalid }
         archive = try TeamProjectArchiveState.read(row)
+        hierarchy = try TeamProjectHierarchy.read(row, project: id)
         self.id = id; self.team = team; self.account = account; self.origin = origin
         revision = try TeamProjectValue.revision(row["revision"]); teamRevision = context.revision
         folder = try TeamProjectValue.optionalID(row["folder_id"])

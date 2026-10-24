@@ -277,3 +277,66 @@ checks. Mac runtime/spoken and genuine hosted Auth/Keychain acceptance remain op
 
 Owned isolated test apps/runners and temporary host/build/result/attachment folders
 were removed after preserving evidence; approximately 1.22 GiB of allocated artifacts removed. No Mac test app launched. Persistent core caches and unrelated apps, containers and runtimes remain intact.
+
+
+## Team subprojects and branch moves: service and command foundation — 24 October 2026
+
+The next rank-6 stage adds source-only `review_hierarchy`, `move` and
+`create_subproject` service operations, with independent native command/read
+implementations in both repositories. It does **not** expose the new app controls
+yet. The destination picker, branch confirmation, synthetic UI peer and native
+phone/tablet/Mac acceptance are the next stage. Teams and task writes stay gated;
+no migration is deployed and no real workspace or rollout setting is changed.
+
+A hierarchy review binds the exact source branch, its per-project revisions and
+archive settings, and the destination ancestry/revision to a digest. The caller
+must manage every affected project and the destination. Cross-creator branches
+and branches whose creator has left are valid; private parent identity is hidden
+when unreadable. New subprojects are attributed to their actual creator, with an
+explicit manager grant and separately chosen visibility/folder. Destination
+permissions and folder settings do not propagate into the moved branch.
+
+The separate transaction/actor/team/root/project/destination scope permits only
+reviewed parent and derived archive changes. Source creators, own archive flags,
+tasks, discussions, sections, Storage rows, file custody and grants stay intact.
+Moving into an archived destination is explicit in the review and retains each
+project's own archive flag. The legacy personal ownership guard remains intact;
+only bound team rows use the new team-aware organization guard. Live Auth/session
+and role checks, team serialization, bounded branches/depth, request fingerprints,
+15-minute request expiry, operation budget and exact replay apply. A failure after
+the root write rolls the entire operation back, including scope and receipt rows.
+
+The optional versioned hierarchy projection distinguishes team-level placement
+from an inaccessible parent, and rejects partial/contradictory values. Native
+reviews/commands/receipts bind account, backend, team, action, source, destination,
+revisions, count and archive states. An HTTP review must return the requested
+destination. Both new commands reuse the private project journal, keeping their
+exact reviewed intent across a lost response and relaunch. Existing controls
+explicitly decline hierarchy actions until the reviewed native flow is ready.
+
+Verification in each repo: 121 focused Swift tests; 95 real owned-PostgreSQL
+hierarchy checks; the existing 93 archive and 152 access checks with the new
+migration loaded. Native core tests decode each repository's independently
+produced SQL reviews/receipts, including archived-root moves. Checks include
+concurrent requests, destination revocation while waiting on a lock, stale branch
+and destination ancestry, full rollback, exact scope misuse, hidden parents,
+departed creators, 20-level depth and 1,000-project limits, direct-write rejection,
+unchanged content/custody/grants and unchanged personal creator isolation.
+Security/performance advisors report no new warnings (the existing fixture's
+`auth_rls_initplan` baseline remains). Debug app/extension compilation is recorded
+in `p2-team-project-hierarchy-foundation-evidence.json`; build success is not
+native interaction, spoken, hosted Auth/Keychain or rollout acceptance.
+
+Reproduce with `node Scripts/Database/test-team-project-hierarchy.mjs <report.json> <native-fixtures.json>`.
+Run the two existing service suites under `TASKFOLD_TEST_PROJECT_HIERARCHY=1` to
+load this migration as well. Their deliberate corruption fixtures conditionally
+bypass both organization triggers; production guards are not weakened to seed
+those fixtures. All service runtimes are owned local containers removed in finally
+blocks. No cross-repository build input is introduced.
+
+This completes the hierarchy service/typed-command foundation only. The ranked
+Px objective, team hierarchy UI/acceptance, scoped task/comment/file integration,
+project adoption/templates/deletion, Watch acceptance and the other remaining
+ranked work stay open. Existing user deferrals stay deferred.
+
+Both Debug app/extension builds passed. No native app was installed or launched in this foundation stage; no Taskfold processes remained at cleanup. The owned copies/native caches were removed after preserving evidence (approximately 1.01 GiB allocated across both platforms). Existing core caches, booted phone/tablet states, user data and unrelated runtimes remain intact.

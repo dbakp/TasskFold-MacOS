@@ -234,10 +234,11 @@ private struct TeamProjectEditSheet: View {
     }
     private var screenTitle: String {
         guard textSize.isAccessibilitySize else { return request.action.title }
-        switch request.action { case .rename: return "Rename"; case .archive: return "Archive"; case .unarchive: return "Reopen"; case .settings: return "Settings"; case .setAccess: return "Access"; case .resetAccess: return "Reset access"; case .create: return "New project" }
+        switch request.action { case .rename: return "Rename"; case .archive: return "Archive"; case .unarchive: return "Reopen"; case .settings: return "Settings"; case .setAccess: return "Access"; case .resetAccess: return "Reset access"; case .create: return "New project"; case .move: return "Move"; case .createSubproject: return "Subproject" }
     }
     private var canConfirm: Bool {
         switch request.action {
+        case .move, .createSubproject: return false // Hierarchy controls await their reviewed destination flow.
         case .archive, .unarchive: return request.review != nil
         case .rename: return name.trimmingCharacters(in: .whitespacesAndNewlines) != request.detail?.access.name && (try? TeamOrganizationValue.name(.string(name.trimmingCharacters(in: .whitespacesAndNewlines)))) != nil
         case .create: return (try? TeamOrganizationValue.name(.string(name.trimmingCharacters(in: .whitespacesAndNewlines)))) != nil
@@ -407,6 +408,7 @@ private struct TeamProjectFixtureIO: CalendarSecureItemIO {
         }
         var revision = Double(row?["revision"]?.integer ?? 0)
         switch command.action {
+        case .move, .createSubproject: throw TeamOrganizationCommandFailure(code: "PT503") // Not exposed by this fixture yet.
         case .create: row = ["id": .string(command.project), "team_id": .string(command.team), "name": command.body["name"]!, "grants": .object([account: .string("manager")])]; fallthrough
         case .settings:
             if command.body["folder_id"] != .null && command.body["folder_id"] != .string(TeamProjectFixture.folder) { throw TeamOrganizationCommandFailure(code: "22023") }

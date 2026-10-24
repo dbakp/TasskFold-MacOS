@@ -107,4 +107,31 @@ final class TeamProjectAccessTests: XCTestCase {
         TeamProjectHTTP.handler = { _,peer in peer.finish(Data("{\"code\":\"28000\",\"message\":\"private server details\"}".utf8),status:403) }
         do { _ = try await api.teamProjectPage(team:tpTeam,account:tpAccount,origin:tpOrigin); XCTFail("Expired session accepted") } catch { XCTAssertTrue(error is AccountSessionAuthorizationRequired) }
     }
+    private func hierarchyReply(parent: String? = tpOther) -> [String: JSON] {
+        ["protocol": .number(1), "project_hierarchy_protocol": .number(1), "account": .string(tpAccount), "team_id": .string(tpTeam), "id": .string(tpProject), "operation": .string("move"), "team_revision": .number(3), "revision": .number(2), "parent_id": parent.map(JSON.string) ?? .null, "parent_revision": parent == nil ? .null : .number(1), "tree_token": .string(String(repeating: "a", count: 64)), "affected_count": .number(2), "destination_archived": .bool(false), "is_archived": .bool(false)]
+    }
+    @MainActor func testHierarchyHTTPReviewChecksRequestedDestinationBeforeReturning() async throws {
+        let api = try backend(); var calls = 0
+        TeamProjectHTTP.handler = { request, peer in
+            calls += 1
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_team_projects")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-store")
+            XCTAssertEqual(request.timeoutInterval, 25)
+            peer.finish(try! JSONEncoder().encode(self.hierarchyReply()))
+        }; defer { TeamProjectHTTP.handler = nil }
+        let reviewed = try await api.teamProjectHierarchyReview(team: tpTeam, project: tpProject, parent: tpOther, action: .move, account: tpAccount, origin: tpOrigin)
+        XCTAssertEqual(reviewed.parent, tpOther)
+        do { _ = try await api.teamProjectHierarchyReview(team: tpTeam, project: tpProject, parent: nil, action: .move, account: tpAccount, origin: tpOrigin); XCTFail("Wrong destination accepted") } catch {}
+        do { _ = try await api.teamProjectHierarchyReview(team: tpTeam, project: tpProject, parent: tpOther, action: .move, account: tpOther, origin: tpOrigin); XCTFail("Wrong account sent") } catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(calls, 2)
+    }
+    @MainActor func testHierarchyReviewCannotReturnAfterAccountChanges() async throws {
+        let api = try backend(), next = try backend(tpOther), gate = TeamProjectGate(), started = expectation(description: "Hierarchy review held")
+        let reply = try JSONEncoder().encode(hierarchyReply())
+        TeamProjectHTTP.handler = { _, peer in gate.hold(peer); started.fulfill() }; defer { TeamProjectHTTP.handler = nil }
+        let pending = Task { @MainActor in try await api.teamProjectHierarchyReview(team: tpTeam, project: tpProject, parent: tpOther, action: .move, account: tpAccount, origin: tpOrigin) }
+        await fulfillment(of: [started], timeout: 3); try await api.accept(XCTUnwrap(next.session)); gate.release(reply)
+        do { _ = try await pending.value; XCTFail("Late hierarchy review escaped") } catch { XCTAssertTrue(error is CancellationError) }
+    }
+
 }
