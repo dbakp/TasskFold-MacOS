@@ -249,6 +249,18 @@ try {
       .name,
     "Product",
   );
+  if (process.argv[3]) {
+    const fixture = {team};
+    for (const role of ["owner", "admin", "member", "guest"]) {
+      fixture[role] = {
+        account: users[role].id,
+        list: await ok("native " + role + " list", role, "list", {}),
+        invitations: await ok("native " + role + " invitations", role, "invitations", {}),
+        detail: await ok("native " + role + " detail", role, "get", {team_id: team}),
+      };
+    }
+    await writeFile(process.argv[3], JSON.stringify(fixture, null, 2) + "\n");
+  }
   for (
     const [name, who, action, extra, code] of [
       ["guest cannot create folder", "guest", "folder_create", {

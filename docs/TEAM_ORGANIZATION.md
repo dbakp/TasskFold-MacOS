@@ -1,8 +1,40 @@
 # Team organization foundation
 
-Status: disabled, local verification only (24 October 2026). No deployment,
-project access change or native team UI is included. Each app repository owns
-its migration and tests; neither app builds against the other repository.
+Status: disabled, local verification only (24 October 2026). A gated read-only
+native overview now exists in each app; no deployment or project access change
+is included. Each app repository owns its sources, migration and tests; neither
+app builds against the other repository.
+
+## Native overview
+
+`TeamOrganizationView` previews active/archived teams, your organization role,
+folders, incoming invitations, and ownership offers. Owner/admin detail includes
+the role directory and pending invitation emails; member and guest responses
+must omit that private directory, and guests must also omit folders. Names are
+not invented from account identifiers. This is an overview: creation, invitation
+responses, role changes, folder editing and ownership actions are still pending.
+There are no mutation calls or new email sends in this milestone.
+
+`TeamOrganizationOverview` and `TeamOrganizationDetail` decode bounded collections,
+UUIDs, finite integer revisions, valid states, roles, expiry dates, folder order,
+unique records and the current directory role. They are ephemeral, scoped to the
+captured account/backend, and never stored in the task cache or backup. The
+existing hardened `taskfold_teams` read transport rejects redirects/cookies/cache,
+limits response bytes, and checks session identity before and after requests.
+The two-read overview also fences reauthentication between list and invitations.
+
+The view masks existing content and its title when its workspace, session,
+known access revision or foreground state changes; refresh clears prior content
+before awaiting new results. Delayed or overlapping responses cannot replace a
+newer screen. These guards do not claim instantaneous detection of remote role
+changes before the app next refreshes access.
+
+Release navigation remains hidden unless `TaskfoldTeamsEnabled` is explicitly
+configured. The synthetic debug route requires an exact isolated bundle ID plus
+`--team-overview-testing`, does not sign in and never touches task data. Neither
+this UI flag nor organization roles enable native team task writes. The backend
+rollout gates below remain in force. Verification is scoped in
+`p2-team-overview-evidence.json` and `p2-team-overview-postgres-evidence.json`.
 
 ## Durable model
 

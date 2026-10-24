@@ -4309,3 +4309,10 @@ backlog and every explicit user deferral remain intact; full Px is not complete.
 Verification: 124 relevant core tests pass independently in each repository;
 Debug app/extension builds pass. Mac native runtime, real cloud transitions
 and VoiceOver remain open. Simulator proofs do not establish those gates.
+
+24 October team overview: the Mac owns a gated native organization browser with
+active/archived teams, clear roles, folders and permission-filtered directories.
+The account sheet presents it in its own navigation stack. Sensitive presentation
+is ephemeral and fenced by workspace/session/access changes. It is read-only;
+team rollout and management actions remain pending. See
+[p2-team-overview-evidence.json](p2-team-overview-evidence.json) for exact checks.

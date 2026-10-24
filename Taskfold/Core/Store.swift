@@ -280,6 +280,7 @@ final class Store {
     var todoistImportFixture: Bool { false }
     #endif
     var workspaceGeneration: UUID { accountGeneration }
+    var teamOrganizationReadable: Bool { workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked }
     var sharedCaptureAvailable: Bool { !accountRemovalBlocked && workspaceCacheReadable && (signedIn || localMode) && !signingOut && !userID.isEmpty }
     var backupWarning: String?
     @ObservationIgnored private var dailyBackupRunning = false

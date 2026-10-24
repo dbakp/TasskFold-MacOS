@@ -510,6 +510,29 @@ final class Backend: NSObject {
     func sendPasswordReset(email: String) async throws {
         _ = try await request("/auth/v1/recover", method: "POST", body: ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())], authenticated: false)
     }
+    /// The organization RPC does not echo an account. Bind both ends of every
+    /// read to this exact authenticated backend, then decode its bounded value.
+    private func teamOrganizationRead(_ action: String, body: [String: JSON] = [:], account: String, origin: String) async throws -> [String: JSON] {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard !sessionTransition, session?.user.id == account, origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let generation = sessionGeneration
+        let data = try await request("/rest/v1/rpc/taskfold_teams", method: "POST", body: ["_action": .string(action), "_body": .object(body)], expectedAccount: account)
+        guard !sessionTransition, generation == sessionGeneration, session?.user.id == account, origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        guard let raw = try? JSONDecoder().decode([String: JSON].self, from: data) else { throw TeamOrganizationValue.invalid }
+        return raw
+    }
+    func teamOrganizationOverview(account: String, origin: String) async throws -> TeamOrganizationOverview {
+        let generation = sessionGeneration
+        let list = try await teamOrganizationRead("list", account: account, origin: origin)
+        let invitations = try await teamOrganizationRead("invitations", account: account, origin: origin)
+        guard generation == sessionGeneration else { throw CancellationError() }
+        return try TeamOrganizationOverview(list: list, invitations: invitations, account: account, origin: origin)
+    }
+    func teamOrganizationDetail(team: String, account: String, origin: String) async throws -> TeamOrganizationDetail {
+        guard TeamProjectValue.id(team) else { throw TeamOrganizationValue.invalid }
+        return try TeamOrganizationDetail(await teamOrganizationRead("get", body: ["team_id": .string(team)], account: account, origin: origin), team: team, account: account, origin: origin)
+    }
+
     private func teamProjectReceipt(action: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
         guard !sessionTransition, session?.user.id == account, TeamProjectValue.id(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
         let data = try await request("/rest/v1/rpc/taskfold_team_projects", method: "POST", body: ["_action": .string(action), "_body": .object(body)], expectedAccount: account)

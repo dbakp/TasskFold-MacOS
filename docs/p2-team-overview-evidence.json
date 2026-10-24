@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-24",
+  "milestone": "Gated read-only native organization overview",
+  "platform": "mac",
+  "deployment": false,
+  "liveTeamRolloutEnabled": false,
+  "nativeTeamTaskWritesEnabled": false,
+  "realTasksChanged": false,
+  "emailSent": false,
+  "sourceSHA256": {
+    "Taskfold/Core/TeamOrganization.swift": "950ba2c7411a0964c0a907bef0ef3d38fd1bacd0f336451c5006044c8501fefe",
+    "Taskfold/Core/Backend.swift": "570123ed65dddac298bab8a9e5d1972961157bb6aa41cd6f9853908340ecfdd2",
+    "Taskfold/Core/Store.swift": "a475c1b6ebe2d557b91062a11cd001df340b02b583797a2bbd417a3d5d17c7cd",
+    "Taskfold/Views/TeamOrganizationView.swift": "fdcb1a7418a2e3486d229064ad09549148bcb716e3bfb7b77a3c8c35588c5f0b",
+    "TaskfoldTests/TeamOrganizationTests.swift": "1e9d0f5dd148848e1465ccca3fdd11b04299525edb1630a7e49564fc8196499e",
+    "TaskfoldTests/Fixtures/team-organization-overview-v1.json": "01f58a9d8357f7a96ad8953677c572de28053766ae117144a9eb09dcc4fb1171",
+    "Scripts/Database/test-team-organization.mjs": "99975122cb1029c7d986bc9323ca9e1ed35d6f6493018daa9d6da3bda421744b",
+    "Taskfold.xcodeproj/project.pbxproj": "fe28668ff02a5881961928c0c8ed7617d12bb9ab1c8080d173e7d6ea830059be",
+    "Package.swift": "f39ff4737b69538736bd021341830d46f865ab7a78e5a5150611c6b7e84c4e6d"
+  },
+  "core": {
+    "status": "passed",
+    "count": 51,
+    "newOrganizationCases": 14,
+    "suites": [
+      "TeamOrganizationTests",
+      "TeamProjectAccessTests",
+      "TeamWorkspaceTests"
+    ],
+    "log": "/tmp/taskfold-team-overview-mac-core-final.log"
+  },
+  "postgres": {
+    "status": "passed",
+    "checks": 156,
+    "actualRoleResponseFixture": "TaskfoldTests/Fixtures/team-organization-overview-v1.json",
+    "roles": [
+      "owner",
+      "admin",
+      "member",
+      "guest"
+    ],
+    "advisorsRan": true,
+    "containerRemoved": true,
+    "report": "p2-team-overview-postgres-evidence.json"
+  },
+  "remaining": [
+    "Reviewed create/rename/archive/folder/invitation/role/ownership commands and stable retry lifecycle",
+    "Live authenticated native organization acceptance and broader role/account/draft-cohort matrix",
+    "Project/task/API/email/storage rollout gates; no team setup has been enabled",
+    "VoiceOver speech for these new screens; no new spoken acceptance claimed"
+  ],
+  "cleanup": {
+    "ownedTemporaryBuildsRemoved": true,
+    "ownedTestAppsClosed": true,
+    "simulatorTestAppAndRunnerUninstalled": true,
+    "approximateBytesReclaimedAcrossBothRepos": 1619437301,
+    "smallLogsAndCoreBuildCachesRetained": true
+  },
+  "build": {
+    "status": "passed",
+    "target": "Independent isolated universal Debug macOS app (arm64 + x86_64)",
+    "log": "/tmp/taskfold-team-overview-mac-build-final.log"
+  },
+  "native": {
+    "status": "not accepted",
+    "reason": "XCTest runner refused to initialize: Authentication cancelled; system authentication running. Direct computer-use inspection then reported Mac locked. No request for another unlock was made.",
+    "test": "TaskfoldMacUITests/testTeamOrganizationOverviewAndRoleScopedDetail",
+    "testLog": "/tmp/taskfold-team-overview-mac-ui.log",
+    "isolatedAppClosed": true
+  }
+}

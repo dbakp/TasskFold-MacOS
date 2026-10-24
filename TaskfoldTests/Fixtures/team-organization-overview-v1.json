@@ -1,0 +1,167 @@
+{
+  "team": "5cee1cd2-ea46-4af9-bb56-fb419e73a937",
+  "owner": {
+    "account": "a6195e8a-8df9-4da2-85b5-3c80e764caa8",
+    "list": {
+      "teams": [
+        {
+          "id": "5cee1cd2-ea46-4af9-bb56-fb419e73a937",
+          "name": "Design studio",
+          "role": "owner",
+          "state": "active",
+          "revision": 8
+        }
+      ],
+      "enabled": true
+    },
+    "invitations": {
+      "enabled": true,
+      "invitations": []
+    },
+    "detail": {
+      "id": "5cee1cd2-ea46-4af9-bb56-fb419e73a937",
+      "name": "Design studio",
+      "role": "owner",
+      "state": "active",
+      "folders": [
+        {
+          "id": "0f86e8e2-0b24-4cec-9777-5b8d574eea44",
+          "name": "Product",
+          "position": 0
+        }
+      ],
+      "members": [
+        {
+          "role": "owner",
+          "user_id": "a6195e8a-8df9-4da2-85b5-3c80e764caa8"
+        },
+        {
+          "role": "admin",
+          "user_id": "bd36be78-c465-419b-b468-1d811e606373"
+        },
+        {
+          "role": "member",
+          "user_id": "3623f2e6-e345-4cf0-b0ae-22493c624367"
+        },
+        {
+          "role": "guest",
+          "user_id": "a895f3a2-230f-4142-baf6-ae72a68265da"
+        }
+      ],
+      "revision": 8,
+      "transfer": null,
+      "invitations": []
+    }
+  },
+  "admin": {
+    "account": "bd36be78-c465-419b-b468-1d811e606373",
+    "list": {
+      "teams": [
+        {
+          "id": "5cee1cd2-ea46-4af9-bb56-fb419e73a937",
+          "name": "Design studio",
+          "role": "admin",
+          "state": "active",
+          "revision": 8
+        }
+      ],
+      "enabled": true
+    },
+    "invitations": {
+      "enabled": true,
+      "invitations": []
+    },
+    "detail": {
+      "id": "5cee1cd2-ea46-4af9-bb56-fb419e73a937",
+      "name": "Design studio",
+      "role": "admin",
+      "state": "active",
+      "folders": [
+        {
+          "id": "0f86e8e2-0b24-4cec-9777-5b8d574eea44",
+          "name": "Product",
+          "position": 0
+        }
+      ],
+      "members": [
+        {
+          "role": "owner",
+          "user_id": "a6195e8a-8df9-4da2-85b5-3c80e764caa8"
+        },
+        {
+          "role": "admin",
+          "user_id": "bd36be78-c465-419b-b468-1d811e606373"
+        },
+        {
+          "role": "member",
+          "user_id": "3623f2e6-e345-4cf0-b0ae-22493c624367"
+        },
+        {
+          "role": "guest",
+          "user_id": "a895f3a2-230f-4142-baf6-ae72a68265da"
+        }
+      ],
+      "revision": 8,
+      "invitations": []
+    }
+  },
+  "member": {
+    "account": "3623f2e6-e345-4cf0-b0ae-22493c624367",
+    "list": {
+      "teams": [
+        {
+          "id": "5cee1cd2-ea46-4af9-bb56-fb419e73a937",
+          "name": "Design studio",
+          "role": "member",
+          "state": "active",
+          "revision": 8
+        }
+      ],
+      "enabled": true
+    },
+    "invitations": {
+      "enabled": true,
+      "invitations": []
+    },
+    "detail": {
+      "id": "5cee1cd2-ea46-4af9-bb56-fb419e73a937",
+      "name": "Design studio",
+      "role": "member",
+      "state": "active",
+      "folders": [
+        {
+          "id": "0f86e8e2-0b24-4cec-9777-5b8d574eea44",
+          "name": "Product",
+          "position": 0
+        }
+      ],
+      "revision": 8
+    }
+  },
+  "guest": {
+    "account": "a895f3a2-230f-4142-baf6-ae72a68265da",
+    "list": {
+      "teams": [
+        {
+          "id": "5cee1cd2-ea46-4af9-bb56-fb419e73a937",
+          "name": "Design studio",
+          "role": "guest",
+          "state": "active",
+          "revision": 8
+        }
+      ],
+      "enabled": true
+    },
+    "invitations": {
+      "enabled": true,
+      "invitations": []
+    },
+    "detail": {
+      "id": "5cee1cd2-ea46-4af9-bb56-fb419e73a937",
+      "name": "Design studio",
+      "role": "guest",
+      "state": "active",
+      "revision": 8
+    }
+  }
+}

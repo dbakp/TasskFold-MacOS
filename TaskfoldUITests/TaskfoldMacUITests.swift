@@ -2,6 +2,25 @@ import XCTest
 import AppKit
 
 final class TaskfoldMacUITests: XCTestCase {
+    @MainActor func testTeamOrganizationOverviewAndRoleScopedDetail() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--team-overview-testing"]
+        app.launch(); defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["A place for shared work"].waitForExistence(timeout: 15))
+        let overview = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        overview.name = "Mac team organization overview"; overview.lifetime = .keepAlways; add(overview)
+        let team = app.descendants(matching: .any)["team-ea300000-0000-4000-8000-000000000002"].firstMatch
+        XCTAssertTrue(team.waitForExistence(timeout: 5)); team.click()
+        XCTAssertTrue(app.staticTexts["Product design"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Launch planning"].exists)
+        XCTAssertTrue(app.staticTexts["Your role: Owner"].exists)
+        XCTAssertTrue(app.staticTexts["You"].exists)
+        let detail = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        detail.name = "Mac team organization detail"; detail.lifetime = .keepAlways; add(detail)
+        app.buttons["Refresh teams"].click()
+        XCTAssertTrue(app.staticTexts["Product design"].waitForExistence(timeout: 10))
+    }
+
     @MainActor func testNormalQuitRetainsLatestInspectorEdit() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--quick-entry-fixture", "--section=inbox"]

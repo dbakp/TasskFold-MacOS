@@ -4,13 +4,14 @@ Updated 24 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Rank 6 is active: editor recovery now has source custody and opening-time
-workspace admission; queued new capture uses a private original-account
-checkpoint. Acceptance is scoped in the editor evidence files below. Next work
-remains the broader role/account and draft-cohort matrix, scoped team adapters
-and premium organization UI. Rank 7 still needs paired offline completion and
-its recorded native/hardware gates. This does not supersede the ranked delivery
-order or the dependencies explicitly deferred by the user.
+Rank 6 is active: source-custody and opening-time editor admission are in place.
+A gated native team overview now shows organization roles, folders and permitted
+directory/invitation information through account-bound read adapters. It remains
+read-only and has not enabled team rollout. Next: reviewed organization commands
+and their retry/revision lifecycle, broader role/account and draft-cohort
+acceptance, then remaining scoped team-task adapters. Rank 7 still needs paired
+offline completion and its recorded native/hardware gates. User-deferred release,
+provider and device dependencies remain deferred.
 
 ## Immediate priority correction
 
@@ -2268,3 +2269,20 @@ Verification: 124 relevant core tests pass independently in each repository;
 Debug app/extension builds pass. Mac native runtime, real cloud transitions
 and VoiceOver remain open. Simulator proofs do not establish those gates.
 Owned test apps, builds and results removed after evidence preservation; 1.75 GiB reclaimed. No native Mac app launched this stage.
+
+## Native organization overview (24 October 2026)
+
+Both app repositories now independently own the gated Teams overview and its
+strict, ephemeral service models. Active/archived teams lead into role-aware
+folders and directories. Incoming invitations and ownership offers are visible
+without sending any email or performing a membership change. Refresh and
+workspace/session/access invalidation discard prior directory contents; stale
+reads cannot populate a different account. Organization membership never grants
+project/task permission.
+
+The disposable PostgreSQL harness now optionally exports actual list/get/invite
+responses for all four roles; each repository generates and tests its own fixture.
+See `TEAM_ORGANIZATION.md`, `p2-team-overview-evidence.json` and
+`p2-team-overview-postgres-evidence.json`. Organization mutations, live service
+rollout, broad native role/account acceptance and the remaining advanced-team
+work are still open. This milestone does not complete rank 6 or Px.

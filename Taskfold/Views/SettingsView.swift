@@ -165,6 +165,7 @@ struct AccountSettings: View {
     @State private var emailCapture = false
     @State private var webhookAccess = false
     @State private var automationAccess = false
+    @State private var teamsPresented = false
     @State private var changingEmail = false
     @State private var changingPassword = false
     @State private var deletingAccount = false
@@ -207,6 +208,9 @@ struct AccountSettings: View {
             if WebhookAccessAvailability.enabled && store.signedIn && !store.localMode {
                 Section("Task connections") { Button("Task connections…", systemImage: "arrow.triangle.branch") { webhookAccess = true }.accessibilityIdentifier("webhookAccess") }
             }
+            if TeamOrganizationAvailability.enabled && store.signedIn && !store.localMode {
+                Section("Teams") { Button("Your teams…", systemImage: "person.3") { teamsPresented = true } }
+            }
             if AutomationAccessAvailability.enabled && store.signedIn && !store.localMode {
                 Section("Connected tools") {
                     Button("Automation access…", systemImage: "key.horizontal") { automationAccess = true }.accessibilityIdentifier("automationAccess")
@@ -238,6 +242,7 @@ struct AccountSettings: View {
         .onChange(of: store.signedIn) { _, signedIn in if signedIn && !store.localMode { showLogin = false } }
         .sheet(isPresented: $emailCapture) { NavigationStack { EmailCaptureView() } }
         .sheet(isPresented: $webhookAccess) { NavigationStack { WebhookAccessView() } }
+        .sheet(isPresented: $teamsPresented) { NavigationStack { TeamOrganizationView() } }
         .sheet(isPresented: $automationAccess) { NavigationStack { AutomationAccessView() } }
         .sheet(isPresented: $changingEmail) { ChangeEmailSheet() }
         .sheet(isPresented: $changingPassword) { ChangePasswordSheet() }
