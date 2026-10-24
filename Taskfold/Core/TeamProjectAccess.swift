@@ -119,7 +119,7 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
     var restoreRequest: UUID? = nil
     var parentGeneration: String? = nil
 
-    static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at"]
+    static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at", "assigned_to", "section_id", "labels", "reminder_specs"]
     static var invalid: AppFailure { AppFailure(message: "This saved team edit needs review. Your changes remain on this device.") }
     static var conflict: AppFailure { AppFailure(message: "TASKFOLD_CONFLICT: This team task changed. Review the synced task and your saved edit.") }
 
@@ -146,6 +146,23 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
               let base = change.baseline, base["project_id"] == .string(project),
               case .string(let generation)? = base["task_generation"], TeamProjectValue.id(generation),
               change.fields.keys.allSatisfy({ base[$0] != nil }) else { throw Self.invalid }
+        for key in ["assigned_to", "section_id"] {
+            if let value = change.fields[key], value != .null {
+                guard case .string(let id) = value, TeamProjectValue.id(id) else { throw Self.invalid }
+            }
+        }
+        if let value = change.fields["labels"] {
+            guard case .array(let labels) = value, labels.count <= 256,
+                  labels.allSatisfy({ if case .string(let text) = $0 { return !text.isEmpty && text.utf8.count <= 1024 }; return false }) else { throw Self.invalid }
+        }
+        if let value = change.fields["reminder_specs"] {
+            guard case .array(let reminders) = value, reminders.count <= 20 else { throw Self.invalid }
+            var ids = Set<UUID>()
+            for reminder in reminders {
+                guard case .object(let row) = reminder, case .string(let text)? = row["id"],
+                      let id = UUID(uuidString: text), ids.insert(id).inserted else { throw Self.invalid }
+            }
+        }
         if TaskCompletionRevision.touches(change.fields) {
             guard case .number(let version)? = base["completion_version"], version.isFinite,
                   version >= 0, version <= 9_007_199_254_740_991, version.rounded(.down) == version else { throw Self.conflict }

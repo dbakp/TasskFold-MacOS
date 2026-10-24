@@ -67,6 +67,20 @@ try {
       new URL("../../supabase/migrations/" + migration, import.meta.url),
     ),
   ).digest("hex");
+  if (process.env.TASKFOLD_TEAM_PLANNING_REGRESSION === "1") {
+    const { loadTeamPlanningSchema, teamPlanningMigration } = await import(
+      "./team-planning-schema.mjs"
+    );
+    await loadTeamPlanningSchema(pg.raw);
+    report.planningMigrationSHA256 = createHash("sha256").update(
+      await readFile(
+        new URL(
+          "../../supabase/migrations/" + teamPlanningMigration,
+          import.meta.url,
+        ),
+      ),
+    ).digest("hex");
+  }
   for (const [name, u] of Object.entries(people)) {
     await pg.raw(
       `insert into auth.users(id,email,email_confirmed_at) values(${

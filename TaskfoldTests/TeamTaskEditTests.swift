@@ -60,7 +60,7 @@ final class TeamTaskEditTests: XCTestCase {
     func testWrongMutationShapeCannotReachTeamAdapter() throws {
         let(original,scope,_)=try fixture()
         for method in ["POST","DELETE","ORDER"] {var change=original;change.method=method;XCTAssertThrowsError(try scope.body(for:change))}
-        for key in ["project_id","assigned_to","subtasks","attachments","comments","source_metadata","task_generation"] {
+        for key in ["project_id","subtasks","attachments","comments","source_metadata","task_generation"] {
             var change=original;change.fields=[key:.null];change.baseline?[key] = .null;XCTAssertThrowsError(try scope.body(for:change))
         }
         var change=original;change.baseline?.removeValue(forKey:"project_id");XCTAssertThrowsError(try scope.body(for:change))
@@ -147,5 +147,50 @@ final class TeamTaskEditTests: XCTestCase {
         let(change,scope,_)=try fixture();let api=try backend(scope.account)
         TeamEditHTTP.handler={_,peer in peer.finish(Data(repeating:32,count:256001))};defer{TeamEditHTTP.handler=nil}
         do{_=try await api.send(change);XCTFail("Oversized response accepted")}catch{XCTAssertTrue(error.localizedDescription.contains("too large"))}
+    }
+    private func planningFixture() throws -> (Mutation, TeamTaskEditScope, [String:JSON], Record) {
+        let url=try XCTUnwrap(Bundle.module.url(forResource:"team-task-planning-v1",withExtension:"json",subdirectory:"Fixtures"))
+        let raw=try JSONDecoder().decode([String:JSON].self,from:Data(contentsOf:url))["planning"]!.object
+        let body=raw["body"]!.object,reply=raw["reply"]!.object
+        let scope=TeamTaskEditScope(account:raw["account"]!.text,origin:editOrigin,team:body["team_id"]!.text,project:body["project_id"]!.text)
+        return(Mutation(id:try XCTUnwrap(UUID(uuidString:body["request_id"]!.text)),table:"tasks",recordID:body["task_id"]!.text,method:"PATCH",fields:body["changes"]!.object,baseline:body["base"]!.object,teamTaskScope:scope),scope,reply,Record(raw["before"]!.object))
+    }
+    func testPlanningActualSQLReplyAndPersistedFourFieldIntent() throws {
+        let(change,scope,reply,before)=try planningFixture()
+        XCTAssertEqual(Set(change.fields.keys),Set(["assigned_to","section_id","labels","reminder_specs"]))
+        let saved=try scope.saved(reply,for:change)
+        for (key,value) in change.fields { XCTAssertEqual(saved[key],value); XCTAssertEqual(change.baseline?[key],before[key]) }
+        XCTAssertEqual(try JSONDecoder().decode(Mutation.self,from:JSONEncoder().encode(change)),change)
+        XCTAssertNoThrow(try scope.capturing(change,existing:before))
+    }
+    func testPlanningUndoAndRedoKeepEveryFrozenField() throws {
+        let(change,scope,_,before)=try planningFixture();var snapshot=Snapshot();snapshot.tables=["tasks":[before]]
+        let history=EditHistory(changes:[change],snapshot:snapshot)
+        let inverse=try XCTUnwrap(history.undo.first)
+        XCTAssertEqual(inverse.teamTaskScope,scope)
+        for key in change.fields.keys { XCTAssertEqual(inverse.fields[key],before[key]) }
+        XCTAssertNoThrow(try scope.body(for:inverse));XCTAssertNoThrow(try scope.body(for:XCTUnwrap(history.redo.first)))
+        snapshot.apply(change);snapshot.apply(inverse)
+        let restored=try XCTUnwrap(snapshot.tables["tasks"]?.first)
+        for key in change.fields.keys { XCTAssertEqual(restored[key],before[key]) }
+    }
+    func testPlanningInvalidReferenceAndListShapesStayLocal() throws {
+        let(original,scope,_,_)=try planningFixture()
+        let invalid:[String:[JSON]]=["assigned_to":[.string("invalid"),.number(1),.string("00000000-0000-0000-0000-000000000000")],"section_id":[.bool(false),.array([])],"labels":[.null,.array([.number(3)]),.array([.string("")]),.array([.string(String(repeating:"x",count:1025))]),.array(Array(repeating:.string("tag"),count:257))],"reminder_specs":[.null,.array([.string("not a reminder")]),.array([.object([:])]),.array(Array(repeating:.object(["id":.string(UUID().uuidString)]),count:21))]]
+        for (key,values) in invalid { for value in values { var change=original;change.fields=[key:value];XCTAssertThrowsError(try scope.body(for:change),key) } }
+        var duplicate=original;let reminder=try XCTUnwrap(original.fields["reminder_specs"]?.list.first)
+        duplicate.fields=["reminder_specs":.array([reminder,reminder])];XCTAssertThrowsError(try scope.body(for:duplicate))
+    }
+    func testPlanningMissingBaselineCannotBeSilentlyCaptured() throws {
+        let(original,scope,_,_)=try planningFixture()
+        for key in original.fields.keys {var change=original;change.baseline?.removeValue(forKey:key);XCTAssertThrowsError(try scope.body(for:change))}
+    }
+    @MainActor func testPlanningSendsFourFieldsThroughGuardedEndpoint() async throws {
+        let(change,scope,reply,_)=try planningFixture();let api=try backend(scope.account);var captured:URLRequest?
+        TeamEditHTTP.handler={request,peer in captured=request;peer.finish(try! JSONEncoder().encode(reply))};defer{TeamEditHTTP.handler=nil}
+        _=try await api.send(change,expectedAccount:scope.account)
+        let request=try XCTUnwrap(captured);XCTAssertEqual(request.url?.path,"/rest/v1/rpc/taskfold_edit_team_task")
+        let root=try JSONDecoder().decode([String:JSON].self,from:XCTUnwrap(request.httpBody))
+        XCTAssertEqual(root["_body"],.object(try scope.body(for:change)))
     }
 }

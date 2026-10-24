@@ -81,6 +81,22 @@ try {
       ),
     ).digest("hex");
   }
+  if (process.env.TASKFOLD_TEAM_PLANNING_REGRESSION === "1") {
+    if (process.env.TASKFOLD_TEAM_BATCH_REGRESSION !== "1") {
+      throw new Error("Planning regression requires batch schema");
+    }
+    const sql = await readFile(
+      new URL(
+        "../../supabase/migrations/20261024054229_team_task_planning_edits.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    await pg.raw(sql);
+    report.planningMigrationSHA256 = createHash("sha256").update(sql).digest(
+      "hex",
+    );
+  }
   for (const [name, u] of Object.entries(people)) {
     await pg.raw(
       `insert into auth.users(id,email,email_confirmed_at) values(${
@@ -262,7 +278,10 @@ try {
       ["user_id", people.editor.id],
       ["task_generation", randomUUID()],
       ["source_metadata", {}],
-    ]
+    ].filter(([k]) =>
+      process.env.TASKFOLD_TEAM_PLANNING_REGRESSION !== "1" ||
+      k !== "assigned_to"
+    )
   ) {
     check(
       "separate " + k + " action required",
@@ -580,6 +599,21 @@ try {
     retainedReply.value.task.user_id,
     people.outsider.id,
   );
+  if (process.env.TASKFOLD_TEAM_PLANNING_REGRESSION === "1") {
+    const { checkTeamPlanning } = await import("./team-planning-checks.mjs");
+    nativeFixture.planning = await checkTeamPlanning({
+      pg,
+      check,
+      rpc,
+      row,
+      body,
+      people,
+      team,
+      project,
+      hidden,
+      task,
+    });
+  }
   report.advisors = await pg.advisors();
   check(
     "no new security performance warnings",

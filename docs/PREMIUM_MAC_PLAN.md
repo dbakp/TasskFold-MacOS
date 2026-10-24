@@ -3999,3 +3999,25 @@ extensions build, including the platform-specific Store and new model source.
 Owned fixtures/build folders/registrations are removed. See TEAM_TASK_BATCHES.md
 and evidence. Team UI stays off pending remaining editing/workspace/review flows
 and privacy/recovery acceptance. Full Px and user deferrals remain open.
+
+
+## Team task planning — 24 October, rank 6 in progress
+
+The guarded team edit adapter now supports assignment, labels, same-project
+sections and portable reminders. Live recipients/current roles, locked section
+references, durable retries and final merged-value validation protect shared work.
+Recorded retries cannot reassign departed recipients. Private/unknown reminder
+choices and future extensions survive supported edits; oversized concurrent merges
+roll back. Each app independently persists these intents and preserves Undo/Redo.
+
+Each repo passes 363 database checks (132 planning/edit + 72 batch + 89 lifecycle
++ 70 discussion), 182 selected Swift tests (five new) and unsigned Debug app/
+embedded-extension builds. Advisors have no new warnings/errors; owned containers,
+build outputs and temporary Mac registration are removed. See
+TEAM_TASK_PLANNING.md and the planning evidence files. No hosted/runtime/
+distribution acceptance or enabled team UI is claimed.
+
+Next: checklist/recurrence completion and comment/mention/file/service adapters,
+current-role workspace refresh and premium native team organization/review UI,
+then full privacy/recovery acceptance. Full Px and existing user deferrals retain
+scope.
