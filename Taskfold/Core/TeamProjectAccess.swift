@@ -100,3 +100,56 @@ struct TeamProjectPage: Sendable {
         teamRevision = context.revision; state = context.state; setupPaused = context.paused
     }
 }
+
+/// Captured when the user edits, never inferred from a later project listing.
+/// Persisting context prevents a saved intent from changing account or workspace.
+struct TeamTaskEditScope: Codable, Equatable, Sendable {
+    let account: String
+    let origin: String
+    let team: String
+    let project: String
+
+    static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at"]
+    static var invalid: AppFailure { AppFailure(message: "This saved team edit needs review. Your changes remain on this device.") }
+    static var conflict: AppFailure { AppFailure(message: "TASKFOLD_CONFLICT: This team task changed. Review the synced task and your saved edit.") }
+
+    func capturing(_ change: Mutation, existing: Record?) throws -> Mutation {
+        guard let existing, existing.id == change.recordID, existing["project_id"] == .string(project),
+              change.baseline?["task_generation"] == existing["task_generation"] else { throw Self.conflict }
+        var captured = change
+        if captured.baseline?["project_id"] == nil { captured.baseline?["project_id"] = .string(project) }
+        _ = try body(for: captured)
+        return captured
+    }
+    func body(for change: Mutation) throws -> [String: JSON] {
+        guard [account, team, project, change.recordID].allSatisfy(TeamProjectValue.id),
+              change.table == "tasks", change.method == "PATCH", change.organizationOrder == nil,
+              !change.fields.isEmpty, Set(change.fields.keys).isSubset(of: Self.fields),
+              let base = change.baseline, base["project_id"] == .string(project),
+              case .string(let generation)? = base["task_generation"], TeamProjectValue.id(generation),
+              change.fields.keys.allSatisfy({ base[$0] != nil }) else { throw Self.invalid }
+        if TaskCompletionRevision.touches(change.fields) {
+            guard case .number(let version)? = base["completion_version"], version.isFinite,
+                  version >= 0, version <= 9_007_199_254_740_991, version.rounded(.down) == version else { throw Self.conflict }
+        }
+        let body: [String: JSON] = ["team_id": .string(team), "project_id": .string(project), "task_id": .string(change.recordID),
+            "request_id": .string(change.id.uuidString.lowercased()), "task_generation": .string(generation), "base": .object(base), "changes": .object(change.fields)]
+        guard try JSONEncoder().encode(body).count <= 128000 else { throw Self.invalid }
+        return body
+    }
+    func saved(_ reply: [String: JSON], for change: Mutation) throws -> Record {
+        let body = try body(for: change)
+        guard reply["protocol"] == .number(1), reply["account"] == .string(account),
+              reply["team_id"] == .string(team), reply["project_id"] == .string(project),
+              reply["request_id"] == body["request_id"], reply["task_generation"] == body["task_generation"],
+              case .bool? = reply["replayed"], case .object(let fields)? = reply["task"],
+              fields["id"] == .string(change.recordID), fields["project_id"] == .string(project),
+              fields["task_generation"] == body["task_generation"], case .string(let creator)? = fields["user_id"],
+              TeamProjectValue.id(creator), case .string? = fields["title"], case .bool? = fields["completed"],
+              case .number(let version)? = fields["completion_version"], version.isFinite, version >= 0,
+              version <= 9_007_199_254_740_991, version.rounded(.down) == version else { throw Self.invalid }
+        // A replay can return another person's newer values. Confirm identity,
+        // not equality with our desired edit, so a retry cannot overwrite them.
+        return Record(fields)
+    }
+}

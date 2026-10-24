@@ -1,0 +1,60 @@
+{
+  "body": {
+    "team_id": "5cb46b25-2a84-4fea-9d1c-44e5bbd63b85",
+    "project_id": "6e9dbe58-e554-4270-ac4d-e89906d363c3",
+    "task_id": "e6b4071a-3545-42b2-abe2-515c955abc34",
+    "request_id": "490ab760-c2f4-407b-b19c-94d061df70ac",
+    "task_generation": "1456902e-f091-4b28-9088-255d65ae4f2b",
+    "base": {
+      "title": "Original",
+      "task_generation": "1456902e-f091-4b28-9088-255d65ae4f2b",
+      "project_id": "6e9dbe58-e554-4270-ac4d-e89906d363c3"
+    },
+    "changes": {
+      "title": "Edited"
+    }
+  },
+  "reply": {
+    "task": {
+      "id": "e6b4071a-3545-42b2-abe2-515c955abc34",
+      "title": "Edited",
+      "labels": [],
+      "user_id": "273dd933-e17c-4286-a097-ddb7649207f4",
+      "comments": [],
+      "due_date": null,
+      "due_time": null,
+      "priority": 4,
+      "subtasks": [],
+      "completed": false,
+      "reminders": [],
+      "time_zone": null,
+      "created_at": "2026-10-24T04:10:32.63008+00:00",
+      "project_id": "6e9dbe58-e554-4270-ac4d-e89906d363c3",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [],
+      "description": null,
+      "completed_at": null,
+      "is_recurring": false,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {},
+      "task_generation": "1456902e-f091-4b28-9088-255d65ae4f2b",
+      "duration_minutes": null,
+      "completion_version": 0,
+      "recurrence_pattern": null,
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "8e75ae17-17ab-41ee-8517-7a110265566e",
+    "team_id": "5cb46b25-2a84-4fea-9d1c-44e5bbd63b85",
+    "protocol": 1,
+    "replayed": false,
+    "project_id": "6e9dbe58-e554-4270-ac4d-e89906d363c3",
+    "request_id": "490ab760-c2f4-407b-b19c-94d061df70ac",
+    "task_generation": "1456902e-f091-4b28-9088-255d65ae4f2b"
+  },
+  "account": "8e75ae17-17ab-41ee-8517-7a110265566e"
+}

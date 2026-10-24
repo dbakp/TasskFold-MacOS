@@ -3934,3 +3934,19 @@ write/assignment/structural adapters and premium team/folder/admin/invitation UI
 cache/filter/widget and backup/account/activity acceptance are still required.
 See TEAM_PROJECT_ACCESS.md and the two project evidence files. Full Px and all
 existing user deferrals remain unchanged.
+
+
+### Guarded team task edits — 24 October
+
+The independently owned Mac candidate now includes the disabled existing-task
+edit RPC and explicit native queue adapter. Locked live role checks, narrow task
+scope, generation/completion review and durable replay receipts protect team
+work without widening direct writes. Undo/review retain their workspace;
+unavailable-project recovery cannot discard a newer team draft.
+
+Mac passes 70 real PostgreSQL checks and 59 selected SwiftPM tests (11 new), with
+no failures/skips. Advisors report no errors/new warnings; the owned fixture is
+removed. Store syntax and project lint pass. This is not a native runtime/app
+build or hosted-delivery claim. Catalog editing stays false pending remaining
+write/workspace/role-refresh adapters and premium team UI/acceptance. See
+TEAM_TASK_EDITS.md and task-edit evidence. Full Px and user deferrals stay open.

@@ -1,0 +1,26 @@
+{
+  "tests": 59,
+  "newTeamTests": 11,
+  "failures": 0,
+  "skips": 0,
+  "independentlyRun": true,
+  "deployed": false,
+  "nativeUIClaimed": false,
+  "nativeAppBuildClaimed": false,
+  "storeSyntaxParsed": true,
+  "xcodeProjectLint": true,
+  "nativeCatalogEditingEnabled": false,
+  "realDataChanged": false,
+  "filter": "TeamTaskEditTests|TeamProjectAccessTests|AutomationAccessTests|EmailCaptureTests",
+  "sha256": {
+    "Taskfold/Core/Backend.swift": "b12f75d09537cdb81a34abeaa44f2f45dad765dbe4cc6fd89158f117fe597d6b",
+    "Taskfold/Core/Models.swift": "a5d1883d30345fda4a03d746a9aa1c7cd5137cfb183d3225341db32efdaccf2f",
+    "Taskfold/Core/Store.swift": "dd47fa1aec0e1ef47420af9ed742a91115cde081e958e4d9bf7cc6bbd0d05757",
+    "Taskfold/Core/TeamProjectAccess.swift": "18cd6f7c59a90694f2cfdd22d60e0c57f4d6b29554c6436166b8c8f865f77521",
+    "TaskfoldTests/TeamTaskEditTests.swift": "41db7428c0807d49141fdd8f81df722f910e36a624149ddd2eb30dc725cbf4d2",
+    "TaskfoldTests/Fixtures/team-task-edit-v1.json": "9387fe7778cb3dc10887dbb9189cd906b4f4f451e9f18538cc00399b1b6bb20a",
+    "supabase/migrations/20261024040403_team_task_edits.sql": "61cc2cc98e265e1110c6125a3ed3e0ba94a4922570e24be6d80c43b94d278b0a",
+    "Scripts/Database/test-team-task-edits.mjs": "5234f04d388641eb1b3603e928d8cadca226a83b50778eee646ea6024cb71c6d"
+  },
+  "appOwnsTeamEditModelSource": true
+}

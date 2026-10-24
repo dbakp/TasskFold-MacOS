@@ -98,6 +98,7 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var reminderPreferenceField: String? = nil
     /// One complete ordering intent, persisted with its retry identity.
     var organizationOrder: OrganizationOrder.Command? = nil
+    var teamTaskScope: TeamTaskEditScope? = nil
 }
 
 /// Undo/redo recreation is a new task incarnation; an exact queued retry retains its chosen ID.
@@ -259,6 +260,9 @@ struct SyncConflict: Identifiable {
         guard mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
               remote.id.lowercased() == mutation.recordID.lowercased(),
               let index = snapshot.pending.firstIndex(where: { $0 == mutation }) else { return nil }
+        if let scope = mutation.teamTaskScope, keepLocal {
+            guard remote["project_id"] == .string(scope.project), remote["task_generation"] == mutation.baseline?["task_generation"] else { return nil }
+        }
         let laterMutationIDs = Set(snapshot.pending.dropFirst(index + 1).map(\.id))
         var result = snapshot
         if keepLocal, mutation.method == "DELETE" {
@@ -269,6 +273,10 @@ struct SyncConflict: Identifiable {
             })
             result.pending[index].baseline = Dictionary(uniqueKeysWithValues: mutation.fields.keys.map { ($0, remote[$0]) })
             result.pending[index] = TaskCompletionRevision.capturing(result.pending[index], existing: remote)
+            if let scope = mutation.teamTaskScope {
+                guard let reviewed = try? scope.capturing(result.pending[index], existing: remote) else { return nil }
+                result.pending[index] = reviewed; result.pending[index].id = UUID()
+            }
             if TaskCompletionRevision.touches(mutation.fields) {
                 let before = TaskCompletionRevision.applying(mutation.fields, to: Record(mutation.baseline ?? [:]))["completion_version"].integer
                 let after = TaskCompletionRevision.applying(result.pending[index].fields, to: remote)["completion_version"].integer
@@ -465,7 +473,7 @@ struct Snapshot: Codable, Equatable, Sendable {
 /// snapshot in the encrypted vault before replacing the active workspace.
 extension Snapshot {
     func recoveryProjectIDs(for mutation: Mutation) -> [String] {
-        guard pending.contains(mutation), ["tasks", "sections", "projects", "project_collaborators"].contains(mutation.table),
+        guard mutation.teamTaskScope == nil, pending.contains(mutation), ["tasks", "sections", "projects", "project_collaborators"].contains(mutation.table),
               ["POST", "PATCH", "DELETE"].contains(mutation.method) else { return [] }
         if mutation.table == "projects", mutation.method == "POST" { return [] }
         let row = tables[mutation.table]?.first { $0.id.lowercased() == mutation.recordID.lowercased() }
@@ -505,6 +513,9 @@ extension Snapshot {
             // A row moved elsewhere on the server still needs normal conflict handling.
             guard !(remote[table] ?? []).contains(where: { removed[table]?.contains($0.id.lowercased()) == true }) else { return nil }
         }
+        // A legacy mutation in the same project cannot discard a later scoped
+        // team intent while recovering its own unavailable-project snapshot.
+        guard !pending.contains(where: { $0.teamTaskScope != nil && removed[$0.table]?.contains($0.recordID.lowercased()) == true }) else { return nil }
         var recovered = self
         recovered.pending.removeAll { removed[$0.table]?.contains($0.recordID.lowercased()) == true }
         for key in recovered.tables.keys.filter({ $0.lowercased() == "project_members:" + project }) { recovered.tables.removeValue(forKey: key) }
@@ -979,13 +990,17 @@ struct EditHistory {
             }
             if let old = current.tables[change.table]?.first(where: { $0.id == change.recordID }) {
                 let fields = change.method == "DELETE" ? old.fields : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old.fields[$0] ?? .null) })
-                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(change.fields, to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil))
+                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(change.fields, to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil, teamTaskScope: change.teamTaskScope))
                 var forward = change
                 if change.method == "PATCH" { forward.baseline = change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: change.fields, from: old) : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old[$0]) }) }
+                if let scope = change.teamTaskScope { forward.baseline?["project_id"] = .string(scope.project) }
                 redo.append(forward)
             } else {
                 redo.append(change)
-                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: "DELETE", fields: [:], baseline: change.table == "tasks" ? change.fields : nil))
+                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: "DELETE", fields: [:], baseline: change.table == "tasks" ? change.fields : nil, teamTaskScope: change.teamTaskScope))
+            }
+            if let scope = change.teamTaskScope, !inverse.isEmpty, inverse[inverse.count - 1].method == "PATCH" {
+                inverse[inverse.count - 1].baseline?["project_id"] = .string(scope.project)
             }
             current.apply(change)
         }

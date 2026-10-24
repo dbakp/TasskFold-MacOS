@@ -978,7 +978,7 @@ final class Store {
         // Undo and redo are new commands; a persisted retry keeps its existing identity.
         let orderingCommands = changes.map { change in
             var change = change
-            if change.organizationOrder != nil { change.id = UUID() }
+            if change.organizationOrder != nil || change.teamTaskScope != nil { change.id = UUID() }
             return change
         }
         let old = snapshot
@@ -1020,6 +1020,12 @@ final class Store {
                 snapshot = old
                 error = "This task was deleted and restored while you were editing. Reopen its current copy before applying this change."
                 return false
+            }
+            if let scope = change.teamTaskScope {
+                do {
+                    guard !localMode, scope.account == userID, scope.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskEditScope.invalid }
+                    change = try scope.capturing(change, existing: record("tasks", id: change.recordID))
+                } catch { snapshot = old; self.error = error.localizedDescription; return false }
             }
             committedChanges.append(change)
             let before = change.table == "tasks" ? record("tasks", id: change.recordID) : nil
@@ -1172,7 +1178,7 @@ final class Store {
     /// A denied queued change must not block the refresh that removes revoked shared work.
     /// Keep its complete local snapshot in the encrypted vault before changing the live cache.
     private func recoverUnavailableProject(_ mutation: Mutation, generation: UUID, account: String) async -> Bool {
-        guard generation == accountGeneration, snapshot.pending.contains(mutation) else { return false }
+        guard mutation.teamTaskScope == nil, generation == accountGeneration, snapshot.pending.contains(mutation) else { return false }
         let reviewed = snapshot
         let projectIDs = reviewed.recoveryProjectIDs(for: mutation)
         guard !projectIDs.isEmpty else { return false }

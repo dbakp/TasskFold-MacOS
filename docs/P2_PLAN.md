@@ -1832,3 +1832,26 @@ assignment/structural adapters, then premium native team/folder/admin/invitation
 flows and workspace/cache/filter/widget/backup/account acceptance. This does not
 complete advanced teams, rank 6 or wider Px; every existing user deferral retains
 scope.
+
+
+## Guarded team task edits — 24 October, rank 6 in progress
+
+Both independent candidates now have a disabled adapter for existing task text,
+planning and completion edits. Current live membership/role and project state
+are locked and checked; captured workspace/generation/baseline and durable
+request receipts prevent stale permissions, conflicting writes and old retries
+from replacing newer work. Direct team writes remain closed. Native scoped
+queues retain rejected drafts, validate replies, preserve Undo/review context and
+cannot be discarded through legacy unavailable-project recovery.
+
+Each repo passes 70 PostgreSQL checks (including two transaction overlaps) and
+59 selected SwiftPM checks (11 new, 48 project/automation/email regressions), with
+zero failures/skips. Advisors have no errors/new warnings; owned containers are
+removed. See TEAM_TASK_EDITS.md and both task-edit evidence files. There is no
+hosted or native UI/runtime claim. Editing stays off; catalog capabilities remain
+read-only until workspace/role refresh and remaining write adapters are ready.
+
+Next: create/delete/restore/recurrence, assignment/structural/checklist/reminder,
+comment/file/API/email adapters, then premium team organization/admin UI and
+workspace/privacy/recovery acceptance. Rank 6 and the full Px goal remain open;
+all user deferrals remain unchanged.
