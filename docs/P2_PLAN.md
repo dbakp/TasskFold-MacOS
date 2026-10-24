@@ -4,7 +4,7 @@ Updated 24 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. Rank-6 automation acceptance and rank-7 Watch implementation are both in progress. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; scoped clipboard/spoken secret controls now pass; native recovery and the remaining spoken checks remain in progress. Hosted server-session expiry and temporary encryption-key restoration now pass in both repo-owned services; hosted same-account webhook, queued-task and API-key recovery now pass on phone/tablet; wider spoken acceptance remains open. Signing-dependent Mac runtime stays deferred. Actual paired Simulator live capture/completion/replay and normal foreground relaunch now pass; offline Watch relaunch is durable. A startup authority fix passes 31 native checks, while its fixed paired phone-reboot delivery retake remains open. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. Rank-6 automation acceptance and rank-7 Watch implementation are both in progress. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; scoped clipboard/spoken secret controls now pass; native recovery and the remaining spoken checks remain in progress. Hosted server-session expiry and temporary encryption-key restoration now pass in both repo-owned services; hosted same-account webhook, queued-task and API-key recovery now pass on phone/tablet; wider spoken acceptance remains open. Signing-dependent Mac runtime stays deferred. Actual paired Simulator live capture/completion/replay and normal foreground relaunch now pass; offline Watch relaunch is durable. The startup authority fix and ready-update retry now pass paired Simulator cold capture return; 88 focused cases cover the queue/binding/retry policy. Paired offline completion, hardware/background/cloud and native/spoken acceptance remain open. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -1725,3 +1725,37 @@ Shipping flags/embedding remain off. No Mac code/build dependency or shared
 wire/task/receipt contract changes. Real hardware/background/cloud/input/spoken,
 email/team/Wear OS and wider Px gates and all user deferrals retain scope. See the
 iOS-owned `p2-watch-paired-simulator-evidence.json` for exact accepted limits.
+
+
+## Watch ready-update retries and cold capture return — 24 October
+
+The fresh paired retake confirmed the startup authority fix, then found a second
+gap: the Watch received the phone's ready publication but left an unacknowledged
+capture waiting after the earlier live request failed. The client now retries
+eligible original commands on a fresh validated publication. Duplicate/old frames,
+explicit Retry/stale receipts, full history, concealment and changed bindings do
+not create a publication loop. One bounded ephemeral credit per command handles a
+ready update overlapping an older request; explicit Refresh/session retry behavior
+remains available. No command, destination or receipt is invented or rewritten.
+
+Eighty-eight focused checks pass (11 new policy/overlap cases plus the previous
+77, no failures/skips). Current iPhone Debug and Watch Debug/Release builds pass;
+Release excludes fixture flags and diagnostics. The actual paired Simulator run
+now proves capture return after phone OS reboot, including a real failed send,
+an unsolicited ready-update retry and matching acknowledgement in the same Watch
+process. Seventeen independent file/identity/receipt checks pass. All four earlier
+synthetic tasks/receipts remain exact; only the original fifth command's task and
+receipt appear, and the Watch outbox clears. A separate short-outage run also
+passes. Read-only DEBUG observations establish the retry path; no peer or packet
+is injected. Phone uses normal foreground startup with only the synthetic-cache
+selector, and Watch receives no manual Refresh/Connect or restart on return.
+
+This supersedes the earlier pending **cold capture return** gate only. Paired
+offline completion/stale/Undo/account variants, hardware/background/system launch,
+cloud/storage, native input/spoken/layout/icon and eventual embedding gates remain
+open. No shared stored/wire contract or Mac runtime/build inputs change. Watch
+shipping flags remain off; advanced teams/email/Wear OS, wider Px and all user
+deferrals retain scope. Exact proof is in the iOS-owned
+`p2-watch-cold-return-evidence.json`. Five superseded generated test-build caches
+were also removed (about 3.2 GiB allocated); source, saved app data and Simulator
+devices were not pruned, and current reusable build caches remain.

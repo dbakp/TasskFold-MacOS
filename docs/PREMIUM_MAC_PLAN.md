@@ -3877,3 +3877,15 @@ readiness fix passes 31 native checks, including four new guards. Fixed paired
 phone-reboot delivery still needs a fresh retake. Mac runtime/build/resources and
 shared data contracts are unchanged; this claims no new Mac runtime pass. All
 hardware/background/cloud/input/spoken, broader Px and deferred gates stay open.
+
+
+### Watch ready-update recovery — 24 October
+
+The iOS-owned Watch now retries original unacknowledged work on fresh ready
+publications, with bounded overlap handling and no loop on deferred receipts.
+Eighty-eight focused cases pass. Actual paired Simulator cold capture return after
+a real SDK failure passes 17 independent checks, preserving the original binding,
+old work and receipts while saving only the original new command. No Mac runtime,
+build or stored contract changes; no new Mac runtime pass is claimed. Paired
+offline completion, hardware/background/cloud, native/spoken, remaining Px and all
+user-deferred gates remain open. Watch shipping remains off/unembedded.
