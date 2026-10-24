@@ -1,8 +1,9 @@
-# Team project access — native read and management foundation
+# Team projects — access and native management (gated)
 
 24 October 2026. Local, undeployed, disabled by default. This builds on
 TEAM_ORGANIZATION.md and TEAM_CONTENT_CUSTODY.md. It does not complete advanced
-teams: task/comment/file/service editing and native workspace screens remain open.
+teams: full task/comment/file/service editing, rollout and broader native acceptance remain open.
+The latest gated project-management implementation is recorded below.
 
 ## Role contract
 
@@ -144,3 +145,73 @@ native team switcher/folders/administration, project invitation/people flows,
 membership-driven catalog refresh/cache/filter/widget privacy, account-removal
 explanations and backup/activity acceptance. Keep all existing user deferrals and
 the full ranked Px objective intact; this is neither rank-6 nor full-Px completion.
+
+
+## Gated native project management (24 October 2026)
+
+Both independently owned apps now connect Projects from a team's overview to the
+permitted catalog, project visibility/folder settings and reviewed access controls.
+Owners/admins and project managers see current accepted recipients; guests cannot
+create projects or become managers. Team-role management remains inherited and
+cannot be misleadingly overridden. Reset to team permissions explicitly explains
+whether this restores Editor access or removes access. Narrowing resets remain
+available while paused/archived; widening changes require normal availability.
+Unchanged settings and unchanged explicit roles cannot create a new command.
+
+Creation makes a new empty top-level team project. Private visibility includes
+explicit recipients plus the team owner/admins; it never promises secrecy from
+admins. Folder options come from the same reviewed team. Project moves, personal
+project adoption, templates/subprojects and actual team-task editing remain other
+workflows, and no such write permission is enabled by this screen. Team-project
+rename/archive/delete still need dedicated guards and reviews; personal edit
+paths stay closed for team projects. The preview
+states when task editing is unavailable rather than opening a personal task path.
+
+The source-only private presentation wrapper first executes the existing guarded
+service. It adds bounded project names to permitted list/get rows and accepted
+member IDs, roles and profile names to manager get responses. It adds no global
+account search or contact-email endpoint. Nonmanagers receive no recipient/grant
+directory. Banned/unconfirmed/removal-pending recipients are excluded. Names never
+authorize actions; commands retain the selected exact account ID. A team admin's
+confirmed email is merged only from that admin's separately authorized team read.
+The Join disclosure now explains project managers' name visibility separately
+from the owner/admin email directory. Profiles are self-authored, not proof of
+identity. The existing project/task/storage access boundaries stay intact.
+
+A typed project command retains exact action/body/account/backend/team/project
+and both revisions. Creation/settings/set_access/reset_access all use a separate
+private recovery namespace. The shared journal implementation preserves existing
+team-command bytes/keys while keeping the two families independent. It checks the
+account-removal fence, coordinates across app windows, saves before sending and
+clears only the reviewed request after a verified minimal receipt. Lost replies
+retry the same nonce/body; stale, expired or unauthorized results stay saved for
+explicit review/clear. Saved-request recovery shows the authored name, requested
+visibility/folder or selected account/role so an expired request remains useful
+to review without recovering private files manually. Project access never enters the optimistic task queue or
+Undo. Account removal also clears this new private command family.
+
+Catalog/detail reads clear prior names before loading, bind the caller/session
+and compare the existing verified workspace-boundary token before/after the full
+read. Pages are bounded at 1,000 total projects and must keep team revision/state/
+pause context and strict ordering. Access drift or an account switch publishes no
+partial directory. Project replies now have a bounded 1 MB transport allowance
+for up to 500 recipients; redirects, cache/cookies and existing session fences
+remain closed. No directory or grant projection is saved into tasks/widgets or
+portable backups. Confirmed management refreshes the scoped view and requests the
+existing workspace sync; wider live workspace/cache/editor/widget transition
+acceptance remains required before enabling teams.
+
+See `p2-team-project-management-evidence.json` and the separately generated real
+SQL response fixtures for exact verification. This is a gated implementation,
+not hosted Auth/Keychain, Mac runtime/spoken, Realtime or release acceptance.
+Team rollout and task-write flags remain disabled. Existing user deferrals and
+all other ranked Px work remain intact.
+
+
+The new shared-service migration versions are canonical in both independently
+owned copies: directory identity `20261024161155` and project presentation
+`20261024163752`. The Mac directory file was renamed from `20261024161156` with
+identical SQL; its earlier evidence remains the historical snapshot at commit
+`aff6323`. Both services stay undeployed. Current Mac directory/project harnesses
+are rerun against these owned canonical files; no cross-repo runtime dependency
+is introduced. Older foundation-history reconciliation remains a rollout check.

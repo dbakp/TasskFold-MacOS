@@ -12,7 +12,9 @@ stable-request recovery; team rollout stays disabled. Gated invitation responses
 membership/role/ownership and leave/delete controls are now implemented. Next:
 broader native/live role/account and draft-cohort acceptance, then remaining
 scoped team-task adapters. Scoped profile/confirmed-email presentation is now
-implemented; its live-service acceptance remains open. Rank 7 still needs paired
+implemented; its live-service acceptance remains open. Gated Projects now adds
+catalog, creation, visibility/folder and access/reset reviews with separate
+private request recovery; task editing remains disabled. Rank 7 still needs paired
 offline completion and its recorded native/hardware gates. User-deferred release,
 provider and device dependencies remain deferred.
 
@@ -2359,3 +2361,37 @@ large-text roles stack below names and the review email uses a separate full-wid
 line to avoid the standard label's truncation. Native Mac/spoken and live-service
 acceptance remain open. Temporary test apps/builds/results were removed after
 evidence preservation; approximately 1.08 GiB reclaimed. No Mac test app launched.
+
+
+## Gated project catalog and access management — 24 October, rank 6 in progress
+
+Projects now connects a team to its permitted project catalog and native create,
+visibility/folder and access reviews in both independent apps. All four existing
+management actions retain account/backend/team/project identity and revisions in
+an independent private journal. Unknown results retry the same request after
+relaunch. Reset explains the actual team-default outcome; team-role management
+and guest restrictions stay enforced. Read fences prevent partial catalog/people
+publication during access or account changes. No team task edit or rollout flag
+is enabled, and no personal project/task path substitutes for this workflow.
+
+See TEAM_PROJECT_ACCESS.md and p2-team-project-management-evidence.json for exact
+client/service/native scope. Next remains live authenticated acceptance, broader
+role/account/editor/cache/widget transitions, current-role task/comment/file and
+service adapters, personal project adoption/templates/subprojects, and the other
+ranked backlog. Native Mac/spoken and all user-deferred release/provider/device
+work stay open. This does not complete rank 6 or the full Px objective.
+
+
+Verification: 109 relevant core tests (including 10 new project-management cases)
+and 152 owned PostgreSQL checks pass independently in each repo, with successful
+Debug app/extension builds. Actual SQL fixtures cover 13 accepted receipts across
+all four actions. The Mac canonical directory migration also passes its 213-check
+regression run with unchanged SQL bytes. iPhone and iPad native tests pass create,
+visibility/folder changes, lost reply/relaunch/same-request retry, guest Viewer
+access, reset/removal and final relaunch. Saved records show one project, revision
+4, four unique writes and no pending request. Accessibility XXXL create/settings/
+access cancellation creates no peer file or pending command before the lifecycle.
+All twelve screenshots are inspected. Native testing uses synthetic peer/private
+IO, not genuine cloud Auth/Keychain. Mac runtime/spoken and broader live workspace/
+editor/widget acceptance remain open; rollout/task-write flags stay disabled.
+Owned test apps/builds/results are removed; approximately 1.11 GiB reclaimed.

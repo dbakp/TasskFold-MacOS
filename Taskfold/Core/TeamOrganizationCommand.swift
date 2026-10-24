@@ -185,8 +185,14 @@ struct TeamOrganizationAdministration {
 
 /// Stable, private, one-command-per-account/server recovery shared across app windows.
 /// Keychain data never enters portable backups, widgets or the task cache.
-actor TeamOrganizationCommandVault {
-    private struct Envelope: Codable { var version = 1; let command: TeamOrganizationCommand }
+protocol ReviewedTeamCommand: Codable, Equatable, Sendable {
+    var account: String { get }; var origin: String { get }
+    static var storagePrefix: String { get }; static var invalid: AppFailure { get }
+}
+extension TeamOrganizationCommand: ReviewedTeamCommand { static let storagePrefix = "team-command-v1." }
+typealias TeamOrganizationCommandVault = ReviewedTeamCommandVault<TeamOrganizationCommand>
+actor ReviewedTeamCommandVault<Command: ReviewedTeamCommand> {
+    private struct Envelope: Codable { var version = 1; let command: Command }
     private let io: any CalendarSecureItemIO
     private let lock: AutomationEnrollmentProcessLock
     private let removalDirectory: URL?
@@ -196,37 +202,37 @@ actor TeamOrganizationCommandVault {
     }
     private func key(_ account: String, origin: String) throws -> String {
         try TeamOrganizationValue.scope(account: account, origin: origin)
-        return "team-command-v1." + account + "." + CalendarOAuthConfiguration.digest(origin)
+        return Command.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin)
     }
     private func guarded<T>(account: String, _ action: () throws -> T) throws -> T {
         if let removalDirectory { return try AccountRemovalDisk(directory: removalDirectory, account: account).writable(action) }
         return try action()
     }
-    private func read(account: String, origin: String) throws -> TeamOrganizationCommand? {
+    private func read(account: String, origin: String) throws -> Command? {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard let data = try io.read(key: key(account, origin: origin)) else { return nil }
         guard data.count <= 20_000, let value = try? JSONDecoder().decode(Envelope.self, from: data), value.version == 1,
-              value.command.account == account, value.command.origin == origin else { throw TeamOrganizationCommand.invalid }
+              value.command.account == account, value.command.origin == origin else { throw Command.invalid }
         return value.command
     }
-    func pending(account: String, origin: String) throws -> TeamOrganizationCommand? {
+    func pending(account: String, origin: String) throws -> Command? {
         try lock.withExclusive(account: account) { try guarded(account: account) { try read(account: account, origin: origin) } }
     }
-    func begin(_ command: TeamOrganizationCommand, lease: CalendarReadLease) throws {
+    func begin(_ command: Command, lease: CalendarReadLease) throws {
         try lock.withExclusive(account: command.account, check: { try lease.check() }) {
             try guarded(account: command.account) {
                 if let old = try read(account: command.account, origin: command.origin) {
                     guard old == command else { throw AppFailure(message: "Finish or review your saved team request first.") }; return
                 }
                 let data = try JSONEncoder().encode(Envelope(command: command))
-                guard data.count <= 20_000 else { throw TeamOrganizationCommand.invalid }
+                guard data.count <= 20_000 else { throw Command.invalid }
                 try lease.check(); try io.write(data, key: key(command.account, origin: command.origin))
             }
         }
     }
     /// Clearing recovery is conditional: another window's newer request survives.
     /// This never cancels or undoes an operation already accepted by the server.
-    func clear(_ command: TeamOrganizationCommand, lease: CalendarReadLease) throws {
+    func clear(_ command: Command, lease: CalendarReadLease) throws {
         try lock.withExclusive(account: command.account, check: { try lease.check() }) {
             try guarded(account: command.account) {
                 guard let old = try read(account: command.account, origin: command.origin) else { return }

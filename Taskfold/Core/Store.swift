@@ -913,6 +913,7 @@ final class Store {
         UserDefaults.standard.set(false, forKey: "localMode")
         snapshot = Snapshot(); undoStack = []; redoStack = []; load(); Task { await refreshRemoteReminderRegistration(); await sync() }
     }
+    @ObservationIgnored lazy var teamProjectCommandVault = TeamProjectCommandVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-project-commands"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
     @ObservationIgnored lazy var teamOrganizationCommandVault = TeamOrganizationCommandVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-commands"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
     @ObservationIgnored lazy var emailAddressVault = EmailAddressVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".email-addresses"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("EmailAddressLocks", isDirectory: true))
     @ObservationIgnored lazy var webhookEnrollmentVault = WebhookEnrollmentVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".webhook-enrollment"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("WebhookEnrollmentLocks", isDirectory: true))
@@ -1026,6 +1027,7 @@ final class Store {
         try await webhookEnrollmentVault.removeAccount(account, origin: command.origin)
         try await emailAddressVault.removeAccount(account, origin: command.origin)
         try await teamOrganizationCommandVault.removeAccount(account, origin: command.origin)
+        try await teamProjectCommandVault.removeAccount(account, origin: command.origin)
         try await accountRemovalVault.finish(command)
         removalPendingAccounts.remove(account)
         UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + account)

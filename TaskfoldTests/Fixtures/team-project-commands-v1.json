@@ -1,0 +1,298 @@
+[
+  {
+    "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+    "action": "set_access",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "request_id": "f68ef71a-4d2b-4555-9d65-5d7c9021c4f8",
+      "issued_at": "2026-10-24T17:04:34.670Z",
+      "team_revision": 1,
+      "revision": 1,
+      "user_id": "c99c70f3-b7ec-4afc-9a1c-fe19aa440708",
+      "role": "viewer"
+    },
+    "result": {
+      "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 2,
+      "request_id": "f68ef71a-4d2b-4555-9d65-5d7c9021c4f8",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+    "action": "set_access",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "request_id": "d37af7cf-158a-4971-bfa9-782cfb5b1a77",
+      "issued_at": "2026-10-24T17:04:37.511Z",
+      "team_revision": 1,
+      "revision": 2,
+      "user_id": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+      "role": "viewer"
+    },
+    "result": {
+      "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 3,
+      "request_id": "d37af7cf-158a-4971-bfa9-782cfb5b1a77",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+    "action": "set_access",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "request_id": "d37af7cf-158a-4971-bfa9-782cfb5b1a77",
+      "issued_at": "2026-10-24T17:04:37.511Z",
+      "team_revision": 1,
+      "revision": 2,
+      "user_id": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+      "role": "viewer"
+    },
+    "result": {
+      "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 3,
+      "request_id": "d37af7cf-158a-4971-bfa9-782cfb5b1a77",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+    "action": "settings",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "request_id": "95b161f8-301c-40d8-8812-c7631240c5af",
+      "issued_at": "2026-10-24T17:04:38.538Z",
+      "team_revision": 1,
+      "revision": 3,
+      "visibility": "private",
+      "folder_id": "076796bf-7d0c-44d7-af1b-3c6f2101ce7a"
+    },
+    "result": {
+      "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 4,
+      "request_id": "95b161f8-301c-40d8-8812-c7631240c5af",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+    "action": "reset_access",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "request_id": "b40f84be-bf65-4de6-8759-f51c60e0904d",
+      "issued_at": "2026-10-24T17:04:38.927Z",
+      "team_revision": 1,
+      "revision": 4,
+      "user_id": "c99c70f3-b7ec-4afc-9a1c-fe19aa440708"
+    },
+    "result": {
+      "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 5,
+      "request_id": "b40f84be-bf65-4de6-8759-f51c60e0904d",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "06125df0-9f83-4f9f-bd12-a89ea2b5fee3",
+    "action": "settings",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "request_id": "9d571706-6df6-4d00-b3ea-9d234fac20ee",
+      "issued_at": "2026-10-24T17:04:39.869Z",
+      "team_revision": 1,
+      "revision": 7,
+      "visibility": "private",
+      "folder_id": "076796bf-7d0c-44d7-af1b-3c6f2101ce7a"
+    },
+    "result": {
+      "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "account": "06125df0-9f83-4f9f-bd12-a89ea2b5fee3",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 8,
+      "request_id": "9d571706-6df6-4d00-b3ea-9d234fac20ee",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "06125df0-9f83-4f9f-bd12-a89ea2b5fee3",
+    "action": "set_access",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "request_id": "9d5eeb2e-c077-4400-a0a0-24877b54c84a",
+      "issued_at": "2026-10-24T17:04:41.259Z",
+      "team_revision": 1,
+      "revision": 8,
+      "user_id": "d94499c9-1cfd-479d-8561-8bf5f2186719",
+      "role": "manager"
+    },
+    "result": {
+      "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "account": "06125df0-9f83-4f9f-bd12-a89ea2b5fee3",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 9,
+      "request_id": "9d5eeb2e-c077-4400-a0a0-24877b54c84a",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+    "action": "reset_access",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "request_id": "3264073f-65ad-4864-9ea1-7fbf2981f870",
+      "issued_at": "2026-10-24T17:04:42.235Z",
+      "team_revision": 1,
+      "revision": 9,
+      "user_id": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2"
+    },
+    "result": {
+      "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 10,
+      "request_id": "3264073f-65ad-4864-9ea1-7fbf2981f870",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+    "action": "set_access",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "request_id": "0c1fd5a0-5eb7-40e0-bcb4-06a27ff644d9",
+      "issued_at": "2026-10-24T17:04:42.638Z",
+      "team_revision": 1,
+      "revision": 10,
+      "user_id": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+      "role": "viewer"
+    },
+    "result": {
+      "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "account": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 11,
+      "request_id": "0c1fd5a0-5eb7-40e0-bcb4-06a27ff644d9",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+    "action": "create",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "3c96093b-f447-49f1-ae78-03fb41d2d68e",
+      "request_id": "27cb5fa2-b55d-4366-a849-c3c0653d0804",
+      "issued_at": "2026-10-24T17:04:45.024Z",
+      "team_revision": 1,
+      "name": "Launch plan",
+      "visibility": "private",
+      "folder_id": "076796bf-7d0c-44d7-af1b-3c6f2101ce7a"
+    },
+    "result": {
+      "id": "3c96093b-f447-49f1-ae78-03fb41d2d68e",
+      "account": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 1,
+      "request_id": "27cb5fa2-b55d-4366-a849-c3c0653d0804",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+    "action": "create",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "3c96093b-f447-49f1-ae78-03fb41d2d68e",
+      "request_id": "27cb5fa2-b55d-4366-a849-c3c0653d0804",
+      "issued_at": "2026-10-24T17:04:45.024Z",
+      "team_revision": 1,
+      "name": "Launch plan",
+      "visibility": "private",
+      "folder_id": "076796bf-7d0c-44d7-af1b-3c6f2101ce7a"
+    },
+    "result": {
+      "id": "3c96093b-f447-49f1-ae78-03fb41d2d68e",
+      "account": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 1,
+      "request_id": "27cb5fa2-b55d-4366-a849-c3c0653d0804",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "06125df0-9f83-4f9f-bd12-a89ea2b5fee3",
+    "action": "set_access",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "6841346d-0a83-4c4d-bafe-4d85455252b1",
+      "request_id": "37b0a190-7bf4-44ac-b438-3793d3dd91a4",
+      "issued_at": "2026-10-24T17:04:46.128Z",
+      "team_revision": 1,
+      "revision": 1,
+      "user_id": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+      "role": "viewer"
+    },
+    "result": {
+      "id": "6841346d-0a83-4c4d-bafe-4d85455252b1",
+      "account": "06125df0-9f83-4f9f-bd12-a89ea2b5fee3",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 2,
+      "request_id": "37b0a190-7bf4-44ac-b438-3793d3dd91a4",
+      "team_revision": 1
+    }
+  },
+  {
+    "account": "06125df0-9f83-4f9f-bd12-a89ea2b5fee3",
+    "action": "reset_access",
+    "body": {
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "project_id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "request_id": "e24416be-213b-47ef-9bb4-fa645972b45d",
+      "issued_at": "2026-10-24T17:04:46.408Z",
+      "team_revision": 1,
+      "revision": 11,
+      "user_id": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2"
+    },
+    "result": {
+      "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+      "account": "06125df0-9f83-4f9f-bd12-a89ea2b5fee3",
+      "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+      "protocol": 1,
+      "revision": 12,
+      "request_id": "e24416be-213b-47ef-9bb4-fa645972b45d",
+      "team_revision": 1
+    }
+  }
+]

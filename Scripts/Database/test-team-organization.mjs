@@ -60,7 +60,7 @@ try {
   await pg.raw(source);
   // Match the existing profile contract in this minimal owned bootstrap.
   await pg.raw("alter table public.profiles add column display_name text");
-  const identitySource = await readFile(repoFile("supabase/migrations/20261024161156_team_directory_identity.sql"), "utf8");
+  const identitySource = await readFile(repoFile("supabase/migrations/20261024161155_team_directory_identity.sql"), "utf8");
   report.identityMigrationSHA256 = createHash("sha256").update(identitySource).digest("hex");
   await pg.raw(identitySource);
   check(

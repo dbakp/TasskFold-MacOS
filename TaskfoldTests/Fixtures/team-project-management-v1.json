@@ -1,0 +1,108 @@
+{
+  "account": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+  "team": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+  "project": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+  "page": {
+    "account": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+    "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+    "projects": [
+      {
+        "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+        "name": "team project",
+        "role": "editor",
+        "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+        "revision": 1,
+        "folder_id": null,
+        "visibility": "team",
+        "can_edit_tasks": false,
+        "can_manage_access": false
+      }
+    ],
+    "protocol": 1,
+    "team_state": "active",
+    "next_cursor": null,
+    "setup_paused": false,
+    "team_revision": 1,
+    "task_writes_enabled": false
+  },
+  "detail": {
+    "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+    "name": "team project",
+    "role": "editor",
+    "account": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+    "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+    "protocol": 1,
+    "revision": 1,
+    "folder_id": null,
+    "team_state": "active",
+    "visibility": "team",
+    "setup_paused": false,
+    "team_revision": 1,
+    "can_edit_tasks": false,
+    "can_manage_access": false
+  },
+  "management": {
+    "id": "a348c5ec-e892-4f38-9bed-58bed8177fc7",
+    "name": "team project",
+    "role": "manager",
+    "grants": [
+      {
+        "role": "viewer",
+        "user_id": "38e80d39-2fd8-4c9e-9d82-a58b066b2255"
+      },
+      {
+        "role": "manager",
+        "user_id": "91d7f0bb-0882-4b46-9219-a132729ab87b"
+      }
+    ],
+    "account": "06125df0-9f83-4f9f-bd12-a89ea2b5fee3",
+    "team_id": "0d666e9f-e59c-478f-b436-43b4f12e7656",
+    "protocol": 1,
+    "revision": 1,
+    "folder_id": null,
+    "team_state": "active",
+    "visibility": "team",
+    "setup_paused": false,
+    "team_revision": 1,
+    "can_edit_tasks": false,
+    "eligible_members": [
+      {
+        "role": "owner",
+        "user_id": "06125df0-9f83-4f9f-bd12-a89ea2b5fee3",
+        "display_name": "Synthetic owner"
+      },
+      {
+        "role": "admin",
+        "user_id": "13ff124e-2cba-4cef-82bf-d2ab7fa5c1a8",
+        "display_name": "Synthetic admin"
+      },
+      {
+        "role": "member",
+        "user_id": "38e80d39-2fd8-4c9e-9d82-a58b066b2255",
+        "display_name": "Synthetic viewer"
+      },
+      {
+        "role": "member",
+        "user_id": "61d44e3a-a1ef-4f3b-b323-c8f4a1c7fee2",
+        "display_name": "Synthetic member"
+      },
+      {
+        "role": "member",
+        "user_id": "91d7f0bb-0882-4b46-9219-a132729ab87b",
+        "display_name": "Synthetic creator"
+      },
+      {
+        "role": "guest",
+        "user_id": "c99c70f3-b7ec-4afc-9a1c-fe19aa440708",
+        "display_name": "Synthetic guest"
+      },
+      {
+        "role": "member",
+        "user_id": "d94499c9-1cfd-479d-8561-8bf5f2186719",
+        "display_name": "Synthetic observer"
+      }
+    ],
+    "can_manage_access": true
+  },
+  "managerAccount": "06125df0-9f83-4f9f-bd12-a89ea2b5fee3"
+}

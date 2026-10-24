@@ -32,11 +32,15 @@ const people = Object.fromEntries(
     "outsider",
   ].map((k) => [k, { id: randomUUID(), session: randomUUID() }]),
 );
+const commands = [];
 let pg;
 try {
   pg = await createPostgresFixture({ advisors: true });
   report.postgresVersion = pg.serverVersion;
   await loadTeamProjectSchema(pg.raw);
+  const presentationSource = await readFile(new URL("../../supabase/migrations/20261024163752_team_project_presentation.sql",import.meta.url),"utf8");
+  await pg.raw(presentationSource);
+  report.presentationMigrationSHA256 = createHash("sha256").update(presentationSource).digest("hex");
   report.migrationSHA256 = createHash("sha256").update(
     await readFile(
       new URL(
@@ -163,12 +167,11 @@ try {
       };do $r$begin begin insert into result values((${expression}),null,null);exception when others then insert into result values(null,sqlstate,left(sqlerrm,150));end;end$r$;select jsonb_build_object('value',value,'code',code,'reason',reason) from result;commit;`,
     );
   };
-  const rpc = (who, action, body, opts) =>
-    run(
-      who,
-      `public.taskfold_team_projects(${lit(action)},${json(body)})`,
-      opts,
-    );
+  const rpc = async (who, action, body, opts) => {
+    const result = await run(who,`public.taskfold_team_projects(${lit(action)},${json(body)})`,opts);
+    if(result.code===null && ["create","settings","set_access","reset_access"].includes(action)) commands.push({account:people[who].id,action,body,result:result.value});
+    return result;
+  };
   const request = async (p = project, extra = {}) => ({
     team_id: team,
     project_id: p,
@@ -296,6 +299,16 @@ try {
     page: member,
     detail: nativeDetail,
   };
+  nativeFixture.management = await success("native manager presentation", "owner", "get", {team_id:team, project_id:project});
+  nativeFixture.managerAccount = people.owner.id;
+  check("native project name",nativeFixture.management.name,"team project");
+  check("native bounded accepted recipients",nativeFixture.management.eligible_members.length,7);
+  check("native no email or outsider directory",nativeFixture.management.eligible_members.every(x=>x.user_id!==people.outsider.id && !Object.hasOwn(x,"verified_email") && !Object.hasOwn(x,"email")),true);
+  check("native member lacks recipient directory",nativeDetail.eligible_members,undefined);
+  await pg.raw(`update public.profiles set display_name=repeat('x',101) where user_id=${lit(people.guest.id)}`);
+  const sanitized = await success("native bounded profile", "creator", "get", {team_id:team,project_id:project});
+  check("native oversized name withheld",sanitized.eligible_members.find(x=>x.user_id===people.guest.id).display_name,null);
+  await pg.raw(`update public.profiles set display_name='Synthetic guest' where user_id=${lit(people.guest.id)}`);
   const viewer = await success("viewer capabilities", "viewer", "get", {
     team_id: team,
     project_id: project,
@@ -1105,6 +1118,7 @@ try {
       JSON.stringify(nativeFixture, null, 2) + "\n",
     );
   }
+  if (process.argv[4]) await writeFile(process.argv[4],JSON.stringify(commands,null,2)+"\n");
   if (process.argv[2]) {
     await writeFile(process.argv[2], JSON.stringify(report, null, 2) + "\n");
   }

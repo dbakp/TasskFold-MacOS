@@ -152,6 +152,7 @@ struct TeamOrganizationView: View {
                     if detail.team.archived { Label("Archived", systemImage: "archivebox").font(.callout).foregroundStyle(.secondary) }
                 }.padding(.vertical, 10).listRowBackground(Color.accentColor.opacity(0.07))
             }
+            Section { NavigationLink { TeamProjectManagementView(teamID: detail.team.id) } label: { Label("Projects", systemImage: "folder") }.accessibilityIdentifier("teamProjects") }
             if detail.team.role != .guest {
                 Section {
                     if detail.folders.isEmpty { Text("No folders yet").foregroundStyle(.secondary) }
@@ -367,7 +368,7 @@ private struct TeamOrganizationEditSheet: View {
                             }
                         }
                     }
-                    if request.action == .acceptInvitation { Section { Text("Join as \(request.role.title.lowercased())") } footer: { Text("The team owner and admins can see your profile name and confirmed email address.") } }
+                    if request.action == .acceptInvitation { Section { Text("Join as \(request.role.title.lowercased())") } footer: { Text("Project managers can see your profile name. The team owner and admins can also see your confirmed email address.") } }
                     if request.action == .delete { Section { TextField("Type team name", text: $confirmation).accessibilityIdentifier("teamDeleteConfirmation") } footer: { Text("Type \(request.target) to confirm.") } }
                     Section { Text(explanation).foregroundStyle(.secondary) }
                     if let error { Section { Label(error, systemImage: "exclamationmark.circle").foregroundStyle(.secondary) } }

@@ -1,0 +1,138 @@
+import XCTest
+@testable import TaskfoldCore
+private let pmAccount = "ea340000-0000-4000-8000-000000000001", pmTeam = "ea340000-0000-4000-8000-000000000002", pmProject = "ea340000-0000-4000-8000-000000000003", pmMember = "ea340000-0000-4000-8000-000000000004", pmGuest = "ea340000-0000-4000-8000-000000000005", pmOrigin = "https://backend.example"
+private final class ProjectCommandIO: CalendarSecureItemIO, @unchecked Sendable {
+    let lock = NSLock(); var values: [String: Data] = [:]; var failWrite = false, failRemove = false
+    func read(key: String) throws -> Data? { lock.lock(); defer { lock.unlock() }; return values[key] }
+    func write(_ data: Data, key: String) throws { lock.lock(); defer { lock.unlock() }; if failWrite { throw URLError(.cannotWriteToFile) }; values[key] = data }
+    func remove(key: String) throws { lock.lock(); defer { lock.unlock() }; if failRemove { throw URLError(.cannotRemoveFile) }; values.removeValue(forKey: key) }
+}
+@MainActor private final class ProjectCommandPeer: TeamProjectCommandService {
+    var calls: [TeamProjectCommand] = [], applied: [String: TeamProjectCommandReceipt] = [:]
+    var loseReply = false, foreign = false, hold = false
+    var continuation: CheckedContinuation<Void, Never>?
+    func teamProjectCommand(_ command: TeamProjectCommand) async throws -> TeamProjectCommandReceipt {
+        calls.append(command)
+        if hold { await withCheckedContinuation { continuation = $0 } }
+        let raw: [String: JSON] = ["protocol": .number(1), "account": .string(foreign ? pmGuest : command.account), "team_id": .string(command.team), "id": .string(command.project), "request_id": .string(command.id), "team_revision": command.body["team_revision"]!, "revision": .number(command.action == .create ? 1 : Double(command.body["revision"]!.integer + 1))]
+        let result = applied[command.id] ?? TeamProjectCommandReceipt(raw: raw); applied[command.id] = result
+        if loseReply { loseReply = false; throw URLError(.networkConnectionLost) }; return result
+    }
+}
+final class TeamProjectManagementTests: XCTestCase {
+    func command(_ action: TeamProjectCommand.Action = .create, now: Date = Date()) throws -> TeamProjectCommand {
+        try .init(account: pmAccount, origin: pmOrigin, action: action, team: pmTeam, project: pmProject, teamRevision: 3, revision: action == .create ? nil : 2, name: action == .create ? "Reading room" : nil, visibility: [.create, .settings].contains(action) ? .private : nil, user: [.setAccess, .resetAccess].contains(action) ? pmMember : nil, role: action == .setAccess ? .viewer : nil, issuedAt: now)
+    }
+    func raw(_ role: String = "manager", visibility: String = "team", paused: Bool = false, grant: String = "viewer") -> [String: JSON] {
+        var raw: [String: JSON] = ["protocol": .number(1), "account": .string(pmAccount), "team_id": .string(pmTeam), "id": .string(pmProject), "team_revision": .number(3), "revision": .number(2), "team_state": .string("active"), "setup_paused": .bool(paused), "role": .string(role), "visibility": .string(visibility), "folder_id": .null, "name": .string("Reading room"), "can_edit_tasks": .bool(false), "can_manage_access": .bool(role == "manager")]
+        if role == "manager" {
+            raw["eligible_members"] = .array([(pmAccount,"owner"),(pmMember,"member"),(pmGuest,"guest")].map { .object(["user_id": .string($0.0), "role": .string($0.1), "display_name": .string("Sam Chen")]) })
+            raw["grants"] = .array([.object(["user_id": .string(pmMember), "role": .string(grant)]), .object(["user_id": .string(pmGuest), "role": .string("viewer")])])
+        }
+        return raw
+    }
+    func detail(_ raw: [String: JSON]? = nil) throws -> TeamProjectManagementDetail { try .init(raw ?? self.raw(), account: pmAccount, origin: pmOrigin, team: pmTeam, project: pmProject) }
+    func team() throws -> TeamOrganizationDetail { try .init(["id": .string(pmTeam), "name": .string("Studio"), "role": .string("owner"), "state": .string("active"), "revision": .number(3), "folders": .array([]), "members": .array([.object(["user_id": .string(pmAccount), "role": .string("owner")])]), "invitations": .array([])], team: pmTeam, account: pmAccount, origin: pmOrigin) }
+    func page(_ row: [String: JSON]? = nil) throws -> TeamProjectPage {
+        var p = raw(); p["projects"] = .array([.object(row ?? raw())]); p["next_cursor"] = .null; p["task_writes_enabled"] = .bool(false)
+        return try .init(p, account: pmAccount, origin: pmOrigin, team: pmTeam, after: nil)
+    }
+    func testFourActionsHaveExactStableBodiesAndPrivateRoundTrip() throws {
+        for action in TeamProjectCommand.Action.allCases {
+            let command = try command(action), restored = try JSONDecoder().decode(TeamProjectCommand.self, from: JSONEncoder().encode(command))
+            XCTAssertEqual(command, restored); XCTAssertEqual(command.id, restored.id)
+            var wrong = command.body; wrong["display_name"] = .string("unreviewed")
+            XCTAssertThrowsError(try TeamProjectCommand(account: pmAccount, origin: pmOrigin, action: action, body: wrong))
+            wrong = command.body; wrong.removeValue(forKey: "team_revision")
+            XCTAssertThrowsError(try TeamProjectCommand(account: pmAccount, origin: pmOrigin, action: action, body: wrong))
+            XCTAssertEqual(String(describing: command), "Private project administration request")
+        }
+    }
+    func testMalformedTimeScopeRoleFolderAndRevisionsCannotBecomeCommands() throws {
+        let command = try command(.setAccess)
+        for change in [["role": JSON.string("owner")], ["revision": .number(1.5)], ["team_revision": .number(0)], ["issued_at": .string("2030-01-01T10:00:00+02:00")], ["project_id": .string("personal")], ["user_id": .null]] {
+            XCTAssertThrowsError(try TeamProjectCommand(account: pmAccount, origin: pmOrigin, action: .setAccess, body: command.body.merging(change) { _, b in b }))
+        }
+        XCTAssertThrowsError(try TeamProjectCommand(account: pmAccount, origin: "https://other.example/path", action: command.action, body: command.body))
+        XCTAssertThrowsError(try TeamProjectCommand(account: pmAccount, origin: pmOrigin, action: .settings, team: pmTeam, project: pmProject, teamRevision: 3, revision: 2, visibility: .private, folder: "bad"))
+        XCTAssertThrowsError(try TeamProjectCommand(account: pmAccount, origin: pmOrigin, action: .resetAccess, team: pmTeam, project: pmProject, teamRevision: 3, revision: 2, folder: pmMember, user: pmMember))
+        let old = try self.command(now: Date(timeIntervalSince1970: 1000)); XCTAssertFalse(old.canRetry)
+    }
+    func testSQLGoldenReceiptsCoverEveryActionAndActualManagerDirectory() throws {
+        let file = try XCTUnwrap(Bundle.module.url(forResource: "team-project-commands-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let rows = try JSONDecoder().decode([[String: JSON]].self, from: Data(contentsOf: file)); var actions = Set<String>()
+        for row in rows {
+            let action = try XCTUnwrap(TeamProjectCommand.Action(rawValue: row["action"]!.text)); actions.insert(action.rawValue)
+            let command = try TeamProjectCommand(account: row["account"]!.text, origin: pmOrigin, action: action, body: row["body"]!.object)
+            XCTAssertEqual(try command.confirmed(row["result"]!.object).project, command.project)
+            var foreign = row["result"]!.object; foreign["account"] = .string(pmGuest)
+            XCTAssertThrowsError(try command.confirmed(foreign))
+        }
+        XCTAssertEqual(actions, Set(TeamProjectCommand.Action.allCases.map(\.rawValue)))
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-project-management-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let value = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let directory = try TeamProjectManagementDetail(value["management"]!.object, account: value["managerAccount"]!.text, origin: pmOrigin, team: value["team"]!.text, project: value["project"]!.text)
+        XCTAssertEqual(directory.access.name, "team project"); XCTAssertEqual(directory.members.count, 7); XCTAssertTrue(directory.members.allSatisfy { $0.verifiedEmail == nil })
+    }
+    func testResetNeverMistakesTeamDefaultForRevocation() throws {
+        let normal = try detail(), member = normal.members[1], guest = normal.members[2]
+        XCTAssertEqual(normal.effective(member), .viewer); XCTAssertTrue(normal.canReset(member)); XCTAssertTrue(normal.canReset(guest))
+        XCTAssertTrue(normal.resetDescription(member).contains("Editor")); XCTAssertTrue(normal.resetDescription(guest).contains("lose access"))
+        let paused = try detail(raw(paused: true)); XCTAssertFalse(paused.canReset(paused.members[1])); XCTAssertTrue(paused.canReset(paused.members[2]))
+        let pausedManager = try detail(raw(paused: true, grant: "manager")); XCTAssertTrue(pausedManager.canReset(pausedManager.members[1]))
+        let privatePaused = try detail(raw(visibility: "private", paused: true)); XCTAssertTrue(privatePaused.canReset(privatePaused.members[1]))
+        XCTAssertFalse(normal.canReset(normal.members[0])); XCTAssertTrue(normal.roles(for: normal.members[0]).isEmpty)
+        XCTAssertEqual(normal.roles(for: guest), [.editor, .viewer]); XCTAssertTrue(paused.roles(for: paused.members[1]).isEmpty)
+    }
+    func testManagerDirectoryCannotLeakThroughLowerRolesOrAcceptDuplicates() throws {
+        for role in ["editor", "viewer"] {
+            var value = raw(role); value["eligible_members"] = .array([]); XCTAssertThrowsError(try detail(value))
+            value = raw(role); value["grants"] = .array([]); XCTAssertThrowsError(try detail(value))
+        }
+        var value = raw(); value["eligible_members"] = .array(value["eligible_members"]!.list + value["eligible_members"]!.list); XCTAssertThrowsError(try detail(value))
+        value = raw(); value["eligible_members"] = .array([]); XCTAssertThrowsError(try detail(value))
+        value = raw(); value["eligible_members"] = .array([.object(["user_id": .string(pmAccount), "role": .string("owner"), "verified_email": .string("private@example.invalid")])]); XCTAssertThrowsError(try detail(value))
+    }
+    @MainActor func testLostReplySurvivesRelaunchAndReusesSameProjectRequest() async throws {
+        let io = ProjectCommandIO(), vault = TeamProjectCommandVault(io: io), peer = ProjectCommandPeer(); peer.loseReply = true
+        var model = TeamProjectCommandModel(account: pmAccount, origin: pmOrigin, vault: vault, service: peer, isCurrent: { true })
+        let command = try command(); await model.send(command); XCTAssertEqual(model.pending, command); XCTAssertEqual(peer.applied.count, 1)
+        model.close(); model = TeamProjectCommandModel(account: pmAccount, origin: pmOrigin, vault: vault, service: peer, isCurrent: { true }); await model.load(); await model.retry()
+        XCTAssertNil(model.pending); XCTAssertEqual(peer.calls, [command, command]); XCTAssertEqual(peer.applied.count, 1); XCTAssertNotNil(model.receipt)
+    }
+    @MainActor func testPrivateWriteFailurePreventsSendAndClearFailureRetainsIntent() async throws {
+        let io = ProjectCommandIO(), vault = TeamProjectCommandVault(io: io), peer = ProjectCommandPeer()
+        let model = TeamProjectCommandModel(account: pmAccount, origin: pmOrigin, vault: vault, service: peer, isCurrent: { true })
+        io.failWrite = true; await model.send(try command()); XCTAssertTrue(peer.calls.isEmpty)
+        io.failWrite = false; io.failRemove = true; let command = try command(); await model.send(command); XCTAssertEqual(model.pending, command)
+        io.failRemove = false; await model.retry(); XCTAssertNil(model.pending); XCTAssertEqual(peer.applied.count, 1)
+    }
+    @MainActor func testLateForeignAndAccountChangedRepliesCannotClearJournal() async throws {
+        let io = ProjectCommandIO(), vault = TeamProjectCommandVault(io: io), peer = ProjectCommandPeer(); var current = true
+        let model = TeamProjectCommandModel(account: pmAccount, origin: pmOrigin, vault: vault, service: peer, isCurrent: { current })
+        let command = try command(); peer.hold = true
+        let task = Task { await model.send(command) }; while peer.continuation == nil { await Task.yield() }
+        current = false; model.close(); peer.continuation?.resume(); await task.value
+        let saved = try await vault.pending(account: pmAccount, origin: pmOrigin); XCTAssertEqual(saved, command); XCTAssertNil(model.receipt)
+        peer.hold = false; peer.foreign = true; peer.applied = [:]
+        let retry = TeamProjectCommandModel(account: pmAccount, origin: pmOrigin, vault: vault, service: peer, isCurrent: { true }); await retry.load(); await retry.retry()
+        XCTAssertEqual(retry.pending, command); XCTAssertNil(retry.receipt)
+    }
+    func testProjectAndTeamJournalsCannotReplaceOrClearOneAnother() async throws {
+        let io = ProjectCommandIO(), team = TeamOrganizationCommandVault(io: io), project = TeamProjectCommandVault(io: io), lease = CalendarReadLease()
+        let org = try TeamOrganizationCommand(account: pmAccount, origin: pmOrigin, action: .create, team: pmTeam, name: "Studio")
+        let command = try command(); try await team.begin(org, lease: lease); try await project.begin(command, lease: lease)
+        XCTAssertEqual(io.values.count, 2); try await project.removeAccount(pmAccount, origin: pmOrigin)
+        let savedTeam = try await team.pending(account: pmAccount, origin: pmOrigin), savedProject = try await project.pending(account: pmAccount, origin: pmOrigin)
+        XCTAssertEqual(savedTeam, org); XCTAssertNil(savedProject)
+    }
+    @MainActor func testAccessFenceChangeAndLateAccountReadNeverPublishProjectNames() async throws {
+        var calls = 0, current = true
+        let browser = TeamProjectBrowser(account: pmAccount, origin: pmOrigin, team: pmTeam, current: { current }, fence: { calls += 1; return String(repeating: calls == 1 ? "a" : "b", count: 64) }, readTeam: { try self.team() }, page: { _ in try self.page() }, detail: { _ in try self.detail() })
+        await browser.refresh(); XCTAssertTrue(browser.projects.isEmpty); XCTAssertNotNil(browser.message)
+        var suspended: CheckedContinuation<TeamProjectManagementDetail, Never>?
+        let late = TeamProjectBrowser(account: pmAccount, origin: pmOrigin, team: pmTeam, current: { current }, fence: { String(repeating: "a", count: 64) }, readTeam: { try self.team() }, page: { _ in try self.page() }, detail: { _ in await withCheckedContinuation { suspended = $0 } })
+        let task = Task { await late.refresh(project: pmProject) }; while suspended == nil { await Task.yield() }; current = false; late.invalidate(); suspended?.resume(returning: try detail()); await task.value
+        XCTAssertNil(late.detail); XCTAssertNil(late.team); XCTAssertTrue(late.projects.isEmpty)
+    }
+}

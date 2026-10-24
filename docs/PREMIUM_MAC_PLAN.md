@@ -4353,3 +4353,31 @@ large-text roles stack below names and the review email uses a separate full-wid
 line to avoid the standard label's truncation. Native Mac/spoken and live-service
 acceptance remain open. Temporary test apps/builds/results were removed after
 evidence preservation; approximately 1.08 GiB reclaimed. No Mac test app launched.
+
+
+## Native project management — 24 October 2026
+
+The gated Teams surface now leads to permitted projects, new empty project
+creation, visibility/folder settings and member project-access reviews. Separate
+private stable-request recovery protects uncertain results and relaunch; the
+existing team journal stays byte/key compatible. The form distinguishes a reset
+that restores Editor access from one that removes access. Source-only manager
+directories return bounded profile names and no email; team admin email remains
+separately scoped. Full team task editing, workspace transition acceptance and
+Mac/runtime/spoken checks remain open, and rollout stays disabled. See
+TEAM_PROJECT_ACCESS.md and p2-team-project-management-evidence.json.
+
+
+Verification: 109 relevant core tests (including 10 new project-management cases)
+and 152 owned PostgreSQL checks pass independently in each repo, with successful
+Debug app/extension builds. Actual SQL fixtures cover 13 accepted receipts across
+all four actions. The Mac canonical directory migration also passes its 213-check
+regression run with unchanged SQL bytes. iPhone and iPad native tests pass create,
+visibility/folder changes, lost reply/relaunch/same-request retry, guest Viewer
+access, reset/removal and final relaunch. Saved records show one project, revision
+4, four unique writes and no pending request. Accessibility XXXL create/settings/
+access cancellation creates no peer file or pending command before the lifecycle.
+All twelve screenshots are inspected. Native testing uses synthetic peer/private
+IO, not genuine cloud Auth/Keychain. Mac runtime/spoken and broader live workspace/
+editor/widget acceptance remain open; rollout/task-write flags stay disabled.
+Owned test apps/builds/results are removed; approximately 1.11 GiB reclaimed.

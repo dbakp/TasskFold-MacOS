@@ -1,7 +1,7 @@
 import Foundation
 
-enum TeamProjectRole: String, Sendable { case manager, editor, viewer }
-enum TeamProjectVisibility: String, Sendable { case team, `private` }
+enum TeamProjectRole: String, Codable, Sendable, CaseIterable { case manager, editor, viewer; var title: String { rawValue.capitalized } }
+enum TeamProjectVisibility: String, Codable, Sendable { case team, `private` }
 enum TeamProjectState: String, Sendable { case active, archived }
 
 struct TeamConversationRecoveryExpired: LocalizedError {
@@ -60,6 +60,7 @@ struct TeamProjectAccess: Equatable, Sendable {
     let visibility: TeamProjectVisibility
     let folder: String?
     let canManageAccess: Bool
+    let name: String?
     var canEditTasks: Bool { false } // Enable after complete commands and workspace refresh acceptance.
 
     init(detail: [String: JSON], account: String, origin: String, team: String, project: String) throws {
@@ -76,7 +77,7 @@ struct TeamProjectAccess: Equatable, Sendable {
         self.id = id; self.team = team; self.account = account; self.origin = origin
         revision = try TeamProjectValue.revision(row["revision"]); teamRevision = context.revision
         folder = try TeamProjectValue.optionalID(row["folder_id"])
-        self.role = role; self.visibility = visibility; state = context.state; setupPaused = context.paused; canManageAccess = manage
+        self.role = role; self.visibility = visibility; state = context.state; setupPaused = context.paused; canManageAccess = manage; name = TeamOrganizationDetail.Member.identity(row["name"])
     }
     func belongs(to account: String, origin: String, team: String) -> Bool {
         self.account == account && self.origin == origin && self.team == team
