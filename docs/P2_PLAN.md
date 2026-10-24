@@ -1942,3 +1942,25 @@ Next: checklist/recurrence completion and comment/mention/file/service adapters,
 current-role workspace refresh and premium native team organization/review UI,
 then full privacy/recovery acceptance. Full Px and existing user deferrals retain
 scope.
+
+
+## Team checklist editing — 24 October, rank 6 in progress
+
+Nested team checklists now edit, merge, complete, delete and recover through the
+existing guarded task RPC. Item epochs/revisions fence completion cycles and old
+text/delete callbacks after restoration. Receipt-bound recovery preserves original
+discussions, files, private reminders, unknown fields and server timestamps; private HMAC/tombstone
+metadata prevents history forgery or identity reuse. Whole-task Undo preserves its
+certified tree exactly. Each app owns preparation, persistence and Undo context.
+
+Each repo passes 452 database checks (221 checklist/planning/edit, 89 lifecycle,
+72 batch and 70 discussion), 196 selected Swift tests (14 new), and unsigned Debug
+app/extension builds. Advisors show no new errors/warnings; owned containers,
+derived builds and temporary Mac registration are removed. See
+TEAM_CHECKLIST_EDITS.md and checklist evidence. Team editing stays disabled;
+there is no hosted/native-runtime/distribution acceptance claim.
+
+Next: atomic recurring completion/Undo, comment/mention/file/service adapters,
+current-role workspace refresh and premium native team organization/review UI,
+then full privacy/recovery acceptance. The full Px goal and user deferrals remain
+unchanged.

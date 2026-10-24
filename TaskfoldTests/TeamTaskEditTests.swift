@@ -60,7 +60,7 @@ final class TeamTaskEditTests: XCTestCase {
     func testWrongMutationShapeCannotReachTeamAdapter() throws {
         let(original,scope,_)=try fixture()
         for method in ["POST","DELETE","ORDER"] {var change=original;change.method=method;XCTAssertThrowsError(try scope.body(for:change))}
-        for key in ["project_id","subtasks","attachments","comments","source_metadata","task_generation"] {
+        for key in ["project_id","attachments","comments","source_metadata","task_generation"] {
             var change=original;change.fields=[key:.null];change.baseline?[key] = .null;XCTAssertThrowsError(try scope.body(for:change))
         }
         var change=original;change.baseline?.removeValue(forKey:"project_id");XCTAssertThrowsError(try scope.body(for:change))

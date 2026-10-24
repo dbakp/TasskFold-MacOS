@@ -60,7 +60,7 @@ struct TeamProjectAccess: Equatable, Sendable {
     let visibility: TeamProjectVisibility
     let folder: String?
     let canManageAccess: Bool
-    var canEditTasks: Bool { false } // This client has no team task-write adapter yet.
+    var canEditTasks: Bool { false } // Enable after complete commands and workspace refresh acceptance.
 
     init(detail: [String: JSON], account: String, origin: String, team: String, project: String) throws {
         let context = try TeamProjectValue.Context(detail, account: account, team: team)
@@ -118,12 +118,14 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
     let project: String
     var restoreRequest: UUID? = nil
     var parentGeneration: String? = nil
+    var checklistRestoreRequest: UUID? = nil
 
-    static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at", "assigned_to", "section_id", "labels", "reminder_specs"]
+    static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at", "assigned_to", "section_id", "labels", "reminder_specs", "subtasks"]
     static var invalid: AppFailure { AppFailure(message: "This saved team edit needs review. Your changes remain on this device.") }
     static var conflict: AppFailure { AppFailure(message: "TASKFOLD_CONFLICT: This team task changed. Review the synced task and your saved edit.") }
 
-    func capturing(_ change: Mutation, existing: Record?) throws -> Mutation {
+    func capturing(_ original: Mutation, existing: Record?) throws -> Mutation {
+        let change = try TeamChecklist.preparing(original)
         if change.method != "PATCH" {
             if change.method == "DELETE" {
                 guard let existing, existing.id == change.recordID, existing["project_id"] == .string(project),
@@ -163,12 +165,15 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
                       let id = UUID(uuidString: text), ids.insert(id).inserted else { throw Self.invalid }
             }
         }
+        if let tree = change.fields["subtasks"] { try TeamChecklist.validate(tree) }
+        if checklistRestoreRequest != nil, change.fields["subtasks"] == nil { throw Self.invalid }
         if TaskCompletionRevision.touches(change.fields) {
             guard case .number(let version)? = base["completion_version"], version.isFinite,
                   version >= 0, version <= 9_007_199_254_740_991, version.rounded(.down) == version else { throw Self.conflict }
         }
-        let body: [String: JSON] = ["team_id": .string(team), "project_id": .string(project), "task_id": .string(change.recordID),
+        var body: [String: JSON] = ["team_id": .string(team), "project_id": .string(project), "task_id": .string(change.recordID),
             "request_id": .string(change.id.uuidString.lowercased()), "task_generation": .string(generation), "base": .object(base), "changes": .object(change.fields)]
+        if let checklistRestoreRequest { body["checklist_restore_from"] = .string(checklistRestoreRequest.uuidString.lowercased()) }
         guard try JSONEncoder().encode(body).count <= 128000 else { throw Self.invalid }
         return body
     }

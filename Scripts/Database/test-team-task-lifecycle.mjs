@@ -81,6 +81,23 @@ try {
       ),
     ).digest("hex");
   }
+  if (process.env.TASKFOLD_TEAM_CHECKLIST_REGRESSION === "1") {
+    if (process.env.TASKFOLD_TEAM_PLANNING_REGRESSION !== "1") {
+      throw new Error("Checklist regression requires planning");
+    }
+    const { loadTeamChecklistSchema, teamChecklistMigration } = await import(
+      "./team-checklist-schema.mjs"
+    );
+    await loadTeamChecklistSchema(pg.raw);
+    report.checklistMigrationSHA256 = createHash("sha256").update(
+      await readFile(
+        new URL(
+          "../../supabase/migrations/" + teamChecklistMigration,
+          import.meta.url,
+        ),
+      ),
+    ).digest("hex");
+  }
   for (const [name, u] of Object.entries(people)) {
     await pg.raw(
       `insert into auth.users(id,email,email_confirmed_at) values(${

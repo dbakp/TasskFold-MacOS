@@ -1019,6 +1019,10 @@ struct EditHistory {
                 scope.restoreRequest = change.id
                 inverse[inverse.count - 1].teamTaskScope = scope
             }
+            if var scope = change.teamTaskScope, change.method == "PATCH", change.fields["subtasks"] != nil, !inverse.isEmpty {
+                scope.checklistRestoreRequest = change.id
+                inverse[inverse.count - 1].teamTaskScope = scope
+            }
             if let scope = change.teamTaskScope, !inverse.isEmpty, inverse[inverse.count - 1].method == "PATCH" {
                 inverse[inverse.count - 1].baseline?["project_id"] = .string(scope.project)
             }
@@ -1510,6 +1514,7 @@ enum TaskCompletion {
             var child = Record(fields)
             let path = path + "/" + String(index) + ":" + child.id
             child["id"] = .string(successorID(parent: root + path, day: "child"))
+            child.fields.removeValue(forKey: TeamChecklist.key)
             child["completed"] = .bool(false); child["completed_at"] = .null; child["comments"] = .array([])
             child["deadline_date"] = .null; child["notification_sent_at"] = .null
             child["reminder_specs"] = .array(ReminderSpec.successorRows(ReminderSpec.rows(child)))
