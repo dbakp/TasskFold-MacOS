@@ -455,6 +455,51 @@ final class TeamCompletionTests: XCTestCase {
         XCTAssertTrue(review.canRequestRebase(local));XCTAssertNotNil(review.previewRebase(local));XCTAssertNil(review.rebasing(local))
         XCTAssertEqual(local.pending,[header])
     }
+    func testRebaseDoesNotOfferActionWithoutItsCachedProject() throws {
+        for mode in ["complete","undo"] {
+            for state in ["review","cancelled"] {
+                let(header,_,reply,_)=try rebaseFixture(mode,state:state)
+                let review=try TeamCompletion.Review(reply,for:header)
+                let projectSets:[[Record]?]=[nil,[],[Record(["id":.string(UUID().uuidString.lowercased())])]]
+                for projects in projectSets {
+                    var local=rebaseProjection(header);local.tables["projects"]=projects
+                    let before=local
+                    XCTAssertFalse(review.hasRebaseProject(in:local))
+                    XCTAssertNil(review.previewRebase(local));XCTAssertFalse(review.canRequestRebase(local))
+                    XCTAssertNil(review.rebasing(local));XCTAssertEqual(local,before)
+                    // Keeping the synced task remains available: it does not
+                    // enqueue a new edit into the missing project.
+                    XCTAssertTrue(review.canRequestCancellation(local))
+                }
+            }
+        }
+    }
+    func testRestoredProjectEnablesRebaseWithoutRewritingOtherWork() throws {
+        for mode in ["complete","undo"] {
+            let(header,_,reply,_)=try rebaseFixture(mode),review=try TeamCompletion.Review(reply,for:header)
+            var local=rebaseProjection(header);local.tables.removeValue(forKey:"projects")
+            let independent=Mutation(table:"labels",recordID:UUID().uuidString.lowercased(),method:"POST",fields:["name":.string("Keep this draft")])
+            local.apply(independent);local.pending.append(independent)
+            XCTAssertNil(review.previewRebase(local))
+            local.tables["projects"]=[Record(["id":.string(header.teamCompletion!.scope.project)])]
+            XCTAssertNotNil(review.previewRebase(local))
+            let before=local,plan=try XCTUnwrap(review.rebasing(local))
+            XCTAssertEqual(plan.snapshot.pending,[plan.action,independent])
+            XCTAssertEqual(plan.snapshot.tables["labels"],before.tables["labels"])
+            XCTAssertEqual(local,before)
+        }
+    }
+    func testProjectRemovedAfterPreviewCannotQueueRebasedAction() throws {
+        for mode in ["complete","undo"] {
+            let(header,_,reply,_)=try rebaseFixture(mode),review=try TeamCompletion.Review(reply,for:header)
+            var local=rebaseProjection(header)
+            XCTAssertNotNil(review.previewRebase(local))
+            local.tables["projects"]=[];let before=local
+            XCTAssertNil(review.rebasing(local));XCTAssertEqual(local,before)
+            XCTAssertEqual(local.pending,[header])
+        }
+    }
+
     func testRebaseDefaultClosedOnOlderBackendAndMalformedCapabilities() throws {
         let(header,_,original,_)=try rebaseFixture();var reply=original
         reply.removeValue(forKey:"can_edit_current");reply.removeValue(forKey:"can_edit_series")

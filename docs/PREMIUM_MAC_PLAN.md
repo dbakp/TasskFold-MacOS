@@ -4151,3 +4151,14 @@ Next: unrecorded and compound/root/batch draft cohorts, explicit full-detail
 reapplication, current-role workspace refresh/privacy, remaining collaboration
 adapters, premium native organization UI and consolidated native acceptance. The
 full Px goal and existing user release/provider/hardware deferrals remain intact.
+
+
+### Completion recovery workspace preflight — 24 October
+
+The Mac review now explains when its project is missing from the current workspace
+and offers a new completion/reopen only after that project is present. Keeping
+the synced task remains available; project removal during review never discards
+the saved queue. The independent Mac completion suite passes 65 tests, including
+three new regressions. See p2-team-rebase-project-evidence.json for full build
+verification. Rank 6 and broader Px work remain in progress; team editing is still
+disabled, without hosted or native runtime/visual acceptance.

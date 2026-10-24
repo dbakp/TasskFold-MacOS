@@ -297,10 +297,14 @@ extension TeamCompletion {
             let base: Snapshot
             let snapshot: Snapshot
         }
+        func hasRebaseProject(in snapshot:Snapshot) -> Bool {
+            guard let command=mutation.teamCompletion else {return false}
+            return snapshot.tables["projects"]?.contains(where:{$0.id == command.scope.project}) == true
+        }
         /// This preview does not authorize removing the old command. It freezes
         /// a fresh action only after the durable cancellation is confirmed.
         func previewRebase(_ snapshot:Snapshot) -> Mutation? {
-            guard canEditCurrent,!isRecorded,cancellationProjection(snapshot) != nil else {return nil}
+            guard hasRebaseProject(in:snapshot),canEditCurrent,!isRecorded,cancellationProjection(snapshot) != nil else {return nil}
             return rebaseAction()
         }
         func canRequestRebase(_ snapshot:Snapshot) -> Bool {previewRebase(snapshot) != nil}
@@ -322,8 +326,7 @@ extension TeamCompletion {
             return try? scope.capturing(intent,existing:task)
         }
         func rebasing(_ snapshot:Snapshot,id:UUID=UUID()) -> Rebase? {
-            guard isCancelled,canEditCurrent,let base=cancelling(snapshot),let action=rebaseAction(id:id),
-                  base.tables["projects"]?.contains(where:{$0.id == mutation.teamCompletion?.scope.project}) == true else {return nil}
+            guard isCancelled,hasRebaseProject(in:snapshot),canEditCurrent,let base=cancelling(snapshot),let action=rebaseAction(id:id) else {return nil}
             var result=base
             if let command=action.teamCompletion {
                 guard command.apply(to:&result,header:action) else {return nil}

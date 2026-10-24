@@ -2072,3 +2072,14 @@ Next: unrecorded and compound/root/batch draft cohorts, explicit full-detail
 reapplication, current-role workspace refresh/privacy, remaining collaboration
 adapters, premium native organization UI and consolidated native acceptance. The
 full Px goal and existing user release/provider/hardware deferrals remain intact.
+
+
+## Completion review workspace preflight — 24 October, rank 6 in progress
+
+A missing cached project now disables rebasing at preview time, using the same
+requirement as final application. The review explains the missing project while
+keeping the recovery-backed Use synced task path available. Three new regressions
+pass in both repositories (65 completion tests each). See
+TEAM_COMPLETION_REBASE.md and p2-team-rebase-project-evidence.json for final build
+verification. No team-edit enablement or hosted changes; the prior remaining
+rank-6 work and user deferrals remain unchanged.

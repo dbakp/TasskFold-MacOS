@@ -80,3 +80,22 @@ Full Px scope and the user's release/provider/hardware deferrals remain unchange
 Follow-up: TEAM_PROVISIONAL_DRAFTS.md adds safe parking of direct edits/comments
 on an unused provisional generation after a recorded completion. Compound and
 unrecorded cases remain in progress. Counts above describe the rebase stage.
+
+
+## Workspace availability follow-up — 24 October
+
+The preview and final application now use the same cached-project requirement.
+A server review with current edit capability cannot offer Complete current task
+or Reopen current task when its project is missing locally. The review explains
+that the project must be reopened; keeping the synced task remains available.
+Project removal after preview still refuses a new action without altering the
+queue, while restoring the correct project enables the existing reviewed flow.
+
+Both repositories independently pass unsigned Debug app/extension builds and
+65 completion tests, including three new
+regressions covering completion/reopen, unrecorded/cancelled reviews, missing or
+wrong projects, preserved unrelated work and project removal during review. This
+is a native preflight consistency fix; server authority checks are unchanged.
+Full saved-detail reapplication, the other draft cohorts, current-role workspace
+refresh/privacy and the rest of rank 6 remain in progress. Team editing stays
+disabled, with no hosted deployment or runtime/visual acceptance claimed.

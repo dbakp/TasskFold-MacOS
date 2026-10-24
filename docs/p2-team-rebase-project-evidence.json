@@ -1,0 +1,27 @@
+{
+  "stage": "completion-rebase-cached-project-preflight",
+  "verifiedAt": "2026-10-24T09:03:20.644790+00:00",
+  "platform": "mac",
+  "tests": {
+    "suite": "TeamCompletionTests",
+    "passed": 65,
+    "failed": 0,
+    "newRegressionMethods": 3,
+    "logSHA256": "acec66c9e4963ee38c4de814c30459fe86c28966d8962cd3d2f5ed9f2977bf28"
+  },
+  "unsignedDebugAppAndExtensionsBuildPassed": true,
+  "buildLogSHA256": "bd34576a06f3976c6debea0923dd692c1d5f8c6361bef9a57d46f17fd664e119",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamCompletion.swift": "ce7746c7ad96b7228e538eb49a0b45d74dfd3d051c4096f8ae9b40e72cbf6e5a",
+    "Taskfold/Collaboration.swift": "5b0f2df6caceac71a053cdb678fef6e212ced420f14618bb8ae197a2aea5e0fb",
+    "TaskfoldTests/TeamCompletionTests.swift": "6b13762f04159350feb8478c7f154a8238cd6cc4052ecc2961e7faaaddced1a7"
+  },
+  "ownedBuildRemoved": true,
+  "ownedBuildBytesRemoved": 1146216184,
+  "temporaryMacProductUnregistered": true,
+  "appLaunched": false,
+  "hostedChanges": false,
+  "nativeRuntimeAcceptanceClaimed": false,
+  "teamEditingEnabled": false,
+  "fullRankComplete": false
+}
