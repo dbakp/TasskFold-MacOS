@@ -326,6 +326,10 @@ final class Store {
         let team = kind == .existing && capturedRoot?.id == record.id ? capturedRoot.flatMap { try? captureTeamTaskEditor($0) } : nil
         return TaskEditorAdmission(workspace:workspace ?? WorkspaceBinding(account:userID,generation:workspaceGeneration),record:record,root:capturedRoot,kind:kind,teamDraft:team)
     }
+    func teamTaskCreationOpening(_ source: Record) throws -> TaskEditorOpening {
+        let draft = try captureTeamTaskCreation(source)
+        return TaskEditorOpening(task: source, admission: TaskEditorAdmission(workspace: draft.workspace, record: source, root: nil, kind: .new, teamDraft: draft))
+    }
     func beginEditorSession(_ original: Record) throws -> TaskEditorSession {
         guard !accountRemovalBlocked,signedIn || localMode else {throw CancellationError()}
         let session=TaskEditorSession(vault:backupVault,origin:localMode ? nil:try backend.accountRemovalOrigin,original:original,labels:labels)
@@ -358,6 +362,12 @@ final class Store {
               let cache = nativeConversationTeamCache, cache.boundary.origin == (try backend.accountRemovalOrigin),
               record("tasks", id: source.id) == source else { throw TeamTaskEditorDraft.unavailable }
         return try TeamTaskEditorDraft(source: source, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+    }
+    func captureTeamTaskCreation(_ source: Record) throws -> TeamTaskEditorDraft {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache, cache.boundary.origin == (try backend.accountRemovalOrigin),
+              record("tasks", id: source.id) == nil else { throw TeamTaskEditorDraft.unavailable }
+        return try TeamTaskEditorDraft(creating: source, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
     }
     @discardableResult
     func saveTeamTaskEditor(_ desired: Record, draft: TeamTaskEditorDraft) -> Bool {
@@ -3005,6 +3015,10 @@ extension Store {
               let index = snapshot.tables["tasks"]?.firstIndex(where: { $0.id == TeamEditorNativeFixture.taskID }) else { return }
         snapshot.tables["tasks"]![index]["description"] = .string("A newer saved design decision")
         try? persist()
+    }
+    func failTeamCreationFixtureSave() {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-create-testing") else { return }
+        savedFilterFixtureFailNextPersist = true
     }
     func failTeamDeletionFixtureSave() {
         guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-delete-testing") else { return }

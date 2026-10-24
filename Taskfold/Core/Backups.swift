@@ -1113,7 +1113,11 @@ struct TaskEditorAdmission: Equatable, Sendable {
         // Secondary sheets inherit the opening authority; they cannot attach
         // another task's or workspace's captured team context.
         let teamValid = teamDraft.map { draft in
-            kind != .new && draft.workspace == workspace && root.map { row in
+            guard draft.workspace == workspace else { return false }
+            if draft.kind == .creation {
+                return kind != .existing && root == nil && ["id", "user_id", "project_id", "task_generation"].allSatisfy { record[$0] == draft.source[$0] }
+            }
+            return kind != .new && root.map { row in
                 ["id", "user_id", "project_id", "task_generation"].allSatisfy { row[$0] == draft.source[$0] }
             } == true
         } ?? true

@@ -348,6 +348,89 @@ extension TeamWorkspaceTests {
         let revoked=try TeamWorkspaceCache(boundary:boundary("left"),previous:cache,pending:[])
         XCTAssertFalse(revoked.nativeConversationWritable(project:f["project"]!.text))
     }
+    private func creationContext() throws -> (TeamTaskEditorDraft, TeamWorkspaceCache, Record, WorkspaceBinding, UUID) {
+        let (_, cache, existing, workspace, session) = try editorContext()
+        var row = Record.task(user: workspace.account, project: existing.string("project_id"))
+        row["title"] = .string("Prepare shared launch")
+        return (try TeamTaskEditorDraft(creating: row, workspace: workspace, session: session, cache: cache, enabled: true), cache, row, workspace, session)
+    }
+    func testCreationCarriesFullAuthoredTaskAsScopedInsertOnlyCommand() throws {
+        let (draft, cache, row, workspace, session) = try creationContext()
+        var proposed = row
+        proposed["description"] = .string("Review the three-line instructions\nCheck contrast\nPublish")
+        proposed["labels"] = .array([.string("Design"), .string(UUID().uuidString.lowercased())])
+        proposed["priority"] = .number(1); proposed["due_date"] = .string("2026-12-01")
+        proposed["duration_minutes"] = .number(45)
+        proposed["subtasks"] = .array([.object(["id": .string(UUID().uuidString.lowercased()), "title": .string("Review contrast"), "completed": .bool(false)])])
+        let id = UUID()
+        let change = try XCTUnwrap(draft.mutation(desired: proposed, current: nil, workspace: workspace, session: session, cache: cache, enabled: true, requestID: id))
+        XCTAssertEqual(change.id, id); XCTAssertEqual(change.method, "POST"); XCTAssertEqual(change.insertOnly, true)
+        XCTAssertNil(change.baseline); XCTAssertEqual(change.teamTaskScope, draft.scope)
+        for key in ["id", "user_id", "task_generation", "project_id", "description", "labels", "priority", "due_date", "duration_minutes"] { XCTAssertEqual(change.fields[key], proposed.fields[key], key) }
+        XCTAssertEqual(change.fields["subtasks"]?.list.count, 1)
+        XCTAssertEqual(try draft.scope.lifecycleAction(for: change), "create")
+        XCTAssertEqual(try draft.scope.lifecycleBody(for: change)["request_id"], .string(id.uuidString.lowercased()))
+        XCTAssertFalse(cache.canSend(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: proposed.fields), in: try snapshot()), "Ordinary writers stay closed")
+    }
+    func testPrefilledCreationStillCreatesAndRetryKeepsIdentity() throws {
+        let (draft, cache, row, workspace, session) = try creationContext(), id = UUID()
+        let first = try draft.mutation(desired: row, current: nil, workspace: workspace, session: session, cache: cache, enabled: true, requestID: id)
+        XCTAssertNotNil(first)
+        XCTAssertEqual(first, try draft.mutation(desired: row, current: nil, workspace: workspace, session: session, cache: cache, enabled: true, requestID: id))
+    }
+    func testCreationRefusesExistingRowAndCannotBecomeEditOrDelete() throws {
+        let (draft, cache, row, workspace, session) = try creationContext()
+        XCTAssertFalse(draft.permits(current: row, workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try draft.mutation(desired: row, current: row, workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try draft.deletion(current: row, workspace: workspace, session: session, cache: cache, enabled: true, requestID: UUID()))
+        let admission = TaskEditorAdmission(workspace: workspace, record: row, root: row, kind: .existing, teamDraft: draft)
+        XCTAssertFalse(admission.matches(account: workspace.account, generation: workspace.generation, currentRoot: row))
+    }
+    func testCreationAdmissionAndNestedEditorsKeepOriginalUnpersistedIdentity() throws {
+        let (draft, _, row, workspace, _) = try creationContext()
+        for kind in [TaskEditorAdmission.Kind.new, .nested] {
+            let opening = TaskEditorAdmission(workspace: workspace, record: row, root: nil, kind: kind, teamDraft: draft)
+            XCTAssertTrue(opening.matches(account: workspace.account, generation: workspace.generation, currentRoot: nil))
+            XCTAssertFalse(opening.matches(account: workspace.account, generation: UUID(), currentRoot: nil))
+            XCTAssertFalse(opening.matches(account: workspace.account, generation: workspace.generation, currentRoot: row))
+            var other = row; other["id"] = .string(UUID().uuidString.lowercased())
+            XCTAssertFalse(TaskEditorAdmission(workspace: workspace, record: other, root: nil, kind: kind, teamDraft: draft).matches(account: workspace.account, generation: workspace.generation, currentRoot: nil))
+        }
+    }
+    func testCreationRefusesCopiedBookkeepingPrivateContentAndUnknownFields() throws {
+        let (_, cache, row, workspace, session) = try creationContext()
+        for (key, value) in ["user_id": JSON.string(UUID().uuidString.lowercased()), "completed": .bool(true), "completion_version": .number(1), "comments": .array([.string("private")]), "attachments": .array([.string("private")]), "reminders": .array([.string("legacy")]), "recurrence_parent_id": .string(UUID().uuidString.lowercased()), "opaque_future": .string("unsupported")] {
+            var copied = row; copied[key] = value
+            XCTAssertThrowsError(try TeamTaskEditorDraft(creating: copied, workspace: workspace, session: session, cache: cache, enabled: true), key)
+        }
+    }
+    func testCreationRejectsUnsupportedEditsWithoutDroppingAuthoredFields() throws {
+        let (draft, cache, row, workspace, session) = try creationContext()
+        for key in ["id", "user_id", "project_id", "task_generation", "created_at", "completion_version", "completed", "comments", "attachments", "opaque_future"] {
+            var proposed = row; proposed["title"] = .string("Keep this title"); proposed[key] = .string("unsupported")
+            XCTAssertThrowsError(try draft.mutation(desired: proposed, current: nil, workspace: workspace, session: session, cache: cache, enabled: true), key)
+            XCTAssertEqual(proposed.title, "Keep this title")
+        }
+    }
+    func testCreationRequiresCurrentRoleTokenSessionWorkspaceAndRollout() throws {
+        let (draft, cache, row, workspace, session) = try creationContext()
+        let viewer = try TeamWorkspaceCache(boundary: boundary("viewer"), previous: cache, pending: [], tasks: [])
+        XCTAssertThrowsError(try TeamTaskEditorDraft(creating: row, workspace: workspace, session: session, cache: viewer, enabled: true))
+        XCTAssertThrowsError(try TeamTaskEditorDraft(creating: row, workspace: workspace, session: session, cache: cache, enabled: false))
+        XCTAssertThrowsError(try draft.mutation(desired: row, current: nil, workspace: workspace, session: session, cache: viewer, enabled: true))
+        XCTAssertThrowsError(try draft.mutation(desired: row, current: nil, workspace: workspace, session: UUID(), cache: cache, enabled: true))
+        XCTAssertThrowsError(try draft.mutation(desired: row, current: nil, workspace: .init(account: workspace.account, generation: UUID()), session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try draft.mutation(desired: row, current: nil, workspace: workspace, session: session, cache: cache, enabled: false))
+    }
+    func testCreationRequiresNameAndCoherentRepeatPlan() throws {
+        let (draft, cache, row, workspace, session) = try creationContext()
+        var proposed = row; proposed["title"] = .string("  ")
+        XCTAssertThrowsError(try draft.mutation(desired: proposed, current: nil, workspace: workspace, session: session, cache: cache, enabled: true))
+        proposed = row; proposed["is_recurring"] = .bool(true); proposed["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
+        XCTAssertThrowsError(try draft.mutation(desired: proposed, current: nil, workspace: workspace, session: session, cache: cache, enabled: true))
+        proposed["due_date"] = .string("2026-12-01")
+        XCTAssertNotNil(try draft.mutation(desired: proposed, current: nil, workspace: workspace, session: session, cache: cache, enabled: true))
+    }
     private func editorContext() throws -> (TeamTaskEditorDraft, TeamWorkspaceCache, Record, WorkspaceBinding, UUID) {
         let b = try boundary(); var row = try snapshot().tables["tasks"]![0]
         row["user_id"] = .string("ea350000-0000-4000-8000-000000000099") // Retained/departed creator, not current actor.

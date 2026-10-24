@@ -67,6 +67,10 @@ struct RootView: View {
             workspace.clearNavigationMemory(); workspace.section = .today
             inboxReview = nil; pinnedNote = nil; focusRequest = nil; pulseRequest = nil; insightsRequest = nil; mentionsRequest = nil
         }
+        .sheet(item: Binding(get: { workspace.teamTaskCreation }, set: { workspace.teamTaskCreation = $0 })) { opening in
+            TaskInspectorForm(taskID: opening.task.id, admission: opening.admission)
+                .frame(minWidth: 620, idealWidth: 680, minHeight: 620, idealHeight: 760)
+        }
         .sheet(item: Binding(get: { workspace.teamTaskDeletion }, set: { workspace.teamTaskDeletion = $0 })) { TeamTaskDeletionReview(request: $0) }
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
             BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.records : []) { day in

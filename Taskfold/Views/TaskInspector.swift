@@ -65,6 +65,11 @@ struct TaskInspectorForm: View {
     @Environment(Workspace.self) private var workspace
     let taskID: String
     var admission: TaskEditorAdmission? = nil
+    @Environment(\.dismiss) private var dismiss
+    @State private var creationFinished = false
+    @State private var discardCreation = false
+    @State private var creationFailure: String?
+    private var isCreating: Bool { admission?.teamDraft?.kind == .creation }
     @State private var teamDraft: TeamTaskEditorDraft?
     @State private var teamDraftCaptured = false
     private var isTeamTask: Bool { teamDraft != nil }
@@ -112,6 +117,7 @@ struct TaskInspectorForm: View {
 
     private var current: Record? { workspace.taskRecord(taskID) }
     private var currentGeneration: JSON {
+        if isCreating { return admission!.source.record["task_generation"] }
         let root = Workspace.subtaskPath(taskID)?.first ?? taskID
         return store.record("tasks", id: root)?["task_generation"] ?? .null
     }
@@ -122,6 +128,9 @@ struct TaskInspectorForm: View {
         guard !accessStopped else {return false}
         if let admission,(!admission.matches(account:store.userID,generation:store.workspaceGeneration,currentRoot:store.record("tasks",id:admission.rootID)) || !store.editorMayWrite(source:admission.source.root ?? admission.source.record,proposed:admission.source.record,teamDraft:teamDraft ?? admission.teamDraft)) {return false}
         guard let workspaceBinding else {return true}
+        if isCreating {
+            return workspaceBinding.matches(account: store.userID, generation: store.workspaceGeneration) && store.editorMayWrite(source: admission!.source.record, proposed: draft, teamDraft: teamDraft ?? admission?.teamDraft)
+        }
         guard workspaceBinding.matches(account:store.userID,generation:store.workspaceGeneration),let sourceRoot,
               let live=store.record("tasks",id:sourceRoot.id),live["task_generation"]==sourceRoot["task_generation"],live["project_id"]==sourceRoot["project_id"],current != nil,sourceContext?.matches(live)==true,
               store.editorMayWrite(source:sourceRoot,proposed:draft,teamDraft:teamDraft) else {return false}
@@ -131,8 +140,8 @@ struct TaskInspectorForm: View {
         ["new_subtask":.string(subtask),"unsubmitted_comment":.string(comment),"pin":notePin.map(JSON.bool) ?? .null,"declined":.array(declined.sorted().map(JSON.string)),"reference_choices":.object(referenceChoices.mapValues(JSON.string)),"source_identity":sourceContext?.identity ?? .null]
     }
     private func checkpoint() {
-        guard !original.id.isEmpty else {return}
-        guard draft != original || notePin != nil || !subtask.isEmpty || !comment.isEmpty else {_=recoverySession?.finish();return}
+        guard !creationFinished, !original.id.isEmpty else {return}
+        guard draft != original || (isCreating && !draft.title.isEmpty) || notePin != nil || !subtask.isEmpty || !comment.isEmpty else {_=recoverySession?.finish();return}
         if recoverySession==nil || recoverySession?.closed==true {
             guard workspaceBinding?.matches(account:store.userID,generation:store.workspaceGeneration)==true else {return}
             do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure="Your draft cannot be protected yet. Keep this inspector open and retry.";return}
@@ -146,7 +155,7 @@ struct TaskInspectorForm: View {
             else {
                 ScrollView {VStack(alignment:.leading,spacing:16) {
                     Label("Editing paused",systemImage:"lock.shield").font(.title2.weight(.semibold))
-                    Text("This task or workspace changed. Reopen its current details before editing again.")
+                    Text(isCreating ? "This project or workspace changed. Your task has not been added." : "This task or workspace changed. Reopen its current details before editing again.")
                     if let session=recoverySession,session.latest != nil {
                         Text(session.preserved ? "Your unsent edit is saved privately with its original workspace. Open that workspace’s Backups & restore → Unsent task edits.":"Preserving your unsent edit…").accessibilityIdentifier("editorRecoveryStatus")
                         if let failure=session.failure {Text(failure).foregroundStyle(.red);Button("Retry preserving edit") {_=session.flush()}}
@@ -155,6 +164,28 @@ struct TaskInspectorForm: View {
                 }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}.accessibilityIdentifier("editorAccessStopped")
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            if isCreating {
+                HStack {
+                    Button("Cancel") {
+                        if !draft.title.isEmpty || draft != original { discardCreation = true }
+                        else { creationFinished = true; _ = recoverySession?.finish(); dismiss() }
+                    }.keyboardShortcut(.cancelAction)
+                    Spacer()
+                    Button("Add Task", action: createTeamTask).buttonStyle(.borderedProminent)
+                        .keyboardShortcut(.defaultAction).disabled(!editorAvailable || draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .accessibilityIdentifier("createSharedTask")
+                }.padding().background(.bar)
+            }
+        }
+        .alert("Could not add task", isPresented: Binding(get: { creationFailure != nil }, set: { if !$0 { creationFailure = nil } })) {
+            Button("OK") { creationFailure = nil }
+        } message: { Text(creationFailure ?? "") }
+        .confirmationDialog("Discard this task draft?", isPresented: $discardCreation) {
+            Button("Discard draft", role: .destructive) { creationFinished = true; _ = recoverySession?.finish(); dismiss() }
+            Button("Keep editing", role: .cancel) {}
+        }
+        .interactiveDismissDisabled(isCreating && !creationFinished)
         .sheet(item: $teamDeletion) { TeamTaskDeletionReview(request: $0) }
         .sheet(item: $teamRepeat) { TeamTaskRecurrenceEditor(request: $0) }
         .sheet(item: $teamReminders) { TeamTaskRemindersEditor(request: $0) }
@@ -175,7 +206,7 @@ struct TaskInspectorForm: View {
                     .onChange(of: titleFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
                     .accessibilityIdentifier("taskTitle")
                     .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: quickExclusions, onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
-                Text("Changes save automatically")
+                Text(isCreating ? "Added only when you choose Add Task" : "Changes save automatically")
                     .font(.caption).foregroundStyle(.secondary)
                     .accessibilityIdentifier("inspectorAutosaveHint")
                 if let suggestions {
@@ -204,7 +235,7 @@ struct TaskInspectorForm: View {
                 Button("Format notes", systemImage: "textformat") {
                     guard let binding = workspaceBinding else { return }
                     noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"),source:draft,sourceRootID:sourceRoot?.id,admission:TaskEditorAdmission(workspace:binding,record:draft,root:sourceRoot,kind:.nested,teamDraft:teamDraft))
-                }.disabled(current == nil).accessibilityIdentifier("openNoteFormatting")
+                }.disabled(current == nil && !isCreating).accessibilityIdentifier("openNoteFormatting")
                 if !isTeamTask, store.record("tasks", id: taskID) != nil {
                     Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
                     Text("Pin only text you want visible on your desktop or Home Screen. Choose it in the Pinned note widget; hide its details for privacy.").font(.caption).foregroundStyle(.secondary)
@@ -431,13 +462,13 @@ struct TaskInspectorForm: View {
             }
             Section {
                 if let created = ISO8601DateFormatter().date(from: draft.string("created_at")) { LabeledContent("Created", value: created.formatted(date: .abbreviated, time: .shortened)) }
-                if isTeamTask && Workspace.subtaskPath(taskID) == nil {
+                if isTeamTask && !isCreating && Workspace.subtaskPath(taskID) == nil {
                     Button("Delete shared task…", systemImage: "trash", role: .destructive, action: openTeamDeletion)
                         .disabled(!teamDeletionClean).accessibilityIdentifier("reviewTeamTaskDeletion")
                     if !teamDeletionClean { Text("Finish saving your edits before deleting this task.").font(.footnote).foregroundStyle(.secondary) }
-                } else if isTeamTask {
+                } else if isTeamTask && !isCreating {
                     Text("Manage this checklist item from its parent task.").font(.footnote).foregroundStyle(.secondary)
-                } else { Button("Delete Task…", systemImage: "trash", role: .destructive) { confirmDelete = true } }
+                } else if !isCreating { Button("Delete Task…", systemImage: "trash", role: .destructive) { confirmDelete = true } }
             }
         }
         .formStyle(.grouped)
@@ -460,6 +491,10 @@ struct TaskInspectorForm: View {
             NoteFormattingView(request: request) { value in
                 guard editorAvailable else {return "This task’s access changed. Your formatted edit is kept privately."}
                 guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), request.taskID == taskID, currentGeneration == request.generation, editingGeneration == request.generation else { return "This task or workspace changed. Your formatted draft is still here." }
+                if isCreating {
+                    guard draft.string("description") == request.original else { return "The notes changed while formatting was open. Your formatted draft is still here." }
+                    draft["description"] = .string(value); checkpoint(); return nil
+                }
                 guard let current, draft.string("description") == request.original,
                       current.string("description") == request.storedText || current.string("description") == request.original else { return "The notes changed while formatting was open. Copy your draft before reopening the current notes." }
                 let previous = draft; saveTask?.cancel()
@@ -524,10 +559,10 @@ struct TaskInspectorForm: View {
             titleSelection = TextSelection(insertionPoint: draft.title.endIndex)
         }
     }
-    private func load() { if let current { draft = current; original = current; titleParsingBaseline = current.title } }
+    private func load() { if let value = current ?? (isCreating ? admission?.source.record : nil) { draft = value; original = value; titleParsingBaseline = isCreating ? "" : value.title } }
     /// Moves accepted quick-entry pieces out of the title into their fields, like the iOS editor's save.
     private func applySuggestions() {
-        guard editorAvailable,workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, current != nil else { return }
+        guard editorAvailable,workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, (current != nil || isCreating) else { return }
         guard QuickReferenceCompletion(draft.title, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices)).range == nil else { titleParsingBaseline = draft.title; return }
         guard let parsed = suggestions, parsed.hasSuggestions else { titleParsingBaseline = draft.title; return }
         withAnimation(workspace.layout) {
@@ -539,7 +574,7 @@ struct TaskInspectorForm: View {
         declined = []; titleParsingBaseline = draft.title
     }
     private func applyReferenceChoices() {
-        guard editorAvailable,workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, current != nil else { return }
+        guard editorAvailable,workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, (current != nil || isCreating) else { return }
         let referenceGroups: Set<String> = ["project_id", "section_id", "assigned_to", "labels"]
         let excluded = Set(QuickEntry.groups).subtracting(referenceGroups).union(declined).union(quickExclusions)
         let parsed = QuickEntry(draft.title, disabled: excluded, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices), task: draft)
@@ -550,14 +585,30 @@ struct TaskInspectorForm: View {
         titleSelection = TextSelection(insertionPoint: draft.title.endIndex)
         saveNow()
     }
+    private func createTeamTask() {
+        guard isCreating, !creationFinished, editorAvailable, let captured = teamDraft else { checkpoint(); return }
+        saveTask?.cancel(); applySuggestions()
+        draft["title"] = .string(draft.title.trimmingCharacters(in: .whitespacesAndNewlines))
+        var saved = false
+        workspace.run("Add Shared Task") { saved = store.saveTeamTaskEditor(draft, draft: captured) }
+        if saved {
+            creationFinished = true; _ = recoverySession?.finish()
+            if workspace.quickAdd == workspace.teamTaskCreationText { workspace.quickAdd = "" }
+            workspace.selection = [draft.id]; workspace.confirm("Added “\(draft.title)”"); dismiss()
+        } else {
+            creationFailure = (store.error ?? "Your task could not be added.") + "\n\nYour draft is still here."
+            store.error = nil; checkpoint()
+        }
+    }
     private func scheduleSave() {
         saveTask?.cancel()
+        if isCreating { checkpoint(); return }
         guard editorAvailable else {checkpoint();return}
         saveTask = Task { try? await Task.sleep(for: .milliseconds(600)); guard !Task.isCancelled else { return }; saveNow() }
     }
     private var teamDeletionClean: Bool { draft == original && subtask.isEmpty && comment.isEmpty && notePin == nil }
     private func openTeamDeletion() {
-        guard Workspace.subtaskPath(taskID) == nil, editorAvailable, teamDeletionClean, let captured = teamDraft, taskID == captured.source.id else { return }
+        guard !isCreating, Workspace.subtaskPath(taskID) == nil, editorAvailable, teamDeletionClean, let captured = teamDraft, taskID == captured.source.id else { return }
         saveTask?.cancel()
         teamDeletion = TeamTaskDeletionRequest(draft: captured, current: { editorAvailable && teamDeletionClean }, perform: { requestID in
             guard editorAvailable, teamDeletionClean else { return false }
@@ -627,6 +678,7 @@ struct TaskInspectorForm: View {
             })
     }
     @discardableResult private func saveNow() -> Bool {
+        if isCreating { checkpoint(); return editorAvailable }
         guard editorAvailable,workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, let current else { checkpoint();return false }
         guard draft != original || notePin != nil else { return true }
         guard editingGeneration == currentGeneration else {

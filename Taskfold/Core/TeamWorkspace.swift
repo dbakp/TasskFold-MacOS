@@ -314,9 +314,11 @@ struct TeamWorkspaceRead: Sendable {let tables:[String:[Record]];let boundary:Te
 }
 
 
-/// Opening-time authority for an existing team-task editor. This value is
+/// Opening-time authority for a team-task editor or an insert-only creation. This value is
 /// intentionally not Codable: a backup or cached draft cannot restore authority.
 struct TeamTaskEditorDraft: Equatable, Sendable {
+    enum Kind: Equatable, Sendable { case existing, creation }
+    let kind: Kind
     let source: Record
     let workspace: WorkspaceBinding
     let session: UUID
@@ -326,6 +328,20 @@ struct TeamTaskEditorDraft: Equatable, Sendable {
     static let editableFields = TeamTaskEditScope.fields.subtracting(["completed", "completed_at"])
     static var unavailable: AppFailure { AppFailure(message: "Project access changed. Your draft is still here; reopen the task before saving.") }
     init(source: Record, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) throws {
+        try self.init(source: source, kind: .existing, workspace: workspace, session: session, cache: cache, enabled: enabled)
+    }
+    init(creating source: Record, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) throws {
+        // New work has no inherited creator, completion, provenance or private
+        // content. Authored fields remain intact; unsupported input is refused.
+        let fixed: Set<String> = ["id", "user_id", "project_id", "task_generation", "created_at", "completed", "completion_version", "comments", "attachments", "reminders"]
+        guard Set(source.fields.keys).isSubset(of: fixed.union(Self.editableFields)),
+              source.string("user_id") == workspace.account, source["completed"] == .bool(false),
+              source["completion_version"] == .number(0),
+              ["comments", "attachments", "reminders"].allSatisfy({ source[$0] == .null || source[$0] == .array([]) }),
+              !cache.knownTasks.contains(source.id) else { throw Self.unavailable }
+        try self.init(source: source, kind: .creation, workspace: workspace, session: session, cache: cache, enabled: enabled)
+    }
+    private init(source: Record, kind: Kind, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) throws {
         let boundary = cache.boundary, project = source.string("project_id")
         guard enabled, workspace.account == boundary.account,
               let permission = boundary.projects[project], let team = permission.team,
@@ -335,7 +351,7 @@ struct TeamTaskEditorDraft: Equatable, Sendable {
               [source.id, source.string("user_id"), source.string("task_generation")].allSatisfy(TeamProjectValue.id),
               case .string? = source.fields["title"], case .bool? = source.fields["completed"],
               let token = boundary.raw["token"]?.text else { throw Self.unavailable }
-        self.source = source; self.workspace = workspace; self.session = session
+        self.kind = kind; self.source = source; self.workspace = workspace; self.session = session
         scope = TeamTaskEditScope(account: boundary.account, origin: boundary.origin, team: team, project: project)
         accessToken = token; role = TeamProjectRole(rawValue: permission.role)!
     }
@@ -345,19 +361,27 @@ struct TeamTaskEditorDraft: Equatable, Sendable {
               cache.knownTeams[scope.project] == scope.team,
               cache.boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(scope.team) && $0.object["state"] == .string("active") }) == true,
               let permission = cache.boundary.projects[scope.project], permission.team == scope.team,
-              permission.canSend, !permission.archived, ["manager", "editor"].contains(permission.role), let current,
-              ["id", "user_id", "project_id", "task_generation"].allSatisfy({ current.fields[$0] == source.fields[$0] }) else { return false }
-        return true
+              permission.canSend, !permission.archived, ["manager", "editor"].contains(permission.role) else { return false }
+        if kind == .creation { return current == nil && !cache.knownTasks.contains(source.id) }
+        guard let current else { return false }
+        return ["id", "user_id", "project_id", "task_generation"].allSatisfy({ current.fields[$0] == source.fields[$0] })
     }
     /// Preserve authored baselines; never merge another person's new value into
     /// our intent or silently discard unsupported changes from a broad editor.
     func mutation(desired: Record, current: Record?, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool, requestID: UUID = UUID()) throws -> Mutation? {
-        guard permits(current: current, workspace: workspace, session: session, cache: cache, enabled: enabled), let current else { throw Self.unavailable }
+        guard permits(current: current, workspace: workspace, session: session, cache: cache, enabled: enabled) else { throw Self.unavailable }
         let keys = Set(source.fields.keys).union(desired.fields.keys)
         let changed = Set(keys.filter { key in
             Self.editableFields.contains(key) ? source[key] != desired[key] : source.fields[key] != desired.fields[key]
         })
         guard changed.isSubset(of: Self.editableFields) else { throw AppFailure(message: "This change needs its own team action. Your draft is still here; no fields have been saved.") }
+        if kind == .creation {
+            guard !desired.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw AppFailure(message: "Include a task name before saving.") }
+            guard TeamTaskRecurrence.supported(desired) else { throw TeamTaskRecurrence.invalid }
+            let change = Mutation(id: requestID, table: "tasks", recordID: source.id, method: "POST", fields: desired.fields, insertOnly: true, teamTaskScope: scope)
+            return try scope.capturing(change, existing: nil)
+        }
+        guard let current else { throw Self.unavailable }
         var fields: [String: JSON] = [:]
         for key in changed {
             if current[key] == desired[key] { continue }
@@ -377,7 +401,7 @@ extension TeamTaskEditorDraft {
     /// Deletion reviews the complete saved task, unlike a field-level edit. A
     /// newer observed row must never silently become the deletion baseline.
     func deletion(current: Record?, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool, requestID: UUID) throws -> Mutation {
-        guard permits(current: current, workspace: workspace, session: session, cache: cache, enabled: enabled),
+        guard kind == .existing, permits(current: current, workspace: workspace, session: session, cache: cache, enabled: enabled),
               let current else { throw Self.unavailable }
         guard TeamCompletion.sameLocal(source, current) else {
             throw AppFailure(message: "This task changed before deletion. Close this review and reopen its current details; nothing has been removed.")

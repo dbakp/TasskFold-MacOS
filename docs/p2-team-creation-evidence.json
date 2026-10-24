@@ -1,0 +1,166 @@
+{
+  "date": "2026-10-25",
+  "status": "Scoped shared task creation implemented; team rollout remains off; wider native/live acceptance remains open",
+  "repositoryOwner": "TasskFold-MacOS",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamWorkspace.swift": "d4d70a0a054956d98432c3aa3ef5ab8f298846d5f289c480699555e9cba71bb6",
+    "Taskfold/Core/Backups.swift": "147c4a0c0bd29978d0a85aeea1c9d863fe6d1b85d8db36031811b245120eb86b",
+    "Taskfold/Core/Store.swift": "5904df294885df74b40316c08cb92c9d8a0a8cdee4d59838bd185bf956420ed3",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "296f0cfaeeade75bdade32a4fe5e1383f235864511368cdfacbcf382a1e02002",
+    "Taskfold/Workspace.swift": "64a37d8844af42250f16d03d160daf9d368c749f8760fb7d2ce2a631d730af69",
+    "Taskfold/Views/TaskInspector.swift": "264c59fe022cc9f8cf885b296052c7145be51a5adf4d5a00804ec4184fe387b4",
+    "Taskfold/Views/RootView.swift": "7874700d6b1f1816c8a5a7736beb5dd1e9a1864667895dc014d38c94fc72ce64"
+  },
+  "behavior": [
+    "Explicit immutable creation admission; existing-task editing/deletion authority remains separate",
+    "Full native editor with explicit Add; notes, plan, assignee, shared labels, reminders, Repeat and checklist adapters remain available",
+    "No ordinary personal writer can infer shared scope; no private catalog/default import",
+    "Fresh actor-owned ID and generation, insert-only POST, scoped lifecycle endpoint and persistent pending retry identity",
+    "Secondary Apply stages the new task; creation is not an autosave",
+    "Role/token/session/workspace/source-identity changes stop saving; initial saved draft cannot become update or deletion authority",
+    "Mac failed Add uses a sheet-local error and retains draft; existing inspector autosave behavior is unchanged"
+  ],
+  "focusedCore": {
+    "tests": 106,
+    "failures": 0,
+    "skips": 0,
+    "newCreationTests": 8
+  },
+  "fullCore": {
+    "tests": 1781,
+    "optionalSkips": 33,
+    "failures": 0
+  },
+  "ownedPostgreSQL": {
+    "runner": "Scripts/Database/test-team-task-lifecycle.mjs",
+    "environment": {
+      "TASKFOLD_TEAM_CONVERSATION_REGRESSION": "1"
+    },
+    "checks": 89,
+    "containerRemoved": true,
+    "hostedChanges": false,
+    "sourceMigrationAdded": false,
+    "scriptSHA256": "5cf2cc318cdf02bbd7d4783f05c09d51da629c942d311aaf2fa1c59a886f79a3"
+  },
+  "build": {
+    "DebugArm64": true,
+    "isolatedHost": true,
+    "MacBuildOmitsWidgets": true,
+    "MacRuntimeClaimed": false
+  },
+  "iOSNative": {
+    "devices": [
+      "iPhone 18 Pro, iOS 27.0 Simulator",
+      "iPad Pro 13-inch (M5), iOS 27.0 Simulator"
+    ],
+    "testsPerDevice": 5,
+    "failures": 0,
+    "skips": 0,
+    "flows": [
+      "Actual project + opens Add Task full editor",
+      "Cancel creates/queues nothing",
+      "Full notes and portable shared labels stay staged until Add; one scoped insert remains identical across relaunch",
+      "Role loss pauses new task with no creation",
+      "Injected durable Store-save failure retains draft; retry creates once"
+    ],
+    "fixtureOnly": true,
+    "hostedAcceptanceClaimed": false,
+    "evidenceOwner": "TaskFold-iOS/docs/evidence/team-creation",
+    "eightScreenshotsVisuallyReviewed": true,
+    "evidenceCommit": "c983dbcf3b4b08d2aa95b300c0080ccd1bb29095",
+    "referenceIsDocumentationOnly": true
+  },
+  "diagnosticRuns": {
+    "initial": "Multiline SwiftUI notes field was misqueried as TextView; corrected to ID regardless of AX type",
+    "second": "Temporary failure button was not exposed by ToolbarItem; moved failure configuration to the reserved DEBUG fixture opening",
+    "collectors": "Only after all cases ended, process samples proved collectSimulatorDiagnostics; owned failed drivers were terminated. No live test was restarted. Final accepted run completes normally."
+  },
+  "compatibility": {
+    "newStoredWireSchema": false,
+    "authoritySerializable": false,
+    "shippingTeamRolloutEnabled": false,
+    "crossRepoBuildDependency": false,
+    "realTasksOrCredentialsChanged": false
+  },
+  "remaining": [
+    "Mac native creation, keyboard and spoken acceptance; wider native field/large-text/layout/fault/account tests",
+    "Hosted shared creation/concurrency/service acceptance and complete advanced teams rollout",
+    "Project moves/adoption, native linked batches/templates/conversations/files and remaining ranked Px work",
+    "Watch navigation remains unverified: computer use still reported the Mac locked after unlock reply",
+    "User deferrals retained: remote push delivery/recovery, old-client rollout safeguards, release/distribution, external OAuth registrations, genuine location delivery and inbound mail setup"
+  ],
+  "preparedHostSHA256": {
+    "Taskfold/Core/TeamWorkspace.swift": "d4d70a0a054956d98432c3aa3ef5ab8f298846d5f289c480699555e9cba71bb6",
+    "Taskfold/Core/Backups.swift": "5f777122a215c02967c48fb7c4e2b9d6e1f95b4004728976e1ef7f7164faec21",
+    "Taskfold/Core/Store.swift": "b7ff3046d5d634c618ef0701ff4962aa0274ea75454148d76d7fce0544f634fd",
+    "Taskfold/Workspace.swift": "cbefed89e78c25de177a0f198165d1a026451eeacf86e3fd0be8c8b1f62963db",
+    "Taskfold/Views/TaskInspector.swift": "264c59fe022cc9f8cf885b296052c7145be51a5adf4d5a00804ec4184fe387b4",
+    "Taskfold/Views/RootView.swift": "7874700d6b1f1816c8a5a7736beb5dd1e9a1864667895dc014d38c94fc72ce64"
+  },
+  "preparedHostChanges": "Isolated bundle/App Group, synthetic backend, private session/recovery Keychain services and fixture-only team flag. Mac test helper omits widgets. No source release configuration changed.",
+  "testLogSHA256": {
+    "full": "4f70e7b965cdd221f1d14da201ef7985e97af1e288237f0519ceda58fabef307",
+    "focused": "5f39a168b309a9772c3369a5794e728c6e01f8e5fc8ce519c3e873eccecf77f7",
+    "service": "9deb2d741d87c7b2108f9d9e1c80e1a298234f46651a28141ae9f5e78fd9a3df"
+  },
+  "cleanup": {
+    "isolatedAppsAndRunnersUninstalledAndAbsenceVerified": true,
+    "noTaskfoldProcessesRemain": true,
+    "ownedTemporaryRootsRemoved": 50,
+    "allocatedBytesRemoved": 2143338496,
+    "removedNames": [
+      "taskfold-creation-phone-accepted.xcresult",
+      "taskfold-creation-mac-preparation.log",
+      "taskfold-creation-phone.log",
+      "taskfold-creation-mac-host",
+      "taskfold-creation-focused-ios.log",
+      "taskfold-creation-ios-native-build",
+      "taskfold-creation-ios-host",
+      "taskfold-creation-tablet-attachments",
+      "taskfold-creation-ios-final-build.log",
+      "taskfold-creation-tablet-final-driver.sample",
+      "taskfold-creation-core-ios.log",
+      "taskfold-creation-phone-final.log",
+      "taskfold-creation-ios-verified-build.log",
+      "taskfold-creation-tablet-accepted.xcresult",
+      "taskfold-creation-phone-final-driver.sample",
+      "taskfold-creation-ios-build.log",
+      "taskfold-creation-tablet-accepted.log",
+      "taskfold-creation-phone-accepted.log",
+      "taskfold-creation-service-mac.log",
+      "taskfold-creation-full-mac.log",
+      "taskfold-creation-tablet-attachments.log",
+      "taskfold-creation-phone-driver.sample",
+      "taskfold-creation-tablet-driver.sample",
+      "taskfold-creation-ios-build",
+      "taskfold-creation-mac-final-build.log",
+      "taskfold-creation-ios-accepted-build.log",
+      "taskfold-creation-tablet-final.xcresult",
+      "taskfold-creation-ios-preparation.log",
+      "taskfold-creation-phone-attachments.log",
+      "taskfold-creation-full-ios.log",
+      "taskfold-creation-service-ios.log",
+      "taskfold-creation-tablet-accepted-summary.json",
+      "taskfold-creation-tablet.log",
+      "taskfold-creation-phone.xcresult",
+      "taskfold-creation-phone-attachments",
+      "taskfold-creation-mac-build.log",
+      "taskfold-creation-ios-native-build.log",
+      "taskfold-creation-tests.py",
+      "taskfold-creation-focused-mac.log",
+      "taskfold-creation-tablet-final.log",
+      "taskfold-creation-tablet.xcresult",
+      "taskfold-creation-mac-verified-build.log",
+      "taskfold-creation-mac-build",
+      "taskfold-creation-core-mac.log",
+      "taskfold-creation-phone-final.xcresult",
+      "taskfold-creation-phone-accepted-summary.json",
+      "taskfold-create-edit.py",
+      "taskfold-create-ui.py",
+      "taskfold-create-native.py",
+      "taskfold-create-evidence.py"
+    ],
+    "baselineSimulatorStatesAndCoreCachesPreserved": true,
+    "unrelatedFilesTouched": false
+  }
+}

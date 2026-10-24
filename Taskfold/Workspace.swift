@@ -102,6 +102,8 @@ final class Workspace {
     var rosterCache = MemberCache()
     var rosterAccount = ""
     var search = ""
+    var teamTaskCreationText = ""
+    var teamTaskCreation: TaskEditorOpening?
     var quickAdd = ""
     private struct NavigationMemory {
         var selection = Set<String>()
@@ -523,6 +525,17 @@ final class Workspace {
     /// Creates a task from quick-entry text. Returns the new task's id.
     @discardableResult
     func add(_ input: String, project: String = "", date: Date?, declined: Set<String> = [], sectionID: String = "", referenceChoices: [String: String] = [:]) -> String? {
+        if store.nativeConversationTeamCache?.knownTeams[project] != nil {
+            do {
+                var shared = Record.task(user: store.userID, project: project, date: date)
+                shared["section_id"] = sectionID.isEmpty ? .null : .string(sectionID)
+                let excluded = SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"])
+                shared = QuickEntry(input, disabled: declined.union(excluded), context: quickEntryContext(project: project), task: shared).applying(to: shared)
+                teamTaskCreationText = input
+                teamTaskCreation = try store.teamTaskCreationOpening(shared)
+            } catch { store.error = error.localizedDescription }
+            return nil
+        }
         var task = captureTask(project: project, date: date, sectionID: sectionID)
         let parsed = QuickEntry(input, disabled: declined, context: quickEntryContext(project: task.string("project_id")).choosingReferences(referenceChoices), task: task)
         guard !parsed.title.isEmpty else { return nil }

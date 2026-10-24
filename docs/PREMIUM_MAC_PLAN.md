@@ -5066,3 +5066,44 @@ Mac runtime/keyboard, VoiceOver, wider native/account/concurrency/fault/large-te
 acceptance and the remaining ranked/Px work stay open. Owned temporary apps,
 runners, prepared hosts, build/results and scratch files are removed after evidence
 capture. Baseline Simulator states, reusable Core caches and unrelated files stay.
+
+
+## Full shared-task creation — 25 October 2026, rank 6 in progress
+
+Shared projects now enter the complete task editor through an explicit creation
+admission. iOS project + opens Add Task; Mac Quick Add opens the full inspector
+as a creation sheet. Notes, planning, scoped assignment, shared labels/reminders,
+Repeat and checklists remain available. Secondary Apply stages this new task;
+only Add creates it. The existing Mac inspector still autosaves existing tasks.
+Mac creation failures stay in a sheet-local alert and preserve the draft.
+
+Creation captures the actor, project/team, access token, session and workspace at
+opening. It requires a fresh identity and zero completion state, rejects copied
+private content/bookkeeping and unsupported changes as a whole, then emits one
+insert-only scoped lifecycle command. Existing task edits keep their current-row
+requirement; creation cannot upgrade into PATCH or deletion after an ID collision.
+Nested editors inherit the same admission. Private recovery records preserve text,
+not authority. Personal writers and catalogs cannot infer a shared destination.
+No migration, hosted configuration or distribution setting changed. Rollout stays
+off and every user-deferred dependency remains deferred.
+
+Both owned repositories pass 106 focused cases (eight new creation cases) without
+failures/skips. Full suites pass: iOS 1,749 Core cases (13 optional skips) plus 79
+Watch cases; Mac 1,781 cases (33 optional skips), all without failures. Each owned
+PostgreSQL lifecycle fixture passes 89 checks with conversation regression enabled,
+removes its own container, and makes no hosted change. Both Debug arm64 apps build.
+Five native flows pass on each iPhone/iPad Simulator: actual project + entry,
+Cancel, notes/labels staging and single insert/relaunch, role loss, and failed
+Store save/retry. Eight screenshots and both summaries are retained by iOS.
+The first diagnostic runs corrected two test-harness issues (AX field type and a
+missing toolbar hook); final acceptance uses the fixed fixture. Failed diagnostic
+collectors were stopped only after every case ended and sampling confirmed their
+collector state. No active scenario was replaced or restarted.
+
+Mac runtime/keyboard, spoken feedback, wider native field/account/fault/layout and
+hosted/concurrency acceptance remain open. Moves/adoption, linked native batches,
+templates/conversations/files and the rest of ranked Px remain in scope. Watch
+navigation was not accepted: the native-control tool again reported the Mac locked
+after the unlock reply; no repeated manual unlock was requested. Disposable apps,
+runners and owned temporary builds/results are removed after evidence capture;
+Core caches, baseline Simulator states and unrelated files remain intact.
