@@ -3847,3 +3847,13 @@ PostgreSQL pipeline harness. Its 114 Deno cases and 27 real PostgreSQL checks pa
 no public entrypoint, durable email admission, provider configuration, native UI or
 deployment is added. Source links/additional senders, genuine provider acceptance,
 remaining native checks, Watch/team work and existing user deferrals stay open.
+
+
+### Watch freshness compatibility — 24 October
+
+The iOS-owned Watch candidate now refreshes offline date eligibility on a native
+minute schedule and shows its original update time. Its focused 77 checks,
+Debug/Release Watch and Debug iPhone builds pass; isolated 42 mm scheduled expiry
+preserves exact private archive bytes. This adds no Mac runtime code, resource,
+target or cross-repo build dependency. No new Mac runtime/test pass is claimed.
+Full paired/native Watch, teams/email work and all existing deferrals stay open.

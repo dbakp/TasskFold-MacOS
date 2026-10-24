@@ -1657,3 +1657,23 @@ wider native/accessibility checks remain open. No SQL, native app, live account,
 release flag or deployed function changed. Watch/advanced-team/other Px work and
 all user deferrals retain scope. See `p2-email-signed-handoff-evidence.json` and the
 module README; this is neither rank-6 nor full-Px completion.
+
+
+## Watch offline date refresh — 24 October
+
+The iOS-owned Watch Today screen now reevaluates the cached list on the native
+minute schedule and on active-scene redraws, even without a reachable iPhone.
+Expired rows give way to the existing refresh guidance and historical count.
+The original update stamp remains visible, formatted for the phone's time zone;
+older civil dates include the date, and daylight-saving changes do not relabel
+an earlier update with the later offset. No receipt, task or wire schema changes.
+
+Seven new boundary/presentation cases and the previous 70 focused Watch/receipt
+cases pass without failures or skips. Actual Watch Debug/Release and iPhone Debug
+builds pass. The isolated 42 mm Watch Simulator crosses the existing 24-hour age
+boundary without another packet, relaunch or input: task rows retire while the
+actual private archive stays byte-identical. This is local scheduled-render proof,
+not paired/background delivery, native input, midnight hardware or spoken proof.
+Mac owns no Watch runtime code or build dependency. Full Watch/teams/email/native
+acceptance and every user deferral retain scope. Exact evidence is in the iOS repo's
+`p2-watch-freshness-evidence.json`; no full rank or Px completion is claimed.
