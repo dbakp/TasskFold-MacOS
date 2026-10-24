@@ -58,6 +58,11 @@ try {
   const source = await readFile(repoFile(migration), "utf8");
   report.migrationSHA256 = createHash("sha256").update(source).digest("hex");
   await pg.raw(source);
+  // Match the existing profile contract in this minimal owned bootstrap.
+  await pg.raw("alter table public.profiles add column display_name text");
+  const identitySource = await readFile(repoFile("supabase/migrations/20261024161156_team_directory_identity.sql"), "utf8");
+  report.identityMigrationSHA256 = createHash("sha256").update(identitySource).digest("hex");
+  await pg.raw(identitySource);
   check(
     "existing project/task/storage boundary unchanged in fixture",
     await existingBoundary(),
@@ -69,7 +74,7 @@ try {
         lit(u.id)
       },${lit(u.email)},now());insert into auth.sessions(id,user_id) values(${
         lit(u.session)
-      },${lit(u.id)});insert into public.profiles values(${lit(u.id)});`,
+      },${lit(u.id)});insert into public.profiles(user_id) values(${lit(u.id)});`,
     );
   }
   const run = (
@@ -245,6 +250,56 @@ try {
   ], [undefined, undefined, undefined]);
   const member = await ok("member detail", "member", "get", { team_id: team });
   check("member no directory", member.members, undefined);
+  // Identity is presentation-only, freshly scoped to the authorized roster.
+  const identify = async (who = "owner") => (await ok("identity detail " + randomUUID(), who, "get", {team_id: team})).members;
+  const by = (rows, who) => rows.find(x => x.user_id === users[who].id);
+  await pg.raw(`update public.profiles set display_name=case user_id when ${lit(users.owner.id)} then 'Alex Rivera' when ${lit(users.admin.id)} then 'Sam Chen' when ${lit(users.member.id)} then 'Sam Chen' else null end`);
+  const initialIdentity = await identify();
+  check("identity duplicate names keep separate account email", [by(initialIdentity,"admin").display_name,by(initialIdentity,"member").display_name,by(initialIdentity,"admin").verified_email,by(initialIdentity,"member").verified_email], ["Sam Chen","Sam Chen",users.admin.email,users.member.email]);
+  check("identity owner name", by(initialIdentity,"owner").display_name,"Alex Rivera");
+  check("identity missing profile name explicit null", by(initialIdentity,"guest").display_name,null);
+  check("identity admin sees same authorized directory",await identify("admin"),initialIdentity);
+  check("identity no outsider lookup", initialIdentity.some(x => x.user_id === users.outsider.id),false);
+  for (const [label,value] of [["control","Bad\nname"],["bidi","Bad\u202ename"],["oversize","a".repeat(101)],["empty","   "]]) {
+    await pg.raw(`update public.profiles set display_name=${lit(value)} where user_id=${lit(users.member.id)}`);
+    check("identity rejects " + label,by(await identify(),"member").display_name,null);
+  }
+  await pg.raw(`update public.profiles set display_name='Sam Chen' where user_id=${lit(users.member.id)}; update auth.users set email_confirmed_at=null where id=${lit(users.member.id)}`);
+  check("identity unconfirmed email withheld",by(await identify(),"member").verified_email,null);
+  await pg.raw(`update auth.users set email_confirmed_at=now(),email='new.member@example.invalid' where id=${lit(users.member.id)}`);
+  check("identity changed email fresh",by(await identify(),"member").verified_email,"new.member@example.invalid");
+  await pg.raw(`update auth.users set email=${lit(users.member.email)},banned_until=now()+interval '1 hour' where id=${lit(users.member.id)}`);
+  const bannedIdentity=by(await identify(),"member");
+  check("identity banned target redacted",[bannedIdentity.display_name,bannedIdentity.verified_email],[null,null]);
+  await pg.raw(`update auth.users set banned_until=null where id=${lit(users.member.id)};delete from public.profiles where user_id=${lit(users.member.id)}`);
+  check("identity missing profile retains confirmed email",[by(await identify(),"member").display_name,by(await identify(),"member").verified_email],[null,users.member.email]);
+  await pg.raw(`insert into public.profiles(user_id,display_name) values(${lit(users.member.id)},'Sam Chen')`);
+  for (const role of ["member","guest"]) check("identity hidden from " + role,(await ok("identity lower " + role,role,"get",{team_id:team})).members,undefined);
+  await deny("identity arbitrary target cannot be injected","owner","get",{team_id:team,user_id:users.outsider.id},"22023");
+  await deny("identity outsider cannot get roster","outsider","get",{team_id:team},"PT404");
+  for (const role of ["anon","service_role"]) check("identity private helper denied " + role,(await run(users.owner,`taskfold_private.team_present('get',${json({team_id:team})})`,{role})).code,"42501");
+  check("identity no direct profile table read",(await run(users.owner,"(select to_jsonb(p) from public.profiles p limit 1)")).code,"42501");
+  await pg.raw(`alter table auth.users add column raw_user_meta_data jsonb; update auth.users set raw_user_meta_data='{"full_name":"Pretend Owner","email":"forged@example.invalid"}'::jsonb where id=${lit(users.member.id)};update public.profiles set display_name=null where user_id=${lit(users.member.id)}`);
+  const withoutProfile=by(await identify(),"member");
+  check("identity never invents name from editable metadata",[withoutProfile.display_name,withoutProfile.verified_email],[null,users.member.email]);
+  const spoofed=await ok("identity spoofed claims ignored","admin","get",{team_id:team},{claims:{user_metadata:{role:"owner",email:"forged@example.invalid"},email:"forged@example.invalid"}});
+  check("identity ignores claimed target identity",by(spoofed.members,"member").verified_email,users.member.email);
+  await pg.raw(`update public.profiles set display_name='Sam Chen' where user_id=${lit(users.member.id)};insert into taskfold_private.account_removal_receipts(token_hash,account_id) values('${"b".repeat(64)}',${lit(users.member.id)})`);
+  const removing=by(await identify(),"member");
+  check("identity removal-pending target withheld",[removing.display_name,removing.verified_email],[null,null]);
+  await deny("identity removing actor denied","member","get",{team_id:team},"28000");
+  await pg.raw(`delete from taskfold_private.account_removal_receipts where token_hash='${"b".repeat(64)}'`);
+  const identityLockApp="identity-role-"+randomUUID().slice(0,8);
+  const identityLock=await pg.hold(`select 1 from taskfold_private.teams where id=${lit(team)} for update; update taskfold_private.team_members set role='member' where team_id=${lit(team)} and user_id=${lit(users.admin.id)}`);
+  const queuedDirectory=rpc("admin","get",{team_id:team},{app:identityLockApp});
+  await pg.waitForLock(identityLockApp,identityLock.pid);
+  await identityLock.release();
+  const afterDemotion=await queuedDirectory;
+  check("identity queued read rechecks role after lock",[afterDemotion.code,afterDemotion.value.role,afterDemotion.value.members],[null,"member",undefined]);
+  await pg.raw(`update taskfold_private.team_members set role='admin' where team_id=${lit(team)} and user_id=${lit(users.admin.id)}`);
+  const directoryFixture={team};
+  for(const role of ["owner","admin","member","guest"]) directoryFixture[role]={account:users[role].id,detail:await ok("identity fixture " + role,role,"get",{team_id:team})};
+  if(process.argv[5]) await writeFile(process.argv[5],JSON.stringify(directoryFixture,null,2)+"\n");
   const folder = await change("create folder", "admin", "folder_create", {
     name: "Product",
   });

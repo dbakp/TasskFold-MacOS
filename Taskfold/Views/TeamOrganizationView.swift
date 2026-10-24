@@ -9,6 +9,7 @@ struct TeamOrganizationView: View {
     var teamID: String?
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.dismiss) private var dismiss
     @State private var browser: TeamOrganizationBrowser?
     @State private var loadedScope: String?
@@ -167,15 +168,16 @@ struct TeamOrganizationView: View {
                 } header: { Text("Folders") } footer: { Text("Folders organize the team. Project access is managed separately.") }
             }
             if detail.team.role.directoryVisible {
-                Section("Members") {
+                Section {
                     ForEach(detail.members) { member in
                         HStack(alignment: .top) {
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(member.id == detail.account ? "You" : "Member \(member.id.suffix(8))").font(.headline)
-                                if member.id != detail.account { Text("Name not shared").font(.caption).foregroundStyle(.secondary) }
+                                Text(member.title(account: detail.account)).font(.headline).fixedSize(horizontal: false, vertical: true)
+                                if typeSize.isAccessibilitySize { Text(member.role.title).font(.subheadline).foregroundStyle(.secondary) }
+                                Text(member.subtitle(account: detail.account)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                             }
                             Spacer(minLength: 8)
-                            Text(member.role.title).font(.subheadline).foregroundStyle(.secondary)
+                            if !typeSize.isAccessibilitySize { Text(member.role.title).font(.subheadline).foregroundStyle(.secondary) }
                             let policy = TeamOrganizationAdministration(detail: detail, enabled: browser?.setupEnabled == true)
                             if commands?.pending == nil && (policy.allows(.changeRole, member: member) || policy.allows(.removeMember, member: member) || policy.allows(.transferOffer, member: member)) {
                                 Menu {
@@ -183,11 +185,11 @@ struct TeamOrganizationView: View {
                                     if policy.allows(.transferOffer, member: member) { Button("Offer ownership") { begin(.transferOffer, member: member) } }
                                     if policy.allows(.removeMember, member: member) { Button("Remove member", role: .destructive) { begin(.removeMember, member: member) } }
                                 } label: { Image(systemName: "ellipsis") }
-                                .accessibilityLabel("Manage member \(member.id.suffix(8))").accessibilityIdentifier("teamMember-\(member.id)").disabled(commands?.busy == true)
+                                .accessibilityLabel("Manage \(member.title(account: detail.account)), \(member.reference)").accessibilityIdentifier("teamMember-\(member.id)").disabled(commands?.busy == true)
                             }
                         }.padding(.vertical, 3)
                     }
-                }
+                } header: { Text("Members") } footer: { Text("Profile names are chosen by members. Confirmed email addresses are visible only to the owner and admins.") }
                 let pending = detail.invitations.filter { $0.expires > Date() }
                 if !pending.isEmpty {
                     Section("Pending invitations") {
@@ -249,9 +251,10 @@ struct TeamOrganizationView: View {
         } else if let detail = browser?.detail {
             let policy = TeamOrganizationAdministration(detail: detail, enabled: browser?.setupEnabled == true)
             guard policy.allows(action, member: member, invitation: invitation), !action.needsFolder || detail.folders.contains(where: { $0.id == folder?.id }) else { return }
-            let label = folder?.name ?? member.map { $0.id == detail.account ? "You" : "Member \($0.id.suffix(8))" } ?? invitation?.email ?? detail.team.name
+            let label = folder?.name ?? member.map { $0.title(account: detail.account) } ?? invitation?.email ?? detail.team.name
             var request = TeamOrganizationEditRequest(scope: scope, account: detail.account, origin: detail.origin, action: action, team: detail.team.id, revision: detail.team.revision, folder: folder?.id, name: action == .folderCreate || action == .invite ? "" : label)
             request.state = detail.team.archived ? "archived" : "active"; request.target = label
+            request.verifiedEmail = member?.verifiedEmail
             request.user = member?.id; request.invitation = invitation?.id; request.transfer = detail.transfer?.id
             request.roles = policy.assignableRoles; request.role = member?.role ?? invitation?.role ?? .member
             editing = request
@@ -300,6 +303,7 @@ private struct TeamOrganizationEditRequest: Identifiable {
     var state = "active"
     var target = ""
     var user: String?
+    var verifiedEmail: String?
     var invitation: String?
     var transfer: String?
     var role: TeamOrganizationRole = .member
@@ -329,13 +333,26 @@ private struct TeamOrganizationEditSheet: View {
                 if current(), model.current {
                     if request.action.needsName {
                         Section { TextField("Name", text: $name).accessibilityIdentifier("teamChangeName") }
-                    } else if !request.name.isEmpty { Section { Text(request.name).font(.headline) } }
+                    } else if request.user == nil && !request.name.isEmpty { Section { Text(request.name).font(.headline) } }
                     if request.action == .invite {
                         Section { TextField("Email", text: $email).accessibilityIdentifier("teamInvitationEmail")
                             #if os(iOS)
                             .keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
                             #endif
                         } footer: { Text("They’ll see this invitation in Taskfold when signed in with that verified email. No email is sent.") }
+                    }
+                    if let user = request.user {
+                        Section {
+                            Text(request.target).font(.headline).accessibilityIdentifier("teamReviewTarget")
+                            if let email = request.verifiedEmail {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Label("Confirmed email", systemImage: "checkmark.shield").font(.caption).foregroundStyle(.secondary).accessibilityHidden(true)
+                                    Text(verbatim: email).lineLimit(nil).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                                        .accessibilityLabel("Confirmed email, \(email)").accessibilityIdentifier("teamReviewEmail")
+                                }
+                            }
+                            Text(user).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled).accessibilityIdentifier("teamReviewAccount")
+                        } header: { Text("Member") } footer: { Text("Profile names are chosen by members. Check the confirmed email or account reference before changing access.") }
                     }
                     if request.action.needsRole {
                         Section {
@@ -350,8 +367,7 @@ private struct TeamOrganizationEditSheet: View {
                             }
                         }
                     }
-                    if let user = request.user { Section("Account reference") { Text(user).font(.caption.monospaced()).textSelection(.enabled) } }
-                    if request.action == .acceptInvitation { Section { Text("Join as \(request.role.title.lowercased())") } }
+                    if request.action == .acceptInvitation { Section { Text("Join as \(request.role.title.lowercased())") } footer: { Text("The team owner and admins can see your profile name and confirmed email address.") } }
                     if request.action == .delete { Section { TextField("Type team name", text: $confirmation).accessibilityIdentifier("teamDeleteConfirmation") } footer: { Text("Type \(request.target) to confirm.") } }
                     Section { Text(explanation).foregroundStyle(.secondary) }
                     if let error { Section { Label(error, systemImage: "exclamationmark.circle").foregroundStyle(.secondary) } }

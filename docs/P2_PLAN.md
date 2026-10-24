@@ -10,8 +10,9 @@ directory/invitation information through account-bound read adapters. Reviewed
 team creation, naming, archive/reopen and folder changes now use private
 stable-request recovery; team rollout stays disabled. Gated invitation responses,
 membership/role/ownership and leave/delete controls are now implemented. Next:
-broader native/live role/account and draft-cohort acceptance, verified member
-identity presentation, then remaining scoped team-task adapters. Rank 7 still needs paired
+broader native/live role/account and draft-cohort acceptance, then remaining
+scoped team-task adapters. Scoped profile/confirmed-email presentation is now
+implemented; its live-service acceptance remains open. Rank 7 still needs paired
 offline completion and its recorded native/hardware gates. User-deferred release,
 provider and device dependencies remain deferred.
 
@@ -2329,3 +2330,32 @@ Exact evidence is in `p2-team-members-evidence.json` and
 role/account/draft acceptance, verified identity presentation, Mac/runtime/spoken
 checks and the remaining team-task adapters remain open. This milestone does not
 complete advanced teams or Px; user deferrals remain unchanged.
+
+
+## Scoped directory identity presentation — 24 October, rank 6 in progress
+
+Team owners/admins can now identify members by saved profile name and confirmed
+email rather than an opaque account suffix alone. Duplicate names retain separate
+email/account references; role/removal/ownership reviews repeat the selected
+identity. Names never grant authority, and commands retain exact account IDs
+without saving the directory in recovery/task/widget storage. Missing or unsafe
+identity text falls back safely. The Join review discloses directory visibility.
+
+The source-only service wrapper enriches only authorized owner/admin directory
+rows after the existing session/team lock; it adds no account-search endpoint.
+Queued demotion returns the current lower role without directory content. See
+`TEAM_ORGANIZATION.md` and `p2-team-directory-evidence.json`. Live-service and wider
+native account/role acceptance, remaining draft cohorts, Mac/spoken checks and
+scoped team-task adapters remain open. Teams stays disabled and all user-deferred
+release/provider/device work remains deferred. The full Px goal is active.
+
+
+Verification: 91 relevant core cases and 213 owned PostgreSQL checks pass in each
+repository, with successful independent Debug app/extension builds. The phone and
+tablet pass directory → exact member review → Cancel → lower-role view → owner
+relaunch in normal and Accessibility XXXL sizes. Saved-state checks show no peer
+mutation file or pending command. All eight screenshots are visually inspected;
+large-text roles stack below names and the review email uses a separate full-width
+line to avoid the standard label's truncation. Native Mac/spoken and live-service
+acceptance remain open. Temporary test apps/builds/results were removed after
+evidence preservation; approximately 1.08 GiB reclaimed. No Mac test app launched.

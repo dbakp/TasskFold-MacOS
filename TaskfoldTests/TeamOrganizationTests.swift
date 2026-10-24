@@ -185,4 +185,99 @@ final class TeamOrganizationTests: XCTestCase {
             XCTAssertEqual(detail.folders.count, role == "guest" ? 0 : 1)
         }
     }
+    func testDirectoryIdentitySupportsOldAndNewServiceWithoutGuessingNames() throws {
+        let legacy = try decode(detail()).members[0]
+        XCTAssertNil(legacy.displayName); XCTAssertNil(legacy.verifiedEmail)
+        XCTAssertEqual(legacy.subtitle(account: orgOther), "Profile not shared")
+        XCTAssertEqual(legacy.title(account: orgAccount), "You")
+        XCTAssertEqual(legacy.title(account: orgOther), "Member \(orgAccount.suffix(8))")
+        var raw = detail()
+        raw["members"] = .array([.object(["user_id": .string(orgAccount), "role": .string("owner"), "display_name": .string("Sam Chen"), "verified_email": .string("sam@example.invalid")])])
+        let member = try decode(raw).members[0]
+        XCTAssertEqual(member.title(account: orgOther), "Sam Chen")
+        XCTAssertEqual(member.reference, "sam@example.invalid")
+        XCTAssertEqual(member.subtitle(account: orgOther), "sam@example.invalid")
+        let emailOnly = TeamOrganizationDetail.Member(id: orgOther, role: .member, verifiedEmail: "sam@example.invalid")
+        XCTAssertEqual(emailOnly.title(account: orgAccount), "sam@example.invalid")
+        XCTAssertEqual(emailOnly.subtitle(account: orgAccount), "Confirmed email")
+        XCTAssertEqual(member.title(account: orgAccount), "You")
+    }
+    func testDirectoryIdentityHidesMisleadingOrMalformedPresentationWithoutLosingRoster() throws {
+        for key in ["display_name", "verified_email"] {
+            for value: JSON in [.number(1), .bool(true), .string(""), .string(" padded "), .string("bad\nname"), .string("bad\u{202E}name"), .string("bad\u{2066}name"), .string(String(repeating: "a", count: 1020))] {
+                var raw = detail()
+                raw["members"] = .array([.object(["user_id": .string(orgAccount), "role": .string("owner"), key: value])])
+                let member = try decode(raw).members[0]
+                XCTAssertNil(key == "display_name" ? member.displayName : member.verifiedEmail)
+                XCTAssertEqual(member.id, orgAccount)
+            }
+        }
+        for value in ["not-email", "a@@b", "a@b c", "a@b\u{00A0}c"] {
+            XCTAssertNil(TeamOrganizationDetail.Member.identity(.string(value), email: true))
+        }
+        XCTAssertEqual(TeamOrganizationDetail.Member.identity(.string("Zoë 陳 👩🏽‍💻")), "Zoë 陳 👩🏽‍💻")
+        XCTAssertNil(TeamOrganizationDetail.Member.identity(.null))
+    }
+    func testDirectoryDuplicateNamesKeepFullDistinctReferencesAndCommands() throws {
+        var raw = detail()
+        raw["members"] = .array([
+            .object(["user_id": .string(orgAccount), "role": .string("owner"), "display_name": .string("Sam Chen"), "verified_email": .string("owner@example.invalid")]),
+            .object(["user_id": .string(orgOther), "role": .string("member"), "display_name": .string("Sam Chen"), "verified_email": .string("other@example.invalid")])])
+        let members = try decode(raw).members
+        XCTAssertEqual(members.map { $0.title(account: orgTeam) }, ["Sam Chen", "Sam Chen"])
+        XCTAssertNotEqual(members[0].reference, members[1].reference)
+        let command = try TeamOrganizationCommand(account: orgAccount, origin: orgOrigin, action: .removeMember, team: orgTeam, revision: 3, user: members[1].id)
+        XCTAssertEqual(command.body["user_id"], .string(orgOther))
+        XCTAssertNil(command.body["display_name"]); XCTAssertNil(command.body["verified_email"])
+    }
+    func testActualPostgreSQLDirectoryIdentityContract() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-directory-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let fixture = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        for role in ["owner", "admin", "member", "guest"] {
+            let actor = fixture[role]!.object
+            let value = try TeamOrganizationDetail(actor["detail"]!.object, team: fixture["team"]!.text, account: actor["account"]!.text, origin: orgOrigin)
+            XCTAssertEqual(value.team.role.rawValue, role)
+            if value.team.role.directoryVisible {
+                XCTAssertEqual(value.members.count, 4)
+                XCTAssertEqual(value.members.filter { $0.displayName == "Sam Chen" }.count, 2)
+                XCTAssertEqual(Set(value.members.compactMap(\.verifiedEmail)).count, 4)
+            } else { XCTAssertTrue(value.members.isEmpty) }
+        }
+    }
+    @MainActor func testDirectoryNamesDisappearWhileRefreshAndAfterRoleLoss() async throws {
+        var lower = false
+        var suspended: CheckedContinuation<TeamOrganizationOverview, Never>?
+        let browser = TeamOrganizationBrowser(account: orgAccount, origin: orgOrigin, current: { true }, overview: {
+            if lower { return await withCheckedContinuation { suspended = $0 } }
+            return try self.overview()
+        }, detail: { _ in
+            var raw = self.detail(lower ? "member" : "owner")
+            if !lower { raw["members"] = .array([.object(["user_id": .string(orgAccount), "role": .string("owner"), "display_name": .string("Private profile"), "verified_email": .string("private@example.invalid")])]) }
+            return try self.decode(raw)
+        })
+        await browser.refresh(team: orgTeam)
+        XCTAssertEqual(browser.detail?.members[0].displayName, "Private profile")
+        lower = true
+        let job = Task { await browser.refresh(team: orgTeam) }
+        while suspended == nil { await Task.yield() }
+        XCTAssertNil(browser.detail)
+        suspended?.resume(returning: try overview()); await job.value
+        XCTAssertEqual(browser.detail?.team.role, .member)
+        XCTAssertTrue(browser.detail?.members.isEmpty == true)
+    }
+
+    @MainActor func testLateDirectoryIdentityAfterAccountChangeCannotReappear() async throws {
+        var raw = detail()
+        raw["members"] = .array([.object(["user_id": .string(orgAccount), "role": .string("owner"), "display_name": .string("Private profile"), "verified_email": .string("private@example.invalid")])])
+        let oldReply = try decode(raw)
+        var current = true
+        var suspended: CheckedContinuation<TeamOrganizationDetail, Never>?
+        let browser = TeamOrganizationBrowser(account: orgAccount, origin: orgOrigin, current: { current }, overview: { try self.overview() }, detail: { _ in await withCheckedContinuation { suspended = $0 } })
+        let job = Task { await browser.refresh(team: orgTeam) }
+        while suspended == nil { await Task.yield() }
+        current = false; browser.invalidate()
+        suspended?.resume(returning: oldReply); await job.value
+        XCTAssertNil(browser.detail); XCTAssertNil(browser.overview); XCTAssertFalse(browser.loading)
+    }
+
 }

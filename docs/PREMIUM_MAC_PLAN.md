@@ -4331,3 +4331,25 @@ Recovery remains available where allowed during setup pauses or archiving.
 Verified leave/delete navigation no longer waits for background task sync. See
 [membership evidence](p2-team-members-evidence.json) for exact runtime limits;
 live team rollout and the remaining access/identity/task gates remain open.
+
+
+## Scoped team directory presentation — 24 October 2026
+
+The independently owned Mac directory now presents saved profile names and
+confirmed emails for owners/admins, with duplicate-name disambiguation and full
+account references in management reviews. Identity is presentation only, stays
+ephemeral and does not enter command bodies/recovery or task/widget storage. The
+source-only service wrapper respects existing session/team locks and role scope.
+See TEAM_ORGANIZATION.md and p2-team-directory-evidence.json for exact verification.
+Native Mac/spoken and live-service acceptance remain open; Teams is disabled.
+
+
+Verification: 91 relevant core cases and 213 owned PostgreSQL checks pass in each
+repository, with successful independent Debug app/extension builds. The phone and
+tablet pass directory → exact member review → Cancel → lower-role view → owner
+relaunch in normal and Accessibility XXXL sizes. Saved-state checks show no peer
+mutation file or pending command. All eight screenshots are visually inspected;
+large-text roles stack below names and the review email uses a separate full-width
+line to avoid the standard label's truncation. Native Mac/spoken and live-service
+acceptance remain open. Temporary test apps/builds/results were removed after
+evidence preservation; approximately 1.08 GiB reclaimed. No Mac test app launched.

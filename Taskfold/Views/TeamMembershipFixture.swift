@@ -74,7 +74,14 @@ private struct TeamMembershipFixtureIO: CalendarSecureItemIO {
         team["role"] = .string(role)
         if role != "guest" { team["folders"] = data["folders"]!.object[id] ?? .array([]) }
         if ["owner", "admin"].contains(role) {
-            team["members"] = data["members"]!.object[id] ?? .array([])
+            team["members"] = .array((data["members"]!.object[id]?.list ?? []).map { value in
+                var row = value.object
+                let account = row["user_id"]!.text
+                let names = [TeamMembershipFixture.owner: "Alex Rivera", TeamMembershipFixture.admin: "Sam Chen", TeamMembershipFixture.member: "Sam Chen"]
+                row["display_name"] = names[account].map(JSON.string) ?? .null
+                row["verified_email"] = account == TeamMembershipFixture.guest ? .null : .string(TeamMembershipFixture.email(account))
+                return .object(row)
+            })
             team["invitations"] = .array(data["invitations"]!.object.values.filter { $0.object["team_id"] == .string(id) })
         }
         if let transfer = data["transfers"]!.object[id], role == "owner" || transfer.object["target_id"] == .string(TeamMembershipFixture.account) { team["transfer"] = transfer }

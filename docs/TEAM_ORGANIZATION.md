@@ -95,8 +95,8 @@ but cannot appoint or manage admins. Current owners cannot be removed or leave;
 transfer requires an accepted non-guest recipient's separate confirmation. Guest
 and member views omit the privileged directory. Account references in individual
 reviews disambiguate the selected UUID without inventing display names or adding
-an unscoped account lookup; richer verified member identity presentation remains
-a rollout gate.
+an unscoped account lookup. The scoped enrichment below now supplies profile
+names and confirmed emails; live identity acceptance remains a rollout gate.
 
 Recovery/removal/ownership controls follow the service's paused/archived rules;
 ordinary setup stays hidden while paused and ordinary edits require an active
@@ -250,3 +250,40 @@ The subsequent disabled content-custody layer is documented in
 [TEAM_CONTENT_CUSTODY.md](TEAM_CONTENT_CUSTODY.md). It preserves team work after
 creator removal, retains personal deletion semantics and closes legacy team-data
 shortcuts. It does not enable team access or complete the next permission/UI gates.
+
+
+## Scoped directory identities (24 October 2026)
+
+The gated owner/admin directory now presents profile names and confirmed account
+email addresses alongside roles. Names are self-authored presentation, never
+proof of identity or authority. Duplicate names remain separate rows and each
+management review repeats the selected email and full account reference. Action
+bodies still contain only the selected account ID: there is no name/email lookup,
+retargeting or additional identity persisted in command recovery. Joining a team
+explains the directory's visibility before confirmation. No avatar is fetched.
+
+A new private `team_present` wrapper enriches only the exact member rows returned
+by the existing organization service. That service verifies the actor/session and
+holds the team lock before the profile/email read. The public RPC remains an
+invoker-only entry point with its original signature; all eighteen actions keep
+their command/receipt behavior. Only owner/admin `get` responses are enriched;
+member/guest, overview, incoming offers and outsiders receive no directory.
+The existing task/project/storage permissions and rollout flags are unchanged.
+
+Display names come only from the explicit saved profile. Confirmed emails come
+only from the current Auth user row with a confirmation timestamp, never JWT or
+editable metadata. Banned or removal-pending targets have both values withheld.
+Missing, overlong, control/bidi-tainted or otherwise malformed presentation uses
+a safe account-reference fallback without dropping the roster. Client validation
+also suppresses unsafe formatting while allowing name joiners used by scripts
+and emoji. Existing services that omit the optional fields continue to work.
+
+Identity stays in the ephemeral, scoped browser/review, not the task/widget cache
+or private recovery journal. Refresh clears prior content before fetching; role,
+account/session and workspace invalidation use the existing browser fences. The
+saved SQL fixture covers authorized current identities and duplicate names. A
+queued read demoted while waiting returns its new member role with no directory.
+See `p2-team-directory-evidence.json` for current verification and limits. This
+migration is source-only, not deployed, and Teams stays disabled. Live Auth/RLS/
+private-Keychain acceptance, native Mac/spoken checks, broader draft cohorts and
+team-task integration remain open; this does not complete rank 6 or Px.

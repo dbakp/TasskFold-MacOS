@@ -92,7 +92,28 @@ struct TeamOrganizationOverview: Equatable, Sendable {
 
 struct TeamOrganizationDetail: Equatable, Sendable {
     struct Folder: Equatable, Identifiable, Sendable { let id: String; let name: String; let position: Int }
-    struct Member: Equatable, Identifiable, Sendable { let id: String; let role: TeamOrganizationRole }
+    /// A profile name is self-authored presentation. Only the service can supply
+    /// a confirmed email; neither value participates in authorization or commands.
+    struct Member: Equatable, Identifiable, Sendable {
+        let id: String
+        let role: TeamOrganizationRole
+        var displayName: String? = nil
+        var verifiedEmail: String? = nil
+        func title(account: String) -> String { id == account ? "You" : displayName ?? verifiedEmail ?? "Member \(id.suffix(8))" }
+        var reference: String { verifiedEmail ?? "Account \(id.suffix(8))" }
+        func subtitle(account: String) -> String {
+            if let verifiedEmail { return title(account: account) == verifiedEmail ? "Confirmed email" : verifiedEmail }
+            return displayName == nil ? "Profile not shared" : reference
+        }
+        static func identity(_ value: JSON?, email: Bool = false) -> String? {
+            guard let value, value != .null else { return nil }
+            guard case .string(let text) = value, text == text.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !text.isEmpty, text.unicodeScalars.count <= (email ? 254 : 100), text.utf8.count <= (email ? 1016 : 400),
+                  !text.unicodeScalars.contains(where: { (CharacterSet.controlCharacters.contains($0) && (email || ![0x200C, 0x200D].contains($0.value))) || (0x202A...0x202E).contains($0.value) || (0x2066...0x2069).contains($0.value) }),
+                  !email || (TeamOrganizationCommand.validEmail(text) && !text.unicodeScalars.contains(where: CharacterSet.whitespacesAndNewlines.contains)) else { return nil }
+            return text
+        }
+    }
     struct Invitation: Equatable, Identifiable, Sendable { let id: String; let email: String; let role: TeamOrganizationRole; let expires: Date }
     struct Transfer: Equatable, Sendable { let id: String; let target: String; let expires: Date }
     let account: String
@@ -118,7 +139,7 @@ struct TeamOrganizationDetail: Equatable, Sendable {
         if team.role.directoryVisible {
             members = try TeamOrganizationValue.rows(raw["members"], limit: 500).map { row in
                 guard case .string(let raw)? = row["role"], let role = TeamOrganizationRole(rawValue: raw) else { throw TeamOrganizationValue.invalid }
-                return try Member(id: TeamOrganizationValue.id(row["user_id"]), role: role)
+                return try Member(id: TeamOrganizationValue.id(row["user_id"]), role: role, displayName: Member.identity(row["display_name"]), verifiedEmail: Member.identity(row["verified_email"], email: true))
             }
             try TeamOrganizationValue.unique(members, by: \.id)
             guard members.filter({ $0.role == .owner }).count == 1, members.first(where: { $0.id == account })?.role == team.role else { throw TeamOrganizationValue.invalid }
