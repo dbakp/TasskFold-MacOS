@@ -14,6 +14,7 @@ struct NoteFormatRequest: Identifiable {
     let storedText: String?
     var source: Record? = nil
     var sourceRootID: String? = nil
+    var admission: TaskEditorAdmission? = nil
 }
 
 /// Native, selectable note blocks. Every link has already passed the web-only policy;
@@ -91,6 +92,7 @@ struct NoteFormattingView: View {
     }
     private var available: Bool {
         guard !accessStopped,request.workspace.matches(account:store.userID,generation:store.workspaceGeneration) else {return false}
+        if let admission=request.admission,(!admission.matches(account:store.userID,generation:store.workspaceGeneration,currentRoot:store.record("tasks",id:admission.rootID)) || !store.editorMayWrite(source:admission.source.root ?? admission.source.record,proposed:admission.source.record)) {return false}
         guard let sourceRecord else {return true}
         guard let sourceContext,store.editorMayWrite(source:sourceContext.root ?? sourceRecord,proposed:sourceRecord),sourceContext.matches(sourceContext.root.flatMap{store.record("tasks",id:$0.id)}) else {return false}
         return true
@@ -152,14 +154,14 @@ struct NoteFormattingView: View {
                         }.padding()
                     }
                 } else {
-                    VStack(alignment:.leading,spacing:16) {
+                    ScrollView {VStack(alignment:.leading,spacing:16) {
                         Label("Editing paused",systemImage:"lock.shield").font(.title2)
                         Text("Reopen the current task before editing again.")
                         if let session=recoverySession,session.latest != nil {
                             Text(session.preserved ? "Your unsent formatting is saved privately in Unsent task edits.":"Preserving your unsent formatting…")
                             if let failure=session.failure {Text(failure).foregroundStyle(.red);Button("Retry preserving edit") {_=session.flush()}}
                         }
-                    }.padding(24)
+                    }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}
                 }
             }.navigationTitle("Format notes")
                 .toolbar {
@@ -196,10 +198,10 @@ struct NoteFormattingView: View {
                 }
         }
         .onAppear {
-            guard recoverySession==nil,request.workspace.matches(account:store.userID,generation:store.workspaceGeneration) else {return}
+            guard recoverySession==nil,available else {return}
             var original=request.source ?? store.record("tasks",id:request.taskID) ?? Record(["id":.string(request.taskID),"title":.string("Recovered notes"),"description":.string(request.original),"task_generation":request.generation])
             original["description"] = .string(request.original)
-            sourceRecord=original;sourceContext=TaskEditorSourceContext(record:original,root:store.record("tasks",id:request.sourceRootID ?? SubtaskTree.referencePath(request.taskID)?.first ?? request.taskID))
+            sourceRecord=original;sourceContext=request.admission?.source ?? TaskEditorSourceContext(record:original,root:store.record("tasks",id:request.sourceRootID ?? SubtaskTree.referencePath(request.taskID)?.first ?? request.taskID))
             do {recoverySession=try store.beginEditorSession(original)} catch {message="Your note could not be protected. Keep this editor open and retry."}
         }
         .onChange(of:text) {_,_ in checkpoint()}

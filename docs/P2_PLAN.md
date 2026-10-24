@@ -2,6 +2,16 @@
 
 Updated 24 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
 
+## Current implementation focus
+
+Rank 6 is active: editor recovery now has source custody and opening-time
+workspace admission; queued new capture uses a private original-account
+checkpoint. Acceptance is scoped in the editor evidence files below. Next work
+remains the broader role/account and draft-cohort matrix, scoped team adapters
+and premium organization UI. Rank 7 still needs paired offline completion and
+its recorded native/hardware gates. This does not supersede the ranked delivery
+order or the dependencies explicitly deferred by the user.
+
 ## Immediate priority correction
 
 Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. Rank-6 automation acceptance and rank-7 Watch implementation are both in progress. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; scoped clipboard/spoken secret controls now pass; native recovery and the remaining spoken checks remain in progress. Hosted server-session expiry and temporary encryption-key restoration now pass in both repo-owned services; hosted same-account webhook, queued-task and API-key recovery now pass on phone/tablet; wider spoken acceptance remains open. Signing-dependent Mac runtime stays deferred. Actual paired Simulator live capture/completion/replay and normal foreground relaunch now pass; offline Watch relaunch is durable. The startup authority fix and ready-update retry now pass paired Simulator cold capture return; 88 focused cases cover the queue/binding/retry policy. Paired offline completion, hardware/background/cloud and native/spoken acceptance remain open. These priorities preserve the full backlog and existing user deferrals.
@@ -2225,3 +2235,36 @@ Verification: 119 relevant core tests pass independently in each repository,
 with successful Debug app/extension builds. Mac runtime/VoiceOver and the broader
 role/account matrix remain open; Simulator acceptance is not Mac runtime proof.
 Owned test apps/builds/results removed after evidence preservation; 1.82 GiB reclaimed. No native Mac app launched this stage.
+
+
+## Editor opening admission and queued capture — 24 October, rank 6 in progress
+
+Editor requests now capture their workspace incarnation and source root at the
+opening action. Existing tasks require a matching stored source; deleted or
+replaced records cannot silently become new tasks. New tasks require their
+creating account and an unused identity. Nested opening values retain the
+parent's workspace/root rather than resolving them again in another account.
+Calendar, list, widget/notification, Inbox-review, pinned-note and nested editor
+routes use the captured admission. Current Store write permissions are checked
+separately before controls or mutation paths are admitted.
+
+Quick Add → More checkpoints the authored task before deferred presentation. Its
+Store-owned session and device vault remain bound to the original account while
+the sheet is queued. A blocked presentation can preserve/close that original
+checkpoint without writing in the current account. An unchanged, unsaved new
+task is still an authored draft; it no longer disappears merely because it was
+unchanged since More. Successful Save or explicit discard retires its session.
+Private preservation is allowed while ordinary editing is paused (including an
+unreadable cache or sign-out in progress); removal fences still prevent account
+recreation. Recovery status directs the user to the original workspace.
+
+See p2-editor-admission-evidence.json for core/build and synthetic native scope.
+The test identities are local-only, not evidence of live cloud Auth, service role
+transitions or Mac runtime/VoiceOver. Those checks, remaining draft cohorts,
+scoped adapters and premium organization UI remain in progress. The ranked
+backlog and every explicit user deferral remain intact; full Px is not complete.
+
+Verification: 124 relevant core tests pass independently in each repository;
+Debug app/extension builds pass. Mac native runtime, real cloud transitions
+and VoiceOver remain open. Simulator proofs do not establish those gates.
+Owned test apps, builds and results removed after evidence preservation; 1.75 GiB reclaimed. No native Mac app launched this stage.

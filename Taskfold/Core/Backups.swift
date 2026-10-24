@@ -1035,6 +1035,7 @@ struct TaskEditorSourceContext: Equatable, Sendable {
             invalid=paths.count>1
         }
     }
+    var persistedSelection: Bool {root != nil && !invalid && path != nil}
     var identity: JSON {.object(["root":.string(root?.id ?? record.id),"root_generation":root?["task_generation"] ?? record["task_generation"],"project":root?["project_id"] ?? record["project_id"],"path":path.map{.array($0.map(JSON.string))} ?? .null])}
     func matches(_ current: Record?) -> Bool {
         guard !invalid else {return false}
@@ -1087,4 +1088,39 @@ struct TaskEditorSourceContext: Equatable, Sendable {
         if visited>=100000 {return [[],[]]}
         return found
     }
+}
+
+/// Captured at the opening action, before SwiftUI can defer presentation.
+/// This value is a client preflight; current Store/service permissions still apply.
+struct TaskEditorAdmission: Equatable, Sendable {
+    enum Kind: Equatable, Sendable { case existing, new, nested }
+    let workspace: WorkspaceBinding
+    let source: TaskEditorSourceContext
+    let kind: Kind
+    private let validAtOpening: Bool
+    init(workspace: WorkspaceBinding, record: Record, root: Record?, kind: Kind) {
+        self.workspace=workspace;self.kind=kind;let context=TaskEditorSourceContext(record:record,root:root);source=context
+        switch kind {
+        case .existing:
+            validAtOpening=root.map { root in
+                context.persistedSelection && record["task_generation"]==root["task_generation"] && record["project_id"]==root["project_id"] && record["user_id"]==root["user_id"]
+            } ?? false
+        case .new: validAtOpening=root==nil && record.string("user_id")==workspace.account && !record.id.isEmpty
+        case .nested: validAtOpening=root != nil || record.string("user_id").isEmpty || record.string("user_id")==workspace.account
+        }
+    }
+    var rootID: String {source.root?.id ?? source.record.id}
+    func matches(account:String,generation:UUID,currentRoot:Record?) -> Bool {
+        guard validAtOpening,workspace.matches(account:account,generation:generation) else {return false}
+        if source.root==nil {return kind != .existing && currentRoot==nil}
+        return source.matches(currentRoot)
+    }
+}
+
+
+/// One sheet item carries the record and its captured admission atomically.
+struct TaskEditorOpening: Identifiable, Equatable, Sendable {
+    let task: Record
+    let admission: TaskEditorAdmission
+    var id: String {task.id}
 }

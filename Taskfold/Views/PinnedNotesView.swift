@@ -68,7 +68,7 @@ private struct PinnedNoteDetail: View {
     let binding: WorkspaceBinding
     let close: () -> Void
     @State private var failure: String?
-    @State private var editing: Record?
+    @State private var editing: TaskEditorOpening?
     @State private var originalText = false
     @State private var failureTitle = "Could not unpin note"
     @State private var printReview: PrintReviewRequest?
@@ -92,7 +92,7 @@ private struct PinnedNoteDetail: View {
                                 else { NoteMarkupPreview(text: task.string("description")).accessibilityIdentifier("formattedPinnedNote") }
                             } else { Text(task.string("description")).font(.body).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("pinnedNoteText") }
                         }
-                        Button { editing = task } label: { Label("Edit details", systemImage: "pencil").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("editPinnedNote")
+                        Button {guard binding.matches(account:store.userID,generation:store.workspaceGeneration) else {return};editing=TaskEditorOpening(task:task,admission:store.editorAdmission(task,workspace:binding)) } label: { Label("Edit details", systemImage: "pencil").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("editPinnedNote")
                         Button("Print or save PDF", systemImage: "printer") { preparePrint() }.accessibilityIdentifier("printPinnedNote")
                         Button(action: unpin) { Label("Unpin note", systemImage: "pin.slash").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("unpinNote")
                         Text("Unpinning keeps the task and its notes. Widgets show a shortened preview; this screen shows the full text.").font(.caption).foregroundStyle(.secondary)
@@ -104,12 +104,12 @@ private struct PinnedNoteDetail: View {
         }.navigationTitle("Pinned note")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close", action: close).accessibilityIdentifier("closePinnedNotes") } }
             .sheet(item: $printReview) { PrintReviewView(request: $0) }
-            .sheet(item: $editing) { task in
+            .sheet(item: $editing) { opening in
                 #if os(iOS)
-                TaskEditor(task: task)
+                TaskEditor(task:opening.task,admission:opening.admission)
                 #else
                 NavigationStack {
-                    TaskInspectorForm(taskID: task.id).id(task.id).navigationTitle("Task details")
+                    TaskInspectorForm(taskID: opening.task.id,admission:opening.admission).id(opening.id).navigationTitle("Task details")
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { editing = nil } } }
                 }.frame(minWidth: 460, idealWidth: 560, minHeight: 540)
                 #endif

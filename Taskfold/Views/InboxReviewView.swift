@@ -19,7 +19,7 @@ struct InboxReviewView: View {
     #endif
     @State private var request: InboxReviewRequest
     @State private var decisions: [String: InboxReviewDecision] = [:]
-    @State private var editing: Record?
+    @State private var editing: TaskEditorOpening?
     @State private var failure: String?
     @State private var feedback: String?
     @State private var lastDecision: (String, [String: InboxReviewDecision], [UUID]?)?
@@ -66,12 +66,12 @@ struct InboxReviewView: View {
                 }
             }
             .alert("Could not save decision", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) { Button("OK") { failure = nil } } message: { Text(failure ?? "") }
-            .sheet(item: $editing) { task in
+            .sheet(item: $editing) { opening in
                 #if os(iOS)
-                TaskEditor(task: task)
+                TaskEditor(task:opening.task,admission:opening.admission)
                 #else
                 NavigationStack {
-                    TaskInspectorForm(taskID: task.id).id(task.id)
+                    TaskInspectorForm(taskID: opening.task.id,admission:opening.admission).id(opening.id)
                         .navigationTitle("Task details")
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { editing = nil }.accessibilityIdentifier("inboxReviewEditorDone") } }
                 }.frame(minWidth: 460, idealWidth: 560, minHeight: 540)
@@ -118,7 +118,7 @@ struct InboxReviewView: View {
             } label: { actionLabel("Move to project", "folder", primary: true) }
                 .accessibilityIdentifier("inboxReviewMove").disabled(store.projects.isEmpty)
             if store.projects.isEmpty { Text("No projects yet. You can edit, finish, or keep this task here.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
-            Button { guard let row = live(task) else { return }; editing = row } label: { actionLabel("Edit details", "pencil") }.accessibilityIdentifier("inboxReviewEdit")
+            Button { guard let row = live(task) else { return }; editing=TaskEditorOpening(task:row,admission:store.editorAdmission(row,workspace:request.workspace)) } label: { actionLabel("Edit details", "pencil") }.accessibilityIdentifier("inboxReviewEdit")
             Button { complete(task) } label: { actionLabel("Complete", "checkmark.circle") }.accessibilityIdentifier("inboxReviewComplete")
             Button { keep(task) } label: { actionLabel("Keep in Inbox", "tray") }.accessibilityIdentifier("inboxReviewKeep")
         }.buttonStyle(.plain)

@@ -2,19 +2,27 @@ import SwiftUI
 
 struct SubtaskOrganizerButton: View {
     @Environment(Store.self) private var store
-    @State private var sourceWorkspace: WorkspaceBinding?
+    @State private var openingAdmission: TaskEditorAdmission?
     @Binding var children: JSON
     let taskID: String
     var baseDepth = 0
     var projectID = ""
     var sourceRecord: Record? = nil
     var sourceRootID: String? = nil
+    var custodyRoot: Record? = nil
+    var admittedWorkspace: WorkspaceBinding? = nil
     var saveAndOpen: ((JSON, [String]) -> Bool)? = nil
     @State private var showing = false
     var body: some View {
-        Button("Organize subtasks", systemImage: "list.bullet.indent") { sourceWorkspace=WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration);showing = true }
+        Button("Organize subtasks", systemImage: "list.bullet.indent") {
+            let workspace=admittedWorkspace ?? WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration)
+            let root=custodyRoot ?? store.record("tasks",id:sourceRootID ?? SubtaskTree.referencePath(taskID)?.first ?? taskID)
+            var record=sourceRecord ?? root.flatMap{TaskEditorSourceContext.projection($0,reference:taskID)} ?? Record(["id":.string(taskID),"title":.string("Recovered checklist"),"project_id":.string(projectID)])
+            record["subtasks"] = children
+            openingAdmission=TaskEditorAdmission(workspace:workspace,record:record,root:root,kind:.nested);showing=true
+        }
             .accessibilityIdentifier("organizeSubtasks")
-            .sheet(isPresented: $showing) { if let sourceWorkspace {SubtaskOrganizer(children: $children, taskID: taskID, baseDepth: baseDepth, projectID: projectID, proposedSource:sourceRecord, sourceRootID:sourceRootID, sourceWorkspace:sourceWorkspace, saveAndOpen: saveAndOpen)} }
+            .sheet(isPresented: $showing) { if let openingAdmission {SubtaskOrganizer(children: $children, taskID: taskID, baseDepth: baseDepth, projectID: projectID, admission:openingAdmission, saveAndOpen: saveAndOpen)} }
     }
 }
 
@@ -25,9 +33,8 @@ private struct SubtaskOrganizer: View {
     let taskID: String
     let baseDepth: Int
     let projectID: String
-    let proposedSource: Record?
-    let sourceRootID: String?
-    let sourceWorkspace: WorkspaceBinding
+    let admission: TaskEditorAdmission
+    private var sourceWorkspace: WorkspaceBinding {admission.workspace}
     let saveAndOpen: ((JSON, [String]) -> Bool)?
     private struct ChildRequest: Identifiable { let record: Record; let depth: Int; var id: String { record.id } }
     @State private var recoverySession: TaskEditorSession?
@@ -53,15 +60,15 @@ private struct SubtaskOrganizer: View {
     @State private var removing: SubtaskTree.Item?
     @State private var childTitle = ""
 
-    init(children: Binding<JSON>, taskID: String, baseDepth: Int, projectID: String, proposedSource:Record?, sourceRootID:String?, sourceWorkspace:WorkspaceBinding, saveAndOpen: ((JSON, [String]) -> Bool)?) {
-        _children = children; self.taskID = taskID; self.baseDepth = baseDepth; self.projectID = projectID; self.proposedSource=proposedSource;self.sourceRootID=sourceRootID;self.sourceWorkspace=sourceWorkspace;self.saveAndOpen = saveAndOpen
-        _source = State(initialValue: children.wrappedValue)
+    init(children: Binding<JSON>, taskID: String, baseDepth: Int, projectID: String, admission:TaskEditorAdmission, saveAndOpen: ((JSON, [String]) -> Bool)?) {
+        _children = children; self.taskID = taskID; self.baseDepth = baseDepth; self.projectID = projectID; self.admission=admission;self.saveAndOpen = saveAndOpen
+        _source = State(initialValue: admission.source.record["subtasks"])
         _originalTaskID = State(initialValue: taskID)
         _draft = State(initialValue: .array([]))
     }
     private var items: [SubtaskTree.Item] { SubtaskTree.outline(draft) }
     private var available: Bool {
-        guard !accessStopped,sourceWorkspace.matches(account:store.userID,generation:store.workspaceGeneration) else {return false}
+        guard !accessStopped,admission.matches(account:store.userID,generation:store.workspaceGeneration,currentRoot:store.record("tasks",id:admission.rootID)),store.editorMayWrite(source:admission.source.root ?? admission.source.record,proposed:admission.source.record) else {return false}
         guard let binding,let sourceRecord else {return true}
         guard binding.matches(account:store.userID,generation:store.workspaceGeneration),let sourceContext,
               store.editorMayWrite(source:sourceContext.root ?? sourceRecord,proposed:sourceRecord),
@@ -77,12 +84,12 @@ private struct SubtaskOrganizer: View {
         Group {
             if available {editingBody}
             else {
-                VStack(alignment:.leading,spacing:16) {
+                ScrollView {VStack(alignment:.leading,spacing:16) {
                     Label("Editing paused",systemImage:"lock.shield").font(.title2)
                     Text("This task or workspace changed. Your checklist edit is kept privately in Unsent task edits.")
                     if let session=recoverySession,let failure=session.failure {Text(failure).foregroundStyle(.red);Button("Retry preserving edit") {_=session.flush()}}
                     Button("Close") {checkpoint();if recoverySession?.latest==nil || recoverySession?.flush()==true {dismiss()}}
-                }.padding(24)
+                }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}
             }
         }
         .onChange(of:draft) {_,_ in checkpoint()}
@@ -199,10 +206,8 @@ private struct SubtaskOrganizer: View {
         let workspace=sourceWorkspace
         guard workspace.matches(account:store.userID,generation:store.workspaceGeneration) else {accessStopped=true;preparing=false;return}
         binding = workspace
-        let root=store.record("tasks",id:sourceRootID ?? SubtaskTree.referencePath(taskID)?.first ?? taskID)
-        var original=proposedSource ?? root.flatMap{TaskEditorSourceContext.projection($0,reference:taskID)} ?? Record(["id":.string(taskID),"title":.string("Recovered checklist"),"project_id":.string(projectID)])
-        original["subtasks"] = source
-        sourceRecord=original;sourceContext=TaskEditorSourceContext(record:original,root:root)
+        var original=admission.source.record;original["subtasks"] = source
+        sourceRecord=original;sourceContext=admission.source
         do {recoverySession=try store.beginEditorSession(original)} catch {loadError="Your checklist cannot be protected. Keep this editor open and retry.";preparing=false;return}
         let input = source, depth = baseDepth
         let job = Task.detached(priority: .userInitiated) { () -> Result<ChecklistRecovery.Review, SubtaskTree.Failure> in

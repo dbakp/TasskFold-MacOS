@@ -101,3 +101,40 @@ Mac Complete and confirmed Delete recheck editor admission at action dispatch.
 Verification: 119 relevant core tests pass independently in each repository,
 with successful Debug app/extension builds. Mac runtime/VoiceOver and the broader
 role/account matrix remain open; Simulator acceptance is not Mac runtime proof.
+
+
+## Editor opening admission and queued capture — 24 October, rank 6 in progress
+
+Editor requests now capture their workspace incarnation and source root at the
+opening action. Existing tasks require a matching stored source; deleted or
+replaced records cannot silently become new tasks. New tasks require their
+creating account and an unused identity. Nested opening values retain the
+parent's workspace/root rather than resolving them again in another account.
+Calendar, list, widget/notification, Inbox-review, pinned-note and nested editor
+routes use the captured admission. Current Store write permissions are checked
+separately before controls or mutation paths are admitted.
+
+Quick Add → More checkpoints the authored task before deferred presentation. Its
+Store-owned session and device vault remain bound to the original account while
+the sheet is queued. A blocked presentation can preserve/close that original
+checkpoint without writing in the current account. An unchanged, unsaved new
+task is still an authored draft; it no longer disappears merely because it was
+unchanged since More. Successful Save or explicit discard retires its session.
+Private preservation is allowed while ordinary editing is paused (including an
+unreadable cache or sign-out in progress); removal fences still prevent account
+recreation. Recovery status directs the user to the original workspace.
+
+See p2-editor-admission-evidence.json for core/build and synthetic native scope.
+The test identities are local-only, not evidence of live cloud Auth, service role
+transitions or Mac runtime/VoiceOver. Those checks, remaining draft cohorts,
+scoped adapters and premium organization UI remain in progress. The ranked
+backlog and every explicit user deferral remain intact; full Px is not complete.
+
+Inbox-review and pinned-note edit sheets carry the record and admission in one
+TaskEditorOpening item, so deferred presentation cannot combine independently
+updated state values. Root iOS requests also carry their handoff session in the
+same item. This is separate from current service authorization.
+
+Verification: 124 relevant core tests pass independently in each repository;
+Debug app/extension builds pass. Mac native runtime, real cloud transitions
+and VoiceOver remain open. Simulator proofs do not establish those gates.

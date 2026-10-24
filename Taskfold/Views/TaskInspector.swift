@@ -64,6 +64,7 @@ struct TaskInspectorForm: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     let taskID: String
+    var admission: TaskEditorAdmission? = nil
     @State private var recoverySession: TaskEditorSession?
     @State private var sourceContext: TaskEditorSourceContext?
     @State private var sourceRoot: Record?
@@ -108,6 +109,7 @@ struct TaskInspectorForm: View {
     }
     private var editorAvailable: Bool {
         guard !accessStopped else {return false}
+        if let admission,(!admission.matches(account:store.userID,generation:store.workspaceGeneration,currentRoot:store.record("tasks",id:admission.rootID)) || !store.editorMayWrite(source:admission.source.root ?? admission.source.record,proposed:admission.source.record)) {return false}
         guard let workspaceBinding else {return true}
         guard workspaceBinding.matches(account:store.userID,generation:store.workspaceGeneration),let sourceRoot,
               let live=store.record("tasks",id:sourceRoot.id),live["task_generation"]==sourceRoot["task_generation"],live["project_id"]==sourceRoot["project_id"],current != nil,sourceContext?.matches(live)==true,
@@ -131,15 +133,15 @@ struct TaskInspectorForm: View {
         Group {
             if editorAvailable {editingBody}
             else {
-                VStack(alignment:.leading,spacing:16) {
+                ScrollView {VStack(alignment:.leading,spacing:16) {
                     Label("Editing paused",systemImage:"lock.shield").font(.title2.weight(.semibold))
                     Text("This task or workspace changed. Reopen its current details before editing again.")
                     if let session=recoverySession,session.latest != nil {
-                        Text(session.preserved ? "Your unsent edit is saved privately in Backups & restore → Unsent task edits.":"Preserving your unsent edit…").accessibilityIdentifier("editorRecoveryStatus")
+                        Text(session.preserved ? "Your unsent edit is saved privately with its original workspace. Open that workspace’s Backups & restore → Unsent task edits.":"Preserving your unsent edit…").accessibilityIdentifier("editorRecoveryStatus")
                         if let failure=session.failure {Text(failure).foregroundStyle(.red);Button("Retry preserving edit") {_=session.flush()}}
                     }
                     if let sessionFailure {Text(sessionFailure).foregroundStyle(.red)}
-                }.padding(24).accessibilityIdentifier("editorAccessStopped")
+                }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}.accessibilityIdentifier("editorAccessStopped")
             }
         }
         .onChange(of:editorAvailable) {_,available in if !available {stopEditing()}}
@@ -184,7 +186,7 @@ struct TaskInspectorForm: View {
                     .accessibilityLabel("Notes").accessibilityIdentifier("taskDescription")
                 Button("Format notes", systemImage: "textformat") {
                     guard let binding = workspaceBinding else { return }
-                    noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"),source:draft,sourceRootID:sourceRoot?.id)
+                    noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"),source:draft,sourceRootID:sourceRoot?.id,admission:TaskEditorAdmission(workspace:binding,record:draft,root:sourceRoot,kind:.nested))
                 }.disabled(current == nil).accessibilityIdentifier("openNoteFormatting")
                 if store.record("tasks", id: taskID) != nil {
                     Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
@@ -303,7 +305,7 @@ struct TaskInspectorForm: View {
             if workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty {
             Section("Subtasks") {
                 let childIndices = SubtaskTree.uniqueChildIndices(draft["subtasks"])
-                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id, saveAndOpen: { children, path in
+                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, saveAndOpen: { children, path in
                     let previous = draft
                     draft["subtasks"] = children
                     guard saveNow() else { draft = previous; return false }
@@ -411,7 +413,7 @@ struct TaskInspectorForm: View {
             } catch { store.error = error.localizedDescription }
         }
         .quickLookPreview($preview)
-        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; sourceRoot=store.record("tasks",id:Workspace.subtaskPath(taskID)?.first ?? taskID); load();sourceContext=TaskEditorSourceContext(record:draft,root:sourceRoot); if recoverySession==nil {do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure=error.localizedDescription}}; if draft.title.isEmpty { titleFocused = true } }
+        .onAppear { workspaceBinding = admission?.workspace ?? WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; sourceRoot=admission?.source.root ?? store.record("tasks",id:Workspace.subtaskPath(taskID)?.first ?? taskID); load();sourceContext=admission?.source ?? TaskEditorSourceContext(record:draft,root:sourceRoot); if recoverySession==nil {do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure=error.localizedDescription}}; if draft.title.isEmpty { titleFocused = true } }
         .task(id: suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) { _ = try? await store.refreshProjectMembers(suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .onChange(of: titleChipFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }

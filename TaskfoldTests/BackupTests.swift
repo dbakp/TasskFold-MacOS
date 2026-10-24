@@ -779,3 +779,57 @@ extension BackupTests {
         XCTAssertTrue(TaskEditorSourceContext(record:new,root:nil).matches(nil))
     }
 }
+
+extension BackupTests {
+    func testEditorAdmissionCapturesAccountAndEpochBeforePresentation() throws {
+        let value=try editRecovery(),epoch=UUID(),scope=WorkspaceBinding(account:owner,generation:epoch)
+        let opening=TaskEditorAdmission(workspace:scope,record:value.original,root:value.original,kind:.existing)
+        XCTAssertTrue(opening.matches(account:owner,generation:epoch,currentRoot:value.original))
+        XCTAssertFalse(opening.matches(account:other,generation:epoch,currentRoot:value.original))
+        XCTAssertFalse(opening.matches(account:owner,generation:UUID(),currentRoot:value.original))
+        XCTAssertEqual(opening.workspace,scope)
+    }
+    func testExistingEditorAdmissionCannotTurnMissingOrReplacedSourceIntoANewTask() throws {
+        let value=try editRecovery(),scope=WorkspaceBinding(account:owner,generation:UUID())
+        let missing=TaskEditorAdmission(workspace:scope,record:value.original,root:nil,kind:.existing)
+        XCTAssertFalse(missing.matches(account:owner,generation:scope.generation,currentRoot:nil))
+        var replacement=value.original;replacement["task_generation"] = .string(UUID().uuidString.lowercased())
+        let stale=TaskEditorAdmission(workspace:scope,record:value.original,root:replacement,kind:.existing)
+        XCTAssertFalse(stale.matches(account:owner,generation:scope.generation,currentRoot:replacement))
+        let captured=TaskEditorAdmission(workspace:scope,record:value.original,root:value.original,kind:.existing)
+        XCTAssertFalse(captured.matches(account:owner,generation:scope.generation,currentRoot:replacement))
+        XCTAssertFalse(captured.matches(account:owner,generation:scope.generation,currentRoot:nil))
+    }
+    func testNewEditorAdmissionRequiresItsAuthoredAccountAndNoIdentityCollision() {
+        let scope=WorkspaceBinding(account:owner,generation:UUID()),draft=Record.task(user:owner)
+        let opening=TaskEditorAdmission(workspace:scope,record:draft,root:nil,kind:.new)
+        XCTAssertTrue(opening.matches(account:owner,generation:scope.generation,currentRoot:nil))
+        XCTAssertFalse(opening.matches(account:owner,generation:scope.generation,currentRoot:draft))
+        let wrong=TaskEditorAdmission(workspace:WorkspaceBinding(account:other,generation:scope.generation),record:draft,root:nil,kind:.new)
+        XCTAssertFalse(wrong.matches(account:other,generation:scope.generation,currentRoot:nil))
+        let collision=TaskEditorAdmission(workspace:scope,record:draft,root:draft,kind:.new)
+        XCTAssertFalse(collision.matches(account:owner,generation:scope.generation,currentRoot:draft))
+    }
+    func testNestedAdmissionKeepsCapturedRootWhenSheetLoadsLater() throws {
+        let (root,child,_)=nestedEditorSource(),scope=WorkspaceBinding(account:owner,generation:UUID())
+        let opening=TaskEditorAdmission(workspace:scope,record:child,root:root,kind:.nested)
+        XCTAssertTrue(opening.matches(account:owner,generation:scope.generation,currentRoot:root))
+        XCTAssertFalse(opening.matches(account:other,generation:scope.generation,currentRoot:root))
+        var moved=root;moved["project_id"] = .null
+        XCTAssertFalse(opening.matches(account:owner,generation:scope.generation,currentRoot:moved))
+        XCTAssertFalse(opening.matches(account:owner,generation:scope.generation,currentRoot:nil))
+        XCTAssertEqual(opening.source.record,child);XCTAssertEqual(opening.source.root,root)
+    }
+    @MainActor func testQueuedNewDraftCheckpointRemainsInOriginalVaultAcrossAccountSwitch() throws {
+        let folder=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:folder)}
+        let key=SymmetricKey(size:.bits256),a=BackupVault(directory:folder.appendingPathComponent("A"),account:owner,key:{key}),b=BackupVault(directory:folder.appendingPathComponent("B"),account:other,key:{key})
+        var draft=Record.task(user:owner);draft["title"] = .string("Typed before More");draft["description"] = .string("Keep the authored notes")
+        let scope=WorkspaceBinding(account:owner,generation:UUID()),admission=TaskEditorAdmission(workspace:scope,record:draft,root:nil,kind:.new)
+        let session=TaskEditorSession(vault:a,origin:nil,original:draft,labels:[]);session.capture(draft,extras:["source_identity":admission.source.identity,"pending_labels":.array([.string("Review")])])
+        XCTAssertFalse(admission.matches(account:other,generation:UUID(),currentRoot:nil))
+        XCTAssertTrue(session.flush());XCTAssertTrue(try b.editorEntries().isEmpty)
+        let retained=try a.editorDraft(session.id,origin:nil);XCTAssertEqual(retained.account,owner);XCTAssertEqual(retained.draft,draft)
+        XCTAssertThrowsError(try b.saveEditorDraft(retained))
+        XCTAssertEqual(try retained.copyBackup(current:Snapshot()).tables["tasks"]?.first?.title,"Typed before More")
+    }
+}

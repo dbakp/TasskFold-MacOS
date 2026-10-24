@@ -320,8 +320,11 @@ final class Store {
         Task { await reschedule(); await sync() }
     }
     @ObservationIgnored private var editorSessions: [UUID:TaskEditorSession] = [:]
+    func editorAdmission(_ record: Record, kind: TaskEditorAdmission.Kind = .existing, workspace: WorkspaceBinding? = nil, root: Record? = nil) -> TaskEditorAdmission {
+        TaskEditorAdmission(workspace:workspace ?? WorkspaceBinding(account:userID,generation:workspaceGeneration),record:record,root:root ?? self.record("tasks",id:SubtaskTree.referencePath(record.id)?.first ?? record.id),kind:kind)
+    }
     func beginEditorSession(_ original: Record) throws -> TaskEditorSession {
-        guard !accountRemovalBlocked,!signingOut,workspaceCacheReadable,signedIn || localMode else {throw CancellationError()}
+        guard !accountRemovalBlocked,signedIn || localMode else {throw CancellationError()}
         let session=TaskEditorSession(vault:backupVault,origin:localMode ? nil:try backend.accountRemovalOrigin,original:original,labels:labels)
         editorSessions=editorSessions.filter{!$0.value.closed}
         editorSessions[session.id]=session
