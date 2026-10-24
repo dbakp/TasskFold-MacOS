@@ -681,3 +681,50 @@ extension BackupTests {
         XCTAssertFalse(FileManager.default.fileExists(atPath:vault.directory.path))
     }
 }
+
+extension BackupTests {
+    @MainActor func testEditorSessionRetainsLatestDraftAndQuitFlushVerifiesIt() async throws {
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:root)}
+        let key=SymmetricKey(size:.bits256),value=try editRecovery(),vault=BackupVault(directory:root,account:owner,key:{key})
+        let session=TaskEditorSession(vault:vault,origin:value.origin,original:value.original,labels:[])
+        for index in 1...30 {
+            var draft=value.draft;draft["title"] = .string("Latest edit \(index)")
+            session.capture(draft,extras:["new_subtask":.string("Still typing")])
+        }
+        XCTAssertTrue(session.flush());XCTAssertTrue(session.preserved)
+        let id=session.id
+        XCTAssertEqual(try vault.editorDraft(id,origin:value.origin).draft.title,"Latest edit 30")
+        try await Task.sleep(for:.milliseconds(100))
+        XCTAssertEqual(try vault.editorDraft(id,origin:value.origin).draft.title,"Latest edit 30")
+        XCTAssertEqual(try vault.editorDraft(id,origin:value.origin).extras["new_subtask"],.string("Still typing"))
+    }
+    @MainActor func testFinishingEditorSessionPreventsLateCheckpointRecreation() async throws {
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:root)}
+        let key=SymmetricKey(size:.bits256),value=try editRecovery(),vault=BackupVault(directory:root,account:owner,key:{key})
+        let session=TaskEditorSession(vault:vault,origin:value.origin,original:value.original,labels:[])
+        session.capture(value.draft,extras:[:]);let latest=try XCTUnwrap(session.latest)
+        XCTAssertTrue(session.finish());XCTAssertTrue(session.closed)
+        try vault.saveEditorDraft(latest)
+        try await Task.sleep(for:.milliseconds(100))
+        XCTAssertTrue(try vault.editorEntries().isEmpty)
+        session.capture(value.original,extras:[:]);XCTAssertNil(session.latest)
+        XCTAssertTrue(session.flush())
+    }
+    @MainActor func testFailedEditorCheckpointKeepsDraftAndRefusesQuitFlush() throws {
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:root)}
+        let value=try editRecovery(),vault=BackupVault(directory:root,account:owner,key:{throw BackupFailure(message:"Simulated unavailable key")})
+        let session=TaskEditorSession(vault:vault,origin:value.origin,original:value.original,labels:[])
+        session.capture(value.draft,extras:["unsubmitted_comment":.string("Keep me")])
+        XCTAssertFalse(session.flush());XCTAssertNotNil(session.failure);XCTAssertFalse(session.preserved)
+        XCTAssertEqual(session.latest?.draft,value.draft);XCTAssertEqual(session.latest?.extras["unsubmitted_comment"],.string("Keep me"))
+    }
+    @MainActor func testRemovedAccountCannotBeRecreatedByRetainedEditorSession() throws {
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:root)}
+        let gate=AccountRemovalDisk(directory:root,account:owner),value=try editRecovery()
+        let vault=BackupVault(directory:root.appendingPathComponent("Backups"),account:owner,key:{XCTFail("Removal must run before key acquisition");throw CancellationError()},removalGate:gate)
+        let session=TaskEditorSession(vault:vault,origin:value.origin,original:value.original,labels:[])
+        session.capture(value.draft,extras:[:]);try gate.removeCache()
+        XCTAssertTrue(session.flush());XCTAssertTrue(session.closed);XCTAssertNil(session.latest)
+        XCTAssertFalse(FileManager.default.fileExists(atPath:vault.directory.path))
+    }
+}

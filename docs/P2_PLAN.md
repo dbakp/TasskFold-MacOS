@@ -2182,3 +2182,20 @@ Debug app/extension build. Mac runtime and VoiceOver acceptance remain open.
 Live editor capture/invalidation and inspector autosave handoff remain unfinished.
 Owned isolated test apps/builds/results were removed after preserving evidence;
 2.25 GiB of temporary files reclaimed. No Mac test app was launched this stage.
+
+
+## Live editor sessions and pending-save handoff — 24 October, rank 6 in progress
+
+Store-owned recovery sessions now retain edits independently of the editing view.
+The iOS task editor and Mac inspector pause on source/workspace/access changes;
+Mac delayed saves stop and quit verifies retained checkpoints. iOS backgrounding
+also flushes checkpoints. Note-formatting and checklist organizers register their
+own unsent text/tree state. Successful saves/discards close a session and fence
+late writers, while failed checkpointing retains the in-memory draft for retry.
+See EDITOR_RECOVERY.md and p2-live-editor-evidence.json for exact verification.
+The full role/account/child-flow acceptance matrix and native Mac/VoiceOver checks
+remain open; team-native writes stay disabled and the full Px goal stays active.
+
+Verification: 115 relevant core tests pass in this repository; the independent
+Debug app/extension build passes. Mac runtime and spoken acceptance remain open.
+Owned test apps, builds and results removed after preserving evidence; 1.75 GiB reclaimed. No native Mac app launched this stage.

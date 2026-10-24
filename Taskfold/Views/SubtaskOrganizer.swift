@@ -23,6 +23,10 @@ private struct SubtaskOrganizer: View {
     let projectID: String
     let saveAndOpen: ((JSON, [String]) -> Bool)?
     private struct ChildRequest: Identifiable { let record: Record; let depth: Int; var id: String { record.id } }
+    @State private var recoverySession: TaskEditorSession?
+    @State private var sourceRecord: Record?
+    @State private var sourceWasStored = false
+    @State private var accessStopped = false
     @State private var editingChild: ChildRequest?
     @State private var source: JSON
     @State private var originalTaskID: String
@@ -49,7 +53,39 @@ private struct SubtaskOrganizer: View {
         _draft = State(initialValue: .array([]))
     }
     private var items: [SubtaskTree.Item] { SubtaskTree.outline(draft) }
+    private var available: Bool {
+        guard !accessStopped else {return false}
+        guard let binding,let sourceRecord else {return true}
+        guard binding.matches(account:store.userID,generation:store.workspaceGeneration),store.editorMayWrite(source:sourceRecord,proposed:sourceRecord) else {return false}
+        if sourceWasStored {
+            guard let current=store.record("tasks",id:sourceRecord.id),current["task_generation"]==sourceRecord["task_generation"],current["project_id"]==sourceRecord["project_id"] else {return false}
+        }
+        return true
+    }
+    private func checkpoint() {
+        guard let session=recoverySession,draft != source || !newTitle.isEmpty || !childTitle.isEmpty else {return}
+        var task=session.original;task["subtasks"] = draft
+        session.capture(task,extras:["organizer_source":source,"new_subtask":.string(newTitle),"new_child":.string(childTitle),"adding_to":addingTo.map(JSON.string) ?? .null])
+    }
     var body: some View {
+        Group {
+            if available {editingBody}
+            else {
+                VStack(alignment:.leading,spacing:16) {
+                    Label("Editing paused",systemImage:"lock.shield").font(.title2)
+                    Text("This task or workspace changed. Your checklist edit is kept privately in Unsent task edits.")
+                    if let session=recoverySession,let failure=session.failure {Text(failure).foregroundStyle(.red);Button("Retry preserving edit") {_=session.flush()}}
+                    Button("Close") {checkpoint();if recoverySession?.latest==nil || recoverySession?.flush()==true {dismiss()}}
+                }.padding(24)
+            }
+        }
+        .onChange(of:draft) {_,_ in checkpoint()}
+        .onChange(of:newTitle) {_,_ in checkpoint()}
+        .onChange(of:childTitle) {_,_ in checkpoint()}
+        .onChange(of:available) {_,value in if !value {checkpoint();accessStopped=true}}
+        .onDisappear {checkpoint()}
+    }
+    private var editingBody: some View {
         NavigationStack {
             Form {
                 if preparing {
@@ -120,7 +156,7 @@ private struct SubtaskOrganizer: View {
             }.formStyle(.grouped).accessibilityIdentifier("subtaskOrganizerForm")
             .navigationTitle("Organize subtasks")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction).accessibilityIdentifier("cancelSubtaskOrganizer") }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") {if recoverySession?.finish() != false {dismiss()}}.keyboardShortcut(.cancelAction).accessibilityIdentifier("cancelSubtaskOrganizer") }
                 ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).keyboardShortcut("s", modifiers: .command).disabled(preparing || recovery != nil || loadError != nil || items.contains { $0.record.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }).accessibilityIdentifier("saveSubtaskOrganizer") }
             }
             .sheet(isPresented: $showingOriginal) { if let originalText { OriginalChecklistView(text: originalText) } }
@@ -156,6 +192,9 @@ private struct SubtaskOrganizer: View {
         guard !prepared else { return }; prepared = true
         let workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
         binding = workspace
+        let original=store.record("tasks",id:SubtaskTree.referencePath(taskID)?.first ?? taskID) ?? Record(["id":.string(taskID),"title":.string("Recovered checklist"),"project_id":.string(projectID),"subtasks":source])
+        sourceRecord=original;sourceWasStored=store.record("tasks",id:original.id) != nil
+        do {recoverySession=try store.beginEditorSession(original)} catch {loadError="Your checklist cannot be protected. Keep this editor open and retry.";preparing=false;return}
         let input = source, depth = baseDepth
         let job = Task.detached(priority: .userInitiated) { () -> Result<ChecklistRecovery.Review, SubtaskTree.Failure> in
             do { return .success(try ChecklistRecovery.review(input, baseDepth: depth)) }
@@ -206,7 +245,7 @@ private struct SubtaskOrganizer: View {
     }
     private func save() { commit(opening: nil) }
     private func commit(opening childID: String?) {
-        guard !preparing, recovery == nil, loadError == nil, binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true,
+        guard available,!preparing, recovery == nil, loadError == nil, binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true,
               taskID == originalTaskID, children == source else {
             message = "The task or workspace changed. Cancel and reopen the organizer to keep the latest work."; return
         }
@@ -219,7 +258,7 @@ private struct SubtaskOrganizer: View {
             if let childID, let saveAndOpen, let path = SubtaskTree.path(saved, id: childID) {
                 guard saveAndOpen(saved, path) else { message = store.error ?? "The task could not be saved. Your checklist draft is still here."; return }
             } else { children = saved }
-            dismiss()
+            _=recoverySession?.finish();dismiss()
         } catch { message = error.localizedDescription }
     }
 }

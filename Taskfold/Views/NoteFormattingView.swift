@@ -12,6 +12,7 @@ struct NoteFormatRequest: Identifiable {
     let workspace: WorkspaceBinding
     let generation: JSON
     let storedText: String?
+    var source: Record? = nil
 }
 
 /// Native, selectable note blocks. Every link has already passed the web-only policy;
@@ -70,6 +71,11 @@ struct NoteFormattingView: View {
     let request: NoteFormatRequest
     /// Returns a review-specific error, or nil after the caller accepts the text.
     let apply: (String) -> String?
+    @State private var recoverySession: TaskEditorSession?
+    @State private var sourceRecord: Record?
+    @State private var sourceWasStored = false
+    @State private var editorFinished = false
+    @State private var accessStopped = false
     @State private var text: String
     @State private var selection: TextSelection?
     @State private var preview = false
@@ -82,7 +88,24 @@ struct NoteFormattingView: View {
     init(request: NoteFormatRequest, apply: @escaping (String) -> String?) {
         self.request = request; self.apply = apply; _text = State(initialValue: request.original)
     }
-    private var available: Bool { request.workspace.matches(account: store.userID, generation: store.workspaceGeneration) }
+    private var available: Bool {
+        guard !accessStopped,request.workspace.matches(account:store.userID,generation:store.workspaceGeneration) else {return false}
+        guard let sourceRecord else {return true}
+        guard store.editorMayWrite(source:sourceRecord,proposed:sourceRecord) else {return false}
+        if sourceWasStored {
+            guard let current=store.record("tasks",id:sourceRecord.id),current["task_generation"]==sourceRecord["task_generation"],current["project_id"]==sourceRecord["project_id"] else {return false}
+        }
+        return true
+    }
+    private func checkpoint() {
+        guard !editorFinished else {return}
+        guard text != request.original else {_=recoverySession?.finish();return}
+        if recoverySession?.closed==true,let sourceRecord,request.workspace.matches(account:store.userID,generation:store.workspaceGeneration) {recoverySession=try? store.beginEditorSession(sourceRecord)}
+        guard let session=recoverySession else {return}
+        var draft=session.original;draft["description"] = .string(text)
+        session.capture(draft,extras:["formatting":.bool(true),"link_url":.string(url)])
+    }
+
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 0) {
@@ -130,12 +153,21 @@ struct NoteFormattingView: View {
                             Button("Copy text", action: copyText).frame(minHeight: 44)
                         }.padding()
                     }
-                } else { ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Close this editor and reopen notes in your current workspace. Existing saved notes are unchanged.")) }
+                } else {
+                    VStack(alignment:.leading,spacing:16) {
+                        Label("Editing paused",systemImage:"lock.shield").font(.title2)
+                        Text("Reopen the current task before editing again.")
+                        if let session=recoverySession,session.latest != nil {
+                            Text(session.preserved ? "Your unsent formatting is saved privately in Unsent task edits.":"Preserving your unsent formatting…")
+                            if let failure=session.failure {Text(failure).foregroundStyle(.red);Button("Retry preserving edit") {_=session.flush()}}
+                        }
+                    }.padding(24)
+                }
             }.navigationTitle("Format notes")
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: cancel) }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Apply") { guard available else { return }; if let error = apply(text) { focused = false; message = error } else { dismiss() } }
+                        Button("Apply") { guard available else { return }; if let error = apply(text) { focused = false; message = error } else { editorFinished=true;_=recoverySession?.finish();dismiss() } }
                             .disabled(!available || link).accessibilityIdentifier("applyNoteFormatting")
                     }
                 }
@@ -143,7 +175,7 @@ struct NoteFormattingView: View {
                 .onChange(of: focused) { _, editing in if editing { message = nil } }
                 .onChange(of: preview) { _, reading in if reading { focused = false } }
                 .interactiveDismissDisabled(text != request.original)
-                .confirmationDialog("Discard your formatting changes?", isPresented: $discard, titleVisibility: .visible) { Button("Discard changes", role: .destructive) { dismiss() } }
+                .confirmationDialog("Discard your formatting changes?", isPresented: $discard, titleVisibility: .visible) { Button("Discard changes", role: .destructive) {if recoverySession?.finish() != false {editorFinished=true;dismiss()}} }
                 .sheet(isPresented: $link) {
                     NavigationStack {
                         Form {
@@ -165,6 +197,16 @@ struct NoteFormattingView: View {
                     #endif
                 }
         }
+        .onAppear {
+            guard recoverySession==nil else {return}
+            var original=request.source ?? store.record("tasks",id:request.taskID) ?? Record(["id":.string(request.taskID),"title":.string("Recovered notes"),"description":.string(request.original),"task_generation":request.generation])
+            original["description"] = .string(request.original)
+            sourceRecord=original;sourceWasStored=store.record("tasks",id:original.id) != nil
+            do {recoverySession=try store.beginEditorSession(original)} catch {message="Your note could not be protected. Keep this editor open and retry."}
+        }
+        .onChange(of:text) {_,_ in checkpoint()}
+        .onChange(of:available) {_,value in if !value {checkpoint();accessStopped=true;link=false;focused=false}}
+        .onDisappear {checkpoint()}
         #if os(macOS)
         .frame(minWidth: 520, idealWidth: 640, minHeight: 520, idealHeight: 650)
         #endif
@@ -194,7 +236,7 @@ struct NoteFormattingView: View {
             message = nil; focused = true
         } catch { focused = false; message = error.localizedDescription }
     }
-    private func cancel() { if !available { dismiss() } else if text != request.original { discard = true } else { dismiss() } }
+    private func cancel() { if !available {checkpoint();if recoverySession?.latest==nil || recoverySession?.flush()==true {editorFinished=true;dismiss()}} else if text != request.original { discard = true } else { dismiss() } }
     private func copyText() {
         guard available else { return }
         #if os(iOS)

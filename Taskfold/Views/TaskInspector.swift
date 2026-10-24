@@ -64,6 +64,10 @@ struct TaskInspectorForm: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     let taskID: String
+    @State private var recoverySession: TaskEditorSession?
+    @State private var sourceRoot: Record?
+    @State private var accessStopped = false
+    @State private var sessionFailure: String?
     @State private var draft = Record()
     @State private var notePin: Bool?
     @State private var original = Record()
@@ -101,7 +105,47 @@ struct TaskInspectorForm: View {
     private func text(_ key: String) -> Binding<String> {
         Binding(get: { draft.string(key) }, set: { draft[key] = $0.isEmpty && ["project_id", "section_id", "due_time", "time_zone"].contains(key) ? .null : .string($0) })
     }
+    private var editorAvailable: Bool {
+        guard !accessStopped else {return false}
+        guard let workspaceBinding else {return true}
+        guard workspaceBinding.matches(account:store.userID,generation:store.workspaceGeneration),let sourceRoot,
+              let live=store.record("tasks",id:sourceRoot.id),live["task_generation"]==sourceRoot["task_generation"],live["project_id"]==sourceRoot["project_id"],current != nil,
+              store.editorMayWrite(source:sourceRoot,proposed:draft) else {return false}
+        return true
+    }
+    private var recoveryExtras: [String:JSON] {
+        ["new_subtask":.string(subtask),"unsubmitted_comment":.string(comment),"pin":notePin.map(JSON.bool) ?? .null,"declined":.array(declined.sorted().map(JSON.string)),"reference_choices":.object(referenceChoices.mapValues(JSON.string)),"source_identity":.object(["root":.string(sourceRoot?.id ?? taskID),"root_generation":sourceRoot?["task_generation"] ?? .null,"path":.string(taskID)])]
+    }
+    private func checkpoint() {
+        guard !original.id.isEmpty else {return}
+        guard draft != original || notePin != nil || !subtask.isEmpty || !comment.isEmpty else {_=recoverySession?.finish();return}
+        if recoverySession==nil || recoverySession?.closed==true {
+            guard workspaceBinding?.matches(account:store.userID,generation:store.workspaceGeneration)==true else {return}
+            do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure="Your draft cannot be protected yet. Keep this inspector open and retry.";return}
+        }
+        recoverySession?.capture(draft,extras:recoveryExtras)
+    }
+    private func stopEditing() {checkpoint();accessStopped=true;saveTask?.cancel();titleFocused=false}
     var body: some View {
+        Group {
+            if editorAvailable {editingBody}
+            else {
+                VStack(alignment:.leading,spacing:16) {
+                    Label("Editing paused",systemImage:"lock.shield").font(.title2.weight(.semibold))
+                    Text("This task or workspace changed. Reopen its current details before editing again.")
+                    if let session=recoverySession,session.latest != nil {
+                        Text(session.preserved ? "Your unsent edit is saved privately in Backups & restore → Unsent task edits.":"Preserving your unsent edit…").accessibilityIdentifier("editorRecoveryStatus")
+                        if let failure=session.failure {Text(failure).foregroundStyle(.red);Button("Retry preserving edit") {_=session.flush()}}
+                    }
+                    if let sessionFailure {Text(sessionFailure).foregroundStyle(.red)}
+                }.padding(24).accessibilityIdentifier("editorAccessStopped")
+            }
+        }
+        .onChange(of:editorAvailable) {_,available in if !available {stopEditing()}}
+        .onChange(of:recoveryExtras) {_,_ in checkpoint()}
+        .onDisappear {checkpoint()}
+    }
+    private var editingBody: some View {
         Form {
             Section {
                 TextField("Title", text: text("title"), selection: $titleSelection, prompt: Text("What needs doing?"), axis: .vertical)
@@ -139,7 +183,7 @@ struct TaskInspectorForm: View {
                     .accessibilityLabel("Notes").accessibilityIdentifier("taskDescription")
                 Button("Format notes", systemImage: "textformat") {
                     guard let binding = workspaceBinding else { return }
-                    noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"))
+                    noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"),source:draft)
                 }.disabled(current == nil).accessibilityIdentifier("openNoteFormatting")
                 if store.record("tasks", id: taskID) != nil {
                     Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
@@ -366,13 +410,14 @@ struct TaskInspectorForm: View {
             } catch { store.error = error.localizedDescription }
         }
         .quickLookPreview($preview)
-        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; load(); if draft.title.isEmpty { titleFocused = true } }
+        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; sourceRoot=store.record("tasks",id:Workspace.subtaskPath(taskID)?.first ?? taskID); load(); if recoverySession==nil {do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure=error.localizedDescription}}; if draft.title.isEmpty { titleFocused = true } }
         .task(id: suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) { _ = try? await store.refreshProjectMembers(suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .onChange(of: titleChipFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
         .sheet(item: $conversation) { SharedConversationView(request: $0) }
         .sheet(item: $noteFormatting) { request in
             NoteFormattingView(request: request) { value in
+                guard editorAvailable else {return "This task’s access changed. Your formatted edit is kept privately."}
                 guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), request.taskID == taskID, currentGeneration == request.generation, editingGeneration == request.generation else { return "This task or workspace changed. Your formatted draft is still here." }
                 guard let current, draft.string("description") == request.original,
                       current.string("description") == request.storedText || current.string("description") == request.original else { return "The notes changed while formatting was open. Copy your draft before reopening the current notes." }
@@ -391,17 +436,11 @@ struct TaskInspectorForm: View {
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showingReminders = false } } }
             }.frame(minWidth: 550, minHeight: 620)
         }
-        .onChange(of: draft) { _, _ in scheduleSave() }
-        .onChange(of: currentGeneration) { _, value in
-            if draft == original && notePin == nil { editingGeneration = value; load() }
-            else {
-                saveTask?.cancel()
-                store.error = "This task was deleted and restored while you were editing. Your draft is still here; reopen the current task before saving."
-            }
-        }
+        .onChange(of: draft) { _, _ in checkpoint();scheduleSave() }
+        .onChange(of: currentGeneration) { _, _ in stopEditing() }
         .onChange(of: current) { _, value in
             // Untouched fields follow sync; the user's in-progress edits win.
-            guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, editingGeneration == currentGeneration, let value else { return }
+            guard editorAvailable, workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, editingGeneration == currentGeneration, let value else { return }
             var merged = value
             var nextOriginal = value
             for (key, field) in draft.fields where original.fields[key] != field {
@@ -419,7 +458,8 @@ struct TaskInspectorForm: View {
             saveNow()
             // Store commits synchronously to its durable cache. A failed save
             // retains this draft and must keep the process alive for a retry.
-            if draft != original || notePin != nil { request.hasUnsavedEdits = true }
+            checkpoint()
+            if (draft != original || notePin != nil || !subtask.isEmpty || !comment.isEmpty),recoverySession?.flush() != true { request.hasUnsavedEdits = true }
         }
         .onDisappear { saveTask?.cancel(); titleFocused = false; applySuggestions(); saveNow() }
     }
@@ -446,7 +486,7 @@ struct TaskInspectorForm: View {
     private func load() { if let current { draft = current; original = current; titleParsingBaseline = current.title } }
     /// Moves accepted quick-entry pieces out of the title into their fields, like the iOS editor's save.
     private func applySuggestions() {
-        guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, current != nil else { return }
+        guard editorAvailable,workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, current != nil else { return }
         guard QuickReferenceCompletion(draft.title, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices)).range == nil else { titleParsingBaseline = draft.title; return }
         guard let parsed = suggestions, parsed.hasSuggestions else { titleParsingBaseline = draft.title; return }
         withAnimation(workspace.layout) {
@@ -458,7 +498,7 @@ struct TaskInspectorForm: View {
         declined = []; titleParsingBaseline = draft.title
     }
     private func applyReferenceChoices() {
-        guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, current != nil else { return }
+        guard editorAvailable,workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, current != nil else { return }
         let referenceGroups: Set<String> = ["project_id", "section_id", "assigned_to", "labels"]
         let excluded = Set(QuickEntry.groups).subtracting(referenceGroups).union(declined).union(Workspace.subtaskPath(taskID) == nil ? [] : SubtaskTree.childQuickEntryExclusions)
         let parsed = QuickEntry(draft.title, disabled: excluded, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices), task: draft)
@@ -471,10 +511,11 @@ struct TaskInspectorForm: View {
     }
     private func scheduleSave() {
         saveTask?.cancel()
+        guard editorAvailable else {checkpoint();return}
         saveTask = Task { try? await Task.sleep(for: .milliseconds(600)); guard !Task.isCancelled else { return }; saveNow() }
     }
     @discardableResult private func saveNow() -> Bool {
-        guard workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, let current else { return false }
+        guard editorAvailable,workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, let current else { checkpoint();return false }
         guard draft != original || notePin != nil else { return true }
         guard editingGeneration == currentGeneration else {
             store.error = "This task was deleted and restored while you were editing. Your draft is still here; reopen the current task before saving."
@@ -492,7 +533,7 @@ struct TaskInspectorForm: View {
             workspace.run("Edit Pinned Note") { saved = store.saveTaskWithNotePin(merged, pin: notePin, baseline: original) }
             if saved { self.notePin = nil }
         } else { saved = workspace.save("tasks", merged, name: "Edit Task", baseline: original) }
-        if saved { original = merged; draft = merged }
+        if saved { original = merged; draft = merged; if subtask.isEmpty && comment.isEmpty {_=recoverySession?.finish()} }
         return saved
     }
     private func addSubtask() {

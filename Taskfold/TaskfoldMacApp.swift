@@ -85,6 +85,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let request = TerminationSaveRequest()
         NotificationCenter.default.post(name: TerminationSaveRequest.notification, object: request)
+        if !Store.shared.flushEditorSessions() { request.hasUnsavedEdits = true }
         return request.hasUnsavedEdits ? .terminateCancel : .terminateNow
     }
 

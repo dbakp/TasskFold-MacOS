@@ -1,9 +1,12 @@
 # Unsent editor recovery storage and review
 
-This stage provides the shared recovery mechanism for the next live-editor access
-work. It does **not** yet capture ordinary iOS editor changes or Mac inspector
-changes automatically. Live invalidation, pending-save handoff, quit protection,
-child-editor integration and failure acceptance remain in progress.
+Live sessions now connect the recovery vault to the iOS task editor, the Mac
+inspector, note-formatting sheets and checklist organizers. A Store-owned session
+retains full drafts beyond a view's disappearance. The iOS background transition
+flushes retained checkpoints; Mac quit first tries ordinary inspector saves and
+then verifies every retained checkpoint. An unwritten recovery failure refuses
+termination. These are implementation statements; platform acceptance is scoped
+below and does not close the full rank-6 work.
 
 TaskEditorRecovery preserves the complete original record, draft record, labels
 and extra editor state with account/backend binding, editor-session UUID and a
@@ -40,11 +43,31 @@ capture: synthetic saved edits are seeded into an independently named app, then
 reviewed/recovered/refused on repeat and inspected after relaunch. Mac runtime,
 VoiceOver and live editor capture are not implied by builds or Simulator proofs.
 
-Full rank 6 and the full Px objective remain active. Ordinary editor/inspector
-admission and durable handoff are next, followed by remaining draft cohorts,
-adapters and premium organization UI/acceptance. Existing release, provider and
-hardware deferrals stay unchanged.
+Live admission checks require the captured account/workspace, source root
+incarnation and project identity, current visible task/project access and an
+editable destination. Team-native task writing stays disabled until its scoped
+adapters/UI are accepted. Loss of access or source identity swaps the root
+editing controls for a neutral recovery status without showing stale shared
+content. Mac autosave and quick-entry side effects stop. Checkpoints include
+unsubmitted comment/subtask text, note pin choices and parsing/reference choices.
+Nested formatting/checklist sheets register their own private drafts so parent
+teardown cannot silently discard their changes.
 
-Verification: 111 relevant core tests pass in this repository, with a successful
-Debug app/extension build. Mac runtime and VoiceOver acceptance remain open.
-Live editor capture/invalidation and inspector autosave handoff remain unfinished.
+Checkpoint writes coalesce behind one background worker per session. Increasing
+revisions prevent an older write replacing a later one. Successful saves and
+explicit discards close their session; an in-process closure fence under the
+vault lock prevents an already queued writer recreating the archive afterward.
+Reverting and editing again uses a fresh session. Account removal fences still
+precede key/file access; retained sessions retire after explicit account removal.
+
+Acceptance is recorded in p2-live-editor-evidence.json. Core coverage includes
+rapid edits plus synchronous quit flush, closing ahead of an asynchronous writer,
+unavailable encryption keys retaining the draft, and account removal before key
+acquisition. Full rank 6 and the full Px objective remain active: the wider live
+role/account/child-editor acceptance matrix, remaining adapters and premium
+organization UI still require work. Builds and core tests do not establish Mac
+runtime, human VoiceOver or real service role-change acceptance. Existing release,
+provider and hardware deferrals stay unchanged.
+
+Verification: 115 relevant core tests pass in this repository; the independent
+Debug app/extension build passes. Mac runtime and spoken acceptance remain open.

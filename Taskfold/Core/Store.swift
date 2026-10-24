@@ -319,6 +319,30 @@ final class Store {
         notice = "Original file preserved. Restore a recovery copy or wait for cloud sync."
         Task { await reschedule(); await sync() }
     }
+    @ObservationIgnored private var editorSessions: [UUID:TaskEditorSession] = [:]
+    func beginEditorSession(_ original: Record) throws -> TaskEditorSession {
+        guard !accountRemovalBlocked,!signingOut,workspaceCacheReadable,signedIn || localMode else {throw CancellationError()}
+        let session=TaskEditorSession(vault:backupVault,origin:localMode ? nil:try backend.accountRemovalOrigin,original:original,labels:labels)
+        editorSessions=editorSessions.filter{!$0.value.closed}
+        editorSessions[session.id]=session
+        return session
+    }
+    /// Existing team writers remain disabled until their scoped adapters land.
+    func editorMayWrite(source: Record, proposed: Record) -> Bool {
+        guard workspaceCacheReadable,!accountRemovalBlocked,!signingOut,signedIn || localMode else {return false}
+        let cache=nativeConversationTeamCache
+        if cache?.knownTasks.contains(source.id)==true {return false}
+        for project in Set([source.string("project_id"),proposed.string("project_id")]) where !project.isEmpty {
+            guard record("projects",id:project) != nil, cache?.knownTeams[project]==nil else {return false}
+            if let permission=cache?.boundary.projects[project],!permission.canSend {return false}
+        }
+        return true
+    }
+    func flushEditorSessions() -> Bool {
+        var success=true
+        for session in editorSessions.values where !session.closed {if !session.flush() {success=false}}
+        return success
+    }
     func preserveEditorEdit(_ value: TaskEditorRecovery, workspace: WorkspaceBinding) async throws {
         guard workspace.matches(account:userID,generation:workspaceGeneration), value.account==userID,
               !accountRemovalBlocked,!signingOut,signedIn || localMode else {throw CancellationError()}

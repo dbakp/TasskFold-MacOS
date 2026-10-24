@@ -2,6 +2,7 @@ import Foundation
 import CryptoKit
 import Security
 import Darwin
+import Observation
 
 struct BackupFailure: LocalizedError, Equatable {
     var message: String
@@ -872,13 +873,27 @@ struct TaskEditorRecovery: Codable, Equatable, Sendable {
 }
 
 extension BackupVault {
+    private static var closedEditorSessions = Set<String>()
+    private func editorClosureKey(_ id: UUID) -> String {directory.standardizedFileURL.path+"/"+account+"/"+id.uuidString}
+    func closeEditorDraft(_ id: UUID) throws {
+        if let gate=removalGate {
+            var unguarded=self;unguarded.removalGate=nil
+            // Removal already deletes this vault and blocks every late writer.
+            if gate.removed {return}
+            return try gate.writable {try unguarded.closeEditorDraft(id)}
+        }
+        Self.lock.lock();defer {Self.lock.unlock()}
+        Self.closedEditorSessions.insert(editorClosureKey(id))
+        let file=editorFile(id)
+        if FileManager.default.fileExists(atPath:file.path) {try FileManager.default.removeItem(at:file)}
+    }
     private var editorDirectory: URL {directory.appendingPathComponent("Unsent task edits",isDirectory:true)}
     func editorFile(_ id: UUID) -> URL {editorDirectory.appendingPathComponent(id.uuidString.lowercased()+".taskfoldedit")}
     func editorEntries() throws -> [PreservedWorkspaceFile] {
         Self.lock.lock();defer {Self.lock.unlock()}
         guard FileManager.default.fileExists(atPath:editorDirectory.path) else {return []}
         let files=try FileManager.default.contentsOfDirectory(at:editorDirectory,includingPropertiesForKeys:[.contentModificationDateKey])
-        guard files.count<=2000 else {throw BackupFailure(message:"There are too many saved edits to list. All originals are kept.")}
+        guard files.filter({$0.pathExtension=="taskfoldedit"}).count<=2000 else {throw BackupFailure(message:"There are too many saved edits to list. All originals are kept.")}
         return try files.compactMap {file in
             guard file.pathExtension=="taskfoldedit",let id=UUID(uuidString:file.deletingPathExtension().lastPathComponent) else {return nil}
             return PreservedWorkspaceFile(id:id,createdAt:try file.resourceValues(forKeys:[.contentModificationDateKey]).contentModificationDate ?? .distantPast)
@@ -909,8 +924,9 @@ extension BackupVault {
             var unguarded=self;unguarded.removalGate=nil
             return try gate.writable {try unguarded.saveEditorDraft(value)}
         }
-        let secret=try key()
         Self.lock.lock();defer {Self.lock.unlock()}
+        guard !Self.closedEditorSessions.contains(editorClosureKey(value.id)) else {return}
+        let secret=try key()
         var verifier=self;verifier.key={secret}
         if FileManager.default.fileExists(atPath:editorFile(value.id).path) {
             let saved=try verifier.editorDraft(value.id,origin:value.origin)
@@ -932,5 +948,69 @@ extension BackupVault {
         let verified=try JSONDecoder().decode(TaskEditorRecovery.self,from:AES.GCM.open(AES.GCM.SealedBox(combined:persisted),using:secret))
         guard verified==value else {throw BackupFailure(message:"The saved edit could not be verified. Keep this window open.")}
         guard Darwin.rename(staging.path,editorFile(value.id).path)==0 else {throw BackupFailure(message:"The verified edit could not replace its previous version. Keep this window open and retry.")}
+    }
+}
+
+
+/// The Store retains these sessions after their views disappear. Background
+/// checkpoints may finish out of order; vault revisions and closure fences make
+/// that safe. Quit can synchronously verify any still-unwritten checkpoint.
+@MainActor @Observable final class TaskEditorSession {
+    let id = UUID()
+    let vault: BackupVault
+    let account: String
+    let origin: String?
+    let original: Record
+    let labels: [Record]
+    private(set) var latest: TaskEditorRecovery?
+    private(set) var savedRevision: UInt64 = 0
+    private(set) var failure: String?
+    private(set) var closed = false
+    private var writing = false
+    private var captureFailed = false
+    private var revision: UInt64 = 0
+    private let createdAt = Date()
+    init(vault: BackupVault, origin: String?, original: Record, labels: [Record]) {
+        self.vault=vault;account=vault.account;self.origin=origin;self.original=original;self.labels=labels
+    }
+    var preserved: Bool {!captureFailed && latest != nil && savedRevision == latest?.revision}
+    func capture(_ draft: Record, extras: [String:JSON]) {
+        guard !closed else {return}
+        guard latest?.draft != draft || latest?.extras != extras else {return}
+        revision += 1
+        do {
+            let value=try TaskEditorRecovery(id:id,revision:revision,account:account,origin:origin,original:original,draft:draft,extras:extras,labels:labels,now:createdAt)
+            latest=value;failure=nil;captureFailed=false
+            guard !writing else {return}
+            writing=true
+            Task {
+                defer {writing=false}
+                while !closed,let value=latest,value.revision>savedRevision {
+                    let vault=self.vault
+                    do {
+                        try await Task.detached(priority:.utility) {try vault.saveEditorDraft(value)}.value
+                        guard !closed else {return}
+                        savedRevision=max(savedRevision,value.revision)
+                        if latest?.revision==value.revision {failure=nil}
+                    } catch {
+                        guard !closed else {return}
+                        if latest?.revision==value.revision {failure="Your edit could not be preserved. Keep this window open and retry.";return}
+                    }
+                }
+            }
+        } catch {captureFailed=true;failure=error.localizedDescription}
+    }
+    @discardableResult func flush() -> Bool {
+        if closed {return true}
+        if vault.removalGate?.removed==true {_=finish();return true}
+        guard !captureFailed else {return false}
+        guard let latest else {return true}
+        do {try vault.saveEditorDraft(latest);savedRevision=latest.revision;failure=nil;return true}
+        catch {failure="Your edit could not be preserved. Keep this window open and retry.";return false}
+    }
+    @discardableResult func finish() -> Bool {
+        guard !closed else {return true}
+        do {try vault.closeEditorDraft(id);closed=true;latest=nil;failure=nil;return true}
+        catch {failure="The saved draft still needs cleanup. Its original is kept.";return false}
     }
 }
