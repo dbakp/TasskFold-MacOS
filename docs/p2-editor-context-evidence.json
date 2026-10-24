@@ -1,0 +1,87 @@
+{
+  "date": "2026-10-24",
+  "platform": "macOS",
+  "scope": "Nested editor source custody, exact child-path admission, and recovery of the edited entity",
+  "rank": 6,
+  "rankComplete": false,
+  "fullGoalComplete": false,
+  "sourceSHA256": {
+    "Taskfold/Core/Backups.swift": "27d0574c1e57b5d6748100dc6d5fc1b47a09cc529edbcc4da298a0935e807e04",
+    "Taskfold/Views/NoteFormattingView.swift": "4a7d03b1cc4bf8a6661ba8392a64d3ffce61ae3fdb9cff026a2a341734165b34",
+    "Taskfold/Views/SubtaskOrganizer.swift": "e1e1ce1518da223f06b46ac87a83dc79a2c0d6409fff8d22d797addd4f3ddc5c",
+    "TaskfoldTests/BackupTests.swift": "d437e3ec6cde9e41790833b5823ce0bacdea73acbf8fdae5f25f5bca00c582d4",
+    "Taskfold/Views/TaskInspector.swift": "47b6ada5da5158665915a8d93ed2ddcfb1812c0ed6636ea92758b1c4ae88a82b"
+  },
+  "coreTests": {
+    "passed": 119,
+    "failed": 0,
+    "logSHA256": "f753ec914a0d431af882dc7ab7d3569188fe500d41e15d23c21e851cef03ada7",
+    "newCases": [
+      "Child projection/recovery keeps own title, notes and checklist; root text excluded",
+      "Text sync and sibling reorder remain valid",
+      "Deletion, moving, duplicate UUIDs and changed creation stamps refuse admission",
+      "Root owner/project/generation binding and new-child UUID collision refusal"
+    ]
+  },
+  "build": {
+    "passed": true,
+    "configuration": "Debug unsigned generic macOS",
+    "logSHA256": "9250110e300897ceb6929c32638b2d531b86fcfce596e6ffba56094a5faf13ef"
+  },
+  "nativeAcceptance": {
+    "macRuntime": false,
+    "spokenVoiceOver": false,
+    "realRoleTransitions": false,
+    "fullAccountMatrix": false
+  },
+  "realTasksChanged": false,
+  "hostedChanges": false,
+  "releaseConfigurationChanged": false,
+  "remaining": [
+    "Broader role/account and other draft-cohort acceptance",
+    "Native Mac and spoken acceptance",
+    "Remaining adapters and premium organization UI"
+  ],
+  "cleanup": {
+    "removedOwnedBuildBytes": 1952451501,
+    "removedPaths": [
+      "/tmp/taskfold-editor-context-ios-host",
+      "/tmp/taskfold-editor-context-ios-build",
+      "/tmp/taskfold-editor-context-mac-build",
+      "/tmp/taskfold-editor-context-ipad.xcresult",
+      "/tmp/taskfold-editor-context-ipad-nested-final.xcresult",
+      "/tmp/taskfold-editor-context-iphone-nested-final.xcresult",
+      "/tmp/taskfold-editor-context-ipad-nested-scroll.xcresult",
+      "/tmp/taskfold-editor-context-iphone.xcresult",
+      "/tmp/taskfold-editor-context-ipad-attachments",
+      "/tmp/taskfold-editor-context-iphone-nested-final-attachments",
+      "/tmp/taskfold-editor-context-ipad-nested-scroll-attachments",
+      "/tmp/taskfold-editor-context-iphone-attachments",
+      "/tmp/taskfold-editor-context-ipad-nested-final-attachments"
+    ],
+    "temporaryApps": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsliveeditor",
+        "uninstalled": true
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsliveeditor.uitests.xctrunner",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsliveeditor",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsliveeditor.uitests.xctrunner",
+        "uninstalled": true
+      }
+    ],
+    "macRegistrationRemoved": true,
+    "noMacAppLaunched": true
+  }
+}

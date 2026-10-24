@@ -71,3 +71,33 @@ provider and hardware deferrals stay unchanged.
 
 Verification: 115 relevant core tests pass in this repository; the independent
 Debug app/extension build passes. Mac runtime and spoken acceptance remain open.
+
+
+## Nested editor source custody — 24 October
+
+TaskEditorSourceContext separates the persisted access root from the record being
+edited. Nested note formatting and checklist organizers now receive the complete
+edited record plus its actual root ID. A recovered child retains its own title,
+notes and checklist, rather than the root title/notes or unrelated siblings.
+Only root/path/generation/project identifiers enter the recovery source identity.
+
+Admission rechecks the captured root generation, owner and project, and resolves
+the exact captured child path. Ordinary text updates and sibling reordering are
+allowed. Missing/moved paths, ambiguous child UUIDs and changed child creation or
+generation stamps refuse continuation. A new child cannot retarget a newly
+persisted matching UUID. Root access checks remain separate from these identity
+checks; no new team write adapter or organization permission is enabled.
+
+Core and native scope are recorded in p2-editor-context-evidence.json. The broader
+account/role transition matrix, additional draft cohorts, native Mac/VoiceOver
+acceptance, remaining adapters and premium organization UI remain in progress.
+Existing user deferrals remain unchanged; the full Px goal is still active.
+
+Nested organizers capture their workspace at the opening action, pass it into
+child details, and refuse stale admission before creating a recovery session.
+Formatting likewise requires its captured workspace before session creation.
+Mac Complete and confirmed Delete recheck editor admission at action dispatch.
+
+Verification: 119 relevant core tests pass independently in each repository,
+with successful Debug app/extension builds. Mac runtime/VoiceOver and the broader
+role/account matrix remain open; Simulator acceptance is not Mac runtime proof.

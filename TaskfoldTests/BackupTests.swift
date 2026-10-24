@@ -728,3 +728,54 @@ extension BackupTests {
         XCTAssertFalse(FileManager.default.fileExists(atPath:vault.directory.path))
     }
 }
+
+extension BackupTests {
+    private func nestedEditorSource() -> (Record,Record,String) {
+        let child=Record(["id":.string("ec190000-0000-4000-8000-000000000002"),"title":.string("Child design notes"),"description":.string("Child-only text"),"created_at":.string("2026-10-24T12:00:00Z"),"subtasks":.array([.object(["id":.string("ec190000-0000-4000-8000-000000000003"),"title":.string("Child checklist item")])])])
+        var root=Record.task(user:owner,project:projectID);root["id"] = .string(taskID);root["title"] = .string("Root title stays separate");root["description"] = .string("Root-only text")
+        root["subtasks"] = .array([.object(child.fields),.object(["id":.string("ec190000-0000-4000-8000-000000000004"),"title":.string("Independent sibling")])])
+        return (root,child,SubtaskTree.reference(parent:root.id,key:child.id))
+    }
+    func testNestedEditorProjectionKeepsChildTitleNotesAndChecklistSeparateFromRoot() throws {
+        let (root,child,reference)=nestedEditorSource()
+        let projected=try XCTUnwrap(TaskEditorSourceContext.projection(root,reference:reference))
+        XCTAssertEqual(projected.title,child.title);XCTAssertEqual(projected["description"],child["description"]);XCTAssertEqual(projected["subtasks"],child["subtasks"])
+        XCTAssertEqual(projected["project_id"],root["project_id"]);XCTAssertEqual(projected["task_generation"],root["task_generation"])
+        let value=try TaskEditorRecovery(account:owner,origin:nil,original:projected,draft:projected,extras:["source_identity":TaskEditorSourceContext(record:projected,root:root).identity])
+        let copy=try XCTUnwrap(value.copyBackup(current:Snapshot()).tables["tasks"]?.first)
+        XCTAssertEqual(copy.title,child.title);XCTAssertEqual(copy.string("description"),"Child-only text");XCTAssertEqual(copy["subtasks"].list.count,1)
+        XCTAssertFalse(String(decoding:try JSONEncoder().encode(value),as:UTF8.self).contains("Root-only text"))
+    }
+    func testNestedEditorAllowsOrdinarySyncAndSiblingReorderWithoutRetargeting() throws {
+        let (root,child,reference)=nestedEditorSource(),projection=try XCTUnwrap(TaskEditorSourceContext.projection(root,reference:reference))
+        let context=TaskEditorSourceContext(record:projection,root:root)
+        var changed=root,updated=child;updated["title"] = .string("Teammate changed title")
+        changed["subtasks"] = .array([root["subtasks"].list[1],.object(updated.fields)])
+        XCTAssertTrue(context.matches(changed));XCTAssertTrue(context.matches(root))
+        XCTAssertTrue(TaskEditorSourceContext(record:child,root:root).matches(changed))
+    }
+    func testNestedEditorRefusesDeletedMovedAmbiguousAndRecreatedChild() throws {
+        let (root,child,reference)=nestedEditorSource(),projection=try XCTUnwrap(TaskEditorSourceContext.projection(root,reference:reference))
+        let context=TaskEditorSourceContext(record:projection,root:root)
+        var changed=root;changed["subtasks"] = .array([]);XCTAssertFalse(context.matches(changed))
+        changed["subtasks"] = .array([.object(["id":.string("ec190000-0000-4000-8000-000000000005"),"title":.string("New parent"),"subtasks":.array([.object(child.fields)])])]);XCTAssertFalse(context.matches(changed))
+        changed=root;var replacement=child;replacement["created_at"] = .string("2026-10-24T13:00:00Z");changed["subtasks"] = .array([.object(replacement.fields)])
+        XCTAssertFalse(context.matches(changed))
+        changed["subtasks"] = .array([.object(child.fields),.object(child.fields)])
+        XCTAssertNil(TaskEditorSourceContext.projection(changed,reference:child.id));XCTAssertFalse(TaskEditorSourceContext(record:child,root:changed).matches(changed))
+        XCTAssertFalse(context.matches(changed))
+    }
+    func testNestedEditorRootIncarnationOwnershipAndProjectMustStayBound() throws {
+        let (root,child,_)=nestedEditorSource(),context=TaskEditorSourceContext(record:child,root:root)
+        XCTAssertFalse(context.matches(nil))
+        for (key,value) in [("task_generation",JSON.string(UUID().uuidString.lowercased())),("project_id",.null),("user_id",.string(other))] {
+            var changed=root;changed[key]=value;XCTAssertFalse(context.matches(changed))
+        }
+        var new=child;new["id"] = .string(UUID().uuidString.lowercased())
+        let pending=TaskEditorSourceContext(record:new,root:root)
+        XCTAssertTrue(pending.matches(root));XCTAssertFalse(pending.matches(nil))
+        var collision=root;collision["subtasks"] = .array([.object(new.fields)])
+        XCTAssertFalse(pending.matches(collision),"A new child must never retarget an independently persisted matching UUID")
+        XCTAssertTrue(TaskEditorSourceContext(record:new,root:nil).matches(nil))
+    }
+}

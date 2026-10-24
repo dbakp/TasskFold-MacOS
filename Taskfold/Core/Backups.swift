@@ -1014,3 +1014,77 @@ extension BackupVault {
         catch {failure="The saved draft still needs cleanup. Its original is kept.";return false}
     }
 }
+
+/// Access follows the persisted root, while recovery keeps only the entity the
+/// user was editing. A captured child path never retargets a moved sibling.
+struct TaskEditorSourceContext: Equatable, Sendable {
+    let record: Record
+    let root: Record?
+    private let path: [String]?
+    private let invalid: Bool
+    init(record: Record, root: Record?) {
+        self.record=record;self.root=root
+        guard let root else {path=nil;invalid=false;return}
+        if record.id==root.id {path=[];invalid=false;return}
+        if let reference=SubtaskTree.referencePath(record.id) {
+            path=Array(reference.dropFirst())
+            invalid=reference.first != root.id || Self.node(root,path:path!)==nil
+        } else {
+            let paths=Self.paths(root,id:record.id)
+            path=paths.count==1 ? paths[0]:nil
+            invalid=paths.count>1
+        }
+    }
+    var identity: JSON {.object(["root":.string(root?.id ?? record.id),"root_generation":root?["task_generation"] ?? record["task_generation"],"project":root?["project_id"] ?? record["project_id"],"path":path.map{.array($0.map(JSON.string))} ?? .null])}
+    func matches(_ current: Record?) -> Bool {
+        guard !invalid else {return false}
+        guard let root else {return true} // A new local draft has no persisted root.
+        guard let current,current.id==root.id,current["task_generation"]==root["task_generation"],current["project_id"]==root["project_id"],current["user_id"]==root["user_id"] else {return false}
+        guard let path else {return Self.paths(current,id:record.id).isEmpty}
+        if path.isEmpty {return true}
+        guard let before=Self.node(root,path:path),let live=Self.node(current,path:path) else {return false}
+        // UUIDs alone cannot authorize a replacement with a new incarnation.
+        for key in ["created_at","task_generation"] where before[key] != .null {if live[key] != before[key] {return false}}
+        return true
+    }
+    static func projection(_ root: Record, reference: String) -> Record? {
+        if reference==root.id {return root}
+        let path: [String]
+        if let reference=SubtaskTree.referencePath(reference) {
+            guard reference.first==root.id else {return nil};path=Array(reference.dropFirst())
+        } else {
+            let paths=paths(root,id:reference);guard paths.count==1 else {return nil};path=paths[0]
+        }
+        guard var child=node(root,path:path) else {return nil}
+        child["id"] = .string(reference)
+        for key in ["project_id","section_id","user_id","task_generation"] {child[key]=root[key]}
+        return child
+    }
+    private static func node(_ root: Record,path:[String]) -> Record? {
+        guard path.count<=SubtaskTree.readableDepth else {return nil}
+        var current=root
+        for key in path {
+            let matches=current["subtasks"].list.enumerated().filter{SubtaskTree.childKey($0.element,index:$0.offset)==key}
+            guard matches.count==1,case .object(let fields)=matches[0].element else {return nil}
+            current=Record(fields)
+        }
+        return current
+    }
+    private static func paths(_ root:Record,id:String) -> [[String]] {
+        var found:[[String]]=[],visited=0
+        func visit(_ record:Record,_ path:[String]) {
+            guard path.count<SubtaskTree.readableDepth,found.count<2,visited<100000 else {return}
+            for (index,value) in record["subtasks"].list.enumerated() {
+                visited+=1;guard case .object(let fields)=value else {continue}
+                let child=Record(fields),next=path+[SubtaskTree.childKey(value,index:index)]
+                if child.id==id {found.append(next)}
+                visit(child,next)
+            }
+        }
+        visit(root,[])
+        // Oversized trees refuse admission rather than treating an unvisited
+        // persisted node as a new draft.
+        if visited>=100000 {return [[],[]]}
+        return found
+    }
+}

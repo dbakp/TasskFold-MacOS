@@ -13,6 +13,7 @@ struct NoteFormatRequest: Identifiable {
     let generation: JSON
     let storedText: String?
     var source: Record? = nil
+    var sourceRootID: String? = nil
 }
 
 /// Native, selectable note blocks. Every link has already passed the web-only policy;
@@ -73,7 +74,7 @@ struct NoteFormattingView: View {
     let apply: (String) -> String?
     @State private var recoverySession: TaskEditorSession?
     @State private var sourceRecord: Record?
-    @State private var sourceWasStored = false
+    @State private var sourceContext: TaskEditorSourceContext?
     @State private var editorFinished = false
     @State private var accessStopped = false
     @State private var text: String
@@ -91,10 +92,7 @@ struct NoteFormattingView: View {
     private var available: Bool {
         guard !accessStopped,request.workspace.matches(account:store.userID,generation:store.workspaceGeneration) else {return false}
         guard let sourceRecord else {return true}
-        guard store.editorMayWrite(source:sourceRecord,proposed:sourceRecord) else {return false}
-        if sourceWasStored {
-            guard let current=store.record("tasks",id:sourceRecord.id),current["task_generation"]==sourceRecord["task_generation"],current["project_id"]==sourceRecord["project_id"] else {return false}
-        }
+        guard let sourceContext,store.editorMayWrite(source:sourceContext.root ?? sourceRecord,proposed:sourceRecord),sourceContext.matches(sourceContext.root.flatMap{store.record("tasks",id:$0.id)}) else {return false}
         return true
     }
     private func checkpoint() {
@@ -103,7 +101,7 @@ struct NoteFormattingView: View {
         if recoverySession?.closed==true,let sourceRecord,request.workspace.matches(account:store.userID,generation:store.workspaceGeneration) {recoverySession=try? store.beginEditorSession(sourceRecord)}
         guard let session=recoverySession else {return}
         var draft=session.original;draft["description"] = .string(text)
-        session.capture(draft,extras:["formatting":.bool(true),"link_url":.string(url)])
+        session.capture(draft,extras:["source_identity":sourceContext?.identity ?? .null,"formatting":.bool(true),"link_url":.string(url)])
     }
 
     var body: some View {
@@ -198,10 +196,10 @@ struct NoteFormattingView: View {
                 }
         }
         .onAppear {
-            guard recoverySession==nil else {return}
+            guard recoverySession==nil,request.workspace.matches(account:store.userID,generation:store.workspaceGeneration) else {return}
             var original=request.source ?? store.record("tasks",id:request.taskID) ?? Record(["id":.string(request.taskID),"title":.string("Recovered notes"),"description":.string(request.original),"task_generation":request.generation])
             original["description"] = .string(request.original)
-            sourceRecord=original;sourceWasStored=store.record("tasks",id:original.id) != nil
+            sourceRecord=original;sourceContext=TaskEditorSourceContext(record:original,root:store.record("tasks",id:request.sourceRootID ?? SubtaskTree.referencePath(request.taskID)?.first ?? request.taskID))
             do {recoverySession=try store.beginEditorSession(original)} catch {message="Your note could not be protected. Keep this editor open and retry."}
         }
         .onChange(of:text) {_,_ in checkpoint()}

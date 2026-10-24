@@ -65,6 +65,7 @@ struct TaskInspectorForm: View {
     @Environment(Workspace.self) private var workspace
     let taskID: String
     @State private var recoverySession: TaskEditorSession?
+    @State private var sourceContext: TaskEditorSourceContext?
     @State private var sourceRoot: Record?
     @State private var accessStopped = false
     @State private var sessionFailure: String?
@@ -109,12 +110,12 @@ struct TaskInspectorForm: View {
         guard !accessStopped else {return false}
         guard let workspaceBinding else {return true}
         guard workspaceBinding.matches(account:store.userID,generation:store.workspaceGeneration),let sourceRoot,
-              let live=store.record("tasks",id:sourceRoot.id),live["task_generation"]==sourceRoot["task_generation"],live["project_id"]==sourceRoot["project_id"],current != nil,
+              let live=store.record("tasks",id:sourceRoot.id),live["task_generation"]==sourceRoot["task_generation"],live["project_id"]==sourceRoot["project_id"],current != nil,sourceContext?.matches(live)==true,
               store.editorMayWrite(source:sourceRoot,proposed:draft) else {return false}
         return true
     }
     private var recoveryExtras: [String:JSON] {
-        ["new_subtask":.string(subtask),"unsubmitted_comment":.string(comment),"pin":notePin.map(JSON.bool) ?? .null,"declined":.array(declined.sorted().map(JSON.string)),"reference_choices":.object(referenceChoices.mapValues(JSON.string)),"source_identity":.object(["root":.string(sourceRoot?.id ?? taskID),"root_generation":sourceRoot?["task_generation"] ?? .null,"path":.string(taskID)])]
+        ["new_subtask":.string(subtask),"unsubmitted_comment":.string(comment),"pin":notePin.map(JSON.bool) ?? .null,"declined":.array(declined.sorted().map(JSON.string)),"reference_choices":.object(referenceChoices.mapValues(JSON.string)),"source_identity":sourceContext?.identity ?? .null]
     }
     private func checkpoint() {
         guard !original.id.isEmpty else {return}
@@ -183,7 +184,7 @@ struct TaskInspectorForm: View {
                     .accessibilityLabel("Notes").accessibilityIdentifier("taskDescription")
                 Button("Format notes", systemImage: "textformat") {
                     guard let binding = workspaceBinding else { return }
-                    noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"),source:draft)
+                    noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"),source:draft,sourceRootID:sourceRoot?.id)
                 }.disabled(current == nil).accessibilityIdentifier("openNoteFormatting")
                 if store.record("tasks", id: taskID) != nil {
                     Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
@@ -191,7 +192,7 @@ struct TaskInspectorForm: View {
                 }
                 HStack {
                     Button(draft.completed ? "Reopen" : "Complete", systemImage: draft.completed ? "arrow.uturn.backward.circle" : "checkmark.circle") {
-                        guard editingGeneration == currentGeneration, workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { store.error = "This task or workspace changed. Reopen its current details."; return }
+                        guard editorAvailable,editingGeneration == currentGeneration, workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { store.error = "This task or workspace changed. Reopen its current details."; return }
                         if workspace.hierarchyFilter {
                             do { workspace.complete(try store.selectionRecord(taskID)) } catch { store.error = error.localizedDescription }
                         } else if let current { workspace.complete(current) }
@@ -302,7 +303,7 @@ struct TaskInspectorForm: View {
             if workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty {
             Section("Subtasks") {
                 let childIndices = SubtaskTree.uniqueChildIndices(draft["subtasks"])
-                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID), saveAndOpen: { children, path in
+                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id, saveAndOpen: { children, path in
                     let previous = draft
                     draft["subtasks"] = children
                     guard saveNow() else { draft = previous; return false }
@@ -401,7 +402,7 @@ struct TaskInspectorForm: View {
         }
         .formStyle(.grouped)
         .confirmationDialog("Delete “\(draft.title)”?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { workspace.delete([taskID]) }
+            Button("Delete", role: .destructive) {guard editorAvailable else {stopEditing();return};workspace.delete([taskID])}
         } message: { Text("You can undo this from the Edit menu.") }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.item]) { result in
             do {
@@ -410,7 +411,7 @@ struct TaskInspectorForm: View {
             } catch { store.error = error.localizedDescription }
         }
         .quickLookPreview($preview)
-        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; sourceRoot=store.record("tasks",id:Workspace.subtaskPath(taskID)?.first ?? taskID); load(); if recoverySession==nil {do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure=error.localizedDescription}}; if draft.title.isEmpty { titleFocused = true } }
+        .onAppear { workspaceBinding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; sourceRoot=store.record("tasks",id:Workspace.subtaskPath(taskID)?.first ?? taskID); load();sourceContext=TaskEditorSourceContext(record:draft,root:sourceRoot); if recoverySession==nil {do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure=error.localizedDescription}}; if draft.title.isEmpty { titleFocused = true } }
         .task(id: suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) { _ = try? await store.refreshProjectMembers(suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .onChange(of: titleChipFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }

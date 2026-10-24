@@ -1,16 +1,20 @@
 import SwiftUI
 
 struct SubtaskOrganizerButton: View {
+    @Environment(Store.self) private var store
+    @State private var sourceWorkspace: WorkspaceBinding?
     @Binding var children: JSON
     let taskID: String
     var baseDepth = 0
     var projectID = ""
+    var sourceRecord: Record? = nil
+    var sourceRootID: String? = nil
     var saveAndOpen: ((JSON, [String]) -> Bool)? = nil
     @State private var showing = false
     var body: some View {
-        Button("Organize subtasks", systemImage: "list.bullet.indent") { showing = true }
+        Button("Organize subtasks", systemImage: "list.bullet.indent") { sourceWorkspace=WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration);showing = true }
             .accessibilityIdentifier("organizeSubtasks")
-            .sheet(isPresented: $showing) { SubtaskOrganizer(children: $children, taskID: taskID, baseDepth: baseDepth, projectID: projectID, saveAndOpen: saveAndOpen) }
+            .sheet(isPresented: $showing) { if let sourceWorkspace {SubtaskOrganizer(children: $children, taskID: taskID, baseDepth: baseDepth, projectID: projectID, proposedSource:sourceRecord, sourceRootID:sourceRootID, sourceWorkspace:sourceWorkspace, saveAndOpen: saveAndOpen)} }
     }
 }
 
@@ -21,11 +25,14 @@ private struct SubtaskOrganizer: View {
     let taskID: String
     let baseDepth: Int
     let projectID: String
+    let proposedSource: Record?
+    let sourceRootID: String?
+    let sourceWorkspace: WorkspaceBinding
     let saveAndOpen: ((JSON, [String]) -> Bool)?
     private struct ChildRequest: Identifiable { let record: Record; let depth: Int; var id: String { record.id } }
     @State private var recoverySession: TaskEditorSession?
     @State private var sourceRecord: Record?
-    @State private var sourceWasStored = false
+    @State private var sourceContext: TaskEditorSourceContext?
     @State private var accessStopped = false
     @State private var editingChild: ChildRequest?
     @State private var source: JSON
@@ -46,26 +53,25 @@ private struct SubtaskOrganizer: View {
     @State private var removing: SubtaskTree.Item?
     @State private var childTitle = ""
 
-    init(children: Binding<JSON>, taskID: String, baseDepth: Int, projectID: String, saveAndOpen: ((JSON, [String]) -> Bool)?) {
-        _children = children; self.taskID = taskID; self.baseDepth = baseDepth; self.projectID = projectID; self.saveAndOpen = saveAndOpen
+    init(children: Binding<JSON>, taskID: String, baseDepth: Int, projectID: String, proposedSource:Record?, sourceRootID:String?, sourceWorkspace:WorkspaceBinding, saveAndOpen: ((JSON, [String]) -> Bool)?) {
+        _children = children; self.taskID = taskID; self.baseDepth = baseDepth; self.projectID = projectID; self.proposedSource=proposedSource;self.sourceRootID=sourceRootID;self.sourceWorkspace=sourceWorkspace;self.saveAndOpen = saveAndOpen
         _source = State(initialValue: children.wrappedValue)
         _originalTaskID = State(initialValue: taskID)
         _draft = State(initialValue: .array([]))
     }
     private var items: [SubtaskTree.Item] { SubtaskTree.outline(draft) }
     private var available: Bool {
-        guard !accessStopped else {return false}
+        guard !accessStopped,sourceWorkspace.matches(account:store.userID,generation:store.workspaceGeneration) else {return false}
         guard let binding,let sourceRecord else {return true}
-        guard binding.matches(account:store.userID,generation:store.workspaceGeneration),store.editorMayWrite(source:sourceRecord,proposed:sourceRecord) else {return false}
-        if sourceWasStored {
-            guard let current=store.record("tasks",id:sourceRecord.id),current["task_generation"]==sourceRecord["task_generation"],current["project_id"]==sourceRecord["project_id"] else {return false}
-        }
+        guard binding.matches(account:store.userID,generation:store.workspaceGeneration),let sourceContext,
+              store.editorMayWrite(source:sourceContext.root ?? sourceRecord,proposed:sourceRecord),
+              sourceContext.matches(sourceContext.root.flatMap{store.record("tasks",id:$0.id)}) else {return false}
         return true
     }
     private func checkpoint() {
         guard let session=recoverySession,draft != source || !newTitle.isEmpty || !childTitle.isEmpty else {return}
         var task=session.original;task["subtasks"] = draft
-        session.capture(task,extras:["organizer_source":source,"new_subtask":.string(newTitle),"new_child":.string(childTitle),"adding_to":addingTo.map(JSON.string) ?? .null])
+        session.capture(task,extras:["source_identity":sourceContext?.identity ?? .null,"organizer_source":source,"new_subtask":.string(newTitle),"new_child":.string(childTitle),"adding_to":addingTo.map(JSON.string) ?? .null])
     }
     var body: some View {
         Group {
@@ -190,10 +196,13 @@ private struct SubtaskOrganizer: View {
     }
     @MainActor private func prepare() async {
         guard !prepared else { return }; prepared = true
-        let workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+        let workspace=sourceWorkspace
+        guard workspace.matches(account:store.userID,generation:store.workspaceGeneration) else {accessStopped=true;preparing=false;return}
         binding = workspace
-        let original=store.record("tasks",id:SubtaskTree.referencePath(taskID)?.first ?? taskID) ?? Record(["id":.string(taskID),"title":.string("Recovered checklist"),"project_id":.string(projectID),"subtasks":source])
-        sourceRecord=original;sourceWasStored=store.record("tasks",id:original.id) != nil
+        let root=store.record("tasks",id:sourceRootID ?? SubtaskTree.referencePath(taskID)?.first ?? taskID)
+        var original=proposedSource ?? root.flatMap{TaskEditorSourceContext.projection($0,reference:taskID)} ?? Record(["id":.string(taskID),"title":.string("Recovered checklist"),"project_id":.string(projectID)])
+        original["subtasks"] = source
+        sourceRecord=original;sourceContext=TaskEditorSourceContext(record:original,root:root)
         do {recoverySession=try store.beginEditorSession(original)} catch {loadError="Your checklist cannot be protected. Keep this editor open and retry.";preparing=false;return}
         let input = source, depth = baseDepth
         let job = Task.detached(priority: .userInitiated) { () -> Result<ChecklistRecovery.Review, SubtaskTree.Failure> in
