@@ -511,3 +511,78 @@ extension BackupTests {
         XCTAssertThrowsError(try file.plan(current:Snapshot(),account:other))
     }
 }
+
+
+extension BackupTests {
+    private func repairFixture() throws -> (URL, URL, BackupVault) {
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at:root,withIntermediateDirectories:true)
+        let source=root.appendingPathComponent(owner+".json"), key=SymmetricKey(size:.bits256)
+        return (root,source,BackupVault(directory:root.appendingPathComponent("Backups"),account:owner,key:{key},removalGate:AccountRemovalDisk(directory:root,account:owner)))
+    }
+    func testUnreadableRepairPreservesExactBytesEncryptedAndReopensWithoutReplayingQueue() throws {
+        let (root,source,vault)=try repairFixture();defer {try? FileManager.default.removeItem(at:root)}
+        let original=Data(("{\"tasks\":[\"Secret unsent title\"],\"pending\":[" + String(repeating:"x",count:1_100_000)).utf8)
+        try original.write(to:source)
+        let entry=try vault.preserveAndReopen(source,expectedDigest:vault.unreadableFingerprint(source))
+        XCTAssertEqual(try vault.preservedBytes(entry.id),original)
+        XCTAssertFalse(String(decoding:try Data(contentsOf:vault.preservedFile(entry.id)),as:UTF8.self).contains("Secret unsent title"))
+        XCTAssertEqual(try JSONDecoder().decode(Snapshot.self,from:Data(contentsOf:source)),Snapshot())
+        XCTAssertEqual(try vault.preservedFiles().map(\.id),[entry.id])
+        XCTAssertThrowsError(try vault.preserveAndReopen(source,expectedDigest:"old"))
+        XCTAssertEqual(try vault.preservedFiles().count,1)
+    }
+    func testRepairNeverReplacesChangedReadableOrForeignCache() throws {
+        let (root,source,vault)=try repairFixture();defer {try? FileManager.default.removeItem(at:root)}
+        try Data("broken one".utf8).write(to:source);let digest=try vault.unreadableFingerprint(source)
+        let changed=Data("broken two".utf8);try changed.write(to:source)
+        XCTAssertThrowsError(try vault.preserveAndReopen(source,expectedDigest:digest));XCTAssertEqual(try Data(contentsOf:source),changed)
+        let valid=try JSONEncoder().encode(fixture());try valid.write(to:source)
+        XCTAssertThrowsError(try vault.unreadableFingerprint(source))
+        XCTAssertThrowsError(try vault.preserveAndReopen(source,expectedDigest:digest));XCTAssertEqual(try Data(contentsOf:source),valid)
+        let foreign=root.appendingPathComponent(other+".json");try changed.write(to:foreign)
+        XCTAssertThrowsError(try vault.preserveAndReopen(foreign,expectedDigest:vault.unreadableFingerprint(foreign)))
+        XCTAssertEqual(try Data(contentsOf:foreign),changed)
+    }
+    func testRepairKeyOrArchiveWriteFailureRetainsOriginal() throws {
+        let (root,source,vault)=try repairFixture();defer {try? FileManager.default.removeItem(at:root)}
+        let original=Data("malformed workspace".utf8);try original.write(to:source)
+        let digest=try vault.unreadableFingerprint(source)
+        var locked=vault;locked.key={throw BackupFailure(message:"key unavailable")}
+        XCTAssertThrowsError(try locked.preserveAndReopen(source,expectedDigest:digest));XCTAssertEqual(try Data(contentsOf:source),original)
+        try FileManager.default.createDirectory(at:vault.directory,withIntermediateDirectories:true)
+        try Data("not a directory".utf8).write(to:vault.directory.appendingPathComponent("Preserved workspaces"))
+        XCTAssertThrowsError(try vault.preserveAndReopen(source,expectedDigest:digest));XCTAssertEqual(try Data(contentsOf:source),original)
+    }
+    func testRepairHonorsRemovalAndCannotResurrectCacheOrVault() throws {
+        let (root,source,vault)=try repairFixture();defer {try? FileManager.default.removeItem(at:root)}
+        try Data("broken".utf8).write(to:source);let digest=try vault.unreadableFingerprint(source)
+        try AccountRemovalDisk(directory:root,account:owner).removeCache()
+        XCTAssertThrowsError(try vault.preserveAndReopen(source,expectedDigest:digest))
+        XCTAssertFalse(FileManager.default.fileExists(atPath:source.path));XCTAssertFalse(FileManager.default.fileExists(atPath:vault.directory.path))
+    }
+    func testPreservedOriginalRejectsWrongKeyAccountTamperingAndSurvivesDailyRetention() throws {
+        let (root,source,vault)=try repairFixture();defer {try? FileManager.default.removeItem(at:root)}
+        let original=Data("broken with unsent work".utf8);try original.write(to:source)
+        let entry=try vault.preserveAndReopen(source,expectedDigest:vault.unreadableFingerprint(source))
+        var short=vault;short.retention=1
+        for _ in 0..<3 {_=try short.save(Snapshot(),kind:"Daily")}
+        XCTAssertEqual(try vault.preservedBytes(entry.id),original)
+        var otherAccount=vault;otherAccount.account=other;XCTAssertThrowsError(try otherAccount.preservedBytes(entry.id))
+        var wrongKey=vault;wrongKey.key={SymmetricKey(size:.bits256)};XCTAssertThrowsError(try wrongKey.preservedBytes(entry.id))
+        var bytes=try Data(contentsOf:vault.preservedFile(entry.id));bytes[bytes.count-1] ^= 1;try bytes.write(to:vault.preservedFile(entry.id))
+        XCTAssertThrowsError(try vault.preservedBytes(entry.id))
+        try vault.removeAll();XCTAssertFalse(FileManager.default.fileExists(atPath:vault.preservedFile(entry.id).path))
+    }
+    func testRepairRejectsSymlinkAndRechecksAfterKeyWait() throws {
+        let (root,source,vault)=try repairFixture();defer {try? FileManager.default.removeItem(at:root)}
+        let target=root.appendingPathComponent("target.json"),original=Data("broken original".utf8)
+        try original.write(to:target);try FileManager.default.createSymbolicLink(at:source,withDestinationURL:target)
+        XCTAssertThrowsError(try vault.unreadableFingerprint(source));XCTAssertEqual(try Data(contentsOf:target),original)
+        try FileManager.default.removeItem(at:source);try original.write(to:source)
+        let digest=try vault.unreadableFingerprint(source),secret=try vault.key(),changed=Data("newer broken work".utf8)
+        var delayed=vault;delayed.key={try changed.write(to:source);return secret}
+        XCTAssertThrowsError(try delayed.preserveAndReopen(source,expectedDigest:digest));XCTAssertEqual(try Data(contentsOf:source),changed)
+        XCTAssertTrue(try vault.preservedFiles().isEmpty)
+    }
+}

@@ -26,6 +26,10 @@ struct RestoreReviewRequest: Identifiable {
 @MainActor @Observable
 private final class BackupUI {
     var history: [RecoveryEntry] = []
+    var preserved: [PreservedWorkspaceFile] = []
+    var exportFilename = "Taskfold-backup"
+    var confirmingRepair = false
+    var didConfirmRepair: (() -> Void)?
     var daily = true
     var busy = false
     var fileRead: BackupFileReadOperation?
@@ -62,6 +66,7 @@ private final class BackupUI {
     @State private var ui = BackupUI()
     func body(content: Content) -> some View {
         @Bindable var ui = ui
+        let confirmingRepair = ui.confirmingRepair
         // macOS presentation bindings may evaluate outside this body's
         // observation scope. Read their state here so button actions refresh it.
         let review = ui.review
@@ -69,7 +74,7 @@ private final class BackupUI {
         content.environment(ui)
             // A popped settings page must not retain a coordinated read after
             // its workspace observer and Cancel control disappear.
-            .onDisappear { ui.cancelPicker(); if ui.fileRead != nil { ui.cancelFileRead() } }
+            .onDisappear { ui.confirmingRepair=false; ui.didConfirmRepair=nil; ui.cancelPicker(); if ui.fileRead != nil { ui.cancelFileRead() } }
             .safeAreaInset(edge: .bottom) {
                 if ui.fileRead != nil {
                     VStack(alignment: .leading, spacing: 8) {
@@ -87,7 +92,13 @@ private final class BackupUI {
                     .background(.regularMaterial)
                 }
             }
-            .fileExporter(isPresented: $ui.exporting, document: ui.document, contentType: .json, defaultFilename: "Taskfold-backup-" + Dates.day(Date())) { result in
+            .alert("Preserve the original and reopen?", isPresented: Binding(get:{confirmingRepair},set:{ui.confirmingRepair=$0})) {
+                Button("Preserve file and reopen") { let action=ui.didConfirmRepair;ui.didConfirmRepair=nil;action?() }
+                Button("Cancel",role:.cancel) {ui.didConfirmRepair=nil}
+            } message: {
+                Text("An encrypted, verified copy of the entire original file will be kept on this device. The unreadable working file will then be replaced. Unsynced work stays in the preserved file for repair. Cloud tasks and existing recovery copies are kept.")
+            }
+            .fileExporter(isPresented: $ui.exporting, document: ui.document, contentType: .json, defaultFilename: ui.exportFilename + "-" + Dates.day(Date())) { result in
                 if case .failure(let error) = result { ui.show(error) }
                 ui.document = nil
             }
@@ -147,17 +158,34 @@ struct BackupTools: View {
     private var message: String? { get { ui.message } nonmutating set { ui.message = newValue } }
     var body: some View {
         Section {
+            if store.workspaceNeedsRepair {
+                Label("Your saved workspace needs recovery", systemImage: "externaldrive.badge.exclamationmark")
+                Text("The original file is protected. Preserve it before reopening this workspace, then sync cloud work or restore a backup.")
+                    .font(.callout).foregroundStyle(.secondary)
+                Button("Preserve file and reopen…") {
+                    let expected=store.workspaceGeneration
+                    ui.didConfirmRepair = {
+                        run {
+                            guard expected==store.workspaceGeneration else { throw BackupFailure(message:"The workspace changed. Review recovery again.") }
+                            // Reopening changes the workspace generation and closes
+                            // this settings presentation. Store supplies the success notice.
+                            try await store.preserveUnreadableWorkspace()
+                        }
+                    }
+                    ui.confirmingRepair=true
+                }.accessibilityIdentifier("preserveUnreadableWorkspace")
+            }
             Button("Saved team drafts",systemImage:"doc.text") {showingTeamDrafts=true}
                 .disabled(store.teamDraftVault == nil).accessibilityIdentifier("savedTeamDrafts")
                 .sheet(isPresented:$showingTeamDrafts){SavedTeamDraftsView()}
             Button("Back up now", systemImage: "externaldrive.badge.checkmark") { run { _ = try await store.makeRecoveryBackup(); await refreshHistory(); message = "Recovery copy saved on this device." } }
-                .accessibilityIdentifier("backupNow")
+                .accessibilityIdentifier("backupNow").disabled(store.workspaceNeedsRepair)
             Button("Export workspace", systemImage: "square.and.arrow.up") {
                 let backup = WorkspaceBackup.make(store.presentationSnapshot, account: store.userID)
                 export(backup)
-            }.accessibilityIdentifier("backupExport")
+            }.accessibilityIdentifier("backupExport").disabled(store.workspaceNeedsRepair)
             Button("Restore from file", systemImage: "arrow.counterclockwise", action: chooseRestoreFile).accessibilityIdentifier("backupImport")
-            Toggle("Daily recovery copies", isOn: Binding(get: { daily }, set: { daily = $0 })).accessibilityIdentifier("dailyBackups")
+            Toggle("Daily recovery copies", isOn: Binding(get: { daily }, set: { daily = $0 })).accessibilityIdentifier("dailyBackups").disabled(store.workspaceNeedsRepair)
             if let warning = store.backupWarning { Text(warning).font(.callout).foregroundStyle(.secondary) }
         } header: { Text("Backups & restore") } footer: {
             Text("Keep up to 20 encrypted recovery copies on this device. Export a portable JSON backup for another device. Exported files contain your workspace data; keep them somewhere private.")
@@ -170,9 +198,29 @@ struct BackupTools: View {
             if let request = model.pickerSession.request, request.workspace != owner.workspaceGeneration { model.cancelPicker() }
             model.didSelectFile = { [weak model] url, generation in if let model { Self.readFile(url, generation: generation, store: owner, ui: model) } }
             model.didCloseReview = { [weak model] in if let model { Task { await Self.refreshHistory(store: owner, ui: model) } } }
+            ui.history=[]; ui.preserved=[]
             daily = store.dailyBackupsEnabled; await refreshHistory()
         }
 
+        if !ui.preserved.isEmpty {
+            Section {
+                ForEach(ui.preserved) { entry in
+                    Button {
+                        let vault=store.backupVault, generation=store.workspaceGeneration
+                        run {
+                            let bytes=try await Task.detached(priority: .utility) { try vault.preservedBytes(entry.id) }.value
+                            guard generation==store.workspaceGeneration else { throw CancellationError() }
+                            ui.exportFilename="Taskfold-preserved-workspace"
+                            document=WorkspaceDocument(data:bytes); exporting=true
+                        }
+                    } label: {
+                        Label("Export original · " + entry.createdAt.formatted(date: .abbreviated, time: .shortened), systemImage: "square.and.arrow.up")
+                    }.disabled(busy).accessibilityIdentifier("preservedWorkspace-"+entry.id.uuidString.lowercased())
+                }
+            } header: { Text("Preserved workspace files") } footer: {
+                Text("Encrypted originals are kept separately from daily copies. Export only to a private location for repair. These files may be damaged and are not portable backups.")
+            }
+        }
         if !history.isEmpty {
             Section("Recovery copies on this device") {
                 ForEach(history) { entry in
@@ -251,7 +299,7 @@ struct BackupTools: View {
         run {
             let data = try await Task.detached(priority: .utility) { try backup.data() }.value
             guard generation == store.workspaceGeneration else { throw BackupFailure(message: "The workspace changed. Export again from the intended workspace.") }
-            document = WorkspaceDocument(data: data); exporting = true
+            ui.exportFilename="Taskfold-backup"; document = WorkspaceDocument(data: data); exporting = true
         }
     }
     private func load(_ entry: RecoveryEntry, exportFile: Bool) {
@@ -262,17 +310,24 @@ struct BackupTools: View {
             if exportFile {
                 let data = try await Task.detached(priority: .utility) { try payload.workspace.data() }.value
                 guard generation == store.workspaceGeneration else { throw BackupFailure(message: "The workspace changed. Export again from the intended workspace.") }
-                document = WorkspaceDocument(data: data); exporting = true
+                ui.exportFilename="Taskfold-backup"; document = WorkspaceDocument(data: data); exporting = true
             } else { preview(payload.workspace) }
         }
     }
     private func refreshHistory() async { await Self.refreshHistory(store: store, ui: ui) }
     private static func refreshHistory(store: Store, ui: BackupUI) async {
         let vault = store.backupVault, generation = store.workspaceGeneration
+        var failures: [String] = []
         do {
             let entries = try await Task.detached(priority: .utility) { try vault.entries() }.value
             if generation == store.workspaceGeneration { ui.history = entries }
-        } catch { if generation == store.workspaceGeneration { store.backupWarning = "Recovery copies could not be read: " + error.localizedDescription } }
+        } catch { failures.append(error.localizedDescription) }
+        do {
+            let preserved = try await Task.detached(priority: .utility) { try vault.preservedFiles() }.value
+            if generation == store.workspaceGeneration { ui.preserved = preserved }
+        } catch { failures.append(error.localizedDescription) }
+        if generation == store.workspaceGeneration, !failures.isEmpty { store.backupWarning = "Some recovery files could not be read: " + failures.joined(separator: " ") }
+
     }
     private func run(_ operation: @escaping @MainActor () async throws -> Void) {
         busy = true

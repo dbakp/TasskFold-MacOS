@@ -78,8 +78,9 @@ loaded. A fresh authorized read plus durable filtered cache permits fence remova
 and can repair damaged fence metadata; another backend/account's valid fence is
 not removed. Account removal deletes the fence and gates late writers. An
 undecodable primary workspace file stops automatic sync/editing and is retained;
-its separate raw-file repair workflow remains unfinished rather than silently
-overwriting unparsed work.
+the separate preserve-and-reopen flow now verifies an encrypted original before
+replacement and offers byte-for-byte export for repair (RAW_WORKSPACE_RECOVERY.md).
+Unparsed edits are retained in that original and are not automatically replayed.
 
 ## Verification and remaining work
 
@@ -97,8 +98,7 @@ relaunch, account cleanup and table pagination. Broader backup/reminder/capture/
 widget/Watch regressions and unsigned app/extension builds validate integration.
 
 No real task or hosted service changes. Temporary builds/containers and temporary
-Mac registration are removed after verification. Full rank 6 still needs raw-cache
-repair, complete open-editor/thread/readonly-control invalidation and native
+Mac registration are removed after verification. Full rank 6 still needs complete open-editor/thread/readonly-control invalidation and native
 acceptance, other unrecorded/root/compound/batch draft reconciliation, remaining
 collaboration/organization adapters and premium team UI before enablement. Wider
 Px work and all existing release/provider/hardware deferrals remain unchanged.

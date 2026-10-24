@@ -1,0 +1,70 @@
+{
+  "verifiedAtUTC": "2026-10-24T11:09:56.140984+00:00",
+  "platform": "mac",
+  "selectedCoreTests": 88,
+  "backupTestsWithinCore": 50,
+  "newRecoveryCasesWithinBackupSuite": 6,
+  "coreTestsPassed": true,
+  "debugBuildPassed": true,
+  "buildScope": "Independent unsigned macOS Debug app and extensions",
+  "nativeAcceptance": {},
+  "macNativeRuntimeTested": false,
+  "voiceOverTested": false,
+  "nativeOriginalExportPickerTested": false,
+  "preservedOriginalRoundTripCoreTested": true,
+  "automaticMalformedDataSalvageImplemented": false,
+  "realDataChanged": false,
+  "hostedChanges": false,
+  "releaseVerified": false,
+  "fullRankComplete": false,
+  "logs": {
+    "taskfold-raw-repair-mac-tests-final.log": "9e440bf6dfe2948b4597ef786e7e3d82457acbad24043e68e648b184572f04c7",
+    "taskfold-raw-repair-mac-build-complete.log": "c1917a1b212c8232ba1c9c1136ae0eb706679baf2e613a52c0e2f67a10f46ded"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/Backups.swift": "5acd71ef0e366e890d91afa6ea4abd229775c2ff31f5bb949417b56379b6770d",
+    "Taskfold/Core/Store.swift": "dd41b92d9f0aa578c3cd01be14baa42f9c7323d8ea3c8d5529b9b3aa23be5a72",
+    "Taskfold/Views/BackupTools.swift": "eb01ce9d891b0a13b95d0b99a18b860dbe6ddb6f53341d125cb3e152f6354e3c",
+    "TaskfoldTests/BackupTests.swift": "828bff72934d167465f2b7c3784b337f1b969038ccf2b1240c4a24759f2b3fed"
+  },
+  "cleanup": {
+    "simulatorAppsRemoved": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsrawrepair"
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowtestsrawrepair.uitests.xctrunner"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsrawrepair"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowtestsrawrepair.uitests.xctrunner"
+      }
+    ],
+    "ownedPathsRemoved": [
+      "taskfold-raw-repair-ios-build",
+      "taskfold-raw-repair-mac-build",
+      "taskfold-raw-repair-ios-host",
+      "taskfold-raw-repair-ipad-verified.xcresult",
+      "taskfold-raw-repair-iphone-complete.xcresult",
+      "taskfold-raw-repair-iphone.xcresult",
+      "taskfold-raw-repair-iphone-accepted.xcresult",
+      "taskfold-raw-repair-ipad.xcresult",
+      "taskfold-raw-repair-ipad-complete.xcresult",
+      "taskfold-raw-repair-iphone-verified.xcresult",
+      "taskfold-raw-repair-iphone-accepted-attachments",
+      "taskfold-raw-repair-iphone-verified-attachments",
+      "taskfold-raw-repair-iphone-complete-attachments",
+      "taskfold-raw-repair-ipad-attachments",
+      "taskfold-raw-repair-ipad-complete-attachments"
+    ],
+    "ownedBytesRemoved": 2524626817,
+    "temporaryMacRegistrationRemoved": true
+  },
+  "nativeIterationNotes": []
+}

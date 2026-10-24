@@ -4193,3 +4193,18 @@ claimed. Existing user deferrals remain unchanged.
 Verified with 653 selected core tests (27 workspace tests), 57 database checks
 and a complete unsigned Debug app/extension build. Owned temporary builds and
 database containers were removed; native interface acceptance remains pending.
+
+
+### Preserve and reopen an unreadable workspace — 24 October
+
+Backups & restore now explains the protected-file state and offers a confirmed
+recovery action. The complete original is encrypted and verified before the
+working cache is replaced; a separate original-file list supports private export
+for repair. Manual/daily copies and portable export refuse an unreadable primary.
+See RAW_WORKSPACE_RECOVERY.md and platform evidence for verified scope; native
+interface acceptance and broader rank-6 work remain tracked separately.
+
+Verified: 88 focused core cases and an unsigned Debug app/extension build pass.
+Mac runtime/VoiceOver acceptance is still pending; iPhone/iPad Simulator flow
+acceptance belongs to the independently tested iOS app. Temporary builds and
+registration were removed.

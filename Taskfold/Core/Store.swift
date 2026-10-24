@@ -230,6 +230,8 @@ final class Store {
     @ObservationIgnored private var widgetCalendarRevision = -1
     @ObservationIgnored private var capacityRequest: (UUID, String)?
     private(set) var widgetPublicationRevision = 0
+    private var workspaceRepairFingerprint: String?
+    var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
     private var workspaceCacheDecoded = true
     private var workspaceCacheReadable = true {
         didSet {if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
@@ -267,15 +269,28 @@ final class Store {
         return TeamCompletionDraftVault(directory:vault.directory.appendingPathComponent("Team drafts",isDirectory:true).appendingPathComponent(WorkspaceBackup.stableID("origin",origin),isDirectory:true),account:userID,origin:origin,key:vault.key,removalGate:vault.removalGate)
     }
     func makeRecoveryBackup(kind: String = "Manual") async throws -> RecoveryEntry {
-        guard !accountRemovalBlocked, !signingOut, signedIn || localMode, !userID.isEmpty else { throw BackupFailure(message: "Open a workspace before backing it up.") }
+        guard workspaceCacheDecoded, !accountRemovalBlocked, !signingOut, signedIn || localMode, !userID.isEmpty else { throw BackupFailure(message: "Open a readable workspace before backing it up.") }
         let vault = backupVault, before = snapshot, generation = accountGeneration
         let entry = try await Task.detached(priority: .utility) { try vault.save(before, kind: kind) }.value
         guard generation == accountGeneration else { throw BackupFailure(message: "The workspace changed. The backup belongs to the previous workspace.") }
         backupWarning = nil
         return entry
     }
+    func preserveUnreadableWorkspace() async throws {
+        guard workspaceNeedsRepair, !accountRemovalBlocked, !signingOut, !syncing, signedIn || localMode,
+              let fingerprint = workspaceRepairFingerprint else { throw BackupFailure(message: "The original file cannot be safely read yet. Reopen your workspace and try again.") }
+        let vault = backupVault, source = cacheURL, generation = accountGeneration
+        _ = try await Task.detached(priority: .utility) { try vault.preserveAndReopen(source, expectedDigest: fingerprint) }.value
+        guard generation == accountGeneration, !signingOut, !accountRemovalBlocked else { throw CancellationError() }
+        accountGeneration = UUID()
+        snapshot = Snapshot(); teamAccessMask = nil; undoStack = []; redoStack = []; syncConflict = nil; focusSyncConflict = nil
+        error = nil; load(); publishWidgetSnapshot(scheduleCapacityRefresh: false)
+        guard !workspaceNeedsRepair else { throw BackupFailure(message: "The original is preserved, but the workspace could not reopen. Try reopening the app.") }
+        notice = "Original file preserved. Restore a recovery copy or wait for cloud sync."
+        Task { await reschedule(); await sync() }
+    }
     private func scheduleDailyBackup() {
-        guard !accountRemovalBlocked, !signingOut, (signedIn || localMode), !userID.isEmpty, dailyBackupsEnabled, !dailyBackupRunning else { return }
+        guard workspaceCacheDecoded, !accountRemovalBlocked, !signingOut, (signedIn || localMode), !userID.isEmpty, dailyBackupsEnabled, !dailyBackupRunning else { return }
         let vault = backupVault, before = snapshot, generation = accountGeneration
         dailyBackupRunning = true
         Task {
@@ -605,7 +620,7 @@ final class Store {
     }
     func load() {
         accessRecoveryPending = UserDefaults.standard.bool(forKey: accessRecoveryNoticeKey)
-        workspaceCacheReadable = false;workspaceCacheDecoded=false
+        workspaceCacheReadable = false;workspaceCacheDecoded=false;workspaceRepairFingerprint=nil
         defer {
             if localMode, workspaceCacheReadable { migrateOrganization() }
             if workspaceCacheReadable {
@@ -625,7 +640,7 @@ final class Store {
                 snapshot.tables[DayPlacement.table] = legacy.map { row in var row = row; row["user_id"] = .string(userID); return row }
             }
         }
-        catch { self.error = "Could not read saved tasks: \(error.localizedDescription)"; if let disk = try? widgetActionDisk() { try? disk.clearProjection() } }
+        catch { if !workspaceCacheDecoded { workspaceRepairFingerprint = try? backupVault.unreadableFingerprint(cacheURL) }; self.error = "Could not read saved tasks: \(error.localizedDescription)"; if let disk = try? widgetActionDisk() { try? disk.clearProjection() } }
     }
     func persist(acceptingTimeSnooze timeSnooze: TimeSnoozeIntent? = nil) throws {
         #if DEBUG

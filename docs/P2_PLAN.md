@@ -2126,3 +2126,23 @@ Verification: 57 database checks and 653 selected core tests pass independently
 in each repository; iOS additionally passes 79 Watch tests. Both unsigned Debug
 app/extension builds pass. Owned temporary builds and database containers were
 removed. See the workspace evidence files for source and log hashes.
+
+
+## Unreadable device workspace — 24 October, rank 6 in progress
+
+Both apps now offer explicit preserve-and-reopen recovery for an undecodable
+primary cache. A verified encrypted byte-for-byte original precedes replacement;
+unsynced work stays archived for repair, while cloud sync and normal reviewed
+backup restoration can resume. Originals can be exported and survive daily-copy
+retention. No automatic salvage/replay or remote deletion is inferred. See
+RAW_WORKSPACE_RECOVERY.md and per-platform evidence for verification. Remaining
+rank-6 scope includes open-editor/thread/readonly-control invalidation, other
+draft cohorts, remaining adapters and premium team UI/native acceptance. Existing
+provider/hardware/release deferrals and the full Px objective remain intact.
+
+Verification: 88 focused core tests per repo (including 6 new recovery cases)
+and both Debug app/extension builds pass. iPhone and iPad native Cancel →
+preserve/reopen → restore → relaunch checks pass; independent disk checks confirm
+the restored task and encrypted original. iPad uses the largest text size in dark
+appearance. Mac native runtime and VoiceOver acceptance remain open. Owned test
+apps, builds and temporary Mac registration were removed.

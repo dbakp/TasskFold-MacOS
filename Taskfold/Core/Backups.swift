@@ -1,6 +1,7 @@
 import Foundation
 import CryptoKit
 import Security
+import Darwin
 
 struct BackupFailure: LocalizedError, Equatable {
     var message: String
@@ -700,5 +701,95 @@ struct BackupPickerSession {
         guard closed, let selected, let request, !delivered else { return nil }
         delivered = true
         return Selection(url: selected, workspace: request.workspace)
+    }
+}
+
+
+struct PreservedWorkspaceFile: Identifiable, Sendable {
+    let id: UUID
+    let createdAt: Date
+}
+private struct PreservedWorkspacePayload: Codable {
+    let version: Int
+    let account: String
+    let digest: String
+    let original: Data
+}
+
+extension BackupVault {
+    private var preservedDirectory: URL { directory.appendingPathComponent("Preserved workspaces", isDirectory: true) }
+    func preservedFile(_ id: UUID) -> URL { preservedDirectory.appendingPathComponent(id.uuidString.lowercased() + ".taskfoldraw") }
+    private static func digest(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
+    private static func boundedFile(_ file: URL, limit: Int) throws -> Data {
+        let fd = Darwin.open(file.path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
+        guard fd >= 0 else { throw BackupFailure(message: "This file cannot be safely opened. The original is unchanged.") }
+        let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true); defer { try? handle.close() }
+        var info = stat()
+        guard fstat(fd, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_size >= 0, info.st_size <= limit else {
+            throw BackupFailure(message: "This file cannot be safely preserved. The original is unchanged.")
+        }
+        var data = Data()
+        while data.count <= limit {
+            let chunk = try handle.read(upToCount: min(1_048_576, limit + 1 - data.count)) ?? Data()
+            if chunk.isEmpty { break }
+            data.append(chunk)
+        }
+        guard data.count <= limit, data.count == info.st_size else { throw BackupFailure(message: "This file changed or exceeds the recovery limit. The original is unchanged.") }
+        return data
+    }
+    /// A review fingerprint also prevents replacing a file changed by a later writer.
+    func unreadableFingerprint(_ source: URL) throws -> String {
+        let data = try Self.boundedFile(source, limit: WorkspaceBackup.maximumBytes)
+        guard (try? JSONDecoder().decode(Snapshot.self, from: data)) == nil else {
+            throw BackupFailure(message: "The saved workspace is readable now. Reopen it before making changes.")
+        }
+        return Self.digest(data)
+    }
+    func preservedFiles() throws -> [PreservedWorkspaceFile] {
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        guard FileManager.default.fileExists(atPath: preservedDirectory.path) else { return [] }
+        let files = try FileManager.default.contentsOfDirectory(at: preservedDirectory, includingPropertiesForKeys: [.creationDateKey])
+        guard files.count <= 2000 else { throw BackupFailure(message: "There are too many preserved files to list. Your files are kept.") }
+        return try files.compactMap { file in
+            guard file.pathExtension == "taskfoldraw", let id = UUID(uuidString: file.deletingPathExtension().lastPathComponent) else { return nil }
+            return PreservedWorkspaceFile(id: id, createdAt: try file.resourceValues(forKeys: [.creationDateKey]).creationDate ?? .distantPast)
+        }.sorted { $0.createdAt > $1.createdAt }
+    }
+    func preservedBytes(_ id: UUID) throws -> Data {
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        let data = try Self.boundedFile(preservedFile(id), limit: WorkspaceBackup.maximumBytes * 2)
+        let plain = try AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key())
+        let payload = try JSONDecoder().decode(PreservedWorkspacePayload.self, from: plain)
+        guard payload.version == 1, payload.account == account, payload.original.count <= WorkspaceBackup.maximumBytes,
+              payload.digest == Self.digest(payload.original) else { throw BackupFailure(message: "This preserved file does not belong to this workspace or is damaged.") }
+        return payload.original
+    }
+    /// Explicit repair only: verify an encrypted byte-for-byte copy before replacing
+    /// the unreadable cache. Separate retention means daily copies cannot evict it.
+    func preserveAndReopen(_ source: URL, expectedDigest: String) throws -> PreservedWorkspaceFile {
+        guard source.lastPathComponent == account + ".json" else { throw CancellationError() }
+        // Ask Keychain before taking the account-removal lock.
+        let secret = try key()
+        if let gate = removalGate {
+            guard gate.account == account, source.standardizedFileURL == gate.cache.standardizedFileURL else { throw CancellationError() }
+            var unguarded = self; unguarded.removalGate = nil; unguarded.key = { secret }
+            return try gate.writable { try unguarded.preserveAndReopen(source, expectedDigest: expectedDigest) }
+        }
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        guard try unreadableFingerprint(source) == expectedDigest else { throw BackupFailure(message: "The saved file changed. Reopen recovery and review it again. The original is unchanged.") }
+        let original = try Self.boundedFile(source, limit: WorkspaceBackup.maximumBytes)
+        guard Self.digest(original) == expectedDigest else { throw CancellationError() }
+        let payload = PreservedWorkspacePayload(version: 1, account: account, digest: expectedDigest, original: original)
+        let sealed = try AES.GCM.seal(JSONEncoder().encode(payload), using: secret)
+        guard let bytes = sealed.combined else { throw BackupFailure(message: "The original file could not be encrypted. It is unchanged.") }
+        let entry = PreservedWorkspaceFile(id: UUID(), createdAt: Date())
+        try FileManager.default.createDirectory(at: preservedDirectory, withIntermediateDirectories: true)
+        try bytes.write(to: preservedFile(entry.id), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        var verifier = self; verifier.key = { secret }
+        guard try verifier.preservedBytes(entry.id) == original,
+              try Self.boundedFile(source, limit: WorkspaceBackup.maximumBytes) == original else { throw BackupFailure(message: "The original changed during recovery. Both files are kept; reopen recovery to try again.") }
+        // No cloud mutations or queue replay are inferred from malformed bytes.
+        try JSONEncoder().encode(Snapshot()).write(to: source, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        return entry
     }
 }
