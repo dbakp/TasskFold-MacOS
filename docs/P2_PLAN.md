@@ -1855,3 +1855,25 @@ Next: create/delete/restore/recurrence, assignment/structural/checklist/reminder
 comment/file/API/email adapters, then premium team organization/admin UI and
 workspace/privacy/recovery acceptance. Rank 6 and the full Px goal remain open;
 all user deferrals remain unchanged.
+
+
+## Team task lifecycle — 24 October, rank 6 in progress
+
+Both independently owned candidates now create team tasks, delete against a
+whole-task baseline and restore through a consumed, content-certified Undo
+receipt. Fresh generations and shared nonce receipts prevent resurrection or
+late deletion of restored work. Later occurrences survive deletion; Undo restores
+only unchanged, currently editable links. Current assignment roles and deleted-
+author custody are preserved. Legacy unscoped team edits now require review,
+with current clients retaining their drafts.
+
+Each repo passes 89 PostgreSQL lifecycle checks, 70 edit regressions against the
+new migration, and 137 selected SwiftPM checks (10 new; zero failures/skips).
+Unsigned Debug app/embedded-extension builds pass for Mac and iOS Simulator.
+Official advisors report no new warnings/errors; owned containers/build outputs
+are cleaned up. See TEAM_TASK_LIFECYCLE.md and lifecycle evidence files.
+
+Team UI/editing remains disabled. Shared-conversation recovery, atomic linked
+batches, structural/assignment/reminder edits, service/email/file boundaries,
+current-role workspace refresh, premium team organization/admin UI and full native
+privacy/recovery acceptance remain required. Full Px and user deferrals are unchanged.

@@ -3950,3 +3950,20 @@ removed. Store syntax and project lint pass. This is not a native runtime/app
 build or hosted-delivery claim. Catalog editing stays false pending remaining
 write/workspace/role-refresh adapters and premium team UI/acceptance. See
 TEAM_TASK_EDITS.md and task-edit evidence. Full Px and user deferrals stay open.
+
+
+### Team task lifecycle — 24 October
+
+Mac now independently owns the disabled task create/delete/Undo adapter. Whole
+baselines, current roles, content-certified restoration and fresh generations
+preserve authors, changed tasks and later recurrence occurrences. Shared comments
+and linked delete batches stay protected pending their recovery adapters. Legacy
+team queue denials require review without losing the draft.
+
+Mac passes 89 PostgreSQL lifecycle checks, 70 current edit regressions and 137
+selected SwiftPM tests (10 new), with no failures/skips. The unsigned Debug app
+and embedded extensions build; this does not claim runtime or distribution.
+Advisors show no errors/new warnings and owned containers/build outputs are
+removed. See TEAM_TASK_LIFECYCLE.md and lifecycle evidence. Team UI remains off;
+remaining role/workspace/editor/service/privacy flows, full Px and user deferrals
+stay open.

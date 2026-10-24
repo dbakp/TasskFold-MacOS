@@ -1,0 +1,32 @@
+{
+  "tests": 137,
+  "newLifecycleTests": 10,
+  "failures": 0,
+  "skips": 0,
+  "independentlyRun": true,
+  "appBuild": "Debug generic macOS",
+  "signingEnabled": false,
+  "appBuildSucceeded": true,
+  "nativeRuntimeClaimed": false,
+  "distributionClaimed": false,
+  "deployed": false,
+  "nativeTeamUIEnabled": false,
+  "realDataChanged": false,
+  "sourceSHA256": {
+    "Taskfold/Core/Backend.swift": "150766ca7f001ce7538005637040eb246e0ea5ad2d9cee9885c5d6e743ec57b9",
+    "Taskfold/Core/Models.swift": "1ee298cdeb2189ed424db77c1672c30a0a47148418cc1d0ae21924bb5ad230b0",
+    "Taskfold/Core/Store.swift": "f0507af2824a9f7bb87ff5ab5c2a03b66cbe57d5ca765aeb4acb2435337977af",
+    "Taskfold/Core/TeamProjectAccess.swift": "6e2d91a0e249f55301d6c08c381956064cc10d25312e1eab9b401dafb94ca4fa",
+    "TaskfoldTests/TeamTaskLifecycleTests.swift": "30a523cd2ed10a9f0b10447b503d8f4e54ea5ba8995b1361af14a0fd59a58eff",
+    "TaskfoldTests/Fixtures/team-task-lifecycle-v1.json": "85aface7374125060c80afe27acaebaeaf3bdfeabd0c406b3abf65c93fc13e84",
+    "Scripts/Database/team-task-guard-snapshot.sql": "f7c0878fbe8cf978756f417815ae3ea509ae9b1cc5bb83cbdad29b7b37ddc9fd",
+    "Scripts/Database/team-task-schema.mjs": "e3b74ef47b226e792e0b5b32f0403361c59a4cdf32b3aff433dbedeb7852844d",
+    "Scripts/Database/test-team-task-lifecycle.mjs": "b44ba1a45a4b24373697d0c46cd003b196e5a696aa43bb2851b2e3d7db34d1c1",
+    "Scripts/Database/test-team-task-edits.mjs": "0c6385653e68f32e95b992171b8a7d4dbcb757f509871d253c676cba95d43786",
+    "supabase/migrations/20261024041605_team_task_lifecycle.sql": "bf96bb4cda0dafcae052a9cec0111771cb142a8b7b8e7f3782faf7eb4e89ab07"
+  },
+  "testLogSHA256": "ebe1979cdca18bd880bd9b65af25d2b8d146075eb71ed903021a3c9ca7dd4bc0",
+  "appBuildLogSHA256": "2d18cfe257ba9c8924cd688e586f241bbd37e127be309363679b40162f53f60d",
+  "ownedBuildOutputRemoved": true,
+  "buildDiskBytesFreed": 1174945792
+}

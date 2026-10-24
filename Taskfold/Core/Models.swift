@@ -415,7 +415,14 @@ struct Snapshot: Codable, Equatable, Sendable {
             let index = rows.firstIndex { $0.id == change.recordID }
             guard let replayed = ReminderAutomatic.replay(change, onto: index.map { rows[$0] }) else { return }
             if let index { rows[index] = replayed } else { rows.append(replayed) }
-        } else if change.method == "DELETE" { rows.removeAll { $0.id == change.recordID } }
+        } else if change.method == "DELETE" {
+            if change.table == "tasks", change.teamTaskScope != nil {
+                for index in rows.indices where rows[index].string("recurrence_parent_id") == change.recordID {
+                    rows[index]["recurrence_parent_id"] = .null
+                }
+            }
+            rows.removeAll { $0.id == change.recordID }
+        }
         else if let i = rows.firstIndex(where: { $0.id == change.recordID }) {
             if change.method == "POST", change.insertOnly == true { return }
             var projected = change.fields
@@ -998,6 +1005,10 @@ struct EditHistory {
             } else {
                 redo.append(change)
                 inverse.append(Mutation(table: change.table, recordID: change.recordID, method: "DELETE", fields: [:], baseline: change.table == "tasks" ? change.fields : nil, teamTaskScope: change.teamTaskScope))
+            }
+            if var scope = change.teamTaskScope, change.method == "DELETE", !inverse.isEmpty {
+                scope.restoreRequest = change.id
+                inverse[inverse.count - 1].teamTaskScope = scope
             }
             if let scope = change.teamTaskScope, !inverse.isEmpty, inverse[inverse.count - 1].method == "PATCH" {
                 inverse[inverse.count - 1].baseline?["project_id"] = .string(scope.project)

@@ -4,6 +4,10 @@ enum TeamProjectRole: String, Sendable { case manager, editor, viewer }
 enum TeamProjectVisibility: String, Sendable { case team, `private` }
 enum TeamProjectState: String, Sendable { case active, archived }
 
+struct TeamTaskReviewRequired: LocalizedError {
+    var errorDescription: String? { "TASKFOLD_CONFLICT: Review this team action in a supported Taskfold app. Your saved change remains on this device." }
+}
+
 struct TeamProjectAccessUnavailable: LocalizedError {
     var errorDescription: String? { "This project is no longer available to your account." }
 }
@@ -108,12 +112,22 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
     let origin: String
     let team: String
     let project: String
+    var restoreRequest: UUID? = nil
+    var parentGeneration: String? = nil
 
     static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at"]
     static var invalid: AppFailure { AppFailure(message: "This saved team edit needs review. Your changes remain on this device.") }
     static var conflict: AppFailure { AppFailure(message: "TASKFOLD_CONFLICT: This team task changed. Review the synced task and your saved edit.") }
 
     func capturing(_ change: Mutation, existing: Record?) throws -> Mutation {
+        if change.method != "PATCH" {
+            if change.method == "DELETE" {
+                guard let existing, existing.id == change.recordID, existing["project_id"] == .string(project),
+                      existing["task_generation"] == change.baseline?["task_generation"] else { throw Self.conflict }
+            } else if existing != nil { throw Self.conflict }
+            _ = try lifecycleBody(for: change)
+            return change
+        }
         guard let existing, existing.id == change.recordID, existing["project_id"] == .string(project),
               change.baseline?["task_generation"] == existing["task_generation"] else { throw Self.conflict }
         var captured = change
@@ -151,5 +165,60 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
         // A replay can return another person's newer values. Confirm identity,
         // not equality with our desired edit, so a retry cannot overwrite them.
         return Record(fields)
+    }
+}
+
+
+extension TeamTaskEditScope {
+    static func needsLinkedDeletionReview(_ changes: [Mutation], snapshot: Snapshot) -> Bool {
+        let ids = Set(changes.filter { $0.teamTaskScope != nil && $0.table == "tasks" && $0.method == "DELETE" }.map(\.recordID))
+        return (snapshot.tables["tasks"] ?? []).contains { ids.contains($0.id) && ids.contains($0.string("recurrence_parent_id")) }
+    }
+    static func historyAction(_ original: Mutation) -> Mutation {
+        var change = original
+        if change.teamTaskScope != nil { change.id = UUID() }
+        return change
+    }
+    func lifecycleAction(for change: Mutation) throws -> String {
+        guard change.table == "tasks", change.organizationOrder == nil else { throw Self.invalid }
+        if change.method == "DELETE" { return "delete" }
+        if change.method == "POST", change.insertOnly == true { return restoreRequest == nil ? "create" : "restore" }
+        throw Self.invalid
+    }
+    func lifecycleBody(for change: Mutation) throws -> [String: JSON] {
+        let action = try lifecycleAction(for: change)
+        guard [account,team,project,change.recordID].allSatisfy(TeamProjectValue.id) else { throw Self.invalid }
+        let record = action == "delete" ? change.baseline : change.fields
+        guard let record, record["id"] == .string(change.recordID), record["project_id"] == .string(project),
+              case .string(let creator)? = record["user_id"], TeamProjectValue.id(creator),
+              case .string? = record["title"], case .string(let generation)? = record["task_generation"],
+              TeamProjectValue.id(generation), action != "create" || creator == account else { throw Self.invalid }
+        var body: [String: JSON] = ["team_id":.string(team),"project_id":.string(project),"task_id":.string(change.recordID),
+            "request_id":.string(change.id.uuidString.lowercased()),"task_generation":.string(generation),"record":.object(record)]
+        if action == "restore", let restoreRequest { body["restore_from"] = .string(restoreRequest.uuidString.lowercased()) }
+        if action == "create", let parent = record["recurrence_parent_id"], parent != .null {
+            guard case .string(let parentID) = parent, TeamProjectValue.id(parentID), let parentGeneration,
+                  TeamProjectValue.id(parentGeneration) else { throw Self.conflict }
+            body["parent_generation"] = .string(parentGeneration)
+        }
+        guard try JSONEncoder().encode(body).count <= 128000 else { throw Self.invalid }
+        return body
+    }
+    func lifecycleSaved(_ reply: [String: JSON], for change: Mutation) throws -> Record? {
+        let action = try lifecycleAction(for: change), body = try lifecycleBody(for: change)
+        guard reply["protocol"] == .number(1), reply["operation"] == .string(action), reply["account"] == .string(account),
+              reply["team_id"] == .string(team), reply["project_id"] == .string(project), reply["task_id"] == .string(change.recordID),
+              reply["request_id"] == body["request_id"], reply["task_generation"] == body["task_generation"],
+              case .bool(let unavailable)? = reply["unavailable"], case .bool(let replayed)? = reply["replayed"] else { throw Self.invalid }
+        if unavailable {
+            guard reply["task"] == .null, action == "delete" || replayed else { throw Self.invalid }
+            return nil
+        }
+        guard action != "delete", case .object(let row)? = reply["task"], row["id"] == .string(change.recordID),
+              row["project_id"] == .string(project), row["task_generation"] == body["task_generation"],
+              case .string(let creator)? = row["user_id"], TeamProjectValue.id(creator), row["user_id"] == body["record"]?.object["user_id"], case .string? = row["title"],
+              case .bool? = row["completed"], case .number(let revision)? = row["completion_version"], revision.isFinite,
+              revision >= 0, revision <= 9_007_199_254_740_991, revision.rounded(.down) == revision else { throw Self.invalid }
+        return Record(row)
     }
 }

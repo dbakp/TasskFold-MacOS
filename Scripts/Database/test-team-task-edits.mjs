@@ -37,6 +37,20 @@ try {
   );
   await pg.raw(sql);
   report.migrationSHA256 = createHash("sha256").update(sql).digest("hex");
+  if (process.env.TASKFOLD_TEAM_LIFECYCLE_REGRESSION === "1") {
+    const { loadTeamTaskLifecycle, teamTaskLifecycleMigration } = await import(
+      "./team-task-schema.mjs"
+    );
+    await loadTeamTaskLifecycle(pg.raw, { base: false });
+    report.lifecycleMigrationSHA256 = createHash("sha256").update(
+      await readFile(
+        new URL(
+          "../../supabase/migrations/" + teamTaskLifecycleMigration,
+          import.meta.url,
+        ),
+      ),
+    ).digest("hex");
+  }
   for (const [name, u] of Object.entries(people)) {
     await pg.raw(
       `insert into auth.users(id,email,email_confirmed_at) values(${
@@ -430,7 +444,7 @@ try {
         json((await body()).base)
       },'{"title":"Bypass"}'))`,
     )).code,
-    "P0001",
+    process.env.TASKFOLD_TEAM_LIFECYCLE_REGRESSION === "1" ? "PT409" : "P0001",
   );
   check(
     "private scope cannot be forged",

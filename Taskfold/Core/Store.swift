@@ -975,10 +975,14 @@ final class Store {
         guard changes.filter({ $0.organizationOrder != nil || $0.method == "ORDER" }).allSatisfy(OrganizationOrder.valid) else {
             error = "This ordering command is invalid."; return false
         }
+        guard !TeamTaskEditScope.needsLinkedDeletionReview(changes, snapshot: snapshot) else {
+            error = "This selection contains linked repeat tasks. Remove the parent and occurrences separately."
+            return false
+        }
         // Undo and redo are new commands; a persisted retry keeps its existing identity.
         let orderingCommands = changes.map { change in
             var change = change
-            if change.organizationOrder != nil || change.teamTaskScope != nil { change.id = UUID() }
+            if change.organizationOrder != nil { change.id = UUID() }
             return change
         }
         let old = snapshot
@@ -1151,7 +1155,8 @@ final class Store {
     }
     func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks, account: userID) }
     private func historyChanges(_ changes: [Mutation]) -> [Mutation] {
-        changes.map { change in
+        changes.map { original in
+            let change = TeamTaskEditScope.historyAction(original)
             if change.table == "tasks", change.method == "POST" {
                 return TaskGeneration.restoring(change, existing: record("tasks", id: change.recordID))
             }
@@ -1245,7 +1250,7 @@ final class Store {
             googleAvatarURL = backend.session?.user.googleAvatarURL
             await reschedule()
         } catch {
-            if let mutation = sending, await recoverUnavailableProject(mutation, generation: generation, account: account) { return }
+            if !(error is TeamTaskReviewRequired), let mutation = sending, await recoverUnavailableProject(mutation, generation: generation, account: account) { return }
             if generation == accountGeneration {
                 syncSignInWorkspace = error is AccountSessionAuthorizationRequired ? WorkspaceBinding(account:account,generation:generation) : nil
                 notice = SyncStatus.failureMessage(error)
