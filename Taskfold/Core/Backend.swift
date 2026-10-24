@@ -568,6 +568,11 @@ final class Backend: NSObject {
         guard TeamProjectValue.id(team), TeamProjectValue.id(project) else { throw TeamProjectValue.invalid }
         return try TeamProjectManagementDetail(await teamProjectReceipt(action: "get", body: ["team_id": .string(team), "project_id": .string(project)], account: account, origin: origin), account: account, origin: origin, team: team, project: project)
     }
+    func teamProjectStructureReview(team: String, project: String, action: TeamProjectCommand.Action, account: String, origin: String) async throws -> TeamProjectStructureReview {
+        guard action.structural, TeamProjectValue.id(team), TeamProjectValue.id(project) else { throw TeamProjectCommand.invalid }
+        let raw = try await teamProjectReceipt(action: "review_structure", body: ["team_id": .string(team), "project_id": .string(project), "operation": .string(action.rawValue)], account: account, origin: origin)
+        return try TeamProjectStructureReview(raw, account: account, origin: origin, team: team, project: project, action: action)
+    }
     func teamProjectCommand(_ command: TeamProjectCommand) async throws -> TeamProjectCommandReceipt {
         try command.confirmed(await teamProjectReceipt(action: command.action.rawValue, body: command.body, account: command.account, origin: command.origin))
     }

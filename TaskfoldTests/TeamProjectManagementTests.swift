@@ -14,15 +14,20 @@ private final class ProjectCommandIO: CalendarSecureItemIO, @unchecked Sendable 
     func teamProjectCommand(_ command: TeamProjectCommand) async throws -> TeamProjectCommandReceipt {
         calls.append(command)
         if hold { await withCheckedContinuation { continuation = $0 } }
-        let raw: [String: JSON] = ["protocol": .number(1), "account": .string(foreign ? pmGuest : command.account), "team_id": .string(command.team), "id": .string(command.project), "request_id": .string(command.id), "team_revision": command.body["team_revision"]!, "revision": .number(command.action == .create ? 1 : Double(command.body["revision"]!.integer + 1))]
+        var raw: [String: JSON] = ["protocol": .number(1), "account": .string(foreign ? pmGuest : command.account), "team_id": .string(command.team), "id": .string(command.project), "request_id": .string(command.id), "team_revision": command.body["team_revision"]!, "revision": .number(command.action == .create ? 1 : Double(command.body["revision"]!.integer + 1))]
+        if command.action.structural { raw["project_state_protocol"] = .number(1); raw["is_archived"] = .bool(command.action == .archive); raw["ancestor_archived"] = .bool(false); raw["affected_count"] = command.body["affected_count"] }
         let result = applied[command.id] ?? TeamProjectCommandReceipt(raw: raw); applied[command.id] = result
         if loseReply { loseReply = false; throw URLError(.networkConnectionLost) }; return result
     }
 }
 final class TeamProjectManagementTests: XCTestCase {
     func command(_ action: TeamProjectCommand.Action = .create, now: Date = Date()) throws -> TeamProjectCommand {
-        try .init(account: pmAccount, origin: pmOrigin, action: action, team: pmTeam, project: pmProject, teamRevision: 3, revision: action == .create ? nil : 2, name: action == .create ? "Reading room" : nil, visibility: [.create, .settings].contains(action) ? .private : nil, user: [.setAccess, .resetAccess].contains(action) ? pmMember : nil, role: action == .setAccess ? .viewer : nil, issuedAt: now)
+        try .init(account: pmAccount, origin: pmOrigin, action: action, team: pmTeam, project: pmProject, teamRevision: 3, revision: action == .create ? nil : 2, name: action == .create || action == .rename ? "Reading room" : nil, visibility: [.create, .settings].contains(action) ? .private : nil, user: [.setAccess, .resetAccess].contains(action) ? pmMember : nil, role: action == .setAccess ? .viewer : nil, review: action.structural ? review(action) : nil, issuedAt: now)
     }
+    func reviewRaw(_ action: TeamProjectCommand.Action = .archive) -> [String: JSON] {
+        ["protocol": .number(1), "project_state_protocol": .number(1), "account": .string(pmAccount), "team_id": .string(pmTeam), "id": .string(pmProject), "operation": .string(action.rawValue), "team_revision": .number(3), "revision": .number(2), "tree_token": .string(String(repeating: "a", count: 64)), "affected_count": .number(4), "is_archived": .bool(action == .unarchive), "ancestor_archived": .bool(false)]
+    }
+    func review(_ action: TeamProjectCommand.Action = .archive, raw: [String: JSON]? = nil) throws -> TeamProjectStructureReview { try .init(raw ?? reviewRaw(action), account: pmAccount, origin: pmOrigin, team: pmTeam, project: pmProject, action: action) }
     func raw(_ role: String = "manager", visibility: String = "team", paused: Bool = false, grant: String = "viewer") -> [String: JSON] {
         var raw: [String: JSON] = ["protocol": .number(1), "account": .string(pmAccount), "team_id": .string(pmTeam), "id": .string(pmProject), "team_revision": .number(3), "revision": .number(2), "team_state": .string("active"), "setup_paused": .bool(paused), "role": .string(role), "visibility": .string(visibility), "folder_id": .null, "name": .string("Reading room"), "can_edit_tasks": .bool(false), "can_manage_access": .bool(role == "manager")]
         if role == "manager" {
@@ -37,7 +42,7 @@ final class TeamProjectManagementTests: XCTestCase {
         var p = raw(); p["projects"] = .array([.object(row ?? raw())]); p["next_cursor"] = .null; p["task_writes_enabled"] = .bool(false)
         return try .init(p, account: pmAccount, origin: pmOrigin, team: pmTeam, after: nil)
     }
-    func testFourActionsHaveExactStableBodiesAndPrivateRoundTrip() throws {
+    func testSevenActionsHaveExactStableBodiesAndPrivateRoundTrip() throws {
         for action in TeamProjectCommand.Action.allCases {
             let command = try command(action), restored = try JSONDecoder().decode(TeamProjectCommand.self, from: JSONEncoder().encode(command))
             XCTAssertEqual(command, restored); XCTAssertEqual(command.id, restored.id)
@@ -58,7 +63,7 @@ final class TeamProjectManagementTests: XCTestCase {
         XCTAssertThrowsError(try TeamProjectCommand(account: pmAccount, origin: pmOrigin, action: .resetAccess, team: pmTeam, project: pmProject, teamRevision: 3, revision: 2, folder: pmMember, user: pmMember))
         let old = try self.command(now: Date(timeIntervalSince1970: 1000)); XCTAssertFalse(old.canRetry)
     }
-    func testSQLGoldenReceiptsCoverEveryActionAndActualManagerDirectory() throws {
+    func testSQLLegacyReceiptsCoverFourActionsAndActualManagerDirectory() throws {
         let file = try XCTUnwrap(Bundle.module.url(forResource: "team-project-commands-v1", withExtension: "json", subdirectory: "Fixtures"))
         let rows = try JSONDecoder().decode([[String: JSON]].self, from: Data(contentsOf: file)); var actions = Set<String>()
         for row in rows {
@@ -68,7 +73,7 @@ final class TeamProjectManagementTests: XCTestCase {
             var foreign = row["result"]!.object; foreign["account"] = .string(pmGuest)
             XCTAssertThrowsError(try command.confirmed(foreign))
         }
-        XCTAssertEqual(actions, Set(TeamProjectCommand.Action.allCases.map(\.rawValue)))
+        XCTAssertEqual(actions, Set(["create", "settings", "set_access", "reset_access"]))
         let url = try XCTUnwrap(Bundle.module.url(forResource: "team-project-management-v1", withExtension: "json", subdirectory: "Fixtures"))
         let value = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
         let directory = try TeamProjectManagementDetail(value["management"]!.object, account: value["managerAccount"]!.text, origin: pmOrigin, team: value["team"]!.text, project: value["project"]!.text)
@@ -135,4 +140,59 @@ final class TeamProjectManagementTests: XCTestCase {
         let task = Task { await late.refresh(project: pmProject) }; while suspended == nil { await Task.yield() }; current = false; late.invalidate(); suspended?.resume(returning: try detail()); await task.value
         XCTAssertNil(late.detail); XCTAssertNil(late.team); XCTAssertTrue(late.projects.isEmpty)
     }
+    func testArchiveStatusIsVersionedAndOldServicesRemainUnknown() throws {
+        XCTAssertNil(try detail().access.archive)
+        for own in [false, true] { for inherited in [false, true] {
+            var value = raw(); value["project_state_protocol"] = .number(1); value["is_archived"] = .bool(own); value["ancestor_archived"] = .bool(inherited)
+            let state = try XCTUnwrap(detail(value).access.archive)
+            XCTAssertEqual(state.effective, own || inherited); XCTAssertEqual(state.own, own); XCTAssertEqual(state.inherited, inherited)
+        } }
+        for change: [String: JSON] in [["is_archived": .bool(false)], ["project_state_protocol": .number(2), "is_archived": .bool(false), "ancestor_archived": .bool(false)], ["project_state_protocol": .number(1), "is_archived": .string("false"), "ancestor_archived": .bool(false)]] {
+            XCTAssertThrowsError(try detail(raw().merging(change) { _, b in b }))
+        }
+    }
+    func testBranchReviewRejectsWrongScopeOperationBoundsAndProjection() throws {
+        for change: [String: JSON] in [["account": .string(pmGuest)], ["team_id": .string(pmMember)], ["id": .string(pmMember)], ["operation": .string("unarchive")], ["revision": .number(0)], ["team_revision": .number(1.5)], ["tree_token": .string("A" + String(repeating: "a", count: 63))], ["affected_count": .number(1001)], ["affected_count": .number(1.1)], ["affected_count": .string("4")], ["is_archived": .bool(true)], ["project_state_protocol": .null]] {
+            XCTAssertThrowsError(try review(raw: reviewRaw().merging(change) { _, b in b }))
+        }
+        var inherited = reviewRaw(.unarchive); inherited["ancestor_archived"] = .bool(true); XCTAssertThrowsError(try review(.unarchive, raw: inherited))
+        XCTAssertThrowsError(try review(.rename))
+    }
+    func testReviewedBranchCannotBeReusedForAnotherProjectAccountOrRevision() throws {
+        let reviewed = try review()
+        for (account, project, revision, action) in [(pmGuest,pmProject,2.0,TeamProjectCommand.Action.archive),(pmAccount,pmMember,2.0,.archive),(pmAccount,pmProject,3.0,.archive),(pmAccount,pmProject,2.0,.unarchive)] {
+            XCTAssertThrowsError(try TeamProjectCommand(account: account, origin: pmOrigin, action: action, team: pmTeam, project: project, teamRevision: 3, revision: revision, review: reviewed))
+        }
+        XCTAssertThrowsError(try TeamProjectCommand(account: pmAccount, origin: pmOrigin, action: .rename, team: pmTeam, project: pmProject, teamRevision: 3, revision: 2, name: "New", review: reviewed))
+    }
+    func testActualSQLBranchReviewsAndThreeMetadataReceipts() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-project-archiving-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let value = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url)); var actions = Set<String>()
+        for row in value["reviews"]!.list.map(\.object) {
+            let action = try XCTUnwrap(TeamProjectCommand.Action(rawValue: row["body"]!.object["operation"]!.text)), result = row["result"]!.object
+            let reviewed = try TeamProjectStructureReview(result, account: row["account"]!.text, origin: pmOrigin, team: result["team_id"]!.text, project: result["id"]!.text, action: action)
+            XCTAssertTrue((1...1000).contains(reviewed.count))
+        }
+        for row in value["commands"]!.list.map(\.object) {
+            let action = try XCTUnwrap(TeamProjectCommand.Action(rawValue: row["action"]!.text)); actions.insert(action.rawValue)
+            let command = try TeamProjectCommand(account: row["account"]!.text, origin: pmOrigin, action: action, body: row["body"]!.object)
+            XCTAssertEqual(try command.confirmed(row["result"]!.object).project, command.project)
+            if action.structural {
+                for change: [String: JSON] in [["affected_count": .number(1001)], ["project_state_protocol": .number(2)], ["is_archived": .bool(action != .archive)], ["ancestor_archived": .string("false")]] {
+                    XCTAssertThrowsError(try command.confirmed(row["result"]!.object.merging(change) { _, b in b }))
+                }
+            }
+        }
+        XCTAssertEqual(actions, ["rename", "archive", "unarchive"])
+    }
+    @MainActor func testLostArchiveReplyRetainsReviewedBranchAcrossRelaunch() async throws {
+        let io = ProjectCommandIO(), vault = TeamProjectCommandVault(io: io), peer = ProjectCommandPeer(); peer.loseReply = true
+        let command = try command(.archive)
+        var model = TeamProjectCommandModel(account: pmAccount, origin: pmOrigin, vault: vault, service: peer, isCurrent: { true })
+        await model.send(command); XCTAssertEqual(model.pending, command); XCTAssertNil(model.receipt)
+        model.close(); model = TeamProjectCommandModel(account: pmAccount, origin: pmOrigin, vault: vault, service: peer, isCurrent: { true })
+        await model.load(); await model.retry()
+        XCTAssertEqual(peer.calls, [command, command]); XCTAssertEqual(peer.applied.count, 1); XCTAssertNil(model.pending); XCTAssertEqual(model.success, "Project archived")
+    }
+
 }

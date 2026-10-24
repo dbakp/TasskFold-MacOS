@@ -9,6 +9,8 @@ struct TeamProjectManagementView: View {
     @State private var commands: TeamProjectCommandModel?
     @State private var loadedScope: String?
     @State private var editing: TeamProjectEditRequest?
+    @State private var preparing = false
+    @State private var reviewError: String?
     @State private var clearing: TeamProjectCommand?
     private var scope: String? {
         #if DEBUG
@@ -24,6 +26,8 @@ struct TeamProjectManagementView: View {
                 else {
                     List {
                         commandStatus
+                        if preparing { Section { ProgressView("Reviewing project branch…") } }
+                        if let reviewError { Section { Label(reviewError, systemImage: "exclamationmark.circle").foregroundStyle(.secondary) } }
                         if let message = browser.message { Section { Label(message, systemImage: "exclamationmark.circle").foregroundStyle(.secondary) } }
                         else if let detail = browser.detail { projectDetail(detail) }
                         else if let team = browser.team {
@@ -34,6 +38,7 @@ struct TeamProjectManagementView: View {
                                     VStack(alignment: .leading, spacing: 5) {
                                         Text(project.name ?? "Project \(project.id.suffix(8))").font(.headline).fixedSize(horizontal: false, vertical: true)
                                         Text("\(project.role.title) · \(project.visibility == .team ? "Team-visible" : "Private")").font(.caption).foregroundStyle(.secondary)
+                                        if let archive = project.archive { Label(archive.title, systemImage: archive.effective ? "archivebox" : "circle").font(.caption).foregroundStyle(.secondary) }
                                         if let folder = project.folder, let name = team.folders.first(where: { $0.id == folder })?.name { Label(name, systemImage: "folder").font(.caption).foregroundStyle(.secondary) }
                                     }.padding(.vertical, 5)
                                 }.accessibilityIdentifier("teamProject-\(project.id)")
@@ -91,6 +96,7 @@ struct TeamProjectManagementView: View {
                             else { Text("Requested folder reference: \(id)").font(.caption.monospaced()).fixedSize(horizontal: false, vertical: true) }
                         }
                     }
+                    if let count = pending.body["affected_count"]?.integer { Text("Reviewed branch: \(count == 1 ? "1 project" : "\(count) projects"). Tasks and explicit subproject archive settings are preserved.").font(.callout).fixedSize(horizontal: false, vertical: true) }
                     if let user = pending.body["user_id"]?.text { Text("Member reference: \(user)").font(.caption.monospaced()).fixedSize(horizontal: false, vertical: true) }
                     if let role = pending.body["role"]?.text { Text("Requested access: \(role.capitalized)").font(.callout) }
                     Text("The result is uncertain. Retry sends the same saved request, even after relaunch.").font(.callout).foregroundStyle(.secondary)
@@ -108,10 +114,20 @@ struct TeamProjectManagementView: View {
     @ViewBuilder private func projectDetail(_ detail: TeamProjectManagementDetail) -> some View {
         Section {
             Text(detail.access.name ?? "Project \(detail.access.id.suffix(8))").font(.title2.bold()).fixedSize(horizontal: false, vertical: true)
+            if let archive = detail.access.archive { Label(archive.title, systemImage: archive.effective ? "archivebox" : "circle").accessibilityIdentifier("teamProjectArchiveStatus") }
             Text("Your access: \(detail.access.role.title)").foregroundStyle(.secondary)
             Label(detail.access.visibility == .team ? "Team-visible" : "Private", systemImage: detail.access.visibility == .team ? "person.2" : "lock")
             if let folder = detail.access.folder, let name = browser?.team?.folders.first(where: { $0.id == folder })?.name { Label(name, systemImage: "folder") }
             Text(detail.access.visibility == .team ? "Team members have Editor access unless a project override changes it. Guests need explicit access." : "Only people with project access, plus the team owner and admins, can view this project.").font(.callout).foregroundStyle(.secondary)
+        }
+        if detail.access.canManageAccess, let archive = detail.access.archive {
+            Section("Organize project") {
+                if detail.editable { Button("Rename project", systemImage: "pencil") { begin(.rename) }.accessibilityIdentifier("teamProjectRename") }
+                if archive.own {
+                    if detail.editable && !archive.inherited { Button("Reopen project", systemImage: "tray.and.arrow.up") { begin(.unarchive) }.accessibilityIdentifier("teamProjectReopen") }
+                    else if archive.inherited { Text("Reopen the parent project first.").foregroundStyle(.secondary) }
+                } else { Button("Archive project", systemImage: "archivebox") { begin(.archive) }.accessibilityIdentifier("teamProjectArchive") }
+            }.disabled(preparing || commands?.pending != nil || commands?.busy == true)
         }
         Section { Text("Task editing isn’t available in this preview.").foregroundStyle(.secondary) }
         if detail.access.canManageAccess {
@@ -143,16 +159,37 @@ struct TeamProjectManagementView: View {
         return person
     }
     private func begin(_ action: TeamProjectCommand.Action, member: TeamOrganizationDetail.Member? = nil) {
-        guard let scope, scope == loadedScope, let team = browser?.team, let commands, commands.current, commands.pending == nil, !commands.busy else { return }
+        guard !preparing, let scope, scope == loadedScope, let team = browser?.team, let commands, commands.current, commands.pending == nil, !commands.busy else { return }
         let detail = browser?.detail
         if action == .create { guard team.team.role != .guest, !team.team.archived, browser?.setupPaused == false else { return } }
         else {
             guard let detail, detail.access.canManageAccess else { return }
-            if action == .settings { guard detail.editable else { return } }
+            if action == .settings || action == .rename || action == .unarchive { guard detail.editable else { return } }
+            if action == .rename || action.structural { guard let archive = detail.access.archive else { return }; if action.structural { guard archive.own != (action == .archive), action != .unarchive || !archive.inherited else { return } } }
             if action == .setAccess { guard let member, !detail.roles(for: member).isEmpty else { return } }
             if action == .resetAccess { guard let member, detail.canReset(member) else { return } }
         }
-        editing = TeamProjectEditRequest(scope: scope, team: team, detail: detail, action: action, member: member.map(identity))
+        reviewError = nil
+        if action.structural, let detail {
+            preparing = true
+            Task { @MainActor in
+                defer { preparing = false }
+                do {
+                    let review: TeamProjectStructureReview
+                    #if DEBUG
+                    if TeamProjectFixture.enabled { review = try TeamProjectFixture.review(project: detail.access.id, action: action) }
+                    else { review = try await store.backend.teamProjectStructureReview(team: teamID, project: detail.access.id, action: action, account: team.account, origin: team.origin) }
+                    #else
+                    review = try await store.backend.teamProjectStructureReview(team: teamID, project: detail.access.id, action: action, account: team.account, origin: team.origin)
+                    #endif
+                    guard self.scope == scope, loadedScope == scope, browser?.detail?.access == detail.access, commands.current, commands.pending == nil,
+                          review.revision == detail.access.revision, review.teamRevision == team.team.revision, review.archive == detail.access.archive else { throw CancellationError() }
+                    editing = TeamProjectEditRequest(scope: scope, team: team, detail: detail, action: action, member: nil, review: review)
+                } catch {
+                    if self.scope == scope, loadedScope == scope { reviewError = "This project branch couldn’t be reviewed. Refresh and check that you can manage every subproject." }
+                }
+            }
+        } else { editing = TeamProjectEditRequest(scope: scope, team: team, detail: detail, action: action, member: member.map(identity), review: nil) }
     }
     @MainActor private func start() async {
         browser?.invalidate(); commands?.close(); browser = nil; commands = nil; loadedScope = nil
@@ -176,12 +213,14 @@ private struct TeamProjectEditRequest: Identifiable {
     let detail: TeamProjectManagementDetail?
     let action: TeamProjectCommand.Action
     let member: TeamOrganizationDetail.Member?
+    let review: TeamProjectStructureReview?
 }
 private struct TeamProjectEditSheet: View {
     let request: TeamProjectEditRequest
     let model: TeamProjectCommandModel
     let current: () -> Bool
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var textSize
     @State private var name = ""
     @State private var visibility: TeamProjectVisibility
     @State private var folder: String?
@@ -189,11 +228,18 @@ private struct TeamProjectEditSheet: View {
     @State private var error: String?
     init(request: TeamProjectEditRequest, model: TeamProjectCommandModel, current: @escaping () -> Bool) {
         self.request = request; self.model = model; self.current = current
+        _name = State(initialValue: request.action == .rename ? request.detail?.access.name ?? "" : "")
         _visibility = State(initialValue: request.detail?.access.visibility ?? .private); _folder = State(initialValue: request.detail?.access.folder)
         _role = State(initialValue: request.member.flatMap { request.detail?.grants[$0.id] ?? request.detail?.effective($0) } ?? .viewer)
     }
+    private var screenTitle: String {
+        guard textSize.isAccessibilitySize else { return request.action.title }
+        switch request.action { case .rename: return "Rename"; case .archive: return "Archive"; case .unarchive: return "Reopen"; case .settings: return "Settings"; case .setAccess: return "Access"; case .resetAccess: return "Reset access"; case .create: return "New project" }
+    }
     private var canConfirm: Bool {
         switch request.action {
+        case .archive, .unarchive: return request.review != nil
+        case .rename: return name.trimmingCharacters(in: .whitespacesAndNewlines) != request.detail?.access.name && (try? TeamOrganizationValue.name(.string(name.trimmingCharacters(in: .whitespacesAndNewlines)))) != nil
         case .create: return (try? TeamOrganizationValue.name(.string(name.trimmingCharacters(in: .whitespacesAndNewlines)))) != nil
         case .settings: return visibility != request.detail?.access.visibility || folder != request.detail?.access.folder
         case .setAccess:
@@ -205,8 +251,16 @@ private struct TeamProjectEditSheet: View {
         NavigationStack {
             Form {
                 if current(), model.current {
-                    if request.action == .create { Section { TextField("Project name", text: $name).accessibilityIdentifier("teamProjectName") } }
+                    if request.action == .create || request.action == .rename { Section { TextField("Project name", text: $name).accessibilityIdentifier("teamProjectName") } }
                     else { Section { Text(request.detail?.access.name ?? "Project").font(.headline) } }
+                    if let review = request.review {
+                        Section("Review project branch") {
+                            Label(review.count == 1 ? "1 project" : "\(review.count) projects", systemImage: "folder.badge.gearshape").font(.headline).accessibilityIdentifier("teamProjectBranchCount")
+                            Text(request.action == .archive ? "This project and its subprojects will be hidden from active task views. All tasks, discussions and files stay saved." : "This project will return to active views. Subprojects that were archived individually will stay archived.")
+                                .lineLimit(nil).fixedSize(horizontal: false, vertical: true)
+                            Text("Each subproject keeps its own archive setting. No task is completed, rescheduled or deleted.").font(.callout).foregroundStyle(.secondary).lineLimit(nil).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
                     if request.action == .create || request.action == .settings {
                         Section {
                             choice("Private", detail: "Explicit project access, plus the team owner and admins.", selected: visibility == .private, id: "teamProjectPrivate") { visibility = .private }
@@ -232,7 +286,7 @@ private struct TeamProjectEditSheet: View {
                     if model.busy { Section { ProgressView("Saving project change…") } }
                 } else { ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Return to the original workspace and review this change again.")) }
             }
-            .navigationTitle(request.action.title)
+            .navigationTitle(screenTitle)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #else
@@ -254,7 +308,7 @@ private struct TeamProjectEditSheet: View {
         guard canConfirm, current(), model.current else { return }
         do {
             let settings = request.action == .create || request.action == .settings
-            let command = try TeamProjectCommand(account: request.team.account, origin: request.team.origin, action: request.action, team: request.team.team.id, project: request.detail?.access.id ?? UUID().uuidString.lowercased(), teamRevision: request.team.team.revision, revision: request.detail?.access.revision, name: request.action == .create ? name : nil, visibility: settings ? visibility : nil, folder: settings ? folder : nil, user: request.member?.id, role: request.action == .setAccess ? role : nil)
+            let command = try TeamProjectCommand(account: request.team.account, origin: request.team.origin, action: request.action, team: request.team.team.id, project: request.detail?.access.id ?? UUID().uuidString.lowercased(), teamRevision: request.team.team.revision, revision: request.detail?.access.revision, name: request.action == .create || request.action == .rename ? name : nil, visibility: settings ? visibility : nil, folder: settings ? folder : nil, user: request.member?.id, role: request.action == .setAccess ? role : nil, review: request.review)
             await model.send(command)
             if model.pending != nil || model.success != nil { dismiss() } else { error = model.message ?? "The change couldn’t be saved. Try again." }
         } catch { self.error = "This change couldn’t be prepared. Check the project and try again." }
@@ -274,6 +328,7 @@ private struct TeamProjectEditSheet: View {
     static func browser() -> TeamProjectBrowser {
         TeamProjectBrowser(account: TeamMembershipFixture.account, origin: TeamMembershipFixture.origin, team: projectTeam, current: { enabled }, fence: { try peer.fence() }, readTeam: { try peer.team() }, page: { try peer.page(after: $0) }, detail: { try peer.detail($0) })
     }
+    static func review(project: String, action: TeamProjectCommand.Action) throws -> TeamProjectStructureReview { try peer.review(project, action: action) }
     static func commands() -> TeamProjectCommandModel { TeamProjectCommandModel(account: TeamMembershipFixture.account, origin: TeamMembershipFixture.origin, vault: TeamProjectCommandVault(io: TeamProjectFixtureIO()), service: peer, isCurrent: { enabled }) }
 }
 private struct TeamProjectFixtureIO: CalendarSecureItemIO {
@@ -312,7 +367,7 @@ private struct TeamProjectFixtureIO: CalendarSecureItemIO {
     }
     private func presentation(_ row: [String: JSON]) -> [String: JSON]? {
         guard let role = role(row) else { return nil }
-        return row.filter { $0.key != "grants" }.merging(["role": .string(role), "can_edit_tasks": .bool(false), "can_manage_access": .bool(role == "manager")]) { _, b in b }
+        return row.filter { $0.key != "grants" }.merging(["project_state_protocol": .number(1), "is_archived": row["is_archived"] ?? .bool(false), "ancestor_archived": row["ancestor_archived"] ?? .bool(false)]) { _, b in b }.merging(["role": .string(role), "can_edit_tasks": .bool(false), "can_manage_access": .bool(role == "manager")]) { _, b in b }
     }
     private var context: [String: JSON] { ["protocol": .number(1), "account": .string(account), "team_id": .string(TeamProjectFixture.projectTeam), "team_revision": .number(3), "team_state": .string("active"), "setup_paused": .bool(!TeamMembershipFixture.setupEnabled)] }
     func page(after: String?) throws -> TeamProjectPage {
@@ -329,6 +384,14 @@ private struct TeamProjectFixtureIO: CalendarSecureItemIO {
         }
         return try TeamProjectManagementDetail(raw, account: account, origin: TeamMembershipFixture.origin, team: TeamProjectFixture.projectTeam, project: id)
     }
+    func review(_ id: String, action: TeamProjectCommand.Action) throws -> TeamProjectStructureReview {
+        guard action.structural, let detail = try? detail(id), detail.access.canManageAccess, let archive = detail.access.archive else { throw TeamProjectCommand.invalid }
+        var raw = context
+        raw["id"] = .string(id); raw["operation"] = .string(action.rawValue); raw["revision"] = .number(detail.access.revision)
+        raw["project_state_protocol"] = .number(1); raw["is_archived"] = .bool(archive.own); raw["ancestor_archived"] = .bool(archive.inherited)
+        raw["tree_token"] = .string(try fence()); raw["affected_count"] = .number(1)
+        return try TeamProjectStructureReview(raw, account: account, origin: TeamMembershipFixture.origin, team: TeamProjectFixture.projectTeam, project: id, action: action)
+    }
     func teamProjectCommand(_ command: TeamProjectCommand) async throws -> TeamProjectCommandReceipt {
         guard command.account == account, command.origin == TeamMembershipFixture.origin, command.team == TeamProjectFixture.projectTeam, command.retryable(at: Date()) else { throw TeamOrganizationCommandFailure(code: "42501") }
         var data = try read(), projects = data["projects"]!.object, receipts = data["receipts"]!.object
@@ -338,7 +401,9 @@ private struct TeamProjectFixtureIO: CalendarSecureItemIO {
         if let old = receipts[command.id]?.object { guard old["command"] == encoded else { throw TeamOrganizationCommandFailure(code: "PT409") }; return try command.confirmed(old["result"]!.object) }
         guard command.body["team_revision"] == .number(3), command.action == .create ? row == nil : command.body["revision"] == row?["revision"] else { throw TeamOrganizationCommandFailure(code: "PT409") }
         if !TeamMembershipFixture.setupEnabled {
-            guard command.action == .resetAccess, let user = command.body["user_id"]?.text, let grant = row?["grants"]?.object[user], row?["visibility"] == .string("private") || TeamProjectFixture.teamRole(user) == "guest" || grant == .string("manager") else { throw TeamOrganizationCommandFailure(code: "PT503") }
+            guard command.action == .archive || (command.action == .resetAccess && { () -> Bool in
+                guard let user = command.body["user_id"]?.text, let grant = row?["grants"]?.object[user], row?["visibility"] == .string("private") || TeamProjectFixture.teamRole(user) == "guest" || grant == .string("manager") else { return false }; return true
+            }()) else { throw TeamOrganizationCommandFailure(code: "PT503") }
         }
         var revision = Double(row?["revision"]?.integer ?? 0)
         switch command.action {
@@ -346,6 +411,11 @@ private struct TeamProjectFixtureIO: CalendarSecureItemIO {
         case .settings:
             if command.body["folder_id"] != .null && command.body["folder_id"] != .string(TeamProjectFixture.folder) { throw TeamOrganizationCommandFailure(code: "22023") }
             row?["visibility"] = command.body["visibility"]; row?["folder_id"] = command.body["folder_id"]
+        case .rename: row?["name"] = command.body["name"]
+        case .archive, .unarchive:
+            let reviewed = try review(command.project, action: command.action)
+            guard command.body["tree_token"] == .string(reviewed.token), command.body["affected_count"] == .number(Double(reviewed.count)) else { throw TeamOrganizationCommandFailure(code: "PT409") }
+            row?["is_archived"] = .bool(command.action == .archive)
         case .setAccess, .resetAccess:
             let user = command.body["user_id"]!.text
             guard TeamProjectFixture.actors.contains(user), !["owner", "admin"].contains(TeamProjectFixture.teamRole(user)) else { throw TeamOrganizationCommandFailure(code: "42501") }
@@ -355,10 +425,12 @@ private struct TeamProjectFixtureIO: CalendarSecureItemIO {
             row?["grants"] = .object(grants)
         }
         revision += 1; row?["revision"] = .number(revision); projects[command.project] = .object(row!)
-        let result: [String: JSON] = ["protocol": .number(1), "account": .string(account), "team_id": .string(command.team), "id": .string(command.project), "request_id": .string(command.id), "team_revision": .number(3), "revision": .number(revision)]
+        var result: [String: JSON] = ["protocol": .number(1), "account": .string(account), "team_id": .string(command.team), "id": .string(command.project), "request_id": .string(command.id), "team_revision": .number(3), "revision": .number(revision)]
+        if command.action.structural { result["project_state_protocol"] = .number(1); result["is_archived"] = .bool(command.action == .archive); result["ancestor_archived"] = row?["ancestor_archived"] ?? .bool(false); result["affected_count"] = command.body["affected_count"] }
         receipts[command.id] = .object(["command": encoded, "result": .object(result)])
         data["projects"] = .object(projects); data["receipts"] = .object(receipts); data["history"] = .array(data["history"]!.list + [.object(["action": .string(command.action.rawValue), "request_id": .string(command.id), "account": .string(account)])]); try write(data)
         if command.action == .settings, data["lost"] == .bool(false), ProcessInfo.processInfo.arguments.contains("--team-project-lose-settings-reply") { data["lost"] = .bool(true); try write(data); throw URLError(.networkConnectionLost) }
+        if command.action == .archive, data["archive_lost"] != .bool(true), ProcessInfo.processInfo.arguments.contains("--team-project-lose-archive-reply") { data["archive_lost"] = .bool(true); try write(data); throw URLError(.networkConnectionLost) }
         return try command.confirmed(result)
     }
 }

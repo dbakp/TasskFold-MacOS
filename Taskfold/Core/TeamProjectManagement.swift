@@ -3,9 +3,10 @@ import Observation
 
 struct TeamProjectCommand: ReviewedTeamCommand, CustomStringConvertible, CustomDebugStringConvertible {
     enum Action: String, Codable, CaseIterable, Sendable {
-        case create, settings, setAccess = "set_access", resetAccess = "reset_access"
-        var title: String { switch self { case .create: "New project"; case .settings: "Project settings"; case .setAccess: "Project access"; case .resetAccess: "Reset to team permissions" } }
-        var success: String { self == .create ? "Project created" : self == .settings ? "Project settings saved" : "Project access updated" }
+        case create, settings, rename, archive, unarchive, setAccess = "set_access", resetAccess = "reset_access"
+        var title: String { switch self { case .rename: "Rename project"; case .archive: "Archive project"; case .unarchive: "Reopen project"; case .create: "New project"; case .settings: "Project settings"; case .setAccess: "Project access"; case .resetAccess: "Reset to team permissions" } }
+        var success: String { switch self { case .create: "Project created"; case .settings: "Project settings saved"; case .rename: "Project renamed"; case .archive: "Project archived"; case .unarchive: "Project reopened"; case .setAccess, .resetAccess: "Project access updated" } }
+        var structural: Bool { self == .archive || self == .unarchive }
     }
     static let storagePrefix = "team-project-command-v1."
     static var invalid: AppFailure { AppFailure(message: "Review this project change again before sending it.") }
@@ -22,7 +23,7 @@ struct TeamProjectCommand: ReviewedTeamCommand, CustomStringConvertible, CustomD
     var expires: Date { issued.addingTimeInterval(900) }
     var canRetry: Bool { retryable(at: Date()) }
     func retryable(at now: Date) -> Bool { issued <= now.addingTimeInterval(60) && expires >= now }
-    init(account: String, origin: String, action: Action, team: String, project: String, teamRevision: Double, revision: Double? = nil, name: String? = nil, visibility: TeamProjectVisibility? = nil, folder: String? = nil, user: String? = nil, role: TeamProjectRole? = nil, requestID: UUID = UUID(), issuedAt: Date = Date()) throws {
+    init(account: String, origin: String, action: Action, team: String, project: String, teamRevision: Double, revision: Double? = nil, name: String? = nil, visibility: TeamProjectVisibility? = nil, folder: String? = nil, user: String? = nil, role: TeamProjectRole? = nil, review: TeamProjectStructureReview? = nil, requestID: UUID = UUID(), issuedAt: Date = Date()) throws {
         guard folder == nil || visibility != nil else { throw Self.invalid }
         let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         var body: [String: JSON] = ["team_id": .string(team), "project_id": .string(project), "team_revision": .number(teamRevision), "request_id": .string(requestID.uuidString.lowercased()), "issued_at": .string(formatter.string(from: issuedAt))]
@@ -31,18 +32,26 @@ struct TeamProjectCommand: ReviewedTeamCommand, CustomStringConvertible, CustomD
         if let visibility { body["visibility"] = .string(visibility.rawValue); body["folder_id"] = folder.map(JSON.string) ?? .null }
         if let user { body["user_id"] = .string(user) }
         if let role { body["role"] = .string(role.rawValue) }
+        if let review {
+            guard action.structural, review.account == account, review.origin == origin, review.team == team, review.project == project, review.action == action, review.teamRevision == teamRevision, review.revision == revision else { throw Self.invalid }
+            body["tree_token"] = .string(review.token); body["affected_count"] = .number(Double(review.count))
+        }
         try self.init(account: account, origin: origin, action: action, body: body)
     }
     init(account: String, origin: String, action: Action, body: [String: JSON]) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         var keys: Set<String> = ["team_id", "project_id", "team_revision", "request_id", "issued_at"]
         if action != .create { keys.insert("revision"); let r = try TeamProjectValue.revision(body["revision"]); guard r < 9_007_199_254_740_991 else { throw Self.invalid } }
-        if action == .create { keys.insert("name"); _ = try TeamOrganizationValue.name(body["name"]) }
+        if action == .create || action == .rename { keys.insert("name"); _ = try TeamOrganizationValue.name(body["name"]) }
         if action == .create || action == .settings {
             keys.formUnion(["visibility", "folder_id"])
             guard let value = body["visibility"]?.text, TeamProjectVisibility(rawValue: value) != nil else { throw Self.invalid }
             _ = try TeamProjectValue.optionalID(body["folder_id"])
-        } else { keys.insert("user_id"); _ = try TeamOrganizationValue.id(body["user_id"]) }
+        } else if action == .setAccess || action == .resetAccess { keys.insert("user_id"); _ = try TeamOrganizationValue.id(body["user_id"]) }
+        if action.structural {
+            keys.formUnion(["tree_token", "affected_count"])
+            guard case .string(let token)? = body["tree_token"], TeamProjectStructureReview.validToken(token), case .number(let count)? = body["affected_count"], count >= 1, count <= 1000, count.rounded(.down) == count else { throw Self.invalid }
+        }
         if action == .setAccess { keys.insert("role"); guard let value = body["role"]?.text, TeamProjectRole(rawValue: value) != nil else { throw Self.invalid } }
         guard Set(body.keys) == keys, try JSONEncoder().encode(body).count <= 16_384,
               let text = body["issued_at"]?.text, text.range(of: #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$"#, options: .regularExpression) != nil else { throw Self.invalid }
@@ -60,7 +69,29 @@ struct TeamProjectCommand: ReviewedTeamCommand, CustomStringConvertible, CustomD
         guard raw["protocol"] == .number(1), raw["account"] == .string(account), raw["team_id"] == body["team_id"], raw["id"] == body["project_id"], raw["request_id"] == body["request_id"], raw["team_revision"] == body["team_revision"] else { throw Self.invalid }
         let expected = action == .create ? 1 : try TeamProjectValue.revision(body["revision"]) + 1
         guard try TeamProjectValue.revision(raw["revision"]) == expected else { throw Self.invalid }
+        if action.structural {
+            guard let state = try TeamProjectArchiveState.read(raw), state.own == (action == .archive), !state.inherited || action == .archive, raw["affected_count"] == body["affected_count"] else { throw Self.invalid }
+        }
         return TeamProjectCommandReceipt(raw: raw)
+    }
+}
+/// Server-reviewed branch identity; no private child names or task data.
+struct TeamProjectStructureReview: Equatable, Sendable {
+    let account: String, origin: String, team: String, project: String
+    let action: TeamProjectCommand.Action
+    let revision: Double, teamRevision: Double
+    let token: String
+    let count: Int
+    let archive: TeamProjectArchiveState
+    static func validToken(_ value: String) -> Bool { value.utf8.count == 64 && value.utf8.allSatisfy { (48...57).contains($0) || (97...102).contains($0) } }
+    init(_ raw: [String: JSON], account: String, origin: String, team: String, project: String, action: TeamProjectCommand.Action) throws {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard action.structural, TeamProjectValue.id(team), TeamProjectValue.id(project), raw["protocol"] == .number(1), raw["account"] == .string(account), raw["team_id"] == .string(team), raw["id"] == .string(project), raw["operation"] == .string(action.rawValue),
+              case .string(let token)? = raw["tree_token"], Self.validToken(token), case .number(let count)? = raw["affected_count"], count >= 1, count <= 1000, count.rounded(.down) == count,
+              let archive = try TeamProjectArchiveState.read(raw), archive.own != (action == .archive), action != .unarchive || !archive.inherited else { throw TeamProjectCommand.invalid }
+        self.account = account; self.origin = origin; self.team = team; self.project = project; self.action = action
+        self.token = token; self.count = Int(count); self.archive = archive
+        revision = try TeamProjectValue.revision(raw["revision"]); teamRevision = try TeamProjectValue.revision(raw["team_revision"])
     }
 }
 struct TeamProjectCommandReceipt: Equatable, Sendable { let raw: [String: JSON]; var project: String { raw["id"]!.text } }

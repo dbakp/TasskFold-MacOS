@@ -1,0 +1,655 @@
+{
+  "reviews": [
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "archive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 1,
+        "operation": "archive",
+        "tree_token": "96728e3a890db0e31daf10313363ea4e7e5e8b6d4ae8d54da2e338187473ce03",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "a76694c0-7c93-42a5-8698-9deb308bcfe7",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "archive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "a76694c0-7c93-42a5-8698-9deb308bcfe7",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 1,
+        "operation": "archive",
+        "tree_token": "96728e3a890db0e31daf10313363ea4e7e5e8b6d4ae8d54da2e338187473ce03",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "457abac7-577c-4882-a47d-89907f709e57",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "archive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "457abac7-577c-4882-a47d-89907f709e57",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 1,
+        "operation": "archive",
+        "tree_token": "96728e3a890db0e31daf10313363ea4e7e5e8b6d4ae8d54da2e338187473ce03",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "archive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 1,
+        "operation": "archive",
+        "tree_token": "96728e3a890db0e31daf10313363ea4e7e5e8b6d4ae8d54da2e338187473ce03",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "archive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 2,
+        "operation": "archive",
+        "tree_token": "0ca03786855048c9d127a3ad34b9839d505c6f756450af059aa5380c7591c836",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "unarchive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 3,
+        "operation": "unarchive",
+        "tree_token": "773f0c3fee9282706becd5620a6b28483274c91cfddcd6848db8df23e9cc5ce4",
+        "is_archived": true,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "archive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 4,
+        "operation": "archive",
+        "tree_token": "b2992d1d999ebe39aa68c0c57fe8d9950eb828210964e3cd7920ace599e7c84a",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "archive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 4,
+        "operation": "archive",
+        "tree_token": "2a074ee19225be16adf4b558bdd6b866c8f70b88f0a6874bece33188dfc95132",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "unarchive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 5,
+        "operation": "unarchive",
+        "tree_token": "cd344ea297913bfc116622b8d9ccfd374f6a9fdd30e7042e507c22c4bcbe102e",
+        "is_archived": true,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "unarchive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 5,
+        "operation": "unarchive",
+        "tree_token": "cd344ea297913bfc116622b8d9ccfd374f6a9fdd30e7042e507c22c4bcbe102e",
+        "is_archived": true,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "archive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 6,
+        "operation": "archive",
+        "tree_token": "5c3f8dc3c0bf14e275c76cb76f2315694d2151595a36567da3b0b8e2317b8688",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "unarchive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 7,
+        "operation": "unarchive",
+        "tree_token": "f7bb211e9ebf5e3d78355e17649c0ab8e1a625c0a5da956bdf0e173f6f72c996",
+        "is_archived": true,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "archive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 8,
+        "operation": "archive",
+        "tree_token": "1b9c4fb38a4ef490262f4fc0b844fbf103d679526111eea31abc13c370c85db9",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "operation": "unarchive"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 9,
+        "operation": "unarchive",
+        "tree_token": "7aa7cdf64fb2c1e6e6021240610c4d045941069654395f46f8cd4860c2bf7380",
+        "is_archived": true,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    }
+  ],
+  "commands": [
+    {
+      "account": "457abac7-577c-4882-a47d-89907f709e57",
+      "action": "rename",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "e781647c-a7d6-443d-873a-59537bb68829",
+        "issued_at": "2026-10-24T17:35:25.031Z",
+        "team_revision": 1,
+        "revision": 1,
+        "name": "Renamed design workshop"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "457abac7-577c-4882-a47d-89907f709e57",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 2,
+        "request_id": "e781647c-a7d6-443d-873a-59537bb68829",
+        "team_revision": 1
+      }
+    },
+    {
+      "account": "457abac7-577c-4882-a47d-89907f709e57",
+      "action": "rename",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "e781647c-a7d6-443d-873a-59537bb68829",
+        "issued_at": "2026-10-24T17:35:25.031Z",
+        "team_revision": 1,
+        "revision": 1,
+        "name": "Renamed design workshop"
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "457abac7-577c-4882-a47d-89907f709e57",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 2,
+        "request_id": "e781647c-a7d6-443d-873a-59537bb68829",
+        "team_revision": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "action": "archive",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "0a12a6d0-1be3-4cda-a97f-10bec5f655c2",
+        "issued_at": "2026-10-24T17:35:26.117Z",
+        "team_revision": 1,
+        "revision": 2,
+        "tree_token": "0ca03786855048c9d127a3ad34b9839d505c6f756450af059aa5380c7591c836",
+        "affected_count": 4
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 3,
+        "request_id": "0a12a6d0-1be3-4cda-a97f-10bec5f655c2",
+        "is_archived": true,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "action": "archive",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "0a12a6d0-1be3-4cda-a97f-10bec5f655c2",
+        "issued_at": "2026-10-24T17:35:26.117Z",
+        "team_revision": 1,
+        "revision": 2,
+        "tree_token": "0ca03786855048c9d127a3ad34b9839d505c6f756450af059aa5380c7591c836",
+        "affected_count": 4
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 3,
+        "request_id": "0a12a6d0-1be3-4cda-a97f-10bec5f655c2",
+        "is_archived": true,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "action": "unarchive",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "097a4189-ed13-4124-9394-99bf272fcc19",
+        "issued_at": "2026-10-24T17:35:27.096Z",
+        "team_revision": 1,
+        "revision": 3,
+        "tree_token": "773f0c3fee9282706becd5620a6b28483274c91cfddcd6848db8df23e9cc5ce4",
+        "affected_count": 4
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 4,
+        "request_id": "097a4189-ed13-4124-9394-99bf272fcc19",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "action": "unarchive",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "097a4189-ed13-4124-9394-99bf272fcc19",
+        "issued_at": "2026-10-24T17:35:27.096Z",
+        "team_revision": 1,
+        "revision": 3,
+        "tree_token": "773f0c3fee9282706becd5620a6b28483274c91cfddcd6848db8df23e9cc5ce4",
+        "affected_count": 4
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 4,
+        "request_id": "097a4189-ed13-4124-9394-99bf272fcc19",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "action": "archive",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "0a12a6d0-1be3-4cda-a97f-10bec5f655c2",
+        "issued_at": "2026-10-24T17:35:26.117Z",
+        "team_revision": 1,
+        "revision": 2,
+        "tree_token": "0ca03786855048c9d127a3ad34b9839d505c6f756450af059aa5380c7591c836",
+        "affected_count": 4
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 3,
+        "request_id": "0a12a6d0-1be3-4cda-a97f-10bec5f655c2",
+        "is_archived": true,
+        "team_revision": 1,
+        "affected_count": 4,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "action": "archive",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "76e1105c-7c8c-4b8f-a079-862650e26504",
+        "issued_at": "2026-10-24T17:35:28.629Z",
+        "team_revision": 1,
+        "revision": 4,
+        "tree_token": "2a074ee19225be16adf4b558bdd6b866c8f70b88f0a6874bece33188dfc95132",
+        "affected_count": 5
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 5,
+        "request_id": "76e1105c-7c8c-4b8f-a079-862650e26504",
+        "is_archived": true,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "action": "unarchive",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "fa002c56-d50c-47b1-a26f-14b2c6384ece",
+        "issued_at": "2026-10-24T17:35:29.815Z",
+        "team_revision": 1,
+        "revision": 5,
+        "tree_token": "cd344ea297913bfc116622b8d9ccfd374f6a9fdd30e7042e507c22c4bcbe102e",
+        "affected_count": 5
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 6,
+        "request_id": "fa002c56-d50c-47b1-a26f-14b2c6384ece",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "a76694c0-7c93-42a5-8698-9deb308bcfe7",
+      "action": "archive",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "87884c4d-5923-4c80-8a27-61b8257c9db4",
+        "issued_at": "2026-10-24T17:35:30.757Z",
+        "team_revision": 1,
+        "revision": 6,
+        "tree_token": "5c3f8dc3c0bf14e275c76cb76f2315694d2151595a36567da3b0b8e2317b8688",
+        "affected_count": 5
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "a76694c0-7c93-42a5-8698-9deb308bcfe7",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 7,
+        "request_id": "87884c4d-5923-4c80-8a27-61b8257c9db4",
+        "is_archived": true,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "action": "unarchive",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "22f5fd02-0bdf-47e7-a95c-9ff96f1f587a",
+        "issued_at": "2026-10-24T17:35:31.026Z",
+        "team_revision": 1,
+        "revision": 7,
+        "tree_token": "f7bb211e9ebf5e3d78355e17649c0ab8e1a625c0a5da956bdf0e173f6f72c996",
+        "affected_count": 5
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 8,
+        "request_id": "22f5fd02-0bdf-47e7-a95c-9ff96f1f587a",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "action": "archive",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "a6e64fcb-e55e-4e93-8e51-54913a077016",
+        "issued_at": "2026-10-24T17:35:31.312Z",
+        "team_revision": 1,
+        "revision": 8,
+        "tree_token": "1b9c4fb38a4ef490262f4fc0b844fbf103d679526111eea31abc13c370c85db9",
+        "affected_count": 5
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 9,
+        "request_id": "a6e64fcb-e55e-4e93-8e51-54913a077016",
+        "is_archived": true,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    },
+    {
+      "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+      "action": "unarchive",
+      "body": {
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "project_id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "request_id": "21a3d774-f877-45da-bbd9-68af88b2f0f7",
+        "issued_at": "2026-10-24T17:35:31.767Z",
+        "team_revision": 1,
+        "revision": 9,
+        "tree_token": "7aa7cdf64fb2c1e6e6021240610c4d045941069654395f46f8cd4860c2bf7380",
+        "affected_count": 5
+      },
+      "result": {
+        "id": "34793318-4cfa-4968-865c-91a6a9f0c195",
+        "account": "80ba10b8-f048-49c6-9e24-0ab6d7e57974",
+        "team_id": "20e4aefc-d1d4-4cd2-bf62-13d568ff71e8",
+        "protocol": 1,
+        "revision": 10,
+        "request_id": "21a3d774-f877-45da-bbd9-68af88b2f0f7",
+        "is_archived": false,
+        "team_revision": 1,
+        "affected_count": 5,
+        "ancestor_archived": false,
+        "project_state_protocol": 1
+      }
+    }
+  ]
+}

@@ -2395,3 +2395,63 @@ All twelve screenshots are inspected. Native testing uses synthetic peer/private
 IO, not genuine cloud Auth/Keychain. Mac runtime/spoken and broader live workspace/
 editor/widget acceptance remain open; rollout/task-write flags stay disabled.
 Owned test apps/builds/results are removed; approximately 1.11 GiB reclaimed.
+
+
+## Reviewed project rename, archive and reopen — 24 October 2026
+
+The gated project surface now offers Rename, Archive and Reopen, with explicit
+active/own-archive/inherited-archive status. Older services without the versioned
+state fields remain unknown and do not receive these new controls. A structural
+review shows the complete affected project count and explains preservation before
+confirmation. Cancel creates no command. The server rejects a branch if the
+actor cannot manage every child, or if a reviewed branch changed. No child names
+are disclosed by that review. Reopening a parent preserves individually archived
+children; reopening under an archived parent requires reopening the parent first.
+
+All seven project commands use the existing separate private project journal.
+The archive review token/count, account, backend, IDs, revisions and request ID
+survive uncertain results and relaunch. Exact retries return the original minimal
+receipt without applying the operation again, including an old archive retry
+after a later reopen. Fresh archive is available as a narrowing/recovery action
+while setup is paused or the team is archived/at its budget; rename/reopen retain
+the normal setup/team/budget restrictions. Requests expire after 15 minutes.
+
+The canonical source-only migration is 20261024172109_team_project_archiving.sql
+in each repo. A private, transaction/actor/team/root/project/operation scope lets
+only the reviewed project metadata fields change. Existing task/comment/file
+write guards stay untouched. The real legacy hierarchy cascade derives inherited
+archive state while retaining child own flags. Team and hierarchy locks serialize
+reviews against branch changes; affected project locks serialize against task
+writers. Every affected binding revision and access boundary changes on apply.
+The existing trusted whole-team cleanup scope remains separate. No hosted schema
+or native rollout/task-write flag was changed.
+
+Verification: 114 focused Swift tests, 93 owned PostgreSQL metadata checks and the
+152-check project access regression pass independently in each repo. Actual SQL
+review/command fixtures are decoded by each native core test suite. The database
+suite covers lost responses/replay, stale branch/revisions, explicit manager and
+lower roles, private/foreign/personal children, corrupt cycles/depth, paused/team
+archive/quota recovery, unchanged task/discussion/file/custody/grant rows, epochs,
+concurrent writes and project locks, direct-write rejection, exact scope rejection
+and existing empty whole-team cleanup. Both Debug app/extension builds succeed.
+See p2-team-project-archiving-evidence.json for native results and limitations.
+
+This advances rank 6; it does not complete team collaboration or the full Px
+objective. Live Auth/RLS/Keychain acceptance, Mac runtime/spoken checks, broader
+workspace/editor/widget transitions, scoped team task/comment/file adapters,
+project deletion with retained custody/Storage API cleanup, project adoption/
+templates/subprojects and remaining ranked work remain open. All user-deferred
+provider/device/release work stays deferred.
+
+Native verification: iPhone and iPad each pass the two final normal/Accessibility
+XXXL workflows. The saved peer contains one project at revision 4, exactly three
+unique accepted changes (rename/archive/reopen), and no pending request. Sixteen
+screenshots are visually inspected. Accessibility-size review titles shorten to
+fit; long body copy remains in the scrollable form. The test waits for a control’s
+center to be visible before tapping. Intermediate failed UI trials are described
+in the evidence and are not counted as acceptance. Native tests use a one-project
+synthetic file peer; task/content and descendant preservation are real owned-SQL
+checks. Mac runtime/spoken and genuine hosted Auth/Keychain acceptance remain open.
+
+Owned isolated test apps/runners and temporary host/build/result/attachment folders
+were removed after preserving evidence; approximately 1.22 GiB of allocated artifacts removed. No Mac test app launched. Persistent core caches and unrelated apps, containers and runtimes remain intact.

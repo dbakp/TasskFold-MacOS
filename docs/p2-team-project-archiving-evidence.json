@@ -1,0 +1,56 @@
+{
+  "stage": "Gated team-project rename, archive and reopen",
+  "date": "2026-10-24",
+  "repository": "TasskFold-MacOS",
+  "coreTests": 114,
+  "coreFailures": 0,
+  "ownedPostgresChecks": 93,
+  "projectAccessRegressionChecks": 152,
+  "debugAppAndExtensionBuildPassed": true,
+  "realDataChanged": false,
+  "hostedMigrationDeployed": false,
+  "nativeTeamRolloutEnabled": false,
+  "teamTaskWritesEnabled": false,
+  "goalComplete": false,
+  "sourceSHA256": {
+    "supabase/migrations/20261024172109_team_project_archiving.sql": "823b09e482e3048c70388777b97e06983ee3d6b08cb7f041792478fa9c72f3cf",
+    "Taskfold/Core/TeamProjectAccess.swift": "7a8d57bd6d567c86e9fb279019e103a429fa29d4c7f2face4878ac913dd8215f",
+    "Taskfold/Core/TeamProjectManagement.swift": "4e88bc45f24638eb0c44286577861de778400bd23d5fde3c3d398d7e9fde1299",
+    "Taskfold/Core/Backend.swift": "23361db91cc58bfc939be97362ea730d6ecb595a57076775978a89a15cabf084",
+    "Taskfold/Views/TeamProjectManagementView.swift": "98bff295f0ea4e911912e6be4eadfc649317dbe4b0aefaf2868cfd1b2951890e",
+    "TaskfoldTests/TeamProjectManagementTests.swift": "f12b229973820d87ca47546903e70eabcd01296db66d28f4a7686b9c0d21e277",
+    "TaskfoldTests/Fixtures/team-project-archiving-v1.json": "2a86657c8b1c4229989c74a4020af89acb7d30a109651a0134eccdfc2033f90d",
+    "Scripts/Database/test-team-project-archiving.mjs": "62f6a79700dabd3ac5cfeed6e5944c28f5ed1142887f2751dd08b96ce260179c",
+    "Scripts/Database/test-team-project-access.mjs": "7e296c643163e0fbe27b5b1b897e3a3a9fa715dcc227b6148df2fe8ef138116f"
+  },
+  "nativeIOS": {
+    "runtimeClaimedForMac": false,
+    "iOSReference": "See the iOS repository\u2019s same-stage evidence; this is not Mac runtime acceptance."
+  },
+  "limitations": [
+    "Synthetic native file peer is not genuine hosted Auth/RLS/Keychain acceptance",
+    "Native fixture contains one project; preservation of real SQL task/discussion/file/custody rows and child archive flags is verified separately by owned PostgreSQL",
+    "Native Mac runtime and spoken checks remain open; native access reported the Mac locked again",
+    "Broader live workspace/editor/widget/account transitions remain open",
+    "Project deletion, project adoption/templates/subprojects and current-role team task/comment/file/service adapters remain open",
+    "All user-deferred distribution, remote reminder, old-client rollout, provider registration and physical device work stays deferred"
+  ],
+  "intermediateUITrial": {
+    "acceptedAsFinalEvidence": false,
+    "phoneLargestRenameTapOpenedSheet": false,
+    "snapshot": "Project list at top; Rename not in visible content after the attempted tap",
+    "remedy": "Test uses slow bounded scrolls, checks the visible center before tapping, and opens the independent rename Cancel review from the top of the unchanged project. Product review titles shorten at accessibility sizes."
+  },
+  "cleanup": {
+    "pending": false,
+    "isolatedSimulatorAppsAndRunnersUninstalled": true,
+    "macTestAppLaunched": false,
+    "macBuildRegistrationRemoved": true,
+    "ownedTemporaryDirectoriesRemoved": 14,
+    "allocatedBytesRemovedApproximately": 1308508160,
+    "reclaimedGiBApproximately": 1.22,
+    "persistentCoreCachesRetained": true,
+    "unrelatedAppsContainersAndRuntimesRemoved": false
+  },
+  "screenshotsVisuallyInspected": "16 in the iOS repository; not Mac runtime evidence"
+}
