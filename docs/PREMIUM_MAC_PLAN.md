@@ -3866,3 +3866,14 @@ and primary-icon configuration. Watch Debug/Release Simulator builds compile it,
 and installed assets match the built archive. Mac runtime/build/resources are
 unchanged. Native launcher/Settings/notification and older Watch/hardware checks
 remain open, alongside paired delivery, broader Px and existing user deferrals.
+
+
+### Paired Simulator and Watch startup fix — 24 October
+
+The iOS-owned candidate now has actual paired Simulator Connect/capture/completion/
+replay, normal foreground relaunch and durable offline Watch relaunch evidence.
+Phone cold return uncovered a pre-activation peer-retirement bug; its publication
+readiness fix passes 31 native checks, including four new guards. Fixed paired
+phone-reboot delivery still needs a fresh retake. Mac runtime/build/resources and
+shared data contracts are unchanged; this claims no new Mac runtime pass. All
+hardware/background/cloud/input/spoken, broader Px and deferred gates stay open.

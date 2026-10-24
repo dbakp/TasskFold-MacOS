@@ -4,7 +4,7 @@ Updated 24 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. Rank-6 automation acceptance and rank-7 Watch implementation are both in progress. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; scoped clipboard/spoken secret controls now pass; native recovery and the remaining spoken checks remain in progress. Hosted server-session expiry and temporary encryption-key restoration now pass in both repo-owned services; hosted same-account webhook, queued-task and API-key recovery now pass on phone/tablet; wider spoken acceptance remains open. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. Rank-6 automation acceptance and rank-7 Watch implementation are both in progress. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; scoped clipboard/spoken secret controls now pass; native recovery and the remaining spoken checks remain in progress. Hosted server-session expiry and temporary encryption-key restoration now pass in both repo-owned services; hosted same-account webhook, queued-task and API-key recovery now pass on phone/tablet; wider spoken acceptance remains open. Signing-dependent Mac runtime stays deferred. Actual paired Simulator live capture/completion/replay and normal foreground relaunch now pass; offline Watch relaunch is durable. A startup authority fix passes 31 native checks, while its fixed paired phone-reboot delivery retake remains open. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -1694,3 +1694,34 @@ No Swift, task/wire contract, phone or Mac target changed. Mac gains no resource
 or build dependency. The Watch stays disabled/unembedded; paired/native/hardware,
 advanced-team/email and other Px work and every user deferral retain scope. Exact
 scope is recorded in the iOS-owned `p2-watch-icon-evidence.json`.
+
+
+## Paired Watch Simulator and startup authority — 24 October
+
+A real iPhone Air–42 mm Watch Simulator pair now passes Connect, literal reviewed
+capture, completion, saved receipts and exact live replay using production
+WCSession peer discovery/transport and actual Store/files. No peer identity or
+packet is injected. Initial local workspace/readiness preparation is explicit;
+normal subsequent foreground relaunch uses no paired-fixture route and preserves
+the phone/workspace identity, work and receipts while advancing the live revision.
+Watch capture also stays durable across its own relaunch while the phone Simulator
+is shut down; independent reads confirm no phone task/receipt was created offline.
+Simulator reachability stayed true despite shutdown, so it is not delivery proof.
+
+Phone cold return exposed a production bug: publication before session activation
+could treat undefined SDK peer fields as a different peer and retire authority.
+The bridge now supplies an explicit ready-observation gate, required by the driver.
+Before activation, publication preserves authority and emits nothing. Incoming
+unconfirmed peers still fail; account retirement and confirmed peer absence keep
+their original fences. Twenty first-run plus eleven relaunch native Store/file
+checks pass, including four new startup checks. Those regression checks inject
+the OS peer boundary and are distinct from the actual paired Simulator evidence.
+
+The live pair cases preceded the gate fix. A fresh fixed paired phone-reboot
+return is still required; the failed original intent was never silently rebound
+to manufacture success. Debug iPhone/Watch and Release Watch builds pass, with
+verified native Simulator identities/signatures and no Release fixture flags.
+Shipping flags/embedding remain off. No Mac code/build dependency or shared
+wire/task/receipt contract changes. Real hardware/background/cloud/input/spoken,
+email/team/Wear OS and wider Px gates and all user deferrals retain scope. See the
+iOS-owned `p2-watch-paired-simulator-evidence.json` for exact accepted limits.
