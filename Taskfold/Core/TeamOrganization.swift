@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 /// Organization roles never imply permission to read or edit a project.
-enum TeamOrganizationRole: String, Sendable, CaseIterable {
+enum TeamOrganizationRole: String, Sendable, CaseIterable, Hashable {
     case owner, admin, member, guest
     var title: String { rawValue.capitalized }
     var directoryVisible: Bool { self == .owner || self == .admin }
@@ -76,6 +76,9 @@ struct TeamOrganizationOverview: Equatable, Sendable {
     let enabled: Bool
     let teams: [TeamOrganization]
     let invitations: [TeamOrganizationInvitation]
+    func canAccept(_ invitation: TeamOrganizationInvitation, now: Date = Date()) -> Bool {
+        enabled && invitations.contains(invitation) && invitation.expires > now && !teams.contains(where: { $0.id == invitation.team })
+    }
     init(list: [String: JSON], invitations: [String: JSON], account: String, origin: String) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard case .bool(let enabled)? = list["enabled"], invitations["enabled"] == .bool(enabled) else { throw TeamOrganizationValue.invalid }

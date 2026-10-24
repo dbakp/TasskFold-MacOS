@@ -47,18 +47,20 @@ struct TeamOrganizationView: View {
             if scope != nil, scope == loadedScope, commands?.current == true, commands?.pending == nil, commands?.busy == false, browser?.loading == false {
                 if teamID == nil, let overview = browser?.overview, overview.enabled {
                     ToolbarItem { Button("New team", systemImage: "plus") { begin(.create) }.accessibilityIdentifier("teamCreate") }
-                } else if let detail = browser?.detail, browser?.setupEnabled == true {
+                } else if let detail = browser?.detail {
+                    let policy = TeamOrganizationAdministration(detail: detail, enabled: browser?.setupEnabled == true)
                     ToolbarItem { Menu("Manage team", systemImage: "ellipsis.circle") {
-                        if detail.team.role.directoryVisible && !detail.team.archived {
-                            Button("Rename team", systemImage: "pencil") { begin(.rename) }
-                            Button("New folder", systemImage: "folder.badge.plus") { begin(.folderCreate) }
-                        }
-                        if detail.team.role == .owner {
-                            Button(detail.team.archived ? "Reopen team" : "Archive team", systemImage: "archivebox") { begin(detail.team.archived ? .unarchive : .archive) }
-                        }
+                        if policy.allows(.rename) { Button("Rename team", systemImage: "pencil") { begin(.rename) } }
+                        if policy.allows(.folderCreate) { Button("New folder", systemImage: "folder.badge.plus") { begin(.folderCreate) } }
+                        if policy.allows(.invite) { Button("Invite to team", systemImage: "person.badge.plus") { begin(.invite) } }
+                        if policy.allows(.archive) { Button("Archive team", systemImage: "archivebox") { begin(.archive) } }
+                        if policy.allows(.unarchive) { Button("Reopen team", systemImage: "archivebox") { begin(.unarchive) } }
+                        if policy.allows(.leave) { Button("Leave team", role: .destructive) { begin(.leave) } }
+                        if policy.allows(.delete) { Button("Delete team", role: .destructive) { begin(.delete) } }
                     }.accessibilityIdentifier("teamManage") }
                 }
             }
+
             ToolbarItem { Button { Task { await browser?.refresh(team: teamID) } } label: { Label("Refresh teams", systemImage: "arrow.clockwise") }.disabled(scope == nil || browser?.loading == true || commands?.busy == true) }
         }
         .task(id: scope) { await start() }
@@ -70,14 +72,19 @@ struct TeamOrganizationView: View {
             if let reviewed = clearing { Button("Clear saved request", role: .destructive) { Task { await commands?.clearReviewedRequest(reviewed) } } }
         } message: { Text("Review the latest team details first. Clearing this device’s saved request does not cancel or undo a change that may already have been made.") }
         .onChange(of: commands?.receipt) { _, receipt in
-            guard receipt != nil else { return }
+            guard receipt != nil, let scope, scope == loadedScope, commands?.current == true else { return }
+            let leavesTeam = teamID != nil && (commands?.appliedAction == .leave || commands?.appliedAction == .delete)
+            let account = store.userID, generation = store.workspaceGeneration, incarnation = store.backend.reminderSessionIncarnation
+            // Finish navigation in the reviewed context. A later task refresh
+            // must never dismiss a different account's sheet after awaiting I/O.
+            if leavesTeam { dismiss() }
+            else { Task { await browser?.refresh(team: teamID) } }
             Task {
                 #if DEBUG
-                if !TeamOrganizationFixture.enabled { await store.sync() }
-                #else
-                await store.sync()
+                if TeamOrganizationFixture.enabled { return }
                 #endif
-                await browser?.refresh(team: teamID)
+                guard store.userID == account, store.workspaceGeneration == generation, store.backend.reminderSessionIncarnation == incarnation else { return }
+                await store.sync()
             }
         }
     }
@@ -110,16 +117,18 @@ struct TeamOrganizationView: View {
                 if !archived.isEmpty { Section("Archived") { ForEach(archived) { teamRow($0) } } }
             }
             let offers = overview.invitations.filter { $0.expires > Date() }
-            if !offers.isEmpty {
+            ForEach(offers) { offer in
                 Section {
-                    ForEach(offers) { offer in
-                        VStack(alignment: .leading, spacing: 5) {
-                            Label(offer.name, systemImage: "envelope").font(.headline)
-                            Text("Invited as \(offer.role.title.lowercased()) · Expires \(offer.expires.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(.secondary)
-                        }.padding(.vertical, 4)
-                    }
-                } header: { Text("Invitations") } footer: { Text("This preview shows your pending invitations. Responses aren’t available here yet.") }
+                    VStack(alignment: .leading, spacing: 5) {
+                        Label(offer.name, systemImage: "envelope").font(.headline)
+                        Text("Invited as \(offer.role.title.lowercased()) · Expires \(offer.expires.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(.secondary)
+                    }.padding(.vertical, 4)
+                    if overview.teams.contains(where: { $0.id == offer.team }) { Label("Already a member", systemImage: "person.crop.circle.badge.checkmark").foregroundStyle(.secondary) }
+                    else { Button("Join team") { beginInvitation(.acceptInvitation, offer: offer) }.disabled(!overview.canAccept(offer) || commands?.pending != nil || commands?.busy == true).accessibilityIdentifier("teamJoin-\(offer.id)") }
+                    Button("Decline invitation", role: .destructive) { beginInvitation(.declineInvitation, offer: offer) }.disabled(commands?.pending != nil || commands?.busy == true).accessibilityIdentifier("teamDecline-\(offer.id)")
+                } header: { Text("Invitation") }
             }
+
         }
         .refreshable { await browser?.refresh() }
         .accessibilityIdentifier("teamOverview")
@@ -167,6 +176,15 @@ struct TeamOrganizationView: View {
                             }
                             Spacer(minLength: 8)
                             Text(member.role.title).font(.subheadline).foregroundStyle(.secondary)
+                            let policy = TeamOrganizationAdministration(detail: detail, enabled: browser?.setupEnabled == true)
+                            if commands?.pending == nil && (policy.allows(.changeRole, member: member) || policy.allows(.removeMember, member: member) || policy.allows(.transferOffer, member: member)) {
+                                Menu {
+                                    if policy.allows(.changeRole, member: member) { Button("Change role") { begin(.changeRole, member: member) } }
+                                    if policy.allows(.transferOffer, member: member) { Button("Offer ownership") { begin(.transferOffer, member: member) } }
+                                    if policy.allows(.removeMember, member: member) { Button("Remove member", role: .destructive) { begin(.removeMember, member: member) } }
+                                } label: { Image(systemName: "ellipsis") }
+                                .accessibilityLabel("Manage member \(member.id.suffix(8))").accessibilityIdentifier("teamMember-\(member.id)").disabled(commands?.busy == true)
+                            }
                         }.padding(.vertical, 3)
                     }
                 }
@@ -177,6 +195,9 @@ struct TeamOrganizationView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(invitation.email).textSelection(.enabled)
                                 Text("\(invitation.role.title) · Expires \(invitation.expires.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(.secondary)
+                                if commands?.pending == nil, TeamOrganizationAdministration(detail: detail, enabled: browser?.setupEnabled == true).allows(.revokeInvitation, invitation: invitation) {
+                                    Button("Revoke invitation", role: .destructive) { begin(.revokeInvitation, invitation: invitation) }.buttonStyle(.borderless).disabled(commands?.busy == true).accessibilityIdentifier("teamRevoke-\(invitation.id)")
+                                }
                             }
                         }
                     }
@@ -188,6 +209,11 @@ struct TeamOrganizationView: View {
                 Section("Ownership") {
                     Label(transfer.target == detail.account ? "You’ve been offered ownership" : "Ownership transfer pending", systemImage: "person.badge.key")
                     Text("Expires \(transfer.expires.formatted(date: .abbreviated, time: .shortened))").font(.caption).foregroundStyle(.secondary)
+                    let policy = TeamOrganizationAdministration(detail: detail, enabled: browser?.setupEnabled == true)
+                    if commands?.pending == nil {
+                        if policy.allows(.transferAccept) { Button("Accept ownership") { begin(.transferAccept) }.disabled(commands?.busy == true).accessibilityIdentifier("teamAcceptOwnership") }
+                        if policy.allows(.transferCancel) { Button("Cancel ownership offer", role: .destructive) { begin(.transferCancel) }.disabled(commands?.busy == true).accessibilityIdentifier("teamCancelOwnership") }
+                    }
                 }
             }
         }
@@ -201,6 +227,7 @@ struct TeamOrganizationView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Label(pending.action.title, systemImage: "clock.arrow.circlepath").font(.headline)
                         if let name = pending.name { Text(name) }
+                        if let email = pending.email { Text(email) }
                         Text("The change may already have reached your team. Retry sends this same request; it won’t create a replacement.").font(.callout).foregroundStyle(.secondary)
                         if !pending.canRetry { Text("This request has expired. Check the latest team before clearing it.").foregroundStyle(.secondary) }
                     }.padding(.vertical, 4)
@@ -214,18 +241,29 @@ struct TeamOrganizationView: View {
             if commands.busy { Section { ProgressView("Saving team change…") } }
         }
     }
-    private func begin(_ action: TeamOrganizationCommand.Action, folder: TeamOrganizationDetail.Folder? = nil) {
+    private func begin(_ action: TeamOrganizationCommand.Action, folder: TeamOrganizationDetail.Folder? = nil, member: TeamOrganizationDetail.Member? = nil, invitation: TeamOrganizationDetail.Invitation? = nil) {
         guard let scope, scope == loadedScope, let commands, commands.current, !commands.busy, commands.pending == nil else { return }
         if action == .create {
             guard browser?.overview?.enabled == true else { return }
             editing = TeamOrganizationEditRequest(scope: scope, account: commands.account, origin: commands.origin, action: action, team: UUID().uuidString.lowercased(), revision: nil, folder: nil, name: "")
-        } else if let detail = browser?.detail, browser?.setupEnabled == true {
-            guard detail.team.role.directoryVisible,
-                  ![TeamOrganizationCommand.Action.archive, .unarchive].contains(action) || detail.team.role == .owner,
-                  action == .unarchive ? detail.team.archived : !detail.team.archived,
-                  !action.needsFolder || detail.folders.contains(where: { $0.id == folder?.id }) else { return }
-            editing = TeamOrganizationEditRequest(scope: scope, account: detail.account, origin: detail.origin, action: action, team: detail.team.id, revision: detail.team.revision, folder: folder?.id, name: folder?.name ?? ([TeamOrganizationCommand.Action.rename, .archive, .unarchive].contains(action) ? detail.team.name : ""))
+        } else if let detail = browser?.detail {
+            let policy = TeamOrganizationAdministration(detail: detail, enabled: browser?.setupEnabled == true)
+            guard policy.allows(action, member: member, invitation: invitation), !action.needsFolder || detail.folders.contains(where: { $0.id == folder?.id }) else { return }
+            let label = folder?.name ?? member.map { $0.id == detail.account ? "You" : "Member \($0.id.suffix(8))" } ?? invitation?.email ?? detail.team.name
+            var request = TeamOrganizationEditRequest(scope: scope, account: detail.account, origin: detail.origin, action: action, team: detail.team.id, revision: detail.team.revision, folder: folder?.id, name: action == .folderCreate || action == .invite ? "" : label)
+            request.state = detail.team.archived ? "archived" : "active"; request.target = label
+            request.user = member?.id; request.invitation = invitation?.id; request.transfer = detail.transfer?.id
+            request.roles = policy.assignableRoles; request.role = member?.role ?? invitation?.role ?? .member
+            editing = request
         }
+    }
+    private func beginInvitation(_ action: TeamOrganizationCommand.Action, offer: TeamOrganizationInvitation) {
+        guard [.acceptInvitation, .declineInvitation].contains(action), let scope, scope == loadedScope, let commands, commands.current,
+              !commands.busy, commands.pending == nil, offer.expires > Date(), browser?.overview?.invitations.contains(offer) == true,
+              action != .acceptInvitation || browser?.overview?.canAccept(offer) == true else { return }
+        var request = TeamOrganizationEditRequest(scope: scope, account: commands.account, origin: commands.origin, action: action, team: offer.team, revision: offer.revision, folder: nil, name: offer.name)
+        request.invitation = offer.id; request.target = offer.name; request.role = offer.role
+        editing = request
     }
     @MainActor private func start() async {
         browser?.invalidate(); commands?.close(); browser = nil; commands = nil; loadedScope = nil
@@ -259,6 +297,13 @@ private struct TeamOrganizationEditRequest: Identifiable {
     let revision: Double?
     let folder: String?
     let name: String
+    var state = "active"
+    var target = ""
+    var user: String?
+    var invitation: String?
+    var transfer: String?
+    var role: TeamOrganizationRole = .member
+    var roles: [TeamOrganizationRole] = [.member, .guest]
 }
 private struct TeamOrganizationEditSheet: View {
     let request: TeamOrganizationEditRequest
@@ -267,10 +312,17 @@ private struct TeamOrganizationEditSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
     @State private var error: String?
+    @State private var email = ""
+    @State private var confirmation = ""
+    @State private var role: TeamOrganizationRole
     init(request: TeamOrganizationEditRequest, model: TeamOrganizationCommandModel, current: @escaping () -> Bool) {
-        self.request = request; self.model = model; self.current = current; _name = State(initialValue: request.name)
+        self.request = request; self.model = model; self.current = current; _name = State(initialValue: request.name); _role = State(initialValue: request.role)
     }
     private var validName: Bool { !request.action.needsName || (try? TeamOrganizationValue.name(.string(name.trimmingCharacters(in: .whitespacesAndNewlines)))) != nil }
+    private var validInput: Bool {
+        validName && (request.action != .invite || TeamOrganizationCommand.validEmail(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())) &&
+            (!request.action.needsRole || request.roles.contains(role)) && (request.action != .delete || confirmation == request.target)
+    }
     var body: some View {
         NavigationStack {
             Form {
@@ -278,6 +330,29 @@ private struct TeamOrganizationEditSheet: View {
                     if request.action.needsName {
                         Section { TextField("Name", text: $name).accessibilityIdentifier("teamChangeName") }
                     } else if !request.name.isEmpty { Section { Text(request.name).font(.headline) } }
+                    if request.action == .invite {
+                        Section { TextField("Email", text: $email).accessibilityIdentifier("teamInvitationEmail")
+                            #if os(iOS)
+                            .keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
+                            #endif
+                        } footer: { Text("They’ll see this invitation in Taskfold when signed in with that verified email. No email is sent.") }
+                    }
+                    if request.action.needsRole {
+                        Section {
+                            ForEach(request.roles, id: \.rawValue) { option in
+                                Button { role = option } label: {
+                                    HStack(alignment: .top, spacing: 12) {
+                                        VStack(alignment: .leading, spacing: 4) { Text(option.title).font(.headline); Text(roleDescription(option)).font(.callout).foregroundStyle(.secondary) }
+                                        Spacer(minLength: 8)
+                                        if role == option { Image(systemName: "checkmark.circle.fill").foregroundStyle(.tint).accessibilityHidden(true) }
+                                    }.padding(.vertical, 4)
+                                }.buttonStyle(.plain).accessibilityLabel(option.title).accessibilityHint(roleDescription(option)).accessibilityValue(role == option ? "Selected" : "").accessibilityIdentifier("teamRole-\(option.rawValue)")
+                            }
+                        }
+                    }
+                    if let user = request.user { Section("Account reference") { Text(user).font(.caption.monospaced()).textSelection(.enabled) } }
+                    if request.action == .acceptInvitation { Section { Text("Join as \(request.role.title.lowercased())") } }
+                    if request.action == .delete { Section { TextField("Type team name", text: $confirmation).accessibilityIdentifier("teamDeleteConfirmation") } footer: { Text("Type \(request.target) to confirm.") } }
                     Section { Text(explanation).foregroundStyle(.secondary) }
                     if let error { Section { Label(error, systemImage: "exclamationmark.circle").foregroundStyle(.secondary) } }
                     if model.busy { Section { ProgressView("Saving…") } }
@@ -288,13 +363,13 @@ private struct TeamOrganizationEditSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             #else
             .formStyle(.grouped)
-            .frame(width: 520, height: 340)
+            .frame(width: 520, height: request.action.needsRole ? 560 : 340)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(model.busy) }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(request.action.needsName ? "Save" : "Confirm") { Task { await submit() } }
-                        .disabled(!current() || !model.current || model.busy || !validName || model.pending != nil).accessibilityIdentifier("teamConfirmChange")
+                        .disabled(!current() || !model.current || model.busy || !validInput || model.pending != nil).accessibilityIdentifier("teamConfirmChange")
                 }
             }
             .interactiveDismissDisabled(model.busy)
@@ -309,12 +384,31 @@ private struct TeamOrganizationEditSheet: View {
         case .folderCreate: return "Add a folder to organize your team. Project access is managed separately."
         case .folderRename: return "Update this folder’s name for everyone in the team."
         case .folderRemove: return "Remove this folder. Projects and tasks are kept."
+        case .invite: return "Create an in-app invitation valid for seven days. The recipient must accept before joining."
+        case .revokeInvitation: return "Remove this invitation so it can no longer be accepted. Existing memberships stay unchanged."
+        case .acceptInvitation: return "Accept this invitation and join the team with the offered role. Project access is managed separately."
+        case .declineInvitation: return "Remove this invitation without changing your team memberships."
+        case .changeRole: return "Update this person’s team role. Invitations they created and ownership offers involving them will be cancelled. Project permissions are managed separately."
+        case .removeMember: return "End this person’s team membership. Invitations they created and ownership offers involving them will be cancelled. Team work stays with the team."
+        case .leave: return "End your membership and team access. Team work stays with the team. An owner must transfer ownership before leaving."
+        case .delete: return "Delete this team and its membership, folder and invitation settings. Team access ends. This can’t be undone here."
+        case .transferOffer: return "Offer ownership to this accepted member for one day. You remain owner until they accept."
+        case .transferAccept: return "Become the team’s owner. The current owner becomes an admin, and pending invitations are cancelled."
+        case .transferCancel: return "Cancel the pending ownership offer. The current owner keeps ownership."
+        }
+    }
+    private func roleDescription(_ role: TeamOrganizationRole) -> String {
+        switch role {
+        case .owner: return "Ownership changes require a separate accepted offer."
+        case .admin: return "Admins manage team settings and most memberships. Only the owner can appoint or manage admins."
+        case .member: return "Members see team folders. Project access is managed separately."
+        case .guest: return "Guests see basic team details. Project access is managed separately."
         }
     }
     @MainActor private func submit() async {
-        guard current(), model.current, validName else { return }
+        guard current(), model.current, validInput else { return }
         do {
-            let command = try TeamOrganizationCommand(account: request.account, origin: request.origin, action: request.action, team: request.team, revision: request.revision, name: request.action.needsName ? name : nil, folder: request.folder)
+            let command = try TeamOrganizationCommand(account: request.account, origin: request.origin, action: request.action, team: request.team, revision: request.revision, name: request.action.needsName ? name : nil, folder: request.folder, email: request.action == .invite ? email : nil, role: request.action.needsRole ? role : nil, user: request.action.needsUser ? request.user : nil, invitation: request.action.needsInvitation ? request.invitation : nil, transfer: request.action == .transferAccept ? request.transfer : nil, state: request.state)
             await model.send(command)
             if model.pending != nil || model.success != nil { dismiss() }
             else { error = model.message ?? "The change couldn’t be saved. Try again." }
@@ -327,21 +421,23 @@ private struct TeamOrganizationEditSheet: View {
 /// app container. This peer never signs in, contacts a service or touches tasks.
 enum TeamOrganizationFixture {
     static var management: Bool {
-        ["com.dbakp.taskfold.workflowteststeamcommands", "com.dbakp.taskfold.mac.workflowteststeamcommands"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--team-command-testing")
+        TeamMembershipFixture.enabled || ["com.dbakp.taskfold.workflowteststeamcommands", "com.dbakp.taskfold.mac.workflowteststeamcommands"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--team-command-testing")
     }
     static var enabled: Bool {
         management || (["com.dbakp.taskfold.workflowteststeams", "com.dbakp.taskfold.mac.workflowteststeams"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--team-overview-testing"))
     }
-    static let account = "ea300000-0000-4000-8000-000000000001"
+    static var account: String { TeamMembershipFixture.enabled ? TeamMembershipFixture.account : "ea300000-0000-4000-8000-000000000001" }
     static let team = "ea300000-0000-4000-8000-000000000002"
     static let origin = "https://synthetic.example"
     static var row: [String: JSON] { ["id": .string(team), "name": .string("Design studio"), "role": .string("owner"), "state": .string("active"), "revision": .number(3)] }
     @MainActor private static let peer = TeamOrganizationFixturePeer()
     @MainActor static func browser() -> TeamOrganizationBrowser {
-        TeamOrganizationBrowser(account: account, origin: origin, current: { enabled }, overview: { try peer.overview() }, detail: { try peer.detail($0) })
+        if TeamMembershipFixture.enabled { return TeamMembershipFixture.browser() }
+        return TeamOrganizationBrowser(account: account, origin: origin, current: { enabled }, overview: { try peer.overview() }, detail: { try peer.detail($0) })
     }
     @MainActor static func commands() -> TeamOrganizationCommandModel {
-        TeamOrganizationCommandModel(account: account, origin: origin, vault: TeamOrganizationCommandVault(io: TeamOrganizationFixtureIO()), service: peer, isCurrent: { enabled })
+        if TeamMembershipFixture.enabled { return TeamMembershipFixture.commands() }
+        return TeamOrganizationCommandModel(account: account, origin: origin, vault: TeamOrganizationCommandVault(io: TeamOrganizationFixtureIO()), service: peer, isCurrent: { enabled })
     }
 }
 private struct TeamOrganizationFixtureIO: CalendarSecureItemIO {
@@ -404,6 +500,7 @@ private struct TeamOrganizationFixtureIO: CalendarSecureItemIO {
             guard let i = list.firstIndex(where: { $0.object["id"] == command.body["folder_id"] }) else { throw TeamOrganizationCommandFailure(code: "PT404") }
             if command.action == .folderRemove { list.remove(at: i) }
             else { var folder = list[i].object; folder["name"] = command.body["name"]; list[i] = .object(folder) }
+        default: throw TeamOrganizationCommandFailure(code: "22023")
         }
         let result = try command.confirmed(receipt)
         teams[command.team] = .object(team); folders[command.team] = .array(list)

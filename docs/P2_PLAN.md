@@ -8,9 +8,10 @@ Rank 6 is active: source-custody and opening-time editor admission are in place.
 A gated native team overview now shows organization roles, folders and permitted
 directory/invitation information through account-bound read adapters. Reviewed
 team creation, naming, archive/reopen and folder changes now use private
-stable-request recovery; team rollout stays disabled. Next: invitation responses,
-membership/role and ownership management, broader role/account and draft-cohort
-acceptance, then remaining scoped team-task adapters. Rank 7 still needs paired
+stable-request recovery; team rollout stays disabled. Gated invitation responses,
+membership/role/ownership and leave/delete controls are now implemented. Next:
+broader native/live role/account and draft-cohort acceptance, verified member
+identity presentation, then remaining scoped team-task adapters. Rank 7 still needs paired
 offline completion and its recorded native/hardware gates. User-deferred release,
 provider and device dependencies remain deferred.
 
@@ -2306,3 +2307,25 @@ an independent native-decoder fixture in each repository. See
 stage does not complete advanced teams or Px. Invitation responses and membership/
 role management, ownership, leave/delete flows, broad live/native acceptance and
 the remaining team-task/admission work stay open; user deferrals remain unchanged.
+
+## Gated membership and ownership administration (24 October 2026)
+
+Rank 6 now connects all eighteen organization actions to the native surface in
+both independent apps. Incoming verified-email offers can be joined/declined;
+existing members cannot join again. Owners/admins get the appropriate role,
+revocation and removal controls; ownership requires a separate accepted offer.
+Paused/archived teams retain allowed recovery actions, and deletion requires the
+reviewed team name. Visible role descriptions, target account references and
+explicit consequences support the review. None of these organization roles grant
+project/task permission, send mail or enable team rollout.
+
+Private recovery now also binds the original active/archived state without adding
+unsupported RPC fields; invite/transfer receipts validate their new identifiers.
+Verified leave/delete navigation happens before background task sync and is
+scoped to the reviewed context. Actual PostgreSQL fixtures cover successful
+receipts for all eighteen actions, including new positive leave/revoke cases.
+Exact evidence is in `p2-team-members-evidence.json` and
+`p2-team-members-postgres-evidence.json`. Real service/Auth/Keychain and broader
+role/account/draft acceptance, verified identity presentation, Mac/runtime/spoken
+checks and the remaining team-task adapters remain open. This milestone does not
+complete advanced teams or Px; user deferrals remain unchanged.

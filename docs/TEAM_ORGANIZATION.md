@@ -1,7 +1,7 @@
 # Team organization foundation
 
 Status: disabled, local verification only (24 October 2026). Gated native
-overview and reviewed team/folder administration now exist in each app; no
+overview and reviewed organization administration now exist in each app; no
 deployment or project access change is included. Each app repository owns its sources, migration and tests; neither
 app builds against the other repository.
 
@@ -12,9 +12,9 @@ folders, incoming invitations, and ownership offers. Owner/admin detail includes
 the role directory and pending invitation emails; member and guest responses
 must omit that private directory, and guests must also omit folders. Names are
 not invented from account identifiers. The initial read-only milestone is retained in `p2-team-overview-evidence.json`.
-Reviewed organization changes are now described below. Invitation responses,
-membership/roles, team deletion/leaving and ownership actions remain pending;
-no email is sent by the new controls.
+Reviewed organization changes are described below. All eighteen service actions
+now have gated native controls, including membership and ownership management.
+No email is sent by these controls; live rollout remains disabled.
 
 `TeamOrganizationOverview` and `TeamOrganizationDetail` decode bounded collections,
 UUIDs, finite integer revisions, valid states, roles, expiry dates, folder order,
@@ -78,6 +78,52 @@ fixture, invokes the existing workspace sync to refresh task/access projections.
 Successful compilation is not live team-rollout acceptance. Exact checks and
 remaining limits are in `p2-team-commands-evidence.json` and
 `p2-team-commands-postgres-evidence.json`.
+
+## Membership, invitations and ownership
+
+Both apps now expose in-app Invite, Revoke, Join and Decline; Change role and
+Remove member; Offer/Accept/Cancel ownership; Leave and Delete team. All use the
+same private stable-request journal and reviewed account/backend/revision as
+team/folder administration. Invite explicitly says no email is sent: a verified
+recipient finds the offer in their own Taskfold invitation list. Existing members
+see Already a member rather than an invalid Join action. Declining an offer does
+not change an existing membership.
+
+Role choices are visible native rows with permission descriptions and selected
+state. Owners may appoint admins/members/guests; admins may manage members/guests
+but cannot appoint or manage admins. Current owners cannot be removed or leave;
+transfer requires an accepted non-guest recipient's separate confirmation. Guest
+and member views omit the privileged directory. Account references in individual
+reviews disambiguate the selected UUID without inventing display names or adding
+an unscoped account lookup; richer verified member identity presentation remains
+a rollout gate.
+
+Recovery/removal/ownership controls follow the service's paused/archived rules;
+ordinary setup stays hidden while paused and ordinary edits require an active
+team. The server still checks current authority for every attempt and replay.
+Role/member changes warn that the target's issued invitations and related
+ownership offers are cancelled. Ownership acceptance warns that the former owner
+becomes an admin and pending invitations are cancelled. Delete requires typing
+the exact reviewed team name and explains loss of access; it is not an assertion
+that every retained team-work record is physically erased.
+
+Review metadata retains the team's original active/archived state outside the
+RPC body, so recovery commands validate the correct result state. Old saved
+seven-action requests without that metadata retain their original body/ID and
+infer their original state. Invite and ownership-offer receipts require their
+new identifiers before acknowledgement. A verified Leave/Delete finishes
+navigation in its original context immediately; workspace sync runs separately
+with captured account/generation/session guards, so delayed I/O cannot dismiss
+a different account's screen.
+
+The database harness now captures successful responses at the RPC boundary for
+all eighteen actions and adds positive leave/revoke/retry/return checks; existing
+authority, actor/session, replay and concurrency cases remain. Each repository
+owns its generated response fixture and sources. See `p2-team-members-evidence.json`
+and `p2-team-members-postgres-evidence.json` for exact acceptance. These controls
+do not complete native team task adapters, live Auth/Keychain/account/access
+acceptance, profile identity presentation, spoken testing or distribution, and
+do not enable the disabled team service.
 
 ## Durable model
 

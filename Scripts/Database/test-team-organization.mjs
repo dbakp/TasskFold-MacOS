@@ -28,7 +28,7 @@ const users = Object.fromEntries(
   ),
 );
 const nativeCommands = [];
-const nativeCommandActions = new Set(["create", "rename", "archive", "unarchive", "folder_create", "folder_rename", "folder_remove"]);
+const nativeCommandActions = new Set(["create", "rename", "archive", "unarchive", "delete", "invite", "revoke_invitation", "accept_invitation", "decline_invitation", "change_role", "remove_member", "leave", "transfer_offer", "transfer_accept", "transfer_cancel", "folder_create", "folder_rename", "folder_remove"]);
 const captureCommand = (who, action, body, result) => {
   if (nativeCommandActions.has(action)) nativeCommands.push({account: users[who].id, action, body, result});
 };
@@ -91,16 +91,14 @@ try {
         lit(JSON.stringify({ sub: u.id, session_id: session, role, ...claims }))
       };do $test$begin begin insert into team_result values((${expression}),null,null);exception when others then insert into team_result values(null,sqlstate,left(sqlerrm,160));end;end$test$;select jsonb_build_object('value',value,'code',code,'reason',reason) from team_result;commit;`,
     );
-  const rpc = (who, action, body, opts) =>
-    run(
-      users[who],
-      `public.taskfold_teams(${lit(action)},${json(body)})`,
-      opts,
-    );
+  const rpc = async (who, action, body, opts) => {
+    const result = await run(users[who], `public.taskfold_teams(${lit(action)},${json(body)})`, opts);
+    if (result.code === null) captureCommand(who, action, body, result.value);
+    return result;
+  };
   const ok = async (name, who, action, body, opts) => {
     const r = await rpc(who, action, body, opts);
     check(name + " succeeds", r.code, null);
-    captureCommand(who, action, body, r.value);
     return r.value;
   };
   const deny = async (name, who, action, body, code, opts) =>
@@ -125,7 +123,6 @@ try {
     const body = request(await revision(t), extra, t);
     const r = await rpc(who, action, body);
     check(name, r.code, null);
-    captureCommand(who, action, body, r.value);
     return r.value;
   };
   const create = request(null, { name: "Design studio" });
@@ -438,6 +435,17 @@ try {
     user_id: users.admin.id,
     role: "admin",
   });
+  const revokeProof = await change("native revoke invitation setup", "owner", "invite", {email: users.other.email, role: "guest"});
+  const revokeBody = request(await revision(), {invitation_id: revokeProof.invitation_id});
+  const revokedProof = await ok("native revoke invitation", "owner", "revoke_invitation", revokeBody);
+  check("native revoke exact retry", await ok("native retry revoke", "owner", "revoke_invitation", revokeBody), revokedProof);
+  check("native revoked invitation disappears", (await ok("native revoked invitation list", "other", "invitations", {})).invitations.length, 0);
+  const leaveBody = request(await revision());
+  await ok("native guest leave", "guest", "leave", leaveBody);
+  check("native left membership disappears", (await ok("native left team list", "guest", "list", {})).teams.length, 0);
+  await deny("native left actor cannot replay leave", "guest", "leave", leaveBody, "PT404");
+  const returnGuest = await change("native guest return invitation", "owner", "invite", {email: users.guest.email, role: "guest"});
+  await ok("native guest return", "guest", "accept_invitation", request(await revision(), {invitation_id: returnGuest.invitation_id}));
   const expired = await change("invite expiry fixture", "owner", "invite", {
     email: users.other.email,
     role: "guest",

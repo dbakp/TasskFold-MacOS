@@ -4323,3 +4323,11 @@ privately before sending; retry and local clearing have distinct controls and
 meaning. The app never substitutes a fresh command for an uncertain result.
 Live team rollout and remaining membership/invitation/ownership flows stay open.
 See [command evidence](p2-team-commands-evidence.json) for verification limits.
+
+24 October membership administration: native invitation responses, visible role
+choices with permission explanations, removal, ownership offers/acceptance,
+leave and exact-name deletion reviews are wired through private stable requests.
+Recovery remains available where allowed during setup pauses or archiving.
+Verified leave/delete navigation no longer waits for background task sync. See
+[membership evidence](p2-team-members-evidence.json) for exact runtime limits;
+live team rollout and the remaining access/identity/task gates remain open.

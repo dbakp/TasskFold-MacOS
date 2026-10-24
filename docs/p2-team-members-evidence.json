@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-24",
+  "milestone": "Gated membership and ownership administration",
+  "platform": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamOrganizationCommand.swift": "4f8cf9a83a75e2284a01fb3d965ded15bcf1a635130a95a6097fccbbdfb772e2",
+    "Taskfold/Core/TeamOrganization.swift": "4cff55433700e8fe175a1e0da3d21d643e4333b773e1180000c84a60a2830785",
+    "Taskfold/Views/TeamOrganizationView.swift": "30aa9638c714e51e7063926f2716bc7b74fdbc8a6733ae12869d06b7a6323de9",
+    "Taskfold/Views/TeamMembershipFixture.swift": "f89165027e5877b50c50eeb7e39fedbc5dd2c54a4a8303c452974699e0bb1942",
+    "TaskfoldTests/TeamOrganizationCommandTests.swift": "98d677b2b05ed3179ad112dac3ef9df6708ce281b13533842f7c54855145b807",
+    "TaskfoldTests/TeamOrganizationMembershipTests.swift": "6275eae49f805455c554e6e001429c9d3c66a6ac6bcfa18d5c8218bb0e8e3752",
+    "TaskfoldTests/Fixtures/team-organization-commands-v1.json": "b40097c2aa996e01dac95f508ac65d5ae9a865697282ca6714c602d82cd66bf8",
+    "Scripts/Database/test-team-organization.mjs": "99ba8dd0159b5eb2cd8232c658aa0528e7374bb72b7edd73ba303c1906e26bd5",
+    "Taskfold.xcodeproj/project.pbxproj": "a73401b3a9bd7bc1255d7ac49595eafef7e073ffe4c3b44d5d2a9a8eae4fad91"
+  },
+  "deployed": false,
+  "teamSetupEnabled": false,
+  "realDataChanged": false,
+  "emailSent": false,
+  "nativeTeamTaskWritesEnabled": false,
+  "core": {
+    "status": "passed",
+    "tests": 82,
+    "membershipTests": 10,
+    "allActionContractAndRecoveryCases": 18,
+    "log": "/tmp/taskfold-team-members-mac-core-accepted.log"
+  },
+  "database": {
+    "status": "passed",
+    "checks": 168,
+    "actualCommandReceipts": 42,
+    "actionsCovered": 18,
+    "positiveLeaveRevokeCasesAdded": true,
+    "advisorsRan": true,
+    "containerRemoved": true,
+    "fixture": "TaskfoldTests/Fixtures/team-organization-commands-v1.json",
+    "report": "p2-team-members-postgres-evidence.json"
+  },
+  "remaining": [
+    "Live authenticated service/RLS/Keychain/native and broader role/account/epoch/draft-cohort acceptance",
+    "Mac runtime and spoken accessibility for these controls",
+    "Verified member identity presentation; identifiers are explicit rather than invented names",
+    "Team task/project adapters and full project/task/API/email/storage rollout gates",
+    "User-deferred release, remote notifications, older-client enforcement, OAuth, physical location and inbound email setup remain deferred"
+  ],
+  "cleanup": {
+    "ownedBuildsRemoved": true,
+    "ownedSimulatorAppsAndRunnersUninstalled": true,
+    "macTestAppNotLaunched": true,
+    "approximateBytesReclaimedAcrossBothRepos": 1562032873,
+    "smallLogsAndCoreBuildCachesRetained": true
+  },
+  "build": {
+    "status": "passed",
+    "target": "Independent isolated arm64 macOS app",
+    "log": "/tmp/taskfold-team-members-mac-build-verified.log"
+  },
+  "native": {
+    "status": "not accepted",
+    "reason": "Current computer-use inventory reported Mac locked. No app was launched or additional unlock requested.",
+    "actualMacKeychainRuntimeClaimed": false
+  }
+}

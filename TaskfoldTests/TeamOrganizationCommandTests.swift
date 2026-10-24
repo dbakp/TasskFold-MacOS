@@ -41,11 +41,14 @@ private final class CommandHTTP: URLProtocol, @unchecked Sendable {
 }
 final class TeamOrganizationCommandTests: XCTestCase {
     func command(_ action: TeamOrganizationCommand.Action = .create, now: Date = Date()) throws -> TeamOrganizationCommand {
-        try .init(account: cmAccount, origin: cmOrigin, action: action, team: cmTeam, revision: action == .create ? nil : 3, name: action.needsName ? "  Design studio  " : nil, folder: action.needsFolder ? cmFolder : nil, now: now)
+        try .init(account: cmAccount, origin: cmOrigin, action: action, team: cmTeam, revision: action == .create ? nil : 3, name: action.needsName ? "  Design studio  " : nil, folder: action.needsFolder ? cmFolder : nil, email: action == .invite ? "Joiner@Example.invalid" : nil, role: action.needsRole ? .member : nil, user: action.needsUser ? cmOther : nil, invitation: action.needsInvitation ? cmFolder : nil, transfer: action == .transferAccept ? cmFolder : nil, now: now)
     }
     func reply(_ command: TeamOrganizationCommand) -> [String: JSON] {
-        var raw: [String: JSON] = ["id": .string(command.team), "revision": .number(command.action == .create ? 1 : 4), "state": .string(command.action == .archive ? "archived" : "active")]
-        if command.action == .folderCreate { raw["folder_id"] = .string(cmFolder) }; return raw
+        var raw: [String: JSON] = ["id": .string(command.team), "revision": .number(command.action == .create ? 1 : 4), "state": .string(command.resultState)]
+        if command.action == .folderCreate { raw["folder_id"] = .string(cmFolder) }
+        if command.action == .invite { raw["invitation_id"] = .string(cmFolder) }
+        if command.action == .transferOffer { raw["transfer_id"] = .string(cmFolder) }
+        return raw
     }
     func testAllActionsHaveExactBodiesAndRoundTripWithoutChangingRequestIdentity() throws {
         for action in TeamOrganizationCommand.Action.allCases {
@@ -71,7 +74,7 @@ final class TeamOrganizationCommandTests: XCTestCase {
     func testReceiptsRejectForeignTeamStateRevisionAndMissingFolder() throws {
         for action in TeamOrganizationCommand.Action.allCases {
             let command = try command(action), expected = reply(command)
-            for change in [["id": JSON.string(cmOther)], ["revision": .number(2)], ["state": .string("deleted")]] { XCTAssertThrowsError(try command.confirmed(expected.merging(change) { _, b in b })) }
+            for change in [["id": JSON.string(cmOther)], ["revision": .number(2)], ["state": .string(command.resultState == "deleted" ? "active" : "deleted")]] { XCTAssertThrowsError(try command.confirmed(expected.merging(change) { _, b in b })) }
             if action == .folderCreate { var missing = expected; missing.removeValue(forKey: "folder_id"); XCTAssertThrowsError(try command.confirmed(missing)) }
         }
     }
@@ -201,7 +204,7 @@ final class TeamOrganizationCommandTests: XCTestCase {
         var actions: Set<String> = []
         for raw in rows {
             let action = try XCTUnwrap(TeamOrganizationCommand.Action(rawValue: raw["action"]!.text)); actions.insert(action.rawValue)
-            let command = try TeamOrganizationCommand(account: raw["account"]!.text, origin: cmOrigin, action: action, body: raw["body"]!.object)
+            let command = try TeamOrganizationCommand(account: raw["account"]!.text, origin: cmOrigin, action: action, body: raw["body"]!.object, state: action == .unarchive || (raw["result"]!.object["state"] == .string("archived") && action != .archive) ? "archived" : "active")
             XCTAssertNoThrow(try command.confirmed(raw["result"]!.object))
         }
         XCTAssertEqual(actions, Set(TeamOrganizationCommand.Action.allCases.map(\.rawValue)))
