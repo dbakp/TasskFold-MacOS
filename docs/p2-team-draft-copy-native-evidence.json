@@ -1,0 +1,41 @@
+{
+  "stage": "reviewed-saved-team-draft-copy",
+  "verifiedAt": "2026-10-24T09:31:00.722816+00:00",
+  "platform": "mac",
+  "database": {
+    "passed": 144,
+    "failed": 0,
+    "reportSHA256": "221982aa46fd435a5575f7c30d6a7f2eb7420dbbd3ace205f9e51a6689aaeb3b",
+    "containersRemoved": true
+  },
+  "native": {
+    "selectedTestsPassed": 481,
+    "failed": 0,
+    "completionTestsPassed": 84,
+    "newCompletionTests": 19,
+    "includesBackupAccountRemovalAndReminderPlannerTests": true,
+    "testLogSHA256": "3892ecc7ff451085094564660007de1dca18271a0304fe850b280ce15a89efc7",
+    "unsignedDebugAppAndExtensionsBuildPassed": true,
+    "buildLogSHA256": "7008bd8c7c8299997bfacebfd2437a01fa7118eb7b46dda249c3ed622f029d44"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/TeamCompletionDraft.swift": "6e35957fffc15d718e9958ce52a196e228d8127f1d5739e6b9a3298e5ffa457d",
+    "Taskfold/Core/Backend.swift": "ef703e6c1f429c7b9eb00add8d73a312613b35aa6763863f9b46d15eb69f4e86",
+    "Taskfold/Core/Store.swift": "635a90fc90eed4bbfed2bd28071474d22dd41d7db66b465af708c4377f55c815",
+    "Taskfold/Collaboration.swift": "63182e9afdb16bb4d5bb67a20080716ce26c88859fd2dd79b22fc3e1b458a160",
+    "TaskfoldTests/TeamCompletionTests.swift": "4e8505ff2c800b82be5b1e9538aac25d3828a2a64ba1da54b79823e6a5317860",
+    "TaskfoldTests/Fixtures/team-draft-copy-v1.json": "efdb7430b61fe865bfe1968670a7ebd76ea10add569f71f2915bfff479e872c7",
+    "supabase/migrations/20261024090623_team_saved_draft_copy.sql": "a8627f8df64348c82f337378ce4e6d7b4ec744dd72f588c2d45f3e9ca8090502",
+    "Scripts/Database/team-draft-copy-schema.mjs": "c8b20ef0198bb80e340ec6ff7e8a57281bb91d1185902d4a30da81c521307498",
+    "Scripts/Database/test-team-draft-copy.mjs": "a7b75da9590607784b8f790a8713c7c81137b0321dbea1d834562763486a210e"
+  },
+  "ownedBuildRemoved": true,
+  "ownedBuildBytesRemoved": 1161273069,
+  "temporaryMacRegistrationRemoved": true,
+  "appLaunched": false,
+  "hostedChanges": false,
+  "nativeRuntimeAcceptanceClaimed": false,
+  "visualAccessibilityAcceptanceClaimed": false,
+  "teamEditingEnabled": false,
+  "fullRankComplete": false
+}

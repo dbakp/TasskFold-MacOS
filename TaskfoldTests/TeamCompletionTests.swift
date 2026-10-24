@@ -736,4 +736,240 @@ final class TeamCompletionTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath:vault.file(draft.id).path))
     }
 
+    private func draftCopyFixture() throws -> (TeamCompletionDraft,TeamCompletionDraft.CopyCommand,[String:JSON]) {
+        let url=try XCTUnwrap(Bundle.module.url(forResource:"team-draft-copy-v1",withExtension:"json",subdirectory:"Fixtures"))
+        let root=try JSONDecoder().decode([String:JSON].self,from:Data(contentsOf:url)),body=root["body"]!.object,original=body["original"]!.object
+        let source=Record(original["record"]!.object),id=try XCTUnwrap(UUID(uuidString:original["request_id"]!.text))
+        let scope=TeamTaskEditScope(account:root["account"]!.text,origin:origin,team:original["team_id"]!.text,project:original["project_id"]!.text)
+        let forecast=try TeamCompletion.complete(source,tasks:[source],scope:scope,at:TaskPlanning.instant(original["completed_at"]!.text)!,zone:original["input_zone"]!.text,id:id)
+        var proposed=forecast.teamCompletion!.proposed;proposed?["task_generation"]=original["next_generation"]!
+        let command=TeamCompletion(scope:scope,operation:.complete,source:source,completedAt:original["completed_at"]!.text,inputZone:original["input_zone"]!.text,seriesID:original["series_id"]!.text,seriesGeneration:original["series_generation"]!.text,seriesProject:original["series_project_id"]!.text,nextGeneration:original["next_generation"]!.text,proposed:proposed,related:nil)
+        let draft=TeamCompletionDraft(version:1,id:UUID(),createdAt:Date(timeIntervalSince1970:1792830000),original:TeamCompletion.header(command,id:id),record:Record(body["record"]!.object),markedForDeletion:false,edits:[],conversations:[])
+        let copy=TeamCompletionDraft.CopyCommand(assignments:body["copy_assignments"]!.flag,reminders:body["copy_reminders"]!.flag,requestID:UUID(uuidString:body["request_id"]!.text)!,taskID:UUID(uuidString:body["task_id"]!.text)!,generation:UUID(uuidString:body["task_generation"]!.text)!)
+        return(draft,copy,root)
+    }
+    func testSavedDraftCopyMatchesActualSQLRequestAndFreshReceipt() throws {
+        let(draft,command,fixture)=try draftCopyFixture()
+        XCTAssertEqual(try command.body(for:draft),fixture["body"]!.object)
+        let preview=try TeamCompletionDraft.CopyReview(fixture["preview"]!.object,draft:draft,command:command)
+        XCTAssertFalse(preview.recorded);XCTAssertNil(preview.installing(in:Snapshot()))
+        let created=try TeamCompletionDraft.CopyReview(fixture["created"]!.object,draft:draft,command:command)
+        XCTAssertTrue(created.recorded);XCTAssertFalse(created.replayed)
+        XCTAssertEqual(created.task?["attachments"],draft.record["attachments"])
+        XCTAssertEqual(created.task?["source_metadata"].object["future"],draft.record["source_metadata"].object["future"])
+        XCTAssertEqual(created.task?["subtasks"].list.first?.object["description"],draft.record["subtasks"].list.first?.object["description"])
+        XCTAssertEqual(created.task?["recurrence_parent_id"],.null)
+        let local=Snapshot(tables:["projects":[Record(["id":.string(draft.scope.project)])],"tasks":[draft.original.teamCompletion!.source]])
+        let installed=try XCTUnwrap(created.installing(in:local))
+        XCTAssertEqual(installed.tables["tasks"]?.count,2);XCTAssertEqual(installed.tables["tasks"]?.first,local.tables["tasks"]?.first)
+        XCTAssertTrue(installed.pending.isEmpty);XCTAssertEqual(local.tables["tasks"]?.count,1)
+    }
+    func testSavedDraftCopyRejectsWrongScopeIdentityAndChoiceReceipts() throws {
+        let(draft,command,fixture)=try draftCopyFixture(),reply=fixture["created"]!.object
+        for key in ["account","team_id","project_id","original_request_id","request_id","task_id","task_generation"] {
+            var bad=reply;bad[key] = .string(UUID().uuidString.lowercased())
+            XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command),key)
+        }
+        for key in ["copy_assignments","copy_reminders"] {
+            var bad=reply;bad[key] = .bool(true)
+            XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command),key)
+        }
+        for key in ["recorded","replayed","unavailable","cancelled"] {
+            var bad=reply;bad[key] = .string("true")
+            XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command),key)
+        }
+        var bad=fixture["preview"]!.object;bad["replayed"] = .bool(true)
+        XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command))
+        bad=reply;bad["task"] = .null
+        XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command))
+    }
+    func testSavedDraftCopyCannotClaimOldRootOrChildCompletionHistoryAsFresh() throws {
+        let(draft,command,fixture)=try draftCopyFixture(),reply=fixture["created"]!.object
+        for (key,value) in [("completion_version",JSON.number(5)),("recurrence_parent_id",JSON.string(draft.record.id)),("comments",JSON.array([.string("old discussion")])),("notification_sent_at",JSON.string("2026-10-24T12:00:00Z"))] {
+            var bad=reply,task=reply["task"]!.object;task[key]=value;bad["task"] = .object(task)
+            XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command),key)
+        }
+        var bad=reply,task=reply["task"]!.object,child=task["subtasks"]!.list[0].object
+        child["taskfold_completion_v1"] = .object(["epoch":.string("wrong"),"version":.number(0)])
+        task["subtasks"] = .array([.object(child)]);bad["task"] = .object(task)
+        XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command))
+    }
+    func testSavedDraftCopyRetryAcceptsCurrentEditedRowAndUnavailableDeletion() throws {
+        let(draft,command,fixture)=try draftCopyFixture()
+        let edited=try TeamCompletionDraft.CopyReview(fixture["editedReplay"]!.object,draft:draft,command:command)
+        XCTAssertTrue(edited.replayed);XCTAssertEqual(edited.task?.string("description"),"Another edit after creation")
+        let unavailable=try TeamCompletionDraft.CopyReview(fixture["unavailableReplay"]!.object,draft:draft,command:command)
+        XCTAssertTrue(unavailable.recorded);XCTAssertNil(unavailable.task)
+        let local=Snapshot(tables:["tasks":[draft.record]])
+        XCTAssertEqual(unavailable.installing(in:local),local)
+    }
+    func testSavedDraftCopyInstallationNeverOverwritesNewLocalWorkOrGeneration() throws {
+        let(draft,command,fixture)=try draftCopyFixture(),review=try TeamCompletionDraft.CopyReview(fixture["created"]!.object,draft:draft,command:command)
+        var local=Snapshot(tables:["projects":[Record(["id":.string(draft.scope.project)])],"tasks":[review.task!]])
+        local.tables["tasks"]![0]["description"] = .string("New local instructions")
+        let before=local;XCTAssertNil(review.installing(in:local));XCTAssertEqual(local,before)
+        local.tables["tasks"]![0]["task_generation"] = .string(UUID().uuidString.lowercased())
+        XCTAssertNil(review.installing(in:local))
+        local.tables["tasks"]=[]
+        let deletion=Mutation(table:"tasks",recordID:command.taskID.uuidString.lowercased(),method:"DELETE",fields:[:])
+        local.pending=[deletion];XCTAssertNil(review.installing(in:local));XCTAssertEqual(local.pending,[deletion])
+        local.pending=[];local.tables.removeValue(forKey:"projects");XCTAssertNil(review.installing(in:local))
+    }
+    func testSavedDraftCopyPreservesIndependentQueueAndProtectsCommentOutbox() throws {
+        let(draft,command,fixture)=try draftCopyFixture(),review=try TeamCompletionDraft.CopyReview(fixture["created"]!.object,draft:draft,command:command)
+        let independent=Mutation(table:"labels",recordID:UUID().uuidString.lowercased(),method:"POST",fields:["name":.string("Independent work")])
+        var local=Snapshot(tables:["projects":[Record(["id":.string(draft.scope.project)])]],pending:[independent]);local.apply(independent)
+        let installed=try XCTUnwrap(review.installing(in:local))
+        XCTAssertEqual(installed.pending,[independent]);XCTAssertEqual(installed.tables["labels"],local.tables["labels"])
+        let comment=try SharedCommentChange(account:draft.scope.account,taskID:command.taskID.uuidString.lowercased(),taskGeneration:command.generation.uuidString.lowercased(),projectID:draft.scope.project,body:"Queued comment")
+        try ConversationOutbox.enqueue(comment.record,into:&local)
+        XCTAssertNil(review.installing(in:local));XCTAssertNotNil(local.tables[ConversationOutbox.table]?.first)
+    }
+    func testSavedDraftCopyCommandUsesFreshIdentitiesAndBoundedFullContent() throws {
+        let(draft,command,_)=try draftCopyFixture()
+        let invalid=[TeamCompletionDraft.CopyCommand(requestID:draft.original.id),TeamCompletionDraft.CopyCommand(taskID:UUID(uuidString:draft.record.id)!),TeamCompletionDraft.CopyCommand(generation:UUID(uuidString:draft.record.string("task_generation"))!),TeamCompletionDraft.CopyCommand(taskID:UUID(uuidString:"00000000-0000-0000-0000-000000000000")!)]
+        for value in invalid {XCTAssertThrowsError(try value.body(for:draft))}
+        var large=draft.record;large["description"] = .string(String(repeating:"x",count:900001))
+        let huge=TeamCompletionDraft(version:1,id:UUID(),createdAt:Date(),original:draft.original,record:large,markedForDeletion:false,edits:[],conversations:[])
+        XCTAssertThrowsError(try command.body(for:huge))
+    }
+    func testSavedDraftCopyAttemptSurvivesEncryptedRelaunchAndCannotChangeChoices() throws {
+        let(draft,command,_)=try draftCopyFixture(),directory=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer{try? FileManager.default.removeItem(at:directory)}
+        let vault=draftVault(draft,directory:directory,key:SymmetricKey(size:.bits256));try vault.save(draft)
+        let prepared=try vault.prepareCopy(draft,command:command),reloaded=try vault.load(draft.id)
+        XCTAssertEqual(prepared.copyAttempt,command);XCTAssertEqual(reloaded,prepared)
+        XCTAssertEqual(try command.body(for:reloaded),try command.body(for:draft))
+        XCTAssertEqual(try vault.prepareCopy(draft,command:command),prepared)
+        let before=try Data(contentsOf:vault.file(draft.id))
+        XCTAssertThrowsError(try vault.prepareCopy(draft,command:TeamCompletionDraft.CopyCommand(assignments:true)))
+        XCTAssertEqual(try Data(contentsOf:vault.file(draft.id)),before)
+        XCTAssertEqual(try vault.save(draft).copyAttempt,command)
+        XCTAssertEqual(try vault.entries().count,1)
+        XCTAssertFalse(before.range(of:Data(draft.record.title.utf8)) != nil)
+        var older=try JSONDecoder().decode([String:JSON].self,from:JSONEncoder().encode(draft));older.removeValue(forKey:"copyAttempt")
+        XCTAssertNil(try JSONDecoder().decode(TeamCompletionDraft.self,from:JSONEncoder().encode(older)).copyAttempt)
+    }
+    func testSavedDraftCopyAttemptRequiresExistingUnchangedArchive() throws {
+        let(draft,command,_)=try draftCopyFixture(),directory=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer{try? FileManager.default.removeItem(at:directory)}
+        let vault=draftVault(draft,directory:directory,key:SymmetricKey(size:.bits256))
+        XCTAssertThrowsError(try vault.prepareCopy(draft,command:command))
+        try vault.save(draft)
+        var record=draft.record;record["title"] = .string("Unexpected archive change")
+        let changed=TeamCompletionDraft(version:1,id:draft.id,createdAt:draft.createdAt,original:draft.original,record:record,markedForDeletion:false,edits:[],conversations:[])
+        XCTAssertThrowsError(try vault.prepareCopy(changed,command:command));XCTAssertNil(try vault.load(draft.id).copyAttempt)
+    }
+    @MainActor func testSavedDraftCopyBackendBindsAccountChoicesAndReadOnlyPreview() async throws {
+        let(draft,command,fixture)=try draftCopyFixture(),backend=try backend(draft.scope.account)
+        var requests:[URLRequest]=[]
+        CompletionHTTP.handler={request,peer in requests.append(request);peer.finish(try! JSONEncoder().encode(fixture["preview"]!))};defer{CompletionHTTP.handler=nil}
+        let review=try await backend.copyTeamDraft(draft,command:command,commit:false,expectedAccount:draft.scope.account)
+        XCTAssertFalse(review.recorded)
+        let request=try XCTUnwrap(requests.first),body=try JSONDecoder().decode([String:JSON].self,from:XCTUnwrap(request.httpBody))
+        XCTAssertEqual(request.url?.path,"/rest/v1/rpc/taskfold_copy_team_draft");XCTAssertEqual(body["_commit"],.bool(false));XCTAssertEqual(body["_body"]?.object,try command.body(for:draft))
+        XCTAssertEqual(request.value(forHTTPHeaderField:"Cache-Control"),"no-store");XCTAssertFalse(request.httpShouldHandleCookies)
+        do {_=try await backend.copyTeamDraft(draft,command:command,commit:false,expectedAccount:UUID().uuidString.lowercased());XCTFail("foreign account")}catch{}
+        XCTAssertEqual(requests.count,1)
+        do {_=try await backend.copyTeamDraft(draft,command:command,commit:true,expectedAccount:draft.scope.account);XCTFail("commit requires recorded receipt")}catch{}
+    }
+    @MainActor func testSavedDraftCopyBackendCapsResponsesAndDoesNotReflectServerText() async throws {
+        let(draft,command,_)=try draftCopyFixture(),backend=try backend(draft.scope.account)
+        CompletionHTTP.handler={_,peer in peer.finish(Data(repeating:32,count:2_000_001))};defer{CompletionHTTP.handler=nil}
+        do {_=try await backend.copyTeamDraft(draft,command:command,commit:false,expectedAccount:draft.scope.account);XCTFail("oversize")}catch{}
+        CompletionHTTP.handler={_,peer in peer.finish(Data("{\"code\":\"22023\",\"message\":\"do not reflect this secret\"}".utf8),status:400)}
+        do {_=try await backend.copyTeamDraft(draft,command:command,commit:false,expectedAccount:draft.scope.account);XCTFail("server refusal")}catch {XCTAssertFalse(error.localizedDescription.contains("do not reflect"))}
+    }
+
+    func testSavedDraftCopyPreviewBindsEveryAuthoredFieldBeforeConfirmation() throws {
+        let(draft,command,fixture)=try draftCopyFixture(),review=try TeamCompletionDraft.CopyReview(fixture["preview"]!.object,draft:draft,command:command)
+        XCTAssertTrue(review.matches(draft))
+        var changed=draft.record;changed["description"] = .string("Content changed after preview")
+        let other=TeamCompletionDraft(version:1,id:draft.id,createdAt:draft.createdAt,original:draft.original,record:changed,markedForDeletion:false,edits:[],conversations:[])
+        XCTAssertFalse(review.matches(other))
+        var prepared=draft;prepared.copyAttempt=command
+        XCTAssertTrue(review.matches(prepared))
+    }
+
+    func testFreshSavedDraftCopyProofHonorsChoicesAndCannotInventChecklistHistory() throws {
+        let(draft,command,fixture)=try draftCopyFixture(),reply=fixture["created"]!.object
+        for (key,value) in [("assigned_to",JSON.string(draft.scope.account)),("reminder_specs",JSON.array([.object(["kind":.string("location")])]))] {
+            var bad=reply,task=reply["task"]!.object;task[key]=value;bad["task"] = .object(task)
+            XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command))
+        }
+        var bad=reply,task=reply["task"]!.object,child=task["subtasks"]!.list[0].object
+        child["taskfold_completion_v1"] = .object(["epoch":.string(UUID().uuidString.lowercased()),"version":.number(0)])
+        task["subtasks"] = .array([.object(child)]);bad["task"] = .object(task)
+        XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command))
+    }
+
+    func testAccountRemovalStopsDelayedSavedDraftCopyPreparation() throws {
+        let(draft,command,_)=try draftCopyFixture(),directory=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer{try? FileManager.default.removeItem(at:directory)}
+        let gate=AccountRemovalDisk(directory:directory,account:draft.scope.account)
+        var vault=draftVault(draft,directory:directory.appendingPathComponent("drafts"),key:SymmetricKey(size:.bits256));vault.removalGate=gate
+        try vault.save(draft);let before=try Data(contentsOf:vault.file(draft.id))
+        try gate.removeCache()
+        XCTAssertThrowsError(try vault.prepareCopy(draft,command:command))
+        XCTAssertEqual(try Data(contentsOf:vault.file(draft.id)),before)
+        XCTAssertNil(try vault.load(draft.id).copyAttempt)
+    }
+
+    private func cancelledDraftCopyFixture() throws -> (TeamCompletionDraft,TeamCompletionDraft.CopyCommand,[String:JSON]) {
+        let(draft,_,root)=try draftCopyFixture(),body=root["cancelBody"]!.object
+        let command=TeamCompletionDraft.CopyCommand(assignments:body["copy_assignments"]!.flag,reminders:body["copy_reminders"]!.flag,requestID:UUID(uuidString:body["request_id"]!.text)!,taskID:UUID(uuidString:body["task_id"]!.text)!,generation:UUID(uuidString:body["task_generation"]!.text)!)
+        XCTAssertEqual(try command.body(for:draft),body)
+        return(draft,command,root["cancelledCopy"]!.object)
+    }
+    func testSavedDraftCopyCancellationIsDistinctFromCreationOrUnavailableCopy() throws {
+        let(draft,command,reply)=try cancelledDraftCopyFixture()
+        let cancelled=try TeamCompletionDraft.CopyReview(reply,draft:draft,command:command)
+        XCTAssertTrue(cancelled.cancelled);XCTAssertFalse(cancelled.recorded);XCTAssertNil(cancelled.task)
+        XCTAssertNil(cancelled.installing(in:Snapshot()))
+        var bad=reply;bad["recorded"] = .bool(true)
+        XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command))
+        bad=reply;bad["unavailable"] = .bool(false)
+        XCTAssertThrowsError(try TeamCompletionDraft.CopyReview(bad,draft:draft,command:command))
+    }
+    func testSavedDraftCopyCanChangeChoicesOnlyAfterBoundDurableCancellation() throws {
+        let(draft,command,reply)=try cancelledDraftCopyFixture(),proof=try TeamCompletionDraft.CopyReview(reply,draft:draft,command:command)
+        let directory=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:directory)}
+        let vault=draftVault(draft,directory:directory,key:SymmetricKey(size:.bits256));try vault.save(draft)
+        let saved=try vault.prepareCopy(draft,command:command)
+        XCTAssertThrowsError(try vault.prepareCopy(draft,command:TeamCompletionDraft.CopyCommand()))
+        try vault.clearCopyAttempt(saved,proof:proof)
+        let cleared=try vault.load(draft.id);XCTAssertNil(cleared.copyAttempt);XCTAssertTrue(cleared.sameWork(as:draft))
+        let new=TeamCompletionDraft.CopyCommand(assignments:false,reminders:false)
+        XCTAssertEqual(try vault.prepareCopy(cleared,command:new).copyAttempt,new)
+        XCTAssertThrowsError(try vault.clearCopyAttempt(saved,proof:proof))
+        XCTAssertEqual(try vault.load(draft.id).copyAttempt,new)
+    }
+    func testRecordedCopyProofCannotReleaseItsRequestForDuplicateCreation() throws {
+        let(draft,command,fixture)=try draftCopyFixture(),proof=try TeamCompletionDraft.CopyReview(fixture["created"]!.object,draft:draft,command:command)
+        let directory=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString);defer{try? FileManager.default.removeItem(at:directory)}
+        let vault=draftVault(draft,directory:directory,key:SymmetricKey(size:.bits256));try vault.save(draft)
+        let saved=try vault.prepareCopy(draft,command:command)
+        XCTAssertThrowsError(try vault.clearCopyAttempt(saved,proof:proof))
+        XCTAssertEqual(try vault.load(draft.id).copyAttempt,command)
+    }
+    @MainActor func testSavedDraftCopyCancellationTransportRequiresDurableOutcome() async throws {
+        let(draft,command,reply)=try cancelledDraftCopyFixture(),backend=try backend(draft.scope.account)
+        var request:URLRequest?
+        CompletionHTTP.handler={incoming,peer in request=incoming;peer.finish(try! JSONEncoder().encode(reply))};defer{CompletionHTTP.handler=nil}
+        let proof=try await backend.copyTeamDraft(draft,command:command,commit:false,cancel:true,expectedAccount:draft.scope.account)
+        XCTAssertTrue(proof.cancelled)
+        let body=try JSONDecoder().decode([String:JSON].self,from:XCTUnwrap(request?.httpBody))
+        XCTAssertEqual(body["_cancel"],.bool(true));XCTAssertEqual(body["_commit"],.bool(false));XCTAssertEqual(body["_body"]?.object,try command.body(for:draft))
+        do {_=try await backend.copyTeamDraft(draft,command:command,commit:true,cancel:true,expectedAccount:draft.scope.account);XCTFail("contradictory action")}catch{}
+    }
+
+    func testCopiedTaskWithRemindersOffCannotFallBackToAutomaticPlannedAlert() throws {
+        let(draft,command,fixture)=try draftCopyFixture(),review=try TeamCompletionDraft.CopyReview(fixture["created"]!.object,draft:draft,command:command)
+        let task=try XCTUnwrap(review.task)
+        var calendar=Calendar(identifier:.gregorian);calendar.timeZone=TimeZone(identifier:"Europe/Copenhagen")!
+        XCTAssertTrue(DueReminder.events(tasks:[task],calendar:calendar).isEmpty)
+        var fallback=task;fallback["reminder_specs"] = .array([])
+        XCTAssertFalse(DueReminder.events(tasks:[fallback],calendar:calendar).isEmpty)
+    }
+
 }

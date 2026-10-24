@@ -1,0 +1,1096 @@
+{
+  "account": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+  "body": {
+    "original": {
+      "team_id": "9a29bba6-2cda-4dbc-a4b0-15321cfefc7a",
+      "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+      "task_id": "bf08c4c6-4b74-4cef-939b-b3f1381f4f85",
+      "task_generation": "043b21b1-ab64-4815-b2fc-d1273ea1ca24",
+      "request_id": "4aa25ee0-8456-4496-a2a6-a31a02190fd7",
+      "record": {
+        "id": "bf08c4c6-4b74-4cef-939b-b3f1381f4f85",
+        "title": "Review the workshop",
+        "labels": [
+          "design"
+        ],
+        "user_id": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+        "comments": [],
+        "due_date": "2026-10-24",
+        "due_time": "09:00:00",
+        "priority": 2,
+        "subtasks": [
+          {
+            "id": "original-child",
+            "title": "Approve contrast",
+            "comments": [],
+            "subtasks": [],
+            "completed": false,
+            "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+            "attachments": [
+              {
+                "path": "fixture/child.pdf"
+              }
+            ],
+            "description": "Check every state",
+            "reminder_specs": [
+              {
+                "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
+                "kind": "relative",
+                "anchor": "planned",
+                "enabled": true,
+                "version": 1,
+                "channels": [
+                  "local"
+                ],
+                "offset_minutes": 15
+              }
+            ],
+            "source_metadata": {
+              "future": "child extension"
+            }
+          }
+        ],
+        "completed": false,
+        "reminders": [],
+        "time_zone": "Europe/Copenhagen",
+        "created_at": "2026-10-24T00:00:00+00:00",
+        "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+        "section_id": "1d68a788-f5e5-47b6-beab-b6a1ecca6f87",
+        "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+        "attachments": [
+          {
+            "id": "synthetic-file",
+            "path": "fixture/review.pdf"
+          }
+        ],
+        "description": "Review layout\nCheck contrast",
+        "completed_at": null,
+        "is_recurring": true,
+        "scheduled_at": "2026-10-24T07:00:00+00:00",
+        "deadline_date": null,
+        "reminder_specs": [
+          {
+            "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
+            "kind": "relative",
+            "anchor": "planned",
+            "enabled": true,
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": 15
+          },
+          {
+            "id": "b2376004-0b69-4715-aad1-060f993eee2b",
+            "kind": "location",
+            "enabled": true,
+            "version": 1,
+            "private_place": "synthetic place"
+          }
+        ],
+        "source_metadata": {
+          "future": {
+            "note": "Keep this opaque value",
+            "schema": 2
+          }
+        },
+        "task_generation": "043b21b1-ab64-4815-b2fc-d1273ea1ca24",
+        "duration_minutes": 45,
+        "completion_version": 0,
+        "recurrence_pattern": {
+          "type": "daily",
+          "count": 3,
+          "interval": 1
+        },
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "completed_at": "2026-10-24T12:00:00Z",
+      "input_zone": "Europe/Copenhagen",
+      "next_generation": "aa4bac8f-ab58-48bc-811b-b9ebd855638e",
+      "planned_next_id": "7ce84dc4-f1fb-52c8-a5f6-eccfbfb40720",
+      "series_id": "bf08c4c6-4b74-4cef-939b-b3f1381f4f85",
+      "series_generation": "043b21b1-ab64-4815-b2fc-d1273ea1ca24",
+      "series_project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca"
+    },
+    "record": {
+      "id": "7ce84dc4-f1fb-52c8-a5f6-eccfbfb40720",
+      "title": "Draft design review",
+      "labels": [
+        "design"
+      ],
+      "user_id": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 1,
+      "subtasks": [
+        {
+          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
+          "title": "Approve all contrast",
+          "comments": [],
+          "subtasks": [],
+          "completed": true,
+          "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+          "attachments": [
+            {
+              "path": "fixture/child.pdf"
+            }
+          ],
+          "description": "Check every state",
+          "completed_at": null,
+          "deadline_date": null,
+          "reminder_specs": [
+            {
+              "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
+              "kind": "relative",
+              "anchor": "planned",
+              "enabled": true,
+              "version": 1,
+              "channels": [
+                "local"
+              ],
+              "offset_minutes": 15
+            }
+          ],
+          "source_metadata": {
+            "future": "child extension"
+          },
+          "notification_sent_at": null
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T12:00:00+00:00",
+      "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+      "section_id": "1d68a788-f5e5-47b6-beab-b6a1ecca6f87",
+      "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+      "attachments": [
+        {
+          "id": "synthetic-file",
+          "path": "fixture/review.pdf"
+        }
+      ],
+      "description": "Review layout\nCheck contrast\nSaved offline instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": "2026-11-01",
+      "reminder_specs": [
+        {
+          "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
+          "kind": "relative",
+          "anchor": "planned",
+          "enabled": true,
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": 15
+        },
+        {
+          "id": "b2376004-0b69-4715-aad1-060f993eee2b",
+          "kind": "location",
+          "enabled": true,
+          "version": 1,
+          "private_place": "synthetic place"
+        }
+      ],
+      "source_metadata": {
+        "future": {
+          "note": "Keep this opaque value",
+          "schema": 2
+        },
+        "taskfold_recurrence_v1": {
+          "action_id": "4aa25ee0-8456-4496-a2a6-a31a02190fd7"
+        }
+      },
+      "task_generation": "aa4bac8f-ab58-48bc-811b-b9ebd855638e",
+      "duration_minutes": 45,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 2,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": "bf08c4c6-4b74-4cef-939b-b3f1381f4f85"
+    },
+    "request_id": "804c9414-75a1-404f-a7de-d7952381b00d",
+    "task_id": "406cb5df-36fa-4be6-adfe-169e7f9c13a1",
+    "task_generation": "cfa5917a-0dcb-434f-a9a1-594dcac96fc6",
+    "copy_assignments": false,
+    "copy_reminders": false
+  },
+  "preview": {
+    "task": {
+      "id": "406cb5df-36fa-4be6-adfe-169e7f9c13a1",
+      "title": "Draft design review",
+      "labels": [
+        "design"
+      ],
+      "user_id": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 1,
+      "subtasks": [
+        {
+          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
+          "title": "Approve all contrast",
+          "comments": [],
+          "subtasks": [],
+          "completed": true,
+          "reminders": [],
+          "assigned_to": null,
+          "attachments": [
+            {
+              "path": "fixture/child.pdf"
+            }
+          ],
+          "description": "Check every state",
+          "completed_at": "2026-10-24T09:27:55.156545+00:00",
+          "deadline_date": null,
+          "reminder_specs": [
+            {
+              "id": "00000000-0000-4000-8000-000000000001",
+              "kind": "relative",
+              "anchor": "planned",
+              "enabled": false,
+              "version": 1,
+              "channels": [
+                "local"
+              ],
+              "offset_minutes": 0
+            }
+          ],
+          "source_metadata": {
+            "future": "child extension"
+          },
+          "notification_sent_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "827ebdaa-78b3-5588-ade9-632b99039c27",
+            "version": 0
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T09:27:55.156545+00:00",
+      "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+      "section_id": "1d68a788-f5e5-47b6-beab-b6a1ecca6f87",
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "synthetic-file",
+          "path": "fixture/review.pdf"
+        }
+      ],
+      "description": "Review layout\nCheck contrast\nSaved offline instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": "2026-11-01",
+      "reminder_specs": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "kind": "relative",
+          "anchor": "planned",
+          "enabled": false,
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": 0
+        }
+      ],
+      "source_metadata": {
+        "future": {
+          "note": "Keep this opaque value",
+          "schema": 2
+        },
+        "taskfold_draft_copy_v1": {
+          "request_id": "804c9414-75a1-404f-a7de-d7952381b00d",
+          "provisional_id": "7ce84dc4-f1fb-52c8-a5f6-eccfbfb40720",
+          "original_request": "4aa25ee0-8456-4496-a2a6-a31a02190fd7",
+          "provisional_generation": "aa4bac8f-ab58-48bc-811b-b9ebd855638e"
+        }
+      },
+      "task_generation": "cfa5917a-0dcb-434f-a9a1-594dcac96fc6",
+      "duration_minutes": 45,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 2,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+    "task_id": "406cb5df-36fa-4be6-adfe-169e7f9c13a1",
+    "team_id": "9a29bba6-2cda-4dbc-a4b0-15321cfefc7a",
+    "recorded": false,
+    "replayed": false,
+    "cancelled": false,
+    "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+    "request_id": "804c9414-75a1-404f-a7de-d7952381b00d",
+    "unavailable": false,
+    "copy_reminders": false,
+    "task_generation": "cfa5917a-0dcb-434f-a9a1-594dcac96fc6",
+    "copy_assignments": false,
+    "draft_copy_protocol": 1,
+    "original_request_id": "4aa25ee0-8456-4496-a2a6-a31a02190fd7"
+  },
+  "created": {
+    "task": {
+      "id": "406cb5df-36fa-4be6-adfe-169e7f9c13a1",
+      "title": "Draft design review",
+      "labels": [
+        "design"
+      ],
+      "user_id": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 1,
+      "subtasks": [
+        {
+          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
+          "title": "Approve all contrast",
+          "comments": [],
+          "subtasks": [],
+          "completed": true,
+          "reminders": [],
+          "assigned_to": null,
+          "attachments": [
+            {
+              "path": "fixture/child.pdf"
+            }
+          ],
+          "description": "Check every state",
+          "completed_at": "2026-10-24T09:27:55.360649+00:00",
+          "deadline_date": null,
+          "reminder_specs": [
+            {
+              "id": "00000000-0000-4000-8000-000000000001",
+              "kind": "relative",
+              "anchor": "planned",
+              "enabled": false,
+              "version": 1,
+              "channels": [
+                "local"
+              ],
+              "offset_minutes": 0
+            }
+          ],
+          "source_metadata": {
+            "future": "child extension"
+          },
+          "notification_sent_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "827ebdaa-78b3-5588-ade9-632b99039c27",
+            "version": 0
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T09:27:55.360649+00:00",
+      "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+      "section_id": "1d68a788-f5e5-47b6-beab-b6a1ecca6f87",
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "synthetic-file",
+          "path": "fixture/review.pdf"
+        }
+      ],
+      "description": "Review layout\nCheck contrast\nSaved offline instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": "2026-11-01",
+      "reminder_specs": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "kind": "relative",
+          "anchor": "planned",
+          "enabled": false,
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": 0
+        }
+      ],
+      "source_metadata": {
+        "future": {
+          "note": "Keep this opaque value",
+          "schema": 2
+        },
+        "taskfold_draft_copy_v1": {
+          "request_id": "804c9414-75a1-404f-a7de-d7952381b00d",
+          "provisional_id": "7ce84dc4-f1fb-52c8-a5f6-eccfbfb40720",
+          "original_request": "4aa25ee0-8456-4496-a2a6-a31a02190fd7",
+          "provisional_generation": "aa4bac8f-ab58-48bc-811b-b9ebd855638e"
+        }
+      },
+      "task_generation": "cfa5917a-0dcb-434f-a9a1-594dcac96fc6",
+      "duration_minutes": 45,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 2,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+    "task_id": "406cb5df-36fa-4be6-adfe-169e7f9c13a1",
+    "team_id": "9a29bba6-2cda-4dbc-a4b0-15321cfefc7a",
+    "recorded": true,
+    "replayed": false,
+    "cancelled": false,
+    "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+    "request_id": "804c9414-75a1-404f-a7de-d7952381b00d",
+    "unavailable": false,
+    "copy_reminders": false,
+    "task_generation": "cfa5917a-0dcb-434f-a9a1-594dcac96fc6",
+    "copy_assignments": false,
+    "draft_copy_protocol": 1,
+    "original_request_id": "4aa25ee0-8456-4496-a2a6-a31a02190fd7"
+  },
+  "replay": {
+    "task": {
+      "id": "406cb5df-36fa-4be6-adfe-169e7f9c13a1",
+      "title": "Draft design review",
+      "labels": [
+        "design"
+      ],
+      "user_id": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 1,
+      "subtasks": [
+        {
+          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
+          "title": "Approve all contrast",
+          "comments": [],
+          "subtasks": [],
+          "completed": true,
+          "reminders": [],
+          "assigned_to": null,
+          "attachments": [
+            {
+              "path": "fixture/child.pdf"
+            }
+          ],
+          "description": "Check every state",
+          "completed_at": "2026-10-24T09:27:55.360649+00:00",
+          "deadline_date": null,
+          "reminder_specs": [
+            {
+              "id": "00000000-0000-4000-8000-000000000001",
+              "kind": "relative",
+              "anchor": "planned",
+              "enabled": false,
+              "version": 1,
+              "channels": [
+                "local"
+              ],
+              "offset_minutes": 0
+            }
+          ],
+          "source_metadata": {
+            "future": "child extension"
+          },
+          "notification_sent_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "827ebdaa-78b3-5588-ade9-632b99039c27",
+            "version": 0
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T09:27:55.360649+00:00",
+      "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+      "section_id": "1d68a788-f5e5-47b6-beab-b6a1ecca6f87",
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "synthetic-file",
+          "path": "fixture/review.pdf"
+        }
+      ],
+      "description": "Review layout\nCheck contrast\nSaved offline instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": "2026-11-01",
+      "reminder_specs": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "kind": "relative",
+          "anchor": "planned",
+          "enabled": false,
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": 0
+        }
+      ],
+      "source_metadata": {
+        "future": {
+          "note": "Keep this opaque value",
+          "schema": 2
+        },
+        "taskfold_draft_copy_v1": {
+          "request_id": "804c9414-75a1-404f-a7de-d7952381b00d",
+          "provisional_id": "7ce84dc4-f1fb-52c8-a5f6-eccfbfb40720",
+          "original_request": "4aa25ee0-8456-4496-a2a6-a31a02190fd7",
+          "provisional_generation": "aa4bac8f-ab58-48bc-811b-b9ebd855638e"
+        }
+      },
+      "task_generation": "cfa5917a-0dcb-434f-a9a1-594dcac96fc6",
+      "duration_minutes": 45,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 2,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+    "task_id": "406cb5df-36fa-4be6-adfe-169e7f9c13a1",
+    "team_id": "9a29bba6-2cda-4dbc-a4b0-15321cfefc7a",
+    "recorded": true,
+    "replayed": true,
+    "cancelled": false,
+    "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+    "request_id": "804c9414-75a1-404f-a7de-d7952381b00d",
+    "unavailable": false,
+    "copy_reminders": false,
+    "task_generation": "cfa5917a-0dcb-434f-a9a1-594dcac96fc6",
+    "copy_assignments": false,
+    "draft_copy_protocol": 1,
+    "original_request_id": "4aa25ee0-8456-4496-a2a6-a31a02190fd7"
+  },
+  "editedReplay": {
+    "task": {
+      "id": "406cb5df-36fa-4be6-adfe-169e7f9c13a1",
+      "title": "Draft design review",
+      "labels": [
+        "design"
+      ],
+      "user_id": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 1,
+      "subtasks": [
+        {
+          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
+          "title": "Approve all contrast",
+          "comments": [],
+          "subtasks": [],
+          "completed": true,
+          "reminders": [],
+          "assigned_to": null,
+          "attachments": [
+            {
+              "path": "fixture/child.pdf"
+            }
+          ],
+          "description": "Check every state",
+          "completed_at": "2026-10-24T09:27:55.360649+00:00",
+          "deadline_date": null,
+          "reminder_specs": [
+            {
+              "id": "00000000-0000-4000-8000-000000000001",
+              "kind": "relative",
+              "anchor": "planned",
+              "enabled": false,
+              "version": 1,
+              "channels": [
+                "local"
+              ],
+              "offset_minutes": 0
+            }
+          ],
+          "source_metadata": {
+            "future": "child extension"
+          },
+          "notification_sent_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "827ebdaa-78b3-5588-ade9-632b99039c27",
+            "version": 0
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T09:27:55.360649+00:00",
+      "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+      "section_id": "1d68a788-f5e5-47b6-beab-b6a1ecca6f87",
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "synthetic-file",
+          "path": "fixture/review.pdf"
+        }
+      ],
+      "description": "Another edit after creation",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": "2026-11-01",
+      "reminder_specs": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "kind": "relative",
+          "anchor": "planned",
+          "enabled": false,
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": 0
+        }
+      ],
+      "source_metadata": {
+        "future": {
+          "note": "Keep this opaque value",
+          "schema": 2
+        },
+        "taskfold_draft_copy_v1": {
+          "request_id": "804c9414-75a1-404f-a7de-d7952381b00d",
+          "provisional_id": "7ce84dc4-f1fb-52c8-a5f6-eccfbfb40720",
+          "original_request": "4aa25ee0-8456-4496-a2a6-a31a02190fd7",
+          "provisional_generation": "aa4bac8f-ab58-48bc-811b-b9ebd855638e"
+        }
+      },
+      "task_generation": "cfa5917a-0dcb-434f-a9a1-594dcac96fc6",
+      "duration_minutes": 45,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 2,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+    "task_id": "406cb5df-36fa-4be6-adfe-169e7f9c13a1",
+    "team_id": "9a29bba6-2cda-4dbc-a4b0-15321cfefc7a",
+    "recorded": true,
+    "replayed": true,
+    "cancelled": false,
+    "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+    "request_id": "804c9414-75a1-404f-a7de-d7952381b00d",
+    "unavailable": false,
+    "copy_reminders": false,
+    "task_generation": "cfa5917a-0dcb-434f-a9a1-594dcac96fc6",
+    "copy_assignments": false,
+    "draft_copy_protocol": 1,
+    "original_request_id": "4aa25ee0-8456-4496-a2a6-a31a02190fd7"
+  },
+  "unavailableReplay": {
+    "task": null,
+    "account": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+    "task_id": "406cb5df-36fa-4be6-adfe-169e7f9c13a1",
+    "team_id": "9a29bba6-2cda-4dbc-a4b0-15321cfefc7a",
+    "recorded": true,
+    "replayed": true,
+    "cancelled": false,
+    "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+    "request_id": "804c9414-75a1-404f-a7de-d7952381b00d",
+    "unavailable": true,
+    "copy_reminders": false,
+    "task_generation": "cfa5917a-0dcb-434f-a9a1-594dcac96fc6",
+    "copy_assignments": false,
+    "draft_copy_protocol": 1,
+    "original_request_id": "4aa25ee0-8456-4496-a2a6-a31a02190fd7"
+  },
+  "cancelBody": {
+    "original": {
+      "team_id": "9a29bba6-2cda-4dbc-a4b0-15321cfefc7a",
+      "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+      "task_id": "bf08c4c6-4b74-4cef-939b-b3f1381f4f85",
+      "task_generation": "043b21b1-ab64-4815-b2fc-d1273ea1ca24",
+      "request_id": "4aa25ee0-8456-4496-a2a6-a31a02190fd7",
+      "record": {
+        "id": "bf08c4c6-4b74-4cef-939b-b3f1381f4f85",
+        "title": "Review the workshop",
+        "labels": [
+          "design"
+        ],
+        "user_id": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+        "comments": [],
+        "due_date": "2026-10-24",
+        "due_time": "09:00:00",
+        "priority": 2,
+        "subtasks": [
+          {
+            "id": "original-child",
+            "title": "Approve contrast",
+            "comments": [],
+            "subtasks": [],
+            "completed": false,
+            "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+            "attachments": [
+              {
+                "path": "fixture/child.pdf"
+              }
+            ],
+            "description": "Check every state",
+            "reminder_specs": [
+              {
+                "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
+                "kind": "relative",
+                "anchor": "planned",
+                "enabled": true,
+                "version": 1,
+                "channels": [
+                  "local"
+                ],
+                "offset_minutes": 15
+              }
+            ],
+            "source_metadata": {
+              "future": "child extension"
+            }
+          }
+        ],
+        "completed": false,
+        "reminders": [],
+        "time_zone": "Europe/Copenhagen",
+        "created_at": "2026-10-24T00:00:00+00:00",
+        "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+        "section_id": "1d68a788-f5e5-47b6-beab-b6a1ecca6f87",
+        "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+        "attachments": [
+          {
+            "id": "synthetic-file",
+            "path": "fixture/review.pdf"
+          }
+        ],
+        "description": "Review layout\nCheck contrast",
+        "completed_at": null,
+        "is_recurring": true,
+        "scheduled_at": "2026-10-24T07:00:00+00:00",
+        "deadline_date": null,
+        "reminder_specs": [
+          {
+            "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
+            "kind": "relative",
+            "anchor": "planned",
+            "enabled": true,
+            "version": 1,
+            "channels": [
+              "local"
+            ],
+            "offset_minutes": 15
+          },
+          {
+            "id": "b2376004-0b69-4715-aad1-060f993eee2b",
+            "kind": "location",
+            "enabled": true,
+            "version": 1,
+            "private_place": "synthetic place"
+          }
+        ],
+        "source_metadata": {
+          "future": {
+            "note": "Keep this opaque value",
+            "schema": 2
+          }
+        },
+        "task_generation": "043b21b1-ab64-4815-b2fc-d1273ea1ca24",
+        "duration_minutes": 45,
+        "completion_version": 0,
+        "recurrence_pattern": {
+          "type": "daily",
+          "count": 3,
+          "interval": 1
+        },
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "completed_at": "2026-10-24T12:00:00Z",
+      "input_zone": "Europe/Copenhagen",
+      "next_generation": "aa4bac8f-ab58-48bc-811b-b9ebd855638e",
+      "planned_next_id": "7ce84dc4-f1fb-52c8-a5f6-eccfbfb40720",
+      "series_id": "bf08c4c6-4b74-4cef-939b-b3f1381f4f85",
+      "series_generation": "043b21b1-ab64-4815-b2fc-d1273ea1ca24",
+      "series_project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca"
+    },
+    "record": {
+      "id": "7ce84dc4-f1fb-52c8-a5f6-eccfbfb40720",
+      "title": "Draft design review",
+      "labels": [
+        "design"
+      ],
+      "user_id": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 1,
+      "subtasks": [
+        {
+          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
+          "title": "Approve all contrast",
+          "comments": [],
+          "subtasks": [],
+          "completed": true,
+          "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+          "attachments": [
+            {
+              "path": "fixture/child.pdf"
+            }
+          ],
+          "description": "Check every state",
+          "completed_at": null,
+          "deadline_date": null,
+          "reminder_specs": [
+            {
+              "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
+              "kind": "relative",
+              "anchor": "planned",
+              "enabled": true,
+              "version": 1,
+              "channels": [
+                "local"
+              ],
+              "offset_minutes": 15
+            }
+          ],
+          "source_metadata": {
+            "future": "child extension"
+          },
+          "notification_sent_at": null
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T12:00:00+00:00",
+      "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+      "section_id": "1d68a788-f5e5-47b6-beab-b6a1ecca6f87",
+      "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+      "attachments": [
+        {
+          "id": "synthetic-file",
+          "path": "fixture/review.pdf"
+        }
+      ],
+      "description": "Review layout\nCheck contrast\nSaved offline instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": "2026-11-01",
+      "reminder_specs": [
+        {
+          "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
+          "kind": "relative",
+          "anchor": "planned",
+          "enabled": true,
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": 15
+        },
+        {
+          "id": "b2376004-0b69-4715-aad1-060f993eee2b",
+          "kind": "location",
+          "enabled": true,
+          "version": 1,
+          "private_place": "synthetic place"
+        }
+      ],
+      "source_metadata": {
+        "future": {
+          "note": "Keep this opaque value",
+          "schema": 2
+        },
+        "taskfold_recurrence_v1": {
+          "action_id": "4aa25ee0-8456-4496-a2a6-a31a02190fd7"
+        }
+      },
+      "task_generation": "aa4bac8f-ab58-48bc-811b-b9ebd855638e",
+      "duration_minutes": 45,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 2,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": "bf08c4c6-4b74-4cef-939b-b3f1381f4f85"
+    },
+    "request_id": "39c48df0-49cd-406b-b7f8-b8dd170b2be0",
+    "task_id": "f9275fa6-485e-4769-82e4-0e4726b2b178",
+    "task_generation": "cb64ab17-0de3-4cc0-b964-d9c22523aeea",
+    "copy_assignments": true,
+    "copy_reminders": false
+  },
+  "cancelledCopy": {
+    "task": null,
+    "account": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+    "task_id": "f9275fa6-485e-4769-82e4-0e4726b2b178",
+    "team_id": "9a29bba6-2cda-4dbc-a4b0-15321cfefc7a",
+    "recorded": false,
+    "replayed": false,
+    "cancelled": true,
+    "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+    "request_id": "39c48df0-49cd-406b-b7f8-b8dd170b2be0",
+    "unavailable": true,
+    "copy_reminders": false,
+    "task_generation": "cb64ab17-0de3-4cc0-b964-d9c22523aeea",
+    "copy_assignments": true,
+    "draft_copy_protocol": 1,
+    "original_request_id": "4aa25ee0-8456-4496-a2a6-a31a02190fd7"
+  },
+  "cancelRecorded": {
+    "task": {
+      "id": "9648626d-1a7e-4122-b9b5-2350c703b4cd",
+      "title": "Draft design review",
+      "labels": [
+        "design"
+      ],
+      "user_id": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 1,
+      "subtasks": [
+        {
+          "id": "21ffc0d8-1cb2-5e40-a793-0f23dd223a34",
+          "title": "Approve all contrast",
+          "comments": [],
+          "subtasks": [],
+          "completed": true,
+          "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+          "attachments": [
+            {
+              "path": "fixture/child.pdf"
+            }
+          ],
+          "description": "Check every state",
+          "completed_at": "2026-10-24T09:27:56.281448+00:00",
+          "deadline_date": null,
+          "reminder_specs": [
+            {
+              "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
+              "kind": "relative",
+              "anchor": "planned",
+              "enabled": true,
+              "version": 1,
+              "channels": [
+                "local"
+              ],
+              "offset_minutes": 15
+            }
+          ],
+          "source_metadata": {
+            "future": "child extension"
+          },
+          "notification_sent_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "e8c30a69-90bb-5fd2-a70b-d4d5cca12039",
+            "version": 0
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T09:27:56.281448+00:00",
+      "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+      "section_id": "1d68a788-f5e5-47b6-beab-b6a1ecca6f87",
+      "assigned_to": "31472df7-2d47-4025-9b2a-605fd047f8a3",
+      "attachments": [
+        {
+          "id": "synthetic-file",
+          "path": "fixture/review.pdf"
+        }
+      ],
+      "description": "Review layout\nCheck contrast\nSaved offline instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": "2026-11-01",
+      "reminder_specs": [
+        {
+          "id": "cc5ca696-7fd6-407c-a4d9-b06f5800b0b8",
+          "kind": "relative",
+          "anchor": "planned",
+          "enabled": true,
+          "version": 1,
+          "channels": [
+            "local"
+          ],
+          "offset_minutes": 15
+        }
+      ],
+      "source_metadata": {
+        "future": {
+          "note": "Keep this opaque value",
+          "schema": 2
+        },
+        "taskfold_draft_copy_v1": {
+          "request_id": "9a7664ec-9e81-4e76-ba63-2b5a6d45fdd7",
+          "provisional_id": "7ce84dc4-f1fb-52c8-a5f6-eccfbfb40720",
+          "original_request": "4aa25ee0-8456-4496-a2a6-a31a02190fd7",
+          "provisional_generation": "aa4bac8f-ab58-48bc-811b-b9ebd855638e"
+        }
+      },
+      "task_generation": "790c04fd-138e-4e71-8b44-d956b28f6972",
+      "duration_minutes": 45,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 2,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "6dc41994-33d1-4406-bebe-a16dbc9fc37b",
+    "task_id": "9648626d-1a7e-4122-b9b5-2350c703b4cd",
+    "team_id": "9a29bba6-2cda-4dbc-a4b0-15321cfefc7a",
+    "recorded": true,
+    "replayed": true,
+    "cancelled": false,
+    "project_id": "6409e124-a41d-4566-93d8-284f9ddb41ca",
+    "request_id": "9a7664ec-9e81-4e76-ba63-2b5a6d45fdd7",
+    "unavailable": false,
+    "copy_reminders": true,
+    "task_generation": "790c04fd-138e-4e71-8b44-d956b28f6972",
+    "copy_assignments": true,
+    "draft_copy_protocol": 1,
+    "original_request_id": "4aa25ee0-8456-4496-a2a6-a31a02190fd7"
+  }
+}

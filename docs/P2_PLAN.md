@@ -2083,3 +2083,23 @@ pass in both repositories (65 completion tests each). See
 TEAM_COMPLETION_REBASE.md and p2-team-rebase-project-evidence.json for final build
 verification. No team-edit enablement or hosted changes; the prior remaining
 rank-6 work and user deferrals remain unchanged.
+
+
+## Reviewed saved-draft copies — 24 October, rank 6 in progress
+
+Saved team drafts now offer an explicit preview and a same-project independent
+task copy preserving authored details, certified files and extension data. Current
+assignments and portable reminders are separately reviewed; off suppresses the
+automatic planned alert. Old discussion/history stays in the encrypted archive.
+A saved request prevents duplicates across retries/relaunch; durable cancellation
+allows new choices, while an already-recorded copy is recovered instead.
+
+Each repo passes 144 database checks, 481 selected native tests (19 new) and
+unsigned Debug app/extension builds. Owned containers/builds and temporary Mac
+registration are removed. See TEAM_DRAFT_COPY.md and each repo’s database/native
+evidence for verification.
+Remaining rank-6 scope includes other unrecorded/root/compound/batch draft cohorts,
+current-role workspace/cache refresh/privacy, remaining team adapters, premium
+organization UI and consolidated native acceptance. This stage does not enable
+team editing, deploy hosted changes or reopen the user's release/provider/hardware
+deferrals. The full Px goal remains in progress.

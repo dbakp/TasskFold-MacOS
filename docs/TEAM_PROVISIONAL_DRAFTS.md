@@ -89,3 +89,13 @@ reapplication of full saved details, current-role workspace/cache refresh/privac
 remaining collaboration adapters, premium organization UI and consolidated native
 acceptance before enablement. Wider Px scope and the user's release/provider/
 hardware deferrals remain unchanged.
+
+
+## Reviewed task-copy follow-up
+
+Same-project full-detail copying is now implemented in TEAM_DRAFT_COPY.md. It keeps
+the original archive, explicitly reviews assignments/reminders and starts fresh
+identity/history without widening file access. Durable copy-request cancellation
+allows new choices without risking a duplicate after a lost response. Arbitrary
+field/project/section editing, new file access and other draft cohorts remain open.
+The earlier verification numbers above belong to the original parking milestone.

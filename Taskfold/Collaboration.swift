@@ -408,7 +408,7 @@ struct SavedTeamDraftsView: View {
         NavigationStack {
             List {
                 Section {
-                    Text("These edits stay on this device and are never sent automatically. Open a draft to copy its text when you’re ready to use it.").foregroundStyle(.secondary)
+                    Text("These edits stay on this device and are never sent automatically. Open a draft to review a separate task copy or copy its text.").foregroundStyle(.secondary)
                 }
                 if scopeKey == loadedScope && !scopeKey.isEmpty {
                     ForEach(drafts) {draft in
@@ -427,6 +427,7 @@ struct SavedTeamDraftsView: View {
                                     LabeledContent("Reminder choices retained",value:String(draft.record["reminder_specs"].list.count))
                                 }
                                 Section {Text("The full task details and earlier edits remain in this encrypted draft. Copying text never changes a shared task.").foregroundStyle(.secondary)}
+                                NavigationLink {SavedTeamDraftCopyView(draft:draft)} label:{Label("Review task copy",systemImage:"doc.badge.plus")}.accessibilityIdentifier("reviewSavedTeamDraftCopy")
                                 Button(copiedKey == draft.id.uuidString ? "Copied":"Copy saved text",systemImage:"doc.on.doc"){copy(draft.text,key:draft.id.uuidString)}.accessibilityIdentifier("copyTeamDraftText")
                                 ShareLink("Share saved text",item:draft.text).accessibilityIdentifier("shareTeamDraftText")
                             }.formStyle(.grouped).navigationTitle(draft.record.title)
@@ -449,7 +450,7 @@ struct SavedTeamDraftsView: View {
             .confirmationDialog("Delete saved draft?",isPresented:Binding(get:{deleting != nil},set:{if !$0 {deleting=nil}})) {
                 Button("Delete saved draft",role:.destructive){if let draft=deleting {Task {await remove(draft)}}}
                 Button("Cancel",role:.cancel){deleting=nil}
-            } message:{Text("This removes only the saved copy on this device. Shared tasks stay unchanged.")}
+            } message:{Text(deleting?.copyAttempt == nil ? "This removes only the saved copy on this device. Shared tasks stay unchanged." : "A task copy may already exist. Deleting this draft removes its saved retry request and does not undo that task copy.")}
         }
         #if os(macOS)
         .frame(minWidth:560,minHeight:520)
@@ -488,4 +489,156 @@ struct SavedTeamDraftsView: View {
             deleting=nil;await reload()
         } catch {if generation == store.workspaceGeneration,scope == scopeKey {message="This saved draft could not be removed. It is still kept on this device."}}
     }
+}
+
+
+/// An explicit preview precedes every first copy. A saved attempt keeps its
+/// choices locked so a timeout cannot turn a retry into another task.
+struct SavedTeamDraftCopyView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let draft:TeamCompletionDraft
+    @State private var command:TeamCompletionDraft.CopyCommand?
+    @State private var review:TeamCompletionDraft.CopyReview?
+    @State private var assignments=false
+    @State private var reminders=false
+    @State private var busy=false
+    @State private var message:String?
+    @State private var finished=false
+    @State private var requestSaved=false
+    @State private var initialized=false
+    var body:some View {
+        Form {
+            Section {
+                Label("A separate task, with your details",systemImage:"doc.badge.plus").font(.headline)
+                Text(draft.record.title).font(.headline)
+                Text("Creates a new independent task in the original project. Your shared tasks and this encrypted draft are kept.").foregroundStyle(.secondary)
+                if draft.markedForDeletion {Text("You had marked this draft for deletion. Creating a copy brings its saved content back as a separate task.").foregroundStyle(.secondary)}
+            }
+            Section("Copy choices") {
+                Toggle("Include assignments",isOn:$assignments)
+                Toggle("Include reminders",isOn:$reminders)
+                Text("Assignments must still belong to current project editors. Private or unsupported reminders need separate setup and cannot be activated by copying.").font(.callout).foregroundStyle(.secondary)
+                if requestSaved {Text("These choices belong to a saved copy request. Retrying checks the same task, so it cannot create a duplicate.").font(.callout).foregroundStyle(.secondary)}
+            }.disabled(busy || requestSaved || finished)
+            Section("Details kept") {
+                Text("Task notes, checklist details and checked states, labels, planning, repeat settings, file references and supported extension data stay with the copy.")
+                Text("The copy starts fresh completion history. Old discussion and saved comment drafts stay in this archive and are never published automatically.").foregroundStyle(.secondary)
+            }
+            if let review {
+                Section(review.recorded ? "Saved copy":"New task preview") {
+                    if let task=review.task {
+                        Text(task.title).font(.headline)
+                        taskDetails(task)
+                        LabeledContent("Checklist items",value:String((try? TeamChecklist.indexed(task["subtasks"]).count) ?? 0))
+                        LabeledContent("Task attachments",value:String(task["attachments"].list.count))
+                    } else {Text(review.cancelled ? "The saved copy request was cancelled. You can review new choices." : "This copy was created, but it is no longer available here. Retrying will not recreate it. Your full draft is kept.").foregroundStyle(.secondary)}
+                }
+            }
+            if let task=review?.task,!task["subtasks"].list.isEmpty {
+                Section("Checklist preview") {
+                    ForEach(checklist(task["subtasks"])) {item in
+                        VStack(alignment:.leading,spacing:8) {
+                            Label(item.record.title,systemImage:item.record.completed ? "checkmark.circle.fill":"circle").font(.headline)
+                            taskDetails(item.record)
+                        }.padding(.leading,CGFloat(min(item.depth,6))*12)
+                    }
+                }
+            }
+            if let message {Section {Text(message).foregroundStyle(.secondary).accessibilityIdentifier("teamDraftCopyMessage")}}
+            Section {
+                if !finished {
+                    if requestSaved {Button("Change copy choices") {Task {await changeChoices()}}.disabled(busy).accessibilityIdentifier("changeSavedTeamDraftCopyChoices")}
+                    Button(requestSaved ? "Check saved copy":"Review copy") {Task {await preview()}}.disabled(busy).accessibilityIdentifier("previewSavedTeamDraftCopy")
+                    if let review,review.task != nil {
+                        Button(review.recorded ? "Finish saved copy":"Create task copy") {Task {await create(review)}}
+                            .buttonStyle(.borderedProminent).disabled(busy).accessibilityIdentifier("createSavedTeamDraftCopy")
+                    }
+                } else {Label("Copy saved. Your draft is kept.",systemImage:"checkmark.circle.fill").foregroundStyle(Color.taskfold)}
+                if busy {ProgressView().accessibilityLabel("Checking saved task copy")}
+            }
+        }.formStyle(.grouped).navigationTitle("Review task copy")
+        .onAppear {if !initialized {initialized=true;command=draft.copyAttempt;assignments=draft.copyAttempt?.assignments ?? false;reminders=draft.copyAttempt?.reminders ?? false;requestSaved=draft.copyAttempt != nil}}
+        .onChange(of:assignments){_,_ in if !requestSaved {review=nil;command=nil}}
+        .onChange(of:reminders){_,_ in if !requestSaved {review=nil;command=nil}}
+        .onChange(of:store.workspaceGeneration){_,_ in review=nil;dismiss()}
+    }
+    private struct ChecklistItem: Identifiable {let record:Record;let depth:Int;var id:String {record.id}}
+    private func checklist(_ value:JSON,depth:Int=0) -> [ChecklistItem] {
+        guard depth<24 else {return []}
+        return value.list.flatMap {item -> [ChecklistItem] in
+            var record=Record(item.object);record["project_id"] = .string(draft.scope.project)
+            return [ChecklistItem(record:record,depth:depth)]+checklist(record["subtasks"],depth:depth+1)
+        }
+    }
+    @ViewBuilder private func taskDetails(_ task:Record) -> some View {
+        if !task.string("description").isEmpty {
+            Text(String(task.string("description").prefix(4000))).textSelection(.enabled)
+            if task.string("description").count>4000 {Text("Preview shows the first 4,000 characters. The copy keeps the full notes.").font(.caption).foregroundStyle(.secondary)}
+        }
+        LabeledContent("State",value:task.completed ? "Completed":"Open")
+        LabeledContent("Project",value:store.record("projects",id:draft.scope.project)?.name ?? "Original project")
+        if case .number(let priority)=task["priority"],(1...4).contains(priority) {LabeledContent("Priority",value:"P\(Int(priority))")}
+        if !task.string("due_date").isEmpty {LabeledContent("Planned date",value:task.string("due_date"))}
+        if !task.string("due_time").isEmpty {LabeledContent("Planned time",value:task.string("due_time"))}
+        if !task.string("time_zone").isEmpty {LabeledContent("Time zone",value:task.string("time_zone"))}
+        if !task.string("deadline_date").isEmpty {LabeledContent("Deadline",value:task.string("deadline_date"))}
+        if task["duration_minutes"].integer>0 {LabeledContent("Estimate",value:"\(task["duration_minutes"].integer) minutes")}
+        if !task.string("section_id").isEmpty {LabeledContent("Section",value:store.record("sections",id:task.string("section_id"))?.name ?? "Saved section")}
+        if !task["labels"].list.isEmpty {LabeledContent("Labels",value:task["labels"].list.map(\.text).joined(separator:", "))}
+        if task["is_recurring"].flag {LabeledContent("Repeat",value:Recurrence.summary(Recurrence.effective(task)))}
+        LabeledContent("Assigned to",value:store.assigneeName(task))
+        ForEach(Array(task["reminder_specs"].list.enumerated()),id:\.offset) {_,value in
+            if let spec=ReminderSpec(row:value) {LabeledContent(spec.enabled ? "Reminder":"Reminder (off)",value:spec.label)}
+            else {Text("Saved reminder choice").foregroundStyle(.secondary)}
+        }
+        if !task["reminders"].list.isEmpty {LabeledContent("Other reminder choices",value:task["reminders"].list.map(\.text).joined(separator:", "))}
+    }
+    private func preview() async {
+        busy=true;message=nil;defer{busy=false}
+        let value=command ?? TeamCompletionDraft.CopyCommand(assignments:assignments,reminders:reminders)
+        command=value
+        do {
+            let result=try await store.reviewSavedTeamDraft(draft,command:value)
+            if result.cancelled {resetCancelled()} else {review=result}
+        }
+        catch {
+            review=nil
+            if let vault=store.teamDraftVault,let latest=try? vault.load(draft.id),let saved=latest.copyAttempt {
+                command=saved;assignments=saved.assignments;reminders=saved.reminders;requestSaved=true
+            }
+            message=SyncStatus.failureMessage(error)
+        }
+    }
+    private func create(_ expected:TeamCompletionDraft.CopyReview) async {
+        busy=true;message=nil;defer{busy=false}
+        do {
+            let result=try await store.createSavedTeamDraftCopy(draft,review:expected)
+            if result.cancelled {resetCancelled()}
+            else {review=result;requestSaved=true;finished=result.task != nil
+                if result.task == nil {message="The original copy is no longer available. Your draft remains saved."}}
+
+        } catch {
+            // Persistence may have succeeded before a network failure. Reload
+            // its exact request before allowing another attempt or choice.
+            if let vault=store.teamDraftVault,let latest=try? vault.load(draft.id),let saved=latest.copyAttempt {
+                command=saved;assignments=saved.assignments;reminders=saved.reminders;requestSaved=true
+            }
+            review=nil;message=SyncStatus.failureMessage(error)
+        }
+    }
+    private func resetCancelled() {
+        review=nil;command=nil;requestSaved=false;finished=false
+        message="Saved copy request cancelled. Review your new choices before creating a task copy."
+    }
+    private func changeChoices() async {
+        guard let command else {return}
+        busy=true;message=nil;defer{busy=false}
+        do {
+            let result=try await store.cancelSavedTeamDraftCopy(draft,command:command)
+            if result.cancelled {resetCancelled()}
+            else {review=result;requestSaved=true;finished=result.task != nil;message="The copy was already created. Your original draft is kept."}
+        } catch {message=SyncStatus.failureMessage(error)}
+    }
+
 }

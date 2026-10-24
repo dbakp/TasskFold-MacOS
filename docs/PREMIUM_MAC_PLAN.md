@@ -4162,3 +4162,15 @@ the saved queue. The independent Mac completion suite passes 65 tests, including
 three new regressions. See p2-team-rebase-project-evidence.json for full build
 verification. Rank 6 and broader Px work remain in progress; team editing is still
 disabled, without hosted or native runtime/visual acceptance.
+
+
+### Reviewed saved-draft copies — 24 October
+
+The encrypted draft shelf now has a grouped native review for a separate task
+copy, including checklist order/notes/planning, fresh history and explicit
+assignment/reminder choices. Long previews disclose their limits; full content
+is retained. A durable request and server cancellation fence prevent duplicate
+creation during retry or choice changes. The original archive and shared tasks
+are retained. Independent verification is recorded in TEAM_DRAFT_COPY.md and
+p2-team-draft-copy-native-evidence.json. Rank 6 remains in progress, team editing
+is disabled, and hosted/native runtime/visual/release acceptance is not claimed.

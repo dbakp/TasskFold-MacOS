@@ -11,6 +11,7 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
     let markedForDeletion: Bool
     let edits: [Mutation]
     let conversations: [Record]
+    var copyAttempt: CopyCommand? = nil
     var scope: TeamTaskEditScope { original.teamCompletion!.scope }
     static var invalid: AppFailure {AppFailure(message:"This saved draft needs review. Your queued work is unchanged.")}
     func validate() throws {
@@ -31,6 +32,7 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
             guard ConversationOutbox.valid(row),let change=ConversationOutbox.comment(row),change.account == command.scope.account,
                   change.projectID == command.scope.project,change.taskID == proposed.id,change.taskGeneration == proposed.string("task_generation") else {throw Self.invalid}
         }
+        try copyAttempt?.validate(for:self)
         guard try JSONEncoder().encode(self).count<=16_000_000 else {throw Self.invalid}
     }
     func sameWork(as other:Self) -> Bool {
@@ -56,6 +58,115 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
         for edit in edits {for key in ["title","description"] {if case .string(let text)?=edit.fields[key],!text.isEmpty {lines.append("Saved "+(key == "title" ? "title":"notes")+": "+text)}}}
         for row in conversations {if let change=ConversationOutbox.comment(row),!change.body.isEmpty {lines.append("Saved comment: "+change.body)}}
         return lines.joined(separator:"\n\n")
+    }
+
+    /// A confirmed copy keeps the same identities and choices across lost
+    /// responses/relaunches. It is separate from the task mutation outbox.
+    struct CopyCommand: Codable, Equatable, Sendable {
+        let requestID: UUID
+        let taskID: UUID
+        let generation: UUID
+        let assignments: Bool
+        let reminders: Bool
+        init(assignments:Bool=false,reminders:Bool=false,requestID:UUID=UUID(),taskID:UUID=UUID(),generation:UUID=UUID()) {
+            self.requestID=requestID;self.taskID=taskID;self.generation=generation;self.assignments=assignments;self.reminders=reminders
+        }
+        func validate(for draft:TeamCompletionDraft) throws {
+            guard let command=draft.original.teamCompletion,let proposed=command.proposed,
+                  requestID != draft.original.id,taskID.uuidString.lowercased() != proposed.id,
+                  taskID.uuidString.lowercased() != command.source.id,generation.uuidString.lowercased() != command.nextGeneration,
+                  [requestID,taskID,generation].allSatisfy({TeamProjectValue.id($0.uuidString.lowercased())}) else {throw TeamCompletionDraft.invalid}
+        }
+        func body(for draft:TeamCompletionDraft) throws -> [String:JSON] {
+            try draft.validate();try validate(for:draft)
+            let result:[String:JSON]=["original":.object(try draft.original.teamCompletion!.body(for:draft.original)),"record":.object(draft.record.fields),
+             "request_id":.string(requestID.uuidString.lowercased()),"task_id":.string(taskID.uuidString.lowercased()),"task_generation":.string(generation.uuidString.lowercased()),
+             "copy_assignments":.bool(assignments),"copy_reminders":.bool(reminders)]
+            guard try JSONEncoder().encode(result).count<=900000 else {throw AppFailure(message:"This saved draft is too large to copy. The full draft remains on this device.")}
+            return result
+        }
+    }
+    struct CopyReview: Equatable, Sendable {
+        let command: CopyCommand
+        let draftID: UUID
+        let request: [String:JSON]
+        let task: Record?
+        let recorded: Bool
+        let replayed: Bool
+        let cancelled: Bool
+        init(_ reply:[String:JSON],draft:TeamCompletionDraft,command:CopyCommand) throws {
+            let request=try command.body(for:draft)
+            guard reply["draft_copy_protocol"] == .number(1),reply["account"] == .string(draft.scope.account),
+                  reply["team_id"] == .string(draft.scope.team),reply["project_id"] == .string(draft.scope.project),
+                  reply["original_request_id"] == .string(draft.original.id.uuidString.lowercased()),
+                  reply["request_id"] == .string(command.requestID.uuidString.lowercased()),reply["task_id"] == .string(command.taskID.uuidString.lowercased()),
+                  reply["task_generation"] == .string(command.generation.uuidString.lowercased()),
+                  reply["copy_assignments"] == .bool(command.assignments),reply["copy_reminders"] == .bool(command.reminders),
+                  case .bool(let recorded)?=reply["recorded"],case .bool(let replayed)?=reply["replayed"],case .bool(let cancelled)?=reply["cancelled"],case .bool(let unavailable)?=reply["unavailable"],
+                  !replayed || recorded || cancelled,!unavailable || recorded || cancelled,!cancelled || (!recorded && unavailable) else {throw TeamCompletionDraft.invalid}
+            let task:Record?
+            if unavailable {
+                guard reply["task"] == .null else {throw TeamCompletionDraft.invalid};task=nil
+            } else {
+                guard case .object(let fields)?=reply["task"],fields["id"] == reply["task_id"],fields["task_generation"] == reply["task_generation"],
+                      fields["project_id"] == .string(draft.scope.project),TeamProjectValue.id(fields["user_id"]?.text ?? ""),
+                      case .string?=fields["title"],case .bool?=fields["completed"],case .number(let version)?=fields["completion_version"],
+                      version.isFinite,version>=0,version<=9_007_199_254_740_991,version.rounded(.down)==version else {throw TeamCompletionDraft.invalid}
+                if !replayed {
+                    guard fields["user_id"] == .string(draft.scope.account),version == 0,fields["recurrence_parent_id"] == .null,
+                          fields["notification_sent_at"] == .null,fields["comments"] == .array([]),
+                          fields["source_metadata"]?.object["taskfold_draft_copy_v1"]?.object["request_id"] == reply["request_id"] else {throw TeamCompletionDraft.invalid}
+                }
+                let children=fields["subtasks"] ?? .array([])
+                try TeamChecklist.validate(children)
+                if !replayed {
+                    var metadata=draft.record["source_metadata"].object
+                    metadata.removeValue(forKey:"taskfold_recurrence_v1")
+                    metadata["taskfold_draft_copy_v1"] = .object(["original_request":.string(draft.original.id.uuidString.lowercased()),"provisional_id":.string(draft.record.id),"provisional_generation":draft.record["task_generation"],"request_id":reply["request_id"]!])
+                    guard fields["source_metadata"] == .object(metadata),fields["completed"] == draft.record["completed"],
+                          fields["attachments"] == (draft.record.fields["attachments"] ?? .array([])) else {throw TeamCompletionDraft.invalid}
+                    let rows=[fields]+Array(try TeamChecklist.indexed(children).values)
+                    for row in rows {
+                        if !command.assignments {guard row["assigned_to"] == nil || row["assigned_to"] == .null else {throw TeamCompletionDraft.invalid}}
+                        if !command.reminders {
+                            let off=JSON.array([.object(ReminderSpec.relative(0,id:ReminderSpec.plannedID,enabled:false).raw)])
+                            guard row["reminder_specs"] == off,(row["reminders"] ?? .array([])) == .array([]) else {throw TeamCompletionDraft.invalid}
+                        }
+                    }
+                    for (id,row) in try TeamChecklist.indexed(children) {
+                        let epoch=TaskCompletion.successorID(parent:"team-checklist:"+command.requestID.uuidString.lowercased(),day:id)
+                        guard row[TeamChecklist.key] == .object(["epoch":.string(epoch),"version":.number(0)]) else {throw TeamCompletionDraft.invalid}
+                    }
+                }
+                task=Record(fields)
+            }
+            self.command=command;self.draftID=draft.id;self.request=request;self.task=task;self.recorded=recorded;self.replayed=replayed;self.cancelled=cancelled
+        }
+        func matches(_ draft:TeamCompletionDraft) -> Bool {draft.id == draftID && (try? command.body(for:draft)) == request}
+        /// Never replace an already edited local copy with a retry's older row.
+        /// The durable copy receipt remains recoverable from the encrypted draft.
+        func installing(in snapshot:Snapshot) -> Snapshot? {
+            guard recorded else {return nil}
+            guard let task else {return snapshot}
+            guard snapshot.tables["projects"]?.contains(where:{$0.id == task.string("project_id")}) == true else {return nil}
+            if let current=snapshot.tables["tasks"]?.first(where:{$0.id == task.id}) {
+                return TeamCompletion.sameLocal(current,task) ? snapshot:nil
+            }
+            let id=task.id.lowercased()
+            func references(_ value:JSON) -> Bool {
+                switch value {
+                case .string(let s):return s.lowercased().contains(id)
+                case .array(let values):return values.contains(where:references)
+                case .object(let fields):return fields.values.contains(where:references)
+                default:return false
+                }
+            }
+            for change in snapshot.pending {
+                guard let data=try? JSONEncoder().encode(change),let value=try? JSONDecoder().decode(JSON.self,from:data),!references(value) else {return nil}
+            }
+            guard !(snapshot.tables[ConversationOutbox.table] ?? []).contains(where:{references(.object($0.fields))}) else {return nil}
+            var result=snapshot;result.tables["tasks",default:[]].append(task);return result
+        }
     }
 
     struct Retirement: Equatable, Sendable {
@@ -191,6 +302,36 @@ struct TeamCompletionDraftVault: Sendable {
         try FileManager.default.createDirectory(at:directory,withIntermediateDirectories:true)
         try bytes.write(to:file(draft.id),options:[.atomic,.completeFileProtectionUntilFirstUserAuthentication])
         return draft
+    }
+    /// Confirm before writing to the server. Retrying cannot silently mint a
+    /// second task or change options when the first response was lost.
+    func prepareCopy(_ draft:TeamCompletionDraft,command:TeamCompletionDraft.CopyCommand) throws -> TeamCompletionDraft {
+        if let removalGate {var free=self;free.removalGate=nil;return try removalGate.writable{try free.prepareCopy(draft,command:command)}}
+        Self.lock.lock();defer{Self.lock.unlock()}
+        var current=try load(draft.id)
+        guard current.sameWork(as:draft) else {throw TeamCompletionDraft.invalid}
+        if let existing=current.copyAttempt {
+            guard existing == command else {throw AppFailure(message:"This draft already has a saved copy request. Check that request before trying again.")}
+            return current
+        }
+        current.copyAttempt=command;try current.validate();_=try command.body(for:current)
+        let data=try JSONEncoder().encode(current),sealed=try AES.GCM.seal(data,using:key(),authenticating:context)
+        guard let bytes=sealed.combined else {throw TeamCompletionDraft.invalid}
+        let oldSize=try Data(contentsOf:file(current.id)).count
+        let total=try entries().reduce(0){try $0+Data(contentsOf:file($1.id)).count}
+        guard total-oldSize+bytes.count<=64_000_000 else {throw AppFailure(message:"Saved drafts reached their storage limit. The copy has not been sent.")}
+        try bytes.write(to:file(current.id),options:[.atomic,.completeFileProtectionUntilFirstUserAuthentication])
+        return current
+    }
+    func clearCopyAttempt(_ draft:TeamCompletionDraft,proof:TeamCompletionDraft.CopyReview) throws {
+        if let removalGate {var free=self;free.removalGate=nil;return try removalGate.writable{try free.clearCopyAttempt(draft,proof:proof)}}
+        Self.lock.lock();defer{Self.lock.unlock()}
+        var current=try load(draft.id)
+        guard proof.cancelled,proof.matches(current),current.sameWork(as:draft),current.copyAttempt == proof.command else {throw TeamCompletionDraft.invalid}
+        current.copyAttempt=nil;try current.validate()
+        let sealed=try AES.GCM.seal(JSONEncoder().encode(current),using:key(),authenticating:context)
+        guard let bytes=sealed.combined else {throw TeamCompletionDraft.invalid}
+        try bytes.write(to:file(current.id),options:[.atomic,.completeFileProtectionUntilFirstUserAuthentication])
     }
     func remove(_ id:UUID) throws {
         Self.lock.lock();defer{Self.lock.unlock()};_=try load(id);try FileManager.default.removeItem(at:file(id))

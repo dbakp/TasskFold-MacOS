@@ -1369,6 +1369,66 @@ final class Store {
         }
         #endif
     }
+    func reviewSavedTeamDraft(_ draft:TeamCompletionDraft,command:TeamCompletionDraft.CopyCommand) async throws -> TeamCompletionDraft.CopyReview {
+        let generation=accountGeneration,account=userID
+        guard let vault=teamDraftVault,draft.scope.account == account,draft.scope.origin == vault.origin,
+              snapshot.tables["projects"]?.contains(where:{$0.id == draft.scope.project}) == true else {
+            throw AppFailure(message:"Reopen the original project to review a task copy. Your draft is kept.")
+        }
+        let saved=try await Task.detached(priority:.utility){try vault.load(draft.id)}.value
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,saved.sameWork(as:draft),
+              saved.copyAttempt == nil || saved.copyAttempt == command else {throw TeamCompletionDraft.invalid}
+        let review=try await backend.copyTeamDraft(saved,command:command,commit:false,expectedAccount:account)
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        if review.cancelled,saved.copyAttempt == command {
+            try await Task.detached(priority:.utility){try vault.clearCopyAttempt(saved,proof:review)}.value
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        }
+        return review
+    }
+    func createSavedTeamDraftCopy(_ draft:TeamCompletionDraft,review:TeamCompletionDraft.CopyReview) async throws -> TeamCompletionDraft.CopyReview {
+        let generation=accountGeneration,account=userID
+        guard let vault=teamDraftVault,draft.scope.account == account,draft.scope.origin == vault.origin,review.matches(draft),
+              snapshot.tables["projects"]?.contains(where:{$0.id == draft.scope.project}) == true else {throw TeamCompletionDraft.invalid}
+        _=try await makeRecoveryBackup(kind:"Before copying team draft")
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        let saved=try await Task.detached(priority:.utility){try vault.prepareCopy(draft,command:review.command)}.value
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        let result=try await backend.copyTeamDraft(saved,command:review.command,commit:true,expectedAccount:account)
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        if result.cancelled {
+            try await Task.detached(priority:.utility){try vault.clearCopyAttempt(saved,proof:result)}.value
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+            return result
+        }
+        // An in-flight workspace read may predate this server write. Let its
+        // authorized refresh finish rather than inserting a row it could then
+        // erase. The same copy remains recoverable through the saved request.
+        if !syncing,let next=result.installing(in:snapshot) {
+            let before=snapshot;snapshot=next
+            do {try persist()} catch {snapshot=before;throw error}
+        }
+        // The draft and frozen request remain encrypted even after success.
+        // A retry reads the same copy; it never rewinds local edits or recreates
+        // a deleted/replaced task. Ordinary sync can refresh other shared work.
+        notice=result.task == nil ? "This task copy is no longer available. Your saved draft is kept." : "Task copy saved. Your original draft is kept."
+        return result
+    }
+
+    func cancelSavedTeamDraftCopy(_ draft:TeamCompletionDraft,command:TeamCompletionDraft.CopyCommand) async throws -> TeamCompletionDraft.CopyReview {
+        let generation=accountGeneration,account=userID
+        guard let vault=teamDraftVault,draft.scope.account == account,draft.scope.origin == vault.origin else {throw CancellationError()}
+        let saved=try await Task.detached(priority:.utility){try vault.load(draft.id)}.value
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,saved.sameWork(as:draft),saved.copyAttempt == command else {throw TeamCompletionDraft.invalid}
+        let result=try await backend.copyTeamDraft(saved,command:command,commit:false,cancel:true,expectedAccount:account)
+        guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        if result.cancelled {
+            try await Task.detached(priority:.utility){try vault.clearCopyAttempt(saved,proof:result)}.value
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+        }
+        return result
+    }
+
     @discardableResult func parkTeamCompletionDraft(_ expected:TeamCompletion.Review) async -> Bool {
         let generation=accountGeneration,account=userID,before=snapshot
         guard syncConflict?.completionReview == expected,let candidate=TeamCompletionDraft.Candidate(review:expected,snapshot:before),let vault=teamDraftVault,
