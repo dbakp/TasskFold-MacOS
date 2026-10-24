@@ -69,6 +69,7 @@ struct TaskInspectorForm: View {
     @State private var teamDraftCaptured = false
     private var isTeamTask: Bool { teamDraft != nil }
     private var quickExclusions: Set<String> { isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : [] }
+    @State private var subtaskOrganizing: SubtaskOrganizerRequest?
     @State private var recoverySession: TaskEditorSession?
     @State private var sourceContext: TaskEditorSourceContext?
     @State private var sourceRoot: Record?
@@ -147,6 +148,7 @@ struct TaskInspectorForm: View {
                 }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}.accessibilityIdentifier("editorAccessStopped")
             }
         }
+        .sheet(item: $subtaskOrganizing) { SubtaskOrganizerPresentation(request: $0) }
         .onChange(of:editorAvailable) {_,available in if !available {stopEditing()}}
         .onChange(of:recoveryExtras) {_,_ in checkpoint()}
         .onDisappear {checkpoint()}
@@ -309,7 +311,7 @@ struct TaskInspectorForm: View {
             if workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty {
             Section("Subtasks") {
                 let childIndices = SubtaskTree.uniqueChildIndices(draft["subtasks"])
-                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, saveAndOpen: { children, path in
+                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, present: { subtaskOrganizing = $0 }, saveAndOpen: { children, path in
                     let previous = draft
                     draft["subtasks"] = children
                     guard saveNow() else { draft = previous; return false }

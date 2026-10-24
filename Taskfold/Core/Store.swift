@@ -2862,6 +2862,8 @@ extension Store {
     }
     static let account = "ec240000-0000-4000-8000-000000000001"
     static let taskID = "ec240000-0000-4000-8000-000000000002"
+    static let childID = "ec240000-0000-4000-8000-000000000005"
+    static let siblingID = "ec240000-0000-4000-8000-000000000006"
     static let projectID = "ec240000-0000-4000-8000-000000000003"
     static let teamID = "ec240000-0000-4000-8000-000000000004"
     static func backend() -> Backend {
@@ -2894,11 +2896,21 @@ extension Store {
             var row = Record.task(user: "ec240000-0000-4000-8000-000000000099", project: TeamEditorNativeFixture.projectID)
             row["id"] = .string(TeamEditorNativeFixture.taskID); row["title"] = .string("Team editor proof"); row["description"] = .string("Original team notes")
             row["opaque_future"] = .object(["preserved": .bool(true)])
+            row["subtasks"] = .array([
+                .object(["id": .string(TeamEditorNativeFixture.childID), "title": .string("Review the layout"), "description": .string("Original child notes"), "completed": .bool(false), "priority": .number(4), "subtasks": .array([]), "opaque_child": .bool(true)]),
+                .object(["id": .string(TeamEditorNativeFixture.siblingID), "title": .string("Keep the workshop notes"), "description": .string("Unchanged sibling notes"), "completed": .bool(false), "subtasks": .array([])])
+            ])
             let project = Record(["id": .string(TeamEditorNativeFixture.projectID), "user_id": row["user_id"], "name": .string("Design workshop")])
             snapshot = Snapshot(tables: ["tasks": [row], "projects": [project]])
             snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: nil, pending: [], tasks: [row])
             try persist()
         } catch { self.error = error.localizedDescription }
+    }
+    func changeTeamEditorFixtureSibling() {
+        guard TeamEditorNativeFixture.enabled,
+              let index = snapshot.tables["tasks"]?.firstIndex(where: { $0.id == TeamEditorNativeFixture.taskID }) else { return }
+        snapshot.tables["tasks"]![index]["subtasks"] = SubtaskTree.changing(snapshot.tables["tasks"]![index]["subtasks"], id: TeamEditorNativeFixture.siblingID, fields: ["title": .string("Sibling updated elsewhere")])
+        do { try persist() } catch { self.error = error.localizedDescription }
     }
     func revokeTeamEditorNativeFixture() {
         guard TeamEditorNativeFixture.enabled else { return }

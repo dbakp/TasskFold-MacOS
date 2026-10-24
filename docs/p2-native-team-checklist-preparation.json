@@ -1,0 +1,11 @@
+{
+  "namespace": "workflowteststeameditbridge",
+  "teamRolloutInCopyOnly": true,
+  "network": "All requests intercepted and rejected when the exact DEBUG fixture is enabled",
+  "files": {
+    "Taskfold/Core/Store.swift": "cbd0c8275db435bbc1f39805b3283cbd49f7443831c8acf2130091d74e24bfa8",
+    "Taskfold/Core/Backups.swift": "38050bd8927d98a969aaf0f165ec501c76363082e941a504b3759b3cf16e2adf",
+    "Taskfold/Core/Backend.swift": "865f7949728134d481d8f72ebd74ff9f34939e0b96a8350ce72af57c011cab8e",
+    "Taskfold/Info.plist": "33953091b7e759f83f134886e32f9dad933f78b190fae1317e5a74c676fb5679"
+  }
+}

@@ -1,8 +1,29 @@
 import SwiftUI
 
+/// One opening carries its local binding and frozen admission together. The
+/// editor owns presentation so removing its editable form cannot discard a sheet.
+struct SubtaskOrganizerRequest: Identifiable {
+    let id = UUID()
+    let children: Binding<JSON>
+    let taskID: String
+    let baseDepth: Int
+    let projectID: String
+    let admission: TaskEditorAdmission
+    let saveAndOpen: ((JSON, [String]) -> Bool)?
+}
+
+struct SubtaskOrganizerPresentation: View {
+    let request: SubtaskOrganizerRequest
+    var body: some View {
+        SubtaskOrganizer(children: request.children, taskID: request.taskID,
+                         baseDepth: request.baseDepth, projectID: request.projectID,
+                         admission: request.admission, saveAndOpen: request.saveAndOpen)
+    }
+}
+
 struct SubtaskOrganizerButton: View {
     @Environment(Store.self) private var store
-    @State private var openingAdmission: TaskEditorAdmission?
+    @State private var opening: SubtaskOrganizerRequest?
     @Binding var children: JSON
     let taskID: String
     var baseDepth = 0
@@ -12,18 +33,20 @@ struct SubtaskOrganizerButton: View {
     var custodyRoot: Record? = nil
     var admittedWorkspace: WorkspaceBinding? = nil
     var teamDraft: TeamTaskEditorDraft? = nil
+    var present: ((SubtaskOrganizerRequest) -> Void)? = nil
     var saveAndOpen: ((JSON, [String]) -> Bool)? = nil
-    @State private var showing = false
     var body: some View {
         Button("Organize subtasks", systemImage: "list.bullet.indent") {
             let workspace=admittedWorkspace ?? WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration)
             let root=custodyRoot ?? store.record("tasks",id:sourceRootID ?? SubtaskTree.referencePath(taskID)?.first ?? taskID)
             var record=sourceRecord ?? root.flatMap{TaskEditorSourceContext.projection($0,reference:taskID)} ?? Record(["id":.string(taskID),"title":.string("Recovered checklist"),"project_id":.string(projectID)])
             record["subtasks"] = children
-            openingAdmission=TaskEditorAdmission(workspace:workspace,record:record,root:root,kind:.nested,teamDraft:teamDraft);showing=true
+            let admission = TaskEditorAdmission(workspace:workspace,record:record,root:root,kind:.nested,teamDraft:teamDraft)
+            let request = SubtaskOrganizerRequest(children: $children, taskID: taskID, baseDepth: baseDepth, projectID: projectID, admission: admission, saveAndOpen: teamDraft == nil ? saveAndOpen : nil)
+            if let present { present(request) } else { opening = request }
         }
             .accessibilityIdentifier("organizeSubtasks")
-            .sheet(isPresented: $showing) { if let openingAdmission {SubtaskOrganizer(children: $children, taskID: taskID, baseDepth: baseDepth, projectID: projectID, admission:openingAdmission, saveAndOpen: teamDraft == nil ? saveAndOpen : nil)} }
+            .sheet(item: $opening) { SubtaskOrganizerPresentation(request: $0) }
     }
 }
 
@@ -87,12 +110,28 @@ private struct SubtaskOrganizer: View {
             else {
                 ScrollView {VStack(alignment:.leading,spacing:16) {
                     Label("Editing paused",systemImage:"lock.shield").font(.title2)
-                    Text("This task or workspace changed. Your checklist edit is kept privately in Unsent task edits.")
+                    Text("This task or workspace changed. Reopen its current checklist before editing again.")
+                    if let session = recoverySession, session.latest != nil {
+                        Text(session.preserved ? "Your checklist edit is saved privately with its original workspace. Open that workspace’s Backups & restore → Unsent task edits." : "Preserving your checklist edit…")
+                            .accessibilityIdentifier("organizerRecoveryStatus")
+                    }
                     if let session=recoverySession,let failure=session.failure {Text(failure).foregroundStyle(.red);Button("Retry preserving edit") {_=session.flush()}}
                     Button("Close") {checkpoint();if recoverySession?.latest==nil || recoverySession?.flush()==true {dismiss()}}
                 }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}
             }
         }
+        #if os(iOS)
+        .sheet(item: $editingChild) { request in
+            TaskEditor(task: SubtaskTree.detailDraft(request.record, project: projectID), embeddedSave: { edited in
+                guard binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true,
+                  taskID == originalTaskID, let current = items.first(where: { $0.id == request.id })?.record else {
+                throw SubtaskTree.Failure(message: "This task or workspace changed. Reopen its current details before saving.")
+                }
+                let saved = try SubtaskTree.detailChanges(original: request.record, edited: edited, current: current)
+                draft = SubtaskTree.changing(draft, id: request.id, fields: saved.fields)
+            }, embeddedDepth: request.depth)
+        }
+        #endif
         .onChange(of:draft) {_,_ in checkpoint()}
         .onChange(of:newTitle) {_,_ in checkpoint()}
         .onChange(of:childTitle) {_,_ in checkpoint()}
@@ -174,18 +213,7 @@ private struct SubtaskOrganizer: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).keyboardShortcut("s", modifiers: .command).disabled(preparing || recovery != nil || loadError != nil || items.contains { $0.record.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }).accessibilityIdentifier("saveSubtaskOrganizer") }
             }
             .sheet(isPresented: $showingOriginal) { if let originalText { OriginalChecklistView(text: originalText) } }
-            #if os(iOS)
-            .sheet(item: $editingChild) { request in
-                TaskEditor(task: SubtaskTree.detailDraft(request.record, project: projectID), embeddedSave: { edited in
-                    guard binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true,
-                          taskID == originalTaskID, let current = items.first(where: { $0.id == request.id })?.record else {
-                        throw SubtaskTree.Failure(message: "This task or workspace changed. Reopen its current details before saving.")
-                    }
-                    let saved = try SubtaskTree.detailChanges(original: request.record, edited: edited, current: current)
-                    draft = SubtaskTree.changing(draft, id: request.id, fields: saved.fields)
-                }, embeddedDepth: request.depth)
-            }
-            #endif
+
             .alert("Add child subtask", isPresented: $addingChild) {
                 TextField("Subtask name", text: $childTitle)
                 Button("Cancel", role: .cancel) { addingTo = nil }

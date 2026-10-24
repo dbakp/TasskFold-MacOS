@@ -4724,3 +4724,57 @@ boot states and persistent core caches are preserved.
 The iPhone/iPad runtime records and six screenshots belong to the independent
 iOS repository at commit `8bdcd1913607526bb8ed2a01115f9f87b5212c19`. They do not
 substitute for Mac runtime acceptance or create a build dependency.
+
+
+## Native team checklist custody and acceptance — 24 October 2026
+
+A real iPhone/iPad check found that a role downgrade removed the editable parent
+form and dismissed its checklist sheet. The screen then showed only the parent’s
+paused message, losing the checklist’s own recovery feedback. Both native editors
+now own checklist presentation outside the editable form. One transient request
+carries the local binding and frozen admission together. iOS also hosts child
+Details outside the organizer’s editable branch, so a paused child retains its own
+private draft and recovery state. No sheet opening refreshes team authority.
+
+Checklist recovery now shows Preserving until the encrypted revision is verified,
+then identifies its original workspace and Unsent task edits. An unchanged iOS
+child closes directly on Cancel; edited children still require Discard changes.
+The existing organizer layout, local review and parent Save flow are preserved.
+
+Final iPhone acceptance passes six tests; iPad passes five, with no failures or
+skips. The cases verify unchanged/edited child cancellation, organizer cancellation
+with exact saved-cache preservation, child Save held locally until parent Save,
+one scoped parent PATCH with the opening checklist baseline, preserved opaque child
+fields and a concurrently observed sibling edit, relaunch, and role loss while
+editing either the organizer or child Details. Role-loss cases verify the saved
+private-draft message, unchanged stored checklist and no queued task mutation.
+Existing team title/notes formatting Save/relaunch passes on both, and the existing
+personal organizer cancel/move/save/relaunch passes on iPhone. All ten final
+screenshots were inspected; six new checklist/recovery captures and one diagnostic
+before-fix frame are retained in the iOS repository. Initial test selector and
+DEBUG-toolbar ambiguities were corrected before relying on these final checks.
+
+Each repository passes 143 focused workspace/checklist/tree/recovery tests. The
+iOS app, widget extension and UI runner build; the independent Mac app builds with
+its isolated helper’s widget target omitted. Mac interaction remains open: computer
+use still reported the Mac locked, and no further unlock question was sent. The
+native tests use synthetic accounts, a synthetic access boundary, a simulated
+concurrent sibling observation and a Backend configured to reject HTTP. Hosted
+multi-actor authorization, broader account/read-loss transitions, VoiceOver and
+Mac runtime are separate acceptance work. Team rollout remains off in both source
+Info.plists. No schema, hosted configuration, provider or real data changed.
+
+Assignments/labels and other field-specific native team controls, independent child
+records, wider native/live acceptance and the full Px objective remain open. All
+user-deferred release/provider/device work stays deferred. Reproduction uses each
+repo’s `Scripts/prepare_team_editor_native_test.py` and the four `testTeamChecklist`
+methods in the iOS native suite. See `p2-native-team-checklist-evidence.json`.
+
+Owned temporary copies/builds/results, frame-extraction cache and scratch files
+are removed (1.28 GiB allocated across both repos). Both isolated iOS
+apps/runners are uninstalled. No Taskfold native app/test process remains; baseline
+Simulator boot states and persistent core caches are preserved.
+
+The independent iOS runtime summaries and inspected captures are recorded at
+`TaskFold-iOS` commit `b1ca194e50ffcebf8fbc1a7445a835e2eff078c8`. This is an
+evidence reference only; the Mac app has no build dependency on that repository.

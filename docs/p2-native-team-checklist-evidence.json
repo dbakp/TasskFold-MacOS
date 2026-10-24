@@ -1,0 +1,67 @@
+{
+  "stage": "Rank 6 native team checklist custody and acceptance",
+  "date": "2026-10-24",
+  "platform": "mac",
+  "teamRolloutEnabled": false,
+  "hostedChanges": false,
+  "realDataChanged": false,
+  "verification": {
+    "focusedTests": 143,
+    "focusedFailures": 0,
+    "filter": "TeamWorkspace|TeamChecklist|SubtaskTree|BackupTests",
+    "focusedLogSHA256": "581b61ee63d9332bf70b393f86af1f85be22caec28963bfa4fd1d10e5e0270d2",
+    "nativeBuild": "passed unsigned arm64 Mac app; widget target omitted by isolated helper",
+    "buildLogSHA256": "d4f21b38b7c5a793f2174f50290d121ea636fb472252c921bcaad678870cb768",
+    "iosSimulatorRuntime": {
+      "phone": {
+        "result": "Passed",
+        "passedTests": 6,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "totalTestCount": 6
+      },
+      "tablet": {
+        "result": "Passed",
+        "passedTests": 5,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "totalTestCount": 5
+      }
+    },
+    "macRuntimeAccepted": false,
+    "finalScreenshotsInspected": 10,
+    "newChecklistScreenshotsRetained": 6,
+    "beforeFixDiagnosticFrameRetained": 1,
+    "initialHarnessCorrections": [
+      "Select the actual Subtask details title/Save/Cancel, and wait for that sheet to close; parent controls remain in the accessibility tree.",
+      "Use a DEBUG ToolbarItemGroup so both synthetic sibling/role controls are exposed."
+    ],
+    "observedProductDefect": "Role downgrade dismissed the checklist sheet and its recovery feedback when the parent editable form was removed. Both organizer and child-details presentation now live outside editable branches.",
+    "iosRuntimeEvidenceReference": {
+      "repository": "TaskFold-iOS",
+      "commit": "b1ca194e50ffcebf8fbc1a7445a835e2eff078c8",
+      "file": "docs/p2-native-team-checklist-evidence.json",
+      "scope": "iPhone/iPad Simulator acceptance only; Mac runtime remains open"
+    }
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "e2332f19c67a674337ffef731d2f5f626fdcd0576d2a525cef7d472299135a60",
+    "Taskfold/Views/SubtaskOrganizer.swift": "b52febb1de54c530579ff488ba3da8f35dea280137815ffc87ec3edb2109f9b1",
+    "Taskfold/Views/TaskInspector.swift": "121c5fd77bd4dc1522714b6a00d000e5d0a4439fde3eaf41377a644aca043404"
+  },
+  "limitations": [
+    "Runtime evidence uses synthetic access and concurrent-change fixtures; no hosted service acceptance is claimed.",
+    "Mac runtime, wider account/read-loss/concurrency and VoiceOver acceptance remain open.",
+    "Remaining native field adapters, independent child records and full Px scope remain open.",
+    "All user deferrals are preserved."
+  ],
+  "cleanup": {
+    "ownedTemporaryArtifactsRemoved": true,
+    "allocatedBytesRemovedAcrossBothRepos": 1372921856,
+    "isolatedIOSAppAndRunnerUninstalledFromBothSimulators": true,
+    "remainingTaskfoldNativeAppTestProcesses": 0,
+    "nativeMacAppNotLaunched": true,
+    "baselineSimulatorBootStatePreserved": true,
+    "persistentCoreCachesPreserved": true
+  }
+}
