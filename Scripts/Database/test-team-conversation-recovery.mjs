@@ -31,7 +31,11 @@ const team = randomUUID(),
 let pg;
 try {
   pg = await createPostgresFixture({ advisors: true });
-  await loadTeamConversationSchema(pg.raw);
+  if (process.env.TASKFOLD_TEAM_CURRENT_DELETE_REGRESSION === "1") {
+    const { loadTeamWorkspaceSchema } = await import("./team-workspace-schema.mjs");
+    await loadTeamWorkspaceSchema(pg.raw);
+    report.currentWorkspaceSchema = true;
+  } else { await loadTeamConversationSchema(pg.raw); }
   report.migrationSHA256 = createHash("sha256").update(
     await readFile(
       new URL("../../supabase/migrations/" + migration, import.meta.url),

@@ -5008,3 +5008,61 @@ diagnostic collection after the completed failed run was stopped before its
 replacement run. Exact source hashes and limits are in the stage manifests.
 Owned temporary apps/runners and stage builds/results are removed after evidence
 capture; baseline Simulator states and reusable Core caches are retained.
+
+
+## Reviewed native shared-task deletion (rank 6, acceptance scoped)
+
+Single shared task deletion now opens a review showing the current captured task,
+project and deletion scope. The details editors and ordinary list actions use the
+same explicit scoped Store path. The Mac selection command routes a single root
+through a workspace sheet and registers the existing Edit-menu Undo; the iOS list
+uses its existing confirmation/Undo toast. Existing independent occurrences stay
+in place. Checklist items remain part of their parent and cannot accidentally open
+a parent deletion review. Native team batch/child deletion and broader layout/
+accessibility/live acceptance remain open rather than falling back to personal
+writes.
+
+The review retains its opening `TeamTaskEditorDraft` and one operation nonce.
+Every confirmation revalidates the account, workspace/session incarnation, backend,
+access fence, current role and exact saved task contents. It sends the whole frozen
+source to the existing lifecycle service; it never substitutes a newer observed
+row, strips unfamiliar values or truncates an oversized request. A refused or
+failed durable save leaves the review, task, queue and history intact. A retry uses
+the same intent; successful deletion dismisses once. Existing restore receipts,
+fresh task generations, scoped history, linked-occurrence preservation and server
+conversation archives own Undo. The current session's device history and current
+server permissions still bound recovery; this is not a new permanent trash bin.
+
+Unsent parent task fields, comments, checklist input and note-pin changes prevent
+deletion from details. iOS paused-editor Close now also verifies an open recovery
+session contains the actual latest task and extras before flushing; an absent,
+closed or failed first revision cannot be mistaken for a protected edit. The
+failure message offers Retry. Personal and nested Mac deletion feedback and iOS
+personal list feedback now appear only after their durable commit succeeds.
+
+When the review becomes unavailable, its old task/project content is hidden and
+confirmation is disabled. The review never reacquires authority after a role,
+workspace, session or backend change. No new server endpoint, migration, grant,
+provider registration or hosted data change is introduced. Team rollout stays
+off; all user-deferred release/provider/remote-delivery dependencies remain as
+recorded. The full ranked/Px objective is still active.
+
+Verification: both repositories pass 230 focused Core cases without skips or
+failures, including eight new whole-source/authority/Undo/payload-boundary cases.
+Each owned PostgreSQL fixture passes 70 conversation lifecycle/recovery checks
+using the current workspace/lifecycle loader. The existing fixture still leaves
+linked batch completion unclaimed. Both independent apps build. All seven native
+flows pass on both iPhone and iPad: changed source, Cancel, failed save/retry,
+actual TaskScreen context-menu/Undo toast, deletion/Undo/relaunch, role loss and
+unsent-title/private-recovery Close. The context-menu case includes two long
+XCTest idle waits but finishes successfully; no live run was restarted.
+
+Visual inspection caught a destructive action that looked active while disabled.
+Its label now uses an explicit semantic secondary color when paused. Both apps
+were rebuilt; the paused-state case passes once more on each device. Eight
+representative review/failure/recovery images and complete summaries are retained
+in the iOS repository; the final paused images replace the pre-polish versions.
+Mac runtime/keyboard, VoiceOver, wider native/account/concurrency/fault/large-text
+acceptance and the remaining ranked/Px work stay open. Owned temporary apps,
+runners, prepared hosts, build/results and scratch files are removed after evidence
+capture. Baseline Simulator states, reusable Core caches and unrelated files stay.

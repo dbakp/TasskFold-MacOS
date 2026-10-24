@@ -69,6 +69,7 @@ struct TaskInspectorForm: View {
     @State private var teamDraftCaptured = false
     private var isTeamTask: Bool { teamDraft != nil }
     private var quickExclusions: Set<String> { isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : [] }
+    @State private var teamDeletion: TeamTaskDeletionRequest?
     @State private var teamRepeat: TeamTaskRecurrenceRequest?
     @State private var teamReminders: TeamTaskRemindersRequest?
     @State private var teamLabels: TeamTaskLabelsRequest?
@@ -154,6 +155,7 @@ struct TaskInspectorForm: View {
                 }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}.accessibilityIdentifier("editorAccessStopped")
             }
         }
+        .sheet(item: $teamDeletion) { TeamTaskDeletionReview(request: $0) }
         .sheet(item: $teamRepeat) { TeamTaskRecurrenceEditor(request: $0) }
         .sheet(item: $teamReminders) { TeamTaskRemindersEditor(request: $0) }
         .sheet(item: $teamLabels) { TeamTaskLabelsEditor(request: $0) }
@@ -429,7 +431,13 @@ struct TaskInspectorForm: View {
             }
             Section {
                 if let created = ISO8601DateFormatter().date(from: draft.string("created_at")) { LabeledContent("Created", value: created.formatted(date: .abbreviated, time: .shortened)) }
-                Button("Delete Task…", systemImage: "trash", role: .destructive) { confirmDelete = true }.disabled(isTeamTask)
+                if isTeamTask && Workspace.subtaskPath(taskID) == nil {
+                    Button("Delete shared task…", systemImage: "trash", role: .destructive, action: openTeamDeletion)
+                        .disabled(!teamDeletionClean).accessibilityIdentifier("reviewTeamTaskDeletion")
+                    if !teamDeletionClean { Text("Finish saving your edits before deleting this task.").font(.footnote).foregroundStyle(.secondary) }
+                } else if isTeamTask {
+                    Text("Manage this checklist item from its parent task.").font(.footnote).foregroundStyle(.secondary)
+                } else { Button("Delete Task…", systemImage: "trash", role: .destructive) { confirmDelete = true } }
             }
         }
         .formStyle(.grouped)
@@ -546,6 +554,22 @@ struct TaskInspectorForm: View {
         saveTask?.cancel()
         guard editorAvailable else {checkpoint();return}
         saveTask = Task { try? await Task.sleep(for: .milliseconds(600)); guard !Task.isCancelled else { return }; saveNow() }
+    }
+    private var teamDeletionClean: Bool { draft == original && subtask.isEmpty && comment.isEmpty && notePin == nil }
+    private func openTeamDeletion() {
+        guard Workspace.subtaskPath(taskID) == nil, editorAvailable, teamDeletionClean, let captured = teamDraft, taskID == captured.source.id else { return }
+        saveTask?.cancel()
+        teamDeletion = TeamTaskDeletionRequest(draft: captured, current: { editorAvailable && teamDeletionClean }, perform: { requestID in
+            guard editorAvailable, teamDeletionClean else { return false }
+            var saved = false
+            workspace.run("Delete Shared Task") { saved = store.deleteTeamTaskEditor(captured, requestID: requestID) }
+            return saved
+        }, completed: {
+            _ = recoverySession?.finish(); teamDeletion = nil
+            workspace.selection.remove(taskID)
+            if workspace.finderTaskID == taskID { workspace.finderTaskID = nil }
+            workspace.confirm("Deleted “\(captured.source.title)”")
+        })
     }
     private func openTeamRepeat() {
         guard editorAvailable, let captured = teamDraft else { return }

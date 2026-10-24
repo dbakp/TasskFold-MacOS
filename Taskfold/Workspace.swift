@@ -70,6 +70,7 @@ struct Confirmation: Equatable {
 /// Window-level state shared by the sidebar, the list, the inspector, and the menu bar commands.
 @MainActor @Observable
 final class Workspace {
+    var teamTaskDeletion: TeamTaskDeletionRequest?
     let store: Store
     #if DEBUG
     @ObservationIgnored var fixturePrepared = false
@@ -372,6 +373,24 @@ final class Workspace {
         confirm(open.isEmpty ? "Reopened \(items.count) tasks" : "Completed \(items.count) tasks")
     }
     func delete(_ ids: Set<String>) {
+        if ids.count == 1, let id = ids.first, Self.subtaskPath(id) == nil, let task = store.record("tasks", id: id),
+           (store.nativeConversationTeamCache?.knownTasks.contains(id) == true || store.nativeConversationTeamCache?.knownTeams[task.string("project_id")] != nil) {
+            do {
+                let captured = try store.captureTeamTaskEditor(task)
+                teamTaskDeletion = TeamTaskDeletionRequest(draft: captured, current: { [weak self] in self.map { captured.workspace.matches(account: $0.store.userID, generation: $0.store.workspaceGeneration) } ?? false }, perform: { [weak self] requestID in
+                    guard let self else { return false }
+                    var saved = false
+                    self.run("Delete Shared Task") { saved = self.store.deleteTeamTaskEditor(captured, requestID: requestID) }
+                    return saved
+                }, completed: { [weak self] in
+                    guard let self else { return }
+                    self.teamTaskDeletion = nil; self.selection.remove(id)
+                    if self.finderTaskID == id { self.finderTaskID = nil }
+                    self.confirm("Deleted “\(captured.source.title)”")
+                })
+            } catch { store.error = error.localizedDescription }
+            return
+        }
         if hierarchyFilter {
             guard runSelection(ids, name: "Delete Selected Branches", action: { _ in .delete }) else { return }
             selection.subtract(ids); if let id = finderTaskID, ids.contains(id) { finderTaskID = nil }
@@ -385,7 +404,9 @@ final class Workspace {
                 roots[root.id] = updated
             }
             let changes = roots.values.map { Mutation(table: "tasks", recordID: $0.id, method: "PATCH", fields: ["subtasks": $0["subtasks"]]) }
-            run("Delete Subtasks") { _ = store.commit(changes) }
+            var saved = false
+            run("Delete Subtasks") { saved = store.commit(changes) }
+            guard saved else { return }
             selection.subtract(nested)
             delete(ids.subtracting(nested))
             return
@@ -393,7 +414,9 @@ final class Workspace {
         let existing = ids.filter { taskRecord($0) != nil }
         guard !existing.isEmpty else { return }
         let title = existing.count == 1 ? store.record("tasks", id: existing.first!)?.title ?? "" : ""
-        run(existing.count == 1 ? "Delete Task" : "Delete Tasks") { withAnimation(layout) { store.removeAll(Array(existing)) } }
+        var saved = false
+        run(existing.count == 1 ? "Delete Task" : "Delete Tasks") { withAnimation(layout) { saved = store.commit(existing.map { Mutation(table: "tasks", recordID: $0, method: "DELETE", fields: [:]) }) } }
+        guard saved else { return }
         selection.subtract(existing)
         if let id = finderTaskID, existing.contains(id) { finderTaskID = nil }
         confirm(existing.count == 1 ? "Deleted “\(title)”" : "Deleted \(existing.count) tasks")

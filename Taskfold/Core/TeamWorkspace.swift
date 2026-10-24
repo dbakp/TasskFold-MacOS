@@ -372,3 +372,17 @@ struct TeamTaskEditorDraft: Equatable, Sendable {
         return try scope.capturing(mutation, existing: current)
     }
 }
+
+extension TeamTaskEditorDraft {
+    /// Deletion reviews the complete saved task, unlike a field-level edit. A
+    /// newer observed row must never silently become the deletion baseline.
+    func deletion(current: Record?, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool, requestID: UUID) throws -> Mutation {
+        guard permits(current: current, workspace: workspace, session: session, cache: cache, enabled: enabled),
+              let current else { throw Self.unavailable }
+        guard TeamCompletion.sameLocal(source, current) else {
+            throw AppFailure(message: "This task changed before deletion. Close this review and reopen its current details; nothing has been removed.")
+        }
+        let change = Mutation(id: requestID, table: "tasks", recordID: source.id, method: "DELETE", fields: [:], baseline: source.fields, teamTaskScope: scope)
+        return try scope.capturing(change, existing: current)
+    }
+}

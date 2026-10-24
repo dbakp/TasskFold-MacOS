@@ -369,6 +369,17 @@ final class Store {
             return commit([change])
         } catch { self.error = error.localizedDescription; return false }
     }
+    /// Both review and commit use the original admission; no fresh authority or
+    /// source baseline is acquired by a confirmation sheet.
+    func reviewedTeamTaskDeletion(_ draft: TeamTaskEditorDraft, requestID: UUID) throws -> Mutation {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache, draft.scope.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskEditorDraft.unavailable }
+        return try draft.deletion(current: record("tasks", id: draft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled, requestID: requestID)
+    }
+    @discardableResult func deleteTeamTaskEditor(_ draft: TeamTaskEditorDraft, requestID: UUID) -> Bool {
+        do { return commit([try reviewedTeamTaskDeletion(draft, requestID: requestID)]) }
+        catch { self.error = error.localizedDescription; return false }
+    }
     func flushEditorSessions() -> Bool {
         var success=true
         for session in editorSessions.values where !session.closed {if !session.flush() {success=false}}
@@ -2988,6 +2999,16 @@ extension Store {
               let index = snapshot.tables["tasks"]?.firstIndex(where: { $0.id == TeamEditorNativeFixture.taskID }) else { return }
         snapshot.tables["tasks"]![index]["subtasks"] = SubtaskTree.changing(snapshot.tables["tasks"]![index]["subtasks"], id: TeamEditorNativeFixture.siblingID, fields: ["title": .string("Sibling updated elsewhere")])
         do { try persist() } catch { self.error = error.localizedDescription }
+    }
+    func changeTeamDeletionFixtureSource() {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-delete-testing"),
+              let index = snapshot.tables["tasks"]?.firstIndex(where: { $0.id == TeamEditorNativeFixture.taskID }) else { return }
+        snapshot.tables["tasks"]![index]["description"] = .string("A newer saved design decision")
+        try? persist()
+    }
+    func failTeamDeletionFixtureSave() {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-delete-testing") else { return }
+        savedFilterFixtureFailNextPersist = true
     }
     func revokeTeamEditorNativeFixture() {
         guard TeamEditorNativeFixture.enabled else { return }

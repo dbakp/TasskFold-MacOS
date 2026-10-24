@@ -502,3 +502,73 @@ extension TeamWorkspaceTests {
     }
 
 }
+
+extension TeamWorkspaceTests {
+    func testDeletionReviewKeepsWholeSourceAndStableIntentWithRetainedCreator() throws {
+        let (draft, cache, row, workspace, session) = try editorContext(), request = UUID()
+        let change = try draft.deletion(current: row, workspace: workspace, session: session, cache: cache, enabled: true, requestID: request)
+        XCTAssertEqual(change.id, request); XCTAssertEqual(change.method, "DELETE"); XCTAssertTrue(change.fields.isEmpty)
+        XCTAssertEqual(change.baseline, row.fields); XCTAssertEqual(change.teamTaskScope, draft.scope)
+        XCTAssertNotEqual(row.string("user_id"), workspace.account)
+        XCTAssertEqual(try draft.scope.lifecycleBody(for: change)["record"], .object(row.fields))
+        XCTAssertEqual(try draft.deletion(current: row, workspace: workspace, session: session, cache: cache, enabled: true, requestID: request), change)
+        XCTAssertEqual(try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(change)), change)
+    }
+    func testDeletionReviewRejectsEveryChangedSavedFieldInsteadOfRetargetingBaseline() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        for (key, value): (String, JSON) in [("title", .string("New title")), ("description", .string("A colleague's new notes")), ("priority", .number(1)), ("subtasks", .array([])), ("attachments", .array([.object(["name": .string("new.pdf")])])), ("comments", .array([.string("new history")])), ("completion_version", .number(2)), ("opaque_future", .object(["new": .bool(true)]))] {
+            var current = row; current[key] = value
+            if current[key] != row[key] { XCTAssertThrowsError(try draft.deletion(current: current, workspace: workspace, session: session, cache: cache, enabled: true, requestID: UUID()), key) }
+        }
+    }
+    func testDeletionReviewRejectsRecreatedRemovedMovedAndReassignedCreator() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        XCTAssertThrowsError(try draft.deletion(current: nil, workspace: workspace, session: session, cache: cache, enabled: true, requestID: UUID()))
+        for key in ["id", "project_id", "task_generation", "user_id"] {
+            var current = row; current[key] = .string(UUID().uuidString.lowercased())
+            XCTAssertThrowsError(try draft.deletion(current: current, workspace: workspace, session: session, cache: cache, enabled: true, requestID: UUID()), key)
+        }
+    }
+    func testDeletionReviewCannotAcquireNewWorkspaceSessionOrBackendAuthority() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        for next in [WorkspaceBinding(account: workspace.account, generation: UUID()), WorkspaceBinding(account: UUID().uuidString.lowercased(), generation: workspace.generation)] {
+            XCTAssertThrowsError(try draft.deletion(current: row, workspace: next, session: session, cache: cache, enabled: true, requestID: UUID()))
+        }
+        XCTAssertThrowsError(try draft.deletion(current: row, workspace: workspace, session: UUID(), cache: cache, enabled: true, requestID: UUID()))
+        let other = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(cache.boundary.raw, account: workspace.account, origin: "https://other.example"), previous: nil, pending: [], tasks: [row])
+        XCTAssertThrowsError(try draft.deletion(current: row, workspace: workspace, session: session, cache: other, enabled: true, requestID: UUID()))
+        XCTAssertThrowsError(try draft.deletion(current: row, workspace: workspace, session: session, cache: cache, enabled: false, requestID: UUID()))
+    }
+    func testDeletionReviewRejectsChangedAndRestoredAccessFence() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        var raw = cache.boundary.raw; raw["token"] = .string(String(repeating: "b", count: 64))
+        let later = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: workspace.account, origin: origin), previous: cache, pending: [], tasks: [row])
+        XCTAssertThrowsError(try draft.deletion(current: row, workspace: workspace, session: session, cache: later, enabled: true, requestID: UUID()))
+    }
+    func testDeletionReviewUsesCanonicalClockAndTimestampSpellingWithoutDroppingSource() throws {
+        let (_, cache, initial, workspace, session) = try editorContext()
+        var row = initial; row["due_time"] = .string("09:00"); row["created_at"] = .string("2026-10-25T10:00:00Z")
+        let draft = try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: cache, enabled: true)
+        var current = row; current["due_time"] = .string("09:00:00"); current["created_at"] = .string("2026-10-25T10:00:00+00:00")
+        let change = try draft.deletion(current: current, workspace: workspace, session: session, cache: cache, enabled: true, requestID: UUID())
+        XCTAssertEqual(change.baseline, row.fields); XCTAssertEqual(change.baseline?["opaque_future"], initial["opaque_future"])
+    }
+    func testDeletionReviewUndoUsesExactDeletionReceiptAndFreshGeneration() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        let change = try draft.deletion(current: row, workspace: workspace, session: session, cache: cache, enabled: true, requestID: UUID())
+        var snapshot = Snapshot(tables: ["tasks": [row]])
+        let history = EditHistory(changes: [change], snapshot: snapshot); snapshot.apply(change)
+        XCTAssertTrue(snapshot.tables["tasks"]!.isEmpty)
+        let undo = TaskGeneration.restoring(TeamTaskEditScope.historyAction(try XCTUnwrap(history.undo.first)), existing: nil)
+        XCTAssertEqual(undo.teamTaskScope?.restoreRequest, change.id); XCTAssertNotEqual(undo.fields["task_generation"], row["task_generation"])
+        XCTAssertEqual(undo.fields["user_id"], row["user_id"]); XCTAssertEqual(undo.fields["opaque_future"], row["opaque_future"])
+        XCTAssertNoThrow(try undo.teamTaskScope!.lifecycleBody(for: undo))
+    }
+    func testDeletionReviewRefusesOversizedPayloadRatherThanTruncatingSavedContents() throws {
+        let (_, cache, initial, workspace, session) = try editorContext()
+        var row = initial; row["description"] = .string(String(repeating: "x", count: 128001))
+        let draft = try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: cache, enabled: true)
+        XCTAssertThrowsError(try draft.deletion(current: row, workspace: workspace, session: session, cache: cache, enabled: true, requestID: UUID()))
+        XCTAssertEqual(row.string("description").count, 128001)
+    }
+}
