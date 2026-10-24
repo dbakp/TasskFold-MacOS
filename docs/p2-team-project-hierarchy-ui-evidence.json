@@ -1,0 +1,64 @@
+{
+  "stage": "Rank 6 team subproject and move review UI",
+  "date": "2026-10-24",
+  "platform": "mac",
+  "deployed": false,
+  "teamRolloutEnabled": false,
+  "taskEditingEnabled": false,
+  "realDataChanged": false,
+  "independentRepositoryInputs": true,
+  "sourceSHA256": {
+    "Taskfold/Core/TeamProjectManagement.swift": "13d90e8849ebfa86d7ccd7035d787a05f99c92c1fb13afc7c7adc38d34a9d08a",
+    "Taskfold/Views/TeamProjectManagementView.swift": "e978360d9f8b7fc0b813e62f7a5b2cec3b6fcdb8a332d97c477050f390b53056",
+    "TaskfoldTests/TeamProjectManagementTests.swift": "7284a56e8f71ea8a1989c76fee006570a01aec9249fc8af7afe4b2db715a3126"
+  },
+  "verification": {
+    "focusedSwiftTests": 123,
+    "swiftFailures": 0,
+    "swiftLogSHA256": "bcd69247e7aa71797f114d4fdeec26c4ac70b5ec293012bb4e6cccfd26bc368a",
+    "debugAppAndExtensionBuild": "passed, arm64",
+    "buildLogSHA256": "28a9fb92c55e69314da7c6d92ddc9398d8a2b9b4e8cc9db0f37b67af06830616",
+    "signing": "disabled; no native Mac app launched"
+  },
+  "serviceFoundation": {
+    "hierarchyChecks": 95,
+    "archiveRegressionChecks": 93,
+    "projectAccessRegressionChecks": 152,
+    "rerunThisUIStage": false,
+    "reference": "p2-team-project-hierarchy-foundation-evidence.json"
+  },
+  "limitations": [
+    "Source-only service and gated team/task-write flags remain unchanged.",
+    "Native UI uses a synthetic file-backed service and journal, not genuine hosted Auth/Keychain, RLS/Realtime or cloud account transitions.",
+    "Real SQL content/custody/grant preservation is separate service evidence, not inferred from this native peer.",
+    "Mac runtime/spoken and broader native/live role/account acceptance remain open; native Mac inspection reported a locked desktop. No unlock question was repeated.",
+    "Scoped team task/comment/file adapters, adoption/templates/deletion, Watch acceptance and other remaining ranked work stay open.",
+    "All user-deferred release, provider, device and rollout dependencies remain deferred."
+  ],
+  "intermediateTrials": [
+    "An initial native compile surfaced two naming/shadowing mistakes, including a compiler assertion while diagnosing catch error assignment. Both are repaired.",
+    "The first hierarchy flow reached the correct parent on both devices, then the test searched for the wrong Back label. Its observed BackButton identifier is used in the passing retake.",
+    "Earlier iPad screenshot scrolling used the app viewport rather than the sheet. Named active collection viewports now drive scrolling and verify that the warning is actually visible. The final helper stops once the target is visible.",
+    "Superseded runs are not counted as full final acceptance."
+  ],
+  "cleanup": {
+    "complete": true,
+    "ownedAppsAndRunnersUninstalledFromPhoneAndTablet": [
+      "com.dbakp.taskfold.workflowteststeammembers",
+      "com.dbakp.taskfold.workflowteststeammembers.uitests.xctrunner"
+    ],
+    "remainingTaskfoldProcessesObserved": 0,
+    "nativeMacAppLaunched": false,
+    "ownedTemporaryArtifactsRemoved": true,
+    "combinedOwnedArtifactsAllocatedBytes": 1435762688,
+    "baselineBootedPhoneAndTabletPreserved": true,
+    "unrelatedCachesRuntimesAndDataPreserved": true
+  },
+  "iOSAcceptanceReference": {
+    "repository": "TaskFold-iOS",
+    "path": "docs/p2-team-project-hierarchy-ui-evidence.json",
+    "commit": "53fefac03030df75bc7ff1ea714763faf14dbb0f",
+    "macRuntimeClaim": false,
+    "url": "https://github.com/dbakp/TaskFold-iOS/blob/53fefac03030df75bc7ff1ea714763faf14dbb0f/docs/p2-team-project-hierarchy-ui-evidence.json"
+  }
+}

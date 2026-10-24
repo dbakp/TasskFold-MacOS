@@ -190,6 +190,29 @@ struct TeamProjectManagementDetail: Sendable {
     }
 }
 
+/// Presentation filtering only; the service verifies the complete private branch.
+/// A paginated, fenced catalog must be fully loaded before offering destinations.
+enum TeamProjectMoveOptions {
+    static func destinations(for source: TeamProjectAccess, in projects: [TeamProjectAccess]) -> [TeamProjectAccess] {
+        guard source.canManageAccess, source.state == .active, !source.setupPaused, source.hierarchy != nil else { return [] }
+        let known = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return projects.filter { candidate in
+            guard candidate.belongs(to: source.account, origin: source.origin, team: source.team), candidate.teamRevision == source.teamRevision,
+                  candidate.canManageAccess, candidate.state == .active, !candidate.setupPaused, candidate.hierarchy != nil,
+                  candidate.id != source.id, candidate.id != source.hierarchy?.parent else { return false }
+            var cursor: String? = candidate.id, visited = Set<String>()
+            while let id = cursor {
+                guard id != source.id, visited.insert(id).inserted, visited.count <= 20 else { return false }
+                cursor = known[id]?.hierarchy?.parent
+            }
+            return true
+        }.sorted { a, b in
+            let comparison = (a.name ?? a.id).localizedStandardCompare(b.name ?? b.id)
+            return comparison == .orderedSame ? a.id < b.id : comparison == .orderedAscending
+        }
+    }
+}
+
 @MainActor protocol TeamProjectCommandService: AnyObject {
     func teamProjectCommand(_ command: TeamProjectCommand) async throws -> TeamProjectCommandReceipt
 }

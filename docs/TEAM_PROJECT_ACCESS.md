@@ -340,3 +340,76 @@ project adoption/templates/deletion, Watch acceptance and the other remaining
 ranked work stay open. Existing user deferrals stay deferred.
 
 Both Debug app/extension builds passed. No native app was installed or launched in this foundation stage; no Taskfold processes remained at cleanup. The owned copies/native caches were removed after preserving evidence (approximately 1.01 GiB allocated across both platforms). Existing core caches, booted phone/tablet states, user data and unrelated runtimes remain intact.
+
+
+## Team subprojects and move review — 24 October 2026
+
+The gated project surface now offers New subproject and Move project when the
+service supplies versioned hierarchy metadata and the actor can manage the
+project in an active, unpaused team. Older services keep their existing controls.
+Each repository owns its implementation; no cross-repository build dependency
+was introduced. No hosted migration or team/task-write rollout flag changed.
+
+New subproject reviews a fresh project identity under the chosen parent before
+opening the draft. Its own visibility defaults to Private and its folder to No
+folder; the parent is not treated as permission or folder inheritance. Move
+loads a separate, fully paginated, access-fenced catalog. It offers managed
+projects and, where applicable, Team level. It removes the source, known
+subprojects, current parent and known cycles from presentation; the service
+still verifies the entire private branch and destination independently.
+
+The review names the destination and affected project count, explains retained
+tasks/discussions/files and per-project settings, and warns when a destination
+is archived. Change destination returns to the picker without creating a command.
+Cancel creates no pending request. Confirm uses the typed source/destination
+review from the preceding service foundation; no private child names are added
+to the review. Late account/workspace or stale source/team/destination results
+are declined. Enter/Done in the name editor dismisses its keyboard without
+submitting the draft. Large review titles shorten; body copy wraps and scrolls.
+
+A saved uncertain command shows its branch and retained destination intent and
+reuses the exact private request after relaunch. Destination display names remain
+presentation only. Successful creation offers Open subproject. Catalog rows show
+known parent context or an unavailable-parent status, and a permitted subproject
+can open its parent. Task editing remains disabled in this gated preview.
+
+The synthetic native peer now models real parent links, mixed creators, derived
+archive state, per-project revisions and separate lost replies for both new
+commands. It runs only in the existing exact isolated DEBUG namespace with
+explicit test arguments. Its file-backed journal replaces Keychain only for
+synthetic acceptance; no real Auth, task, mail or storage service is involved.
+Real SQL authorization/custody preservation remains separately proved by the
+95-check service foundation and its archive/access regressions, not by this peer.
+
+Two additional native-core cases cover destination filtering, including source,
+current parent, descendants, lower roles, paused/old services, archived targets,
+known cycles and cross-origin catalog rows. The focused 123-test Swift suite
+passes independently in each repo, and each Debug app/extension build passes.
+Native acceptance results are recorded separately below; these builds do not
+imply Mac runtime, spoken, hosted Auth/Keychain or rollout acceptance.
+
+
+Native iPhone and iPad acceptance now passes all six project workflows per
+device: the new largest-text hierarchy cancellation/change-destination checks,
+subproject creation and interrupted-reply recovery, branch move and interrupted
+recovery, correct parent navigation, return to team level, saved child navigation,
+and existing creation/settings/access/rename/archive/reopen regressions. Final
+saved peer state has four projects and exactly three distinct accepted hierarchy
+requests (create/move/move), with no pending journal. Creators, grants/folders,
+per-project own archive flags and final inherited projections are verified.
+Cancelled hierarchy reviews leave no peer or command files. Twenty-six new
+screenshots are visually inspected and preserved in the iOS repo; standard
+single-line name-field horizontal editing/truncation remains native behavior.
+
+The passing retake uses the observed native BackButton identifier and targets
+the active sheet collection viewport for visual checks. Superseded runs are not
+counted as final acceptance. See `p2-team-project-hierarchy-ui-evidence.json` and
+the iOS-owned native result/state/screenshot records for precise scope. Mac core
+checks and Debug build pass independently; no native Mac runtime/spoken, hosted
+Auth/Keychain or full team-rollout acceptance is claimed. Rank 6 and the full Px
+objective remain active, including remaining task/adoption/template/deletion and
+broader access/role/account integration. Existing deferrals remain unchanged.
+
+The isolated apps and runners are closed and uninstalled from both Simulators. Owned native caches, prepared copies, result bundles and scratch files are removed after preserving evidence (approximately 1.34 GiB allocated). No Taskfold process remains. Baseline phone/tablet boot states and unrelated caches, runtimes and user data are preserved.
+
+The [iOS-owned hierarchy UI acceptance record](https://github.com/dbakp/TaskFold-iOS/blob/53fefac03030df75bc7ff1ea714763faf14dbb0f/docs/p2-team-project-hierarchy-ui-evidence.json) is committed at `53fefac`. This is a reference to iPhone/iPad Simulator acceptance, not a Mac runtime claim.

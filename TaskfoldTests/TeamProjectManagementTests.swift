@@ -272,4 +272,28 @@ final class TeamProjectManagementTests: XCTestCase {
         }
     }
 
+    func testMoveDestinationsExcludeSourceDescendantsCurrentParentAndLowerRoles() throws {
+        func access(_ id: String, parent: String?, role: String = "manager", patch: [String: JSON] = [:]) throws -> TeamProjectAccess {
+            let row = raw(role).merging(["id": .string(id), "project_hierarchy_protocol": .number(1), "parent_id": parent.map(JSON.string) ?? .null, "parent_unavailable": .bool(false)]) { _, b in b }.merging(patch) { _, b in b }
+            return try TeamProjectAccess(detail: row, account: pmAccount, origin: pmOrigin, team: pmTeam, project: id)
+        }
+        let source = try access(pmProject, parent: pmMember), parent = try access(pmMember, parent: nil), child = try access(pmGuest, parent: pmProject)
+        let other = "ea340000-0000-4000-8000-000000000006", lower = "ea340000-0000-4000-8000-000000000007", paused = "ea340000-0000-4000-8000-000000000008"
+        let destination = try access(other, parent: nil, patch: ["project_state_protocol": .number(1), "is_archived": .bool(true), "ancestor_archived": .bool(false)])
+        let choices = TeamProjectMoveOptions.destinations(for: source, in: [source, parent, child, destination, try access(lower, parent: nil, role: "viewer"), try access(paused, parent: nil, patch: ["setup_paused": .bool(true)])])
+        XCTAssertEqual(choices.map(\.id), [other]); XCTAssertEqual(choices.first?.archive?.own, true)
+        XCTAssertTrue(TeamProjectMoveOptions.destinations(for: try access(pmProject, parent: pmMember, role: "viewer"), in: [destination]).isEmpty)
+    }
+    func testMoveDestinationsRejectKnownCyclesAndCrossScopeCatalogRows() throws {
+        let one = "ea340000-0000-4000-8000-000000000006", two = "ea340000-0000-4000-8000-000000000007"
+        func access(_ id: String, parent: String?, origin: String = pmOrigin) throws -> TeamProjectAccess {
+            let row = raw().merging(["id": .string(id), "project_hierarchy_protocol": .number(1), "parent_id": parent.map(JSON.string) ?? .null, "parent_unavailable": .bool(false)]) { _, b in b }
+            return try TeamProjectAccess(detail: row, account: pmAccount, origin: origin, team: pmTeam, project: id)
+        }
+        let source = try access(pmProject, parent: nil)
+        XCTAssertTrue(TeamProjectMoveOptions.destinations(for: source, in: [try access(one, parent: two), try access(two, parent: one)]).isEmpty)
+        XCTAssertTrue(TeamProjectMoveOptions.destinations(for: source, in: [try access(one, parent: nil, origin: "https://other.example")]).isEmpty)
+        XCTAssertTrue(TeamProjectMoveOptions.destinations(for: try detail().access, in: [try access(one, parent: nil)]).isEmpty)
+    }
+
 }
