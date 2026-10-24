@@ -37,6 +37,20 @@ try {
       new URL("../../supabase/migrations/" + migration, import.meta.url),
     ),
   ).digest("hex");
+  if (process.env.TASKFOLD_TEAM_BATCH_REGRESSION === "1") {
+    const { loadTeamBatchSchema, teamBatchMigration } = await import(
+      "./team-batch-schema.mjs"
+    );
+    await loadTeamBatchSchema(pg.raw, { base: false });
+    report.batchMigrationSHA256 = createHash("sha256").update(
+      await readFile(
+        new URL(
+          "../../supabase/migrations/" + teamBatchMigration,
+          import.meta.url,
+        ),
+      ),
+    ).digest("hex");
+  }
   for (const [n, u] of Object.entries(users)) {
     await pg.raw(
       `insert into auth.users(id,email,email_confirmed_at) values(${

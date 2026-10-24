@@ -1898,3 +1898,25 @@ Next: atomic linked-task deletion/Undo, remaining task/comment/mention/file/serv
 adapters, current-role workspace refresh and premium native team administration,
 then full privacy/recovery acceptance. Team UI remains off. The full Px objective,
 Watch/Wear OS and all user deferrals retain scope.
+
+
+## Atomic linked team selections — 24 October, rank 6 in progress
+
+Linked selections now delete and Undo atomically across projects within one team.
+Deletion runs children first; recovery runs parents first with fresh generations
+and verified parent mappings. Unselected occurrences and discussions survive.
+Any changed/inaccessible member or later failure rolls back the whole selection.
+Current account/roles and shared nonce receipts guard retries and split-Undo.
+
+Each app independently owns a persisted batch model and Store/Undo/Redo integration.
+No client splitting or single-task fallback is used. Each repo passes 301 database
+checks (72 new plus discussion/lifecycle/edit regressions) and 177 selected SwiftPM
+checks (10 new), with zero failures/skips. Both unsigned Debug app/extension builds
+pass, including Store and main-target source registration. Advisors show no new
+errors/warnings; owned fixtures/build output and registrations are removed.
+See TEAM_TASK_BATCHES.md and batch evidence. No hosted/runtime/distribution pass
+or enabled team UI is claimed.
+
+Next: remaining native editing/comment/mention/file/service adapters, current-role
+workspace refresh and premium team organization/review UI, then full privacy and
+recovery acceptance. Wider Px, Watch/Wear OS and user deferrals remain unchanged.

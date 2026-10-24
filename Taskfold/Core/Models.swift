@@ -99,6 +99,7 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     /// One complete ordering intent, persisted with its retry identity.
     var organizationOrder: OrganizationOrder.Command? = nil
     var teamTaskScope: TeamTaskEditScope? = nil
+    var teamTaskBatch: TeamTaskBatch? = nil
 }
 
 /// Undo/redo recreation is a new task incarnation; an exact queued retry retains its chosen ID.
@@ -402,6 +403,10 @@ struct Snapshot: Codable, Equatable, Sendable {
     var locationImports: [String: LocationHandoffImportReceipt]? = nil
     mutating func apply(_ change: Mutation) {
         guard change.table != TaskAssignmentProvenance.table else { return }
+        if change.method == "TEAM_BATCH" || change.teamTaskBatch != nil {
+            guard let batch=change.teamTaskBatch else { return }
+            _=batch.apply(to:&self,header:change);return
+        }
         if change.organizationOrder != nil || change.method == "ORDER" {
             guard let command = change.organizationOrder, OrganizationOrder.valid(change) else { return }
             tables[change.table] = command.applying(to: tables[change.table] ?? [])
@@ -988,6 +993,10 @@ struct EditHistory {
         var current = snapshot
         var inverse: [Mutation] = []
         for change in changes {
+            if let batch=change.teamTaskBatch {
+                if let back=try? batch.inverse(of:change,snapshot:current) { inverse.append(back) }
+                redo.append(change);current.apply(change);continue
+            }
             if let command = change.organizationOrder, OrganizationOrder.valid(change) {
                 let rows = (current.tables[change.table] ?? []).filter { command.contains($0) }
                 var back = change; back.id = UUID()

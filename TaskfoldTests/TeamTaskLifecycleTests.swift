@@ -95,13 +95,14 @@ final class TeamTaskLifecycleTests: XCTestCase {
         let(deletion,deleteScope,_)=try fixture("delete");var wrong=Record(deletion.baseline!);wrong["project_id"] = .string(UUID().uuidString.lowercased())
         XCTAssertThrowsError(try deleteScope.capturing(deletion,existing:wrong))
     }
-    func testLinkedDeleteBatchNeedsAtomicAdapterBeforeAdmission() throws {
+    func testLinkedDeleteBatchIsPreparedAtomically() throws {
         let(change,scope,_) = try fixture("delete"); let parent = Record(change.baseline!)
         var child = parent; child["id"] = .string(UUID().uuidString.lowercased()); child["recurrence_parent_id"] = .string(parent.id)
         let childChange = Mutation(table:"tasks",recordID:child.id,method:"DELETE",fields:[:],baseline:child.fields,teamTaskScope:scope)
         let snapshot = Snapshot(tables:["tasks":[parent,child]])
-        XCTAssertTrue(TeamTaskEditScope.needsLinkedDeletionReview([change,childChange],snapshot:snapshot))
-        XCTAssertFalse(TeamTaskEditScope.needsLinkedDeletionReview([change],snapshot:snapshot))
+        let grouped=try TeamTaskBatch.preparing([change,childChange],snapshot:snapshot)
+        XCTAssertEqual(grouped.count,1);XCTAssertEqual(grouped.first?.teamTaskBatch?.items.count,2)
+        XCTAssertEqual(try TeamTaskBatch.preparing([change],snapshot:snapshot),[change])
     }
     @MainActor func testLegacyTeamDenialRequiresReviewWithoutAcknowledging() async throws {
         let(original,scope,_) = try fixture("delete"), api = try backend(scope.account)

@@ -3983,3 +3983,19 @@ advisor errors or warnings. Owned containers/Cron staging files are removed.
 See TEAM_CONVERSATION_RECOVERY.md and evidence. This does not claim a new native
 app build/runtime or enabled team UI. Linked batches, remaining permissions and
 premium team/workspace acceptance, full Px and user deferrals remain open.
+
+
+### Atomic team selections — 24 October
+
+The independent Mac candidate now groups linked task deletion and Undo as one
+persisted/atomic action, with cross-project role checks, fresh generations and
+full rollback of tasks, discussions and receipts. Store captures the whole
+selection before removal and keeps request lineage through Undo/Redo. The old
+linked-selection hold is replaced by this adapter.
+
+Mac passes 301 database checks and 177 selected SwiftPM tests (10 new), with no
+failures/skips/new advisor errors or warnings. The unsigned Debug app/embedded
+extensions build, including the platform-specific Store and new model source.
+Owned fixtures/build folders/registrations are removed. See TEAM_TASK_BATCHES.md
+and evidence. Team UI stays off pending remaining editing/workspace/review flows
+and privacy/recovery acceptance. Full Px and user deferrals remain open.

@@ -174,10 +174,6 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
 
 
 extension TeamTaskEditScope {
-    static func needsLinkedDeletionReview(_ changes: [Mutation], snapshot: Snapshot) -> Bool {
-        let ids = Set(changes.filter { $0.teamTaskScope != nil && $0.table == "tasks" && $0.method == "DELETE" }.map(\.recordID))
-        return (snapshot.tables["tasks"] ?? []).contains { ids.contains($0.id) && ids.contains($0.string("recurrence_parent_id")) }
-    }
     static func historyAction(_ original: Mutation) -> Mutation {
         var change = original
         if change.teamTaskScope != nil { change.id = UUID() }

@@ -948,13 +948,25 @@ final class Store {
     @discardableResult
     func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil, sharedCaptureReceipt: SharedCaptureDraft? = nil) -> Bool {
         guard !signingOut, !accountRemovalBlocked else { error = "Finish account removal before changing this workspace."; return false }
-        guard !changes.contains(where: { $0.table == "tasks" && $0.recordID.hasPrefix("subtask:") }) else {
+        let prepared:[Mutation]
+        do {
+            prepared=try TeamTaskBatch.preparing(changes,snapshot:snapshot)
+            for change in prepared {
+                if let batch=change.teamTaskBatch {
+                    guard !localMode,batch.account == userID,batch.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskBatch.invalid }
+                    var preview=snapshot
+                    guard batch.apply(to:&preview,header:change) else { throw TeamTaskBatch.invalid }
+                }
+            }
+        } catch { self.error=error.localizedDescription;return false }
+        let preparedChanges=prepared
+        guard !preparedChanges.contains(where: { $0.table == "tasks" && $0.recordID.hasPrefix("subtask:") }) else {
             error = "Open this subtask's details to make this change."; return false
         }
         if let draft = sharedCaptureReceipt {
-            guard draft.workspace.account == userID, changes.count == 1,
-                  changes[0].table == "tasks", changes[0].method == "POST",
-                  changes[0].recordID == draft.taskID, changes[0].insertOnly == true else { return false }
+            guard draft.workspace.account == userID, preparedChanges.count == 1,
+                  preparedChanges[0].table == "tasks", preparedChanges[0].method == "POST",
+                  preparedChanges[0].recordID == draft.taskID, preparedChanges[0].insertOnly == true else { return false }
         }
         #if DEBUG
         if userID == "ui-testing", sharedCaptureReceipt != nil,
@@ -963,24 +975,20 @@ final class Store {
             sharedCaptureFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
         }
         if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-save-failure-once"), !workflowFixtureFailureConsumed,
-           changes.filter({ $0.table == "tasks" && $0.method == "POST" }).count > 1 {
+           preparedChanges.filter({ $0.table == "tasks" && $0.method == "POST" }).count > 1 {
             workflowFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
         }
         #endif
-        guard changes.filter(ProductivityGoalEdit.matches).allSatisfy({ProductivityGoalEdit.valid($0,account:userID)}) else { error="These goals need a supported choice and current workspace.";return false }
-        guard changes.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable && $0.table != TaskAssignmentProvenance.table && $0.table != SharedComment.table && $0.table != SharedMention.table && !$0.table.hasPrefix("_conversation_") }) else { error = "Activity history is read-only."; return false }
-        guard changes.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
+        guard preparedChanges.filter(ProductivityGoalEdit.matches).allSatisfy({ProductivityGoalEdit.valid($0,account:userID)}) else { error="These goals need a supported choice and current workspace.";return false }
+        guard preparedChanges.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable && $0.table != TaskAssignmentProvenance.table && $0.table != SharedComment.table && $0.table != SharedMention.table && !$0.table.hasPrefix("_conversation_") }) else { error = "Activity history is read-only."; return false }
+        guard preparedChanges.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
             error = "This Focus command needs a valid workspace and revision."; return false
         }
-        guard changes.filter({ $0.organizationOrder != nil || $0.method == "ORDER" }).allSatisfy(OrganizationOrder.valid) else {
+        guard preparedChanges.filter({ $0.organizationOrder != nil || $0.method == "ORDER" }).allSatisfy(OrganizationOrder.valid) else {
             error = "This ordering command is invalid."; return false
         }
-        guard !TeamTaskEditScope.needsLinkedDeletionReview(changes, snapshot: snapshot) else {
-            error = "This selection contains linked repeat tasks. Remove the parent and occurrences separately."
-            return false
-        }
         // Undo and redo are new commands; a persisted retry keeps its existing identity.
-        let orderingCommands = changes.map { change in
+        let orderingCommands = preparedChanges.map { change in
             var change = change
             if change.organizationOrder != nil { change.id = UUID() }
             return change
@@ -1156,7 +1164,7 @@ final class Store {
     func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks, account: userID) }
     private func historyChanges(_ changes: [Mutation]) -> [Mutation] {
         changes.map { original in
-            let change = TeamTaskEditScope.historyAction(original)
+            let change = TeamTaskBatch.historyAction(original)
             if change.table == "tasks", change.method == "POST" {
                 return TaskGeneration.restoring(change, existing: record("tasks", id: change.recordID))
             }
