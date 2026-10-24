@@ -131,6 +131,12 @@ try {
       ),
     ).digest("hex");
   }
+  if (process.env.TASKFOLD_TEAM_REPEAT_REGRESSION === "1") {
+    if (process.env.TASKFOLD_TEAM_CHECKLIST_REGRESSION !== "1") throw new Error("Repeat regression requires checklist schema");
+    const sql = await readFile(new URL("../../supabase/migrations/20261024222451_team_task_repeat_edits.sql", import.meta.url), "utf8");
+    await pg.raw(sql);
+    report.repeatMigrationSHA256 = createHash("sha256").update(sql).digest("hex");
+  }
   for (const [name, u] of Object.entries(people)) {
     await pg.raw(
       `insert into auth.users(id,email,email_confirmed_at) values(${

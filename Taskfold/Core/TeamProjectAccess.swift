@@ -151,7 +151,7 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
     var parentGeneration: String? = nil
     var checklistRestoreRequest: UUID? = nil
 
-    static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at", "assigned_to", "section_id", "labels", "reminder_specs", "subtasks"]
+    static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at", "assigned_to", "section_id", "labels", "reminder_specs", "subtasks", "is_recurring", "recurrence_pattern", "recurrence_end_date"]
     static var invalid: AppFailure { AppFailure(message: "This saved team edit needs review. Your changes remain on this device.") }
     static var conflict: AppFailure { AppFailure(message: "TASKFOLD_CONFLICT: This team task changed. Review the synced task and your saved edit.") }
 
@@ -168,6 +168,10 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
         guard let existing, existing.id == change.recordID, existing["project_id"] == .string(project),
               change.baseline?["task_generation"] == existing["task_generation"] else { throw Self.conflict }
         var captured = change
+        if TeamTaskRecurrence.touches(captured.fields) {
+            try TeamTaskRecurrence.validate(base: captured.baseline ?? [:], changes: captured.fields)
+            try TeamTaskRecurrence.requireCurrent(base: captured.baseline ?? [:], current: existing)
+        }
         if captured.baseline?["project_id"] == nil { captured.baseline?["project_id"] = .string(project) }
         _ = try body(for: captured)
         return captured
@@ -196,6 +200,7 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
                       let id = UUID(uuidString: text), ids.insert(id).inserted else { throw Self.invalid }
             }
         }
+        try TeamTaskRecurrence.validate(base: base, changes: change.fields)
         if let tree = change.fields["subtasks"] { try TeamChecklist.validate(tree) }
         if checklistRestoreRequest != nil, change.fields["subtasks"] == nil { throw Self.invalid }
         if TaskCompletionRevision.touches(change.fields) {

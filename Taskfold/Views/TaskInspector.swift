@@ -69,6 +69,7 @@ struct TaskInspectorForm: View {
     @State private var teamDraftCaptured = false
     private var isTeamTask: Bool { teamDraft != nil }
     private var quickExclusions: Set<String> { isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : [] }
+    @State private var teamRepeat: TeamTaskRecurrenceRequest?
     @State private var teamReminders: TeamTaskRemindersRequest?
     @State private var teamLabels: TeamTaskLabelsRequest?
     @State private var teamAssignee: TeamTaskAssigneeRequest?
@@ -153,6 +154,7 @@ struct TaskInspectorForm: View {
                 }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}.accessibilityIdentifier("editorAccessStopped")
             }
         }
+        .sheet(item: $teamRepeat) { TeamTaskRecurrenceEditor(request: $0) }
         .sheet(item: $teamReminders) { TeamTaskRemindersEditor(request: $0) }
         .sheet(item: $teamLabels) { TeamTaskLabelsEditor(request: $0) }
         .sheet(item: $teamAssignee) { TeamTaskAssigneePicker(request: $0) }
@@ -304,7 +306,9 @@ struct TaskInspectorForm: View {
                     Text("Subtasks stay with the parent task.").font(.caption).foregroundStyle(.secondary)
                 }
                 if Workspace.subtaskPath(taskID) == nil {
-                RecurrenceEditor(task: $draft).disabled(isTeamTask)
+                if isTeamTask {
+                    Button(action: openTeamRepeat) { LabeledContent("Repeat", value: draft["is_recurring"].flag ? Recurrence.summary(Recurrence.effective(draft)) : "Never") }.accessibilityIdentifier("taskRepeat")
+                } else { RecurrenceEditor(task: $draft) }
                 if isTeamTask {
                     Button("Shared reminders…", systemImage: "bell", action: openTeamReminders).accessibilityIdentifier("taskTeamReminders")
                 } else {
@@ -542,6 +546,21 @@ struct TaskInspectorForm: View {
         saveTask?.cancel()
         guard editorAvailable else {checkpoint();return}
         saveTask = Task { try? await Task.sleep(for: .milliseconds(600)); guard !Task.isCancelled else { return }; saveNow() }
+    }
+    private func openTeamRepeat() {
+        guard editorAvailable, let captured = teamDraft else { return }
+        let opening = draft
+        teamRepeat = TeamTaskRecurrenceRequest(teamDraft: captured, record: opening, sourceIdentity: sourceContext?.identity ?? .null, current: { editorAvailable }, apply: { value in
+            guard editorAvailable else { return "Project access changed. Your repeat draft is still here." }
+            do {
+                let changes = try TeamTaskRecurrence.reviewedChanges(from: opening, to: value)
+                guard !changes.isEmpty else { return nil }
+                try TeamTaskRecurrence.requireCurrent(base: TaskCompletionRevision.editBaseline(for: changes, from: opening), current: draft)
+                for (key, field) in changes { draft[key] = field }
+                if !saveNow() { return "Your repeat edit could not be saved. Keep this draft open and retry." }
+                return nil
+            } catch { return error.localizedDescription }
+        })
     }
     private func openTeamReminders() {
         guard editorAvailable, let captured = teamDraft else { return }

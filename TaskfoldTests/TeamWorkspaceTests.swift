@@ -427,7 +427,7 @@ extension TeamWorkspaceTests {
     }
     func testNativeEditorRejectsUnsupportedChangesAsAWholeWithoutDiscardingDraftFields() throws {
         let (draft, cache, row, workspace, session) = try editorContext()
-        for key in ["id", "user_id", "project_id", "task_generation", "completion_version", "completed", "completed_at", "attachments", "comments", "is_recurring", "recurrence_pattern", "source_metadata", "opaque_future"] {
+        for key in ["id", "user_id", "project_id", "task_generation", "completion_version", "completed", "completed_at", "attachments", "comments", "is_recurring", "source_metadata", "opaque_future"] {
             var desired = row; desired["title"] = .string("Keep this draft"); desired[key] = .null
             XCTAssertThrowsError(try draft.mutation(desired: desired, current: row, workspace: workspace, session: session, cache: cache, enabled: true), key)
             XCTAssertEqual(desired["title"], .string("Keep this draft"))

@@ -2964,6 +2964,12 @@ extension Store {
                 privateTask["reminder_specs"] = .array([.object(ReminderSpec.relative(-15, id: "ec240000-0000-4000-8000-000000000027").raw)])
                 tasks = [row, privateTask]; projects.append(privateProject)
             }
+            if ProcessInfo.processInfo.arguments.contains("--team-repeat-testing") {
+                row["due_date"] = .string("2026-10-25"); row["due_time"] = .string("09:00"); row["time_zone"] = .string("Europe/Copenhagen")
+                row["is_recurring"] = .bool(false); row["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
+                row["recurrence_end_date"] = .string("2027-10-25")
+                if ProcessInfo.processInfo.arguments.contains("--team-repeat-future") { row["recurrence_pattern"] = .object(["type": .string("hourly"), "future": .bool(true)]) }
+            }
             tasks[0] = row
             snapshot = Snapshot(tables: ["tasks": tasks, "projects": projects, "labels": labels])
             snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: nil, pending: [], tasks: [row])

@@ -4951,3 +4951,60 @@ result summaries in the iOS repository. The Mac app builds independently; Mac
 runtime and spoken checks are not claimed. Temporary host apps/runners and stage
 build/results are removed after preserving evidence; baseline simulator states
 and reusable core caches are retained.
+
+
+## Shared task repeat controls (rank 6, acceptance scoped)
+
+The team task's Repeat action now opens the complete existing native recurrence
+controls in a review sheet. It supports daily/custom intervals, selected weekdays,
+monthly dates or ordinal weekdays, yearly dates, completion-based scheduling,
+end dates, occurrence limits and the existing upcoming-occurrence preview.
+Apply changes the iOS parent draft; its ordinary Save remains responsible for the
+scoped durable mutation. The Mac inspector commits the reviewed fields through
+its existing scoped autosave path. Cancel keeps the parent unchanged. Personal
+Repeat controls keep their existing flow. Unfamiliar or malformed source rules
+are shown as saved/read-only instead of being rewritten by incomplete controls.
+
+A repeat edit captures the original rule, legacy end date, planned date/time and
+zone, completion state/time and completion revision as one review context.
+The native scope rejects missing/stale context; the server repeats that check
+under the existing task lock. An intervening complete/reopen cycle is detected
+by its revision even if its visible state returned to the original. Unrelated
+notes may still merge. Completing and editing a repeat rule are separate actions;
+series parent links, generations and completion bookkeeping remain server-owned.
+Undo/redo carry the applied/original contexts through the existing history path.
+Stable-request retries acknowledge an already accepted edit without replaying it.
+
+The sheet registers a private recovery session before editing. Access loss stops
+Apply, keeps the unsent rule with its source workspace, and requires a verified
+flush before Close. Changed sheets resist interactive dismissal; a clean cancelled
+sheet releases its unused session. Recovery remains a private record/export and
+does not restore authority or automatically replay the rule to a shared task.
+
+`20261024222451_team_task_repeat_edits.sql` is source-only in each repository.
+It extends the existing private reviewed edit function and adds two private pure
+validators. No new public endpoint, table, grant, rollout switch or hosted change
+is introduced. Existing role/session/lock/retry/checklist behavior stays in the
+same function. Provider, remote-delivery, old-client and distribution dependencies
+remain deferred. The full ranked/Px objective is still open; scoped test results
+must not be read as live multi-account, Mac runtime, VoiceOver or release proof.
+
+Verified stage evidence: each repository passes 53 new PostgreSQL checks plus
+221 existing team edit/planning/checklist checks against the new migration,
+including advisor checks. Full suites ran 1,732 iOS Core cases (13 optional skips)
+plus 79 Watch cases, and 1,764 Mac cases (33 optional skips), with no failures.
+After one additional review-boundary test, the final focused suite passes all
+191 selected cases with one optional live-concurrency fixture skipped; all ten
+new repeat cases pass. Both native apps build independently. The final iPhone
+and iPad runs each pass five native checks without skips, covering saved rule/
+legacy end date, queue/relaunch, Cancel, private role-loss recovery, future-rule
+preservation and the existing reminder-Cancel regression. Six captured images
+were inspected and retained with result summaries in the iOS repository.
+
+The initial iPad helper rejected a visible first switch by one point at its
+scroll boundary; its three reveal assertions failed while subsequent state
+assertions passed. The corrected helper passes the final runs. Xcode's optional
+diagnostic collection after the completed failed run was stopped before its
+replacement run. Exact source hashes and limits are in the stage manifests.
+Owned temporary apps/runners and stage builds/results are removed after evidence
+capture; baseline Simulator states and reusable Core caches are retained.

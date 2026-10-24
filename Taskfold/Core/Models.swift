@@ -125,6 +125,9 @@ enum TaskCompletionRevision {
     static func editBaseline(for fields: [String: JSON], from original: Record) -> [String: JSON] {
         var baseline = Dictionary(uniqueKeysWithValues: fields.keys.map { ($0, original[$0]) })
         baseline["task_generation"] = original["task_generation"]
+        if TeamTaskRecurrence.touches(fields) {
+            for key in TeamTaskRecurrence.cohort { baseline[key] = original[key] }
+        }
         if touches(fields) { baseline["completion_version"] = original.fields["completion_version"] ?? .number(0) }
         return baseline
     }

@@ -1,0 +1,112 @@
+{
+  "account": "fe3a0eae-b34a-4aa6-8efb-7e7ef3f5dfb2",
+  "team": "cdd52bb0-249e-4d95-8f5d-45e8b71b0857",
+  "project": "535beb34-44ed-4dd8-ade2-873976d110e3",
+  "origin": "https://synthetic.example",
+  "body": {
+    "team_id": "cdd52bb0-249e-4d95-8f5d-45e8b71b0857",
+    "project_id": "535beb34-44ed-4dd8-ade2-873976d110e3",
+    "task_id": "694c684d-0a20-43e9-8324-3e53f35d3e2f",
+    "request_id": "40739b97-64fc-40fe-970c-1401f077e9bf",
+    "task_generation": "e3302254-0c54-4e7a-aa49-21544c56885e",
+    "base": {
+      "id": "694c684d-0a20-43e9-8324-3e53f35d3e2f",
+      "title": "Review shared designs",
+      "labels": [],
+      "user_id": "80ce8165-14eb-4e71-a15f-432b58fde15b",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 4,
+      "subtasks": [],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T22:27:55.007845+00:00",
+      "project_id": "535beb34-44ed-4dd8-ade2-873976d110e3",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [],
+      "description": null,
+      "completed_at": null,
+      "is_recurring": false,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {},
+      "task_generation": "e3302254-0c54-4e7a-aa49-21544c56885e",
+      "duration_minutes": null,
+      "completion_version": 0,
+      "recurrence_pattern": null,
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "changes": {
+      "is_recurring": true,
+      "recurrence_pattern": {
+        "type": "monthly",
+        "daysOfMonth": [
+          1,
+          15,
+          31
+        ],
+        "interval": 1,
+        "fromCompletion": false,
+        "count": 10
+      }
+    }
+  },
+  "reply": {
+    "task": {
+      "id": "694c684d-0a20-43e9-8324-3e53f35d3e2f",
+      "title": "Review shared designs",
+      "labels": [],
+      "user_id": "80ce8165-14eb-4e71-a15f-432b58fde15b",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 4,
+      "subtasks": [],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T22:27:55.007845+00:00",
+      "project_id": "535beb34-44ed-4dd8-ade2-873976d110e3",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [],
+      "description": null,
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {},
+      "task_generation": "e3302254-0c54-4e7a-aa49-21544c56885e",
+      "duration_minutes": null,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "monthly",
+        "count": 10,
+        "interval": 1,
+        "daysOfMonth": [
+          1,
+          15,
+          31
+        ],
+        "fromCompletion": false
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "fe3a0eae-b34a-4aa6-8efb-7e7ef3f5dfb2",
+    "team_id": "cdd52bb0-249e-4d95-8f5d-45e8b71b0857",
+    "protocol": 1,
+    "replayed": false,
+    "project_id": "535beb34-44ed-4dd8-ade2-873976d110e3",
+    "request_id": "40739b97-64fc-40fe-970c-1401f077e9bf",
+    "task_generation": "e3302254-0c54-4e7a-aa49-21544c56885e"
+  }
+}
