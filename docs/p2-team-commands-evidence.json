@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-24",
+  "milestone": "Reviewed native team/folder administration with durable retry identity",
+  "platform": "mac",
+  "actions": [
+    "create",
+    "rename",
+    "archive",
+    "unarchive",
+    "folder_create",
+    "folder_rename",
+    "folder_remove"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/TeamOrganizationCommand.swift": "da3611156c29c719928dfd18281291653a3037ac9b135d7f6387af15177535af",
+    "Taskfold/Core/TeamOrganization.swift": "1d581858ac422e9f02dba87b91bc4401e510b2da60430f083d3e04b58699af11",
+    "Taskfold/Core/Backend.swift": "3ec6f377029861f55e3d1de47a9a82db3ceb240cfc44c4b3b0e4f3c0b55ca056",
+    "Taskfold/Core/Store.swift": "79c7ec18fb6046165c1848a8ec5a470bf9ceabde4cd028c354721bddc6fe10ce",
+    "Taskfold/Views/TeamOrganizationView.swift": "ff2d46d8c09fa4d6e6eed33f9c7d7c4710855f1e8d020d2c79cd90031e67fe81",
+    "TaskfoldTests/TeamOrganizationCommandTests.swift": "cc36886ad20a1bc5c2b4f04250d65766308d5b8bff86437b6a373e3246dde280",
+    "TaskfoldTests/Fixtures/team-organization-commands-v1.json": "ad736fad695bf06ccfbdbb6ead87efd70763feac8514ac65c54dd9744c0836d8",
+    "Scripts/Database/test-team-organization.mjs": "f5fe9a6e6a25511057ac790b6109dcad8c06f0803124365b86f7c1fd47b54d72",
+    "Taskfold.xcodeproj/project.pbxproj": "3723cb39fe5e0c9986bf96e9152de91196a16f0cf582e01ce14fb31d05ad7fbd",
+    "Package.swift": "3905690b2479c6595deba3540b627fb92c3798635e2e0d7d1cf1720a37e56217"
+  },
+  "deployed": false,
+  "teamSetupEnabled": false,
+  "realTaskDataChanged": false,
+  "emailSent": false,
+  "nativeTeamTaskWritesEnabled": false,
+  "core": {
+    "status": "passed",
+    "tests": 72,
+    "newCommandTests": 18,
+    "suites": [
+      "TeamOrganizationCommandTests",
+      "TeamOrganizationTests",
+      "TeamWorkspaceTests",
+      "AccountRemovalTests"
+    ],
+    "log": "/tmp/taskfold-team-commands-mac-core-accepted.log"
+  },
+  "database": {
+    "status": "passed",
+    "checks": 156,
+    "commandReceipts": 9,
+    "implementedActionsCovered": 7,
+    "fixture": "TaskfoldTests/Fixtures/team-organization-commands-v1.json",
+    "advisorsRan": true,
+    "containerRemoved": true,
+    "report": "p2-team-commands-postgres-evidence.json"
+  },
+  "requestRecovery": {
+    "storage": "App-private WhenUnlockedThisDeviceOnly non-synchronizing Keychain, partitioned by account and origin digest",
+    "beforeSend": true,
+    "crossWindowLock": true,
+    "sameIdBodyTimestampRevisionOnRetry": true,
+    "loadDoesNotSend": true,
+    "expiredRequestAutomaticallyRenewed": false,
+    "accountRemovalFenceAndCleanup": true,
+    "taskCacheWidgetOrPortableBackupContainsRecovery": false,
+    "retryBoundToDisplayedRequestAcrossWindows": true
+  },
+  "remaining": [
+    "Invitation responses, membership/role and ownership management; team leave/delete UI",
+    "Live Auth/HTTP native team management and wider role/account/backend/fault acceptance",
+    "Mac native controls and actual private Keychain runtime",
+    "VoiceOver speech for new controls, largest-text recovery/error states",
+    "Full advanced-team/project/task/API/email/storage rollout gates; no release readiness claimed",
+    "Actual Keychain-backed command storage on iOS and Mac; native flows here use synthetic private-item IO"
+  ],
+  "cleanup": {
+    "ownedBuildsRemoved": true,
+    "ownedSimulatorAppsAndRunnersUninstalled": true,
+    "macTestAppNotLaunched": true,
+    "approximateBytesReclaimedAcrossBothRepos": 1267133871,
+    "smallLogsAndCoreBuildCachesRetained": true
+  },
+  "build": {
+    "status": "passed",
+    "target": "Independent isolated arm64 Debug macOS app",
+    "log": "/tmp/taskfold-team-commands-mac-build-accepted.log"
+  },
+  "native": {
+    "status": "not accepted",
+    "reason": "Current computer-use inventory reported the Mac locked. No app was launched and no additional unlock was requested.",
+    "noRealMacKeychainAcceptanceClaimed": true
+  }
+}

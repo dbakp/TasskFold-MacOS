@@ -27,6 +27,11 @@ const users = Object.fromEntries(
     }],
   ),
 );
+const nativeCommands = [];
+const nativeCommandActions = new Set(["create", "rename", "archive", "unarchive", "folder_create", "folder_rename", "folder_remove"]);
+const captureCommand = (who, action, body, result) => {
+  if (nativeCommandActions.has(action)) nativeCommands.push({account: users[who].id, action, body, result});
+};
 let pg;
 try {
   pg = await createPostgresFixture({ advisors: true });
@@ -95,6 +100,7 @@ try {
   const ok = async (name, who, action, body, opts) => {
     const r = await rpc(who, action, body, opts);
     check(name + " succeeds", r.code, null);
+    captureCommand(who, action, body, r.value);
     return r.value;
   };
   const deny = async (name, who, action, body, code, opts) =>
@@ -116,8 +122,10 @@ try {
   const mutate = async (who, action, extra = {}, t = team) =>
     rpc(who, action, request(await revision(t), extra, t));
   const change = async (name, who, action, extra = {}, t = team) => {
-    const r = await mutate(who, action, extra, t);
+    const body = request(await revision(t), extra, t);
+    const r = await rpc(who, action, body);
     check(name, r.code, null);
+    captureCommand(who, action, body, r.value);
     return r.value;
   };
   const create = request(null, { name: "Design studio" });
@@ -791,6 +799,7 @@ try {
   report.advisors = advisors;
   report.containerRemoved = await pg.close();
   pg = null;
+  if (process.argv[4]) await writeFile(process.argv[4], JSON.stringify(nativeCommands, null, 2) + "\n");
   report.checkCount = Object.keys(report.checks).length;
   if (output) await writeFile(output, JSON.stringify(report, null, 2) + "\n");
   console.log(

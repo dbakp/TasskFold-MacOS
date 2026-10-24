@@ -145,6 +145,7 @@ struct TeamOrganizationDetail: Equatable, Sendable {
 @MainActor @Observable final class TeamOrganizationBrowser {
     private(set) var overview: TeamOrganizationOverview?
     private(set) var detail: TeamOrganizationDetail?
+    private(set) var setupEnabled = false
     private(set) var loading = false
     private(set) var message: String?
     private var request = UUID()
@@ -158,19 +159,21 @@ struct TeamOrganizationDetail: Equatable, Sendable {
          detail: @escaping (String) async throws -> TeamOrganizationDetail) {
         self.account = account; self.origin = origin; self.current = current; readOverview = overview; readDetail = detail
     }
-    func invalidate() { request = UUID(); overview = nil; detail = nil; message = nil; loading = false }
+    func invalidate() { request = UUID(); overview = nil; detail = nil; setupEnabled = false; message = nil; loading = false }
     func refresh(team: String? = nil) async {
         invalidate(); guard current() else { return }
         let attempt = request; loading = true
         do {
             if let team {
+                let enrollment = try await readOverview()
+                guard attempt == request, current(), enrollment.account == account, enrollment.origin == origin else { return finishStale(attempt) }
                 let value = try await readDetail(team)
                 guard attempt == request, current(), value.account == account, value.origin == origin, value.team.id == team else { return finishStale(attempt) }
-                detail = value
+                detail = value; setupEnabled = enrollment.enabled
             } else {
                 let value = try await readOverview()
                 guard attempt == request, current(), value.account == account, value.origin == origin else { return finishStale(attempt) }
-                overview = value
+                overview = value; setupEnabled = value.enabled
             }
         } catch {
             guard attempt == request, current() else { return finishStale(attempt) }

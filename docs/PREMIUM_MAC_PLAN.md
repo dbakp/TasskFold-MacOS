@@ -4316,3 +4316,10 @@ The account sheet presents it in its own navigation stack. Sensitive presentatio
 is ephemeral and fenced by workspace/session/access changes. It is read-only;
 team rollout and management actions remain pending. See
 [p2-team-overview-evidence.json](p2-team-overview-evidence.json) for exact checks.
+
+24 October reviewed team administration: native team naming, archive/reopen and
+folder controls now open a scoped confirmation sheet. Exact requests are retained
+privately before sending; retry and local clearing have distinct controls and
+meaning. The app never substitutes a fresh command for an uncertain result.
+Live team rollout and remaining membership/invitation/ownership flows stay open.
+See [command evidence](p2-team-commands-evidence.json) for verification limits.

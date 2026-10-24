@@ -1,8 +1,8 @@
 # Team organization foundation
 
-Status: disabled, local verification only (24 October 2026). A gated read-only
-native overview now exists in each app; no deployment or project access change
-is included. Each app repository owns its sources, migration and tests; neither
+Status: disabled, local verification only (24 October 2026). Gated native
+overview and reviewed team/folder administration now exist in each app; no
+deployment or project access change is included. Each app repository owns its sources, migration and tests; neither
 app builds against the other repository.
 
 ## Native overview
@@ -11,9 +11,10 @@ app builds against the other repository.
 folders, incoming invitations, and ownership offers. Owner/admin detail includes
 the role directory and pending invitation emails; member and guest responses
 must omit that private directory, and guests must also omit folders. Names are
-not invented from account identifiers. This is an overview: creation, invitation
-responses, role changes, folder editing and ownership actions are still pending.
-There are no mutation calls or new email sends in this milestone.
+not invented from account identifiers. The initial read-only milestone is retained in `p2-team-overview-evidence.json`.
+Reviewed organization changes are now described below. Invitation responses,
+membership/roles, team deletion/leaving and ownership actions remain pending;
+no email is sent by the new controls.
 
 `TeamOrganizationOverview` and `TeamOrganizationDetail` decode bounded collections,
 UUIDs, finite integer revisions, valid states, roles, expiry dates, folder order,
@@ -35,6 +36,48 @@ configured. The synthetic debug route requires an exact isolated bundle ID plus
 this UI flag nor organization roles enable native team task writes. The backend
 rollout gates below remain in force. Verification is scoped in
 `p2-team-overview-evidence.json` and `p2-team-overview-postgres-evidence.json`.
+
+## Reviewed team and folder changes
+
+Both native apps now support Create team, Rename team, Archive/Reopen team,
+New folder, Rename folder and Remove folder in this gated surface. The review
+captures the original account, backend, team revision and selected folder before
+presentation. Confirmation shows the affected team/folder and the effect; names
+are trimmed and validated. Owners/admins see ordinary naming/folder controls;
+only owners see Archive/Reopen. Paused enrollment hides ordinary setup controls.
+These client affordances never replace the service's current permission checks.
+There are still no automatic grants to projects/tasks, and no optimistic task
+queue or Undo entry is used for administration.
+
+Before sending, `TeamOrganizationCommandVault` saves the exact action, body,
+request UUID and issue time in an app-only, non-synchronizing Keychain item
+(`WhenUnlockedThisDeviceOnly`). Its key is partitioned by account and a digest
+of the backend origin; the contents revalidate both. A process lock serializes
+windows, one pending command per account/backend prevents replacement, and the
+account-removal disk fence blocks late recreation or recovery reads. Confirmed
+account cleanup erases the matching item, including corrupt recovery, without
+erasing another backend's item. Pending names never enter task caches, widgets,
+exports or portable backups.
+
+Relaunch and reauthentication recover a request without sending it. Retry keeps
+its original ID, body, reviewed revision and timestamp. It also revalidates the
+request currently displayed: if another window cleared it and prepared a new
+one, the stale Retry only reloads that new review and sends nothing. Validated minimal SQL
+receipts must identify the expected team, revision, state and (for creation) new
+folder before local recovery is cleared. Failure to save private recovery prevents any send. Dispatch/acknowledgement
+errors, unknown responses, permission changes and account transitions preserve
+the original request identity for recovery. The UI offers Retry, Check latest team and an explicit Clear saved
+request confirmation. Clearing is local only; it cannot cancel or undo an
+already accepted change. After the service's 15-minute request window expires,
+retry is refused; no new timestamp/ID or automatic revision rebase is generated.
+The user must inspect current team details before deliberately clearing and
+reviewing a new action.
+
+A confirmed change refreshes organization presentation and, outside the synthetic
+fixture, invokes the existing workspace sync to refresh task/access projections.
+Successful compilation is not live team-rollout acceptance. Exact checks and
+remaining limits are in `p2-team-commands-evidence.json` and
+`p2-team-commands-postgres-evidence.json`.
 
 ## Durable model
 
@@ -113,7 +156,8 @@ but ordinary edits/invitation acceptance require reopening.
 
 The private configuration defaults to **disabled**. Do not enable it until the
 project/task/API/email/storage authorization stage and native acceptance pass.
-There is no client configuration or service credential embedded in either app.
+The private service rollout configuration and service credentials are not
+embedded in either app.
 
 ## Verification and limits
 

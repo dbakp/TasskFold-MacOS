@@ -6,9 +6,10 @@ Updated 24 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 Rank 6 is active: source-custody and opening-time editor admission are in place.
 A gated native team overview now shows organization roles, folders and permitted
-directory/invitation information through account-bound read adapters. It remains
-read-only and has not enabled team rollout. Next: reviewed organization commands
-and their retry/revision lifecycle, broader role/account and draft-cohort
+directory/invitation information through account-bound read adapters. Reviewed
+team creation, naming, archive/reopen and folder changes now use private
+stable-request recovery; team rollout stays disabled. Next: invitation responses,
+membership/role and ownership management, broader role/account and draft-cohort
 acceptance, then remaining scoped team-task adapters. Rank 7 still needs paired
 offline completion and its recorded native/hardware gates. User-deferred release,
 provider and device dependencies remain deferred.
@@ -2286,3 +2287,22 @@ See `TEAM_ORGANIZATION.md`, `p2-team-overview-evidence.json` and
 `p2-team-overview-postgres-evidence.json`. Organization mutations, live service
 rollout, broad native role/account acceptance and the remaining advanced-team
 work are still open. This milestone does not complete rank 6 or Px.
+
+## Reviewed native team/folder administration (24 October 2026)
+
+Rank 6 now includes native Create/Rename team, Archive/Reopen and Create/Rename/
+Remove folder, implemented independently in both repositories. Reviews retain
+account/backend/revision identity. A private account/server-bound Keychain vault
+saves the original command before send and keeps uncertain results through
+relaunch; retries reuse the same body/ID and never rebase or renew an expired
+request. Current authority still comes from the service. Local clearing is an
+explicit review and does not undo remote work. Confirmed changes use existing
+workspace sync so access projections can refresh.
+
+The SQL harness exports real minimal command receipts for all seven actions as
+an independent native-decoder fixture in each repository. See
+`p2-team-commands-evidence.json`, `p2-team-commands-postgres-evidence.json` and
+`TEAM_ORGANIZATION.md` for exact client, database, build and native scope. This
+stage does not complete advanced teams or Px. Invitation responses and membership/
+role management, ownership, leave/delete flows, broad live/native acceptance and
+the remaining team-task/admission work stay open; user deferrals remain unchanged.

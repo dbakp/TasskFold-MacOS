@@ -355,6 +355,10 @@ final class Backend: NSObject {
                ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
                 throw AccountSessionAuthorizationRequired()
             }
+            if path == "/rest/v1/rpc/taskfold_teams", body?["_action"] != .string("list"), body?["_action"] != .string("get"), body?["_action"] != .string("invitations") {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                throw TeamOrganizationCommandFailure(code: error.string("code"))
+            }
             if ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
                 if error.string("code")=="PGRST202" {throw TeamWorkspaceUnavailable()}
                 if error.string("code")=="28000" {throw AccountSessionAuthorizationRequired()}
@@ -512,6 +516,16 @@ final class Backend: NSObject {
     }
     /// The organization RPC does not echo an account. Bind both ends of every
     /// read to this exact authenticated backend, then decode its bounded value.
+    func teamOrganizationCommand(_ command: TeamOrganizationCommand) async throws -> TeamOrganizationCommandReceipt {
+        guard command.canRetry else { throw TeamOrganizationCommand.invalid }
+        try TeamOrganizationValue.scope(account: command.account, origin: command.origin)
+        guard !sessionTransition, session?.user.id == command.account, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let generation = sessionGeneration
+        let data = try await request("/rest/v1/rpc/taskfold_teams", method: "POST", body: ["_action": .string(command.action.rawValue), "_body": .object(command.body)], expectedAccount: command.account)
+        guard !sessionTransition, generation == sessionGeneration, session?.user.id == command.account, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        guard let raw = try? JSONDecoder().decode([String: JSON].self, from: data) else { throw TeamOrganizationCommand.invalid }
+        return try command.confirmed(raw)
+    }
     private func teamOrganizationRead(_ action: String, body: [String: JSON] = [:], account: String, origin: String) async throws -> [String: JSON] {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard !sessionTransition, session?.user.id == account, origin == (try accountRemovalOrigin) else { throw CancellationError() }

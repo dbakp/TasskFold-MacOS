@@ -1,0 +1,144 @@
+[
+  {
+    "account": "a62c14d6-6391-409b-92c2-50f90b8920d3",
+    "action": "create",
+    "body": {
+      "team_id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "request_id": "6e35a944-a7ee-4666-b085-87b6b4ffa93b",
+      "issued_at": "2026-10-24T14:49:55.881Z",
+      "name": "Design studio"
+    },
+    "result": {
+      "id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "state": "active",
+      "revision": 1
+    }
+  },
+  {
+    "account": "a62c14d6-6391-409b-92c2-50f90b8920d3",
+    "action": "create",
+    "body": {
+      "team_id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "request_id": "6e35a944-a7ee-4666-b085-87b6b4ffa93b",
+      "issued_at": "2026-10-24T14:49:55.881Z",
+      "name": "Design studio"
+    },
+    "result": {
+      "id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "state": "active",
+      "revision": 1
+    }
+  },
+  {
+    "account": "30de94b6-7a3e-4eee-9e31-4800011df62a",
+    "action": "folder_create",
+    "body": {
+      "team_id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "request_id": "2ba03a86-5169-40dc-863d-2d6a411a820c",
+      "issued_at": "2026-10-24T14:49:58.653Z",
+      "revision": 7,
+      "name": "Product"
+    },
+    "result": {
+      "id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "state": "active",
+      "revision": 8,
+      "folder_id": "adf3c03c-e2f5-4c2d-9d04-9820d6e591f3"
+    }
+  },
+  {
+    "account": "30de94b6-7a3e-4eee-9e31-4800011df62a",
+    "action": "rename",
+    "body": {
+      "team_id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "request_id": "8f22cae9-df6d-4801-bc65-c3637b285bf5",
+      "issued_at": "2026-10-24T14:50:01.579Z",
+      "revision": 8,
+      "name": "Design collective"
+    },
+    "result": {
+      "id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "state": "active",
+      "revision": 9
+    }
+  },
+  {
+    "account": "30de94b6-7a3e-4eee-9e31-4800011df62a",
+    "action": "rename",
+    "body": {
+      "team_id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "request_id": "8f22cae9-df6d-4801-bc65-c3637b285bf5",
+      "issued_at": "2026-10-24T14:50:01.579Z",
+      "revision": 8,
+      "name": "Design collective"
+    },
+    "result": {
+      "id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "state": "active",
+      "revision": 9
+    }
+  },
+  {
+    "account": "30de94b6-7a3e-4eee-9e31-4800011df62a",
+    "action": "folder_rename",
+    "body": {
+      "team_id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "request_id": "46b2ad32-b64b-483c-af3e-bc4ad81c4cb3",
+      "issued_at": "2026-10-24T14:50:03.665Z",
+      "revision": 15,
+      "folder_id": "adf3c03c-e2f5-4c2d-9d04-9820d6e591f3",
+      "name": "Research"
+    },
+    "result": {
+      "id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "state": "active",
+      "revision": 16
+    }
+  },
+  {
+    "account": "30de94b6-7a3e-4eee-9e31-4800011df62a",
+    "action": "folder_remove",
+    "body": {
+      "team_id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "request_id": "2400a0c8-2513-428d-8c6b-94ad57a70f3d",
+      "issued_at": "2026-10-24T14:50:03.784Z",
+      "revision": 16,
+      "folder_id": "adf3c03c-e2f5-4c2d-9d04-9820d6e591f3"
+    },
+    "result": {
+      "id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "state": "active",
+      "revision": 17
+    }
+  },
+  {
+    "account": "a62c14d6-6391-409b-92c2-50f90b8920d3",
+    "action": "archive",
+    "body": {
+      "team_id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "request_id": "73871cf2-dde4-4bd4-8ba2-0c4edc9809b0",
+      "issued_at": "2026-10-24T14:50:03.914Z",
+      "revision": 17
+    },
+    "result": {
+      "id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "state": "archived",
+      "revision": 18
+    }
+  },
+  {
+    "account": "a62c14d6-6391-409b-92c2-50f90b8920d3",
+    "action": "unarchive",
+    "body": {
+      "team_id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "request_id": "df48ec15-a2f0-4b16-b270-74d3a65ee5a5",
+      "issued_at": "2026-10-24T14:50:04.253Z",
+      "revision": 18
+    },
+    "result": {
+      "id": "68e6e7ac-69cc-465b-8484-bfe07a22bfb6",
+      "state": "active",
+      "revision": 19
+    }
+  }
+]
