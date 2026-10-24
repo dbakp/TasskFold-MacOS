@@ -48,7 +48,7 @@ struct SharedConversationView: View {
                             Text(task.title).font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("conversationTaskTitle")
                             Text(store.record("projects", id: request.project)?.name ?? "Project").font(.subheadline).foregroundStyle(.secondary)
                             ConversationStatus()
-                            if !writable { Text("This project is archived. Restore it to share new changes.").font(.footnote).foregroundStyle(.secondary) }
+                            if !writable { Text("This conversation is read-only right now. You can keep unsent text as a private draft.").font(.footnote).foregroundStyle(.secondary) }
                             let comments = store.conversationComments(task)
                             if let selected = request.selectedComment, !comments.contains(where: { $0.id == selected }), !loading, store.conversationMeta(store.conversationScope(task)) != nil {
                                 Text("This comment is no longer available. Other accessible comments appear below.").font(.footnote).foregroundStyle(.secondary)
@@ -77,13 +77,14 @@ struct SharedConversationView: View {
                                     }.padding(16).frame(maxWidth: .infinity, alignment: .leading).background(comment.id == request.selectedComment ? Color.taskfold.opacity(0.08) : Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 18)).id(comment.id).accessibilityElement(children: .contain).accessibilityIdentifier("conversationComment-" + comment.id)
                                 }
                             }
-                            ConversationOutboxSection(workspace: request.workspace, target: request)
                             Button { composer = ConversationComposerRequest(target: request) } label: { Label("Write a comment", systemImage: "square.and.pencil").frame(maxWidth: .infinity, minHeight: 44) }.buttonStyle(.borderedProminent).disabled(!writable).accessibilityIdentifier("conversationCompose")
                             if !task["comments"].list.isEmpty { Text("Earlier and imported comments remain in the task’s details.").font(.caption).foregroundStyle(.secondary) }
                         } else { ContentUnavailableView("Conversation unavailable", systemImage: "lock.bubble", description: Text("This task moved, was removed or is no longer available. Your saved comment text remains in Mentions.")) }
+                        // Keep private draft sheets mounted after shared access is withdrawn.
+                        ConversationOutboxSection(workspace: request.workspace, target: request)
                     }.padding(20).frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
                 }.accessibilityIdentifier("conversationScroll")
-                    .task(id: store.lastSync) { if let task { loading = true; await store.refreshConversation(task, selectedComment: request.selectedComment); loading = false; if let id = request.selectedComment { reader.scrollTo(id, anchor: .center) } } }
+                    .task(id: "\(store.workspaceReadRevision)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { if let task { loading = true; await store.refreshConversation(task, selectedComment: request.selectedComment); loading = false; if let id = request.selectedComment { reader.scrollTo(id, anchor: .center) } } }
             }.navigationTitle("Conversation")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -91,7 +92,15 @@ struct SharedConversationView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("conversationClose") }
                 ToolbarItem { Button { Task { if let task { loading = true; await store.refreshConversation(task, selectedComment: request.selectedComment); loading = false } } } label: { Image(systemName: "arrow.clockwise") }.disabled(loading || !store.conversationsOnline).accessibilityLabel("Refresh conversation") }
-                if let openTask, let task { ToolbarItem { Button { guard active else { return }; dismiss(); openTask(task) } label: { Image(systemName: "arrow.up.forward.app") }.accessibilityLabel("Open task").accessibilityIdentifier("conversationOpenTask") } }
+                #if DEBUG
+                if ConversationFixture.enabled, ProcessInfo.processInfo.arguments.contains("--conversation-access-testing") {
+                    ToolbarItem {
+                        if store.conversationFixtureWaiting { Text("Reply held").accessibilityIdentifier("conversationHeldReply") }
+                        else { Button("Hold refresh") { guard let task else {return};store.conversationFixtureHolding=true;Task {await store.refreshConversation(task)} }.disabled(loading).accessibilityIdentifier("conversationHoldReply") }
+                    }
+                }
+                #endif
+                if let openTask, task != nil { ToolbarItem { Button { guard active, let current=self.task else { return }; dismiss(); openTask(current) } label: { Image(systemName: "arrow.up.forward.app") }.accessibilityLabel("Open task").accessibilityIdentifier("conversationOpenTask") } }
             }
             .sheet(item: $composer) { ConversationComposer(request: $0) }
             .confirmationDialog("Remove this comment for everyone?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
@@ -100,6 +109,7 @@ struct SharedConversationView: View {
                     do { let change = try SharedCommentChange(account: store.userID, taskID: comment.taskID, taskGeneration: comment.taskGeneration, projectID: comment.projectID, commentID: comment.id, expectedRevision: comment.revision, body: "", deleting: true); _ = store.saveConversation(change, workspace: request.workspace) } catch { store.conversationError = error.localizedDescription }; removing = nil
                 }
             } message: { Text("Its text and mentions will be removed. A saved removal waits for a connection.") }
+            .onChange(of: store.workspaceReadRevision) { _, _ in if task == nil || !writable { removing=nil } }
             .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
         }
         #if os(macOS)
@@ -124,6 +134,7 @@ private struct ConversationComposer: View {
     @Environment(\.dismiss) private var dismiss
     let request: ConversationComposerRequest
     @State private var bodyText = ""
+    @FocusState private var bodyFocused: Bool
     @State private var people = Set<String>()
     @State private var loaded = false
     @State private var discard = false
@@ -139,13 +150,21 @@ private struct ConversationComposer: View {
     var body: some View {
         NavigationStack {
             Form {
-                if !store.conversationWritable(taskID: request.target.taskID, generation: request.target.generation, project: request.target.project) {
-                    Section { Text("This conversation is unavailable or its project is archived. You can keep your text as a draft.").foregroundStyle(.secondary) }
+                #if DEBUG
+                if ConversationFixture.enabled, ProcessInfo.processInfo.arguments.contains("--conversation-access-testing") {
+                    Text("Fixture access: " + (store.nativeConversationTeamCache?.boundary.projects[request.target.project]?.role ?? (store.nativeConversationTeamCache == nil ? "legacy":"revoked")))
+                        .font(.caption2).lineLimit(1).minimumScaleFactor(0.5).accessibilityIdentifier("conversationAccessFixtureState")
                 }
-                Section("Comment") { TextField("Share your thoughts", text: $bodyText, axis: .vertical).lineLimit(5...15).accessibilityIdentifier("conversationBody")
+                #endif
+                if !store.conversationWritable(taskID: request.target.taskID, generation: request.target.generation, project: request.target.project) {
+                    Section { Text("Read-only conversation. You can save a private draft.").font(.callout).foregroundStyle(.secondary) }
+                }
+                Section("Comment") { TextField("Share your thoughts", text: $bodyText, axis: .vertical).lineLimit(5...15).focused($bodyFocused).accessibilityIdentifier("conversationBody")
                     if bodyText.utf8.count > 16000 { Text("This comment is too long. Shorten it before sending.").foregroundStyle(.red) }
                 }
-                if request.saved?.string("state") == "conflict", let latest = request.baseline {
+                if active, request.saved?.string("state") == "conflict", let baseline = request.baseline,
+                   let latest = store.record(SharedComment.table,id:baseline.id).flatMap(SharedComment.init),
+                   latest.taskID == request.target.taskID.lowercased(), latest.taskGeneration == request.target.generation.lowercased(), latest.projectID == request.target.project.lowercased(), store.conversationTask(latest) != nil {
                     Section("Latest shared version") { Text(latest.body).fixedSize(horizontal: false, vertical: true); Text("Sending your draft replaces this version. Any newer edit will still need review.").font(.caption).foregroundStyle(.secondary) }
                 }
                 Section { ForEach(members) { member in Toggle(member.string("display_name"), isOn: Binding(get: { people.contains(member.id) }, set: { if $0 { people.insert(member.id) } else { people.remove(member.id) } })).frame(minHeight: 44).accessibilityIdentifier("conversationPerson-" + member.id) }
@@ -160,6 +179,14 @@ private struct ConversationComposer: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { if hasChanges { discard = true } else { dismiss() } }.accessibilityIdentifier("conversationCancel") }
+                #if DEBUG
+                if ConversationFixture.enabled, ProcessInfo.processInfo.arguments.contains("--conversation-access-testing") {
+                    ToolbarItem { HStack {
+                        Button("Make read-only",systemImage:"lock") {store.changeConversationAccessFixture(readable:true)}.accessibilityIdentifier("conversationReadOnlyAccess")
+                        Button("Revoke test access",systemImage:"lock.slash") {store.changeConversationAccessFixture(readable:false)}.accessibilityIdentifier("conversationRevokeAccess")
+                    }.labelStyle(.iconOnly).buttonStyle(.borderless) }
+                }
+                #endif
                 ToolbarItem(placement: .confirmationAction) { Button("Send") { save(draft: false) }.disabled(!valid || !active).accessibilityIdentifier("conversationSend") }
             }
             .task {
@@ -173,6 +200,7 @@ private struct ConversationComposer: View {
                 Button("Discard edits", role: .destructive) { dismiss() }
                 Button("Keep editing", role: .cancel) {}
             }
+            .onChange(of: store.workspaceReadRevision) { _, _ in bodyFocused=false }
             .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
         }
         #if os(macOS)
@@ -231,7 +259,7 @@ private struct ConversationOutboxSection: View {
         }
     }
     @ViewBuilder private func savedActions(_ row: Record) -> some View {
-    if row.string("state") == "pending" { Button("Retry") { store.retryConversation(row.id, workspace: workspace) }.frame(minHeight: 44).disabled(store.conversationSending || !store.conversationsOnline) }
+    if row.string("state") == "pending" { Button("Retry") { store.retryConversation(row.id, workspace: workspace) }.frame(minHeight: 44).disabled(store.conversationSending || !store.conversationsOnline || !retryAllowed(row)) }
     else if let change = ConversationOutbox.comment(row), !change.deleting {
         Button("Review") {
             let task = Record(["id": .string(change.taskID), "task_generation": .string(change.taskGeneration), "project_id": .string(change.projectID)])
@@ -244,8 +272,14 @@ private struct ConversationOutboxSection: View {
     }
     Button("Discard", role: .destructive) { discard = row.id }.frame(minHeight: 44).disabled(store.conversationSending)
     }
+    private func retryAllowed(_ row:Record) -> Bool {
+        if let change=ConversationOutbox.comment(row) {return store.conversationWritable(taskID:change.taskID,generation:change.taskGeneration,project:change.projectID)}
+        if let change=ConversationOutbox.mention(row) {return store.conversationMentions.contains{$0.id==change.mentionID}}
+        return false
+    }
     private func label(_ row: Record) -> String {
         guard ConversationOutbox.valid(row) else { return "Saved data needs a newer app" }
+        if row.string("state")=="pending", !retryAllowed(row) {return "Access changed · saved change kept here"}
         switch row.string("state") { case "pending": return store.conversationsOnline ? "Waiting to send" : "Saved here · waiting for a connection"; case "draft": return "Draft saved on this device"; case "conflict": return "Changed elsewhere · review your draft"; case "recipients_changed": return "Review the people mentioned"; case "archived": return "Project archived · change kept here"; default: return "Task or permission changed · text kept here" }
     }
 }
@@ -304,7 +338,7 @@ struct MentionsInboxView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("mentionsClose") }
                 ToolbarItem { Button { Task { loading = true; await store.sync(); await store.syncConversations(); await store.refreshConversation(nil, unreadOnly: unreadOnly); loading = false } } label: { Image(systemName: "arrow.clockwise") }.disabled(loading || !store.conversationsOnline).accessibilityLabel("Refresh mentions").accessibilityIdentifier("mentionsRefresh") }
             }
-            .task(id: "\(unreadOnly)-\(store.lastSync?.timeIntervalSince1970 ?? 0)") { loading = true; await store.syncConversations(); await store.refreshConversation(nil, unreadOnly: unreadOnly); loading = false }
+            .task(id: "\(unreadOnly)-\(store.lastSync?.timeIntervalSince1970 ?? 0)-\(store.workspaceReadRevision)") { loading = true; await store.syncConversations(); await store.refreshConversation(nil, unreadOnly: unreadOnly); loading = false }
             .sheet(item: $thread) { SharedConversationView(request: $0, openTask: openTask) }
             .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
         }

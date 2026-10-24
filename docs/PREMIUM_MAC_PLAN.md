@@ -4208,3 +4208,17 @@ Verified: 88 focused core cases and an unsigned Debug app/extension build pass.
 Mac runtime/VoiceOver acceptance is still pending; iPhone/iPad Simulator flow
 acceptance belongs to the independently tested iOS app. Temporary builds and
 registration were removed.
+
+
+### Current-access discussion presentation — 24 October
+
+Shared discussion screens and composers now use current visible rows and access
+revisions. Stale requests cannot repopulate shared text after revocation, and
+private authored drafts remain available. Native team sending remains gated.
+See DISCUSSION_ACCESS_REFRESH.md and per-platform evidence; ordinary inspector
+invalidation/unsent editing recovery and Mac runtime acceptance remain open.
+
+Independent verification: 105 selected core tests and a complete unsigned Debug
+app/extension build pass. iPhone/iPad runtime proof is scoped to the iOS app; Mac
+runtime and spoken acceptance remain open. Temporary builds/registration are
+removed. Ordinary inspector recovery remains the next part of this work.

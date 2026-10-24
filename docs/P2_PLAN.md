@@ -2146,3 +2146,21 @@ preserve/reopen → restore → relaunch checks pass; independent disk checks co
 the restored task and encrypted original. iPad uses the largest text size in dark
 appearance. Mac native runtime and VoiceOver acceptance remain open. Owned test
 apps, builds and temporary Mac registration were removed.
+
+
+## Open discussions follow current access — 24 October, rank 6 in progress
+
+Discussion/mention projections, cached counts/cursors and late replies now follow
+the live access boundary. An open composer withdraws Send and shared baseline
+content after access changes while retaining private authored text and Save draft.
+Team commands stay gated; blocked requests retain their original identity. See
+DISCUSSION_ACCESS_REFRESH.md and platform evidence for verified scope. Ordinary
+task-editor/inspector invalidation and unsent edit recovery remain open, alongside
+other rank-6 draft cohorts, adapters, premium organization UI and acceptance.
+
+Verification: 105 selected core tests per repo and both Debug app/extension
+builds pass. The iOS app passes native held-reply → viewer → revoked → private
+draft → relaunch checks on iPhone and largest-text dark iPad. Native disk proofs
+confirm zero shared tasks/comments/mentions and one matching authored draft. The
+existing iPhone offline-send/relaunch regression also passes. Mac runtime and
+VoiceOver remain open. Owned test apps, builds and Mac registration are removed.

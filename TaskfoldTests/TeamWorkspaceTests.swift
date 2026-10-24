@@ -215,6 +215,16 @@ final class TeamWorkspaceTests:XCTestCase {
         let draft=try SharedCommentChange(account:b.account,taskID:task.id,taskGeneration:task.string("task_generation"),projectID:task.string("project_id"),body:"My unsent comment")
         try ConversationOutbox.enqueue(draft.record,into:&local)
         let cache=try TeamWorkspaceCache(boundary:boundary("left"),previous:nil,pending:local.pending,tasks:local.tables["tasks"]!)
+        let mention=Record(["id":.string(UUID().uuidString.lowercased()),"comment_id":.string(id),"recipient_id":.string(b.account),"revision":.number(1),"created_at":.string("2026-10-24T10:00:00Z"),"read_at":.null])
+        local.tables[SharedMention.table]=[mention]
+        local.tables[ConversationOutbox.viewsTable]=[Record(["id":.string("summary"),"account":.string(b.account),"version":.number(1),"total":.number(1),"unread":.number(1)])]
+        let before=local
+        let masked=cache.presentation(local)
+        XCTAssertTrue(masked[SharedComment.table]?.isEmpty != false)
+        XCTAssertTrue(masked[SharedMention.table]?.isEmpty != false)
+        XCTAssertTrue(masked[ConversationOutbox.viewsTable]?.isEmpty != false)
+        XCTAssertEqual(local,before)
+        XCTAssertEqual(masked[ConversationOutbox.table],local.tables[ConversationOutbox.table])
         let hidden=cache.merging(local.tables,into:local)
         XCTAssertTrue(hidden.tables[SharedComment.table]?.isEmpty != false)
         XCTAssertEqual(hidden.tables[ConversationOutbox.table],local.tables[ConversationOutbox.table])
@@ -311,4 +321,31 @@ final class TeamWorkspaceTests:XCTestCase {
         XCTAssertTrue(visible["tasks"]?.isEmpty != false);XCTAssertEqual(old.pending,[create])
     }
 
+}
+
+
+extension TeamWorkspaceTests {
+    func testConversationMetadataMatchesCurrentBoundaryAndSurvivesCodec() throws {
+        let b=try boundary();var local=try snapshot()
+        let cache=try TeamWorkspaceCache(boundary:b,previous:nil,pending:[],tasks:local.tables["tasks"]!)
+        local.tables[ConversationOutbox.viewsTable]=[
+            Record(["id":.string("summary"),"access_token":b.raw["token"]!]),
+            Record(["id":.string("inbox"),"access_token":.string("old")]),
+            Record(["id":.string("thread:old")])]
+        let visible=cache.presentation(local)
+        XCTAssertEqual(visible[ConversationOutbox.viewsTable]?.map(\.id),["summary"])
+        let restored=try JSONDecoder().decode(TeamWorkspaceCache.self,from:JSONEncoder().encode(cache))
+        XCTAssertEqual(restored.presentation(local)[ConversationOutbox.viewsTable],visible[ConversationOutbox.viewsTable])
+        let changed=try TeamWorkspaceCache(boundary:boundary("viewer"),previous:cache,pending:[],tasks:local.tables["tasks"]!)
+        XCTAssertTrue(changed.presentation(local)[ConversationOutbox.viewsTable]?.isEmpty != false)
+    }
+    func testNativeDiscussionWriteGateDoesNotInferTeamRightsFromTaskCreator() throws {
+        let f=try fixture(),b=try boundary()
+        let cache=try TeamWorkspaceCache(boundary:b,previous:nil,pending:[])
+        XCTAssertFalse(cache.nativeConversationWritable(project:f["project"]!.text))
+        XCTAssertTrue(cache.nativeConversationWritable(project:f["personal"]!.text))
+        XCTAssertTrue(cache.nativeConversationWritable(project:f["legacy"]!.text))
+        let revoked=try TeamWorkspaceCache(boundary:boundary("left"),previous:cache,pending:[])
+        XCTAssertFalse(revoked.nativeConversationWritable(project:f["project"]!.text))
+    }
 }

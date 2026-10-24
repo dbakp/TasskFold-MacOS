@@ -152,6 +152,9 @@ struct TeamWorkspaceCache: Equatable, Sendable, Codable {
         }
         return blocked
     }
+    /// Team discussion commands stay unavailable until the organization UI and
+    /// scoped discussion adapter are accepted. A creator UUID grants no shortcut.
+    func nativeConversationWritable(project:String) -> Bool {knownTeams[project] == nil}
     func filtering(_ tables:[String:[Record]],localProjects:Set<String>=[]) -> [String:[Record]] {
         var result=tables
         let allowed=Set(boundary.projects.keys).union(localProjects)
@@ -172,7 +175,10 @@ struct TeamWorkspaceCache: Equatable, Sendable, Codable {
         var people:Set<String>=[boundary.account]
         for table in ["projects","tasks","project_collaborators",TaskActivity.table] {for row in result[table] ?? [] {for key in ["user_id","assigned_to","actor_id"] where !row.string(key).isEmpty {people.insert(row.string(key))}}}
         result["profiles"]=tables["profiles"]?.filter{people.contains($0.string("user_id").isEmpty ? $0.id:$0.string("user_id"))}
-        return result
+        result[ConversationOutbox.viewsTable]=tables[ConversationOutbox.viewsTable]?.filter{$0["access_token"] == boundary.raw["token"]}
+        var visible=Snapshot(tables:result)
+        ConversationCache.prune(&visible)
+        return visible.tables
     }
     /// Presentation can be masked before an encrypted Recovery write finishes.
     /// The original snapshot/queue is retained unchanged until durable protection.

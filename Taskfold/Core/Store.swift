@@ -19,13 +19,18 @@ final class Store {
     @ObservationIgnored private var workflowFixtureFailureConsumed = false
     @ObservationIgnored private var sharedCaptureFixtureFailureConsumed = false
     #endif
+    private(set) var workspaceReadRevision = UUID()
+    var workspaceAccessToken: String? { (activeTeamMask ?? snapshot.teamWorkspace)?.boundary.raw["token"]?.text }
+    var nativeConversationTeamCache: TeamWorkspaceCache? { activeTeamMask ?? snapshot.teamWorkspace }
     var snapshot = Snapshot() {
         didSet {
+            if oldValue.teamWorkspace?.boundary != snapshot.teamWorkspace?.boundary || oldValue.tables["projects"] != snapshot.tables["projects"] || oldValue.tables["project_collaborators"] != snapshot.tables["project_collaborators"] { workspaceReadRevision = UUID() }
             if taskCache.update(presentedTables["tasks"] ?? []) { taskRevision += 1 }
         }
     }
     private var teamAccessMask:TeamWorkspaceCache? {
         didSet {
+            if oldValue?.boundary != teamAccessMask?.boundary {workspaceReadRevision = UUID()}
             if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}
             publishWidgetSnapshot(scheduleCapacityRefresh:false)
             Task {await reschedule()}
@@ -219,6 +224,31 @@ final class Store {
     var conversationPageTokens: [String: UUID] = [:]
     #if DEBUG
     var conversationFixtureRevision = 0
+    var conversationFixtureHolding = false
+    var conversationFixtureWaiting = false
+    var conversationFixtureRelease: CheckedContinuation<Void,Never>?
+    func changeConversationAccessFixture(readable: Bool) {
+        guard ConversationFixture.enabled, ProcessInfo.processInfo.arguments.contains("--conversation-access-testing"), let origin=try? backend.accountRemovalOrigin else {return}
+        do {
+            var raw:[String:JSON] = ["workspace_boundary_protocol":.number(1),"account":.string(userID),"native_team_reads_enabled":.bool(false),"setup_paused":.bool(false),"teams":.array([]),"projects":.array([]),"token":.string(String(repeating:"b",count:64))]
+            if readable {
+                let team="f1799000-0000-4000-8000-000000000099"
+                raw["native_team_reads_enabled"] = .bool(true);raw["token"] = .string(String(repeating:"a",count:64))
+                raw["teams"] = .array([.object(["id":.string(team),"state":.string("active"),"revision":.number(1),"access_revision":.number(1)])])
+                raw["projects"] = .array([.object(["id":.string(ConversationFixture.project),"team_id":.string(team),"role":.string("viewer"),"archived":.bool(false),"can_send_tasks":.bool(false)])])
+            }
+            let boundary=try TeamWorkspaceBoundary(raw,account:userID,origin:origin)
+            let cache=try TeamWorkspaceCache(boundary:boundary,previous:snapshot.teamWorkspace,pending:snapshot.pending,tasks:snapshot.tables["tasks"] ?? [])
+            teamAccessMask=cache
+            snapshot=cache.merging(cache.filtering(snapshot.tables),into:snapshot)
+            try persist()
+            if !readable {
+                conversationFixtureHolding=false;conversationFixtureWaiting=false
+                let reply=conversationFixtureRelease;conversationFixtureRelease=nil;reply?.resume()
+            }
+        } catch {self.conversationError=error.localizedDescription;self.error=error.localizedDescription}
+    }
+
     #endif
     private let monitor = NWPathMonitor()
     private var accountGeneration = UUID() { didSet {
@@ -234,7 +264,7 @@ final class Store {
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
     private var workspaceCacheDecoded = true
     private var workspaceCacheReadable = true {
-        didSet {if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+        didSet {if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
     }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"
@@ -608,12 +638,13 @@ final class Store {
     @discardableResult
     func refreshProjectMembers(_ projectID: String) async throws -> [Record] {
         guard !projectID.isEmpty, !localMode else { return projectMembers(projectID) }
-        let generation = accountGeneration
-        let data = try await backend.request("/rest/v1/rpc/taskfold_project_members", method: "POST", body: ["_project_id": .string(projectID)])
+        guard record("projects",id:projectID) != nil else {throw TeamProjectAccessUnavailable()}
+        let generation = accountGeneration, accessRevision=workspaceReadRevision, account=userID
+        let data = try await backend.request("/rest/v1/rpc/taskfold_project_members", method: "POST", body: ["_project_id": .string(projectID)], expectedAccount:account)
         let people = try JSONDecoder().decode([Record].self, from: data).map { person in
             var member = person; member["status"] = .string("accepted"); return member
         }
-        guard generation == accountGeneration else { throw CancellationError() }
+        guard generation == accountGeneration, accessRevision==workspaceReadRevision, record("projects",id:projectID) != nil else { throw CancellationError() }
         snapshot.tables["project_members:" + projectID] = people
         try persist()
         return projectMembers(projectID)

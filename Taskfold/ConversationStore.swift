@@ -15,10 +15,10 @@ extension Store {
     }
     var conversationSending: Bool { conversationSyncGeneration == workspaceGeneration && conversationSyncID != nil }
     var conversationOutbox: [Record] { ConversationOutbox.rows(snapshot, account: userID) }
-    var mentionSummary: Record? { rows(ConversationOutbox.viewsTable).first { $0.id == "summary" && $0.string("account") == userID } }
+    var mentionSummary: Record? { conversationMeta("summary") }
     var mentionUnreadCount: Int? { mentionSummary.flatMap { try? ConversationSummary($0).unread } }
     var conversationMentions: [SharedMention] { rows(SharedMention.table).compactMap(SharedMention.init).filter { $0.recipientID == userID }.sorted { $0.createdAt == $1.createdAt ? $0.id > $1.id : $0.createdAt > $1.createdAt } }
-    func conversationTask(_ comment: SharedComment) -> Record? { ConversationCache.accessible(comment, snapshot: snapshot) }
+    func conversationTask(_ comment: SharedComment) -> Record? { ConversationCache.accessible(comment, snapshot: presentationSnapshot) }
     func conversationComments(_ task: Record) -> [SharedComment] {
         rows(SharedComment.table).compactMap(SharedComment.init).filter { $0.taskID == task.id.lowercased() && $0.taskGeneration == task.string("task_generation").lowercased() && $0.projectID == task.string("project_id").lowercased() && !$0.isDeleted }.sorted { $0.createdAt == $1.createdAt ? $0.id < $1.id : $0.createdAt < $1.createdAt }
     }
@@ -26,13 +26,13 @@ extension Store {
         guard let id else { return "Name unavailable" }; if id == userID { return "You" }
         return projectMembers(project).first { $0.id.lowercased() == id }?.string("display_name") ?? "Collaborator"
     }
-    func conversationMeta(_ scope: String) -> Record? { rows(ConversationOutbox.viewsTable).first { $0.id == scope && $0.string("account") == userID && $0["version"] == .number(1) } }
+    func conversationMeta(_ scope: String) -> Record? { rows(ConversationOutbox.viewsTable).first { $0.id == scope && $0.string("account") == userID && $0["version"] == .number(1) && $0["access_token"].text == (workspaceAccessToken ?? "") } }
     func conversationScope(_ task: Record) -> String { "thread:" + task.id.lowercased() + ":" + task.string("task_generation").lowercased() }
     func conversationHasMore(_ scope: String) -> Bool { conversationMeta(scope)?["has_more"].flag ?? false }
     func conversationWritable(taskID: String, generation: String, project: String) -> Bool {
         guard let task = record("tasks", id: taskID), task.string("task_generation").lowercased() == generation.lowercased(),
               task.string("project_id").lowercased() == project.lowercased(), record("projects", id: project) != nil else { return false }
-        return !ProjectOrganization.archivedIDs(in: allProjects).contains(project)
+        return nativeConversationTeamCache?.nativeConversationWritable(project:project) != false && !ProjectOrganization.archivedIDs(in: allProjects).contains(project)
     }
     @discardableResult private func commitConversation(_ edit: (inout Snapshot) throws -> Void) -> Bool {
         let before = snapshot
@@ -56,7 +56,7 @@ extension Store {
         if !draft { Task { await sync(); await syncConversations() } }; return true
     }
     @discardableResult func markConversationMention(_ mention: SharedMention, read: Bool, workspace: WorkspaceBinding) -> Bool {
-        guard workspace.matches(account: userID, generation: workspaceGeneration), conversationsAvailable else { return false }
+        guard workspace.matches(account: userID, generation: workspaceGeneration), conversationsAvailable, conversationMentions.contains(where:{$0.id==mention.id}) else { return false }
         do {
             let change = try SharedMentionChange(mention: mention, account: userID, read: read)
             guard commitConversation({ try ConversationOutbox.enqueue(change.record, into: &$0) }) else { return false }
@@ -73,6 +73,7 @@ extension Store {
     }
     func syncConversations() async {
         guard conversationsAvailable, conversationsOnline, !conversationSending else { return }
+        let accessRevision=workspaceReadRevision, accessToken=workspaceAccessToken
         let token = UUID(), binding = WorkspaceBinding(account: userID, generation: workspaceGeneration), account = userID
         conversationSyncID = token; conversationSyncGeneration = workspaceGeneration; conversationError = nil
         var attempted = Set<String>(), completed = false
@@ -80,7 +81,7 @@ extension Store {
             if conversationSyncID == token {
                 conversationSyncID = nil
                 // A composer can save another intent while the summary request is in flight.
-                if completed, binding.matches(account: userID, generation: workspaceGeneration), conversationOutbox.contains(where: { $0.string("state") == "pending" && !attempted.contains($0.id) }) {
+                if binding.matches(account: userID, generation: workspaceGeneration), (accessRevision != workspaceReadRevision || (completed && conversationOutbox.contains(where: { $0.string("state") == "pending" && !attempted.contains($0.id) }))) {
                     Task { await syncConversations() }
                 }
             }
@@ -88,8 +89,9 @@ extension Store {
         do {
             while let row = conversationOutbox.first(where: { $0.string("state") == "pending" && !attempted.contains($0.id) }) {
                 attempted.insert(row.id)
-                guard binding.matches(account: userID, generation: workspaceGeneration), conversationSyncID == token else { return }
+                guard accessRevision==workspaceReadRevision, binding.matches(account: userID, generation: workspaceGeneration), conversationSyncID == token else { return }
                 if let change = ConversationOutbox.comment(row) {
+                    guard conversationWritable(taskID:change.taskID,generation:change.taskGeneration,project:change.projectID) else {continue}
                     if snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID.lowercased() == change.taskID }) { continue }
                     let reply: SharedCommentReply
                     #if DEBUG
@@ -97,16 +99,17 @@ extension Store {
                     #else
                     reply = try await backend.writeSharedComment(change)
                     #endif
-                    guard binding.matches(account: userID, generation: workspaceGeneration), conversationSyncID == token else { return }
+                    guard accessRevision==workspaceReadRevision, binding.matches(account: userID, generation: workspaceGeneration), conversationSyncID == token else { return }
                     guard commitConversation({ ConversationOutbox.apply(reply, change: change, to: &$0) }) else { return }
                 } else if let change = ConversationOutbox.mention(row) {
+                    guard conversationMentions.contains(where:{$0.id==change.mentionID}) else {continue}
                     let reply: SharedMentionReply
                     #if DEBUG
                     if ConversationFixture.enabled { reply = try fixtureMentionReply(change) } else { reply = try await backend.markSharedMention(change) }
                     #else
                     reply = try await backend.markSharedMention(change)
                     #endif
-                    guard binding.matches(account: userID, generation: workspaceGeneration), conversationSyncID == token else { return }
+                    guard accessRevision==workspaceReadRevision, binding.matches(account: userID, generation: workspaceGeneration), conversationSyncID == token else { return }
                     guard commitConversation({ next in
                         ConversationOutbox.apply(reply, change: change, to: &next)
                         if reply.status == .unavailable { next.tables[SharedMention.table]?.removeAll { $0.id == change.mentionID } }
@@ -120,16 +123,17 @@ extension Store {
             #else
             summary = try await backend.sharedMentionsSummary(account: account)
             #endif
-            guard binding.matches(account: userID, generation: workspaceGeneration), conversationSyncID == token else { return }
+            guard accessRevision==workspaceReadRevision, binding.matches(account: userID, generation: workspaceGeneration), conversationSyncID == token else { return }
             _ = commitConversation { next in
                 next.tables[ConversationOutbox.viewsTable]?.removeAll { $0.id == "summary" }
-                next.tables[ConversationOutbox.viewsTable, default: []].append(Record(["id": .string("summary"), "account": .string(account), "version": .number(1), "total": .number(Double(summary.total)), "unread": .number(Double(summary.unread)), "updated_at": .string(Dates.timestamp())]))
+                next.tables[ConversationOutbox.viewsTable, default: []].append(Record(["id": .string("summary"), "account": .string(account), "version": .number(1), "access_token": .string(accessToken ?? ""), "total": .number(Double(summary.total)), "unread": .number(Double(summary.unread)), "updated_at": .string(Dates.timestamp())]))
             }
             completed = true
-        } catch { if !Task.isCancelled, !(error is CancellationError), binding.matches(account: userID, generation: workspaceGeneration), conversationSyncID == token { conversationError = "Couldn’t connect or verify the response. Saved changes remain on this device. " + error.localizedDescription } }
+        } catch { if !Task.isCancelled, !(error is CancellationError), accessRevision==workspaceReadRevision, binding.matches(account: userID, generation: workspaceGeneration), conversationSyncID == token { conversationError = "Couldn’t connect or verify the response. Saved changes remain on this device. " + error.localizedDescription } }
     }
     func refreshConversation(_ task: Record?, earlier: Bool = false, selectedComment: String? = nil, unreadOnly: Bool = false) async {
         guard conversationsAvailable, conversationsOnline else { return }
+        let accessRevision=workspaceReadRevision, accessToken=workspaceAccessToken
         let binding = WorkspaceBinding(account: userID, generation: workspaceGeneration), account = userID
         let scope = task.map(conversationScope) ?? (unreadOnly ? "inbox-unread" : "inbox")
         let prior = conversationMeta(scope)
@@ -149,7 +153,12 @@ extension Store {
             if let task { page = try await backend.sharedCommentsPage(task: task, account: account, cursor: cursor) }
             else { page = try await backend.sharedMentionsPage(account: account, cursor: cursor, unreadOnly: unreadOnly) }
             #endif
-            guard !Task.isCancelled, binding.matches(account: userID, generation: workspaceGeneration), conversationPageTokens[scope] == pageToken else { return }
+            #if DEBUG
+            if ConversationFixture.enabled, ProcessInfo.processInfo.arguments.contains("--conversation-access-testing"), conversationFixtureHolding {
+                await withCheckedContinuation { continuation in conversationFixtureHolding=false;conversationFixtureWaiting=true;conversationFixtureRelease=continuation }
+            }
+            #endif
+            guard !Task.isCancelled, accessRevision==workspaceReadRevision, binding.matches(account: userID, generation: workspaceGeneration), conversationPageTokens[scope] == pageToken else { return }
             if task == nil {
                 let ids = page.rows.map { $0.string("comment_id") }
                 #if DEBUG
@@ -166,7 +175,7 @@ extension Store {
                 comments = try await backend.sharedComments(ids: [selectedComment], account: account)
                 #endif
             }
-            guard !Task.isCancelled, binding.matches(account: userID, generation: workspaceGeneration), conversationPageTokens[scope] == pageToken else { return }
+            guard !Task.isCancelled, accessRevision==workspaceReadRevision, binding.matches(account: userID, generation: workspaceGeneration), conversationPageTokens[scope] == pageToken else { return }
             if let task {
                 guard let current = record("tasks", id: task.id), current.string("task_generation") == task.string("task_generation"), current.string("project_id") == task.string("project_id") else { return }
             }
@@ -200,10 +209,10 @@ extension Store {
                     for row in page.rows { ConversationCache.upsert(row, table: SharedMention.table, in: &next) }
                 }
                 next.tables[ConversationOutbox.viewsTable]?.removeAll { $0.id == scope }
-                next.tables[ConversationOutbox.viewsTable, default: []].append(Record(["id": .string(scope), "version": .number(1), "account": .string(account), "has_more": .bool(page.hasMore), "cursor": page.cursor?.document ?? .null, "updated_at": .string(Dates.timestamp())]))
+                next.tables[ConversationOutbox.viewsTable, default: []].append(Record(["id": .string(scope), "version": .number(1), "account": .string(account), "access_token": .string(accessToken ?? ""), "has_more": .bool(page.hasMore), "cursor": page.cursor?.document ?? .null, "updated_at": .string(Dates.timestamp())]))
                 ConversationCache.prune(&next)
             }
-        } catch { if !Task.isCancelled, !(error is CancellationError), binding.matches(account: userID, generation: workspaceGeneration) { conversationError = "Conversation refresh failed. Saved content is kept. " + error.localizedDescription } }
+        } catch { if !Task.isCancelled, !(error is CancellationError), accessRevision==workspaceReadRevision, binding.matches(account: userID, generation: workspaceGeneration) { conversationError = "Conversation refresh failed. Saved content is kept. " + error.localizedDescription } }
     }
 }
 
