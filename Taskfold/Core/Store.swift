@@ -2854,7 +2854,7 @@ extension Store {
 #endif
 
 #if DEBUG
-/// Reserved isolated bundle only. Every HTTP request is rejected locally;
+/// Reserved isolated bundle only. Only the synthetic recipient lookup is answered;
 /// this exercises native Store persistence, not a hosted service acceptance.
 @MainActor enum TeamEditorNativeFixture {
     static var enabled: Bool {
@@ -2864,6 +2864,15 @@ extension Store {
     static let taskID = "ec240000-0000-4000-8000-000000000002"
     static let childID = "ec240000-0000-4000-8000-000000000005"
     static let siblingID = "ec240000-0000-4000-8000-000000000006"
+    static let recipientID = "ec240000-0000-4000-8000-000000000007"
+    static func removeRecipient() { UserDefaults.standard.set(true, forKey: "teamEditorRecipientUnavailable") }
+    static func recipientData() -> Data {
+        var people: [[String: Any]] = [["user_id": account, "role": "editor", "display_name": NSNull()]]
+        if !UserDefaults.standard.bool(forKey: "teamEditorRecipientUnavailable") {
+            people.append(["user_id": recipientID, "role": "editor", "display_name": "Riley Chen"])
+        }
+        return try! JSONSerialization.data(withJSONObject: ["recipient_protocol": 1, "account": account, "team_id": teamID, "project_id": projectID, "access_token": String(repeating: "a", count: 64), "recipients": people])
+    }
     static let projectID = "ec240000-0000-4000-8000-000000000003"
     static let teamID = "ec240000-0000-4000-8000-000000000004"
     static func backend() -> Backend {
@@ -2884,7 +2893,34 @@ extension Store {
 private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
-    override func startLoading() { client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet)) }
+    override func startLoading() {
+        let request = self.request
+        Task { @MainActor in
+            guard TeamEditorNativeFixture.enabled,
+                  request.url?.absoluteString == "https://synthetic.example/rest/v1/rpc/taskfold_team_task_recipients",
+                  request.httpMethod == "POST" else {
+                client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet)); return
+            }
+            var body = request.httpBody
+            if body == nil, let stream = request.httpBodyStream {
+                stream.open(); defer { stream.close() }
+                var data = Data(); var bytes = [UInt8](repeating: 0, count: 1024)
+                while stream.hasBytesAvailable && data.count < 65536 {
+                    let count = stream.read(&bytes, maxLength: bytes.count)
+                    if count <= 0 { break }; data.append(contentsOf: bytes.prefix(count))
+                }
+                body = data
+            }
+            guard let body, let params = try? JSONSerialization.jsonObject(with: body) as? [String: String],
+                  params == ["_team_id": TeamEditorNativeFixture.teamID, "_project_id": TeamEditorNativeFixture.projectID] else {
+                client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse)); return
+            }
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: TeamEditorNativeFixture.recipientData())
+            client?.urlProtocolDidFinishLoading(self)
+        }
+    }
     override func stopLoading() {}
 }
 extension Store {
@@ -2892,6 +2928,7 @@ extension Store {
         guard TeamEditorNativeFixture.enabled else { return }
         dailyBackupsEnabled = false
         guard ProcessInfo.processInfo.arguments.contains("--team-editor-reset") || record("tasks", id: TeamEditorNativeFixture.taskID) == nil else { return }
+        UserDefaults.standard.removeObject(forKey: "teamEditorRecipientUnavailable")
         do {
             var row = Record.task(user: "ec240000-0000-4000-8000-000000000099", project: TeamEditorNativeFixture.projectID)
             row["id"] = .string(TeamEditorNativeFixture.taskID); row["title"] = .string("Team editor proof"); row["description"] = .string("Original team notes")

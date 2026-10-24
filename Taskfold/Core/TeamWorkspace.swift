@@ -322,6 +322,7 @@ struct TeamTaskEditorDraft: Equatable, Sendable {
     let session: UUID
     let scope: TeamTaskEditScope
     let accessToken: String
+    let role: TeamProjectRole
     static let editableFields = TeamTaskEditScope.fields.subtracting(["completed", "completed_at"])
     static var unavailable: AppFailure { AppFailure(message: "Project access changed. Your draft is still here; reopen the task before saving.") }
     init(source: Record, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) throws {
@@ -336,7 +337,7 @@ struct TeamTaskEditorDraft: Equatable, Sendable {
               let token = boundary.raw["token"]?.text else { throw Self.unavailable }
         self.source = source; self.workspace = workspace; self.session = session
         scope = TeamTaskEditScope(account: boundary.account, origin: boundary.origin, team: team, project: project)
-        accessToken = token
+        accessToken = token; role = TeamProjectRole(rawValue: permission.role)!
     }
     func permits(current: Record?, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) -> Bool {
         guard enabled, self.workspace == workspace, self.session == session,

@@ -4,9 +4,12 @@ Updated 24 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Latest scoped acceptance: iPhone/iPad team checklist child editing, cancellation,
-concurrent sibling preservation and role-loss recovery now pass. Mac runtime and
-remaining native team fields stay open; see `p2-native-team-checklist-evidence.json`.
+Latest implementation: project-scoped team assignment controls now use a bounded
+recipient lookup, frozen editor admission and the scoped task queue. Native
+acceptance is tracked in `p2-team-assignment-evidence.json`. Earlier checklist
+child editing/cancellation/concurrent-sibling/role-loss acceptance is retained in
+`p2-native-team-checklist-evidence.json`. Mac runtime, other native field adapters
+and broader live team acceptance remain open.
 
 Rank 6 is active: source-custody and opening-time editor admission are in place.
 A gated native team overview now shows organization roles, folders and permitted
@@ -2611,3 +2614,60 @@ Simulator boot states and persistent core caches are preserved.
 The independent iOS runtime summaries and inspected captures are recorded at
 `TaskFold-iOS` commit `b1ca194e50ffcebf8fbc1a7445a835e2eff078c8`. This is an
 evidence reference only; the Mac app has no build dependency on that repository.
+
+
+## Project-scoped team assignments — 24 October 2026
+
+The gated team editor now offers Unassigned, You and teammates with current
+editing access to the exact project. iOS retains the choice in the task draft
+until Save; the Mac inspector uses its existing scoped autosave path. The picker
+uses native rows, search, selection feedback and explicit refresh/error states.
+It keeps display names only in memory and never loads the manager directory or
+uses a retained task creator as authority. Personal assignment controls are
+unchanged. Team quick-entry assignment remains excluded until it has its own
+scoped adapter.
+
+A source-only recipient RPC returns a bounded, account/project/access-fenced
+catalog with IDs, project roles and sanitized display names. It discloses no
+emails, invitations or organization-wide directory. Live actor/session and access
+checks reject viewers, unrelated projects and disabled/archived contexts. New
+recipient membership/access is checked on selection. Connectivity failure may
+retain an already reviewed choice as a frozen offline intent; authentication,
+malformed responses and access loss never use that fallback. The write service
+still independently validates the recipient. Self and Unassigned remain usable
+without a directory request. Closed or retargeted pickers ignore late replies.
+
+Both repositories independently pass 34 synthetic PostgreSQL checks with no new
+advisor warnings/errors. Each owns its migration, lookup/client/model/view, SQL
+fixture and nine new core tests. Full core suites passed before the final bounded
+transport refinement (iOS 1,707 tests, 13 environment-gated skips; Mac 1,739 tests,
+33 environment-gated skips). After that refinement, all 76 focused recipient,
+workspace, edit and project-access tests pass in each repository without skips.
+The Mac isolated app compiles unsigned; its helper omits the widget target.
+Native iPhone/iPad results and exact evidence are recorded in
+`p2-team-assignment-evidence.json`. Initial native harness failures were corrected:
+use a measured short drag to reveal the full row above the tablet sheet edge
+(the broad swipe overscrolled), scope child controls to the child
+form, and assert the parent’s actual absent assignment rather than assuming an
+explicit JSON null. These did not require changing the saved-task implementation. The initial iOS compile caught a helper placed
+on the presentation wrapper; it was moved to the editor before native testing.
+
+No hosted migration, team rollout switch or real account/task changed. Native
+checks use an exact DEBUG bundle/argument fixture; only its synthetic recipient
+RPC is answered locally, and all other requests fail without network. Mac
+interactive/spoken acceptance, hosted multi-actor acceptance, remaining native
+field adapters and the full rank-6/Px scope remain open. All user deferrals stay
+in place.
+
+Final assignment acceptance passes four tests on iPhone and four on iPad,
+with no failures or skips. The four new picker/recovery screenshots were inspected
+and retained in the iOS evidence directory; both displays show readable, complete
+rows and status text. Native Mac interaction remains a separate open gate.
+
+Stage cleanup removed 1,318,117,376 allocated bytes of owned temporary builds,
+results and scratch files across both repositories. Both isolated apps/runners
+are uninstalled, with no Taskfold native app/test process left. Baseline Simulator
+boot states and persistent core caches are preserved.
+
+The independent iOS Simulator evidence is recorded at `TaskFold-iOS` commit
+`8e27b0147691d7ec3af4cf2822f2a2e05ec9ee33`. This is an evidence reference; the Mac build owns all its inputs.

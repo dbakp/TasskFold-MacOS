@@ -69,6 +69,9 @@ struct TaskInspectorForm: View {
     @State private var teamDraftCaptured = false
     private var isTeamTask: Bool { teamDraft != nil }
     private var quickExclusions: Set<String> { isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : [] }
+    @State private var teamAssignee: TeamTaskAssigneeRequest?
+    @State private var selectedTeamName: String?
+    @State private var selectedTeamID: String?
     @State private var subtaskOrganizing: SubtaskOrganizerRequest?
     @State private var recoverySession: TaskEditorSession?
     @State private var sourceContext: TaskEditorSourceContext?
@@ -148,6 +151,7 @@ struct TaskInspectorForm: View {
                 }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}.accessibilityIdentifier("editorAccessStopped")
             }
         }
+        .sheet(item: $teamAssignee) { TeamTaskAssigneePicker(request: $0) }
         .sheet(item: $subtaskOrganizing) { SubtaskOrganizerPresentation(request: $0) }
         .onChange(of:editorAvailable) {_,available in if !available {stopEditing()}}
         .onChange(of:recoveryExtras) {_,_ in checkpoint()}
@@ -274,7 +278,11 @@ struct TaskInspectorForm: View {
                     ForEach(1...4, id: \.self) { n in Label(n == 4 ? "None" : "Priority \(n)", systemImage: "flag.fill").foregroundStyle(Color.priority(n)).tag(n) }
                 }
                 LabeledContent("Assigned to") {
-                    AssigneeMenu(task: draft, contextID: taskID, showsName: true) { draft["assigned_to"] = $0.isEmpty ? .null : .string($0) }.disabled(isTeamTask)
+                    if isTeamTask {
+                        Button(teamAssigneeCaption, action: openTeamAssignee).accessibilityIdentifier("taskAssignee")
+                    } else {
+                        AssigneeMenu(task: draft, contextID: taskID, showsName: true) { draft["assigned_to"] = $0.isEmpty ? .null : .string($0) }
+                    }
                 }
                 if Workspace.subtaskPath(taskID) == nil {
                 Picker("Project", selection: text("project_id")) {
@@ -523,6 +531,24 @@ struct TaskInspectorForm: View {
         saveTask?.cancel()
         guard editorAvailable else {checkpoint();return}
         saveTask = Task { try? await Task.sleep(for: .milliseconds(600)); guard !Task.isCancelled else { return }; saveNow() }
+    }
+    private var teamAssigneeCaption: String {
+        let id = draft.string("assigned_to")
+        if id.isEmpty { return "Unassigned" }
+        if id == store.userID { return "You" }
+        return selectedTeamID == id ? selectedTeamName ?? "Team member" : "Team member"
+    }
+    private func openTeamAssignee() {
+        guard editorAvailable, let captured = teamDraft else { return }
+        teamAssignee = TeamTaskAssigneeRequest(draft: captured,
+            selected: Binding(get: { draft.string("assigned_to") }, set: { draft["assigned_to"] = $0.isEmpty ? .null : .string($0) }),
+            current: { editorAvailable }, choose: { person in
+                guard editorAvailable else { return "Project access changed. Reopen this task before assigning it." }
+                draft["assigned_to"] = person.map { .string($0.id) } ?? .null
+                selectedTeamID = person?.id; selectedTeamName = person?.displayName
+                guard saveNow() else { return "Your assignment is still in this draft. Reopen the task’s current details before saving again." }
+                return nil
+            })
     }
     @discardableResult private func saveNow() -> Bool {
         guard editorAvailable,workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, let current else { checkpoint();return false }
