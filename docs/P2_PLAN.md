@@ -1,10 +1,10 @@
 # Remaining product backlog
 
-Updated 23 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
+Updated 24 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
 
 ## Immediate priority correction
 
-Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. The current independent implementation is rank-6 automation access. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; scoped clipboard/spoken secret controls now pass; native recovery and the remaining spoken checks remain in progress. Hosted server-session expiry and temporary encryption-key restoration now pass in both repo-owned services; hosted same-account webhook, queued-task and API-key recovery now pass on phone/tablet; wider spoken acceptance remains open. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
+Account removal now has a deployed protocol-2 service and genuine iPhone Simulator deletion/recovery acceptance, including confirmation after deliberate pruning of a synthetic retry receipt. Mac private-Keychain/runtime, expired pre-proof legacy state, residual-file repair and wider fault/concurrency checks remain open; see `ACCOUNT_REMOVAL.md`. Scoped rank-3 note-save recovery now passes. Rank-6 automation acceptance and rank-7 Watch implementation are both in progress. Scoped credentials, task operations and gated native management are implemented; both repo-owned server sources now pass hosted lifecycle/timeout acceptance. Signed-in phone/tablet management against the hosted service now passes; the webhook transport now passes local and hosted acceptance. Account-bound subscriptions and receiver proof now pass local SQL/HTTP acceptance. The task outbox/dispatcher and gated native controls are now implemented; hosted queue/delivery, signed scheduling and scoped phone/tablet native Auth/relaunch/account-isolation flows now pass; scoped clipboard/spoken secret controls now pass; native recovery and the remaining spoken checks remain in progress. Hosted server-session expiry and temporary encryption-key restoration now pass in both repo-owned services; hosted same-account webhook, queued-task and API-key recovery now pass on phone/tablet; wider spoken acceptance remains open. Signing-dependent Mac runtime stays deferred. These priorities preserve the full backlog and existing user deferrals.
 
 ## Priority and delivery order
 
@@ -1572,3 +1572,47 @@ icons/resources and embedding remain open. The full email/teams/Wear OS/native
 backlog and all user deferrals keep scope. See iOS-owned
 `p2-watch-capacity-evidence.json` and Mac-owned
 `p2-watch-capacity-compatibility-evidence.json`.
+
+
+## Resumable Watch capture and action review — 24 October, candidate
+
+Code review found that unsent capture words existed only in the open sheet. The
+Watch now owns one private, bounded capture draft in its existing atomic archive.
+Editing does not enqueue a command or include draft text in a wire snapshot.
+Close is wired to persist before dismissing; reopening uses the original draft
+identity, phone and workspace. Account/epoch/phone changes never silently adopt a
+new destination. A separate destination review rechecks the chosen workspace, and
+Save atomically moves the latest words into one new capture while clearing the
+draft. Failed writes, capacity refusal and stale reviews keep the durable draft.
+Explicit draft removal leaves existing pending commands untouched. The native
+input field is accompanied by a wrapping full-title review and its destination.
+
+The action sheet now has separate review/removal rows, an explicit Done control
+and an empty state. Its name is Watch actions because retained original references
+also count; it does not imply that every reference is awaiting delivery. Known
+full phone history refuses recovery copies before consuming the original. Failed
+local changes show a plain retry message instead of a raw file error.
+
+Seventy focused cases pass (12 new draft cases plus one new full-history recovery
+case, no failures/skips). The actual isolated Watch client and private archive
+pass 15 assertions across two process relaunches, including a blocked filesystem
+write, edit retry, changed workspace, explicit adoption, atomic Save, repeat Save
+and independent draft discard. Packet updates are injected and transport is
+turned off; these do not prove iPhone delivery, native typing or button input.
+Watch Debug/Release and the actual iPhone app build. Release excludes fixture
+flags. The automatically presented Capture and Watch actions sheets render on
+42 mm, with full sample title/destination and distinct action rows inspected.
+
+The Mac remained locked, so the full button-driven open/edit/Close/Cancel/Save/
+return flow, dictation and spoken acceptance remain open. Prepared DEBUG routes
+reduce the setup for that later check. No fresh full-suite, Mac runtime, paired,
+cloud or hardware acceptance is claimed. The test app is removed and the Watch
+Simulator returned to shutdown; reusable caches are retained. Exact scope is in
+iOS-owned `p2-watch-draft-evidence.json`.
+
+The new field is optional, private Watch state; wire commands and iPhone task/cache
+schemas are unchanged. Mac gains no code or build dependency. The Watch flag
+remains off and the target unembedded. Earlier paired/background/cloud/storage,
+input/layout/VoiceOver, icons/resources and embedding gates, the broader email/
+teams/Wear OS/native backlog and every user deferral retain scope. This closes
+neither rank 7 nor the full Px objective.

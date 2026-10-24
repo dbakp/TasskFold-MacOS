@@ -3827,3 +3827,14 @@ companion's explicit atomic reset/reconnect/review flow passes 19 signed local
 iPhone assertions plus native confirmation/cancellation checks. Watch remains
 disabled/unembedded pending genuine paired/cloud/hardware/native acceptance.
 Existing rollout, distribution and other user deferrals remain in place.
+
+
+### Watch capture continuity — 24 October
+
+The iOS-owned companion now retains private unsent capture drafts, explicitly
+reviews changed destinations and moves a draft into its outbox atomically. Seventy
+focused cases, 15 native client/archive assertions and two 42 mm prepared-sheet
+renders are recorded. Manual navigation/edit/dictation/spoken checks remain open
+because the Mac stayed locked. Mac source/build inputs are unchanged in this
+milestone; no new Mac runtime or full-suite result is claimed. Watch stays
+disabled/unembedded, and all broader Px gates and user deferrals retain scope.
