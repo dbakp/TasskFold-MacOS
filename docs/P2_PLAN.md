@@ -1808,3 +1808,27 @@ API or team UI is enabled. Next: permissions across all write/read paths, then
 premium native organization/admin flows and backup/account/activity/widget checks.
 Rank 6, remaining Watch/Wear OS/email, the full Px objective and every existing
 user deferral retain scope.
+
+
+## Team project roles and native read bridge — 24 October, rank 6 in progress
+
+Both independently owned candidates now implement team/private project visibility,
+manager/editor/viewer overrides, guest-only explicit scope, reviewed new project
+creation/folder/access changes and UUID identity tombstones. Live native sessions
+and current membership govern reads; departed creator IDs do not grant history,
+file or directory access. Legacy team email lookups and cross-workspace personal
+writes are fenced; personal sharing/service task pages remain supported.
+
+Each repo passes 145 real PostgreSQL checks, including three transaction overlaps.
+Each SwiftPM run passes 48 selected checks (8 new team cases, existing automation/
+email regressions; zero failures/skips), decoding its actual SQL-produced fixture
+and testing account-switch/response bounds. Both apps own the models, read API and
+Xcode source registration. No hosted change, native UI/runtime or Storage delivery
+is claimed. See TEAM_PROJECT_ACCESS.md and the project access/native evidence.
+
+The native-read flag defaults off. Task/comment/file/service writes remain closed
+and the native client rejects task-edit capabilities. Next: finish those write/
+assignment/structural adapters, then premium native team/folder/admin/invitation
+flows and workspace/cache/filter/widget/backup/account acceptance. This does not
+complete advanced teams, rank 6 or wider Px; every existing user deferral retains
+scope.

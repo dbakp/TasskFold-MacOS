@@ -131,3 +131,8 @@ reject cross-workspace structural links and unauthorized moves; add safe native
 team/folder/admin flows; verify account-removal explanations, backup/restore,
 activity attribution and widget privacy; verify actual Storage/email/API/hosted
 and native acceptance. Existing user deferrals and the full ranked Px scope remain.
+
+The subsequent project-role/native-read stage is described in
+[TEAM_PROJECT_ACCESS.md](TEAM_PROJECT_ACCESS.md). It replaces the closed native
+read policies with verified session/membership rules behind a default-off flag;
+editing, service access and native workspace integration remain closed/pending.

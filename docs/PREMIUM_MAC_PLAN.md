@@ -3918,3 +3918,19 @@ Storage delivery, reviewed admission/current role permissions and premium native
 team/folder/admin controls plus backup/activity/widget acceptance remain open.
 See TEAM_CONTENT_CUSTODY.md and p2-team-content-custody-evidence.json. Wider Px
 and the existing user deferrals retain scope.
+
+
+### Team project roles and independent read client — 24 October
+
+Mac owns current-member project visibility/roles and reviewed access/folder/new
+project management, with creator-independent privacy and workspace-link guards.
+Its 145-check real PostgreSQL suite and 48-check selected SwiftPM suite pass;
+8 native cases cover role/schema validation, SQL response compatibility, response
+bounds and account-switch fencing. Xcode registers the independently owned core
+source. No native team UI, hosted delivery or app-runtime pass is claimed.
+
+The read flag remains off and editing capabilities remain false. Current-role
+write/assignment/structural adapters and premium team/folder/admin/invitation UI,
+cache/filter/widget and backup/account/activity acceptance are still required.
+See TEAM_PROJECT_ACCESS.md and the two project evidence files. Full Px and all
+existing user deferrals remain unchanged.

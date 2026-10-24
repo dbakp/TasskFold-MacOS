@@ -1,0 +1,102 @@
+import Foundation
+
+enum TeamProjectRole: String, Sendable { case manager, editor, viewer }
+enum TeamProjectVisibility: String, Sendable { case team, `private` }
+enum TeamProjectState: String, Sendable { case active, archived }
+
+struct TeamProjectAccessUnavailable: LocalizedError {
+    var errorDescription: String? { "This project is no longer available to your account." }
+}
+
+enum TeamProjectValue {
+    static var invalid: AppFailure { AppFailure(message: "Project access couldn’t be verified. Reload your projects.") }
+    static func id(_ value: String) -> Bool {
+        AutomationKey.canonicalID(value) && value != "00000000-0000-0000-0000-000000000000"
+    }
+    static func revision(_ value: JSON?) throws -> Double {
+        guard case .number(let n)? = value, n.isFinite, n >= 1, n <= 9_007_199_254_740_991, n.rounded(.down) == n else { throw invalid }
+        return n
+    }
+    static func optionalID(_ value: JSON?) throws -> String? {
+        if value == .null { return nil }
+        guard case .string(let text)? = value, id(text) else { throw invalid }
+        return text
+    }
+    struct Context {
+        let revision: Double
+        let state: TeamProjectState
+        let paused: Bool
+        init(_ root: [String: JSON], account: String, team: String) throws {
+            guard TeamProjectValue.id(account), TeamProjectValue.id(team), root["protocol"] == .number(1),
+                  root["account"] == .string(account), root["team_id"] == .string(team),
+                  case .string(let text)? = root["team_state"], let state = TeamProjectState(rawValue: text),
+                  case .bool(let paused)? = root["setup_paused"] else { throw TeamProjectValue.invalid }
+            revision = try TeamProjectValue.revision(root["team_revision"])
+            self.state = state; self.paused = paused
+        }
+    }
+}
+
+/// Context is part of the value: a caller must not reuse it in another account,
+/// server or workspace. A creator UUID never implies any of these permissions.
+struct TeamProjectAccess: Equatable, Sendable {
+    let id: String
+    let team: String
+    let account: String
+    let origin: String
+    let revision: Double
+    let teamRevision: Double
+    let state: TeamProjectState
+    let setupPaused: Bool
+    let role: TeamProjectRole
+    let visibility: TeamProjectVisibility
+    let folder: String?
+    let canManageAccess: Bool
+    var canEditTasks: Bool { false } // This client has no team task-write adapter yet.
+
+    init(detail: [String: JSON], account: String, origin: String, team: String, project: String) throws {
+        let context = try TeamProjectValue.Context(detail, account: account, team: team)
+        try self.init(row: detail, context: context, account: account, origin: origin, team: team)
+        guard id == project else { throw TeamProjectValue.invalid }
+    }
+    fileprivate init(row: [String: JSON], context: TeamProjectValue.Context, account: String, origin: String, team: String) throws {
+        guard case .string(let id)? = row["id"], TeamProjectValue.id(id), row["team_id"] == .string(team),
+              case .string(let roleText)? = row["role"], let role = TeamProjectRole(rawValue: roleText),
+              case .string(let visibilityText)? = row["visibility"], let visibility = TeamProjectVisibility(rawValue: visibilityText),
+              case .bool(false)? = row["can_edit_tasks"], case .bool(let manage)? = row["can_manage_access"],
+              manage == (role == .manager) else { throw TeamProjectValue.invalid }
+        self.id = id; self.team = team; self.account = account; self.origin = origin
+        revision = try TeamProjectValue.revision(row["revision"]); teamRevision = context.revision
+        folder = try TeamProjectValue.optionalID(row["folder_id"])
+        self.role = role; self.visibility = visibility; state = context.state; setupPaused = context.paused; canManageAccess = manage
+    }
+    func belongs(to account: String, origin: String, team: String) -> Bool {
+        self.account == account && self.origin == origin && self.team == team
+    }
+}
+
+struct TeamProjectPage: Sendable {
+    let account: String
+    let origin: String
+    let team: String
+    let projects: [TeamProjectAccess]
+    let next: String?
+    let teamRevision: Double
+    let state: TeamProjectState
+    let setupPaused: Bool
+    init(_ root: [String: JSON], account: String, origin: String, team: String, after: String?, limit: Int = 50) throws {
+        let context = try TeamProjectValue.Context(root, account: account, team: team)
+        guard (1...100).contains(limit), after == nil || TeamProjectValue.id(after!),
+              root["task_writes_enabled"] == .bool(false), case .array(let values)? = root["projects"], values.count <= limit else { throw TeamProjectValue.invalid }
+        let rows = try values.map { value -> TeamProjectAccess in
+            guard case .object(let row) = value else { throw TeamProjectValue.invalid }
+            return try TeamProjectAccess(row: row, context: context, account: account, origin: origin, team: team)
+        }
+        let ids = rows.map(\.id)
+        guard Set(ids).count == ids.count, ids == ids.sorted(), after == nil || ids.allSatisfy({ $0 > after! }) else { throw TeamProjectValue.invalid }
+        let cursor = try TeamProjectValue.optionalID(root["next_cursor"])
+        guard cursor == nil || (rows.count == limit && cursor == ids.last) else { throw TeamProjectValue.invalid }
+        self.account = account; self.origin = origin; self.team = team; projects = rows; next = cursor
+        teamRevision = context.revision; state = context.state; setupPaused = context.paused
+    }
+}

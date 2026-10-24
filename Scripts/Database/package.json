@@ -28,7 +28,8 @@
     "test:email-maintenance": "node test-email-maintenance.mjs",
     "test:email-maintenance-cron": "node test-email-maintenance-cron.mjs",
     "test:teams": "node test-team-organization.mjs",
-    "test:team-custody": "node test-team-content-custody.mjs"
+    "test:team-custody": "node test-team-content-custody.mjs",
+    "test:team-projects": "node test-team-project-access.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

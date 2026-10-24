@@ -321,7 +321,7 @@ final class Backend: NSObject {
             request.setValue("Bearer \(session.access_token)", forHTTPHeaderField: "Authorization")
         }
         extra.forEach { request.setValue($1, forHTTPHeaderField: $0) }
-        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes"].contains(path) {
+        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects"].contains(path) {
             request.timeoutInterval = 25
             request.cachePolicy = .reloadIgnoringLocalCacheData
             request.httpShouldHandleCookies = false
@@ -329,15 +329,15 @@ final class Backend: NSObject {
         }
         if let body { request.httpBody = try JSONEncoder().encode(body) }
         let data: Data, response: URLResponse
-        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes"].contains(path) {
+        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects"].contains(path) {
             let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
-            let limit = path == "/functions/v1/email-routes" ? 512000 : (["/functions/v1/automation-keys", "/functions/v1/automation-webhooks"].contains(path) ? 256000 : LocationHandoffResponse.maximumBytes)
+            let limit = path == "/functions/v1/email-routes" ? 512000 : (["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/rest/v1/rpc/taskfold_team_projects"].contains(path) ? 256000 : LocationHandoffResponse.maximumBytes)
             var body = Data()
             do {
-                guard incoming.expectedContentLength <= Int64(limit) else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
+                guard incoming.expectedContentLength <= Int64(limit) else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
                 for try await byte in bytes {
                     try Task.checkCancellation()
-                    guard body.count < limit else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
+                    guard body.count < limit else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
                     body.append(byte)
                 }
             } catch { bytes.task.cancel(); throw error }
@@ -352,8 +352,13 @@ final class Backend: NSObject {
             let error = (try? JSONDecoder().decode(Record.self, from: data)) ?? Record()
             let status = (response as? HTTPURLResponse)?.statusCode
             if authenticated, status == 401,
-               ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes"].contains(path) {
+               ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects"].contains(path) {
                 throw AccountSessionAuthorizationRequired()
+            }
+            if path == "/rest/v1/rpc/taskfold_team_projects" {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                if error.string("code") == "PT404" { throw TeamProjectAccessUnavailable() }
+                throw TeamProjectValue.invalid
             }
             // Raw Auth responses use error_code (code may be numeric HTTP status).
             // Retain support for normalized string-code responses, without using msg.
@@ -472,6 +477,23 @@ final class Backend: NSObject {
     func sendPasswordReset(email: String) async throws {
         _ = try await request("/auth/v1/recover", method: "POST", body: ["email": .string(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())], authenticated: false)
     }
+    private func teamProjectReceipt(action: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
+        guard !sessionTransition, session?.user.id == account, TeamProjectValue.id(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/rest/v1/rpc/taskfold_team_projects", method: "POST", body: ["_action": .string(action), "_body": .object(body)], expectedAccount: account)
+        guard let receipt = try? JSONDecoder().decode([String: JSON].self, from: data) else { throw TeamProjectValue.invalid }
+        return receipt
+    }
+    func teamProjectPage(team: String, account: String, origin: String, after: String? = nil) async throws -> TeamProjectPage {
+        guard TeamProjectValue.id(team), after == nil || TeamProjectValue.id(after!) else { throw TeamProjectValue.invalid }
+        var body: [String: JSON] = ["team_id": .string(team), "limit": .number(50)]
+        if let after { body["after"] = .string(after) }
+        return try TeamProjectPage(await teamProjectReceipt(action: "list", body: body, account: account, origin: origin), account: account, origin: origin, team: team, after: after)
+    }
+    func teamProjectAccess(team: String, project: String, account: String, origin: String) async throws -> TeamProjectAccess {
+        guard TeamProjectValue.id(team), TeamProjectValue.id(project) else { throw TeamProjectValue.invalid }
+        return try TeamProjectAccess(detail: await teamProjectReceipt(action: "get", body: ["team_id": .string(team), "project_id": .string(project)], account: account, origin: origin), account: account, origin: origin, team: team, project: project)
+    }
+
     private func automationReceipt(action: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
         guard !sessionTransition, session?.user.id == account, AutomationKey.canonicalID(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
         let data = try await request("/functions/v1/automation-keys", method: "POST", body: ["action": .string(action), "body": .object(body)],
