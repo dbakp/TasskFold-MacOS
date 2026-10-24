@@ -1783,3 +1783,28 @@ without bypasses, then the premium native team switcher/folders/admin flows and
 backup/account-removal/audit/widget privacy acceptance. Team configuration stays
 off until those gates pass. This does not complete advanced teams, rank 6 or the
 full Px scope; Watch/Wear OS/email and all existing user deferrals retain scope.
+
+
+## Team content custody — 24 October, rank 6 in progress
+
+The source/hosted-schema audit found cascading Auth ownership on team-relevant
+content. Both independently owned candidates now preserve existing creator UUID
+fields through a private content-identity registry and private team project/task/
+file custody. Author removal preserves team work/history/generations; personal
+cleanup retains the prior behavior. Ownership transfer does not rewrite tasks.
+Deleted-account personal creation, admission/removal races and object-cleanup gaps
+are fenced. Team deletion waits for file cleanup and purges content atomically.
+
+Each repo independently passes 93 PostgreSQL checks, including native SQL guarded
+edits, authenticated transfer/delete, actual service API create/get/list, personal
+regressions and three real transaction overlaps. Advisors report no errors or new
+custody/helper warnings; fixture init-plan findings remain documented. No hosted
+write, native UI/build claim or actual Storage-provider delivery is included.
+See TEAM_CONTENT_CUSTODY.md and p2-team-content-custody-evidence.json.
+
+Team data is deliberately closed to native/direct/service legacy access until
+current role enforcement and reviewed admission replace those gates. No admission
+API or team UI is enabled. Next: permissions across all write/read paths, then
+premium native organization/admin flows and backup/account/activity/widget checks.
+Rank 6, remaining Watch/Wear OS/email, the full Px objective and every existing
+user deferral retain scope.

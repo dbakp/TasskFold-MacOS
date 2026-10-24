@@ -123,3 +123,8 @@ audit and widget privacy; add the premium native team switcher, folders and
 administration flows independently to both apps; run cross-client and native
 acceptance. Existing release, remote-reminder, older-client rollout, OAuth,
 physical-location and email-provider deferrals remain in effect.
+
+The subsequent disabled content-custody layer is documented in
+[TEAM_CONTENT_CUSTODY.md](TEAM_CONTENT_CUSTODY.md). It preserves team work after
+creator removal, retains personal deletion semantics and closes legacy team-data
+shortcuts. It does not enable team access or complete the next permission/UI gates.

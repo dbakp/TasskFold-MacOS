@@ -3902,3 +3902,19 @@ off pending full project/task/service/storage permissions and premium native tea
 flows, followed by backup/activity/widget privacy and cross-client acceptance.
 See TEAM_ORGANIZATION.md and p2-team-foundation-evidence.json. Wider Px and user
 deferrals remain open; this is a foundation milestone, not team completion.
+
+
+### Team content survives account removal — 24 October, disabled candidate
+
+Mac independently owns the creator-identity/custody migration and 93-check owned
+PostgreSQL acceptance suite. Team work/history/generations survive creator removal
+and ownership transfer while personal cleanup remains intact. Pending file cleanup
+keeps access closed and blocks team deletion. Direct/native guarded/service API
+checks and three real transaction overlaps pass; advisors report no new findings
+for custody/helpers. Original native/wire creator fields remain stable.
+
+No hosted changes, new Mac runtime build or enabled team UI is claimed. Actual
+Storage delivery, reviewed admission/current role permissions and premium native
+team/folder/admin controls plus backup/activity/widget acceptance remain open.
+See TEAM_CONTENT_CUSTODY.md and p2-team-content-custody-evidence.json. Wider Px
+and the existing user deferrals retain scope.
