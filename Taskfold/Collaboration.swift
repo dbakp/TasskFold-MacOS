@@ -278,6 +278,7 @@ private struct TeamCompletionReviewContent: View {
     private var canUseSynced:Bool {current && review.canRequestCancellation(store.snapshot)}
     private var command:TeamCompletion {review.mutation.teamCompletion!}
     var body:some View {
+        let preview=review.previewRebase(store.snapshot)
         NavigationStack {
             Form {
                 Section {
@@ -296,10 +297,24 @@ private struct TeamCompletionReviewContent: View {
                         Section("Your saved next occurrence") {taskSummary(local,missing:"")}
                     }
                 }
+                if let preview {
+                    Section("Apply to the current version") {
+                        if command.operation == .complete {
+                            Text("Complete the task shown above using your original completion time. Its current notes, repeat rule and other details are kept.").foregroundStyle(.secondary)
+                            if let next=preview.teamCompletion?.proposed {LabeledContent("Next planned date",value:next.string("due_date"))}
+                            else {Text("No new occurrence is planned.").foregroundStyle(.secondary)}
+                            Text("Existing shared occurrences are kept.").font(.callout).foregroundStyle(.secondary)
+                        } else {
+                            Text("Reopen the task shown above. Its current notes and existing next occurrence are kept.").foregroundStyle(.secondary)
+                        }
+                    }
+                }
                 Section {
                     if (review.isRecorded && !canContinue) || (!review.isRecorded && !canUseSynced) {Text("Additional task changes are saved on this device. They need a separate review before sync can resume.").foregroundStyle(.secondary)}
                     if !review.isRecorded && !review.isCancelled {Text("Retry keeps your original action and completion time. If the task changed, your work stays saved for review.").foregroundStyle(.secondary)}
                     if !review.isRecorded {Text("Use synced task cancels only this saved action and removes its untouched local next occurrence. A recovery copy is saved first. Related edits and comment drafts stay protected.").foregroundStyle(.secondary)}
+                    if !review.isRecorded && !review.canEditCurrent && review.task != nil {Text("Editing is not available for this task right now. You can keep the synced version or check again after project access changes.").foregroundStyle(.secondary)}
+                    if preview == nil && review.canEditCurrent && command.operation == .complete && review.task?.completed == false && review.task?["is_recurring"].flag == true && review.task?.string("recurrence_parent_id").isEmpty == false && !review.canEditSeries {Text("Editing access to the repeat series is needed before this completion can be applied.").foregroundStyle(.secondary)}
                     if review.role == .viewer {Text("You currently have view access to this project.").foregroundStyle(.secondary)}
                 }
             }.formStyle(.grouped)
@@ -310,19 +325,19 @@ private struct TeamCompletionReviewContent: View {
             .safeAreaInset(edge:.bottom) {
                 VStack(spacing:10) {
                     Divider()
-                    if !review.isCancelled { Button(review.isRecorded ? "Continue sync":"Retry saved action") {
-                        if store.continueTeamCompletionReview(review) {dismiss()}
-                        else {message=store.error ?? "Reopen the current sync review.";store.error=nil}
-                    }.buttonStyle(.borderedProminent).disabled(!canContinue || checking || (!review.isRecorded && review.role == .viewer)).accessibilityIdentifier("continueTeamCompletionReview") }
+                    if let _=preview {
+                        Button(command.operation == .complete ? "Complete current task":"Reopen current task") {resolve(rebase:true)}
+                            .buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("rebaseTeamCompletion")
+                    }
+                    if !review.isCancelled {
+                        if review.isRecorded {
+                            Button("Continue sync") {continueReview()}.buttonStyle(.borderedProminent).disabled(!canContinue || checking).accessibilityIdentifier("continueTeamCompletionReview")
+                        } else {
+                            Button("Retry saved action") {continueReview()}.buttonStyle(.bordered).disabled(!canContinue || checking || review.role == .viewer).accessibilityIdentifier("continueTeamCompletionReview")
+                        }
+                    }
                     if !review.isRecorded {
-                        Button("Use synced task") {
-                            checking=true
-                            Task {
-                                let success=await store.cancelTeamCompletionReview(review);checking=false
-                                if success {dismiss()}
-                                else if store.syncConflict?.completionReview == review {message=store.error ?? "Your task changed. Check again before continuing.";store.error=nil}
-                            }
-                        }.buttonStyle(.bordered).disabled(!canUseSynced || checking).accessibilityIdentifier("cancelSavedTeamCompletion")
+                        Button("Use synced task") {resolve(rebase:false)}.buttonStyle(.bordered).disabled(!canUseSynced || checking).accessibilityIdentifier("cancelSavedTeamCompletion")
                     }
                     Button("Check again") {checking=true;Task {let success=await store.refreshTeamCompletionReview(review);checking=false;if !success {message=store.error ?? "Reopen the current sync review.";store.error=nil}}}
                         .buttonStyle(.bordered).disabled(!current || checking).accessibilityIdentifier("refreshTeamCompletionReview")
@@ -336,10 +351,26 @@ private struct TeamCompletionReviewContent: View {
         #endif
         .onChange(of:store.workspaceGeneration){_,_ in dismiss()}
     }
+    private func continueReview() {
+        if store.continueTeamCompletionReview(review) {dismiss()}
+        else {message=store.error ?? "Reopen the current sync review.";store.error=nil}
+    }
+    private func resolve(rebase:Bool) {
+        checking=true
+        Task {
+            let success:Bool
+            if rebase {success=await store.rebaseTeamCompletionReview(review)}
+            else {success=await store.cancelTeamCompletionReview(review)}
+            checking=false
+            if success {dismiss()}
+            else if store.syncConflict?.completionReview == review {message=store.error ?? "Your task changed. Check again before continuing.";store.error=nil}
+        }
+    }
     @ViewBuilder private func taskSummary(_ task:Record?,missing:String) -> some View {
         if let task {
             Text(task.title).font(.headline).textSelection(.enabled)
             Text(task.completed ? "Completed":"Open").foregroundStyle(.secondary)
+            if task.completed,let date=TaskPlanning.instant(task.string("completed_at")) {LabeledContent("Completed at",value:date.formatted(date:.abbreviated,time:.shortened))}
             if !task.string("description").isEmpty {Text(task.string("description")).textSelection(.enabled)}
             if !task.string("due_date").isEmpty {LabeledContent("Planned date",value:task.string("due_date"))}
         } else {Text(missing).foregroundStyle(.secondary)}

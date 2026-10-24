@@ -82,3 +82,7 @@ work, current-role workspace/cache privacy, remaining collaboration adapters and
 premium organization UI, followed by full native runtime/visual/accessibility
 acceptance before team editing is enabled. Wider Px scope and user deferrals remain
 unchanged; this stage does not claim the full team feature is complete.
+
+Follow-up: TEAM_COMPLETION_REBASE.md now adds explicit fresh completion/reopen
+actions for untouched projections after cancellation. Edited dependent work still
+requires its own reconciliation. Counts above describe the cancellation stage.

@@ -410,4 +410,125 @@ final class TeamCompletionTests: XCTestCase {
         XCTAssertEqual(local.pending,[header,group])
     }
 
+    private func rebaseFixture(_ mode:String="complete",state:String="cancelled") throws -> (Mutation,[String:JSON],[String:JSON],[String:JSON]) {
+        let url=try XCTUnwrap(Bundle.module.url(forResource:"team-completion-rebase-v1",withExtension:"json",subdirectory:"Fixtures"))
+        let root=try JSONDecoder().decode([String:JSON].self,from:Data(contentsOf:url))
+        let prefix=mode == "complete" ? "":mode+"_",body=root[prefix+"body"]!.object
+        let key=mode == "parent" ? "parent_"+state : prefix+(state == "review" ? "review":state)
+        let reply=root[key]!.object,source=Record(body["record"]!.object),id=try XCTUnwrap(UUID(uuidString:body["request_id"]!.text))
+        let undo=mode == "undo",reference=undo ? UUID(uuidString:body["undoes"]!.text):nil
+        let scope=TeamTaskEditScope(account:root["account"]!.text,origin:origin,team:body["team_id"]!.text,project:body["project_id"]!.text)
+        var tasks=[source];if case .object(let parent)?=reply["series"] {tasks.append(Record(parent))}
+        let forecast=try TeamCompletion.complete(source,tasks:tasks,scope:scope,at:TaskPlanning.instant(body["completed_at"]!.text)!,zone:body["input_zone"]!.text,id:reference ?? id)
+        var proposed=forecast.teamCompletion!.proposed;proposed?["task_generation"]=body["next_generation"]!
+        let command=TeamCompletion(scope:scope,operation:undo ? .undo:.complete,source:source,completedAt:body["completed_at"]!.text,inputZone:body["input_zone"]!.text,seriesID:body["series_id"]!.text,seriesGeneration:body["series_generation"]!.text,seriesProject:body["series_project_id"]!.text,nextGeneration:body["next_generation"]!.text,proposed:proposed,related:reference)
+        return(TeamCompletion.header(command,id:id),body,reply,root)
+    }
+    private func rebaseProjection(_ header:Mutation)->Snapshot {
+        guard header.teamCompletion!.operation == .undo else {return projected(header)}
+        let command=header.teamCompletion!;var completed=command.source
+        completed["completed"] = .bool(true);completed["completed_at"] = .string(command.completedAt);completed["completion_version"] = .number(Double(command.source["completion_version"].integer+1))
+        var local=Snapshot(tables:["projects":[Record(["id":.string(command.scope.project)])],"tasks":[completed]+[command.proposed].compactMap{$0}],pending:[header])
+        XCTAssertTrue(command.apply(to:&local,header:header));return local
+    }
+    func testRebasedCompletionMatchesActualSQLSourceAndRecurrenceContract() throws {
+        let(header,_,reply,root)=try rebaseFixture(),review=try TeamCompletion.Review(reply,for:header),local=rebaseProjection(header)
+        let sql=root["rebased_body"]!.object,id=try XCTUnwrap(UUID(uuidString:sql["request_id"]!.text))
+        let plan=try XCTUnwrap(review.rebasing(local,id:id)),command=try XCTUnwrap(plan.action.teamCompletion)
+        var body=try command.body(for:plan.action),expected=sql
+        // Each caller owns its fresh UUID; the remainder must match the body
+        // accepted by the real SQL fixture, including the changed repeat rule.
+        expected["next_generation"]=body["next_generation"]
+        XCTAssertEqual(body,expected);XCTAssertNotEqual(plan.action.id,header.id)
+        XCTAssertNotEqual(command.nextGeneration,header.teamCompletion!.nextGeneration)
+        XCTAssertNil(command.related);XCTAssertEqual(command.source,review.task)
+        XCTAssertEqual(command.completedAt,header.teamCompletion!.completedAt)
+        XCTAssertEqual(command.proposed?["due_date"],.string("2026-10-28"))
+        XCTAssertEqual(command.proposed?["attachments"],review.task?["attachments"])
+        XCTAssertEqual(command.proposed?["source_metadata"].object["future"],review.task?["source_metadata"].object["future"])
+        XCTAssertEqual(plan.snapshot.pending,[plan.action]);XCTAssertTrue(plan.snapshot.tables["tasks"]!.first{$0.id == command.source.id}!.completed)
+        XCTAssertFalse(plan.snapshot.tables["tasks"]!.contains{$0.id == header.teamCompletion!.proposed!.id})
+        body["request_id"] = .string(header.id.uuidString.lowercased());XCTAssertNotEqual(body,try command.body(for:plan.action))
+    }
+    func testUnrecordedReviewPreviewsButCannotQueueRebaseUntilCancelled() throws {
+        let(header,_,reply,_)=try rebaseFixture(state:"review"),review=try TeamCompletion.Review(reply,for:header),local=rebaseProjection(header)
+        XCTAssertTrue(review.canRequestRebase(local));XCTAssertNotNil(review.previewRebase(local));XCTAssertNil(review.rebasing(local))
+        XCTAssertEqual(local.pending,[header])
+    }
+    func testRebaseDefaultClosedOnOlderBackendAndMalformedCapabilities() throws {
+        let(header,_,original,_)=try rebaseFixture();var reply=original
+        reply.removeValue(forKey:"can_edit_current");reply.removeValue(forKey:"can_edit_series")
+        let review=try TeamCompletion.Review(reply,for:header),local=rebaseProjection(header)
+        XCTAssertFalse(review.canEditCurrent);XCTAssertFalse(review.canEditSeries);XCTAssertNil(review.previewRebase(local));XCTAssertTrue(review.canRequestCancellation(local))
+        for key in ["can_edit_current","can_edit_series"] {
+            var invalid=original;invalid[key] = .number(1);XCTAssertThrowsError(try TeamCompletion.Review(invalid,for:header))
+            invalid[key] = .null;XCTAssertThrowsError(try TeamCompletion.Review(invalid,for:header))
+        }
+    }
+    func testRebaseRequiresCurrentEditorCapabilityAndUntouchedProjection() throws {
+        let(header,_,original,_)=try rebaseFixture(),local=rebaseProjection(header)
+        for (key,value) in [("can_edit_current",JSON.bool(false)),("project_role",JSON.string("viewer"))] {
+            var reply=original;reply[key]=value;let review=try TeamCompletion.Review(reply,for:header)
+            XCTAssertNil(review.previewRebase(local));XCTAssertNil(review.rebasing(local))
+        }
+        let review=try TeamCompletion.Review(original,for:header)
+        var draft=local;let change=Mutation(table:"tasks",recordID:header.teamCompletion!.proposed!.id,method:"PATCH",fields:["description":.string("My unsent instructions")])
+        draft.apply(change);draft.pending.append(change);let saved=draft
+        XCTAssertNil(review.rebasing(draft));XCTAssertEqual(draft,saved)
+        XCTAssertNil(review.rebasing(local,id:header.id))
+    }
+    func testRebaseCannotApplyChangedServerObservationWithoutAnotherReview() throws {
+        let(header,_,before,root)=try rebaseFixture("changed",state:"cancelled")
+        let expected=try TeamCompletion.Review(before,for:header),changed=try TeamCompletion.Review(root["changed_again"]!.object,for:header)
+        XCTAssertFalse(changed.matchesRebaseObservation(expected));XCTAssertTrue(expected.matchesRebaseObservation(expected))
+        let plan=try XCTUnwrap(changed.rebasing(rebaseProjection(header)))
+        XCTAssertEqual(plan.action.teamCompletion?.source.string("description"),"Changed again while reviewing")
+    }
+    func testRebaseIndependentlyChecksSeriesParentAccessAndGeneration() throws {
+        let(header,_,reply,_)=try rebaseFixture("parent",state:"viewer"),local=rebaseProjection(header)
+        let viewer=try TeamCompletion.Review(reply,for:header)
+        XCTAssertTrue(viewer.canEditCurrent);XCTAssertFalse(viewer.canEditSeries);XCTAssertNil(viewer.previewRebase(local))
+        var allowed=reply;allowed["can_edit_series"] = .bool(true);let editor=try TeamCompletion.Review(allowed,for:header)
+        XCTAssertNotNil(editor.previewRebase(local))
+        allowed["series"] = .null;let unavailable=try TeamCompletion.Review(allowed,for:header);XCTAssertNil(unavailable.previewRebase(local))
+        var bad=reply;var parent=reply["series"]!.object;parent["task_generation"] = .string(UUID().uuidString.lowercased());bad["series"] = .object(parent)
+        XCTAssertThrowsError(try TeamCompletion.Review(bad,for:header))
+    }
+    func testRebasedReopenMatchesSQLGuardedPatchAndPreservesExistingFuture() throws {
+        let(header,_,reply,root)=try rebaseFixture("undo"),review=try TeamCompletion.Review(reply,for:header)
+        let sql=root["reopen_body"]!.object,id=try XCTUnwrap(UUID(uuidString:sql["request_id"]!.text))
+        let plan=try XCTUnwrap(review.rebasing(rebaseProjection(header),id:id)),scope=try XCTUnwrap(plan.action.teamTaskScope)
+        XCTAssertEqual(try scope.body(for:plan.action),sql);XCTAssertNil(plan.action.teamCompletion)
+        XCTAssertEqual(plan.action.fields,["completed":.bool(false),"completed_at":.null])
+        XCTAssertEqual(plan.snapshot.tables["tasks"]!.first{$0.id == header.recordID}?["completion_version"],.number(Double(review.task!["completion_version"].integer+1)))
+        XCTAssertEqual(plan.snapshot.tables["tasks"]!.first{$0.id == review.successor?.id},review.successor)
+        XCTAssertNotEqual(plan.action.id,header.id)
+    }
+    func testRebasePreservesIndependentPendingRowsAndNewQueuePosition() throws {
+        let(header,_,reply,_)=try rebaseFixture(),review=try TeamCompletion.Review(reply,for:header)
+        var local=rebaseProjection(header)
+        let unrelated=Mutation(table:"labels",recordID:UUID().uuidString.lowercased(),method:"POST",fields:["name":.string("Independent queue")])
+        local.apply(unrelated);local.pending.append(unrelated)
+        let plan=try XCTUnwrap(review.rebasing(local))
+        XCTAssertEqual(plan.snapshot.pending,[plan.action,unrelated]);XCTAssertEqual(plan.snapshot.tables["labels"],local.tables["labels"])
+        XCTAssertEqual(plan.base.pending,[unrelated]);XCTAssertEqual(local.pending,[header,unrelated])
+    }
+    func testRebasedCompletionCanPersistRetryAndBuildItsOwnUndo() throws {
+        let(header,_,reply,_)=try rebaseFixture(),review=try TeamCompletion.Review(reply,for:header)
+        let plan=try XCTUnwrap(review.rebasing(rebaseProjection(header)))
+        let restored=try JSONDecoder().decode(Snapshot.self,from:JSONEncoder().encode(plan.snapshot))
+        XCTAssertEqual(restored,plan.snapshot);XCTAssertEqual(try restored.pending[0].teamCompletion!.body(for:restored.pending[0]),try plan.action.teamCompletion!.body(for:plan.action))
+        let history=EditHistory(changes:[plan.action],snapshot:plan.base),back=try XCTUnwrap(history.undo.first),undo=try XCTUnwrap(back.teamCompletion)
+        XCTAssertEqual(undo.related,plan.action.id);XCTAssertNotEqual(undo.related,header.id);XCTAssertEqual(undo.source,review.task)
+        var after=plan.snapshot;XCTAssertTrue(undo.apply(to:&after,header:back));XCTAssertFalse(after.tables["tasks"]!.first{$0.id == header.recordID}!.completed)
+    }
+    func testAlreadyCompletedOrAlreadyReopenedTaskDoesNotOfferAnotherAction() throws {
+        for mode in ["complete","undo"] {
+            let(header,_,original,_)=try rebaseFixture(mode);var reply=original,task=reply["task"]!.object
+            task["completed"] = .bool(mode == "complete");reply["task"] = .object(task)
+            let review=try TeamCompletion.Review(reply,for:header)
+            XCTAssertNil(review.previewRebase(rebaseProjection(header)))
+        }
+    }
+
 }

@@ -203,9 +203,14 @@ extension TeamCompletion {
         let recorded: [String:JSON]?
         var isRecorded: Bool { recorded != nil }
         let isCancelled: Bool
+        let canEditCurrent: Bool
+        let canEditSeries: Bool
         init(_ reply:[String:JSON],for mutation:Mutation) throws {
             guard let command=mutation.teamCompletion else { throw TeamCompletion.invalid }
             let body=try command.body(for:mutation)
+            for key in ["can_edit_current","can_edit_series"] {
+                if let value=reply[key] {guard case .bool = value else {throw TeamCompletion.invalid}}
+            }
             for key in ["team_id","project_id","task_id","task_generation","request_id","series_id","series_generation","series_project_id","planned_next_id"] {
                 guard reply[key] == body[key] else { throw TeamCompletion.invalid }
             }
@@ -234,7 +239,7 @@ extension TeamCompletion {
                 guard reply["receipt"] == .null else {throw TeamCompletion.invalid}
                 recorded=nil;successor=try row("successor",id:command.proposed?.id,generation:nil,project:command.scope.project)
             }
-            self.mutation=mutation;self.role=role;self.task=task;self.series=series;self.successor=successor;self.recorded=recorded;self.isCancelled=reply["state"] == .string("cancelled")
+            self.mutation=mutation;self.role=role;self.task=task;self.series=series;self.successor=successor;self.recorded=recorded;self.isCancelled=reply["state"] == .string("cancelled");self.canEditCurrent=reply["can_edit_current"] == .bool(true);self.canEditSeries=reply["can_edit_series"] == .bool(true)
         }
         /// This is only a preflight. An unrecorded read never authorizes dropping
         /// the queue entry; the server must first return a durable cancellation.
@@ -286,6 +291,55 @@ extension TeamCompletion {
             // its already optimistic row unchanged: replaying a complete/Undo
             // cycle here would advance its completion counter a second time.
             return result
+        }
+        struct Rebase: Equatable, Sendable {
+            let action: Mutation
+            let base: Snapshot
+            let snapshot: Snapshot
+        }
+        /// This preview does not authorize removing the old command. It freezes
+        /// a fresh action only after the durable cancellation is confirmed.
+        func previewRebase(_ snapshot:Snapshot) -> Mutation? {
+            guard canEditCurrent,!isRecorded,cancellationProjection(snapshot) != nil else {return nil}
+            return rebaseAction()
+        }
+        func canRequestRebase(_ snapshot:Snapshot) -> Bool {previewRebase(snapshot) != nil}
+        private func rebaseAction(id:UUID=UUID()) -> Mutation? {
+            guard canEditCurrent,role != .viewer,!isRecorded,let command=mutation.teamCompletion,let task,
+                  id != mutation.id,task["completion_version"].integer<9_007_199_254_740_991 else {return nil}
+            if command.operation == .complete {
+                guard !task.completed,let clock=TaskPlanning.instant(command.completedAt),
+                      let action=try? TeamCompletion.complete(task,tasks:[task,series].compactMap{$0},scope:command.scope,at:clock,zone:command.inputZone,id:id),
+                      let next=action.teamCompletion,next.seriesID == task.id || canEditSeries else {return nil}
+                return action
+            }
+            // This is a new explicit reopen of the currently reviewed completion,
+            // not a replay of the old Undo. Its existing future task stays intact.
+            guard task.completed else {return nil}
+            let fields:[String:JSON] = ["completed":.bool(false),"completed_at":.null]
+            let scope=TeamTaskEditScope(account:command.scope.account,origin:command.scope.origin,team:command.scope.team,project:command.scope.project)
+            let intent=Mutation(id:id,table:"tasks",recordID:task.id,method:"PATCH",fields:fields,baseline:TaskCompletionRevision.editBaseline(for:fields,from:task),teamTaskScope:scope)
+            return try? scope.capturing(intent,existing:task)
+        }
+        func rebasing(_ snapshot:Snapshot,id:UUID=UUID()) -> Rebase? {
+            guard isCancelled,canEditCurrent,let base=cancelling(snapshot),let action=rebaseAction(id:id),
+                  base.tables["projects"]?.contains(where:{$0.id == mutation.teamCompletion?.scope.project}) == true else {return nil}
+            var result=base
+            if let command=action.teamCompletion {
+                guard command.apply(to:&result,header:action) else {return nil}
+            } else {result.apply(action)}
+            result.pending.insert(action,at:0)
+            return Rebase(action:action,base:base,snapshot:result)
+        }
+        /// Never apply newly fetched task/series content under an older visible
+        /// review. A changed observation is shown first, even if cancellation won.
+        func matchesRebaseObservation(_ expected:Self) -> Bool {
+            guard mutation == expected.mutation else {return false}
+            func same(_ a:Record?,_ b:Record?) -> Bool {
+                if let a,let b {return TeamCompletion.sameLocal(a,b)}
+                return a == nil && b == nil
+            }
+            return same(task,expected.task) && same(series,expected.series) && same(successor,expected.successor)
         }
         func acknowledging(_ snapshot:Snapshot) -> Snapshot? {
             guard snapshot.pending.first == mutation,let recorded,let command=mutation.teamCompletion else {return nil}

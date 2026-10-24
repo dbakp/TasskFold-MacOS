@@ -2029,3 +2029,24 @@ Next: explicit rejected-action rebasing and edited-provisional-draft reconciliat
 current-role workspace refresh/privacy, remaining team adapters, premium native
 organization UI and complete native acceptance. Full Px scope and the user's
 release/provider/hardware deferrals remain intact.
+
+
+## Explicit completion rebase — 24 October, rank 6 in progress
+
+The native review can now complete the currently reviewed task or explicitly
+reopen its current completion while preserving its existing next occurrence.
+A Recovery copy and durable cancellation precede a fresh, persisted guarded
+request. Updated content requires another visible review; current edit/series
+capabilities disable unavailable actions and default closed for older servers.
+New history belongs to the fresh action, and unrelated queued work stays intact.
+
+Each repo passes 319 database checks (60 rebase/capability + 259 regressions),
+338 selected Swift tests (10 new; includes 44 backup tests), and unsigned Debug
+app/extension builds. See TEAM_COMPLETION_REBASE.md and rebase evidence. Owned
+containers/builds and temporary Mac registration are removed. Team editing stays
+disabled; no hosted/runtime/visual/distribution acceptance is claimed.
+
+Next: explicit reconciliation of authored provisional drafts/related cohorts,
+current-role workspace refresh/privacy, remaining collaboration adapters, premium
+native organization UI and consolidated native acceptance. Full Px scope and the
+user's existing release/provider/hardware deferrals remain intact.

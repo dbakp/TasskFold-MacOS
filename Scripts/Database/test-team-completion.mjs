@@ -27,15 +27,20 @@ let pg;
 try {
   pg = await createPostgresFixture({ advisors: true });
   await loadTeamCompletionSchema(pg.raw);
-  if(process.env.TASKFOLD_TEAM_COMPLETION_REVIEW_REGRESSION === '1' || process.env.TASKFOLD_TEAM_CANCELLATION_REGRESSION === '1') {
+  if(process.env.TASKFOLD_TEAM_COMPLETION_REVIEW_REGRESSION === '1' || (process.env.TASKFOLD_TEAM_CANCELLATION_REGRESSION === '1' || process.env.TASKFOLD_TEAM_REBASE_REGRESSION === '1')) {
     const { loadTeamCompletionReviewSchema,teamCompletionReviewMigration }=await import('./team-completion-review-schema.mjs');
     await loadTeamCompletionReviewSchema(pg.raw,{base:false});
     report.reviewMigrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+teamCompletionReviewMigration,import.meta.url))).digest('hex');
   }
-  if(process.env.TASKFOLD_TEAM_CANCELLATION_REGRESSION === '1') {
+  if((process.env.TASKFOLD_TEAM_CANCELLATION_REGRESSION === '1' || process.env.TASKFOLD_TEAM_REBASE_REGRESSION === '1')) {
     const {loadTeamCompletionCancellationSchema,teamCompletionCancellationMigration}=await import('./team-completion-cancellation-schema.mjs');
     await loadTeamCompletionCancellationSchema(pg.raw,{base:false});
     report.cancellationMigrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+teamCompletionCancellationMigration,import.meta.url))).digest('hex');
+  }
+  if(process.env.TASKFOLD_TEAM_REBASE_REGRESSION === '1') {
+    const {loadTeamCompletionRebaseSchema,teamCompletionRebaseMigration}=await import('./team-completion-rebase-schema.mjs');
+    await loadTeamCompletionRebaseSchema(pg.raw,{base:false});
+    report.rebaseMigrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+teamCompletionRebaseMigration,import.meta.url))).digest('hex');
   }
   report.completionMigrationSHA256 = createHash("sha256").update(
     await readFile(

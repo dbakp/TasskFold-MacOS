@@ -1365,8 +1365,15 @@ final class Store {
         #endif
     }
     @discardableResult func cancelTeamCompletionReview(_ expected:TeamCompletion.Review) async -> Bool {
+        await resolveTeamCompletionReview(expected,rebase:false)
+    }
+    @discardableResult func rebaseTeamCompletionReview(_ expected:TeamCompletion.Review) async -> Bool {
+        await resolveTeamCompletionReview(expected,rebase:true)
+    }
+    private func resolveTeamCompletionReview(_ expected:TeamCompletion.Review,rebase:Bool) async -> Bool {
         let generation=accountGeneration,account=userID,before=snapshot
-        guard syncConflict?.completionReview == expected,expected.canRequestCancellation(before),
+        guard syncConflict?.completionReview == expected,
+              (rebase ? expected.canRequestRebase(before):expected.canRequestCancellation(before)),
               let command=expected.mutation.teamCompletion,command.scope.account == account,
               command.scope.origin == (try? backend.accountRemovalOrigin),!signingOut else {return false}
         do {
@@ -1375,13 +1382,26 @@ final class Store {
             let review=try await backend.cancelTeamCompletion(expected.mutation,expectedAccount:account)
             guard generation == accountGeneration,syncConflict?.completionReview == expected,snapshot.pending.first == expected.mutation else {return false}
             syncConflict=SyncConflict(mutation:expected.mutation,remote:review.task ?? command.source,completionReview:review)
-            guard review.isCancelled,let next=review.cancelling(snapshot) else {
-                notice=review.isRecorded ? "This action had already synced. Review its result to continue." : "Your action was cancelled. Additional changes remain saved for review."
-                return false
+            guard review.isCancelled else {
+                notice="This action had already synced. Review its result to continue.";return false
+            }
+            let next:Snapshot
+            let history:EditHistory?
+            if rebase {
+                guard review.matchesRebaseObservation(expected),let plan=review.rebasing(snapshot) else {
+                    notice="Task access or content changed. Review the current task before applying your action.";return false
+                }
+                next=plan.snapshot;history=EditHistory(changes:[plan.action],snapshot:plan.base)
+            } else {
+                guard let cancelled=review.cancelling(snapshot) else {
+                    notice="Your action was cancelled. Additional changes remain saved for review.";return false
+                }
+                next=cancelled;history=nil
             }
             let old=snapshot;snapshot=next
             do {try persist()} catch {snapshot=old;throw error}
-            undoStack=[];redoStack=[];syncConflict=nil;notice="Synced task kept. A recovery copy is saved."
+            undoStack=history.map{[$0]} ?? [];redoStack=[];syncConflict=nil
+            notice=rebase ? "Your reviewed action is saved and ready to sync." : "Synced task kept. A recovery copy is saved."
             Task {await sync()};return true
         } catch {
             guard generation == accountGeneration else {return false}
