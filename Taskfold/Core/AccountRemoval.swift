@@ -111,6 +111,7 @@ struct AccountRemovalDisk: Sendable {
     let directory: URL
     let account: String
     var cache: URL { directory.appendingPathComponent(account + ".json") }
+    var teamAccessFence:URL {directory.appendingPathComponent(account+".team-access-fence")}
     private var marker: URL { directory.appendingPathComponent(account + ".removed") }
     private func locked<T>(_ operation: () throws -> T) throws -> T {
         guard let id = UUID(uuidString: account), id.uuidString.lowercased() == account else { throw CancellationError() }
@@ -133,7 +134,7 @@ struct AccountRemovalDisk: Sendable {
     func removeCache() throws {
         try locked {
             try Data("Account removed\n".utf8).write(to: marker, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
-            if FileManager.default.fileExists(atPath: cache.path) { try FileManager.default.removeItem(at: cache) }
+            for file in [cache,teamAccessFence] where FileManager.default.fileExists(atPath:file.path) {try FileManager.default.removeItem(at:file)}
         }
     }
 }

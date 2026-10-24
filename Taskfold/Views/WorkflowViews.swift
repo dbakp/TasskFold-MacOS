@@ -276,7 +276,7 @@ struct TemplateLibraryView: View {
         guard store.workflowReady(binding) else { message = store.error; return }
         do {
             guard sources.contains(where: { $0.id == source }), let kind = WorkflowTemplate.Kind(rawValue: sourceKind) else { throw AppFailure(message: "Choose an available source.") }
-            let template = try WorkflowTemplate.capture(kind: kind, id: source, snapshot: store.snapshot)
+            let template = try WorkflowTemplate.capture(kind: kind, id: source, snapshot: store.presentationSnapshot)
             let row = Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": .string(name.trimmingCharacters(in: .whitespacesAndNewlines)), "document": template.document])
             guard row.name.count <= 160 else { throw AppFailure(message: "Use up to 160 characters for the template name.") }
             var saved = false
@@ -709,7 +709,7 @@ private struct TemplateSourceReplacement: View {
             List {
                 Section("Choose source") {
                     Picker("Source",selection:$source) { Text("Choose a source").tag("");ForEach(sources) { Text(kind == .task ? $0.title : $0.name).tag($0.id) } }.onChange(of:source){_,_ in preview=nil}.accessibilityIdentifier("replacementTemplateSource")
-                    Button("Review replacement") { do { preview=try WorkflowTemplate.capture(kind:kind,id:source,snapshot:store.snapshot).document;message=nil } catch { message=error.localizedDescription } }.disabled(source.isEmpty).accessibilityIdentifier("reviewTemplateReplacement")
+                    Button("Review replacement") { do { preview=try WorkflowTemplate.capture(kind:kind,id:source,snapshot:store.presentationSnapshot).document;message=nil } catch { message=error.localizedDescription } }.disabled(source.isEmpty).accessibilityIdentifier("reviewTemplateReplacement")
                 }
                 if let preview {
                     Section("Current definition") { TemplateDefinitionPreview(document:document, scope:"draft") }

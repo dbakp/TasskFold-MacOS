@@ -2103,3 +2103,26 @@ current-role workspace/cache refresh/privacy, remaining team adapters, premium
 organization UI and consolidated native acceptance. This stage does not enable
 team editing, deploy hosted changes or reopen the user's release/provider/hardware
 deferrals. The full Px goal remains in progress.
+
+
+## Current-role workspace boundary — 24 October, rank 6 in progress
+
+Refresh now validates current project roles around the full table read, filters
+inaccessible content and restarts partial reads after access changes. Blocked
+intents/cohorts stay queued with Recovery protection; unchanged quarantine does
+not generate duplicate backups or immediate retry loops. Historical UUID custody
+fences late legacy callbacks. A device-private presentation/fence protects widgets
+and current read sources even while backup waits, fails or the app relaunches.
+Partial team services never silently fall back to legacy sync.
+
+See TEAM_WORKSPACE_ACCESS.md and each repository’s independent database/native
+evidence. Team editing stays disabled; no hosted or native runtime/visual
+acceptance is claimed. Remaining rank-6 scope includes raw-cache repair and full
+open-editor/thread/readonly-control invalidation/native acceptance, other draft
+cohorts, remaining collaboration/organization adapters and premium team UI. The
+full Px objective and existing release/provider/hardware deferrals stay intact.
+
+Verification: 57 database checks and 653 selected core tests pass independently
+in each repository; iOS additionally passes 79 Watch tests. Both unsigned Debug
+app/extension builds pass. Owned temporary builds and database containers were
+removed. See the workspace evidence files for source and log hashes.

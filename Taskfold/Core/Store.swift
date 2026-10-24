@@ -21,9 +21,26 @@ final class Store {
     #endif
     var snapshot = Snapshot() {
         didSet {
-            if taskCache.update(snapshot.tables["tasks"] ?? []) { taskRevision += 1 }
+            if taskCache.update(presentedTables["tasks"] ?? []) { taskRevision += 1 }
         }
     }
+    private var teamAccessMask:TeamWorkspaceCache? {
+        didSet {
+            if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}
+            publishWidgetSnapshot(scheduleCapacityRefresh:false)
+            Task {await reschedule()}
+        }
+    }
+    private var activeTeamMask:TeamWorkspaceCache? {
+        guard let teamAccessMask,teamAccessMask.boundary.account==userID,teamAccessMask.boundary.origin==(try? backend.accountRemovalOrigin) else {return nil}
+        return teamAccessMask
+    }
+    private var teamAccessFenceDisk:TeamAccessFenceDisk? {
+        guard !localMode,TeamProjectValue.id(userID),let origin=try? backend.accountRemovalOrigin else {return nil}
+        return TeamAccessFenceDisk(disk:AccountRemovalDisk(directory:cacheURL.deletingLastPathComponent(),account:userID),origin:origin)
+    }
+    private var presentedTables:[String:[Record]] {workspaceCacheReadable ? (activeTeamMask?.presentation(snapshot) ?? snapshot.tables):[:]}
+    var presentationSnapshot:Snapshot {var visible=snapshot;visible.tables=presentedTables;return visible}
     @ObservationIgnored private let taskCache = TaskCache()
     private(set) var taskRevision = 0
     private(set) var calendarContext = TaskCalendarContext()
@@ -213,7 +230,10 @@ final class Store {
     @ObservationIgnored private var widgetCalendarRevision = -1
     @ObservationIgnored private var capacityRequest: (UUID, String)?
     private(set) var widgetPublicationRevision = 0
-    @ObservationIgnored private var workspaceCacheReadable = true
+    private var workspaceCacheDecoded = true
+    private var workspaceCacheReadable = true {
+        didSet {if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+    }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"
     var todoistImportFixture: Bool { userID == "ui-testing" && ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--todoist-import-testing") }
@@ -271,6 +291,8 @@ final class Store {
     }
     /// The reviewed snapshot must still be current after the encrypted checkpoint is written.
     func restore(_ backup: WorkspaceBackup, policy: RestorePolicy, reviewed: Snapshot, generation: UUID) async throws -> RestorePlan {
+        guard activeTeamMask==nil else {throw BackupFailure(message:"Finish the project-access recovery before restoring another workspace. Your saved work is kept.")}
+        guard workspaceCacheDecoded else {throw BackupFailure(message:"This device’s saved workspace could not be read. Its original file is protected and needs repair before it can be replaced.")}
         guard generation == accountGeneration, snapshot == reviewed, signedIn || localMode else { throw BackupFailure(message: "Your workspace changed. Refresh the restore preview before continuing.") }
         guard !syncing else { throw BackupFailure(message: "Wait for sync to finish, then refresh the restore preview.") }
         let plan = try backup.plan(current: reviewed, account: userID, policy: policy)
@@ -282,6 +304,7 @@ final class Store {
             error = nil
             throw BackupFailure(message: message)
         }
+        workspaceCacheDecoded=true
         undoStack = []; redoStack = []
         return plan
     }
@@ -298,10 +321,10 @@ final class Store {
     }
     var email: String { backend.session?.user.email ?? "On this iPhone" }
     var tasks: [Record] { _ = taskRevision; return taskCache.tasks }
-    private var filterCollaborators: [Record]? { snapshot.tables["project_collaborators"] ?? (localMode ? [] : nil) }
+    private var filterCollaborators: [Record]? { presentedTables["project_collaborators"] ?? (localMode ? [] : nil) }
     @ObservationIgnored private var cachedAssignments: (rows:[Record]?,scope:String?,catalog:TaskAssignmentProvenance.Catalog)?
     var assignmentCatalog: TaskAssignmentProvenance.Catalog {
-        let rows = snapshot.tables[TaskAssignmentProvenance.table] ?? (localMode ? [] : nil), scope = localMode ? userID : nil
+        let rows = presentedTables[TaskAssignmentProvenance.table] ?? (localMode ? [] : nil), scope = localMode ? userID : nil
         if let cachedAssignments, cachedAssignments.rows == rows, cachedAssignments.scope == scope { return cachedAssignments.catalog }
         let catalog = TaskAssignmentProvenance.Catalog(rows,localAccount:scope)
         cachedAssignments = (rows,scope,catalog); return catalog
@@ -554,12 +577,12 @@ final class Store {
         monitor.start(queue: DispatchQueue(label: "taskfold.connectivity"))
         Task { await refreshRemoteReminderRegistration() }
     }
-    func rows(_ table: String) -> [Record] { snapshot.tables[table] ?? [] }
+    func rows(_ table: String) -> [Record] { presentedTables[table] ?? [] }
     func record(_ table: String, id: String) -> Record? { rows(table).first { $0.id == id } }
     func projectMembers(_ projectID: String) -> [Record] {
         guard let project = record("projects", id: projectID) else { return [] }
         let key = "project_members:" + projectID
-        let people = snapshot.tables[key] ?? rows("project_collaborators").filter { $0.string("project_id") == projectID }
+        let people = presentedTables[key] ?? rows("project_collaborators").filter { $0.string("project_id") == projectID }
         return TaskAssignment.members(project: project, collaborators: people, currentUser: userID, profile: profile)
     }
     func assigneeName(_ task: Record) -> String {
@@ -582,7 +605,7 @@ final class Store {
     }
     func load() {
         accessRecoveryPending = UserDefaults.standard.bool(forKey: accessRecoveryNoticeKey)
-        workspaceCacheReadable = false
+        workspaceCacheReadable = false;workspaceCacheDecoded=false
         defer {
             if localMode, workspaceCacheReadable { migrateOrganization() }
             if workspaceCacheReadable {
@@ -590,9 +613,13 @@ final class Store {
                 catch { self.error = "Could not prepare widget actions: " + error.localizedDescription }
             }
         }
-        guard FileManager.default.fileExists(atPath: cacheURL.path) else { snapshot = Snapshot(); workspaceCacheReadable = true; return }
+        guard FileManager.default.fileExists(atPath: cacheURL.path) else { snapshot = Snapshot(); workspaceCacheDecoded=true;workspaceCacheReadable = true; return }
         do {
-            snapshot = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
+            let loaded=try JSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))
+            snapshot=loaded;workspaceCacheDecoded=true
+            if let boundary=try teamAccessFenceDisk?.load() {
+                teamAccessMask=try TeamWorkspaceCache(boundary:boundary,previous:loaded.teamWorkspace,pending:loaded.pending,tasks:loaded.tables["tasks"] ?? [])
+            }
             workspaceCacheReadable = true
             if snapshot.tables[DayPlacement.table] == nil, let legacy = snapshot.tables["_local_day_order"] {
                 snapshot.tables[DayPlacement.table] = legacy.map { row in var row = row; row["user_id"] = .string(userID); return row }
@@ -650,7 +677,7 @@ final class Store {
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.anyConnected ? (busy.connected && busy.selected.isEmpty && busy.links?.active != true ? "choose" : "refresh") : "off"
-        var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people, viewPreferences: rows("view_preferences"), viewOrders: rows("view_orders"), collaborators: filterCollaborators, assignments: assignmentCatalog)
+        var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: (activeTeamMask ?? snapshot.teamWorkspace)?.widgetTokens(presentationSnapshot) ?? WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people, viewPreferences: rows("view_preferences"), viewOrders: rows("view_orders"), collaborators: filterCollaborators, assignments: assignmentCatalog)
         if let feedback = snapshot.widgetCompletion.feedback, feedback.account == account,
            Date() < feedback.expiresAt, widgetFeedbackIsCurrent(feedback) {
             payload["completionFeedback"] = try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(feedback))
@@ -953,6 +980,11 @@ final class Store {
     @discardableResult
     func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil, sharedCaptureReceipt: SharedCaptureDraft? = nil) -> Bool {
         guard !signingOut, !accountRemovalBlocked else { error = "Finish account removal before changing this workspace."; return false }
+        guard workspaceCacheDecoded else {error="Your saved workspace needs recovery before more changes can be saved. Its original file is kept.";return false}
+        if let access=activeTeamMask ?? snapshot.teamWorkspace,
+           changes.contains(where:{!access.canSend($0,in:snapshot)}) {
+            error="Team editing is not available for this change. Your existing work is kept.";return false
+        }
         let prepared:[Mutation]
         do {
             prepared=try TeamTaskBatch.preparing(changes,snapshot:snapshot)
@@ -1233,9 +1265,10 @@ final class Store {
         #if DEBUG
         if LocationHandoffNativeFixture.enabled { return }
         #endif
+        guard workspaceCacheDecoded else {notice="Your saved workspace needs recovery before sync can continue. Its original file is kept.";return}
         consumeWidgetCompletions()
         guard !signingOut, !accountRemovalBlocked, signedIn, !localMode, online, !syncing else { return }
-        if syncConflict != nil || focusSyncConflict != nil { await syncConversations(); return }
+        let hadConflict=syncConflict != nil || focusSyncConflict != nil
         syncing = true; let generation = accountGeneration, account = userID
         var sending: Mutation?
         defer {
@@ -1246,7 +1279,23 @@ final class Store {
             }
         }
         do {
-            while let mutation = snapshot.pending.first {
+            let boundary:TeamWorkspaceBoundary?
+            let allowLegacy=snapshot.teamWorkspace==nil && !snapshot.pending.contains{$0.teamTaskScope != nil || $0.teamCompletion != nil || $0.teamTaskBatch != nil}
+            do {boundary=try await backend.workspaceBoundary(account:account)}
+            catch is TeamWorkspaceUnavailable {guard allowLegacy else {throw TeamWorkspaceUnavailable()};boundary=nil}
+            guard generation==accountGeneration else {return}
+            if boundary==nil && hadConflict {await syncConversations();return}
+            let access=try boundary.map{try TeamWorkspaceCache(boundary:$0,previous:snapshot.teamWorkspace,pending:snapshot.pending,tasks:snapshot.tables["tasks"] ?? [])}
+            if let access,access.requiresRecovery(snapshot) {
+                teamAccessMask=access
+                if let fence=teamAccessFenceDisk,let boundary {
+                    try await Task.detached(priority:.utility){try fence.save(boundary)}.value
+                    guard generation==accountGeneration,!signingOut,!accountRemovalBlocked else {throw CancellationError()}
+                }
+            }
+            let initialRequests=Set(snapshot.pending.map(\.id)),blockedRequests=access?.blocked(snapshot) ?? []
+            while !hadConflict,let mutation = snapshot.pending.first {
+                if blockedRequests.contains(mutation.id) || (!initialRequests.contains(mutation.id) && access?.canSend(mutation,in:snapshot)==false) {break}
                 sending = mutation
                 let saved = try await backend.send(mutation, expectedAccount: account)
                 guard generation == accountGeneration else { return }
@@ -1261,14 +1310,37 @@ final class Store {
                     notice = "Task reopened. The next occurrence was kept."
                 }
             }
-            var remote: [String: [Record]] = [:]
-            for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions", "task_activity_epoch", "task_activity"] {
-                remote[table] = try await backend.rows(table)
-                guard generation == accountGeneration else { return }
-            }
-            remote[TaskAssignmentProvenance.table] = await backend.assignmentProvenanceRows()
-            guard generation == accountGeneration else { return }
-            snapshot.mergeRemote(remote); try persist(); lastSync = Date(); migrateOrganization()
+            let read=try await backend.workspaceRead(account:account,initial:boundary,allowLegacy:allowLegacy)
+            guard generation==accountGeneration else {return}
+            if let boundary=read.boundary {
+                let cache=try TeamWorkspaceCache(boundary:boundary,previous:snapshot.teamWorkspace,pending:snapshot.pending,tasks:(snapshot.tables["tasks"] ?? [])+(read.tables["tasks"] ?? []))
+                let before=snapshot,protect=cache.requiresRecovery(before)
+                if protect {
+                    teamAccessMask=cache
+                    if let fence=teamAccessFenceDisk {
+                        try await Task.detached(priority:.utility){try fence.save(boundary)}.value
+                        guard generation==accountGeneration,!signingOut,!accountRemovalBlocked,snapshot==before else {throw TeamWorkspaceChanged()}
+                    }
+                    _=try await makeRecoveryBackup(kind:"Before team access refresh")
+                    guard generation==accountGeneration,!signingOut,!accountRemovalBlocked,snapshot==before else {throw TeamWorkspaceChanged()}
+                }
+                if hadConflict && !protect {
+                    // Keep a current review's optimistic drafts untouched until
+                    // its explicit resolution; only cull inaccessible content.
+                    snapshot.tables=cache.filtering(snapshot.tables);snapshot.teamWorkspace=cache
+                } else {snapshot=cache.merging(read.tables,into:snapshot)}
+                do {try persist()} catch {snapshot=before;throw error}
+                if let fence=teamAccessFenceDisk {try fence.clear(after:boundary)}
+                let wasUnreadable = !workspaceCacheReadable
+                workspaceCacheReadable=true
+                if teamAccessMask != nil {teamAccessMask=nil}
+                else if wasUnreadable {publishWidgetSnapshot(scheduleCapacityRefresh:false)}
+                if protect {
+                    undoStack=[];redoStack=[];syncConflict=nil;markAccessRecovery()
+                    notice="Project access changed. Your queued work is kept, and a Recovery copy is saved."
+                }
+            } else {snapshot.mergeRemote(read.tables);try persist()}
+            lastSync=Date();migrateOrganization()
             await syncConversations()
             if !avatarMetadataLoaded {
                 do { try await backend.refreshUser(); if generation == accountGeneration { avatarMetadataLoaded = true } }
@@ -1332,9 +1404,10 @@ final class Store {
         }
         guard generation == accountGeneration else { return }
         syncSignInWorkspace = nil
-        notice = widgetActionStatus
-        // Edits made while fetching are still queued; flush after this sync releases its lock.
-        if !snapshot.pending.isEmpty { Task { await self.sync() } }
+        let accessBlocked=snapshot.pending.first.map{snapshot.teamWorkspace?.blocked(snapshot).contains($0.id)==true} ?? false
+        if !accessBlocked && !hadConflict {notice = widgetActionStatus}
+        // A blocked head needs review, not an immediate busy retry loop.
+        if !snapshot.pending.isEmpty && !accessBlocked && syncConflict==nil && focusSyncConflict==nil {Task {await self.sync()}}
     }
     /// Only fill missing remote rows after a successful fetch. Existing synchronized choices win.
     private func migrateOrganization() {

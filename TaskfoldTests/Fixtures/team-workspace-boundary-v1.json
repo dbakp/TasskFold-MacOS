@@ -1,0 +1,231 @@
+{
+  "account": "289e96e1-b28d-458d-b8f7-11cd19bcc1d2",
+  "team": "365c89d9-59dd-4494-a8f4-daf392fffdef",
+  "project": "1f038b3f-80f4-464d-8cab-d29111b28301",
+  "personal": "0a1f7c56-dd53-4e09-8d09-1056ec084576",
+  "legacy": "71825bae-2270-4a60-a212-836b736f6cf2",
+  "active": {
+    "teams": [
+      {
+        "id": "365c89d9-59dd-4494-a8f4-daf392fffdef",
+        "state": "active",
+        "revision": 1,
+        "access_revision": 13
+      }
+    ],
+    "token": "5c5c92d7426889d33cb2a9f31e357c1a77e4c3131c7ad414ee8960e15c7b5956",
+    "account": "289e96e1-b28d-458d-b8f7-11cd19bcc1d2",
+    "projects": [
+      {
+        "id": "0a1f7c56-dd53-4e09-8d09-1056ec084576",
+        "role": "owner",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      },
+      {
+        "id": "1f038b3f-80f4-464d-8cab-d29111b28301",
+        "role": "editor",
+        "team_id": "365c89d9-59dd-4494-a8f4-daf392fffdef",
+        "archived": false,
+        "can_send_tasks": true
+      },
+      {
+        "id": "71825bae-2270-4a60-a212-836b736f6cf2",
+        "role": "collaborator",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      }
+    ],
+    "setup_paused": false,
+    "native_team_reads_enabled": true,
+    "workspace_boundary_protocol": 1
+  },
+  "viewer": {
+    "teams": [
+      {
+        "id": "365c89d9-59dd-4494-a8f4-daf392fffdef",
+        "state": "active",
+        "revision": 1,
+        "access_revision": 2
+      }
+    ],
+    "token": "6adc79948a71d36df5c94e854540bdff61adc54db26efa9be493cd7ed3f1efc1",
+    "account": "289e96e1-b28d-458d-b8f7-11cd19bcc1d2",
+    "projects": [
+      {
+        "id": "0a1f7c56-dd53-4e09-8d09-1056ec084576",
+        "role": "owner",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      },
+      {
+        "id": "1f038b3f-80f4-464d-8cab-d29111b28301",
+        "role": "viewer",
+        "team_id": "365c89d9-59dd-4494-a8f4-daf392fffdef",
+        "archived": false,
+        "can_send_tasks": false
+      },
+      {
+        "id": "71825bae-2270-4a60-a212-836b736f6cf2",
+        "role": "collaborator",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      }
+    ],
+    "setup_paused": false,
+    "native_team_reads_enabled": true,
+    "workspace_boundary_protocol": 1
+  },
+  "revoked": {
+    "teams": [
+      {
+        "id": "365c89d9-59dd-4494-a8f4-daf392fffdef",
+        "state": "active",
+        "revision": 1,
+        "access_revision": 10
+      }
+    ],
+    "token": "1253065b85c82d70f594a93f219b212bc256f8fcf62643abedfb2994fdbf0a3f",
+    "account": "289e96e1-b28d-458d-b8f7-11cd19bcc1d2",
+    "projects": [
+      {
+        "id": "0a1f7c56-dd53-4e09-8d09-1056ec084576",
+        "role": "owner",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      },
+      {
+        "id": "71825bae-2270-4a60-a212-836b736f6cf2",
+        "role": "collaborator",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      }
+    ],
+    "setup_paused": false,
+    "native_team_reads_enabled": true,
+    "workspace_boundary_protocol": 1
+  },
+  "archived": {
+    "teams": [
+      {
+        "id": "365c89d9-59dd-4494-a8f4-daf392fffdef",
+        "state": "active",
+        "revision": 1,
+        "access_revision": 4
+      }
+    ],
+    "token": "54c9402f8e275768099cfb351fa8605c52c5a2e01a37517f4bf1760d7a6f5b6f",
+    "account": "289e96e1-b28d-458d-b8f7-11cd19bcc1d2",
+    "projects": [
+      {
+        "id": "0a1f7c56-dd53-4e09-8d09-1056ec084576",
+        "role": "owner",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      },
+      {
+        "id": "1f038b3f-80f4-464d-8cab-d29111b28301",
+        "role": "editor",
+        "team_id": "365c89d9-59dd-4494-a8f4-daf392fffdef",
+        "archived": true,
+        "can_send_tasks": false
+      },
+      {
+        "id": "71825bae-2270-4a60-a212-836b736f6cf2",
+        "role": "collaborator",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      }
+    ],
+    "setup_paused": false,
+    "native_team_reads_enabled": true,
+    "workspace_boundary_protocol": 1
+  },
+  "closed": {
+    "teams": [],
+    "token": "808f51b2c18e6645d2b8a1f8315577dc2696125f4cd7256f77a52936a9504e4a",
+    "account": "289e96e1-b28d-458d-b8f7-11cd19bcc1d2",
+    "projects": [
+      {
+        "id": "0a1f7c56-dd53-4e09-8d09-1056ec084576",
+        "role": "owner",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      },
+      {
+        "id": "71825bae-2270-4a60-a212-836b736f6cf2",
+        "role": "collaborator",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      }
+    ],
+    "setup_paused": true,
+    "native_team_reads_enabled": false,
+    "workspace_boundary_protocol": 1
+  },
+  "paused": {
+    "teams": [
+      {
+        "id": "365c89d9-59dd-4494-a8f4-daf392fffdef",
+        "state": "active",
+        "revision": 1,
+        "access_revision": 13
+      }
+    ],
+    "token": "4e9de4940c1fb694d0b528edcab57f41ae8886a15a2d2411bc133517ea91d230",
+    "account": "289e96e1-b28d-458d-b8f7-11cd19bcc1d2",
+    "projects": [
+      {
+        "id": "0a1f7c56-dd53-4e09-8d09-1056ec084576",
+        "role": "owner",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      },
+      {
+        "id": "1f038b3f-80f4-464d-8cab-d29111b28301",
+        "role": "editor",
+        "team_id": "365c89d9-59dd-4494-a8f4-daf392fffdef",
+        "archived": false,
+        "can_send_tasks": false
+      },
+      {
+        "id": "71825bae-2270-4a60-a212-836b736f6cf2",
+        "role": "collaborator",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      }
+    ],
+    "setup_paused": true,
+    "native_team_reads_enabled": true,
+    "workspace_boundary_protocol": 1
+  },
+  "left": {
+    "teams": [],
+    "token": "779714c942c7ffde735caf624116242323d67610fc24f406458a009a48c2dd8d",
+    "account": "289e96e1-b28d-458d-b8f7-11cd19bcc1d2",
+    "projects": [
+      {
+        "id": "0a1f7c56-dd53-4e09-8d09-1056ec084576",
+        "role": "owner",
+        "team_id": null,
+        "archived": false,
+        "can_send_tasks": true
+      }
+    ],
+    "setup_paused": false,
+    "native_team_reads_enabled": true,
+    "workspace_boundary_protocol": 1
+  }
+}

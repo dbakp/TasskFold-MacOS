@@ -1,0 +1,56 @@
+{
+  "verifiedAtUTC": "2026-10-24T10:45:59.549096+00:00",
+  "platform": "mac",
+  "coreTests": 653,
+  "workspaceTestsWithinCore": 27,
+  "additionalWatchTests": 0,
+  "databaseChecks": 57,
+  "allPassed": true,
+  "unsignedDebugAppAndExtensionsBuildPassed": true,
+  "logs": {
+    "taskfold-team-workspace-mac-tests-release-check.log": {
+      "sha256": "3abc485d45c2e7bb9181985e675f607ba2a2e2787f34eea68e8364746c9d3830"
+    },
+    "taskfold-team-workspace-mac-build-release-check.log": {
+      "sha256": "b3f15b9b3dbdbdd1cbc6421f1d094b8f9126946da33828baacfc818d521dc2fe"
+    }
+  },
+  "sourceSHA256": {
+    "Package.swift": "4b9904f465e102e734d7e065481e9124f84b16cdebe950520a96dd8a180debd5",
+    "Taskfold.xcodeproj/project.pbxproj": "867ed83a02d3d7ff7cc9a420887f6223768e8f628673d4889dc97697638c98f5",
+    "Taskfold/Core/AccountRemoval.swift": "44f14f710c68e94715e634f5bba4c0f03f5faa77b831c1ae4286443b08f42b9c",
+    "Taskfold/Core/Backend.swift": "90317aa185ff5520fac904a57433ab54aff7e948f3034011124e58aa9d44d2f8",
+    "Taskfold/Core/Models.swift": "eca3567671ed20b2964baf62223a5a3aaa1cf2165a47c10e214a1d3af187f4ef",
+    "Taskfold/Core/Store.swift": "5c53559241f7837aba763cf158615c781ff423f1d21baa8b703625f1edfa2156",
+    "Taskfold/Core/TeamWorkspace.swift": "c98a969ad20ccf18bfd9896bb8ee858d91d4cfe2071823f0c4440d058f261b20",
+    "Taskfold/Views/BackupTools.swift": "909500fdb013468a15a50d5809a4f7256e0c1d7a6c19cf4556665ce766b0177d",
+    "Taskfold/Views/WorkflowViews.swift": "22978c456ffda4270b5fd4f2c331fc58d42174851d1ad7aaa9127b820bd32271",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "9d300e25f5638eceddbb88e8cfc8826145ae81dfdf89d45973c17e324ace8ff3",
+    "TaskfoldTests/Fixtures/team-workspace-boundary-v1.json": "41889afae64941b29a15ad7ef50d7e919dc80cfcbf43c01a40560ac86132d8b5",
+    "Scripts/Database/team-workspace-schema.mjs": "0159f0832d12fedf84e3ce2c3eabdde52ef6bb7aaa0bd65101f322aaad44a745",
+    "Scripts/Database/test-team-workspace.mjs": "259f11942fbc882305c11e18bf82768e3c74b7e00d6349954d0ffa625cd2e48c",
+    "supabase/migrations/20261024094010_team_workspace_boundary.sql": "d8bb58f8aa8bb532fc6ea97648195cac8e131289daaf4b39c916305a164f29b6"
+  },
+  "databaseEvidenceSHA256": "39c143f1d9a8465184ef894e5422de78b397ae3be34413dab9c1ce2e03091249",
+  "cleanup": {
+    "ownedBuildRemoved": true,
+    "ownedBuildBytesRemoved": 1174448580,
+    "databaseContainerRemoved": true,
+    "temporaryMacRegistrationRemoved": true,
+    "appsLaunchedForThisStage": false
+  },
+  "hostedDeployment": false,
+  "realDataChanged": false,
+  "nativeRuntimeAcceptance": false,
+  "visualAcceptance": false,
+  "voiceOverAcceptance": false,
+  "distributionVerified": false,
+  "teamEditingEnabled": false,
+  "fullRankComplete": false,
+  "remaining": [
+    "raw-cache repair workflow",
+    "open-editor/thread/readonly-control invalidation and native acceptance",
+    "other draft cohorts",
+    "collaboration/organization adapters and premium team UI"
+  ]
+}

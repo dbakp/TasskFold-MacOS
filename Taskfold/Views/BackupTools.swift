@@ -153,7 +153,7 @@ struct BackupTools: View {
             Button("Back up now", systemImage: "externaldrive.badge.checkmark") { run { _ = try await store.makeRecoveryBackup(); await refreshHistory(); message = "Recovery copy saved on this device." } }
                 .accessibilityIdentifier("backupNow")
             Button("Export workspace", systemImage: "square.and.arrow.up") {
-                let backup = WorkspaceBackup.make(store.snapshot, account: store.userID)
+                let backup = WorkspaceBackup.make(store.presentationSnapshot, account: store.userID)
                 export(backup)
             }.accessibilityIdentifier("backupExport")
             Button("Restore from file", systemImage: "arrow.counterclockwise", action: chooseRestoreFile).accessibilityIdentifier("backupImport")

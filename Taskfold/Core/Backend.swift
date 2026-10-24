@@ -321,7 +321,7 @@ final class Backend: NSObject {
             request.setValue("Bearer \(session.access_token)", forHTTPHeaderField: "Authorization")
         }
         extra.forEach { request.setValue($1, forHTTPHeaderField: $0) }
-        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) {
+        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
             request.timeoutInterval = 25
             request.cachePolicy = .reloadIgnoringLocalCacheData
             request.httpShouldHandleCookies = false
@@ -329,15 +329,15 @@ final class Backend: NSObject {
         }
         if let body { request.httpBody = try JSONEncoder().encode(body) }
         let data: Data, response: URLResponse
-        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) {
+        if path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
             let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
-            let limit = ["/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) ? 2_000_000 : ["/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) ? 1_000_000 : ["/functions/v1/email-routes", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) ? 512000 : (["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) ? 256000 : LocationHandoffResponse.maximumBytes)
+            let limit = ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 4_000_000 : ["/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) ? 2_000_000 : ["/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 1_000_000 : ["/functions/v1/email-routes", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 512000 : (["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 256000 : LocationHandoffResponse.maximumBytes)
             var body = Data()
             do {
-                guard incoming.expectedContentLength <= Int64(limit) else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
+                guard incoming.expectedContentLength <= Int64(limit) else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
                 for try await byte in bytes {
                     try Task.checkCancellation()
-                    guard body.count < limit else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
+                    guard body.count < limit else { throw AppFailure(message: ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
                     body.append(byte)
                 }
             } catch { bytes.task.cancel(); throw error }
@@ -352,8 +352,13 @@ final class Backend: NSObject {
             let error = (try? JSONDecoder().decode(Record.self, from: data)) ?? Record()
             let status = (response as? HTTPURLResponse)?.statusCode
             if authenticated, status == 401,
-               ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) {
+               ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
                 throw AccountSessionAuthorizationRequired()
+            }
+            if ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
+                if error.string("code")=="PGRST202" {throw TeamWorkspaceUnavailable()}
+                if error.string("code")=="28000" {throw AccountSessionAuthorizationRequired()}
+                throw TeamProjectValue.invalid
             }
             if path == "/rest/v1/rpc/taskfold_copy_team_draft" {
                 if error.string("code") == "28000" {throw AccountSessionAuthorizationRequired()}
@@ -365,7 +370,7 @@ final class Backend: NSObject {
                 throw TeamCompletionDraft.invalid
             }
             if path == "/rest/v1/rpc/taskfold_complete_team_task" { throw TeamCompletion.conflict }
-            if ["/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) {
+            if ["/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
                 if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
                 if error.string("code") == "PT410" { throw TeamConversationRecoveryExpired() }
                 if path == "/rest/v1/rpc/taskfold_team_task_batch", ["40P01","55P03","57014"].contains(error.string("code")) {
@@ -717,9 +722,11 @@ final class Backend: NSObject {
         UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows).first(where: \.isKeyWindow) ?? UIWindow()
     }
     #endif
-    func rows(_ table: String) async throws -> [Record] {
+    func rows(_ table: String, expectedAccount:String?=nil, maximumRows:Int?=nil) async throws -> [Record] {
+        let expected=expectedAccount ?? session?.user.id,epoch=sessionGeneration
+        guard expected==session?.user.id else {throw CancellationError()}
         if table == TaskActivity.table {
-            let owner = session?.user.id, generation = sessionGeneration
+            let owner = expected, generation = sessionGeneration
             var result: [Record] = []; var cursor: Int64 = 0
             while true {
                 guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
@@ -727,15 +734,20 @@ final class Backend: NSObject {
                 guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
                 let page = try JSONDecoder().decode([Record].self, from: data)
                 cursor = try TaskActivityPage.cursor(page, after: cursor); result += page
+                if let maximumRows,result.count>maximumRows {throw TeamProjectValue.invalid}
                 if page.count < 500 { return result }
             }
         }
         // PostgREST caps responses; paginate so large task libraries are not truncated.
-        var result: [Record] = []; var offset = 0
+        var result: [Record] = []; var offset = 0; var seen=Set<String>()
+        let order=table=="profiles" ? "user_id":"id"
         while true {
-            let data = try await request("/rest/v1/\(table)?select=*&order=id&offset=\(offset)&limit=500")
+            guard epoch==sessionGeneration,expected==session?.user.id else {throw CancellationError()}
+            let data = try await request("/rest/v1/\(table)?select=*&order=\(order)&offset=\(offset)&limit=500",expectedAccount:expected)
             let page = try JSONDecoder().decode([Record].self, from: data)
+            guard epoch==sessionGeneration,expected==session?.user.id else {throw CancellationError()}
             result += page
+            if let maximumRows {guard result.count<=maximumRows,page.count<=500,page.allSatisfy({row in let id=table=="profiles" ? row.string("user_id"):row.id;return !id.isEmpty && seen.insert(id).inserted}) else {throw TeamProjectValue.invalid}}
             if page.count < 500 { return result }; offset += page.count
         }
     }

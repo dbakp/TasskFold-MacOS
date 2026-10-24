@@ -4174,3 +4174,22 @@ creation during retry or choice changes. The original archive and shared tasks
 are retained. Independent verification is recorded in TEAM_DRAFT_COPY.md and
 p2-team-draft-copy-native-evidence.json. Rank 6 remains in progress, team editing
 is disabled, and hosted/native runtime/visual/release acceptance is not claimed.
+
+
+### Current-role refresh and private presentation — 24 October
+
+The Mac now brackets refresh with an authenticated access boundary, preserves
+blocked drafts/cohorts with encrypted Recovery and filters inaccessible working
+content. The presentation is masked before Keychain/backup waits, with a small
+account-bound access fence surviving relaunch. Templates/portable export and
+widgets use the filtered projection; personal child actions remain available.
+Repeated quarantine does not repeatedly create backups. Malformed primary cache
+bytes are retained for repair rather than silently overwritten. See
+TEAM_WORKSPACE_ACCESS.md and native/database evidence for checks and remaining
+work. Native open-window/thread/readonly-control acceptance and premium team UI
+remain in progress; team editing is disabled and no hosted/release acceptance is
+claimed. Existing user deferrals remain unchanged.
+
+Verified with 653 selected core tests (27 workspace tests), 57 database checks
+and a complete unsigned Debug app/extension build. Owned temporary builds and
+database containers were removed; native interface acceptance remains pending.
