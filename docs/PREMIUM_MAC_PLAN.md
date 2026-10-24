@@ -3889,3 +3889,16 @@ old work and receipts while saving only the original new command. No Mac runtime
 build or stored contract changes; no new Mac runtime pass is claimed. Paired
 offline completion, hardware/background/cloud, native/spoken, remaining Px and all
 user-deferred gates remain open. Watch shipping remains off/unembedded.
+
+
+### Disabled team lifecycle foundation — 24 October
+
+Mac now independently owns the team schema/RPC and 144-check PostgreSQL harness,
+covering verified invitations, current roles/sessions, explicit ownership transfer,
+archive/delete, retry/revision conflicts and ownership-aware account removal.
+Official advisors report no team findings; fixture baseline warnings are recorded.
+No Mac UI/build behavior or hosted project access changes. Team enrollment stays
+off pending full project/task/service/storage permissions and premium native team
+flows, followed by backup/activity/widget privacy and cross-client acceptance.
+See TEAM_ORGANIZATION.md and p2-team-foundation-evidence.json. Wider Px and user
+deferrals remain open; this is a foundation milestone, not team completion.

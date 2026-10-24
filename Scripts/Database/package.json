@@ -26,7 +26,8 @@
     "test:email-routes-http": "node test-email-routes-http.mjs",
     "test:email-domain": "node test-email-domain.mjs",
     "test:email-maintenance": "node test-email-maintenance.mjs",
-    "test:email-maintenance-cron": "node test-email-maintenance-cron.mjs"
+    "test:email-maintenance-cron": "node test-email-maintenance-cron.mjs",
+    "test:teams": "node test-team-organization.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

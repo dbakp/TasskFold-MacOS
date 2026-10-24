@@ -1759,3 +1759,27 @@ deferrals retain scope. Exact proof is in the iOS-owned
 `p2-watch-cold-return-evidence.json`. Five superseded generated test-build caches
 were also removed (about 3.2 GiB allocated); source, saved app data and Simulator
 devices were not pruned, and current reusable build caches remain.
+
+
+## Team organization foundation — 24 October, rank 6 in progress
+
+Both repositories independently own the disabled team lifecycle migration and
+real PostgreSQL acceptance harness. The foundation implements owner/admin/member/
+guest roles, verified-email invitations, folders as metadata, archive/reopen,
+explicit accepted ownership transfer, deletion tombstones and account-removal
+ownership protection. Current sessions/roles, reviewed revisions and exact retry
+receipts govern mutations. Quota/paused states preserve revocation and recovery.
+No team/folder grants project access; existing native sharing remains unchanged.
+
+Each repository passes 144 checks, including actual competing writes, role
+revocation and session expiry while waiting, and the last daily creation slot.
+The official advisors find no team warnings/errors; the minimal fixture's
+pre-existing is_project_owner search-path warning is recorded separately. Owned
+containers/ports are removed. No hosted changes, native rollout or app build is
+claimed. See TEAM_ORGANIZATION.md and p2-team-foundation-evidence.json.
+
+Next: integrate every project/task/native direct-data/API/email/storage boundary
+without bypasses, then the premium native team switcher/folders/admin flows and
+backup/account-removal/audit/widget privacy acceptance. Team configuration stays
+off until those gates pass. This does not complete advanced teams, rank 6 or the
+full Px scope; Watch/Wear OS/email and all existing user deferrals retain scope.
