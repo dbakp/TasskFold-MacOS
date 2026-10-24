@@ -11,6 +11,7 @@ struct SubtaskOrganizerButton: View {
     var sourceRootID: String? = nil
     var custodyRoot: Record? = nil
     var admittedWorkspace: WorkspaceBinding? = nil
+    var teamDraft: TeamTaskEditorDraft? = nil
     var saveAndOpen: ((JSON, [String]) -> Bool)? = nil
     @State private var showing = false
     var body: some View {
@@ -19,10 +20,10 @@ struct SubtaskOrganizerButton: View {
             let root=custodyRoot ?? store.record("tasks",id:sourceRootID ?? SubtaskTree.referencePath(taskID)?.first ?? taskID)
             var record=sourceRecord ?? root.flatMap{TaskEditorSourceContext.projection($0,reference:taskID)} ?? Record(["id":.string(taskID),"title":.string("Recovered checklist"),"project_id":.string(projectID)])
             record["subtasks"] = children
-            openingAdmission=TaskEditorAdmission(workspace:workspace,record:record,root:root,kind:.nested);showing=true
+            openingAdmission=TaskEditorAdmission(workspace:workspace,record:record,root:root,kind:.nested,teamDraft:teamDraft);showing=true
         }
             .accessibilityIdentifier("organizeSubtasks")
-            .sheet(isPresented: $showing) { if let openingAdmission {SubtaskOrganizer(children: $children, taskID: taskID, baseDepth: baseDepth, projectID: projectID, admission:openingAdmission, saveAndOpen: saveAndOpen)} }
+            .sheet(isPresented: $showing) { if let openingAdmission {SubtaskOrganizer(children: $children, taskID: taskID, baseDepth: baseDepth, projectID: projectID, admission:openingAdmission, saveAndOpen: teamDraft == nil ? saveAndOpen : nil)} }
     }
 }
 
@@ -68,10 +69,10 @@ private struct SubtaskOrganizer: View {
     }
     private var items: [SubtaskTree.Item] { SubtaskTree.outline(draft) }
     private var available: Bool {
-        guard !accessStopped,admission.matches(account:store.userID,generation:store.workspaceGeneration,currentRoot:store.record("tasks",id:admission.rootID)),store.editorMayWrite(source:admission.source.root ?? admission.source.record,proposed:admission.source.record) else {return false}
+        guard !accessStopped,admission.matches(account:store.userID,generation:store.workspaceGeneration,currentRoot:store.record("tasks",id:admission.rootID)),store.editorMayWrite(source:admission.source.root ?? admission.source.record,proposed:admission.source.record,teamDraft:admission.teamDraft) else {return false}
         guard let binding,let sourceRecord else {return true}
         guard binding.matches(account:store.userID,generation:store.workspaceGeneration),let sourceContext,
-              store.editorMayWrite(source:sourceContext.root ?? sourceRecord,proposed:sourceRecord),
+              store.editorMayWrite(source:sourceContext.root ?? sourceRecord,proposed:sourceRecord,teamDraft:admission.teamDraft),
               sourceContext.matches(sourceContext.root.flatMap{store.record("tasks",id:$0.id)}) else {return false}
         return true
     }

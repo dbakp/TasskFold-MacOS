@@ -65,6 +65,10 @@ struct TaskInspectorForm: View {
     @Environment(Workspace.self) private var workspace
     let taskID: String
     var admission: TaskEditorAdmission? = nil
+    @State private var teamDraft: TeamTaskEditorDraft?
+    @State private var teamDraftCaptured = false
+    private var isTeamTask: Bool { teamDraft != nil }
+    private var quickExclusions: Set<String> { isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : [] }
     @State private var recoverySession: TaskEditorSession?
     @State private var sourceContext: TaskEditorSourceContext?
     @State private var sourceRoot: Record?
@@ -93,8 +97,7 @@ struct TaskInspectorForm: View {
     /// Parsing runs while the title differs from the saved one; Return (or leaving the field) applies it.
     private var suggestions: QuickEntry? {
         guard draft.title != titleParsingBaseline else { return nil }
-        let nested = Workspace.subtaskPath(taskID) != nil
-        let parsed = QuickEntry(draft.title, disabled: nested ? declined.union(SubtaskTree.childQuickEntryExclusions) : declined,
+        let parsed = QuickEntry(draft.title, disabled: declined.union(quickExclusions),
             context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices), task: draft)
         return parsed.tokens.isEmpty && parsed.warnings.isEmpty ? nil : parsed
     }
@@ -109,11 +112,11 @@ struct TaskInspectorForm: View {
     }
     private var editorAvailable: Bool {
         guard !accessStopped else {return false}
-        if let admission,(!admission.matches(account:store.userID,generation:store.workspaceGeneration,currentRoot:store.record("tasks",id:admission.rootID)) || !store.editorMayWrite(source:admission.source.root ?? admission.source.record,proposed:admission.source.record)) {return false}
+        if let admission,(!admission.matches(account:store.userID,generation:store.workspaceGeneration,currentRoot:store.record("tasks",id:admission.rootID)) || !store.editorMayWrite(source:admission.source.root ?? admission.source.record,proposed:admission.source.record,teamDraft:teamDraft ?? admission.teamDraft)) {return false}
         guard let workspaceBinding else {return true}
         guard workspaceBinding.matches(account:store.userID,generation:store.workspaceGeneration),let sourceRoot,
               let live=store.record("tasks",id:sourceRoot.id),live["task_generation"]==sourceRoot["task_generation"],live["project_id"]==sourceRoot["project_id"],current != nil,sourceContext?.matches(live)==true,
-              store.editorMayWrite(source:sourceRoot,proposed:draft) else {return false}
+              store.editorMayWrite(source:sourceRoot,proposed:draft,teamDraft:teamDraft) else {return false}
         return true
     }
     private var recoveryExtras: [String:JSON] {
@@ -157,7 +160,7 @@ struct TaskInspectorForm: View {
                     .focused($titleFocused)
                     .onChange(of: titleFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
                     .accessibilityIdentifier("taskTitle")
-                    .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: Workspace.subtaskPath(taskID) == nil ? [] : SubtaskTree.childQuickEntryExclusions, onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
+                    .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: quickExclusions, onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
                 Text("Changes save automatically")
                     .font(.caption).foregroundStyle(.secondary)
                     .accessibilityIdentifier("inspectorAutosaveHint")
@@ -186,9 +189,9 @@ struct TaskInspectorForm: View {
                     .accessibilityLabel("Notes").accessibilityIdentifier("taskDescription")
                 Button("Format notes", systemImage: "textformat") {
                     guard let binding = workspaceBinding else { return }
-                    noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"),source:draft,sourceRootID:sourceRoot?.id,admission:TaskEditorAdmission(workspace:binding,record:draft,root:sourceRoot,kind:.nested))
+                    noteFormatting = NoteFormatRequest(taskID: taskID, original: draft.string("description"), workspace: binding, generation: currentGeneration, storedText: current?.string("description"),source:draft,sourceRootID:sourceRoot?.id,admission:TaskEditorAdmission(workspace:binding,record:draft,root:sourceRoot,kind:.nested,teamDraft:teamDraft))
                 }.disabled(current == nil).accessibilityIdentifier("openNoteFormatting")
-                if store.record("tasks", id: taskID) != nil {
+                if !isTeamTask, store.record("tasks", id: taskID) != nil {
                     Toggle("Show notes in widgets", isOn: Binding(get: { notePin ?? store.isPinnedNote(taskID) }, set: { notePin = $0; saveNow() })).accessibilityIdentifier("pinTaskNotes")
                     Text("Pin only text you want visible on your desktop or Home Screen. Choose it in the Pinned note widget; hide its details for privacy.").font(.caption).foregroundStyle(.secondary)
                 }
@@ -199,7 +202,7 @@ struct TaskInspectorForm: View {
                             do { workspace.complete(try store.selectionRecord(taskID)) } catch { store.error = error.localizedDescription }
                         } else if let current { workspace.complete(current) }
                     }
-                        .controlSize(.small)
+                        .controlSize(.small).disabled(isTeamTask)
                     Spacer()
                     if draft.completed, let at = ISO8601DateFormatter().date(from: draft.string("completed_at")) { Text("Completed \(at.formatted(.relative(presentation: .named)))").font(.caption).foregroundStyle(.secondary) }
                 }
@@ -269,13 +272,13 @@ struct TaskInspectorForm: View {
                     ForEach(1...4, id: \.self) { n in Label(n == 4 ? "None" : "Priority \(n)", systemImage: "flag.fill").foregroundStyle(Color.priority(n)).tag(n) }
                 }
                 LabeledContent("Assigned to") {
-                    AssigneeMenu(task: draft, contextID: taskID, showsName: true) { draft["assigned_to"] = $0.isEmpty ? .null : .string($0) }
+                    AssigneeMenu(task: draft, contextID: taskID, showsName: true) { draft["assigned_to"] = $0.isEmpty ? .null : .string($0) }.disabled(isTeamTask)
                 }
                 if Workspace.subtaskPath(taskID) == nil {
                 Picker("Project", selection: text("project_id")) {
                     Text("Inbox").tag("")
                     ForEach(store.projects) { Text($0.name).tag($0.id) }
-                }.onChange(of: draft.string("project_id")) { old, new in if old != new && new != original.string("project_id") { draft = Workspace.clearingAssignments(draft); draft["section_id"] = .null } }
+                }.disabled(isTeamTask).onChange(of: draft.string("project_id")) { old, new in if old != new && new != original.string("project_id") { draft = Workspace.clearingAssignments(draft); draft["section_id"] = .null } }
                 if !draft.string("project_id").isEmpty {
                     Picker("Section", selection: text("section_id")) {
                         Text("No section").tag("")
@@ -287,8 +290,8 @@ struct TaskInspectorForm: View {
                     Text("Subtasks stay with the parent task.").font(.caption).foregroundStyle(.secondary)
                 }
                 if Workspace.subtaskPath(taskID) == nil {
-                RecurrenceEditor(task: $draft)
-                Button("Reminders…", systemImage: "bell") { showingReminders = true }.accessibilityIdentifier("taskReminders")
+                RecurrenceEditor(task: $draft).disabled(isTeamTask)
+                Button("Reminders…", systemImage: "bell") { showingReminders = true }.disabled(isTeamTask).accessibilityIdentifier("taskReminders")
                 } else {
                     Text("Manage repeating schedules and reminders on the parent task.").font(.caption).foregroundStyle(.secondary)
                 }
@@ -302,10 +305,11 @@ struct TaskInspectorForm: View {
                     })) { Label(label.name, systemImage: "tag.fill").foregroundStyle(Color.project(label.string("color"))) }.accessibilityIdentifier("taskLabel-" + label.id)
                 }
             }
+            .disabled(isTeamTask)
             if workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty {
             Section("Subtasks") {
                 let childIndices = SubtaskTree.uniqueChildIndices(draft["subtasks"])
-                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, saveAndOpen: { children, path in
+                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, saveAndOpen: { children, path in
                     let previous = draft
                     draft["subtasks"] = children
                     guard saveNow() else { draft = previous; return false }
@@ -332,7 +336,7 @@ struct TaskInspectorForm: View {
                             workspace.open(workspace.childID(parent: taskID, value: value, index: index))
                         } label: { Image(systemName: "sidebar.trailing") }
                             .buttonStyle(.borderless).accessibilityLabel("Open details for " + accessibleTitle)
-                            .disabled(childIndices[Workspace.childKey(value, index: index)] != index)
+                            .disabled(isTeamTask || childIndices[Workspace.childKey(value, index: index)] != index)
                         Button { var list = draft["subtasks"].list; list.remove(at: index); draft["subtasks"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove " + accessibleTitle)
                     }.disabled(!SubtaskTree.inlineEditable(value))
                 }
@@ -344,10 +348,10 @@ struct TaskInspectorForm: View {
                     HStack {
                         Button { openAttachment(Record(value.object)) } label: { Label(value.object["name"]?.text ?? "Attachment", systemImage: "paperclip") }.buttonStyle(.link)
                         Spacer()
-                        Button { var list = draft["attachments"].list; list.remove(at: index); draft["attachments"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove attachment")
+                        Button { var list = draft["attachments"].list; list.remove(at: index); draft["attachments"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).disabled(isTeamTask).accessibilityLabel("Remove attachment")
                     }
                 }
-                Button("Attach a File…", systemImage: "doc.badge.plus") { importing = true }
+                Button("Attach a File…", systemImage: "doc.badge.plus") { importing = true }.disabled(isTeamTask)
             }
             if Workspace.subtaskPath(taskID) == nil, store.conversationsAvailable, let saved = current, !saved.string("project_id").isEmpty {
                 Section { Button("Shared conversation", systemImage: "bubble.left.and.bubble.right") { conversation = ConversationRequest(task: saved, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) }.accessibilityIdentifier("openSharedConversation")
@@ -361,7 +365,7 @@ struct TaskInspectorForm: View {
                         HStack {
                             Text(row.string("authorName").isEmpty ? "Comment" : row.string("authorName")).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                             Spacer()
-                            Button { var list = draft["comments"].list; list.remove(at: index); draft["comments"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Delete comment")
+                            Button { var list = draft["comments"].list; list.remove(at: index); draft["comments"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).disabled(isTeamTask).accessibilityLabel("Delete comment")
                         }
                         if !row.string("text").isEmpty { Text(.init(row.string("text"))).textSelection(.enabled) }
                         if case .object(let attachment) = row["attachment"] {
@@ -384,6 +388,7 @@ struct TaskInspectorForm: View {
                             if draft == original { pastedImageName = name }
                         } catch { store.error = error.localizedDescription }
                     }, pasteError: { store.error = $0 })
+                    .disabled(isTeamTask)
                     .frame(height: 80)
                     .background(Color(nsColor: .textBackgroundColor), in: .rect(cornerRadius: 6))
                     if let pastedImageName {
@@ -395,11 +400,11 @@ struct TaskInspectorForm: View {
                 Button("Add Comment", systemImage: "text.bubble") {
                     appendComment(text: comment.trimmingCharacters(in: .whitespacesAndNewlines))
                     comment = ""
-                }.disabled(comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }.disabled(isTeamTask || comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             Section {
                 if let created = ISO8601DateFormatter().date(from: draft.string("created_at")) { LabeledContent("Created", value: created.formatted(date: .abbreviated, time: .shortened)) }
-                Button("Delete Task…", systemImage: "trash", role: .destructive) { confirmDelete = true }
+                Button("Delete Task…", systemImage: "trash", role: .destructive) { confirmDelete = true }.disabled(isTeamTask)
             }
         }
         .formStyle(.grouped)
@@ -413,8 +418,8 @@ struct TaskInspectorForm: View {
             } catch { store.error = error.localizedDescription }
         }
         .quickLookPreview($preview)
-        .onAppear { workspaceBinding = admission?.workspace ?? WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; sourceRoot=admission?.source.root ?? store.record("tasks",id:Workspace.subtaskPath(taskID)?.first ?? taskID); load();sourceContext=admission?.source ?? TaskEditorSourceContext(record:draft,root:sourceRoot); if recoverySession==nil {do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure=error.localizedDescription}}; if draft.title.isEmpty { titleFocused = true } }
-        .task(id: suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) { _ = try? await store.refreshProjectMembers(suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) }
+        .onAppear { workspaceBinding = admission?.workspace ?? WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); editingGeneration = currentGeneration; sourceRoot=admission?.source.root ?? store.record("tasks",id:Workspace.subtaskPath(taskID)?.first ?? taskID); if !teamDraftCaptured { teamDraftCaptured = true; if let admission { teamDraft = admission.teamDraft } else if Workspace.subtaskPath(taskID) == nil { teamDraft = sourceRoot.flatMap { try? store.captureTeamTaskEditor($0) } } }; load();sourceContext=admission?.source ?? TaskEditorSourceContext(record:draft,root:sourceRoot); if recoverySession==nil {do {recoverySession=try store.beginEditorSession(original)} catch {sessionFailure=error.localizedDescription}}; if draft.title.isEmpty { titleFocused = true } }
+        .task(id: suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) { if !isTeamTask { _ = try? await store.refreshProjectMembers(suggestions?.updates["project_id"]?.text ?? workspace.assignmentProject(draft, contextID: taskID)) } }
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .onChange(of: titleChipFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
         .sheet(item: $conversation) { SharedConversationView(request: $0) }
@@ -503,7 +508,7 @@ struct TaskInspectorForm: View {
     private func applyReferenceChoices() {
         guard editorAvailable,workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, current != nil else { return }
         let referenceGroups: Set<String> = ["project_id", "section_id", "assigned_to", "labels"]
-        let excluded = Set(QuickEntry.groups).subtracting(referenceGroups).union(declined).union(Workspace.subtaskPath(taskID) == nil ? [] : SubtaskTree.childQuickEntryExclusions)
+        let excluded = Set(QuickEntry.groups).subtracting(referenceGroups).union(declined).union(quickExclusions)
         let parsed = QuickEntry(draft.title, disabled: excluded, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices), task: draft)
         draft = parsed.applying(to: draft)
         for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.id == value.text || $0.name == value.text }) {
@@ -523,6 +528,19 @@ struct TaskInspectorForm: View {
         guard editingGeneration == currentGeneration else {
             store.error = "This task was deleted and restored while you were editing. Your draft is still here; reopen the current task before saving."
             return false
+        }
+        if let captured = teamDraft {
+            var desired = captured.source
+            for key in Set(original.fields.keys).union(draft.fields.keys) where original[key] != draft[key] { desired[key] = draft[key] }
+            let title = desired.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            desired["title"] = title.isEmpty ? captured.source["title"] : .string(title)
+            let saved = store.saveTeamTaskEditor(desired, draft: captured)
+            if saved, let live = store.record("tasks", id: captured.source.id) {
+                original = live; draft = live
+                teamDraft = try? store.captureTeamTaskEditor(live)
+                if subtask.isEmpty && comment.isEmpty { _ = recoverySession?.finish() }
+            }
+            return saved
         }
         var merged = current
         for (key, value) in draft.fields where original.fields[key] != value { merged[key] = value }
@@ -892,3 +910,13 @@ struct RepeatStepper: View {
     }
     #endif
 }
+
+#if DEBUG
+struct TeamEditorNativeFixtureView: View {
+    @Environment(Store.self) private var store
+    var body: some View {
+        TaskInspectorForm(taskID: TeamEditorNativeFixture.taskID)
+            .safeAreaInset(edge: .bottom) { Button("Revoke test editing") { store.revokeTeamEditorNativeFixture() }.accessibilityIdentifier("revokeTeamEditorFixture") }
+    }
+}
+#endif

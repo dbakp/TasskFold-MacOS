@@ -29,7 +29,8 @@ struct TaskfoldMacApp: App {
 
     @ViewBuilder private var mainContent: some View {
         #if DEBUG
-        if TeamOrganizationFixture.enabled { NavigationStack { TeamOrganizationView() } }
+        if TeamEditorNativeFixture.enabled { TeamEditorNativeFixtureView() }
+        else if TeamOrganizationFixture.enabled { NavigationStack { TeamOrganizationView() } }
         else if WebhookManagementFixture.enabled { NavigationStack { WebhookAccessView(fixture: true) } }
         else if AutomationManagementFixture.enabled { NavigationStack { AutomationAccessView(fixture: true) } }
         else if AccountRemovalNativeFixture.enabled { AccountRemovalProofView() }
@@ -52,7 +53,7 @@ struct TaskfoldMacApp: App {
                 .safeAreaInset(edge: .top, spacing: 0) { AccountRemovalRecoveryBanner().environment(store) }
                 .task {
                     #if DEBUG
-                    if TeamOrganizationFixture.enabled || AutomationManagementFixture.enabled || AccountRemovalNativeFixture.enabled { return }
+                    if TeamEditorNativeFixture.enabled || TeamOrganizationFixture.enabled || AutomationManagementFixture.enabled || AccountRemovalNativeFixture.enabled { return }
                     #endif
                     await store.resumeAccountRemovals()
                 }

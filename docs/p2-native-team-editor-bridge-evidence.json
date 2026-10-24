@@ -1,0 +1,70 @@
+{
+  "stage": "Rank 6 captured native team editor bridge",
+  "date": "2026-10-24",
+  "platform": "mac",
+  "teamRolloutEnabled": false,
+  "hostedChanges": false,
+  "realDataChanged": false,
+  "nativeUIConnected": true,
+  "verification": {
+    "focusedTests": 111,
+    "backupRecoveryTests": 69,
+    "coreFailures": 0,
+    "focusedLogSHA256": "8ce5bc89c59723e0012206220f74e308bddb3e08658d4294af20a899dd6ecb74",
+    "backupLogSHA256": "8300ecfb4c1f100e1494e831b7dd5705c40dd25d3fe9aef713d8283291b7e4fe",
+    "nativeDebugBuild": "passed arm64 unsigned Mac Debug",
+    "buildLogSHA256": "f4efb716e60c0250a409a5b2151427f71bbf140eebc2a99e312f6143586cb962",
+    "iosSimulatorRuntime": {
+      "phone": {
+        "result": "Passed",
+        "passedTests": 3,
+        "failedTests": 0,
+        "skippedTests": 1,
+        "totalTestCount": 4
+      },
+      "tablet": {
+        "result": "Passed",
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "totalTestCount": 2
+      }
+    },
+    "macRuntimeAccepted": false,
+    "preparedFixtureScriptSmoke": "passed in each repository",
+    "initialNativeFailure": "Both initial save tests failed on title replacement because simulated Command-A inserted text. Replaced test input with native Select All; final runs pass.",
+    "skippedTest": "Phone personal-root regression has exact workflowtestsp1 namespace guard; excluded from pass count.",
+    "iosRuntimeEvidenceReference": {
+      "repository": "TaskFold-iOS",
+      "commit": "8bdcd1913607526bb8ed2a01115f9f87b5212c19",
+      "file": "docs/p2-native-team-editor-bridge-evidence.json",
+      "scope": "iPhone/iPad Simulator only; no Mac runtime acceptance"
+    }
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/TeamWorkspace.swift": "f41b212ba50e2a9703a7ff4a662230972b55490a17774e5b5b5d1a5297cb1b3e",
+    "Taskfold/Core/Backups.swift": "572d254af8c68c7cd1b848e6c5e9c44478dabafcff646f3117d0b2ff97d170c0",
+    "Taskfold/Core/Store.swift": "098eb226b6b5e41714c1c1a6357d0349bf6c788c009f3fdf2e29c6449e29a543",
+    "Taskfold/TaskfoldMacApp.swift": "6dcf482207abe4fe027909bf1d9197922f2c15aee98cc40910f59b4ca81e1447",
+    "Taskfold/Views/TaskInspector.swift": "9e12cc546a51b2a0f2ab4156233d18e1acae0f08734149978a159ceb1f314069",
+    "Taskfold/Views/NoteFormattingView.swift": "a6a66cc7a1ecfcaf621f3d90e469b38fb6fc1be81d29295334c88196b9545324",
+    "Taskfold/Views/SubtaskOrganizer.swift": "d1028b94c867882409581ab5652e1bc94beebea30f6e00fc490a147829aaf92f",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "9cf59cb20b9f8fdb3972bf7bf07e5d207bc9ef339046e9837521c6766e8a50fb",
+    "Scripts/prepare_team_editor_native_test.py": "086dc5079cb141afbc863d10c3570ebf19c19f9cef26b0a5833d3b89e2238528"
+  },
+  "limitations": [
+    "Client/UI/native-disk evidence uses a synthetic boundary and denied HTTP transport; no hosted service acceptance.",
+    "Mac autosave/native runtime and VoiceOver acceptance remain open.",
+    "Team checklist interactive acceptance, remaining field adapters and broader account/role/conflict transitions remain open.",
+    "All existing user-deferred release/provider/device dependencies remain deferred."
+  ],
+  "cleanup": {
+    "ownedTemporaryArtifactsRemoved": true,
+    "allocatedBytesRemovedAcrossBothRepos": 1271263232,
+    "isolatedIOSAppAndRunnerUninstalledFromBothSimulators": true,
+    "nativeMacAppNotLaunched": true,
+    "remainingTaskfoldNativeAppTestProcesses": 0,
+    "baselineSimulatorBootStatePreserved": true,
+    "persistentCoreCachesPreserved": true
+  }
+}

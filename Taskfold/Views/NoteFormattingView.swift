@@ -92,9 +92,9 @@ struct NoteFormattingView: View {
     }
     private var available: Bool {
         guard !accessStopped,request.workspace.matches(account:store.userID,generation:store.workspaceGeneration) else {return false}
-        if let admission=request.admission,(!admission.matches(account:store.userID,generation:store.workspaceGeneration,currentRoot:store.record("tasks",id:admission.rootID)) || !store.editorMayWrite(source:admission.source.root ?? admission.source.record,proposed:admission.source.record)) {return false}
+        if let admission=request.admission,(!admission.matches(account:store.userID,generation:store.workspaceGeneration,currentRoot:store.record("tasks",id:admission.rootID)) || !store.editorMayWrite(source:admission.source.root ?? admission.source.record,proposed:admission.source.record,teamDraft:admission.teamDraft)) {return false}
         guard let sourceRecord else {return true}
-        guard let sourceContext,store.editorMayWrite(source:sourceContext.root ?? sourceRecord,proposed:sourceRecord),sourceContext.matches(sourceContext.root.flatMap{store.record("tasks",id:$0.id)}) else {return false}
+        guard let sourceContext,store.editorMayWrite(source:sourceContext.root ?? sourceRecord,proposed:sourceRecord,teamDraft:request.admission?.teamDraft),sourceContext.matches(sourceContext.root.flatMap{store.record("tasks",id:$0.id)}) else {return false}
         return true
     }
     private func checkpoint() {

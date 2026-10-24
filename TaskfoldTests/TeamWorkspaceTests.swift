@@ -355,6 +355,31 @@ extension TeamWorkspaceTests {
         let cache = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [], tasks: [row]), workspace = WorkspaceBinding(account: b.account, generation: UUID()), session = UUID()
         return (try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: cache, enabled: true), cache, row, workspace, session)
     }
+
+    func testTeamEditorAdmissionKeepsCapturedContextThroughSecondarySheets() throws {
+        let (draft, _, row, workspace, _) = try editorContext()
+        let opening = TaskEditorAdmission(workspace: workspace, record: row, root: row, kind: .existing, teamDraft: draft)
+        XCTAssertTrue(opening.matches(account: workspace.account, generation: workspace.generation, currentRoot: row))
+        var edited = row; edited["description"] = .string("Unsaved formatted notes")
+        let nested = TaskEditorAdmission(workspace: workspace, record: edited, root: row, kind: .nested, teamDraft: opening.teamDraft)
+        XCTAssertEqual(nested.teamDraft, draft)
+        XCTAssertEqual(nested.teamDraft?.source, row, "Opening a sheet cannot promote unsaved fields to the captured baseline")
+        XCTAssertTrue(nested.matches(account: workspace.account, generation: workspace.generation, currentRoot: row))
+        XCTAssertFalse(nested.matches(account: workspace.account, generation: UUID(), currentRoot: row))
+    }
+    func testTeamEditorAdmissionRejectsMismatchedRootAndWorkspaceContext() throws {
+        let (draft, _, row, workspace, _) = try editorContext()
+        for key in ["id", "user_id", "project_id", "task_generation"] {
+            var replaced = row; replaced[key] = .string(UUID().uuidString.lowercased())
+            let opening = TaskEditorAdmission(workspace: workspace, record: replaced, root: replaced, kind: .existing, teamDraft: draft)
+            XCTAssertFalse(opening.matches(account: workspace.account, generation: workspace.generation, currentRoot: replaced), key)
+        }
+        let other = WorkspaceBinding(account: workspace.account, generation: UUID())
+        let opening = TaskEditorAdmission(workspace: other, record: row, root: row, kind: .nested, teamDraft: draft)
+        XCTAssertFalse(opening.matches(account: other.account, generation: other.generation, currentRoot: row))
+        let new = TaskEditorAdmission(workspace: workspace, record: Record.task(user: workspace.account), root: nil, kind: .new, teamDraft: draft)
+        XCTAssertFalse(new.matches(account: workspace.account, generation: workspace.generation, currentRoot: nil))
+    }
     func testNativeEditorCapturesRoleAuthorityRatherThanCreatorAndKeepsOrdinaryWritesClosed() throws {
         let (draft, cache, row, workspace, session) = try editorContext()
         XCTAssertNotEqual(row.string("user_id"), draft.scope.account)

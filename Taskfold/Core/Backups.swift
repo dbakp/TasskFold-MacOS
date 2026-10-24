@@ -1097,17 +1097,27 @@ struct TaskEditorAdmission: Equatable, Sendable {
     let workspace: WorkspaceBinding
     let source: TaskEditorSourceContext
     let kind: Kind
+    let teamDraft: TeamTaskEditorDraft?
     private let validAtOpening: Bool
-    init(workspace: WorkspaceBinding, record: Record, root: Record?, kind: Kind) {
-        self.workspace=workspace;self.kind=kind;let context=TaskEditorSourceContext(record:record,root:root);source=context
+    init(workspace: WorkspaceBinding, record: Record, root: Record?, kind: Kind, teamDraft: TeamTaskEditorDraft? = nil) {
+        self.workspace=workspace;self.kind=kind;self.teamDraft=teamDraft;let context=TaskEditorSourceContext(record:record,root:root);source=context
+        let sourceValid: Bool
         switch kind {
         case .existing:
-            validAtOpening=root.map { root in
+            sourceValid=root.map { root in
                 context.persistedSelection && record["task_generation"]==root["task_generation"] && record["project_id"]==root["project_id"] && record["user_id"]==root["user_id"]
             } ?? false
-        case .new: validAtOpening=root==nil && record.string("user_id")==workspace.account && !record.id.isEmpty
-        case .nested: validAtOpening=root != nil || record.string("user_id").isEmpty || record.string("user_id")==workspace.account
+        case .new: sourceValid=root==nil && record.string("user_id")==workspace.account && !record.id.isEmpty
+        case .nested: sourceValid=root != nil || record.string("user_id").isEmpty || record.string("user_id")==workspace.account
         }
+        // Secondary sheets inherit the opening authority; they cannot attach
+        // another task's or workspace's captured team context.
+        let teamValid = teamDraft.map { draft in
+            kind != .new && draft.workspace == workspace && root.map { row in
+                ["id", "user_id", "project_id", "task_generation"].allSatisfy { row[$0] == draft.source[$0] }
+            } == true
+        } ?? true
+        validAtOpening = sourceValid && teamValid
     }
     var rootID: String {source.root?.id ?? source.record.id}
     func matches(account:String,generation:UUID,currentRoot:Record?) -> Bool {

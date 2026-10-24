@@ -4669,3 +4669,57 @@ interactive, spoken, Keychain, hosted or team-rollout acceptance. Rank 6 and the
 full remaining Px objective stay active; all existing user deferrals remain.
 
 Owned prepared copies/build caches and scratch files are removed after evidence preservation (approximately 1.02 GiB allocated). No Taskfold process remains. Persistent core caches, baseline Simulator boot states and unrelated data/runtimes are preserved. See `p2-native-team-editor-draft-evidence.json`.
+
+
+## Captured native team editor bridge — 24 October 2026
+
+The captured draft now travels with existing-root editor admission. iOS Save uses
+its explicit scoped Store path before personal label creation, reminder defaults
+or personal task merging. The Mac inspector retains autosave and captures its
+context once when opened; it renews the baseline only after a successful durable
+save. An explicit denied admission cannot acquire fresh authority on appearance.
+Note formatting and checklist sheets inherit the same context. Admission rejects
+another root/workspace's context; secondary sheets cannot reset its baseline.
+
+Title, notes, planning and checklist controls use this bridge. Project moves,
+assignments, labels, recurrence, reminder management, root completion/deletion,
+attachments, legacy comments and note pins are withheld where they still need
+separate native team adapters. Quick entry and reference suggestions respect the
+same limits. Ordinary personal Store writes still cannot infer a team scope.
+The iOS Form is split into typed sections to keep SwiftUI compilation bounded;
+its native layout and explicit Save remain in place.
+
+Each repository passes 111 focused team/edit checks and 69 backup/recovery checks,
+with no failures. Both native Debug apps/extensions build. The isolated iPhone and
+iPad each pass title editing, note-formatting application, exact scoped PATCH and
+opening baseline persistence, different-creator/opaque-field preservation,
+relaunch retention, and edit-to-viewer loss with a privately encrypted unsent draft
+and no task write. The iPhone also passes the existing personal checklist
+cancel/move/save/relaunch workflow. A separately selected personal-root test is
+skipped because its exact namespace guard excludes this fixture; it is not counted
+as a pass. The initial team-save attempts failed because simulated Command-A did
+not select text. The test now uses the native Select All menu and asserts the
+replacement before saving. Six final screenshots were inspected and retained in
+the iOS repository. The native test backend rejects every HTTP request locally;
+this proves client/UI/durable-disk behavior, not hosted authorization or delivery.
+
+The Mac bridge is independently compiled; Mac runtime/autosave, hosted multi-actor
+conflicts, broader account/role transitions, team checklist interaction and the
+remaining field-specific adapters still need acceptance. Computer use reported
+the Mac locked again, so no additional manual unlock was requested. Teams remain
+disabled in both shipping Info.plists; only the reserved isolated copy enables the
+switch. No schema, hosted service, provider, release setting or real data changed.
+Rank 6 and the full Px objective remain active, with all user deferrals preserved.
+See `p2-native-team-editor-bridge-evidence.json`. Reproduce the isolated copy with
+`Scripts/prepare_team_editor_native_test.py --output <new-temporary-directory>`;
+launch with `--team-editor-testing`, adding `--team-editor-reset` only to seed the
+synthetic workspace.
+
+Both isolated Simulator apps/runners are uninstalled. Owned temporary builds,
+results, prepared copies and scratch files are removed (1.18 GiB allocated
+across both repos). No Taskfold native app/test process remains; baseline Simulator
+boot states and persistent core caches are preserved.
+
+The iPhone/iPad runtime records and six screenshots belong to the independent
+iOS repository at commit `8bdcd1913607526bb8ed2a01115f9f87b5212c19`. They do not
+substitute for Mac runtime acceptance or create a build dependency.

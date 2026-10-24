@@ -322,7 +322,9 @@ final class Store {
     }
     @ObservationIgnored private var editorSessions: [UUID:TaskEditorSession] = [:]
     func editorAdmission(_ record: Record, kind: TaskEditorAdmission.Kind = .existing, workspace: WorkspaceBinding? = nil, root: Record? = nil) -> TaskEditorAdmission {
-        TaskEditorAdmission(workspace:workspace ?? WorkspaceBinding(account:userID,generation:workspaceGeneration),record:record,root:root ?? self.record("tasks",id:SubtaskTree.referencePath(record.id)?.first ?? record.id),kind:kind)
+        let capturedRoot = root ?? self.record("tasks", id: SubtaskTree.referencePath(record.id)?.first ?? record.id)
+        let team = kind == .existing && capturedRoot?.id == record.id ? capturedRoot.flatMap { try? captureTeamTaskEditor($0) } : nil
+        return TaskEditorAdmission(workspace:workspace ?? WorkspaceBinding(account:userID,generation:workspaceGeneration),record:record,root:capturedRoot,kind:kind,teamDraft:team)
     }
     func beginEditorSession(_ original: Record) throws -> TaskEditorSession {
         guard !accountRemovalBlocked,signedIn || localMode else {throw CancellationError()}
@@ -331,10 +333,16 @@ final class Store {
         editorSessions[session.id]=session
         return session
     }
-    /// Existing team writers remain disabled until their scoped adapters land.
-    func editorMayWrite(source: Record, proposed: Record) -> Bool {
+    /// Team editors require their captured scope; ordinary personal writers stay closed.
+    func editorMayWrite(source: Record, proposed: Record, teamDraft: TeamTaskEditorDraft? = nil) -> Bool {
         guard workspaceCacheReadable,!accountRemovalBlocked,!signingOut,signedIn || localMode else {return false}
         let cache=nativeConversationTeamCache
+        if let teamDraft {
+            guard let cache, !localMode, teamDraft.source.id == source.id,
+                  ["id", "user_id", "project_id", "task_generation"].allSatisfy({ teamDraft.source[$0] == source[$0] }),
+                  teamDraft.scope.origin == (try? backend.accountRemovalOrigin) else { return false }
+            return teamDraft.permits(current: record("tasks", id: teamDraft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+        }
         if cache?.knownTasks.contains(source.id)==true {return false}
         for project in Set([source.string("project_id"),proposed.string("project_id")]) where !project.isEmpty {
             guard record("projects",id:project) != nil, cache?.knownTeams[project]==nil else {return false}
@@ -641,7 +649,8 @@ final class Store {
         #if DEBUG
         // This local-only fixture must never read another app's stored cloud credentials.
         // Keep authenticated test variants and every normal app launch on the existing path.
-        if AccountRemovalNativeFixture.enabled { backend = AccountRemovalNativeFixture.backend() }
+        if TeamEditorNativeFixture.enabled { backend = TeamEditorNativeFixture.backend() }
+        else if AccountRemovalNativeFixture.enabled { backend = AccountRemovalNativeFixture.backend() }
         else if LocationHandoffNativeFixture.enabled { backend = LocationHandoffNativeFixture.backend() }
         else if let bundle = Bundle.main.bundleIdentifier,
            (bundle == "com.dbakp.taskfold.mac.p0grammaruitests" || bundle == "com.dbakp.taskfold.mac.p0widgethosts" || bundle.hasPrefix("com.dbakp.taskfold.mac.workflowtests")),
@@ -660,9 +669,15 @@ final class Store {
         }
         #endif
         localMode = UserDefaults.standard.bool(forKey: "localMode")
+        #if DEBUG
+        if TeamEditorNativeFixture.enabled { localMode = false }
+        #endif
         googleAvatarURL = backend.session?.user.googleAvatarURL
         signedIn = backend.session != nil || localMode
         if signedIn { load() } else { publishWidgetSnapshot() }
+        #if DEBUG
+        prepareTeamEditorNativeFixture()
+        #endif
         #if DEBUG
         if LocationHandoffNativeFixture.enabled {
             if !rows("tasks").contains(where: { $0.id == LocationHandoffNativeFixture.taskID }) { snapshot.tables["tasks"] = [LocationHandoffNativeFixture.task()] }
@@ -1370,7 +1385,7 @@ final class Store {
     }
     func sync() async {
         #if DEBUG
-        if LocationHandoffNativeFixture.enabled { return }
+        if TeamEditorNativeFixture.enabled || LocationHandoffNativeFixture.enabled { return }
         #endif
         guard workspaceCacheDecoded else {notice="Your saved workspace needs recovery before sync can continue. Its original file is kept.";return}
         consumeWidgetCompletions()
@@ -2834,6 +2849,63 @@ extension Store {
             try? FileManager.default.createDirectory(at: AccountRemovalNativeFixture.root, withIntermediateDirectories: true)
             try? JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]).write(to: AccountRemovalNativeFixture.result, options: .atomic)
         }
+    }
+}
+#endif
+
+#if DEBUG
+/// Reserved isolated bundle only. Every HTTP request is rejected locally;
+/// this exercises native Store persistence, not a hosted service acceptance.
+@MainActor enum TeamEditorNativeFixture {
+    static var enabled: Bool {
+        ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--team-editor-testing")
+    }
+    static let account = "ec240000-0000-4000-8000-000000000001"
+    static let taskID = "ec240000-0000-4000-8000-000000000002"
+    static let projectID = "ec240000-0000-4000-8000-000000000003"
+    static let teamID = "ec240000-0000-4000-8000-000000000004"
+    static func backend() -> Backend {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [TeamEditorNoNetwork.self]
+        let session = try! JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(account)\"}}".utf8))
+        return Backend(configuration: ["URL": "https://synthetic.example", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: session, persistSession: { _ in })
+    }
+    static func boundary(viewer: Bool = false) throws -> TeamWorkspaceBoundary {
+        try TeamWorkspaceBoundary([
+            "workspace_boundary_protocol": .number(1), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false),
+            "account": .string(account), "token": .string(String(repeating: viewer ? "b" : "a", count: 64)),
+            "teams": .array([.object(["id": .string(teamID), "state": .string("active"), "revision": .number(1), "access_revision": .number(viewer ? 2 : 1)])]),
+            "projects": .array([.object(["id": .string(projectID), "team_id": .string(teamID), "role": .string(viewer ? "viewer" : "editor"), "archived": .bool(false), "can_send_tasks": .bool(!viewer)])])
+        ], account: account, origin: "https://synthetic.example")
+    }
+}
+private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() { client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet)) }
+    override func stopLoading() {}
+}
+extension Store {
+    private func prepareTeamEditorNativeFixture() {
+        guard TeamEditorNativeFixture.enabled else { return }
+        dailyBackupsEnabled = false
+        guard ProcessInfo.processInfo.arguments.contains("--team-editor-reset") || record("tasks", id: TeamEditorNativeFixture.taskID) == nil else { return }
+        do {
+            var row = Record.task(user: "ec240000-0000-4000-8000-000000000099", project: TeamEditorNativeFixture.projectID)
+            row["id"] = .string(TeamEditorNativeFixture.taskID); row["title"] = .string("Team editor proof"); row["description"] = .string("Original team notes")
+            row["opaque_future"] = .object(["preserved": .bool(true)])
+            let project = Record(["id": .string(TeamEditorNativeFixture.projectID), "user_id": row["user_id"], "name": .string("Design workshop")])
+            snapshot = Snapshot(tables: ["tasks": [row], "projects": [project]])
+            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: nil, pending: [], tasks: [row])
+            try persist()
+        } catch { self.error = error.localizedDescription }
+    }
+    func revokeTeamEditorNativeFixture() {
+        guard TeamEditorNativeFixture.enabled else { return }
+        do {
+            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(viewer: true), previous: snapshot.teamWorkspace, pending: snapshot.pending, tasks: snapshot.tables["tasks"] ?? [])
+            try persist()
+        } catch { self.error = error.localizedDescription }
     }
 }
 #endif
