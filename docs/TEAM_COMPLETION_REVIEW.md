@@ -67,3 +67,7 @@ refresh/cache privacy, remaining collaboration adapters, and enabled team UI wit
 full native runtime/visual/accessibility acceptance. No generic overwrite/discard
 is offered as a substitute. Wider Px work and the user's release/provider/hardware
 deferrals retain their original scope.
+
+Follow-up: TEAM_COMPLETION_CANCELLATION.md adds durable cancellation for untouched
+projections. Explicit rebasing and reconciliation of authored dependent drafts
+remain in progress. The verification counts above describe the outcome-read stage.

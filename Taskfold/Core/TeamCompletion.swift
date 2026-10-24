@@ -142,6 +142,14 @@ struct TeamCompletion: Codable, Equatable, Sendable {
         guard let saved,case .object(let raw)=saved["team_completion_reply"],let receipt=try? receipt(raw,for:header) else { return false }
         var result=snapshot
         let later=result.pending.filter{$0.id != header.id}
+        let changedIDs=Set([source.id,proposed?.id,receipt.successor?.id].compactMap{$0})
+        // A later group that mixes these rows with other optimistic tasks needs
+        // its own review; this two-row receipt cannot reconstruct that cohort.
+        if later.contains(where:{ next in
+            if let batch=next.teamTaskBatch {return batch.items.contains{changedIDs.contains($0.recordID)}}
+            if let command=next.teamCompletion,!changedIDs.contains(command.source.id),let proposed=command.proposed {return changedIDs.contains(proposed.id)}
+            return false
+        }) {return false}
         func hasDraft(_ id:String)->Bool {later.contains{$0.table == "tasks" && $0.recordID == id}}
         // Offline completion → Undo → Redo may already project a later provisional
         // generation. It can be reconstructed from the complete durable queue.
@@ -178,7 +186,7 @@ struct TeamCompletion: Codable, Equatable, Sendable {
             result.tables["tasks"]=rows
         }
         result.pending.removeAll{$0.id == header.id}
-        for change in later where change.table == "tasks" {result.apply(change)}
+        for change in later where change.table == "tasks" && changedIDs.contains(change.recordID) {result.apply(change)}
         snapshot=result;return true
     }
 }
@@ -194,6 +202,7 @@ extension TeamCompletion {
         let successor: Record?
         let recorded: [String:JSON]?
         var isRecorded: Bool { recorded != nil }
+        let isCancelled: Bool
         init(_ reply:[String:JSON],for mutation:Mutation) throws {
             guard let command=mutation.teamCompletion else { throw TeamCompletion.invalid }
             let body=try command.body(for:mutation)
@@ -202,7 +211,7 @@ extension TeamCompletion {
             }
             guard reply["review_protocol"] == .number(1),reply["account"] == .string(command.scope.account),
                   reply["operation"] == .string(command.operation.rawValue),let role=TeamProjectRole(rawValue:reply["project_role"]?.text ?? ""),
-                  ["recorded","unrecorded"].contains(reply["state"]?.text ?? "") else { throw TeamCompletion.invalid }
+                  ["recorded","unrecorded","cancelled"].contains(reply["state"]?.text ?? "") else { throw TeamCompletion.invalid }
             func row(_ key:String,id:String?,generation:String?,project:String) throws -> Record? {
                 guard let value=reply[key] else { throw TeamCompletion.invalid }
                 if value == .null { return nil }
@@ -225,7 +234,58 @@ extension TeamCompletion {
                 guard reply["receipt"] == .null else {throw TeamCompletion.invalid}
                 recorded=nil;successor=try row("successor",id:command.proposed?.id,generation:nil,project:command.scope.project)
             }
-            self.mutation=mutation;self.role=role;self.task=task;self.series=series;self.successor=successor;self.recorded=recorded
+            self.mutation=mutation;self.role=role;self.task=task;self.series=series;self.successor=successor;self.recorded=recorded;self.isCancelled=reply["state"] == .string("cancelled")
+        }
+        /// This is only a preflight. An unrecorded read never authorizes dropping
+        /// the queue entry; the server must first return a durable cancellation.
+        func canRequestCancellation(_ snapshot:Snapshot) -> Bool {
+            !isRecorded && cancellationProjection(snapshot) != nil
+        }
+        func cancelling(_ snapshot:Snapshot) -> Snapshot? {
+            guard isCancelled else {return nil}
+            return cancellationProjection(snapshot)
+        }
+        private func cancellationProjection(_ snapshot:Snapshot) -> Snapshot? {
+            guard !isRecorded,snapshot.pending.first == mutation,let command=mutation.teamCompletion,
+                  command.proposed?.id != command.source.id else {return nil}
+            let ids=Set([command.source.id,command.proposed?.id].compactMap{$0?.lowercased()})
+            func references(_ value:JSON) -> Bool {
+                switch value {
+                case .string(let text):return ids.contains(where:{text.lowercased().contains($0)})
+                case .array(let rows):return rows.contains(where:references)
+                case .object(let fields):return fields.values.contains(where:references)
+                default:return false
+                }
+            }
+            // Include nested batch envelopes, completion/history references,
+            // pinned-note intents and independent comment/mention outboxes.
+            for later in snapshot.pending.dropFirst() {
+                guard let encoded=try? JSONEncoder().encode(later),let value=try? JSONDecoder().decode(JSON.self,from:encoded),!references(value) else {return nil}
+                if later.table == "projects",later.recordID.lowercased() == command.scope.project.lowercased() {return nil}
+            }
+            guard !(snapshot.tables[ConversationOutbox.table] ?? []).contains(where:{references(.object($0.fields))}) else {return nil}
+            var rows=snapshot.tables["tasks"] ?? []
+            if let local=rows.first(where:{$0.id == command.source.id}) {
+                guard local["task_generation"] == command.source["task_generation"] else {return nil}
+                let fields:[String:JSON] = ["completed":.bool(command.operation == .complete),"completed_at":command.operation == .complete ? .string(command.completedAt):.null]
+                var expected=TaskCompletionRevision.applying(fields,to:command.source)
+                if command.operation == .undo {expected["completion_version"] = .number(Double(command.source["completion_version"].integer+2))}
+                guard TeamCompletion.sameLocal(local,expected) || TeamCompletion.sameLocal(local,command.source) else {return nil}
+            }
+            if let proposed=command.proposed,let local=rows.first(where:{$0.id == proposed.id}) {
+                if local["task_generation"] == proposed["task_generation"] {
+                    guard TeamCompletion.sameLocal(local,proposed) else {return nil}
+                } else if local["task_generation"] != successor?["task_generation"] {return nil}
+                rows.removeAll{$0.id == proposed.id}
+            }
+            rows.removeAll{$0.id == command.source.id}
+            if let task {rows.append(task)}
+            if let successor {rows.removeAll{$0.id == successor.id};rows.append(successor)}
+            var result=snapshot;result.tables["tasks"]=rows;result.pending.removeFirst()
+            // Every remaining intent is independent of these identities. Keep
+            // its already optimistic row unchanged: replaying a complete/Undo
+            // cycle here would advance its completion counter a second time.
+            return result
         }
         func acknowledging(_ snapshot:Snapshot) -> Snapshot? {
             guard snapshot.pending.first == mutation,let recorded,let command=mutation.teamCompletion else {return nil}

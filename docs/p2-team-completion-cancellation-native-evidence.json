@@ -1,0 +1,52 @@
+{
+  "verifiedUTC": "2026-10-24T07:36:58.486590+00:00",
+  "platform": "mac",
+  "hostedDeployment": false,
+  "realDataChanged": false,
+  "nativeTeamUIEnabled": false,
+  "nativeRuntimeAcceptanceClaimed": false,
+  "visualAccessibilityAcceptanceClaimed": false,
+  "distributionAcceptanceClaimed": false,
+  "databaseChecks": 259,
+  "databaseReports": {
+    "p2-team-completion-cancellation-evidence.json": {
+      "sha256": "1067945da2161c0da9f4bb0648ae76fb0f960fda1ec5fe56a262fcab00faa224",
+      "checks": 61
+    },
+    "p2-team-completion-cancellation-regression.json": {
+      "sha256": "7eab9b83e050825aa1b3c72ee73286c1a0a13298032692e36232338f9d475238",
+      "checks": 131
+    },
+    "p2-team-completion-cancellation-review-regression.json": {
+      "sha256": "4d4de1900ae4d2c770bf2ec148fb06c04c55bcdc73be6d33501425ddcae73759",
+      "checks": 67
+    }
+  },
+  "selectedSwiftTests": 328,
+  "newCancellationProjectionTests": 13,
+  "includedBackupTests": 44,
+  "swiftFailures": 0,
+  "swiftSkipped": 0,
+  "swiftLogSHA256": "eeffe1407d07098812c477e6f2ec7bcec542fd77c8f0fc8cd2bb9ed863997238",
+  "unsignedDebugAppAndExtensionsBuild": true,
+  "appBuildLogSHA256": "6dfa2fc5f98a69dd4ab1a5a72902a82497f3fa4dd1228f6f646883724b529ce7",
+  "sources": {
+    "Taskfold/Core/TeamCompletion.swift": "ce86aec68b554ae95116c33472d80e236e86718ca45cc1a6a5acaf4b0f8ae95c",
+    "Taskfold/Core/Backend.swift": "7123144cafca646285100eb45106519afb0ce427b985016de3508151392484d8",
+    "Taskfold/Core/Store.swift": "b93260129035f62d1eb8675ee1485515a753252127067126169aa06193e22cb5",
+    "Taskfold/Collaboration.swift": "eeb4da2cb2c7b796ff928bdff53fe6c8f14a4f95772ab2f7e11e5baef5051fb8",
+    "TaskfoldTests/TeamCompletionTests.swift": "e9e325c1263acfd16d50fbfb8e8d11fb0ade451eac185c1b42bd52012afc37b4",
+    "TaskfoldTests/Fixtures/team-completion-cancellation-v1.json": "7ac8dbcacd1162f3858c8154957cd999e59c3efb5d77acfdd21d010f848c8738",
+    "Scripts/Database/team-completion-cancellation-schema.mjs": "a55618a0cc88a41c93ae56425efcf72e86789ac739d64209abf604bebf483f62",
+    "Scripts/Database/test-team-completion-cancellation.mjs": "e38ed0a178f8a8f3ee676f1b4fe23d7a08f5f59b463f3d579f5f62cafeba769d",
+    "Scripts/Database/test-team-completion-review.mjs": "5dc155337e601cf3331ab97f2823d0c146e4fdae2c50e5c67724a1e157a2bc05",
+    "Scripts/Database/test-team-completion.mjs": "dcbd5d4bb4b5b67c39afededc33d79b8a19f8b546a549e8e1f0edee438cad1b6",
+    "supabase/migrations/20261024072504_team_completion_cancellation.sql": "7148ee558cbdf952b9b44ecd1627a97293eb8748a2ef90495cbe74a051b4c058"
+  },
+  "cleanup": {
+    "temporaryAppLaunched": false,
+    "temporaryBuildRemoved": true,
+    "temporaryMacRegistrationUnregistered": true,
+    "removedBuildBytes": 1145316727
+  }
+}

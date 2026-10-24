@@ -1,4 +1,5 @@
 import XCTest
+import CryptoKit
 @testable import TaskfoldCore
 
 private final class CompletionHTTP: URLProtocol, @unchecked Sendable {
@@ -256,6 +257,157 @@ final class TeamCompletionTests: XCTestCase {
         let local=Snapshot(tables:["tasks":[review.task!],"projects":[Record(["id":.string(header.teamCompletion!.scope.project)])]],pending:[header])
         let next=try XCTUnwrap(review.acknowledging(local));XCTAssertTrue(next.pending.isEmpty)
         XCTAssertEqual(next.tables["tasks"],local.tables["tasks"])
+    }
+
+    private func cancellationFixture(recorded:Bool=false,undo:Bool=false) throws -> (Mutation,[String:JSON],[String:JSON]) {
+        let url=try XCTUnwrap(Bundle.module.url(forResource:"team-completion-cancellation-v1",withExtension:"json",subdirectory:"Fixtures"))
+        let root=try JSONDecoder().decode([String:JSON].self,from:Data(contentsOf:url)),body=root[undo ? "undo_body":recorded ? "recorded_body":"body"]!.object
+        let source=Record(body["record"]!.object),id=try XCTUnwrap(UUID(uuidString:body["request_id"]!.text))
+        let scope=TeamTaskEditScope(account:root["account"]!.text,origin:origin,team:body["team_id"]!.text,project:body["project_id"]!.text)
+        let forecast=try TeamCompletion.complete(source,tasks:[source],scope:scope,at:TaskPlanning.instant(body["completed_at"]!.text)!,zone:body["input_zone"]!.text,id:undo ? UUID(uuidString:body["undoes"]!.text)!:id)
+        var proposed=forecast.teamCompletion!.proposed;proposed?["task_generation"]=body["next_generation"]!
+        let command=TeamCompletion(scope:scope,operation:undo ? .undo:.complete,source:source,completedAt:body["completed_at"]!.text,inputZone:body["input_zone"]!.text,seriesID:body["series_id"]!.text,seriesGeneration:body["series_generation"]!.text,seriesProject:body["series_project_id"]!.text,nextGeneration:body["next_generation"]!.text,proposed:proposed,related:undo ? UUID(uuidString:body["undoes"]!.text):nil)
+        return(TeamCompletion.header(command,id:id),body,root[undo ? "undo_cancelled":recorded ? "recorded":"cancelled"]!.object)
+    }
+    private func projected(_ header:Mutation)->Snapshot {
+        var local=snapshot(header);local.apply(header);local.pending=[header];return local
+    }
+    func testActualSQLCancellationRestoresSyncedRowsAndOnlyRemovesCertifiedCommand() throws {
+        let(header,body,reply)=try cancellationFixture(),review=try TeamCompletion.Review(reply,for:header)
+        XCTAssertEqual(try header.teamCompletion!.body(for:header),body)
+        var local=projected(header)
+        let unrelated=Mutation(table:"labels",recordID:UUID().uuidString.lowercased(),method:"POST",fields:["name":.string("Independent work")])
+        local.apply(unrelated);local.pending.append(unrelated)
+        let result=try XCTUnwrap(review.cancelling(local))
+        XCTAssertTrue(review.isCancelled);XCTAssertFalse(review.isRecorded);XCTAssertNil(review.acknowledging(local))
+        XCTAssertEqual(result.pending,[unrelated]);XCTAssertEqual(result.tables["tasks"],[review.task!]);XCTAssertEqual(result.tables["labels"],local.tables["labels"])
+    }
+    func testUnrecordedObservationDoesNotAuthorizeCancellationProjection() throws {
+        let(header,_,original)=try cancellationFixture();var reply=original;reply["state"] = .string("unrecorded")
+        let review=try TeamCompletion.Review(reply,for:header),local=projected(header)
+        XCTAssertTrue(review.canRequestCancellation(local));XCTAssertNil(review.cancelling(local));XCTAssertEqual(local.pending,[header])
+    }
+    func testCancelledActionRejectsStaleQueueOrMalformedAuthority() throws {
+        let(header,_,reply)=try cancellationFixture(),review=try TeamCompletion.Review(reply,for:header)
+        var local=projected(header);local.pending=[];XCTAssertNil(review.cancelling(local))
+        local.pending=[header];local.pending[0].id=UUID();XCTAssertNil(review.cancelling(local))
+        for key in ["account","team_id","project_id","request_id","task_generation"] {
+            var bad=reply;bad[key] = .string(UUID().uuidString.lowercased());XCTAssertThrowsError(try TeamCompletion.Review(bad,for:header))
+        }
+        var bad=reply;bad["receipt"] = .object([:]);XCTAssertThrowsError(try TeamCompletion.Review(bad,for:header))
+    }
+    func testCancellationKeepsAuthoredSourceAndProvisionalEditsForSeparateReview() throws {
+        let(header,_,reply)=try cancellationFixture(),review=try TeamCompletion.Review(reply,for:header)
+        for id in [header.recordID,header.teamCompletion!.proposed!.id] {
+            var local=projected(header)
+            let edit=Mutation(table:"tasks",recordID:id,method:"PATCH",fields:["title":.string("Authored draft")])
+            local.apply(edit);local.pending.append(edit);let before=local
+            XCTAssertFalse(review.canRequestCancellation(local));XCTAssertNil(review.cancelling(local));XCTAssertEqual(local,before)
+            local.pending.removeLast() // Even an unexplained local delta cannot be discarded.
+            XCTAssertNil(review.cancelling(local))
+        }
+    }
+    func testCancellationFindsDependenciesInsideBatchesHistoryAndPinnedNotes() throws {
+        let(header,_,reply)=try cancellationFixture(),review=try TeamCompletion.Review(reply,for:header),command=header.teamCompletion!
+        let deletion=Mutation(table:"tasks",recordID:command.proposed!.id,method:"DELETE",fields:[:])
+        let batch=TeamTaskBatch(account:command.scope.account,origin:origin,team:command.scope.team,operation:.delete,restores:nil,items:[deletion])
+        let pin=Mutation(table:"view_orders",recordID:"notes",method:"PATCH",fields:["ids":.array([.string("task:"+command.proposed!.id)])])
+        for dependent in [TeamTaskBatch.header(batch),try command.inverse(of:header),pin] {
+            var local=projected(header);local.pending.append(dependent)
+            XCTAssertNil(review.cancelling(local));XCTAssertEqual(local.pending.count,2)
+        }
+    }
+    func testCancellationProtectsSeparateCommentDraftOutbox() throws {
+        let(header,_,reply)=try cancellationFixture(),review=try TeamCompletion.Review(reply,for:header),command=header.teamCompletion!
+        var local=projected(header)
+        let intent=try SharedCommentChange(account:command.scope.account,taskID:command.proposed!.id,taskGeneration:command.nextGeneration,projectID:command.scope.project,body:"Keep this discussion draft")
+        try ConversationOutbox.enqueue(intent.record,into:&local);let before=local
+        XCTAssertNil(review.cancelling(local));XCTAssertEqual(local,before)
+    }
+    func testCancellationRetainsExistingServerOccurrenceAndNeverRewindsGeneration() throws {
+        let(header,_,original)=try cancellationFixture();var reply=original
+        var existing=header.teamCompletion!.proposed!;existing["task_generation"] = .string(UUID().uuidString.lowercased());existing["title"] = .string("Existing shared occurrence")
+        reply["successor"] = .object(existing.fields)
+        let review=try TeamCompletion.Review(reply,for:header)
+        var local=projected(header);local.tables["tasks"]?.removeAll{$0.id == existing.id};local.tables["tasks"]?.append(existing)
+        let result=try XCTUnwrap(review.cancelling(local));XCTAssertEqual(result.tables["tasks"]?.first{$0.id == existing.id},existing)
+        local.tables["tasks"]?[0]["task_generation"] = .string(UUID().uuidString.lowercased())
+        XCTAssertNil(review.cancelling(local))
+    }
+    func testRecordedWinnerCannotBeDiscardedAsCancellation() throws {
+        let(header,_,reply)=try cancellationFixture(recorded:true),review=try TeamCompletion.Review(reply,for:header),local=projected(header)
+        XCTAssertTrue(review.isRecorded);XCTAssertFalse(review.isCancelled)
+        XCTAssertFalse(review.canRequestCancellation(local));XCTAssertNil(review.cancelling(local));XCTAssertNotNil(review.acknowledging(local))
+    }
+    func testRecoveryVaultPreservesEntireOriginalCompletionBeforeCancellation() throws {
+        let(header,_,reply)=try cancellationFixture(),review=try TeamCompletion.Review(reply,for:header)
+        var local=projected(header);local.tables["projects"]=[Record(["id":.string(header.teamCompletion!.scope.project),"name":.string("Synthetic review project"),"user_id":.string(header.teamCompletion!.scope.account)])]
+        let directory=FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-cancel-vault-"+UUID().uuidString,isDirectory:true)
+        defer{try? FileManager.default.removeItem(at:directory)}
+        let key=SymmetricKey(size:.bits256),vault=BackupVault(directory:directory,account:header.teamCompletion!.scope.account,key:{key})
+        let entry=try vault.save(local,kind:"Before sync review"),loaded=try vault.load(entry)
+        XCTAssertEqual(loaded.snapshot,local);XCTAssertEqual(loaded.snapshot.pending,[header]);XCTAssertNotNil(review.cancelling(local))
+        XCTAssertFalse(String(decoding:try Data(contentsOf:vault.file(entry)),as:UTF8.self).contains(header.teamCompletion!.source.title))
+    }
+    @MainActor func testCancellationTransportRequiresDurableOutcomeAndRetriesSameBody() async throws {
+        let(header,body,reply)=try cancellationFixture(),api=try backend(header.teamCompletion!.scope.account)
+        var requests:[URLRequest]=[]
+        CompletionHTTP.handler={request,peer in requests.append(request);peer.finish(try! JSONEncoder().encode(reply))};defer{CompletionHTTP.handler=nil}
+        let first=try await api.cancelTeamCompletion(header,expectedAccount:header.teamCompletion!.scope.account)
+        let again=try await api.cancelTeamCompletion(header,expectedAccount:header.teamCompletion!.scope.account)
+        XCTAssertEqual(first,again);XCTAssertTrue(first.isCancelled);XCTAssertEqual(requests.count,2)
+        for request in requests {
+            XCTAssertEqual(request.url?.path,"/rest/v1/rpc/taskfold_cancel_team_completion");XCTAssertEqual(request.timeoutInterval,25);XCTAssertFalse(request.httpShouldHandleCookies)
+            XCTAssertEqual(request.value(forHTTPHeaderField:"Cache-Control"),"no-store")
+            XCTAssertEqual(try JSONDecoder().decode([String:JSON].self,from:XCTUnwrap(request.httpBody))["_body"],.object(body))
+        }
+        var absent=reply;absent["state"] = .string("unrecorded")
+        CompletionHTTP.handler={_,peer in peer.finish(try! JSONEncoder().encode(absent))}
+        do{_=try await api.cancelTeamCompletion(header,expectedAccount:header.teamCompletion!.scope.account);XCTFail("Absence treated as cancellation")}catch{}
+        CompletionHTTP.handler={_,peer in peer.finish(Data(repeating:32,count:1_000_001))}
+        do{_=try await api.cancelTeamCompletion(header,expectedAccount:header.teamCompletion!.scope.account);XCTFail("Oversized certificate")}catch{XCTAssertTrue(error.localizedDescription.contains("too large"))}
+        do{_=try await api.cancelTeamCompletion(header,expectedAccount:UUID().uuidString.lowercased());XCTFail("Wrong account cancellation")}catch{XCTAssertTrue(error is CancellationError)}
+    }
+
+    func testCancelledUndoRestoresCompletedRootAndExistingNextOccurrence() throws {
+        let(header,_,reply)=try cancellationFixture(undo:true),review=try TeamCompletion.Review(reply,for:header),command=header.teamCompletion!
+        var completed=command.source;completed["completed"] = .bool(true);completed["completed_at"] = .string(command.completedAt);completed["completion_version"] = .number(Double(command.source["completion_version"].integer+1))
+        var local=Snapshot(tables:["projects":[Record(["id":.string(command.scope.project)])],"tasks":[completed,command.proposed!]],pending:[header])
+        XCTAssertTrue(command.apply(to:&local,header:header));XCTAssertFalse(local.tables["tasks"]!.first!.completed)
+        let result=try XCTUnwrap(review.cancelling(local));XCTAssertTrue(result.pending.isEmpty)
+        XCTAssertTrue(result.tables["tasks"]!.first{$0.id == command.source.id}!.completed)
+        XCTAssertEqual(result.tables["tasks"]!.first{$0.id == command.proposed!.id},review.successor)
+    }
+
+    func testReviewResolutionDoesNotReplayUnrelatedCompletionCycles() throws {
+        for recorded in [false,true] {
+            let(header,_,reply)=try cancellationFixture(recorded:recorded),review=try TeamCompletion.Review(reply,for:header)
+            var local=projected(header),other=header.teamCompletion!.source
+            other["id"] = .string(UUID().uuidString.lowercased());other["task_generation"] = .string(UUID().uuidString.lowercased())
+            other["is_recurring"] = .bool(false);other["recurrence_pattern"] = .null
+            local.tables["tasks"]?.append(other)
+            let first=TaskCompletionRevision.capturing(Mutation(table:"tasks",recordID:other.id,method:"PATCH",fields:["completed":.bool(true),"completed_at":.string("2026-10-24T14:00:00Z")]),existing:other)
+            local.apply(first);local.pending.append(first)
+            let middle=local.tables["tasks"]!.first{$0.id == other.id}!
+            let second=TaskCompletionRevision.capturing(Mutation(table:"tasks",recordID:other.id,method:"PATCH",fields:["completed":.bool(false),"completed_at":.null]),existing:middle)
+            local.apply(second);local.pending.append(second)
+            let expected=local.tables["tasks"]!.first{$0.id == other.id}!
+            XCTAssertEqual(expected["completion_version"],.number(2))
+            let resolved=try XCTUnwrap(recorded ? review.acknowledging(local):review.cancelling(local))
+            XCTAssertEqual(resolved.tables["tasks"]!.first{$0.id == other.id},expected)
+            XCTAssertEqual(resolved.pending,[first,second])
+        }
+    }
+
+    func testRecordedOutcomeKeepsLaterAtomicDeletionCohortWaitingTogether() throws {
+        let(header,_,reply)=try cancellationFixture(recorded:true),review=try TeamCompletion.Review(reply,for:header),command=header.teamCompletion!
+        let item=Mutation(table:"tasks",recordID:command.proposed!.id,method:"DELETE",fields:[:],baseline:command.proposed!.fields,teamTaskScope:command.scope)
+        let batch=TeamTaskBatch(account:command.scope.account,origin:origin,team:command.scope.team,operation:.delete,restores:nil,items:[item])
+        let group=TeamTaskBatch.header(batch)
+        var local=projected(header);XCTAssertTrue(batch.apply(to:&local,header:group));local.pending.append(group)
+        let exact=local
+        XCTAssertNil(review.acknowledging(local));XCTAssertEqual(local,exact)
+        XCTAssertEqual(local.pending,[header,group])
     }
 
 }

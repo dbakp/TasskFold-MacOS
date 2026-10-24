@@ -1364,6 +1364,31 @@ final class Store {
         }
         #endif
     }
+    @discardableResult func cancelTeamCompletionReview(_ expected:TeamCompletion.Review) async -> Bool {
+        let generation=accountGeneration,account=userID,before=snapshot
+        guard syncConflict?.completionReview == expected,expected.canRequestCancellation(before),
+              let command=expected.mutation.teamCompletion,command.scope.account == account,
+              command.scope.origin == (try? backend.accountRemovalOrigin),!signingOut else {return false}
+        do {
+            _=try await makeRecoveryBackup(kind:"Before sync review")
+            guard generation == accountGeneration,snapshot == before,syncConflict?.completionReview == expected else {return false}
+            let review=try await backend.cancelTeamCompletion(expected.mutation,expectedAccount:account)
+            guard generation == accountGeneration,syncConflict?.completionReview == expected,snapshot.pending.first == expected.mutation else {return false}
+            syncConflict=SyncConflict(mutation:expected.mutation,remote:review.task ?? command.source,completionReview:review)
+            guard review.isCancelled,let next=review.cancelling(snapshot) else {
+                notice=review.isRecorded ? "This action had already synced. Review its result to continue." : "Your action was cancelled. Additional changes remain saved for review."
+                return false
+            }
+            let old=snapshot;snapshot=next
+            do {try persist()} catch {snapshot=old;throw error}
+            undoStack=[];redoStack=[];syncConflict=nil;notice="Synced task kept. A recovery copy is saved."
+            Task {await sync()};return true
+        } catch {
+            guard generation == accountGeneration else {return false}
+            self.error=SyncStatus.failureMessage(error);return false
+        }
+    }
+
     @discardableResult func refreshTeamCompletionReview(_ expected:TeamCompletion.Review) async -> Bool {
         let generation=accountGeneration,account=userID
         guard syncConflict?.completionReview == expected,snapshot.pending.first == expected.mutation else {return false}
@@ -1382,6 +1407,7 @@ final class Store {
         guard syncConflict?.completionReview == review,snapshot.pending.first == review.mutation,
               let command=review.mutation.teamCompletion,command.scope.account == userID,
               command.scope.origin == (try? backend.accountRemovalOrigin) else {return false}
+        guard !review.isCancelled else {return false} // Cancelled projections use the recovery-backed async path.
         if review.isRecorded {
             guard let next=review.acknowledging(snapshot) else {
                 error="Your additional task changes are still saved. Keep this review for now.";return false

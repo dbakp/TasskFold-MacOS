@@ -4086,3 +4086,25 @@ Next: explicit rejected-action cancellation/rebase and provisional-draft
 reconciliation, current-role workspace refresh/privacy, remaining team adapters,
 premium organization UI and full native acceptance. Full Px scope and existing
 user deferrals remain unchanged.
+
+
+## Durable completion cancellation — 24 October, rank 6 in progress
+
+Use synced task now cancels an unrecorded completion/Undo through its durable nonce
+before removing an untouched local projection. The original workspace and queue
+are saved in encrypted Recovery first. A racing recorded completion is reviewed;
+lost responses, failures, permission changes and newly authored dependent work keep
+the appropriate queue/drafts. Unrelated optimistic completion cycles are no longer
+replayed twice, and related later atomic batches stay together for review.
+
+Each repo passes 259 database checks (61 cancellation, 131 completion and 67 review
+regressions), 328 selected Swift tests (13 new; includes 44 backup tests), and
+unsigned Debug app/extension builds. Owned containers/builds and temporary Mac
+registration are removed. See TEAM_COMPLETION_CANCELLATION.md and cancellation
+evidence. Team editing stays disabled; no hosted/runtime/visual/distribution
+acceptance is claimed.
+
+Next: explicit rejected-action rebasing and edited-provisional-draft reconciliation,
+current-role workspace refresh/privacy, remaining team adapters, premium native
+organization UI and complete native acceptance. Full Px scope and the user's
+release/provider/hardware deferrals remain intact.
