@@ -252,6 +252,7 @@ enum TaskEdit {
 struct SyncConflict: Identifiable {
     var mutation: Mutation
     var remote: Record
+    var completionReview: TeamCompletion.Review? = nil
     var id: UUID { mutation.id }
 
     /// Resolve only the edit that was reviewed, then replay later offline work.

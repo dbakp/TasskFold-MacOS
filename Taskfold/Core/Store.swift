@@ -1277,6 +1277,14 @@ final class Store {
             if generation == accountGeneration {
                 syncSignInWorkspace = error is AccountSessionAuthorizationRequired ? WorkspaceBinding(account:account,generation:generation) : nil
                 notice = SyncStatus.failureMessage(error)
+                if let mutation=sending,mutation.teamCompletion != nil,
+                   !(error is CancellationError),!(error is AccountSessionAuthorizationRequired),
+                   let review=try? await backend.reviewTeamCompletion(mutation,expectedAccount:account),
+                   generation == accountGeneration,snapshot.pending.first == mutation {
+                    syncConflict=SyncConflict(mutation:mutation,remote:review.task ?? mutation.teamCompletion!.source,completionReview:review)
+                    notice="Your completion is saved. Review its sync status to continue."
+                    return
+                }
                 if error.localizedDescription.contains("TASKFOLD_FOCUS_CONFLICT:"), let mutation = sending,
                    mutation.table == FocusSessionChange.table,
                    let data = try? await backend.request("/rest/v1/focus_sessions?id=eq.current&select=*"),
@@ -1356,6 +1364,37 @@ final class Store {
         }
         #endif
     }
+    @discardableResult func refreshTeamCompletionReview(_ expected:TeamCompletion.Review) async -> Bool {
+        let generation=accountGeneration,account=userID
+        guard syncConflict?.completionReview == expected,snapshot.pending.first == expected.mutation else {return false}
+        do {
+            let review=try await backend.reviewTeamCompletion(expected.mutation,expectedAccount:account)
+            guard generation == accountGeneration,syncConflict?.completionReview == expected,snapshot.pending.first == expected.mutation else {return false}
+            syncConflict=SyncConflict(mutation:expected.mutation,remote:review.task ?? expected.mutation.teamCompletion!.source,completionReview:review)
+            return true
+        } catch {
+            guard generation == accountGeneration else {return false}
+            if syncConflict?.completionReview == expected {syncConflict=nil}
+            notice=SyncStatus.failureMessage(error);self.error=notice;return false
+        }
+    }
+    @discardableResult func continueTeamCompletionReview(_ review:TeamCompletion.Review) -> Bool {
+        guard syncConflict?.completionReview == review,snapshot.pending.first == review.mutation,
+              let command=review.mutation.teamCompletion,command.scope.account == userID,
+              command.scope.origin == (try? backend.accountRemovalOrigin) else {return false}
+        if review.isRecorded {
+            guard let next=review.acknowledging(snapshot) else {
+                error="Your additional task changes are still saved. Keep this review for now.";return false
+            }
+            let old=snapshot;snapshot=next
+            do {try persist()} catch {snapshot=old;self.error=error.localizedDescription;return false}
+            undoStack=[];redoStack=[]
+        }
+        // An unrecorded observation never discards or changes the command. A
+        // request still in flight and this retry use exactly the same nonce.
+        syncConflict=nil;notice=nil;Task {await sync()};return true
+    }
+
     /// Resolution is persisted before resuming. A second simultaneous edit can still conflict safely.
     @discardableResult func resolveConflict(id: UUID, keepLocal: Bool) -> Bool {
         guard let conflict = syncConflict, conflict.id == id,

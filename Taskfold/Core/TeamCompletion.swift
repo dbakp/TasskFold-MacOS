@@ -182,3 +182,57 @@ struct TeamCompletion: Codable, Equatable, Sendable {
         snapshot=result;return true
     }
 }
+
+extension TeamCompletion {
+    /// Read-only observation, never a certificate that an unrecorded command can
+    /// be discarded: another request can still be in flight after the read.
+    struct Review: Equatable, Sendable {
+        let mutation: Mutation
+        let role: TeamProjectRole
+        let task: Record?
+        let series: Record?
+        let successor: Record?
+        let recorded: [String:JSON]?
+        var isRecorded: Bool { recorded != nil }
+        init(_ reply:[String:JSON],for mutation:Mutation) throws {
+            guard let command=mutation.teamCompletion else { throw TeamCompletion.invalid }
+            let body=try command.body(for:mutation)
+            for key in ["team_id","project_id","task_id","task_generation","request_id","series_id","series_generation","series_project_id","planned_next_id"] {
+                guard reply[key] == body[key] else { throw TeamCompletion.invalid }
+            }
+            guard reply["review_protocol"] == .number(1),reply["account"] == .string(command.scope.account),
+                  reply["operation"] == .string(command.operation.rawValue),let role=TeamProjectRole(rawValue:reply["project_role"]?.text ?? ""),
+                  ["recorded","unrecorded"].contains(reply["state"]?.text ?? "") else { throw TeamCompletion.invalid }
+            func row(_ key:String,id:String?,generation:String?,project:String) throws -> Record? {
+                guard let value=reply[key] else { throw TeamCompletion.invalid }
+                if value == .null { return nil }
+                guard let id,case .object(let fields)=value,fields["id"] == .string(id),fields["project_id"] == .string(project),
+                      TeamProjectValue.id(fields["task_generation"]?.text ?? ""),generation == nil || fields["task_generation"] == .string(generation!),
+                      TeamProjectValue.id(fields["user_id"]?.text ?? ""),case .string?=fields["title"],case .bool?=fields["completed"],
+                      case .number(let v)?=fields["completion_version"],v.isFinite,v>=0,v<=9_007_199_254_740_991,v.rounded(.down)==v else {throw TeamCompletion.invalid}
+                return Record(fields)
+            }
+            let task=try row("task",id:command.source.id,generation:command.source.string("task_generation"),project:command.scope.project)
+            let series=try row("series",id:command.seriesID,generation:command.seriesGeneration,project:command.seriesProject)
+            let recorded:[String:JSON]?
+            let successor:Record?
+            if reply["state"] == .string("recorded") {
+                guard case .object(let receipt)?=reply["receipt"],receipt["replayed"] == .bool(true) else {throw TeamCompletion.invalid}
+                let parsed=try command.receipt(receipt,for:mutation)
+                guard receipt["task"] == reply["task"],receipt["successor"] == reply["successor"] else {throw TeamCompletion.invalid}
+                recorded=receipt;successor=parsed.successor
+            } else {
+                guard reply["receipt"] == .null else {throw TeamCompletion.invalid}
+                recorded=nil;successor=try row("successor",id:command.proposed?.id,generation:nil,project:command.scope.project)
+            }
+            self.mutation=mutation;self.role=role;self.task=task;self.series=series;self.successor=successor;self.recorded=recorded
+        }
+        func acknowledging(_ snapshot:Snapshot) -> Snapshot? {
+            guard snapshot.pending.first == mutation,let recorded,let command=mutation.teamCompletion else {return nil}
+            var result=snapshot
+            let saved=Record(["id":.string(mutation.recordID),"team_completion_reply":.object(recorded)])
+            guard command.acknowledge(saved,header:mutation,snapshot:&result) else {return nil}
+            return result
+        }
+    }
+}

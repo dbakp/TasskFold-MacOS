@@ -157,6 +157,10 @@ struct ConflictReview: View {
         return (baseline[key] ?? .null) != conflict.remote[key]
     }
     var body: some View {
+        if let review=conflict.completionReview { TeamCompletionReviewContent(review:review) }
+        else { ordinaryReview }
+    }
+    private var ordinaryReview: some View {
         NavigationStack {
             Form {
                 Section {
@@ -257,5 +261,75 @@ struct ConflictReview: View {
         case .object(let fields):
             return fields.keys.sorted().filter { !["id", "authorId", "data"].contains($0) }.map { "\(fieldName($0)): \(summary(fields[$0]!))" }.joined(separator: " · ")
         }
+    }
+}
+
+
+/// Recorded outcomes can be acknowledged without repeating the action. A read
+/// that finds no receipt permits only an exact retry, never a destructive discard.
+private struct TeamCompletionReviewContent: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let review: TeamCompletion.Review
+    @State private var checking=false
+    @State private var message:String?
+    private var current:Bool {store.syncConflict?.completionReview == review && store.snapshot.pending.first == review.mutation}
+    private var canContinue:Bool {current && (!review.isRecorded || review.acknowledging(store.snapshot) != nil)}
+    private var command:TeamCompletion {review.mutation.teamCompletion!}
+    var body:some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Label("Your work is saved",systemImage:"checkmark.icloud").font(.headline).foregroundStyle(Color.taskfold)
+                    Text(command.source.title).font(.headline)
+                    Text(review.isRecorded ? "This action was recorded. Check the current task below before continuing sync." : "This action has no recorded result yet. You can check again or retry the same saved action.").foregroundStyle(.secondary)
+                }
+                Section("Your saved action") {
+                    Label(command.operation == .complete ? "Complete task" : "Reopen task",systemImage:command.operation == .complete ? "checkmark.circle":"arrow.uturn.backward.circle")
+                    if let date=TaskPlanning.instant(command.completedAt) {LabeledContent("Completion time",value:date.formatted(date:.abbreviated,time:.shortened))}
+                }
+                Section("Current synced task") { taskSummary(review.task,missing:"The original task is no longer available here.") }
+                if command.proposed != nil {
+                    Section("Current synced next occurrence") {taskSummary(review.successor,missing:"No next occurrence is available in this review.")}
+                    if let local=store.record("tasks",id:command.proposed!.id),local["task_generation"] == command.proposed?["task_generation"],!TeamCompletion.sameLocal(local,command.proposed!) {
+                        Section("Your saved next occurrence") {taskSummary(local,missing:"")}
+                    }
+                }
+                Section {
+                    if review.isRecorded && !canContinue {Text("Additional task changes are saved on this device. They need a separate review before sync can resume.").foregroundStyle(.secondary)}
+                    if !review.isRecorded {Text("Retry keeps your original action and completion time. If the task changed, your work stays saved for review.").foregroundStyle(.secondary)}
+                    if review.role == .viewer {Text("You currently have view access to this project.").foregroundStyle(.secondary)}
+                }
+            }.formStyle(.grouped)
+            .navigationTitle("Review completion")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .safeAreaInset(edge:.bottom) {
+                VStack(spacing:10) {
+                    Divider()
+                    Button(review.isRecorded ? "Continue sync":"Retry saved action") {
+                        if store.continueTeamCompletionReview(review) {dismiss()}
+                        else {message=store.error ?? "Reopen the current sync review.";store.error=nil}
+                    }.buttonStyle(.borderedProminent).disabled(!canContinue || checking || (!review.isRecorded && review.role == .viewer)).accessibilityIdentifier("continueTeamCompletionReview")
+                    Button("Check again") {checking=true;Task {let success=await store.refreshTeamCompletionReview(review);checking=false;if !success {message=store.error ?? "Reopen the current sync review.";store.error=nil}}}
+                        .buttonStyle(.bordered).disabled(!current || checking).accessibilityIdentifier("refreshTeamCompletionReview")
+                    Button("Later") {dismiss()}.buttonStyle(.plain).keyboardShortcut(.cancelAction).frame(minHeight:44)
+                }.controlSize(.large).padding([.horizontal,.bottom]).frame(maxWidth:.infinity).background(.regularMaterial)
+            }
+            .alert("Review could not finish",isPresented:Binding(get:{message != nil},set:{if !$0 {message=nil}})) {Button("OK"){message=nil}} message:{Text(message ?? "")}
+        }
+        #if os(macOS)
+        .frame(width:620,height:680)
+        #endif
+        .onChange(of:store.workspaceGeneration){_,_ in dismiss()}
+    }
+    @ViewBuilder private func taskSummary(_ task:Record?,missing:String) -> some View {
+        if let task {
+            Text(task.title).font(.headline).textSelection(.enabled)
+            Text(task.completed ? "Completed":"Open").foregroundStyle(.secondary)
+            if !task.string("description").isEmpty {Text(task.string("description")).textSelection(.enabled)}
+            if !task.string("due_date").isEmpty {LabeledContent("Planned date",value:task.string("due_date"))}
+        } else {Text(missing).foregroundStyle(.secondary)}
     }
 }

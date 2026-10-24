@@ -167,4 +167,95 @@ final class TeamCompletionTests: XCTestCase {
         XCTAssertThrowsError(try TeamCompletion.complete(command.source,tasks:[command.source],scope:command.scope,at:Date(),zone:"Not/AZone"))
     }
 
+    private func reviewFixture(recorded:Bool=true,undo:Bool=false) throws -> (Mutation,[String:JSON],[String:JSON]) {
+        let url=try XCTUnwrap(Bundle.module.url(forResource:"team-completion-review-v1",withExtension:"json",subdirectory:"Fixtures"))
+        let root=try JSONDecoder().decode([String:JSON].self,from:Data(contentsOf:url)),body=root[undo ? "undo_body":"body"]!.object
+        let source=Record(body["record"]!.object),id=try XCTUnwrap(UUID(uuidString:body["request_id"]!.text))
+        let scope=TeamTaskEditScope(account:root["account"]!.text,origin:origin,team:body["team_id"]!.text,project:body["project_id"]!.text)
+        let forecast=try TeamCompletion.complete(source,tasks:[source],scope:scope,at:TaskPlanning.instant(body["completed_at"]!.text)!,zone:body["input_zone"]!.text,id:undo ? UUID(uuidString:body["undoes"]!.text)!:id)
+        var proposed=forecast.teamCompletion!.proposed;proposed?["task_generation"]=body["next_generation"]!
+        let command=TeamCompletion(scope:scope,operation:undo ? .undo:.complete,source:source,completedAt:body["completed_at"]!.text,inputZone:body["input_zone"]!.text,seriesID:body["series_id"]!.text,seriesGeneration:body["series_generation"]!.text,seriesProject:body["series_project_id"]!.text,nextGeneration:body["next_generation"]!.text,proposed:proposed,related:undo ? UUID(uuidString:body["undoes"]!.text):nil)
+        return(TeamCompletion.header(command,id:id),body,root[undo ? "undo_review":recorded ? "recorded":"unrecorded"]!.object)
+    }
+    func testActualSQLReviewAndNativeEnvelopeAgree() throws {
+        let(header,body,reply)=try reviewFixture(),review=try TeamCompletion.Review(reply,for:header)
+        XCTAssertEqual(try header.teamCompletion!.body(for:header),body)
+        XCTAssertTrue(review.isRecorded);XCTAssertTrue(review.task!.completed);XCTAssertEqual(review.role,.editor)
+        XCTAssertEqual(review.successor?.id,header.teamCompletion!.proposed?.id)
+    }
+    func testRecordedReviewAcknowledgesSavedOutcomeWithoutNewCommand() throws {
+        let(header,_,reply)=try reviewFixture(),review=try TeamCompletion.Review(reply,for:header)
+        var local=snapshot(header);local.apply(header);local.pending=[header]
+        let next=try XCTUnwrap(review.acknowledging(local))
+        XCTAssertTrue(next.pending.isEmpty);XCTAssertEqual(next.tables["tasks"]?.first{$0.id == header.recordID},review.task)
+        XCTAssertEqual(next.tables["tasks"]?.first{$0.id == review.successor?.id},review.successor)
+    }
+    func testUnrecordedReadCannotDiscardOrAcknowledgeInFlightCommand() throws {
+        let(header,_,reply)=try reviewFixture(recorded:false),review=try TeamCompletion.Review(reply,for:header)
+        var local=snapshot(header);local.apply(header);local.pending=[header];let original=local
+        XCTAssertFalse(review.isRecorded);XCTAssertNil(review.acknowledging(local));XCTAssertEqual(local,original)
+    }
+    func testReviewMustMatchExactFrozenAuthorityAndRequest() throws {
+        let(header,_,reply)=try reviewFixture()
+        for key in ["account","team_id","project_id","task_id","task_generation","request_id","series_id","series_generation","series_project_id","planned_next_id"] {
+            var wrong=reply;wrong[key] = .string(UUID().uuidString.lowercased());XCTAssertThrowsError(try TeamCompletion.Review(wrong,for:header),key)
+        }
+        var wrong=reply;wrong["operation"] = .string("undo");XCTAssertThrowsError(try TeamCompletion.Review(wrong,for:header))
+        wrong=reply;wrong["project_role"] = .string("owner");XCTAssertThrowsError(try TeamCompletion.Review(wrong,for:header))
+        wrong=reply;wrong["receipt"] = .null;XCTAssertThrowsError(try TeamCompletion.Review(wrong,for:header))
+        wrong=reply;wrong["state"] = .string("unrecorded");XCTAssertThrowsError(try TeamCompletion.Review(wrong,for:header))
+    }
+    func testReviewRejectsInconsistentRowsAndReplacementSource() throws {
+        let(header,_,reply)=try reviewFixture();var wrong=reply
+        var task=reply["task"]!.object;task["task_generation"] = .string(UUID().uuidString.lowercased());wrong["task"] = .object(task)
+        XCTAssertThrowsError(try TeamCompletion.Review(wrong,for:header))
+        wrong=reply;var receipt=reply["receipt"]!.object;receipt["task"] = .null;wrong["receipt"] = .object(receipt)
+        XCTAssertThrowsError(try TeamCompletion.Review(wrong,for:header))
+        wrong=reply;wrong.removeValue(forKey:"series");XCTAssertThrowsError(try TeamCompletion.Review(wrong,for:header))
+    }
+    func testReviewRetainsEditedProvisionalDraftWhenServerAdoptedAnotherGeneration() throws {
+        let(header,_,original)=try reviewFixture();var reply=original,receipt=reply["receipt"]!.object,next=reply["successor"]!.object
+        let generation=UUID().uuidString.lowercased();next["task_generation"] = .string(generation)
+        receipt["successor"] = .object(next);receipt["successor_generation"] = .string(generation);receipt["created_successor"] = .bool(false)
+        reply["receipt"] = .object(receipt);reply["successor"] = .object(next)
+        let review=try TeamCompletion.Review(reply,for:header)
+        var local=snapshot(header);local.apply(header);local.pending=[header]
+        let edit=Mutation(table:"tasks",recordID:next["id"]!.text,method:"PATCH",fields:["title":.string("Local design notes")])
+        local.apply(edit);local.pending.append(edit);let exact=local
+        XCTAssertNil(review.acknowledging(local));XCTAssertEqual(local,exact)
+        local.pending.removeLast();local.tables["tasks"]?.removeAll{$0.id == edit.recordID};local.tables["tasks"]?.append(header.teamCompletion!.proposed!)
+        XCTAssertNotNil(review.acknowledging(local))
+    }
+    func testRecordedReviewCannotAcknowledgeStaleOrNonHeadQueue() throws {
+        let(header,_,reply)=try reviewFixture(),review=try TeamCompletion.Review(reply,for:header)
+        var local=snapshot(header);local.apply(header)
+        XCTAssertNil(review.acknowledging(local))
+        local.pending=[Mutation(table:"labels",recordID:UUID().uuidString,method:"POST",fields:[:]),header]
+        XCTAssertNil(review.acknowledging(local))
+    }
+    @MainActor func testReviewTransportIsReadOnlyBoundedAndAccountBound() async throws {
+        let(header,body,reply)=try reviewFixture(),api=try backend(header.teamCompletion!.scope.account)
+        var requests:[URLRequest]=[]
+        CompletionHTTP.handler={request,peer in requests.append(request);peer.finish(try! JSONEncoder().encode(reply))};defer{CompletionHTTP.handler=nil}
+        let result=try await api.reviewTeamCompletion(header,expectedAccount:header.teamCompletion!.scope.account)
+        XCTAssertTrue(result.isRecorded);XCTAssertEqual(requests.count,1)
+        let request=try XCTUnwrap(requests.first)
+        XCTAssertEqual(request.url?.path,"/rest/v1/rpc/taskfold_review_team_completion");XCTAssertEqual(request.timeoutInterval,25);XCTAssertFalse(request.httpShouldHandleCookies)
+        XCTAssertEqual(request.value(forHTTPHeaderField:"Cache-Control"),"no-store")
+        XCTAssertEqual(try JSONDecoder().decode([String:JSON].self,from:XCTUnwrap(request.httpBody))["_body"],.object(body))
+        do{_=try await api.reviewTeamCompletion(header,expectedAccount:UUID().uuidString.lowercased());XCTFail("wrong account read")}catch{XCTAssertTrue(error is CancellationError)}
+        XCTAssertEqual(requests.count,1)
+        CompletionHTTP.handler={_,peer in peer.finish(Data(repeating:32,count:1_000_001))}
+        do{_=try await api.reviewTeamCompletion(header,expectedAccount:header.teamCompletion!.scope.account);XCTFail("oversized review")}catch{XCTAssertTrue(error.localizedDescription.contains("too large"))}
+    }
+
+    func testActualSQLUndoReviewAcknowledgesWithoutReopeningAgain() throws {
+        let(header,body,reply)=try reviewFixture(undo:true),review=try TeamCompletion.Review(reply,for:header)
+        XCTAssertEqual(try header.teamCompletion!.body(for:header),body)
+        XCTAssertEqual(header.teamCompletion?.operation,.undo);XCTAssertFalse(review.task!.completed);XCTAssertNil(review.successor)
+        let local=Snapshot(tables:["tasks":[review.task!],"projects":[Record(["id":.string(header.teamCompletion!.scope.project)])]],pending:[header])
+        let next=try XCTUnwrap(review.acknowledging(local));XCTAssertTrue(next.pending.isEmpty)
+        XCTAssertEqual(next.tables["tasks"],local.tables["tasks"])
+    }
+
 }

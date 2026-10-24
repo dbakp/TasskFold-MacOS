@@ -4065,3 +4065,24 @@ structural/comment/mention/file/service adapters, premium native organization UI
 and full privacy/recovery acceptance. Cross-project existing series occurrences
 currently fail safely and require explicit UX acceptance. The full Px scope and
 user deferrals remain unchanged.
+
+
+## Team completion outcome review — 24 October, rank 6 in progress
+
+Both native apps now read and display a saved completion's authoritative outcome.
+Recorded actions can resume sync without another write when acknowledgment is safe;
+unrecorded actions retain their exact nonce and allow checking/retrying. The native
+sheet compares current task/next-occurrence content and protects edited provisional
+drafts. Read access, live sessions and frozen identities are checked before receipt
+lookup; nonce locking resolves in-flight requests without implying cancellation.
+
+Each repo passes 67 review database checks + 131 completion regressions, 271
+selected Swift tests (nine new review tests), and unsigned Debug app/extension
+builds. See TEAM_COMPLETION_REVIEW.md and review evidence. Owned containers,
+temporary builds and Mac registration are removed. Team editing stays disabled;
+no hosted/runtime/visual/accessibility/distribution acceptance is claimed.
+
+Next: explicit rejected-action cancellation/rebase and provisional-draft
+reconciliation, current-role workspace refresh/privacy, remaining team adapters,
+premium organization UI and full native acceptance. Full Px scope and existing
+user deferrals remain unchanged.
