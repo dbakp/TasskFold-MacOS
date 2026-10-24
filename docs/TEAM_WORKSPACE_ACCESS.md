@@ -175,7 +175,8 @@ The iOS Form is split into typed sections to keep SwiftUI compilation bounded;
 its native layout and explicit Save remain in place.
 
 Each repository passes 111 focused team/edit checks and 69 backup/recovery checks,
-with no failures. Both native Debug apps/extensions build. The isolated iPhone and
+with no failures. Both native Debug app builds pass. The iOS widget extension also builds; the
+isolated Mac helper omits its widget target. The isolated iPhone and
 iPad each pass title editing, note-formatting application, exact scoped PATCH and
 opening baseline persistence, different-creator/opaque-field preservation,
 relaunch retention, and edit-to-viewer loss with a privately encrypted unsent draft

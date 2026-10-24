@@ -39,7 +39,8 @@
       "commit": "8bdcd1913607526bb8ed2a01115f9f87b5212c19",
       "file": "docs/p2-native-team-editor-bridge-evidence.json",
       "scope": "iPhone/iPad Simulator only; no Mac runtime acceptance"
-    }
+    },
+    "widgetExtensionBuildScope": "iOS Simulator extension built; isolated Mac helper intentionally omits its widget target. No new Mac widget build/runtime acceptance."
   },
   "sourceSHA256": {
     "Taskfold/Core/TeamWorkspace.swift": "f41b212ba50e2a9703a7ff4a662230972b55490a17774e5b5b5d1a5297cb1b3e",
