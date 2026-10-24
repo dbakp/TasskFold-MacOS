@@ -3967,3 +3967,19 @@ Advisors show no errors/new warnings and owned containers/build outputs are
 removed. See TEAM_TASK_LIFECYCLE.md and lifecycle evidence. Team UI remains off;
 remaining role/workspace/editor/service/privacy flows, full Px and user deferrals
 stay open.
+
+
+### Team discussion recovery — 24 October
+
+The independent Mac candidate now preserves discussion text/read history across
+team task deletion and Undo, with fresh identities, current recipient access and
+private encrypted recovery. Expiry and account/team cleanup remove the recovery
+copy; failed restores retain task data and Undo authority atomically. The Mac
+explains expired recovery without exposing server details.
+
+Mac passes 240 database checks (70 new recovery, 89 lifecycle, 70 edit and 11 real
+Cron worker checks) and 167 selected SwiftPM tests, with no failures/skips/new
+advisor errors or warnings. Owned containers/Cron staging files are removed.
+See TEAM_CONVERSATION_RECOVERY.md and evidence. This does not claim a new native
+app build/runtime or enabled team UI. Linked batches, remaining permissions and
+premium team/workspace acceptance, full Px and user deferrals remain open.

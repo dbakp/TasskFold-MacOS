@@ -4,6 +4,10 @@ enum TeamProjectRole: String, Sendable { case manager, editor, viewer }
 enum TeamProjectVisibility: String, Sendable { case team, `private` }
 enum TeamProjectState: String, Sendable { case active, archived }
 
+struct TeamConversationRecoveryExpired: LocalizedError {
+    var errorDescription: String? { "Discussion recovery has expired. Your saved task is still on this device." }
+}
+
 struct TeamTaskReviewRequired: LocalizedError {
     var errorDescription: String? { "TASKFOLD_CONFLICT: Review this team action in a supported Taskfold app. Your saved change remains on this device." }
 }

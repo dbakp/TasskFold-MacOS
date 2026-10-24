@@ -1,0 +1,29 @@
+{
+  "checks": {
+    "actual hourly cleanup job registered": true,
+    "job active": true,
+    "job uses guarded cleanup": true,
+    "job owned by postgres": true,
+    "real worker expires encrypted recovery": true,
+    "real worker leaves locked receipt": true,
+    "real worker preserves unexpired archive": true,
+    "real worker retries unlocked archive": true,
+    "expired ciphertext removed": true,
+    "expired receipts remain fenced": true,
+    "actual worker reports success": true
+  },
+  "deployed": false,
+  "realDataChanged": false,
+  "hostedCronClaimed": false,
+  "cronSource": {
+    "version": "1.6.8",
+    "commit": "5cedfa472ccc83567aa23ec645925ed8489a7797",
+    "sha256": "cba185da9308d2c624ded35a596937ce391badd60665ab6badc55bd8e78a1e94",
+    "url": "https://codeload.github.com/citusdata/pg_cron/tar.gz/5cedfa472ccc83567aa23ec645925ed8489a7797"
+  },
+  "librarySHA256": "8ed4a893679a9f74bcd3bc19e2a64eac98190533287917c05808f9fdba982e4f",
+  "postgresVersion": 170006,
+  "migrationSHA256": "02baf514bd24859d6520c6dcf00914fccb00f8e82395f6e6b58bf03845aba079",
+  "containerRemoved": true,
+  "checkCount": 11
+}

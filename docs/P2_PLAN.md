@@ -1877,3 +1877,24 @@ Team UI/editing remains disabled. Shared-conversation recovery, atomic linked
 batches, structural/assignment/reminder edits, service/email/file boundaries,
 current-role workspace refresh, premium team organization/admin UI and full native
 privacy/recovery acceptance remain required. Full Px and user deferrals are unchanged.
+
+
+## Team discussion recovery — 24 October, rank 6 in progress
+
+Task delete/Undo now preserves shared discussions through private, encrypted
+30-day recovery copies. Undo creates new comment/mention identities, preserves
+content and read history, excludes departed recipients and fences stale callbacks.
+Corruption/interrupted writes roll back atomically. Expiry, successful Undo,
+account removal and team deletion clean up keys/ciphertext; real Cron cleanup is
+verified locally. The preceding conversation-deletion hold is removed.
+
+Each repo independently passes 70 recovery + 89 lifecycle + 70 edit + 11 real Cron
+checks (240 database checks total), and 167 selected SwiftPM tests (4 new; zero
+failures/skips). Advisors have no errors/new warnings, and owned fixtures/Cron
+staging files are removed. See TEAM_CONVERSATION_RECOVERY.md and its evidence.
+No new app-runtime/build, hosted deployment or distribution pass is claimed.
+
+Next: atomic linked-task deletion/Undo, remaining task/comment/mention/file/service
+adapters, current-role workspace refresh and premium native team administration,
+then full privacy/recovery acceptance. Team UI remains off. The full Px objective,
+Watch/Wear OS and all user deferrals retain scope.

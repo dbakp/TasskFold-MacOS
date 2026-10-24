@@ -34,6 +34,20 @@ let pg;
 try {
   pg = await createPostgresFixture({ advisors: true });
   await loadTeamTaskLifecycle(pg.raw);
+  if (process.env.TASKFOLD_TEAM_CONVERSATION_REGRESSION === "1") {
+    const { loadTeamConversationSchema, teamConversationMigration } =
+      await import("./team-conversation-schema.mjs");
+    await loadTeamConversationSchema(pg.raw, { base: false });
+    report.conversationAdapterComplete = true;
+    report.conversationMigrationSHA256 = createHash("sha256").update(
+      await readFile(
+        new URL(
+          "../../supabase/migrations/" + teamConversationMigration,
+          import.meta.url,
+        ),
+      ),
+    ).digest("hex");
+  }
   report.migrationSHA256 = createHash("sha256").update(
     await readFile(
       new URL("../../supabase/migrations/" + migration, import.meta.url),
@@ -726,18 +740,22 @@ try {
     },${lit(people.owner.id)},'Preserve this conversation')`,
   );
   check(
-    "conversation cascade blocked pending adapter",
+    process.env.TASKFOLD_TEAM_CONVERSATION_REGRESSION === "1"
+      ? "conversation deletion now recoverable"
+      : "conversation cascade blocked pending adapter",
     (await rpc("editor", "delete", await deletion(commentTask.task_id))).code,
-    "PT409",
+    process.env.TASKFOLD_TEAM_CONVERSATION_REGRESSION === "1" ? null : "PT409",
   );
   check(
-    "comment remains",
+    process.env.TASKFOLD_TEAM_CONVERSATION_REGRESSION === "1"
+      ? "conversation moved to recovery copy"
+      : "comment remains",
     await pg.scalar(
       `select to_jsonb(count(*)) from public.task_comments where task_id=${
         lit(commentTask.task_id)
       }`,
     ),
-    1,
+    process.env.TASKFOLD_TEAM_CONVERSATION_REGRESSION === "1" ? 0 : 1,
   );
   const removedAuthor = fresh("author", { title: "Author retention" });
   await success("author retention created", "author", "create", removedAuthor);

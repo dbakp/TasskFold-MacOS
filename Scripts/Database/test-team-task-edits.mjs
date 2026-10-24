@@ -51,6 +51,22 @@ try {
       ),
     ).digest("hex");
   }
+  if (process.env.TASKFOLD_TEAM_CONVERSATION_REGRESSION === "1") {
+    if (process.env.TASKFOLD_TEAM_LIFECYCLE_REGRESSION !== "1") {
+      throw new Error("Conversation regression requires lifecycle");
+    }
+    const { loadTeamConversationSchema, teamConversationMigration } =
+      await import("./team-conversation-schema.mjs");
+    await loadTeamConversationSchema(pg.raw, { base: false });
+    report.conversationMigrationSHA256 = createHash("sha256").update(
+      await readFile(
+        new URL(
+          "../../supabase/migrations/" + teamConversationMigration,
+          import.meta.url,
+        ),
+      ),
+    ).digest("hex");
+  }
   for (const [name, u] of Object.entries(people)) {
     await pg.raw(
       `insert into auth.users(id,email,email_confirmed_at) values(${

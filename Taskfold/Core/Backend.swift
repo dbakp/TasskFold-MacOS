@@ -357,6 +357,7 @@ final class Backend: NSObject {
             }
             if ["/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle"].contains(path) {
                 if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                if error.string("code") == "PT410" { throw TeamConversationRecoveryExpired() }
                 if ["PT409", "P0001"].contains(error.string("code")) { throw TeamTaskEditScope.conflict }
                 if ["PT404", "42501"].contains(error.string("code")) {
                     throw AppFailure(message: "Team editing access is no longer available. Your saved edit remains on this device.")
