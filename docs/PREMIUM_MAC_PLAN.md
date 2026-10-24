@@ -3857,3 +3857,12 @@ Debug/Release Watch and Debug iPhone builds pass; isolated 42 mm scheduled expir
 preserves exact private archive bytes. This adds no Mac runtime code, resource,
 target or cross-repo build dependency. No new Mac runtime/test pass is claimed.
 Full paired/native Watch, teams/email work and all existing deferrals stay open.
+
+
+### Independently owned Watch icon — 24 October
+
+The iOS repo now owns the Watch's circular layered Taskfold icon, resource phase
+and primary-icon configuration. Watch Debug/Release Simulator builds compile it,
+and installed assets match the built archive. Mac runtime/build/resources are
+unchanged. Native launcher/Settings/notification and older Watch/hardware checks
+remain open, alongside paired delivery, broader Px and existing user deferrals.

@@ -1677,3 +1677,20 @@ not paired/background delivery, native input, midnight hardware or spoken proof.
 Mac owns no Watch runtime code or build dependency. Full Watch/teams/email/native
 acceptance and every user deferral retain scope. Exact evidence is in the iOS repo's
 `p2-watch-freshness-evidence.json`; no full rank or Px completion is claimed.
+
+
+## Watch icon resources — 24 October
+
+The iOS-owned Watch target now includes a circular Icon Composer document using
+Taskfold's existing red gradient and exact layered check/fold vectors. Watch owns
+its resource copies and resource build phase; both configurations name the primary
+icon. The target generator preserves this setup for future project creation.
+Debug and Release Watch Simulator builds pass and contain the named primary icon,
+watch-specific layered assets and raster compatibility rendition. Native Icon
+Composer renders are visually reviewed, and the installed isolated Simulator app's
+asset archive matches the built archive. The install check does not prove launcher,
+Settings or notification appearance; those remain native acceptance gates.
+No Swift, task/wire contract, phone or Mac target changed. Mac gains no resource
+or build dependency. The Watch stays disabled/unembedded; paired/native/hardware,
+advanced-team/email and other Px work and every user deferral retain scope. Exact
+scope is recorded in the iOS-owned `p2-watch-icon-evidence.json`.
