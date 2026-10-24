@@ -952,6 +952,12 @@ final class Store {
         do {
             prepared=try TeamTaskBatch.preparing(changes,snapshot:snapshot)
             for change in prepared {
+                if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
+                    guard let command=change.teamCompletion else { throw TeamCompletion.invalid }
+                    guard !localMode,command.scope.account == userID,command.scope.origin == (try backend.accountRemovalOrigin) else { throw TeamCompletion.invalid }
+                    var preview=snapshot
+                    guard command.apply(to:&preview,header:change) else { throw TeamCompletion.conflict }
+                }
                 if let batch=change.teamTaskBatch {
                     guard !localMode,batch.account == userID,batch.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskBatch.invalid }
                     var preview=snapshot
@@ -1164,7 +1170,7 @@ final class Store {
     func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks, account: userID) }
     private func historyChanges(_ changes: [Mutation]) -> [Mutation] {
         changes.map { original in
-            let change = TeamTaskBatch.historyAction(original)
+            let change = TeamCompletion.historyAction(original,snapshot:snapshot)
             if change.table == "tasks", change.method == "POST" {
                 return TaskGeneration.restoring(change, existing: record("tasks", id: change.recordID))
             }
@@ -1191,7 +1197,7 @@ final class Store {
     /// A denied queued change must not block the refresh that removes revoked shared work.
     /// Keep its complete local snapshot in the encrypted vault before changing the live cache.
     private func recoverUnavailableProject(_ mutation: Mutation, generation: UUID, account: String) async -> Bool {
-        guard mutation.teamTaskScope == nil, generation == accountGeneration, snapshot.pending.contains(mutation) else { return false }
+        guard mutation.teamTaskScope == nil, mutation.teamCompletion == nil, generation == accountGeneration, snapshot.pending.contains(mutation) else { return false }
         let reviewed = snapshot
         let projectIDs = reviewed.recoveryProjectIDs(for: mutation)
         guard !projectIDs.isEmpty else { return false }
@@ -1239,7 +1245,16 @@ final class Store {
                 sending = mutation
                 let saved = try await backend.send(mutation, expectedAccount: account)
                 guard generation == accountGeneration else { return }
-                snapshot.acknowledge(mutation, saved: saved); try persist()
+                guard snapshot.acknowledge(mutation, saved: saved) else { throw TeamCompletion.conflict }
+                try persist()
+                if let command=mutation.teamCompletion,command.operation == .undo,let saved,
+                   case .object(let raw)=saved["team_completion_reply"],let receipt=try? command.receipt(raw,for:mutation),
+                   !receipt.removed,receipt.successor != nil,
+                   !snapshot.pending.contains(where:{$0.teamCompletion?.source.id == command.source.id}),
+                   record("tasks",id:command.source.id)?["task_generation"] == command.source["task_generation"],
+                   record("tasks",id:command.source.id)?.completed == false {
+                    notice = "Task reopened. The next occurrence was kept."
+                }
             }
             var remote: [String: [Record]] = [:]
             for table in ["projects", "sections", "labels", "tasks", "profiles", "project_collaborators", "saved_views", "favorites", "view_preferences", "view_orders", WorkflowTemplate.table, ReminderSnooze.table, "focus_sessions", "task_activity_epoch", "task_activity"] {

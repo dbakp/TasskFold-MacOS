@@ -1964,3 +1964,25 @@ Next: atomic recurring completion/Undo, comment/mention/file/service adapters,
 current-role workspace refresh and premium native team organization/review UI,
 then full privacy/recovery acceptance. The full Px goal and user deferrals remain
 unchanged.
+
+
+## Atomic team recurring completion — 24 October, rank 6 in progress
+
+Team completion and next-occurrence creation now share one guarded transaction.
+Actor-bound retries, source/series generations and durable write epochs protect
+concurrent edits, Undo and Redo. Undo preserves later work; native acknowledgment
+keeps provisional drafts when another generation wins. Both independent apps own
+the persisted command, projection, transport and history integration.
+
+Each repo passes 583 database checks (131 completion + 452 existing regressions),
+262 selected Swift tests (17 new completion tests; broader recurrence coverage),
+and unsigned Debug app/extension builds. Owned test containers/build products and
+temporary Mac registration are removed. See TEAM_RECURRING_COMPLETION.md and the
+completion evidence files. Native team editing stays disabled; no hosted/runtime/
+distribution acceptance is claimed.
+
+Next: dedicated review and current-role workspace refresh, remaining team
+structural/comment/mention/file/service adapters, premium native organization UI
+and full privacy/recovery acceptance. Cross-project existing series occurrences
+currently fail safely and require explicit UX acceptance. The full Px scope and
+user deferrals remain unchanged.

@@ -100,6 +100,7 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var organizationOrder: OrganizationOrder.Command? = nil
     var teamTaskScope: TeamTaskEditScope? = nil
     var teamTaskBatch: TeamTaskBatch? = nil
+    var teamCompletion: TeamCompletion? = nil
 }
 
 /// Undo/redo recreation is a new task incarnation; an exact queued retry retains its chosen ID.
@@ -256,6 +257,7 @@ struct SyncConflict: Identifiable {
     /// Resolve only the edit that was reviewed, then replay later offline work.
     /// Returning nil leaves stale or mismatched review requests untouched.
     func resolving(_ snapshot: Snapshot, keepLocal: Bool) -> Snapshot? {
+        if mutation.teamCompletion != nil { return nil }
         if ProductivityGoalEdit.matches(mutation) { return ProductivityGoalEdit.resolving(self,snapshot:snapshot,keepLocal:keepLocal) }
         if mutation.table == WorkflowTemplate.table { return TemplateEditing.resolving(self, snapshot: snapshot, keepLocal: keepLocal) }
         guard mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
@@ -403,6 +405,10 @@ struct Snapshot: Codable, Equatable, Sendable {
     var locationImports: [String: LocationHandoffImportReceipt]? = nil
     mutating func apply(_ change: Mutation) {
         guard change.table != TaskAssignmentProvenance.table else { return }
+        if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
+            guard let command=change.teamCompletion else { return }
+            _=command.apply(to:&self,header:change);return
+        }
         if change.method == "TEAM_BATCH" || change.teamTaskBatch != nil {
             guard let batch=change.teamTaskBatch else { return }
             _=batch.apply(to:&self,header:change);return
@@ -450,16 +456,20 @@ struct Snapshot: Codable, Equatable, Sendable {
         if change.table == "tasks" { TaskAssignmentProvenance.invalidate(before:assignmentBefore,after:rows.first { $0.id == change.recordID },snapshot:&self) }
     }
     /// Confirm the server revision before replaying work queued during the request.
-    mutating func acknowledge(_ change: Mutation, saved: Record?) {
+    @discardableResult mutating func acknowledge(_ change: Mutation, saved: Record?) -> Bool {
+        if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
+            guard let command=change.teamCompletion else { return false }
+            return command.acknowledge(saved,header:change,snapshot:&self)
+        }
         pending.removeAll { $0.id == change.id }
         if change.organizationOrder != nil {
             if let saved, case .array(let values) = saved["organization_order_rows"] {
                 tables[change.table] = values.map { Record($0.object) }
             }
             for queued in pending where queued.table == change.table { apply(queued) }
-            return
+            return true
         }
-        guard let saved else { return }
+        guard let saved else { return true }
         var rows = tables[change.table] ?? []
         if let index = rows.firstIndex(where: { $0.id.lowercased() == change.recordID.lowercased() }) {
             var confirmed = saved; confirmed["id"] = .string(rows[index].id); rows[index] = confirmed
@@ -470,6 +480,7 @@ struct Snapshot: Codable, Equatable, Sendable {
             if let id = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() })?.id { queued.recordID = id }
             apply(queued)
         }
+        return true
     }
     mutating func mergeRemote(_ remote: [String: [Record]]) {
         // A fresh task snapshot without matching history cannot certify the old
@@ -485,7 +496,7 @@ struct Snapshot: Codable, Equatable, Sendable {
 /// snapshot in the encrypted vault before replacing the active workspace.
 extension Snapshot {
     func recoveryProjectIDs(for mutation: Mutation) -> [String] {
-        guard mutation.teamTaskScope == nil, pending.contains(mutation), ["tasks", "sections", "projects", "project_collaborators"].contains(mutation.table),
+        guard mutation.teamTaskScope == nil, mutation.teamCompletion == nil, pending.contains(mutation), ["tasks", "sections", "projects", "project_collaborators"].contains(mutation.table),
               ["POST", "PATCH", "DELETE"].contains(mutation.method) else { return [] }
         if mutation.table == "projects", mutation.method == "POST" { return [] }
         let row = tables[mutation.table]?.first { $0.id.lowercased() == mutation.recordID.lowercased() }
@@ -527,7 +538,7 @@ extension Snapshot {
         }
         // A legacy mutation in the same project cannot discard a later scoped
         // team intent while recovering its own unavailable-project snapshot.
-        guard !pending.contains(where: { $0.teamTaskScope != nil && removed[$0.table]?.contains($0.recordID.lowercased()) == true }) else { return nil }
+        guard !pending.contains(where: { ($0.teamTaskScope != nil || $0.teamCompletion != nil) && removed[$0.table]?.contains($0.recordID.lowercased()) == true }) else { return nil }
         var recovered = self
         recovered.pending.removeAll { removed[$0.table]?.contains($0.recordID.lowercased()) == true }
         for key in recovered.tables.keys.filter({ $0.lowercased() == "project_members:" + project }) { recovered.tables.removeValue(forKey: key) }
@@ -993,6 +1004,10 @@ struct EditHistory {
         var current = snapshot
         var inverse: [Mutation] = []
         for change in changes {
+            if let command=change.teamCompletion {
+                if let back=try? command.inverse(of:change) { inverse.append(back) }
+                redo.append(change);current.apply(change);continue
+            }
             if let batch=change.teamTaskBatch {
                 if let back=try? batch.inverse(of:change,snapshot:current) { inverse.append(back) }
                 redo.append(change);current.apply(change);continue

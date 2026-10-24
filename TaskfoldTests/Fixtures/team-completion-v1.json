@@ -1,0 +1,1073 @@
+{
+  "account": "289702eb-10fb-4662-a5ab-c5df8564634a",
+  "body": {
+    "team_id": "4dcea0ff-d49a-4f2d-8bc5-7740b6523075",
+    "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "task_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "request_id": "9f2793c1-a612-4a1d-a95d-cd45d9657d4d",
+    "record": {
+      "id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+      "title": "Recurring team task",
+      "labels": [],
+      "user_id": "1a61a58e-f902-4095-b02e-db8d6c7886f4",
+      "comments": [
+        {
+          "body": "Original occurrence discussion"
+        }
+      ],
+      "due_date": "2026-10-24",
+      "due_time": "09:00:00",
+      "priority": 2,
+      "subtasks": [
+        {
+          "id": "nested",
+          "title": "Nested review",
+          "comments": [
+            {
+              "body": "Previous nested discussion"
+            }
+          ],
+          "subtasks": [],
+          "completed": true,
+          "attachments": [
+            {
+              "id": "nested-file"
+            }
+          ],
+          "completed_at": "2026-10-01T08:00:00Z",
+          "future_state": {
+            "keep": true
+          },
+          "reminder_specs": [
+            {
+              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
+              "kind": "private-device-setting",
+              "opaque": {
+                "keep": true
+              },
+              "version": 99
+            }
+          ],
+          "taskfold_completion_v1": {
+            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
+            "version": 3
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T00:00:00+00:00",
+      "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "original-file",
+          "url": "https://files.example.invalid/instructions"
+        }
+      ],
+      "description": "Shared instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-24T07:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {
+        "future": {
+          "keep": true
+        }
+      },
+      "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+      "duration_minutes": null,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 3,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "completed_at": "2026-10-24T12:00:00Z",
+    "input_zone": "Europe/Copenhagen",
+    "next_generation": "a55153c1-64a4-49cb-be42-fdc943a71bc5",
+    "planned_next_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "series_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "series_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "series_project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111"
+  },
+  "reply": {
+    "task": {
+      "id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+      "title": "Recurring team task",
+      "labels": [],
+      "user_id": "1a61a58e-f902-4095-b02e-db8d6c7886f4",
+      "comments": [
+        {
+          "body": "Original occurrence discussion"
+        }
+      ],
+      "due_date": "2026-10-24",
+      "due_time": "09:00:00",
+      "priority": 2,
+      "subtasks": [
+        {
+          "id": "nested",
+          "title": "Nested review",
+          "comments": [
+            {
+              "body": "Previous nested discussion"
+            }
+          ],
+          "subtasks": [],
+          "completed": true,
+          "attachments": [
+            {
+              "id": "nested-file"
+            }
+          ],
+          "completed_at": "2026-10-01T08:00:00Z",
+          "future_state": {
+            "keep": true
+          },
+          "reminder_specs": [
+            {
+              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
+              "kind": "private-device-setting",
+              "opaque": {
+                "keep": true
+              },
+              "version": 99
+            }
+          ],
+          "taskfold_completion_v1": {
+            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
+            "version": 3
+          }
+        }
+      ],
+      "completed": true,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T00:00:00+00:00",
+      "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "original-file",
+          "url": "https://files.example.invalid/instructions"
+        }
+      ],
+      "description": "Shared instructions",
+      "completed_at": "2026-10-24T12:00:00+00:00",
+      "is_recurring": true,
+      "scheduled_at": "2026-10-24T07:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {
+        "future": {
+          "keep": true
+        }
+      },
+      "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+      "duration_minutes": null,
+      "completion_version": 1,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 3,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "289702eb-10fb-4662-a5ab-c5df8564634a",
+    "task_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "team_id": "4dcea0ff-d49a-4f2d-8bc5-7740b6523075",
+    "protocol": 1,
+    "replayed": false,
+    "operation": "complete",
+    "series_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "successor": {
+      "id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+      "title": "Recurring team task",
+      "labels": [],
+      "user_id": "289702eb-10fb-4662-a5ab-c5df8564634a",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 2,
+      "subtasks": [
+        {
+          "id": "87dd68c9-552e-56b3-afd4-e2ed0d0450b9",
+          "title": "Nested review",
+          "comments": [],
+          "subtasks": [],
+          "completed": false,
+          "attachments": [
+            {
+              "id": "nested-file"
+            }
+          ],
+          "completed_at": null,
+          "future_state": {
+            "keep": true
+          },
+          "deadline_date": null,
+          "reminder_specs": [
+            {
+              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
+              "kind": "private-device-setting",
+              "opaque": {
+                "keep": true
+              },
+              "version": 99
+            }
+          ],
+          "notification_sent_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "64aad458-7e77-53d6-a6f0-2fd00397ed05",
+            "version": 0
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T12:00:00+00:00",
+      "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "original-file",
+          "url": "https://files.example.invalid/instructions"
+        }
+      ],
+      "description": "Shared instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {
+        "future": {
+          "keep": true
+        },
+        "taskfold_recurrence_v1": {
+          "action_id": "9f2793c1-a612-4a1d-a95d-cd45d9657d4d"
+        }
+      },
+      "task_generation": "a55153c1-64a4-49cb-be42-fdc943a71bc5",
+      "duration_minutes": null,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 2,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8"
+    },
+    "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "request_id": "9f2793c1-a612-4a1d-a95d-cd45d9657d4d",
+    "successor_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "planned_next_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "related_request": null,
+    "source_revision": 1,
+    "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "created_successor": true,
+    "removed_successor": false,
+    "series_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "series_project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "successor_generation": "a55153c1-64a4-49cb-be42-fdc943a71bc5"
+  },
+  "undo_body": {
+    "team_id": "4dcea0ff-d49a-4f2d-8bc5-7740b6523075",
+    "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "task_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "request_id": "e868b11f-ef39-4b6d-8125-e6dcf2143052",
+    "record": {
+      "id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+      "title": "Recurring team task",
+      "labels": [],
+      "user_id": "1a61a58e-f902-4095-b02e-db8d6c7886f4",
+      "comments": [
+        {
+          "body": "Original occurrence discussion"
+        }
+      ],
+      "due_date": "2026-10-24",
+      "due_time": "09:00:00",
+      "priority": 2,
+      "subtasks": [
+        {
+          "id": "nested",
+          "title": "Nested review",
+          "comments": [
+            {
+              "body": "Previous nested discussion"
+            }
+          ],
+          "subtasks": [],
+          "completed": true,
+          "attachments": [
+            {
+              "id": "nested-file"
+            }
+          ],
+          "completed_at": "2026-10-01T08:00:00Z",
+          "future_state": {
+            "keep": true
+          },
+          "reminder_specs": [
+            {
+              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
+              "kind": "private-device-setting",
+              "opaque": {
+                "keep": true
+              },
+              "version": 99
+            }
+          ],
+          "taskfold_completion_v1": {
+            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
+            "version": 3
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T00:00:00+00:00",
+      "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "original-file",
+          "url": "https://files.example.invalid/instructions"
+        }
+      ],
+      "description": "Shared instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-24T07:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {
+        "future": {
+          "keep": true
+        }
+      },
+      "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+      "duration_minutes": null,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 3,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "completed_at": "2026-10-24T12:00:00Z",
+    "input_zone": "Europe/Copenhagen",
+    "next_generation": "a55153c1-64a4-49cb-be42-fdc943a71bc5",
+    "planned_next_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "series_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "series_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "series_project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "undoes": "9f2793c1-a612-4a1d-a95d-cd45d9657d4d"
+  },
+  "undo_reply": {
+    "task": {
+      "id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+      "title": "Recurring team task",
+      "labels": [],
+      "user_id": "1a61a58e-f902-4095-b02e-db8d6c7886f4",
+      "comments": [
+        {
+          "body": "Original occurrence discussion"
+        }
+      ],
+      "due_date": "2026-10-24",
+      "due_time": "09:00:00",
+      "priority": 2,
+      "subtasks": [
+        {
+          "id": "nested",
+          "title": "Nested review",
+          "comments": [
+            {
+              "body": "Previous nested discussion"
+            }
+          ],
+          "subtasks": [],
+          "completed": true,
+          "attachments": [
+            {
+              "id": "nested-file"
+            }
+          ],
+          "completed_at": "2026-10-01T08:00:00Z",
+          "future_state": {
+            "keep": true
+          },
+          "reminder_specs": [
+            {
+              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
+              "kind": "private-device-setting",
+              "opaque": {
+                "keep": true
+              },
+              "version": 99
+            }
+          ],
+          "taskfold_completion_v1": {
+            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
+            "version": 3
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T00:00:00+00:00",
+      "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "original-file",
+          "url": "https://files.example.invalid/instructions"
+        }
+      ],
+      "description": "Shared instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-24T07:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {
+        "future": {
+          "keep": true
+        }
+      },
+      "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+      "duration_minutes": null,
+      "completion_version": 2,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 3,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "289702eb-10fb-4662-a5ab-c5df8564634a",
+    "task_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "team_id": "4dcea0ff-d49a-4f2d-8bc5-7740b6523075",
+    "protocol": 1,
+    "replayed": false,
+    "operation": "undo",
+    "series_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "successor": null,
+    "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "request_id": "e868b11f-ef39-4b6d-8125-e6dcf2143052",
+    "successor_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "planned_next_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "related_request": "9f2793c1-a612-4a1d-a95d-cd45d9657d4d",
+    "source_revision": 2,
+    "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "created_successor": true,
+    "removed_successor": true,
+    "series_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "series_project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "successor_generation": "a55153c1-64a4-49cb-be42-fdc943a71bc5"
+  },
+  "redo_body": {
+    "team_id": "4dcea0ff-d49a-4f2d-8bc5-7740b6523075",
+    "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "task_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "request_id": "deb85a87-3385-4688-a361-fb0aad7e5049",
+    "record": {
+      "id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+      "title": "Recurring team task",
+      "labels": [],
+      "user_id": "1a61a58e-f902-4095-b02e-db8d6c7886f4",
+      "comments": [
+        {
+          "body": "Original occurrence discussion"
+        }
+      ],
+      "due_date": "2026-10-24",
+      "due_time": "09:00:00",
+      "priority": 2,
+      "subtasks": [
+        {
+          "id": "nested",
+          "title": "Nested review",
+          "comments": [
+            {
+              "body": "Previous nested discussion"
+            }
+          ],
+          "subtasks": [],
+          "completed": true,
+          "attachments": [
+            {
+              "id": "nested-file"
+            }
+          ],
+          "completed_at": "2026-10-01T08:00:00Z",
+          "future_state": {
+            "keep": true
+          },
+          "reminder_specs": [
+            {
+              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
+              "kind": "private-device-setting",
+              "opaque": {
+                "keep": true
+              },
+              "version": 99
+            }
+          ],
+          "taskfold_completion_v1": {
+            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
+            "version": 3
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T00:00:00+00:00",
+      "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "original-file",
+          "url": "https://files.example.invalid/instructions"
+        }
+      ],
+      "description": "Shared instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-24T07:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {
+        "future": {
+          "keep": true
+        }
+      },
+      "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+      "duration_minutes": null,
+      "completion_version": 2,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 3,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "completed_at": "2026-10-24T12:00:00Z",
+    "input_zone": "Europe/Copenhagen",
+    "next_generation": "891176ce-ea96-44ac-9c26-3c6b22408b24",
+    "planned_next_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "series_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "series_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "series_project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "redo_of": "e868b11f-ef39-4b6d-8125-e6dcf2143052"
+  },
+  "redo_reply": {
+    "task": {
+      "id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+      "title": "Recurring team task",
+      "labels": [],
+      "user_id": "1a61a58e-f902-4095-b02e-db8d6c7886f4",
+      "comments": [
+        {
+          "body": "Original occurrence discussion"
+        }
+      ],
+      "due_date": "2026-10-24",
+      "due_time": "09:00:00",
+      "priority": 2,
+      "subtasks": [
+        {
+          "id": "nested",
+          "title": "Nested review",
+          "comments": [
+            {
+              "body": "Previous nested discussion"
+            }
+          ],
+          "subtasks": [],
+          "completed": true,
+          "attachments": [
+            {
+              "id": "nested-file"
+            }
+          ],
+          "completed_at": "2026-10-01T08:00:00Z",
+          "future_state": {
+            "keep": true
+          },
+          "reminder_specs": [
+            {
+              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
+              "kind": "private-device-setting",
+              "opaque": {
+                "keep": true
+              },
+              "version": 99
+            }
+          ],
+          "taskfold_completion_v1": {
+            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
+            "version": 3
+          }
+        }
+      ],
+      "completed": true,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T00:00:00+00:00",
+      "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "original-file",
+          "url": "https://files.example.invalid/instructions"
+        }
+      ],
+      "description": "Shared instructions",
+      "completed_at": "2026-10-24T12:00:00+00:00",
+      "is_recurring": true,
+      "scheduled_at": "2026-10-24T07:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {
+        "future": {
+          "keep": true
+        }
+      },
+      "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+      "duration_minutes": null,
+      "completion_version": 3,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 3,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "289702eb-10fb-4662-a5ab-c5df8564634a",
+    "task_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "team_id": "4dcea0ff-d49a-4f2d-8bc5-7740b6523075",
+    "protocol": 1,
+    "replayed": false,
+    "operation": "complete",
+    "series_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "successor": {
+      "id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+      "title": "Recurring team task",
+      "labels": [],
+      "user_id": "289702eb-10fb-4662-a5ab-c5df8564634a",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 2,
+      "subtasks": [
+        {
+          "id": "87dd68c9-552e-56b3-afd4-e2ed0d0450b9",
+          "title": "Nested review",
+          "comments": [],
+          "subtasks": [],
+          "completed": false,
+          "attachments": [
+            {
+              "id": "nested-file"
+            }
+          ],
+          "completed_at": null,
+          "future_state": {
+            "keep": true
+          },
+          "deadline_date": null,
+          "reminder_specs": [
+            {
+              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
+              "kind": "private-device-setting",
+              "opaque": {
+                "keep": true
+              },
+              "version": 99
+            }
+          ],
+          "notification_sent_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "cb2270c6-266e-5501-a0ee-51227512aa97",
+            "version": 0
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T12:00:00+00:00",
+      "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "original-file",
+          "url": "https://files.example.invalid/instructions"
+        }
+      ],
+      "description": "Shared instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {
+        "future": {
+          "keep": true
+        },
+        "taskfold_recurrence_v1": {
+          "action_id": "deb85a87-3385-4688-a361-fb0aad7e5049"
+        }
+      },
+      "task_generation": "891176ce-ea96-44ac-9c26-3c6b22408b24",
+      "duration_minutes": null,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 2,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8"
+    },
+    "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "request_id": "deb85a87-3385-4688-a361-fb0aad7e5049",
+    "successor_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "planned_next_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "related_request": "e868b11f-ef39-4b6d-8125-e6dcf2143052",
+    "source_revision": 3,
+    "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "created_successor": true,
+    "removed_successor": false,
+    "series_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "series_project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "successor_generation": "891176ce-ea96-44ac-9c26-3c6b22408b24"
+  },
+  "kept_body": {
+    "team_id": "4dcea0ff-d49a-4f2d-8bc5-7740b6523075",
+    "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "task_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "request_id": "0ad645fd-6d8d-4f5c-a50e-503ae56ea7c6",
+    "record": {
+      "id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+      "title": "Recurring team task",
+      "labels": [],
+      "user_id": "1a61a58e-f902-4095-b02e-db8d6c7886f4",
+      "comments": [
+        {
+          "body": "Original occurrence discussion"
+        }
+      ],
+      "due_date": "2026-10-24",
+      "due_time": "09:00:00",
+      "priority": 2,
+      "subtasks": [
+        {
+          "id": "nested",
+          "title": "Nested review",
+          "comments": [
+            {
+              "body": "Previous nested discussion"
+            }
+          ],
+          "subtasks": [],
+          "completed": true,
+          "attachments": [
+            {
+              "id": "nested-file"
+            }
+          ],
+          "completed_at": "2026-10-01T08:00:00Z",
+          "future_state": {
+            "keep": true
+          },
+          "reminder_specs": [
+            {
+              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
+              "kind": "private-device-setting",
+              "opaque": {
+                "keep": true
+              },
+              "version": 99
+            }
+          ],
+          "taskfold_completion_v1": {
+            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
+            "version": 3
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T00:00:00+00:00",
+      "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "original-file",
+          "url": "https://files.example.invalid/instructions"
+        }
+      ],
+      "description": "Shared instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-24T07:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {
+        "future": {
+          "keep": true
+        }
+      },
+      "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+      "duration_minutes": null,
+      "completion_version": 2,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 3,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "completed_at": "2026-10-24T12:00:00Z",
+    "input_zone": "Europe/Copenhagen",
+    "next_generation": "891176ce-ea96-44ac-9c26-3c6b22408b24",
+    "planned_next_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "series_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "series_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "series_project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "undoes": "deb85a87-3385-4688-a361-fb0aad7e5049"
+  },
+  "kept_reply": {
+    "task": {
+      "id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+      "title": "Recurring team task",
+      "labels": [],
+      "user_id": "1a61a58e-f902-4095-b02e-db8d6c7886f4",
+      "comments": [
+        {
+          "body": "Original occurrence discussion"
+        }
+      ],
+      "due_date": "2026-10-24",
+      "due_time": "09:00:00",
+      "priority": 2,
+      "subtasks": [
+        {
+          "id": "nested",
+          "title": "Nested review",
+          "comments": [
+            {
+              "body": "Previous nested discussion"
+            }
+          ],
+          "subtasks": [],
+          "completed": true,
+          "attachments": [
+            {
+              "id": "nested-file"
+            }
+          ],
+          "completed_at": "2026-10-01T08:00:00Z",
+          "future_state": {
+            "keep": true
+          },
+          "reminder_specs": [
+            {
+              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
+              "kind": "private-device-setting",
+              "opaque": {
+                "keep": true
+              },
+              "version": 99
+            }
+          ],
+          "taskfold_completion_v1": {
+            "epoch": "c286ed45-0ac0-4437-9d06-c09b9d07d809",
+            "version": 3
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T00:00:00+00:00",
+      "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "original-file",
+          "url": "https://files.example.invalid/instructions"
+        }
+      ],
+      "description": "Shared instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-24T07:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {
+        "future": {
+          "keep": true
+        }
+      },
+      "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+      "duration_minutes": null,
+      "completion_version": 4,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 3,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "289702eb-10fb-4662-a5ab-c5df8564634a",
+    "task_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "team_id": "4dcea0ff-d49a-4f2d-8bc5-7740b6523075",
+    "protocol": 1,
+    "replayed": false,
+    "operation": "undo",
+    "series_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8",
+    "successor": {
+      "id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+      "title": "A collaborator edited the occurrence",
+      "labels": [],
+      "user_id": "289702eb-10fb-4662-a5ab-c5df8564634a",
+      "comments": [],
+      "due_date": "2026-10-25",
+      "due_time": "09:00:00",
+      "priority": 2,
+      "subtasks": [
+        {
+          "id": "87dd68c9-552e-56b3-afd4-e2ed0d0450b9",
+          "title": "Nested review",
+          "comments": [],
+          "subtasks": [],
+          "completed": false,
+          "attachments": [
+            {
+              "id": "nested-file"
+            }
+          ],
+          "completed_at": null,
+          "future_state": {
+            "keep": true
+          },
+          "deadline_date": null,
+          "reminder_specs": [
+            {
+              "id": "8f82c75e-6a04-4a85-973c-d6c951268beb",
+              "kind": "private-device-setting",
+              "opaque": {
+                "keep": true
+              },
+              "version": 99
+            }
+          ],
+          "notification_sent_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "cb2270c6-266e-5501-a0ee-51227512aa97",
+            "version": 0
+          }
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": "Europe/Copenhagen",
+      "created_at": "2026-10-24T12:00:00+00:00",
+      "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "original-file",
+          "url": "https://files.example.invalid/instructions"
+        }
+      ],
+      "description": "Shared instructions",
+      "completed_at": null,
+      "is_recurring": true,
+      "scheduled_at": "2026-10-25T08:00:00+00:00",
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {
+        "future": {
+          "keep": true
+        },
+        "taskfold_recurrence_v1": {
+          "action_id": "deb85a87-3385-4688-a361-fb0aad7e5049"
+        }
+      },
+      "task_generation": "891176ce-ea96-44ac-9c26-3c6b22408b24",
+      "duration_minutes": null,
+      "completion_version": 0,
+      "recurrence_pattern": {
+        "type": "daily",
+        "count": 2,
+        "interval": 1
+      },
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": "1d7c0e12-6bcd-4899-85b2-7518ebb32ca8"
+    },
+    "project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "request_id": "0ad645fd-6d8d-4f5c-a50e-503ae56ea7c6",
+    "successor_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "planned_next_id": "7706cb54-b21d-53a5-a39c-d4a660ca09b3",
+    "related_request": "deb85a87-3385-4688-a361-fb0aad7e5049",
+    "source_revision": 4,
+    "task_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "created_successor": true,
+    "removed_successor": false,
+    "series_generation": "06988108-9080-4921-88d5-76731da48baf",
+    "series_project_id": "5598af6c-da8e-4f6f-8e7e-365dafbe3111",
+    "successor_generation": "891176ce-ea96-44ac-9c26-3c6b22408b24"
+  }
+}

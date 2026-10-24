@@ -114,6 +114,23 @@ try {
       ),
     ).digest("hex");
   }
+  if (process.env.TASKFOLD_TEAM_COMPLETION_REGRESSION === "1") {
+    if (process.env.TASKFOLD_TEAM_CHECKLIST_REGRESSION !== "1") {
+      throw new Error("Completion regression requires checklist schema");
+    }
+    const { loadTeamCompletionSchema, teamCompletionMigration } = await import(
+      "./team-completion-schema.mjs"
+    );
+    await loadTeamCompletionSchema(pg.raw, { base: false });
+    report.completionMigrationSHA256 = createHash("sha256").update(
+      await readFile(
+        new URL(
+          "../../supabase/migrations/" + teamCompletionMigration,
+          import.meta.url,
+        ),
+      ),
+    ).digest("hex");
+  }
   for (const [name, u] of Object.entries(people)) {
     await pg.raw(
       `insert into auth.users(id,email,email_confirmed_at) values(${
