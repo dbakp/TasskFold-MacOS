@@ -348,4 +348,132 @@ extension TeamWorkspaceTests {
         let revoked=try TeamWorkspaceCache(boundary:boundary("left"),previous:cache,pending:[])
         XCTAssertFalse(revoked.nativeConversationWritable(project:f["project"]!.text))
     }
+    private func editorContext() throws -> (TeamTaskEditorDraft, TeamWorkspaceCache, Record, WorkspaceBinding, UUID) {
+        let b = try boundary(); var row = try snapshot().tables["tasks"]![0]
+        row["user_id"] = .string("ea350000-0000-4000-8000-000000000099") // Retained/departed creator, not current actor.
+        row["opaque_future"] = .object(["kept": .bool(true)])
+        let cache = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [], tasks: [row]), workspace = WorkspaceBinding(account: b.account, generation: UUID()), session = UUID()
+        return (try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: cache, enabled: true), cache, row, workspace, session)
+    }
+    func testNativeEditorCapturesRoleAuthorityRatherThanCreatorAndKeepsOrdinaryWritesClosed() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        XCTAssertNotEqual(row.string("user_id"), draft.scope.account)
+        XCTAssertThrowsError(try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: cache, enabled: false))
+        let viewer = try TeamWorkspaceCache(boundary: boundary("viewer"), previous: cache, pending: [], tasks: [row])
+        XCTAssertThrowsError(try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: viewer, enabled: true))
+        var proposed = row; proposed["title"] = .string("Reviewed title")
+        let change = try XCTUnwrap(draft.mutation(desired: proposed, current: row, workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertEqual(change.teamTaskScope, draft.scope); XCTAssertTrue(cache.canSend(change, in: Snapshot(tables: ["tasks": [row]])))
+        let personal = Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: change.fields)
+        XCTAssertFalse(cache.canSend(personal, in: Snapshot(tables: ["tasks": [row]])))
+    }
+    func testNativeEditorRejectsAccessABAAccountWorkspaceSessionAndBackendChanges() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        var changed = cache.boundary.raw; changed["token"] = .string(String(repeating: "b", count: 64))
+        let next = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(changed, account: cache.boundary.account, origin: origin), previous: cache, pending: [], tasks: [row])
+        XCTAssertFalse(draft.permits(current: row, workspace: workspace, session: session, cache: next, enabled: true))
+        XCTAssertFalse(draft.permits(current: row, workspace: WorkspaceBinding(account: workspace.account, generation: UUID()), session: session, cache: cache, enabled: true))
+        XCTAssertFalse(draft.permits(current: row, workspace: WorkspaceBinding(account: UUID().uuidString.lowercased(), generation: workspace.generation), session: session, cache: cache, enabled: true))
+        XCTAssertFalse(draft.permits(current: row, workspace: workspace, session: UUID(), cache: cache, enabled: true))
+        let other = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(cache.boundary.raw, account: cache.boundary.account, origin: "https://other.example"), previous: nil, pending: [], tasks: [row])
+        XCTAssertFalse(draft.permits(current: row, workspace: workspace, session: session, cache: other, enabled: true))
+        XCTAssertFalse(draft.permits(current: row, workspace: workspace, session: session, cache: cache, enabled: false))
+    }
+    func testNativeEditorRejectsRemovedRecreatedOrReboundTaskEvenWithSameVisibleTitle() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        XCTAssertFalse(draft.permits(current: nil, workspace: workspace, session: session, cache: cache, enabled: true))
+        for key in ["id", "user_id", "project_id", "task_generation"] {
+            var current = row; current[key] = .string(UUID().uuidString.lowercased())
+            XCTAssertFalse(draft.permits(current: current, workspace: workspace, session: session, cache: cache, enabled: true), key)
+        }
+    }
+    func testNativeEditorPreservesAuthoredBaselineAndConcurrentUntouchedFields() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        var desired = row; desired["title"] = .string("My new name"); desired["description"] = .string("My notes")
+        var current = row; current["priority"] = .number(1); current["opaque_future"] = .object(["newer": .bool(true)]); current["title"] = .string("Teammate's new name")
+        let before = current
+        let change = try XCTUnwrap(draft.mutation(desired: desired, current: current, workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertEqual(current, before); XCTAssertEqual(Set(change.fields.keys), ["title", "description"])
+        XCTAssertEqual(change.baseline?["title"], row["title"]); XCTAssertEqual(change.fields["title"], desired["title"])
+        XCTAssertEqual(try draft.scope.body(for: change)["base"]?.object["title"], row["title"])
+        var state = Snapshot(tables: ["tasks": [current]]); state.apply(change)
+        XCTAssertEqual(state.tables["tasks"]![0]["priority"], .number(1)); XCTAssertEqual(state.tables["tasks"]![0]["opaque_future"], current["opaque_future"])
+        XCTAssertEqual(try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(change)), change)
+    }
+    func testNativeEditorRejectsUnsupportedChangesAsAWholeWithoutDiscardingDraftFields() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        for key in ["id", "user_id", "project_id", "task_generation", "completion_version", "completed", "completed_at", "attachments", "comments", "is_recurring", "recurrence_pattern", "source_metadata", "opaque_future"] {
+            var desired = row; desired["title"] = .string("Keep this draft"); desired[key] = .null
+            XCTAssertThrowsError(try draft.mutation(desired: desired, current: row, workspace: workspace, session: session, cache: cache, enabled: true), key)
+            XCTAssertEqual(desired["title"], .string("Keep this draft"))
+        }
+        var desired = row; desired.fields.removeValue(forKey: "opaque_future")
+        XCTAssertThrowsError(try draft.mutation(desired: desired, current: row, workspace: workspace, session: session, cache: cache, enabled: true))
+    }
+    func testNativeEditorNoopDoesNotCreateARequestOrReplaceObservedWork() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        var current = row; current["description"] = .string("New remote notes")
+        XCTAssertNil(try draft.mutation(desired: row, current: current, workspace: workspace, session: session, cache: cache, enabled: true))
+        var desired = row; desired["description"] = current["description"]
+        XCTAssertNil(try draft.mutation(desired: desired, current: current, workspace: workspace, session: session, cache: cache, enabled: true))
+        desired = row; desired["title"] = .string("  ")
+        XCTAssertThrowsError(try draft.mutation(desired: desired, current: row, workspace: workspace, session: session, cache: cache, enabled: true))
+    }
+    @MainActor func testNativeEditorMatchesActualSQLCommandAndUsesDedicatedTransport() async throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-task-planning-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let f = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))["planning"]!.object, body = f["body"]!.object, reply = f["reply"]!.object
+        let account = reply["account"]!.text, team = body["team_id"]!.text, project = body["project_id"]!.text
+        let source = Record(f["before"]!.object)
+        var desired = source; desired.fields.merge(body["changes"]!.object) { _, b in b }
+        let raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(account), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false), "token": .string(String(repeating: "a", count: 64)), "teams": .array([.object(["id": .string(team), "revision": .number(1), "access_revision": .number(1), "state": .string("active")])]), "projects": .array([.object(["id": .string(project), "team_id": .string(team), "role": .string("editor"), "archived": .bool(false), "can_send_tasks": .bool(true)])])]
+        let b = try TeamWorkspaceBoundary(raw, account: account, origin: origin), cache = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [], tasks: [source]), workspace = WorkspaceBinding(account: account, generation: UUID()), session = UUID()
+        let draft = try TeamTaskEditorDraft(source: source, workspace: workspace, session: session, cache: cache, enabled: true)
+        let change = try XCTUnwrap(draft.mutation(desired: desired, current: source, workspace: workspace, session: session, cache: cache, enabled: true, requestID: try XCTUnwrap(UUID(uuidString: body["request_id"]!.text))))
+        XCTAssertEqual(try draft.scope.body(for: change), body)
+        let api = try backend(account); var calls = 0
+        WorkspaceHTTP.handler = { request, peer in calls += 1; XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_edit_team_task"); peer.finish(.object(reply)) }; defer { WorkspaceHTTP.handler = nil }
+        _ = try await api.send(change, expectedAccount: account); XCTAssertEqual(calls, 1)
+    }
+
+    func testNativeEditorRefusesArchivedTeamEvenIfCapabilityReplyContradictsItsState() throws {
+        let (_, cache, row, workspace, session) = try editorContext()
+        var raw = cache.boundary.raw
+        raw["teams"] = .array(raw["teams"]!.list.map { value in var team = value.object; team["state"] = .string("archived"); return .object(team) })
+        let archived = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: workspace.account, origin: origin), previous: cache, pending: [], tasks: [row])
+        XCTAssertThrowsError(try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: archived, enabled: true))
+    }
+    func testNativeEditorChecklistIntentRetainsConcurrentOtherChildWithoutRewritingItsBaseline() throws {
+        let (_, cache, original, workspace, session) = try editorContext()
+        var source = original
+        let a: JSON = .object(["id": .string("alpha"), "title": .string("First"), "completed": .bool(false)])
+        let b: JSON = .object(["id": .string("beta"), "title": .string("Second"), "completed": .bool(false)])
+        source["subtasks"] = .array([a,b])
+        let draft = try TeamTaskEditorDraft(source: source, workspace: workspace, session: session, cache: cache, enabled: true)
+        var desired = source, current = source, local = a.object, remote = b.object
+        local["title"] = .string("My first child edit"); remote["title"] = .string("Their second child edit")
+        desired["subtasks"] = .array([.object(local),b]); current["subtasks"] = .array([a,.object(remote)])
+        let change = try XCTUnwrap(draft.mutation(desired: desired, current: current, workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertEqual(change.baseline?["subtasks"], source["subtasks"])
+        var state = Snapshot(tables: ["tasks": [current]]); state.apply(change)
+        let children = state.tables["tasks"]![0]["subtasks"].list.map(\.object)
+        XCTAssertEqual(children[0]["title"], .string("My first child edit")); XCTAssertEqual(children[1]["title"], .string("Their second child edit"))
+        XCTAssertEqual(change.teamTaskScope, draft.scope)
+    }
+
+    func testNativeEditorUndoRestoresObservedStateWithFreshScopedRequest() throws {
+        let (draft, cache, source, workspace, session) = try editorContext()
+        var current = source; current["description"] = .string("Their observed notes")
+        var desired = source; desired["description"] = .string("My authored notes")
+        let change = try XCTUnwrap(draft.mutation(desired: desired, current: current, workspace: workspace, session: session, cache: cache, enabled: true))
+        var state = Snapshot(tables: ["tasks": [current]])
+        let history = EditHistory(changes: [change], snapshot: state)
+        let inverse = try XCTUnwrap(history.undo.first)
+        XCTAssertNotEqual(change.id, inverse.id); XCTAssertEqual(inverse.teamTaskScope, draft.scope)
+        XCTAssertEqual(change.baseline?["description"], source["description"])
+        XCTAssertEqual(inverse.fields["description"], current["description"])
+        XCTAssertNoThrow(try draft.scope.body(for: inverse))
+        state.apply(change); state.apply(inverse)
+        XCTAssertEqual(state.tables["tasks"]![0], current)
+    }
+
 }

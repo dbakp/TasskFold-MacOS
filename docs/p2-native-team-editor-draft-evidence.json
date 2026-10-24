@@ -1,0 +1,42 @@
+{
+  "stage": "Rank 6 native team task editor captured-draft boundary",
+  "date": "2026-10-24",
+  "platform": "mac",
+  "teamRolloutEnabled": false,
+  "existingEditorAdmissionGateChanged": false,
+  "nativeUIConnected": false,
+  "hostedChanges": false,
+  "realDataChanged": false,
+  "verification": {
+    "newCases": 10,
+    "focusedSwiftTests": 109,
+    "failures": 0,
+    "filter": "TeamWorkspace|TeamTaskEdit|TeamChecklist|TaskEditorAdmission|TaskCompletion|TaskGeneration|SubtaskTree|EditHistory",
+    "swiftLogSHA256": "d4f21219fc7394cf0639b401cba61c16443a5da7faad64c3d6e3f6d7d2506cc1",
+    "debugAppAndExtensionBuild": "passed, unsigned arm64",
+    "buildLogSHA256": "f301da1c1a87cf71155d48979c81881cc6ebdf5ebebb2d0d40d71e89ac3d68e7",
+    "newStoreEntryPointsPresentInCompiledCopy": true,
+    "fixture": "TaskfoldTests/Fixtures/team-task-planning-v1.json",
+    "fixtureSHA256": "679cf46bce4e526a0045832164724317b2073cdfe882f74bc53d46f3b935a749"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/TeamWorkspace.swift": "f41b212ba50e2a9703a7ff4a662230972b55490a17774e5b5b5d1a5297cb1b3e",
+    "Taskfold/Core/Store.swift": "33985fb74f0c9ab18ffc6f4b7ba31181444d556f0f82f1c9cc47a0f0ad594473",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "d02ea6947b8a7f6c952c4d83ae29f98fbdea11edc9b5bf892ec7735a8da425cc"
+  },
+  "limitations": [
+    "Current editor UI/admission is not yet connected to these captured requests.",
+    "Native Store entry points are compiled; runtime/durable-disk/UI acceptance is not claimed.",
+    "The SQL-produced task/planning fixture uses a synthetic access boundary and HTTP transport for client verification.",
+    "No new database or hosted service acceptance is claimed; previous service evidence remains separate.",
+    "Remaining field-specific integration, live role/account/Keychain/recovery acceptance and the full ranked Px objective remain open.",
+    "All user-deferred release/provider/device dependencies remain deferred."
+  ],
+  "cleanup": {
+    "ownedTemporaryArtifactsRemoved": true,
+    "allocatedBytes": 1092345856,
+    "nativeAppsInstalledOrLaunched": false,
+    "baselineSimulatorStateUnchanged": true,
+    "remainingTaskfoldProcessesObserved": 0
+  }
+}

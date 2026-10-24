@@ -4618,3 +4618,54 @@ broader access/role/account integration. Existing deferrals remain unchanged.
 The isolated apps and runners are closed and uninstalled from both Simulators. Owned native caches, prepared copies, result bundles and scratch files are removed after preserving evidence (approximately 1.34 GiB allocated). No Taskfold process remains. Baseline phone/tablet boot states and unrelated caches, runtimes and user data are preserved.
 
 The [iOS-owned hierarchy UI acceptance record](https://github.com/dbakp/TaskFold-iOS/blob/53fefac03030df75bc7ff1ea714763faf14dbb0f/docs/p2-team-project-hierarchy-ui-evidence.json) is committed at `53fefac`. This is a reference to iPhone/iPad Simulator acceptance, not a Mac runtime claim.
+
+
+## Captured native team-task draft boundary — 24 October 2026
+
+The next editor stage adds an opening-time `TeamTaskEditorDraft` and explicit
+Store capture/save entry points in each independent repository. It freezes the
+account/workspace incarnation, backend, session incarnation, source task/project/
+creator/generation and opaque access-boundary token. Editing requires the existing
+organization client flag and current server send capability for an unarchived
+project in an active team. A creator UUID is never an authority shortcut; retained
+work from another creator can be edited under current editor/manager authority.
+Changed rights, access remove/restore, session, workspace, backend or task identity
+require reopening the task. This authority value is deliberately not Codable.
+
+The builder creates only an explicit scoped PATCH. It compares the complete draft
+with its opening source, rejects unsupported changes as a whole and does not strip
+unknown fields or quietly convert project moves, recurrence, attachments, comments,
+root completion or metadata into ordinary edits. Those fields require their own
+commands. Supported planning/checklist fields use the existing scoped validators.
+Unchanged fields and no-op saves create no mutation. Opaque stored fields remain
+in the task, without entering an unrelated patch.
+
+Authored values retain the opening baseline even if another person edited that
+field locally during the open sheet. The dedicated team service remains responsible
+for field conflicts and merge rules; the builder does not turn a newly observed
+value into its own baseline. Existing Snapshot checklist projection retains another
+child's concurrent edit. Existing history builds a fresh scoped Undo restoring the
+observed pre-commit state, while transport retries retain the committed nonce.
+Store hands the validated mutation to the existing durable commit/outbox path and
+never falls back to a personal task write. Ordinary team writes stay rejected.
+
+Ten new cases cover current-role authority with a different creator, disabled and
+viewer access, archived-team contradictions, access ABA, session/account/workspace/
+backend transitions, removed/recreated/rebound tasks, authored and untouched fields,
+whole-draft rejection, no-ops, concurrent checklist items, persisted scoped payloads,
+Undo and the actual SQL-produced four-field planning body/reply through the dedicated
+HTTP adapter. The access boundary and HTTP transport in that final client test are
+synthetic; it is not a hosted authorization test. Each repository reads its own
+previously generated SQL fixture. No migration, server grant or provider setting
+changed in this stage.
+
+The focused Swift suite passes 109 tests per repo, with no failures. Both unsigned
+arm64 Debug apps/extensions build, including Store. No native app is installed or
+launched. The current editor admission gate is intentionally unchanged: the new
+Store entry points still need to be connected to captured editor requests and
+verified through the native UI, including the remaining field-specific adapters,
+role/account transitions, recovery and permissions. Build and core checks are not
+interactive, spoken, Keychain, hosted or team-rollout acceptance. Rank 6 and the
+full remaining Px objective stay active; all existing user deferrals remain.
+
+Owned prepared copies/build caches and scratch files are removed after evidence preservation (approximately 1.02 GiB allocated). No Taskfold process remains. Persistent core caches, baseline Simulator boot states and unrelated data/runtimes are preserved. See `p2-native-team-editor-draft-evidence.json`.

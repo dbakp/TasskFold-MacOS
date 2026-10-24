@@ -312,3 +312,62 @@ struct TeamWorkspaceRead: Sendable {let tables:[String:[Record]];let boundary:Te
         throw TeamWorkspaceChanged()
     }
 }
+
+
+/// Opening-time authority for an existing team-task editor. This value is
+/// intentionally not Codable: a backup or cached draft cannot restore authority.
+struct TeamTaskEditorDraft: Equatable, Sendable {
+    let source: Record
+    let workspace: WorkspaceBinding
+    let session: UUID
+    let scope: TeamTaskEditScope
+    let accessToken: String
+    static let editableFields = TeamTaskEditScope.fields.subtracting(["completed", "completed_at"])
+    static var unavailable: AppFailure { AppFailure(message: "Project access changed. Your draft is still here; reopen the task before saving.") }
+    init(source: Record, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) throws {
+        let boundary = cache.boundary, project = source.string("project_id")
+        guard enabled, workspace.account == boundary.account,
+              let permission = boundary.projects[project], let team = permission.team,
+              permission.canSend, !permission.archived, ["manager", "editor"].contains(permission.role),
+              cache.knownTeams[project] == team,
+              boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(team) && $0.object["state"] == .string("active") }) == true,
+              [source.id, source.string("user_id"), source.string("task_generation")].allSatisfy(TeamProjectValue.id),
+              case .string? = source.fields["title"], case .bool? = source.fields["completed"],
+              let token = boundary.raw["token"]?.text else { throw Self.unavailable }
+        self.source = source; self.workspace = workspace; self.session = session
+        scope = TeamTaskEditScope(account: boundary.account, origin: boundary.origin, team: team, project: project)
+        accessToken = token
+    }
+    func permits(current: Record?, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) -> Bool {
+        guard enabled, self.workspace == workspace, self.session == session,
+              cache.boundary.belongs(account: scope.account, origin: scope.origin), cache.boundary.raw["token"] == .string(accessToken),
+              cache.knownTeams[scope.project] == scope.team,
+              cache.boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(scope.team) && $0.object["state"] == .string("active") }) == true,
+              let permission = cache.boundary.projects[scope.project], permission.team == scope.team,
+              permission.canSend, !permission.archived, ["manager", "editor"].contains(permission.role), let current,
+              ["id", "user_id", "project_id", "task_generation"].allSatisfy({ current.fields[$0] == source.fields[$0] }) else { return false }
+        return true
+    }
+    /// Preserve authored baselines; never merge another person's new value into
+    /// our intent or silently discard unsupported changes from a broad editor.
+    func mutation(desired: Record, current: Record?, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool, requestID: UUID = UUID()) throws -> Mutation? {
+        guard permits(current: current, workspace: workspace, session: session, cache: cache, enabled: enabled), let current else { throw Self.unavailable }
+        let keys = Set(source.fields.keys).union(desired.fields.keys)
+        let changed = Set(keys.filter { key in
+            Self.editableFields.contains(key) ? source[key] != desired[key] : source.fields[key] != desired.fields[key]
+        })
+        guard changed.isSubset(of: Self.editableFields) else { throw AppFailure(message: "This change needs its own team action. Your draft is still here; no fields have been saved.") }
+        var fields: [String: JSON] = [:]
+        for key in changed {
+            if current[key] == desired[key] { continue }
+            fields[key] = desired[key]
+        }
+        guard !fields.isEmpty else { return nil }
+        if let title = fields["title"] {
+            guard case .string(let text) = title, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw AppFailure(message: "Include a task name before saving.") }
+        }
+        let mutation = Mutation(id: requestID, table: "tasks", recordID: source.id, method: "PATCH", fields: fields,
+                                baseline: TaskCompletionRevision.editBaseline(for: fields, from: source), teamTaskScope: scope)
+        return try scope.capturing(mutation, existing: current)
+    }
+}

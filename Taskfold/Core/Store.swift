@@ -342,6 +342,25 @@ final class Store {
         }
         return true
     }
+    /// This explicit path never infers team scope for an ordinary personal save.
+    /// Organization rollout and the service's task capability both stay required.
+    private var nativeTeamEditorEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldTeamsEnabled") as? Bool == true }
+    func captureTeamTaskEditor(_ source: Record) throws -> TeamTaskEditorDraft {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache, cache.boundary.origin == (try backend.accountRemovalOrigin),
+              record("tasks", id: source.id) == source else { throw TeamTaskEditorDraft.unavailable }
+        return try TeamTaskEditorDraft(source: source, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+    }
+    @discardableResult
+    func saveTeamTaskEditor(_ desired: Record, draft: TeamTaskEditorDraft) -> Bool {
+        do {
+            guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+                  let cache = nativeConversationTeamCache, draft.scope.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskEditorDraft.unavailable }
+            let change = try draft.mutation(desired: desired, current: record("tasks", id: draft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+            guard let change else { return true }
+            return commit([change])
+        } catch { self.error = error.localizedDescription; return false }
+    }
     func flushEditorSessions() -> Bool {
         var success=true
         for session in editorSessions.values where !session.closed {if !session.flush() {success=false}}
