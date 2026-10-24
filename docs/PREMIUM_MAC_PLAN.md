@@ -4835,3 +4835,63 @@ boot states and persistent core caches are preserved.
 
 The independent iOS Simulator evidence is recorded at `TaskFold-iOS` commit
 `8e27b0147691d7ec3af4cf2822f2a2e05ec9ee33`. This is an evidence reference; the Mac build owns all its inputs.
+
+
+## Shared task labels — 24 October 2026
+
+Gated team Details now opens a dedicated shared-label editor. It supports adding
+and removing portable label names, existing legacy entries, and suggestions from
+visible tasks and nested children in the same project. Personal catalogs and
+other projects never supply those suggestions. Apply returns the choice to the
+iOS task draft (or the Mac inspector’s scoped autosave); Cancel keeps the task
+unchanged. Captured editor scope and the original label baseline remain in charge.
+The sheet stays present after access loss, keeps its edit in the private encrypted
+recovery vault and blocks callbacks into the wrong task/workspace.
+
+A team label is text, not a lookup into an individual’s label table. Scoped task
+mutations now preserve that text without personal name-to-ID normalization.
+Personal label rename/delete only considers personal task records, including when
+a shared task has the same label name. Team quick-entry no longer resolves label
+references through personal IDs; its separate shared-label adapter remains open.
+Personal editing retains the previous normalization behavior.
+
+New names allow 1–100 characters (at most 400 UTF-8 bytes), with no controls,
+bidi overrides or UUID-shaped catalog IDs. Existing nonempty strings up to the
+service’s 1,024-byte limit remain exact, ordered and removable; unsafe names/IDs
+appear as Saved label instead of being resolved through personal data. Duplicates
+remain until explicitly removed. A future/unsupported list is read-only and
+preserved. No list is silently truncated. Project suggestions inspect at most
+2,048 nodes/4,096 values and offer up to 200 names, keeping large projects bounded.
+The service’s 256-label task limit and guarded replacement baseline still apply.
+
+Both repositories pass 71 focused team/model checks and 140 label/conflict/
+quick-entry/recovery regressions. After tightening the suggestion work bound,
+all seven new model cases pass again. These cover text/legacy preservation,
+invalid/future/oversize values, Unicode, project-only suggestions, frozen scoped
+mutations/relaunch encoding, personal normalization and shared-task exclusion.
+The existing server planning validator/contract is unchanged; this stage adds
+no migration, hosted configuration, permissions or new network endpoint.
+Native phone/tablet and build results are recorded in `p2-team-labels-evidence.json`.
+
+Each app owns its code, model and tests independently. Team rollout stays off.
+Mac interactive/spoken and hosted multi-actor acceptance, remaining field adapters,
+independent child records and the wider ranked/Px work stay open. All existing
+user deferrals are preserved.
+
+Final native acceptance passes five tests per device on iPhone and iPad, with no
+failures or skips. Four label cases cover typed-text Apply, scoped Save/relaunch,
+unchanged personal catalogs, Cancel, encrypted access-loss recovery, child labels
+and actual personal label rename/reset/delete without changing shared tasks. The
+existing assignment Save/relaunch regression passes too. Six new label/recovery
+screenshots were inspected and retained with both summaries in the iOS repository.
+The initial native reveal helper imposed a 60-point margin on a fully visible
+last debug row; its label-form margin is now 12 points. Review also fixed Apply
+dropping unsubmitted name text; the final native Save case types without Add.
+
+Stage cleanup removed 1,278,590,976 allocated bytes of owned temporary builds,
+results and scratch files. Both isolated apps/runners are uninstalled, with no
+Taskfold native app/test process left. Baseline Simulator boot states and
+persistent core caches remain intact.
+
+The independent iOS runtime evidence is at `TaskFold-iOS` commit
+`80dff267d9bda5fafba2559e57b90ae3e2735ffd`. This is an evidence reference only; Mac build inputs remain independent.

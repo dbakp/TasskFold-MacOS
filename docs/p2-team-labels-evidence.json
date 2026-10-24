@@ -1,0 +1,105 @@
+{
+  "stage": "Rank 6 shared task-label editing and personal catalog separation",
+  "date": "2026-10-24",
+  "platform": "mac",
+  "teamRolloutEnabled": false,
+  "hostedChanges": false,
+  "realDataChanged": false,
+  "databaseChanges": false,
+  "verification": {
+    "core": {
+      "tests": 71,
+      "failures": 0,
+      "skips": 0,
+      "logSHA256": "6928c2d4f516a8acedf7b0d34cb4b7ab2a3f184c545e4913e3911fe64a6bccb2"
+    },
+    "regression": {
+      "tests": 140,
+      "failures": 0,
+      "skips": 0,
+      "logSHA256": "5ad4ba9da095b25fe2bea13fb8b60147c854cb2690cc1f9bba1f90273bab9eab"
+    },
+    "final-model": {
+      "tests": 7,
+      "failures": 0,
+      "skips": 0,
+      "logSHA256": "662755783ee2b8362e3b2eafa87553eb4a8607a3b87e16ea880383cfa7db2844"
+    }
+  },
+  "nativeBuild": {
+    "result": "Passed",
+    "scope": "Unsigned arm64 Mac app; isolated helper omits widgets",
+    "logSHA256": "17ce2e16d50ca3c55643985da55931e0ef98973aacf4480bbde65f2e1bae1ee9"
+  },
+  "nativeMacRuntimeAccepted": false,
+  "contract": [
+    "Shared label names remain literal text, with no personal catalog resolution",
+    "Personal catalog normalization/rename/delete excludes known shared tasks and frozen scoped mutations",
+    "Same-project visible-task/checklist suggestions, bounded by 2048 nodes,4096 values,200 names",
+    "Exact existing strings/order/duplicates are retained until explicit edits; catalog IDs/unsafe names displayed as Saved label",
+    "Unsupported future shapes stay read-only; no truncation",
+    "New names: 1\u2013100 characters and <=400 UTF-8 bytes; final array <=256 values under unchanged service contract",
+    "Apply includes valid unsubmitted name text; invalid text stays in the sheet",
+    "Cancel does not change task; Apply stays in iOS parent draft until Save; Mac uses scoped autosave",
+    "Role loss keeps sheet and verified encrypted private draft; current editor closure and frozen baseline guard callbacks"
+  ],
+  "initialFindings": [
+    "Generic commit normalized shared names through personal catalog; personal rename/delete attempted to edit shared names. Both now use explicit shared-task exclusion.",
+    "Initial reveal helper demanded 60 points below a fully visible bottom debug button. Its final shared-label-form margin is 12 points; saved-task assertions already passed after the initial tap.",
+    "Review found Apply would discard an unsubmitted name. Apply now validates/includes it and final native test types without pressing Add."
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/TeamTaskLabels.swift": "f188cf29ff2e199985836b779a8384f38751743639c2537bcbe657fc5c5be39a",
+    "Taskfold/Core/Store.swift": "fb91021846db18caab9649b73906f3a0fd6c6bbcd3b5e898715f3c57f1657f5c",
+    "Taskfold/Views/TeamTaskLabelsEditor.swift": "6d5c67493d76edbcabb2e4d9be044f94ee9afe56e14d8b7a9541f9ff3c0c6351",
+    "Taskfold/Views/TaskInspector.swift": "831e0715b8db3f8f8d582a127ce717ed87eeb7dd94d4f85abdb16f578cd0cb80",
+    "TaskfoldTests/TeamTaskLabelsTests.swift": "c746e1e0765be131a1c9a3dd7b641beeb3193f8e2441ad947d9b00300422167f",
+    "Package.swift": "d718a35fabc7f793b295a203f4f3f41170bc4c6750b4777de164b5559e719b2d",
+    "Taskfold.xcodeproj/project.pbxproj": "263c95152ae87c980d8deb5d85f2165947c8a9c939da54a754a4f2fde4ab988f"
+  },
+  "testedNativeInputSHA256": {
+    "Taskfold/Core/TeamTaskLabels.swift": "f188cf29ff2e199985836b779a8384f38751743639c2537bcbe657fc5c5be39a",
+    "Taskfold/Core/Store.swift": "fb91021846db18caab9649b73906f3a0fd6c6bbcd3b5e898715f3c57f1657f5c",
+    "Taskfold/Views/TeamTaskLabelsEditor.swift": "6d5c67493d76edbcabb2e4d9be044f94ee9afe56e14d8b7a9541f9ff3c0c6351",
+    "Taskfold/Views/TaskInspector.swift": "831e0715b8db3f8f8d582a127ce717ed87eeb7dd94d4f85abdb16f578cd0cb80"
+  },
+  "limitations": [
+    "Synthetic native fixtures and existing source-only team rollout; no live hosted multi-actor claim",
+    "Mac native interaction/VoiceOver and broader native account/concurrency/failed-write acceptance remain open",
+    "Remaining native adapters, independent child records and full ranked/Px objective remain open",
+    "All user-deferred release/provider/device work preserved"
+  ],
+  "iosSimulatorAcceptance": {
+    "phone": {
+      "result": "Passed",
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "totalTestCount": 5
+    },
+    "tablet": {
+      "result": "Passed",
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "totalTestCount": 5
+    }
+  },
+  "iosAcceptanceScope": "Four new label cases per device: root edit/typed-name Apply/frozen PATCH/unchanged personal catalog/relaunch; Cancel and verified private recovery after viewer downgrade; nested child labels scoped to parent checklist with parent/sibling/opaque fields intact; actual Store personal label rename/reset/delete with shared task unchanged and only label-table mutations. Existing team assignment Save/relaunch regression also passes.",
+  "inspectedNewScreenshots": 6,
+  "iosEvidenceFiles": {
+    "repository": "TaskFold-iOS",
+    "directory": "docs/evidence/team-labels",
+    "scope": "Independent runtime evidence only; no build dependency",
+    "commit": "80dff267d9bda5fafba2559e57b90ae3e2735ffd"
+  },
+  "cleanup": {
+    "ownedTemporaryArtifactsRemoved": true,
+    "allocatedBytesOfRemovedArtifactsAcrossBothRepos": 1278590976,
+    "isolatedAppAndRunnerUninstalledFromBothSimulators": true,
+    "remainingTaskfoldNativeAppTestProcesses": 0,
+    "macAppNotLaunched": true,
+    "baselineSimulatorBootStatesPreserved": true,
+    "persistentCoreCachesPreserved": true
+  }
+}

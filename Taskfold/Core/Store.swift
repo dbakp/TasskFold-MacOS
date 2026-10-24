@@ -1173,7 +1173,7 @@ final class Store {
                         if change.baseline != nil { change.baseline?["reminder_specs"] = existing["reminder_specs"] }
                     }
                 }
-                if case .array(let values)? = change.fields["labels"] { change.fields["labels"] = .array(TaskLabels.normalized(values, labels: labels)) }
+                change = TeamTaskLabelsDraft.normalizing(change, existing: record("tasks", id: change.recordID), catalog: labels, cache: nativeConversationTeamCache)
             }
             if change.table == DayPlacement.table, change.method != "DELETE" {
                 change.method = "POST" // Stable composite upsert also handles pre-sync legacy rows.
@@ -1245,7 +1245,7 @@ final class Store {
             table == WorkflowTemplate.table ? old.fields : table == "tasks" ? TaskCompletionRevision.editBaseline(for: changed, from: old) : Dictionary(uniqueKeysWithValues: changed.keys.map { ($0, old[$0]) })
         })]
         if table == "labels", let existing, existing.name != record.name {
-            for task in tasks {
+            for task in tasks where TeamTaskLabelsDraft.usesPersonalCatalog(task, cache: nativeConversationTeamCache) {
                 let values = TaskLabels.normalized(task["labels"].list, labels: labels)
                 // Bind legacy names before the rename; IDs belonging to another label survive.
                 if values != task["labels"].list && values.contains(.string(existing.id)) {
@@ -1283,7 +1283,7 @@ final class Store {
         var changes: [Mutation] = []
         if table == "saved_views", record("favorites", id: "view:" + id) != nil { changes.append(Mutation(table: "favorites", recordID: "view:" + id, method: "DELETE", fields: [:])) }
         if table == "labels", let label = record("labels", id: id) {
-            for task in tasks {
+            for task in tasks where TeamTaskLabelsDraft.usesPersonalCatalog(task, cache: nativeConversationTeamCache) {
                 let values = TaskLabels.normalized(task["labels"].list, labels: labels)
                 if values.contains(.string(label.id)) {
                     changes.append(Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["labels": .array(values.filter { $0 != .string(id) })]))
@@ -2938,10 +2938,29 @@ extension Store {
                 .object(["id": .string(TeamEditorNativeFixture.siblingID), "title": .string("Keep the workshop notes"), "description": .string("Unchanged sibling notes"), "completed": .bool(false), "subtasks": .array([])])
             ])
             let project = Record(["id": .string(TeamEditorNativeFixture.projectID), "user_id": row["user_id"], "name": .string("Design workshop")])
-            snapshot = Snapshot(tables: ["tasks": [row], "projects": [project]])
+            var tasks = [row], projects = [project], labels: [Record] = []
+            if ProcessInfo.processInfo.arguments.contains("--team-label-testing") {
+                row["labels"] = .array([.string("Design"), .string("ec240000-0000-4000-8000-000000000009")])
+                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["labels": .array([.string("Child design")])])
+                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.siblingID, fields: ["labels": .array([.string("Review")])])
+                labels = [Record(["id": .string("ec240000-0000-4000-8000-000000000008"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Design")]),
+                          Record(["id": .string("ec240000-0000-4000-8000-000000000010"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Personal only")])]
+                let privateProject = Record(["id": .string("ec240000-0000-4000-8000-000000000012"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Private test project")])
+                var privateTask = Record.task(user: TeamEditorNativeFixture.account, project: privateProject.id)
+                privateTask["title"] = .string("Private test work"); privateTask["labels"] = .array([.string("Private project label")])
+                tasks = [row, privateTask]; projects.append(privateProject)
+            }
+            snapshot = Snapshot(tables: ["tasks": tasks, "projects": projects, "labels": labels])
             snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: nil, pending: [], tasks: [row])
             try persist()
         } catch { self.error = error.localizedDescription }
+    }
+    func changeTeamLabelCatalogFixture() {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-label-testing"),
+              let original = record("labels", id: "ec240000-0000-4000-8000-000000000008") else { return }
+        var renamed = original; renamed["name"] = .string("Private design")
+        guard save("labels", renamed), save("labels", original) else { return }
+        remove("labels", original.id)
     }
     func changeTeamEditorFixtureSibling() {
         guard TeamEditorNativeFixture.enabled,

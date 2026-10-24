@@ -68,7 +68,8 @@ struct TaskInspectorForm: View {
     @State private var teamDraft: TeamTaskEditorDraft?
     @State private var teamDraftCaptured = false
     private var isTeamTask: Bool { teamDraft != nil }
-    private var quickExclusions: Set<String> { isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : [] }
+    private var quickExclusions: Set<String> { isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : [] }
+    @State private var teamLabels: TeamTaskLabelsRequest?
     @State private var teamAssignee: TeamTaskAssigneeRequest?
     @State private var selectedTeamName: String?
     @State private var selectedTeamID: String?
@@ -151,6 +152,7 @@ struct TaskInspectorForm: View {
                 }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}.accessibilityIdentifier("editorAccessStopped")
             }
         }
+        .sheet(item: $teamLabels) { TeamTaskLabelsEditor(request: $0) }
         .sheet(item: $teamAssignee) { TeamTaskAssigneePicker(request: $0) }
         .sheet(item: $subtaskOrganizing) { SubtaskOrganizerPresentation(request: $0) }
         .onChange(of:editorAvailable) {_,available in if !available {stopEditing()}}
@@ -308,14 +310,17 @@ struct TaskInspectorForm: View {
 
             }
             Section("Labels") {
+                if isTeamTask {
+                    Button("Edit shared labels", systemImage: "tag", action: openTeamLabels).accessibilityIdentifier("taskTeamLabels")
+                } else {
                 if store.labels.isEmpty { Text("Create labels from the sidebar.").foregroundStyle(.secondary) }
                 ForEach(store.labels) { label in
                     Toggle(isOn: Binding(get: { TaskLabels.normalized(draft["labels"].list, labels: store.labels).contains(.string(label.id)) }, set: { enabled in
                         var labels = TaskLabels.normalized(draft["labels"].list, labels: store.labels).filter { $0 != .string(label.id) }; if enabled { labels.append(.string(label.id)) }; draft["labels"] = .array(labels)
                     })) { Label(label.name, systemImage: "tag.fill").foregroundStyle(Color.project(label.string("color"))) }.accessibilityIdentifier("taskLabel-" + label.id)
                 }
+                }
             }
-            .disabled(isTeamTask)
             if workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty {
             Section("Subtasks") {
                 let childIndices = SubtaskTree.uniqueChildIndices(draft["subtasks"])
@@ -531,6 +536,17 @@ struct TaskInspectorForm: View {
         saveTask?.cancel()
         guard editorAvailable else {checkpoint();return}
         saveTask = Task { try? await Task.sleep(for: .milliseconds(600)); guard !Task.isCancelled else { return }; saveNow() }
+    }
+    private func openTeamLabels() {
+        guard editorAvailable, let captured = teamDraft else { return }
+        let opening = draft["labels"]
+        teamLabels = TeamTaskLabelsRequest(teamDraft: captured, record: draft, sourceIdentity: sourceContext?.identity ?? .null, current: { editorAvailable }, apply: { value in
+            guard editorAvailable, draft["labels"] == opening else { return "Labels changed while this editor was open. Close it and review the task’s current labels." }
+            if value == opening { return nil }
+            draft["labels"] = value
+            guard saveNow() else { return "Your label edit remains in this task draft. Reopen its current details before saving again." }
+            return nil
+        })
     }
     private var teamAssigneeCaption: String {
         let id = draft.string("assigned_to")
