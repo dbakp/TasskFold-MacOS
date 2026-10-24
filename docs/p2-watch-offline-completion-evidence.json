@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-24",
+  "ownership": "Watch application, phone transport and paired native acceptance are iOS-owned. No Watch target or dependency is added to the Mac app.",
+  "iOSCommit": "ed0c1189a4021079b89b83aed0d7be4cc461e0c3",
+  "iOSEvidenceURL": "https://github.com/dbakp/TaskFold-iOS/blob/ed0c1189a4021079b89b83aed0d7be4cc461e0c3/docs/p2-watch-offline-completion-evidence.json",
+  "iOSPairedSimulatorChecks": 47,
+  "iOSWatchAndReceiptCoreTests": 88,
+  "MacReceiptCompatibilityTests": 9,
+  "failures": 0,
+  "MacNativeWatchRuntimeClaimed": false,
+  "persistentContractChanged": false,
+  "MacWearableReceiptSHA256": "d06365b025a65dbe9be7e81ec38e5fff5766a9133649a3da71bb256d5a9e973c",
+  "gatesRemain": [
+    "Native controls/spoken/layout/icons",
+    "Physical hardware/background/system launch/protected storage",
+    "Genuine cloud/account/phone/reinstall variants",
+    "Embedding/distribution and every user-deferred provider/device/release item",
+    "Advanced teams and remaining Px"
+  ],
+  "cleanupReference": {
+    "pending": false,
+    "isolatedPhoneAndWatchAppsTerminatedAndUninstalled": true,
+    "selectedAirAnd42mmWatchRestoredToShutdown": true,
+    "existing18ProAndIPadBootStatesPreserved": true,
+    "ownedNativeBuildCachesAndSourceCopiesRemoved": true,
+    "directoriesRemoved": 5,
+    "allocatedBytesRemovedApproximately": 1399271424,
+    "GiBRemovedApproximately": 1.3,
+    "coreCachesAndUnrelatedAppsRuntimesUntouched": true,
+    "deviceEraseOrUnpairPerformed": false,
+    "obsoleteDeletedBuildWidgetExtensionTerminated": true
+  },
+  "goalComplete": false
+}
