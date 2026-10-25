@@ -1,0 +1,539 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -derivedDataPath /tmp/taskfold-template-handoff-ios-build -resultBundlePath /tmp/taskfold-template-handoff-phone.xcresult -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testInvalidTransferNamesBlockCopyAndExportWithoutReads" "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testNativeShareSheetCancelRetainsPreparedFileUntilDone" -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 test-without-building
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+Writing result bundle at path:
+	/tmp/taskfold-template-handoff-phone.xcresult
+
+2026-10-25 10:00:11.142996+0100 TaskfoldUITests-Runner[45399:19355750] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-25 10:00:14.598.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-25 10:00:14.599.
+Test Suite 'TeamTemplateLibraryUITests' started at 2026-10-25 10:00:14.599.
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testInvalidTransferNamesBlockCopyAndExportWithoutReads]' started.
+    t =     0.01s Start Test at 2026-10-25 10:00:14.605
+    t =     0.07s Set Up
+    t =     0.08s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.08s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-25 10:00:14.764 xcodebuild[45366:19355161] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 10:00:14.764 xcodebuild[45366:19355161] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.65s         Setting up automation session
+objc[45399]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10827c398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x108878310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     5.92s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.25s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     9.30s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     9.30s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     9.47s Tap "openTeamTemplateLibraryFixture" Button
+    t =     9.47s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.48s     Find the "openTeamTemplateLibraryFixture" Button
+    t =     9.50s     Check for interrupting elements affecting "openTeamTemplateLibraryFixture" Button
+    t =     9.56s     Synthesize event
+    t =     9.94s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.24s Waiting 12.0s for "teamTemplate-ec240000-0000-4000-8000-000000000061" Button to exist
+    t =    11.28s     Checking `Expect predicate `existsNoRetry == 1` for object "teamTemplate-ec240000-0000-4000-8000-000000000061" Button`
+    t =    11.28s         Checking existence of `"teamTemplate-ec240000-0000-4000-8000-000000000061" Button`
+    t =    11.36s Tap "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =    11.36s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.36s     Find the "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =    11.40s     Check for interrupting elements affecting "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =    11.44s     Synthesize event
+    t =    11.74s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.07s Waiting 10.0s for "copyTeamTemplate" Button to exist
+    t =    13.11s     Checking `Expect predicate `existsNoRetry == 1` for object "copyTeamTemplate" Button`
+    t =    13.11s         Checking existence of `"copyTeamTemplate" Button`
+    t =    13.19s Tap "copyTeamTemplate" Button
+    t =    13.19s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.19s     Find the "copyTeamTemplate" Button
+    t =    13.23s     Check for interrupting elements affecting "copyTeamTemplate" Button
+    t =    13.27s     Synthesize event
+    t =    13.56s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.67s Waiting 5.0s for "teamTemplateTransferName" TextField to exist
+    t =    14.73s     Checking `Expect predicate `existsNoRetry == 1` for object "teamTemplateTransferName" TextField`
+    t =    14.73s         Checking existence of `"teamTemplateTransferName" TextField`
+    t =    14.87s Find the "teamTemplateTransferName" TextField
+    t =    14.93s Tap "teamTemplateTransferName" TextField
+    t =    14.93s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.94s     Find the "teamTemplateTransferName" TextField
+    t =    14.99s     Check for interrupting elements affecting "teamTemplateTransferName" TextField
+    t =    15.05s     Synthesize event
+    t =    15.34s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.95s Type '' into "teamTemplateTransferName" TextField
+    t =    15.95s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.32s     Find the "teamTemplateTransferName" TextField
+    t =    16.44s     Check for interrupting elements affecting "teamTemplateTransferName" TextField
+    t =    16.51s     Synthesize event
+    t =    17.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.02s Waiting 5.0s for "teamTemplateTransferNameValidation" StaticText to exist
+    t =    18.08s     Checking `Expect predicate `existsNoRetry == 1` for object "teamTemplateTransferNameValidation" StaticText`
+    t =    18.08s         Checking existence of `"teamTemplateTransferNameValidation" StaticText`
+    t =    18.17s Find the "saveTeamTemplateCopy" Button
+    t =    18.25s Type 'aaaaaaaaaaaaaaaaaa...' into "teamTemplateTransferName" TextField
+    t =    18.25s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.48s     Find the "teamTemplateTransferName" TextField
+    t =    18.57s     Check for interrupting elements affecting "teamTemplateTransferName" TextField
+    t =    18.64s     Synthesize event
+    t =    21.53s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.54s Checking existence of `"teamTemplateTransferNameValidation" StaticText`
+    t =    21.61s Find the "saveTeamTemplateCopy" Button
+    t =    21.72s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    21.90s Added attachment named 'team-template-invalid-copy-name'
+    t =    21.90s Tap "cancelTeamTemplateTransfer" Button
+    t =    21.90s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.90s     Find the "cancelTeamTemplateTransfer" Button
+    t =    21.97s     Check for interrupting elements affecting "cancelTeamTemplateTransfer" Button
+    t =    22.05s     Synthesize event
+    t =    22.35s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.76s Tap "exportTeamTemplate" Button
+    t =    22.76s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.77s     Find the "exportTeamTemplate" Button
+    t =    22.81s     Check for interrupting elements affecting "exportTeamTemplate" Button
+    t =    22.86s     Synthesize event
+    t =    23.16s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.61s Waiting 5.0s for "teamTemplateTransferName" TextField to exist
+    t =    24.66s     Checking `Expect predicate `existsNoRetry == 1` for object "teamTemplateTransferName" TextField`
+    t =    24.66s         Checking existence of `"teamTemplateTransferName" TextField`
+    t =    24.76s Find the "teamTemplateTransferName" TextField
+    t =    24.82s Tap "teamTemplateTransferName" TextField
+    t =    24.82s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.82s     Find the "teamTemplateTransferName" TextField
+    t =    24.88s     Check for interrupting elements affecting "teamTemplateTransferName" TextField
+    t =    24.94s     Synthesize event
+    t =    25.24s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.58s Type '' into "teamTemplateTransferName" TextField
+    t =    25.58s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.59s     Find the "teamTemplateTransferName" TextField
+    t =    25.67s     Check for interrupting elements affecting "teamTemplateTransferName" TextField
+    t =    25.74s     Synthesize event
+    t =    26.24s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.24s Waiting 5.0s for "teamTemplateTransferNameValidation" StaticText to exist
+    t =    27.30s     Checking `Expect predicate `existsNoRetry == 1` for object "teamTemplateTransferNameValidation" StaticText`
+    t =    27.30s         Checking existence of `"teamTemplateTransferNameValidation" StaticText`
+    t =    27.39s Find the "prepareTeamTemplateExport" Button
+    t =    27.46s Type 'aaaaaaaaaaaaaaaaaa...' into "teamTemplateTransferName" TextField
+    t =    27.46s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.61s     Find the "teamTemplateTransferName" TextField
+    t =    27.70s     Check for interrupting elements affecting "teamTemplateTransferName" TextField
+    t =    27.77s     Synthesize event
+    t =    30.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.67s Checking existence of `"teamTemplateTransferNameValidation" StaticText`
+    t =    30.75s Find the "prepareTeamTemplateExport" Button
+    t =    30.83s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    30.99s Added attachment named 'team-template-invalid-export-name'
+    t =    30.99s Tap "cancelTeamTemplateTransfer" Button
+    t =    30.99s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.99s     Find the "cancelTeamTemplateTransfer" Button
+    t =    31.07s     Check for interrupting elements affecting "cancelTeamTemplateTransfer" Button
+    t =    31.14s     Synthesize event
+    t =    31.43s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.81s Terminate com.dbakp.taskfold.workflowteststeameditbridge:45421
+    t =    32.91s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testInvalidTransferNamesBlockCopyAndExportWithoutReads]' passed (32.994 seconds).
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testNativeShareSheetCancelRetainsPreparedFileUntilDone]' started.
+    t =     0.00s Start Test at 2026-10-25 10:00:47.599
+    t =     0.02s Set Up
+    t =     0.02s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.02s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-25 10:00:47.621 xcodebuild[45366:19355161] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 10:00:47.621 xcodebuild[45366:19355161] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     3.99s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     5.68s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     6.71s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     6.71s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     6.82s Tap "openTeamTemplateLibraryFixture" Button
+    t =     6.82s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.82s     Find the "openTeamTemplateLibraryFixture" Button
+    t =     6.84s     Check for interrupting elements affecting "openTeamTemplateLibraryFixture" Button
+    t =     6.87s     Synthesize event
+    t =     7.19s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.72s Waiting 12.0s for "teamTemplate-ec240000-0000-4000-8000-000000000061" Button to exist
+    t =     8.77s     Checking `Expect predicate `existsNoRetry == 1` for object "teamTemplate-ec240000-0000-4000-8000-000000000061" Button`
+    t =     8.77s         Checking existence of `"teamTemplate-ec240000-0000-4000-8000-000000000061" Button`
+    t =     8.85s Tap "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =     8.85s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.86s     Find the "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =     8.90s     Check for interrupting elements affecting "teamTemplate-ec240000-0000-4000-8000-000000000061" Button
+    t =     8.95s     Synthesize event
+    t =     9.24s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.59s Waiting 10.0s for "copyTeamTemplate" Button to exist
+    t =    10.65s     Checking `Expect predicate `existsNoRetry == 1` for object "copyTeamTemplate" Button`
+    t =    10.65s         Checking existence of `"copyTeamTemplate" Button`
+    t =    10.73s Tap "exportTeamTemplate" Button
+    t =    10.73s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.74s     Find the "exportTeamTemplate" Button
+    t =    10.78s     Check for interrupting elements affecting "exportTeamTemplate" Button
+    t =    10.82s     Synthesize event
+    t =    11.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.14s Find the "teamTemplateTransferForm" CollectionView
+    t =    11.20s Find the "teamTemplateTransferForm" CollectionView
+    t =    11.24s Checking existence of `"prepareTeamTemplateExport" Button`
+    t =    11.31s Find the "prepareTeamTemplateExport" Button
+    t =    11.39s Find the "prepareTeamTemplateExport" Button
+    t =    11.46s Find the "prepareTeamTemplateExport" Button
+    t =    11.52s Tap "prepareTeamTemplateExport" Button
+    t =    11.52s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.64s     Find the "prepareTeamTemplateExport" Button
+    t =    11.71s     Check for interrupting elements affecting "prepareTeamTemplateExport" Button
+    t =    11.77s     Synthesize event
+    t =    12.05s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.32s Waiting 10.0s for "shareTeamTemplateFile" Button to exist
+    t =    13.37s     Checking `Expect predicate `existsNoRetry == 1` for object "shareTeamTemplateFile" Button`
+    t =    13.37s         Checking existence of `"shareTeamTemplateFile" Button`
+    t =    13.48s Find the "teamTemplateTransferForm" CollectionView
+    t =    13.53s Find the "teamTemplateTransferForm" CollectionView
+    t =    13.57s Checking existence of `"shareTeamTemplateFile" Button`
+    t =    13.63s Find the "shareTeamTemplateFile" Button
+    t =    13.70s Find the "shareTeamTemplateFile" Button
+    t =    13.77s Find the "shareTeamTemplateFile" Button
+    t =    13.84s Tap "shareTeamTemplateFile" Button
+    t =    13.84s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.84s     Find the "shareTeamTemplateFile" Button
+    t =    13.90s     Check for interrupting elements affecting "shareTeamTemplateFile" Button
+    t =    13.96s     Synthesize event
+    t =    14.25s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.80s Waiting 10.0s for "Close" Button to exist
+    t =    15.84s     Checking `Expect predicate `existsNoRetry == 1` for object "Close" Button`
+    t =    15.84s         Checking existence of `"Close" Button`
+    t =    16.01s         Capturing element debug description
+    t =    16.85s     Checking `Expect predicate `existsNoRetry == 1` for object "Close" Button`
+    t =    16.86s         Checking existence of `"Close" Button`
+    t =    17.00s         Capturing element debug description
+    t =    17.85s     Checking `Expect predicate `existsNoRetry == 1` for object "Close" Button`
+    t =    17.85s         Checking existence of `"Close" Button`
+    t =    18.02s         Capturing element debug description
+    t =    18.86s     Checking `Expect predicate `existsNoRetry == 1` for object "Close" Button`
+    t =    18.87s         Checking existence of `"Close" Button`
+    t =    19.01s         Capturing element debug description
+    t =    19.82s     Checking `Expect predicate `existsNoRetry == 1` for object "Close" Button`
+    t =    19.82s         Checking existence of `"Close" Button`
+    t =    19.97s         Capturing element debug description
+    t =    20.81s     Checking `Expect predicate `existsNoRetry == 1` for object "Close" Button`
+    t =    20.81s         Checking existence of `"Close" Button`
+    t =    20.95s         Capturing element debug description
+    t =    21.81s     Checking `Expect predicate `existsNoRetry == 1` for object "Close" Button`
+    t =    21.81s         Checking existence of `"Close" Button`
+    t =    21.96s         Capturing element debug description
+    t =    22.90s     Checking `Expect predicate `existsNoRetry == 1` for object "Close" Button`
+    t =    22.90s         Checking existence of `"Close" Button`
+    t =    23.05s         Capturing element debug description
+    t =    23.86s     Checking `Expect predicate `existsNoRetry == 1` for object "Close" Button`
+    t =    23.86s         Checking existence of `"Close" Button`
+    t =    24.01s         Capturing element debug description
+    t =    24.80s     Checking `Expect predicate `existsNoRetry == 1` for object "Close" Button`
+    t =    24.80s         Checking existence of `"Close" Button`
+    t =    24.95s         Capturing element debug description
+    t =    24.95s     Checking existence of `"Close" Button`
+    t =    25.08s Collecting debug information to assist test failure triage
+    t =    25.08s     Requesting snapshot of accessibility hierarchy for app with pid 45486
+    t =    25.22s Requesting snapshot of accessibility hierarchy for app with pid 45486
+    t =    25.68s Requesting snapshot of accessibility hierarchy for app with pid 45486
+/tmp/taskfold-template-handoff-ios-host/TaskfoldUITests/TeamTemplateLibraryUITests.swift:174: error: -[TaskfoldUITests.TeamTemplateLibraryUITests testNativeShareSheetCancelRetainsPreparedFileUntilDone] : XCTAssertTrue failed - Attributes: Application, 0x11319da40, pid: 45486, label: 'Taskfold Team Editor Test'
+Element subtree:
+ →Application, 0x11319da40, pid: 45486, label: 'Taskfold Team Editor Test'
+    Window (Main), 0x11319db80, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11319dcc0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11319de00, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x11319df40, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x11319e080, {{-402.0, -874.0}, {1206.0, 2622.0}}
+          Other, 0x11319e1c0, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x11319e300, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x11319e440, {{0.0, 0.0}, {402.0, 874.0}}
+                NavigationBar, 0x11319e580, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Team templates'
+                  Button, 0x11319e6c0, {{16.0, 62.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Team templates'
+                  StaticText, 0x11319e800, {{137.7, 73.7}, {126.7, 20.7}}, label: 'Team templates'
+                  Button, 0x11319e940, {{346.0, 66.0}, {36.0, 36.0}}, label: 'Refresh'
+                Other, 0x11319ea80, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x11319ebc0, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x11319ed00, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x11319ee40, {{0.0, 0.0}, {402.0, 874.0}}
+                        CollectionView, 0x11319ef80, {{0.0, 0.0}, {402.0, 874.0}}
+                          Other, 0x11319f0c0, {{-16.0, -1632.0}, {434.0, 1948.3}}
+                          Other, 0x11319f200, {{0.0, 0.0}, {402.0, 874.0}}
+                            Other, 0x11319f340, {{0.0, 0.0}, {402.0, 156.0}}
+                          Other, 0x11319f480, {{0.0, 0.0}, {402.0, 874.0}}
+                          Cell, 0x11319f5c0, {{16.0, 151.0}, {370.0, 56.3}}
+                            Other, 0x11319f700, {{16.0, 151.0}, {370.0, 56.3}}
+                              Other, 0x11319f840, {{16.0, 151.0}, {370.0, 56.3}}
+                                Other, 0x11319f980, {{16.0, 151.0}, {370.0, 56.3}}
+                                  Other, 0x11319fac0, {{16.0, 151.0}, {370.0, 56.3}}
+                            Other, 0x11319fc00, {{16.0, 151.0}, {370.0, 56.3}}
+                              Other, 0x11319fd40, {{16.0, 151.0}, {370.0, 56.3}}
+                                Other, 0x11319fe80, {{16.0, 151.0}, {370.0, 56.3}}
+                                  StaticText, 0x11323c000, {{16.0, 151.0}, {370.0, 56.3}}, label: 'Widget Studio'
+                                  Image, 0x11323c140, {{17.7, 165.7}, {52.7, 27.3}}, identifier: 'person.3.fill', label: 'Three People, Filled'
+                          Cell, 0x11323c280, {{16.0, 207.3}, {370.0, 91.3}}
+                            Other, 0x11323c3c0, {{16.0, 207.3}, {370.0, 91.3}}
+                              Other, 0x11323c500, {{16.0, 207.3}, {370.0, 91.3}}
+                                Other, 0x11323c640, {{16.0, 207.3}, {370.0, 91.3}}
+                                  Other, 0x11323c780, {{16.0, 207.3}, {370.0, 91.3}}
+                            Other, 0x11323c8c0, {{16.0, 207.3}, {370.0, 91.3}}
+                              Other, 0x11323ca00, {{16.0, 207.3}, {370.0, 91.3}}
+                                Other, 0x11323cb40, {{16.0, 207.3}, {370.0, 91.3}}
+                                  StaticText, 0x11323cc80, {{16.0, 207.3}, {370.0, 91.3}}, label: 'Reusable workflows for this team. Publishing a definition creates no tasks; later edits leave existing work unchanged.'
+                          Other, 0x11323cdc0, {{72.0, 206.3}, {298.0, 1.0}}
+                          Other, 0x11323cf00, {{-16.0, 316.3}, {434.0, 227.0}}
+                          Cell, 0x11323d040, {{16.0, 316.3}, {370.0, 40.3}}
+                            Other, 0x11323d180, {{16.0, 316.3}, {370.0, 40.3}}
+                            Other, 0x11323d2c0, {{16.0, 316.3}, {370.0, 40.3}}
+                              Other, 0x11323d400, {{16.0, 316.3}, {370.0, 40.3}}
+                                Other, 0x11323d540, {{16.0, 316.3}, {370.0, 40.3}}
+                                  StaticText, 0x11323d680, {{16.0, 316.3}, {370.0, 40.3}}, label: 'Design review kit'
+                          Cell, 0x11323d7c0, {{16.0, 356.7}, {370.0, 52.0}}
+                            Other, 0x11323d900, {{16.0, 356.7}, {370.0, 52.0}}
+                              Other, 0x11323da40, {{16.0, 356.7}, {370.0, 52.0}}
+                            Other, 0x11323db80, {{16.0, 356.7}, {370.0, 52.0}}
+                              Other, 0x11323dcc0, {{16.0, 356.7}, {370.0, 52.0}}
+                                Other, 0x11323de00, {{16.0, 356.7}, {370.0, 52.0}}
+                                  StaticText, 0x11323df40, {{16.0, 356.7}, {370.0, 52.0}}, label: '0 projects · 0 sections · 1 task'
+                          Cell, 0x11323e080, {{16.0, 408.7}, {370.0, 117.0}}
+                            Other, 0x11323e1c0, {{16.0, 408.7}, {370.0, 117.0}}
+                              Other, 0x11323e300, {{16.0, 408.7}, {370.0, 117.0}}
+                            Other, 0x11323e440, {{16.0, 408.7}, {370.0, 117.0}}
+                              Other, 0x11323e580, {{16.0, 408.7}, {370.0, 117.0}}
+                                Other, 0x11323e6c0, {{16.0, 408.7}, {370.0, 117.0}}
+                                  StaticText, 0x11323e800, {{32.0, 423.7}, {144.0, 20.3}}, identifier: 'templatePreview-team-library-task-0', label: 'Review the launch'
+                                  StaticText, 0x11323e940, {{32.0, 449.0}, {318.3, 42.3}}, label: 'Compare the full layout, confirm readable labels, and record the release decision.'
+                                  StaticText, 0x11323ea80, {{32.0, 496.3}, {238.0, 14.3}}, label: 'Priority 2 · 25 min · Planned day 1 · Design'
+                          Other, 0x11323ebc0, {{32.0, 407.7}, {338.0, 1.0}}
+                          Other, 0x11323ed00, {{-16.0, 543.0}, {434.0, 139.0}}
+                          Cell, 0x11323ee40, {{16.0, 560.7}, {370.0, 52.0}}
+                            Other, 0x11323ef80, {{16.0, 560.7}, {370.0, 52.0}}
+                              Other, 0x11323f0c0, {{16.0, 560.7}, {370.0, 52.0}}
+                            Other, 0x11323f200, {{16.0, 560.7}, {370.0, 52.0}}
+                              Other, 0x11323f340, {{16.0, 560.7}, {370.0, 52.0}}
+                                Other, 0x11323f480, {{16.0, 560.7}, {370.0, 52.0}}
+                                  Button, 0x11323f5c0, {{16.0, 560.7}, {370.0, 52.0}}, identifier: 'copyTeamTemplate', label: 'Save private copy…'
+                                    Image, 0x11323f700, {{32.7, 575.7}, {22.7, 22.0}}, identifier: 'square.on.square', label: 'Tabs'
+                                    StaticText, 0x11323f840, {{32.7, 575.7}, {186.0, 22.0}}, label: 'Save private copy…'
+                          Cell, 0x11323f980, {{16.0, 612.7}, {370.0, 52.0}}
+                            Other, 0x11323fac0, {{16.0, 612.7}, {370.0, 52.0}}
+                              Other, 0x11323fc00, {{16.0, 612.7}, {370.0, 52.0}}
+                            Other, 0x11323fd40, {{16.0, 612.7}, {370.0, 52.0}}
+                              Other, 0x11323fe80, {{16.0, 612.7}, {370.0, 52.0}}
+                                Other, 0x113240000, {{16.0, 612.7}, {370.0, 52.0}}
+                                  Button, 0x113240140, {{16.0, 612.7}, {370.0, 52.0}}, identifier: 'exportTeamTemplate', label: 'Export template…'
+                                    Image, 0x113240280, {{34.7, 626.0}, {19.0, 25.7}}, identifier: 'square.and.arrow.up', label: 'Share'
+                                    StaticText, 0x1132403c0, {{34.7, 626.0}, {171.7, 25.7}}, label: 'Export template…'
+                          Other, 0x113240500, {{72.0, 611.7}, {298.0, 1.0}}
+                          Other, 0x113240640, {{-16.0, 682.0}, {434.0, 1889.7}}
+                          Cell, 0x113240780, {{16.0, 699.7}, {370.0, 52.0}}
+                            Other, 0x1132408c0, {{16.0, 699.7}, {370.0, 52.0}}
+                              Other, 0x113240a00, {{16.0, 699.7}, {370.0, 52.0}}
+                            Other, 0x113240b40, {{16.0, 699.7}, {370.0, 52.0}}
+                              Other, 0x113240c80, {{16.0, 699.7}, {370.0, 52.0}}
+                                Other, 0x113240dc0, {{16.0, 699.7}, {370.0, 52.0}}
+                                  Button, 0x113240f00, {{16.0, 699.7}, {370.0, 52.0}}, identifier: 'editTeamTemplate', label: 'Edit or replace definition'
+                                    StaticText, 0x113241040, {{35.3, 715.5}, {221.7, 20.3}}, label: 'Edit or replace definition'
+                                    Image, 0x113241180, {{35.3, 717.0}, {17.3, 17.3}}, identifier: 'pencil', label: 'Edit'
+                          Cell, 0x1132412c0, {{16.0, 751.7}, {370.0, 52.0}}
+                            Other, 0x113241400, {{16.0, 751.7}, {370.0, 52.0}}
+                              Other, 0x113241540, {{16.0, 751.7}, {370.0, 52.0}}
+                            Other, 0x113241680, {{16.0, 751.7}, {370.0, 52.0}}
+                              Other, 0x1132417c0, {{16.0, 751.7}, {370.0, 52.0}}
+                                Other, 0x113241900, {{16.0, 751.7}, {370.0, 52.0}}
+                                  Button, 0x113241a40, {{16.0, 751.7}, {370.0, 52.0}}, identifier: 'deleteTeamTemplate', label: 'Remove from library'
+                          Other, 0x113241b80, {{72.0, 750.7}, {298.0, 1.0}}
+                          Other, 0x113241cc0, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %
+                            Other, 0x113241e00, {{396.0, 135.3}, {3.0, 673.7}}
+                          Other, 0x113241f40, {{369.0, 116.0}, {30.0, 696.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %
+                            Other, 0x113242080, {{396.0, 135.3}, {3.0, 673.7}}
+                Toolbar, 0x1132421c0, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x113242300, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x113242440, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x113242580, {{-402.0, -874.0}, {1206.0, 2622.0}}
+        Other, 0x1132426c0, {{0.0, 62.0}, {402.0, 812.0}}
+          Other, 0x113242800, {{0.0, 62.0}, {402.0, 812.0}}
+            Other, 0x113242940, {{0.0, 62.0}, {402.0, 812.0}}
+              Other, 0x113242a80, {{0.0, 62.0}, {402.0, 812.0}}
+                Other, 0x113242bc0, {{0.0, 62.0}, {402.0, 812.0}}
+                  NavigationBar, 0x113242d00, {{0.0, 78.0}, {402.0, 106.0}}, identifier: 'Export team template'
+                    Other, 0x113242e40, {{20.0, 82.0}, {64.3, 36.0}}
+                      Other, 0x113242f80, {{20.0, 82.0}, {64.3, 36.0}}
+                        Button, 0x1132430c0, {{20.0, 82.0}, {64.3, 36.0}}, identifier: 'cancelTeamTemplateTransfer', label: 'Done'
+                    StaticText, 0x113243200, {{16.0, 135.7}, {339.7, 40.7}}, label: 'Export team template'
+                  Other, 0x113243340, {{0.0, 62.0}, {402.0, 812.0}}
+                    Other, 0x113243480, {{0.0, 62.0}, {402.0, 812.0}}
+                      Other, 0x1132435c0, {{0.0, 62.0}, {402.0, 812.0}}
+                        Other, 0x113243700, {{0.0, 62.0}, {402.0, 812.0}}
+                          CollectionView, 0x113243840, {{0.0, 62.0}, {402.0, 812.0}}, identifier: 'teamTemplateTransferForm'
+                            Other, 0x113243980, {{-16.0, -1440.0}, {434.0, 1848.3}}
+                            Other, 0x113243ac0, {{0.0, 62.0}, {402.0, 812.0}}
+                              Other, 0x113243c00, {{0.0, 62.0}, {402.0, 110.0}}
+                            Other, 0x113243d40, {{0.0, 62.0}, {402.0, 812.0}}
+                            Cell, 0x113243e80, {{16.0, 184.0}, {370.0, 52.0}}
+                              Other, 0x113244000, {{16.0, 184.0}, {370.0, 52.0}}
+                                Other, 0x113244140, {{16.0, 184.0}, {370.0, 52.0}}
+                              Other, 0x113244280, {{16.0, 184.0}, {370.0, 52.0}}
+                                Other, 0x1132443c0, {{16.0, 184.0}, {370.0, 52.0}}
+                                  Other, 0x113244500, {{16.0, 184.0}, {370.0, 52.0}}
+                                    TextField, 0x113244640, {{32.0, 199.0}, {338.0, 22.0}}, identifier: 'teamTemplateTransferName', placeholderValue: 'Template name', value: Design review kit, Disabled
+                            Cell, 0x113244780, {{16.0, 236.0}, {370.0, 91.3}}
+                              Other, 0x1132448c0, {{16.0, 236.0}, {370.0, 91.3}}
+                                Other, 0x113244a00, {{16.0, 236.0}, {370.0, 91.3}}
+                              Other, 0x113244b40, {{16.0, 236.0}, {370.0, 91.3}}
+                                Other, 0x113244c80, {{16.0, 236.0}, {370.0, 91.3}}
+                                  Other, 0x113244dc0, {{16.0, 236.0}, {370.0, 91.3}}
+                                    StaticText, 0x113244f00, {{16.0, 236.0}, {370.0, 91.3}}, label: 'This file includes workflow notes, label names and schedule rules. Review the full contents before saving or sharing it outside the team.'
+                            Other, 0x113245040, {{32.0, 235.0}, {338.0, 1.0}}
+                            Cell, 0x113245180, {{16.0, 327.3}, {370.0, 63.7}}
+                              Other, 0x1132452c0, {{16.0, 327.3}, {370.0, 63.7}}
+                                Other, 0x113245400, {{16.0, 327.3}, {370.0, 63.7}}
+                              Other, 0x113245540, {{16.0, 327.3}, {370.0, 63.7}}
+                                Other, 0x113245680, {{16.0, 327.3}, {370.0, 63.7}}
+                                  Other, 0x1132457c0, {{16.0, 327.3}, {370.0, 63.7}}
+                                    StaticText, 0x113245900, {{16.0, 327.3}, {370.0, 63.7}}, label: 'Assignments, discussions, attachments and completion history are excluded. No tasks are created.'
+                            Other, 0x113245a40, {{32.0, 326.3}, {338.0, 1.0}}
+                            Other, 0x113245b80, {{-16.0, 408.3}, {434.0, 227.0}}
+                            Cell, 0x113245cc0, {{16.0, 408.3}, {370.0, 40.3}}
+                              Other, 0x113245e00, {{16.0, 408.3}, {370.0, 40.3}}
+                              Other, 0x113245f40, {{16.0, 408.3}, {370.0, 40.3}}
+                                Other, 0x113246080, {{16.0, 408.3}, {370.0, 40.3}}
+                                  Other, 0x1132461c0, {{16.0, 408.3}, {370.0, 40.3}}
+                                    StaticText, 0x113246300, {{16.0, 408.3}, {370.0, 40.3}}, label: 'Full contents'
+                            Cell, 0x113246440, {{16.0, 449.0}, {370.0, 52.0}}
+                              Other, 0x113246580, {{16.0, 449.0}, {370.0, 52.0}}
+                                Other, 0x1132466c0, {{16.0, 449.0}, {370.0, 52.0}}
+                              Other, 0x113246800, {{16.0, 449.0}, {370.0, 52.0}}
+                                Other, 0x113246940, {{16.0, 449.0}, {370.0, 52.0}}
+                                  Other, 0x113246a80, {{16.0, 449.0}, {370.0, 52.0}}
+                                    StaticText, 0x113246bc0, {{16.0, 449.0}, {370.0, 52.0}}, label: '0 projects · 0 sections · 1 task'
+                            Cell, 0x113246d00, {{16.0, 501.0}, {370.0, 117.0}}
+                              Other, 0x113246e40, {{16.0, 501.0}, {370.0, 117.0}}
+                                Other, 0x113246f80, {{16.0, 501.0}, {370.0, 117.0}}
+                              Other, 0x1132470c0, {{16.0, 501.0}, {370.0, 117.0}}
+                                Other, 0x113247200, {{16.0, 501.0}, {370.0, 117.0}}
+                                  Other, 0x113247340, {{16.0, 501.0}, {370.0, 117.0}}
+                                    StaticText, 0x113247480, {{32.0, 516.0}, {144.0, 20.3}}, identifier: 'templatePreview-team-transfer-task-0', label: 'Review the launch'
+                                    StaticText, 0x1132475c0, {{32.0, 541.3}, {318.3, 42.3}}, label: 'Compare the full layout, confirm readable labels, and record the release decision.'
+                                    StaticText, 0x113247700, {{32.0, 588.7}, {238.0, 14.3}}, label: 'Priority 2 · 25 min · Planned day 1 · Design'
+                            Other, 0x113247840, {{32.0, 500.0}, {338.0, 1.0}}
+                            Other, 0x113247980, {{-16.0, 635.3}, {434.0, 147.3}}
+                            Cell, 0x113247ac0, {{16.0, 653.0}, {370.0, 52.0}}
+                              Other, 0x113247c00, {{16.0, 653.0}, {370.0, 52.0}}
+                                Other, 0x113247d40, {{16.0, 653.0}, {370.0, 52.0}}
+                              Other, 0x113247e80, {{16.0, 653.0}, {370.0, 52.0}}
+                                Other, 0x113250000, {{16.0, 653.0}, {370.0, 52.0}}
+                                  Other, 0x113250140, {{16.0, 653.0}, {370.0, 52.0}}
+                                    Button, 0x113250280, {{16.0, 653.0}, {370.0, 52.0}}, identifier: 'shareTeamTemplateFile', label: 'Save or share file…'
+                                      Image, 0x1132503c0, {{34.7, 666.3}, {19.0, 25.7}}, identifier: 'square.and.arrow.up', label: 'Share'
+                                      StaticText, 0x113250500, {{34.7, 666.3}, {181.0, 25.7}}, label: 'Save or share file…'
+                            Cell, 0x113250640, {{16.0, 704.7}, {370.0, 60.3}}
+                              Other, 0x113250780, {{16.0, 704.7}, {370.0, 60.3}}
+                                Other, 0x1132508c0, {{16.0, 704.7}, {370.0, 60.3}}
+                              Other, 0x113250a00, {{16.0, 704.7}, {370.0, 60.3}}
+                                Other, 0x113250b40, {{16.0, 704.7}, {370.0, 60.3}}
+                                  Other, 0x113250c80, {{16.0, 704.7}, {370.0, 60.3}}
+                                    StaticText, 0x113250dc0, {{16.0, 704.7}, {370.0, 60.3}}, label: 'The current definition and access were checked before this file was prepared.'
+                            Other, 0x113250f00, {{72.0, 703.7}, {298.0, 1.0}}
+                            Other, 0x113251040, {{-16.0, 782.7}, {434.0, 1788.3}}
+                            Cell, 0x113251180, {{16.0, 782.7}, {370.0, 40.3}}
+                              Other, 0x1132512c0, {{16.0, 782.7}, {370.0, 40.3}}
+                              Other, 0x113251400, {{16.0, 782.7}, {370.0, 40.3}}
+                                Other, 0x113251540, {{16.0, 782.7}, {370.0, 40.3}}
+                                  Other, 0x113251680, {{16.0, 782.7}, {370.0, 40.3}}
+                                    StaticText, 0x1132517c0, {{16.0, 782.7}, {370.0, 40.3}}, label: 'Isolated test controls'
+                            Cell, 0x113251900, {{16.0, 823.0}, {370.0, 52.0}}
+                              Other, 0x113251a40, {{16.0, 823.0}, {370.0, 52.0}}
+                                Other, 0x113251b80, {{16.0, 823.0}, {370.0, 52.0}}
+                              Other, 0x113251cc0, {{16.0, 823.0}, {370.0, 52.0}}
+                                Other, 0x113251e00, {{16.0, 823.0}, {370.0, 52.0}}
+                                  Other, 0x113251f40, {{16.0, 823.0}, {370.0, 52.0}}
+                                    Button, 0x113252080, {{16.0, 823.0}, {370.0, 52.0}}, identifier: 'changeTemplateTransferSource', label: 'Change shared test definition'
+                            Other, 0x1132521c0, {{369.0, 132.0}, {30.0, 680.0}}, label: 'Vertical scroll bar, 2 pages', value: 0 %
+                              Other, 0x113252300, {{396.0, 135.0}, {3.0, 637.3}}
+                            Other, 0x113252440, {{369.0, 132.0}, {30.0, 680.0}}, label: 'Vertical scroll bar, 2 pages', value: 0 %
+                              Other, 0x113252580, {{396.0, 135.0}, {3.0, 637.3}}
+                  Toolbar, 0x1132526c0, {{0.0, 62.0}, {402.0, 812.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                    Other, 0x113252800, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x113252940, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x113252a80, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+        Popover, 0x113252bc0, {{9.0, 501.0}, {384.0, 364.0}}
+          Other, 0x113252d00, {{9.0, 501.0}, {384.0, 364.0}}
+            Other, 0x113252e40, {{9.0, 501.0}, {384.0, 364.0}}
+              Other, 0x113252f80, {{9.0, 501.0}, {384.0, 364.0}}
+                Other, 0x1132530c0, {{9.0, 501.0}, {384.0, 364.0}}
+                  Other, 0x113253200, {{9.0, 501.0}, {384.0, 364.0}}
+                    Other, 0x113253340, {{9.0, 501.0}, {0.0, 0.0}}
+                      Other, 0x113253480, {{9.0, 501.0}, {384.0, 364.0}}
+                        Other, 0x1132535c0, {{9.0, 501.0}, {384.0, 364.0}}
+                          Other, 0x113253700, {{9.0, 501.0}, {384.0, 364.0}}
+                            Other, 0x113253840, {{9.0, 501.0}, {384.0, 364.0}}
+                              Other, 0x113253980, {{9.0, 501.0}, {384.0, 364.0}}, identifier: 'ActivityListView'
+                                Other, 0x113253ac0, {{9.0, 501.0}, {384.0, 364.0}}, identifier: 'ShareSheet.RemoteContainerView'
+                                  Other, 0x113253c00, {{9.0, 501.0}, {384.0, 364.0}}
+                                    Other, 0x113253d40, {{9.0, 501.0}, {384.0, 364.0}}
+                                      Other, 0x113253e80, {{9.0, 501.0}, {384.0, 364.0}}
+                                        Other, 0x113258000, {{9.0, 501.0}, {384.0, 364.0}}
+                                          Other, 0x113258140, {{9.0, 501.0}, {384.0, 364.0}}
+                                            Other, 0x113258280, {{9.0, 501.0}, {384.0, 364.0}}
+                                              Other, 0x1132583c0, {{9.0, 501.0}, {384.0, 364.0}}
+                                                NavigationBar, 0x113258500, {{9.0, 501.0}, {384.0, 107.7}}, identifier: 'Design review kit'
+                                                  Image, 0x113258640, {{52.7, 544.7}, {32.0, 32.0}}
+                                                  Other, 0x113258780, {{115.7, 551.7}, {249.7, 18.0}}, identifier: 'LP.CaptionBar.TopCaption', label: 'Design review kit'
+                                                Other, 0x1132588c0, {{9.0, 501.0}, {384.0, 364.0}}
+                                                  Other, 0x113258a00, {{9.0, 501.0}, {384.0, 364.0}}
+                                                    Other, 0x113258b40, {{9.0, 501.0}, {384.0, 364.0}}, identifier: 'shareSheet.activity.contentView'
+                                                      CollectionView, 0x113258c80, {{9.0, 501.0}, {384.0, 364.0}}, identifier: 'activityCollectionView'
+                                                        Other, 0x113258dc0, {{9.0, 501.0}, {384.0, 364.0}}
+                                                          Other, 0x113258f00, {{9.0, 501.0}, {384.0, 147.7}}
+                                                        Other, 0x113259040, {{9.0, 501.0}, {384.0, 364.0}}
+                                                        ScrollView, 0x113259180, {{28.7, 608.7}, {344.7, 121.0}}
+                                                          Cell, 0x1132592c0, {{28.7, 608.7}, {82.0, 120.3}}, identifier: 'shareCell', label: 'More'
+                                                            Other, 0x113259400, {{28.7, 608.7}, {82.0, 120.3}}
+                                                              Other, 0x113259540, {{28.7, 698.7}, {82.0, 14.3}}
+                                                                StaticText, 0x113259680, {{28.7, 698.7}, {82.0, 14.3}}, identifier: 'cellTitleLabel', label: 'More'
+                                                                StaticText, 0x1132597c0, {{28.7, 698.7}, {32.7, 30.3}}, identifier: 'cellTitleLabel', label: 'Apple Inc'
+                                                                Other, 0x113259900, {{28.7, 698.7}, {82.0, 14.3}}
+                                                              Image, 0x113259a40, {{36.7, 624.7}, {66.0, 66.0}}, identifier: 'activityImageView'
+                                                        ScrollView, 0x113259b80, {{28.7, 730.7}, {344.7, 134.3}}
+                                                          Cell, 0x113259cc0, {{28.7, 730.7}, {82.0, 134.3}}, identifier: 'actionGroupCell', label: 'Copy'
+                                                            Other, 0x113259e00, {{28.7, 730.7}, {82.0, 134.3}}
+                                                              Other, 0x113259f40, {{28.7, 818.7}, {82.0, 14.3}}
+                                                                StaticText, 0x11325a080, {{28.7, 818.7}, {82.0, 14.3}}, identifier: 'cellTitleLabel', label: 'Copy'
+                                                                StaticText, 0x11325a1c0, {{28.7, 818.7}, {32.7, 30.3}}, identifier: 'cellTitleLabel', label: 'Apple Inc'
+                                                                Other, 0x11325a300, {{28.7, 818.7}, {82.0, 14.3}}
+                                                              Other, 0x11325a440, {{36.7, 746.7}, {66.0, 66.0}}
+                                                              Image, 0x11325a580, {{53.7, 760.7}, {32.0, 38.0}}, identifier: 'activityImageView', label: 'copy'
+                                                          Cell, 0x11325a6c0, {{116.3, 730.7}, {82.0, 134.3}}, identifier: 'actionGroupCell', label: 'Save to Files'
+                                                            Other, 0x11325a800, {{116.3, 730.7}, {82.0, 134.3}}
+                                                              Other, 0x11325a940, {{116.3, 818.7}, {82.0, 14.3}}
+                                                                StaticText, 0x11325aa80, {{116.3, 818.7}, {82.0, 14.3}}, identifier: 'cellTitleLabel', label: 'Save to Files'
+                                                                StaticText, 0x11325abc0, {{116.3, 818.7}, {32.7, 30.3}}, identifier: 'cellTitleLabel', label: 'Apple Inc'
+                                                                Other, 0x11325ad00, {{116.3, 818.7}, {82.0, 14.3}}
+                                                              Other, 0x11325ae40, {{124.3, 746.7}, {66.0, 66.0}}
+                                                              Image, 0x11325af80, {{135.7, 758.0}, {43.3, 43.3}}, identifier: 'activityImageView'
+                                                        Other, 0x11325b0c0, {{36.7, 729.7}, {328.7, 1.0}}, identifier: 'collectionView.footerView'
+                                                      Other, 0x11325b200, {{36.7, 608.7}, {328.7, 1.0}}
+                                                Toolbar, 0x11325b340, {{9.0, 501.0}, {384.0, 364.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                                                  Other, 0x11325b480, {{9.0, 501.0}, {384.0, 364.0}}
+Path to element:
+ →Application, 0x11319da40, pid: 45486, label: 'Taskfold Team Editor Test'
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+  Output: {
+    Application, 0x11325b5c0, pid: 45486, label: 'Taskfold Team Editor Test'
+  }
+
+    t =    25.97s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    26.14s Added attachment named 'team-template-native-share-sheet'
+    t =    26.14s Tap "Close" Button
+    t =    26.14s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.15s     Find the "Close" Button
+    t =    27.32s         Find the "Close" Button (retry 1)
+    t =    28.47s         Find the "Close" Button (retry 2)
+    t =    28.61s Requesting snapshot of accessibility hierarchy for app with pid 45486
+/tmp/taskfold-template-handoff-ios-host/TaskfoldUITests/TeamTemplateLibraryUITests.swift:177: error: -[TaskfoldUITests.TeamTemplateLibraryUITests testNativeShareSheetCancelRetainsPreparedFileUntilDone] : Failed to tap "Close" Button: No matches found for first query match sequence: `Descendants matching type Button` -> `Elements matching predicate '"Close" IN identifiers'`, given input App element pid: 45486
+    t =    28.74s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testNativeShareSheetCancelRetainsPreparedFileUntilDone]' failed (29.031 seconds).
+Test Suite 'TeamTemplateLibraryUITests' failed at 2026-10-25 10:01:16.630.
+	 Executed 2 tests, with 2 failures (0 unexpected) in 62.024 (62.031) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-25 10:01:16.635.
+	 Executed 2 tests, with 2 failures (0 unexpected) in 62.024 (62.036) seconds
+Test Suite 'Selected tests' failed at 2026-10-25 10:01:16.635.
+	 Executed 2 tests, with 2 failures (0 unexpected) in 62.024 (62.038) seconds
+** BUILD INTERRUPTED **

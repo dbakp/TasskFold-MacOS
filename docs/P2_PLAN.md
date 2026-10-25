@@ -4,6 +4,11 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Latest follow-up adds inline copy/export name validation. Native iPhone/iPad
+share-popover cancellation/reopening and final file cleanup now pass; see
+`p2-team-template-handoff-evidence.json`. External provider delivery and the
+remaining work below stay open.
+
 Newest native stage implements the team-owned library catalog, publication and
 replacement/removal reviews, private request recovery, and reviewed private-copy/
 portable-export paths. Fresh scope/content checks precede artifacts; refresh keeps

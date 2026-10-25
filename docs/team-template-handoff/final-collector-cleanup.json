@@ -1,0 +1,12 @@
+[
+  {
+    "pid": 46513,
+    "args": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4 -derivedDataPath /tmp/taskfold-template-handoff-ios-build -resultBundlePath /tmp/taskfold-template-handoff-phone-final.xcresult -parallel-testing-enabled NO -only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testNativeShareSheetCancelRetainsPreparedFileUntilDone -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 test-without-building",
+    "reason": "All tests terminal; post-test Simulator diagnostic collection stuck; sampled phone collector."
+  },
+  {
+    "pid": 46514,
+    "args": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378 -derivedDataPath /tmp/taskfold-template-handoff-ios-build -resultBundlePath /tmp/taskfold-template-handoff-tablet-final.xcresult -parallel-testing-enabled NO -only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testNativeShareSheetCancelRetainsPreparedFileUntilDone -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 test-without-building",
+    "reason": "All tests terminal; post-test Simulator diagnostic collection stuck; sampled phone collector."
+  }
+]

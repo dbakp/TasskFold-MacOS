@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-25",
+  "platform": "macos",
+  "status": "Transfer name validation implemented independently; native share cancellation accepted on iPhone/iPad; wider Px remains open",
+  "sourceSHA256": {
+    "Taskfold/Views/TeamTemplateLibraryView.swift": "20a77137088b6c26376408c2e881f208c26588593b2a966f03282c0be80764a4"
+  },
+  "builds": {
+    "ios": "TEST BUILD SUCCEEDED",
+    "macos": "BUILD SUCCEEDED"
+  },
+  "native": {
+    "invalidNames": "phone and tablet passed; no extra reads or copies/receipts",
+    "shareCancellation": "final v3 phone and tablet passed; fresh directory, two native share opens/cancels, bytes preserved until Done removes directory",
+    "initialFailures": "Missing Close button assumption, then stale prior export directory assertion; logs retained; post-test diagnostic collectors stopped only after terminal tests and exact process validation. v3 uses documented collect-test-diagnostics never."
+  },
+  "core": "No Core changes; prior 111-test proof not rerun in this UI-only stage.",
+  "limits": [
+    "No external share-provider delivery",
+    "No Mac runtime acceptance in this stage",
+    "Shared run destinations, hosted acceptance and wider Px open",
+    "User-deferred signing/distribution and providers unchanged"
+  ],
+  "evidenceDirectory": "team-template-handoff"
+}

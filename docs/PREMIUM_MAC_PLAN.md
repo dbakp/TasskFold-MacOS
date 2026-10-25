@@ -5729,3 +5729,22 @@ Source build caches and baseline Simulators are preserved; owned temporary build
 results/source copies are removed after evidence retention, and both isolated
 app/runner installations are closed/uninstalled. Release/distribution, remote
 reminders, old-client rollout, provider and physical-device deferrals are unchanged.
+
+### 2026-10-25 — Template transfer validation and native share cancellation
+
+Copy/export names now show a bounded-name validation hint and disable submission
+before any read when empty or too long. Both independent Debug app builds pass.
+The installed signed iPhone/iPad checks pass invalid-name/no-extra-read coverage,
+and the final native share test passes open/cancel/reopen/cancel, byte preservation
+and Done cleanup. Earlier test failures were automation assumptions: iOS 27 uses
+an outside-dismissed popover, and a failed prior run left a different temporary
+export directory. The corrected test tracks exactly its newly created directory.
+Retained logs include those failures; no production cleanup bypass was added.
+
+The system share previews were inspected on both sizes. Installed app signatures
+and binary hashes match the tested products. External share-provider delivery,
+Mac runtime/accessibility, shared run destinations, genuine hosted acceptance and
+the wider Px goal remain open. No hosted service/configuration, rollout or real
+user data changed. See p2-team-template-handoff-evidence.json. Owned temporary
+builds/results and isolated app/runner installs are removed after retaining proof;
+repo build caches and baseline Simulators remain intact.

@@ -300,7 +300,11 @@ private struct TeamTemplateTransferView: View {
     @State private var message: String?
     @State private var exportData = Data()
     @State private var exporting = false
-    private var allowed: Bool { phase == .active && current() && !busy && !finished }
+    private var nameProblem: String? {
+        (try? TeamTemplateLibraryValue.name(.string(name.trimmingCharacters(in: .whitespacesAndNewlines)))) == nil
+            ? "Use a name of 1–160 characters without hidden formatting or line breaks." : nil
+    }
+    private var allowed: Bool { phase == .active && current() && !busy && !finished && nameProblem == nil }
     var body: some View {
         NavigationStack {
             Form {
@@ -310,7 +314,8 @@ private struct TeamTemplateTransferView: View {
                         Button("Review latest definition") { refreshReview() }.disabled(busy).accessibilityIdentifier("refreshTeamTemplateTransfer")
                     } }
                     Section {
-                        TextField("Template name", text: $name).focused($nameFocused).disabled(busy).accessibilityIdentifier("teamTemplateTransferName")
+                        TextField("Template name", text: $name).focused($nameFocused).disabled(busy).accessibilityIdentifier("teamTemplateTransferName").accessibilityHint(nameProblem ?? "Name for the copied or exported template.")
+                        if let nameProblem { Text(nameProblem).font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("teamTemplateTransferNameValidation") }
                         Text(request.exporting ? "This file includes workflow notes, label names and schedule rules. Review the full contents before saving or sharing it outside the team." : "Save a private template in your account. The team’s definition stays unchanged; later team edits will not update your copy.").font(.callout).foregroundStyle(.secondary)
                         Text("Assignments, discussions, attachments and completion history are excluded. No tasks are created.").font(.footnote).foregroundStyle(.secondary)
                     }
