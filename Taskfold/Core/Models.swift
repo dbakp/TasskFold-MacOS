@@ -261,7 +261,7 @@ struct SyncConflict: Identifiable {
     /// Resolve only the edit that was reviewed, then replay later offline work.
     /// Returning nil leaves stale or mismatched review requests untouched.
     func resolving(_ snapshot: Snapshot, keepLocal: Bool) -> Snapshot? {
-        if mutation.teamCompletion != nil { return nil }
+        if mutation.teamCompletion != nil || mutation.teamTaskBatch != nil { return nil }
         if ProductivityGoalEdit.matches(mutation) { return ProductivityGoalEdit.resolving(self,snapshot:snapshot,keepLocal:keepLocal) }
         if mutation.table == WorkflowTemplate.table { return TemplateEditing.resolving(self, snapshot: snapshot, keepLocal: keepLocal) }
         guard mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
@@ -462,6 +462,8 @@ struct Snapshot: Codable, Equatable, Sendable {
     }
     /// Confirm the server revision before replaying work queued during the request.
     @discardableResult mutating func acknowledge(_ change: Mutation, saved: Record?) -> Bool {
+        if change.method == "TEAM_BATCH", change.teamTaskBatch == nil { return false }
+        if let batch = change.teamTaskBatch, batch.isCompletion { return batch.acknowledgeCompletion(saved, header: change, snapshot: &self) }
         if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
             guard let command=change.teamCompletion else { return false }
             return command.acknowledge(saved,header:change,snapshot:&self)
@@ -501,7 +503,7 @@ struct Snapshot: Codable, Equatable, Sendable {
 /// snapshot in the encrypted vault before replacing the active workspace.
 extension Snapshot {
     func recoveryProjectIDs(for mutation: Mutation) -> [String] {
-        guard mutation.teamTaskScope == nil, mutation.teamCompletion == nil, pending.contains(mutation), ["tasks", "sections", "projects", "project_collaborators"].contains(mutation.table),
+        guard mutation.teamTaskScope == nil, mutation.teamCompletion == nil, mutation.teamTaskBatch == nil, pending.contains(mutation), ["tasks", "sections", "projects", "project_collaborators"].contains(mutation.table),
               ["POST", "PATCH", "DELETE"].contains(mutation.method) else { return [] }
         if mutation.table == "projects", mutation.method == "POST" { return [] }
         let row = tables[mutation.table]?.first { $0.id.lowercased() == mutation.recordID.lowercased() }

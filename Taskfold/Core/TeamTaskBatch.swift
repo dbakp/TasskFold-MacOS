@@ -3,7 +3,11 @@ import Foundation
 /// One durable intent and one RPC cover the complete selection. Member requests
 /// remain frozen inside the envelope; a transport retry never rebuilds the group.
 struct TeamTaskBatch: Codable, Equatable, Sendable {
-    enum Operation: String, Codable, Sendable { case delete, restore, edit }
+    enum Operation: String, Codable, Sendable { case delete, restore, edit, complete
+        case undoComplete = "undo_complete"
+    }
+    var completionOperation: TeamCompletion.Operation? { operation == .complete ? .complete : operation == .undoComplete ? .undo : nil }
+    var isCompletion: Bool { completionOperation != nil }
     static let planningFields: Set<String> = ["priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels"]
     static func dateFields(task: Record, day: String?) -> [String: JSON] {
         guard let day else { return ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null] }
@@ -26,13 +30,19 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
     }
     func body(for header: Mutation) throws -> [String:JSON] {
         guard header.table == "tasks",header.method == "TEAM_BATCH",header.recordID == header.id.uuidString.lowercased(),
-              header.teamTaskBatch == self,header.fields.isEmpty,header.baseline == nil,header.teamTaskScope == nil,header.organizationOrder == nil,
+              header.teamTaskBatch == self,header.fields.isEmpty,header.baseline == nil,header.teamTaskScope == nil,header.teamCompletion == nil,header.organizationOrder == nil,
               [account,team].allSatisfy(TeamProjectValue.id),(1...100).contains(items.count),
-              (operation == .restore) == (restores != nil) else { throw Self.invalid }
+              (isCompletion ? (operation != .undoComplete || restores != nil) : (operation == .restore) == (restores != nil)) else { throw Self.invalid }
         let ids=items.map(\.recordID),nonces=items.map(\.id)
-        guard ids == ids.sorted(),Set(ids).count == items.count,Set(nonces).count == items.count,!nonces.contains(header.id) else { throw Self.invalid }
+        guard ids == ids.sorted(),Set(ids).count == items.count,Set(nonces).count == items.count,!nonces.contains(header.id), restores != header.id, restores.map({ !nonces.contains($0) }) ?? true else { throw Self.invalid }
         let values=try items.map { item -> JSON in
-            guard item.teamTaskBatch == nil, let scope=item.teamTaskScope,scope.account == account,scope.origin == origin,scope.team == team else { throw Self.invalid }
+            if let action = completionOperation {
+                guard item.teamTaskBatch == nil, let command = item.teamCompletion,
+                      command.operation == action, command.scope.account == account, command.scope.origin == origin, command.scope.team == team,
+                      (command.related != nil) == (restores != nil) else { throw Self.invalid }
+                return .object(try command.body(for: item))
+            }
+            guard item.teamCompletion == nil, item.teamTaskBatch == nil, let scope=item.teamTaskScope,scope.account == account,scope.origin == origin,scope.team == team else { throw Self.invalid }
             if operation == .edit {
                 // Absent nullable planning values mean null in saved task rows.
                 // Normalize only validation; keep the frozen row byte-for-byte.
@@ -47,12 +57,13 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
             return .object(try scope.lifecycleBody(for:item))
         }
         var body:[String:JSON]=["team_id":.string(team),"request_id":.string(header.id.uuidString.lowercased()),"items":.array(values)]
-        if let restores { body["restores"] = .string(restores.uuidString.lowercased()) }
+        if let restores { body[isCompletion ? "related_request" : "restores"] = .string(restores.uuidString.lowercased()) }
         guard try JSONEncoder().encode(body).count <= 1_500_000 else { throw AppFailure(message:"This selection is too large. Choose fewer tasks.") }
         return body
     }
     func confirm(_ reply:[String:JSON],for header:Mutation) throws {
         let request=try body(for:header)
+        if isCompletion { _ = try completionReceipts(reply, for: header); return }
         let expected=request["items"]!.list.map { value -> JSON in
             let row=value.object
             return .object(Dictionary(uniqueKeysWithValues:["task_id","project_id","task_generation","request_id"].map{($0,row[$0]!)}))
@@ -66,6 +77,7 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
             guard changes.count == 1,let batch=changes[0].teamTaskBatch else { throw Self.invalid }
             _=try batch.body(for:changes[0]);return changes
         }
+        if changes.count > 1 && changes.contains(where: { $0.teamCompletion != nil || $0.method == "TEAM_COMPLETE" }) { throw Self.invalid }
         if changes.count > 1 && changes.contains(where: { $0.teamTaskScope != nil && $0.method == "PATCH" }) { throw Self.invalid }
         let scoped=changes.filter{$0.teamTaskScope != nil && $0.method == "DELETE"}
         if !scoped.isEmpty && changes.count > 1 && scoped.count != changes.count { throw AppFailure(message:"Choose tasks from one workspace for this action.") }
@@ -82,6 +94,13 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
     }
     func inverse(of header:Mutation,snapshot:Snapshot) throws -> Mutation {
         _=try body(for:header)
+        if isCompletion {
+            let inverse = try items.map { item -> Mutation in
+                guard let command = item.teamCompletion else { throw Self.invalid }
+                return try command.inverse(of: item)
+            }
+            return Self.header(Self(account: account, origin: origin, team: team, operation: operation == .complete ? .undoComplete : .complete, restores: header.id, items: inverse))
+        }
         let inverseItems=try items.map { item -> Mutation in
             guard var scope=item.teamTaskScope else { throw Self.invalid }
             if operation == .edit {
@@ -105,8 +124,15 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
                        restores:operation == .delete ? header.id:nil,items:inverseItems)
         return Self.header(value)
     }
-    static func historyAction(_ original:Mutation) -> Mutation {
+    static func historyAction(_ original:Mutation, snapshot: Snapshot? = nil) -> Mutation {
         guard var batch=original.teamTaskBatch else { return TeamTaskEditScope.historyAction(original) }
+        if batch.isCompletion {
+            // A new action requires the current source revision and fresh member
+            // nonces. A transport retry bypasses this method entirely.
+            guard let snapshot else { return original }
+            batch.items = batch.items.map { TeamCompletion.historyAction($0, snapshot: snapshot) }
+            return header(batch)
+        }
         batch.items=batch.items.map { old in
             var value=old;value.id=UUID()
             if batch.operation == .restore { value=TaskGeneration.restoring(value,existing:nil) }
@@ -115,6 +141,17 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
         return header(batch)
     }
     func apply(to snapshot:inout Snapshot,header:Mutation) -> Bool {
+        if isCompletion {
+            guard (try? body(for: header)) != nil else { return false }
+            // Validate all sources before projecting any of the members.
+            for item in items {
+                guard let command = item.teamCompletion, let current = snapshot.tables["tasks"]?.first(where: { $0.id == item.recordID }),
+                      command.operation != .complete || TeamCompletion.sameLocal(current, command.source) else { return false }
+            }
+            var result = snapshot
+            for item in items { guard item.teamCompletion!.apply(to: &result, header: item) else { return false } }
+            snapshot = result; return true
+        }
         guard (try? body(for:header)) != nil,
               items.allSatisfy({ item in
                   guard let scope=item.teamTaskScope,snapshot.tables["projects"]?.contains(where:{$0.id == scope.project}) == true else { return false }
@@ -215,5 +252,56 @@ struct TeamTaskPlanningSelection: Equatable, Sendable {
         let first = drafts[0].scope
         let batch = TeamTaskBatch(account: first.account, origin: first.origin, team: first.team, operation: .edit, restores: nil, items: items)
         let header = TeamTaskBatch.header(batch, id: requestID); _ = try batch.body(for: header); return header
+    }
+}
+
+
+extension TeamTaskBatch {
+    /// Verify every member before accepting any part of a group response.
+    func completionReceipts(_ reply: [String: JSON], for header: Mutation) throws -> [TeamCompletion.Receipt] {
+        let request = try body(for: header)
+        guard let action = completionOperation,
+              Set(reply.keys) == ["batch_protocol", "account", "team_id", "request_id", "operation", "related_request", "items", "replayed"],
+              reply["batch_protocol"] == .number(1), reply["account"] == .string(account), reply["team_id"] == .string(team),
+              reply["request_id"] == request["request_id"], reply["operation"] == .string(action.rawValue),
+              reply["related_request"] == (request["related_request"] ?? .null), case .bool? = reply["replayed"],
+              case .array(let replies)? = reply["items"], replies.count == items.count,
+              try JSONEncoder().encode(reply).count <= 4_300_000 else { throw Self.invalid }
+        return try zip(items, replies).map { item, value in
+            guard case .object(let raw) = value, raw["replayed"] == reply["replayed"], let command = item.teamCompletion else { throw Self.invalid }
+            return try command.receipt(raw, for: item)
+        }
+    }
+    /// All receipts publish together. A later touching cohort remains durable
+    /// until its complete history can be reconstructed, never partially dropped.
+    func acknowledgeCompletion(_ saved: Record?, header: Mutation, snapshot: inout Snapshot) -> Bool {
+        guard isCompletion, snapshot.pending.first == header, let saved,
+              case .object(let raw) = saved["team_completion_batch_reply"],
+              let receipts = try? completionReceipts(raw, for: header) else { return false }
+        var ids = Set(items.map(\.recordID)), projects = Set<String>()
+        for (item, receipt) in zip(items, receipts) {
+            guard let command = item.teamCompletion else { return false }
+            if let proposed = command.proposed { ids.insert(proposed.id) }
+            if let successor = receipt.successor { ids.insert(successor.id) }
+            projects.formUnion([command.scope.project, command.seriesProject])
+        }
+        guard projects.allSatisfy({ p in snapshot.tables["projects"]?.contains(where: { $0.id == p }) == true }) else { return false }
+        let later = Array(snapshot.pending.dropFirst())
+        func touches(_ change: Mutation) -> Bool {
+            if change.table == "projects", projects.contains(change.recordID) { return true }
+            if change.table == "tasks", ids.contains(change.recordID) { return true }
+            if let batch = change.teamTaskBatch { return batch.items.contains(where: touches) }
+            if let command = change.teamCompletion { return ids.contains(command.source.id) || command.proposed.map { ids.contains($0.id) } == true }
+            return false
+        }
+        guard !later.contains(where: touches) else { return false }
+        var result = snapshot
+        let replies = raw["items"]!.list
+        for (index, item) in items.enumerated() {
+            // Other members of this same atomic action are not later drafts.
+            result.pending = [item] + later
+            guard item.teamCompletion!.acknowledge(Record(["id": .string(item.recordID), "team_completion_reply": replies[index]]), header: item, snapshot: &result) else { return false }
+        }
+        result.pending = later; snapshot = result; return true
     }
 }

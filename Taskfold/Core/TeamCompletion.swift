@@ -66,7 +66,7 @@ struct TeamCompletion: Codable, Equatable, Sendable {
         return Self.header(Self(scope:scope,operation:operation == .complete ? .undo:.complete,source:source,completedAt:completedAt,inputZone:inputZone,seriesID:seriesID,seriesGeneration:seriesGeneration,seriesProject:seriesProject,nextGeneration:nextGeneration,proposed:proposed,related:header.id))
     }
     static func historyAction(_ header:Mutation,snapshot:Snapshot) -> Mutation {
-        guard let command=header.teamCompletion else { return TeamTaskBatch.historyAction(header) }
+        guard let command=header.teamCompletion else { return TeamTaskBatch.historyAction(header, snapshot: snapshot) }
         if command.operation == .complete,
            let task=snapshot.tables["tasks"]?.first(where:{$0.id == command.source.id}),task["task_generation"] == command.source["task_generation"],task["project_id"] == .string(command.scope.project),
            let clock=TaskPlanning.instant(command.completedAt),

@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "status": "Completion selection Core/storage/transport stage verified; dependent cohort reconciliation and native UI remain open",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamTaskBatch.swift": "0ced6b5db57613f1b57f5b53aaf72fb7fdbbcbfcfda597e72e56facdd01278d3",
+    "Taskfold/Core/TeamCompletion.swift": "06452d5e38dc0354d584788114bafa7052801dee878c3f5d7cc1b539d8f74c4c",
+    "Taskfold/Core/Models.swift": "7ca9193ca34fd4367390ae552e6588a29666ceaf32aba5df7f3300166be7b688",
+    "Taskfold/Core/Backend.swift": "80433b86e8d5a538965e975470ab57fa6b75002e0e21b4231c840c833d637896",
+    "Taskfold/Core/Store.swift": "9f80827f37bfb107f30cf9794f798bce92fd1453ea478945ea45bbd54640c44d",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "443db7a412d67c26b1897dfb6a2520a53af16b4b882c535b9cb3d3d5822bba19",
+    "TaskfoldTests/Fixtures/team-completion-batch-v1.json": "0b3b827bf632a8e5c5f11a9aa136c91d88eaa76df529e3b8f5b63d76d491ee4a"
+  },
+  "verification": {
+    "selectedCoreCases": 564,
+    "newCompletionBatchCases": 13,
+    "failures": 0,
+    "finalOwnAppBuild": "arm64 Debug passed; signing disabled, compilation only",
+    "SQLFixture": "Own independently generated accepted service fixture; exact body/reply/persistence comparisons for complete, Undo, Redo and recurrence",
+    "transport": "Actual Backend with synthetic URLProtocol; one private RPC, no real data/session/provider calls",
+    "nativeRuntime": "Not exercised; no app installed or launched"
+  },
+  "initialFailure": "Raw JSON request-byte equality incorrectly assumed stable object-key order. Decoded semantic body equality proves frozen IDs/clocks/generations/fields and array order instead; initial failure logs retained.",
+  "limits": [
+    "Touching later cohorts pause entire acknowledgement until complete dependent history reconstruction is implemented",
+    "No native bulk selection entry or installed batch UI acceptance",
+    "No hosted deployment or current/older-client release/rollout acceptance",
+    "All wider ranked Px and standing release/provider/physical-device deferrals remain open"
+  ],
+  "deployed": false,
+  "teamRolloutEnabled": false,
+  "realDataChanged": false,
+  "cleanup": {
+    "scratchPrefix": "/tmp/taskfold-completion-client-",
+    "removedAllocatedGiB": 1.21,
+    "repoBuildCachesPreserved": true,
+    "readyMacHostAndBuildPreserved": true,
+    "appsInstalledOrLaunched": false,
+    "noGlobalCleanup": true
+  }
+}

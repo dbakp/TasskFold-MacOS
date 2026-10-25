@@ -6077,3 +6077,58 @@ changes; never decompose a saved selection into individual retries. Current
 native single-checkbox acceptance is unchanged. Broader rank 6, child records,
 Watch/Wear OS and all remaining Px stay open. No hosted schema/configuration,
 rollout, real task data or user-deferred release/provider/device work changed.
+
+
+### 2026-10-25 — Durable completion selection client (Core stage)
+
+Each app independently extends the existing TeamTaskBatch carrier with complete
+and undo_complete. Mutation's outer format is unchanged; the internal restores
+reference maps to related_request for completion history. Member TeamCompletion
+commands retain their frozen clocks, sources, scopes, generations and nonces.
+Body validation rejects mixed contexts, nested groups, reused identities, invalid
+relations, unbounded content and independent multi-completion queue writes.
+Old deletion/restoration/planning selections retain their existing contracts.
+Updated clients are required for the new operation values; this is not older-
+client rollout or upgrade acceptance.
+
+Local projection uses a temporary snapshot and publishes only after every source
+and member applies. One history entry contains the complete inverse selection.
+Actual Undo/Redo obtain fresh group/member request identities and current source
+revisions; frozen transport retries retain their original logical payload.
+Recurring Redo chooses fresh successor incarnations; converging members share
+one projected future occurrence. The existing recursive team-access mask knows
+every member/source/proposed successor and refuses the whole unavailable group.
+Shared groups are excluded from ordinary personal conflict/project recovery.
+
+Backend uses one taskfold_complete_team_tasks RPC, with origin/account/session
+fences, no-store/no-cookie transport, redirect refusal, 25-second timeout and a
+4.3 MB streamed reply bound. It validates the whole reply before exposing a saved
+receipt: exact group identity/operation/relation, complete sorted member list,
+per-member completion proofs and consistent replay bits. Errors retain saved
+intent and do not expose server detail or fall back to individual task calls.
+A late reply cannot cross another account or a new session for the same account.
+
+For a front-of-queue group with no touching later work, complete acknowledgement
+merges all receipts on a temporary snapshot and removes the group only after all
+members succeed. Unrelated queued work remains unchanged. Missing projects,
+invalid/partial/foreign/reordered replies and authored provisional-row conflicts
+keep the entire original snapshot/queue. Touching later cohorts (including queued
+completion → Undo → Redo) currently refuse acknowledgement and stay durable.
+They still need full cohort reconstruction before the native bulk entry is added;
+no claim of finished offline batch history or native bulk completion is made.
+
+Both repos pass 564 selected Core regressions, including 13 new completion-batch
+cases, and independent final arm64 Debug app builds with signing disabled. Actual
+SQL-generated complete/Undo/Redo/recurring envelopes and replies come from each
+repo's independently accepted 243-check service fixture. HTTP tests exercise the
+actual Backend with synthetic intercepted requests. Initial byte-order retry
+assertions were corrected to compare JSON values: object-key order may differ
+while every request identity, field and array order is frozen. Initial failures
+and final logs/hashes are retained in p2-completion-client-evidence.json.
+
+Next: reconcile complete dependent cohorts transactionally, preserve authored
+provisional edits through adoption/recovery, then add captured native selection
+review/Cancel/Save/Undo/Redo/relaunch acceptance in both apps. Mac runtime/spoken/
+window and hosted acceptance, other rank-6 work, Watch/Wear OS and the full Px
+objective remain open. No UI control, hosted migration/configuration, rollout,
+real task or user-deferred release/provider/device setting changed.
