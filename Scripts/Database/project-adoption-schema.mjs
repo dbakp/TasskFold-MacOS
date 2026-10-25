@@ -1,7 +1,8 @@
 import {readFile} from 'node:fs/promises';
 import {loadProjectOwnershipSchema} from './project-ownership-schema.mjs';
 export const projectAdoptionMigration='20261025014040_team_project_adoption_review.sql';
-export async function loadProjectAdoptionSchema(execute,{base=true}={}) {
+export const projectAdoptionConnectionsMigration='20261025031915_team_project_adoption_connection_fences.sql';
+export async function loadProjectAdoptionSchema(execute,{base=true,connections=true}={}) {
  if(base) {
   await loadProjectOwnershipSchema(execute);
   const foundation=await readFile(new URL('../../supabase/migrations/20261020174132_project_workflow_foundation.sql',import.meta.url),'utf8');
@@ -10,4 +11,5 @@ export async function loadProjectAdoptionSchema(execute,{base=true}={}) {
    await execute(await readFile(new URL('../../supabase/migrations/'+file,import.meta.url),'utf8'));
  }
  await execute(await readFile(new URL('../../supabase/migrations/'+projectAdoptionMigration,import.meta.url),'utf8'));
+ if(connections) await execute(await readFile(new URL('../../supabase/migrations/'+projectAdoptionConnectionsMigration,import.meta.url),'utf8'));
 }

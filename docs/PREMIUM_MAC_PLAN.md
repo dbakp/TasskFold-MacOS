@@ -5420,3 +5420,33 @@ acceptance and file-custody/personal integration pause/retarget adapters, then h
 acceptance. Rank 6, remaining shared batch/history/keyboard, independent child
 records, Watch/Wear OS and the wider Px work remain open. Every user-deferred
 release/provider/device dependency remains deferred.
+
+
+### 2026-10-25 — Project connection cutover coordination (source only)
+
+Added the coordination required before reviewed personal email/webhook pause or
+retarget during adoption: closed connection-owner Auth cohorts, nonblocking account
+and row fences, deferred personal-realm tickets and authored binding epochs. Review
+now fingerprints affected queued events and counts active send permits without
+exposing payloads, endpoints or credentials. Dispatcher/ack contention is a review
+conflict; unrelated connections and project edits still work.
+
+A private identity-only permit survives connection revocation, queue cancellation
+and pruning for 60 seconds after first final write authorization, covering the
+current 55-second worker/10-second socket deadlines. Existing authorized leases are
+conservatively seeded at migration. A live permit blocks new custody cutover, while
+an exact already-applied receipt still confirms. Finite deadlines and bounded,
+nonblocking 256-row cleanup avoid unbounded work while service locks are held.
+
+Both independent fixtures pass 55 new SQL cases, all 148 existing adoption cases
+and 21 client Core cases with regenerated actual SQL contracts. Advisors show only
+known fixture auth-initplan notices. No current app source/build/runtime, system
+setting, hosted schema/configuration, real task or rollout switch changed. Owned
+containers and temporary artifacts are cleaned; Core caches remain intact. See
+p2-project-adoption-connections-evidence.json for exact scope and cleanup.
+
+Next: explicit policy/native review for personal connection pause/retarget, queued
+update retirement and destination reauthorization, plus file custody and remaining
+Mac/native/provider acceptance. Those transfers remain blocked; this does not
+complete adoption, rank 6 or the wider Px backlog. All user-deferred items remain
+deferred.

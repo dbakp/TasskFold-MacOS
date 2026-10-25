@@ -339,3 +339,54 @@ See `p2-project-adoption-installed-evidence.json` for exact runs and limitations
 The normal rollout switches remain disabled. File custody and personal integration
 pause/retarget adapters, the remaining adoption acceptance and wider Px work stay
 open; all user-deferred release/provider/device dependencies remain deferred.
+
+
+## 2026-10-25 connection-cutover coordination (source only)
+
+`20261025031915_team_project_adoption_connection_fences.sql` prepares the atomic
+pause/retarget adapter without enabling it. The participant cohort now includes
+owners of affected personal email routes, project/global webhooks and queued
+historical task events. After canonical Auth locks, review takes nonblocking
+service-account fences; a changed cohort requires a new review. Relevant connection,
+budget and queue rows use nonblocking locks, and contention returns PT409 rather
+than leaking a lock error or waiting in a team/content/service cycle. Other owners'
+connections and unrelated project edits continue working.
+
+Private/legacy binding writers also take the account fence and capture deferred
+project-realm tickets. A newly inserted connection cannot cross custody under an
+old personal transaction. Active personal destinations cannot be resumed/enrolled
+into team custody. Per-binding authored epochs prevent an exact edit/revert or
+byte-identical ID reuse from reviving an inspection. The existing counts remain;
+`queued_webhook_events` and `inflight_webhook_events` extend contents metadata.
+Affected queue identity/state fingerprints join the review proof, without exposing
+endpoints, sender addresses, secrets or task payloads.
+
+The final before-write dispatcher authorization creates a private, identity-only
+permit. It remains active for 60 seconds from its first authorization, covering the
+current worker's 55-second invocation and 10-second socket budgets. Cancellation,
+revocation, payload scrubbing, queue pruning and receipt recovery cannot erase or
+extend that permit. The migration conservatively seeds permits for existing leased,
+authorized packets. A fresh cutover is refused while an affected permit is active,
+even after its connection is revoked. Already-applied exact receipt replay still
+returns confirmation. Changing worker deadlines requires reviewing this barrier;
+real provider/transport acceptance is not established by the local SQL fixture.
+
+Permits contain only event/lease/project/task UUIDs and a finite deadline, with no
+foreign key that could erase them alongside a queue record. Expired permits confer
+no authority and are pruned on authorization/review activity in batches of 256,
+skipping locked records. They are not a new credential. RLS, revoked direct grants,
+private function ACLs and project/task/owner/expiry indexes protect the inventory.
+
+Each independent owned PostgreSQL fixture passes 55 new connection/race/permission
+cases and all 148 existing adoption cases. Independently regenerated SQL contracts
+also pass 21 native-client Core compatibility checks per repo. Advisors report only
+the known fixture auth-initplan warnings. Current app source is unchanged; no new
+app build, installed UI/Keychain, live delivery or hosted acceptance is claimed.
+See `p2-project-adoption-connections-evidence.json` for exact checks and cleanup.
+
+Still required: explicit reviewed pause/retarget policy and native choices/counts,
+queued-update retirement and supported destination reauthorization, file/provider
+custody, remaining native Mac/account/window/layout/spoken and hosted acceptance.
+Non-revoked connections still block commit; this coordination layer does not make
+those transfers available or complete rank 6. Rollout and every user-deferred
+release/provider/device item remain unchanged. The wider Px backlog remains open.

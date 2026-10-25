@@ -15,7 +15,7 @@
         "completed": true,
         "reminders": [],
         "time_zone": null,
-        "created_at": "2026-10-25T02:31:05.617138+00:00",
+        "created_at": "2026-10-25T03:29:19.004516+00:00",
         "project_id": "fdad0000-0000-4000-8000-000000000005",
         "section_id": null,
         "assigned_to": "fdad0000-0000-4000-8000-000000000003",
@@ -26,13 +26,13 @@
           }
         ],
         "description": "Never put task text in a retry",
-        "completed_at": "2026-10-25T02:31:05.697986+00:00",
+        "completed_at": "2026-10-25T03:29:19.074939+00:00",
         "is_recurring": false,
         "scheduled_at": null,
         "deadline_date": null,
         "reminder_specs": [],
         "source_metadata": {},
-        "task_generation": "a6e42cc4-b1a0-482e-9393-c4f06f8aa69a",
+        "task_generation": "245ff09c-47e8-4d8c-a18d-7ef38dad9bb1",
         "duration_minutes": null,
         "completion_version": 1,
         "recurrence_pattern": null,
@@ -83,44 +83,7 @@
     "sections": [],
     "task_activity": [
       {
-        "id": "31a80e27-94eb-43af-b206-0f531b268212",
-        "kinds": [
-          "completed"
-        ],
-        "task_id": "fdad0000-0000-4000-8000-000000000010",
-        "user_id": "fdad0000-0000-4000-8000-000000000001",
-        "actor_id": "fdad0000-0000-4000-8000-000000000001",
-        "sequence": 2,
-        "after_state": {
-          "due_date": null,
-          "due_time": null,
-          "completed": true,
-          "time_zone": null,
-          "project_id": "fdad0000-0000-4000-8000-000000000005",
-          "section_id": null,
-          "completed_at": "2026-10-25T02:31:05.697986+00:00",
-          "scheduled_at": null,
-          "deadline_date": null,
-          "recurrence_parent_id": null
-        },
-        "recorded_at": "2026-10-25T02:31:05.697986+00:00",
-        "before_state": {
-          "due_date": null,
-          "due_time": null,
-          "completed": false,
-          "time_zone": null,
-          "project_id": "fdad0000-0000-4000-8000-000000000005",
-          "section_id": null,
-          "completed_at": null,
-          "scheduled_at": null,
-          "deadline_date": null,
-          "recurrence_parent_id": null
-        },
-        "effective_at": "2026-10-25T02:31:05.697986+00:00",
-        "completion_version": 1
-      },
-      {
-        "id": "47fe48b4-ed9f-44fd-aba8-f78c273592bc",
+        "id": "52569c13-f6af-4972-93cb-37d425294ad6",
         "kinds": [
           "created"
         ],
@@ -140,10 +103,47 @@
           "deadline_date": null,
           "recurrence_parent_id": null
         },
-        "recorded_at": "2026-10-25T02:31:05.617138+00:00",
+        "recorded_at": "2026-10-25T03:29:19.004516+00:00",
         "before_state": {},
-        "effective_at": "2026-10-25T02:31:05.617138+00:00",
+        "effective_at": "2026-10-25T03:29:19.004516+00:00",
         "completion_version": 0
+      },
+      {
+        "id": "ff258dee-edcd-4011-bdb1-3eb028e3531f",
+        "kinds": [
+          "completed"
+        ],
+        "task_id": "fdad0000-0000-4000-8000-000000000010",
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "actor_id": "fdad0000-0000-4000-8000-000000000001",
+        "sequence": 2,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "fdad0000-0000-4000-8000-000000000005",
+          "section_id": null,
+          "completed_at": "2026-10-25T03:29:19.074939+00:00",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "recorded_at": "2026-10-25T03:29:19.074939+00:00",
+        "before_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "fdad0000-0000-4000-8000-000000000005",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "effective_at": "2026-10-25T03:29:19.074939+00:00",
+        "completion_version": 1
       }
     ],
     "task_comments": [],
@@ -156,7 +156,7 @@
         "user_id": "fdad0000-0000-4000-8000-000000000002",
         "invited_by": "fdad0000-0000-4000-8000-000000000001",
         "project_id": "fdad0000-0000-4000-8000-000000000005",
-        "accepted_at": "2026-10-25T02:31:05.617138+00:00",
+        "accepted_at": "2026-10-25T03:29:19.004516+00:00",
         "invited_email": "fdad0000-0000-4000-8000-000000000002@example.invalid"
       },
       {
@@ -166,23 +166,23 @@
         "user_id": "fdad0000-0000-4000-8000-000000000003",
         "invited_by": "fdad0000-0000-4000-8000-000000000001",
         "project_id": "fdad0000-0000-4000-8000-000000000005",
-        "accepted_at": "2026-10-25T02:31:05.617138+00:00",
+        "accepted_at": "2026-10-25T03:29:19.004516+00:00",
         "invited_email": "fdad0000-0000-4000-8000-000000000003@example.invalid"
       }
     ],
     "task_assignment_provenance": [
       {
-        "id": "960f3ab0-6ed2-4cb6-be17-cc5804aec3b7",
+        "id": "da4389df-fe02-4c7e-b691-934772c49dd0",
         "active": true,
         "origin": "recorded",
         "task_id": "fdad0000-0000-4000-8000-000000000010",
         "actor_id": "fdad0000-0000-4000-8000-000000000001",
-        "event_id": "e668339c-6b69-4d9a-b59f-27246997d3bc",
+        "event_id": "391d3334-4a8d-4e70-9de7-3e62b3384c72",
         "node_key": "",
         "node_path": [],
-        "assigned_at": "2026-10-25T02:31:05.629997+00:00",
+        "assigned_at": "2026-10-25T03:29:19.016396+00:00",
         "assignee_id": "fdad0000-0000-4000-8000-000000000003",
-        "task_generation": "a6e42cc4-b1a0-482e-9393-c4f06f8aa69a"
+        "task_generation": "245ff09c-47e8-4d8c-a18d-7ef38dad9bb1"
       }
     ]
   },
@@ -195,7 +195,7 @@
         "access_revision": 3
       }
     ],
-    "token": "616784a7b0fa165b34fb4fd81cdd2bfd99bbc24258a26dac09dc3a3b141e6513",
+    "token": "774c984cfe538c3b3a20aee434805a21f6b57a3d83c75632e745d553f0e591b9",
     "account": "fdad0000-0000-4000-8000-000000000001",
     "projects": [
       {
@@ -251,7 +251,7 @@
         "completed": true,
         "reminders": [],
         "time_zone": null,
-        "created_at": "2026-10-25T02:31:05.617138+00:00",
+        "created_at": "2026-10-25T03:29:19.004516+00:00",
         "project_id": "fdad0000-0000-4000-8000-000000000005",
         "section_id": null,
         "assigned_to": null,
@@ -262,13 +262,13 @@
           }
         ],
         "description": "Never put task text in a retry",
-        "completed_at": "2026-10-25T02:31:05.697986+00:00",
+        "completed_at": "2026-10-25T03:29:19.074939+00:00",
         "is_recurring": false,
         "scheduled_at": null,
         "deadline_date": null,
         "reminder_specs": [],
         "source_metadata": {},
-        "task_generation": "a6e42cc4-b1a0-482e-9393-c4f06f8aa69a",
+        "task_generation": "245ff09c-47e8-4d8c-a18d-7ef38dad9bb1",
         "duration_minutes": null,
         "completion_version": 1,
         "recurrence_pattern": null,
@@ -319,44 +319,7 @@
     "sections": [],
     "task_activity": [
       {
-        "id": "31a80e27-94eb-43af-b206-0f531b268212",
-        "kinds": [
-          "completed"
-        ],
-        "task_id": "fdad0000-0000-4000-8000-000000000010",
-        "user_id": "fdad0000-0000-4000-8000-000000000001",
-        "actor_id": "fdad0000-0000-4000-8000-000000000001",
-        "sequence": 2,
-        "after_state": {
-          "due_date": null,
-          "due_time": null,
-          "completed": true,
-          "time_zone": null,
-          "project_id": "fdad0000-0000-4000-8000-000000000005",
-          "section_id": null,
-          "completed_at": "2026-10-25T02:31:05.697986+00:00",
-          "scheduled_at": null,
-          "deadline_date": null,
-          "recurrence_parent_id": null
-        },
-        "recorded_at": "2026-10-25T02:31:05.697986+00:00",
-        "before_state": {
-          "due_date": null,
-          "due_time": null,
-          "completed": false,
-          "time_zone": null,
-          "project_id": "fdad0000-0000-4000-8000-000000000005",
-          "section_id": null,
-          "completed_at": null,
-          "scheduled_at": null,
-          "deadline_date": null,
-          "recurrence_parent_id": null
-        },
-        "effective_at": "2026-10-25T02:31:05.697986+00:00",
-        "completion_version": 1
-      },
-      {
-        "id": "47fe48b4-ed9f-44fd-aba8-f78c273592bc",
+        "id": "52569c13-f6af-4972-93cb-37d425294ad6",
         "kinds": [
           "created"
         ],
@@ -376,10 +339,47 @@
           "deadline_date": null,
           "recurrence_parent_id": null
         },
-        "recorded_at": "2026-10-25T02:31:05.617138+00:00",
+        "recorded_at": "2026-10-25T03:29:19.004516+00:00",
         "before_state": {},
-        "effective_at": "2026-10-25T02:31:05.617138+00:00",
+        "effective_at": "2026-10-25T03:29:19.004516+00:00",
         "completion_version": 0
+      },
+      {
+        "id": "ff258dee-edcd-4011-bdb1-3eb028e3531f",
+        "kinds": [
+          "completed"
+        ],
+        "task_id": "fdad0000-0000-4000-8000-000000000010",
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "actor_id": "fdad0000-0000-4000-8000-000000000001",
+        "sequence": 2,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "fdad0000-0000-4000-8000-000000000005",
+          "section_id": null,
+          "completed_at": "2026-10-25T03:29:19.074939+00:00",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "recorded_at": "2026-10-25T03:29:19.074939+00:00",
+        "before_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "fdad0000-0000-4000-8000-000000000005",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "effective_at": "2026-10-25T03:29:19.074939+00:00",
+        "completion_version": 1
       }
     ],
     "task_comments": [],
@@ -387,17 +387,17 @@
     "project_collaborators": [],
     "task_assignment_provenance": [
       {
-        "id": "960f3ab0-6ed2-4cb6-be17-cc5804aec3b7",
+        "id": "da4389df-fe02-4c7e-b691-934772c49dd0",
         "active": false,
         "origin": "unassigned",
         "task_id": "fdad0000-0000-4000-8000-000000000010",
         "actor_id": null,
-        "event_id": "15db4a3b-c0bc-4912-9547-f0e906aa3a52",
+        "event_id": "1a538c54-96cd-4844-b5cb-08c74dc07db5",
         "node_key": "",
         "node_path": [],
         "assigned_at": null,
         "assignee_id": null,
-        "task_generation": "a6e42cc4-b1a0-482e-9393-c4f06f8aa69a"
+        "task_generation": "245ff09c-47e8-4d8c-a18d-7ef38dad9bb1"
       }
     ]
   },
@@ -410,7 +410,7 @@
         "access_revision": 9
       }
     ],
-    "token": "990810d94e42d54665c9be486cf83736048d35698d60aa6cc21122e6e89c9c39",
+    "token": "83391e7813e5cc0e9cbc41e5349f7e645e0bf601d5df4cd16e7764a2c97b442d",
     "account": "fdad0000-0000-4000-8000-000000000001",
     "projects": [
       {
@@ -512,7 +512,9 @@
       "inline_files": 1,
       "content_bytes": 4230,
       "external_files": 0,
-      "provider_files": 0
+      "provider_files": 0,
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0
     },
     "projects": [
       {
@@ -558,7 +560,7 @@
     ],
     "automatic_undo": false,
     "commit_supported": true,
-    "inspection_token": "ff82effce79e7f03b5bd2d0eeb7b4dfb301512efb583a19db8391595a3f48d89",
+    "inspection_token": "815b0f2dd3375beab691e9137d45f2a6ba26114ac9cda0ba64ae9bf2a09cc079",
     "sends_invitations": false,
     "team_member_count": 2,
     "creates_memberships": false,
@@ -600,7 +602,9 @@
       "inline_files": 1,
       "content_bytes": 4230,
       "external_files": 0,
-      "provider_files": 0
+      "provider_files": 0,
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0
     },
     "projects": [
       {
@@ -639,9 +643,9 @@
     "folder_id": null,
     "parent_id": null,
     "team_name": "Design Studio",
-    "expires_at": "2026-10-25T02:46:06.202188Z",
+    "expires_at": "2026-10-25T03:44:19.597984Z",
     "visibility": "private",
-    "review_token": "44a8d92b80e3e8b5a0f7224b4ccfd8b117148f74295f6f0ec909c89d6d544b40",
+    "review_token": "940ecadb585c0750d74fa31f16fe733efbe571afa33b6f34e2eaec2e0d0d7f1e",
     "collaborators": [
       {
         "id": "fdad0000-0000-4000-8000-000000000008",
@@ -662,7 +666,7 @@
     ],
     "automatic_undo": false,
     "commit_supported": true,
-    "inspection_token": "ff82effce79e7f03b5bd2d0eeb7b4dfb301512efb583a19db8391595a3f48d89",
+    "inspection_token": "815b0f2dd3375beab691e9137d45f2a6ba26114ac9cda0ba64ae9bf2a09cc079",
     "sends_invitations": false,
     "team_member_count": 2,
     "invitations_closed": 2,
@@ -681,7 +685,7 @@
     "visibility": "private",
     "folder_id": null,
     "parent_id": null,
-    "inspection_token": "ff82effce79e7f03b5bd2d0eeb7b4dfb301512efb583a19db8391595a3f48d89",
+    "inspection_token": "815b0f2dd3375beab691e9137d45f2a6ba26114ac9cda0ba64ae9bf2a09cc079",
     "decisions": [
       {
         "project_id": "fdad0000-0000-4000-8000-000000000005",
@@ -694,9 +698,9 @@
         "role": null
       }
     ],
-    "review_token": "44a8d92b80e3e8b5a0f7224b4ccfd8b117148f74295f6f0ec909c89d6d544b40",
-    "expires_at": "2026-10-25T02:46:06.202188Z",
-    "request_id": "008ea9ec-7218-41d8-943f-0a887fe5e603"
+    "review_token": "940ecadb585c0750d74fa31f16fe733efbe571afa33b6f34e2eaec2e0d0d7f1e",
+    "expires_at": "2026-10-25T03:44:19.597984Z",
+    "request_id": "8267be49-b3c2-400b-95f8-138ac55475a6"
   },
   "receipt": {
     "roots": [
@@ -708,7 +712,7 @@
     "replayed": false,
     "folder_id": null,
     "parent_id": null,
-    "request_id": "008ea9ec-7218-41d8-943f-0a887fe5e603",
+    "request_id": "8267be49-b3c2-400b-95f8-138ac55475a6",
     "visibility": "private",
     "project_ids": [
       "fdad0000-0000-4000-8000-000000000005",
