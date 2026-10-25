@@ -449,3 +449,26 @@ the wider Px goal remain open. No hosted service/configuration, rollout or real
 user data changed. See p2-team-template-handoff-evidence.json. Owned temporary
 builds/results and isolated app/runner installs are removed after retaining proof;
 repo build caches and baseline Simulators remain intact.
+
+### 2026-10-25 — Shared workflow run materialization (Core foundation)
+
+A frozen shared-run plan now prepares new team project hierarchies or task/section
+runs into an existing project, without returning personal write mutations.
+It preserves sections, explicit group order, relative schedules and label spelling
+(including differing case and child-specific labels), removes history through the
+existing workflow instantiator, and gives shared checklist children stable fresh
+completion epochs. Per-task/checklist and complete payload limits are checked.
+Existing-project previews require scoped editor/manager access, current revision,
+archive/hierarchy metadata and an active unpaused team. New projects include their
+reviewed team/private visibility. Source, destination, team revision, workspace
+generation and session are frozen and compared in full on explicit revalidation.
+Readable sources in another team retain their separate source scope.
+
+Both independent Core packages pass 102 focused cases (10 shared-run, 47 workflow,
+31 template-library and 14 checklist). No app runtime, SQL/service or shared-save
+acceptance is claimed here. The plan is not exposed in the app yet: the atomic
+service, durable reviewed command/retry and native destination/content review
+must be connected before it creates shared work. Folder/subproject destination
+choices and existing destination order admission also remain part of that work.
+See p2-team-workflow-run-plan-evidence.json and TEAM_WORKFLOW_RUNS.md. Rollout and
+the full rank-6/Px goal remain open; all user deferrals remain unchanged.

@@ -4,6 +4,12 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Shared workflow runs now have a frozen Core content plan in both apps; 102
+focused cases pass per repository. Atomic service/command and native destination
+reviews remain open. See `TEAM_WORKFLOW_RUNS.md` and
+`p2-team-workflow-run-plan-evidence.json`. This is a foundation, not an enabled
+shared-run feature.
+
 Latest follow-up adds inline copy/export name validation. Native iPhone/iPad
 share-popover cancellation/reopening and final file cleanup now pass; see
 `p2-team-template-handoff-evidence.json`. External provider delivery and the

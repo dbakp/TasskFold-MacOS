@@ -608,3 +608,135 @@ struct WorkflowTemplateCapture: Identifiable {
               token == current.token, template.document == current.template.document else { throw Self.changed }
     }
 }
+
+/// Frozen preview for a future atomic team-workflow command. These are content
+/// rows, deliberately not personal Mutations: a caller cannot commit a partial
+/// shared run through the personal writer. Service admission is still required.
+struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    enum Source: Equatable, Sendable {
+        case personal(Record)
+        case shared(TeamTemplateDetail)
+        var document: JSON {
+            switch self { case .personal(let row): row["document"]; case .shared(let detail): detail.document }
+        }
+    }
+    enum Destination: Equatable, Sendable {
+        case newProject(TeamProjectVisibility)
+        case project(TeamProjectAccess)
+    }
+    struct Order: Equatable, Sendable {
+        let project: String
+        let section: String?
+        let tasks: [String]
+    }
+    let account: String
+    let origin: String
+    let team: TeamOrganization
+    let source: Source
+    let destination: Destination
+    let workspace: WorkspaceBinding
+    let session: UUID
+    let run: UUID
+    let projects: [Record]
+    let sections: [Record]
+    let tasks: [Record]
+    let orders: [Order]
+    var description: String { "Private shared workflow run preview" }
+    var debugDescription: String { description }
+    static var invalid: AppFailure { AppFailure(message: "The template or destination changed. Review the workflow again before creating it.") }
+
+    init(source: Source, account: String, origin: String, team: TeamOrganization,
+         destination: Destination, name: String, start: Date? = nil,
+         workspace: WorkspaceBinding, session: UUID, run: UUID = UUID(),
+         createdAt: Date = Date()) throws {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard workspace.account == account, !team.archived, TeamProjectValue.id(run.uuidString.lowercased()),
+              (-62135596800...253402214400).contains(createdAt.timeIntervalSince1970), start == nil || (-62135596800...253402214400).contains(start!.timeIntervalSince1970) else { throw Self.invalid }
+        switch source {
+        case .personal(let row):
+            guard TeamProjectValue.id(row.id), row["user_id"] == .string(account), row["team_id"] == .null else { throw Self.invalid }
+        case .shared(let detail):
+            guard detail.scope.account == account, detail.scope.origin == origin else { throw Self.invalid }
+        }
+        let definition = try WorkflowTemplate(document: source.document)
+        let target: String
+        switch destination {
+        case .newProject:
+            guard definition.kind == .project, team.role != .guest else { throw Self.invalid }
+            _ = try TeamOrganizationValue.name(.string(name.trimmingCharacters(in: .whitespacesAndNewlines)))
+            target = ""
+        case .project(let access):
+            guard definition.kind != .project, access.belongs(to: account, origin: origin, team: team.id),
+                  access.state == .active, !access.setupPaused, access.teamRevision == team.revision,
+                  access.role != .viewer, let archive = access.archive, !archive.effective,
+                  let hierarchy = access.hierarchy, !hierarchy.parentUnavailable else { throw Self.invalid }
+            target = access.id
+        }
+        let changes = try definition.instantiate(account: account, name: name, targetProject: target, start: start, run: run)
+        let stamp = ISO8601DateFormatter().string(from: createdAt)
+        var projectRows: [Record] = [], sectionRows: [Record] = [], taskRows: [Record] = [], orderRows: [Order] = []
+        func task(_ row: Record, source: Record) throws -> Record {
+            var row = row
+            let labels = source["labels"].list.map { $0.object["name"] ?? .null }
+            let value = JSON.array(labels)
+            guard TeamTaskLabelsDraft(value).supported else { throw Self.invalid }
+            row["labels"] = value
+            // Retain spelling and case, including child-specific names. Never
+            // resolve through the user's personal label IDs or catalog colors.
+            row["created_at"] = .string(stamp)
+            let children = row["subtasks"].list, original = source["subtasks"].list
+            guard children.count == original.count else { throw Self.invalid }
+            row["subtasks"] = .array(try zip(children, original).map { .object(try task(Record($0.0.object), source: Record($0.1.object)).fields) })
+            return row
+        }
+        var sourceIndex = 0
+        for change in changes {
+            var row = Record(change.fields)
+            switch change.table {
+            case "projects":
+                row["team_id"] = .string(team.id)
+                guard case .newProject(let visibility) = destination else { throw Self.invalid }
+                row["visibility"] = .string(visibility.rawValue)
+                projectRows.append(row)
+            case "sections": sectionRows.append(row)
+            case "tasks":
+                guard sourceIndex < definition.tasks.count else { throw Self.invalid }
+                row = try task(row, source: definition.tasks[sourceIndex])
+                let scope = TeamTaskEditScope(account: account, origin: origin, team: team.id, project: row.string("project_id"))
+                let requestID = WorkspaceBackup.stableID("template-checklist:" + run.uuidString, row.id)
+                guard let nonce = UUID(uuidString: requestID) else { throw Self.invalid }
+                let mutation = try TeamChecklist.preparing(Mutation(id: nonce, table: "tasks", recordID: row.id, method: "POST", fields: row.fields, insertOnly: true, teamTaskScope: scope))
+                _ = try scope.lifecycleBody(for: mutation)
+                try TeamChecklist.validate(mutation.fields["subtasks"] ?? .array([]))
+                taskRows.append(Record(mutation.fields)); sourceIndex += 1
+            case "view_orders":
+                let ids = row["ids"].list.map(\.text)
+                guard let first = ids.first, let task = taskRows.first(where: { $0.id == first }) else { throw Self.invalid }
+                orderRows.append(Order(project: task.string("project_id"), section: task["section_id"] == .null ? nil : task.string("section_id"), tasks: ids))
+            case "labels": break // Shared labels are inline names, never catalog writes.
+            default: throw Self.invalid
+            }
+        }
+        guard sourceIndex == definition.tasks.count else { throw Self.invalid }
+        // A one-task template has no personal order mutation; its shared command
+        // still needs an explicit append group for the destination.
+        if definition.kind == .task, let task = taskRows.first {
+            orderRows = [Order(project: task.string("project_id"), section: nil, tasks: [task.id])]
+        }
+        let identities = projectRows.map(\.id) + sectionRows.map(\.id) + taskRows.map(\.id)
+        guard Set(identities).count == identities.count, identities.allSatisfy(TeamProjectValue.id),
+              identities.allSatisfy({ $0 != target }),
+              try JSONEncoder().encode(projectRows.map(\.fields) + sectionRows.map(\.fields) + taskRows.map(\.fields)).count <= 2_000_000 else { throw Self.invalid }
+        self.account = account; self.origin = origin; self.team = team; self.source = source
+        self.destination = destination; self.workspace = workspace; self.session = session; self.run = run
+        projects = projectRows; sections = sectionRows; tasks = taskRows; orders = orderRows
+    }
+
+    /// Compare the complete fresh review, not just a project ID or a creator UUID.
+    /// The eventual server transaction must independently recheck live authority.
+    func verify(source: Source, team: TeamOrganization, destination: Destination,
+                workspace: WorkspaceBinding, session: UUID) throws {
+        guard self.source == source, self.team == team, self.destination == destination,
+              self.workspace == workspace, self.session == session else { throw Self.invalid }
+    }
+}
