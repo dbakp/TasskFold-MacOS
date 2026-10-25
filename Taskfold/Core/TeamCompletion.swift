@@ -462,3 +462,34 @@ extension TeamCompletion.Review {
         return Rebase(action: plan.action, base: base, snapshot: next)
     }
 }
+
+
+/// A delayed review screen may consume an error only from its exact context.
+struct TeamCompletionReviewPresentation: Equatable, Sendable {
+    let workspace: WorkspaceBinding
+    let session: UUID
+    let snapshot: Snapshot
+    let access: TeamWorkspaceCache?
+    let revision: UUID
+    let errorRevision: UUID
+    let single: TeamCompletion.Review?
+    let group: TeamTaskBatch.Review?
+    var request: UUID? { single?.mutation.id ?? group?.mutation.id }
+    func matchesWorkspace(_ current: WorkspaceBinding, session: UUID) -> Bool {
+        workspace.matches(account: current.account, generation: current.generation) && self.session == session
+    }
+    func ownsFailure(workspace: WorkspaceBinding, session: UUID, snapshot: Snapshot, access: TeamWorkspaceCache?, revision: UUID, single: TeamCompletion.Review?, group: TeamTaskBatch.Review?) -> Bool {
+        matchesWorkspace(workspace, session: session) && self.snapshot == snapshot && self.access == access && self.revision == revision && self.single == single && self.group == group
+    }
+}
+
+/// The originating action owns only the error it published, including its own
+/// synchronous rollback. A subsequent message invalidates this receipt.
+struct TeamCompletionReviewFailure: Sendable {
+    let origin: TeamCompletionReviewPresentation
+    let current: TeamCompletionReviewPresentation
+    let message: String
+    func mayConsume(origin: TeamCompletionReviewPresentation, current: TeamCompletionReviewPresentation, error: String?) -> Bool {
+        self.origin == origin && self.current == current && error == message
+    }
+}

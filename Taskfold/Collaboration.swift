@@ -164,16 +164,19 @@ struct ConflictReview: View {
         return (baseline[key] ?? .null) != conflict.remote[key]
     }
     var body: some View {
-        if let review = conflict.completionBatchReview {
-            if let latest = store.syncConflict?.completionBatchReview, latest.mutation == review.mutation { TeamCompletionBatchReviewContent(review: latest) }
-            else { TeamCompletionBatchReviewContent(review: review) }
-        }
-        else if let review = conflict.completionReview {
-            if let latest = store.syncConflict?.completionReview, latest.mutation == review.mutation { TeamCompletionReviewContent(review: latest) }
-            else { TeamCompletionReviewContent(review: review) }
-        }
-        else { ordinaryReview }
+        Group {
+            if let review = conflict.completionBatchReview {
+                if let latest = store.syncConflict?.completionBatchReview, latest.mutation == review.mutation { TeamCompletionBatchReviewContent(review: latest) }
+                else { TeamCompletionBatchReviewContent(review: review) }
+            }
+            else if let review = conflict.completionReview {
+                if let latest = store.syncConflict?.completionReview, latest.mutation == review.mutation { TeamCompletionReviewContent(review: latest) }
+                else { TeamCompletionReviewContent(review: review) }
+            }
+            else { ordinaryReview }
+        }.id(conflict.id)
     }
+
     private var ordinaryReview: some View {
         NavigationStack {
             Form {
@@ -351,7 +354,7 @@ private struct TeamCompletionReviewContent: View {
                     Divider()
                     if park != nil {
                         Button("Keep edits as draft") {
-                            checking=true;Task {let success=await store.parkTeamCompletionDraft(review);checking=false;if success {dismiss()} else {message=store.error ?? "Your draft remains saved for review.";store.error=nil}}
+                            performReview(fallback: "Your draft remains saved for review.") { await store.parkTeamCompletionDraft(review) }
                         }.buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("parkTeamCompletionDraft")
                     }
                     if let _=preview {
@@ -368,7 +371,7 @@ private struct TeamCompletionReviewContent: View {
                     if !review.isRecorded {
                         Button("Use synced task") {resolve(rebase:false)}.buttonStyle(.bordered).disabled(!canUseSynced || checking).accessibilityIdentifier("cancelSavedTeamCompletion")
                     }
-                    Button("Check again") {checking=true;Task {let success=await store.refreshTeamCompletionReview(review);checking=false;if !success {message=store.error ?? "Reopen the current sync review.";store.error=nil}}}
+                    Button("Check again") { performReview(dismissOnSuccess: false, fallback: "Reopen the current sync review.") { await store.refreshTeamCompletionReview(review) } }
                         .buttonStyle(.bordered).disabled(!current || checking).accessibilityIdentifier("refreshTeamCompletionReview")
                     Button("Later") {dismiss()}.buttonStyle(.plain).keyboardShortcut(.cancelAction).frame(minHeight:44)
                 }.controlSize(.large).padding([.horizontal,.bottom]).frame(maxWidth:.infinity).background(.regularMaterial)
@@ -380,23 +383,25 @@ private struct TeamCompletionReviewContent: View {
         #endif
         .onChange(of:store.workspaceGeneration){_,_ in dismiss()}
     }
-    private func continueReview() {
+    private func performReview(dismissOnSuccess: Bool = true, fallback: String, _ action: @escaping () async -> Bool) {
+        guard !checking, current else { return }
+        let context = store.teamCompletionReviewPresentation
         checking = true
         Task {
-            let success = await store.continueTeamCompletionReview(review); checking = false
-            if success { dismiss() }
-            else { message = store.error ?? "Reopen the current sync review."; store.error = nil }
+            let success = await action()
+            checking = false
+            guard store.teamCompletionReviewMayFinish(context) else { return }
+            if success, dismissOnSuccess { dismiss() }
+            else if !success { message = store.takeTeamCompletionReviewFailure(context, fallback: fallback) }
         }
     }
-    private func resolve(rebase:Bool) {
-        checking=true
-        Task {
-            let success:Bool
-            if rebase {success=await store.rebaseTeamCompletionReview(review)}
-            else {success=await store.cancelTeamCompletionReview(review)}
-            checking=false
-            if success {dismiss()}
-            else if store.syncConflict?.completionReview == review {message=store.error ?? "Your task changed. Check again before continuing.";store.error=nil}
+    private func continueReview() {
+        performReview(fallback: "Reopen the current sync review.") { await store.continueTeamCompletionReview(review) }
+    }
+    private func resolve(rebase: Bool) {
+        performReview(fallback: "Your task changed. Check again before continuing.") {
+            if rebase { return await store.rebaseTeamCompletionReview(review) }
+            return await store.cancelTeamCompletionReview(review)
         }
     }
     @ViewBuilder private func taskSummary(_ task:Record?,missing:String) -> some View {
@@ -749,10 +754,13 @@ private struct TeamCompletionBatchReviewContent: View {
     }
     private func perform(dismissOnSuccess: Bool = true, _ action: @escaping () async -> Bool) {
         guard !checking, current else { return }; checking = true; message = nil
+        let context = store.teamCompletionReviewPresentation
         Task {
-            let saved = await action(); checking = false
+            let saved = await action()
+            checking = false
+            guard store.teamCompletionReviewMayFinish(context) else { return }
             if saved, dismissOnSuccess { dismiss() }
-            else if !saved { message = store.error ?? "The selection remains saved. Check the current result before continuing."; store.error = nil }
+            else if !saved { message = store.takeTeamCompletionReviewFailure(context, fallback: "The selection remains saved. Check the current result before continuing.") }
         }
     }
 }

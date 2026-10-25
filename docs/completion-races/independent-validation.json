@@ -1,0 +1,208 @@
+[
+  {
+    "platform": "mac",
+    "mode": "cancel-access-error",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "stalePresentationKeptCurrentMessage",
+      "actualReplyHeld",
+      "currentSnapshotExact",
+      "freshReadAccessChanged",
+      "currentWorkspaceFileExact",
+      "staleResultRefused",
+      "coarseGuardsStillMatch",
+      "currentReadAccessExact"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "cancel-account",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "currentSnapshotExact",
+      "originalEncryptedDraftKept",
+      "actualReplyHeld",
+      "priorOtherWorkspaceReadable",
+      "realWorkspaceGenerationChanged",
+      "currentWorkspaceFileExact",
+      "stalePresentationKeptCurrentMessage",
+      "currentReadAccessExact",
+      "staleResultRefused",
+      "originalQueueReloads",
+      "originalQueueFileKept"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "refresh-access-error",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "currentReadAccessExact",
+      "currentWorkspaceFileExact",
+      "currentSnapshotExact",
+      "freshReadAccessChanged",
+      "coarseGuardsStillMatch",
+      "actualReplyHeld",
+      "stalePresentationKeptCurrentMessage",
+      "staleResultRefused"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "refresh-access",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "currentReadAccessExact",
+      "stalePresentationKeptCurrentMessage",
+      "staleResultRefused",
+      "currentWorkspaceFileExact",
+      "coarseGuardsStillMatch",
+      "actualReplyHeld",
+      "currentSnapshotExact",
+      "freshReadAccessChanged"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "refresh-account-return",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "originalQueueReloads",
+      "stalePresentationKeptCurrentMessage",
+      "originalQueueFileKept",
+      "currentReadAccessExact",
+      "currentWorkspaceFileExact",
+      "realWorkspaceGenerationChanged",
+      "staleResultRefused",
+      "priorOtherWorkspaceReadable",
+      "currentSnapshotExact",
+      "actualReplyHeld"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "refresh-current-error",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "currentSnapshotExact",
+      "staleResultRefused",
+      "currentWorkspaceFileExact",
+      "currentReadAccessExact",
+      "newMessageCannotBePublishedOverOrConsumed",
+      "actualReplyHeld",
+      "currentFailurePresented"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "refresh-current",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "actualReplyHeld",
+      "currentReadAccessExact",
+      "currentSnapshotExact",
+      "currentInstructionsVisible",
+      "currentResultAccepted",
+      "currentMessageKept",
+      "currentWorkspaceFileExact"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "refresh-edit-error",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "actualReplyHeld",
+      "currentReadAccessExact",
+      "currentWorkspaceFileExact",
+      "staleResultRefused",
+      "currentSnapshotExact",
+      "stalePresentationKeptCurrentMessage"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "refresh-edit",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "stalePresentationKeptCurrentMessage",
+      "currentReadAccessExact",
+      "currentSnapshotExact",
+      "actualReplyHeld",
+      "currentWorkspaceFileExact",
+      "staleResultRefused"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "refresh-session",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "stalePresentationKeptCurrentMessage",
+      "staleResultRefused",
+      "actualReplyHeld",
+      "currentReadAccessExact",
+      "sameWorkspaceNewSession",
+      "currentSnapshotExact",
+      "currentWorkspaceFileExact"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "single-cancel-account",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "currentReadAccessExact",
+      "staleResultRefused",
+      "currentWorkspaceFileExact",
+      "currentSnapshotExact",
+      "realWorkspaceGenerationChanged",
+      "stalePresentationKeptCurrentMessage",
+      "originalQueueReloads",
+      "priorOtherWorkspaceReadable",
+      "originalQueueFileKept",
+      "actualReplyHeld"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "single-cancel-edit-error",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "stalePresentationKeptCurrentMessage",
+      "currentSnapshotExact",
+      "actualReplyHeld",
+      "currentWorkspaceFileExact",
+      "currentReadAccessExact",
+      "staleResultRefused"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "single-refresh-access-error",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "coarseGuardsStillMatch",
+      "staleResultRefused",
+      "currentWorkspaceFileExact",
+      "currentSnapshotExact",
+      "currentReadAccessExact",
+      "freshReadAccessChanged",
+      "stalePresentationKeptCurrentMessage",
+      "actualReplyHeld"
+    ]
+  },
+  {
+    "platform": "mac",
+    "mode": "single-refresh-edit-error",
+    "wholeSnapshotAndRelaunchExact": true,
+    "nativeAssertions": [
+      "currentWorkspaceFileExact",
+      "currentReadAccessExact",
+      "staleResultRefused",
+      "currentSnapshotExact",
+      "actualReplyHeld",
+      "stalePresentationKeptCurrentMessage"
+    ]
+  }
+]

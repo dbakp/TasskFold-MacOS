@@ -1092,6 +1092,10 @@ struct TeamEditorNativeFixtureView: View {
                     Text("Queued edits: \(store.snapshot.pending.count)").accessibilityIdentifier("macRecoveryPending")
                     if let notice = store.notice { Text(notice).accessibilityIdentifier("macRecoveryNotice") }
                     if let error = store.error { Text(error).accessibilityIdentifier("macRecoveryError") }
+                    if TeamRecoveryRaceNativeFixture.mode != nil {
+                        Button("Run delayed recovery check") { Task { await store.runTeamRecoveryRaceFixture() } }.accessibilityIdentifier("runTeamRecoveryRace")
+                        Text(store.teamRecoveryRaceStatus).accessibilityIdentifier("teamRecoveryRaceStatus")
+                    }
                     Button("Review saved action") { Task { await store.prepareTeamBatchRecoveryFixture(); recoveryPresented = store.syncConflict != nil } }.accessibilityIdentifier("openMacCompletionRecovery")
                     Button("Check paused sync") { Task { await store.sync(); recoveryPresented = store.syncConflict != nil } }.accessibilityIdentifier("discoverMacCompletionRecovery")
                     Button("Saved team drafts") { draftsPresented = true }.accessibilityIdentifier("openMacSavedDrafts")

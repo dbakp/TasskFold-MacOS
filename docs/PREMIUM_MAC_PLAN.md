@@ -6708,3 +6708,37 @@ missing-incarnation/cross-table recovery, large workloads and the advanced/weara
 backlog remain open. Existing user deferrals remain unchanged. No hosted schema,
 service/configuration, rollout or real account/task changed. See
 p2-storage-recovery-evidence.json and storage-recovery/ for the retained evidence.
+
+
+## 25 October: completion recovery owns its workspace and error
+
+Individual and selection review actions now capture the credential incarnation as
+well as the full saved snapshot, access cache, workspace generation, read revision
+and exact review. Late replies and errors cannot replace a newer observation,
+retire newer authored work or alter a different account. Leaving and returning to
+the same account also invalidates the earlier request. Review-screen handlers check
+ownership before dismissing or consuming a message; a new request gets fresh view
+state. A failure receipt binds the original action to its post-rollback state, so a
+real storage failure remains actionable without consuming a later unrelated error.
+
+Each independently owned repo passes 191 completion Core cases. Fifteen native
+cases pass on each Mac, iPhone Simulator and iPad Simulator with zero failures,
+skips or runtime warnings: fourteen delayed-response scenarios and a real workspace
+write failure/retry control. The local peer validates typed replies before holding
+them. Actual Backend session transitions, Store refresh/cancel methods and saved
+snapshots are exercised. Positive controls accept a current reply and present its
+current timeout; a later message is neither overwritten nor consumed. Real native
+review controls still show the storage error and complete retry after repair.
+All 42 race proofs retain complete interleaved snapshots and match whole-workspace
+relaunches; all three storage cases preserve the failed durable workspace exactly.
+Only Codable Set ordering is canonicalized. See
+[p2-completion-race-evidence.json](p2-completion-race-evidence.json) and
+[completion-races/](completion-races/) for retained evidence and source hashes.
+
+The fixture initiates races through reserved DEBUG controls, not the production
+account-picker UI. Read-cache equality is checked at reply delivery; a fixture-only
+access downgrade is not claimed durable through relaunch. Backup/vault I/O-phase
+races, native individual storage failures, Mac recurring history, broader keyboard/
+spoken checks, missing-incarnation authored/cross-table recovery, large workloads
+and genuine hosted multiwriter delivery remain open. No hosted schema, service,
+configuration, rollout or real account/task changed. User deferrals remain intact.

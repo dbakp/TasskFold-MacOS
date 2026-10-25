@@ -1170,3 +1170,50 @@ final class TeamCompletionRecoveryMessageTests: XCTestCase {
         XCTAssertEqual(TeamCompletionRecoveryFailure.message(AccountSessionAuthorizationRequired()), SyncStatus.failureMessage(AccountSessionAuthorizationRequired()))
     }
 }
+
+
+final class TeamCompletionPresentationTests: XCTestCase {
+    private func context() -> TeamCompletionReviewPresentation {
+        TeamCompletionReviewPresentation(workspace: WorkspaceBinding(account: "ec240000-0000-4000-8000-000000000001", generation: UUID()), session: UUID(), snapshot: Snapshot(), access: nil, revision: UUID(), errorRevision: UUID(), single: nil, group: nil)
+    }
+    private func owns(_ value: TeamCompletionReviewPresentation, workspace: WorkspaceBinding? = nil, session: UUID? = nil, snapshot: Snapshot? = nil, access: TeamWorkspaceCache? = nil, revision: UUID? = nil) -> Bool {
+        value.ownsFailure(workspace: workspace ?? value.workspace, session: session ?? value.session, snapshot: snapshot ?? value.snapshot, access: access ?? value.access, revision: revision ?? value.revision, single: value.single, group: value.group)
+    }
+    func testUnchangedPresentationOwnsItsFailure() { let value = context(); XCTAssertTrue(owns(value)) }
+    func testOtherAccountAndReturnCannotReusePresentation() {
+        let value = context()
+        XCTAssertFalse(owns(value, workspace: WorkspaceBinding(account: UUID().uuidString.lowercased(), generation: value.workspace.generation)))
+        XCTAssertFalse(owns(value, workspace: WorkspaceBinding(account: value.workspace.account, generation: UUID())))
+    }
+    func testNewCredentialIncarnationCannotReuseSameWorkspacePresentation() {
+        let value = context(); XCTAssertFalse(owns(value, session: UUID()))
+    }
+    func testNewAuthoredWorkAndReadRevisionInvalidateFailureOwnership() {
+        let value = context(); var changed = value.snapshot; changed.tables["tasks"] = [Record.task(user: value.workspace.account)]
+        XCTAssertFalse(owns(value, snapshot: changed)); XCTAssertFalse(owns(value, revision: UUID()))
+    }
+    func testChangedAccessCacheInvalidatesFailureOwnership() throws {
+        let value = context()
+        let raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(value.workspace.account), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false), "token": .string(String(repeating: "a", count: 64)), "teams": .array([]), "projects": .array([])]
+        let access = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: value.workspace.account, origin: "https://synthetic.example"), previous: nil, pending: [], tasks: [])
+        XCTAssertFalse(owns(value, access: access))
+    }
+}
+
+extension TeamCompletionPresentationTests {
+    func testOwnedRollbackFailureCanUseItsNewReadRevision() {
+        let origin = context()
+        let rollback = TeamCompletionReviewPresentation(workspace: origin.workspace, session: origin.session, snapshot: origin.snapshot, access: origin.access, revision: UUID(), errorRevision: UUID(), single: origin.single, group: origin.group)
+        let failure = TeamCompletionReviewFailure(origin: origin, current: rollback, message: "Storage unavailable")
+        XCTAssertTrue(failure.mayConsume(origin: origin, current: rollback, error: "Storage unavailable"))
+        XCTAssertFalse(failure.mayConsume(origin: rollback, current: rollback, error: "Storage unavailable"))
+        XCTAssertFalse(failure.mayConsume(origin: origin, current: origin, error: "Storage unavailable"))
+    }
+    func testNewMessageInvalidatesOwnershipEvenWithIdenticalText() {
+        let origin = context()
+        let later = TeamCompletionReviewPresentation(workspace: origin.workspace, session: origin.session, snapshot: origin.snapshot, access: origin.access, revision: origin.revision, errorRevision: UUID(), single: origin.single, group: origin.group)
+        let failure = TeamCompletionReviewFailure(origin: origin, current: origin, message: "Try again")
+        XCTAssertFalse(failure.mayConsume(origin: origin, current: later, error: "Try again"))
+        XCTAssertFalse(failure.mayConsume(origin: origin, current: origin, error: "Different message"))
+    }
+}

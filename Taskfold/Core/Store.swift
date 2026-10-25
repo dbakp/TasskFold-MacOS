@@ -16,6 +16,9 @@ final class Store {
     /// One store per process so notification actions and App Intents share the app's data.
     static let shared = Store()
     #if DEBUG
+    private(set) var teamRecoveryRaceStatus = "Ready"
+    #endif
+    #if DEBUG
     @ObservationIgnored private var workflowFixtureFailureConsumed = false
     @ObservationIgnored private var sharedCaptureFixtureFailureConsumed = false
     #endif
@@ -180,7 +183,11 @@ final class Store {
     var localMode = false
     var syncing = false
     var online = true
-    var error: String?
+    @ObservationIgnored private var teamCompletionErrorRevision = UUID()
+    @ObservationIgnored private var teamCompletionReviewFailure: TeamCompletionReviewFailure?
+    var error: String? {
+        didSet { teamCompletionErrorRevision = UUID(); teamCompletionReviewFailure = nil }
+    }
     var notice: String?
     /// A confirmed Auth refusal is scoped to this workspace, never inferred from text.
     private(set) var syncSignInWorkspace: WorkspaceBinding?
@@ -1864,27 +1871,29 @@ final class Store {
     }
 
     @discardableResult func parkTeamCompletionDraft(_ expected:TeamCompletion.Review) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
         let generation=accountGeneration,account=userID,before=snapshot,access=nativeConversationTeamCache,revision=workspaceReadRevision
         guard currentTeamCompletionReview(expected),let access,let candidate=TeamCompletionDraft.Candidate(review:expected,snapshot:before),let vault=teamDraftVault,
               candidate.draft.scope.account == account,candidate.draft.scope.origin == vault.origin else {return false}
         do {
             _=try await makeRecoveryBackup(kind:"Before saving team draft")
-            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
             _=try await Task.detached(priority:.utility){try vault.save(candidate.draft)}.value
-            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
             let proof=try await backend.retireTeamProvisional(expected.mutation,expectedAccount:account)
-            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
             guard let projected=candidate.parking(snapshot,proof:proof), let next=access.retainingRecoveryAccess(in:projected,from:before) else {
                 syncConflict=SyncConflict(mutation:expected.mutation,remote:proof.review.task ?? expected.mutation.teamCompletion!.source,completionReview:proof.review)
-                error="Your draft is saved. The shared task changed; check the current review before continuing.";return false
+                recordTeamCompletionReviewFailure("Your draft is saved. The shared task changed; check the current review before continuing.", origin: presentation);return false
             }
             snapshot=next
-            do {try persist()} catch {snapshot=before;throw error}
+            do {try persist()} catch {snapshot=before;recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation);return false}
             undoStack=[];redoStack=[];syncConflict=nil;notice="Edits kept in Saved team drafts. Sync can continue."
             Task {await sync()};return true
         } catch {
-            guard generation == accountGeneration else {return false}
-            self.error=TeamCompletionRecoveryFailure.message(error);return false
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionReview(expected) else {return false}
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation);return false
         }
     }
 
@@ -1895,19 +1904,23 @@ final class Store {
         await resolveTeamCompletionReview(expected,rebase:true)
     }
     private func resolveTeamCompletionReview(_ expected:TeamCompletion.Review,rebase:Bool) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
         let generation=accountGeneration,account=userID,before=snapshot,access=nativeConversationTeamCache,revision=workspaceReadRevision
         guard currentTeamCompletionReview(expected), let access,
               (rebase ? expected.canRequestRebase(before):expected.canRequestCancellation(before)),
               let command=expected.mutation.teamCompletion,command.scope.account == account,
               command.scope.origin == (try? backend.accountRemovalOrigin),!signingOut, !rebase || access.canSend(expected.mutation, in: before) else {return false}
+        var observedReview = expected
         do {
             _=try await makeRecoveryBackup(kind:"Before sync review")
-            guard generation == accountGeneration,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
             let review: TeamCompletion.Review
             if expected.isCancelled { review = expected }
             else { review = try await backend.cancelTeamCompletion(expected.mutation,expectedAccount:account) }
-            guard generation == accountGeneration,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
             syncConflict=SyncConflict(mutation:expected.mutation,remote:review.task ?? command.source,completionReview:review)
+            observedReview = review
             guard review.isCancelled else {
                 notice="This action had already synced. Review its result to continue.";return false
             }
@@ -1925,13 +1938,13 @@ final class Store {
                 next=cancelled;history=nil
             }
             let old=snapshot;snapshot=next
-            do {try persist()} catch {snapshot=old;throw error}
+            do {try persist()} catch {snapshot=old;recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation);return false}
             undoStack=history.map{[$0]} ?? [];redoStack=[];syncConflict=nil
             notice=rebase ? "Your reviewed action is saved and ready to sync." : "Synced task kept. A recovery copy is saved."
             Task {await sync()};return true
         } catch {
-            guard generation == accountGeneration else {return false}
-            self.error=TeamCompletionRecoveryFailure.message(error);return false
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionReview(observedReview) else {return false}
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation);return false
         }
     }
 
@@ -1969,6 +1982,28 @@ final class Store {
         return true
     }
 
+    var teamCompletionReviewPresentation: TeamCompletionReviewPresentation {
+        TeamCompletionReviewPresentation(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, snapshot: snapshot, access: nativeConversationTeamCache, revision: workspaceReadRevision, errorRevision: teamCompletionErrorRevision, single: syncConflict?.completionReview, group: syncConflict?.completionBatchReview)
+    }
+    func teamCompletionReviewMayFinish(_ context: TeamCompletionReviewPresentation) -> Bool {
+        context.matchesWorkspace(WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation) && signedIn && !localMode && !signingOut && !accountRemovalBlocked && (syncConflict == nil || syncConflict?.id == context.request)
+    }
+    private func recordTeamCompletionReviewFailure(_ message: String, origin: TeamCompletionReviewPresentation) {
+        guard teamCompletionReviewMayFinish(origin), teamCompletionErrorRevision == origin.errorRevision else { return }
+        error = message
+        teamCompletionReviewFailure = TeamCompletionReviewFailure(origin: origin, current: teamCompletionReviewPresentation, message: message)
+    }
+    func takeTeamCompletionReviewFailure(_ context: TeamCompletionReviewPresentation, fallback: String) -> String? {
+        guard teamCompletionReviewMayFinish(context) else { return nil }
+        if let failure = teamCompletionReviewFailure, failure.mayConsume(origin: context, current: teamCompletionReviewPresentation, error: error) {
+            let message = failure.message; error = nil; return message
+        }
+        guard context.ownsFailure(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, snapshot: snapshot, access: nativeConversationTeamCache, revision: workspaceReadRevision, single: syncConflict?.completionReview, group: syncConflict?.completionBatchReview) else {
+            return "The review changed while it was being checked. Check the current result before continuing."
+        }
+        return fallback
+    }
+
     func currentTeamCompletionBatchReview(_ review: TeamTaskBatch.Review) -> Bool {
         guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
               syncConflict?.completionBatchReview == review, snapshot.pending.first == review.mutation,
@@ -1986,72 +2021,80 @@ final class Store {
         syncConflict = SyncConflict(mutation: review.mutation, remote: review.members.first?.task ?? review.mutation.teamTaskBatch!.items[0].teamCompletion!.source, completionBatchReview: review)
     }
     @discardableResult func refreshTeamCompletionBatchReview(_ expected: TeamTaskBatch.Review) async -> Bool {
-        let generation = accountGeneration, before = snapshot
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
+        let generation = accountGeneration, account = userID, before = snapshot, access = nativeConversationTeamCache, revision = workspaceReadRevision
         guard currentTeamCompletionBatchReview(expected) else { return false }
         do {
-            let review = try await backend.reviewTeamCompletionBatch(expected.mutation, expectedAccount: userID)
-            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
+            let review = try await backend.reviewTeamCompletionBatch(expected.mutation, expectedAccount: account)
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
             installTeamCompletionBatchReview(review); return true
         } catch {
-            guard generation == accountGeneration, currentTeamCompletionBatchReview(expected) else { return false }
-            self.error = SyncStatus.failureMessage(error); return false
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+            recordTeamCompletionReviewFailure(SyncStatus.failureMessage(error), origin: presentation); return false
         }
     }
     @discardableResult func continueTeamCompletionBatchReview(_ review: TeamTaskBatch.Review) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
         let generation = accountGeneration, before = snapshot
         guard currentTeamCompletionBatchReview(review), !review.isCancelled else { return false }
         if review.isRecorded {
             guard let access = nativeConversationTeamCache else { return false }
             let readRevision = workspaceReadRevision
             let next = await Task.detached(priority: .userInitiated) { review.acknowledging(before, readable: access) }.value
-            guard generation == accountGeneration, snapshot == before, readRevision == workspaceReadRevision,
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, readRevision == workspaceReadRevision,
                   nativeConversationTeamCache == access, currentTeamCompletionBatchReview(review) else { return false }
-            guard let next else { error = "Later task changes still need review. The entire saved selection and its drafts are kept."; return false }
+            guard let next else { recordTeamCompletionReviewFailure("Later task changes still need review. The entire saved selection and its drafts are kept.", origin: presentation); return false }
             snapshot = next
-            do { try persist() } catch { snapshot = before; self.error = TeamCompletionRecoveryFailure.message(error); return false }
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false }
             undoStack = []; redoStack = []
         }
         syncConflict = nil; notice = nil; Task { await sync() }; return true
     }
     @discardableResult func cancelTeamCompletionBatchReview(_ expected: TeamTaskBatch.Review) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
         let generation = accountGeneration, before = snapshot, account = userID
         guard currentTeamCompletionBatchReview(expected), !expected.isRecorded, let access = nativeConversationTeamCache else { return false }
         let revision = workspaceReadRevision
+        var observedReview = expected
         do {
             var savedDraft: TeamCompletionBatchDraft?
             let independent = await Task.detached(priority: .userInitiated) { expected.canRequestCancellation(before) }.value
-            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
             if !independent {
                 guard let vault = teamSelectionDraftVault else { throw TeamCompletionBatchDraft.invalid }
                 savedDraft = try await Task.detached(priority: .userInitiated) {
                     let draft = try TeamCompletionBatchDraft(review: expected, snapshot: before)
                     return try vault.save(draft)
                 }.value
-                guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+                guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
                 guard savedDraft?.snapshot == before else { throw TeamCompletionBatchDraft.invalid }
             }
             _ = try await makeRecoveryBackup(kind: "Before selection sync review")
-            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
             let review: TeamTaskBatch.Review
             if expected.isCancelled { review = expected }
             else { review = try await backend.reviewTeamCompletionBatch(expected.mutation, expectedAccount: account, cancel: true) }
-            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
             installTeamCompletionBatchReview(review)
+            observedReview = review
             guard review.isCancelled else { notice = "This selection had already synced. Review its result to continue. Any saved draft is kept."; return false }
             let archived = savedDraft != nil
             let next = await Task.detached(priority: .userInitiated) {
                 archived ? review.parkingCancellation(before, readable: access) : review.cancelling(before, readable: access)
             }.value
-            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(review) else { return false }
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(review) else { return false }
             guard let next else { notice = "The selection was cancelled. Your additional changes remain saved for review."; return false }
             snapshot = next
-            do { try persist() } catch { snapshot = before; throw error }
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false }
             undoStack = []; redoStack = []; syncConflict = nil
             notice = archived ? "Synced tasks kept. Your later edits are in Saved team drafts." : "Synced tasks kept. A recovery copy is saved."
             Task { await sync() }; return true
         } catch {
-            guard generation == accountGeneration else { return false }
-            self.error = TeamCompletionRecoveryFailure.message(error); return false
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(observedReview) else { return false }
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false
         }
     }
 
@@ -2067,31 +2110,35 @@ final class Store {
         return !review.isRecorded || review.acknowledging(snapshot, readable: cache) != nil
     }
     @discardableResult func refreshTeamCompletionReview(_ expected: TeamCompletion.Review) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
         let generation = accountGeneration, account = userID, before = snapshot, access = nativeConversationTeamCache, revision = workspaceReadRevision
         guard currentTeamCompletionReview(expected) else { return false }
         do {
             let review = try await backend.reviewTeamCompletion(expected.mutation, expectedAccount: account)
-            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision,
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision,
                   nativeConversationTeamCache == access, currentTeamCompletionReview(expected) else { return false }
             syncConflict = SyncConflict(mutation: expected.mutation, remote: review.task ?? expected.mutation.teamCompletion!.source, completionReview: review)
             return true
         } catch {
-            guard generation == accountGeneration, currentTeamCompletionReview(expected) else { return false }
-            self.error = SyncStatus.failureMessage(error); return false
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionReview(expected) else { return false }
+            recordTeamCompletionReviewFailure(SyncStatus.failureMessage(error), origin: presentation); return false
         }
     }
     @discardableResult func continueTeamCompletionReview(_ review: TeamCompletion.Review) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        let session = backend.reminderSessionIncarnation
         let generation = accountGeneration, before = snapshot
         guard currentTeamCompletionReview(review), !review.isCancelled else { return false }
         if review.isRecorded {
             guard let access = nativeConversationTeamCache else { return false }
             let revision = workspaceReadRevision
             let next = await Task.detached(priority: .userInitiated) { review.acknowledging(before, readable: access) }.value
-            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision,
+            guard generation == accountGeneration, session == backend.reminderSessionIncarnation, snapshot == before, revision == workspaceReadRevision,
                   nativeConversationTeamCache == access, currentTeamCompletionReview(review) else { return false }
-            guard let next else { error = "Your additional task changes are still saved. Keep this review for now."; return false }
+            guard let next else { recordTeamCompletionReviewFailure("Your additional task changes are still saved. Keep this review for now.", origin: presentation); return false }
             snapshot = next
-            do { try persist() } catch { snapshot = before; self.error = TeamCompletionRecoveryFailure.message(error); return false }
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false }
             undoStack = []; redoStack = []
         }
         // Unrecorded reads retain the original nonce and immutable command.
@@ -3289,9 +3336,14 @@ private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
     override func startLoading() {
         let request = self.request
         Task { @MainActor in
+            TeamRecoveryRaceNativeFixture.observe(request)
             if let data = TeamBatchRecoveryNativePeer.response(request), let url = request.url {
+                let delivered: Data
+                do { delivered = try await TeamRecoveryRaceNativeFixture.deliver(data, request: request) }
+                catch { client?.urlProtocol(self, didFailWithError: error); return }
+
                 client?.urlProtocol(self, didReceive: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
-                client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self); return
+                client?.urlProtocol(self, didLoad: delivered); client?.urlProtocolDidFinishLoading(self); return
             }
             guard TeamEditorNativeFixture.enabled,
                   request.url?.absoluteString == "https://synthetic.example/rest/v1/rpc/taskfold_team_task_recipients",
@@ -3786,18 +3838,18 @@ extension Store {
         trace(request)
         if blockedSync, request.httpMethod == "POST", request.url?.path == "/rest/v1/rpc/taskfold_workspace_boundary" { return try? JSONEncoder().encode(readBoundary().raw) }
         guard request.httpMethod == "POST",
-              ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion"].contains(request.url?.path ?? "") else { return nil }
+              ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion"].contains(request.url?.path ?? "") else { return nil }
         var data = request.httpBody
         if data == nil, let stream = request.httpBodyStream {
             stream.open(); defer { stream.close() }; var value = Data(), bytes = [UInt8](repeating: 0, count: 4096)
             while stream.hasBytesAvailable && value.count < 2_000_000 { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; value.append(contentsOf: bytes.prefix(count)) }; data = value
         }
         guard let data, let params = try? JSONDecoder().decode([String: JSON].self, from: data) else { return nil }
-        if recurring { return try? recurringResponse(params, single: request.url?.path == "/rest/v1/rpc/taskfold_review_team_completion") }
+        if recurring { return try? recurringResponse(params, single: ["/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion"].contains(request.url?.path ?? "")) }
         guard params["_action"] == .string("complete"),
               let body = params["_body"]?.object, body["team_id"] == .string(TeamEditorNativeFixture.teamID),
               let nonce = body["request_id"]?.text, TeamProjectValue.id(nonce) else { return nil }
-        let single = request.url?.path == "/rest/v1/rpc/taskfold_review_team_completion"
+        let single = ["/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion"].contains(request.url?.path ?? "")
         let items = single ? [JSON.object(body)] : body["items"]?.list ?? []
         guard (1...100).contains(items.count) else { return nil }
         let file = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("taskfold-group-review-peer.json")
@@ -3962,6 +4014,176 @@ extension Store {
             try fm.moveItem(at: prior, to: vault)
         } else if !hadVault, fm.fileExists(atPath: vault.path) { try fm.removeItem(at: vault) }
         try fm.removeItem(at: journal)
+    }
+}
+#endif
+
+
+#if DEBUG
+/// Hold a validated local peer reply so a real Store transaction can be
+/// interleaved with a new session, current read boundary or authored edit.
+@MainActor enum TeamRecoveryRaceNativeFixture {
+    static var mode: String? {
+        guard TeamEditorNativeFixture.enabled else { return nil }
+        return ["refresh-access", "refresh-access-error", "single-refresh-access-error", "cancel-account", "single-cancel-account", "refresh-account-return", "refresh-edit", "refresh-edit-error", "single-refresh-edit-error", "refresh-current", "refresh-current-error", "refresh-session", "cancel-access-error", "single-cancel-edit-error"].first { ProcessInfo.processInfo.arguments.contains("--team-recovery-race=" + $0) }
+    }
+    static var expected: Mutation?
+    static var held = false
+    static var validated = false
+    static var path = ""
+    static var attemptedPaths: [String] = []
+    private static var armed = false
+    private static var resume: CheckedContinuation<Void, Never>?
+    static func arm(_ header: Mutation) { expected = header; held = false; validated = false; path = ""; attemptedPaths = []; armed = true }
+    static func release() { armed = false; let pending = resume; resume = nil; pending?.resume() }
+    static func observe(_ request: URLRequest) { if armed, mode != nil { attemptedPaths.append(request.url?.path ?? "") } }
+
+    static func deliver(_ data: Data, request: URLRequest) async throws -> Data {
+        guard armed, let mode, let expected,
+              request.url?.path.contains(mode.contains("cancel") ? "cancel_team_completion" : "review_team_completion") == true else { return data }
+        armed = false
+        var raw = try JSONDecoder().decode([String: JSON].self, from: data)
+        if !mode.contains("cancel") {
+            func changed(_ member: [String: JSON]) -> [String: JSON] {
+                var view = member, task = view["task"]!.object
+                task["description"] = .string("Delayed response instructions")
+                view["task"] = .object(task); view["series"] = .object(task)
+                if case .object(var receipt) = view["receipt"] { receipt["task"] = .object(task); view["receipt"] = .object(receipt) }
+                return view
+            }
+            if expected.teamCompletion != nil { raw = changed(raw) }
+            else {
+                raw["items"] = .array(raw["items"]!.list.map { .object(changed($0.object)) })
+                if case .object(var receipt) = raw["receipt"] { receipt["items"] = .array(raw["items"]!.list.map { $0.object["receipt"]! }); raw["receipt"] = .object(receipt) }
+            }
+        }
+        // Prove that rejecting the reply is a context decision, not malformed test data.
+        if expected.teamCompletion != nil { _ = try TeamCompletion.Review(raw, for: expected) }
+        else { _ = try TeamTaskBatch.Review(raw, for: expected) }
+        validated = true; path = request.url!.path; held = true
+        await withCheckedContinuation { resume = $0 }
+        if mode.hasSuffix("error") { throw URLError(.timedOut) }
+        return try JSONEncoder().encode(raw)
+    }
+    static func session(_ account: String) throws -> Session {
+        try JSONDecoder().decode(Session.self, from: Data(("{\"access_token\":\"synthetic-race-access\",\"refresh_token\":\"synthetic-race-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"" + account + "\"}}").utf8))
+    }
+}
+
+extension Store {
+    func runTeamRecoveryRaceFixture() async {
+        guard let mode = TeamRecoveryRaceNativeFixture.mode, userID == TeamEditorNativeFixture.account,
+              let conflict = syncConflict else { teamRecoveryRaceStatus = "Failed: original review unavailable"; return }
+        teamRecoveryRaceStatus = "Running"
+        let original = snapshot, originalGeneration = accountGeneration, originalAccess = nativeConversationTeamCache
+        error = nil
+        let presentation = teamCompletionReviewPresentation, originalSession = backend.reminderSessionIncarnation
+        let owner = userID, outsider = "ec240000-0000-4000-8000-000000000098"
+        let ownerFile = cacheURL, outsiderFile = cacheURL.deletingLastPathComponent().appendingPathComponent(outsider + ".json")
+        let priorOutsider = try? Data(contentsOf: outsiderFile)
+        var touchedOutsider = false
+        var action: Task<Bool, Never>?
+        var checks: [String: JSON] = [:], proof: [String: JSON] = [:]
+        func require(_ name: String, _ condition: Bool) throws {
+            checks[name] = .bool(condition)
+            if !condition { throw AppFailure(message: "Race check failed: " + name) }
+        }
+        func encoded(_ value: Snapshot) throws -> JSON { try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(value)) }
+        do {
+            proof["before"] = try encoded(original)
+            if mode.contains("account") { try require("priorOtherWorkspaceReadable", !FileManager.default.fileExists(atPath: outsiderFile.path) || priorOutsider != nil) }
+            TeamRecoveryRaceNativeFixture.arm(conflict.mutation)
+            action = Task {
+                if mode.contains("cancel") {
+                    if let review = conflict.completionReview { return await self.cancelTeamCompletionReview(review) }
+                    if let review = conflict.completionBatchReview { return await self.cancelTeamCompletionBatchReview(review) }
+                } else {
+                    if let review = conflict.completionReview { return await self.refreshTeamCompletionReview(review) }
+                    if let review = conflict.completionBatchReview { return await self.refreshTeamCompletionBatchReview(review) }
+                }
+                return false
+            }
+            for _ in 0..<1000 { if TeamRecoveryRaceNativeFixture.held { break }; try await Task.sleep(for: .milliseconds(10)) }
+            try require("actualReplyHeld", TeamRecoveryRaceNativeFixture.held && TeamRecoveryRaceNativeFixture.validated)
+            if mode.contains("account") {
+                var outside = Snapshot(); var task = Record.task(user: outsider)
+                task["id"] = .string("ec240000-0000-4000-8000-000000000097"); task["title"] = .string("Other workspace untouched proof")
+                outside.tables["tasks"] = [task]
+                try JSONEncoder().encode(outside).write(to: outsiderFile, options: .atomic); touchedOutsider = true
+                try await backend.accept(TeamRecoveryRaceNativeFixture.session(outsider)); await authenticated()
+                if mode == "refresh-account-return" { try await backend.accept(TeamRecoveryRaceNativeFixture.session(owner)); await authenticated() }
+                try require("realWorkspaceGenerationChanged", accountGeneration != originalGeneration)
+            } else if mode.contains("access") {
+                var raw = try TeamEditorNativeFixture.boundary(viewer: true).raw
+                raw["token"] = .string(String(repeating: "f", count: 64))
+                teamAccessMask = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: owner, origin: backend.accountRemovalOrigin), previous: snapshot.teamWorkspace, pending: snapshot.pending, tasks: snapshot.tables["tasks"] ?? [])
+                try require("coarseGuardsStillMatch", accountGeneration == originalGeneration && snapshot == original && (conflict.completionReview.map { currentTeamCompletionReview($0) } ?? conflict.completionBatchReview.map { currentTeamCompletionBatchReview($0) } ?? false))
+                try require("freshReadAccessChanged", nativeConversationTeamCache != originalAccess)
+            } else if mode == "refresh-session" {
+                try await backend.accept(TeamRecoveryRaceNativeFixture.session(owner))
+                try require("sameWorkspaceNewSession", accountGeneration == originalGeneration && snapshot == original && backend.reminderSessionIncarnation != originalSession)
+            } else if !mode.hasPrefix("refresh-current") {
+                let item = conflict.mutation.teamCompletion != nil ? conflict.mutation : conflict.mutation.teamTaskBatch!.items[0]
+                let command = item.teamCompletion!
+                let row = snapshot.tables["tasks"]!.first { $0.id == item.recordID }!
+                let fields: [String: JSON] = ["description": .string("New authored work while reviewing")]
+                let edit = try command.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: command.scope), existing: row)
+                snapshot.apply(edit); snapshot.pending.append(edit); try persist()
+            }
+            let interleaved = snapshot, currentAccess = nativeConversationTeamCache, currentRevision = workspaceReadRevision
+            let changedBytes = try Data(contentsOf: cacheURL)
+            if !mode.hasPrefix("refresh-current") { error = "Current workspace message" }
+            proof["interleaved"] = try encoded(interleaved)
+            TeamRecoveryRaceNativeFixture.release()
+            let accepted = await action!.value
+            try require(mode == "refresh-current" ? "currentResultAccepted" : "staleResultRefused", accepted == (mode == "refresh-current"))
+            if mode == "refresh-current" { try require("currentInstructionsVisible", syncConflict?.completionBatchReview?.members.first?.task?.string("description") == "Delayed response instructions") }
+            try require("currentSnapshotExact", snapshot == interleaved)
+            try require("currentReadAccessExact", nativeConversationTeamCache == currentAccess && workspaceReadRevision == currentRevision)
+            if mode == "refresh-current-error" {
+                let message = takeTeamCompletionReviewFailure(presentation, fallback: "Missing current error")
+                try require("currentFailurePresented", message == SyncStatus.failureMessage(URLError(.timedOut)) && error == nil)
+                let earlier = teamCompletionReviewPresentation
+                recordTeamCompletionReviewFailure("Earlier owned failure", origin: earlier)
+                error = "Current workspace message"
+                recordTeamCompletionReviewFailure("Late obsolete failure", origin: earlier)
+                _ = takeTeamCompletionReviewFailure(earlier, fallback: "Old screen fallback")
+                try require("newMessageCannotBePublishedOverOrConsumed", error == "Current workspace message")
+                error = nil
+            } else if mode != "refresh-current" {
+                _ = takeTeamCompletionReviewFailure(presentation, fallback: "Stale screen callback")
+                try require("stalePresentationKeptCurrentMessage", error == "Current workspace message")
+            } else { try require("currentMessageKept", error == nil) }
+            try require("currentWorkspaceFileExact", try Data(contentsOf: cacheURL) == changedBytes)
+            proof["after"] = try encoded(snapshot)
+            if mode.contains("account") {
+                try require("originalQueueFileKept", try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: ownerFile)).pending == original.pending)
+                try await backend.accept(TeamRecoveryRaceNativeFixture.session(owner)); await authenticated()
+                try require("originalQueueReloads", snapshot == original)
+                if mode == "cancel-account", let vault = teamSelectionDraftVault {
+                    let entries = try await Task.detached(priority: .utility) { try vault.entries() }.value
+                    try require("originalEncryptedDraftKept", entries.contains { $0.snapshot == original && $0.scope.account == owner })
+                }
+            }
+            proof["restored"] = try encoded(snapshot)
+            proof["status"] = .string("passed"); teamRecoveryRaceStatus = "Passed " + mode
+        } catch {
+            TeamRecoveryRaceNativeFixture.release()
+            if let action { _ = await action.value }
+            proof["status"] = .string("failed"); proof["failure"] = .string(error.localizedDescription); teamRecoveryRaceStatus = "Failed " + mode
+            if userID != owner { try? await backend.accept(TeamRecoveryRaceNativeFixture.session(owner)); await authenticated() }
+        }
+        if touchedOutsider {
+            do { if let priorOutsider { try priorOutsider.write(to: outsiderFile, options: .atomic) } else { try FileManager.default.removeItem(at: outsiderFile) } }
+            catch { proof["status"] = .string("failed"); teamRecoveryRaceStatus = "Failed outsider cleanup" }
+        }
+        proof["mode"] = .string(mode); proof["checks"] = .object(checks); proof["heldPath"] = .string(TeamRecoveryRaceNativeFixture.path)
+        proof["attemptedPaths"] = .array(TeamRecoveryRaceNativeFixture.attemptedPaths.map(JSON.string))
+        if let error = self.error { proof["actionMessage"] = .string(error) }
+
+        do { try JSONEncoder().encode(proof).write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-completion-race-proof.json"), options: .atomic) }
+        catch { teamRecoveryRaceStatus = "Failed proof persistence" }
+        self.error = nil
     }
 }
 #endif

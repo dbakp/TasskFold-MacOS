@@ -3407,11 +3407,12 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         wait(for: [opened], timeout: 10)
         app.activate()
     }
-    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil) throws {
+    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil) throws {
         guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Reserved isolated Mac host required") }
         app.launchArguments = ["--team-editor-testing", "--team-editor-reset", "--team-batch-testing", "--team-batch-recovery-testing", "--team-batch-recovery-recorded", "--team-batch-recovery-" + mode, "-appearance", "light"]
         if !recorded { app.launchArguments.removeAll { $0 == "--team-batch-recovery-recorded" } }
         if let storage { app.launchArguments.append("--team-recovery-storage=" + storage) }
+        if let race { app.launchArguments.append("--team-recovery-race=" + race) }
         if single { app.launchArguments.append("--team-single-recovery-testing") }
         if !refresh { app.launchArguments.append("--team-batch-recovery-dependent") }
         else { app.launchArguments.append("--team-single-recovery-refresh") }
@@ -3562,4 +3563,74 @@ extension TeamCompletionRecoveryMacUITests {
     @MainActor func testRecordedRecoveryWorkspaceWriteFailureRetainsExactQueueAndRetry() throws { try storageRecovery("cache") }
     @MainActor func testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry() throws { try storageRecovery("draft") }
     @MainActor func testCancelledRecoveryBackupIndexFailureKeepsSavedDraftBeforeSafeRetry() throws { try storageRecovery("backup") }
+}
+
+
+extension TeamCompletionRecoveryMacUITests {
+    @MainActor private func delayedRecovery(_ mode: String) throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        try launch(app, mode: "editor", single: mode.hasPrefix("single"), recorded: !mode.contains("cancel"), race: mode)
+        if mode.hasPrefix("single-cancel") {
+            app.terminate(); app.launchArguments.removeAll { $0 == "--team-batch-recovery-dependent" }; try open(app)
+        }
+        app.buttons["openMacCompletionRecovery"].click()
+        let later = app.buttons[mode.hasPrefix("single") ? "Later" : "laterTeamBatchRecovery"]
+        XCTAssertTrue(later.waitForExistence(timeout: 12)); later.click()
+        app.buttons["runTeamRecoveryRace"].click()
+
+        let finished = app.staticTexts["Passed " + mode]
+        let didFinish = finished.waitForExistence(timeout: 30)
+        if !didFinish, let data = try? Data(contentsOf: support().appendingPathComponent("taskfold-completion-race-proof.json")) {
+            let failure = XCTAttachment(data: data, uniformTypeIdentifier: "public.json"); failure.name = "Delayed recovery failure " + mode; failure.lifetime = .keepAlways; add(failure)
+        }
+        XCTAssertTrue(didFinish, app.debugDescription)
+        let file = try support().appendingPathComponent("taskfold-completion-race-proof.json")
+        let data = try Data(contentsOf: file), proof = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        XCTAssertEqual(proof["status"] as? String, "passed"); XCTAssertEqual(proof["mode"] as? String, mode)
+        let checks = try XCTUnwrap(proof["checks"] as? [String: Bool]); XCTAssertGreaterThanOrEqual(checks.count, 6); XCTAssertTrue(checks.values.allSatisfy { $0 })
+        let attachment = XCTAttachment(data: data, uniformTypeIdentifier: "public.json"); attachment.name = "Delayed recovery proof " + mode; attachment.lifetime = .keepAlways; add(attachment)
+        shot(app, "Delayed recovery checked context " + mode)
+        app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; try open(app)
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 15))
+        func canonical(_ value: [String: Any]) -> NSDictionary {
+            var value = value
+            if var cache = value["teamWorkspace"] as? [String: Any] {
+                for key in ["knownTasks", "quarantined"] { if let ids = cache[key] as? [String] { cache[key] = ids.sorted() } }; value["teamWorkspace"] = cache
+            }
+            return value as NSDictionary
+        }
+        let current = try saved()
+        XCTAssertEqual(canonical(current), canonical(try XCTUnwrap(proof["restored"] as? [String: Any])))
+        let restarted = XCTAttachment(data: try JSONSerialization.data(withJSONObject: current, options: [.sortedKeys]), uniformTypeIdentifier: "public.json"); restarted.name = "Delayed recovery after relaunch " + mode; restarted.lifetime = .keepAlways; add(restarted)
+    }
+    @MainActor func testGroupRefreshRefusesResponseAfterAccessDowngrade() throws { try delayedRecovery("refresh-access") }
+    @MainActor func testGroupRefreshKeepsCurrentMessageAfterDelayedErrorAndAccessChange() throws { try delayedRecovery("refresh-access-error") }
+    @MainActor func testSingleRefreshKeepsCurrentMessageAfterDelayedErrorAndAccessChange() throws { try delayedRecovery("single-refresh-access-error") }
+    @MainActor func testGroupCancellationReplyCannotAffectSwitchedAccount() throws { try delayedRecovery("cancel-account") }
+    @MainActor func testSingleCancellationReplyCannotAffectSwitchedAccount() throws { try delayedRecovery("single-cancel-account") }
+    @MainActor func testGroupRefreshRefusesOldSessionAfterAccountSwitchAndReturn() throws { try delayedRecovery("refresh-account-return") }
+    @MainActor func testGroupRefreshKeepsEditsMadeWhileResponseIsHeld() throws { try delayedRecovery("refresh-edit") }
+}
+
+
+extension TeamCompletionRecoveryMacUITests {
+    @MainActor func testGroupRefreshKeepsCurrentMessageAfterDelayedErrorAndNewEdit() throws { try delayedRecovery("refresh-edit-error") }
+    @MainActor func testSingleRefreshKeepsCurrentMessageAfterDelayedErrorAndNewEdit() throws { try delayedRecovery("single-refresh-edit-error") }
+}
+
+
+extension TeamCompletionRecoveryMacUITests {
+    @MainActor func testGroupRefreshAcceptsDelayedResponseWhenContextIsUnchanged() throws { try delayedRecovery("refresh-current") }
+}
+
+
+extension TeamCompletionRecoveryMacUITests {
+    @MainActor func testCurrentRefreshFailureStillReachesItsOwnPresentation() throws { try delayedRecovery("refresh-current-error") }
+    @MainActor func testRefreshRefusesCredentialRenewalBeforeWorkspaceReload() throws { try delayedRecovery("refresh-session") }
+}
+
+
+extension TeamCompletionRecoveryMacUITests {
+    @MainActor func testGroupCancellationErrorCannotReplaceMessageAfterAccessChange() throws { try delayedRecovery("cancel-access-error") }
+    @MainActor func testSingleCancellationErrorKeepsNewEditsAndTheirCurrentMessage() throws { try delayedRecovery("single-cancel-edit-error") }
 }
