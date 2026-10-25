@@ -5,15 +5,19 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 ## Current implementation focus
 
 Native completion recovery and permanent encrypted selection drafts are implemented
-in both clients. After cold startup, readable blocked individual/group actions can
+in both clients. Missing-source/occurrence authored task/comment work now also has
+an explicit encrypted saved-edits path with review, copy and export. After cold startup, readable blocked individual/group actions can
 open matching recorded or cancelled reviews. Explicit acceptance keeps current
 viewer/archive/write-pause restrictions and preserves queued or separately saved
 draft work. See the dated stages at the end of this plan for verification and
 remaining limits; older paragraphs record preceding checkpoints.
 
 The next priorities within rank 6 are:
-1. Preserve missing-incarnation authored work explicitly and extend supported
-   cross-table recovery without granting new editing authority.
+1. Extend explicitly supported cross-table recovery for connected preference and
+   mention intent without granting editing authority. Missing-source/occurrence
+   authored task/comment preservation now has a separate encrypted draft path;
+   ordinary native relaunch/failure/export checks pass. Broader hosted/series
+   acceptance remains open.
 2. Finish backup/vault I/O-phase races, provisional-occurrence draft-vault failures,
    native Mac recurring history and remaining keyboard/accessibility behavior.
    Individual ordinary-root failure/retry now passes three native scenarios on
@@ -4406,3 +4410,64 @@ I/O-phase races, native Mac recurring history, broader keyboard/spoken checks,
 large workloads and genuine hosted multiwriter flows. User-deferred release,
 provider and physical-device work remains deferred. No real task/account, hosted
 schema/service/configuration or rollout changed.
+
+
+## 25 October: keep authored edits after a recorded task incarnation disappears
+
+Both clients now offer **Keep edits as draft** when a validated recorded result
+cannot retain its connected authored task work. This covers missing source tasks
+and displaced provisional occurrences, for individual and selection reviews.
+The existing typed cohort reconstruction validates every connected command and
+local row first. Unexplained fields, foreign scopes, indirect preferences and
+unsupported mention intent continue to protect the whole queue. A current readable
+team/project boundary is required; local recovery never grants editing access.
+
+The explicit action freezes the complete review presentation, including workspace,
+credential incarnation, snapshot, access cache and read revision. An obsolete click
+is rejected even when the account and head task remain the same. A safety backup
+and permanent encrypted draft are saved and read back before local acceptance;
+failed writes leave the exact workspace/queue intact, and retry reuses the draft.
+Only connected task work and valid comment drafts move out of the active queue.
+Independent commands and other rows remain unchanged. Original history bodies and
+nonces remain in the archive; no completion, cancellation, copy or retirement RPC
+is added by this action. Ordinary sync can resume under the current access mask.
+
+The new account/backend-bound format lives in its own **Recorded recovery** folder,
+with authenticated encryption, removal fencing, bounds, explicit deletion and no
+automatic eviction. Existing selection formats and readers are unchanged. Simple
+provisional drafts keep their existing task-copy workflow. Saved team drafts now
+also list Saved edits, with readable text, Copy/Share and a JSON review export.
+The export omits the private workspace snapshot, access cache and unrelated outboxes.
+An individual command is retained exactly; an ephemeral one-member analysis wrapper
+is neither persisted, exported nor sent. Expensive preparation runs off the UI
+thread, and list titles do not reconstruct saved queues.
+
+Each repo passes 203 completion Core checks (12 new cases). Five distinct native cases are accepted
+on each Mac, iPhone Simulator and iPad Simulator with no remaining failures, skips
+or runtime warnings: individual and selection preservation/relaunch, workspace-write failure,
+draft-vault failure and the existing selection-draft control. New cases exercise
+stale-presentation refusal through the real Store entry point. iPhone/iPad sharing
+opens and cancels safely. Mac exports through the standard Save dialog; the actual
+local JSON file matches the prepared export byte for byte, and a second Cancel
+leaves both the file and workspace unchanged. No external delivery is claimed. Complete retained
+snapshots, archives and exports are independently checked. Native cases use ordinary
+missing sources; canonical recurring replacement, mixed/deleted task cohorts and
+comments also have Core coverage. See
+[p2-recorded-recovery-evidence.json](p2-recorded-recovery-evidence.json) and
+[recorded-recovery/](recorded-recovery/) for exact evidence and development history.
+
+The reserved DEBUG fixture no longer reseeds a deliberately missing task on
+relaunch. XCTest teardown blocks restore prior test vaults even after assertion
+failure; initial interrupted fixture vaults were restored before final acceptance.
+Mac uses the native Save dialog for JSON export, with scoped completion feedback
+and safe cancellation. Test sessions end closed.
+The Mac Save-dialog automation initially targeted the filename instead of the
+folder field. No file was written in that attempt. A broad folder lookup also timed out, while
+the native dialog confirmed the
+correct local destination. Narrow field/control lookups resolve both test issues.
+The corrected export case passes separately; the other four cases passed in the
+suite. All run summaries are retained, including both automation failures.
+No hosted schema, service/configuration, rollout, real task/account, release or
+provider setup changed. Rank 6 and the broader Px goal remain open: supported
+cross-table recovery, broader recurring/spoken/I/O-race/large-workload acceptance
+and genuine hosted flows still remain, alongside the agreed user deferrals.

@@ -1,0 +1,38 @@
+[
+  {
+    "platform": "mac",
+    "scenario": "single",
+    "originalEnvelopeAndEntireSnapshotKept": true,
+    "exportOnlyConnectedWork": true,
+    "allOtherTablesAndRowsUnchanged": true,
+    "wholeRelaunchExact": true,
+    "readRestrictionsKept": true
+  },
+  {
+    "platform": "mac",
+    "scenario": "group",
+    "originalEnvelopeAndEntireSnapshotKept": true,
+    "exportOnlyConnectedWork": true,
+    "allOtherTablesAndRowsUnchanged": true,
+    "wholeRelaunchExact": true,
+    "readRestrictionsKept": true
+  },
+  {
+    "platform": "mac",
+    "scenario": "cache",
+    "originalEnvelopeAndEntireSnapshotKept": true,
+    "exportOnlyConnectedWork": true,
+    "allOtherTablesAndRowsUnchanged": true,
+    "wholeRelaunchExact": true,
+    "readRestrictionsKept": true
+  },
+  {
+    "platform": "mac",
+    "scenario": "vault",
+    "originalEnvelopeAndEntireSnapshotKept": true,
+    "exportOnlyConnectedWork": true,
+    "allOtherTablesAndRowsUnchanged": true,
+    "wholeRelaunchExact": true,
+    "readRestrictionsKept": true
+  }
+]

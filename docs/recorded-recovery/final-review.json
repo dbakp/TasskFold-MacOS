@@ -1,0 +1,6 @@
+{
+  "macNativeSaveDialogAndCancelledPreview": "inspected; readable standard Save UI, correct local destination and intact preview",
+  "ipadSavedEditsPreview": "inspected; readable scrollable content",
+  "actualMacLocalExport": "byte-for-byte equality asserted in native test and JSON equality independently verified",
+  "scope": "synthetic isolated fixtures only"
+}

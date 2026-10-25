@@ -1,0 +1,26 @@
+{
+  "TaskFold-iOS": {
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Core/TeamCompletion.swift": true,
+    "Taskfold/Core/TeamCompletionDraft.swift": true,
+    "Taskfold/Core/TeamTaskBatch.swift": true,
+    "Taskfold/Views/ConflictReview.swift": true,
+    "TaskfoldUITests/TeamTaskBatchDeletionUITests.swift": true,
+    "Taskfold/Views/TaskEditor.swift": true
+  },
+  "TasskFold-MacOS": {
+    "Taskfold/Workspace.swift": true,
+    "Taskfold/AccountRemovalNativeFixture.swift": true,
+    "Taskfold/Core/Backups.swift": true,
+    "Taskfold/Core/Backend.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Core/WidgetActions.swift": true,
+    "Taskfold/Core/SharedCapture.swift": true,
+    "Taskfold/Core/TeamCompletion.swift": true,
+    "TaskfoldUITests/TaskfoldMacUITests.swift": true,
+    "Taskfold/Collaboration.swift": true,
+    "Taskfold/Views/TaskInspector.swift": true,
+    "Taskfold/Core/TeamCompletionDraft.swift": true,
+    "Taskfold/Core/TeamTaskBatch.swift": true
+  }
+}

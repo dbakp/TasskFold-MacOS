@@ -17,6 +17,7 @@ final class Store {
     static let shared = Store()
     #if DEBUG
     private(set) var teamRecoveryRaceStatus = "Ready"
+    private(set) var recordedDraftAdmissionStatus = "Ready"
     #endif
     #if DEBUG
     @ObservationIgnored private var workflowFixtureFailureConsumed = false
@@ -305,6 +306,10 @@ final class Store {
         guard signedIn,!localMode,!signingOut,!accountRemovalBlocked,TeamProjectValue.id(userID),let origin=try? backend.accountRemovalOrigin else {return nil}
         let vault=backupVault
         return TeamCompletionDraftVault(directory:vault.directory.appendingPathComponent("Team drafts",isDirectory:true).appendingPathComponent(WorkspaceBackup.stableID("origin",origin),isDirectory:true),account:userID,origin:origin,key:vault.key,removalGate:vault.removalGate)
+    }
+    var teamRecordedRecoveryVault: TeamCompletionRecoveryDraftVault? {
+        guard let base = teamDraftVault else { return nil }
+        return TeamCompletionRecoveryDraftVault(directory: base.directory.appendingPathComponent("Recorded recovery", isDirectory: true), account: base.account, origin: base.origin, key: base.key, removalGate: base.removalGate)
     }
     var teamSelectionDraftVault: TeamCompletionBatchDraftVault? {
         guard let base = teamDraftVault else { return nil }
@@ -2004,6 +2009,47 @@ final class Store {
         return fallback
     }
 
+    /// Local acceptance only: the recorded receipt is already authoritative.
+    /// Durable safety copies and current read access precede retiring any intent.
+    @discardableResult func preserveRecordedCompletionDraft(_ expected: TeamCompletionReviewPresentation) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        guard expected == presentation else { return false }
+        let generation = accountGeneration, session = backend.reminderSessionIncarnation
+        let before = snapshot, access = nativeConversationTeamCache, revision = workspaceReadRevision
+        let single = syncConflict?.completionReview, group = syncConflict?.completionBatchReview
+        guard let access, let vault = teamRecordedRecoveryVault,
+              single.map({ currentTeamCompletionReview($0) && $0.isRecorded }) ?? group.map({ currentTeamCompletionBatchReview($0) && $0.isRecorded }) ?? false else { return false }
+        func unchanged() -> Bool {
+            generation == accountGeneration && session == backend.reminderSessionIncarnation && before == snapshot &&
+            revision == workspaceReadRevision && nativeConversationTeamCache == access &&
+            syncConflict?.completionReview == single && syncConflict?.completionBatchReview == group &&
+            teamCompletionReviewMayFinish(presentation)
+        }
+        do {
+            let prepared = try await Task.detached(priority: .userInitiated) { () -> (TeamCompletionRecoveryDraft, Snapshot) in
+                let draft: TeamCompletionRecoveryDraft
+                if let single { draft = try TeamCompletionRecoveryDraft(single: single, snapshot: before) }
+                else if let group { draft = try TeamCompletionRecoveryDraft(group: group, snapshot: before) }
+                else { throw TeamCompletionRecoveryDraft.invalid }
+                guard let next = draft.preserving(readable: access) else { throw TeamCompletionRecoveryDraft.invalid }
+                return (draft, next)
+            }.value
+            guard unchanged() else { return false }
+            _ = try await makeRecoveryBackup(kind: "Before keeping recorded edits")
+            guard unchanged() else { return false }
+            let saved = try await Task.detached(priority: .utility) { try vault.save(prepared.0) }.value
+            guard unchanged(), saved.sameWork(as: prepared.0) else { return false }
+            snapshot = prepared.1
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false }
+            undoStack = []; redoStack = []; syncConflict = nil
+            notice = "Edits kept in Saved team drafts. Sync can continue."
+            Task { await sync() }; return true
+        } catch {
+            guard unchanged() else { return false }
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false
+        }
+    }
+
     func currentTeamCompletionBatchReview(_ review: TeamTaskBatch.Review) -> Bool {
         guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
               syncConflict?.completionBatchReview == review, snapshot.pending.first == review.mutation,
@@ -3383,7 +3429,9 @@ extension Store {
         }
         if TeamBatchRecoveryNativePeer.blockedSync { try? FileManager.default.removeItem(at: TeamBatchRecoveryNativePeer.traceFile) }
         if TeamBatchRecoveryNativePeer.recurring, ProcessInfo.processInfo.arguments.contains("--team-editor-reset") { try? FileManager.default.removeItem(at: TeamBatchRecoveryNativePeer.recurringProof) }
-        guard ProcessInfo.processInfo.arguments.contains("--team-editor-reset") || record("tasks", id: TeamEditorNativeFixture.taskID) == nil else { return }
+        let reset = ProcessInfo.processInfo.arguments.contains("--team-editor-reset")
+        let preserveMissing = ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing")
+        guard reset || (!preserveMissing && record("tasks", id: TeamEditorNativeFixture.taskID) == nil) else { return }
         UserDefaults.standard.removeObject(forKey: "teamEditorRecipientUnavailable")
         do {
             var row = Record.task(user: "ec240000-0000-4000-8000-000000000099", project: TeamEditorNativeFixture.projectID)
@@ -3874,6 +3922,9 @@ extension Store {
             var view: [String: JSON] = Dictionary(uniqueKeysWithValues: ["team_id", "project_id", "task_id", "task_generation", "request_id", "series_id", "series_generation", "series_project_id", "planned_next_id"].map { ($0, b[$0]!) })
             view.merge(["review_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "operation": .string("complete"), "state": .string(state), "project_role": .string(readOnlyMode == "viewer" ? "viewer" : "editor"),
                 "task": .object(task.fields), "series": .object(task.fields), "successor": .null, "receipt": recorded ? .object(receipt) : .null, "can_edit_current": .bool(readOnlyMode == nil), "can_edit_series": .bool(readOnlyMode == nil)]) { _, new in new }
+            if recorded, ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing"), task.id == TeamEditorNativeFixture.taskID {
+                receipt["task"] = .null; view["task"] = .null; view["series"] = .null; view["receipt"] = .object(receipt)
+            }
             views.append(.object(view)); receipts.append(.object(receipt))
         }
         if single {
@@ -3975,7 +4026,10 @@ extension Store {
     private static var held: URL { cache.appendingPathExtension("storage-proof-held") }
     private static var journal: URL { support.appendingPathComponent("taskfold-storage-proof-journal.json") }
     private static func target(_ fault: String) -> URL {
-        fault == "cache" ? cache : fault == "backup" ? vault.appendingPathComponent("index.json") : vault.appendingPathComponent("Team drafts/1d019528-c5bc-8e72-8e2a-1305600e9a82/Selections")
+        if fault == "cache" { return cache }
+        if fault == "backup" { return vault.appendingPathComponent("index.json") }
+        let name = ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing") ? "Recorded recovery" : "Selections"
+        return vault.appendingPathComponent("Team drafts/1d019528-c5bc-8e72-8e2a-1305600e9a82/" + name)
     }
     static func block() throws {
         guard let fault else { throw TeamCompletion.invalid }
@@ -4184,6 +4238,23 @@ extension Store {
         do { try JSONEncoder().encode(proof).write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-completion-race-proof.json"), options: .atomic) }
         catch { teamRecoveryRaceStatus = "Failed proof persistence" }
         self.error = nil
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    /// Exercise the real entry point with an obsolete presentation while the
+    /// same account, task and review remain current. No queue or file may change.
+    func checkRecordedDraftAdmissionFixture() async {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing"), userID == TeamEditorNativeFixture.account else { return }
+        let context = teamCompletionReviewPresentation, before = snapshot, oldError = error
+        let file = cacheURL, bytes = try? Data(contentsOf: file)
+        error = "Current workspace message"
+        let accepted = await preserveRecordedCompletionDraft(context)
+        let protected = !accepted && before == snapshot && bytes != nil && (try? Data(contentsOf: file)) == bytes && error == "Current workspace message"
+        if error == "Current workspace message" { error = oldError }
+        recordedDraftAdmissionStatus = protected ? "Saved draft context protected" : "Saved draft context failed"
     }
 }
 #endif

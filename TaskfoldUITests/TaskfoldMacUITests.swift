@@ -3407,11 +3407,12 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         wait(for: [opened], timeout: 10)
         app.activate()
     }
-    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil, dependent: Bool = true) throws {
+    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil, dependent: Bool = true, recordedDraft: Bool = false) throws {
         guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Reserved isolated Mac host required") }
         app.launchArguments = ["--team-editor-testing", "--team-editor-reset", "--team-batch-testing", "--team-batch-recovery-testing", "--team-batch-recovery-recorded", "--team-batch-recovery-" + mode, "-appearance", "light"]
         if !recorded { app.launchArguments.removeAll { $0 == "--team-batch-recovery-recorded" } }
         if let storage { app.launchArguments.append("--team-recovery-storage=" + storage) }
+        if recordedDraft { app.launchArguments.append("--team-recorded-draft-testing") }
         if let race { app.launchArguments.append("--team-recovery-race=" + race) }
         if single { app.launchArguments.append("--team-single-recovery-testing") }
         if refresh { app.launchArguments.append("--team-single-recovery-refresh") }
@@ -3729,4 +3730,139 @@ extension TeamCompletionRecoveryMacUITests {
     @MainActor func testIndividualRecordedCacheFailureKeepsAuthoredTailAndRetry() throws { try singleStorageRecovery("recorded-cache") }
     @MainActor func testIndividualCancellationBackupFailureCannotSendBeforeRetry() throws { try singleStorageRecovery("cancel-backup") }
     @MainActor func testIndividualCancellationCacheFailureRecoversReceiptAfterRelaunch() throws { try singleStorageRecovery("cancel-cache") }
+}
+
+
+extension TeamCompletionRecoveryMacUITests {
+    @MainActor private func recordedDraftRecovery(_ scenario: String) throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        let single = scenario == "single", fault = scenario == "vault" ? "draft" : "cache"
+        try launch(app, mode: "viewer", single: single, recorded: true, storage: fault, recordedDraft: true)
+        app.buttons["openMacCompletionRecovery"].click()
+        let fm = FileManager.default, support = try support()
+        let cacheFile = support.appendingPathComponent("Taskfold/ec240000-0000-4000-8000-000000000001.json")
+        let vault = cacheFile.deletingLastPathComponent().appendingPathComponent("Backups/d2be2d54-84e6-8f3d-8850-546d0835535a")
+        let archive = vault.appendingPathComponent("Team drafts/1d019528-c5bc-8e72-8e2a-1305600e9a82/Recorded recovery")
+        addTeardownBlock {
+            await MainActor.run {
+                let fm = FileManager.default
+                app.terminate(); app.launchArguments = ["--team-editor-testing", "--team-recovery-storage-cleanup"]
+                do { try self.open(app); XCTAssertFalse(fm.fileExists(atPath: support.appendingPathComponent("taskfold-storage-proof-journal.json").path)) }
+                catch { XCTFail("Could not restore recorded draft fixture: \(error)") }
+                app.terminate()
+            }
+        }
+        let later = app.buttons[single ? "Later" : "laterTeamBatchRecovery"]
+        XCTAssertTrue(later.waitForExistence(timeout: 10)); later.click()
+        let admission = app.buttons["checkRecordedDraftAdmission"]; XCTAssertTrue(admission.waitForExistence(timeout: 10)); admission.click()
+        XCTAssertTrue(app.staticTexts["Saved draft context protected"].waitForExistence(timeout: 12), app.debugDescription)
+        app.buttons["openMacCompletionRecovery"].click()
+        let before = try saved(), bytes = try Data(contentsOf: cacheFile), queue = pending(before)
+        XCTAssertEqual(queue.count, 2); XCTAssertEqual(queue[0]["teamCompletion"] != nil, single)
+        let keep = app.buttons["preserveRecordedCompletionDraft"]
+        XCTAssertTrue(keep.waitForExistence(timeout: 15), app.debugDescription)
+
+        XCTAssertTrue(keep.isEnabled); shot(app, "Recorded draft review " + scenario)
+        app.buttons["blockNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage blocked"].waitForExistence(timeout: 8))
+        if scenario == "single" || scenario == "group" {
+            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+        }
+
+        keep.click()
+        if scenario == "cache" || scenario == "vault" {
+            let warning = app.descendants(matching: .any)["teamBatchRecoveryError"].firstMatch
+            XCTAssertTrue(warning.waitForExistence(timeout: 15), app.debugDescription)
+            let durable = try Data(contentsOf: scenario == "cache" ? cacheFile.appendingPathExtension("storage-proof-held") : cacheFile)
+            XCTAssertEqual(durable, bytes)
+            if scenario == "cache" {
+                let files = try fm.contentsOfDirectory(at: archive, includingPropertiesForKeys: nil).filter { $0.pathExtension == "taskfoldrecovery" }
+                XCTAssertEqual(files.count, 1, "Verified encrypted draft precedes retiring local work")
+                let cipher = try Data(contentsOf: XCTUnwrap(files.first)); XCTAssertFalse(String(decoding: cipher, as: UTF8.self).contains("Keep these later workshop instructions"))
+            } else { XCTAssertFalse(fm.fileExists(atPath: archive.appendingPathComponent("unexpected.taskfoldrecovery").path)) }
+            shot(app, "Recorded draft storage failure " + scenario)
+            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+            XCTAssertTrue(keep.waitForExistence(timeout: 15));
+            XCTAssertTrue(keep.isEnabled); keep.click()
+        }
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 25), app.debugDescription)
+        let after = try saved(); XCTAssertTrue(pending(after).isEmpty)
+        let files = try fm.contentsOfDirectory(at: archive, includingPropertiesForKeys: nil).filter { $0.pathExtension == "taskfoldrecovery" }
+        XCTAssertEqual(files.count, 1, "Retry must reuse the same complete encrypted draft")
+        let encrypted = try Data(contentsOf: XCTUnwrap(files.first)); XCTAssertFalse(String(decoding: encrypted, as: UTF8.self).contains("Keep these later workshop instructions"))
+        let oldRows = try XCTUnwrap((before["tables"] as? [String: Any])?["tasks"] as? [[String: Any]])
+        let newRows = try XCTUnwrap((after["tables"] as? [String: Any])?["tasks"] as? [[String: Any]])
+        let target = try XCTUnwrap(queue[1]["recordID"] as? String)
+        XCTAssertFalse(newRows.contains { $0["id"] as? String == target })
+        XCTAssertEqual(newRows.filter { $0["id"] as? String != target } as NSArray, oldRows.filter { $0["id"] as? String != target } as NSArray)
+        let metadata = try XCTUnwrap(after["teamWorkspace"] as? [String: Any]), boundary = try XCTUnwrap(metadata["boundary"] as? [String: Any]), raw = try XCTUnwrap(boundary["raw"] as? [String: Any])
+        XCTAssertEqual((raw["projects"] as? [[String: Any]])?.first?["can_send_tasks"] as? Bool, false)
+        app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; try open(app)
+        let drafts = app.buttons["openMacSavedDrafts"]; XCTAssertTrue(drafts.waitForExistence(timeout: 15)); drafts.click()
+        let item = app.buttons["savedRecordedCompletionDraft"].firstMatch; XCTAssertTrue(item.waitForExistence(timeout: 12), app.debugDescription); item.click()
+        let preview = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "Keep these later workshop instructions", "Keep these later workshop instructions")).firstMatch
+        XCTAssertTrue(preview.waitForExistence(timeout: 12), app.debugDescription)
+        let detail = try Data(contentsOf: support.appendingPathComponent("taskfold-recorded-draft-proof.json"))
+        let exported = try Data(contentsOf: support.appendingPathComponent("taskfold-recorded-export-proof.json"))
+        let draft = try JSONSerialization.jsonObject(with: detail) as! [String: Any]
+        XCTAssertEqual(draft["original"] as? NSDictionary, queue[0] as NSDictionary)
+        XCTAssertEqual(canonicalRecordedDraft(try XCTUnwrap(draft["snapshot"] as? [String: Any])), canonicalRecordedDraft(before))
+        XCTAssertEqual((draft["id"] as? String)?.lowercased(), files.first!.deletingPathExtension().lastPathComponent)
+        let json = try JSONSerialization.jsonObject(with: exported) as! [String: Any]
+        XCTAssertEqual(json["format"] as? String, "com.taskfold.saved-edits")
+        XCTAssertEqual(json["changes"] as? NSArray, queue as NSArray)
+        XCTAssertNil(json["snapshot"]); XCTAssertNil(json["review"]); XCTAssertNil(json["teamWorkspace"])
+        XCTAssertTrue(String(decoding: exported, as: UTF8.self).contains("Keep these later workshop instructions"))
+        shot(app, "Recorded draft retained preview " + scenario)
+        let export = app.buttons["exportRecordedEdits"]
+        for _ in 0..<8 where !export.isHittable { app.descendants(matching: .any)["savedRecordedEditsForm"].firstMatch.swipeUp() }
+        XCTAssertTrue(export.isEnabled)
+        if scenario == "group" {
+            export.click()
+            let cancel = app.sheets.buttons["Cancel"].firstMatch
+            XCTAssertTrue(cancel.waitForExistence(timeout: 12), app.debugDescription)
+            let name = app.sheets.textFields.matching(NSPredicate(format: "value CONTAINS %@", "Taskfold-saved-edits")).firstMatch
+            XCTAssertTrue(name.waitForExistence(timeout: 8), app.debugDescription)
+            let filename = "Taskfold-recovery-" + UUID().uuidString.lowercased() + ".json"
+            let destination = URL(fileURLWithPath: "/tmp/taskfold-recorded-recovery-native-exports", isDirectory: true).appendingPathComponent(filename)
+            name.click(); app.typeKey("a", modifierFlags: .command); name.typeText(filename)
+            app.typeKey("g", modifierFlags: [.command, .shift])
+            let path = app.sheets.textFields["PathTextField"].firstMatch
+            XCTAssertTrue(path.waitForExistence(timeout: 8), app.debugDescription)
+            path.click(); app.typeKey("a", modifierFlags: .command); path.typeText(destination.deletingLastPathComponent().path); app.typeKey(.return, modifierFlags: [])
+            let selectedName = app.sheets.textFields.matching(NSPredicate(format: "value == %@", filename)).firstMatch
+            XCTAssertTrue(selectedName.waitForExistence(timeout: 8), app.debugDescription)
+            let selectedFolder = app.sheets.popUpButtons["where popup"].firstMatch
+            XCTAssertTrue(selectedFolder.waitForExistence(timeout: 8), app.debugDescription)
+            XCTAssertEqual(selectedFolder.value as? String, "taskfold-recorded-recovery-native-exports")
+            let save = app.sheets.buttons["Save"].firstMatch.exists ? app.sheets.buttons["Save"].firstMatch : app.sheets.buttons["Export"].firstMatch
+            XCTAssertTrue(save.waitForExistence(timeout: 8), app.debugDescription); XCTAssertTrue(save.isEnabled)
+            shot(app, "Recorded draft native save picker"); save.click()
+            XCTAssertTrue(app.staticTexts["Details saved."].waitForExistence(timeout: 12), app.debugDescription)
+            let delivery = try Data(contentsOf: destination); XCTAssertEqual(delivery, exported)
+            let delivered = XCTAttachment(data: delivery, uniformTypeIdentifier: "public.json"); delivered.name = "Recorded draft local delivery"; delivered.lifetime = .keepAlways; add(delivered)
+            export.click(); XCTAssertTrue(cancel.waitForExistence(timeout: 12), app.debugDescription)
+            shot(app, "Recorded draft native export picker"); cancel.click()
+            XCTAssertTrue(cancel.waitForNonExistence(timeout: 12), app.debugDescription)
+            XCTAssertTrue(export.waitForExistence(timeout: 10)); XCTAssertTrue(export.isEnabled)
+            XCTAssertEqual(try Data(contentsOf: destination), delivery)
+            shot(app, "Recorded draft export cancelled safely")
+            XCTAssertEqual(canonicalRecordedDraft(try saved()), canonicalRecordedDraft(after), "Opening and cancelling export cannot replay saved edits")
+        }
+        let restarted = try saved(); XCTAssertEqual(canonicalRecordedDraft(after), canonicalRecordedDraft(restarted))
+        for (phase, value) in [("before", before), ("after", after), ("relaunch", restarted), ("draft", draft), ("export", json)] {
+            let proof = XCTAttachment(data: try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]), uniformTypeIdentifier: "public.json")
+            proof.name = "Recorded draft " + scenario + " " + phase; proof.lifetime = .keepAlways; add(proof)
+        }
+    }
+    private func canonicalRecordedDraft(_ value: [String: Any]) -> NSDictionary {
+        var value = value
+        if var access = value["teamWorkspace"] as? [String: Any] {
+            for key in ["knownTasks", "quarantined"] { if let ids = access[key] as? [String] { access[key] = ids.sorted() } }; value["teamWorkspace"] = access
+        }
+        return value as NSDictionary
+    }
+    @MainActor func testRecordedMissingSingleKeepsAuthoredEditsAndExportAfterRelaunch() throws { try recordedDraftRecovery("single") }
+    @MainActor func testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch() throws { try recordedDraftRecovery("group") }
+    @MainActor func testRecordedDraftCacheFailurePreservesQueueAndReusesArchiveOnRetry() throws { try recordedDraftRecovery("cache") }
+    @MainActor func testRecordedDraftVaultFailurePreservesQueueBeforeRetry() throws { try recordedDraftRecovery("vault") }
 }

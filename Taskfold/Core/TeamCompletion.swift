@@ -205,6 +205,7 @@ extension TeamCompletion {
         let isCancelled: Bool
         let canEditCurrent: Bool
         let canEditSeries: Bool
+        let response: [String: JSON]
         init(_ reply:[String:JSON],for mutation:Mutation) throws {
             guard let command=mutation.teamCompletion else { throw TeamCompletion.invalid }
             let body=try command.body(for:mutation)
@@ -239,6 +240,7 @@ extension TeamCompletion {
                 guard reply["receipt"] == .null else {throw TeamCompletion.invalid}
                 recorded=nil;successor=try row("successor",id:command.proposed?.id,generation:nil,project:command.scope.project)
             }
+            self.response=reply
             self.mutation=mutation;self.role=role;self.task=task;self.series=series;self.successor=successor;self.recorded=recorded;self.isCancelled=reply["state"] == .string("cancelled");self.canEditCurrent=reply["can_edit_current"] == .bool(true);self.canEditSeries=reply["can_edit_series"] == .bool(true)
         }
         /// This is only a preflight. An unrecorded read never authorizes dropping

@@ -1178,3 +1178,175 @@ extension TeamCompletionBatchTests {
         XCTAssertNil(review.cancelling(remembered, readable: try readRecoveryCache(header, local: local)))
     }
 }
+
+extension TeamCompletionBatchTests {
+    private func recoveryFixture(single: Bool = false, recurring: Bool = false, comment: Bool = false) throws -> (TeamCompletionRecoveryDraft, TeamWorkspaceCache, Mutation, TeamTaskBatch.Review) {
+        let (_, group, batch, reply) = try fixture(recurring ? "recurring_" : "")
+        let header = single ? batch.items[0] : group
+        var local = snapshot(batch); append(header, to: &local)
+        let command = batch.items[0].teamCompletion!, target = recurring ? command.proposed! : local.tables["tasks"]!.first { $0.id == command.source.id }!
+        let edit = try patch(target, ["title": .string("Keep the authored review"), "description": .string("Retain every line\nSecond line 🌱")], scope: command.scope)
+        append(edit, to: &local)
+        if comment {
+            let value = try SharedCommentChange(account: batch.account, taskID: target.id, taskGeneration: target.string("task_generation"), projectID: target.string("project_id"), body: "Authored conversation retained")
+            try ConversationOutbox.enqueue(value.record, into: &local)
+        }
+        var raw = reply, items = reply["items"]!.list, member = items[0].object
+        if recurring {
+            var next = member["successor"]!.object; next["task_generation"] = .string(UUID().uuidString.lowercased())
+            member["successor"] = .object(next); member["successor_generation"] = next["task_generation"]; member["created_successor"] = .bool(false)
+        } else { member["task"] = .null }
+        items[0] = .object(member); raw["items"] = .array(items)
+        let observed = try recordedReadReview(group, reply: raw), access = try readRecoveryCache(group, local: local)
+        local.teamWorkspace = access
+        let draft = single ? try TeamCompletionRecoveryDraft(single: observed.members[0], snapshot: local) : try TeamCompletionRecoveryDraft(group: observed, snapshot: local)
+        return (draft, access, edit, observed)
+    }
+    func testRecordedMissingSourceArchivesExactAuthoredCohortAndKeepsIndependentWork() throws {
+        let (base, cache, edit, observed) = try recoveryFixture()
+        var local = base.snapshot
+        local.tables["profiles"] = [Record(["id": .string("private"), "notes": .string("Unrelated private material")])]
+        let independent = Mutation(table: "view_preferences", recordID: "personal", method: "PATCH", fields: ["name": .string("Unrelated private material")]); local.pending.append(independent)
+        let draft = try TeamCompletionRecoveryDraft(group: observed, snapshot: local), next = try XCTUnwrap(draft.preserving(readable: cache))
+        XCTAssertEqual(draft.parkedChanges, [base.original, edit]); XCTAssertEqual(next.pending, [independent])
+        XCTAssertFalse(next.tables["tasks"]!.contains { $0.id == edit.recordID }); XCTAssertEqual(next.tables["profiles"], local.tables["profiles"])
+        XCTAssertEqual(draft.snapshot, local); XCTAssertEqual(next.teamWorkspace?.boundary, cache.boundary); XCTAssertFalse(next.teamWorkspace!.canSend(base.original, in: next))
+        let raw = try JSONDecoder().decode([String: JSON].self, from: draft.data())
+        XCTAssertEqual(Set(raw.keys), ["format", "version", "created_at", "original", "changes", "tasks", "conversations"])
+        XCTAssertEqual(raw["format"], .string("com.taskfold.saved-edits")); XCTAssertEqual(raw["changes"]?.list.count, 2)
+        XCTAssertTrue(draft.text.contains("Second line 🌱")); XCTAssertFalse(String(decoding: try draft.data(), as: UTF8.self).contains("Unrelated private material"))
+    }
+    func testSingleRecordedRecoveryRetainsActualEnvelopeAndNeverExportsAnalysisHeader() throws {
+        let (draft, cache, edit, _) = try recoveryFixture(single: true, comment: true)
+        XCTAssertEqual(draft.snapshot.pending, [draft.original, edit]); XCTAssertNil(draft.original.teamTaskBatch)
+        let next = try XCTUnwrap(draft.preserving(readable: cache)); XCTAssertTrue(next.pending.isEmpty)
+        XCTAssertEqual(next.tables[ConversationOutbox.table], []); XCTAssertEqual(draft.parkedConversations.count, 1)
+        let raw = try JSONDecoder().decode([String: JSON].self, from: draft.data())
+        let original = try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(raw["original"]!))
+        XCTAssertEqual(original, draft.original); XCTAssertEqual(raw["changes"]?.list.count, 2)
+        let analysis = WorkspaceBackup.stableID("recorded-recovery-analysis", draft.original.id.uuidString)
+        XCTAssertFalse(String(decoding: try draft.data(), as: UTF8.self).lowercased().contains(analysis))
+        XCTAssertEqual(try JSONDecoder().decode(TeamCompletionRecoveryDraft.self, from: JSONEncoder().encode(draft)), draft)
+    }
+    func testRecordedCanonicalSuccessorKeepsOldIncarnationNotesAndCommentsInDraft() throws {
+        for single in [false, true] {
+            let (draft, cache, edit, observed) = try recoveryFixture(single: single, recurring: true, comment: true)
+            let next = try XCTUnwrap(draft.preserving(readable: cache)), canonical = try XCTUnwrap(observed.members[0].successor)
+            XCTAssertEqual(next.tables["tasks"]?.first { $0.id == canonical.id }, canonical)
+            XCTAssertNotEqual(canonical["task_generation"], edit.baseline?["task_generation"])
+            XCTAssertTrue(next.pending.isEmpty); XCTAssertEqual(next.tables[ConversationOutbox.table], [])
+            XCTAssertTrue(draft.text.contains("Retain every line")); XCTAssertTrue(draft.text.contains("Authored conversation retained"))
+            XCTAssertFalse(next.teamWorkspace!.canSend(draft.original, in: next))
+        }
+    }
+    func testRecordedRecoveryArchivesTransitiveMixedSelectionWithoutLosingOutsideBaseline() throws {
+        let (base, _, _, observed) = try recoveryFixture(); var local = base.snapshot
+        let batch = base.original.teamTaskBatch!, scope = batch.items[0].teamCompletion!.scope
+        var outside = batch.items[0].teamCompletion!.source; outside["id"] = .string(UUID().uuidString.lowercased()); outside["task_generation"] = .string(UUID().uuidString.lowercased()); outside["title"] = .string("Outside baseline")
+        local.tables["tasks"]!.append(outside)
+        let earlier = try patch(outside, ["title": .string("Outside authored title")], scope: scope); append(earlier, to: &local)
+        let chosen = [local.tables["tasks"]!.first { $0.id == batch.items[0].recordID }!, local.tables["tasks"]!.first { $0.id == outside.id }!]
+        let items = chosen.map { Mutation(table: "tasks", recordID: $0.id, method: "PATCH", fields: ["priority": .number(1)], baseline: $0.fields, teamTaskScope: scope) }.sorted { $0.recordID < $1.recordID }
+        let mixed = TeamTaskBatch.header(TeamTaskBatch(account: batch.account, origin: batch.origin, team: batch.team, operation: .edit, restores: nil, items: items)); append(mixed, to: &local)
+        let cache = try readRecoveryCache(base.original, local: local), draft = try TeamCompletionRecoveryDraft(group: observed, snapshot: local)
+        let next = try XCTUnwrap(draft.preserving(readable: cache)); XCTAssertTrue(next.pending.isEmpty)
+        XCTAssertEqual(next.tables["tasks"]?.first { $0.id == outside.id }, outside)
+        XCTAssertEqual(draft.parkedChanges.map(\.id), local.pending.map(\.id)); XCTAssertTrue(draft.text.contains("Outside authored title"))
+    }
+    func testRecordedRecoveryRetainsDeletedRowNotesAndTypedConversation() throws {
+        let (base, _, _, observed) = try recoveryFixture(comment: true); var local = base.snapshot
+        let row = local.tables["tasks"]!.first { $0.id == base.parkedChanges[1].recordID }!, scope = base.original.teamTaskBatch!.items[0].teamCompletion!.scope
+        let deletion = try scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "DELETE", fields: [:], baseline: row.fields, teamTaskScope: scope), existing: row); append(deletion, to: &local)
+        let draft = try TeamCompletionRecoveryDraft(group: observed, snapshot: local)
+        XCTAssertNotNil(draft.preserving(readable: try readRecoveryCache(base.original, local: local)))
+        XCTAssertTrue(draft.text.contains("Second line 🌱")); XCTAssertTrue(draft.text.contains("Removed in the saved edits")); XCTAssertEqual(draft.parkedConversations.count, 1)
+    }
+    func testRecordedRecoveryNeverGrantsAccessAndRejectsForeignOrForgottenReadCustody() throws {
+        let (draft, _, _, _) = try recoveryFixture()
+        for cache in [try readRecoveryCache(draft.original, local: draft.snapshot, reads: false), try readRecoveryCache(draft.original, local: draft.snapshot, active: false), try readRecoveryCache(draft.original, local: draft.snapshot, account: UUID().uuidString.lowercased()), try readRecoveryCache(draft.original, local: draft.snapshot, origin: "https://foreign.example"), try readRecoveryCache(draft.original, local: draft.snapshot, missing: [draft.original.teamTaskBatch!.items[0].teamCompletion!.scope.project])] {
+            XCTAssertNil(draft.preserving(readable: cache))
+        }
+        for mode in ["viewer", "archived", "paused"] {
+            let cache = try readRecoveryCache(draft.original, local: draft.snapshot, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archived", paused: mode == "paused")
+            let next = try XCTUnwrap(draft.preserving(readable: cache)); XCTAssertEqual(next.teamWorkspace?.boundary, cache.boundary); XCTAssertFalse(next.teamWorkspace!.canSend(draft.original, in: next))
+        }
+    }
+    func testRecordedRecoveryRefusesUntrackedForeignDuplicateAndIndirectIntent() throws {
+        let (draft, _, _, observed) = try recoveryFixture(comment: true)
+        for mode in ["untracked", "duplicate", "unscoped", "foreign", "preference", "comment", "mention", "replacement", "missing-project"] {
+            var local = draft.snapshot
+            if mode == "untracked" { local.tables["tasks"]![0]["opaque_authored_field"] = .string("Keep it") }
+            if mode == "duplicate" { local.pending.append(local.pending[1]) }
+            if mode == "unscoped" { local.pending[1].teamTaskScope = nil }
+            if mode == "foreign" { local.pending[1].teamTaskScope = TeamTaskEditScope(account: UUID().uuidString.lowercased(), origin: draft.origin, team: draft.original.teamTaskBatch!.team, project: local.pending[1].teamTaskScope!.project) }
+            if mode == "preference" { local.pending.append(Mutation(table: "view_preferences", recordID: "pin", method: "PATCH", fields: ["task": .string(local.pending[1].recordID)])) }
+            if mode == "comment" { var fields = local.tables[ConversationOutbox.table]![0]["intent"].object; fields["task_generation"] = .string(UUID().uuidString.lowercased()); local.tables[ConversationOutbox.table]![0]["intent"] = .object(fields) }
+            if mode == "mention" { local.tables[ConversationOutbox.table]![0]["intent"] = .object(["kind": .string("unsupported mention"), "task_id": .string(local.pending[1].recordID)]) }
+            if mode == "replacement" { local.tables["tasks"]![0]["task_generation"] = .string(UUID().uuidString.lowercased()) }
+            if mode == "missing-project" { local.tables["projects"] = [] }
+            let before = local; XCTAssertThrowsError(try TeamCompletionRecoveryDraft(group: observed, snapshot: local), mode); XCTAssertEqual(local, before)
+        }
+    }
+    func testRecordedRecoveryRequiresMissingIncarnationAuthoredWorkAndTerminalReceipt() throws {
+        let (_, header, batch, raw) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let intact = try recordedReadReview(header, reply: raw)
+        XCTAssertThrowsError(try TeamCompletionRecoveryDraft(group: intact, snapshot: local))
+        let unrecorded = try parkingReview(header, cancelled: false)
+        XCTAssertThrowsError(try TeamCompletionRecoveryDraft(group: unrecorded, snapshot: local))
+        XCTAssertThrowsError(try TeamCompletionRecoveryDraft(group: try parkingReview(header), snapshot: local))
+        var missing = raw, items = raw["items"]!.list, member = items[0].object; member["task"] = .null; items[0] = .object(member); missing["items"] = .array(items)
+        XCTAssertThrowsError(try TeamCompletionRecoveryDraft(group: recordedReadReview(header, reply: missing), snapshot: local), "No later authored work needs a separate permanent draft")
+    }
+    func testRecordedRecoveryVaultEncryptsDeduplicatesAndKeepsLegacySelectionsIndependent() throws {
+        let (draft, _, _, _) = try recoveryFixture(single: true)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("recorded-draft-" + UUID().uuidString); defer { try? FileManager.default.removeItem(at: directory) }
+        let key = SymmetricKey(size: .bits256), vault = TeamCompletionRecoveryDraftVault(directory: directory.appendingPathComponent("Recorded recovery"), account: draft.account, origin: draft.origin, key: { key })
+        XCTAssertEqual(try vault.save(draft), draft); XCTAssertEqual(try vault.save(TeamCompletionRecoveryDraft(single: TeamCompletion.Review(draft.review, for: draft.original), snapshot: draft.snapshot)).id, draft.id)
+        XCTAssertEqual(try vault.entries(), [draft]); XCTAssertFalse(String(decoding: try Data(contentsOf: vault.file(draft.id)), as: UTF8.self).contains("Second line"))
+        let legacy = TeamCompletionBatchDraftVault(directory: directory.appendingPathComponent("Selections"), account: draft.account, origin: draft.origin, key: { key })
+        XCTAssertEqual(try legacy.entries(), [])
+        for other in [TeamCompletionRecoveryDraftVault(directory: vault.directory, account: UUID().uuidString.lowercased(), origin: draft.origin, key: { key }), TeamCompletionRecoveryDraftVault(directory: vault.directory, account: draft.account, origin: "https://foreign.example", key: { key }), TeamCompletionRecoveryDraftVault(directory: vault.directory, account: draft.account, origin: draft.origin, key: { SymmetricKey(size: .bits256) })] { XCTAssertThrowsError(try other.load(draft.id)) }
+        try vault.remove(draft.id); XCTAssertEqual(try vault.entries(), [])
+    }
+    func testRecordedRecoveryVaultRejectsCorruptionSymlinksAndBlockedWrites() throws {
+        let (draft, _, _, _) = try recoveryFixture()
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("recorded-fault-" + UUID().uuidString); defer { try? FileManager.default.removeItem(at: directory) }
+        let key = SymmetricKey(size: .bits256), vault = TeamCompletionRecoveryDraftVault(directory: directory, account: draft.account, origin: draft.origin, key: { key })
+        _ = try vault.save(draft); let bytes = try Data(contentsOf: vault.file(draft.id))
+        try Data("bad".utf8).write(to: vault.file(draft.id)); XCTAssertThrowsError(try vault.load(draft.id)); XCTAssertThrowsError(try vault.save(draft))
+        try FileManager.default.removeItem(at: vault.file(draft.id)); let outside = directory.appendingPathComponent("outside"); try bytes.write(to: outside)
+        try FileManager.default.createSymbolicLink(at: vault.file(draft.id), withDestinationURL: outside); XCTAssertThrowsError(try vault.load(draft.id))
+        let blocked = directory.appendingPathComponent("blocked"); try Data().write(to: blocked)
+        XCTAssertThrowsError(try TeamCompletionRecoveryDraftVault(directory: blocked, account: draft.account, origin: draft.origin, key: { key }).save(draft))
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testRecordedRecoveryVaultCapacityNeverEvictsAndRemovalFenceStopsDelayedWork() throws {
+        let (base, _, _, observed) = try recoveryFixture()
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("recorded-capacity-" + UUID().uuidString); defer { try? FileManager.default.removeItem(at: directory) }
+        let key = SymmetricKey(size: .bits256), gate = AccountRemovalDisk(directory: directory, account: base.account)
+        let vault = TeamCompletionRecoveryDraftVault(directory: directory.appendingPathComponent("Recorded recovery"), account: base.account, origin: base.origin, key: { key }, removalGate: gate)
+        var ids = Set<UUID>()
+        for i in 0..<20 {
+            var local = base.snapshot; local.tables["view_preferences"] = [Record(["id": .string("choice"), "value": .number(Double(i))])]
+            ids.insert(try vault.save(TeamCompletionRecoveryDraft(group: observed, snapshot: local)).id)
+        }
+        XCTAssertThrowsError(try vault.save(base)); XCTAssertEqual(Set(try vault.entries().map(\.id)), ids)
+        try gate.removeCache(); try FileManager.default.removeItem(at: vault.directory)
+        let denied = TeamCompletionRecoveryDraftVault(directory: vault.directory, account: base.account, origin: base.origin, key: { XCTFail("Removed account must not recreate its key"); return key }, removalGate: gate)
+        XCTAssertThrowsError(try denied.save(base)); XCTAssertThrowsError(try denied.entries()); XCTAssertThrowsError(try denied.load(ids.first!)); XCTAssertThrowsError(try denied.remove(ids.first!))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: vault.directory.path))
+    }
+    func testRecordedRecoveryValidatesEncodedProofAndRejectsDirectoryAlias() throws {
+        let (draft, _, _, _) = try recoveryFixture(single: true)
+        var raw = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(draft))
+        var response = raw["review"]!.object; response["state"] = .string("unrecorded"); raw["review"] = .object(response)
+        let changed = try JSONDecoder().decode(TeamCompletionRecoveryDraft.self, from: JSONEncoder().encode(raw)); XCTAssertThrowsError(try changed.validate())
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("recorded-alias-" + UUID().uuidString); defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let alias = directory.appendingPathComponent("alias"); try FileManager.default.createSymbolicLink(at: alias, withDestinationURL: directory)
+        let vault = TeamCompletionRecoveryDraftVault(directory: alias, account: draft.account, origin: draft.origin, key: { SymmetricKey(size: .bits256) })
+        XCTAssertThrowsError(try vault.entries()); XCTAssertThrowsError(try vault.save(draft))
+    }
+}

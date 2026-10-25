@@ -354,6 +354,7 @@ private struct CompletionBatchReconciliation {
     let receipts: [TeamCompletion.Receipt]
     var cancellation: TeamTaskBatch.Review? = nil
     var readAccess: CompletionBatchReadAccess? = nil
+    var parkRecorded = false
     private var later: [Mutation] { Array(original.pending.dropFirst()) }
     private func members(_ change: Mutation) -> [Mutation] { change.teamTaskBatch?.items ?? [change] }
     private func taskIDs(_ change: Mutation) -> Set<String> {
@@ -451,7 +452,7 @@ private struct CompletionBatchReconciliation {
             if let cancellation {
                 guard cancellation.isCancelled, readAccess.review == cancellation else { throw TeamTaskBatch.conflict }
             } else { guard readAccess.review.isRecorded, readAccess.review.recorded == raw else { throw TeamTaskBatch.conflict } }
-        } else if cancellation == nil, let access = original.teamWorkspace {
+        } else if cancellation == nil, !parkRecorded, let access = original.teamWorkspace {
             guard indices.allSatisfy({ access.canSend(changes[$0], in: original) }) else { throw TeamTaskBatch.conflict }
         }
         var projects = Set<String>()
@@ -459,7 +460,7 @@ private struct CompletionBatchReconciliation {
             if let command = item.teamCompletion { projects.formUnion([command.scope.project, command.seriesProject]) }
             else if let scope = item.teamTaskScope { projects.insert(scope.project) }
         }
-        guard projects.allSatisfy({ p in original.tables["projects"]?.contains(where: { $0.id == p && (cancellation != nil || readAccess != nil || (!$0["is_archived"].flag && !$0["ancestor_archived"].flag)) }) == true }),
+        guard projects.allSatisfy({ p in original.tables["projects"]?.contains(where: { $0.id == p && (cancellation != nil || parkRecorded || readAccess != nil || (!$0["is_archived"].flag && !$0["ancestor_archived"].flag)) }) == true }),
               !changes.contains(where: { $0.table == "projects" && projects.contains($0.recordID) }) else { throw TeamTaskBatch.conflict }
         var current: [String: Record] = [:]
         for row in original.tables["tasks"] ?? [] where affected.contains(row.id) {
@@ -526,8 +527,9 @@ private struct CompletionBatchReconciliation {
                 guard cancellation == nil, let confirmed = authoritative[id], same(row[key], confirmed[key], key: key) else { throw TeamTaskBatch.conflict }
             }
         }
-        if let cancellation {
-            guard !cancellation.isRecorded, cancellation.mutation == header else { throw TeamTaskBatch.conflict }
+        if cancellation != nil || parkRecorded {
+            if let cancellation { guard !cancellation.isRecorded, cancellation.mutation == header else { throw TeamTaskBatch.conflict } }
+            else { guard !receipts.isEmpty, cancellation == nil else { throw TeamTaskBatch.conflict } }
             func references(_ value: JSON) -> Bool {
                 switch value {
                 case .string(let text): return affected.contains { text.lowercased().contains($0.lowercased()) }
@@ -545,14 +547,30 @@ private struct CompletionBatchReconciliation {
             var parkedComments = Set<String>()
             for row in comments where references(.object(row.fields)) {
                 guard ConversationOutbox.valid(row), let comment = ConversationOutbox.comment(row), comment.account == batch.account,
-                      affected.contains(comment.taskID), let task = (expected.tables["tasks"] ?? []).first(where: { $0.id == comment.taskID }) ?? current[comment.taskID],
+                      affected.contains(comment.taskID) else { throw TeamTaskBatch.conflict }
+                // A queued deletion may have removed the row. Its frozen typed
+                // baseline still identifies the archived comment's incarnation.
+                let archivedRows = parkRecorded ? all.flatMap { item -> [Record] in
+                    if let command = item.teamCompletion { return [command.source] + [command.proposed].compactMap { $0 } }
+                    return [item.baseline.map(Record.init), item.method == "POST" ? Record(item.fields) : nil].compactMap { $0 }
+                } : []
+                guard let task = (expected.tables["tasks"] ?? []).first(where: { $0.id == comment.taskID }) ?? current[comment.taskID] ?? archivedRows.first(where: { $0.id == comment.taskID && $0.string("task_generation") == comment.taskGeneration }),
                       task.string("task_generation") == comment.taskGeneration, task.string("project_id") == comment.projectID else { throw TeamTaskBatch.conflict }
                 parkedComments.insert(row.id)
             }
             var result = seed
-            let owned = Set(batch.items.flatMap { [$0.recordID, $0.teamCompletion?.proposed?.id].compactMap { $0 } })
-            result.tables["tasks"]?.removeAll { owned.contains($0.id) }
-            for row in cancellation.members.flatMap({ [$0.task, $0.successor].compactMap { $0 } }) where owned.contains(row.id) { put(row, in: &result) }
+            if let cancellation {
+                let owned = Set(batch.items.flatMap { [$0.recordID, $0.teamCompletion?.proposed?.id].compactMap { $0 } })
+                result.tables["tasks"]?.removeAll { owned.contains($0.id) }
+                for row in cancellation.members.flatMap({ [$0.task, $0.successor].compactMap { $0 } }) where owned.contains(row.id) { put(row, in: &result) }
+            } else {
+                result = initial
+                let replies = raw["items"]!.list
+                for (i, item) in batch.items.enumerated() {
+                    result.pending = [item]
+                    guard item.teamCompletion!.acknowledge(Record(["id": .string(item.recordID), "team_completion_reply": replies[i]]), header: item, snapshot: &result) else { throw TeamTaskBatch.conflict }
+                }
+            }
             result.pending = changes.enumerated().filter { !selected.contains($0.offset) }.map(\.element)
             result.tables[ConversationOutbox.table]?.removeAll { parkedComments.contains($0.id) }
             return result
@@ -793,6 +811,28 @@ extension TeamTaskBatch.Review {
               let batch = mutation.teamTaskBatch, (try? batch.body(for: mutation)) != nil,
               let access = CompletionBatchReadAccess(review: self, cache: cache, snapshot: snapshot),
               let next = try? CompletionBatchReconciliation(batch: batch, header: mutation, original: snapshot, raw: [:], receipts: [], cancellation: self, readAccess: access).confirmed() else { return nil }
+        return cache.retainingRecoveryAccess(in: next, from: snapshot)
+    }
+}
+
+
+extension TeamTaskBatch.Review {
+    /// Preview only. Retiring any of this work also requires a verified permanent
+    /// encrypted draft and current read authority in the Store transaction.
+    func recordedDraftPreview(_ snapshot: Snapshot) -> Snapshot? {
+        guard isRecorded, let batch = mutation.teamTaskBatch, let recorded,
+              members.contains(where: { member in
+                  guard let command = member.mutation.teamCompletion else { return false }
+                  return member.task == nil || command.proposed.map { member.successor?.id != $0.id || member.successor?["task_generation"] != $0["task_generation"] } == true
+              }),
+              let receipts = try? batch.completionReceipts(recorded, for: mutation) else { return nil }
+        return try? CompletionBatchReconciliation(batch: batch, header: mutation, original: snapshot, raw: recorded, receipts: receipts, parkRecorded: true).confirmed()
+    }
+    func preservingRecordedDraft(_ snapshot: Snapshot, readable cache: TeamWorkspaceCache) -> Snapshot? {
+        guard recordedDraftPreview(snapshot) != nil, let batch = mutation.teamTaskBatch, let recorded,
+              let access = CompletionBatchReadAccess(review: self, cache: cache, snapshot: snapshot),
+              let receipts = try? batch.completionReceipts(recorded, for: mutation),
+              let next = try? CompletionBatchReconciliation(batch: batch, header: mutation, original: snapshot, raw: recorded, receipts: receipts, readAccess: access, parkRecorded: true).confirmed() else { return nil }
         return cache.retainingRecoveryAccess(in: next, from: snapshot)
     }
 }

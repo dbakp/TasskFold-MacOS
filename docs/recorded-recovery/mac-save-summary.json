@@ -1,0 +1,46 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "modelName": "MacBook Pro",
+        "osBuildNumber": "25G83",
+        "osVersion": "26.6.2",
+        "platform": "macOS"
+      },
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "passedTests": 4,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+  "expectedFailures": 0,
+  "failedTests": 1,
+  "finishTime": 1792960313.367,
+  "passedTests": 4,
+  "result": "Failed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1792960156.373,
+  "statistics": [],
+  "testFailures": [
+    {
+      "failureText": "Failed to synthesize event: Neither element nor any descendant has keyboard focus. Event dispatch snapshot: TextField, {{947.5, 630.0}, {232.0, 26.0}}, identifier: 'saveAsNameTextField', value: Taskfold-recovery-...",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 4,
+      "testIdentifierString": "TeamCompletionRecoveryMacUITests/testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch",
+      "testName": "testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch()"
+    }
+  ],
+  "title": "Test - Taskfold",
+  "topInsights": [],
+  "totalTestCount": 5
+}

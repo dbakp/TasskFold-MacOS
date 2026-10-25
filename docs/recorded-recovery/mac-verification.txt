@@ -1,0 +1,1 @@
+Five distinct actual native cases passed; zero runtime warnings. Export selector failure retained separately; corrected group rerun passed. See mac-summary.json.

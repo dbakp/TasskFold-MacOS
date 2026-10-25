@@ -289,6 +289,8 @@ private struct TeamCompletionReviewContent: View {
     @Environment(\.dismiss) private var dismiss
     let review: TeamCompletion.Review
     @State private var checking=false
+    @State private var canPreserveRecordedDraft = false
+    @State private var recordedDraftContext: TeamCompletionReviewPresentation?
     @State private var message:String?
     private var current:Bool {store.currentTeamCompletionReview(review)}
     private var canContinue:Bool {store.canContinueTeamCompletionReview(review)}
@@ -352,7 +354,15 @@ private struct TeamCompletionReviewContent: View {
             .safeAreaInset(edge:.bottom) {
                 VStack(spacing:10) {
                     Divider()
-                    if park != nil {
+                    // Keep the existing provisional-task copy workflow available.
+                    if canPreserveRecordedDraft && park == nil {
+                        Button("Keep edits as draft") {
+                            guard let context = recordedDraftContext else { return }
+                            performReview(fallback: "Your saved edits remain queued.") { await store.preserveRecordedCompletionDraft(context) }
+                        }
+                            .buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("preserveRecordedCompletionDraft")
+                        Text("Keep the connected edits and comment drafts on this device, then continue with the synced result.").font(.caption).foregroundStyle(.secondary)
+                    } else if park != nil {
                         Button("Keep edits as draft") {
                             performReview(fallback: "Your draft remains saved for review.") { await store.parkTeamCompletionDraft(review) }
                         }.buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("parkTeamCompletionDraft")
@@ -381,7 +391,19 @@ private struct TeamCompletionReviewContent: View {
         #if os(macOS)
         .frame(width:620,height:680)
         #endif
+        .task(id: store.teamCompletionReviewPresentation) { await updateRecordedDraftAvailability() }
         .onChange(of:store.workspaceGeneration){_,_ in dismiss()}
+    }
+    private func updateRecordedDraftAvailability() async {
+        canPreserveRecordedDraft = false; recordedDraftContext = nil
+        let context = store.teamCompletionReviewPresentation
+        guard current, review.isRecorded, let cache = context.access else { return }
+        let value = await Task.detached(priority: .userInitiated) {
+            (try? TeamCompletionRecoveryDraft(single: review, snapshot: context.snapshot))?.preserving(readable: cache) != nil
+        }.value
+        guard !Task.isCancelled, context == store.teamCompletionReviewPresentation, current else { return }
+        recordedDraftContext = value ? context : nil
+        canPreserveRecordedDraft = value
     }
     private func performReview(dismissOnSuccess: Bool = true, fallback: String, _ action: @escaping () async -> Bool) {
         guard !checking, current else { return }
@@ -420,6 +442,8 @@ struct SavedTeamDraftsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var drafts:[TeamCompletionDraft]=[]
     @State private var selections:[TeamCompletionBatchDraft]=[]
+    @State private var recoveries: [TeamCompletionRecoveryDraft] = []
+    @State private var deletingRecovery: TeamCompletionRecoveryDraft?
     @State private var deletingSelection:TeamCompletionBatchDraft?
     @State private var loadedScope=""
     @State private var message:String?
@@ -431,7 +455,7 @@ struct SavedTeamDraftsView: View {
         NavigationStack {
             List {
                 Section {
-                    Text("These edits stay on this device and are never sent automatically. Open a draft to review a separate task copy or copy its text.").foregroundStyle(.secondary)
+                    Text("These edits stay on this device and are never sent automatically. Open a draft to review its details, copy text or export saved work.").foregroundStyle(.secondary)
                 }
                 if scopeKey == loadedScope && !scopeKey.isEmpty {
                     ForEach(drafts) {draft in
@@ -474,7 +498,18 @@ struct SavedTeamDraftsView: View {
                         .swipeActions { Button("Delete", role: .destructive) { deletingSelection = selection } }
                         .contextMenu { Button("Delete saved selection", role: .destructive) { deletingSelection = selection } }
                     }
-                    if drafts.isEmpty && selections.isEmpty {Text("No saved team drafts.").foregroundStyle(.secondary)}
+                    ForEach(recoveries) { recovery in
+                        NavigationLink { SavedRecordedEditsView(draft: recovery) } label: {
+                            VStack(alignment: .leading, spacing: 5) {
+                                Label("Saved edits", systemImage: "lock.doc").font(.headline)
+                                Text(recovery.title).lineLimit(2)
+                                Text(recovery.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }.accessibilityIdentifier("savedRecordedCompletionDraft")
+                        .swipeActions { Button("Delete", role: .destructive) { deletingRecovery = recovery } }
+                        .contextMenu { Button("Delete saved edits", role: .destructive) { deletingRecovery = recovery } }
+                    }
+                    if drafts.isEmpty && selections.isEmpty && recoveries.isEmpty {Text("No saved team drafts.").foregroundStyle(.secondary)}
                 } else if scopeKey.isEmpty {Text("Open the original signed-in workspace to view its saved team drafts.").foregroundStyle(.secondary)}
                 if let message {Text(message).foregroundStyle(.secondary)}
             }
@@ -493,8 +528,12 @@ struct SavedTeamDraftsView: View {
             Button("Delete saved selection", role: .destructive) { if let value = deletingSelection { Task { await removeSelection(value) } } }
             Button("Cancel", role: .cancel) { deletingSelection = nil }
         } message: { Text("This removes only this device’s saved selection. It does not change shared tasks or undo anything that has synced.") }
-        .onChange(of:store.workspaceGeneration){_,_ in drafts=[];selections=[];dismiss()}
-        .onChange(of:scopeKey){_,_ in drafts=[];selections=[];loadedScope="";dismiss()}
+        .confirmationDialog("Delete saved edits?", isPresented: Binding(get: { deletingRecovery != nil }, set: { if !$0 { deletingRecovery = nil } })) {
+            Button("Delete saved edits", role: .destructive) { if let value = deletingRecovery { Task { await removeRecovery(value) } } }
+            Button("Cancel", role: .cancel) { deletingRecovery = nil }
+        } message: { Text("This removes only this device’s saved draft. Shared tasks and synced actions stay unchanged.") }
+        .onChange(of:store.workspaceGeneration){_,_ in drafts=[];selections=[];recoveries=[];dismiss()}
+        .onChange(of:scopeKey){_,_ in drafts=[];selections=[];recoveries=[];loadedScope="";dismiss()}
     }
     private func copy(_ text:String,key:String) {
         #if os(macOS)
@@ -507,7 +546,7 @@ struct SavedTeamDraftsView: View {
     }
     private func previewText(_ text:String) -> String {String(String.UnicodeScalarView(text.unicodeScalars.prefix(12000)))}
     private func reload() async {
-        drafts=[];selections=[];message=nil;loadedScope=""
+        drafts=[];selections=[];recoveries=[];message=nil;loadedScope=""
         let scope=scopeKey,generation=store.workspaceGeneration
         guard let vault=store.teamDraftVault else {return}
         do {
@@ -516,11 +555,22 @@ struct SavedTeamDraftsView: View {
             guard let selectionVault = store.teamSelectionDraftVault else { return }
             let groups = try await Task.detached(priority: .utility) { try selectionVault.entries() }.value
             guard generation == store.workspaceGeneration, scope == scopeKey else { return }
-            drafts=values;selections=groups;loadedScope=scope
+            guard let recoveryVault = store.teamRecordedRecoveryVault else { return }
+            let recorded = try await Task.detached(priority: .utility) { try recoveryVault.entries() }.value
+            guard generation == store.workspaceGeneration, scope == scopeKey else { return }
+            drafts=values;selections=groups;recoveries=recorded;loadedScope=scope
         } catch {
             guard generation == store.workspaceGeneration,scope == scopeKey else {return}
             message="Saved drafts could not be opened on this device. Your saved files are kept."
         }
+    }
+    private func removeRecovery(_ draft: TeamCompletionRecoveryDraft) async {
+        let scope = scopeKey, generation = store.workspaceGeneration
+        guard let vault = store.teamRecordedRecoveryVault, draft.account == vault.account, draft.origin == vault.origin else { return }
+        do {
+            try await Task.detached(priority: .utility) { try vault.remove(draft.id) }.value
+            guard generation == store.workspaceGeneration, scope == scopeKey else { return }; deletingRecovery = nil; await reload()
+        } catch { if generation == store.workspaceGeneration, scope == scopeKey { message = "These saved edits could not be removed. Your saved file is kept." } }
     }
     private func removeSelection(_ draft: TeamCompletionBatchDraft) async {
         let scope = scopeKey, generation = store.workspaceGeneration
@@ -697,6 +747,8 @@ private struct TeamCompletionBatchReviewContent: View {
     @Environment(\.dismiss) private var dismiss
     let review: TeamTaskBatch.Review
     @State private var checking = false
+    @State private var canPreserveRecordedDraft = false
+    @State private var recordedDraftContext: TeamCompletionReviewPresentation?
     @State private var message: String?
     private var current: Bool { store.currentTeamCompletionBatchReview(review) }
     var body: some View {
@@ -727,6 +779,14 @@ private struct TeamCompletionBatchReviewContent: View {
                 } else { Section { Label("Review paused", systemImage: "lock.shield"); Text("Your workspace or project access changed. Reopen the current review to continue.").foregroundStyle(.secondary) } }
                 if let message { Section { Text(message).foregroundStyle(.red) }.accessibilityIdentifier("teamBatchRecoveryError") }
                 Section {
+                    if canPreserveRecordedDraft {
+                        Button("Keep edits as draft") {
+                            guard let context = recordedDraftContext else { return }
+                            perform { await store.preserveRecordedCompletionDraft(context) }
+                        }
+                            .buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("preserveRecordedCompletionDraft")
+                        Text("Keep the connected edits and comment drafts on this device, then continue with the synced result.").font(.footnote).foregroundStyle(.secondary)
+                    }
                     if !review.isCancelled {
                         Button(review.isRecorded ? "Continue sync" : "Retry saved selection") { perform { await store.continueTeamCompletionBatchReview(review) } }
                             .buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("continueTeamBatchRecovery")
@@ -750,7 +810,19 @@ private struct TeamCompletionBatchReviewContent: View {
         #if os(macOS)
         .frame(minWidth: 500, idealWidth: 620, minHeight: 500, idealHeight: 680)
         #endif
+        .task(id: store.teamCompletionReviewPresentation) { await updateRecordedDraftAvailability() }
         .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
+    }
+    private func updateRecordedDraftAvailability() async {
+        canPreserveRecordedDraft = false; recordedDraftContext = nil
+        let context = store.teamCompletionReviewPresentation
+        guard current, review.isRecorded, let cache = context.access else { return }
+        let value = await Task.detached(priority: .userInitiated) {
+            (try? TeamCompletionRecoveryDraft(group: review, snapshot: context.snapshot))?.preserving(readable: cache) != nil
+        }.value
+        guard !Task.isCancelled, context == store.teamCompletionReviewPresentation, current else { return }
+        recordedDraftContext = value ? context : nil
+        canPreserveRecordedDraft = value
     }
     private func perform(dismissOnSuccess: Bool = true, _ action: @escaping () async -> Bool) {
         guard !checking, current else { return }; checking = true; message = nil
@@ -829,5 +901,86 @@ private struct SelectionExportTransfer: Transferable {
     static var transferRepresentation: some TransferRepresentation {
         DataRepresentation(exportedContentType: .json) { value in value.data }
             .suggestedFileName("Taskfold-saved-selection.json")
+    }
+}
+
+private struct SavedRecordedEditsView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let draft: TeamCompletionRecoveryDraft
+    @State private var text = ""
+    @State private var exportData: Data?
+    @State private var exportDocument: WorkspaceDocument?
+    @State private var exporting = false
+    @State private var exportWorkspace: WorkspaceBinding?
+    @State private var message: String?
+    @State private var copied = false
+    @State private var reset: UUID?
+    private var current: Bool { store.teamRecordedRecoveryVault.map { $0.account == draft.account && $0.origin == draft.origin } == true }
+    var body: some View {
+        Form {
+            if current {
+                Section {
+                    Label("Your edits are kept", systemImage: "lock.doc").font(.headline)
+                    Text("The shared task or occurrence changed. These edits and comment drafts stay encrypted on this device until you delete them. They won’t change shared tasks automatically.").foregroundStyle(.secondary)
+                }
+                Section("Saved edits preview") {
+                    if text.isEmpty && message == nil { ProgressView("Opening saved edits…") }
+                    else { Text(String(String.UnicodeScalarView(text.unicodeScalars.prefix(12000)))).textSelection(.enabled).accessibilityIdentifier("recordedEditsPreview") }
+                    if text.unicodeScalars.count > 12000 { Text("Preview shows the first 12,000 characters. Copy and share include the full saved text.").font(.caption).foregroundStyle(.secondary) }
+                }
+                Section {
+                    Button(copied ? "Copied" : "Copy saved text", systemImage: "doc.on.doc") { copy() }.disabled(text.isEmpty).accessibilityIdentifier("copyRecordedEditsText")
+                    ShareLink("Share saved text", item: text).disabled(text.isEmpty)
+                    Button("Export saved details", systemImage: "square.and.arrow.up") {
+                        guard current, let exportData else { return }
+                        message = nil
+                        exportDocument = WorkspaceDocument(data: exportData)
+                        exportWorkspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
+                        exporting = true
+                    }.disabled(exportData == nil || !current).accessibilityIdentifier("exportRecordedEdits")
+                    Text("The JSON export includes only connected task details, saved actions and comment drafts. Keep it private. It is a review file and cannot be restored as a workspace backup.").font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            if let message { Section { Text(message).foregroundStyle(.secondary) }.accessibilityIdentifier("recordedEditsMessage") }
+        }.formStyle(.grouped).navigationTitle("Saved edits").accessibilityIdentifier("savedRecordedEditsForm")
+        .task {
+            let generation = store.workspaceGeneration
+            guard current else { return }
+            do {
+                let result = try await Task.detached(priority: .utility) { (draft.text, try draft.data()) }.value
+                guard generation == store.workspaceGeneration, current else { return }
+                text = result.0; exportData = result.1
+                #if DEBUG
+                if TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing"), draft.account == TeamEditorNativeFixture.account, draft.origin == "https://synthetic.example" {
+                    try JSONEncoder().encode(draft).write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-recorded-draft-proof.json"), options: .atomic)
+                    try result.1.write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-recorded-export-proof.json"), options: .atomic)
+                }
+                #endif
+            } catch { if generation == store.workspaceGeneration, current { message = "These saved edits could not be opened. Their encrypted file is kept." } }
+        }
+        .fileExporter(isPresented: $exporting, document: exportDocument, contentType: .json, defaultFilename: "Taskfold-saved-edits") { result in
+            defer { exporting = false; exportDocument = nil; exportWorkspace = nil }
+            guard current, exportWorkspace?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { return }
+            if case .success = result { message = "Details saved." }
+            else if case .failure(let error) = result, (error as NSError).code != NSUserCancelledError { message = "The file couldn’t be saved. Your encrypted draft is kept. Try exporting again." }
+        }
+        .onChange(of: store.workspaceGeneration) { _, _ in clearAndDismiss() }
+        .onChange(of: current) { _, value in if !value { clearAndDismiss() } }
+        .onChange(of: store.backend.reminderSessionIncarnation) { _, _ in exporting = false; exportDocument = nil; exportWorkspace = nil }
+    }
+    private func clearAndDismiss() {
+        exporting = false; exportDocument = nil; exportWorkspace = nil
+        text = ""; exportData = nil; dismiss()
+    }
+    private func copy() {
+        guard current else { return }
+        #if os(macOS)
+        NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string)
+        #else
+        UIPasteboard.general.string = text
+        #endif
+        copied = true; let token = UUID(); reset = token
+        Task { try? await Task.sleep(for: .seconds(3)); if reset == token { copied = false } }
     }
 }
