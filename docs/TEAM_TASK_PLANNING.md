@@ -272,3 +272,44 @@ Core/build/installed phone/tablet evidence and cleanup are recorded in
 Current capture stage: 87 focused Core checks per repository, independent app
 builds, three installed scenarios per iPhone/iPad and four inspected standard-
 light screenshots pass. See the stage evidence for exact limits.
+
+
+### 2026-10-25 — Team-owned template library service foundation
+
+Each repository now owns a source-only library migration and isolated runner.
+Owners/admins curate; accepted full members read the team-wide library; guests
+and outsiders do not gain library access from project access. Both the existing
+team gate and a new, default-off library gate are required. Archived libraries
+are readable; changes require an active team and current database rights.
+
+List returns at most fifty metadata rows, with no document or author identity.
+Get returns the full bounded versioned definition. A continuation carries the
+library revision; concurrent publication/edit/removal forces refresh. Publish,
+replace and delete use stable request IDs, HMAC-bound receipts and per-template
+revision checks. Replays acknowledge original outcomes without replaying edits.
+Removed template IDs cannot be reused. Delete returns its last reviewed item
+revision and remains available at quota or maximum item revision.
+
+Definitions are opaque versioned storage, distinct from execution authority.
+The service preserves newer definitions, enforces a two-million-byte normalized
+JSONB limit, caps active templates at 200 and combined definitions at 32 MiB, and
+uses the existing administration budget. Any client Use/Edit and future shared
+run service must validate the complete supported workflow schema again. No task
+or project write grant is created by publishing or reading a definition.
+
+Creator account removal anonymizes creator/receipt actor links without deleting
+team-owned work or freeing a used request identity. Soft team deletion purges the
+library’s content, state, identity markers and receipts. RLS and revoked direct
+table privileges protect the private tables; only the checked RPC mediates access.
+Auth/team lock order, role recheck after a held lock, revision conflicts, retries,
+quota boundaries, author removal and team deletion pass in 96 real SQL checks per
+repository. No new advisor warnings/errors occur; inherited fixture policy
+performance notices are retained in the report. No hosted configuration/data was
+changed, no migration deployed and neither gate enabled outside owned fixtures.
+
+Typed transport, native library and audience/contents reviews, durable private
+large-definition recovery, future-version handling, team-deletion disclosure,
+private copy/export and shared run destinations still require implementation or
+acceptance. This is a service milestone, not a complete or shipped team library.
+See `p2-team-template-library-service-evidence.json`. Reproduce with
+`node Scripts/Database/test-team-template-library.mjs <report.json>`.

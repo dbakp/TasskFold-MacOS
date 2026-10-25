@@ -5600,3 +5600,15 @@ user-deferred release/provider/device work stays deferred.
 Capture verification: 87 focused Core cases in each repository, both independent
 app builds and three installed scenarios on each iPhone/iPad pass. Four standard-
 light preview/refusal screens are inspected; the wider gates above remain open.
+
+
+### 2026-10-25 — Team template library service foundation
+
+The Mac repository owns its gated library migration and fixture runner separately.
+Owner/admin curation, full-member reads, versioned bounded storage, stable receipts,
+revision-checked edits/deletion, coherent catalog continuation and account/team
+cleanup pass 96 isolated SQL/advisor checks. See
+p2-team-template-library-service-evidence.json. No app code changed in this stage;
+Core/native transport, premium library/review/recovery UI and real runtime/live
+acceptance remain next. This does not close the full team-template or Px scope.
+No deployment or hosted gate change occurred; user deferrals remain unchanged.

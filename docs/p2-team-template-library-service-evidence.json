@@ -1,0 +1,314 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "becf53e4cf41432838a8762a0f00ef15d1e2653b",
+  "status": "Team-owned template library service foundation verified in isolated PostgreSQL; native UI/transport/recovery and wider feature/Px remain open.",
+  "deployed": false,
+  "rolloutEnabled": false,
+  "hostedDataChanged": false,
+  "applicationCodeChanged": false,
+  "contract": {
+    "entry": "New public invoker RPC taskfold_team_templates(_operation,_body) delegates to one private privileged helper with explicit grants, empty search_path, current-session actor validation and current database membership checks.",
+    "permissions": "Owners/admins curate; accepted full members browse/get. Team guests and outsiders get no team-wide library access. Both existing team and separate library gates must be enabled. New library gate defaults false. Archived teams can read but cannot curate; deleted teams cannot read.",
+    "storage": "Private RLS-enabled config/state/identities/definitions/receipts; no direct client table access. Versioned documents are opaque bounded storage, not authority to create/update tasks or projects. Known and future definitions must be validated by clients, and any future run service must validate anew.",
+    "limits": "Names 1\u2013160 characters/640 UTF-8 bytes without controls or bidi overrides; document normalized JSONB text <=2,000,000 bytes, positive integral version <=9007199254740991; active definitions <=200/team and <=32 MiB/team. Team administration quota retained; deletion remains possible at quota and at maximum item revision.",
+    "concurrency": "Auth locks precede team locks, current roles rechecked after waiting. Exact per-template revision guards replace/delete; permanent removed identities prevent silent resurrection/reuse. Catalog pages contain <=50 metadata-only rows; continuation requires a matching monotonic library revision, otherwise PT409.",
+    "durability": "HMAC-bound actor/action/body receipts make retries acknowledge only the original action without overwriting later work or resurrecting deleted content. Receipts expose no definition text. Actor removal redacts creator/receipt actor links, retains team-owned work and reserves request identities.",
+    "cleanup": "Soft team deletion purges library state, definition content, identity markers and receipts. Transactions roll back identity/content/usage/receipt on failure. Existing task/project/team authority remains separate."
+  },
+  "sql": {
+    "checks": {
+      "default rollout hides library": true,
+      "separate library gate remains off": true,
+      "anon cannot invoke library": true,
+      "service_role cannot invoke library": true,
+      "replaced session refused": true,
+      "guest cannot read team library": true,
+      "outsider cannot read team library": true,
+      "project/team member gains no other team library": true,
+      "member cannot publish": true,
+      "admin publishes": true,
+      "revision starts at one": true,
+      "receipt contains no workflow text": true,
+      "body stored exactly": true,
+      "accepted full member can browse": true,
+      "member cannot curate": true,
+      "list contains metadata only": true,
+      "list excludes author identity": true,
+      "member reads reviewed definition": true,
+      "get excludes author identity": true,
+      "owner replaces current revision": true,
+      "old publish reply can be acknowledged": true,
+      "replay does not overwrite later work": true,
+      "replaced nonce cannot change intent": true,
+      "stale version refused": true,
+      "stale refusal preserves contents": true,
+      "member cannot delete": true,
+      "guest cannot delete": true,
+      "role loss prevents receipt acknowledgement": true,
+      "invalid name refused \"\"": true,
+      "invalid name refused \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"": true,
+      "invalid name refused \"Bad\\nname\"": true,
+      "invalid name refused \"Spoof\u202ename\"": true,
+      "invalid/oversized document refused null": true,
+      "invalid/oversized document refused []": true,
+      "invalid/oversized document refused {}": true,
+      "invalid/oversized document refused {\"version\":0}": true,
+      "invalid/oversized document refused {\"version\":1.5}": true,
+      "invalid/oversized document refused {\"version\":\"1\"}": true,
+      "invalid/oversized document refused oversized": true,
+      "unknown/invalid publish envelope refused": true,
+      "unknown/invalid get envelope refused": true,
+      "unknown/invalid list envelope refused": true,
+      "unknown/invalid delete envelope refused": true,
+      "future definition stored without execution authority": true,
+      "future definition read exactly": true,
+      "waiting publish rechecks committed role loss": true,
+      "waiting refusal creates no identity": true,
+      "archived library remains readable": true,
+      "archived library cannot change": true,
+      "delete exact current version": true,
+      "deleted definition unavailable": true,
+      "deleted identity cannot be republished": true,
+      "old publish replay never resurrects deleted work": true,
+      "replay leaves definition deleted": true,
+      "late content failure rolls back": true,
+      "late failure leaves no identity": true,
+      "late failure leaves usage unchanged": true,
+      "late failure leaves no receipt": true,
+      "two-hundredth template allowed": true,
+      "template count quota refuses next item": true,
+      "catalog page capped at fifty": true,
+      "catalog has next cursor": true,
+      "catalog page has no repeats": true,
+      "cursor needs library revision": true,
+      "catalog change updates content": true,
+      "stale catalog continuation refused": true,
+      "team definition byte quota enforced": true,
+      "administration daily quota enforced": true,
+      "exact receipt remains available at quota": true,
+      "deletion can free storage at quota": true,
+      "create maximum revision fixture": true,
+      "maximum revision can still be removed": true,
+      "admin creates team-owned definition": true,
+      "team definition survives author account removal": true,
+      "creator link removed": true,
+      "removed author nonce cannot be reused": true,
+      "soft team deletion purges team_templates": true,
+      "soft team deletion purges team_template_library_state": true,
+      "soft team deletion purges team_template_identities": true,
+      "soft team deletion purges team_template_commands": true,
+      "anon has no direct team_template_config read": true,
+      "anon has no direct team_template_library_state read": true,
+      "anon has no direct team_templates read": true,
+      "anon has no direct team_template_identities read": true,
+      "anon has no direct team_template_commands read": true,
+      "authenticated has no direct team_template_config read": true,
+      "authenticated has no direct team_template_library_state read": true,
+      "authenticated has no direct team_templates read": true,
+      "authenticated has no direct team_template_identities read": true,
+      "authenticated has no direct team_template_commands read": true,
+      "service_role has no direct team_template_config read": true,
+      "service_role has no direct team_template_library_state read": true,
+      "service_role has no direct team_templates read": true,
+      "service_role has no direct team_template_identities read": true,
+      "service_role has no direct team_template_commands read": true,
+      "no new advisor warnings or errors": true
+    },
+    "deployed": false,
+    "realDataChanged": false,
+    "rolloutEnabled": false,
+    "migrationSHA256": "cf81b1e12fdc35005a1abc5ecffc9879898b5214df1b3244449a44f951ddfef2",
+    "advisors": {
+      "ran": true,
+      "source": "supabase db advisors --type all",
+      "result": [
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "projects",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "project_collaborators",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "title": "Auth RLS Initialization Plan",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+          "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "metadata": {
+            "name": "sections",
+            "type": "table",
+            "schema": "public"
+          },
+          "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+        }
+      ]
+    },
+    "containerRemoved": true,
+    "checkCount": 96
+  },
+  "verificationScope": "Real repo-owned migrations and JWT/SQL roles in isolated pinned PostgreSQL containers. No HTTP, Core/SDK, native/UI, cloud, release, large-template network transfer or installed acceptance claimed. Fixture constructs large JSON inside SQL to avoid host process argument limits.",
+  "diagnostics": [
+    "Initial test used undefined with a helper whose default expected value is true; metadata omission assertions now use Object.hasOwn explicitly.",
+    "A fixture seed query missed a space before FROM after a JSONB cast; corrected before successful acceptance.",
+    "The scalar fixture requires a JSON value for SQL NULL; creator-redaction assertion now uses coalesce(to_jsonb(...),null::jsonb).",
+    "One update-helper indentation error prevented edits; two already-started fixture runs consequently repeated the known scalar assertion issue. Their failed logs are retained, not claimed green.",
+    "Catalog revision continuation and deletion at maximum item revision were added before the final passing service runs."
+  ],
+  "references": [
+    {
+      "url": "https://supabase.com/changelog.md",
+      "checked": "2026-10-25",
+      "finding": "Current breaking-change entries inspected; no change to these isolated SQL contracts required."
+    },
+    {
+      "url": "https://supabase.com/docs/guides/database/functions",
+      "checked": "2026-10-25",
+      "finding": "Private privileged helper, qualified names, invoker public wrapper and explicit execution grants."
+    }
+  ],
+  "remaining": [
+    "Typed Core/Backend transport and protocol acceptance",
+    "Native catalog/get, private-source publication, full audience/contents/name review and edit/delete controls",
+    "Private large-definition draft/retry recovery with account/origin/workspace/session binding",
+    "Read-only/future-version handling and private-copy/export flows",
+    "Team-deletion disclosure and library metadata integration",
+    "Native Mac/phone/tablet, accessibility/layout and genuine hosted/multi-actor/network acceptance",
+    "Team template runs into shared projects and other rank-6/Px work",
+    "All previously user-deferred rollout/distribution/provider/device dependencies"
+  ],
+  "cleanup": {
+    "status": "Complete",
+    "ownedContainersRemoved": true,
+    "ownedTemporaryPrefix": "/tmp/taskfold-team-library-*",
+    "temporaryEntriesRemoved": 14,
+    "removedDiskKiB": 204,
+    "sourceBuildCachePreserved": true,
+    "nativeAppsOrSimulatorsStarted": false,
+    "unrelatedContainersImagesDataCachesAndSessionsPreserved": true
+  },
+  "sourceSHA256": {
+    "supabase/migrations/20261025064636_team_workflow_template_library.sql": "cf81b1e12fdc35005a1abc5ecffc9879898b5214df1b3244449a44f951ddfef2",
+    "Scripts/Database/team-template-library-schema.mjs": "061b673f54c566b246a4758b5b88cda00115de133e7f35e7ee359a182d06ad45",
+    "Scripts/Database/test-team-template-library.mjs": "6291bd008f3376e10dbae3e1abdd264591d97dd2973546c010a5969f31cad739"
+  },
+  "artifactSHA256": {
+    "ios-sql-2.log.gz": "13e31181ccb9ef6df9664efb40c4edc3f89fa3bd716bd286a4dba0530f18b2e4",
+    "ios-sql-3.log.gz": "e75c086dd03b96aba8ccae2ea776332503cfb5dae9366876c586185d4880c204",
+    "ios-sql-final.log.gz": "e75c086dd03b96aba8ccae2ea776332503cfb5dae9366876c586185d4880c204",
+    "ios-sql.log.gz": "3994b90520981a56dc2fccc4f5556a076a48bd70e554cc672d3dc5374ba41341",
+    "ios-verified.json": "0a790f838dcfd7da109767d67b37c314736fff4410846f767cbab717cdca06ee",
+    "ios-verified.log.gz": "7db8b8fc907571230b62f66df52db59a37f326177333649eb3715d9bb8b429f7",
+    "mac-sql-final.log.gz": "90d6af391a0413dd3db644320cf85a22a055e68576aa1d3367619403c32670ae",
+    "mac-sql.log.gz": "90d6af391a0413dd3db644320cf85a22a055e68576aa1d3367619403c32670ae",
+    "mac-verified.json": "0a790f838dcfd7da109767d67b37c314736fff4410846f767cbab717cdca06ee",
+    "mac-verified.log.gz": "7db8b8fc907571230b62f66df52db59a37f326177333649eb3715d9bb8b429f7"
+  }
+}

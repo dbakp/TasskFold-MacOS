@@ -4,7 +4,15 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Newest source stage adds an explicit contents review before copying readable
+Newest source stage establishes the gated team-owned template library service:
+admin/owner curation, full-member reads, strict revisions, stable retries,
+versioned bounded storage, catalog-revision pagination, quotas and team/account
+cleanup. Each independently owned migration passes 96 isolated SQL/advisor checks.
+See `p2-team-template-library-service-evidence.json`. Native transport, library
+screens, publication reviews, private recovery and live acceptance are next;
+this foundation does not close team templates or rank 6/Px. Rollout remains off.
+
+The preceding source stage adds an explicit contents review before copying readable
 shared project/section/task work into a private reusable template. Shared root
 and subtask label names retain their own context; personal catalog IDs and colors
 cannot rewrite them. Full source rows, selected branch/order and opening
