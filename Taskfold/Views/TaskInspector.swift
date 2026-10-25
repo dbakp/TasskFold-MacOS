@@ -1084,6 +1084,7 @@ struct TeamEditorNativeFixtureView: View {
     @Environment(Store.self) private var store
     @State private var recoveryPresented = false
     @State private var draftsPresented = false
+    @State private var storageStatus = ""
     var body: some View {
         if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-testing") {
             NavigationStack {
@@ -1096,7 +1097,20 @@ struct TeamEditorNativeFixtureView: View {
                     Button("Saved team drafts") { draftsPresented = true }.accessibilityIdentifier("openMacSavedDrafts")
                 }.formStyle(.grouped).navigationTitle("Completion recovery test")
             }
-            .sheet(isPresented: $recoveryPresented) { if let conflict = store.syncConflict { ConflictReview(conflict: conflict) } }
+            .sheet(isPresented: $recoveryPresented) {
+                if let conflict = store.syncConflict {
+                    VStack(spacing: 0) {
+                        ConflictReview(conflict: conflict)
+                        if TeamRecoveryStorageNativeFixture.fault != nil {
+                            HStack {
+                                Button("Block test storage") { do { try TeamRecoveryStorageNativeFixture.block(); storageStatus = "Storage blocked" } catch { storageStatus = error.localizedDescription } }.accessibilityIdentifier("blockNativeRecoveryStorage")
+                                Button("Repair test storage") { do { try TeamRecoveryStorageNativeFixture.repair(); storageStatus = "Storage available" } catch { storageStatus = error.localizedDescription } }.accessibilityIdentifier("repairNativeRecoveryStorage")
+                                Text(storageStatus).accessibilityIdentifier("nativeRecoveryStorageStatus")
+                            }.padding(8)
+                        }
+                    }
+                }
+            }
             .sheet(isPresented: $draftsPresented) { SavedTeamDraftsView() }
             .onChange(of: store.syncConflict?.completionBatchReview, initial: true) { _, value in
                 if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync"), value != nil { recoveryPresented = true }

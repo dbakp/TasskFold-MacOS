@@ -464,3 +464,21 @@ struct TeamCompletionBatchDraftVault: Sendable {
     }
     func file(_ id: UUID) -> URL { directory.appendingPathComponent(id.uuidString.lowercased() + ".taskfoldselection") }
 }
+
+
+/// Used only after a completion-review transaction has preserved its original queue.
+enum TeamCompletionRecoveryFailure {
+    static func message(_ error: Error) -> String {
+        let failure = error as NSError
+        if failure.domain == NSCocoaErrorDomain {
+            if failure.code == CocoaError.fileWriteOutOfSpace.rawValue {
+                return "There isn’t enough storage to finish this review. Your queued work is unchanged. Free some space, then try again."
+            }
+            let fileErrors: Set<Int> = [CocoaError.fileReadUnknown.rawValue, CocoaError.fileReadNoPermission.rawValue, CocoaError.fileReadCorruptFile.rawValue, CocoaError.fileWriteUnknown.rawValue, CocoaError.fileWriteNoPermission.rawValue, CocoaError.fileWriteFileExists.rawValue, CocoaError.fileWriteInvalidFileName.rawValue, CocoaError.fileLocking.rawValue]
+            if fileErrors.contains(failure.code) {
+                return "Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again."
+            }
+        }
+        return SyncStatus.failureMessage(error)
+    }
+}

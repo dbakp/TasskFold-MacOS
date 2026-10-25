@@ -3407,9 +3407,11 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         wait(for: [opened], timeout: 10)
         app.activate()
     }
-    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false) throws {
+    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil) throws {
         guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Reserved isolated Mac host required") }
         app.launchArguments = ["--team-editor-testing", "--team-editor-reset", "--team-batch-testing", "--team-batch-recovery-testing", "--team-batch-recovery-recorded", "--team-batch-recovery-" + mode, "-appearance", "light"]
+        if !recorded { app.launchArguments.removeAll { $0 == "--team-batch-recovery-recorded" } }
+        if let storage { app.launchArguments.append("--team-recovery-storage=" + storage) }
         if single { app.launchArguments.append("--team-single-recovery-testing") }
         if !refresh { app.launchArguments.append("--team-batch-recovery-dependent") }
         else { app.launchArguments.append("--team-single-recovery-refresh") }
@@ -3478,4 +3480,86 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         XCTAssertTrue(((after["tables"] as? [String: Any])?["tasks"] as? [[String: Any]])?.contains { $0["description"] as? String == "Updated synced instructions" } == true)
         try attach(after, "Mac refreshed recovery saved state"); XCTAssertEqual(app.windows.count, 1)
     }
+}
+
+
+extension TeamCompletionRecoveryMacUITests {
+    @MainActor private func storageRecovery(_ fault: String) throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        try launch(app, mode: "viewer", single: false, recorded: fault == "cache", storage: fault)
+        app.buttons["openMacCompletionRecovery"].click()
+        XCTAssertTrue(app.buttons[fault == "cache" ? "continueTeamBatchRecovery" : "cancelTeamBatchRecovery"].waitForExistence(timeout: 12))
+        let fm = FileManager.default, support = try support()
+        let cacheFile = support.appendingPathComponent("Taskfold/ec240000-0000-4000-8000-000000000001.json")
+        // These deterministic paths belong only to the reserved synthetic account/origin.
+        let vault = cacheFile.deletingLastPathComponent().appendingPathComponent("Backups/d2be2d54-84e6-8f3d-8850-546d0835535a")
+        let selections = vault.appendingPathComponent("Team drafts/1d019528-c5bc-8e72-8e2a-1305600e9a82/Selections")
+        defer {
+            app.terminate()
+            app.launchArguments = ["--team-editor-testing", "--team-recovery-storage-cleanup"]
+            do { try open(app); XCTAssertFalse(fm.fileExists(atPath: support.appendingPathComponent("taskfold-storage-proof-journal.json").path)) }
+            catch { XCTFail("Could not restore reserved storage fixture: \(error)") }
+            app.terminate()
+        }
+        let before = try saved(), expected = pending(before), nonce = try XCTUnwrap(expected.first?["id"] as? String).lowercased()
+        let ledger = support.appendingPathComponent("taskfold-group-review-peer.json")
+        func cancellationLedger() throws -> [String: Any] {
+            guard fm.fileExists(atPath: ledger.path) else { return [:] }
+            return try JSONSerialization.jsonObject(with: Data(contentsOf: ledger)) as! [String: Any]
+        }
+        XCTAssertNil(try cancellationLedger()[nonce])
+        app.buttons["blockNativeRecoveryStorage"].click()
+        XCTAssertTrue(app.staticTexts["Storage blocked"].waitForExistence(timeout: 8), app.debugDescription)
+        let button = app.buttons[fault == "cache" ? "continueTeamBatchRecovery" : "cancelTeamBatchRecovery"]
+        button.click()
+        let error = app.descendants(matching: .any)["teamBatchRecoveryError"].firstMatch
+        XCTAssertTrue(error.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again."].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(button.isEnabled, "The exact review remains retryable after storage failure")
+        XCTAssertNil(try cancellationLedger()[nonce], "No cancellation can precede the required durable safety copies")
+        let durableURL = fault == "cache" ? cacheFile.appendingPathExtension("storage-proof-held") : cacheFile
+        let durable = try JSONSerialization.jsonObject(with: Data(contentsOf: durableURL)) as! NSDictionary
+        XCTAssertEqual(durable, before as NSDictionary)
+        if fault == "backup" {
+            let files = try fm.contentsOfDirectory(at: selections, includingPropertiesForKeys: nil).filter { $0.pathExtension == "taskfoldselection" }
+            XCTAssertEqual(files.count, 1, "Draft persists even if the following workspace backup fails")
+        }
+        shot(app, "Storage failure keeps reviewed work " + fault)
+        app.buttons["repairNativeRecoveryStorage"].click()
+        XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+        button.click()
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 20), app.debugDescription)
+        let after = try saved()
+        if fault == "cache" {
+            XCTAssertEqual(pending(after) as NSArray, Array(expected.dropFirst()) as NSArray)
+            XCTAssertEqual(after["tables"] as? NSDictionary, before["tables"] as? NSDictionary)
+        } else {
+            XCTAssertTrue(pending(after).isEmpty); XCTAssertNotNil(try cancellationLedger()[nonce])
+            let files = try fm.contentsOfDirectory(at: selections, includingPropertiesForKeys: nil).filter { $0.pathExtension == "taskfoldselection" }
+            XCTAssertEqual(files.count, 1, "Retry reuses the verified permanent draft")
+            XCTAssertFalse(String(decoding: try Data(contentsOf: XCTUnwrap(files.first)), as: UTF8.self).contains("Keep these later workshop instructions"))
+        }
+        app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; try open(app)
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 15))
+        func canonical(_ value: [String: Any]) -> NSDictionary {
+            var result = value
+            if var access = result["teamWorkspace"] as? [String: Any] {
+                for key in ["knownTasks", "quarantined"] { if let ids = access[key] as? [String] { access[key] = ids.sorted() } }; result["teamWorkspace"] = access
+            }
+            return result as NSDictionary
+        }
+        let restarted = try saved(); XCTAssertEqual(canonical(after), canonical(restarted))
+        for (phase, value) in [("before", before), ("failed durable", durable as! [String: Any]), ("after retry", after), ("after relaunch", restarted)] {
+            let proof = XCTAttachment(data: try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]), uniformTypeIdentifier: "public.json"); proof.name = "Storage " + fault + " " + phase; proof.lifetime = .keepAlways; add(proof)
+        }
+        if fault != "cache" {
+            app.buttons["openMacSavedDrafts"].click()
+            let draft = app.buttons["savedTeamSelectionDraft"].firstMatch; XCTAssertTrue(draft.waitForExistence(timeout: 12)); draft.click()
+            XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "Keep these later workshop instructions", "Keep these later workshop instructions")).firstMatch.waitForExistence(timeout: 10), app.debugDescription)
+            shot(app, "Storage repaired permanent draft " + fault)
+        }
+    }
+    @MainActor func testRecordedRecoveryWorkspaceWriteFailureRetainsExactQueueAndRetry() throws { try storageRecovery("cache") }
+    @MainActor func testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry() throws { try storageRecovery("draft") }
+    @MainActor func testCancelledRecoveryBackupIndexFailureKeepsSavedDraftBeforeSafeRetry() throws { try storageRecovery("backup") }
 }

@@ -1,0 +1,515 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-mac-recovery-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedRecoveryWorkspaceWriteFailureRetainsExactQueueAndRetry" "-only-testing:TaskfoldUITests/TeamCompletionRecoveryMacUITests/testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry" "-only-testing:TaskfoldUITests/TeamCompletionRecoveryMacUITests/testCancelledRecoveryBackupIndexFailureKeepsSavedDraftBeforeSafeRetry" "-only-testing:TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedSingleViewerColdRecovery" -resultBundlePath /tmp/taskfold-storage-recovery-mac-final.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-storage-recovery-mac-final.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-25 18:54:39.529106+0100 TaskfoldUITests-Runner[58453:20505329] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-25 18:54:39.629.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-25 18:54:39.630.
+Test Suite 'TeamCompletionRecoveryMacUITests' started at 2026-10-25 18:54:39.630.
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testCancelledRecoveryBackupIndexFailureKeepsSavedDraftBeforeSafeRetry]' started.
+    t =     0.00s Start Test at 2026-10-25 18:54:39.630
+    t =     0.27s Set Up
+    t =     0.28s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.28s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 18:54:40.143 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:54:40.143 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.75s         Wait for accessibility to load
+    t =     1.95s         Setting up automation session
+    t =     1.98s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.05s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.05s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.06s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.25s Waiting 15.0s for "openMacCompletionRecovery" Button to exist
+    t =     3.28s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =     3.29s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =     3.49s Get number of matches for: Descendants matching type Window
+    t =     3.53s Click "openMacCompletionRecovery" Button
+    t =     3.53s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.53s     Find the "openMacCompletionRecovery" Button
+    t =     3.58s     Check for interrupting elements affecting "openMacCompletionRecovery" Button
+    t =     3.61s     Synthesize event
+    t =     4.10s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.13s Waiting 12.0s for "cancelTeamBatchRecovery" Button to exist
+    t =     5.17s     Checking `Expect predicate `existsNoRetry == 1` for object "cancelTeamBatchRecovery" Button`
+    t =     5.17s         Checking existence of `"cancelTeamBatchRecovery" Button`
+    t =     5.28s Click "blockNativeRecoveryStorage" Button
+    t =     5.28s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.29s     Find the "blockNativeRecoveryStorage" Button
+    t =     5.35s     Check for interrupting elements affecting "blockNativeRecoveryStorage" Button
+    t =     5.36s     Synthesize event
+    t =     5.85s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.86s Waiting 8.0s for "Storage blocked" StaticText to exist
+    t =     6.90s     Checking `Expect predicate `existsNoRetry == 1` for object "Storage blocked" StaticText`
+    t =     6.90s         Checking existence of `"Storage blocked" StaticText`
+    t =     6.97s Click "cancelTeamBatchRecovery" Button
+    t =     6.97s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.98s     Find the "cancelTeamBatchRecovery" Button
+    t =     7.04s     Check for interrupting elements affecting "cancelTeamBatchRecovery" Button
+    t =     7.05s     Synthesize event
+    t =     7.57s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.58s Waiting 15.0s for "teamBatchRecoveryError" Any to exist
+    t =     8.61s     Checking `Expect predicate `existsNoRetry == 1` for object "teamBatchRecoveryError" Any`
+    t =     8.61s         Checking existence of `"teamBatchRecoveryError" Any`
+    t =     8.70s Waiting 5.0s for "Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again." StaticText to exist
+    t =     9.74s     Checking `Expect predicate `existsNoRetry == 1` for object "Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again." StaticText`
+    t =     9.74s         Checking existence of `"Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again." StaticText`
+    t =     9.81s Find the "cancelTeamBatchRecovery" Button
+    t =     9.88s Checking existence of `Window (First Match)`
+    t =     9.88s Find the Window (First Match)
+2026-10-25 18:54:49.513422+0100 TaskfoldUITests-Runner[58453:20505329] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =     9.95s Added attachment named 'Storage failure keeps reviewed work backup'
+    t =     9.95s Click "repairNativeRecoveryStorage" Button
+    t =     9.95s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.95s     Find the "repairNativeRecoveryStorage" Button
+    t =    10.00s     Check for interrupting elements affecting "repairNativeRecoveryStorage" Button
+    t =    10.01s     Synthesize event
+    t =    10.52s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.52s Waiting 8.0s for "Storage available" StaticText to exist
+    t =    11.56s     Checking `Expect predicate `existsNoRetry == 1` for object "Storage available" StaticText`
+    t =    11.56s         Checking existence of `"Storage available" StaticText`
+    t =    11.64s Click "cancelTeamBatchRecovery" Button
+    t =    11.64s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.65s     Find the "cancelTeamBatchRecovery" Button
+    t =    11.71s     Check for interrupting elements affecting "cancelTeamBatchRecovery" Button
+    t =    11.72s     Synthesize event
+    t =    12.24s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.25s Waiting 20.0s for "openMacCompletionRecovery" Button to exist
+    t =    13.29s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =    13.29s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =    13.38s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:58464
+    t =    14.46s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    14.46s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 18:54:54.093 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:54:54.093 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    14.98s         Wait for accessibility to load
+    t =    15.17s         Setting up automation session
+    t =    15.19s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.25s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    15.26s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    15.26s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.28s Waiting 15.0s for "openMacCompletionRecovery" Button to exist
+    t =    16.32s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =    16.32s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =    16.45s Added attachment named 'Storage backup before'
+    t =    16.45s Added attachment named 'Storage backup failed durable'
+    t =    16.46s Added attachment named 'Storage backup after retry'
+    t =    16.46s Added attachment named 'Storage backup after relaunch'
+    t =    16.46s Click "openMacSavedDrafts" Button
+    t =    16.46s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.47s     Find the "openMacSavedDrafts" Button
+    t =    16.51s     Check for interrupting elements affecting "openMacSavedDrafts" Button
+    t =    16.52s     Synthesize event
+    t =    17.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.38s Waiting 12.0s for "savedTeamSelectionDraft" Button to exist
+    t =    18.42s     Checking `Expect predicate `existsNoRetry == 1` for object "savedTeamSelectionDraft" Button`
+    t =    18.42s         Checking existence of `"savedTeamSelectionDraft" Button`
+    t =    18.53s Click "savedTeamSelectionDraft" Button
+    t =    18.53s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.53s     Find the "savedTeamSelectionDraft" Button
+    t =    18.58s     Check for interrupting elements affecting "savedTeamSelectionDraft" Button
+    t =    18.60s     Synthesize event
+    t =    19.19s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.23s Waiting 10.0s for StaticText (First Match) to exist
+    t =    20.27s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    20.27s         Checking existence of `StaticText (First Match)`
+    t =    20.33s         Capturing element debug description
+    t =    21.27s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    21.27s         Checking existence of `StaticText (First Match)`
+    t =    21.33s         Capturing element debug description
+    t =    22.26s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    22.26s         Checking existence of `StaticText (First Match)`
+    t =    22.32s         Capturing element debug description
+    t =    23.26s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    23.26s         Checking existence of `StaticText (First Match)`
+    t =    23.31s         Capturing element debug description
+    t =    24.25s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    24.25s         Checking existence of `StaticText (First Match)`
+    t =    24.31s         Capturing element debug description
+    t =    25.24s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    25.25s         Checking existence of `StaticText (First Match)`
+    t =    25.30s         Capturing element debug description
+    t =    26.24s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    26.24s         Checking existence of `StaticText (First Match)`
+    t =    26.30s         Capturing element debug description
+    t =    27.23s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    27.23s         Checking existence of `StaticText (First Match)`
+    t =    27.29s         Capturing element debug description
+    t =    28.23s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    28.23s         Checking existence of `StaticText (First Match)`
+    t =    28.29s         Capturing element debug description
+    t =    29.23s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    29.23s         Checking existence of `StaticText (First Match)`
+    t =    29.29s         Capturing element debug description
+    t =    29.29s     Checking existence of `StaticText (First Match)`
+    t =    29.33s Collecting debug information to assist test failure triage
+    t =    29.34s     Requesting snapshot of accessibility hierarchy for app with pid 58524
+    t =    29.44s Requesting snapshot of accessibility hierarchy for app with pid 58524
+    t =    29.44s Using snapshot previously cached by application
+    t =    29.44s Requesting snapshot of accessibility hierarchy for app with pid 58524
+/tmp/taskfold-mac-recovery-host/TaskfoldUITests/TaskfoldMacUITests.swift:3558: error: -[TaskfoldUITests.TeamCompletionRecoveryMacUITests testCancelledRecoveryBackupIndexFailureKeepsSavedDraftBeforeSafeRetry] : XCTAssertTrue failed - Attributes: Application, 0xa5f8f1540, pid: 58524, title: 'Taskfold Workflow Test', Disabled
+[Unrelated system/debug menu hierarchy omitted]
+
+    t =    29.64s Tear Down
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testCancelledRecoveryBackupIndexFailureKeepsSavedDraftBeforeSafeRetry]' failed (30.277 seconds).
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry]' started.
+    t =     0.01s Start Test at 2026-10-25 18:55:09.916
+    t =     0.16s Set Up
+    t =     0.16s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.17s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.17s         Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:58524
+2026-10-25 18:55:11.159 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:55:11.159 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.80s         Wait for accessibility to load
+    t =     1.88s         Setting up automation session
+    t =     1.90s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.96s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.96s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.96s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.07s Waiting 15.0s for "openMacCompletionRecovery" Button to exist
+    t =     3.10s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =     3.10s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =     3.24s Get number of matches for: Descendants matching type Window
+    t =     3.28s Click "openMacCompletionRecovery" Button
+    t =     3.28s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.28s     Find the "openMacCompletionRecovery" Button
+    t =     3.34s     Check for interrupting elements affecting "openMacCompletionRecovery" Button
+    t =     3.36s     Synthesize event
+    t =     3.84s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.88s Waiting 12.0s for "cancelTeamBatchRecovery" Button to exist
+    t =     4.91s     Checking `Expect predicate `existsNoRetry == 1` for object "cancelTeamBatchRecovery" Button`
+    t =     4.92s         Checking existence of `"cancelTeamBatchRecovery" Button`
+    t =     5.02s Click "blockNativeRecoveryStorage" Button
+    t =     5.02s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.02s     Find the "blockNativeRecoveryStorage" Button
+    t =     5.08s     Check for interrupting elements affecting "blockNativeRecoveryStorage" Button
+    t =     5.09s     Synthesize event
+    t =     5.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.61s Waiting 8.0s for "Storage blocked" StaticText to exist
+    t =     6.64s     Checking `Expect predicate `existsNoRetry == 1` for object "Storage blocked" StaticText`
+    t =     6.64s         Checking existence of `"Storage blocked" StaticText`
+    t =     6.71s Click "cancelTeamBatchRecovery" Button
+    t =     6.71s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.72s     Find the "cancelTeamBatchRecovery" Button
+    t =     6.78s     Check for interrupting elements affecting "cancelTeamBatchRecovery" Button
+    t =     6.79s     Synthesize event
+    t =     7.31s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.31s Waiting 15.0s for "teamBatchRecoveryError" Any to exist
+    t =     8.34s     Checking `Expect predicate `existsNoRetry == 1` for object "teamBatchRecoveryError" Any`
+    t =     8.34s         Checking existence of `"teamBatchRecoveryError" Any`
+    t =     8.43s Waiting 5.0s for "Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again." StaticText to exist
+    t =     9.46s     Checking `Expect predicate `existsNoRetry == 1` for object "Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again." StaticText`
+    t =     9.46s         Checking existence of `"Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again." StaticText`
+    t =     9.54s Find the "cancelTeamBatchRecovery" Button
+    t =     9.62s Checking existence of `Window (First Match)`
+    t =     9.62s Find the Window (First Match)
+2026-10-25 18:55:19.540177+0100 TaskfoldUITests-Runner[58453:20505329] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =     9.68s Added attachment named 'Storage failure keeps reviewed work draft'
+    t =     9.68s Click "repairNativeRecoveryStorage" Button
+    t =     9.68s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.69s     Find the "repairNativeRecoveryStorage" Button
+    t =     9.74s     Check for interrupting elements affecting "repairNativeRecoveryStorage" Button
+    t =     9.75s     Synthesize event
+    t =    10.26s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.27s Waiting 8.0s for "Storage available" StaticText to exist
+    t =    11.30s     Checking `Expect predicate `existsNoRetry == 1` for object "Storage available" StaticText`
+    t =    11.30s         Checking existence of `"Storage available" StaticText`
+    t =    11.38s Click "cancelTeamBatchRecovery" Button
+    t =    11.39s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.39s     Find the "cancelTeamBatchRecovery" Button
+    t =    11.45s     Check for interrupting elements affecting "cancelTeamBatchRecovery" Button
+    t =    11.46s     Synthesize event
+    t =    11.98s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.99s Waiting 20.0s for "openMacCompletionRecovery" Button to exist
+    t =    13.02s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =    13.02s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =    13.10s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:58605
+    t =    14.16s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    14.16s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 18:55:24.072 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:55:24.072 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    14.65s         Wait for accessibility to load
+    t =    14.82s         Setting up automation session
+    t =    14.84s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.92s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    14.92s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    14.93s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.94s Waiting 15.0s for "openMacCompletionRecovery" Button to exist
+    t =    15.98s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =    15.98s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =    16.11s Added attachment named 'Storage draft before'
+    t =    16.11s Added attachment named 'Storage draft failed durable'
+    t =    16.11s Added attachment named 'Storage draft after retry'
+    t =    16.11s Added attachment named 'Storage draft after relaunch'
+    t =    16.11s Click "openMacSavedDrafts" Button
+    t =    16.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.12s     Find the "openMacSavedDrafts" Button
+    t =    16.16s     Check for interrupting elements affecting "openMacSavedDrafts" Button
+    t =    16.18s     Synthesize event
+    t =    16.74s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.04s Waiting 12.0s for "savedTeamSelectionDraft" Button to exist
+    t =    18.07s     Checking `Expect predicate `existsNoRetry == 1` for object "savedTeamSelectionDraft" Button`
+    t =    18.07s         Checking existence of `"savedTeamSelectionDraft" Button`
+    t =    18.15s Click "savedTeamSelectionDraft" Button
+    t =    18.15s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.15s     Find the "savedTeamSelectionDraft" Button
+    t =    18.21s     Check for interrupting elements affecting "savedTeamSelectionDraft" Button
+    t =    18.23s     Synthesize event
+    t =    18.83s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.85s Waiting 10.0s for StaticText (First Match) to exist
+    t =    19.88s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    19.88s         Checking existence of `StaticText (First Match)`
+    t =    19.93s         Capturing element debug description
+    t =    20.86s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    20.87s         Checking existence of `StaticText (First Match)`
+    t =    20.92s         Capturing element debug description
+    t =    21.85s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    21.85s         Checking existence of `StaticText (First Match)`
+    t =    21.91s         Capturing element debug description
+    t =    22.94s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    22.95s         Checking existence of `StaticText (First Match)`
+    t =    23.00s         Capturing element debug description
+    t =    23.93s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    23.94s         Checking existence of `StaticText (First Match)`
+    t =    23.99s         Capturing element debug description
+    t =    24.92s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    24.92s         Checking existence of `StaticText (First Match)`
+    t =    24.98s         Capturing element debug description
+    t =    25.91s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    25.91s         Checking existence of `StaticText (First Match)`
+    t =    25.96s         Capturing element debug description
+    t =    26.89s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    26.89s         Checking existence of `StaticText (First Match)`
+    t =    26.95s         Capturing element debug description
+    t =    27.88s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    27.88s         Checking existence of `StaticText (First Match)`
+    t =    27.94s         Capturing element debug description
+    t =    28.85s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    28.85s         Checking existence of `StaticText (First Match)`
+    t =    28.91s         Capturing element debug description
+    t =    28.91s     Checking existence of `StaticText (First Match)`
+    t =    28.96s Collecting debug information to assist test failure triage
+    t =    28.96s     Requesting snapshot of accessibility hierarchy for app with pid 58632
+    t =    29.06s Requesting snapshot of accessibility hierarchy for app with pid 58632
+    t =    29.06s Using snapshot previously cached by application
+    t =    29.06s Requesting snapshot of accessibility hierarchy for app with pid 58632
+/tmp/taskfold-mac-recovery-host/TaskfoldUITests/TaskfoldMacUITests.swift:3558: error: -[TaskfoldUITests.TeamCompletionRecoveryMacUITests testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry] : XCTAssertTrue failed - Attributes: Application, 0xa5fc9c8c0, pid: 58632, title: 'Taskfold Workflow Test', Disabled
+[Unrelated system/debug menu hierarchy omitted]
+
+    t =    29.13s Tear Down
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry]' failed (29.764 seconds).
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedRecoveryWorkspaceWriteFailureRetainsExactQueueAndRetry]' started.
+    t =     0.00s Start Test at 2026-10-25 18:55:39.681
+    t =     0.14s Set Up
+    t =     0.14s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.15s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.15s         Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:58632
+2026-10-25 18:55:40.904 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:55:40.904 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.76s         Wait for accessibility to load
+    t =     1.97s         Setting up automation session
+    t =     1.99s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.04s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.05s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.06s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.06s Waiting 15.0s for "openMacCompletionRecovery" Button to exist
+    t =     3.09s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =     3.09s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =     3.22s Get number of matches for: Descendants matching type Window
+    t =     3.25s Click "openMacCompletionRecovery" Button
+    t =     3.25s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.26s     Find the "openMacCompletionRecovery" Button
+    t =     3.31s     Check for interrupting elements affecting "openMacCompletionRecovery" Button
+    t =     3.32s     Synthesize event
+    t =     3.81s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.85s Waiting 12.0s for "continueTeamBatchRecovery" Button to exist
+    t =     4.88s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamBatchRecovery" Button`
+    t =     4.88s         Checking existence of `"continueTeamBatchRecovery" Button`
+    t =     4.98s Click "blockNativeRecoveryStorage" Button
+    t =     4.98s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.99s     Find the "blockNativeRecoveryStorage" Button
+    t =     5.04s     Check for interrupting elements affecting "blockNativeRecoveryStorage" Button
+    t =     5.06s     Synthesize event
+    t =     5.56s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.56s Waiting 8.0s for "Storage blocked" StaticText to exist
+    t =     6.60s     Checking `Expect predicate `existsNoRetry == 1` for object "Storage blocked" StaticText`
+    t =     6.60s         Checking existence of `"Storage blocked" StaticText`
+    t =     6.66s Click "continueTeamBatchRecovery" Button
+    t =     6.66s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.67s     Find the "continueTeamBatchRecovery" Button
+    t =     6.72s     Check for interrupting elements affecting "continueTeamBatchRecovery" Button
+    t =     6.74s     Synthesize event
+    t =     7.25s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.27s Waiting 15.0s for "teamBatchRecoveryError" Any to exist
+    t =     8.29s     Checking `Expect predicate `existsNoRetry == 1` for object "teamBatchRecoveryError" Any`
+    t =     8.30s         Checking existence of `"teamBatchRecoveryError" Any`
+    t =     8.38s Waiting 5.0s for "Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again." StaticText to exist
+    t =     9.42s     Checking `Expect predicate `existsNoRetry == 1` for object "Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again." StaticText`
+    t =     9.42s         Checking existence of `"Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again." StaticText`
+    t =     9.48s Find the "continueTeamBatchRecovery" Button
+    t =     9.54s Checking existence of `Window (First Match)`
+    t =     9.55s Find the Window (First Match)
+2026-10-25 18:55:49.233045+0100 TaskfoldUITests-Runner[58453:20505329] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =     9.61s Added attachment named 'Storage failure keeps reviewed work cache'
+    t =     9.62s Click "repairNativeRecoveryStorage" Button
+    t =     9.62s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.62s     Find the "repairNativeRecoveryStorage" Button
+    t =     9.66s     Check for interrupting elements affecting "repairNativeRecoveryStorage" Button
+    t =     9.67s     Synthesize event
+    t =    10.17s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.19s Waiting 8.0s for "Storage available" StaticText to exist
+    t =    11.20s     Checking `Expect predicate `existsNoRetry == 1` for object "Storage available" StaticText`
+    t =    11.20s         Checking existence of `"Storage available" StaticText`
+    t =    11.27s Click "continueTeamBatchRecovery" Button
+    t =    11.27s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.27s     Find the "continueTeamBatchRecovery" Button
+    t =    11.33s     Check for interrupting elements affecting "continueTeamBatchRecovery" Button
+    t =    11.34s     Synthesize event
+    t =    11.86s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.22s Waiting 20.0s for "openMacCompletionRecovery" Button to exist
+    t =    13.25s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =    13.25s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =    13.33s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:58673
+    t =    14.39s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    14.39s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 18:55:54.077 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:55:54.077 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    14.87s         Wait for accessibility to load
+    t =    14.95s         Setting up automation session
+    t =    14.98s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.03s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    15.03s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    15.04s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.13s Waiting 15.0s for "openMacCompletionRecovery" Button to exist
+    t =    16.15s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =    16.16s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =    16.28s Added attachment named 'Storage cache before'
+    t =    16.28s Added attachment named 'Storage cache failed durable'
+    t =    16.28s Added attachment named 'Storage cache after retry'
+    t =    16.29s Added attachment named 'Storage cache after relaunch'
+    t =    16.29s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:58704
+    t =    17.35s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    17.35s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 18:55:57.034 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:55:57.034 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    17.84s         Wait for accessibility to load
+    t =    18.38s         Setting up automation session
+    t =    18.39s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.45s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    18.45s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    18.46s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.46s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:58712
+    t =    19.51s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:0
+    t =    19.51s Tear Down
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedRecoveryWorkspaceWriteFailureRetainsExactQueueAndRetry]' passed (20.016 seconds).
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedSingleViewerColdRecovery]' started.
+    t =     0.00s Start Test at 2026-10-25 18:55:59.698
+    t =     0.13s Set Up
+    t =     0.13s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.13s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 18:55:59.832 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:55:59.832 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.77s         Wait for accessibility to load
+    t =     1.01s         Setting up automation session
+    t =     1.03s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.08s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.08s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.09s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.12s Waiting 15.0s for "openMacCompletionRecovery" Button to exist
+    t =     2.15s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =     2.15s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =     2.30s Get number of matches for: Descendants matching type Window
+    t =     2.33s Click "openMacCompletionRecovery" Button
+    t =     2.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.34s     Find the "openMacCompletionRecovery" Button
+    t =     2.39s     Check for interrupting elements affecting "openMacCompletionRecovery" Button
+    t =     2.41s     Synthesize event
+    t =     2.90s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.93s Waiting 12.0s for "continueTeamCompletionReview" Button to exist
+    t =     3.96s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =     3.96s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =     4.08s Click "Later" Button
+    t =     4.08s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.08s     Find the "Later" Button
+    t =     4.14s     Check for interrupting elements affecting "Later" Button
+    t =     4.16s     Synthesize event
+    t =     4.66s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.95s Waiting 8.0s for "openMacCompletionRecovery" Button to exist
+    t =     5.98s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =     5.98s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =     6.06s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:58719
+    t =     7.13s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     7.13s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 18:56:06.828 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:56:06.828 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     7.67s         Wait for accessibility to load
+    t =     7.79s         Setting up automation session
+    t =     7.81s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.86s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     7.86s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     7.87s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.40s Waiting 15.0s for "continueTeamCompletionReview" Button to exist
+    t =     9.43s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =     9.43s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =     9.62s Added attachment named 'Mac recovery read trace single viewer'
+    t =     9.62s Checking existence of `Window (First Match)`
+    t =     9.64s Find the Window (First Match)
+2026-10-25 18:56:09.338583+0100 TaskfoldUITests-Runner[58453:20505329] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =     9.71s Added attachment named 'Mac recorded recovery single viewer'
+    t =     9.71s Find the "continueTeamCompletionReview" Button
+    t =     9.76s Click "continueTeamCompletionReview" Button
+    t =     9.76s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.77s     Find the "continueTeamCompletionReview" Button
+    t =     9.82s     Check for interrupting elements affecting "continueTeamCompletionReview" Button
+    t =     9.83s     Synthesize event
+    t =    10.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.70s Waiting 12.0s for "openMacCompletionRecovery" Button to exist
+    t =    11.73s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =    11.73s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =    11.81s Get number of matches for: Descendants matching type Window
+    t =    11.85s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:58745
+    t =    12.92s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    12.93s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 18:56:12.652 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:56:12.652 xcodebuild[58443:20505139] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    13.98s         Wait for accessibility to load
+    t =    14.13s         Setting up automation session
+    t =    14.17s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.23s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    14.24s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    14.24s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.39s Waiting 12.0s for "openMacCompletionRecovery" Button to exist
+    t =    15.41s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =    15.41s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =    15.78s Get number of matches for: Descendants matching type Window
+    t =    15.81s Added attachment named 'Mac recovery after acceptance single viewer'
+    t =    15.81s Added attachment named 'Mac recovery after relaunch single viewer'
+    t =    15.81s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:58756
+    t =    16.89s Tear Down
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedSingleViewerColdRecovery]' passed (17.286 seconds).
+Test Suite 'TeamCompletionRecoveryMacUITests' failed at 2026-10-25 18:56:16.985.
+	 Executed 4 tests, with 2 failures (0 unexpected) in 97.344 (97.355) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-25 18:56:16.989.
+	 Executed 4 tests, with 2 failures (0 unexpected) in 97.344 (97.359) seconds
+Test Suite 'Selected tests' failed at 2026-10-25 18:56:16.990.
+	 Executed 4 tests, with 2 failures (0 unexpected) in 97.344 (97.361) seconds
+2026-10-25 18:56:26.936 xcodebuild[58443:20505139] [MT] IDETestOperationsObserverDebug: 108.128 elapsed -- Testing started completed.
+2026-10-25 18:56:26.936 xcodebuild[58443:20505139] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-25 18:56:26.936 xcodebuild[58443:20505139] [MT] IDETestOperationsObserverDebug: 108.128 sec, +108.128 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-storage-recovery-mac-final.xcresult
+
+Failing tests:
+	TeamCompletionRecoveryMacUITests.testCancelledRecoveryBackupIndexFailureKeepsSavedDraftBeforeSafeRetry()
+	TeamCompletionRecoveryMacUITests.testCancelledRecoveryDraftWriteFailureKeepsActionBeforeSafeRetry()
+
+** TEST EXECUTE FAILED **
+
+Testing started

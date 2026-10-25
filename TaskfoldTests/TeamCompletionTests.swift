@@ -1150,3 +1150,23 @@ extension TeamCompletionTests {
         XCTAssertNotEqual(plan.action.id, header.id); XCTAssertEqual(plan.snapshot.pending.first, plan.action)
     }
 }
+
+
+final class TeamCompletionRecoveryMessageTests: XCTestCase {
+    func testFullStorageExplainsRetryWithoutExposingFileDetails() {
+        let failure = NSError(domain: NSCocoaErrorDomain, code: CocoaError.fileWriteOutOfSpace.rawValue, userInfo: [NSFilePathErrorKey: "/private/workspace-sensitive.json", NSLocalizedDescriptionKey: "Cannot write /private/workspace-sensitive.json"])
+        let message = TeamCompletionRecoveryFailure.message(failure)
+        XCTAssertTrue(message.contains("Free some space")); XCTAssertTrue(message.contains("queued work is unchanged")); XCTAssertFalse(message.contains("workspace-sensitive"))
+    }
+    func testInaccessibleOrDamagedStorageKeepsReviewGuidancePrivate() {
+        for code in [CocoaError.fileReadUnknown, .fileReadNoPermission, .fileReadCorruptFile, .fileWriteUnknown, .fileWriteNoPermission, .fileWriteFileExists, .fileWriteInvalidFileName, .fileLocking] {
+            let failure = NSError(domain: NSCocoaErrorDomain, code: code.rawValue, userInfo: [NSLocalizedDescriptionKey: "Could not access private-account-directory"])
+            let message = TeamCompletionRecoveryFailure.message(failure)
+            XCTAssertTrue(message.contains("queued work is unchanged")); XCTAssertTrue(message.contains("Check storage access")); XCTAssertFalse(message.contains("private-account"))
+        }
+    }
+    func testNetworkAndSignInFailuresRetainTheirSpecificNextSteps() {
+        XCTAssertEqual(TeamCompletionRecoveryFailure.message(URLError(.notConnectedToInternet)), SyncStatus.failureMessage(URLError(.notConnectedToInternet)))
+        XCTAssertEqual(TeamCompletionRecoveryFailure.message(AccountSessionAuthorizationRequired()), SyncStatus.failureMessage(AccountSessionAuthorizationRequired()))
+    }
+}

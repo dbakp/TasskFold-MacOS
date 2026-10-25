@@ -821,6 +821,9 @@ final class Store {
         #endif
         googleAvatarURL = backend.session?.user.googleAvatarURL
         signedIn = backend.session != nil || localMode
+        #if DEBUG
+        if TeamEditorNativeFixture.enabled { try? TeamRecoveryStorageNativeFixture.restoreIfRequested() }
+        #endif
         if signedIn { load() } else { publishWidgetSnapshot() }
         #if DEBUG
         prepareTeamEditorNativeFixture()
@@ -1881,7 +1884,7 @@ final class Store {
             Task {await sync()};return true
         } catch {
             guard generation == accountGeneration else {return false}
-            self.error=SyncStatus.failureMessage(error);return false
+            self.error=TeamCompletionRecoveryFailure.message(error);return false
         }
     }
 
@@ -1928,7 +1931,7 @@ final class Store {
             Task {await sync()};return true
         } catch {
             guard generation == accountGeneration else {return false}
-            self.error=SyncStatus.failureMessage(error);return false
+            self.error=TeamCompletionRecoveryFailure.message(error);return false
         }
     }
 
@@ -2005,7 +2008,7 @@ final class Store {
                   nativeConversationTeamCache == access, currentTeamCompletionBatchReview(review) else { return false }
             guard let next else { error = "Later task changes still need review. The entire saved selection and its drafts are kept."; return false }
             snapshot = next
-            do { try persist() } catch { snapshot = before; self.error = error.localizedDescription; return false }
+            do { try persist() } catch { snapshot = before; self.error = TeamCompletionRecoveryFailure.message(error); return false }
             undoStack = []; redoStack = []
         }
         syncConflict = nil; notice = nil; Task { await sync() }; return true
@@ -2048,7 +2051,7 @@ final class Store {
             Task { await sync() }; return true
         } catch {
             guard generation == accountGeneration else { return false }
-            self.error = SyncStatus.failureMessage(error); return false
+            self.error = TeamCompletionRecoveryFailure.message(error); return false
         }
     }
 
@@ -2088,7 +2091,7 @@ final class Store {
                   nativeConversationTeamCache == access, currentTeamCompletionReview(review) else { return false }
             guard let next else { error = "Your additional task changes are still saved. Keep this review for now."; return false }
             snapshot = next
-            do { try persist() } catch { snapshot = before; self.error = error.localizedDescription; return false }
+            do { try persist() } catch { snapshot = before; self.error = TeamCompletionRecoveryFailure.message(error); return false }
             undoStack = []; redoStack = []
         }
         // Unrecorded reads retain the original nonce and immutable command.
@@ -3900,6 +3903,65 @@ extension Store {
         var next = snapshot; next.apply(header); next.pending = [header]
         next.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: snapshot.teamWorkspace, pending: next.pending, tasks: next.tables["tasks"] ?? [])
         snapshot = next; try persist()
+    }
+}
+#endif
+
+
+#if DEBUG
+/// Real filesystem barriers inside the reserved app's own sandbox. No fault is
+/// synthesized in the production writer, backup or encrypted-draft code.
+@MainActor enum TeamRecoveryStorageNativeFixture {
+    static var fault: String? {
+        guard TeamEditorNativeFixture.enabled else { return nil }
+        return ["cache", "draft", "backup"].first { ProcessInfo.processInfo.arguments.contains("--team-recovery-storage=" + $0) }
+    }
+    private static var support: URL { URL.applicationSupportDirectory }
+    private static var cache: URL { support.appendingPathComponent("Taskfold/" + TeamEditorNativeFixture.account + ".json") }
+    private static var vault: URL { cache.deletingLastPathComponent().appendingPathComponent("Backups/d2be2d54-84e6-8f3d-8850-546d0835535a") }
+    private static var prior: URL { vault.appendingPathExtension("storage-proof-prior") }
+    private static var held: URL { cache.appendingPathExtension("storage-proof-held") }
+    private static var journal: URL { support.appendingPathComponent("taskfold-storage-proof-journal.json") }
+    private static func target(_ fault: String) -> URL {
+        fault == "cache" ? cache : fault == "backup" ? vault.appendingPathComponent("index.json") : vault.appendingPathComponent("Team drafts/1d019528-c5bc-8e72-8e2a-1305600e9a82/Selections")
+    }
+    static func block() throws {
+        guard let fault else { throw TeamCompletion.invalid }
+        let fm = FileManager.default
+        guard !fm.fileExists(atPath: journal.path), !fm.fileExists(atPath: prior.path), !fm.fileExists(atPath: held.path) else { throw TeamCompletion.invalid }
+        let hadVault = fm.fileExists(atPath: vault.path)
+        try JSONEncoder().encode(["fault": JSON.string(fault), "hadVault": .bool(hadVault)]).write(to: journal, options: .atomic)
+        if hadVault { try fm.moveItem(at: vault, to: prior) }
+        let destination = target(fault)
+        try fm.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if fault == "cache" {
+            try fm.moveItem(at: cache, to: held)
+            try fm.createDirectory(at: destination, withIntermediateDirectories: false)
+        } else if fault == "backup" { try fm.createDirectory(at: destination, withIntermediateDirectories: false) }
+        else { try Data("Reserved native storage barrier".utf8).write(to: destination) }
+    }
+    static func repair() throws {
+        guard let fault else { throw TeamCompletion.invalid }
+        let fm = FileManager.default
+        try fm.removeItem(at: target(fault))
+        if fault == "cache" { try fm.moveItem(at: held, to: cache) }
+    }
+    static func restoreIfRequested() throws {
+        guard TeamEditorNativeFixture.enabled,
+              ProcessInfo.processInfo.arguments.contains("--team-editor-reset") || ProcessInfo.processInfo.arguments.contains("--team-recovery-storage-cleanup") else { return }
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: journal.path) else { return }
+        let proof = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: journal))
+        guard ["cache", "draft", "backup"].contains(proof["fault"]?.text ?? ""), let hadVault = proof["hadVault"]?.flag else { throw TeamCompletion.invalid }
+        if fm.fileExists(atPath: held.path) {
+            if fm.fileExists(atPath: cache.path) { try fm.removeItem(at: cache) }
+            try fm.moveItem(at: held, to: cache)
+        }
+        if fm.fileExists(atPath: prior.path) {
+            if fm.fileExists(atPath: vault.path) { try fm.removeItem(at: vault) }
+            try fm.moveItem(at: prior, to: vault)
+        } else if !hadVault, fm.fileExists(atPath: vault.path) { try fm.removeItem(at: vault) }
+        try fm.removeItem(at: journal)
     }
 }
 #endif

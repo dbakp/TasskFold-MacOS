@@ -6666,3 +6666,45 @@ advanced/wearable backlog stay open. User-deferred release/provider/device work 
 deferred. No real account/task or hosted schema/configuration changed. See
 p2-recurring-native-recovery-evidence.json and recurring-native-recovery/ in each
 platform repository. Platform sources and build inputs remain independently owned.
+
+## 25 October 2026 — Real storage failure and safe completion-review retry
+
+Completion reviews now give clear guidance for recognized Cocoa filesystem errors
+without exposing private file details. Full-storage errors ask the user to free
+space; inaccessible/corrupt file errors explain that queued work is unchanged and
+ask the user to check storage access and retry. Network and sign-in failures keep
+their existing specific next steps. Transactional queue/storage/transport behavior
+and account/access guards are unchanged. Each independently owned repo passes all
+184 completion checks: the previous 181 plus three new error/privacy/fallback cases.
+
+Four actual native cases pass on each Mac, iPhone and iPad with no runtime warnings:
+three group storage failures plus an individual viewer cold-recovery regression.
+The real workspace-cache path becomes a directory during recorded acknowledgement;
+the selection-draft directory becomes a file before unrecorded cancellation; and
+the backup index becomes a directory after the permanent selection draft is saved.
+The production file writer, backup and encrypted vault fail naturally. Every failed
+review remains retryable and its complete durable snapshot equals the original.
+No cancellation reaches the local peer before the required safety copies succeed.
+After repair, acknowledgement retains the exact queued edit; cancellation restores
+both original source rows exactly, retains unrelated rows and leaves one reusable
+encrypted draft. The draft's authored notes reopen after relaunch. All nine storage
+cases retain current read restrictions and complete post-retry snapshots through
+another launch (only knownTasks/quarantined Codable Set order is canonicalized).
+
+The Mac runner correctly cannot move files in the app's sandbox. Reserved DEBUG
+app controls perform its own reversible filesystem setup/repair, and a journal plus
+explicit cleanup launch restores prior synthetic vaults even after a test failure.
+No entitlements or user permissions changed. The Mac preview assertion reads native
+Text values as well as labels. Both apps and final real development signatures
+verify; installed Simulator app/debug-library/Info hashes match built products.
+Mac backup-failure and iPad cache-failure previews were visually inspected and show
+readable, actionable guidance. Temporary test sessions finish closed.
+
+These cases use ordinary synthetic shared roots, viewer access and the reserved
+local HTTP peer. They do not prove native individual storage failures, real disk
+exhaustion/hardware corruption, account-switch/asynchronous races, native Mac
+recurring history, hosted delivery or release behavior. Those checks, authored
+missing-incarnation/cross-table recovery, large workloads and the advanced/wearable
+backlog remain open. Existing user deferrals remain unchanged. No hosted schema,
+service/configuration, rollout or real account/task changed. See
+p2-storage-recovery-evidence.json and storage-recovery/ for the retained evidence.
