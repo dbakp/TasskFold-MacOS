@@ -16,6 +16,18 @@ enum TeamProjectAdoptionValue {
         return try TeamOrganizationValue.date(value)
     }
 }
+enum TeamProjectConnectionPolicy: String, Sendable { case pause }
+struct TeamProjectConnectionEffects: Equatable, Sendable, Codable {
+    static let keys: Set<String> = ["email_routes_paused", "project_webhooks_paused", "pending_webhooks_cancelled", "global_webhooks_excluded", "queued_updates_discarded"]
+    let values: [String: Int]
+    init(_ raw: [String: JSON]) throws {
+        guard Set(raw.keys) == Self.keys else { throw TeamProjectAdoptionValue.invalid }
+        values = try raw.mapValues { try TeamProjectAdoptionValue.count($0, limit: 100000) }
+    }
+    var body: JSON { .object(values.mapValues { .number(Double($0)) }) }
+    init(from decoder: Decoder) throws { try self.init([String: JSON](from: decoder)) }
+    func encode(to encoder: Encoder) throws { try body.encode(to: encoder) }
+}
 struct TeamProjectAdoptionScope: Equatable, Sendable {
     let account: String, origin: String, team: String
     let roots: [String], visibility: TeamProjectVisibility, folder: String?, parent: String?
@@ -58,6 +70,13 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
     let scope: TeamProjectAdoptionScope, token: String, teamName: String
     let projects: [Project], collaborators: [Collaborator], contents: [String: JSON]
     let commitSupported: Bool, destinationArchived: Bool, teamMembers: Int
+    let supportsConnectionPause: Bool, connectionPauseSupported: Bool
+    var hasConnections: Bool { ["email_routes", "webhooks", "queued_webhook_events"].contains { (contents[$0]?.integer ?? 0) > 0 } }
+    var inflightUpdates: Int { contents["inflight_webhook_events"]?.integer ?? 0 }
+    func expectedConnectionEffects() throws -> TeamProjectConnectionEffects {
+        guard supportsConnectionPause else { throw TeamProjectAdoptionValue.invalid }
+        return try TeamProjectConnectionEffects(["email_routes_paused": contents["email_routes"]!, "project_webhooks_paused": .number(Double(contents["project_webhooks"]!.integer - contents["pending_project_webhooks"]!.integer)), "pending_webhooks_cancelled": contents["pending_project_webhooks"]!, "global_webhooks_excluded": contents["global_webhooks"]!, "queued_updates_discarded": contents["queued_webhook_events"]!])
+    }
     var description: String { "Private project transfer inspection" }
     var people: [Collaborator] {
         var seen: Set<String> = []
@@ -98,6 +117,18 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
               try TeamProjectAdoptionValue.count(counts["project_collaborators"], limit: 1000) == collaborators.count else { throw TeamProjectAdoptionValue.invalid }
         _ = try TeamProjectAdoptionValue.count(contents["content_bytes"], limit: 33_554_432)
         for key in ["attachments", "inline_files", "external_files", "provider_files", "email_routes", "webhooks"] { _ = try TeamProjectAdoptionValue.count(contents[key]) }
+        for key in ["queued_webhook_events", "inflight_webhook_events"] { if let v = contents[key] { _ = try TeamProjectAdoptionValue.count(v, limit: 100000) } }
+        supportsConnectionPause = raw["connection_pause_protocol"] == .number(1)
+        if supportsConnectionPause {
+            guard case .bool(let supported)? = raw["connection_pause_supported"] else { throw TeamProjectAdoptionValue.invalid }
+            connectionPauseSupported = supported
+            for key in ["project_webhooks", "pending_project_webhooks", "global_webhooks", "queued_webhook_events", "inflight_webhook_events"] { _ = try TeamProjectAdoptionValue.count(contents[key], limit: 100000) }
+            guard contents["pending_project_webhooks"]!.integer <= contents["project_webhooks"]!.integer,
+                  contents["project_webhooks"]!.integer + contents["global_webhooks"]!.integer == contents["webhooks"]!.integer else { throw TeamProjectAdoptionValue.invalid }
+        } else {
+            guard raw["connection_pause_protocol"] == nil, raw["connection_pause_supported"] == nil else { throw TeamProjectAdoptionValue.invalid }
+            connectionPauseSupported = false
+        }
         var eligibility: [String: Bool] = [:]
         for person in collaborators { if let id = person.decisionID { guard eligibility[id] == nil || eligibility[id] == person.eligible else { throw TeamProjectAdoptionValue.invalid }; eligibility[id] = person.eligible } }
         self.contents = contents
@@ -111,19 +142,22 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
         }
         return false
     }
-    func reviewBody(_ decisions: [TeamProjectAdoptionDecision]) throws -> [String: JSON] {
+    func reviewBody(_ decisions: [TeamProjectAdoptionDecision], connectionPolicy: TeamProjectConnectionPolicy? = nil) throws -> [String: JSON] {
         guard decisions.count == people.count, Set(decisions.map(\.id)) == Set(people.compactMap(\.decisionID)), decisions.allSatisfy({ d in d.choice == .retire || people.first(where: { $0.decisionID == d.id })?.eligible == true }) else { throw TeamProjectAdoptionValue.invalid }
-        return scope.body.merging(["inspection_token": .string(token), "decisions": .array(decisions.sorted { $0.id < $1.id }.map(\.body))]) { _, b in b }
+        var body = scope.body.merging(["inspection_token": .string(token), "decisions": .array(decisions.sorted { $0.id < $1.id }.map(\.body))]) { _, b in b }
+        if let connectionPolicy { guard supportsConnectionPause, hasConnections else { throw TeamProjectAdoptionValue.invalid }; body["connection_policy"] = .string(connectionPolicy.rawValue) }
+        return body
     }
 }
 struct TeamProjectAdoptionReview: Equatable, Sendable, CustomStringConvertible {
     let inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision], effectiveRoles: [String: TeamProjectRole]
     let token: String, expiresText: String, expires: Date, assignmentsCleared: Int, invitationsClosed: Int
     let needsFileCustody: Bool, needsIntegrationPause: Bool
+    let connectionPolicy: TeamProjectConnectionPolicy?, connectionEffects: TeamProjectConnectionEffects?
     var description: String { "Private project transfer review" }
-    var canCommit: Bool { inspection.commitSupported && !needsFileCustody && !needsIntegrationPause }
-    init(_ raw: [String: JSON], inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision]) throws {
-        _ = try inspection.reviewBody(decisions)
+    var canCommit: Bool { (inspection.commitSupported || (connectionPolicy == .pause && inspection.connectionPauseSupported)) && !needsFileCustody && !needsIntegrationPause && (!inspection.hasConnections || connectionPolicy == .pause) && inspection.inflightUpdates == 0 }
+    init(_ raw: [String: JSON], inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision], connectionPolicy: TeamProjectConnectionPolicy? = nil) throws {
+        _ = try inspection.reviewBody(decisions, connectionPolicy: connectionPolicy)
         guard try TeamProjectAdoptionInspection(raw, scope: inspection.scope) == inspection,
               case .string(let token)? = raw["review_token"], TeamTaskMoveReview.validToken(token), case .string(let expiresText)? = raw["expires_at"],
               case .bool(let files)? = raw["requires_provider_custody"], case .bool(let integrations)? = raw["requires_integration_pause"] else { throw TeamProjectAdoptionValue.invalid }
@@ -135,11 +169,22 @@ struct TeamProjectAdoptionReview: Equatable, Sendable, CustomStringConvertible {
             if row["effective_role"] != .null { guard let text = row["effective_role"]?.text, let role = TeamProjectRole(rawValue: text) else { throw TeamProjectAdoptionValue.invalid }; roles[d.id] = role }
         }
         guard parsed.count == decisions.count, Set(parsed.map(\.id)).count == parsed.count, parsed.sorted(by: { $0.id < $1.id }) == decisions.sorted(by: { $0.id < $1.id }),
-              files == ((inspection.contents["provider_files"]?.integer ?? -1) > 0), integrations == ((inspection.contents["email_routes"]?.integer ?? -1) > 0 || (inspection.contents["webhooks"]?.integer ?? -1) > 0) else { throw TeamProjectAdoptionValue.invalid }
+              files == ((inspection.contents["provider_files"]?.integer ?? -1) > 0), integrations == (connectionPolicy == nil && inspection.hasConnections) else { throw TeamProjectAdoptionValue.invalid }
         self.inspection = inspection; self.decisions = parsed; effectiveRoles = roles; self.token = token; self.expiresText = expiresText; expires = try TeamProjectAdoptionValue.date(raw["expires_at"])
         assignmentsCleared = try TeamProjectAdoptionValue.count(raw["assignments_cleared"], limit: 1_000_010_000)
         invitationsClosed = try TeamProjectAdoptionValue.count(raw["invitations_closed"], limit: 1000)
         guard invitationsClosed == inspection.collaborators.count else { throw TeamProjectAdoptionValue.invalid }
+        guard (raw["connection_policy"] ?? .null) == (connectionPolicy.map { JSON.string($0.rawValue) } ?? .null) else { throw TeamProjectAdoptionValue.invalid }
+        self.connectionPolicy = connectionPolicy
+        if connectionPolicy == .pause {
+            guard !integrations, case .object(let effects)? = raw["connection_effects"] else { throw TeamProjectAdoptionValue.invalid }
+            let parsed = try TeamProjectConnectionEffects(effects)
+            guard parsed == (try inspection.expectedConnectionEffects()) else { throw TeamProjectAdoptionValue.invalid }
+            connectionEffects = parsed
+        } else {
+            guard (raw["connection_effects"] ?? .null) == .null else { throw TeamProjectAdoptionValue.invalid }
+            connectionEffects = nil
+        }
         needsFileCustody = files; needsIntegrationPause = integrations
     }
 }
@@ -149,16 +194,18 @@ struct TeamProjectAdoptionCommand: ReviewedTeamCommand, CustomStringConvertible,
     static var invalid: AppFailure { TeamProjectAdoptionValue.invalid }
     let account: String, origin: String, body: [String: JSON], projects: [String], assignmentsCleared: Int, invitationsClosed: Int
     let scope: TeamProjectAdoptionScope
+    let connectionEffects: TeamProjectConnectionEffects?
+    var connectionPolicy: TeamProjectConnectionPolicy? { body["connection_policy"].flatMap { TeamProjectConnectionPolicy(rawValue: $0.text) } }
     var id: String { body["request_id"]!.text }
     var description: String { "Private project transfer request" }; var debugDescription: String { description }
     init(review: TeamProjectAdoptionReview, requestID: UUID = UUID(), now: Date = Date()) throws {
         guard review.canCommit, review.expires > now, review.expires <= now.addingTimeInterval(16 * 60) else { throw Self.invalid }
         let i = review.inspection
-        var b = try i.reviewBody(review.decisions); b["review_token"] = .string(review.token); b["expires_at"] = .string(review.expiresText); b["request_id"] = .string(requestID.uuidString.lowercased())
-        try self.init(account: i.scope.account, origin: i.scope.origin, body: b, projects: i.projects.map(\.id).sorted(), assignmentsCleared: review.assignmentsCleared, invitationsClosed: review.invitationsClosed)
+        var b = try i.reviewBody(review.decisions, connectionPolicy: review.connectionPolicy); b["review_token"] = .string(review.token); b["expires_at"] = .string(review.expiresText); b["request_id"] = .string(requestID.uuidString.lowercased())
+        try self.init(account: i.scope.account, origin: i.scope.origin, body: b, projects: i.projects.map(\.id).sorted(), assignmentsCleared: review.assignmentsCleared, invitationsClosed: review.invitationsClosed, connectionEffects: review.connectionEffects)
     }
-    init(account: String, origin: String, body: [String: JSON], projects: [String], assignmentsCleared: Int, invitationsClosed: Int) throws {
-        guard Set(body.keys) == ["team_id", "roots", "visibility", "folder_id", "parent_id", "inspection_token", "decisions", "review_token", "expires_at", "request_id"], let v = body["visibility"]?.text, let visibility = TeamProjectVisibility(rawValue: v), try JSONEncoder().encode(body).count <= 262144 else { throw Self.invalid }
+    init(account: String, origin: String, body: [String: JSON], projects: [String], assignmentsCleared: Int, invitationsClosed: Int, connectionEffects: TeamProjectConnectionEffects? = nil) throws {
+        guard Set(body.keys) == Set(["team_id", "roots", "visibility", "folder_id", "parent_id", "inspection_token", "decisions", "review_token", "expires_at", "request_id"] + (body["connection_policy"] == nil ? [] : ["connection_policy"])), let v = body["visibility"]?.text, let visibility = TeamProjectVisibility(rawValue: v), try JSONEncoder().encode(body).count <= 262144 else { throw Self.invalid }
         let roots = try TeamProjectAdoptionValue.ids(body["roots"], limit: 100)
         scope = try TeamProjectAdoptionScope(account: account, origin: origin, team: TeamOrganizationValue.id(body["team_id"]), roots: roots, visibility: visibility, folder: TeamProjectValue.optionalID(body["folder_id"]), parent: TeamProjectValue.optionalID(body["parent_id"]))
         guard try TeamProjectAdoptionValue.ids(.array(projects.map(JSON.string)), limit: 1000) == projects, Set(roots).isSubset(of: Set(projects)), !projects.contains(scope.parent ?? ""), assignmentsCleared >= 0, assignmentsCleared <= 1_000_010_000, (0...1000).contains(invitationsClosed) else { throw Self.invalid }
@@ -166,16 +213,23 @@ struct TeamProjectAdoptionCommand: ReviewedTeamCommand, CustomStringConvertible,
         for k in ["inspection_token", "review_token"] { guard let t = body[k]?.text, TeamTaskMoveReview.validToken(t) else { throw Self.invalid } }
         let choices = try TeamOrganizationValue.rows(body["decisions"], limit: 1000).map(TeamProjectAdoptionDecision.init)
         guard choices.count <= invitationsClosed, Set(choices.map(\.id)).count == choices.count, choices.allSatisfy({ projects.contains($0.project) }), choices.map(\.id) == choices.map(\.id).sorted() else { throw Self.invalid }
+        if let policy = body["connection_policy"] {
+            guard policy == .string("pause"), let connectionEffects else { throw Self.invalid }
+            _ = try TeamProjectConnectionEffects(connectionEffects.body.object)
+        } else { guard connectionEffects == nil else { throw Self.invalid } }
+        self.connectionEffects = connectionEffects
         self.account = account; self.origin = origin; self.body = body; self.projects = projects; self.assignmentsCleared = assignmentsCleared; self.invitationsClosed = invitationsClosed
     }
-    private enum CodingKeys: String, CodingKey { case account, origin, body, projects, assignmentsCleared, invitationsClosed }
+    private enum CodingKeys: String, CodingKey { case account, origin, body, projects, assignmentsCleared, invitationsClosed, connectionEffects }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), body: c.decode([String: JSON].self, forKey: .body), projects: c.decode([String].self, forKey: .projects), assignmentsCleared: c.decode(Int.self, forKey: .assignmentsCleared), invitationsClosed: c.decode(Int.self, forKey: .invitationsClosed))
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), body: c.decode([String: JSON].self, forKey: .body), projects: c.decode([String].self, forKey: .projects), assignmentsCleared: c.decode(Int.self, forKey: .assignmentsCleared), invitationsClosed: c.decode(Int.self, forKey: .invitationsClosed), connectionEffects: c.decodeIfPresent(TeamProjectConnectionEffects.self, forKey: .connectionEffects))
     }
-    func encode(to encoder: Encoder) throws { var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin); try c.encode(body, forKey: .body); try c.encode(projects, forKey: .projects); try c.encode(assignmentsCleared, forKey: .assignmentsCleared); try c.encode(invitationsClosed, forKey: .invitationsClosed) }
+    func encode(to encoder: Encoder) throws { var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin); try c.encode(body, forKey: .body); try c.encode(projects, forKey: .projects); try c.encode(assignmentsCleared, forKey: .assignmentsCleared); try c.encode(invitationsClosed, forKey: .invitationsClosed); try c.encodeIfPresent(connectionEffects, forKey: .connectionEffects) }
     func confirmed(_ raw: [String: JSON]) throws -> TeamProjectAdoptionReceipt {
         guard raw["project_adoption_protocol"] == .number(1), raw["account"] == .string(account), raw["request_id"] == body["request_id"], raw["applied"] == .bool(true), raw["automatic_undo"] == .bool(false), case .bool(let replayed)? = raw["replayed"], scope.body.allSatisfy({ raw[$0.key] == $0.value }), try TeamProjectAdoptionValue.ids(raw["project_ids"], limit: 1000) == projects, try TeamProjectAdoptionValue.count(raw["assignments_cleared"]) == assignmentsCleared, try TeamProjectAdoptionValue.count(raw["invitations_closed"]) == invitationsClosed else { throw Self.invalid }
+        guard (raw["connection_policy"] ?? .null) == (body["connection_policy"] ?? .null),
+              (raw["connection_effects"] ?? .null) == (connectionEffects?.body ?? .null) else { throw Self.invalid }
         return TeamProjectAdoptionReceipt(command: self, replayed: replayed)
     }
 }

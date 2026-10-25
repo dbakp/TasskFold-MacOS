@@ -40,6 +40,7 @@ struct TeamProjectAdoptionView: View {
     @State private var folder = ""
     @State private var parent = ""
     @State private var inspection: TeamProjectAdoptionInspection?
+    @State private var pauseConnections = false
     @State private var choices: [String: TeamProjectAdoptionDecision.Choice] = [:]
     @State private var review: TeamProjectAdoptionReview?
     @State private var stamp: String?
@@ -162,6 +163,14 @@ struct TeamProjectAdoptionView: View {
     }
     private func decisions(_ i: TeamProjectAdoptionInspection) -> some View {
         Group {
+            if i.hasConnections && i.supportsConnectionPause {
+                Section("Personal connections") {
+                    Toggle("Pause connections for these projects", isOn: $pauseConnections).disabled(preparing).accessibilityIdentifier("pauseProjectConnections")
+                    Text("Email addresses and verified project webhooks stay paused. Unfinished project webhook setups are cancelled. Queued outgoing updates for this work are discarded.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Text("Global webhooks keep their other personal work. Addresses, secrets and endpoints are not moved into the team. A team connection needs separate authorization.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    if i.inflightUpdates > 0 { Label("An update is still sending. Wait a minute, then choose projects again for a fresh review.", systemImage: "clock").font(.footnote).foregroundStyle(.secondary) }
+                }
+            }
             Section("Personal collaborators") {
                 ForEach(i.people) { person in
                     VStack(alignment: .leading, spacing: 6) {
@@ -179,11 +188,25 @@ struct TeamProjectAdoptionView: View {
                 Text("Retiring a personal grant does not remove access supplied by team visibility or an administrator role. The next step shows the effective access.").font(.footnote).foregroundStyle(.secondary)
                 Text("All \(i.collaborators.count) personal invitation records will close, including pending invitations. No team membership or invitation is created.").font(.footnote).foregroundStyle(.secondary)
             }
-            Section { Button("Review the transfer") { Task { await prepareReview(i) } }.disabled(preparing || choices.count != i.people.count).accessibilityIdentifier("reviewProjectTransfer"); Button("Back to projects") { resetReview() } }
+            Section { Button("Review the transfer") { Task { await prepareReview(i) } }.disabled(preparing || choices.count != i.people.count || (i.hasConnections && i.supportsConnectionPause && !pauseConnections)).accessibilityIdentifier("reviewProjectTransfer"); Button("Back to projects") { resetReview() } }
+        }
+    }
+    @ViewBuilder private func connectionEffectRows(_ effects: TeamProjectConnectionEffects) -> some View {
+            LabeledContent("Email routes kept paused", value: String(effects.values["email_routes_paused"]!)).accessibilityElement(children: .ignore).accessibilityLabel("Email routes kept paused").accessibilityValue(String(effects.values["email_routes_paused"]!)).accessibilityIdentifier("projectTransferConnection-email_routes_paused")
+            LabeledContent("Project webhooks kept paused", value: String(effects.values["project_webhooks_paused"]!)).accessibilityElement(children: .ignore).accessibilityLabel("Project webhooks kept paused").accessibilityValue(String(effects.values["project_webhooks_paused"]!)).accessibilityIdentifier("projectTransferConnection-project_webhooks_paused")
+            LabeledContent("Unfinished webhook setups cancelled", value: String(effects.values["pending_webhooks_cancelled"]!)).accessibilityElement(children: .ignore).accessibilityLabel("Unfinished webhook setups cancelled").accessibilityValue(String(effects.values["pending_webhooks_cancelled"]!)).accessibilityIdentifier("projectTransferConnection-pending_webhooks_cancelled")
+            LabeledContent("Global webhooks keeping personal scope", value: String(effects.values["global_webhooks_excluded"]!)).accessibilityElement(children: .ignore).accessibilityLabel("Global webhooks keeping personal scope").accessibilityValue(String(effects.values["global_webhooks_excluded"]!)).accessibilityIdentifier("projectTransferConnection-global_webhooks_excluded")
+            LabeledContent("Queued updates discarded", value: String(effects.values["queued_updates_discarded"]!)).accessibilityElement(children: .ignore).accessibilityLabel("Queued updates discarded").accessibilityValue(String(effects.values["queued_updates_discarded"]!)).accessibilityIdentifier("projectTransferConnection-queued_updates_discarded")
+    }
+    private func connectionSummary(_ effects: TeamProjectConnectionEffects) -> some View {
+        Section("Connections after transfer") {
+            connectionEffectRows(effects)
+            Text("Other personal projects keep their connections. Paused personal connections cannot resume into this team; connect a supported team destination separately.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
     private func finalReview(_ r: TeamProjectAdoptionReview) -> some View {
         Group {
+            if let effects = r.connectionEffects { connectionSummary(effects) }
             Section("Reviewed destination") {
                 LabeledContent("Team", value: r.inspection.teamName)
                 LabeledContent("Visibility", value: r.inspection.scope.visibility == .private ? "Private" : "Team-visible")
@@ -204,7 +227,8 @@ struct TeamProjectAdoptionView: View {
             Section {
                 if r.needsFileCustody { Label("Some files need a custody review before this branch can transfer.", systemImage: "paperclip.badge.ellipsis").foregroundStyle(.secondary) }
                 if r.needsIntegrationPause { Label("Personal email or webhook connections need a pause or destination review first.", systemImage: "link.badge.plus").foregroundStyle(.secondary) }
-                if !r.inspection.commitSupported && !r.needsFileCustody && !r.needsIntegrationPause { Text("Project transfers have not been enabled for this service yet.").foregroundStyle(.secondary) }
+                if r.inspection.inflightUpdates > 0 { Text("An outgoing update is still finishing. Wait a minute, then refresh the project review.").foregroundStyle(.secondary) }
+                if !r.canCommit && r.inspection.inflightUpdates == 0 && !r.needsFileCustody && !r.needsIntegrationPause { Text("Project transfers have not been enabled for this service yet.").foregroundStyle(.secondary) }
                 Text("These projects will belong to the team. Returning them to personal ownership is a separate transfer; there is no automatic Undo.").font(.callout).fixedSize(horizontal: false, vertical: true)
                 Button("Transfer \(r.inspection.projects.count == 1 ? "project" : "\(r.inspection.projects.count) projects") to team", systemImage: "folder.badge.arrow.forward") { Task { await confirm(r) } }.buttonStyle(.borderedProminent).disabled(preparing || model?.busy == true || !r.canCommit || r.expires <= Date()).accessibilityIdentifier("confirmProjectTransfer")
                 Button("Back to access choices") { review = nil }
@@ -216,6 +240,10 @@ struct TeamProjectAdoptionView: View {
             Label("The result needs confirmation", systemImage: "tray.and.arrow.up").font(.headline)
             Text("\(c.projects.count) reviewed projects · \(c.scope.visibility == .private ? "Private" : "Team-visible")")
             Text("Retry sends the exact saved request, even if the review expired or team access changed. Task contents are refreshed separately.").font(.callout).foregroundStyle(.secondary)
+            if let effects = c.connectionEffects {
+                Text("This saved request includes these connection actions. Retry preserves later changes.").font(.footnote).foregroundStyle(.secondary)
+                connectionEffectRows(effects)
+            }
             Button("Retry saved transfer") { Task { await model.retry(); await received() } }.disabled(model.busy).accessibilityIdentifier("retryProjectTransfer")
             if TeamOrganizationAvailability.enabled { NavigationLink("Check latest projects") { TeamProjectManagementView(teamID: c.scope.team) } }
             Button("Review clearing this request", role: .destructive) { clearing = c }.disabled(model.busy).accessibilityIdentifier("clearProjectTransfer")
@@ -224,12 +252,12 @@ struct TeamProjectAdoptionView: View {
     private func success(_ r: TeamProjectAdoptionReceipt) -> some View {
         Section {
             Label("Projects transferred", systemImage: "checkmark.circle.fill").font(.title2.weight(.semibold)).foregroundStyle(.tint).accessibilityIdentifier("projectTransferSuccess").accessibilityFocused($resultFocused).onAppear { resultFocused = true }
-            Text("The service confirmed all \(r.command.projects.count) projects. Their identities and saved history are preserved.")
+            Text("All \(r.command.projects.count) projects have transferred. Saved work and history are preserved.")
             if needsRefresh { Text("The transfer is confirmed. Refresh the workspace to review current access and any preserved drafts.").foregroundStyle(.secondary); if store.accessRecoveryPending { AccessRecoveryBanner() }; Button("Refresh workspace") { Task { preparing = true; needsRefresh = !(await store.refreshAfterProjectTransfer(r)); preparing = false } }.disabled(preparing) }
             else { Text("Your current accessible projects have been refreshed.").foregroundStyle(.secondary) }
         }
     }
-    private func resetReview() { epoch = UUID(); inspection = nil; review = nil; stamp = nil; choices = [:]; message = nil }
+    private func resetReview() { epoch = UUID(); inspection = nil; review = nil; stamp = nil; choices = [:]; pauseConnections = false; message = nil }
     private func start() async {
         model?.close(); resetReview(); selected = []; accepted = nil; preparing = false
         guard store.projectTransferRecoveryAvailable, let origin = try? store.backend.accountRemovalOrigin else { loaded = nil; model = nil; return }
@@ -245,7 +273,7 @@ struct TeamProjectAdoptionView: View {
             let id = UUID(); epoch = id; preparing = true; message = nil; defer { if epoch == id { preparing = false } }
             let i = try await store.backend.inspectProjectAdoption(scope)
             guard current, epoch == id, before == store.projectTransferAuthorStamp(scope, projects: i.projects.map(\.id)) else { throw TeamProjectAdoptionValue.invalid }
-            inspection = i; stamp = before; choices = [:]; review = nil
+            inspection = i; stamp = before; choices = [:]; pauseConnections = false; review = nil
         } catch { guard current else { return }; message = "The contents couldn’t be reviewed. Finish any pending sync or task edits, then refresh the team and try again." }
     }
     private func prepareReview(_ i: TeamProjectAdoptionInspection) async {
@@ -253,7 +281,7 @@ struct TeamProjectAdoptionView: View {
         let id = UUID(); epoch = id; preparing = true; message = nil; defer { if epoch == id { preparing = false } }
         do {
             let d = try i.people.map { person -> TeamProjectAdoptionDecision in guard let choice = choices[person.decisionID!], let user = person.user else { throw TeamProjectAdoptionValue.invalid }; return try TeamProjectAdoptionDecision(project: person.project, user: user, choice: choice) }
-            let value = try await store.backend.reviewProjectAdoption(i, decisions: d)
+            let value = try await store.backend.reviewProjectAdoption(i, decisions: d, connectionPolicy: pauseConnections ? .pause : nil)
             guard reviewCurrent, epoch == id else { throw TeamProjectAdoptionValue.invalid }; review = value
         } catch { guard current, epoch == id else { return }; message = "The saved contents or access may have changed. Start a fresh review before transferring." }
     }

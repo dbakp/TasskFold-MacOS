@@ -602,8 +602,11 @@ final class Backend: NSObject {
         try TeamProjectAdoptionInspection(await projectAdoptionReply("inspect", body: scope.body, account: scope.account, origin: scope.origin), scope: scope)
     }
     func reviewProjectAdoption(_ inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision]) async throws -> TeamProjectAdoptionReview {
-        let body = try inspection.reviewBody(decisions)
-        return try TeamProjectAdoptionReview(await projectAdoptionReply("review", body: body, account: inspection.scope.account, origin: inspection.scope.origin), inspection: inspection, decisions: decisions)
+        try await reviewProjectAdoption(inspection, decisions: decisions, connectionPolicy: nil)
+    }
+    func reviewProjectAdoption(_ inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision], connectionPolicy: TeamProjectConnectionPolicy?) async throws -> TeamProjectAdoptionReview {
+        let body = try inspection.reviewBody(decisions, connectionPolicy: connectionPolicy)
+        return try TeamProjectAdoptionReview(await projectAdoptionReply("review", body: body, account: inspection.scope.account, origin: inspection.scope.origin), inspection: inspection, decisions: decisions, connectionPolicy: connectionPolicy)
     }
     func adoptProjects(_ command: TeamProjectAdoptionCommand) async throws -> TeamProjectAdoptionReceipt {
         try command.confirmed(await projectAdoptionReply("adopt", body: command.body, account: command.account, origin: command.origin))

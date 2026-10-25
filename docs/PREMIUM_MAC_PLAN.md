@@ -5450,3 +5450,34 @@ update retirement and destination reauthorization, plus file custody and remaini
 Mac/native/provider acceptance. Those transfers remain blocked; this does not
 complete adoption, rank 6 or the wider Px backlog. All user-deferred items remain
 deferred.
+
+
+### 2026-10-25 — Reviewed connection pause policy and native consent
+
+Implemented optional explicit personal-connection pause during project adoption.
+The reviewed action and five exact counts are proof-bound, persisted privately and
+confirmed in the receipt. It keeps personal addresses and verified project hooks
+paused, cancels unfinished project setups, retires only selected queued payloads
+and preserves global/unrelated settings and work. No credential is retargeted into
+the team. File/wire/stale/late-fault refusal remains fully atomic. Exact retries
+confirm original counts without rewinding later changes; legacy no-policy recovery
+remains compatible.
+
+Both native clients default consent off, explain the effects, show accessible
+label/value count rows and expose the saved actions during recovery. Both repos
+pass 55 new SQL cases, 148 adoption regressions, 55 fence cases and 367 Team Core
+checks, including 27 adoption cases and an actual SQL connection-settings receipt.
+Both isolated Debug builds pass. Installed iPhone/iPad default light flow passes
+consent gating, numeric accessibility metadata, confirmation and normal refresh
+with a SQL-derived network-intercepted peer. No Mac runtime/Keychain, spoken or
+hosted/provider acceptance is claimed. Final queue status uses an existing enum
+value so old edge/client metadata validation continues working.
+
+Source rollout/configuration and real user data remain unchanged. Owned test apps,
+containers and temporary builds are cleaned after evidence capture. See
+p2-project-adoption-connection-policy-evidence.json for exact runs and limitations.
+Next: personal settings destination/resume/verification gates, supported destination
+reauthorization/retarget, persistent busy-send preparation, file custody and the
+remaining native/hosted acceptance. Stage scroll/focus and wider Px items remain
+open. All user-deferred release/provider/device dependencies stay deferred; rank 6
+and adoption are still in progress.

@@ -2,9 +2,9 @@
 """Prepare a reserved, network-blocked project-adoption native host."""
 import argparse,hashlib,json,plistlib,subprocess,sys,uuid
 from pathlib import Path
-p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True);a=p.parse_args();output=a.output.expanduser().resolve()
+p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True);p.add_argument('--connections',action='store_true');a=p.parse_args();output=a.output.expanduser().resolve()
 root=Path(__file__).resolve().parent.parent
-packet=root/'TaskfoldTests/Fixtures/team-project-adoption-v1.json';data=json.loads(packet.read_text());assert data['syntheticOnly'] and data['containerRemoved']
+packet=root/('TaskfoldTests/Fixtures/team-project-adoption-connections-v1.json' if a.connections else 'TaskfoldTests/Fixtures/team-project-adoption-v1.json');data=json.loads(packet.read_text());assert data['syntheticOnly'] and data['containerRemoved']
 subprocess.run([sys.executable,str(Path(__file__).with_name('prepare_team_editor_native_test.py')),'--output',str(output)],check=True)
 resource=output/'Taskfold/ProjectAdoptionNative.json';resource.write_bytes(packet.read_bytes())
 project=output/'Taskfold.xcodeproj/project.pbxproj';s=project.read_text();ref=uuid.uuid4().hex[:24].upper();build=uuid.uuid4().hex[:24].upper()

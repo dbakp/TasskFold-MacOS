@@ -3,7 +3,7 @@ import {randomUUID} from 'node:crypto';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadProjectAdoptionSchema} from './project-adoption-schema.mjs';
 const id=n=>'fdad0000-0000-4000-8000-'+String(n).padStart(12,'0'),account=id(1),member=id(2),outside=id(3),team=id(4),root=id(5),child=id(6),session=id(7);
-const json=x=>lit(JSON.stringify(x))+'::jsonb';let pg;
+const json=x=>lit(JSON.stringify(x))+'::jsonb',connections=process.argv.includes('--connections');let pg;
 try {
  pg=await createPostgresFixture();await loadProjectAdoptionSchema(pg.raw);
  for(const a of [account,member,outside])await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(a)},${lit(a+'@example.invalid')},now());insert into public.profiles(user_id) values(${lit(a)});`);
@@ -11,14 +11,21 @@ try {
  const identity=`set local request.jwt.claim.sub=${lit(account)};set local request.jwt.claims=${lit(JSON.stringify({sub:account,session_id:session}))};`;
  await pg.raw(`begin;${identity}insert into public.project_collaborators(id,project_id,invited_email,invited_by) values(${lit(id(8))},${lit(root)},${lit(member+'@example.invalid')},${lit(account)}),(${lit(id(9))},${lit(root)},${lit(outside+'@example.invalid')},${lit(account)});update public.project_collaborators set status='accepted';insert into public.tasks(id,user_id,project_id,title,description,assigned_to,attachments) values(${lit(id(10))},${lit(account)},${lit(root)},'Synthetic transfer task','Never put task text in a retry',${lit(outside)},'[{"id":"synthetic-file","url":"data:text/plain;base64,QQ=="}]');commit;`);
  await pg.raw(`begin;${identity}update public.projects set is_archived=true where id=${lit(root)};update public.tasks set completed=true where id=${lit(id(10))};commit;`);
+ if(connections) await pg.raw(`insert into taskfold_private.email_routes(id,user_id,name,alias_hash,alias_domain,project_id,sender_email,requested_at) values(${lit(id(11))},${lit(account)},'Workshop address',repeat('c',64),'capture.example.invalid',${lit(root)},'synthetic@example.invalid',now());
+ insert into taskfold_private.webhook_subscriptions(id,user_id,name,endpoint,scope,project_id,events,ttl_days,secret_hash,secret_envelope,state,expires_at,verified_at) values
+ (${lit(id(12))},${lit(account)},'Project connection','https://receiver.example.invalid/events','project',${lit(root)},array['task.updated'],30,repeat('d',64),'{}','active',now()+interval '1 day',now()),
+ (${lit(id(13))},${lit(account)},'Unfinished connection','https://receiver.example.invalid/events','project',${lit(root)},array['task.updated'],30,repeat('e',64),'{}','pending',now()+interval '1 day',null),
+ (${lit(id(14))},${lit(account)},'Personal global connection','https://receiver.example.invalid/events','all',null,array['task.updated'],30,repeat('f',64),'{}','active',now()+interval '1 day',now());
+ begin;${identity}update public.tasks set priority=3 where id=${lit(id(10))};commit;`);
  const body={team_id:team,roots:[root],visibility:'private',folder_id:null,parent_id:null};
  const call=(op,b)=>pg.scalar(`begin;${identity}set local role authenticated;select public.taskfold_team_project_adoption(${lit(op)},${json(b)});commit;`);
  const native=(name,params)=>pg.scalar(`begin;${identity}set local role authenticated;select public.${name}(${params});commit;`);
  const snapshot=()=>pg.scalar(`select jsonb_build_object(${['projects','tasks','sections','profiles','project_collaborators','task_activity','task_assignment_provenance','task_comments','task_mentions'].map(t=>lit(t)+",coalesce((select jsonb_agg(to_jsonb(x) order by "+(t==='profiles'?'user_id':'id')+") from public."+t+" x),'[]')").join(',')})`);
  const source_snapshot=await snapshot(),source_boundary=await native('taskfold_workspace_boundary',''),team_detail=await native('taskfold_teams',"'get',"+json({team_id:team})),source_page=await native('taskfold_team_projects',"'list',"+json({team_id:team}));
- const inspect=await call('inspect',body),decisions=[{project_id:root,user_id:member,role:'editor'},{project_id:root,user_id:outside,role:null}],review=await call('review',{...body,inspection_token:inspect.inspection_token,decisions});
- const command={...body,inspection_token:inspect.inspection_token,decisions,review_token:review.review_token,expires_at:review.expires_at,request_id:randomUUID()},receipt=await call('adopt',command);
+ const inspect=await call('inspect',body),decisions=[{project_id:root,user_id:member,role:'editor'},{project_id:root,user_id:outside,role:null}],review=await call('review',{...body,inspection_token:inspect.inspection_token,decisions,...(connections?{connection_policy:'pause'}:{})});
+ const command={...body,...(connections?{connection_policy:'pause'}:{}),inspection_token:inspect.inspection_token,decisions,review_token:review.review_token,expires_at:review.expires_at,request_id:randomUUID()},receipt=await call('adopt',command);
  const destination_snapshot=await snapshot(),destination_boundary=await native('taskfold_workspace_boundary',''),destination_page=await native('taskfold_team_projects',"'list',"+json({team_id:team}));
+ const connection_receipt=connections?await pg.scalar(`select taskfold_private.webhook_receipt(s) from taskfold_private.webhook_subscriptions s where id=${lit(id(12))}`):null;
  const removed=await pg.close();pg=null;
- await writeFile(process.argv[2],JSON.stringify({protocol:1,source_snapshot,source_boundary,team_detail,source_page,destination_snapshot,destination_boundary,destination_page,account,origin:'https://synthetic.example',body,inspect,decisions,review,command,receipt,syntheticOnly:true,containerRemoved:removed},null,2)+'\n');console.log(JSON.stringify({fixtureWritten:true,containerRemoved:removed}));
+ await writeFile(process.argv[2],JSON.stringify({protocol:1,connection_receipt,source_snapshot,source_boundary,team_detail,source_page,destination_snapshot,destination_boundary,destination_page,account,origin:'https://synthetic.example',body,inspect,decisions,review,command,receipt,syntheticOnly:true,containerRemoved:removed},null,2)+'\n');console.log(JSON.stringify({fixtureWritten:true,containerRemoved:removed}));
 }finally{if(pg)await pg.close()}

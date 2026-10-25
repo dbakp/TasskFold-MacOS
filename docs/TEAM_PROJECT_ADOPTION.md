@@ -390,3 +390,56 @@ custody, remaining native Mac/account/window/layout/spoken and hosted acceptance
 Non-revoked connections still block commit; this coordination layer does not make
 those transfers available or complete rank 6. Rollout and every user-deferred
 release/provider/device item remain unchanged. The wider Px backlog remains open.
+
+
+## 2026-10-25 reviewed personal-connection pause policy
+
+The new `team_project_adoption_connection_policy` migration adds the first explicit
+connection action: review/adopt may include `connection_policy: "pause"`. Inspect
+still uses the original scope. Capability metadata `connection_pause_protocol: 1`
+and `connection_pause_supported` distinguishes a supported reviewed pause from an
+old server or a busy/blocked transfer. Legacy or unselected requests cannot silently
+pause connections or discard retained updates. Inspect and review never mutate
+connection settings.
+
+The review binds the exact policy and five effect counts in a version-2 HMAC proof:
+email routes kept paused, verified project webhooks kept paused, unfinished project
+setups cancelled, global webhooks retaining personal scope and queued updates
+retired. Counts include already-paused connections; their revisions are preserved.
+Pending project hooks are revoked and their credential envelopes cleared instead
+of inventing verification. Global settings/credentials and unrelated project
+connections/queue rows remain intact. Only affected pending/leased/failed retained
+payloads retire through the existing budget-aware terminal transition. The standard
+`resource_unavailable` reason keeps existing edge and client decoders compatible.
+
+All changes share the custody transaction, after review/row/account/realm fences
+and before admission. File-custody requirements, active write permits, stale proofs
+and a late failure leave no partial pause, queue cleanup, grants or custody. No
+address, endpoint or credential becomes a team connection. Exact applied retries
+return the original policy/count receipt without repausing/revoking later settings,
+even after access/expiry/rollout changes. No-policy receipts keep their old shape.
+
+Each native client requires an unchecked explicit consent choice, displays the
+reviewed effects and includes action counts on saved-request recovery. One labelled
+accessibility element exposes each count. Private journal decoding retains old
+requests while new requests bind the enum plus exact bounded numeric expectations;
+no project/task text, sender address, endpoint or credential enters that journal.
+Old incapable clients fail closed on a new-policy journal rather than discarding it.
+
+Each repo passes 55 new policy SQL cases, 148 existing adoption cases, 55 connection
+fence cases and 367 Team Core checks (27 adoption cases). Actual SQL fixtures include
+a paused connection receipt and validate the existing settings decoder. Both
+isolated Debug builds pass. The installed iPhone and iPad light/default-size flow
+verifies consent gating, accessible queued count, confirmation and normal workspace
+refresh against a SQL-derived intercepted peer. It is not a live hosted/provider
+chain, Mac runtime or spoken accessibility proof. See
+`p2-project-adoption-connection-policy-evidence.json` for exact scope and diagnostics.
+
+Still open before rollout: filter personal setup destinations and gate Resume/
+verification for adopted projects with clear settings explanations; separate
+supported destination reauthorization/retarget; a persistent preparation/drain flow
+for continuously sending connections; file/provider custody; stage scroll/focus,
+Mac/account/window/large-text/dark/keyboard/spoken/load and hosted acceptance. The
+current atomic action refuses a live send without changing connections. Normal
+rollout remains disabled and all user-deferred work stays deferred. This does not
+complete adoption, rank 6 or the wider Px plan.

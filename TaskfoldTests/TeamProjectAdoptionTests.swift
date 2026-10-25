@@ -42,14 +42,14 @@ private final class AdoptionHTTP: URLProtocol, @unchecked Sendable {
 }
 
 final class TeamProjectAdoptionTests: XCTestCase {
-    private func fixture() throws -> ([String: JSON], TeamProjectAdoptionInspection, TeamProjectAdoptionReview, TeamProjectAdoptionCommand) {
-        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-project-adoption-v1", withExtension: "json", subdirectory: "Fixtures"))
+    private func fixture(connections: Bool = false) throws -> ([String: JSON], TeamProjectAdoptionInspection, TeamProjectAdoptionReview, TeamProjectAdoptionCommand) {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: connections ? "team-project-adoption-connections-v1" : "team-project-adoption-v1", withExtension: "json", subdirectory: "Fixtures"))
         let raw = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url)), b = raw["body"]!.object
         XCTAssertEqual(raw["syntheticOnly"], .bool(true)); XCTAssertEqual(raw["containerRemoved"], .bool(true))
         let scope = try TeamProjectAdoptionScope(account: raw["account"]!.text, origin: raw["origin"]!.text, team: b["team_id"]!.text, roots: b["roots"]!.list.map(\.text), visibility: .private)
         let i = try TeamProjectAdoptionInspection(raw["inspect"]!.object, scope: scope)
         let decisions = try raw["decisions"]!.list.map { try TeamProjectAdoptionDecision($0.object) }
-        let r = try TeamProjectAdoptionReview(raw["review"]!.object, inspection: i, decisions: decisions)
+        let r = try TeamProjectAdoptionReview(raw["review"]!.object, inspection: i, decisions: decisions, connectionPolicy: connections ? .pause : nil)
         let c = try TeamProjectAdoptionCommand(review: r, requestID: UUID(uuidString: raw["command"]!.object["request_id"]!.text)!, now: r.expires.addingTimeInterval(-60))
         return (raw, i, r, c)
     }
@@ -241,6 +241,61 @@ final class TeamProjectAdoptionTests: XCTestCase {
         root["is_archived"] = .bool(false); response["projects"] = .array([.object(root),.object(child)]); response["destination_archived"] = .bool(true)
         let archivedDestination = try TeamProjectAdoptionInspection(response, scope: i.scope)
         XCTAssertTrue(archivedDestination.inheritsArchiveAfter(archivedDestination.projects[0])); XCTAssertTrue(archivedDestination.inheritsArchiveAfter(archivedDestination.projects[1]))
+    }
+
+    func testActualSQLPausePolicyAndReceiptCounts() throws {
+        let (raw,i,r,c)=try fixture(connections:true)
+        XCTAssertTrue(i.hasConnections);XCTAssertTrue(i.supportsConnectionPause);XCTAssertTrue(i.connectionPauseSupported);XCTAssertFalse(i.commitSupported)
+        XCTAssertTrue(r.canCommit);XCTAssertEqual(r.connectionPolicy,.pause);XCTAssertEqual(r.connectionEffects?.values,["email_routes_paused":1,"project_webhooks_paused":1,"pending_webhooks_cancelled":1,"global_webhooks_excluded":1,"queued_updates_discarded":2])
+        XCTAssertEqual(c.body,raw["command"]!.object);XCTAssertEqual(try c.confirmed(raw["receipt"]!.object).command,c)
+        XCTAssertEqual(try JSONDecoder().decode(TeamProjectAdoptionCommand.self,from:JSONEncoder().encode(c)),c)
+    }
+    func testPauseRequiresExplicitConsentAndMatchingSummary() throws {
+        let (raw,i,r,_)=try fixture(connections:true)
+        XCTAssertThrowsError(try TeamProjectAdoptionReview(raw["review"]!.object,inspection:i,decisions:r.decisions))
+        var unchosen=raw["review"]!.object;unchosen["connection_policy"] = .null;unchosen["connection_effects"] = .null;unchosen["requires_integration_pause"] = .bool(true)
+        let blocked=try TeamProjectAdoptionReview(unchosen,inspection:i,decisions:r.decisions)
+        XCTAssertFalse(blocked.canCommit);XCTAssertThrowsError(try TeamProjectAdoptionCommand(review:blocked,now:blocked.expires.addingTimeInterval(-60)))
+        for key in TeamProjectConnectionEffects.keys {
+            var forged=raw["review"]!.object,values=forged["connection_effects"]!.object;values[key] = .number(Double(values[key]!.integer+1));forged["connection_effects"] = .object(values)
+            XCTAssertThrowsError(try TeamProjectAdoptionReview(forged,inspection:i,decisions:r.decisions,connectionPolicy:.pause))
+        }
+    }
+    func testPauseReceiptCannotHideActionsOrChangeCounts() throws {
+        let (raw,_,_,c)=try fixture(connections:true)
+        var absent=raw["receipt"]!.object;absent.removeValue(forKey:"connection_policy");XCTAssertThrowsError(try c.confirmed(absent))
+        absent=raw["receipt"]!.object;absent.removeValue(forKey:"connection_effects");XCTAssertThrowsError(try c.confirmed(absent))
+        for key in TeamProjectConnectionEffects.keys {
+            var forged=raw["receipt"]!.object,values=forged["connection_effects"]!.object;values[key] = .number(999);forged["connection_effects"] = .object(values);XCTAssertThrowsError(try c.confirmed(forged))
+        }
+        let (old,_,_,legacy)=try fixture();var unexpected=old["receipt"]!.object;unexpected["connection_policy"] = .string("pause");unexpected["connection_effects"] = c.connectionEffects!.body
+        XCTAssertThrowsError(try legacy.confirmed(unexpected))
+    }
+    func testPausePrivateCommandKeepsOnlyActionAndBoundedCounts() throws {
+        let (_,_,_,c)=try fixture(connections:true),data=try JSONEncoder().encode(c),text=String(decoding:data,as:UTF8.self)
+        XCTAssertTrue(text.contains("connection_policy"));XCTAssertTrue(text.contains("queued_updates_discarded"))
+        for secret in ["Never put task text", "Workshop address", "receiver.example", "capture.example", "@example.invalid", "secret_envelope"] {XCTAssertFalse(text.contains(secret))}
+        XCTAssertThrowsError(try TeamProjectAdoptionCommand(account:c.account,origin:c.origin,body:c.body,projects:c.projects,assignmentsCleared:c.assignmentsCleared,invitationsClosed:c.invitationsClosed))
+        var unknown=c.body;unknown["connection_policy"] = .string("retarget")
+        XCTAssertThrowsError(try TeamProjectAdoptionCommand(account:c.account,origin:c.origin,body:unknown,projects:c.projects,assignmentsCleared:c.assignmentsCleared,invitationsClosed:c.invitationsClosed,connectionEffects:c.connectionEffects))
+        var malformed=c.connectionEffects!.body.object;malformed["queued_updates_discarded"] = .number(-1);XCTAssertThrowsError(try TeamProjectConnectionEffects(malformed))
+        malformed=c.connectionEffects!.body.object;malformed["sender_email"] = .string("hidden@example.invalid");XCTAssertThrowsError(try TeamProjectConnectionEffects(malformed))
+        var stored=try JSONDecoder().decode([String:JSON].self,from:data);stored["connectionEffects"] = .object(malformed)
+        XCTAssertThrowsError(try JSONDecoder().decode(TeamProjectAdoptionCommand.self,from:JSONEncoder().encode(stored)))
+    }
+    @MainActor func testAppliedPauseReplyLossPreservesExactPolicyAcrossRelaunch() async throws {
+        let (raw,_,r,c)=try fixture(connections:true),io=AdoptionIO(),vault=TeamProjectAdoptionVault(io:io),peer=AdoptionPeer(raw["receipt"]!.object);peer.lose=true
+        let first=TeamProjectAdoptionModel(account:c.account,origin:c.origin,vault:vault,service:peer,current:{true})
+        await first.send(c,canAuthor:{true},now:r.expires.addingTimeInterval(-60));XCTAssertEqual(first.pending?.connectionEffects,c.connectionEffects);first.close()
+        let next=TeamProjectAdoptionModel(account:c.account,origin:c.origin,vault:TeamProjectAdoptionVault(io:io),service:peer,current:{true});await next.load();XCTAssertEqual(next.pending,c);await next.retry()
+        XCTAssertEqual(peer.calls,[c,c]);XCTAssertEqual(next.receipt?.command.connectionEffects,c.connectionEffects);XCTAssertTrue(next.receipt?.replayed == true);XCTAssertNil(next.pending)
+    }
+
+    func testActualPausedConnectionStillLoadsInExistingSettingsDecoder() throws {
+        let (raw,_,_,_)=try fixture(connections:true)
+        let connection=try WebhookConnection(raw["connection_receipt"]!.object)
+        XCTAssertEqual(connection.state,"paused");XCTAssertEqual(connection.delivery.error,"resource_unavailable");XCTAssertEqual(connection.delivery.pending,0)
+        XCTAssertNil(connection.delivery.blocked)
     }
 
 }
