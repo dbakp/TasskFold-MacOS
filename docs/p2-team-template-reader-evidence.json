@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-25",
+  "status": "typed read client and fenced catalog foundation verified; native library flow still open",
+  "platform": "mac",
+  "sourcesSHA256": {
+    "Taskfold/Core/TeamTemplateLibrary.swift": "98af0b62f8093761c437f422e219d9b68126a28884b5b4a4a6afc2dde847d14f",
+    "Taskfold/Core/Backend.swift": "2e56c7696744c040afb5ee19506d34a960b58ca294fba5a6b659e37c86f41cc3",
+    "TaskfoldTests/TeamTemplateLibraryTests.swift": "b944b72633838722a18a63a3dbc4a01a415b09d291a28f243fa8385b43f06ebb",
+    "Package.swift": "9f7d04266b188e0aee99d59174f2f81e7b31a7b889005242f88a5027474d75f1",
+    "Taskfold.xcodeproj/project.pbxproj": "08bae8934515ee87dfd52f1c616107e1784793e200bc299a0dd49f692fd5b973"
+  },
+  "coreTests": {
+    "newTeamTemplateLibrary": 23,
+    "projectAdoptionRegression": 27,
+    "total": 50,
+    "failed": 0,
+    "skipped": 0,
+    "filter": "TeamTemplateLibraryTests|TeamProjectAdoptionTests"
+  },
+  "coverage": [
+    "strict account/origin/team/protocol/state/role/capability and exact metadata shapes",
+    "bounded document and numeric/name/date validation",
+    "full current WorkflowTemplate validation before use; unknown versions remain opaque and read-only",
+    "optional slash escaping cannot falsely reject a large future definition",
+    "50-row cursor and exact library-revision continuation, ordered distinct identities",
+    "all-pages publication only; changing role/revision/boundary, failed continuation and old overlapping replies discard staging",
+    "synchronous content invalidation and late-account reply refusal",
+    "actual Backend list/get HTTP envelope, no-store/cookie policy, continuation body and original-origin refusal",
+    "announced oversized HTTP response rejected; server error text sanitized and actual auth failure recognized",
+    "actual held HTTP reply after sign-out cannot publish content"
+  ],
+  "build": {
+    "configuration": "Debug",
+    "signingAllowed": false,
+    "destination": "platform=macOS",
+    "succeeded": true,
+    "finalIncrementalBuildAfterLastSourceEdit": true,
+    "projectFileLint": true
+  },
+  "iterationHistory": [
+    "Initial tests found two fixture defects: missing required labels/subtasks arrays in sample workflow, and URLProtocol body arriving as stream. Both corrected; initial failure log retained.",
+    "Review found optional slash escaping could reject a large opaque document. Changed counting to non-escaped-slash encoding, added regression, reran final 50 tests and final app builds."
+  ],
+  "remaining": [
+    "encrypted durable publication/replacement/deletion journal and exact retry/drop recovery",
+    "native catalog/detail, audience/contents/name publication review, replacement/deletion review and private-copy/export flow",
+    "team deletion disclosure and installed Mac/iPhone/iPad/accessibility/account/window/hosted acceptance",
+    "shared team run destination service and remaining ranked Px work",
+    "Watch native navigation remains unaccepted: native-control tool still reported Mac locked after unlock reply; no additional manual request made"
+  ],
+  "boundaries": {
+    "serviceSchemaChanged": false,
+    "hostedCallsOrDeployment": false,
+    "rolloutEnabled": false,
+    "uiAcceptanceClaimed": false,
+    "newAppLaunchedOrInstalled": false,
+    "realTasksOrAccountsUsed": false,
+    "crossRepositoryBuildDependencyAdded": false,
+    "userDeferralsUnchanged": true
+  },
+  "cleanup": {
+    "ownedTemporaryBuildsAndLogsRemovedAfterRetention": true,
+    "sourceBuildCachesPreserved": true,
+    "baselinePhoneAndTabletBootStatePreserved": true,
+    "watchNotBooted": true
+  }
+}

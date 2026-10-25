@@ -5612,3 +5612,31 @@ p2-team-template-library-service-evidence.json. No app code changed in this stag
 Core/native transport, premium library/review/recovery UI and real runtime/live
 acceptance remain next. This does not close the full team-template or Px scope.
 No deployment or hosted gate change occurred; user deferrals remain unchanged.
+
+
+### 2026-10-25 — Team template catalog client foundation
+
+Each app now owns its typed library metadata/page/detail reader, bounded private
+HTTP transport and fenced browser. All pages must share the original account,
+origin, team, role/state and library revision before any names are published; a
+workspace boundary surrounds the read. Failed continuations, late account replies
+and overlapping older refreshes cannot publish stale contents. Invalidation clears
+metadata and definitions synchronously. Opaque future documents remain intact and
+read-only; current definitions require the full workflow validator before use.
+
+Both repositories pass 50 focused Core checks (23 library, 27 adoption regression),
+with no failures or skips. Independent Debug app builds pass with signing disabled,
+including an incremental build after the last source edit. HTTP checks exercise the
+actual Backend with an intercepted synthetic transport. Initial fixture failures
+and final logs are retained in team-template-reader; exact scope/hashes are in
+p2-team-template-reader-evidence.json. No app was installed or launched, no hosted
+service/configuration or real data changed, and the library stays disabled. Owned
+temporary builds/logs were removed after proof retention; source caches and the
+baseline Simulators were preserved. Native Watch controls still reported the Mac
+locked, so no new Watch navigation acceptance is claimed.
+
+Next: encrypted publication/replacement/deletion recovery and exact retries, then
+premium native library/detail/publication review and private-copy/export flows.
+Installed layout, spoken, account/window and hosted acceptance, shared run
+destinations and the wider ranked Px scope remain open. All user-deferred release,
+provider and physical-device dependencies remain deferred.
