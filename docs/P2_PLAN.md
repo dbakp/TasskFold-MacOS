@@ -4,7 +4,16 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Latest implementation: reviewed shared date/priority selections now have a source-only atomic planning command and native review entry in both apps. Complete source baselines, one durable request, one RPC and linked Undo preserve the whole selection. Scoped installed phone/tablet review, Cancel, Save, Undo/relaunch, changed-source and failed-save retry now pass; see `p2-team-planning-selection-native-evidence.json`. Broader native/live acceptance and deadline/estimate bulk entry remain open.
+Newest source stage adds shared deadline/estimate input with opening-time source
+admission, explicit Review/Back/Cancel and the existing atomic Save/Undo path.
+Personal selections gain an undoable estimate picker through their personal
+writer. Bounds, current values and preserved plans are explicit. Each Core suite passes
+493 tests; the final five installed scenarios pass on both iPhone and iPad. See
+`p2-bulk-planning-pickers-evidence.json` for the current native/build scope.
+Shared rollout, broader native/live acceptance and the rest of rank 6 remain open.
+
+
+Latest implementation: reviewed shared date/priority selections now have a source-only atomic planning command and native review entry in both apps. Complete source baselines, one durable request, one RPC and linked Undo preserve the whole selection. Scoped installed phone/tablet review, Cancel, Save, Undo/relaunch, changed-source and failed-save retry now pass; see `p2-team-planning-selection-native-evidence.json`. Broader native/live acceptance remains open; the newer deadline/estimate bulk entry is described above.
 
 Earlier, shared-task creation uses the complete native editor and
 an explicit Add. Shared list selections now have a frozen, reviewed atomic deletion

@@ -47,6 +47,7 @@ struct MultiSelectionInspector: View {
                     Button("Remove Date") { workspace.reschedule(workspace.selection, to: nil, label: "") }
                 }
                 Button("Edit Deadlines…", systemImage: "flag.checkered") { workspace.editDeadlines(workspace.selection) }.accessibilityIdentifier("bulkDeadlines")
+                Button("Edit Estimates…", systemImage: "hourglass") { workspace.editEstimates(workspace.selection) }.accessibilityIdentifier("bulkEstimates")
                 Menu("Move to") {
                     Button("Inbox") { workspace.move(workspace.selection, toProject: "") }
                     ForEach(store.projects) { project in Button(project.name) { workspace.move(workspace.selection, toProject: project.id) } }

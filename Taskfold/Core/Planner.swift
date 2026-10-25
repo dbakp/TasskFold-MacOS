@@ -319,3 +319,22 @@ struct PlannerTimelineItem:Identifiable {
     /// Dense clusters can scroll; unrelated plans retain the viewport's full width.
     func width(in viewport:Double,minimum:Double=140)->Double {max(max(1,viewport)/Double(laneCount),minimum)-4}
 }
+
+/// Values authored by the bulk deadline/estimate picker, before an explicit review.
+enum BulkPlanningField: String, Sendable {
+    case deadline, estimate
+    var title: String { self == .deadline ? "Edit deadlines" : "Edit estimates" }
+    var key: String { self == .deadline ? "deadline_date" : "duration_minutes" }
+    func fields(day: String?, minutes: String, clearing: Bool) throws -> [String: JSON] {
+        if self == .deadline {
+            guard clearing || day != nil else { throw PlannerFailure(message: "Choose a deadline date.") }
+            return try TaskDeadlines.fields(day: clearing ? nil : day)
+        }
+        if clearing { return [key: .null] }
+        let text = minutes.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, text.utf8.allSatisfy({ (48...57).contains($0) }), let value = Int(text), (1...10080).contains(value) else {
+            throw PlannerFailure(message: "Choose an estimate between 1 minute and 7 days (10,080 minutes).")
+        }
+        return [key: .number(Double(value))]
+    }
+}

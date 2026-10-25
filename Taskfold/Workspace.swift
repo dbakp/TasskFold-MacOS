@@ -73,6 +73,7 @@ final class Workspace {
     var teamTaskMove: TeamTaskMoveRequest?
     var teamTaskDeletion: TeamTaskDeletionRequest?
     var teamTaskPlanning: TeamTaskPlanningRequest?
+    var bulkPlanning: BulkTaskPlanningRequest?
     let store: Store
     #if DEBUG
     @ObservationIgnored var fixturePrepared = false
@@ -496,7 +497,32 @@ final class Workspace {
         Feedback.drop()
         confirm("Moved to \(project.isEmpty ? "Inbox" : store.record("projects", id: project)?.name ?? "project")")
     }
+    func editEstimates(_ ids: Set<String>) { _ = beginBulkPlanning(ids, field: .estimate) }
+    @discardableResult private func beginBulkPlanning(_ ids: Set<String>, field: BulkPlanningField) -> Bool {
+        let shared = ids.contains { id in
+            let root = Self.subtaskPath(id)?.first ?? id
+            return store.nativeConversationTeamCache?.knownTasks.contains(root) == true || store.record("tasks", id: root).map { store.nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true
+        }
+        guard shared || field == .estimate else { return false }
+        do {
+            let records = try ids.sorted().map { try store.selectionRecord($0) }
+            if shared {
+                let admission = try store.captureTeamTaskPlanningAdmission(records)
+                bulkPlanning = .shared(store: store, admission: admission, field: field, save: { [weak self] selected in
+                    guard let self else { return false }; var saved = false
+                    self.run("Edit Shared Tasks") { saved = self.store.saveTeamTaskPlanningSelection(selected) }; return saved
+                }, completed: { [weak self] in self?.bulkPlanning = nil; self?.selection.subtract(ids); self?.confirm("Shared task changes saved") })
+            } else {
+                bulkPlanning = try .personal(store: store, records: records, field: field, apply: { [weak self] fields in
+                    guard let self else { return false }; var saved = false
+                    self.run("Edit Estimates") { do { saved = try self.store.commitSelection(records, action: { _ in .patch(fields) }) } catch { self.store.error = error.localizedDescription } }; return saved
+                }, completed: { [weak self] in self?.bulkPlanning = nil; self?.selection.subtract(ids); self?.confirm("Estimates updated") })
+            }
+        } catch { store.error = error.localizedDescription }
+        return true
+    }
     func editDeadlines(_ ids: Set<String>) {
+        if beginBulkPlanning(ids, field: .deadline) { return }
         do {
             let records = hierarchyFilter ? try ids.sorted().map { try store.selectionRecord($0) } : ids.sorted().compactMap { taskRecord($0) }
             deadlineSelection = DeadlineSelection(account: store.userID, ids: ids, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), records: records)

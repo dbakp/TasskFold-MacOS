@@ -5546,3 +5546,25 @@ retained initial phone assertion diagnostic and source/cleanup details. Mac
 window/runtime, keyboard/spoken, large-text/dark/contrast, live acceptance and
 bulk deadline/estimate entry remain open. User-deferred work and the wider Px
 objective retain their scope; rollout remains disabled.
+
+
+### 2026-10-25 — Bulk deadline and estimate choice/review
+
+Shared deadline/estimate actions now capture opening source/access admission
+before presenting native pickers. Explicit Set/Clear, numeric validation, minute
+presets and original-value previews precede the existing complete selection
+review. Back retains the typed choice; Cancel saves nothing; Save/Undo keep the
+whole shared command. Deadline rows retain their planned-date context.
+
+Personal selections gain estimates through the existing personal selection
+writer, with a captured workspace/session/origin and current source/custody check.
+Mac list, inspector selection and Task menu entries are independently owned.
+Validation stays in Store rather than exposing its private cache-readability flag.
+The focused Core suite passes 493 tests per repository; final five installed
+iPhone and iPad scenarios pass independently. The Mac build passes; this is not
+an installed Mac runtime claim. No schema or rollout change occurs.
+See p2-bulk-planning-pickers-evidence.json for
+scoped Core, build and installed iOS evidence; Mac runtime/window, keyboard/spoken,
+larger text/dark/contrast and genuine hosted acceptance remain open. The wider
+Px plan and all user-deferred release/provider/device dependencies remain active
+or deferred as agreed.

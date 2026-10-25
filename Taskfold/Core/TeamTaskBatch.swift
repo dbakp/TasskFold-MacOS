@@ -170,6 +170,26 @@ struct TeamTaskDeletionSelection: Equatable, Sendable {
 }
 
 
+
+/// Opening authority for a planning picker. Choices never reacquire source rows.
+struct TeamTaskPlanningAdmission: Equatable, Sendable {
+    let drafts: [TeamTaskEditorDraft]
+    init(drafts: [TeamTaskEditorDraft]) throws {
+        guard (1...100).contains(drafts.count), Set(drafts.map { $0.source.id }).count == drafts.count,
+              let first = drafts.first,
+              drafts.allSatisfy({ $0.kind == .existing && $0.workspace == first.workspace && $0.session == first.session && $0.scope.account == first.scope.account && $0.scope.origin == first.scope.origin && $0.scope.team == first.scope.team && $0.accessToken == first.accessToken }) else { throw TeamTaskBatch.invalid }
+        self.drafts = drafts.sorted { $0.source.id < $1.source.id }
+    }
+    func permits(current: [String: Record], workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) -> Bool {
+        drafts.allSatisfy { draft in
+            current[draft.source.id] == draft.source && draft.permits(current: current[draft.source.id], workspace: workspace, session: session, cache: cache, enabled: enabled)
+        }
+    }
+    func selecting(_ fields: [String: JSON]) throws -> TeamTaskPlanningSelection {
+        try TeamTaskPlanningSelection(drafts: drafts, changes: Dictionary(uniqueKeysWithValues: drafts.map { ($0.source.id, fields) }))
+    }
+}
+
 /// A planning review freezes every source row and member request before presentation.
 /// Durable retries use the resulting batch; this opening authority is never encoded.
 struct TeamTaskPlanningSelection: Equatable, Sendable {
@@ -178,11 +198,9 @@ struct TeamTaskPlanningSelection: Equatable, Sendable {
     let requestID: UUID
     private let memberRequests: [String: UUID]
     init(drafts: [TeamTaskEditorDraft], changes: [String: [String: JSON]], requestID: UUID = UUID()) throws {
-        guard (1...100).contains(drafts.count), Set(drafts.map { $0.source.id }).count == drafts.count,
-              Set(changes.keys) == Set(drafts.map { $0.source.id }), let first = drafts.first,
-              drafts.allSatisfy({ $0.kind == .existing && $0.workspace == first.workspace && $0.session == first.session && $0.scope.account == first.scope.account && $0.scope.origin == first.scope.origin && $0.scope.team == first.scope.team && $0.accessToken == first.accessToken }),
-              changes.values.allSatisfy({ !$0.isEmpty && Set($0.keys).isSubset(of: TeamTaskBatch.planningFields) }) else { throw TeamTaskBatch.invalid }
-        self.drafts = drafts.sorted { $0.source.id < $1.source.id }; self.changes = changes; self.requestID = requestID
+        let admission = try TeamTaskPlanningAdmission(drafts: drafts)
+        guard Set(changes.keys) == Set(drafts.map { $0.source.id }), changes.values.allSatisfy({ !$0.isEmpty && Set($0.keys).isSubset(of: TeamTaskBatch.planningFields) }) else { throw TeamTaskBatch.invalid }
+        self.drafts = admission.drafts; self.changes = changes; self.requestID = requestID
         memberRequests = Dictionary(uniqueKeysWithValues: drafts.map { ($0.source.id, UUID()) })
     }
     func mutation(current: [String: Record], workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) throws -> Mutation {

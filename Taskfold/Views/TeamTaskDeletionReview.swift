@@ -106,6 +106,7 @@ struct TeamTaskPlanningRequest: Identifiable {
     let title: String
     let perform: () -> Bool
     let completed: () -> Void
+    var back: (() -> Void)? = nil
     var id: UUID { selection.requestID }
 }
 
@@ -163,11 +164,14 @@ struct TeamTaskPlanningReview: View {
                 }
                 #endif
             }.formStyle(.grouped).accessibilityIdentifier("teamPlanningForm")
-            .navigationTitle("Review shared changes")
+            .navigationTitle("Review changes")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelTeamPlanning") } }
+             .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelTeamPlanning") }
+                if let back = request.back { ToolbarItem(placement: .primaryAction) { Button("Edit choice") { back() }.accessibilityIdentifier("editTeamPlanningChoice") } }
+            }
             #if os(macOS)
             .frame(minWidth: 500, idealWidth: 580, minHeight: 440)
             #endif
@@ -202,7 +206,9 @@ struct TeamTaskPlanningReview: View {
 
 struct TeamTaskPlanningSheet: ViewModifier {
     @Binding var request: TeamTaskPlanningRequest?
+    @Binding var input: BulkTaskPlanningRequest?
+    init(request: Binding<TeamTaskPlanningRequest?>, input: Binding<BulkTaskPlanningRequest?> = .constant(nil)) { _request = request; _input = input }
     func body(content: Content) -> some View {
-        content.sheet(item: $request) { TeamTaskPlanningReview(request: $0) }
+        content.sheet(item: $request) { TeamTaskPlanningReview(request: $0) }.sheet(item: $input) { BulkTaskPlanningEditor(request: $0) }
     }
 }

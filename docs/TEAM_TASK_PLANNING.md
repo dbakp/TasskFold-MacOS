@@ -148,3 +148,41 @@ See `p2-team-planning-selection-native-evidence.json` for exact runs, source has
 Mac installed/window, keyboard/spoken, large-text/dark/contrast and hosted acceptance
 remain open, as do bulk deadline/estimate entry and the rest of rank 6/Px. All user-
 deferred release/provider/device work remains deferred.
+
+
+### Bulk deadline and estimate pickers — 25 October 2026
+
+Both apps now offer deadline and estimate pickers for shared selections before the
+existing final review. A non-serializable planning admission freezes every source
+row, account/server/workspace/session and access token when the picker opens.
+Choosing a value never reacquires current rows as a new baseline. Changed/missing
+work or access pauses the complete picker before a request can be authored.
+
+The picker supports Set and Clear, existing-value previews, minute presets and
+strict integer estimates from 1 through 10,080 minutes. Invalid values cannot
+proceed. Shared Review creates one frozen selection; Edit choice returns to the
+picker with its typed value intact. Cancel at either stage saves nothing. Final
+Save and Undo retain the established whole-selection queue/RPC and identity rules.
+Already-correct members stay in the reviewed shared cohort. Planned dates and
+clocks are shown beside current deadlines, and estimates have an explicit Minutes
+label. Unrelated plans, notes and unselected tasks remain unchanged.
+
+Personal tasks also gain bulk estimates through their existing undoable personal
+selection path; they do not acquire a team command or silently switch realms.
+That picker captures source records and account/server/workspace/session and
+rechecks current personal custody before applying. Its local save is one undoable
+step, not a newly introduced atomic personal server endpoint. Personal deadlines
+retain their existing editor. Mac list, inspector selection and Task menu entries
+own their platform code independently.
+
+The focused Core suite passes 493 tests in each repository (22 batch cases).
+Five final installed scenarios pass independently on iPhone and iPad, covering
+Set/Clear, invalid input, Back/Cancel, Save/Undo, personal custody and changed
+opening sources. Final review uses the shorter “Review changes” heading.
+Core/native logs, screenshots, source hashes, diagnostic corrections and cleanup
+are in `p2-bulk-planning-pickers-evidence.json`. The isolated phone/tablet
+walkthrough checks real Store/private-cache behavior with intercepted HTTP, not
+live hosted/Auth/Keychain delivery. Mac installed/window, keyboard/spoken, larger
+text/contrast/dark, broader hosted acceptance and other shared batch/history work
+remain open. No schema, provider configuration or rollout changed; all user-
+deferred dependencies and the full rank-6/Px backlog retain their scope.

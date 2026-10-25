@@ -414,6 +414,29 @@ final class Store {
             return commit([change])
         } catch { self.error = error.localizedDescription; return false }
     }
+    func reviewedPersonalTaskPlanning(_ records: [Record], workspace: WorkspaceBinding, session: UUID, origin: String?) throws {
+        guard (1...TaskHierarchyIndex.maximumEdits).contains(records.count) else { throw AppFailure(message: "Select up to 1,000 tasks at a time.") }
+        guard Set(records.map(\.id)).count == records.count, workspace.matches(account: userID, generation: workspaceGeneration), session == backend.reminderSessionIncarnation, origin == (try? backend.accountRemovalOrigin), signedIn, !signingOut, !accountRemovalBlocked, workspaceCacheReadable else { throw TeamTaskBatch.conflict }
+        for source in records {
+            let root = SubtaskTree.referencePath(source.id)?.first ?? source.id
+            if let cache = nativeConversationTeamCache {
+                guard let origin, cache.boundary.belongs(account: workspace.account, origin: origin), cache.knownTeams[source.string("project_id")] == nil, !cache.knownTasks.contains(root) else { throw TeamTaskBatch.conflict }
+            }
+            guard try selectionRecord(source.id) == source else { throw TeamTaskBatch.conflict }
+        }
+    }
+    func captureTeamTaskPlanningAdmission(_ records: [Record]) throws -> TeamTaskPlanningAdmission {
+        guard !records.isEmpty, records.count <= 100, Set(records.map(\.id)).count == records.count else { throw TeamTaskBatch.invalid }
+        let admission = try TeamTaskPlanningAdmission(drafts: records.map { try captureTeamTaskEditor($0) })
+        try reviewedTeamTaskPlanningAdmission(admission); return admission
+    }
+    func reviewedTeamTaskPlanningAdmission(_ admission: TeamTaskPlanningAdmission) throws {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache,
+              admission.drafts.allSatisfy({ $0.scope.origin == (try? backend.accountRemovalOrigin) }) else { throw TeamTaskEditorDraft.unavailable }
+        let current = Dictionary(uniqueKeysWithValues: admission.drafts.compactMap { draft in record("tasks", id: draft.source.id).map { (draft.source.id, $0) } })
+        guard admission.permits(current: current, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled) else { throw TeamTaskBatch.conflict }
+    }
     func captureTeamTaskPlanningSelection(_ records: [Record], changes: [String: [String: JSON]]) throws -> TeamTaskPlanningSelection {
         guard !records.isEmpty, records.count <= 100, Set(records.map(\.id)).count == records.count else { throw TeamTaskBatch.invalid }
         let selection = try TeamTaskPlanningSelection(drafts: records.map { try captureTeamTaskEditor($0) }, changes: changes)
@@ -2978,6 +3001,7 @@ extension Store {
     }
     static let projectID = "ec240000-0000-4000-8000-000000000003"
     static let teamID = "ec240000-0000-4000-8000-000000000004"
+    static let personalPlanningProject = "ec240000-0000-4000-8000-000000000041"
     static func backend() -> Backend {
         if ProjectAdoptionNativeFixture.enabled { return ProjectAdoptionNativeFixture.backend() }
         let configuration = URLSessionConfiguration.ephemeral
@@ -2990,6 +3014,10 @@ extension Store {
         if ProcessInfo.processInfo.arguments.contains("--team-move-testing") {
             rows.append(.object(["id": .string(TeamTaskMoveNativePeer.destination), "team_id": .string(teamID), "role": .string(viewer ? "viewer" : "editor"), "archived": .bool(false), "can_send_tasks": .bool(!viewer)]))
             rows.append(.object(["id": .string(TeamTaskMoveNativePeer.viewerProject), "team_id": .string(teamID), "role": .string("viewer"), "archived": .bool(false), "can_send_tasks": .bool(false)]))
+        }
+        if ProcessInfo.processInfo.arguments.contains("--team-planning-personal-testing") {
+            rows.append(.object(["id": .string(personalPlanningProject), "team_id": .null, "role": .string("owner"), "archived": .bool(false), "can_send_tasks": .bool(true)]))
+            rows.sort { $0.object["id"]!.text < $1.object["id"]!.text }
         }
         return try TeamWorkspaceBoundary([
             "workspace_boundary_protocol": .number(1), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false),
@@ -3091,6 +3119,26 @@ extension Store {
                 later["title"] = .string("Later workshop review"); later["description"] = .string("Keep this unselected occurrence")
                 later["recurrence_parent_id"] = row["id"]
                 tasks += [next, later]
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-planning-input-testing") {
+                for index in tasks.indices {
+                    let offset = min(index, 2)
+                    tasks[index]["deadline_date"] = .string("2026-11-\(10 + offset)")
+                    tasks[index]["duration_minutes"] = .number(Double([25, 45, 60][offset]))
+                    tasks[index]["due_date"] = .string(String(format: "2026-11-%02d", 5 + offset))
+                    tasks[index]["due_time"] = .string("09:30"); tasks[index]["time_zone"] = .string("UTC")
+                    tasks[index]["scheduled_at"] = .string(String(format: "2026-11-%02dT09:30:00.000Z", 5 + offset))
+                }
+                if ProcessInfo.processInfo.arguments.contains("--team-planning-personal-testing") {
+                    projects.append(Record(["id": .string(TeamEditorNativeFixture.personalPlanningProject), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Personal planning studio")]))
+                    for index in 0..<3 {
+                        var task = Record.task(user: TeamEditorNativeFixture.account, project: TeamEditorNativeFixture.personalPlanningProject)
+                        task["id"] = .string("ec240000-0000-4000-8000-00000000005\(index + 1)")
+                        task["title"] = .string("Personal planning \(index + 1)"); task["description"] = .string("Keep personal notes \(index + 1)")
+                        task["duration_minutes"] = .number(Double([25, 45, 60][index])); task["deadline_date"] = .string("2026-11-12")
+                        tasks.append(task)
+                    }
+                }
             }
             snapshot = Snapshot(tables: ["tasks": tasks, "projects": projects, "labels": labels])
             if TeamTaskMoveNativePeer.enabled {

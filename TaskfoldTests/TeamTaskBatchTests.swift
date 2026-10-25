@@ -237,3 +237,54 @@ extension TeamTaskBatchTests {
         XCTAssertEqual(calls, 2); XCTAssertEqual(try batch.body(for: header), f["body"]!.object)
     }
 }
+
+extension TeamTaskBatchTests {
+    func testBulkPlanningChoicesValidateBoundariesAndKeepTheirOwnFields() throws {
+        for value in ["1", "25", "10080", " 30 "] {
+            let fields = try BulkPlanningField.estimate.fields(day: "2026-11-12", minutes: value, clearing: false)
+            XCTAssertEqual(Set(fields.keys), ["duration_minutes"])
+        }
+        for value in ["", "0", "-1", "10081", "1.5", "+25", "2e3", String(repeating: "9", count: 100), "２５"] {
+            XCTAssertThrowsError(try BulkPlanningField.estimate.fields(day: nil, minutes: value, clearing: false))
+        }
+        XCTAssertEqual(try BulkPlanningField.estimate.fields(day: nil, minutes: "invalid", clearing: true), ["duration_minutes": .null])
+        XCTAssertEqual(try BulkPlanningField.deadline.fields(day: "2026-11-12", minutes: "invalid", clearing: false), ["deadline_date": .string("2026-11-12")])
+        XCTAssertEqual(try BulkPlanningField.deadline.fields(day: "invalid", minutes: "", clearing: true), ["deadline_date": .null])
+        XCTAssertThrowsError(try BulkPlanningField.deadline.fields(day: "2026-02-30", minutes: "", clearing: false))
+        XCTAssertThrowsError(try BulkPlanningField.deadline.fields(day: nil, minutes: "", clearing: false))
+    }
+    func testPlanningPickerKeepsOpeningRowsWhenChoicesAreMadeLater() throws {
+        let (_, _, batch) = try planningFixture(), cache = try planningCache(batch), workspace = WorkspaceBinding(account: batch.account, generation: UUID()), session = UUID()
+        let records = batch.items.map { Record($0.baseline!) }, current = Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0) })
+        let drafts = try records.map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) }
+        let admission = try TeamTaskPlanningAdmission(drafts: drafts)
+        XCTAssertTrue(admission.permits(current: current, workspace: workspace, session: session, cache: cache, enabled: true))
+        let choice = try admission.selecting(BulkPlanningField.estimate.fields(day: nil, minutes: "30", clearing: false))
+        let command = try choice.mutation(current: current, workspace: workspace, session: session, cache: cache, enabled: true)
+        XCTAssertEqual(command.teamTaskBatch?.items.count, records.count)
+        for item in command.teamTaskBatch!.items { XCTAssertEqual(item.baseline, current[item.recordID]?.fields); XCTAssertEqual(item.fields, ["duration_minutes": .number(30)]) }
+        var changed = current; changed[records[0].id]?["description"] = .string("A newer saved note")
+        XCTAssertFalse(admission.permits(current: changed, workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try choice.mutation(current: changed, workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertFalse(admission.permits(current: current, workspace: workspace, session: UUID(), cache: cache, enabled: true))
+        XCTAssertThrowsError(try TeamTaskPlanningAdmission(drafts: [drafts[0], drafts[0]]))
+    }
+    func testPlanningPickerClearsOnlyChosenOptionalFieldAndRetainsOtherPlans() throws {
+        let (_, _, original) = try planningFixture(), cache = try planningCache(original), workspace = WorkspaceBinding(account: original.account, generation: UUID()), session = UUID()
+        let records = original.items.map { item -> Record in
+            var row = Record(item.baseline!); row["due_date"] = .string("2026-11-05"); row["due_time"] = .string("09:30"); row["time_zone"] = .string("UTC"); row["scheduled_at"] = .string("2026-11-05T09:30:00.000Z"); return row
+        }
+        let current = Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0) }), admission = try TeamTaskPlanningAdmission(drafts: records.map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) })
+        for field in [BulkPlanningField.deadline, .estimate] {
+            let selection = try admission.selecting(field.fields(day: nil, minutes: "", clearing: true))
+            let command = try selection.mutation(current: current, workspace: workspace, session: session, cache: cache, enabled: true)
+            var snapshot = Snapshot(tables: ["tasks": records, "projects": cache.boundary.projects.keys.map { Record(["id": .string($0)]) }])
+            XCTAssertTrue(command.teamTaskBatch!.apply(to: &snapshot, header: command))
+            for row in snapshot.tables["tasks"]! {
+                let before = current[row.id]!
+                for key in Set(row.fields.keys).union(before.fields.keys) where key != field.key { XCTAssertEqual(row[key], before[key], key) }
+                XCTAssertEqual(row[field.key], .null)
+            }
+        }
+    }
+}
