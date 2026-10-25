@@ -5901,3 +5901,48 @@ See p2-team-workflow-branch-review-evidence.json for current compile/test scope.
 Mac runtime, spoken/account/window and genuine hosted acceptance remain open;
 rank 6, wider Px and all user-deferred work remain unchanged. No cloud/rollout
 configuration or real task was changed.
+
+
+### 2026-10-25 — Reviewed shared bulk labels (rank 6 in progress)
+
+Both apps independently implement Add, exact Remove and explicit Clear all for
+one captured shared selection. New names use the existing bounded name rules and
+trim outer whitespace. Removal matches saved readable names literally, including
+spaces, case and older longer names. Suggestions come only from selected tasks;
+private label catalogs and IDs never normalize shared values. Existing opaque
+values, duplicates and order survive unrelated edits. Unknown/missing label
+shapes pause the whole selection until refreshed so Undo has an exact baseline.
+
+The editor shows current labels and selected projects; the complete review shows
+every resulting label set, including already-correct members. Back keeps the
+choice, Cancel writes nothing, and Save uses one durable linked batch/RPC. Undo
+restores each task's own original labels and refuses changed source/access. Root
+labels alone change; notes, plans, assignments, conversations, children, other
+labels and unselected tasks remain under their existing contracts.
+
+The source-only migration admits labels to the existing frozen edit batch. Live
+Auth/session/team/project/task checks, bounded envelopes, canonical locks, quotas,
+whole-source comparisons, HMAC receipts, exact replay and all-or-nothing rollback
+are retained. Existing single-task validation checks each label array. No table,
+RPC, grant, hosted schema/configuration or rollout flag is added/enabled.
+
+Each independent repository passes 124 isolated PostgreSQL checks with advisors
+and fixture removal, plus 500 selected Core regression cases. Six new bulk-label
+cases cover per-member add/remove/clear, exact whitespace/case/legacy behavior,
+limits, malformed source/name refusal, durable encoding, Undo/Redo and stale
+inverse protection. Final app builds compile. Native results and their scoped
+limits are recorded in p2-shared-bulk-labels-evidence.json; no live hosted or Mac
+spoken/account/window acceptance is implied. Rank 6 and wider Px remain open,
+with all release/provider/device deferrals unchanged.
+
+
+Native verification: three scenarios pass on each signed isolated iPhone/iPad
+Simulator host. Tests exercise exact Remove/Clear with Undo, Add review/Back/
+Cancel/Save/Undo/normal relaunch, invalid-name refusal and source-change masking.
+They compare complete saved rows (including unselected work) and the one linked
+queue entry, not just visible text. Final installed binaries/signatures match the
+tested products; preparation-only namespace changes are hashed against source.
+Light-mode label-set, Clear and paused-state screenshots were inspected. The
+initial lazy-Save test failure is retained with the test correction. Native tests
+intentionally skip cloud sync; the 124 real local
+PostgreSQL transaction checks are separate. Mac runtime still awaits unlock.

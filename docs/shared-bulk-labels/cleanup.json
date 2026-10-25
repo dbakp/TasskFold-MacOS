@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-25",
+  "scope": "Only owned /tmp/taskfold-bulk-labels-* and exact reserved Simulator app/runner installations",
+  "temporaryPathsRemoved": 45,
+  "temporaryBytesRemoved": 1998589893,
+  "simulatorAppsUninstalled": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    }
+  ],
+  "simulatorPowerStatesUnchangedByCleanup": [
+    "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4"
+  ],
+  "sqlFixtureContainersRemoved": true,
+  "repositoryCoreBuildCachesPreserved": true,
+  "separatePendingMacWorkflowBuildRetained": true
+}

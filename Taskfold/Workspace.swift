@@ -75,6 +75,7 @@ final class Workspace {
     var teamTaskPlanning: TeamTaskPlanningRequest?
     var bulkPlanning: BulkTaskPlanningRequest?
     var bulkAssignment: BulkTaskAssignmentRequest?
+    var bulkLabels: BulkTaskLabelsRequest?
     let store: Store
     #if DEBUG
     @ObservationIgnored var fixturePrepared = false
@@ -497,6 +498,15 @@ final class Workspace {
         guard withAnimation(layout, { updateTasks(ids, fields: ["project_id": project.isEmpty ? .null : .string(project), "section_id": .null], name: "Move to Project") }) else { return }
         Feedback.drop()
         confirm("Moved to \(project.isEmpty ? "Inbox" : store.record("projects", id: project)?.name ?? "project")")
+    }
+    func editSharedLabels(_ ids: Set<String>) {
+        do {
+            let captured = try store.captureTeamTaskPlanningAdmission(ids.sorted().map { try store.selectionRecord($0) })
+            bulkLabels = BulkTaskLabelsRequest(admission: captured, save: { [weak self] selection in
+                guard let self else { return false }; var saved = false
+                self.run("Edit Shared Labels") { saved = self.store.saveTeamTaskPlanningSelection(selection) }; return saved
+            }, completed: { [weak self] in self?.bulkLabels = nil; self?.selection.subtract(ids); self?.confirm("Shared labels saved") })
+        } catch { store.error = error.localizedDescription }
     }
     func assignSharedSelection(_ ids: Set<String>) {
         do {

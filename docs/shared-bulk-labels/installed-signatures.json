@@ -1,0 +1,18 @@
+{
+  "phone": {
+    "team": "3UZ4C73FM2",
+    "strictSignatureVerified": true,
+    "installedMatchesFinalProduct": {
+      "Taskfold": "657b9fcdf385590f7e880de9d0a32aaa47aedd9c7d4d09b775acd04bc09e554f",
+      "Taskfold.debug.dylib": "5d78f4b4d8aa4d83e5e660670f2cc9839f285d6a644d65504ce6ce8e7f188ecf"
+    }
+  },
+  "tablet": {
+    "team": "3UZ4C73FM2",
+    "strictSignatureVerified": true,
+    "installedMatchesFinalProduct": {
+      "Taskfold": "657b9fcdf385590f7e880de9d0a32aaa47aedd9c7d4d09b775acd04bc09e554f",
+      "Taskfold.debug.dylib": "5d78f4b4d8aa4d83e5e660670f2cc9839f285d6a644d65504ce6ce8e7f188ecf"
+    }
+  }
+}

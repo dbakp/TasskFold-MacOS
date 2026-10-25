@@ -246,3 +246,108 @@ struct BulkTaskAssignmentEditor: View {
             .accessibilityIdentifier("bulkAssignee-" + (person?.id ?? "unassigned"))
     }
 }
+
+@MainActor struct BulkTaskLabelsRequest: Identifiable {
+    let id = UUID()
+    let admission: TeamTaskPlanningAdmission
+    let save: (TeamTaskPlanningSelection) -> Bool
+    let completed: () -> Void
+}
+struct BulkTaskLabelsEditor: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var phase
+    let request: BulkTaskLabelsRequest
+    @State private var action = TeamTaskLabelAction.add
+    @State private var name = ""
+    @State private var message: String?
+    @State private var review: TeamTaskPlanningRequest?
+    private var records: [Record] { request.admission.drafts.map(\.source) }
+    private var available: Bool { phase == .active && (try? store.reviewedTeamTaskPlanningAdmission(request.admission)) != nil }
+    private var proposed: [String: [String: JSON]]? { try? TeamTaskBulkLabels.changes(records: records, action: action, input: name) }
+    private var hasChanges: Bool { guard let proposed else { return false }; return records.contains { proposed[$0.id]?["labels"] != $0["labels"] } }
+    private var validation: String? {
+        guard action == .clear || !name.isEmpty else { return nil }
+        do { _ = try TeamTaskBulkLabels.changes(records: records, action: action, input: name); return nil }
+        catch { return error.localizedDescription }
+    }
+    var body: some View {
+        Group {
+            if available, let review { TeamTaskPlanningReview(request: review) }
+            else { input }
+        }.privacySensitive()
+    }
+    private var input: some View {
+        NavigationStack {
+            Form {
+                if available {
+                    Section {
+                        Picker("Label action", selection: $action) {
+                            ForEach(TeamTaskLabelAction.allCases) { Text($0.title).tag($0) }
+                        }.pickerStyle(.segmented).accessibilityIdentifier("bulkLabelsAction")
+                        if action != .clear {
+                            TextField(action == .remove ? "Exact label name" : "Label name", text: $name).accessibilityIdentifier("bulkLabelsName")
+                                .accessibilityHint("Names match exactly, including upper and lower case.")
+                            Text(action == .remove ? "Names match exactly, including spaces and upper and lower case. Other labels keep their order and spelling." : "New names are trimmed at the edges. Other labels keep their order and spelling.").font(.caption).foregroundStyle(.secondary)
+                        } else {
+                            Text("Remove every saved label from the selected tasks. Review the complete selection before saving.").foregroundStyle(.secondary)
+                        }
+                        if let validation { Text(validation).foregroundStyle(.secondary).accessibilityIdentifier("bulkLabelsValidation") }
+                        if proposed != nil, !hasChanges { Text("This selection already matches that choice.").foregroundStyle(.secondary) }
+                        Button("Review changes") { prepare() }.buttonStyle(.borderedProminent)
+                            .disabled(!hasChanges).accessibilityIdentifier("reviewBulkLabels")
+                    }
+                    if action != .clear, !TeamTaskBulkLabels.suggestions(records: records, action: action).isEmpty {
+                        Section("Suggested labels") {
+                            ForEach(Array(TeamTaskBulkLabels.suggestions(records: records, action: action).prefix(20)), id: \.self) { value in
+                                Button(value) { name = value }.accessibilityLabel("Use label " + value)
+                            }
+                        }
+                    }
+                    Section("Selected tasks") {
+                        ForEach(request.admission.drafts, id: \.source.id) { draft in
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(draft.source.title).font(.headline).fixedSize(horizontal: false, vertical: true)
+                                Text(store.record("projects", id: draft.scope.project)?.name ?? "Shared project").font(.caption).foregroundStyle(.secondary)
+                                Text(currentLabels(draft.source)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            }.accessibilityElement(children: .combine)
+                        }
+                    }
+                    #if DEBUG
+                    if TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-planning-input-testing") {
+                        Section("Isolated test controls") {
+                            Button("Change saved test task") { store.changeTeamDeletionFixtureSource() }.accessibilityIdentifier("changeBulkLabelsFixture")
+                        }
+                    }
+                    #endif
+                } else {
+                    ContentUnavailableView("Label editing paused", systemImage: "lock.shield", description: Text("A selected task or its project access changed. Return to your workspace and select the current tasks again.")).accessibilityIdentifier("bulkLabelsPaused")
+                }
+                if let message { Section { Text(message).foregroundStyle(.secondary).accessibilityIdentifier("bulkLabelsMessage") } }
+            }.formStyle(.grouped).accessibilityIdentifier("bulkLabelsForm")
+            .navigationTitle("Edit shared labels")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #else
+            .frame(minWidth: 500, idealWidth: 580, minHeight: 500)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelBulkLabels") } }
+        }
+    }
+    private func currentLabels(_ row: Record) -> String {
+        let values = row["labels"].list.map { TeamTaskLabelsDraft.displayName($0.text) ?? "Unrecognized saved label" }
+        return values.isEmpty ? "No labels" : "Current labels: " + values.joined(separator: ", ")
+    }
+    @MainActor private func prepare() {
+        guard available, hasChanges else { return }
+        do {
+            try store.reviewedTeamTaskPlanningAdmission(request.admission)
+            let changes = try TeamTaskBulkLabels.changes(records: records, action: action, input: name)
+            let selection = try TeamTaskPlanningSelection(drafts: request.admission.drafts, changes: changes)
+            _ = try store.reviewedTeamTaskPlanningSelection(selection)
+            let title = action == .clear ? "Clear shared labels" : action.title + " “" + (try TeamTaskBulkLabels.name(action: action, input: name)) + "”"
+            review = TeamTaskPlanningRequest(selection: selection, title: title, perform: { request.save(selection) }, completed: request.completed, back: { review = nil })
+            message = nil
+        } catch { message = error.localizedDescription }
+    }
+}

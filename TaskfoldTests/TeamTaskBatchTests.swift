@@ -310,3 +310,77 @@ extension TeamTaskBatchTests {
         XCTAssertTrue(Set(batch.items.map(\.id)).isDisjoint(with: inverse.items.map(\.id)))
     }
 }
+
+extension TeamTaskBatchTests {
+    private func labelFixture(_ labels: [[JSON]]) throws -> (TeamTaskPlanningAdmission, TeamWorkspaceCache, WorkspaceBinding, UUID, [Record]) {
+        let (_, _, batch) = try planningFixture(), cache = try planningCache(batch)
+        let workspace = WorkspaceBinding(account: batch.account, generation: UUID()), session = UUID()
+        let records = batch.items.enumerated().map { index, item in var row = Record(item.baseline!); row["labels"] = .array(labels[index]); return row }
+        return (try TeamTaskPlanningAdmission(drafts: records.map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) }), cache, workspace, session, records)
+    }
+    func testBulkLabelsAddPreservesEachSetAndAlreadyCorrectMembers() throws {
+        let opaque = UUID().uuidString.lowercased()
+        let (admission, cache, workspace, session, rows) = try labelFixture([[.string("Design"),.string(opaque)], [.string("design"),.string("Ship")]])
+        let changes = try TeamTaskBulkLabels.changes(records: rows, action: .add, input: " Ship ")
+        XCTAssertEqual(changes[rows[0].id], ["labels": .array([.string("Design"),.string(opaque),.string("Ship")])])
+        XCTAssertEqual(changes[rows[1].id], ["labels": rows[1]["labels"]])
+        let choice = try TeamTaskPlanningSelection(drafts: admission.drafts, changes: changes), current = Dictionary(uniqueKeysWithValues: rows.map { ($0.id,$0) })
+        let command = try choice.mutation(current: current, workspace: workspace, session: session, cache: cache, enabled: true)
+        XCTAssertEqual(command.teamTaskBatch?.items.count, 2)
+        XCTAssertEqual(command, try choice.mutation(current: current, workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertEqual(try JSONDecoder().decode(Mutation.self,from:JSONEncoder().encode(command)),command)
+    }
+    func testBulkLabelsRemoveIsExactAndClearIsExplicit() throws {
+        let (_, _, _, _, rows) = try labelFixture([[.string("Design"),.string("design"),.string("Design")],[.string(" Design "),.string("Keep")]])
+        let removed = try TeamTaskBulkLabels.changes(records: rows, action: .remove, input: "Design")
+        XCTAssertEqual(removed[rows[0].id]?["labels"],.array([.string("design")]))
+        XCTAssertEqual(removed[rows[1].id]?["labels"],rows[1]["labels"])
+        let spaced = try TeamTaskBulkLabels.changes(records: rows, action: .remove, input: " Design ")
+        XCTAssertEqual(spaced[rows[0].id]?["labels"], rows[0]["labels"])
+        XCTAssertEqual(spaced[rows[1].id]?["labels"], .array([.string("Keep")]))
+        let legacyName = String(repeating: "x", count: 101)
+        var legacy = rows; legacy[0]["labels"] = .array([.string(legacyName)])
+        XCTAssertEqual(try TeamTaskBulkLabels.changes(records: legacy, action: .remove, input: legacyName)[rows[0].id]?["labels"], .array([]))
+        XCTAssertTrue(TeamTaskBulkLabels.suggestions(records: legacy, action: .remove).contains(legacyName))
+        XCTAssertFalse(TeamTaskBulkLabels.suggestions(records: legacy).contains(legacyName))
+        let cleared = try TeamTaskBulkLabels.changes(records: rows, action: .clear, input: "ignored invalid\ninput")
+        XCTAssertTrue(cleared.values.allSatisfy { $0 == ["labels": .array([])] })
+    }
+    func testBulkLabelsUndoRestoresEachOriginalSetAndProtectsLaterChanges() throws {
+        let (admission, cache, workspace, session, rows) = try labelFixture([[.string("One")],[]])
+        let selection = try TeamTaskPlanningSelection(drafts: admission.drafts, changes: TeamTaskBulkLabels.changes(records: rows, action: .add, input: "Ship"))
+        let current = Dictionary(uniqueKeysWithValues: rows.map { ($0.id,$0) }), command = try selection.mutation(current: current,workspace: workspace,session: session,cache: cache,enabled: true), batch = try XCTUnwrap(command.teamTaskBatch)
+        let before = Snapshot(tables:["tasks":rows,"projects":cache.boundary.projects.keys.map { Record(["id":.string($0)]) }]); var saved = before
+        XCTAssertTrue(batch.apply(to:&saved,header:command))
+        for row in saved.tables["tasks"]! { var expected = current[row.id]!; expected["labels"] = selection.changes[row.id]!["labels"]!; XCTAssertEqual(row,expected) }
+        let undo = try batch.inverse(of:command,snapshot:before), inverse = try XCTUnwrap(undo.teamTaskBatch)
+        var newer = saved; newer.tables["tasks"]![1]["description"] = .string("Later note")
+        let preserved = newer; XCTAssertFalse(inverse.apply(to:&newer,header:undo)); XCTAssertEqual(newer.tables,preserved.tables)
+        XCTAssertTrue(inverse.apply(to:&saved,header:undo)); XCTAssertEqual(saved.tables["tasks"],rows)
+        let redo = TeamTaskBatch.historyAction(command); XCTAssertNotEqual(redo.id,command.id)
+        XCTAssertTrue(Set(redo.teamTaskBatch!.items.map(\.id)).isDisjoint(with: batch.items.map(\.id)))
+        XCTAssertTrue(redo.teamTaskBatch!.apply(to:&saved,header:redo))
+    }
+    func testBulkLabelsRejectUnsupportedRowsAndInvalidNameBeforeReview() throws {
+        let (_, _, _, _, rows) = try labelFixture([[],[]])
+        for name in ["", "\n", "Name\nHidden", String(repeating:"x",count:101), UUID().uuidString, "Hidden\u{202E}name"] {
+            XCTAssertThrowsError(try TeamTaskBulkLabels.changes(records:rows,action:.add,input:name))
+        }
+        for value: JSON in [.null,.array([.object(["id":.string("future")])]),.array([.string("")]),.array([.string(String(repeating:"é",count:513))]) ] {
+            var bad=rows; bad[1]["labels"]=value
+            for action in TeamTaskLabelAction.allCases { XCTAssertThrowsError(try TeamTaskBulkLabels.changes(records:bad,action:action,input:"Ship")) }
+        }
+        XCTAssertThrowsError(try TeamTaskBulkLabels.changes(records:[rows[0],rows[0]],action:.add,input:"Ship"))
+    }
+    func testBulkLabelsCapacityDoesNotRejectAnAlreadyCorrectFullTask() throws {
+        let full=(0..<256).map { JSON.string("Label \($0)") }
+        let (_, _, _, _, rows)=try labelFixture([full,[]])
+        XCTAssertNoThrow(try TeamTaskBulkLabels.changes(records:rows,action:.add,input:"Label 0"))
+        XCTAssertThrowsError(try TeamTaskBulkLabels.changes(records:rows,action:.add,input:"New"))
+        XCTAssertNoThrow(try TeamTaskBulkLabels.changes(records:rows,action:.remove,input:"Label 0"))
+    }
+    func testBulkLabelsSuggestionsUseOnlyReadableSelectedValues() throws {
+        let opaque=UUID().uuidString.lowercased(),(_,_,_,_,rows)=try labelFixture([[.string("Design"),.string(opaque),.string("Name\nHidden")],[.string("design"),.string("Design")]])
+        XCTAssertEqual(Set(TeamTaskBulkLabels.suggestions(records:rows)),["Design","design"])
+    }
+}

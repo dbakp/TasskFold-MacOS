@@ -1,0 +1,37 @@
+{
+  "Taskfold/Core/Store.swift": {
+    "primarySHA256": "3fb0073bbdb716cf64a409fd84668f2361d5ed1728ac59d0429a0d10ec90395c",
+    "hostSHA256": "4d6caac1e4fb4a536a32c3916d05365d1e6e665b54f85aa62fb6a781771e2b15",
+    "exactAfterPreparationNamespaceTransforms": true
+  },
+  "Taskfold/Core/TeamTaskBatch.swift": {
+    "primarySHA256": "5ffe2550a082b7a476dae3017af2cf2294f39dbdaa319758455152c154448c54",
+    "hostSHA256": "5ffe2550a082b7a476dae3017af2cf2294f39dbdaa319758455152c154448c54",
+    "exactAfterPreparationNamespaceTransforms": true
+  },
+  "Taskfold/Core/TeamTaskLabels.swift": {
+    "primarySHA256": "9addbcf15fadd8922e0c88007ed9d6c71705b689ab34abf5ab2cbf93da905599",
+    "hostSHA256": "9addbcf15fadd8922e0c88007ed9d6c71705b689ab34abf5ab2cbf93da905599",
+    "exactAfterPreparationNamespaceTransforms": true
+  },
+  "Taskfold/TaskfoldApp.swift": {
+    "primarySHA256": "35a89c82265b6b99130d35b0926755360f8c8f51bd423acd5676ede55049bb40",
+    "hostSHA256": "35a89c82265b6b99130d35b0926755360f8c8f51bd423acd5676ede55049bb40",
+    "exactAfterPreparationNamespaceTransforms": true
+  },
+  "Taskfold/Views/BulkPlanningEditor.swift": {
+    "primarySHA256": "d28c027262fa19c60625fd62ce0a813e26c29b2980a8e67c4b4c9d6288c55c5b",
+    "hostSHA256": "d28c027262fa19c60625fd62ce0a813e26c29b2980a8e67c4b4c9d6288c55c5b",
+    "exactAfterPreparationNamespaceTransforms": true
+  },
+  "Taskfold/Views/TeamTaskDeletionReview.swift": {
+    "primarySHA256": "cb06de03767a2174b0fbfe5ba3559149fa80ddf60684eb0eef36470ba5e370c1",
+    "hostSHA256": "cb06de03767a2174b0fbfe5ba3559149fa80ddf60684eb0eef36470ba5e370c1",
+    "exactAfterPreparationNamespaceTransforms": true
+  },
+  "TaskfoldUITests/TeamTaskBatchDeletionUITests.swift": {
+    "primarySHA256": "97ab44d791f97f2760dc5d182988d1bf8cda7f5aaffca942a3157745d471d07b",
+    "hostSHA256": "97ab44d791f97f2760dc5d182988d1bf8cda7f5aaffca942a3157745d471d07b",
+    "exactAfterPreparationNamespaceTransforms": true
+  }
+}

@@ -117,6 +117,7 @@ struct TeamTaskPlanningReview: View {
     let request: TeamTaskPlanningRequest
     @State private var message: String?
     @State private var finished = false
+    private var changesLabels: Bool { request.selection.changes.values.contains { $0["labels"] != nil } }
     private var changesAssignment: Bool { request.selection.changes.values.contains { $0["assigned_to"] != nil } }
     private var refusal: String? {
         guard !finished else { return "This selection has already been saved." }
@@ -128,7 +129,7 @@ struct TeamTaskPlanningReview: View {
         NavigationStack {
             Form {
                 Section {
-                    Label(request.title, systemImage: changesAssignment ? "person.crop.circle.badge.checkmark" : "calendar.badge.checkmark").font(.title2.weight(.semibold))
+                    Label(request.title, systemImage: changesLabels ? "tag" : changesAssignment ? "person.crop.circle.badge.checkmark" : "calendar.badge.checkmark").font(.title2.weight(.semibold))
                     Text("Review \(request.selection.drafts.count) shared \(request.selection.drafts.count == 1 ? "task" : "tasks"). This change affects everyone with access. The complete selection saves together; a changed or unavailable task pauses the whole action.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
                 if blocked == nil {
@@ -138,7 +139,16 @@ struct TeamTaskPlanningReview: View {
                                 Text(draft.source.title).font(.headline).fixedSize(horizontal: false, vertical: true)
                                 Text(store.record("projects", id: draft.scope.project)?.name ?? "Shared project").font(.caption).foregroundStyle(.secondary)
                                 ForEach(displayKeys(request.selection.changes[draft.source.id] ?? [:]), id: \.self) { key in
-                                    LabeledContent(fieldTitle(key), value: valueTitle(request.selection.changes[draft.source.id]![key]!, key: key)).font(.callout)
+                                    if key == "labels" {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Labels after change").font(.caption).foregroundStyle(.secondary)
+                                            let labels = request.selection.changes[draft.source.id]![key]!.list
+                                            if labels.isEmpty { Text("No labels") }
+                                            ForEach(Array(labels.enumerated()), id: \.offset) { _, value in
+                                                Label(TeamTaskLabelsDraft.displayName(value.text) ?? "Unrecognized saved label", systemImage: "tag").fixedSize(horizontal: false, vertical: true)
+                                            }
+                                        }.font(.callout)
+                                    } else { LabeledContent(fieldTitle(key), value: valueTitle(request.selection.changes[draft.source.id]![key]!, key: key)).font(.callout) }
                                 }
                             }.padding(.vertical, 5).accessibilityElement(children: .combine)
                         }
@@ -183,7 +193,7 @@ struct TeamTaskPlanningReview: View {
         switch key { case "priority": "Priority"; case "due_date": "Date"; case "due_time": "Time"; case "time_zone": "Time zone"; case "scheduled_at": "Date and time"; case "deadline_date": "Deadline"; case "duration_minutes": "Estimate"; case "assigned_to": "Assign to"; default: "Planning" }
     }
     private func displayKeys(_ fields: [String: JSON]) -> [String] {
-        ["priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to"].filter { key in
+        ["priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels"].filter { key in
             guard fields[key] != nil else { return false }
             if key == "scheduled_at", fields["due_date"] != nil || fields["due_time"] != nil { return false }
             if fields["due_date"] == .null, ["due_time", "time_zone"].contains(key), fields[key] == .null { return false }
@@ -211,8 +221,9 @@ struct TeamTaskPlanningSheet: ViewModifier {
     @Binding var request: TeamTaskPlanningRequest?
     @Binding var input: BulkTaskPlanningRequest?
     @Binding var assignment: BulkTaskAssignmentRequest?
-    init(request: Binding<TeamTaskPlanningRequest?>, input: Binding<BulkTaskPlanningRequest?> = .constant(nil), assignment: Binding<BulkTaskAssignmentRequest?> = .constant(nil)) { _request = request; _input = input; _assignment = assignment }
+    @Binding var labels: BulkTaskLabelsRequest?
+    init(request: Binding<TeamTaskPlanningRequest?>, input: Binding<BulkTaskPlanningRequest?> = .constant(nil), assignment: Binding<BulkTaskAssignmentRequest?> = .constant(nil), labels: Binding<BulkTaskLabelsRequest?> = .constant(nil)) { _request = request; _input = input; _assignment = assignment; _labels = labels }
     func body(content: Content) -> some View {
-        content.sheet(item: $request) { TeamTaskPlanningReview(request: $0) }.sheet(item: $input) { BulkTaskPlanningEditor(request: $0) }.sheet(item: $assignment) { BulkTaskAssignmentEditor(request: $0) }
+        content.sheet(item: $request) { TeamTaskPlanningReview(request: $0) }.sheet(item: $input) { BulkTaskPlanningEditor(request: $0) }.sheet(item: $assignment) { BulkTaskAssignmentEditor(request: $0) }.sheet(item: $labels) { BulkTaskLabelsEditor(request: $0) }
     }
 }

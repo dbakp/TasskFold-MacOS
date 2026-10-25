@@ -3179,6 +3179,10 @@ extension Store {
                     tasks[index]["due_time"] = .string("09:30"); tasks[index]["time_zone"] = .string("UTC")
                     tasks[index]["scheduled_at"] = .string(String(format: "2026-11-%02dT09:30:00.000Z", 5 + offset))
                 }
+                if ProcessInfo.processInfo.arguments.contains("--team-label-batch-testing") {
+                    let labels: [[JSON]] = [[.string("Design"), .string("ec240000-0000-4000-8000-000000000009")], [.string("design"), .string("Keep")], [.string("Unselected")]]
+                    for index in tasks.indices { tasks[index]["labels"] = .array(labels[min(index, 2)]) }
+                }
                 if ProcessInfo.processInfo.arguments.contains("--team-planning-personal-testing") {
                     projects.append(Record(["id": .string(TeamEditorNativeFixture.personalPlanningProject), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Personal planning studio")]))
                     for index in 0..<3 {

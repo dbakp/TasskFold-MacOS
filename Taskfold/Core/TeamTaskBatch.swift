@@ -4,7 +4,7 @@ import Foundation
 /// remain frozen inside the envelope; a transport retry never rebuilds the group.
 struct TeamTaskBatch: Codable, Equatable, Sendable {
     enum Operation: String, Codable, Sendable { case delete, restore, edit }
-    static let planningFields: Set<String> = ["priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to"]
+    static let planningFields: Set<String> = ["priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels"]
     static func dateFields(task: Record, day: String?) -> [String: JSON] {
         guard let day else { return ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null] }
         guard Dates.parse(day) != nil else { return [:] }

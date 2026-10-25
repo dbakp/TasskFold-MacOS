@@ -79,3 +79,57 @@ extension TeamTaskLabelsDraft {
         var result = mutation; result.fields["labels"] = .array(TaskLabels.normalized(values, labels: catalog)); return result
     }
 }
+
+/// Names are portable shared values; the personal catalog is never consulted.
+enum TeamTaskLabelAction: String, CaseIterable, Identifiable {
+    case add, remove, clear
+    var id: String { rawValue }
+    var title: String { switch self { case .add: "Add"; case .remove: "Remove"; case .clear: "Clear all" } }
+}
+struct TeamTaskBulkLabels {
+    static func name(action: TeamTaskLabelAction, input: String) throws -> String {
+        switch action {
+        case .clear: return ""
+        case .add: return try TeamTaskLabelsDraft.name(input)
+        case .remove:
+            guard input.utf8.count <= 1024, TeamTaskLabelsDraft.displayName(input) != nil else {
+                throw AppFailure(message: "Choose an exact saved label name without hidden formatting.")
+            }
+            return input
+        }
+    }
+    static func changes(records: [Record], action: TeamTaskLabelAction, input: String) throws -> [String: [String: JSON]] {
+        guard (1...100).contains(records.count), Set(records.map(\.id)).count == records.count else { throw TeamTaskBatch.invalid }
+        let name = try Self.name(action: action, input: input)
+        return try Dictionary(uniqueKeysWithValues: records.map { row in
+            // Shared server rows have an array. A missing/newer shape cannot
+            // provide an exact reversible baseline; refresh it before editing.
+            guard case .array(let original) = row["labels"], TeamTaskLabelsDraft(row["labels"]).supported else {
+                throw AppFailure(message: "A selected task’s saved labels need to be refreshed before editing this selection.")
+            }
+            let desired: [JSON]
+            switch action {
+            case .add:
+                if original.contains(.string(name)) { desired = original }
+                else {
+                    guard original.count < 256 else { throw AppFailure(message: "A selected task already has 256 labels. Remove one before adding another.") }
+                    desired = original + [.string(name)]
+                }
+            case .remove: desired = original.filter { $0 != .string(name) }
+            case .clear: desired = []
+            }
+            return (row.id, ["labels": .array(desired)])
+        })
+    }
+    static func suggestions(records: [Record], action: TeamTaskLabelAction = .add) -> [String] {
+        var names = Set<String>()
+        for row in records.prefix(100) {
+            for value in row["labels"].list.prefix(256) {
+                guard case .string(let text) = value, let name = try? Self.name(action: action, input: text), name == text else { continue }
+                names.insert(name)
+                if names.count >= 200 { return names.sorted { $0.localizedStandardCompare($1) == .orderedAscending } }
+            }
+        }
+        return names.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+}

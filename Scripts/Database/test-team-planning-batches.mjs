@@ -5,15 +5,18 @@ import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadTeamPlanningBatchSchema,teamPlanningBatchMigration} from './team-planning-batch-schema.mjs';
 import {loadTeamAssignmentBatchSchema,teamAssignmentBatchMigration} from './team-assignment-batch-schema.mjs';
 import {assignmentBatchChecks} from './team-assignment-batch-checks.mjs';
-const assignments=process.env.TASKFOLD_TEST_ASSIGNMENT_BATCHES==='1';
+import {loadTeamLabelBatchSchema,teamLabelBatchMigration} from './team-label-batch-schema.mjs';
+import {labelBatchChecks} from './team-label-batch-checks.mjs';
+const labels=process.env.TASKFOLD_TEST_LABEL_BATCHES==='1';
+const assignments=labels||process.env.TASKFOLD_TEST_ASSIGNMENT_BATCHES==='1';
 const report={checks:{},deployed:false,realDataChanged:false,rolloutEnabled:false};
 const check=(name,value,expected=true)=>{assert.deepEqual(value,expected,name);report.checks[name]=true};
 const json=x=>lit(JSON.stringify(x))+'::jsonb',team=randomUUID(),projects=[randomUUID(),randomUUID()].sort();
 const users=Object.fromEntries(['owner','editor','viewer','outsider'].map(name=>[name,{id:randomUUID(),session:randomUUID()}]));
 let pg;
 try {
- pg=await createPostgresFixture({advisors:true});await (assignments?loadTeamAssignmentBatchSchema:loadTeamPlanningBatchSchema)(pg.raw);
- report.migrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+(assignments?teamAssignmentBatchMigration:teamPlanningBatchMigration),import.meta.url))).digest('hex');
+ pg=await createPostgresFixture({advisors:true});await (labels?loadTeamLabelBatchSchema:assignments?loadTeamAssignmentBatchSchema:loadTeamPlanningBatchSchema)(pg.raw);
+ report.migrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+(labels?teamLabelBatchMigration:assignments?teamAssignmentBatchMigration:teamPlanningBatchMigration),import.meta.url))).digest('hex');
  for(const [name,u] of Object.entries(users))await pg.raw(`insert into auth.users(id,email,email_confirmed_at)values(${lit(u.id)},${lit(name+'@example.invalid')},now());insert into auth.sessions(id,user_id)values(${lit(u.session)},${lit(u.id)});`);
  await pg.raw(`insert into taskfold_private.teams(id,owner_id,name)values(${lit(team)},${lit(users.owner.id)},'Planning workshop');`+Object.entries(users).filter(([n])=>n!=='outsider').map(([n,u])=>`insert into taskfold_private.team_members(team_id,user_id,role)values(${lit(team)},${lit(u.id)},${lit(n==='owner'?'admin':'member')});`).join(''));
  for(const p of projects)await pg.raw(`insert into public.projects(id,user_id,name)values(${lit(p)},${lit(users.owner.id)},'Planning project');insert into taskfold_private.team_content_projects(project_id,team_id)values(${lit(p)},${lit(team)});insert into taskfold_private.team_project_grants values(${lit(p)},${lit(team)},${lit(users.viewer.id)},'viewer');`);
@@ -29,7 +32,7 @@ try {
  for(const who of ['viewer','outsider'])check(who+' cannot plan shared selections',(await rpc(initial,{who})).code,'42501');
  for(const role of ['anon','service_role'])check(role+' cannot invoke planning authority',(await rpc(initial,{role})).code,'42501');
  check('replaced session cannot plan',(await rpc(initial,{session:randomUUID()})).code,'28000');
- for(const field of ['title','completed',...(assignments ? [] : ['assigned_to']),'labels','subtasks','recurrence_pattern','project_id','section_id']) {const b=await body({[field]:null});check('separate action required for '+field,(await rpc(b)).code,'22023');}
+ for(const field of ['title','completed',...(assignments ? [] : ['assigned_to']),...(labels ? [] : ['labels']),'subtasks','recurrence_pattern','project_id','section_id']) {const b=await body({[field]:null});check('separate action required for '+field,(await rpc(b)).code,'22023');}
  for(const [name,change]of [['empty selection',b=>b.items.splice(0)],['duplicate member',b=>b.items[1]=b.items[0]],['duplicate nonce',b=>b.items[1].request_id=b.items[0].request_id],['group nonce as member',b=>b.items[0].request_id=b.request_id],['unknown envelope',b=>b.extra=true],['restore lineage on edit',b=>b.restores=randomUUID()],['empty changes',b=>b.items[0].changes={}],['cross-team item',b=>b.items[1].team_id=randomUUID()]]) {const b=await body();change(b);check(name+' refused',(await rpc(b)).code,'22023');}
  const changed=await body();await pg.raw(`update public.tasks set description='Newer private note' where id=${lit(ids[1])}`);check('unrelated changed source stops entire selection',(await rpc(changed)).code,'PT409');check('first row unchanged after source conflict',(await row(ids[0])).priority,4);await pg.raw(`update public.tasks set description='Private original note' where id=${lit(ids[1])}`);
  const missing=await body();missing.items[1].task_generation=randomUUID();check('recreated identity rejected',(await rpc(missing)).code,'PT409');
@@ -49,6 +52,7 @@ try {
  const dated=await body({due_date:'2026-11-12'});check('date planning supports the complete selection',(await rpc(dated)).code,null);check('date saved on both selected tasks',(await Promise.all(ids.map(row))).map(r=>r.due_date),['2026-11-12','2026-11-12']);const already=await rpc(await body({due_date:'2026-11-12'}));check('already correct tasks remain explicit reviewed members',already.value?.items.length,2);
  const sparse=await body({due_date:null,due_time:null,time_zone:null,scheduled_at:null});for(const item of sparse.items)for(const key of ['due_time','time_zone','scheduled_at'])delete item.record[key];check('absent optional clock fields retain null semantics',(await rpc(sparse)).code,null);check('sparse date removal clears every selected date',(await Promise.all(ids.map(row))).map(r=>r.due_date),[null,null]);check('sparse date removal retains notes',(await row(ids[0])).description,'Private original note');
  if(assignments)await assignmentBatchChecks({pg,lit,check,body,rpc,row,ids,projects,users,team});
+ if(labels)await labelBatchChecks({pg,lit,check,body,rpc,row,ids,projects,users,team});
  const deletion={team_id:team,request_id:randomUUID(),items:(await body()).items.map(({changes,...item})=>item)};check('legacy delete operation remains supported',(await run('editor',`public.taskfold_team_task_batch('delete',${json(deletion)})`)).code,null);
  for(const role of ['anon','authenticated','service_role'])check(role+' has no private batch table access',await pg.scalar(`select to_jsonb(has_table_privilege(${lit(role)},'taskfold_private.team_task_batches','SELECT'))`),false);
  report.advisors=await pg.advisors();check('no new advisor findings',report.advisors.result.filter(x=>['WARN','ERROR'].includes(x.level)&&x.name!=='auth_rls_initplan'),[]);

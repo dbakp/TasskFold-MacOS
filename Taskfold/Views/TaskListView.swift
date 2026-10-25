@@ -457,7 +457,10 @@ struct TaskListView: View {
             }
             Button("Edit Deadlines…", systemImage: "flag.checkered") { workspace.editDeadlines(targets) }.accessibilityIdentifier("bulkDeadlines")
             Button("Edit Estimates…", systemImage: "hourglass") { workspace.editEstimates(targets) }.accessibilityIdentifier("bulkEstimates")
-            if store.hasSharedTaskSelection(targets) { Button("Assign Shared Tasks…", systemImage: "person.crop.circle.badge.checkmark") { workspace.assignSharedSelection(targets) }.accessibilityIdentifier("bulkAssignShared") }
+            if store.hasSharedTaskSelection(targets) {
+                Button("Assign Shared Tasks…", systemImage: "person.crop.circle.badge.checkmark") { workspace.assignSharedSelection(targets) }.accessibilityIdentifier("bulkAssignShared")
+                Button("Edit Shared Labels…", systemImage: "tag") { workspace.editSharedLabels(targets) }.accessibilityIdentifier("bulkSharedLabels")
+            }
             Menu("Move to") {
                 Button("Inbox", systemImage: "tray") { workspace.move(targets, toProject: "") }
                 ForEach(store.projects) { project in Button(project.name, systemImage: "folder") { workspace.move(targets, toProject: project.id) } }
