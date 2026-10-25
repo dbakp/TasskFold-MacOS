@@ -1,0 +1,103 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "modelName": "MacBook Pro",
+        "osBuildNumber": "25G83",
+        "osVersion": "26.6.2",
+        "platform": "macOS"
+      },
+      "expectedFailures": 0,
+      "failedTests": 6,
+      "passedTests": 1,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+  "expectedFailures": 0,
+  "failedTests": 6,
+  "finishTime": 1792949478.248,
+  "passedTests": 1,
+  "result": "Failed",
+  "runtimeWarnings": [
+    {
+      "issueType": "Runtime Warning",
+      "message": "Invalid view geometry: height is negative."
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "Invalid view geometry: height is negative."
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "Invalid view geometry: width is negative."
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "Invalid view geometry: width is negative."
+    }
+  ],
+  "skippedTests": 0,
+  "startTime": 1792949307.493,
+  "statistics": [],
+  "testFailures": [
+    {
+      "failureText": "XCTAssertTrue failed - Attributes: Application, 0xc66a275c0, pid: 52714, title: 'Taskfold Workflow Test', Disabled\n[Unrelated system menu hierarchy omitted]\n",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 1,
+      "testIdentifierString": "TeamCompletionRecoveryMacUITests/testRecordedGroupArchiveColdRecovery()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedGroupArchiveColdRecovery",
+      "testName": "testRecordedGroupArchiveColdRecovery()"
+    },
+    {
+      "failureText": "XCTAssertTrue failed - Attributes: Application, 0xc665f5180, pid: 52818, title: 'Taskfold Workflow Test', Disabled\n[Unrelated system menu hierarchy omitted]\n",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 2,
+      "testIdentifierString": "TeamCompletionRecoveryMacUITests/testRecordedGroupPauseColdRecovery()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedGroupPauseColdRecovery",
+      "testName": "testRecordedGroupPauseColdRecovery()"
+    },
+    {
+      "failureText": "XCTAssertTrue failed - Attributes: Application, 0xc655b1400, pid: 52891, title: 'Taskfold Workflow Test', Disabled\n[Unrelated system menu hierarchy omitted]\n",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 3,
+      "testIdentifierString": "TeamCompletionRecoveryMacUITests/testRecordedGroupViewerColdRecovery()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedGroupViewerColdRecovery",
+      "testName": "testRecordedGroupViewerColdRecovery()"
+    },
+    {
+      "failureText": "XCTAssertTrue failed - Attributes: Application, 0xc655a3ac0, pid: 52972, title: 'Taskfold Workflow Test', Disabled\n[Unrelated system menu hierarchy omitted]\n",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 4,
+      "testIdentifierString": "TeamCompletionRecoveryMacUITests/testRecordedSingleArchiveColdRecovery()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedSingleArchiveColdRecovery",
+      "testName": "testRecordedSingleArchiveColdRecovery()"
+    },
+    {
+      "failureText": "XCTAssertTrue failed - Attributes: Application, 0xc65608640, pid: 53060, title: 'Taskfold Workflow Test', Disabled\n[Unrelated system menu hierarchy omitted]\n",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 5,
+      "testIdentifierString": "TeamCompletionRecoveryMacUITests/testRecordedSinglePauseColdRecovery()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedSinglePauseColdRecovery",
+      "testName": "testRecordedSinglePauseColdRecovery()"
+    },
+    {
+      "failureText": "XCTAssertTrue failed - Attributes: Application, 0xc655f6f80, pid: 53159, title: 'Taskfold Workflow Test', Disabled\n[Unrelated system menu hierarchy omitted]\n",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 7,
+      "testIdentifierString": "TeamCompletionRecoveryMacUITests/testRecordedSingleViewerColdRecovery()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedSingleViewerColdRecovery",
+      "testName": "testRecordedSingleViewerColdRecovery()"
+    }
+  ],
+  "title": "Test - Taskfold",
+  "topInsights": [],
+  "totalTestCount": 7
+}

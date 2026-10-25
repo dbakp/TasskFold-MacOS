@@ -6615,3 +6615,54 @@ protected for separate review; no action silently drops those drafts.
 No SQL, hosted schema/configuration, rollout, real task/account, OAuth/provider or
 user-deferred release/device work changed. See p2-terminal-completion-recovery-evidence.json
 and terminal-completion-recovery/. The broader rank-6/Px goal remains active.
+
+## 25 October 2026 — Native recurring history and Mac recovery follow-up
+
+Three new actual native recurring cases pass on each iPhone and iPad: recorded
+individual, recorded group, and already-cancelled group with a permanent saved
+draft. Two ordinary cold-recovery regressions also pass on each device. All ten
+cases have zero failures/skips and no runtime warnings. The tests use the actual
+list checkbox/group confirmation, Undo toast and Task options → Undo & redo → Redo.
+
+Captured snapshots independently confirm source revisions 1/2/3 and states
+complete/open/complete, removal of the generated next occurrence on Undo, exactly
+one next occurrence on Redo with a fresh generation/nonce, the same captured clock,
+linked history identities, reset checklist children and preserved notes. A later
+scoped edit to the latest occurrence is added through the reserved fixture. Cold
+sync reads only the current boundary and matching status before review. Recorded
+acceptance preserves the queued Undo, Redo, edit and complete task projection;
+cancelled group acceptance retains the entire connected history and edited next
+occurrence in a permanent encrypted draft that reopens after relaunch. All six
+recurring post-acceptance snapshots survive another launch exactly, apart from
+knownTasks/quarantined Codable Set ordering.
+
+This stage changes DEBUG fixtures and acceptance tests, not the production
+completion/storage/service contracts. The peer seals only the first completion's
+recorded/cancelled result and returns later Undo/Redo as unrecorded. It does not
+pretend to deliver that later history to a server. Existing independent SQL fixture
+checks remain separately recorded; SQL and the Core suite were not rerun here.
+Installed Simulator app/debug-library/Info hashes match the final signed products.
+The phone recorded individual review and iPad permanent draft were visually checked.
+
+All seven separately signed Mac cases now execute and pass with no runtime
+warnings: individual/group viewer, archived-project and write-paused cold recovery,
+plus current-observation refresh. The test now locates the app's separate sandbox
+through the user's passwd home and sends a Finder/Dock-style Launch Services open
+request after process launch, explicitly reusing the sole existing app instance.
+The DEBUG screen picks up an already-discovered review on mount and avoids a second
+startup sync once that review exists. The former no-window and duplicate-read
+failures are retained as diagnostic evidence; production launch behavior is unchanged.
+Each cold case observes exactly two recovery reads, unchanged saved queue/tables
+before review, retained later edits and current read restrictions after acceptance,
+full snapshot equality after relaunch and one main window. Refreshed instructions
+are saved only on acceptance. Group viewer and refreshed individual previews were
+visually inspected. These Mac cases use ordinary synthetic roots; Mac recurring
+history and broader keyboard/spoken acceptance remain open.
+
+Native Mac recurring gestures/history, storage/account-race acceptance, child-series
+and moved-series native cases, genuine hosted later-history/multiwriter delivery,
+missing-incarnation authored/cross-table recovery, large workloads and the remaining
+advanced/wearable backlog stay open. User-deferred release/provider/device work stays
+deferred. No real account/task or hosted schema/configuration changed. See
+p2-recurring-native-recovery-evidence.json and recurring-native-recovery/ in each
+platform repository. Platform sources and build inputs remain independently owned.

@@ -1,5 +1,6 @@
 import XCTest
 import AppKit
+import Darwin
 
 final class TaskfoldMacUITests: XCTestCase {
     @MainActor func testTeamOrganizationOverviewAndRoleScopedDetail() {
@@ -3366,7 +3367,11 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
     private let bundle = "com.dbakp.taskfold.mac.workflowteststeameditbridge"
     override func setUp() { super.setUp(); continueAfterFailure = false }
     private func support() throws -> URL {
-        try XCTUnwrap(FileManager.default.homeDirectory(forUser: NSUserName())).appendingPathComponent("Library/Containers/" + bundle + "/Data/Library/Application Support")
+        // Foundation resolves the current user's home to the runner's sandbox.
+        // The passwd record locates the separate, reserved app container instead.
+        let user = try XCTUnwrap(getpwuid(getuid()))
+        let home = URL(fileURLWithPath: String(cString: user.pointee.pw_dir), isDirectory: true)
+        return home.appendingPathComponent("Library/Containers/" + bundle + "/Data/Library/Application Support")
     }
     private func saved() throws -> [String: Any] {
         try JSONSerialization.jsonObject(with: Data(contentsOf: support().appendingPathComponent("Taskfold/ec240000-0000-4000-8000-000000000001.json"))) as! [String: Any]
@@ -3385,13 +3390,30 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
     private func attach(_ value: Any, _ name: String) throws {
         let proof = XCTAttachment(data: try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]), uniformTypeIdentifier: "public.json"); proof.name = name; proof.lifetime = .keepAlways; add(proof)
     }
+    /// XCTest starts the process; Launch Services supplies the user-open event
+    /// that Finder/Dock normally send. Never create a second app instance.
+    @MainActor private func open(_ app: XCUIApplication) throws {
+        app.launch()
+        let instances = NSRunningApplication.runningApplications(withBundleIdentifier: bundle)
+        XCTAssertEqual(instances.count, 1)
+        let url = try XCTUnwrap(instances.first?.bundleURL)
+        let opened = expectation(description: "Open the reserved Mac workspace")
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        configuration.createsNewApplicationInstance = false
+        NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, error in
+            XCTAssertNil(error); opened.fulfill()
+        }
+        wait(for: [opened], timeout: 10)
+        app.activate()
+    }
     @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false) throws {
         guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Reserved isolated Mac host required") }
         app.launchArguments = ["--team-editor-testing", "--team-editor-reset", "--team-batch-testing", "--team-batch-recovery-testing", "--team-batch-recovery-recorded", "--team-batch-recovery-" + mode, "-appearance", "light"]
         if single { app.launchArguments.append("--team-single-recovery-testing") }
         if !refresh { app.launchArguments.append("--team-batch-recovery-dependent") }
         else { app.launchArguments.append("--team-single-recovery-refresh") }
-        app.launch(); app.activate()
+        try open(app)
         XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 15), app.debugDescription)
         XCTAssertEqual(app.windows.count, 1)
     }
@@ -3404,8 +3426,15 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         XCTAssertFalse(tail.isEmpty)
         app.buttons[single ? "Later" : "laterTeamBatchRecovery"].click()
         XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 8))
-        app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; app.launchArguments.append("--team-batch-recovery-blocked-sync"); app.launch(); app.activate()
-        XCTAssertTrue(confirm.waitForExistence(timeout: 15), app.debugDescription)
+        app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; app.launchArguments.append("--team-batch-recovery-blocked-sync"); try open(app)
+        let reviewAppeared = confirm.waitForExistence(timeout: 15)
+        if !reviewAppeared {
+            try attach(try saved(), "Mac cold discovery failed snapshot")
+            if let data = try? Data(contentsOf: support().appendingPathComponent("taskfold-cold-discovery-diagnostic.json")), let diagnostic = try? JSONSerialization.jsonObject(with: data) { try attach(diagnostic, "Mac cold discovery diagnostic") }
+            let traceURL = try support().appendingPathComponent("taskfold-cold-discovery-trace.json")
+            if let data = try? Data(contentsOf: traceURL), let trace = try? JSONSerialization.jsonObject(with: data) { try attach(trace, "Mac cold discovery failed trace") }
+        }
+        XCTAssertTrue(reviewAppeared, app.debugDescription)
         let discovered = try saved()
         XCTAssertEqual(pending(discovered) as NSArray, pending(before) as NSArray)
         XCTAssertEqual(discovered["tables"] as? NSDictionary, before["tables"] as? NSDictionary)
@@ -3423,7 +3452,7 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         XCTAssertEqual((raw["projects"] as? [[String: Any]])?.first?["archived"] as? Bool, mode == "archived")
         XCTAssertEqual(raw["setup_paused"] as? Bool, mode == "paused")
         XCTAssertEqual(app.windows.count, 1)
-        app.terminate(); app.launchArguments.removeAll { $0 == "--team-batch-recovery-blocked-sync" }; app.launch(); app.activate()
+        app.terminate(); app.launchArguments.removeAll { $0 == "--team-batch-recovery-blocked-sync" }; try open(app)
         XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 12))
         let restarted = try saved(); XCTAssertEqual(canonical(after), canonical(restarted)); XCTAssertEqual(app.windows.count, 1)
         try attach(after, "Mac recovery after acceptance " + (single ? "single " : "group ") + mode)

@@ -1089,6 +1089,8 @@ struct TeamEditorNativeFixtureView: View {
             NavigationStack {
                 Form {
                     Text("Queued edits: \(store.snapshot.pending.count)").accessibilityIdentifier("macRecoveryPending")
+                    if let notice = store.notice { Text(notice).accessibilityIdentifier("macRecoveryNotice") }
+                    if let error = store.error { Text(error).accessibilityIdentifier("macRecoveryError") }
                     Button("Review saved action") { Task { await store.prepareTeamBatchRecoveryFixture(); recoveryPresented = store.syncConflict != nil } }.accessibilityIdentifier("openMacCompletionRecovery")
                     Button("Check paused sync") { Task { await store.sync(); recoveryPresented = store.syncConflict != nil } }.accessibilityIdentifier("discoverMacCompletionRecovery")
                     Button("Saved team drafts") { draftsPresented = true }.accessibilityIdentifier("openMacSavedDrafts")
@@ -1096,14 +1098,15 @@ struct TeamEditorNativeFixtureView: View {
             }
             .sheet(isPresented: $recoveryPresented) { if let conflict = store.syncConflict { ConflictReview(conflict: conflict) } }
             .sheet(isPresented: $draftsPresented) { SavedTeamDraftsView() }
-            .onChange(of: store.syncConflict?.completionBatchReview) { _, value in
+            .onChange(of: store.syncConflict?.completionBatchReview, initial: true) { _, value in
                 if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync"), value != nil { recoveryPresented = true }
             }
-            .onChange(of: store.syncConflict?.completionReview) { _, value in
+            .onChange(of: store.syncConflict?.completionReview, initial: true) { _, value in
                 if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync"), value != nil { recoveryPresented = true }
             }
             .task {
-                if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync") { await store.sync() }
+                // Connectivity may discover the saved review before this window opens.
+                if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync"), store.syncConflict == nil { await store.sync() }
             }
         } else if TeamTemplateNativeFixture.enabled {
             NavigationStack {

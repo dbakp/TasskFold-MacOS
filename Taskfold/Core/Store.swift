@@ -1614,6 +1614,13 @@ final class Store {
         var sending: Mutation?
         defer {
             syncing = false
+            #if DEBUG
+            if TeamBatchRecoveryNativePeer.blockedSync {
+                let proof: [String: JSON] = ["completionReview": .bool(syncConflict?.completionReview != nil), "batchReview": .bool(syncConflict?.completionBatchReview != nil), "notice": notice.map(JSON.string) ?? .null, "error": error.map(JSON.string) ?? .null,
+                    "windowCount": .number(Double(NSApp.windows.count)), "visibleWindows": .number(Double(NSApp.windows.filter(\.isVisible).count))]
+                try? JSONEncoder().encode(proof).write(to: TeamBatchRecoveryNativePeer.traceFile.deletingLastPathComponent().appendingPathComponent("taskfold-cold-discovery-diagnostic.json"), options: .atomic)
+            }
+            #endif
             if let retry = syncAfterSignInRequested {
                 syncAfterSignInRequested = nil
                 Task { await self.resumeSyncAfterSignIn(workspace: retry) }
@@ -3320,6 +3327,7 @@ extension Store {
             try? FileManager.default.removeItem(at: AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).teamAccessFence)
         }
         if TeamBatchRecoveryNativePeer.blockedSync { try? FileManager.default.removeItem(at: TeamBatchRecoveryNativePeer.traceFile) }
+        if TeamBatchRecoveryNativePeer.recurring, ProcessInfo.processInfo.arguments.contains("--team-editor-reset") { try? FileManager.default.removeItem(at: TeamBatchRecoveryNativePeer.recurringProof) }
         guard ProcessInfo.processInfo.arguments.contains("--team-editor-reset") || record("tasks", id: TeamEditorNativeFixture.taskID) == nil else { return }
         UserDefaults.standard.removeObject(forKey: "teamEditorRecipientUnavailable")
         do {
@@ -3362,6 +3370,14 @@ extension Store {
                 row["is_recurring"] = .bool(false); row["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
                 row["recurrence_end_date"] = .string("2027-10-25")
                 if ProcessInfo.processInfo.arguments.contains("--team-repeat-future") { row["recurrence_pattern"] = .object(["type": .string("hourly"), "future": .bool(true)]) }
+            }
+            if TeamBatchRecoveryNativePeer.recurring {
+                row["is_recurring"] = .bool(true); row["due_date"] = .string("2026-10-25"); row["due_time"] = .string("09:00"); row["time_zone"] = .string("Europe/Copenhagen")
+                row["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
+                row["recurrence_end_date"] = .string("2027-10-25")
+                var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(identifier: "Europe/Copenhagen")!
+                row["scheduled_at"] = .string(ISO8601DateFormatter().string(from: calendar.date(from: DateComponents(year: 2026, month: 10, day: 25, hour: 9))!))
+                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["completed": .bool(true)])
             }
             tasks[0] = row
             if ProcessInfo.processInfo.arguments.contains("--team-batch-testing") {
@@ -3680,6 +3696,88 @@ extension Store {
         raw["projects"] = .array(raw["projects"]!.list.map { value in var project = value.object; project["can_send_tasks"] = .bool(false); project["archived"] = .bool(mode == "archived"); return .object(project) })
         return try TeamWorkspaceBoundary(raw, account: TeamEditorNativeFixture.account, origin: "https://synthetic.example")
     }
+
+    static var recurring: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-recurring") }
+    static var recurringProof: URL { traceFile.deletingLastPathComponent().appendingPathComponent("taskfold-recurring-review-proof.json") }
+    static func rememberRecurring(_ header: Mutation) throws {
+        guard recurring else { return }
+        let body: [String: JSON]
+        if let group = header.teamTaskBatch { body = try group.body(for: header) }
+        else if let command = header.teamCompletion { body = try command.body(for: header) }
+        else { throw TeamCompletion.invalid }
+        let value: [String: JSON] = ["_action": .string("complete"), "_body": .object(body)]
+        if FileManager.default.fileExists(atPath: recurringProof.path) {
+            guard try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recurringProof)) == value else { throw TeamCompletion.invalid }
+        } else { try JSONEncoder().encode(value).write(to: recurringProof, options: .atomic) }
+    }
+    /// A sealed first-completion observation, not an emulation of later writes.
+    /// The domain forecast is already checked against independent SQL fixtures.
+    static func recurringCommand(_ body: [String: JSON], operation: TeamCompletion.Operation) throws -> Mutation {
+        let source = Record(body["record"]?.object ?? [:])
+        guard let id = UUID(uuidString: body["request_id"]?.text ?? ""),
+              let clock = TaskPlanning.instant(body["completed_at"]?.text ?? ""),
+              source.string("project_id") == TeamEditorNativeFixture.projectID,
+              body["series_id"] == .string(source.id) else { throw TeamCompletion.invalid }
+        let scope = TeamTaskEditScope(account: TeamEditorNativeFixture.account, origin: "https://synthetic.example", team: TeamEditorNativeFixture.teamID, project: source.string("project_id"))
+        let related = body[operation == .undo ? "undoes" : "redo_of"].flatMap { UUID(uuidString: $0.text) }
+        guard operation != .undo || related != nil else { throw TeamCompletion.invalid }
+        let forecast = try TeamCompletion.complete(source, tasks: [source], scope: scope, at: clock, zone: body["input_zone"]?.text ?? "", id: operation == .undo ? related! : id)
+        var proposed = forecast.teamCompletion!.proposed
+        proposed?["task_generation"] = body["next_generation"]!
+        let command = TeamCompletion(scope: scope, operation: operation, source: source, completedAt: body["completed_at"]!.text, inputZone: body["input_zone"]!.text, seriesID: source.id,
+                                     seriesGeneration: body["series_generation"]?.text ?? "", seriesProject: body["series_project_id"]?.text ?? "", nextGeneration: body["next_generation"]?.text ?? "", proposed: proposed, related: related)
+        let header = TeamCompletion.header(command, id: id)
+        guard try command.body(for: header) == body else { throw TeamCompletion.invalid }
+        return header
+    }
+    static func recurringResponse(_ params: [String: JSON], single: Bool) throws -> Data {
+        guard recurring, let operation = TeamCompletion.Operation(rawValue: params["_action"]?.text ?? ""),
+              let body = params["_body"]?.object else { throw TeamCompletion.invalid }
+        let proof = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recurringProof))
+        let original = proof["_body"]!.object
+        let originalItems = original["items"]?.list ?? [.object(original)], items = single ? [.object(body)] : body["items"]?.list ?? []
+        guard !items.isEmpty else { throw TeamCompletion.invalid }
+        let sealed = proof == params, cancelled = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-cancelled")
+        let recorded = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-recorded") && !cancelled
+        let state = sealed ? (cancelled ? "cancelled" : recorded ? "recorded" : "unrecorded") : "unrecorded"
+        var current: [String: (Record, Record?)] = [:]
+        for item in originalItems {
+            let header = try recurringCommand(item.object, operation: .complete), command = header.teamCompletion!
+            let task = recorded ? TaskCompletionRevision.applying(["completed": .bool(true), "completed_at": .string(command.completedAt)], to: command.source) : command.source
+            guard current.index(forKey: task.id) == nil else { throw TeamCompletion.invalid }
+            current[task.id] = (task, recorded ? command.proposed : nil)
+        }
+        var views: [JSON] = []
+        let identityKeys = ["team_id", "project_id", "task_id", "task_generation", "request_id", "series_id", "series_generation", "series_project_id", "planned_next_id"]
+        for item in items {
+            let b = item.object
+            let header = try recurringCommand(b, operation: operation)
+            let command = header.teamCompletion!
+            guard let (task, originalNext) = current[command.source.id] else { throw TeamCompletion.invalid }
+            let next: Record? = originalNext?.id == command.proposed?.id ? originalNext : nil
+            let nextValue: JSON = next.map { JSON.object($0.fields) } ?? .null
+            let related: JSON = command.related.map { JSON.string($0.uuidString.lowercased()) } ?? .null
+            var identity: [String: JSON] = [:]
+            for key in identityKeys { identity[key] = b[key]! }
+            var receipt = identity
+            receipt["protocol"] = .number(1); receipt["account"] = .string(TeamEditorNativeFixture.account)
+            receipt["operation"] = .string(operation.rawValue); receipt["related_request"] = related; receipt["replayed"] = .bool(true)
+            receipt["source_revision"] = task["completion_version"]; receipt["created_successor"] = .bool(next != nil); receipt["removed_successor"] = .bool(false)
+            receipt["successor_id"] = next.map { JSON.string($0.id) } ?? .null
+            receipt["successor_generation"] = next?["task_generation"] ?? .null
+            receipt["task"] = .object(task.fields); receipt["successor"] = nextValue
+            var view = identity
+            view["review_protocol"] = .number(1); view["account"] = .string(TeamEditorNativeFixture.account); view["operation"] = .string(operation.rawValue)
+            view["state"] = .string(state); view["project_role"] = .string(readOnlyMode == "viewer" ? "viewer" : "editor")
+            view["task"] = .object(task.fields); view["series"] = .object(task.fields); view["successor"] = nextValue
+            view["receipt"] = state == "recorded" ? .object(receipt) : .null
+            view["can_edit_current"] = .bool(readOnlyMode == nil); view["can_edit_series"] = .bool(readOnlyMode == nil)
+            views.append(.object(view))
+        }
+        if single { return try JSONEncoder().encode(views[0]) }
+        let receipt: JSON = state == "recorded" ? .object(["batch_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string(operation.rawValue), "related_request": body["related_request"] ?? .null, "items": .array(views.map { $0.object["receipt"]! }), "replayed": .bool(true)]) : .null
+        return try JSONEncoder().encode(["group_review_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string(operation.rawValue), "related_request": body["related_request"] ?? .null, "state": .string(state), "items": .array(views), "receipt": receipt])
+    }
     static func response(_ request: URLRequest) -> Data? {
         guard enabled, request.url?.host == "synthetic.example" else { return nil }
         trace(request)
@@ -3691,7 +3789,9 @@ extension Store {
             stream.open(); defer { stream.close() }; var value = Data(), bytes = [UInt8](repeating: 0, count: 4096)
             while stream.hasBytesAvailable && value.count < 2_000_000 { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; value.append(contentsOf: bytes.prefix(count)) }; data = value
         }
-        guard let data, let params = try? JSONDecoder().decode([String: JSON].self, from: data), params["_action"] == .string("complete"),
+        guard let data, let params = try? JSONDecoder().decode([String: JSON].self, from: data) else { return nil }
+        if recurring { return try? recurringResponse(params, single: request.url?.path == "/rest/v1/rpc/taskfold_review_team_completion") }
+        guard params["_action"] == .string("complete"),
               let body = params["_body"]?.object, body["team_id"] == .string(TeamEditorNativeFixture.teamID),
               let nonce = body["request_id"]?.text, TeamProjectValue.id(nonce) else { return nil }
         let single = request.url?.path == "/rest/v1/rpc/taskfold_review_team_completion"
@@ -3745,6 +3845,15 @@ extension Store {
                 }
                 header = first; snapshot.pending[0] = first; undoStack = []; redoStack = []; try persist()
             }
+            if TeamBatchRecoveryNativePeer.recurring, ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-dependent"), snapshot.pending.count == 3 {
+                let last = snapshot.pending.last!
+                guard let item = last.teamCompletion != nil ? last : last.teamTaskBatch?.items.first,
+                      let command = item.teamCompletion, let proposed = command.proposed,
+                      let row = snapshot.tables["tasks"]?.first(where: { $0.id == proposed.id && $0["task_generation"] == proposed["task_generation"] }) else { throw TeamCompletion.invalid }
+                let fields: [String: JSON] = ["title": .string("Later recurring occurrence proof"), "description": .string("Keep these later recurring instructions")]
+                let edit = try command.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: command.scope), existing: row)
+                snapshot.apply(edit); snapshot.pending.append(edit); try persist()
+            }
             if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-dependent"), snapshot.pending.count == 1,
                let item = header.teamCompletion != nil ? header : header.teamTaskBatch?.items.first, let command = item.teamCompletion,
                let row = snapshot.tables["tasks"]?.first(where: { $0.id == item.recordID }) {
@@ -3763,6 +3872,7 @@ extension Store {
                 if mode == "archived" { for i in snapshot.tables["projects"]!.indices { snapshot.tables["projects"]![i]["is_archived"] = .bool(true) } }
                 try persist()
             }
+            try TeamBatchRecoveryNativePeer.rememberRecurring(header)
             if header.teamCompletion != nil {
                 let review = try await backend.reviewTeamCompletion(header, expectedAccount: userID)
                 syncConflict = SyncConflict(mutation: header, remote: review.task ?? header.teamCompletion!.source, completionReview: review)

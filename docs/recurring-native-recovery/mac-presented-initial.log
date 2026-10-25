@@ -1,0 +1,139 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-mac-recovery-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamCompletionRecoveryMacUITests/testRecordedSingleViewerColdRecovery" -resultBundlePath /tmp/taskfold-recurring-recovery-mac-presented.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-recurring-recovery-mac-presented.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-25 18:32:00.825107+0100 TaskfoldUITests-Runner[53390:20454467] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-25 18:32:00.920.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-25 18:32:00.921.
+Test Suite 'TeamCompletionRecoveryMacUITests' started at 2026-10-25 18:32:00.921.
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedSingleViewerColdRecovery]' started.
+    t =     0.00s Start Test at 2026-10-25 18:32:00.921
+    t =     0.18s Set Up
+    t =     0.19s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.19s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 18:32:01.184 xcodebuild[53378:20454236] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:32:01.184 xcodebuild[53378:20454236] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.38s         Wait for accessibility to load
+    t =     1.63s         Setting up automation session
+    t =     1.65s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.67s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.67s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.67s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.67s Waiting 15.0s for "openMacCompletionRecovery" Button to exist
+    t =     2.71s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =     2.72s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =     2.88s Get number of matches for: Descendants matching type Window
+    t =     2.91s Click "openMacCompletionRecovery" Button
+    t =     2.91s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.92s     Find the "openMacCompletionRecovery" Button
+    t =     2.99s     Check for interrupting elements affecting "openMacCompletionRecovery" Button
+    t =     3.00s     Synthesize event
+    t =     3.48s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.52s Waiting 12.0s for "continueTeamCompletionReview" Button to exist
+    t =     4.56s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =     4.56s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =     4.68s Click "Later" Button
+    t =     4.68s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.69s     Find the "Later" Button
+    t =     4.75s     Check for interrupting elements affecting "Later" Button
+    t =     4.76s     Synthesize event
+    t =     5.26s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.55s Waiting 8.0s for "openMacCompletionRecovery" Button to exist
+    t =     6.59s     Checking `Expect predicate `existsNoRetry == 1` for object "openMacCompletionRecovery" Button`
+    t =     6.59s         Checking existence of `"openMacCompletionRecovery" Button`
+    t =     6.66s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:53393
+    t =     7.72s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     7.72s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-25 18:32:08.648 xcodebuild[53378:20454236] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-25 18:32:08.648 xcodebuild[53378:20454236] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     8.24s         Wait for accessibility to load
+    t =     8.33s         Setting up automation session
+    t =     8.36s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.36s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     8.36s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     8.37s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.38s Waiting 15.0s for "continueTeamCompletionReview" Button to exist
+    t =     9.42s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =     9.42s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =     9.55s         Capturing element debug description
+    t =    10.40s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    10.40s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    10.43s         Capturing element debug description
+    t =    11.38s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    11.38s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    11.42s         Capturing element debug description
+    t =    12.46s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    12.46s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    12.50s         Capturing element debug description
+    t =    13.43s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    13.44s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    13.47s         Capturing element debug description
+    t =    14.40s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    14.40s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    14.46s         Capturing element debug description
+    t =    15.42s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    15.42s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    15.46s         Capturing element debug description
+    t =    16.39s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    16.39s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    16.43s         Capturing element debug description
+    t =    17.46s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    17.47s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    17.50s         Capturing element debug description
+    t =    18.44s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    18.44s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    18.48s         Capturing element debug description
+    t =    19.43s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    19.43s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    19.49s         Capturing element debug description
+    t =    20.42s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    20.42s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    20.47s         Capturing element debug description
+    t =    21.41s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    21.41s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    21.45s         Capturing element debug description
+    t =    22.39s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    22.39s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    22.43s         Capturing element debug description
+    t =    23.38s     Checking `Expect predicate `existsNoRetry == 1` for object "continueTeamCompletionReview" Button`
+    t =    23.38s         Checking existence of `"continueTeamCompletionReview" Button`
+    t =    23.41s         Capturing element debug description
+    t =    23.42s     Checking existence of `"continueTeamCompletionReview" Button`
+    t =    23.45s Collecting debug information to assist test failure triage
+    t =    23.45s     Requesting snapshot of accessibility hierarchy for app with pid 53414
+    t =    23.53s Added attachment named 'Mac cold discovery failed snapshot'
+    t =    23.53s Added attachment named 'Mac cold discovery failed trace'
+    t =    23.53s Requesting snapshot of accessibility hierarchy for app with pid 53414
+    t =    23.53s Using snapshot previously cached by application
+    t =    23.53s Requesting snapshot of accessibility hierarchy for app with pid 53414
+/tmp/taskfold-mac-recovery-host/TaskfoldUITests/TaskfoldMacUITests.swift:3419: error: -[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedSingleViewerColdRecovery] : XCTAssertTrue failed - Attributes: Application, 0x700e19f40, pid: 53414, title: 'Taskfold Workflow Test', Disabled
+[Unrelated system menu hierarchy omitted]
+
+    t =    23.72s Tear Down
+Test Case '-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedSingleViewerColdRecovery]' failed (24.421 seconds).
+Test Suite 'TeamCompletionRecoveryMacUITests' failed at 2026-10-25 18:32:25.343.
+	 Executed 1 test, with 1 failure (0 unexpected) in 24.421 (24.422) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-25 18:32:25.344.
+	 Executed 1 test, with 1 failure (0 unexpected) in 24.421 (24.423) seconds
+Test Suite 'Selected tests' failed at 2026-10-25 18:32:25.345.
+	 Executed 1 test, with 1 failure (0 unexpected) in 24.421 (24.425) seconds
+2026-10-25 18:32:36.642 xcodebuild[53378:20454236] [MT] IDETestOperationsObserverDebug: 36.699 elapsed -- Testing started completed.
+2026-10-25 18:32:36.642 xcodebuild[53378:20454236] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-25 18:32:36.642 xcodebuild[53378:20454236] [MT] IDETestOperationsObserverDebug: 36.699 sec, +36.699 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-recurring-recovery-mac-presented.xcresult
+
+Failing tests:
+	TeamCompletionRecoveryMacUITests.testRecordedSingleViewerColdRecovery()
+
+** TEST EXECUTE FAILED **
+
+Testing started
