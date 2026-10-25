@@ -588,6 +588,18 @@ final class Backend: NSObject {
         try command.confirmed(await teamProjectReceipt(action: command.action.rawValue, body: command.body, account: command.account, origin: command.origin))
     }
 
+    private func taskMoveReceipt(operation: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
+        guard !sessionTransition, session?.user.id == account, TeamProjectValue.id(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/rest/v1/rpc/taskfold_team_task_move", method: "POST", body: ["_operation": .string(operation), "_body": .object(body)], expectedAccount: account)
+        guard let raw = try? JSONDecoder().decode([String: JSON].self, from: data) else { throw TeamTaskMoveCommand.invalid }; return raw
+    }
+    func teamTaskMoveReview(_ scope: TeamTaskMoveScope) async throws -> TeamTaskMoveReview {
+        try TeamTaskMoveReview(await taskMoveReceipt(operation: scope.reviewOperation, body: scope.body, account: scope.account, origin: scope.origin), scope: scope)
+    }
+    func teamTaskMove(_ command: TeamTaskMoveCommand) async throws -> TeamTaskMoveReceipt {
+        try command.confirmed(await taskMoveReceipt(operation: command.operation, body: command.body, account: command.account, origin: command.origin))
+    }
+
     private func automationReceipt(action: String, body: [String: JSON], account: String, origin: String) async throws -> [String: JSON] {
         guard !sessionTransition, session?.user.id == account, AutomationKey.canonicalID(account), origin == (try accountRemovalOrigin) else { throw CancellationError() }
         let data = try await request("/functions/v1/automation-keys", method: "POST", body: ["action": .string(action), "body": .object(body)],

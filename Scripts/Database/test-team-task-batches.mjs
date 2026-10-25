@@ -31,6 +31,10 @@ try {
     const { loadTeamWorkspaceSchema } = await import("./team-workspace-schema.mjs");
     await loadTeamWorkspaceSchema(pg.raw);
     report.currentWorkspaceSchema = true;
+    if (process.env.TASKFOLD_TEAM_MOVE_REGRESSION === "1") {
+      const { loadTeamTaskMoveSchema, teamTaskMoveMigration } = await import("./team-move-schema.mjs");
+      await loadTeamTaskMoveSchema(pg.raw, { base: false }); report.taskMoveMigration = teamTaskMoveMigration;
+    }
   } else { await loadTeamBatchSchema(pg.raw); }
   report.migrationSHA256 = createHash("sha256").update(
     await readFile(

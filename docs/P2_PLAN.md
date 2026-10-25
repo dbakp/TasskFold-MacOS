@@ -2994,3 +2994,47 @@ Watch/Wear OS and the full ranked Px objective stay in scope. Team rollout remai
 disabled; every user-deferred release/provider/remote-delivery dependency stays
 deferred. Owned test apps/runners and temporary builds/results are removed after
 evidence preservation; baseline Simulator states and Core caches remain intact.
+
+
+## Shared-task move service and client recovery — 25 October 2026, rank 6 in progress
+
+Both repositories independently own a disabled same-team task-move service and
+its typed client/recovery foundation. This stage does **not** add a native Move
+screen or complete task moves, personal-project adoption, or rank 6.
+
+A review identifies the exact source/destination, literal task, destination
+visibility, discussion count and assignments to clear/restore. Its short-lived
+server proof binds task/discussion epochs and the workspace-access boundary.
+The transaction preserves identity, creator, generation, notes and other task
+fields; moves comments with incremented revisions; retains mention read history;
+updates custody; and clears section/root/child assignments. Undo/Redo restore
+reviewed placement through encrypted, 30-day recovery with existing cleanup and
+account-removal lifecycles. Receipt/key locking and a final key check prevent
+using a recovery copy erased while Undo waited. Provider-bound attachments stop
+for their own transfer review; cross-team moves and personal destinations stop.
+
+The client saves one exact IDs/proof-only request privately per account/server
+before sending. Lost replies, write/remove faults, foreign acknowledgements,
+account switches and another window's changed request preserve safe recovery.
+An expired saved request may still reach the server for acknowledgement of a
+previously accepted action; the service rejects its first application after
+expiry. No ordinary task writer gains a shared-project move path. Account
+removal erases the separate move vault.
+
+Each repo passes 334 focused team Core cases (15 new move cases), 90 owned
+PostgreSQL move checks, and the existing 72 batch checks with this migration
+loaded. No focused failures or skips remain. Both isolated Debug arm64 apps
+build; the Mac helper omits its widget extension. The batch regression exposed
+an unsafe trigger branch for linked-task detach updates; type-specific nested
+branches fix it and the complete 72-case run passes on each current schema.
+Advisors report no new warnings; known fixture-policy performance notices remain.
+
+Next: native reviewed destination selection with queued-edit/session/workspace
+fencing, durable retry/clear, fresh cache reconciliation and linked Undo/Redo;
+phone/tablet/Mac layout, runtime, keyboard and spoken acceptance; broader hosted
+lifecycle/concurrency acceptance; and a separately reviewed personal-project
+adoption workflow. Per-task provider file custody, templates/conversations/files,
+independent child records, remaining Watch/Wear OS and wider Px work stay open.
+No hosted migration/configuration or rollout switch changed. All user-deferred
+release, older-client rollout, remote-delivery, OAuth/provider and real location
+dependencies remain deferred. See `p2-team-task-move-foundation-evidence.json`.
