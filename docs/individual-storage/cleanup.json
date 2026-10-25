@@ -1,0 +1,42 @@
+{
+  "temporaryMacTaskfoldProcessesRemaining": 0,
+  "reservedSimulatorAppsUninstalled": true,
+  "originalSimulatorBootStatesPreserved": true,
+  "ownedScratchLogicalBytesRemoved": 919986902,
+  "removed": [
+    "taskfold-single-storage-mac-accepted.xcresult",
+    "taskfold-single-storage-phone-accepted.xcresult",
+    "taskfold-single-storage-mac-build-corrected.log",
+    "taskfold-single-storage-ios-build-corrected.log",
+    "taskfold-single-storage-mac-build.log",
+    "taskfold-single-storage-phone-attachments",
+    "taskfold-single-storage-mac.xcresult",
+    "taskfold-single-storage-mac.log",
+    "taskfold-single-storage-export-initial.log",
+    "taskfold-single-storage-mac-attachments",
+    "taskfold-single-storage-ipad-accepted.log",
+    "taskfold-single-storage-signatures.json",
+    "taskfold-single-storage-ios-build.log",
+    "taskfold-single-storage-host",
+    "taskfold-single-storage-ipad-accepted.xcresult",
+    "taskfold-single-storage-prepare.log",
+    "taskfold-single-storage-collect.py",
+    "taskfold-single-storage-ipad-attachments",
+    "taskfold-single-storage-phone-accepted.log",
+    "taskfold-single-storage-mac-first-attachments",
+    "taskfold-single-storage-document.py",
+    "taskfold-single-storage-mac-accepted.log",
+    "taskfold-single-storage-run.py",
+    "taskfold-single-storage-ios-build",
+    "taskfold-single-storage-edit.py",
+    "taskfold-single-storage-copy.py"
+  ],
+  "preserved": [
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/.build",
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/.build",
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "/tmp/taskfold-workflow-mac-native-host",
+    "/tmp/taskfold-workflow-mac-native-build"
+  ]
+}

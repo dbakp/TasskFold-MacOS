@@ -3407,15 +3407,15 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         wait(for: [opened], timeout: 10)
         app.activate()
     }
-    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil) throws {
+    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil, dependent: Bool = true) throws {
         guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Reserved isolated Mac host required") }
         app.launchArguments = ["--team-editor-testing", "--team-editor-reset", "--team-batch-testing", "--team-batch-recovery-testing", "--team-batch-recovery-recorded", "--team-batch-recovery-" + mode, "-appearance", "light"]
         if !recorded { app.launchArguments.removeAll { $0 == "--team-batch-recovery-recorded" } }
         if let storage { app.launchArguments.append("--team-recovery-storage=" + storage) }
         if let race { app.launchArguments.append("--team-recovery-race=" + race) }
         if single { app.launchArguments.append("--team-single-recovery-testing") }
-        if !refresh { app.launchArguments.append("--team-batch-recovery-dependent") }
-        else { app.launchArguments.append("--team-single-recovery-refresh") }
+        if refresh { app.launchArguments.append("--team-single-recovery-refresh") }
+        else if dependent { app.launchArguments.append("--team-batch-recovery-dependent") }
         try open(app)
         XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 15), app.debugDescription)
         XCTAssertEqual(app.windows.count, 1)
@@ -3633,4 +3633,100 @@ extension TeamCompletionRecoveryMacUITests {
 extension TeamCompletionRecoveryMacUITests {
     @MainActor func testGroupCancellationErrorCannotReplaceMessageAfterAccessChange() throws { try delayedRecovery("cancel-access-error") }
     @MainActor func testSingleCancellationErrorKeepsNewEditsAndTheirCurrentMessage() throws { try delayedRecovery("single-cancel-edit-error") }
+}
+
+
+extension TeamCompletionRecoveryMacUITests {
+    /// Exercise real filesystem failures through the individual review's alert,
+    /// including a remote cancellation that outlives a failed local save.
+    @MainActor private func singleStorageRecovery(_ scenario: String) throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        let recorded = scenario == "recorded-cache", fault = scenario == "cancel-backup" ? "backup" : "cache"
+        try launch(app, mode: "viewer", single: true, recorded: recorded, storage: fault, dependent: recorded)
+        app.buttons["openMacCompletionRecovery"].click()
+        XCTAssertTrue(app.buttons[recorded ? "continueTeamCompletionReview" : "cancelSavedTeamCompletion"].waitForExistence(timeout: 12))
+        let fm = FileManager.default, support = try support()
+        let cacheFile = support.appendingPathComponent("Taskfold/ec240000-0000-4000-8000-000000000001.json")
+        let vault = cacheFile.deletingLastPathComponent().appendingPathComponent("Backups/d2be2d54-84e6-8f3d-8850-546d0835535a")
+        defer {
+            app.terminate(); app.launchArguments = ["--team-editor-testing", "--team-recovery-storage-cleanup"]
+            do { try open(app); XCTAssertFalse(fm.fileExists(atPath: support.appendingPathComponent("taskfold-storage-proof-journal.json").path)) }
+            catch { XCTFail("Could not restore reserved individual storage fixture: \(error)") }
+            app.terminate()
+        }
+        let before = try saved(), bytes = try Data(contentsOf: cacheFile), expected = pending(before)
+        let head = try XCTUnwrap(expected.first), nonce = try XCTUnwrap(head["id"] as? String).lowercased()
+        let command = try XCTUnwrap(head["teamCompletion"] as? [String: Any]), source = try XCTUnwrap(command["source"] as? [String: Any])
+        XCTAssertEqual(expected.count, recorded ? 2 : 1); XCTAssertNil(head["teamTaskBatch"])
+        let ledgerURL = support.appendingPathComponent("taskfold-group-review-peer.json")
+        func ledger() throws -> [String: Any] {
+            guard fm.fileExists(atPath: ledgerURL.path) else { return [:] }
+            return try JSONSerialization.jsonObject(with: Data(contentsOf: ledgerURL)) as! [String: Any]
+        }
+        XCTAssertNil(try ledger()[nonce])
+        app.buttons["blockNativeRecoveryStorage"].click()
+        XCTAssertTrue(app.staticTexts["Storage blocked"].waitForExistence(timeout: 8), app.debugDescription)
+        let button = app.buttons[recorded ? "continueTeamCompletionReview" : "cancelSavedTeamCompletion"]
+        XCTAssertTrue(button.isEnabled); button.click()
+        let message = "Taskfold couldn’t finish saving this review. Your queued work is unchanged. Check storage access and try again."
+        let warning = app.staticTexts.matching(NSPredicate(format: "label == %@ OR value == %@", message, message)).firstMatch
+        XCTAssertTrue(warning.waitForExistence(timeout: 15), app.debugDescription)
+        shot(app, "Individual storage alert " + scenario)
+        let failedLedger = try ledger()
+        if scenario == "cancel-cache" { XCTAssertNotNil(failedLedger[nonce], "Remote cancellation is durable even though local cache write failed") }
+        else { XCTAssertNil(failedLedger[nonce], "Required safety copy must precede cancellation") }
+        let durableURL = fault == "cache" ? cacheFile.appendingPathExtension("storage-proof-held") : cacheFile
+        let failedBytes = try Data(contentsOf: durableURL)
+        XCTAssertEqual(failedBytes, bytes, "Failure cannot rewrite even the durable workspace bytes")
+        let failed = try JSONSerialization.jsonObject(with: failedBytes) as! [String: Any]
+        XCTAssertEqual(canonicalSingleStorage(failed), canonicalSingleStorage(before))
+        let ok = app.windows.buttons["OK"].firstMatch; XCTAssertTrue(ok.waitForExistence(timeout: 5)); ok.click()
+        app.buttons["repairNativeRecoveryStorage"].click()
+        XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+        var reopened: [String: Any]?
+        if scenario == "cancel-cache" {
+            app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; try open(app)
+            let review = app.buttons["openMacCompletionRecovery"]; XCTAssertTrue(review.waitForExistence(timeout: 15)); review.click()
+            XCTAssertTrue(button.waitForExistence(timeout: 12)); reopened = try saved()
+            XCTAssertEqual(canonicalSingleStorage(try XCTUnwrap(reopened)), canonicalSingleStorage(before))
+            XCTAssertEqual(try ledger() as NSDictionary, failedLedger as NSDictionary, "Reading cancelled status cannot replace the frozen cancellation")
+        }
+        XCTAssertTrue(button.isEnabled, "The same individual review remains retryable"); button.click()
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 20), app.debugDescription)
+        let after = try saved()
+        if recorded {
+            XCTAssertEqual(pending(after) as NSArray, Array(expected.dropFirst()) as NSArray)
+            XCTAssertEqual(after["tables"] as? NSDictionary, before["tables"] as? NSDictionary)
+            XCTAssertNil(try ledger()[nonce])
+        } else {
+            XCTAssertTrue(pending(after).isEmpty); XCTAssertNotNil(try ledger()[nonce])
+            let afterRows = try XCTUnwrap((after["tables"] as? [String: Any])?["tasks"] as? [[String: Any]])
+            XCTAssertEqual(try XCTUnwrap(afterRows.first { $0["id"] as? String == source["id"] as? String }) as NSDictionary, source as NSDictionary)
+            let oldRows = try XCTUnwrap((before["tables"] as? [String: Any])?["tasks"] as? [[String: Any]])
+            XCTAssertEqual(afterRows.filter { $0["id"] as? String != source["id"] as? String } as NSArray, oldRows.filter { $0["id"] as? String != source["id"] as? String } as NSArray)
+            if scenario == "cancel-cache" { XCTAssertEqual(try ledger() as NSDictionary, failedLedger as NSDictionary) }
+        }
+        let metadata = try XCTUnwrap(after["teamWorkspace"] as? [String: Any]), boundary = try XCTUnwrap(metadata["boundary"] as? [String: Any]), raw = try XCTUnwrap(boundary["raw"] as? [String: Any])
+        XCTAssertEqual((raw["projects"] as? [[String: Any]])?.first?["can_send_tasks"] as? Bool, false)
+        app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; try open(app)
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 15))
+        let restarted = try saved(); XCTAssertEqual(canonicalSingleStorage(after), canonicalSingleStorage(restarted))
+        var phases: [(String, [String: Any])] = [("before", before), ("failed durable", failed), ("after retry", after), ("after relaunch", restarted), ("cancellation ledger after failure", failedLedger), ("cancellation ledger after retry", try ledger())]
+        if let reopened { phases.append(("reopened after failure", reopened)) }
+        for (phase, value) in phases {
+            let proof = XCTAttachment(data: try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]), uniformTypeIdentifier: "public.json")
+            proof.name = "Individual storage " + scenario + " " + phase; proof.lifetime = .keepAlways; add(proof)
+        }
+        shot(app, "Individual storage repaired " + scenario)
+    }
+    private func canonicalSingleStorage(_ value: [String: Any]) -> NSDictionary {
+        var value = value
+        if var access = value["teamWorkspace"] as? [String: Any] {
+            for key in ["knownTasks", "quarantined"] { if let ids = access[key] as? [String] { access[key] = ids.sorted() } }; value["teamWorkspace"] = access
+        }
+        return value as NSDictionary
+    }
+    @MainActor func testIndividualRecordedCacheFailureKeepsAuthoredTailAndRetry() throws { try singleStorageRecovery("recorded-cache") }
+    @MainActor func testIndividualCancellationBackupFailureCannotSendBeforeRetry() throws { try singleStorageRecovery("cancel-backup") }
+    @MainActor func testIndividualCancellationCacheFailureRecoversReceiptAfterRelaunch() throws { try singleStorageRecovery("cancel-cache") }
 }

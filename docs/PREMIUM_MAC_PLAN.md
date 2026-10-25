@@ -6742,3 +6742,41 @@ races, native individual storage failures, Mac recurring history, broader keyboa
 spoken checks, missing-incarnation authored/cross-table recovery, large workloads
 and genuine hosted multiwriter delivery remain open. No hosted schema, service,
 configuration, rollout or real account/task changed. User deferrals remain intact.
+
+
+## 25 October: individual review storage failure and relaunch acceptance
+
+Three additional native scenarios now pass separately on Mac, iPhone and iPad:
+recorded acknowledgement cannot write the workspace; individual cancellation
+cannot write its required backup index; and cancellation reaches the local peer
+but cannot save its local result. The last scenario repairs storage, quits,
+relaunches and reads the same cancelled request before accepting it. Its original
+queue remains intact until successful acceptance; retry does not change the frozen
+cancellation receipt. The recorded case preserves its exact authored tail, and
+cancellation restores the entire original source row while keeping unrelated work.
+
+All nine scenarios assert unchanged durable workspace bytes on failure and complete
+snapshot equality after final relaunch. Current viewer restrictions remain in force.
+The individual review's native alert is readable and dismisses correctly before
+retry. Four Mac cases pass, including the existing viewer cold-recovery control;
+three cases pass on each Simulator, with no failures, skips or runtime warnings.
+These are new acceptance checks of the existing production implementation, not a
+new user-facing feature. No production app source changed. The preceding 191 Core
+checks per repo remain associated with the unchanged production source; they were
+not rerun for these test-only changes.
+
+The initial Mac run reached all three expected alerts but selected a Touch Bar
+proxy for OK; the final query is scoped to the real window. An iOS test-local name
+initially shadowed the cache reader and was rejected at compile time. Both issues
+were corrected before the final signed native runs. Reserved test vaults are
+restored after every case, and temporary sessions are closed. See
+[p2-individual-storage-evidence.json](p2-individual-storage-evidence.json) and
+[individual-storage/](individual-storage/) for complete retained states and counts.
+
+The next implementation priority is preserving authored work when an incarnation
+has disappeared or been replaced, then supported cross-table recovery. Remaining
+acceptance includes provisional-occurrence draft-vault failures, backup/vault
+I/O-phase races, native Mac recurring history, broader keyboard/spoken checks,
+large workloads and genuine hosted multiwriter flows. User-deferred release,
+provider and physical-device work remains deferred. No real task/account, hosted
+schema/service/configuration or rollout changed.

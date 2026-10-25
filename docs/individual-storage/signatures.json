@@ -1,0 +1,10 @@
+{
+  "Taskfold.app": {
+    "strictDeepSignatureVerified": true,
+    "team": "3UZ4C73FM2"
+  },
+  "TaskfoldUITests-Runner.app": {
+    "strictDeepSignatureVerified": true,
+    "team": "3UZ4C73FM2"
+  }
+}
