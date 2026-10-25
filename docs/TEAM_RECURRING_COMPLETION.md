@@ -540,3 +540,62 @@ release/provider/device work changed. Single-task/cancelled-head discovery, auth
 missing-incarnation and cross-table recovery, native recurring/Undo/Redo/spoken/
 storage/account-race acceptance, Mac runtime, large-workload and genuine hosted
 acceptance remain open. The full rank-6/Px goal remains active.
+
+## 25 October 2026 — Individual completion discovery after reopening
+
+The normal sync loop now inspects an access-blocked individual completion as well
+as a completion selection before a workspace merge. Discovery captures the full
+snapshot, head request, account/origin and current read boundary. Only a matching,
+validated recorded response opens the existing completion review. It neither
+resends nor acknowledges the action. Writable heads use their existing send path;
+unrecorded, cancelled, unreadable, malformed and unrelated heads remain protected.
+
+Accepting an individual recorded review now retains the current read boundary on
+disk rather than restoring earlier writer access. Fresh read access must cover the
+source and repeat-series projects. Connected later edits retain their exact typed
+commands and nonces; malformed/foreign scopes, lost cache custody and comment or
+other pending references to a displaced occurrence refuse acknowledgement. Existing
+single-action reconciliation handles its supported recurring complete/Undo/Redo
+history; mixed connected groups still need the broader cohort work. No refusal
+removes the saved action or authored work.
+
+Native refresh and Continue capture the complete snapshot/access/account context;
+late changes discard their result. Final reconciliation runs away from the main actor
+and is rechecked before persistence. A failed refresh keeps the review available.
+The existing premium completion review explains that later edits stay queued until
+current project access permits syncing.
+
+Each independent repo passes 735 of 736 selected Core cases, with one live shared-
+conversation test skipped because disposable accounts are not configured. Seven new
+cases cover cold eligibility and exact status, stale snapshots/access/envelopes,
+malformed and unrelated heads, view/archive/pause recovery with typed edits,
+recurring Undo/Redo and independent tails, lost custody and displaced comment drafts.
+Actual recorded/Undo wire fixtures from the existing SQL tests are reused. SQL and
+local date/time representations are compared semantically; authored values and
+queued commands remain exact. Both final Debug app builds pass.
+
+Five actual UI tests pass on each iPhone and iPad with no runtime warnings:
+three individual cold-recovery cases (viewer/archive/write pause), a grouped
+cold-recovery regression and a refresh case that changes the observed instructions.
+Each cold case verifies unchanged task/queue values before review, exactly two POST
+reads (workspace boundary and the matching single/group status endpoint), explicit
+Continue, current restrictions and exact remaining commands after a second launch.
+The refresh case verifies newer instructions are displayed before acceptance,
+without changing the queue/task projection, then saved on Continue. All retained
+cold snapshots compare equal after sorting only Codable Set identifier arrays.
+Installed binary/library/Info hashes match the signed final test products. Phone
+individual-review and iPad refreshed-review screenshots were inspected for readable
+presentation. Initial four-case runs per device also passed; final five-case runs
+cover the final source. Mac runtime is not claimed.
+
+The native individual command is seeded from one actual captured completion member
+inside the reserved DEBUG fixture, with the other synthetic members restored before
+testing. Native wire delivery is through the isolated local HTTP peer, not a hosted
+service. See p2-single-completion-discovery-evidence.json and single-completion-discovery/.
+
+The reserved DEBUG peer and fixture use synthetic ordinary roots. Native recurring
+history, Mac runtime/window/spoken checks, storage/account-race acceptance, other
+terminal-state discovery, authored missing-incarnation/cross-table recovery,
+large-workload and genuine hosted acceptance remain open. No SQL, hosted schema,
+service configuration, rollout or real account/task changed. All user-deferred
+release/provider/device work remains deferred; the full rank-6/Px goal stays active.

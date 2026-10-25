@@ -168,7 +168,10 @@ struct ConflictReview: View {
             if let latest = store.syncConflict?.completionBatchReview, latest.mutation == review.mutation { TeamCompletionBatchReviewContent(review: latest) }
             else { TeamCompletionBatchReviewContent(review: review) }
         }
-        else if let review=conflict.completionReview { TeamCompletionReviewContent(review:review) }
+        else if let review = conflict.completionReview {
+            if let latest = store.syncConflict?.completionReview, latest.mutation == review.mutation { TeamCompletionReviewContent(review: latest) }
+            else { TeamCompletionReviewContent(review: review) }
+        }
         else { ordinaryReview }
     }
     private var ordinaryReview: some View {
@@ -284,8 +287,8 @@ private struct TeamCompletionReviewContent: View {
     let review: TeamCompletion.Review
     @State private var checking=false
     @State private var message:String?
-    private var current:Bool {store.syncConflict?.completionReview == review && store.snapshot.pending.first == review.mutation}
-    private var canContinue:Bool {current && !review.isCancelled && (!review.isRecorded || review.acknowledging(store.snapshot) != nil)}
+    private var current:Bool {store.currentTeamCompletionReview(review)}
+    private var canContinue:Bool {store.canContinueTeamCompletionReview(review)}
     private var canUseSynced:Bool {current && review.canRequestCancellation(store.snapshot)}
     private var command:TeamCompletion {review.mutation.teamCompletion!}
     var body:some View {
@@ -328,6 +331,9 @@ private struct TeamCompletionReviewContent: View {
                 }
                 Section {
                     if park == nil && ((review.isRecorded && !canContinue) || (!review.isRecorded && !canUseSynced)) {Text("Additional task changes are saved on this device. They need a separate review before sync can resume.").foregroundStyle(.secondary)}
+                    if review.isRecorded && canContinue && store.snapshot.pending.count > 1 {
+                        Text("Later edits remain saved and queued on this device. They sync only when your current project access allows them.").foregroundStyle(.secondary)
+                    }
                     if !review.isRecorded && !review.isCancelled {Text("Retry keeps your original action and completion time. If the task changed, your work stays saved for review.").foregroundStyle(.secondary)}
                     if !review.isRecorded {Text("Use synced task cancels only this saved action and removes its untouched local next occurrence. A recovery copy is saved first. Related edits and comment drafts stay protected.").foregroundStyle(.secondary)}
                     if !review.isRecorded && !review.canEditCurrent && review.task != nil {Text("Editing is not available for this task right now. You can keep the synced version or check again after project access changes.").foregroundStyle(.secondary)}
@@ -375,8 +381,12 @@ private struct TeamCompletionReviewContent: View {
         .onChange(of:store.workspaceGeneration){_,_ in dismiss()}
     }
     private func continueReview() {
-        if store.continueTeamCompletionReview(review) {dismiss()}
-        else {message=store.error ?? "Reopen the current sync review.";store.error=nil}
+        checking = true
+        Task {
+            let success = await store.continueTeamCompletionReview(review); checking = false
+            if success { dismiss() }
+            else { message = store.error ?? "Reopen the current sync review."; store.error = nil }
+        }
     }
     private func resolve(rebase:Bool) {
         checking=true

@@ -1923,27 +1923,37 @@ final class Store {
         }
     }
 
-    /// Inspect a blocked immutable group before a workspace merge can replace
+    /// Inspect a blocked immutable completion before a workspace merge can replace
     /// its optimistic projection. This never calls a completion writer.
     private func discoverBlockedTeamCompletion(access: TeamWorkspaceCache) async throws -> Bool {
         guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
               syncConflict == nil, focusSyncConflict == nil, access.boundary.account == userID,
               access.boundary.origin == (try? backend.accountRemovalOrigin) else { return false }
         let generation = accountGeneration, before = snapshot, initialAccess = nativeConversationTeamCache, initialRevision = workspaceReadRevision, account = userID
-        let request = await Task.detached(priority: .userInitiated) { TeamCompletionBatchDiscovery(snapshot: before, access: access) }.value
+        let requests = await Task.detached(priority: .userInitiated) { (TeamCompletionBatchDiscovery(snapshot: before, access: access), TeamCompletionDiscovery(snapshot: before, access: access)) }.value
         guard generation == accountGeneration, snapshot == before, initialRevision == workspaceReadRevision,
               nativeConversationTeamCache == initialAccess, !signingOut, !accountRemovalBlocked,
               syncConflict == nil, focusSyncConflict == nil else { throw CancellationError() }
-        guard let request else { return false }
+        guard requests.0 != nil || requests.1 != nil else { return false }
         if teamAccessMask != access { teamAccessMask = access }
         let revision = workspaceReadRevision
-        let review = try await backend.reviewTeamCompletionBatch(request.mutation, expectedAccount: account)
+        let groupReview: TeamTaskBatch.Review?
+        let singleReview: TeamCompletion.Review?
+        if let request = requests.0 {
+            groupReview = try await backend.reviewTeamCompletionBatch(request.mutation, expectedAccount: account); singleReview = nil
+        } else if let request = requests.1 {
+            singleReview = try await backend.reviewTeamCompletion(request.mutation, expectedAccount: account); groupReview = nil
+        } else { return false }
         guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision,
               nativeConversationTeamCache == access, !signingOut, !accountRemovalBlocked,
               syncConflict == nil, focusSyncConflict == nil else { throw CancellationError() }
-        guard let recorded = request.recorded(review, current: snapshot, readable: access) else { return false }
-        installTeamCompletionBatchReview(recorded)
-        notice = "This task selection already synced. Review its result to continue."
+        if let request = requests.0, let review = groupReview, let recorded = request.recorded(review, current: snapshot, readable: access) {
+            installTeamCompletionBatchReview(recorded)
+            notice = "This task selection already synced. Review its result to continue."
+        } else if let request = requests.1, let review = singleReview, let recorded = request.recorded(review, current: snapshot, readable: access) {
+            syncConflict = SyncConflict(mutation: recorded.mutation, remote: recorded.task ?? recorded.mutation.teamCompletion!.source, completionReview: recorded)
+            notice = "This task action already synced. Review its result to continue."
+        } else { return false }
         return true
     }
 
@@ -2030,36 +2040,47 @@ final class Store {
         }
     }
 
-    @discardableResult func refreshTeamCompletionReview(_ expected:TeamCompletion.Review) async -> Bool {
-        let generation=accountGeneration,account=userID
-        guard syncConflict?.completionReview == expected,snapshot.pending.first == expected.mutation else {return false}
+    func currentTeamCompletionReview(_ review: TeamCompletion.Review) -> Bool {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              syncConflict?.completionReview == review, snapshot.pending.first == review.mutation,
+              let command = review.mutation.teamCompletion, command.scope.account == userID,
+              command.scope.origin == (try? backend.accountRemovalOrigin), let cache = nativeConversationTeamCache else { return false }
+        return command.canReview(review.mutation, readable: cache)
+    }
+    func canContinueTeamCompletionReview(_ review: TeamCompletion.Review) -> Bool {
+        guard currentTeamCompletionReview(review), !review.isCancelled, let cache = nativeConversationTeamCache else { return false }
+        return !review.isRecorded || review.acknowledging(snapshot, readable: cache) != nil
+    }
+    @discardableResult func refreshTeamCompletionReview(_ expected: TeamCompletion.Review) async -> Bool {
+        let generation = accountGeneration, account = userID, before = snapshot, access = nativeConversationTeamCache, revision = workspaceReadRevision
+        guard currentTeamCompletionReview(expected) else { return false }
         do {
-            let review=try await backend.reviewTeamCompletion(expected.mutation,expectedAccount:account)
-            guard generation == accountGeneration,syncConflict?.completionReview == expected,snapshot.pending.first == expected.mutation else {return false}
-            syncConflict=SyncConflict(mutation:expected.mutation,remote:review.task ?? expected.mutation.teamCompletion!.source,completionReview:review)
+            let review = try await backend.reviewTeamCompletion(expected.mutation, expectedAccount: account)
+            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision,
+                  nativeConversationTeamCache == access, currentTeamCompletionReview(expected) else { return false }
+            syncConflict = SyncConflict(mutation: expected.mutation, remote: review.task ?? expected.mutation.teamCompletion!.source, completionReview: review)
             return true
         } catch {
-            guard generation == accountGeneration else {return false}
-            if syncConflict?.completionReview == expected {syncConflict=nil}
-            notice=SyncStatus.failureMessage(error);self.error=notice;return false
+            guard generation == accountGeneration, currentTeamCompletionReview(expected) else { return false }
+            self.error = SyncStatus.failureMessage(error); return false
         }
     }
-    @discardableResult func continueTeamCompletionReview(_ review:TeamCompletion.Review) -> Bool {
-        guard syncConflict?.completionReview == review,snapshot.pending.first == review.mutation,
-              let command=review.mutation.teamCompletion,command.scope.account == userID,
-              command.scope.origin == (try? backend.accountRemovalOrigin) else {return false}
-        guard !review.isCancelled else {return false} // Cancelled projections use the recovery-backed async path.
+    @discardableResult func continueTeamCompletionReview(_ review: TeamCompletion.Review) async -> Bool {
+        let generation = accountGeneration, before = snapshot
+        guard currentTeamCompletionReview(review), !review.isCancelled else { return false }
         if review.isRecorded {
-            guard let next=review.acknowledging(snapshot) else {
-                error="Your additional task changes are still saved. Keep this review for now.";return false
-            }
-            let old=snapshot;snapshot=next
-            do {try persist()} catch {snapshot=old;self.error=error.localizedDescription;return false}
-            undoStack=[];redoStack=[]
+            guard let access = nativeConversationTeamCache else { return false }
+            let revision = workspaceReadRevision
+            let next = await Task.detached(priority: .userInitiated) { review.acknowledging(before, readable: access) }.value
+            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision,
+                  nativeConversationTeamCache == access, currentTeamCompletionReview(review) else { return false }
+            guard let next else { error = "Your additional task changes are still saved. Keep this review for now."; return false }
+            snapshot = next
+            do { try persist() } catch { snapshot = before; self.error = error.localizedDescription; return false }
+            undoStack = []; redoStack = []
         }
-        // An unrecorded observation never discards or changes the command. A
-        // request still in flight and this retry use exactly the same nonce.
-        syncConflict=nil;notice=nil;Task {await sync()};return true
+        // Unrecorded reads retain the original nonce and immutable command.
+        syncConflict = nil; notice = nil; Task { await sync() }; return true
     }
 
     /// Resolution is persisted before resuming. A second simultaneous edit can still conflict safely.

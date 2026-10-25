@@ -973,3 +973,131 @@ final class TeamCompletionTests: XCTestCase {
     }
 
 }
+
+extension TeamCompletionTests {
+    private func recoveryAccess(_ header: Mutation, local: Snapshot, role: String = "viewer", archived: Bool = false, paused: Bool = false, reads: Bool = true, active: Bool = true, missing: Set<String> = [], account: String? = nil, origin: String? = nil) throws -> TeamWorkspaceCache {
+        let command = header.teamCompletion!, owner = account ?? command.scope.account
+        let projects = Set((local.tables["projects"] ?? []).map(\.id)).subtracting(missing).sorted()
+        let raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(owner), "native_team_reads_enabled": .bool(reads), "setup_paused": .bool(paused), "token": .string(String(repeating: "d", count: 64)),
+            "teams": .array(reads ? [.object(["id": .string(command.scope.team), "state": .string(active ? "active" : "archived"), "revision": .number(1), "access_revision": .number(3)])] : []),
+            "projects": .array(reads ? projects.map { .object(["id": .string($0), "team_id": .string(command.scope.team), "role": .string(role), "archived": .bool(archived), "can_send_tasks": .bool(role != "viewer" && !archived && !paused && active)]) } : [])]
+        return try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: owner, origin: origin ?? command.scope.origin), previous: local.teamWorkspace, pending: local.pending, tasks: local.tables["tasks"] ?? [])
+    }
+    private func recoveryProjection(_ header: Mutation) -> Snapshot {
+        var local = snapshot(header)
+        if header.teamCompletion!.operation == .undo {
+            local.tables["tasks"] = [TaskCompletionRevision.applying(["completed": .bool(true), "completed_at": .string(header.teamCompletion!.completedAt)], to: header.teamCompletion!.source)] + [header.teamCompletion!.proposed].compactMap { $0 }
+        }
+        local.apply(header); local.pending = [header]; return local
+    }
+    func testSingleColdDiscoveryRequiresBlockedExactReadableHead() throws {
+        let (header, _, raw) = try reviewFixture(), review = try TeamCompletion.Review(raw, for: header), local = recoveryProjection(header)
+        for mode in ["viewer", "archived", "paused"] {
+            let access = try recoveryAccess(header, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archived", paused: mode == "paused")
+            let request = try XCTUnwrap(TeamCompletionDiscovery(snapshot: local, access: access))
+            XCTAssertEqual(request.mutation, header); XCTAssertEqual(request.recorded(review, current: local, readable: access), review)
+            XCTAssertEqual(local.pending, [header]); XCTAssertEqual(request.snapshot, local)
+        }
+        XCTAssertNil(TeamCompletionDiscovery(snapshot: local, access: try recoveryAccess(header, local: local, role: "editor")))
+        for access in [try recoveryAccess(header, local: local, reads: false), try recoveryAccess(header, local: local, active: false), try recoveryAccess(header, local: local, missing: [header.teamCompletion!.scope.project]), try recoveryAccess(header, local: local, account: UUID().uuidString.lowercased()), try recoveryAccess(header, local: local, origin: "https://foreign.example")] {
+            XCTAssertNil(TeamCompletionDiscovery(snapshot: local, access: access)); XCTAssertNil(review.acknowledging(local, readable: access))
+        }
+    }
+    func testSingleColdDiscoveryRejectsUnrecordedCancelledAndLateContext() throws {
+        let (header, _, raw) = try reviewFixture(), review = try TeamCompletion.Review(raw, for: header), local = recoveryProjection(header), access = try recoveryAccess(header, local: local)
+        let request = try XCTUnwrap(TeamCompletionDiscovery(snapshot: local, access: access))
+        let (_, _, unrecorded) = try reviewFixture(recorded: false)
+        for state in ["unrecorded", "cancelled"] {
+            var value = unrecorded; value["state"] = .string(state)
+            XCTAssertNil(request.recorded(try TeamCompletion.Review(value, for: header), current: local, readable: access))
+        }
+        var changed = local; changed.tables["tasks"]![0]["title"] = .string("Newer local work")
+        XCTAssertNil(request.recorded(review, current: changed, readable: access))
+        changed = local; changed.pending.append(Mutation(table: "preferences", recordID: header.recordID, method: "PATCH", fields: ["name": .string("newer")]))
+        XCTAssertNil(request.recorded(review, current: changed, readable: access))
+        XCTAssertNil(request.recorded(review, current: local, readable: try recoveryAccess(header, local: local, paused: true)))
+        let (undo, _, undoRaw) = try reviewFixture(undo: true)
+        XCTAssertNil(request.recorded(try TeamCompletion.Review(undoRaw, for: undo), current: local, readable: access))
+    }
+    func testSingleColdDiscoveryRefusesMalformedUnrelatedAndDuplicateHeads() throws {
+        let (header, _, _) = try reviewFixture(), local = recoveryProjection(header), access = try recoveryAccess(header, local: local)
+        var changed = local; changed.pending = []; XCTAssertNil(TeamCompletionDiscovery(snapshot: changed, access: access))
+        changed = local; changed.pending = [Mutation(table: "tasks", recordID: header.recordID, method: "PATCH", fields: ["title": .string("draft")]), header]
+        XCTAssertNil(TeamCompletionDiscovery(snapshot: changed, access: access))
+        changed = local; changed.pending = [header, header]; XCTAssertNil(TeamCompletionDiscovery(snapshot: changed, access: access))
+        var bad = header; bad.fields = ["title": .string("tampered")]; changed = local; changed.pending = [bad]
+        XCTAssertNil(TeamCompletionDiscovery(snapshot: changed, access: access))
+    }
+    func testRecordedSingleReadRecoveryPersistsCurrentRestrictionsAndTypedLaterEdits() throws {
+        let (header, _, raw) = try reviewFixture(), review = try TeamCompletion.Review(raw, for: header), command = header.teamCompletion!
+        var local = recoveryProjection(header)
+        let row = try XCTUnwrap(local.tables["tasks"]?.first { $0.id == header.recordID })
+        let fields: [String: JSON] = ["title": .string("Keep the later title"), "description": .string("Keep authored instructions")]
+        let edit = try command.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: command.scope), existing: row)
+        local.apply(edit); local.pending.append(edit)
+        local.teamWorkspace = try recoveryAccess(header, local: local, role: "editor")
+        let before = local
+        for mode in ["viewer", "archived", "paused"] {
+            let access = try recoveryAccess(header, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archived", paused: mode == "paused")
+            let next = try XCTUnwrap(review.acknowledging(local, readable: access))
+            XCTAssertEqual(next.tables["projects"], local.tables["projects"])
+            XCTAssertEqual(next.tables["tasks"]?.count, local.tables["tasks"]?.count)
+            for row in local.tables["tasks"] ?? [] {
+                let kept = try XCTUnwrap(next.tables["tasks"]?.first { $0.id == row.id })
+                XCTAssertTrue(TeamCompletion.sameLocal(kept, row), "Only SQL date/time representation may differ")
+                if row.id == edit.recordID { for (key, value) in fields { XCTAssertEqual(kept[key], value) } }
+            }
+            XCTAssertEqual(next.pending, [edit]); XCTAssertEqual(next.teamWorkspace?.boundary, access.boundary)
+            XCTAssertFalse(try XCTUnwrap(next.teamWorkspace).canSend(edit, in: next)); XCTAssertEqual(local, before)
+            XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(next)), next)
+        }
+    }
+    func testRecordedSingleReadRecoveryRetainsUndoRedoEnvelopeAndIndependentWork() throws {
+        for undo in [false, true] {
+            let (header, _, raw) = try reviewFixture(undo: undo), review = try TeamCompletion.Review(raw, for: header)
+            var local = recoveryProjection(header)
+            let independent = Mutation(table: "preferences", recordID: UUID().uuidString.lowercased(), method: "PATCH", fields: ["appearance": .string("dark")])
+            local.pending.append(independent)
+            let access = try recoveryAccess(header, local: local), request = try XCTUnwrap(TeamCompletionDiscovery(snapshot: local, access: access))
+            XCTAssertEqual(request.recorded(review, current: local, readable: access), review)
+            let next = try XCTUnwrap(review.acknowledging(local, readable: access))
+            XCTAssertEqual(next.pending, [independent]); XCTAssertEqual(next.teamWorkspace?.boundary, access.boundary)
+        }
+        let (header, _, raw) = try reviewFixture(), review = try TeamCompletion.Review(raw, for: header)
+        var local = snapshot(header)
+        let undo = try XCTUnwrap(EditHistory(changes: [header], snapshot: local).undo.first); local.apply(header); local.pending = [header]
+        let sentUndo = TeamCompletion.historyAction(undo, snapshot: local)
+        let redo = try XCTUnwrap(EditHistory(changes: [sentUndo], snapshot: local).undo.first); local.apply(sentUndo); local.pending.append(sentUndo)
+        let sentRedo = TeamCompletion.historyAction(redo, snapshot: local); local.apply(sentRedo); local.pending.append(sentRedo)
+        let next = try XCTUnwrap(review.acknowledging(local, readable: try recoveryAccess(header, local: local)))
+        XCTAssertEqual(next.pending, [sentUndo, sentRedo]); XCTAssertEqual(next.tables, local.tables)
+    }
+    func testSingleReadRecoveryRefusesLostCustodyMalformedAndForeignLaterEdits() throws {
+        let (header, _, raw) = try reviewFixture(), review = try TeamCompletion.Review(raw, for: header)
+        var local = recoveryProjection(header)
+        local.teamWorkspace = try recoveryAccess(header, local: local, role: "editor")
+        var encoded = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(try XCTUnwrap(local.teamWorkspace)))
+        encoded["knownTasks"] = .array(encoded["knownTasks"]!.list + [.string(UUID().uuidString.lowercased())])
+        local.teamWorkspace = try JSONDecoder().decode(TeamWorkspaceCache.self, from: JSONEncoder().encode(encoded))
+        var withoutMemory = local; withoutMemory.teamWorkspace = nil
+        XCTAssertNil(review.acknowledging(local, readable: try recoveryAccess(header, local: withoutMemory)))
+        local = recoveryProjection(header)
+        for scope in [nil, TeamTaskEditScope(account: UUID().uuidString.lowercased(), origin: origin, team: header.teamCompletion!.scope.team, project: header.teamCompletion!.scope.project)] {
+            var changed = local
+            changed.pending.append(Mutation(table: "tasks", recordID: header.recordID, method: "PATCH", fields: ["title": .string("Keep this")], teamTaskScope: scope))
+            let before = changed; XCTAssertNil(review.acknowledging(changed, readable: try recoveryAccess(header, local: changed))); XCTAssertEqual(changed, before)
+        }
+        local.pending.append(header); XCTAssertNil(review.acknowledging(local, readable: try recoveryAccess(header, local: local)))
+    }
+    func testSingleReadRecoveryPreservesCommentDraftOnDisplacedOccurrence() throws {
+        let (header, _, raw) = try reviewFixture(); var reply = raw, receipt = raw["receipt"]!.object, row = raw["successor"]!.object
+        let other = UUID().uuidString.lowercased(); row["task_generation"] = .string(other)
+        receipt["successor"] = .object(row); receipt["successor_generation"] = .string(other); receipt["created_successor"] = .bool(false)
+        reply["successor"] = .object(row); reply["receipt"] = .object(receipt)
+        let review = try TeamCompletion.Review(reply, for: header); var local = recoveryProjection(header)
+        local.tables[ConversationOutbox.table] = [Record(["id": .string(UUID().uuidString.lowercased()), "task_id": .string(header.teamCompletion!.proposed!.id), "text": .string("Keep my draft")])]
+        let before = local; XCTAssertNil(review.acknowledging(local, readable: try recoveryAccess(header, local: local))); XCTAssertEqual(local, before)
+        local.tables[ConversationOutbox.table] = []
+        XCTAssertNotNil(review.acknowledging(local, readable: try recoveryAccess(header, local: local)))
+    }
+}

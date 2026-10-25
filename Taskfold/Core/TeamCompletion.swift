@@ -372,3 +372,78 @@ extension TeamTaskEditorDraft {
             baseline: source.fields, teamTaskScope: scope), existing: source)
     }
 }
+
+
+extension TeamCompletion {
+    /// Current read access can inspect a frozen action without granting permission
+    /// to resend it or any later edits.
+    func canReview(_ header: Mutation, readable cache: TeamWorkspaceCache) -> Bool {
+        guard (try? body(for: header)) != nil,
+              cache.boundary.belongs(account: scope.account, origin: scope.origin),
+              cache.boundary.raw["native_team_reads_enabled"] == .bool(true),
+              cache.boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(scope.team) && $0.object["state"] == .string("active") }) == true else { return false }
+        return [scope.project, seriesProject].allSatisfy { cache.boundary.projects[$0]?.team == scope.team }
+    }
+}
+
+extension TeamCompletion.Review {
+    /// Keep current read restrictions on disk when accepting an already recorded
+    /// action. This is local reconciliation, never permission for a task write.
+    func acknowledging(_ snapshot: Snapshot, readable cache: TeamWorkspaceCache) -> Snapshot? {
+        guard isRecorded, let command = mutation.teamCompletion, command.canReview(mutation, readable: cache),
+              Set(snapshot.pending.map(\.id)).count == snapshot.pending.count,
+              Set((snapshot.tables["tasks"] ?? []).map(\.id)).count == (snapshot.tables["tasks"] ?? []).count else { return nil }
+        if let old = snapshot.teamWorkspace {
+            guard old.boundary.belongs(account: command.scope.account, origin: command.scope.origin),
+                  old.knownTasks.isSubset(of: cache.knownTasks), old.knownTeams.allSatisfy({ cache.knownTeams[$0.key] == $0.value }) else { return nil }
+        }
+        let affected = Set([command.source.id, command.proposed?.id, successor?.id].compactMap { $0 })
+        for later in snapshot.pending.dropFirst() where later.table == "tasks" && affected.contains(later.recordID) {
+            if let next = later.teamCompletion {
+                guard next.scope.team == command.scope.team, next.canReview(later, readable: cache) else { return nil }
+            } else {
+                guard let scope = later.teamTaskScope, scope.account == command.scope.account, scope.origin == command.scope.origin,
+                      scope.team == command.scope.team, cache.boundary.projects[scope.project]?.team == scope.team else { return nil }
+                if later.method == "PATCH" { guard (try? scope.body(for: later)) != nil else { return nil } }
+                else { guard (try? scope.lifecycleBody(for: later)) != nil else { return nil } }
+            }
+        }
+        guard var next = acknowledging(snapshot) else { return nil }
+        let displaced = Set((snapshot.tables["tasks"] ?? []).filter { row in
+            affected.contains(row.id) && next.tables["tasks"]?.first(where: { $0.id == row.id })?["task_generation"] != row["task_generation"]
+        }.map(\.id))
+        func references(_ value: JSON) -> Bool {
+            switch value {
+            case .string(let text): return displaced.contains { text.lowercased().contains($0.lowercased()) }
+            case .array(let values): return values.contains(where: references)
+            case .object(let fields): return fields.values.contains(where: references)
+            default: return false
+            }
+        }
+        guard !(snapshot.tables[ConversationOutbox.table] ?? []).contains(where: { references(.object($0.fields)) }) else { return nil }
+        for later in next.pending {
+            guard let data = try? JSONEncoder().encode(later), let value = try? JSONDecoder().decode(JSON.self, from: data), !references(value) else { return nil }
+        }
+        guard let refreshed = try? TeamWorkspaceCache(boundary: cache.boundary, previous: cache, pending: next.pending, tasks: next.tables["tasks"] ?? []) else { return nil }
+        next.teamWorkspace = refreshed
+        return next
+    }
+}
+
+/// A cold observation owns the full queue, task projection and read boundary.
+/// Only an exact recorded response opens review; no state is acknowledged here.
+struct TeamCompletionDiscovery: Equatable, Sendable {
+    let snapshot: Snapshot
+    let access: TeamWorkspaceCache
+    let mutation: Mutation
+    init?(snapshot: Snapshot, access: TeamWorkspaceCache) {
+        guard let head = snapshot.pending.first, let command = head.teamCompletion,
+              Set(snapshot.pending.map(\.id)).count == snapshot.pending.count,
+              command.canReview(head, readable: access), access.blocked(snapshot).contains(head.id) else { return nil }
+        self.snapshot = snapshot; self.access = access; mutation = head
+    }
+    func recorded(_ review: TeamCompletion.Review, current: Snapshot, readable: TeamWorkspaceCache) -> TeamCompletion.Review? {
+        guard current == snapshot, readable == access, review.mutation == mutation, review.isRecorded else { return nil }
+        return review
+    }
+}

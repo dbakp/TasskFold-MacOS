@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-25",
+  "stage": "Individual recorded completion discovery and current-read acknowledgement",
+  "baseCommit": "55ba74526f3f340d561e86412fde8b2bbc25e210",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "433e224519a1c3c2d48c614ca973c6374acadcf0a49abbc7287b09c3c7ab6e70",
+    "Taskfold/Core/TeamCompletion.swift": "f7f6874458ba76c732c0b61820946a8e2bc95a0fa0a46d2ad332517f6501d2b5",
+    "Taskfold/Collaboration.swift": "bbb0729b2309acbac810a9f96aabb6279c6407e87d9af899d1dbbae5ee6a3778",
+    "TaskfoldTests/TeamCompletionTests.swift": "79c02d78ef7613d6a7f94a175bcc23d8d8acf94bb79b97b0c8fe18471aa2a97c"
+  },
+  "core": {
+    "selected": 736,
+    "passed": 735,
+    "skipped": 1,
+    "failures": 0,
+    "newCases": 7,
+    "skip": "Live shared-conversation integration requires disposable accounts; no hosted acceptance claimed"
+  },
+  "native": {
+    "iphone": {
+      "actualPassed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": []
+    },
+    "ipad": {
+      "actualPassed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": []
+    },
+    "mac": "Own final Debug build passes; runtime/window/spoken checks remain open",
+    "cases": [
+      "individual cold viewer with typed later edit",
+      "individual cold archived",
+      "individual cold write pause with typed later edit",
+      "group cold viewer regression",
+      "refresh shows updated observation before local acknowledgement"
+    ],
+    "traces": "All eight final cold traces contain exactly POST workspace_boundary and matching single/group review; no task writer before approval",
+    "persistence": "All eight cold snapshots equal after Continue and a second launch; only knownTasks/quarantined Codable Set arrays canonicalized",
+    "fixture": "Reserved DEBUG fixture seeds one actual captured member, restores remaining members, and answers synthetic ordinary-root HTTP only; all external HTTP blocked",
+    "visual": "Phone individual-review and iPad refreshed-review screenshots inspected; no native Mac acceptance"
+  },
+  "limits": [
+    "Other terminal-state discovery remains open; an unrecorded read cannot retire a command",
+    "Mixed connected groups and broader authored missing-incarnation/cross-table recovery remain open",
+    "Native recurring/history, storage/account-race and Mac runtime/window/spoken acceptance remain open",
+    "Large-workload, hosted acceptance and other rank-6/Px/wearable work remain open",
+    "All user-deferred release/provider/device work remains deferred"
+  ],
+  "retainedEvidence": "docs/single-completion-discovery",
+  "build": {
+    "debug": "Passed",
+    "rawLogSHA256": "a8b4a99019aea72cb09bc37b431fc797a59884589b090ac2e54683ecb87e9861",
+    "signing": "Signing disabled, compile-only; not distribution or Mac runtime acceptance",
+    "warnings": "Existing app-build warnings retained in build-final.log; no claim of warning-free compilation"
+  },
+  "testDevelopment": {
+    "initialCompile": "Corrected an immutable test-cache mutation and missing try annotations before execution",
+    "initialAssertion": "Three failures of one exact table comparison came from SQL/local date-time representation; final test permits only existing date-time normalization and checks authored values and queue entries exactly",
+    "final": "736 selected Core cases; one live-service skip, no failures"
+  },
+  "changesToExternalState": "No SQL, hosted schema/configuration, rollout, provider, real account or task changes",
+  "cleanup": {
+    "ownedScratchPathsRemoved": 41,
+    "ownedScratchBytesRemoved": 2256179594,
+    "isolatedSimulatorUninstalls": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+      }
+    ],
+    "preserved": "Both repo .build caches, baseline Simulator boot state and older ready Mac workflow artifacts",
+    "temporaryMacTaskfoldProcesses": "None running before cleanup"
+  }
+}
