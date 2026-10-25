@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-25",
+  "platform": "mac",
+  "status": "reviewed private-copy/export source implemented; scoped signed iPhone/iPad client acceptance verified; full team-template/Px scope remains open",
+  "sourcesSHA256": {
+    "Taskfold/Core/TeamTemplateLibrary.swift": "8e31c268e25299193d958bfc8dd8b1e6a2e5544cd4a0c2f263216deaf781d690",
+    "Taskfold/Core/Store.swift": "c2e061f0ecba4c39db3f740a11ca460bde3a3b30ffe2207ea3f56c4b6604c3a4",
+    "Taskfold/Views/TeamTemplateLibraryView.swift": "3fb7f2717cac75d6e9366cf137987cfc106376e634cddcdc62845a3e4f74337f",
+    "Taskfold/TeamTemplateNativeFixture.swift": "f34422bd4d21f1dfa6efdf260dc96f9744ea9fd913fbf7bce935ade336c8110b",
+    "TaskfoldTests/TeamTemplateLibraryTests.swift": "3955054c1deaec73899fba92220bf188e3146f177302537c289c3337f2d912c7",
+    "Taskfold.xcodeproj/project.pbxproj": "2f15f579ff7a06694f1600fa3c64707db5b027c17782864126bac775aaee7424",
+    "Scripts/prepare_team_editor_native_test.py": "f9a60a6b2581ce58ce7bec2336431eb26a73bfaf845f24a930ed66c0a7f73b70",
+    "Taskfold/Views/TaskInspector.swift": "ee1699c71418f412f8be264e0ccef99661cbd3c94bf415581a119a40043fb68d"
+  },
+  "coreTests": {
+    "TeamTemplateLibraryTests": 31,
+    "TeamTemplateCommandTests": 22,
+    "ProjectWorkflowsTests": 47,
+    "AccountRemovalTests": 11,
+    "total": 111,
+    "failed": 0,
+    "skipped": 0
+  },
+  "nativeAcceptedCases": {
+    "phone": {
+      "testChangedPrivateSourceAndRevokedAccessRefusePublication": "signed full run; relevant curation code unchanged by transfer-only presentation changes",
+      "testLostReplyRelaunchRetryReplacementAndRemoval": "signed full run; relevant curation code unchanged by transfer-only presentation changes",
+      "testChangedSharedDefinitionRefusesCopyAndKeepsName": "final transfer rerun",
+      "testPrivateCopyExportAndUnsupportedDefinition": "final transfer rerun"
+    },
+    "tablet": {
+      "testChangedPrivateSourceAndRevokedAccessRefusePublication": "signed full run; relevant curation code unchanged by transfer-only presentation changes",
+      "testLostReplyRelaunchRetryReplacementAndRemoval": "signed full run; relevant curation code unchanged by transfer-only presentation changes",
+      "testChangedSharedDefinitionRefusesCopyAndKeepsName": "final transfer rerun",
+      "testPrivateCopyExportAndUnsupportedDefinition": "final transfer rerun"
+    }
+  },
+  "nativeScope": "Exact disposable app/runner, local synthetic URLProtocol/file peer and normal Store/Backend/keychain/journal code. No genuine hosted service/RLS or physical-device acceptance claimed.",
+  "runAccounting": {
+    "signedFullPhone": "4 passed, 0 failed",
+    "signedFullTablet": "3 passed, 1 fixture-control setup failure",
+    "finalTransferPhone": "2 passed, 0 failed",
+    "finalTransferTablet": "2 passed, 0 failed",
+    "unchangedCurationCasesRerunAfterTransferOnlyChange": false,
+    "acceptedDistinctScenariosPerDevice": 4
+  },
+  "changes": [
+    "fresh exact-definition read and account/origin/workspace/session admission before creating a personal record or portable file",
+    "new stable personal identity with no shared authority metadata; unsupported/future definitions refused without loss",
+    "explicit latest-definition refresh preserves typed name and private-copy identity; user reviews updated content before another save",
+    "first-visible status and refresh action, keyboard dismissal and accessibility focus target",
+    "native iOS share-file preparation/revocation and Mac file-save integration",
+    "publication source menu full-row hit target and preservation of a custom publication name",
+    "reserved namespace-only synthetic integration fixture and independently owned native inputs"
+  ],
+  "proof": {
+    "iOSDebugSigningEnabledAppAndUIRunnerBuild": true,
+    "macOSDebugSigningDisabledAppBuild": true,
+    "installedIdentitiesSignaturesAndBinaryHashesVerified": true,
+    "simulatorKeychainEncryptedRequestColdAppRelaunchVerified": true,
+    "realClientPendingOrReceiptInjected": false,
+    "copyCreatesNoTasksAndDoesNotMutateSharedLibrary": true,
+    "exportPortableContentsAndTempCleanupVerified": true,
+    "visualReview": [
+      "phone/tablet error and refresh fully visible",
+      "phone/tablet export content review",
+      "saved recovery privacy",
+      "publication enabled only after acknowledged contents"
+    ],
+    "CoreAndMacBuildAreIndependentPerRepo": true
+  },
+  "iterationHistory": [
+    "Initial export test expected internal references to remain identical; corrected to portable normalization semantics, then both final Core runs pass.",
+    "Native source-menu active label was narrower than its iPad row; fixed. Toggle test now targets/checks the switch. Fixture controls/scroll targeting were improved.",
+    "Unsigned Simulator hosts lacked embedded identities and could not prove encrypted-request/keychain flows. Rebuilt with signing enabled and existing development identity; actual installed signatures, entitlements and binary hashes verified.",
+    "An iPad synthetic source-change control did not execute. Final stale-source test atomically updates the synthetic provider file directly before the normal client read, preserving/strengthening the external-change requirement.",
+    "Added in-review refresh preserving the name; visual inspection found the error below the fold. Moved status/action first, dismissed name keyboard, and reran both transfer cases per device."
+  ],
+  "remaining": [
+    "actual external share-provider delivery and Mac file-dialog/runtime acceptance",
+    "native account-switch, multi-window, broader dynamic layout/keyboard/spoken and hardware protected-storage acceptance",
+    "genuine hosted HTTP/RLS/template rollout acceptance",
+    "shared run destination service/review/recovery and other ranked Px work",
+    "all user-deferred release/distribution, remote reminder, old-client rollout, provider and physical-device work"
+  ],
+  "boundaries": {
+    "schemaOrHostedConfigChanged": false,
+    "rolloutEnabled": false,
+    "releaseSigningConfigurationChanged": false,
+    "nativeMacAppLaunched": false,
+    "newCrossRepositoryBuildDependency": false,
+    "realTaskfoldTasksOrAccountsUsed": false
+  },
+  "cleanup": {
+    "ownedTempBuildsResultsPreparedCopyRemovedAfterRetention": true,
+    "isolatedHostAndRunnerUninstalledFromBothBaselineDevices": true,
+    "baselineDevicesRemainBooted": true,
+    "watchUntouched": true,
+    "sourceBuildCachesPreserved": true
+  }
+}

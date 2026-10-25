@@ -1083,8 +1083,17 @@ struct RepeatStepper: View {
 struct TeamEditorNativeFixtureView: View {
     @Environment(Store.self) private var store
     var body: some View {
+        if TeamTemplateNativeFixture.enabled {
+            NavigationStack {
+                Form {
+                    NavigationLink("Open team template library") { TeamTemplateLibraryView(teamID: TeamEditorNativeFixture.teamID) }.accessibilityIdentifier("openTeamTemplateLibraryFixture")
+                    NavigationLink("Open saved template request") { TeamTemplateLibraryView() }.accessibilityIdentifier("openSavedTeamTemplateFixture")
+                }.navigationTitle("Team template test")
+            }
+        } else {
         TaskInspectorForm(taskID: TeamEditorNativeFixture.taskID)
             .safeAreaInset(edge: .bottom) { Button("Revoke test editing") { store.revokeTeamEditorNativeFixture() }.accessibilityIdentifier("revokeTeamEditorFixture") }
+        }
     }
 }
 #endif

@@ -1075,6 +1075,16 @@ final class Store {
         UserDefaults.standard.set(false, forKey: "localMode")
         snapshot = Snapshot(); undoStack = []; redoStack = []; load(); Task { await refreshRemoteReminderRegistration(); await sync() }
     }
+    func permitsTeamTemplateTransfer(_ review: TeamTemplateTransferReview) -> Bool {
+        teamOrganizationReadable && review.workspace.matches(account: userID, generation: workspaceGeneration)
+            && review.session == backend.reminderSessionIncarnation && review.detail.scope.origin == (try? backend.accountRemovalOrigin)
+    }
+    func revalidateTeamTemplateTransfer(_ review: TeamTemplateTransferReview) async throws {
+        guard permitsTeamTemplateTransfer(review) else { throw TeamTemplateLibraryValue.invalid }
+        let latest = try await backend.teamTemplateDetail(team: review.detail.scope.team, template: review.detail.metadata.id, account: review.detail.scope.account, origin: review.detail.scope.origin)
+        guard permitsTeamTemplateTransfer(review) else { throw TeamTemplateLibraryValue.invalid }
+        try review.verify(latest: latest, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation)
+    }
     var teamTemplateRecoveryAvailable: Bool { signedIn && !localMode && !signingOut && !accountRemovalBlocked }
     /// Uses the confirmed account for cleanup, never whichever account is now active.
     func teamTemplateCommandVault(account: String, origin: String) throws -> TeamTemplateCommandVault {
@@ -3031,6 +3041,7 @@ extension Store {
     static let personalPlanningProject = "ec240000-0000-4000-8000-000000000041"
     static func backend() -> Backend {
         if ProjectAdoptionNativeFixture.enabled { return ProjectAdoptionNativeFixture.backend() }
+        if TeamTemplateNativeFixture.enabled { return TeamTemplateNativeFixture.backend() }
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [TeamEditorNoNetwork.self]
         let session = try! JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(account)\"}}".utf8))
@@ -3182,6 +3193,12 @@ extension Store {
                 try TeamTaskMoveNativePeer.write(TeamTaskMoveNativePeer.State(tasks: tasks))
                 UserDefaults.standard.removeObject(forKey: "teamMoveLoseReply")
                 snapshot.tables["tasks"] = tasks; snapshot.tables["projects"] = projects
+            }
+            if TeamTemplateNativeFixture.enabled {
+                try TeamTemplateNativeFixture.reset()
+                snapshot.tables[WorkflowTemplate.table] = [TeamTemplateNativeFixture.personal]
+                let requests = backupVault.directory.appendingPathComponent("Team template requests", isDirectory: true)
+                if FileManager.default.fileExists(atPath: requests.path) { try FileManager.default.removeItem(at: requests) }
             }
             snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: nil, pending: [], tasks: [row])
             try persist()

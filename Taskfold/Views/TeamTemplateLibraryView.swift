@@ -1,4 +1,5 @@
 import SwiftUI
+import Observation
 
 struct SavedTeamTemplateRequestLink: View {
     @Environment(Store.self) private var store
@@ -37,6 +38,7 @@ struct TeamTemplateLibraryView: View {
     @State private var commands: TeamTemplateCommandModel?
     @State private var loaded: String?
     @State private var editing: TeamTemplateReviewRequest?
+    @State private var transferring: TeamTemplateTransferSheet?
     @State private var stopping: TeamTemplateCommand?
     @State private var retrying: TeamTemplateCommand?
     private var context: String? {
@@ -63,6 +65,12 @@ struct TeamTemplateLibraryView: View {
                                 Section(detail.metadata.name) {
                                     if detail.supported != nil { TemplateDefinitionPreview(document: detail.document, scope: "team-library") }
                                     else { Text("This definition needs a newer Taskfold version. Its contents are preserved.").foregroundStyle(.secondary) }
+                                }
+                                if detail.supported != nil {
+                                    Section {
+                                        Button("Save private copy…", systemImage: "square.on.square") { transfer(detail, exporting: false) }.accessibilityIdentifier("copyTeamTemplate")
+                                        Button("Export template…", systemImage: "square.and.arrow.up") { transfer(detail, exporting: true) }.accessibilityIdentifier("exportTeamTemplate")
+                                    }
                                 }
                                 if canManage {
                                     Section {
@@ -105,6 +113,9 @@ struct TeamTemplateLibraryView: View {
         .sheet(item: $editing) { request in
             if let commands { TeamTemplatePublicationReview(request: request, model: commands, current: { visible && store.teamOrganizationReadable && context == request.context && browser?.organization == request.organization && browser?.scope?.canManage == true && (request.baseline == nil || browser?.detail == request.baseline) }) }
         }
+        .sheet(item: $transferring) { request in
+            TeamTemplateTransferView(request: request, current: { visible && store.permitsTeamTemplateTransfer(request.review) && browser?.detail == request.review.detail }, refresh: { await refreshTransfer(request) })
+        }
         .confirmationDialog("Stop retrying this change?", isPresented: Binding(get: { stopping != nil }, set: { if !$0 { stopping = nil } })) {
             if let command = stopping { Button("Stop retrying", role: .destructive) { Task { await commands?.stopRetrying(command) } } }
         } message: { Text("This removes only the saved request on this device. A change already accepted by the service stays in the team library. Check the latest library first.") }
@@ -133,6 +144,21 @@ struct TeamTemplateLibraryView: View {
             if let success = commands.success { Section { Label(success, systemImage: "checkmark.circle.fill").foregroundStyle(.green) }.accessibilityIdentifier("teamTemplateSuccess") }
             if !commands.recoveryLoaded, !commands.busy { Section { Text("Saved requests must be checked before publishing a new change."); Button("Check saved requests") { Task { await commands.load() } } } }
         }
+    }
+    private func transfer(_ detail: TeamTemplateDetail, exporting: Bool) {
+        guard visible, store.teamOrganizationReadable, browser?.detail == detail else { return }
+        if let review = try? TeamTemplateTransferReview(detail: detail, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation) {
+            transferring = TeamTemplateTransferSheet(review: review, exporting: exporting)
+        }
+    }
+    @MainActor private func refreshTransfer(_ request: TeamTemplateTransferSheet) async -> Bool {
+        let original = request.review
+        guard visible, store.permitsTeamTemplateTransfer(original), transferring === request else { return false }
+        await browser?.refresh(template: original.detail.metadata.id)
+        guard visible, store.permitsTeamTemplateTransfer(original), transferring === request, let latest = browser?.detail,
+              latest.metadata.id == original.detail.metadata.id, latest.scope.team == original.detail.scope.team,
+              let review = try? TeamTemplateTransferReview(detail: latest, workspace: original.workspace, session: original.session, id: original.id) else { return false }
+        request.review = review; return true
     }
     private func review(_ action: TeamTemplateCommand.Action, detail: TeamTemplateDetail? = nil) {
         guard canManage, let context, let organization = browser?.organization else { return }
@@ -204,22 +230,30 @@ private struct TeamTemplatePublicationReview: View {
                             Menu {
                                 if request.baseline != nil { Button("Keep current definition") { source = nil; audienceConfirmed = false } }
                                 ForEach(store.workflowTemplates.filter { $0.string("user_id") == store.userID && (try? WorkflowTemplate(document: $0["document"])) != nil }) { row in
-                                    Button(row.name) { source = row; if request.action == .publish { name = row.name }; audienceConfirmed = false }
+                                    Button(row.name) { let previous = source?.name; source = row; if request.action == .publish && (name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || name == previous) { name = row.name }; audienceConfirmed = false }
                                 }
-                            } label: { Label(source?.name ?? (request.baseline == nil ? "Choose a private template" : "Current team definition"), systemImage: "square.stack.3d.up") }.accessibilityIdentifier("teamTemplateSource")
+                            } label: { Label(source?.name ?? (request.baseline == nil ? "Choose a private template" : "Current team definition"), systemImage: "square.stack.3d.up").frame(maxWidth: .infinity, alignment: .leading).contentShape(.rect) }.accessibilityIdentifier("teamTemplateSource")
                             Text("Project names, task notes, labels and schedule rules will be visible to this audience. No tasks are created. Assignments, discussion and files are not included.").font(.callout).foregroundStyle(.secondary)
                             if request.action == .replace { Text("This replaces the saved definition for future use. Existing work stays unchanged.").font(.callout) }
                         }
                         if let definition { Section("Full contents") { TemplateDefinitionPreview(document: definition, scope: "publish") } }
                         Section { Toggle("I reviewed the audience and contents", isOn: $audienceConfirmed).accessibilityIdentifier("confirmTeamTemplateAudience") }
                     }
+                    #if DEBUG
+                    if TeamTemplateNativeFixture.enabled {
+                        Section("Isolated test controls") {
+                            Button { store.changeTeamTemplatePrivateSourceFixture() } label: { Text("Change private test source").frame(maxWidth: .infinity, alignment: .leading).contentShape(.rect) }.accessibilityIdentifier("changeTemplatePublicationSource")
+                            Button { store.withdrawTeamTemplateAccessFixture() } label: { Text("Withdraw test library access").frame(maxWidth: .infinity, alignment: .leading).contentShape(.rect) }.accessibilityIdentifier("withdrawTemplatePublicationAccess")
+                        }
+                    }
+                    #endif
                     if !sourceCurrent { Section { Text("The private source changed. Your draft name is kept; choose the latest source and review it again.").foregroundStyle(.secondary) } }
                     if let message = message ?? model.message { Section { Text(message).foregroundStyle(.secondary) } }
                 } else { ContentUnavailableView("Review paused", systemImage: "lock.shield", description: Text("Return to the original account and refresh its library. Your draft is kept here.")) }
-            }.formStyle(.grouped)
+            }.formStyle(.grouped).accessibilityIdentifier("teamTemplatePublicationForm")
             .navigationTitle(request.action == .publish ? "Publish template" : request.action == .replace ? "Update team template" : "Remove template")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(model.busy) }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(model.busy).accessibilityIdentifier("cancelTeamTemplateChange") }
                 ToolbarItem(placement: .confirmationAction) { Button(request.action == .delete ? "Remove" : request.action == .publish ? "Publish" : "Save changes", role: request.action == .delete ? .destructive : nil) { send() }.disabled(!valid).accessibilityIdentifier("confirmTeamTemplateChange") }
             }
         }.privacySensitive()
@@ -241,5 +275,104 @@ private struct TeamTemplatePublicationReview: View {
                 if model.pending == nil, model.receipt == nil { submitted = false }
             }
         } catch { message = "Review the name and definition before sending this change." }
+    }
+}
+
+@MainActor @Observable private final class TeamTemplateTransferSheet: Identifiable {
+    let id: UUID
+    var review: TeamTemplateTransferReview
+    let exporting: Bool
+    init(review: TeamTemplateTransferReview, exporting: Bool) { id = review.id; self.review = review; self.exporting = exporting }
+}
+private struct TeamTemplateTransferView: View {
+    let request: TeamTemplateTransferSheet
+    let current: () -> Bool
+    let refresh: () async -> Bool
+    @Environment(Store.self) private var store
+    @Environment(Workspace.self) private var workspace
+    @Environment(\.scenePhase) private var phase
+    @Environment(\.dismiss) private var dismiss
+    @State private var name = ""
+    @FocusState private var nameFocused: Bool
+    @AccessibilityFocusState private var statusFocused: Bool
+    @State private var busy = false
+    @State private var finished = false
+    @State private var message: String?
+    @State private var exportData = Data()
+    @State private var exporting = false
+    private var allowed: Bool { phase == .active && current() && !busy && !finished }
+    var body: some View {
+        NavigationStack {
+            Form {
+                if phase == .active, current() {
+                    if let message { Section {
+                        Text(message).foregroundStyle(.secondary).accessibilityIdentifier("teamTemplateTransferMessage").accessibilityFocused($statusFocused)
+                        Button("Review latest definition") { refreshReview() }.disabled(busy).accessibilityIdentifier("refreshTeamTemplateTransfer")
+                    } }
+                    Section {
+                        TextField("Template name", text: $name).focused($nameFocused).disabled(busy).accessibilityIdentifier("teamTemplateTransferName")
+                        Text(request.exporting ? "This file includes workflow notes, label names and schedule rules. Review the full contents before saving or sharing it outside the team." : "Save a private template in your account. The team’s definition stays unchanged; later team edits will not update your copy.").font(.callout).foregroundStyle(.secondary)
+                        Text("Assignments, discussions, attachments and completion history are excluded. No tasks are created.").font(.footnote).foregroundStyle(.secondary)
+                    }
+                    Section("Full contents") { TemplateDefinitionPreview(document: request.review.detail.document, scope: "team-transfer") }
+                    #if DEBUG
+                    if TeamTemplateNativeFixture.enabled {
+                        Section("Isolated test controls") {
+                            Button { store.changeTeamTemplateSharedSourceFixture() } label: { Text("Change shared test definition").frame(maxWidth: .infinity, alignment: .leading).contentShape(.rect) }.accessibilityIdentifier("changeTemplateTransferSource")
+                            Button { store.withdrawTeamTemplateAccessFixture() } label: { Text("Withdraw test library access").frame(maxWidth: .infinity, alignment: .leading).contentShape(.rect) }.accessibilityIdentifier("withdrawTemplateTransferAccess")
+                        }
+                    }
+                    #endif
+                } else { Section {
+                    ContentUnavailableView("Review paused", systemImage: "lock.shield", description: Text("Return to the original account and refresh this definition. Your draft name is kept here."))
+                    Button("Review latest definition") { refreshReview() }.disabled(busy || phase != .active || !store.permitsTeamTemplateTransfer(request.review)).accessibilityIdentifier("refreshTeamTemplateTransfer")
+                } }
+            }.formStyle(.grouped).accessibilityIdentifier("teamTemplateTransferForm")
+            .navigationTitle(request.exporting ? "Export team template" : "Save private copy")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(busy).accessibilityIdentifier("cancelTeamTemplateTransfer") }
+                ToolbarItem(placement: .confirmationAction) { Button(busy ? "Checking…" : request.exporting ? "Save file…" : "Save copy") { perform() }.disabled(!allowed).accessibilityIdentifier(request.exporting ? "prepareTeamTemplateExport" : "saveTeamTemplateCopy") }
+            }
+        }.privacySensitive().frame(minWidth: 580, idealWidth: 680, minHeight: 540, idealHeight: 680)
+        .onAppear { if name.isEmpty { name = request.review.detail.metadata.name } }
+        .fileExporter(isPresented: $exporting, document: WorkspaceDocument(data: exportData), contentType: .json, defaultFilename: "Taskfold-template") { result in
+            guard current() else { return }
+            if case .success = result { finished = true; dismiss() }
+            else if case .failure(let error) = result, (error as NSError).code != NSUserCancelledError { message = "The file couldn’t be saved. Your draft is kept." }
+        }
+        .onChange(of: request.review.detail) { _, _ in exporting = false; exportData = Data() }
+        .onChange(of: message) { _, value in statusFocused = value != nil }
+        .onChange(of: store.userID) { _, _ in exporting = false; exportData = Data() }
+        .onChange(of: store.workspaceGeneration) { _, _ in exporting = false; exportData = Data() }
+        .onChange(of: store.backend.reminderSessionIncarnation) { _, _ in exporting = false; exportData = Data() }
+        .onChange(of: store.teamOrganizationReadable) { _, readable in if !readable { exporting = false; exportData = Data() } }
+    }
+    private func refreshReview() {
+        guard !busy, phase == .active, store.permitsTeamTemplateTransfer(request.review) else { return }
+        busy = true
+        Task {
+            let refreshed = await refresh()
+            message = refreshed ? "Review the updated contents before continuing. Your draft name is kept." : "The definition couldn’t be refreshed. Return to the original account and try again when connected."
+            busy = false
+        }
+    }
+    private func perform() {
+        guard allowed else { return }
+        nameFocused = false
+        let reviewedName = name, reviewed = request.review; busy = true; message = nil
+        Task {
+            defer { busy = false }
+            do {
+                try await store.revalidateTeamTemplateTransfer(reviewed)
+                guard phase == .active, current(), name == reviewedName, request.review.detail == reviewed.detail else { throw TeamTemplateLibraryValue.invalid }
+                if request.exporting { exportData = try reviewed.export(name: reviewedName).encoded(); exporting = true }
+                else {
+                    let row = try reviewed.privateCopy(name: reviewedName)
+                    guard store.record(WorkflowTemplate.table, id: row.id) == nil else { throw TeamTemplateLibraryValue.invalid }
+                    var saved = false; workspace.run("Save Private Team Template") { saved = store.save(WorkflowTemplate.table, row) }
+                    guard saved else { throw TeamTemplateLibraryValue.invalid }; finished = true; dismiss()
+                }
+            } catch { message = "The current definition and access couldn’t be verified, or this version cannot copy its contents. Your draft is kept. Refresh the library before trying again." }
+        }
     }
 }

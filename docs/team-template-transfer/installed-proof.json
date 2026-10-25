@@ -1,0 +1,24 @@
+{
+  "phone": {
+    "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "team": "3UZ4C73FM2",
+    "installedSignatureVerified": true,
+    "installedMachOIdentityVerified": true,
+    "installedAndBuiltBinaryHashesMatch": {
+      "Taskfold": "2dc8668d8b997a9d6ae45d1a6313399d188b2e58c4396b4057895952082edaeb",
+      "Taskfold.debug.dylib": "068e6240d76f1ef224805991d20b360e6de08c9a062c7ff976753fb78e011f45"
+    },
+    "exportTemporaryDirectoriesRemaining": 0
+  },
+  "tablet": {
+    "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "team": "3UZ4C73FM2",
+    "installedSignatureVerified": true,
+    "installedMachOIdentityVerified": true,
+    "installedAndBuiltBinaryHashesMatch": {
+      "Taskfold": "2dc8668d8b997a9d6ae45d1a6313399d188b2e58c4396b4057895952082edaeb",
+      "Taskfold.debug.dylib": "068e6240d76f1ef224805991d20b360e6de08c9a062c7ff976753fb78e011f45"
+    },
+    "exportTemporaryDirectoriesRemaining": 0
+  }
+}

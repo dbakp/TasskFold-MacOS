@@ -381,3 +381,52 @@ changed. Owned temporary builds/logs were pruned after retention; source caches 
 baseline Simulators remain. Next is isolated installed review/recovery acceptance
 and private-copy/export, then shared run destinations and the wider ranked Px work.
 Every user-deferred release, provider and physical-device dependency stays deferred.
+
+
+### 2026-10-25 — Team template copy/export and installed client acceptance
+
+Both independent apps now offer full-content private-copy/export review, with a
+fresh exact-definition/account/origin/workspace/session check before creating an
+artifact. Private copies get a new personal identity and preserve the definition;
+portable exports remap internal references through the existing workflow format.
+A changed/removed/unsupported definition cannot silently become an artifact.
+“Review latest definition” preserves the typed name and the reserved private-copy
+identity while explicitly presenting the latest supported contents. Errors and
+refresh actions are at the top, the name keyboard closes before save, and status
+has an accessibility focus target. iOS revokes temporary exports on context loss
+or dismissal; Mac uses its native file-save panel and normal private-template Undo.
+Publication source selection now has a full-row active area and keeps custom names.
+
+Each repository passes 111 focused Core tests: 31 catalog/transfer, 22 command,
+47 workflow and 11 account-removal cases. Both arm64 Debug app builds pass. The
+installed iPhone/iPad app uses only an exact reserved DEBUG namespace and a local
+synthetic HTTP peer. Four scenarios are accepted per device: changed private source
+and revoked access; real local encrypted-request lost-reply/relaunch/retry plus
+replacement/removal; copy/export preparation/temporary cleanup/future read-only
+behavior; and external definition change, refusal, preserved-name refresh and save.
+The final transfer-only rerun passes two cases per device after setup/presentation
+changes. Earlier signed full runs pass 4/4 on phone and 3/4 on tablet; the tablet
+setup failure is retained and superseded by the external-peer update case. We did
+not rerun unchanged curation scenarios after the transfer-only presentation fix.
+
+Signing-disabled Simulator builds lacked the identity entitlements needed by
+Keychain and count only as compile evidence. Signing-enabled builds plus the
+existing development identity pass: actual installed signatures/Mach-O identities
+and main/debug binary hashes match the final products. The cold app relaunch
+restores the original request through the normal Simulator Keychain/file path;
+no client pending request or receipt is injected. An iPad fixture change control
+missed its action; the final test changes the synthetic provider file directly,
+which represents an external teammate edit. Initial failures and final reports
+are retained in team-template-transfer; scoped proof is in
+p2-team-template-transfer-evidence.json. Curated phone/tablet screenshots are saved,
+including the now-visible error/refresh card. No real tasks/accounts, hosted
+schema/configuration or rollout changed.
+
+Export acceptance covers preparation, portable file contents and cancellation
+cleanup, not external share-provider delivery. Mac runtime/dialog/keyboard/spoken/
+window and native account-switch acceptance, hardware protected storage, genuine
+hosted acceptance, shared run destinations and wider ranked Px remain open.
+Source build caches and baseline Simulators are preserved; owned temporary builds/
+results/source copies are removed after evidence retention, and both isolated
+app/runner installations are closed/uninstalled. Release/distribution, remote
+reminders, old-client rollout, provider and physical-device deferrals are unchanged.

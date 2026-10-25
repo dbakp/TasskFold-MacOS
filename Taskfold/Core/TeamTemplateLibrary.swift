@@ -174,3 +174,32 @@ extension Backend {
     }
 
 }
+
+/// A reviewed read becomes a private artifact only after the exact definition and
+/// account/session/workspace have been checked again. No shared IDs or authority
+/// are copied into the new personal template.
+struct TeamTemplateTransferReview: Identifiable, Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    let id: UUID
+    let detail: TeamTemplateDetail
+    let workspace: WorkspaceBinding
+    let session: UUID
+    var description: String { "Private team template transfer review" }
+    var debugDescription: String { description }
+    init(detail: TeamTemplateDetail, workspace: WorkspaceBinding, session: UUID, id: UUID = UUID()) throws {
+        guard detail.scope.account == workspace.account, detail.supported != nil, id.uuidString.lowercased() != detail.metadata.id else { throw TeamTemplateLibraryValue.invalid }
+        self.detail = detail; self.workspace = workspace; self.session = session; self.id = id
+    }
+    func verify(latest: TeamTemplateDetail, workspace: WorkspaceBinding, session: UUID) throws {
+        guard latest == detail, self.workspace == workspace, self.session == session else { throw TeamTemplateLibraryValue.invalid }
+    }
+    func privateCopy(name: String) throws -> Record {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        _ = try TeamTemplateLibraryValue.name(.string(name)); _ = try WorkflowTemplate(document: detail.document)
+        return Record(["id": .string(id.uuidString.lowercased()), "user_id": .string(workspace.account), "name": .string(name), "document": detail.document])
+    }
+    func export(name: String) throws -> WorkflowTemplateFile {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        _ = try TeamTemplateLibraryValue.name(.string(name))
+        return try WorkflowTemplateFile(name: name, document: detail.document)
+    }
+}

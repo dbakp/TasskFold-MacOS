@@ -3,6 +3,9 @@
 
 The rollout switch is enabled only in this disposable copy. Launch with
 --team-editor-testing; add --team-editor-reset to seed synthetic test tasks.
+Add --team-library-testing for the file-backed template catalog/publication peer.
+Keychain-backed request tests need a signing-enabled Simulator build; an unsigned
+build verifies compilation only.
 Normal builds retain their existing rollout and network configuration.
 """
 import argparse
@@ -33,9 +36,9 @@ for relative in ["Taskfold/Core/Backend.swift", "Taskfold/Core/Backups.swift"]:
     path.write_text(source)
 
 receipt = root / "team-editor-test-receipt.json"
-files = ["Taskfold/Core/Store.swift", "Taskfold/Core/Backups.swift", "Taskfold/Core/Backend.swift", "Taskfold/Info.plist"]
+files = ["Taskfold/Core/Store.swift", "Taskfold/Core/Backups.swift", "Taskfold/Core/Backend.swift", "Taskfold/TeamTemplateNativeFixture.swift", "Taskfold/Views/TeamTemplateLibraryView.swift", "Taskfold/Info.plist"]
 receipt.write_text(json.dumps({
     "namespace": "workflowteststeameditbridge", "teamRolloutInCopyOnly": True,
-    "network": "All HTTP requests intercepted locally; scoped synthetic recipients are answered; task moves use a separate file-backed peer only with --team-move-testing in the reserved DEBUG host",
+    "network": "All HTTP requests intercepted locally; scoped synthetic recipients are answered; task moves and template libraries use separate file-backed peers only with --team-move-testing / --team-library-testing in the reserved DEBUG host",
     "files": {name: hashlib.sha256((root / name).read_bytes()).hexdigest() for name in files}
 }, indent=2) + "\n")

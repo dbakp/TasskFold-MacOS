@@ -233,4 +233,56 @@ final class TeamTemplateLibraryTests: XCTestCase {
         }
     }
 
+    func testTransferMakesOneStablePrivateIdentityWithoutSharedMetadata() throws {
+        let d = try detail(), workspace = WorkspaceBinding(account: libraryAccount, generation: UUID()), session = UUID()
+        let review = try TeamTemplateTransferReview(detail: d, workspace: workspace, session: session)
+        let copy = try review.privateCopy(name: "  My routine  ")
+        XCTAssertEqual(Set(copy.fields.keys), ["id", "user_id", "name", "document"])
+        XCTAssertEqual(copy.string("user_id"), libraryAccount); XCTAssertEqual(copy.name, "My routine"); XCTAssertEqual(copy["document"], d.document)
+        XCTAssertNotEqual(copy.id, d.metadata.id); XCTAssertEqual(try review.privateCopy(name: "My routine"), copy)
+        XCTAssertFalse(String(reflecting: review).contains("Design review"))
+    }
+    func testTransferExportIsPortableAndDoesNotContainAccountOrLibraryAuthority() throws {
+        let d = try detail(), review = try TeamTemplateTransferReview(detail: d, workspace: WorkspaceBinding(account: libraryAccount, generation: UUID()), session: UUID())
+        let bytes = try review.export(name: "Review kit").encoded(), file = try WorkflowTemplateFile(data: bytes)
+        XCTAssertEqual(file.template.kind, d.supported?.kind); XCTAssertEqual(file.template.tasks.first?.title, d.supported?.tasks.first?.title); XCTAssertEqual(file.template.tasks.count, d.supported?.tasks.count); XCTAssertEqual(file.name, "Review kit")
+        let raw = try JSONDecoder().decode([String: JSON].self, from: bytes)
+        XCTAssertEqual(Set(raw.keys), ["format", "version", "name", "document"])
+        XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains(libraryAccount)); XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains(d.metadata.id))
+    }
+    func testTransferRejectsForeignWorkspaceAndReuseOfTheSharedIdentity() throws {
+        let d = try detail()
+        XCTAssertThrowsError(try TeamTemplateTransferReview(detail: d, workspace: WorkspaceBinding(account: libraryTeam, generation: UUID()), session: UUID()))
+        XCTAssertThrowsError(try TeamTemplateTransferReview(detail: d, workspace: WorkspaceBinding(account: libraryAccount, generation: UUID()), session: UUID(), id: UUID(uuidString: d.metadata.id)!))
+    }
+    func testFutureAndMalformedDefinitionsCannotBecomePrivateArtifacts() throws {
+        for document in [JSON.object(["version": .number(2), "future": .string("preserved")]), .object(["version": .number(1)])] {
+            let d = try detail(detailRaw(document: document))
+            XCTAssertThrowsError(try TeamTemplateTransferReview(detail: d, workspace: WorkspaceBinding(account: libraryAccount, generation: UUID()), session: UUID()))
+        }
+    }
+    func testTransferRequiresTheOriginalWorkspaceAndSessionIncarnations() throws {
+        let d = try detail(), workspace = WorkspaceBinding(account: libraryAccount, generation: UUID()), session = UUID(), review = try TeamTemplateTransferReview(detail: d, workspace: workspace, session: session)
+        XCTAssertNoThrow(try review.verify(latest: d, workspace: workspace, session: session))
+        XCTAssertThrowsError(try review.verify(latest: d, workspace: WorkspaceBinding(account: libraryAccount, generation: UUID()), session: session))
+        XCTAssertThrowsError(try review.verify(latest: d, workspace: workspace, session: UUID()))
+    }
+    func testTransferRefusesChangedDefinitionMetadataAndAccess() throws {
+        let d = try detail(), workspace = WorkspaceBinding(account: libraryAccount, generation: UUID()), session = UUID(), review = try TeamTemplateTransferReview(detail: d, workspace: workspace, session: session)
+        for key in ["name", "revision", "document"] {
+            var raw = detailRaw(), item = raw["item"]!.object
+            item[key] = key == "name" ? .string("Updated") : key == "revision" ? .number(2) : .object(["version": .number(2)])
+            raw["item"] = .object(item); let changed = try detail(raw)
+            XCTAssertThrowsError(try review.verify(latest: changed, workspace: workspace, session: session))
+        }
+        var raw = detailRaw(); raw["role"] = .string("member"); raw["can_manage"] = .bool(false)
+        XCTAssertThrowsError(try review.verify(latest: detail(raw), workspace: workspace, session: session))
+    }
+    func testTransferNameValidationCannotMakeInvalidPrivateRecordsOrFiles() throws {
+        let review = try TeamTemplateTransferReview(detail: detail(), workspace: WorkspaceBinding(account: libraryAccount, generation: UUID()), session: UUID())
+        for name in ["", " ", "bad\u{202e}name", String(repeating: "a", count: 161)] {
+            XCTAssertThrowsError(try review.privateCopy(name: name)); XCTAssertThrowsError(try review.export(name: name))
+        }
+    }
+
 }
