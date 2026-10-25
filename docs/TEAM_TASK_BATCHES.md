@@ -111,3 +111,39 @@ run its existing real PostgreSQL checks against the current workspace loader via
 `TASKFOLD_TEAM_CURRENT_BATCH_REGRESSION=1`; its original fixture mode is preserved.
 Exact current verification and remaining gates are in
 `p2-team-selection-deletion-evidence.json`.
+
+
+## Reviewed shared planning selections — 25 October 2026
+
+Both repos now own a source-only `edit` variant of the existing atomic team-task
+batch endpoint. It accepts 1–100 distinct tasks from one team, with complete frozen
+source records, each task’s project/generation, one group nonce and immutable
+member nonces. Native date/remove-date and priority selection actions enter an
+explicit review in both apps, listing every task, project and requested change.
+Cancel leaves tasks untouched. Save persists one queue entry and one linked Undo
+intent; personal/shared, nested/root, cross-team and missing-member mixtures cannot
+silently become a partial selection. Already-correct date choices remain members.
+
+The service accepts priority, date/time/zone, deadline and estimate fields only.
+Completion/recurrence, assignment, labels, moves, checklists and other content keep
+their separate command contracts. The new batch validates the entire source under
+canonical nonblocking task locks before applying any member through the existing
+guarded task editor. A later member validation failure, trigger fault or busy row
+rolls back every task and receipt. Live actor/session, team/setup switches, current
+roles and all project archive states are checked before new writes and replay.
+Replay confirms the original bounded identity-only receipt without rewinding a
+later edit. No whole task body is stored in server receipt tables.
+
+The private local command retains complete baselines and effects through restart.
+Projection uses a copy and installs only the complete result. Undo/Redo keeps the
+same task generations and renews group/member action identities; it refuses changed
+source contents instead of overwriting another person’s work. Raw multi-PATCH
+arrays cannot bypass the reviewed batch path. Existing delete/restore batches use
+their original implementation and permissions.
+
+This is source and scoped verification, not completed native acceptance. Database,
+Core, build and cleanup evidence is in `p2-team-planning-batches-evidence.json`.
+Installed iPhone/iPad/Mac review/Cancel/save/retry/Undo, keyboard/spoken/large-text
+and live multi-actor acceptance remain required. Deadline and estimate bulk UI
+entry, other shared bulk commands and the wider rank-6/Px backlog remain open.
+No hosted schema, real task, provider, rollout or deferred release setting changed.

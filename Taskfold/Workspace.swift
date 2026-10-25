@@ -72,6 +72,7 @@ struct Confirmation: Equatable {
 final class Workspace {
     var teamTaskMove: TeamTaskMoveRequest?
     var teamTaskDeletion: TeamTaskDeletionRequest?
+    var teamTaskPlanning: TeamTaskPlanningRequest?
     let store: Store
     #if DEBUG
     @ObservationIgnored var fixturePrepared = false
@@ -448,7 +449,28 @@ final class Workspace {
         if let id = finderTaskID, existing.contains(id) { finderTaskID = nil }
         confirm(existing.count == 1 ? "Deleted “\(title)”" : "Deleted \(existing.count) tasks")
     }
+    /// Return true when a shared selection was handled (including a safe refusal).
+    private func reviewSharedPlanning(_ ids: Set<String>, title: String, fields: (Record) -> [String: JSON]) -> Bool {
+        let shared = ids.contains { id in
+            let root = Self.subtaskPath(id)?.first ?? id
+            return store.nativeConversationTeamCache?.knownTasks.contains(root) == true || store.record("tasks", id: root).map { store.nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true
+        }
+        guard shared else { return false }
+        do {
+            let records = ids.sorted().compactMap { store.record("tasks", id: $0) }
+            guard records.count == ids.count, !ids.contains(where: { Self.subtaskPath($0) != nil }) else { throw TeamTaskBatch.invalid }
+            let captured = try store.captureTeamTaskPlanningSelection(records, changes: Dictionary(uniqueKeysWithValues: records.map { ($0.id, fields($0)) }))
+            teamTaskPlanning = TeamTaskPlanningRequest(selection: captured, title: title, perform: { [weak self] in
+                guard let self else { return false }; var saved = false
+                self.run("Edit Shared Tasks") { saved = self.store.saveTeamTaskPlanningSelection(captured) }; return saved
+            }, completed: { [weak self] in
+                self?.teamTaskPlanning = nil; self?.selection.subtract(ids); self?.confirm("Shared task changes saved")
+            })
+        } catch { store.error = error.localizedDescription }
+        return true
+    }
     func reschedule(_ ids: Set<String>, to day: String?, label: String) {
+        if reviewSharedPlanning(ids, title: day == nil ? "Remove dates" : "Move to \(label)", fields: { TeamTaskBatch.dateFields(task: $0, day: day) }) { return }
         if hierarchyFilter {
             guard runSelection(ids, name: "Reschedule", action: { task in .patch(day.map { TaskPlanner.dayFields(task: task, day: $0) } ?? ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null]) }) else { return }
             Feedback.drop(); confirm(day == nil ? "Removed dates" : "Moved to \(label)"); return
@@ -496,6 +518,7 @@ final class Workspace {
         return true
     }
     func setPriority(_ ids: Set<String>, _ value: Int) {
+        if reviewSharedPlanning(ids, title: value == 4 ? "Clear priority" : "Set priority \(value)", fields: { _ in ["priority": .number(Double(value))] }) { return }
         guard withAnimation(layout, { updateTasks(ids, fields: ["priority": .number(Double(value))], name: "Set Priority") }) else { return }
         confirm(value == 4 ? "Priority cleared" : "Priority \(value) set")
     }

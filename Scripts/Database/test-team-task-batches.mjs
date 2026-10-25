@@ -93,6 +93,10 @@ try {
       ),
     ).digest("hex");
   }
+  if (process.env.TASKFOLD_TEAM_PLANNING_BATCH_REGRESSION === "1") {
+    const { loadTeamPlanningBatchSchema } = await import("./team-planning-batch-schema.mjs");
+    await loadTeamPlanningBatchSchema(pg.raw, { base: false }); report.planningBatchRegression = true;
+  }
   for (const [n, x] of Object.entries(u)) {
     await pg.raw(
       `insert into auth.users(id,email,email_confirmed_at)values(${lit(x.id)},${

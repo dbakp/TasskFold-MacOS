@@ -99,3 +99,102 @@ struct TeamTaskDeletionReview: View {
         #endif
     }
 }
+
+
+struct TeamTaskPlanningRequest: Identifiable {
+    let selection: TeamTaskPlanningSelection
+    let title: String
+    let perform: () -> Bool
+    let completed: () -> Void
+    var id: UUID { selection.requestID }
+}
+
+struct TeamTaskPlanningReview: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let request: TeamTaskPlanningRequest
+    @State private var message: String?
+    @State private var finished = false
+    private var refusal: String? {
+        guard !finished else { return "This selection has already been saved." }
+        do { _ = try store.reviewedTeamTaskPlanningSelection(request.selection); return nil }
+        catch { return error.localizedDescription }
+    }
+    var body: some View {
+        let blocked = refusal
+        NavigationStack {
+            Form {
+                Section {
+                    Label(request.title, systemImage: "calendar.badge.checkmark").font(.title2.weight(.semibold))
+                    Text("Review \(request.selection.drafts.count) shared \(request.selection.drafts.count == 1 ? "task" : "tasks"). This change affects everyone with access. The complete selection saves together; a changed or unavailable task pauses the whole action.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                if blocked == nil {
+                    Section("Selected tasks and changes") {
+                        ForEach(request.selection.drafts, id: \.source.id) { draft in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(draft.source.title).font(.headline).fixedSize(horizontal: false, vertical: true)
+                                Text(store.record("projects", id: draft.scope.project)?.name ?? "Shared project").font(.caption).foregroundStyle(.secondary)
+                                ForEach(displayKeys(request.selection.changes[draft.source.id] ?? [:]), id: \.self) { key in
+                                    LabeledContent(fieldTitle(key), value: valueTitle(request.selection.changes[draft.source.id]![key]!, key: key)).font(.callout)
+                                }
+                            }.padding(.vertical, 5).accessibilityElement(children: .combine)
+                        }
+                    }.accessibilityIdentifier("teamPlanningSelection")
+                    Section {
+                        Label("Undo stays available on this device", systemImage: "arrow.uturn.backward")
+                        Text("Undo requires current access and the same saved task contents. Notes, conversations, assignments and repeat rules are kept.").font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                if let blocked { Section { Label("Planning paused", systemImage: "lock.shield"); Text(blocked).foregroundStyle(.secondary) }.accessibilityIdentifier("teamPlanningPaused") }
+                if let message { Section { Text(message).foregroundStyle(.red).accessibilityIdentifier("teamPlanningError") } }
+                Section {
+                    Button("Save changes together") {
+                        guard !finished, refusal == nil else { return }
+                        if request.perform() { finished = true; request.completed(); dismiss() }
+                        else { message = store.error ?? "The selection could not be saved. Your tasks are unchanged; try again."; store.error = nil }
+                    }.disabled(blocked != nil || finished).accessibilityIdentifier("confirmTeamPlanning")
+                }
+            }.formStyle(.grouped).accessibilityIdentifier("teamPlanningForm")
+            .navigationTitle("Review shared changes")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelTeamPlanning") } }
+            #if os(macOS)
+            .frame(minWidth: 500, idealWidth: 580, minHeight: 440)
+            #endif
+        }.privacySensitive()
+    }
+    private func fieldTitle(_ key: String) -> String {
+        switch key { case "priority": "Priority"; case "due_date": "Date"; case "due_time": "Time"; case "time_zone": "Time zone"; case "scheduled_at": "Date and time"; case "deadline_date": "Deadline"; case "duration_minutes": "Estimate"; default: "Planning" }
+    }
+    private func displayKeys(_ fields: [String: JSON]) -> [String] {
+        ["priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes"].filter { key in
+            guard fields[key] != nil else { return false }
+            if key == "scheduled_at", fields["due_date"] != nil || fields["due_time"] != nil { return false }
+            if fields["due_date"] == .null, ["due_time", "time_zone"].contains(key), fields[key] == .null { return false }
+            return true
+        }
+    }
+    private func valueTitle(_ value: JSON, key: String) -> String {
+        switch value {
+        case .null: return "None"
+        case .string(let text):
+            if ["due_date", "deadline_date"].contains(key), let date = Dates.parse(text) { return date.formatted(date: .abbreviated, time: .omitted) }
+            if key == "scheduled_at", let date = ISO8601DateFormatter().date(from: text) { return date.formatted(date: .abbreviated, time: .shortened) }
+            return text
+        case .number(let number):
+            if key == "priority", number == 4 { return "None" }
+            return number.formatted(.number) + (key == "duration_minutes" ? " min" : "")
+        default: return "Review required"
+        }
+    }
+}
+
+
+struct TeamTaskPlanningSheet: ViewModifier {
+    @Binding var request: TeamTaskPlanningRequest?
+    func body(content: Content) -> some View {
+        content.sheet(item: $request) { TeamTaskPlanningReview(request: $0) }
+    }
+}

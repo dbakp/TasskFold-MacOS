@@ -1,0 +1,125 @@
+{
+  "syntheticOnly": true,
+  "containerRemoved": true,
+  "account": "84a43597-2488-4ee0-a1fd-45d0b02174ed",
+  "origin": "https://backend.example",
+  "body": {
+    "team_id": "0eb476af-9a85-4f02-886d-c3159abf3adf",
+    "request_id": "11fe3a48-bb1f-46ed-ad28-4af907cf479d",
+    "items": [
+      {
+        "team_id": "0eb476af-9a85-4f02-886d-c3159abf3adf",
+        "project_id": "9c04f604-a97b-476b-b755-275ac182ae29",
+        "task_id": "42403a28-beda-4bb0-9e28-da4621d6ce11",
+        "request_id": "d03afd70-af39-40ab-8cec-959af885a475",
+        "task_generation": "612df26a-1c73-4621-9149-d9cc96aa394d",
+        "record": {
+          "id": "42403a28-beda-4bb0-9e28-da4621d6ce11",
+          "title": "Planning task 0",
+          "labels": [],
+          "user_id": "30a3b4b3-23dd-4c95-a1eb-67d8d039caf4",
+          "comments": [],
+          "due_date": null,
+          "due_time": null,
+          "priority": 4,
+          "subtasks": [],
+          "completed": false,
+          "reminders": [],
+          "time_zone": null,
+          "created_at": "2026-10-25T04:52:41.442855+00:00",
+          "project_id": "9c04f604-a97b-476b-b755-275ac182ae29",
+          "section_id": null,
+          "assigned_to": null,
+          "attachments": [],
+          "description": "Private original note",
+          "completed_at": null,
+          "is_recurring": false,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "reminder_specs": [],
+          "source_metadata": {},
+          "task_generation": "612df26a-1c73-4621-9149-d9cc96aa394d",
+          "duration_minutes": null,
+          "completion_version": 0,
+          "recurrence_pattern": null,
+          "recurrence_end_date": null,
+          "notification_sent_at": null,
+          "recurrence_parent_id": null
+        },
+        "changes": {
+          "priority": 2,
+          "deadline_date": "2026-11-12",
+          "duration_minutes": 45
+        }
+      },
+      {
+        "team_id": "0eb476af-9a85-4f02-886d-c3159abf3adf",
+        "project_id": "cb6ea422-25fa-4763-a7c6-39efc4aa66ac",
+        "task_id": "cc06c027-686e-4733-b217-99d64f87c30b",
+        "request_id": "e574efc2-69c4-4ecf-8dfe-2fa714f201ed",
+        "task_generation": "199d2944-53cc-49f5-abc0-3dc3c6ec124a",
+        "record": {
+          "id": "cc06c027-686e-4733-b217-99d64f87c30b",
+          "title": "Planning task 1",
+          "labels": [],
+          "user_id": "30a3b4b3-23dd-4c95-a1eb-67d8d039caf4",
+          "comments": [],
+          "due_date": null,
+          "due_time": null,
+          "priority": 4,
+          "subtasks": [],
+          "completed": false,
+          "reminders": [],
+          "time_zone": null,
+          "created_at": "2026-10-25T04:52:41.602917+00:00",
+          "project_id": "cb6ea422-25fa-4763-a7c6-39efc4aa66ac",
+          "section_id": null,
+          "assigned_to": null,
+          "attachments": [],
+          "description": "Private original note",
+          "completed_at": null,
+          "is_recurring": false,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "reminder_specs": [],
+          "source_metadata": {},
+          "task_generation": "199d2944-53cc-49f5-abc0-3dc3c6ec124a",
+          "duration_minutes": null,
+          "completion_version": 0,
+          "recurrence_pattern": null,
+          "recurrence_end_date": null,
+          "notification_sent_at": null,
+          "recurrence_parent_id": null
+        },
+        "changes": {
+          "priority": 2,
+          "deadline_date": "2026-11-12",
+          "duration_minutes": 45
+        }
+      }
+    ]
+  },
+  "reply": {
+    "items": [
+      {
+        "task_id": "42403a28-beda-4bb0-9e28-da4621d6ce11",
+        "project_id": "9c04f604-a97b-476b-b755-275ac182ae29",
+        "request_id": "d03afd70-af39-40ab-8cec-959af885a475",
+        "task_generation": "612df26a-1c73-4621-9149-d9cc96aa394d"
+      },
+      {
+        "task_id": "cc06c027-686e-4733-b217-99d64f87c30b",
+        "project_id": "cb6ea422-25fa-4763-a7c6-39efc4aa66ac",
+        "request_id": "e574efc2-69c4-4ecf-8dfe-2fa714f201ed",
+        "task_generation": "199d2944-53cc-49f5-abc0-3dc3c6ec124a"
+      }
+    ],
+    "account": "84a43597-2488-4ee0-a1fd-45d0b02174ed",
+    "team_id": "0eb476af-9a85-4f02-886d-c3159abf3adf",
+    "protocol": 1,
+    "replayed": false,
+    "restores": null,
+    "operation": "edit",
+    "request_id": "11fe3a48-bb1f-46ed-ad28-4af907cf479d"
+  }
+}

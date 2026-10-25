@@ -3,7 +3,15 @@ import Foundation
 /// One durable intent and one RPC cover the complete selection. Member requests
 /// remain frozen inside the envelope; a transport retry never rebuilds the group.
 struct TeamTaskBatch: Codable, Equatable, Sendable {
-    enum Operation: String, Codable, Sendable { case delete, restore }
+    enum Operation: String, Codable, Sendable { case delete, restore, edit }
+    static let planningFields: Set<String> = ["priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes"]
+    static func dateFields(task: Record, day: String?) -> [String: JSON] {
+        guard let day else { return ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null] }
+        guard Dates.parse(day) != nil else { return [:] }
+        let fields = TaskPlanner.dayFields(task: task, day: day)
+        // Already-correct members still participate in the complete source review.
+        return fields.isEmpty ? ["due_date": .string(day)] : fields
+    }
     let account: String
     let origin: String
     let team: String
@@ -24,8 +32,14 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
         let ids=items.map(\.recordID),nonces=items.map(\.id)
         guard ids == ids.sorted(),Set(ids).count == items.count,Set(nonces).count == items.count,!nonces.contains(header.id) else { throw Self.invalid }
         let values=try items.map { item -> JSON in
-            guard item.teamTaskBatch == nil, let scope=item.teamTaskScope,scope.account == account,scope.origin == origin,scope.team == team,
-                  try scope.lifecycleAction(for:item) == operation.rawValue else { throw Self.invalid }
+            guard item.teamTaskBatch == nil, let scope=item.teamTaskScope,scope.account == account,scope.origin == origin,scope.team == team else { throw Self.invalid }
+            if operation == .edit {
+                let edit = try scope.body(for: item)
+                guard edit["checklist_restore_from"] == nil, let record = item.baseline, record["id"] == .string(item.recordID),
+                      Set(item.fields.keys).isSubset(of: Self.planningFields) else { throw Self.invalid }
+                return .object(edit.filter { $0.key != "base" }.merging(["record": .object(record)]) { _, new in new })
+            }
+            guard try scope.lifecycleAction(for:item) == operation.rawValue else { throw Self.invalid }
             return .object(try scope.lifecycleBody(for:item))
         }
         var body:[String:JSON]=["team_id":.string(team),"request_id":.string(header.id.uuidString.lowercased()),"items":.array(values)]
@@ -48,6 +62,7 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
             guard changes.count == 1,let batch=changes[0].teamTaskBatch else { throw Self.invalid }
             _=try batch.body(for:changes[0]);return changes
         }
+        if changes.count > 1 && changes.contains(where: { $0.teamTaskScope != nil && $0.method == "PATCH" }) { throw Self.invalid }
         let scoped=changes.filter{$0.teamTaskScope != nil && $0.method == "DELETE"}
         if !scoped.isEmpty && changes.count > 1 && scoped.count != changes.count { throw AppFailure(message:"Choose tasks from one workspace for this action.") }
         guard scoped.count > 1 else { return changes }
@@ -65,6 +80,13 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
         _=try body(for:header)
         let inverseItems=try items.map { item -> Mutation in
             guard var scope=item.teamTaskScope else { throw Self.invalid }
+            if operation == .edit {
+                guard let before = item.baseline else { throw Self.invalid }
+                var expected = before
+                for (key, value) in item.fields { expected[key] = value }
+                let fields = Dictionary(uniqueKeysWithValues: item.fields.keys.map { ($0, before[$0] ?? .null) })
+                return Mutation(table: "tasks", recordID: item.recordID, method: "PATCH", fields: fields, baseline: expected, teamTaskScope: scope)
+            }
             if operation == .delete {
                 guard let fields=item.baseline else { throw Self.invalid }
                 let before=Record(fields)
@@ -75,7 +97,7 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
             scope.restoreRequest=nil
             return Mutation(table:"tasks",recordID:item.recordID,method:"DELETE",fields:[:],baseline:item.fields,teamTaskScope:scope)
         }
-        let value=Self(account:account,origin:origin,team:team,operation:operation == .delete ? .restore:.delete,
+        let value=Self(account:account,origin:origin,team:team,operation:operation == .edit ? .edit : operation == .delete ? .restore:.delete,
                        restores:operation == .delete ? header.id:nil,items:inverseItems)
         return Self.header(value)
     }
@@ -93,6 +115,7 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
               items.allSatisfy({ item in
                   guard let scope=item.teamTaskScope,snapshot.tables["projects"]?.contains(where:{$0.id == scope.project}) == true else { return false }
                   let current=snapshot.tables["tasks"]?.first(where:{$0.id == item.recordID})
+                  if operation == .edit { return current != nil && current?.fields == item.baseline && TaskGeneration.permitsLocalAction(item, existing: current) }
                   if operation == .delete { return TaskGeneration.permitsLocalAction(item,existing:current) }
                   return current == nil || current?["task_generation"] == item.fields["task_generation"]
               }) else { return false }
@@ -139,5 +162,34 @@ struct TeamTaskDeletionSelection: Equatable, Sendable {
         let header = TeamTaskBatch.header(batch, id: requestID)
         _ = try batch.body(for: header)
         return header
+    }
+}
+
+
+/// A planning review freezes every source row and member request before presentation.
+/// Durable retries use the resulting batch; this opening authority is never encoded.
+struct TeamTaskPlanningSelection: Equatable, Sendable {
+    let drafts: [TeamTaskEditorDraft]
+    let changes: [String: [String: JSON]]
+    let requestID: UUID
+    private let memberRequests: [String: UUID]
+    init(drafts: [TeamTaskEditorDraft], changes: [String: [String: JSON]], requestID: UUID = UUID()) throws {
+        guard (1...100).contains(drafts.count), Set(drafts.map { $0.source.id }).count == drafts.count,
+              Set(changes.keys) == Set(drafts.map { $0.source.id }), let first = drafts.first,
+              drafts.allSatisfy({ $0.kind == .existing && $0.workspace == first.workspace && $0.session == first.session && $0.scope.account == first.scope.account && $0.scope.origin == first.scope.origin && $0.scope.team == first.scope.team && $0.accessToken == first.accessToken }),
+              changes.values.allSatisfy({ !$0.isEmpty && Set($0.keys).isSubset(of: TeamTaskBatch.planningFields) }) else { throw TeamTaskBatch.invalid }
+        self.drafts = drafts.sorted { $0.source.id < $1.source.id }; self.changes = changes; self.requestID = requestID
+        memberRequests = Dictionary(uniqueKeysWithValues: drafts.map { ($0.source.id, UUID()) })
+    }
+    func mutation(current: [String: Record], workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) throws -> Mutation {
+        let items = try drafts.map { draft -> Mutation in
+            guard current[draft.source.id] == draft.source,
+                  draft.permits(current: current[draft.source.id], workspace: workspace, session: session, cache: cache, enabled: enabled) else { throw TeamTaskBatch.conflict }
+            let item = Mutation(id: memberRequests[draft.source.id]!, table: "tasks", recordID: draft.source.id, method: "PATCH", fields: changes[draft.source.id]!, baseline: draft.source.fields, teamTaskScope: draft.scope)
+            return try draft.scope.capturing(item, existing: draft.source)
+        }
+        let first = drafts[0].scope
+        let batch = TeamTaskBatch(account: first.account, origin: first.origin, team: first.team, operation: .edit, restores: nil, items: items)
+        let header = TeamTaskBatch.header(batch, id: requestID); _ = try batch.body(for: header); return header
     }
 }

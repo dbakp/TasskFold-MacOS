@@ -5497,3 +5497,22 @@ and the Mac Debug compile. No new installed Mac, spoken or hosted/provider
 acceptance is claimed. Supported retarget/reauthorization, file custody, persistent
 busy-send preparation and the remaining Px/native acceptance stay open. Normal
 rollout and all user-deferred distribution/provider/device items remain deferred.
+
+
+### 2026-10-25 — Reviewed atomic shared planning
+
+Shared date/removal and priority selection actions now open a native contents
+review before saving. A frozen 1–100-task command persists and sends as one batch,
+with complete source checks, one atomic local projection and linked Undo/Redo.
+The service applies supported planning fields through the established guarded
+editor; a busy/changed/unauthorized member or late fault refuses the whole group.
+Already-correct date members remain in the selection. Personal task flows retain
+their existing behavior. No rollout or hosted schema is enabled.
+
+The Mac root’s new sheet uses a small presentation modifier to keep the root view
+within the compiler’s type-checking budget. See p2-team-planning-batches-evidence.json
+for exact checks/build status and limitations. Installed native, keyboard/spoken,
+large-text/dark/contrast and hosted multi-actor acceptance remain open; deadline/
+estimate bulk entry and other shared bulk commands are still separate work.
+All user-deferred release/provider/device dependencies stay deferred, and the
+full rank-6/Px objective remains active.

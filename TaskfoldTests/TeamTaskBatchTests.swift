@@ -109,3 +109,108 @@ final class TeamTaskBatchTests:XCTestCase {
         do{_=try await api.send(header,expectedAccount:UUID().uuidString.lowercased());XCTFail("Foreign account sent")}catch{XCTAssertTrue(error is CancellationError)};XCTAssertEqual(count,2)
     }
 }
+
+extension TeamTaskBatchTests {
+    private func planningFixture() throws -> ([String: JSON], Mutation, TeamTaskBatch) {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-planning-batch-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let f = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url)), body = f["body"]!.object
+        let items = body["items"]!.list.map { value -> Mutation in
+            let v = value.object, scope = TeamTaskEditScope(account: f["account"]!.text, origin: batchOrigin, team: body["team_id"]!.text, project: v["project_id"]!.text)
+            return Mutation(id: UUID(uuidString: v["request_id"]!.text)!, table: "tasks", recordID: v["task_id"]!.text, method: "PATCH", fields: v["changes"]!.object, baseline: v["record"]!.object, teamTaskScope: scope)
+        }
+        let batch = TeamTaskBatch(account: f["account"]!.text, origin: batchOrigin, team: body["team_id"]!.text, operation: .edit, restores: nil, items: items)
+        return (f, TeamTaskBatch.header(batch, id: UUID(uuidString: body["request_id"]!.text)!), batch)
+    }
+    private func planningSnapshot(_ batch: TeamTaskBatch) -> Snapshot {
+        Snapshot(tables: ["projects": Set(batch.items.map { $0.teamTaskScope!.project }).sorted().map { Record(["id": .string($0)]) }, "tasks": batch.items.map { Record($0.baseline!) }])
+    }
+    private func planningCache(_ batch: TeamTaskBatch) throws -> TeamWorkspaceCache {
+        let projects = Set(batch.items.map { $0.teamTaskScope!.project }).sorted().map { id in JSON.object(["id": .string(id), "team_id": .string(batch.team), "role": .string("editor"), "archived": .bool(false), "can_send_tasks": .bool(true)]) }
+        let raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(batch.account), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false), "token": .string(String(repeating: "a", count: 64)), "projects": .array(projects), "teams": .array([.object(["id": .string(batch.team), "state": .string("active"), "revision": .number(1), "access_revision": .number(1)])])]
+        return try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: batch.account, origin: batch.origin), previous: nil, pending: [])
+    }
+    func testPlanningDateChoiceKeepsAlreadyCorrectMembersAndExplicitRemoval() throws {
+        let (_, _, batch) = try planningFixture(); var task = Record(batch.items[0].baseline!)
+        task["due_date"] = .string("2026-11-12")
+        XCTAssertEqual(TeamTaskBatch.dateFields(task: task, day: "2026-11-12"), ["due_date": .string("2026-11-12")])
+        XCTAssertEqual(TeamTaskBatch.dateFields(task: task, day: nil), ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null])
+        XCTAssertEqual(TeamTaskBatch.dateFields(task: task, day: "invalid"), [:])
+    }
+    func testPlanningSQLCommandReceiptAndPrivatePersistence() throws {
+        let (f, header, batch) = try planningFixture()
+        XCTAssertEqual(try batch.body(for: header), f["body"]!.object)
+        XCTAssertNoThrow(try batch.confirm(f["reply"]!.object, for: header))
+        XCTAssertEqual(try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(header)), header)
+        var replay = f["reply"]!.object; replay["replayed"] = .bool(true)
+        XCTAssertNoThrow(try batch.confirm(replay, for: header))
+    }
+    func testPlanningProjectionAndUndoKeepWholeRowsAndFreshRequestIdentities() throws {
+        let (_, header, batch) = try planningFixture(); var current = planningSnapshot(batch)
+        let original = current, undo = try batch.inverse(of: header, snapshot: original)
+        XCTAssertTrue(batch.apply(to: &current, header: header))
+        for row in current.tables["tasks"]! { XCTAssertEqual(row["priority"], .number(2)); XCTAssertEqual(row["deadline_date"], .string("2026-11-12")); XCTAssertEqual(row["description"], .string("Private original note")) }
+        let inverse = try XCTUnwrap(undo.teamTaskBatch); XCTAssertEqual(inverse.operation, .edit); XCTAssertNil(inverse.restores)
+        XCTAssertTrue(inverse.apply(to: &current, header: undo)); XCTAssertEqual(current.tables["tasks"], original.tables["tasks"])
+        let redo = try inverse.inverse(of: undo, snapshot: current), repeated = try XCTUnwrap(redo.teamTaskBatch)
+        XCTAssertTrue(Set(batch.items.map(\.id)).isDisjoint(with: repeated.items.map(\.id)))
+        XCTAssertTrue(repeated.apply(to: &current, header: redo)); XCTAssertEqual(current.tables["tasks"]?.first?["priority"], .number(2))
+    }
+    func testPlanningProjectionRejectsMissingRecreatedAndChangedMembersWithoutPartialEffect() throws {
+        let (_, header, batch) = try planningFixture()
+        for variant in 0..<3 {
+            var current = planningSnapshot(batch)
+            if variant == 0 { current.tables["tasks"]!.removeLast() }
+            else { current.tables["tasks"]![1][variant == 1 ? "task_generation" : "description"] = .string(variant == 1 ? UUID().uuidString.lowercased() : "Newer note") }
+            let before = current; XCTAssertFalse(batch.apply(to: &current, header: header)); XCTAssertEqual(current, before)
+        }
+    }
+    func testPlanningBodyRejectsUnsupportedFieldsSmallSelectionAndRestoreAuthority() throws {
+        let (_, _, original) = try planningFixture()
+        for variant in 0..<4 {
+            var items = original.items
+            if variant == 0 { items[0].fields = ["completed": .bool(true)] }
+            if variant == 1 { items.removeAll() }
+            if variant == 2 { items[0].baseline?.removeValue(forKey: "id") }
+            let batch = TeamTaskBatch(account: original.account, origin: original.origin, team: original.team, operation: .edit, restores: variant == 3 ? UUID() : nil, items: items)
+            XCTAssertThrowsError(try batch.body(for: TeamTaskBatch.header(batch)))
+        }
+        XCTAssertThrowsError(try TeamTaskBatch.preparing(original.items, snapshot: planningSnapshot(original)))
+    }
+    func testPlanningReceiptRequiresCompleteExactMemberAcknowledgement() throws {
+        let (f, header, batch) = try planningFixture()
+        for key in ["account", "team_id", "request_id", "operation"] {
+            var reply = f["reply"]!.object; reply[key] = .string("wrong")
+            XCTAssertThrowsError(try batch.confirm(reply, for: header))
+        }
+        var reply = f["reply"]!.object; reply["items"] = .array(Array(reply["items"]!.list.dropLast()))
+        XCTAssertThrowsError(try batch.confirm(reply, for: header))
+    }
+    func testPlanningOpeningFreezesRowsWorkspaceSessionAndAccessBeforeReview() throws {
+        let (_, _, batch) = try planningFixture(), cache = try planningCache(batch), workspace = WorkspaceBinding(account: batch.account, generation: UUID()), session = UUID()
+        let records = batch.items.map { Record($0.baseline!) }, drafts = try records.map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) }
+        let selection = try TeamTaskPlanningSelection(drafts: drafts, changes: Dictionary(uniqueKeysWithValues: batch.items.map { ($0.recordID, $0.fields) }))
+        let current = Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0) })
+        let command = try selection.mutation(current: current, workspace: workspace, session: session, cache: cache, enabled: true)
+        XCTAssertEqual(command, try selection.mutation(current: current, workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try selection.mutation(current: current, workspace: workspace, session: UUID(), cache: cache, enabled: true))
+        XCTAssertThrowsError(try selection.mutation(current: current, workspace: WorkspaceBinding(account: batch.account, generation: UUID()), session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try selection.mutation(current: current, workspace: workspace, session: session, cache: cache, enabled: false))
+        var changed = current; changed[records[0].id]?["description"] = .string("Newer note")
+        XCTAssertThrowsError(try selection.mutation(current: changed, workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try selection.mutation(current: [:], workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try TeamTaskPlanningSelection(drafts: [drafts[0], drafts[0]], changes: [records[0].id: ["priority": .number(1)]]))
+    }
+    @MainActor func testPlanningSenderUsesOneRPCAndPreservesWholeIntentOnConflict() async throws {
+        let (f, header, batch) = try planningFixture(), config = URLSessionConfiguration.ephemeral; config.protocolClasses = [BatchHTTP.self]
+        let session = try JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(batch.account)\"}}".utf8))
+        let api = Backend(configuration: ["URL": batchOrigin, "Key": "synthetic-public"], http: URLSession(configuration: config), session: session, persistSession: { _ in }); var calls = 0
+        BatchHTTP.handler = { request, peer in
+            calls += 1; XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_team_task_batch"); XCTAssertEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-store")
+            XCTAssertFalse(request.httpShouldHandleCookies); peer.finish(try! JSONEncoder().encode(f["reply"]!.object))
+        }; defer { BatchHTTP.handler = nil }
+        let saved = try await api.send(header); XCTAssertNil(saved); XCTAssertEqual(calls, 1)
+        BatchHTTP.handler = { _, peer in calls += 1; peer.finish(Data("{\"code\":\"PT409\",\"message\":\"private-details\"}".utf8), status: 409) }
+        do { _ = try await api.send(header); XCTFail("Conflict acknowledged") } catch { XCTAssertFalse(error.localizedDescription.contains("private-details")) }
+        XCTAssertEqual(calls, 2); XCTAssertEqual(try batch.body(for: header), f["body"]!.object)
+    }
+}
