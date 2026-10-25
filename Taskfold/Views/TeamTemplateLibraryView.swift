@@ -10,8 +10,8 @@ struct SavedTeamTemplateRequestLink: View {
     private var lifecycle: String { "\(store.userID)|\(store.workspaceGeneration)|\(store.backend.reminderSessionIncarnation)|\(phase == .active)|\(reload)" }
     var body: some View {
         Group {
-            if visible, store.teamTemplateRecoveryAvailable {
-                Section { Button("Saved template request", systemImage: "tray.and.arrow.up") { showing = true }.accessibilityIdentifier("savedTeamTemplateRequest") }
+            if store.teamTemplateRecoveryAvailable {
+                Section { Button(visible ? "Saved template request" : "Template requests", systemImage: "tray.and.arrow.up") { showing = true }.accessibilityIdentifier("savedTeamTemplateRequest") }
             }
         }
         .task(id: lifecycle) {
@@ -39,6 +39,7 @@ struct TeamTemplateLibraryView: View {
     @State private var loaded: String?
     @State private var editing: TeamTemplateReviewRequest?
     @State private var transferring: TeamTemplateTransferSheet?
+    @State private var workflow: TeamWorkflowRunRequest?
     @State private var stopping: TeamTemplateCommand?
     @State private var retrying: TeamTemplateCommand?
     private var context: String? {
@@ -68,6 +69,7 @@ struct TeamTemplateLibraryView: View {
                                 }
                                 if detail.supported != nil {
                                     Section {
+                                        if store.teamWorkflowCreationAvailable { Button("Use in shared workspace…", systemImage: "person.3") { workflow = TeamWorkflowRunRequest(source: .shared(detail)) }.accessibilityIdentifier("runTeamTemplate") }
                                         Button("Save private copy…", systemImage: "square.on.square") { transfer(detail, exporting: false) }.accessibilityIdentifier("copyTeamTemplate")
                                         Button("Export template…", systemImage: "square.and.arrow.up") { transfer(detail, exporting: true) }.accessibilityIdentifier("exportTeamTemplate")
                                     }
@@ -110,6 +112,7 @@ struct TeamTemplateLibraryView: View {
         .onChange(of: phase) { _, phase in if phase == .active { Task { await refresh() } } }
         .onChange(of: store.workspaceReadRevision) { _, _ in browser?.invalidate(); Task { await refresh() } }
         .onDisappear { browser?.invalidate(); commands?.close() }
+        .sheet(item: $workflow) { request in WorkflowShell(title: "Use shared workflow") { TeamWorkflowRunView(source: request.source) } }
         .sheet(item: $editing) { request in
             if let commands { TeamTemplatePublicationReview(request: request, model: commands, current: { visible && store.teamOrganizationReadable && context == request.context && browser?.organization == request.organization && browser?.scope?.canManage == true && (request.baseline == nil || browser?.detail == request.baseline) }) }
         }

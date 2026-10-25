@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-25",
+  "scope": "Only owned /tmp/taskfold-workflow-native-* and two reserved Simulator app/runner installations",
+  "temporaryPathsRemoved": 78,
+  "temporaryBytesRemoved": 2938970801,
+  "simulatorApps": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+      "terminationReturnCode": 3,
+      "uninstalled": true
+    },
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+      "terminationReturnCode": 3,
+      "uninstalled": true
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+      "terminationReturnCode": 3,
+      "uninstalled": true
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+      "terminationReturnCode": 3,
+      "uninstalled": true
+    }
+  ],
+  "bootedSimulatorStatesPreserved": [
+    "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4"
+  ],
+  "noMacAppLaunchedThisStage": true,
+  "repositoryBuildCachesPreserved": true
+}

@@ -1,0 +1,65 @@
+{
+  "transforms": [
+    "reserved App Group",
+    "backupcanceltests \u2192 workflowteststeameditbridge",
+    "reserved session Keychain service",
+    "reserved recovery Keychain service"
+  ],
+  "files": {
+    "Taskfold/Core/Backend.swift": {
+      "sourceSHA256": "c182e02f4290d053fdf1ba8ecd20dd01ea80473db90d28c1af682d805367d8b3",
+      "hostSHA256": "8e63d5e842265541de5a2aee266c29fc12bc4c12a38986d6f56fd22c5c87d045",
+      "exactMatchAfterIsolationTransforms": true
+    },
+    "Taskfold/Core/Backups.swift": {
+      "sourceSHA256": "147c4a0c0bd29978d0a85aeea1c9d863fe6d1b85d8db36031811b245120eb86b",
+      "hostSHA256": "704048a2e39d969e690b70bbae5ac1e9bb402258808a38e5129246cf2b84439f",
+      "exactMatchAfterIsolationTransforms": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "sourceSHA256": "a09b8447916b9e1fa7f3968a4a473aa19a06eb4db6462d9198b24122933be248",
+      "hostSHA256": "65ff5cbd7d5e453a3d50f0830bc337eca04f2e4ee36ac4be8e7d10897e734239",
+      "exactMatchAfterIsolationTransforms": true
+    },
+    "Taskfold/Core/TeamWorkflowRunCommands.swift": {
+      "sourceSHA256": "98e7a8737959ca8fc89049bd93833043b9d14d4036f79e758fb16b78de9b0486",
+      "hostSHA256": "98e7a8737959ca8fc89049bd93833043b9d14d4036f79e758fb16b78de9b0486",
+      "exactMatchAfterIsolationTransforms": true
+    },
+    "Taskfold/Views/TeamWorkflowRunView.swift": {
+      "sourceSHA256": "c5888cd9c8d7321e180f0eaedad53ebd709ed988bec8869bd808a579e4eb8f84",
+      "hostSHA256": "c5888cd9c8d7321e180f0eaedad53ebd709ed988bec8869bd808a579e4eb8f84",
+      "exactMatchAfterIsolationTransforms": true
+    },
+    "Taskfold/Views/TeamTemplateLibraryView.swift": {
+      "sourceSHA256": "66112b27aa26ea594eae92f77c702c85db3eafcf00b3170f7bb8e9cfa82be75c",
+      "hostSHA256": "66112b27aa26ea594eae92f77c702c85db3eafcf00b3170f7bb8e9cfa82be75c",
+      "exactMatchAfterIsolationTransforms": true
+    },
+    "Taskfold/Views/WorkflowViews.swift": {
+      "sourceSHA256": "60fd1f23533ff5050ee7b0e86dd35a381530ce8ee548b72f85fa817548fb0dd2",
+      "hostSHA256": "60fd1f23533ff5050ee7b0e86dd35a381530ce8ee548b72f85fa817548fb0dd2",
+      "exactMatchAfterIsolationTransforms": true
+    },
+    "Taskfold/Views/TaskEditor.swift": {
+      "sourceSHA256": "f07eb8ee149c0cc8a482425f667b275311a4a555587beb503fcd8ec3baff6aeb",
+      "hostSHA256": "f07eb8ee149c0cc8a482425f667b275311a4a555587beb503fcd8ec3baff6aeb",
+      "exactMatchAfterIsolationTransforms": true
+    },
+    "Taskfold/Views/BrowseView.swift": {
+      "sourceSHA256": "39bb5545afc29c1307e3e44511154c39a6f3369c528493cf1646fd2d88dbb68b",
+      "hostSHA256": "39bb5545afc29c1307e3e44511154c39a6f3369c528493cf1646fd2d88dbb68b",
+      "exactMatchAfterIsolationTransforms": true
+    },
+    "Taskfold/TeamTemplateNativeFixture.swift": {
+      "sourceSHA256": "96dea0f79ee4eb30621cb7eb64ba4bd61761ad609fa0dbc5ad0bcf8f7c96aa8c",
+      "hostSHA256": "96dea0f79ee4eb30621cb7eb64ba4bd61761ad609fa0dbc5ad0bcf8f7c96aa8c",
+      "exactMatchAfterIsolationTransforms": true
+    },
+    "TaskfoldUITests/TeamTemplateLibraryUITests.swift": {
+      "sourceSHA256": "7c5590eec436d8c2958520eb255671c59067046d80dfb105851abd7541c18909",
+      "hostSHA256": "7c5590eec436d8c2958520eb255671c59067046d80dfb105851abd7541c18909",
+      "exactMatchAfterIsolationTransforms": true
+    }
+  }
+}

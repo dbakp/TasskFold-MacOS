@@ -1087,6 +1087,8 @@ struct TeamEditorNativeFixtureView: View {
             NavigationStack {
                 Form {
                     NavigationLink("Open team template library") { TeamTemplateLibraryView(teamID: TeamEditorNativeFixture.teamID) }.accessibilityIdentifier("openTeamTemplateLibraryFixture")
+                    NavigationLink("Open private workflow run") { TemplateRunView(template: TeamTemplateNativeFixture.personal) }.accessibilityIdentifier("openPrivateWorkflowRunFixture")
+                    NavigationLink("Open workflow recovery") { WorkflowShell(title: "Workflow recovery") { Form { SavedTeamWorkflowRequestLink() } } }.accessibilityIdentifier("openWorkflowRecoveryFixture")
                     NavigationLink("Open saved template request") { TeamTemplateLibraryView() }.accessibilityIdentifier("openSavedTeamTemplateFixture")
                 }.navigationTitle("Team template test")
             }

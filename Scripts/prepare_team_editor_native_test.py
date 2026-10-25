@@ -36,7 +36,7 @@ for relative in ["Taskfold/Core/Backend.swift", "Taskfold/Core/Backups.swift"]:
     path.write_text(source)
 
 receipt = root / "team-editor-test-receipt.json"
-files = ["Taskfold/Core/Store.swift", "Taskfold/Core/Backups.swift", "Taskfold/Core/Backend.swift", "Taskfold/TeamTemplateNativeFixture.swift", "Taskfold/Views/TeamTemplateLibraryView.swift", "Taskfold/Info.plist"]
+files = ["Taskfold/Core/Store.swift", "Taskfold/Core/Backups.swift", "Taskfold/Core/Backend.swift", "Taskfold/TeamTemplateNativeFixture.swift", "Taskfold/Views/TeamTemplateLibraryView.swift", "Taskfold/Core/TeamWorkflowRunCommands.swift", "Taskfold/Views/TeamWorkflowRunView.swift", "Taskfold/Views/WorkflowViews.swift", "Taskfold/Info.plist"]
 receipt.write_text(json.dumps({
     "namespace": "workflowteststeameditbridge", "teamRolloutInCopyOnly": True,
     "network": "All HTTP requests intercepted locally; scoped synthetic recipients are answered; task moves and template libraries use separate file-backed peers only with --team-move-testing / --team-library-testing in the reserved DEBUG host",

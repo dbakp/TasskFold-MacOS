@@ -86,20 +86,55 @@ actual intercepted HTTP and a real Backend sign-out during its reply. Both app
 builds compile. No native recovery/save UI or physical Keychain acceptance is
 claimed yet; no hosted request, schema/configuration or rollout changed.
 
-## Required next implementation
 
-1. Build native destination/content reviews in each app. Support audience and
-   folder/subproject choices, explicit start date, complete counts/content,
-   changed-source recovery and account/window masking. Keep new team work out
-   of the private writer. Existing project order needs an exact reviewed append
-   policy that preserves work added by others.
-2. Finish native and genuine hosted acceptance; retain the isolated SQL regression suite:
 
-   cancellation, complete creation, archived/revoked/changed source/destination,
-   hierarchy/order/dates/labels/checklists, transport loss, relaunch/retry,
-   duplicate requests, late account replies and failure rollback. Genuine hosted
-   acceptance remains separate from local fixtures. Enable no rollout flag as
-   part of these source and isolated-test stages.
+## Implemented native review and recovery
 
-The wider backlog and user-deferred release/provider/device work remain in
-P2_PLAN.md. This foundation does not close shared workflow runs or rank 6.
+Both apps independently own the destination/content/recovery screen. Shared and
+private templates enter the same explicit review: team and editable project, or
+new project audience/folder/parent, optional start date, complete generated
+projects/sections/tasks/checklists, notes, labels, dates and recurrence. Creation
+requires acknowledgement of the contents and audience. A fresh source, coherent
+paginated destination catalog and current actor order are checked again before
+the immutable request is saved and sent. A changed source/access/order refuses
+that send and requires another review. No shared work enters the private writer.
+
+Account/session/workspace and inactive-scene changes mask the review. Saved
+requests have a separate entry in Account and remain recoverable without new
+shared-authoring admission. Retry confirms the original request; Stop retrying
+explains that already-created cloud work is retained. Successful confirmation
+asks Store to sync. Actual hosted Store refresh and Mac runtime/spoken/account-
+window acceptance remain open; the local native peer does not prove them.
+
+Fresh private-source and actor-order reads use filtered REST requests with
+no-store, cookies disabled, redirect refusal, bounded streaming and current
+account/session checks. Destination reads publish only complete, coherent pages;
+unknown archive/hierarchy/name metadata cannot become a selectable destination.
+See p2-team-workflow-run-native-evidence.json for final verification scope.
+Rank 6 and wider Px remain open. No hosted schema/configuration or rollout changed.
+
+## Remaining acceptance
+
+Retain the isolated SQL suite and finish genuine hosted Store refresh, Mac
+runtime, spoken/account/window and wider hierarchy/order/date/checklist native
+acceptance. Local native peer creation/retry proves screen and durable-request
+behavior; it is not remote SQL/RLS acceptance. Keep rollout disabled. Release,
+provider and physical-device deferrals and the wider backlog remain in P2_PLAN.md.
+
+
+Verification: each independent Core suite passes 146 cases (including nine fresh
+read/catalog tests); both final own arm64 Debug app builds compile. Four native
+scenarios pass on each signed iPhone/iPad Simulator host. After adding the
+online/sync-idle/no-pending-edit authoring guard, the complete creation/lost-reply/
+termination/relaunch/Account-entry/exact-retry scenario passes again on each
+device. Recovery remains available while new authoring is paused. The original
+request is unchanged, with one synthetic receipt and two service calls. Source
+and final installed binary/signature parity are recorded. Light-mode review,
+warning, recovery and confirmation screenshots were inspected. This does not
+prove genuine cloud Store sync, Mac runtime, spoken output or hosted permissions.
+
+The first native attempt found a hidden recovery entry that never started its
+disk check. Keeping it mounted fixes the workflow entry and the equivalent
+template entry. Test corrections handle nested confirmation-button wrappers and
+iPad lazy Form rows. Earlier failed/aborted attempts remain in the evidence.
+No rollout flag, hosted data/schema/configuration or real task changed.

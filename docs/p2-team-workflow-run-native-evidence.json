@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "status": "Native review/recovery implemented; isolated iPhone/iPad acceptance; rank 6 and wider Px incomplete",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamWorkflowRunCommands.swift": "98e7a8737959ca8fc89049bd93833043b9d14d4036f79e758fb16b78de9b0486",
+    "Taskfold/Core/Backend.swift": "97800eb4fcae39f180ee41627e1948dc414b2889c5849ae2b411cdb9041d1e73",
+    "Taskfold/Core/Store.swift": "ebd030a383fc01afa58f101b895c1f9657a7639b1b582e5ea4ea472785493cf0",
+    "Taskfold/Views/TeamWorkflowRunView.swift": "c5888cd9c8d7321e180f0eaedad53ebd709ed988bec8869bd808a579e4eb8f84",
+    "Taskfold/Views/TeamTemplateLibraryView.swift": "3128955ea69a181e7067632798f1708acaa69a525795b69a8ca3373720c0ee97",
+    "Taskfold/Views/WorkflowViews.swift": "bdabeed4e516b5de18fce15938f71bb731a1db6af0ca92a88613ab58c805dbb0",
+    "Taskfold/TeamTemplateNativeFixture.swift": "96dea0f79ee4eb30621cb7eb64ba4bd61761ad609fa0dbc5ad0bcf8f7c96aa8c",
+    "TaskfoldTests/TeamWorkflowDestinationsTests.swift": "41ca18eb96490418d6f570d3663eb5d5a3316347f7a2b5d6ec4715fad26e2ce1",
+    "Scripts/prepare_team_editor_native_test.py": "e67ce301fe898cbdb982519d52e83f3cdc910ca33c30827c58a33c4df5d2801e",
+    "Taskfold.xcodeproj/project.pbxproj": "c06c4863bbfad410efe0bb11434986e98e7e05e2887acc91e8a88343d16160bb"
+  },
+  "core": {
+    "passed": 146,
+    "failed": 0,
+    "destinationReadTests": 9
+  },
+  "build": "Final own arm64 Debug app BUILD SUCCEEDED; signing disabled, compile only",
+  "native": {
+    "appRepository": "TaskFold-iOS",
+    "phoneUniqueScenariosPassed": 4,
+    "tabletUniqueScenariosPassed": 4,
+    "finalSyncGuardRecoveryRepeatEachDevice": 1,
+    "scenarios": [
+      "Review/back creates no workflow request",
+      "Changed shared source is refused before dispatch",
+      "Private template creates in explicit shared project without replacing private template",
+      "Lost reply survives termination/relaunch and Account recovery retries exact original request, one receipt, two calls"
+    ],
+    "service": "File-backed synthetic HTTP peer; workflow request/order/metadata receipts only; Store.sync intentionally suppressed in fixture",
+    "realSimulatorKeychainAndFileRecovery": true,
+    "finalInstalledSignaturesAndBinaryHashesVerified": true,
+    "screenshotsOwner": "TaskFold-iOS",
+    "screenshotsInspected": [
+      "phone review/audience/task notes",
+      "phone source-change warning",
+      "phone saved recovery",
+      "phone clean creation confirmation",
+      "tablet scrollable review and confirmation controls",
+      "tablet original-request confirmation"
+    ],
+    "genuineHostedAcceptance": false,
+    "screenshotsBuild": "Four-scenario v5 run; final v6 adds sync/pending admission and paused-state copy, then repeats complete creation/lost-reply/recovery on both devices."
+  },
+  "corrections": [
+    "Explicit project-picker identity and simpler counts compilation",
+    "Account recovery entry always mounted so first disk check runs; same template-request correction",
+    "Native confirmation-button wrapper duplicates use first matching identifier",
+    "Native iPad lazy Form rows are scrolled into view before matching; initial run deliberately stopped after confirmed test-helper defect",
+    "Unsupported changed definition gets explicit update message; successful confirmation suppresses a new-run form",
+    "New creation requires online, sync idle and no pending private edits; recovery remains available"
+  ],
+  "remaining": [
+    "Genuine hosted Store refresh and rollout acceptance",
+    "Mac runtime, spoken and native account/window/lifecycle acceptance",
+    "Broader project hierarchy/folder/date/checklist native acceptance and current rights fault cases",
+    "Shared batch/history/keyboard and remaining ranked Px; user release/provider/device deferrals"
+  ],
+  "hostedSchemaOrConfigChanged": false,
+  "rolloutEnabled": false,
+  "realUserDataChanged": false,
+  "evidenceDirectory": "team-workflow-run-native"
+}

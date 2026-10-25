@@ -204,3 +204,100 @@ extension Backend: TeamWorkflowRunService {
         }
     }
 }
+
+/// Stage a complete destination catalog behind the workspace/session fence.
+@MainActor @Observable final class TeamWorkflowDestinations {
+    private(set) var overview: TeamOrganizationOverview?
+    private(set) var organization: TeamOrganizationDetail?
+    private(set) var projects: [TeamProjectAccess] = []
+    private(set) var loading = false
+    private(set) var message: String?
+    private var attempt = UUID()
+    let account: String, origin: String
+    @ObservationIgnored private let current: () -> Bool
+    @ObservationIgnored private let fence: () async throws -> String
+    @ObservationIgnored private let readOverview: () async throws -> TeamOrganizationOverview
+    @ObservationIgnored private let readTeam: (String) async throws -> TeamOrganizationDetail
+    @ObservationIgnored private let page: (String, String?) async throws -> TeamProjectPage
+    init(account: String, origin: String, current: @escaping () -> Bool, fence: @escaping () async throws -> String,
+         overview: @escaping () async throws -> TeamOrganizationOverview, team: @escaping (String) async throws -> TeamOrganizationDetail,
+         page: @escaping (String, String?) async throws -> TeamProjectPage) {
+        self.account = account; self.origin = origin; self.current = current; self.fence = fence
+        readOverview = overview; readTeam = team; self.page = page
+    }
+    func invalidate() { attempt = UUID(); overview = nil; organization = nil; projects = []; loading = false; message = nil }
+    func load(team: String? = nil) async {
+        invalidate(); guard current() else { return }; let request = attempt; loading = true
+        func check() throws { guard current(), request == attempt else { throw CancellationError() } }
+        do {
+            let before = try await fence(); try check()
+            guard before.utf8.count == 64, before.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }) else { throw TeamWorkflowRunCommand.invalid }
+            let overview = try await readOverview(); try check()
+            guard overview.account == account, overview.origin == origin, overview.enabled else { throw TeamWorkflowRunCommand.invalid }
+            var organization: TeamOrganizationDetail?, projects: [TeamProjectAccess] = []
+            if let team {
+                guard overview.teams.contains(where: { $0.id == team && !$0.archived }) else { throw TeamWorkflowRunCommand.invalid }
+                let detail = try await readTeam(team); try check()
+                guard detail.account == account, detail.origin == origin, overview.teams.contains(detail.team), !detail.team.archived else { throw TeamWorkflowRunCommand.invalid }
+                organization = detail
+                var cursor: String?
+                repeat {
+                    let result = try await page(team, cursor); try check()
+                    guard result.account == account, result.origin == origin, result.team == team,
+                          result.teamRevision == detail.team.revision, result.state == .active, !result.setupPaused,
+                          projects.count + result.projects.count <= 1000 else { throw TeamWorkflowRunCommand.invalid }
+                    projects += result.projects
+                    guard Set(projects.map(\.id)).count == projects.count else { throw TeamWorkflowRunCommand.invalid }
+                    cursor = result.next
+                    if cursor != nil, result.projects.isEmpty { throw TeamWorkflowRunCommand.invalid }
+                } while cursor != nil
+            }
+            let after = try await fence(); try check(); guard before == after else { throw TeamWorkspaceChanged() }
+            self.overview = overview; self.organization = organization; self.projects = projects
+        } catch {
+            guard request == attempt else { return }
+            if current() { message = error is AccountSessionAuthorizationRequired ? "Sign in again to choose a shared destination." : "Destinations couldn’t be verified. Refresh to try again." }
+        }
+        if request == attempt { loading = false }
+    }
+    static func editable(_ project: TeamProjectAccess) -> Bool {
+        project.name != nil && project.state == .active && !project.setupPaused && project.role != .viewer && project.archive?.effective == false && project.hierarchy?.parentUnavailable == false
+    }
+}
+
+extension Backend {
+    func workflowPersonalSource(id: String, account: String, origin: String) async throws -> TeamWorkflowRunPlan.Source {
+        guard TeamProjectValue.id(id), session?.user.id == account, origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let fence = try reauthenticationContext(account: account)
+        var query = URLComponents(); query.queryItems = [URLQueryItem(name: "select", value: "id,user_id,name,document"), URLQueryItem(name: "id", value: "eq." + id), URLQueryItem(name: "user_id", value: "eq." + account), URLQueryItem(name: "limit", value: "1")]
+        let bytes = try await request("/rest/v1/project_templates?" + query.percentEncodedQuery!, expectedAccount: account, workflowReadLimit: 3_000_000)
+        try requireReauthentication(fence)
+        let rows = try JSONDecoder().decode([Record].self, from: bytes)
+        guard rows.count == 1, let row = rows.first, Set(row.fields.keys) == ["id", "user_id", "name", "document"], row.id == id, row["user_id"] == .string(account) else { throw TeamWorkflowRunCommand.invalid }
+        _ = try WorkflowTemplate(document: row["document"])
+        return .personal(row)
+    }
+    func workflowBaseOrders(_ plan: TeamWorkflowRunPlan) async throws -> [String: [String]] {
+        guard session?.user.id == plan.account, plan.origin == (try accountRemovalOrigin), reminderSessionIncarnation == plan.session else { throw CancellationError() }
+        let fence = try reauthenticationContext(account: plan.account)
+        let keys = plan.orders.map { "group:" + $0.project + ":" + ($0.section ?? "none") }
+        guard Set(keys).count == keys.count else { throw TeamWorkflowRunCommand.invalid }
+        var result = Dictionary(uniqueKeysWithValues: keys.map { ($0, [String]()) }), seen = Set<String>(), received = 0
+        for start in stride(from: 0, to: keys.count, by: 50) {
+            let batch = Array(keys[start..<min(start + 50, keys.count)])
+            var query = URLComponents(); query.queryItems = [URLQueryItem(name: "select", value: "user_id,id,ids"), URLQueryItem(name: "user_id", value: "eq." + plan.account), URLQueryItem(name: "id", value: "in.(" + batch.map { "\"" + $0 + "\"" }.joined(separator: ",") + ")"), URLQueryItem(name: "limit", value: "50")]
+            let bytes = try await request("/rest/v1/view_orders?" + query.percentEncodedQuery!, expectedAccount: plan.account, workflowReadLimit: 4_200_000)
+            try requireReauthentication(fence); received += bytes.count
+            guard received <= 4_200_000 else { throw TeamWorkflowRunCommand.invalid }
+            let rows = try JSONDecoder().decode([Record].self, from: bytes)
+            guard rows.count <= batch.count else { throw TeamWorkflowRunCommand.invalid }
+            for row in rows {
+                guard Set(row.fields.keys) == ["id", "user_id", "ids"], row["user_id"] == .string(plan.account), batch.contains(row.id), seen.insert(row.id).inserted,
+                      case .array(let ids) = row["ids"], ids.count <= 10000 else { throw TeamWorkflowRunCommand.invalid }
+                let names = try ids.map { try TeamOrganizationValue.id($0) }
+                guard Set(names).count == names.count else { throw TeamWorkflowRunCommand.invalid }; result[row.id] = names
+            }
+        }
+        return result
+    }
+}

@@ -357,6 +357,7 @@ final class Store {
     /// This explicit path never infers team scope for an ordinary personal save.
     /// Organization rollout and the service's task capability both stay required.
     private var nativeTeamEditorEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldTeamsEnabled") as? Bool == true }
+    var teamWorkflowCreationAvailable: Bool { nativeTeamEditorEnabled && workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked && online && !syncing && snapshot.pending.isEmpty }
     var teamTaskMovesAvailable: Bool { nativeTeamEditorEnabled && workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked }
     func teamTaskMoveContextCurrent(account: String, origin: String, workspace: WorkspaceBinding, session: UUID) -> Bool {
         teamTaskMovesAvailable && workspace.matches(account: userID, generation: workspaceGeneration) && account == userID && origin == (try? backend.accountRemovalOrigin) && session == backend.reminderSessionIncarnation
@@ -3208,6 +3209,8 @@ extension Store {
             if TeamTemplateNativeFixture.enabled {
                 try TeamTemplateNativeFixture.reset()
                 snapshot.tables[WorkflowTemplate.table] = [TeamTemplateNativeFixture.personal]
+                let workflows = backupVault.directory.appendingPathComponent("Shared workflow requests", isDirectory: true)
+                if FileManager.default.fileExists(atPath: workflows.path) { try FileManager.default.removeItem(at: workflows) }
                 let requests = backupVault.directory.appendingPathComponent("Team template requests", isDirectory: true)
                 if FileManager.default.fileExists(atPath: requests.path) { try FileManager.default.removeItem(at: requests) }
             }

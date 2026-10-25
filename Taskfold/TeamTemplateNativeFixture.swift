@@ -18,6 +18,11 @@ import Foundation
         var getReads = 0
         var unavailable = false
         var loseNext = false
+        var workflowReceipts: [String: [String: JSON]] = [:]
+        var workflowRequests: [String: [String: JSON]] = [:]
+        var workflowOrders: [String: [String]] = [:]
+        var workflowCalls = 0
+        var loseNextWorkflow = false
     }
     static func document(title: String = "Review the launch") -> JSON {
         .object(["version": .number(1), "kind": .string("task"), "projects": .array([]), "sections": .array([]), "tasks": .array([.object(["id": .string("review"), "title": .string(title), "description": .string("Compare the full layout, confirm readable labels, and record the release decision."), "priority": .number(2), "duration_minutes": .number(25), "planned_offset": .number(1), "labels": .array([.object(["name": .string("Design"), "color": .string("#7455b3")])]), "subtasks": .array([])])])])
@@ -29,22 +34,71 @@ import Foundation
     static func save(_ state: State) throws { guard enabled else { throw CancellationError() }; try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true); try JSONEncoder().encode(state).write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
     static func load() throws -> State { guard enabled else { throw CancellationError() }; return try JSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
     static func reset() throws {
-        try save(State(items: [item(definitionID, name: "Design review kit", document: document()), item(futureID, name: "Future workflow", document: .object(["version": .number(2), "future": .string("Preserve these instructions")]))], loseNext: ProcessInfo.processInfo.arguments.contains("--team-library-lose-reply")))
+        var initial = State(items: [item(definitionID, name: "Design review kit", document: document()), item(futureID, name: "Future workflow", document: .object(["version": .number(2), "future": .string("Preserve these instructions")]))], loseNext: ProcessInfo.processInfo.arguments.contains("--team-library-lose-reply"))
+        initial.loseNextWorkflow = ProcessInfo.processInfo.arguments.contains("--workflow-run-lose-reply")
+        try save(initial)
     }
     static func backend() -> Backend {
         let configuration = URLSessionConfiguration.ephemeral; configuration.protocolClasses = [TeamTemplateNativeHTTP.self]
         let session = try! JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(TeamEditorNativeFixture.account)\"}}".utf8))
         return Backend(configuration: ["URL": "https://synthetic.example", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: session, persistSession: { _ in })
     }
+    static func read(_ request: URLRequest) throws -> JSON {
+        guard enabled, request.httpMethod == "GET", request.url?.scheme == "https", request.url?.host == "synthetic.example" else { throw URLError(.notConnectedToInternet) }
+        let state = try load(); guard !state.unavailable else { throw URLError(.userAuthenticationRequired) }
+        let query = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)!.queryItems ?? []
+        let values = Dictionary(uniqueKeysWithValues: query.map { ($0.name, $0.value ?? "") })
+        guard values["user_id"] == "eq." + TeamEditorNativeFixture.account else { throw URLError(.badServerResponse) }
+        if request.url?.path == "/rest/v1/project_templates" {
+            guard values["id"] == "eq." + personalID else { return .array([]) }; return .array([.object(personal.fields)])
+        }
+        if request.url?.path == "/rest/v1/view_orders" {
+            let filter = values["id"] ?? ""
+            return .array(state.workflowOrders.keys.sorted().filter { filter.contains("\"" + $0 + "\"") }.map { .object(["id": .string($0), "user_id": .string(TeamEditorNativeFixture.account), "ids": .array(state.workflowOrders[$0]!.map(JSON.string))]) })
+        }
+        throw URLError(.notConnectedToInternet)
+    }
     static func handle(_ request: URLRequest, data: Data) throws -> (raw: [String: JSON], status: Int, lose: Bool) {
         guard enabled, request.url?.scheme == "https", request.url?.host == "synthetic.example", request.httpMethod == "POST" else { throw URLError(.notConnectedToInternet) }
         let path = request.url!.path, params = try JSONDecoder().decode([String: JSON].self, from: data)
         var state = try load()
         if path == "/rest/v1/rpc/taskfold_workspace_boundary" { return (try TeamEditorNativeFixture.boundary(viewer: state.unavailable).raw, 200, false) }
+        if path == "/rest/v1/rpc/taskfold_teams", ["list", "invitations"].contains(params["_action"]?.text ?? "") {
+            guard !state.unavailable else { return (["code": .string("PT404")], 403, false) }
+            if params["_action"] == .string("invitations") { return (["enabled": .bool(true), "invitations": .array([])], 200, false) }
+            return (["enabled": .bool(true), "teams": .array([.object(["id": .string(TeamEditorNativeFixture.teamID), "name": .string("Widget Studio"), "role": .string("owner"), "state": .string("active"), "revision": .number(1)])])], 200, false)
+        }
         guard params["_body"]?.object["team_id"] == .string(TeamEditorNativeFixture.teamID) else { throw URLError(.badServerResponse) }
         if state.unavailable { return (["code": .string("PT404"), "message": .string("Synthetic access withdrawn")], 403, false) }
         if path == "/rest/v1/rpc/taskfold_teams", params["_action"] == .string("get") {
             return (["id": .string(TeamEditorNativeFixture.teamID), "name": .string("Widget Studio"), "role": .string("owner"), "state": .string("active"), "revision": .number(1), "folders": .array([]), "members": .array([.object(["user_id": .string(TeamEditorNativeFixture.account), "role": .string("owner")])]), "invitations": .array([])], 200, false)
+        }
+        if path == "/rest/v1/rpc/taskfold_team_projects" {
+            var project: [String: JSON] = ["id": .string(TeamEditorNativeFixture.projectID), "name": .string("Design board"), "team_id": .string(TeamEditorNativeFixture.teamID), "revision": .number(1), "role": .string("editor"), "visibility": .string("team"), "folder_id": .null, "can_edit_tasks": .bool(false), "can_manage_access": .bool(false), "project_state_protocol": .number(1), "is_archived": .bool(false), "ancestor_archived": .bool(false), "project_hierarchy_protocol": .number(1), "parent_id": .null, "parent_unavailable": .bool(false)]
+            let context: [String: JSON] = ["protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": .string(TeamEditorNativeFixture.teamID), "team_revision": .number(1), "team_state": .string("active"), "setup_paused": .bool(false)]
+            if params["_action"] == .string("get") { project.merge(context) { _, new in new }; return (project, 200, false) }
+            var result = context; result["task_writes_enabled"] = .bool(false); result["projects"] = .array([.object(project)]); result["next_cursor"] = .null; return (result, 200, false)
+        }
+        if path == "/rest/v1/rpc/taskfold_team_workflow_run" {
+            let body = params["_body"]!.object
+            let command = try TeamWorkflowRunCommand(account: TeamEditorNativeFixture.account, origin: "https://synthetic.example", body: body)
+            state.workflowCalls += 1; try save(state)
+            if var receipt = state.workflowReceipts[command.id] {
+                guard state.workflowRequests[command.id] == params else { return (["code": .string("PT409")], 409, false) }
+                receipt["replayed"] = .bool(true); try save(state); return (receipt, 200, false)
+            }
+            let source = body["source"]!.object
+            if source["kind"] == .string("shared") {
+                guard let item = state.items.first(where: { $0["id"] == source["id"] }), item["document"] == source["document"], item["revision"] == source["revision"] else { return (["code": .string("PT409")], 409, false) }
+            } else { guard source["document"] == personal["document"] else { return (["code": .string("PT409")], 409, false) } }
+            for value in body["orders"]!.list {
+                let row = value.object, key = "group:" + row["project_id"]!.text + ":" + (row["section_id"] == .null ? "none" : row["section_id"]!.text)
+                guard row["base_ids"] == .array((state.workflowOrders[key] ?? []).map(JSON.string)) else { return (["code": .string("PT409")], 409, false) }
+                state.workflowOrders[key] = (state.workflowOrders[key] ?? []) + row["task_ids"]!.list.map(\.text)
+            }
+            let raw: [String: JSON] = ["run_protocol": .number(1), "account": .string(command.account), "team_id": .string(command.team), "request_id": .string(command.id), "projects": .array(body["projects"]!.list.map { $0.object["id"]! }), "sections": .array(body["sections"]!.list.map { $0.object["id"]! }), "tasks": .array(body["tasks"]!.list.map { .object(["id": $0.object["id"]!, "generation": $0.object["task_generation"]!, "project_id": $0.object["project_id"]!]) }), "replayed": .bool(false)]
+            state.workflowRequests[command.id] = params; state.workflowReceipts[command.id] = raw
+            let lose = state.loseNextWorkflow; state.loseNextWorkflow = false; try save(state); return (raw, 200, lose)
         }
         guard path == "/rest/v1/rpc/taskfold_team_templates", let operation = params["_operation"]?.text else { throw URLError(.notConnectedToInternet) }
         let body = params["_body"]!.object
@@ -83,9 +137,14 @@ private final class TeamTemplateNativeHTTP: URLProtocol, @unchecked Sendable {
         let request = self.request
         Task { @MainActor in
             do {
+                if request.httpMethod == "GET" {
+                    let value = try TeamTemplateNativeFixture.read(request)
+                    client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
+                    client?.urlProtocol(self, didLoad: try JSONEncoder().encode(value)); client?.urlProtocolDidFinishLoading(self); return
+                }
                 var data = request.httpBody ?? Data()
-                if let stream = request.httpBodyStream { stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 4096); while stream.hasBytesAvailable, data.count <= 2_100_000 { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; data.append(contentsOf: bytes.prefix(count)) } }
-                guard data.count <= 2_100_000 else { throw URLError(.dataLengthExceedsMaximum) }
+                if let stream = request.httpBodyStream { stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 4096); while stream.hasBytesAvailable, data.count <= 4_300_000 { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; data.append(contentsOf: bytes.prefix(count)) } }
+                guard data.count <= 4_300_000 else { throw URLError(.dataLengthExceedsMaximum) }
                 let reply = try TeamTemplateNativeFixture.handle(request, data: data)
                 guard !reply.lose else { throw URLError(.networkConnectionLost) }
                 client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: reply.status, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)

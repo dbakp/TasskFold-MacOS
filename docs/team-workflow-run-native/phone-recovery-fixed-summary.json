@@ -1,0 +1,46 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "modelName": "iPhone 18 Pro",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "passedTests": 0,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+  "expectedFailures": 0,
+  "failedTests": 1,
+  "finishTime": 1792925551.901,
+  "passedTests": 0,
+  "result": "Failed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1792925490.066,
+  "statistics": [],
+  "testFailures": [
+    {
+      "failureText": "Failed to tap \"confirmSharedWorkflowRetry\" Button: Find single matching element. Multiple matching elements found for <XCUIElementQuery: 0x10a2f75c0>.\nSparse tree of matches:\n\u2192Application, pid: 69738, label: 'Taskfold Team Editor Test'\n  \u21b3Window (Main)\n    \u21b3Other\n      \u21b3Popover\n        \u21b3Other\n          \u21b3Other\n            \u21b3Other\n              \u21b3Other\n                \u21b3Other\n                  \u21b3Other\n                    \u21b3Other\n                      \u21b3Other\n                        \u21b3Other\n                          \u21b3Other\n                            \u21b3Sheet\n                              \u21b3Other\n                                \u21b3Other\n                                  \u21b3Other\n                                    \u21b3ScrollView\n                                      \u21b3Other\n                                        \u21b3Other\n                                          \u21b3Button, identifier: 'confirmSharedWorkflowRetry', label: 'Confirm original request'\n                                            \u21b3Button, identifier: 'confirmSharedWorkflowRetry', label: 'Confirm original request'",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 1,
+      "testIdentifierString": "TeamTemplateLibraryUITests/testSharedWorkflowLostReplyRelaunchAndRecovery()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamTemplateLibraryUITests/testSharedWorkflowLostReplyRelaunchAndRecovery",
+      "testName": "testSharedWorkflowLostReplyRelaunchAndRecovery()"
+    }
+  ],
+  "title": "Test - Taskfold",
+  "topInsights": [],
+  "totalTestCount": 1
+}

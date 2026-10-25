@@ -480,6 +480,7 @@ struct TemplateRunView: View {
     @State private var pending: [Mutation]?
     @State private var run = UUID()
     @State private var editingDefinition = false
+    @State private var sharedWorkflow: TeamWorkflowRunRequest?
     var body: some View {
         Group {
             if editingDefinition {
@@ -488,6 +489,8 @@ struct TemplateRunView: View {
         WorkflowShell(title: "Use template") {
             Form {
                 Text(template.name).font(.title2.bold())
+                if store.teamWorkflowCreationAvailable, (try? WorkflowTemplate(document: template["document"])) != nil { Section { Button("Use in shared workspace…", systemImage: "person.3") { sharedWorkflow = .init(source: .personal(template)) }.accessibilityIdentifier("runPrivateTemplateShared") } }
+
                 Button("Edit template",systemImage:"pencil") { editingDefinition=true }.accessibilityIdentifier("editTemplateDefinition").disabled(pending != nil)
                 if let definition = try? WorkflowTemplate(document: template["document"]) {
                     Section("New workflow") {
@@ -510,7 +513,7 @@ struct TemplateRunView: View {
             }.formStyle(.grouped)
         }.onAppear { if binding == nil { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); name = template.name; project = "__choose__" } }
             }
-        }
+        }.sheet(item: $sharedWorkflow) { request in WorkflowShell(title: "Use shared workflow") { TeamWorkflowRunView(source: request.source) } }
     }
     private func apply(_ definition: WorkflowTemplate) {
         guard store.workflowReady(binding), store.record(WorkflowTemplate.table, id: template.id)?["document"] == template["document"] else { message = "The workspace or template changed. Reopen it before creating a workflow."; return }
