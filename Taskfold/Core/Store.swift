@@ -299,6 +299,10 @@ final class Store {
         let vault=backupVault
         return TeamCompletionDraftVault(directory:vault.directory.appendingPathComponent("Team drafts",isDirectory:true).appendingPathComponent(WorkspaceBackup.stableID("origin",origin),isDirectory:true),account:userID,origin:origin,key:vault.key,removalGate:vault.removalGate)
     }
+    var teamSelectionDraftVault: TeamCompletionBatchDraftVault? {
+        guard let base = teamDraftVault else { return nil }
+        return TeamCompletionBatchDraftVault(directory: base.directory.appendingPathComponent("Selections", isDirectory: true), account: base.account, origin: base.origin, key: base.key, removalGate: base.removalGate)
+    }
     func makeRecoveryBackup(kind: String = "Manual") async throws -> RecoveryEntry {
         guard workspaceCacheDecoded, !accountRemovalBlocked, !signingOut, signedIn || localMode, !userID.isEmpty else { throw BackupFailure(message: "Open a readable workspace before backing it up.") }
         let vault = backupVault, before = snapshot, generation = accountGeneration
@@ -1959,21 +1963,37 @@ final class Store {
     }
     @discardableResult func cancelTeamCompletionBatchReview(_ expected: TeamTaskBatch.Review) async -> Bool {
         let generation = accountGeneration, before = snapshot, account = userID
-        guard currentTeamCompletionBatchReview(expected), expected.canRequestCancellation(before) else {
-            error = "Later edits depend on this selection. Keep this review for now; all your tasks and drafts remain saved."; return false
-        }
+        guard currentTeamCompletionBatchReview(expected), !expected.isRecorded else { return false }
         do {
+            var savedDraft: TeamCompletionBatchDraft?
+            let independent = await Task.detached(priority: .userInitiated) { expected.canRequestCancellation(before) }.value
+            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
+            if !independent {
+                guard let vault = teamSelectionDraftVault else { throw TeamCompletionBatchDraft.invalid }
+                savedDraft = try await Task.detached(priority: .userInitiated) {
+                    let draft = try TeamCompletionBatchDraft(review: expected, snapshot: before)
+                    return try vault.save(draft)
+                }.value
+                guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
+                guard savedDraft?.snapshot == before else { throw TeamCompletionBatchDraft.invalid }
+            }
             _ = try await makeRecoveryBackup(kind: "Before selection sync review")
             guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
             let review = try await backend.reviewTeamCompletionBatch(expected.mutation, expectedAccount: account, cancel: true)
             guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
             installTeamCompletionBatchReview(review)
-            guard review.isCancelled else { notice = "This selection had already synced. Review its result to continue."; return false }
-            guard let next = review.cancelling(before) else { notice = "The selection was cancelled. Your additional changes remain saved for review."; return false }
+            guard review.isCancelled else { notice = "This selection had already synced. Review its result to continue. Any saved draft is kept."; return false }
+            let archived = savedDraft != nil
+            let next = await Task.detached(priority: .userInitiated) {
+                archived ? review.parkingCancellation(before) : review.cancelling(before)
+            }.value
+            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(review) else { return false }
+            guard let next else { notice = "The selection was cancelled. Your additional changes remain saved for review."; return false }
             snapshot = next
             do { try persist() } catch { snapshot = before; throw error }
             undoStack = []; redoStack = []; syncConflict = nil
-            notice = "Synced tasks kept. A recovery copy is saved."; Task { await sync() }; return true
+            notice = archived ? "Synced tasks kept. Your later edits are in Saved team drafts." : "Synced tasks kept. A recovery copy is saved."
+            Task { await sync() }; return true
         } catch {
             guard generation == accountGeneration else { return false }
             self.error = SyncStatus.failureMessage(error); return false

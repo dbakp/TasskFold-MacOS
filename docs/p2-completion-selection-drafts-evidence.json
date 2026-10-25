@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-25",
+  "stage": "Permanent encrypted selection drafts for connected completion recovery",
+  "platform": "mac",
+  "baseCommit": "10739952db82a31632b503c13995bc915fb100f0",
+  "sourceSHA256": {
+    "Taskfold/Collaboration.swift": "bad81cdfcec019cf4ea28086343ec80185d4423ddc2920db1cd25d5f9493a2fd",
+    "Taskfold/Core/Store.swift": "c2880ad5ce09e23ab72d057d719c861dfe09f3c120b83ebe7ae58fd170adff5a",
+    "Taskfold/Core/TeamCompletionDraft.swift": "fdda2f40ad6c95d8652bd9d11a6b27336ea55a51540c8e940a9d5ffacbcc5f34",
+    "Taskfold/Core/TeamTaskBatch.swift": "1a59e2841a550d308780f507892b5fa2329500435ef9cc9dd815ffdae56320ec",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "6b30ad9828d4c5b5f38869a9c836efe20e2ae3623caff7e823fc8dbd1dd8e063"
+  },
+  "core": {
+    "selected": 713,
+    "passed": 712,
+    "skipped": 1,
+    "failures": 0,
+    "skip": "Live shared-conversation integration requires disposable service accounts; no live-service acceptance claimed",
+    "finalCompletionGroupPassed": 68,
+    "newSelectionDraftCases": 13,
+    "rawLogs": {
+      "core-regressions.log": {
+        "originalSHA256": "447d7d583112da93119b68c7d4490b2eaf9f1a7df1f00a061ab779eb2d3e0a01",
+        "trailingWhitespaceNormalized": true
+      },
+      "completion-group-final.log": {
+        "originalSHA256": "86ec40e6c2062a5432a83d5fab147b0770d337cce40526d4e0d79ae86b839fc4",
+        "trailingWhitespaceNormalized": true
+      },
+      "final-safety.log": {
+        "originalSHA256": "14ba8d22dd910df0883f9413d79057a1f5faebd60e8f2dcdba8aa5e85d9767d6",
+        "trailingWhitespaceNormalized": true
+      }
+    },
+    "combinedUniqueCovered": 714,
+    "combinedUniquePassed": 713,
+    "preLockSafetyRerunPassed": 2
+  },
+  "proven": [
+    "Connected typed task cohorts are reconstructed and verified before parking",
+    "Mixed/transitive selections, recurring Complete/Undo/Redo and last authored deleted-row content preserved",
+    "Supported comment drafts stay generation/account/project bound; independent tail and comments unchanged",
+    "Permanent AES-GCM archive, authenticated account/origin context, readback-before-retirement, deduplication, no retention eviction",
+    "Corruption, wrong key/context, symlink, write failure, draft-count limit and account-removal fences refuse destructive progress",
+    "Read-only preview cannot publish rollback; recorded proof cannot become cancellation",
+    "Scoped review-file export omits unrelated workspace data, access cache and device receipts",
+    "Concurrent readers waiting on the account fence do not hold the process lock needed by an in-fence save"
+  ],
+  "limits": [
+    "Teams rollout remains disabled; no SQL/schema/configuration or real account changes",
+    "Unsupported cross-table cohorts and unexplained content stay queued",
+    "Recorded-group role/archive/write-pause acknowledgement and missing-incarnation work open",
+    "Native recurring/Undo/Redo, spoken/storage/account-race, Mac runtime and large-workspace acceptance open",
+    "Actual external export delivery and genuine hosted acceptance open",
+    "Other rank-6/Px/wearable and user-deferred release/provider/device work remain open"
+  ],
+  "retainedEvidence": "docs/completion-selection-drafts",
+  "exportPresentation": "In-memory JSON DataRepresentation with suggested Taskfold-saved-selection.json filename through native ShareLink; no app-created plaintext export file",
+  "native": {
+    "status": "Not run this stage; prior Mac automation initialization failure remains unverified",
+    "iosEvidence": "Independent iOS repo only; not runtime acceptance of this Mac binary"
+  },
+  "cleanup": {
+    "removedOwnedScratchBytes": 1874673753,
+    "scope": "Only /tmp/taskfold-cohort*; reserved isolated app/runner uninstalled from both simulators",
+    "preserved": "Both repo .build caches, baseline booted devices, older ready Mac workflow artifacts",
+    "diagnostics": "Stopped only the unused post-failure simctl diagnostic collector after all four original UI cases were terminal; original full result summary was retained before cleanup"
+  }
+}

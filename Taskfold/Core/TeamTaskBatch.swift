@@ -322,6 +322,7 @@ private struct CompletionBatchReconciliation {
     let original: Snapshot
     let raw: [String: JSON]
     let receipts: [TeamCompletion.Receipt]
+    var cancellation: TeamTaskBatch.Review? = nil
     private var later: [Mutation] { Array(original.pending.dropFirst()) }
     private func members(_ change: Mutation) -> [Mutation] { change.teamTaskBatch?.items ?? [change] }
     private func taskIDs(_ change: Mutation) -> Set<String> {
@@ -399,7 +400,7 @@ private struct CompletionBatchReconciliation {
         snapshot.apply(change)
     }
     func confirmed() throws -> Snapshot {
-        guard original.pending.first == header else { throw TeamTaskBatch.conflict }
+        guard Set((original.tables["tasks"] ?? []).map(\.id)).count == (original.tables["tasks"] ?? []).count, original.pending.first == header else { throw TeamTaskBatch.conflict }
         let changes = later, identities = changes.map(taskIDs)
         var affected = Set(batch.items.map(\.recordID)), adjacency: [String: [Int]] = [:]
         for item in batch.items { if let row = item.teamCompletion?.proposed { affected.insert(row.id) } }
@@ -413,7 +414,7 @@ private struct CompletionBatchReconciliation {
             }
         }
         let indices = selected.sorted(), leaves = try indices.flatMap { try checkedMembers(changes[$0]) }
-        if let access = original.teamWorkspace {
+        if cancellation == nil, let access = original.teamWorkspace {
             guard indices.allSatisfy({ access.canSend(changes[$0], in: original) }) else { throw TeamTaskBatch.conflict }
         }
         var projects = Set<String>()
@@ -421,7 +422,7 @@ private struct CompletionBatchReconciliation {
             if let command = item.teamCompletion { projects.formUnion([command.scope.project, command.seriesProject]) }
             else if let scope = item.teamTaskScope { projects.insert(scope.project) }
         }
-        guard projects.allSatisfy({ p in original.tables["projects"]?.contains(where: { $0.id == p && !$0["is_archived"].flag && !$0["ancestor_archived"].flag }) == true }),
+        guard projects.allSatisfy({ p in original.tables["projects"]?.contains(where: { $0.id == p && (cancellation != nil || (!$0["is_archived"].flag && !$0["ancestor_archived"].flag)) }) == true }),
               !changes.contains(where: { $0.table == "projects" && projects.contains($0.recordID) }) else { throw TeamTaskBatch.conflict }
         var current: [String: Record] = [:]
         for row in original.tables["tasks"] ?? [] where affected.contains(row.id) {
@@ -485,8 +486,39 @@ private struct CompletionBatchReconciliation {
         for (id, row) in current {
             let predicted = projection[id]!
             for key in Set(row.fields.keys).union(predicted.fields.keys) where !same(row[key], predicted[key], key: key) {
-                guard let confirmed = authoritative[id], same(row[key], confirmed[key], key: key) else { throw TeamTaskBatch.conflict }
+                guard cancellation == nil, let confirmed = authoritative[id], same(row[key], confirmed[key], key: key) else { throw TeamTaskBatch.conflict }
             }
+        }
+        if let cancellation {
+            guard !cancellation.isRecorded, cancellation.mutation == header else { throw TeamTaskBatch.conflict }
+            func references(_ value: JSON) -> Bool {
+                switch value {
+                case .string(let text): return affected.contains { text.lowercased().contains($0.lowercased()) }
+                case .object(let fields): return fields.values.contains(where: references)
+                case .array(let values): return values.contains(where: references)
+                default: return false
+                }
+            }
+            for i in changes.indices where !selected.contains(i) {
+                let value = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(changes[i]))
+                guard !references(value) else { throw TeamTaskBatch.conflict }
+            }
+            let comments = original.tables[ConversationOutbox.table] ?? []
+            guard Set(comments.map(\.id)).count == comments.count else { throw TeamTaskBatch.conflict }
+            var parkedComments = Set<String>()
+            for row in comments where references(.object(row.fields)) {
+                guard ConversationOutbox.valid(row), let comment = ConversationOutbox.comment(row), comment.account == batch.account,
+                      affected.contains(comment.taskID), let task = (expected.tables["tasks"] ?? []).first(where: { $0.id == comment.taskID }) ?? current[comment.taskID],
+                      task.string("task_generation") == comment.taskGeneration, task.string("project_id") == comment.projectID else { throw TeamTaskBatch.conflict }
+                parkedComments.insert(row.id)
+            }
+            var result = seed
+            let owned = Set(batch.items.flatMap { [$0.recordID, $0.teamCompletion?.proposed?.id].compactMap { $0 } })
+            result.tables["tasks"]?.removeAll { owned.contains($0.id) }
+            for row in cancellation.members.flatMap({ [$0.task, $0.successor].compactMap { $0 } }) where owned.contains(row.id) { put(row, in: &result) }
+            result.pending = changes.enumerated().filter { !selected.contains($0.offset) }.map(\.element)
+            result.tables[ConversationOutbox.table]?.removeAll { parkedComments.contains($0.id) }
+            return result
         }
         var result = initial
         let replies = raw["items"]!.list
@@ -553,6 +585,7 @@ extension TeamTaskBatch {
         let members: [TeamCompletion.Review]
         let state: String
         let recorded: [String: JSON]?
+        let response: [String: JSON]
         var isRecorded: Bool { state == "recorded" }
         var isCancelled: Bool { state == "cancelled" }
         static var invalid: AppFailure { AppFailure(message: "The selection’s sync status could not be verified. Your saved tasks and changes are kept. Check again to continue.") }
@@ -587,7 +620,7 @@ extension TeamTaskBatch {
                 if let previous = rows[row.id], !TeamCompletion.sameLocal(previous, row) { throw Self.invalid }
                 rows[row.id] = row
             }
-            self.mutation = mutation; self.members = members; self.state = state
+            self.mutation = mutation; self.members = members; self.state = state; self.response = reply
         }
         func acknowledging(_ snapshot: Snapshot) -> Snapshot? {
             guard snapshot.pending.first == mutation, let recorded, let batch = mutation.teamTaskBatch else { return nil }
@@ -595,6 +628,13 @@ extension TeamTaskBatch {
             let saved = Record(["id": .string(mutation.recordID), "team_completion_batch_reply": .object(recorded)])
             guard batch.acknowledgeCompletion(saved, header: mutation, snapshot: &next) else { return nil }
             return next
+        }
+        /// Produces a complete rollback only with a separately retained encrypted
+        /// draft. This method alone never authorizes deleting pending work.
+        func parkingCancellation(_ snapshot: Snapshot) -> Snapshot? { isCancelled ? parkingPreview(snapshot) : nil }
+        func parkingPreview(_ snapshot: Snapshot) -> Snapshot? {
+            guard !isRecorded, Set(snapshot.pending.map(\.id)).count == snapshot.pending.count, let batch = mutation.teamTaskBatch, (try? batch.body(for: mutation)) != nil else { return nil }
+            return try? CompletionBatchReconciliation(batch: batch, header: mutation, original: snapshot, raw: [:], receipts: [], cancellation: self).confirmed()
         }
         func canRequestCancellation(_ snapshot: Snapshot) -> Bool { !isRecorded && cancellationProjection(snapshot) != nil }
         func cancelling(_ snapshot: Snapshot) -> Snapshot? { isCancelled ? cancellationProjection(snapshot) : nil }

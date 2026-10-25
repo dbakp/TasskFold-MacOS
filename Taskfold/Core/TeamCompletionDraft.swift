@@ -338,3 +338,129 @@ struct TeamCompletionDraftVault: Sendable {
     }
     func file(_ id:UUID) -> URL {directory.appendingPathComponent(id.uuidString.lowercased()+".taskfolddraft")}
 }
+
+/// An explicit encrypted selection draft. It has no replay or retention-rotation
+/// path: keeping synced tasks cannot silently throw away a connected local edit.
+struct TeamCompletionBatchDraft: Codable, Equatable, Identifiable, Sendable {
+    let version: Int
+    let id: UUID
+    let createdAt: Date
+    let original: Mutation
+    let review: [String: JSON]
+    let snapshot: Snapshot
+    static var invalid: AppFailure { AppFailure(message: "This saved selection needs review. Your queued changes are kept.") }
+    init(review: TeamTaskBatch.Review, snapshot: Snapshot, now: Date = Date(), id: UUID = UUID()) throws {
+        version = 1; self.id = id; createdAt = now; original = review.mutation; self.review = review.response; self.snapshot = snapshot
+        try validate()
+    }
+    var scope: TeamTaskBatch { original.teamTaskBatch! }
+    func validate() throws {
+        guard version == 1, createdAt.timeIntervalSince1970.isFinite, let batch = original.teamTaskBatch,
+              snapshot.pending.first == original, snapshot.pending.count <= 1000,
+              snapshot.tables.values.reduce(0, { $0 + $1.count }) <= 50000 else { throw Self.invalid }
+        _ = try batch.body(for: original)
+        let value = try TeamTaskBatch.Review(review, for: original)
+        guard value.parkingPreview(snapshot) != nil, try JSONEncoder().encode(self).count <= 16_000_000 else { throw Self.invalid }
+    }
+    func sameWork(as other: Self) -> Bool { original == other.original && snapshot == other.snapshot }
+    var parkedChanges: [Mutation] {
+        guard let observation = try? TeamTaskBatch.Review(review, for: original), let kept = observation.parkingPreview(snapshot) else { return [] }
+        let ids = Set(kept.pending.map(\.id)); return snapshot.pending.filter { !ids.contains($0.id) }
+    }
+    var parkedConversations: [Record] {
+        guard let observation = try? TeamTaskBatch.Review(review, for: original), let kept = observation.parkingPreview(snapshot) else { return [] }
+        let ids = Set((kept.tables[ConversationOutbox.table] ?? []).map(\.id))
+        return (snapshot.tables[ConversationOutbox.table] ?? []).filter { !ids.contains($0.id) }
+    }
+    private var leaves: [Mutation] { parkedChanges.flatMap { $0.teamTaskBatch?.items ?? [$0] } }
+    var records: [Record] {
+        var order = [String](), fallback = [String: Record]()
+        for item in leaves {
+            if !order.contains(item.recordID) { order.append(item.recordID) }
+            if let command = item.teamCompletion {
+                fallback[item.recordID] = command.source
+                if let next = command.proposed {
+                    if !order.contains(next.id) { order.append(next.id) }; fallback[next.id] = next
+                }
+            } else if item.method == "DELETE", let baseline = item.baseline { fallback[item.recordID] = Record(baseline) }
+            else if item.method == "POST" { fallback[item.recordID] = Record(item.fields) }
+        }
+        return order.compactMap { id in snapshot.tables["tasks"]?.first(where: { $0.id == id }) ?? fallback[id] }
+    }
+    var text: String {
+        var lines = ["Saved task selection", createdAt.formatted(date: .abbreviated, time: .shortened)]
+        func checklist(_ values: [JSON], depth: Int) {
+            guard depth < 24 else { return }
+            for value in values { let item = Record(value.object); lines.append(String(repeating: "  ", count: depth) + (item.completed ? "☑ " : "☐ ") + item.title); checklist(item["subtasks"].list, depth: depth + 1) }
+        }
+        for row in records {
+            lines.append(row.title); lines.append(row.completed ? "Completed" : "Open")
+            if !(snapshot.tables["tasks"] ?? []).contains(where: { $0.id == row.id }) { lines.append("Removed in the saved selection") }
+            for key in ["description", "due_date", "due_time", "deadline_date"] where !row.string(key).isEmpty { lines.append(row.string(key)) }
+            checklist(row["subtasks"].list, depth: 0)
+        }
+        for item in leaves { for key in ["title", "description"] where !item.fields[key, default: .null].text.isEmpty { lines.append("Earlier saved text: " + item.fields[key]!.text) } }
+        for row in parkedConversations { if let comment = ConversationOutbox.comment(row) { lines.append(comment.deleting ? "Comment marked for deletion: " + comment.body : "Comment draft: " + comment.body) } }
+        return lines.joined(separator: "\n\n")
+    }
+    /// A selection export contains only connected work, never the full private
+    /// workspace snapshot, access cache, device receipts or unrelated outboxes.
+    func data() throws -> Data {
+        try validate()
+        func json<T: Encodable>(_ value: T) throws -> JSON { try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(value)) }
+        let body: [String: JSON] = ["format": .string("com.taskfold.saved-selection"), "version": .number(1), "created_at": .string(ISO8601DateFormatter().string(from: createdAt)),
+            "original": try json(original), "changes": try json(parkedChanges), "tasks": .array(records.map { .object($0.fields) }), "conversations": .array(parkedConversations.map { .object($0.fields) })]
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]; return try encoder.encode(body)
+    }
+}
+
+struct TeamCompletionBatchDraftVault: Sendable {
+    let directory: URL
+    let account: String
+    let origin: String
+    let key: @Sendable () throws -> SymmetricKey
+    var removalGate: AccountRemovalDisk? = nil
+    private static let lock = NSRecursiveLock()
+    private var context: Data { Data(("com.taskfold.selection-draft.v1|" + account + "|" + origin).utf8) }
+    func entries() throws -> [TeamCompletionBatchDraft] {
+        // All paths take the account disk fence before the in-process lock.
+        // Reversing that order can deadlock a reader against a pending save.
+        if let removalGate { var free = self; free.removalGate = nil; return try removalGate.writable { try free.entries() } }
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
+        let urls = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.isSymbolicLinkKey]).filter { $0.pathExtension == "taskfoldselection" }
+        guard urls.count <= 20 else { throw TeamCompletionBatchDraft.invalid }
+        return try urls.map { url in
+            guard let id = UUID(uuidString: url.deletingPathExtension().lastPathComponent) else { throw TeamCompletionBatchDraft.invalid }; return try load(id)
+        }.sorted { $0.createdAt > $1.createdAt }
+    }
+    func load(_ id: UUID) throws -> TeamCompletionBatchDraft {
+        if let removalGate { var free = self; free.removalGate = nil; return try removalGate.writable { try free.load(id) } }
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        let url = file(id), metadata = try url.resourceValues(forKeys: [.isSymbolicLinkKey, .fileSizeKey])
+        guard metadata.isSymbolicLink != true, let size = metadata.fileSize, size <= 16_001_024 else { throw TeamCompletionBatchDraft.invalid }
+        let data = try Data(contentsOf: url); guard data.count <= 16_001_024 else { throw TeamCompletionBatchDraft.invalid }
+        let plain = try AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key(), authenticating: context)
+        let draft = try JSONDecoder().decode(TeamCompletionBatchDraft.self, from: plain); try draft.validate()
+        guard draft.id == id, draft.scope.account == account, draft.scope.origin == origin else { throw TeamCompletionBatchDraft.invalid }
+        return draft
+    }
+    @discardableResult func save(_ draft: TeamCompletionBatchDraft) throws -> TeamCompletionBatchDraft {
+        if let removalGate { var free = self; free.removalGate = nil; return try removalGate.writable { try free.save(draft) } }
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        try draft.validate(); guard draft.scope.account == account, draft.scope.origin == origin else { throw TeamCompletionBatchDraft.invalid }
+        let old = try entries(); if let existing = old.first(where: { $0.sameWork(as: draft) }) { return existing }
+        guard old.count < 20, !FileManager.default.fileExists(atPath: file(draft.id).path) else { throw AppFailure(message: "Your saved selections are full. Review or remove an older selection first. Your queued changes are kept.") }
+        let sealed = try AES.GCM.seal(JSONEncoder().encode(draft), using: key(), authenticating: context)
+        guard let bytes = sealed.combined, try old.reduce(0, { try $0 + Data(contentsOf: file($1.id)).count }) + bytes.count <= 64_000_000 else { throw TeamCompletionBatchDraft.invalid }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try bytes.write(to: file(draft.id), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        // A successful save must also be readable before the caller can retire intent.
+        return try load(draft.id)
+    }
+    func remove(_ id: UUID) throws {
+        if let removalGate { var free = self; free.removalGate = nil; return try removalGate.writable { try free.remove(id) } }
+        Self.lock.lock(); defer { Self.lock.unlock() }; _ = try load(id); try FileManager.default.removeItem(at: file(id))
+    }
+    func file(_ id: UUID) -> URL { directory.appendingPathComponent(id.uuidString.lowercased() + ".taskfoldselection") }
+}

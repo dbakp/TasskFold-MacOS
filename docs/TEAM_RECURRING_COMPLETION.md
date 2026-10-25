@@ -376,3 +376,61 @@ recurring-group/Undo/Redo UI, native storage faults/account-race/spoken acceptan
 large-workload responsiveness and genuine hosted acceptance remain open. Teams
 rollout stays off. No hosted schema/configuration, real tasks/accounts or deferred
 release/provider/device work changed. The full rank-6/Px goal remains active.
+
+
+### 2026-10-25 — Preserve connected edits during selection recovery
+
+Keep synced tasks can now save connected typed task work as a permanent encrypted
+selection draft before retiring the original completion group. This covers scoped
+edits/deletes, transitive mixed selections, recurring completion/Undo/Redo histories
+and supported task-comment drafts. The whole connected cohort is reconstructed and
+compared against the actual local projection before any write. Unsupported scopes,
+unexplained changes, indirect preference references and wrong-generation comments
+leave the original queue intact. Independent pending work and comment drafts remain
+unchanged. A read-only preview never authorizes dropping intent; only the terminal
+whole-group cancellation proof can publish the rollback.
+
+The Store saves and reads back the encrypted draft before requesting cancellation,
+then rechecks the entire captured snapshot, account generation and current review
+after every suspension. A recorded winner stays in review. Network/disk failure or
+a changed workspace leaves the queue saved; persistence failure rolls back memory.
+The saved archive remains available after these failures and retries deduplicate
+identical work. Account-removal fences cover writes and late key-backed reads.
+
+Saved team drafts now includes saved selections. Their native details show authored
+task text, checklist state, earlier title/notes changes and comment drafts, including
+the last known content of a queued deletion. Users can copy/share the full text or
+export connected details as a JSON review file; it is explicitly not a workspace
+backup or automatic replay. Exports exclude unrelated rows/outboxes, the private
+workspace/access snapshot and device receipts. Full raw recovery context remains
+encrypted internally. Explicit drafts have no retention eviction; ordinary backup
+rotation cannot remove them. Each draft is limited to 16 MB, with 20 drafts / 64 MB
+per account/origin; reaching a limit refuses to discard queued work.
+
+See p2-completion-selection-drafts-evidence.json and completion-selection-drafts/.
+These are independent client-only changes; no SQL, hosted schema/configuration,
+rollout switch, real task/account or user-deferred release/provider/device work
+changed. Read-permission/archive acknowledgement for recorded groups, explicit
+missing-incarnation recovery, unsupported cross-table cohorts, native recurring/
+Undo/Redo/spoken/storage/account-race acceptance, Mac runtime, large-workspace
+performance and genuine hosted acceptance remain open. The full rank-6/Px goal
+remains active.
+
+Final lock-order check: selection enumeration, load, save and deletion all acquire
+the account disk fence before the shared process lock. A coordinated reader/saver
+regression proves that a reader waiting on that fence does not block an in-fence
+save. Each repo passes all 68 completion-group checks after this follow-up. The
+broader selected run passes 712 of 713 cases with one live shared-conversation test
+skipped; including the new lock-order case gives 713 unique passing Core cases
+and one explicit live-service skip. Both final Debug builds succeed.
+
+Native acceptance: the final exact signed isolated iOS build passes the new
+end-to-end draft/relaunch/JSON-sharing/popover-cancellation scenario separately
+on iPhone and iPad, with no runtime warnings and matching installed binary hashes.
+Screenshots were inspected for readable saved text/actions and the actual return
+from sharing. Actual encrypted selection-file hashes/sizes and recovery index
+metadata are retained without keys. Three earlier recovery scenarios also pass
+per device in the initial four-case runs; their failed fourth case and subsequent
+picker/selector attempts remain visible in evidence. Final export uses in-memory
+Transferable JSON sharing, which avoids the system picker's unreliable Cancel
+proxy; no actual external delivery is claimed. This is not Mac runtime acceptance.

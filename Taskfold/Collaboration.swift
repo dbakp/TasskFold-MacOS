@@ -1,4 +1,6 @@
 import SwiftUI
+import UniformTypeIdentifiers
+import CoreTransferable
 #if os(macOS)
 import AppKit
 #else
@@ -402,6 +404,8 @@ struct SavedTeamDraftsView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var drafts:[TeamCompletionDraft]=[]
+    @State private var selections:[TeamCompletionBatchDraft]=[]
+    @State private var deletingSelection:TeamCompletionBatchDraft?
     @State private var loadedScope=""
     @State private var message:String?
     @State private var deleting:TeamCompletionDraft?
@@ -444,7 +448,18 @@ struct SavedTeamDraftsView: View {
                         }.swipeActions {Button("Delete",role:.destructive){deleting=draft}}
                         .contextMenu {Button("Delete saved draft",role:.destructive){deleting=draft}}
                     }
-                    if drafts.isEmpty {Text("No saved team drafts.").foregroundStyle(.secondary)}
+                    ForEach(selections) { selection in
+                        NavigationLink { SavedTeamSelectionDraftView(draft: selection) } label: {
+                            VStack(alignment: .leading, spacing: 5) {
+                                Label("Saved selection", systemImage: "square.stack").font(.headline)
+                                Text(selection.original.teamTaskBatch!.items.first!.teamCompletion!.source.title).lineLimit(2)
+                                Text(selection.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }.accessibilityIdentifier("savedTeamSelectionDraft")
+                        .swipeActions { Button("Delete", role: .destructive) { deletingSelection = selection } }
+                        .contextMenu { Button("Delete saved selection", role: .destructive) { deletingSelection = selection } }
+                    }
+                    if drafts.isEmpty && selections.isEmpty {Text("No saved team drafts.").foregroundStyle(.secondary)}
                 } else if scopeKey.isEmpty {Text("Open the original signed-in workspace to view its saved team drafts.").foregroundStyle(.secondary)}
                 if let message {Text(message).foregroundStyle(.secondary)}
             }
@@ -459,8 +474,12 @@ struct SavedTeamDraftsView: View {
         #if os(macOS)
         .frame(minWidth:560,minHeight:520)
         #endif
-        .onChange(of:store.workspaceGeneration){_,_ in drafts=[];dismiss()}
-        .onChange(of:scopeKey){_,_ in drafts=[];loadedScope="";dismiss()}
+        .confirmationDialog("Delete saved selection?", isPresented: Binding(get: { deletingSelection != nil }, set: { if !$0 { deletingSelection = nil } })) {
+            Button("Delete saved selection", role: .destructive) { if let value = deletingSelection { Task { await removeSelection(value) } } }
+            Button("Cancel", role: .cancel) { deletingSelection = nil }
+        } message: { Text("This removes only this device’s saved selection. It does not change shared tasks or undo anything that has synced.") }
+        .onChange(of:store.workspaceGeneration){_,_ in drafts=[];selections=[];dismiss()}
+        .onChange(of:scopeKey){_,_ in drafts=[];selections=[];loadedScope="";dismiss()}
     }
     private func copy(_ text:String,key:String) {
         #if os(macOS)
@@ -473,17 +492,28 @@ struct SavedTeamDraftsView: View {
     }
     private func previewText(_ text:String) -> String {String(String.UnicodeScalarView(text.unicodeScalars.prefix(12000)))}
     private func reload() async {
-        drafts=[];message=nil;loadedScope=""
+        drafts=[];selections=[];message=nil;loadedScope=""
         let scope=scopeKey,generation=store.workspaceGeneration
         guard let vault=store.teamDraftVault else {return}
         do {
             let values=try await Task.detached(priority:.utility){try vault.entries()}.value
             guard generation == store.workspaceGeneration,scope == scopeKey else {return}
-            drafts=values;loadedScope=scope
+            guard let selectionVault = store.teamSelectionDraftVault else { return }
+            let groups = try await Task.detached(priority: .utility) { try selectionVault.entries() }.value
+            guard generation == store.workspaceGeneration, scope == scopeKey else { return }
+            drafts=values;selections=groups;loadedScope=scope
         } catch {
             guard generation == store.workspaceGeneration,scope == scopeKey else {return}
             message="Saved drafts could not be opened on this device. Your saved files are kept."
         }
+    }
+    private func removeSelection(_ draft: TeamCompletionBatchDraft) async {
+        let scope = scopeKey, generation = store.workspaceGeneration
+        guard let vault = store.teamSelectionDraftVault, draft.scope.account == vault.account, draft.scope.origin == vault.origin else { return }
+        do {
+            try await Task.detached(priority: .utility) { try vault.remove(draft.id) }.value
+            guard generation == store.workspaceGeneration, scope == scopeKey else { return }; deletingSelection = nil; await reload()
+        } catch { if generation == store.workspaceGeneration, scope == scopeKey { message = "This saved selection could not be removed. Your saved file is kept." } }
     }
     private func remove(_ draft:TeamCompletionDraft) async {
         let scope=scopeKey,generation=store.workspaceGeneration
@@ -676,8 +706,8 @@ private struct TeamCompletionBatchReviewContent: View {
                         }
                     }
                     Section {
-                        Text("The whole selection is reviewed together. Later edits stay saved. Changes that depend on this selection need their own review before you can keep the synced tasks.").font(.footnote).foregroundStyle(.secondary)
-                        if !review.isRecorded { Text("Keep synced tasks saves a recovery copy and sets aside this device’s completion changes. If they have already synced, you’ll see the result before continuing.").font(.footnote).foregroundStyle(.secondary) }
+                        Text("The whole selection is reviewed together. If later task edits depend on it, they stay in Saved team drafts on this device. You can review, copy or export them there; they won’t be sent automatically.").font(.footnote).foregroundStyle(.secondary)
+                        if !review.isRecorded { Text("Keep synced tasks saves a recovery copy and sets aside this device’s completion changes. Connected task edits are saved as a separate encrypted draft first. If the selection has already synced, you’ll see its result before continuing.").font(.footnote).foregroundStyle(.secondary) }
                     }
                 } else { Section { Label("Review paused", systemImage: "lock.shield"); Text("Your workspace or project access changed. Reopen the current review to continue.").foregroundStyle(.secondary) } }
                 if let message { Section { Text(message).foregroundStyle(.red) }.accessibilityIdentifier("teamBatchRecoveryError") }
@@ -714,5 +744,72 @@ private struct TeamCompletionBatchReviewContent: View {
             if saved, dismissOnSuccess { dismiss() }
             else if !saved { message = store.error ?? "The selection remains saved. Check the current result before continuing."; store.error = nil }
         }
+    }
+}
+
+private struct SavedTeamSelectionDraftView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let draft: TeamCompletionBatchDraft
+    @State private var text = ""
+    @State private var transfer: SelectionExportTransfer?
+    @State private var copied = false
+    @State private var message: String?
+    @State private var reset: UUID?
+    private var current: Bool { store.teamSelectionDraftVault.map { $0.account == draft.scope.account && $0.origin == draft.scope.origin } == true }
+    var body: some View {
+        Form {
+            if current {
+                Section {
+                    Label("Your later work is saved", systemImage: "lock.doc").font(.headline)
+                    Text("This encrypted draft stays on this device until you delete it. Copy or export its contents to review your work. It never changes shared tasks automatically.").foregroundStyle(.secondary)
+                }
+                Section("Saved selection preview") {
+                    if text.isEmpty && message == nil { ProgressView("Opening saved selection…") }
+                    else { Text(String(String.UnicodeScalarView(text.unicodeScalars.prefix(12000)))).textSelection(.enabled) }
+                    if text.unicodeScalars.count > 12000 { Text("Preview shows the first 12,000 characters. Copy and share include the full saved text.").font(.caption).foregroundStyle(.secondary) }
+                }
+                Section {
+                    Button(copied ? "Copied" : "Copy saved text", systemImage: "doc.on.doc") { copy() }.disabled(text.isEmpty).accessibilityIdentifier("copyTeamSelectionText")
+                    ShareLink("Share saved text", item: text).disabled(text.isEmpty)
+                    if let transfer {
+                        ShareLink(item: transfer, preview: SharePreview("Saved task selection", image: Image(systemName: "square.stack"))) {
+                            Label("Export selection details", systemImage: "square.and.arrow.up")
+                        }.accessibilityIdentifier("exportTeamSelectionDraft")
+                    } else { Button("Export selection details", systemImage: "square.and.arrow.up") {}.disabled(true) }
+                    Text("The JSON export includes the selection’s task details, saved changes and comment drafts. Keep it private. It is a review file and cannot be restored as a workspace backup.").font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            if let message { Section { Text(message).foregroundStyle(.secondary) } }
+        }.formStyle(.grouped).navigationTitle("Saved selection")
+        .task {
+            let generation = store.workspaceGeneration
+            guard current else { return }
+            do {
+                let contents = try await Task.detached(priority: .utility) { (draft.text, try draft.data()) }.value
+                guard generation == store.workspaceGeneration, current else { return }
+                text = contents.0; transfer = SelectionExportTransfer(data: contents.1)
+            } catch { if generation == store.workspaceGeneration, current { message = "This saved selection could not be opened. Its encrypted file is kept." } }
+        }
+        .onChange(of: store.workspaceGeneration) { _, _ in text = ""; transfer = nil; dismiss() }
+        .onChange(of: current) { _, value in if !value { text = ""; transfer = nil; dismiss() } }
+    }
+    private func copy() {
+        guard current else { return }
+        #if os(macOS)
+        NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string)
+        #else
+        UIPasteboard.general.string = text
+        #endif
+        copied = true; let token = UUID(); reset = token
+        Task { try? await Task.sleep(for: .seconds(3)); if reset == token { copied = false } }
+    }
+}
+
+private struct SelectionExportTransfer: Transferable {
+    let data: Data
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(exportedContentType: .json) { value in value.data }
+            .suggestedFileName("Taskfold-saved-selection.json")
     }
 }

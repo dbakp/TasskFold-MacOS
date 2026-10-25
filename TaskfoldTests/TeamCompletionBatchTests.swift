@@ -1,4 +1,5 @@
 import XCTest
+import CryptoKit
 @testable import TaskfoldCore
 
 private final class CompletionBatchHTTP: URLProtocol, @unchecked Sendable {
@@ -713,5 +714,194 @@ extension TeamCompletionBatchTests {
         foreign.teamTaskBatch = TeamTaskBatch(account: batch.account, origin: "https://another.example", team: batch.team, operation: batch.operation, restores: batch.restores, items: batch.items)
         do { _ = try await api.reviewTeamCompletionBatch(foreign, expectedAccount: header.teamTaskBatch!.account); XCTFail("Foreign request dispatched") } catch { XCTAssertTrue(error is CancellationError) }
         XCTAssertEqual(calls, 1)
+    }
+}
+
+extension TeamCompletionBatchTests {
+    private func parkingReview(_ header: Mutation, cancelled: Bool = true) throws -> TeamTaskBatch.Review {
+        let batch = header.teamTaskBatch!, body = try batch.body(for: header)
+        let state = JSON.string(cancelled ? "cancelled" : "unrecorded")
+        let members = try batch.items.map { item -> JSON in
+            let command = item.teamCompletion!, b = try command.body(for: item)
+            var raw: [String: JSON] = ["review_protocol": .number(1), "account": .string(batch.account), "operation": .string(command.operation.rawValue), "state": state, "project_role": .string("editor"), "can_edit_current": .bool(true), "can_edit_series": .bool(true), "receipt": .null, "task": .object(command.source.fields), "successor": .null]
+            for key in ["team_id", "project_id", "task_id", "task_generation", "request_id", "series_id", "series_generation", "series_project_id", "planned_next_id"] { raw[key] = b[key] }
+            var series = command.source; series["id"] = .string(command.seriesID); series["task_generation"] = .string(command.seriesGeneration); series["project_id"] = .string(command.seriesProject)
+            raw["series"] = .object(series.fields)
+            return .object(raw)
+        }
+        return try TeamTaskBatch.Review(["group_review_protocol": .number(1), "account": .string(batch.account), "team_id": .string(batch.team), "request_id": body["request_id"]!, "operation": .string(batch.completionOperation!.rawValue), "related_request": body["related_request"] ?? .null, "state": state, "items": .array(members), "receipt": .null], for: header)
+    }
+    private func authoredParking() throws -> (TeamTaskBatch.Review, Snapshot, Mutation) {
+        let (_, header, batch, _) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let edit = try patch(local.tables["tasks"]![0], ["title": .string("Authored selection title"), "description": .string("Keep every authored note")], scope: batch.items[0].teamCompletion!.scope)
+        append(edit, to: &local); return (try parkingReview(header), local, edit)
+    }
+    func testParkingPreservesIndependentTailAndArchivesExactAuthoredSelection() throws {
+        let (review, current, edit) = try authoredParking(); var local = current
+        let other = Mutation(table: "view_preferences", recordID: "independent", method: "PATCH", fields: ["name": .string("untouched")]); local.pending.append(other)
+        let original = local, next = try XCTUnwrap(review.parkingCancellation(local)), draft = try TeamCompletionBatchDraft(review: review, snapshot: local)
+        XCTAssertEqual(next.pending, [other]); XCTAssertEqual(draft.parkedChanges, [review.mutation, edit]); XCTAssertEqual(draft.snapshot, original)
+        XCTAssertTrue(next.tables["tasks"]!.allSatisfy { !$0.completed }); XCTAssertTrue(draft.text.contains("Keep every authored note")); XCTAssertEqual(local, original)
+    }
+    func testParkingTransitiveMixedSelectionsRetainAllRowsAndOriginalQueueOrder() throws {
+        let (_, header, batch, _) = try fixture(); var local = snapshot(batch)
+        var outside = batch.items[0].teamCompletion!.source; outside["id"] = .string(UUID().uuidString.lowercased()); outside["task_generation"] = .string(UUID().uuidString.lowercased()); outside["title"] = .string("Outside selection")
+        local.tables["tasks"]!.append(outside); append(header, to: &local)
+        let scope = batch.items[0].teamCompletion!.scope
+        let earlier = try patch(outside, ["title": .string("Earlier authored outside title")], scope: scope); append(earlier, to: &local)
+        let chosen = [local.tables["tasks"]![0], local.tables["tasks"]!.first { $0.id == outside.id }!]
+        let members = chosen.map { Mutation(table: "tasks", recordID: $0.id, method: "PATCH", fields: ["priority": .number(1)], baseline: $0.fields, teamTaskScope: scope) }.sorted { $0.recordID < $1.recordID }
+        let mixed = TeamTaskBatch.header(TeamTaskBatch(account: batch.account, origin: batch.origin, team: batch.team, operation: .edit, restores: nil, items: members)); append(mixed, to: &local)
+        let review = try parkingReview(header), next = try XCTUnwrap(review.parkingCancellation(local)), draft = try TeamCompletionBatchDraft(review: review, snapshot: local)
+        XCTAssertEqual(draft.parkedChanges, [header, earlier, mixed]); XCTAssertEqual(draft.records.count, 3); XCTAssertTrue(draft.text.contains("Earlier authored outside title"))
+        XCTAssertEqual(next.tables["tasks"]?.first { $0.id == outside.id }, outside); XCTAssertTrue(next.pending.isEmpty)
+    }
+    func testParkingRecurringUndoRedoAndLatestSuccessorEditsStayInOneDraft() throws {
+        let (header, batch, _, undo, redo, current) = try recurringChain(); var local = current
+        let next = redo.teamTaskBatch!.items.last!.teamCompletion!.proposed!, scope = batch.items.last!.teamCompletion!.scope
+        let edit = try patch(next, ["description": .string("Latest future occurrence instructions")], scope: scope); append(edit, to: &local)
+        let review = try parkingReview(header), draft = try TeamCompletionBatchDraft(review: review, snapshot: local), kept = try XCTUnwrap(review.parkingCancellation(local))
+        XCTAssertEqual(draft.parkedChanges, [header, undo, redo, edit]); XCTAssertTrue(draft.text.contains("Latest future occurrence instructions"))
+        XCTAssertEqual(Set(kept.tables["tasks"]!.map(\.id)), Set(batch.items.map(\.recordID))); XCTAssertTrue(kept.pending.isEmpty)
+    }
+    func testParkingDeletedTaskKeepsItsLastAuthoredNotes() throws {
+        let (review, current, _) = try authoredParking(); var local = current
+        let row = local.tables["tasks"]![0], scope = review.mutation.teamTaskBatch!.items[0].teamCompletion!.scope
+        let delete = try scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "DELETE", fields: [:], baseline: row.fields, teamTaskScope: scope), existing: row); append(delete, to: &local)
+        let draft = try TeamCompletionBatchDraft(review: review, snapshot: local)
+        XCTAssertTrue(draft.text.contains("Removed in the saved selection")); XCTAssertTrue(draft.text.contains("Keep every authored note")); XCTAssertNotNil(review.parkingCancellation(local)?.tables["tasks"]?.first { $0.id == row.id })
+    }
+    func testParkingCommentDraftsUsesExactTaskGenerationAndKeepsIndependentComments() throws {
+        let (review, current, _) = try authoredParking(); var local = current
+        let row = local.tables["tasks"]![0], account = review.mutation.teamTaskBatch!.account
+        let comment = try SharedCommentChange(account: account, taskID: row.id, taskGeneration: row.string("task_generation"), projectID: row.string("project_id"), body: "Keep the conversation draft")
+        try ConversationOutbox.enqueue(comment.record, into: &local)
+        let outside = try SharedCommentChange(account: account, taskID: UUID().uuidString.lowercased(), taskGeneration: UUID().uuidString.lowercased(), projectID: row.string("project_id"), body: "Independent comment")
+        try ConversationOutbox.enqueue(outside.record, into: &local)
+        let draft = try TeamCompletionBatchDraft(review: review, snapshot: local), next = try XCTUnwrap(review.parkingCancellation(local))
+        XCTAssertEqual(draft.parkedConversations.count, 1); XCTAssertTrue(draft.text.contains(comment.body)); XCTAssertFalse(draft.text.contains(outside.body))
+        XCTAssertEqual(next.tables[ConversationOutbox.table]?.map(\.id), [outside.operationID])
+        var wrong = comment.record; wrong["task_generation"] = .string(UUID().uuidString.lowercased()); local.tables[ConversationOutbox.table]![0]["intent"] = .object(wrong.fields)
+        XCTAssertNil(review.parkingCancellation(local))
+    }
+    func testParkingRefusesUnexplainedRowsForeignScopeMissingProjectsAndIndirectPreferences() throws {
+        let (review, local, _) = try authoredParking()
+        for mode in ["untracked", "duplicate", "project", "preference", "foreign", "unscoped"] {
+            var value = local
+            if mode == "untracked" { value.tables["tasks"]![1]["description"] = .string("Must not lose") }
+            if mode == "duplicate" { value.tables["tasks"]!.append(value.tables["tasks"]![0]) }
+            if mode == "project" { value.tables["projects"] = [] }
+            if mode == "preference" { value.pending.append(Mutation(table: "view_preferences", recordID: "pin", method: "PATCH", fields: ["task": .string(review.mutation.teamTaskBatch!.items[0].recordID)])) }
+            if mode == "foreign" { value.pending[1].teamTaskScope = TeamTaskEditScope(account: UUID().uuidString.lowercased(), origin: origin, team: review.mutation.teamTaskBatch!.team, project: value.pending[1].teamTaskScope!.project) }
+            if mode == "unscoped" { value.pending[1].teamTaskScope = nil }
+            let before = value; XCTAssertNil(review.parkingCancellation(value), mode); XCTAssertThrowsError(try TeamCompletionBatchDraft(review: review, snapshot: value), mode); XCTAssertEqual(value, before)
+        }
+    }
+    func testParkingNeverReinterpretsRecordedProofAsCancellation() throws {
+        let (opening, local, _) = try authoredParking()
+        let unrecorded = try parkingReview(opening.mutation, cancelled: false)
+        XCTAssertNotNil(unrecorded.parkingPreview(local)); XCTAssertNil(unrecorded.parkingCancellation(local))
+        XCTAssertNoThrow(try TeamCompletionBatchDraft(review: unrecorded, snapshot: local))
+        let (_, header, recorded) = try groupReviewFixture("recorded")
+        XCTAssertNil(recorded.parkingCancellation(groupReviewProjection(header)))
+        XCTAssertThrowsError(try TeamCompletionBatchDraft(review: recorded, snapshot: groupReviewProjection(header)))
+    }
+    func testSelectionExportContainsOnlyConnectedTaskWorkWithoutWorkspaceCapabilities() throws {
+        let (review, current, _) = try authoredParking(); var local = current
+        local.tables["profiles"] = [Record(["id": .string("private"), "private": .string("unrelated private profile")])]
+        let other = Mutation(table: "view_preferences", recordID: "private", method: "PATCH", fields: ["name": .string("unrelated private preference")]); local.pending.append(other)
+        let draft = try TeamCompletionBatchDraft(review: review, snapshot: local), bytes = try draft.data(), raw = try JSONDecoder().decode([String: JSON].self, from: bytes)
+        XCTAssertEqual(Set(raw.keys), ["format", "version", "created_at", "original", "changes", "tasks", "conversations"])
+        XCTAssertEqual(raw["format"], .string("com.taskfold.saved-selection")); XCTAssertEqual(raw["changes"]?.list.count, 2)
+        XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains("unrelated private"))
+        XCTAssertEqual(try JSONDecoder().decode(TeamCompletionBatchDraft.self, from: JSONEncoder().encode(draft)), draft)
+    }
+    func testSelectionVaultEncryptsDeduplicatesChecksContextAndSurvivesOrdinaryBackupRotation() throws {
+        let (review, local, _) = try authoredParking(), draft = try TeamCompletionBatchDraft(review: review, snapshot: local)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-selection-vault-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let key = SymmetricKey(size: .bits256), vault = TeamCompletionBatchDraftVault(directory: directory.appendingPathComponent("Selections"), account: draft.scope.account, origin: draft.scope.origin, key: { key })
+        let saved = try vault.save(draft); XCTAssertEqual(saved, draft); XCTAssertEqual(try vault.save(TeamCompletionBatchDraft(review: review, snapshot: local)).id, draft.id); XCTAssertEqual(try vault.entries().count, 1)
+        XCTAssertFalse(String(decoding: try Data(contentsOf: vault.file(draft.id)), as: UTF8.self).contains("Keep every authored note"))
+        for foreign in [TeamCompletionBatchDraftVault(directory: vault.directory, account: UUID().uuidString.lowercased(), origin: vault.origin, key: { key }), TeamCompletionBatchDraftVault(directory: vault.directory, account: vault.account, origin: "https://foreign.example", key: { key }), TeamCompletionBatchDraftVault(directory: vault.directory, account: vault.account, origin: vault.origin, key: { SymmetricKey(size: .bits256) })] { XCTAssertThrowsError(try foreign.load(draft.id)) }
+        let backups = BackupVault(directory: directory, account: vault.account, key: { key }, retention: 1)
+        _ = try backups.save(local, kind: "Daily"); _ = try backups.save(local, kind: "Daily")
+        XCTAssertEqual(try vault.load(draft.id), draft); try vault.remove(draft.id); XCTAssertTrue(try vault.entries().isEmpty)
+    }
+    func testSelectionVaultCorruptionWriteFailureAndSymlinkNeverAuthorizeDiscard() throws {
+        let (review, local, _) = try authoredParking(), draft = try TeamCompletionBatchDraft(review: review, snapshot: local)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-selection-fault-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let key = SymmetricKey(size: .bits256), vault = TeamCompletionBatchDraftVault(directory: directory, account: draft.scope.account, origin: draft.scope.origin, key: { key })
+        _ = try vault.save(draft); let bytes = try Data(contentsOf: vault.file(draft.id))
+        try Data("corrupt".utf8).write(to: vault.file(draft.id)); XCTAssertThrowsError(try vault.load(draft.id)); XCTAssertThrowsError(try vault.save(draft))
+        try FileManager.default.removeItem(at: vault.file(draft.id)); let outside = directory.appendingPathComponent("outside"); try bytes.write(to: outside)
+        try FileManager.default.createSymbolicLink(at: vault.file(draft.id), withDestinationURL: outside); XCTAssertThrowsError(try vault.load(draft.id))
+        let blocked = directory.appendingPathComponent("not-directory"); try Data().write(to: blocked)
+        let badVault = TeamCompletionBatchDraftVault(directory: blocked.appendingPathComponent("child"), account: vault.account, origin: vault.origin, key: { key }); XCTAssertThrowsError(try badVault.save(draft)); XCTAssertEqual(local.pending.first, review.mutation)
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testSelectionVaultFullNeverEvictsAndAccountRemovalStopsDelayedSave() throws {
+        let (review, current, _) = try authoredParking()
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-selection-retention-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let key = SymmetricKey(size: .bits256), gate = AccountRemovalDisk(directory: directory, account: review.mutation.teamTaskBatch!.account)
+        let vault = TeamCompletionBatchDraftVault(directory: directory.appendingPathComponent("Selections"), account: gate.account, origin: origin, key: { key }, removalGate: gate)
+        var saved = [UUID]()
+        for i in 0..<20 {
+            var local = current; local.tables["view_preferences"] = [Record(["id": .string("choice"), "value": .number(Double(i))])]
+            saved.append(try vault.save(TeamCompletionBatchDraft(review: review, snapshot: local)).id)
+        }
+        var extra = current; extra.tables["view_preferences"] = [Record(["id": .string("choice"), "value": .number(20)])]
+        XCTAssertThrowsError(try vault.save(TeamCompletionBatchDraft(review: review, snapshot: extra)))
+        XCTAssertEqual(Set(try vault.entries().map(\.id)), Set(saved))
+        try gate.removeCache(); try FileManager.default.removeItem(at: vault.directory)
+        XCTAssertThrowsError(try vault.save(TeamCompletionBatchDraft(review: review, snapshot: current)))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: vault.directory.path))
+        let denied = TeamCompletionBatchDraftVault(directory: vault.directory, account: vault.account, origin: vault.origin, key: { XCTFail("Removed-account reader must not request or recreate its key"); return key }, removalGate: gate)
+        XCTAssertThrowsError(try denied.load(saved[0])); XCTAssertThrowsError(try denied.remove(saved[0])); XCTAssertThrowsError(try denied.entries())
+    }
+    func testSelectionDraftRejectsOversizedSnapshotAndDuplicatePendingIdentity() throws {
+        let (review, current, _) = try authoredParking(); var duplicate = current
+        duplicate.pending.append(duplicate.pending[1]); XCTAssertNil(review.parkingCancellation(duplicate))
+        XCTAssertThrowsError(try TeamCompletionBatchDraft(review: review, snapshot: duplicate))
+        var large = current; large.tables["view_preferences"] = [Record(["id": .string("local"), "text": .string(String(repeating: "x", count: 16_000_001))])]
+        XCTAssertThrowsError(try TeamCompletionBatchDraft(review: review, snapshot: large))
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testSelectionReaderWaitingForAccountFenceDoesNotHoldProcessLock() throws {
+        let (review, local, _) = try authoredParking(), draft = try TeamCompletionBatchDraft(review: review, snapshot: local)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-selection-lock-" + UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let key = SymmetricKey(size: .bits256), gate = AccountRemovalDisk(directory: directory, account: draft.scope.account)
+        let gated = TeamCompletionBatchDraftVault(directory: directory.appendingPathComponent("Selections"), account: gate.account, origin: origin, key: { key }, removalGate: gate)
+        _ = try gated.save(draft)
+        var unguarded = gated; unguarded.removalGate = nil
+        let free = unguarded, held = DispatchSemaphore(value: 0), release = DispatchSemaphore(value: 0), started = DispatchSemaphore(value: 0)
+        let holderDone = expectation(description: "account fence released"), readerDone = expectation(description: "reader drained"), writerDone = expectation(description: "in-fence save completed")
+        DispatchQueue.global().async {
+            do { try gate.writable { held.signal(); _ = release.wait(timeout: .now() + 5) } } catch { XCTFail(String(describing: error)) }
+            holderDone.fulfill()
+        }
+        XCTAssertEqual(held.wait(timeout: .now() + 2), .success)
+        defer { release.signal() }
+        DispatchQueue.global().async {
+            started.signal(); do { _ = try gated.entries() } catch { XCTFail(String(describing: error)) }; readerDone.fulfill()
+        }
+        XCTAssertEqual(started.wait(timeout: .now() + 2), .success)
+        // Let the reader reach the held disk fence. It must not hold the
+        // process lock needed by work already inside that account fence.
+        Thread.sleep(forTimeInterval: 0.05)
+        DispatchQueue.global().async {
+            do { _ = try free.save(draft) } catch { XCTFail(String(describing: error)) }; writerDone.fulfill()
+        }
+        let writer = XCTWaiter.wait(for: [writerDone], timeout: 1)
+        release.signal()
+        XCTAssertEqual(writer, .completed, "Reader and saver must share disk-then-process lock order")
+        XCTAssertEqual(XCTWaiter.wait(for: [readerDone, holderDone], timeout: 3), .completed)
     }
 }
