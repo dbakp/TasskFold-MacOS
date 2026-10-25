@@ -1636,7 +1636,10 @@ final class Store {
             }
             let initialRequests=Set(snapshot.pending.map(\.id)),blockedRequests=access?.blocked(snapshot) ?? []
             while !hadConflict,let mutation = snapshot.pending.first {
-                if blockedRequests.contains(mutation.id) || (!initialRequests.contains(mutation.id) && access?.canSend(mutation,in:snapshot)==false) {break}
+                if blockedRequests.contains(mutation.id) || (!initialRequests.contains(mutation.id) && access?.canSend(mutation,in:snapshot)==false) {
+                    if let access, try await discoverBlockedTeamCompletion(access: access) { return }
+                    break
+                }
                 sending = mutation
                 let saved = try await backend.send(mutation, expectedAccount: account)
                 guard generation == accountGeneration else { return }
@@ -1918,6 +1921,30 @@ final class Store {
             guard generation == accountGeneration else {return false}
             self.error=SyncStatus.failureMessage(error);return false
         }
+    }
+
+    /// Inspect a blocked immutable group before a workspace merge can replace
+    /// its optimistic projection. This never calls a completion writer.
+    private func discoverBlockedTeamCompletion(access: TeamWorkspaceCache) async throws -> Bool {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              syncConflict == nil, focusSyncConflict == nil, access.boundary.account == userID,
+              access.boundary.origin == (try? backend.accountRemovalOrigin) else { return false }
+        let generation = accountGeneration, before = snapshot, initialAccess = nativeConversationTeamCache, initialRevision = workspaceReadRevision, account = userID
+        let request = await Task.detached(priority: .userInitiated) { TeamCompletionBatchDiscovery(snapshot: before, access: access) }.value
+        guard generation == accountGeneration, snapshot == before, initialRevision == workspaceReadRevision,
+              nativeConversationTeamCache == initialAccess, !signingOut, !accountRemovalBlocked,
+              syncConflict == nil, focusSyncConflict == nil else { throw CancellationError() }
+        guard let request else { return false }
+        if teamAccessMask != access { teamAccessMask = access }
+        let revision = workspaceReadRevision
+        let review = try await backend.reviewTeamCompletionBatch(request.mutation, expectedAccount: account)
+        guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision,
+              nativeConversationTeamCache == access, !signingOut, !accountRemovalBlocked,
+              syncConflict == nil, focusSyncConflict == nil else { throw CancellationError() }
+        guard let recorded = request.recorded(review, current: snapshot, readable: access) else { return false }
+        installTeamCompletionBatchReview(recorded)
+        notice = "This task selection already synced. Review its result to continue."
+        return true
     }
 
     func currentTeamCompletionBatchReview(_ review: TeamTaskBatch.Review) -> Bool {

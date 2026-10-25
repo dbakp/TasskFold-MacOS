@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-25",
+  "stage": "Read-only startup discovery of recorded blocked completion groups",
+  "platform": "mac",
+  "baseCommit": "357b8179c3db168f5c091f0e1eed769f353a74db",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "1b7d9e9b841568a9a082b7be33c99b752916776cc60bf0958462d4286e30f837",
+    "Taskfold/Core/TeamTaskBatch.swift": "96fc216acc41bbd63046090c566035d43895ee46b808f9e48b203af9ea7ca5f4",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "1b1a19d9f8291e3038970bb8022ea46223164291aadd6168d66eee7b20d70070"
+  },
+  "core": {
+    "selected": 729,
+    "passed": 728,
+    "skipped": 1,
+    "failures": 0,
+    "completionGroupCases": 83,
+    "newDiscoveryCases": 5,
+    "skip": "Live shared-conversation integration requires disposable accounts; no live-service acceptance claimed",
+    "rawLogs": {
+      "core-regressions.log": {
+        "originalSHA256": "e009ca517aa7d99dbc8a49518f2cbe0a6b4ddd8da7357d51715d6fce7ad6f10c",
+        "trailingWhitespaceNormalized": true
+      },
+      "completion-group.log": {
+        "originalSHA256": "ce256ce45c2be9fc07dbff1593a99ffea04446f42bd071ccaaf82b421195d4c3",
+        "trailingWhitespaceNormalized": true
+      }
+    }
+  },
+  "native": {
+    "iphone": "Independent iOS repo acceptance only",
+    "ipad": "Independent iOS repo acceptance only",
+    "mac": "Not run this stage; prior UI automation initialization failure remains open",
+    "scope": "Actual production sync loop with a reserved local HTTP peer: quit with recorded group queued, fresh access read, exact status read, review, explicit Continue, exact tail/read-only cache, second launch",
+    "trace": "Exactly two POST reads before approval: workspace_boundary and review_team_completion_batch; no completion/task writer or workspace collection fetch",
+    "fixtureLimits": "Ordinary roots; default test sync bypass lifted only by reserved DEBUG flag, all external HTTP blocked; no hosted/provider acceptance"
+  },
+  "limits": [
+    "Group-only recorded discovery; single-task and other terminal-state discovery remain open",
+    "Unrecorded/cancelled/unreadable/unsupported heads are kept without granting write capability",
+    "Authored missing-incarnation/cross-table recovery, native recurring/Undo/Redo/spoken/storage/account-race and Mac acceptance open",
+    "Large-workload and genuine hosted acceptance open; rollout remains disabled",
+    "Other rank-6/Px/wearable and user-deferred release/provider/device work remain open"
+  ],
+  "retainedEvidence": "docs/cold-completion-discovery",
+  "cleanup": {
+    "ownedScratchBytesRemoved": 1344854894,
+    "ownedScratchPathsRemoved": 20,
+    "simulatorUninstalls": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "uninstalled": true
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "uninstalled": true
+      }
+    ],
+    "retained": "Both repo .build caches, baseline booted Simulators and older ready Mac workflow artifacts preserved",
+    "temporaryMacTaskfoldProcesses": "None running before cleanup"
+  }
+}

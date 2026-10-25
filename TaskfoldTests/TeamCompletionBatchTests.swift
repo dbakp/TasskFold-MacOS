@@ -1061,3 +1061,62 @@ extension TeamCompletionBatchTests {
         XCTAssertEqual(local, before)
     }
 }
+
+extension TeamCompletionBatchTests {
+    func testColdDiscoveryRequiresBlockedCompletionAndFreshReadableScope() throws {
+        let (_, header, _) = try groupReviewFixture("recorded"), local = groupReviewProjection(header)
+        for mode in ["viewer", "archive", "pause"] {
+            let access = try readRecoveryCache(header, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archive", paused: mode == "pause")
+            let request = try XCTUnwrap(TeamCompletionBatchDiscovery(snapshot: local, access: access), mode)
+            XCTAssertEqual(request.mutation, header); XCTAssertEqual(request.snapshot, local); XCTAssertEqual(request.access, access)
+        }
+        XCTAssertNil(TeamCompletionBatchDiscovery(snapshot: local, access: try readRecoveryCache(header, local: local, role: "editor")))
+        for access in [try readRecoveryCache(header, local: local, reads: false), try readRecoveryCache(header, local: local, active: false), try readRecoveryCache(header, local: local, account: UUID().uuidString.lowercased()), try readRecoveryCache(header, local: local, origin: "https://foreign.example"), try readRecoveryCache(header, local: local, missing: [header.teamTaskBatch!.items[0].teamCompletion!.scope.project])] {
+            XCTAssertNil(TeamCompletionBatchDiscovery(snapshot: local, access: access))
+        }
+    }
+    func testColdDiscoveryOnlySurfacesExactRecordedReviewWithoutAcknowledgingAnything() throws {
+        let (_, header, recorded) = try groupReviewFixture("recorded"), local = groupReviewProjection(header), access = try readRecoveryCache(header, local: local)
+        let request = try XCTUnwrap(TeamCompletionBatchDiscovery(snapshot: local, access: access)), before = local
+        XCTAssertEqual(request.recorded(recorded, current: local, readable: access), recorded); XCTAssertEqual(local, before); XCTAssertEqual(local.pending, [header])
+        var response = recorded.response; response["state"] = .string("unrecorded"); response["receipt"] = .null
+        response["items"] = .array(response["items"]!.list.map { item in var raw = item.object; raw["state"] = .string("unrecorded"); raw["receipt"] = .null; return .object(raw) })
+        let unrecorded = try TeamTaskBatch.Review(response, for: header)
+        XCTAssertNil(request.recorded(unrecorded, current: local, readable: access))
+        response["state"] = .string("cancelled"); response["items"] = .array(response["items"]!.list.map { item in var raw = item.object; raw["state"] = .string("cancelled"); return .object(raw) })
+        XCTAssertNil(request.recorded(try TeamTaskBatch.Review(response, for: header), current: local, readable: access))
+    }
+    func testColdDiscoveryRejectsLateSnapshotAccessHeadAndBodyChanges() throws {
+        let (_, header, review) = try groupReviewFixture("recorded"), local = groupReviewProjection(header), access = try readRecoveryCache(header, local: local)
+        let request = try XCTUnwrap(TeamCompletionBatchDiscovery(snapshot: local, access: access))
+        var changed = local; changed.tables["tasks"]![0]["description"] = .string("Authored while checking")
+        XCTAssertNil(request.recorded(review, current: changed, readable: access))
+        changed = local; changed.pending.append(Mutation(table: "view_preferences", recordID: "choice", method: "PATCH", fields: ["name": .string("Later work")]))
+        XCTAssertNil(request.recorded(review, current: changed, readable: access))
+        changed = local; changed.pending = []
+        XCTAssertNil(request.recorded(review, current: changed, readable: access))
+        XCTAssertNil(request.recorded(review, current: local, readable: try readRecoveryCache(header, local: local, role: "editor", paused: true)))
+        let (_, undo, observation) = try groupReviewFixture("undo"); XCTAssertNotEqual(undo, header)
+        XCTAssertNil(request.recorded(observation, current: local, readable: access))
+    }
+    func testColdDiscoveryDoesNotProbeUnrelatedOrMalformedQueueHeads() throws {
+        let (_, header, _) = try groupReviewFixture("recorded"), local = groupReviewProjection(header), access = try readRecoveryCache(header, local: local)
+        for mode in ["empty", "personal", "single", "duplicate", "nested"] {
+            var changed = local
+            if mode == "empty" { changed.pending = [] }
+            if mode == "personal" { changed.pending.insert(Mutation(table: "tasks", recordID: UUID().uuidString.lowercased(), method: "POST", fields: [:]), at: 0) }
+            if mode == "single" { changed.pending = [header.teamTaskBatch!.items[0]] }
+            if mode == "duplicate" { changed.pending.append(header) }
+            if mode == "nested" { changed.pending[0].teamTaskBatch!.items[0].teamTaskBatch = header.teamTaskBatch }
+            XCTAssertNil(TeamCompletionBatchDiscovery(snapshot: changed, access: access), mode)
+        }
+    }
+    func testColdDiscoveryRetainsBlockedUndoRedoAndIndependentTailCommands() throws {
+        for phase in ["recorded", "undo", "redo"] {
+            let (_, header, review) = try groupReviewFixture(phase); var local = groupReviewProjection(header)
+            let other = Mutation(table: "view_preferences", recordID: "independent", method: "PATCH", fields: ["name": .string("Keep this saved choice")]); local.pending.append(other)
+            let access = try readRecoveryCache(header, local: local), before = local, request = try XCTUnwrap(TeamCompletionBatchDiscovery(snapshot: local, access: access))
+            XCTAssertEqual(request.recorded(review, current: local, readable: access), review); XCTAssertEqual(local, before); XCTAssertEqual(local.pending, [header, other])
+        }
+    }
+}

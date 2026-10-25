@@ -6,15 +6,16 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 Native completion-group recovery and permanent encrypted selection drafts are
 implemented in both clients. Recorded selections can now finish review with current
-read access after viewer/archive/write-pause changes, while later queued work and
-current permission restrictions remain intact. See the dated stages at the end of this
+read access after viewer/archive/write-pause changes, including discovery of an
+already-recorded blocked group after cold startup. Later queued work and current
+permission restrictions remain intact. See the dated stages at the end of this
 plan for current verification and remaining limits; older paragraphs below record
 preceding implementation checkpoints rather than the latest totals.
 
 The next priorities within rank 6 are:
-1. Discover recorded completion reviews automatically when a cold-start queue
-   head is already blocked by edit permissions; then complete native recurring/
-   Undo/Redo, storage/account-race and Mac window/accessibility acceptance.
+1. Extend cold recovery to single-task completions and other terminal statuses;
+   complete native recurring/Undo/Redo, storage/account-race and Mac window/
+   accessibility acceptance.
 2. Preserve missing-incarnation authored work explicitly and extend supported
    cross-table cohort recovery without granting new editing authority.
 3. Validate large-selection responsiveness and genuine hosted team flows before
@@ -4038,3 +4039,52 @@ the final text-only queued-edit/draft distinction, the viewer/later-edit/relaunc
 case passed once more per device with no runtime warnings. Final installed hashes
 match that signed build; the earlier three-mode acceptance remains separately
 retained and the other two modes were not repeated for the wording change.
+
+
+### 2026-10-25 — Discover recorded blocked selections on startup
+
+The normal sync loop now checks a blocked completion-group head before sending it
+or merging remote tables. Discovery requires a fresh readable account/backend/team/
+source/series boundary, a blocked exact queue head and unique pending identities.
+It freezes the full snapshot/access observation off the main actor and rechecks
+account generation, snapshot, read revision, current access and competing reviews
+before/after the status RPC. A matching recorded proof opens the existing review
+and returns before writers or workspace merge. Discovery never acknowledges a
+command or changes task rows; explicit Continue remains required. Unrecorded,
+cancelled, unsupported or unreadable heads do not gain permission or disappear.
+
+The same read eligibility is shared with explicit recorded-review acknowledgement.
+Every saved group nonce, member body, completion time and independent tail remains
+unchanged. A late head/body/snapshot/access change discards discovery. Normal writable
+heads retain their existing path. Cold single-task completion discovery and other
+terminal-state recovery are not introduced by this group-only stage.
+
+Each independent repo passes 728 of 729 selected Core cases with one live shared-
+conversation test explicitly skipped for lack of disposable accounts. This includes
+83 completion-group cases and five new discovery cases covering viewer/archive/
+write-pause eligibility, foreign/missing/disabled/inactive access, malformed and
+unrelated heads, recorded versus unrecorded/cancelled status, late context changes,
+and complete/Undo/Redo envelopes with independent tails. Both own Debug builds pass.
+
+Three actual UI tests pass on each iPhone and iPad with no runtime warnings. Each
+quits while a recorded selection is still queued, relaunches into the production
+sync loop under a fresh viewer/archive/write-pause boundary, discovers review and
+proves no tasks/queue changes before approval. Every captured trace contains exactly
+two POST reads: taskfold_workspace_boundary and taskfold_review_team_completion_batch.
+There is no completion writer or workspace-table fetch before review. After explicit
+Continue, the exact later-edit tail/current read-only permissions and all task values
+survive a second launch. Only Codable Set identifier ordering is canonicalized in
+whole-snapshot comparisons. Installed binary/library/Info hashes match the signed
+isolated build; screenshots were inspected for readable review presentation.
+
+The reserved DEBUG peer enables the actual sync loop only with its explicit test
+flag and answers only synthetic access/status reads; all other HTTP remains blocked.
+Fixtures contain ordinary roots; Core covers Undo/Redo discovery. This is not hosted
+service, recurring native-history or Mac runtime acceptance. See
+p2-cold-completion-discovery-evidence.json and cold-completion-discovery/.
+
+No SQL, hosted schema/configuration, rollout flag, real task/account or deferred
+release/provider/device work changed. Single-task/cancelled-head discovery, authored
+missing-incarnation and cross-table recovery, native recurring/Undo/Redo/spoken/
+storage/account-race acceptance, Mac runtime, large-workload and genuine hosted
+acceptance remain open. The full rank-6/Px goal remains active.

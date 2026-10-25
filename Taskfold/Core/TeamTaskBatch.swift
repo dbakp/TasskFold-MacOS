@@ -323,9 +323,7 @@ private struct CompletionBatchReadAccess {
     let cache: TeamWorkspaceCache
     init?(review: TeamTaskBatch.Review, cache: TeamWorkspaceCache, snapshot: Snapshot) {
         guard review.isRecorded, let batch = review.mutation.teamTaskBatch,
-              cache.boundary.belongs(account: batch.account, origin: batch.origin),
-              cache.boundary.raw["native_team_reads_enabled"] == .bool(true),
-              cache.boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(batch.team) && $0.object["state"] == .string("active") }) == true else { return nil }
+              batch.canReviewCompletion(review.mutation, readable: cache) else { return nil }
         if let old = snapshot.teamWorkspace {
             guard old.boundary.belongs(account: batch.account, origin: batch.origin),
                   old.knownTasks.isSubset(of: cache.knownTasks), old.knownTeams.allSatisfy({ cache.knownTeams[$0.key] == $0.value }) else { return nil }
@@ -741,6 +739,39 @@ extension TeamTaskBatch {
             for row in observed { rows.removeAll { $0.id == row.id }; rows.append(row) }
             var next = snapshot; next.tables["tasks"] = rows; next.pending.removeFirst()
             return next
+        }
+    }
+}
+
+/// A read-only discovery request owns the exact cold-start queue and live access
+/// observation. A positive result opens review; it never acknowledges or sends it.
+struct TeamCompletionBatchDiscovery: Equatable, Sendable {
+    let snapshot: Snapshot
+    let access: TeamWorkspaceCache
+    let mutation: Mutation
+    init?(snapshot: Snapshot, access: TeamWorkspaceCache) {
+        guard let head = snapshot.pending.first, let batch = head.teamTaskBatch,
+              Set(snapshot.pending.map(\.id)).count == snapshot.pending.count,
+              batch.canReviewCompletion(head, readable: access), access.blocked(snapshot).contains(head.id) else { return nil }
+        self.snapshot = snapshot; self.access = access; mutation = head
+    }
+    func recorded(_ review: TeamTaskBatch.Review, current: Snapshot, readable: TeamWorkspaceCache) -> TeamTaskBatch.Review? {
+        guard current == snapshot, readable == access, review.mutation == mutation, review.isRecorded else { return nil }
+        return review
+    }
+}
+
+extension TeamTaskBatch {
+    /// Read eligibility does not imply mutation eligibility. In particular,
+    /// viewers, archived projects and write pauses may still inspect a receipt.
+    func canReviewCompletion(_ header: Mutation, readable cache: TeamWorkspaceCache) -> Bool {
+        guard isCompletion, header.teamTaskBatch == self, (try? body(for: header)) != nil,
+              cache.boundary.belongs(account: account, origin: origin),
+              cache.boundary.raw["native_team_reads_enabled"] == .bool(true),
+              cache.boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(team) && $0.object["state"] == .string("active") }) == true else { return false }
+        return items.allSatisfy { item in
+            guard let command = item.teamCompletion else { return false }
+            return [command.scope.project, command.seriesProject].allSatisfy { cache.boundary.projects[$0]?.team == team }
         }
     }
 }
