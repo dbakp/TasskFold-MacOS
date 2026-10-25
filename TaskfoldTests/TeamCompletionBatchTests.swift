@@ -1075,29 +1075,30 @@ extension TeamCompletionBatchTests {
             XCTAssertNil(TeamCompletionBatchDiscovery(snapshot: local, access: access))
         }
     }
-    func testColdDiscoveryOnlySurfacesExactRecordedReviewWithoutAcknowledgingAnything() throws {
+    func testColdDiscoveryOnlySurfacesExactTerminalReviewWithoutRetiringAnything() throws {
         let (_, header, recorded) = try groupReviewFixture("recorded"), local = groupReviewProjection(header), access = try readRecoveryCache(header, local: local)
         let request = try XCTUnwrap(TeamCompletionBatchDiscovery(snapshot: local, access: access)), before = local
-        XCTAssertEqual(request.recorded(recorded, current: local, readable: access), recorded); XCTAssertEqual(local, before); XCTAssertEqual(local.pending, [header])
+        XCTAssertEqual(request.terminal(recorded, current: local, readable: access), recorded); XCTAssertEqual(local, before); XCTAssertEqual(local.pending, [header])
         var response = recorded.response; response["state"] = .string("unrecorded"); response["receipt"] = .null
         response["items"] = .array(response["items"]!.list.map { item in var raw = item.object; raw["state"] = .string("unrecorded"); raw["receipt"] = .null; return .object(raw) })
         let unrecorded = try TeamTaskBatch.Review(response, for: header)
-        XCTAssertNil(request.recorded(unrecorded, current: local, readable: access))
+        XCTAssertNil(request.terminal(unrecorded, current: local, readable: access))
         response["state"] = .string("cancelled"); response["items"] = .array(response["items"]!.list.map { item in var raw = item.object; raw["state"] = .string("cancelled"); return .object(raw) })
-        XCTAssertNil(request.recorded(try TeamTaskBatch.Review(response, for: header), current: local, readable: access))
+        let cancelled = try TeamTaskBatch.Review(response, for: header)
+        XCTAssertEqual(request.terminal(cancelled, current: local, readable: access), cancelled)
     }
     func testColdDiscoveryRejectsLateSnapshotAccessHeadAndBodyChanges() throws {
         let (_, header, review) = try groupReviewFixture("recorded"), local = groupReviewProjection(header), access = try readRecoveryCache(header, local: local)
         let request = try XCTUnwrap(TeamCompletionBatchDiscovery(snapshot: local, access: access))
         var changed = local; changed.tables["tasks"]![0]["description"] = .string("Authored while checking")
-        XCTAssertNil(request.recorded(review, current: changed, readable: access))
+        XCTAssertNil(request.terminal(review, current: changed, readable: access))
         changed = local; changed.pending.append(Mutation(table: "view_preferences", recordID: "choice", method: "PATCH", fields: ["name": .string("Later work")]))
-        XCTAssertNil(request.recorded(review, current: changed, readable: access))
+        XCTAssertNil(request.terminal(review, current: changed, readable: access))
         changed = local; changed.pending = []
-        XCTAssertNil(request.recorded(review, current: changed, readable: access))
-        XCTAssertNil(request.recorded(review, current: local, readable: try readRecoveryCache(header, local: local, role: "editor", paused: true)))
+        XCTAssertNil(request.terminal(review, current: changed, readable: access))
+        XCTAssertNil(request.terminal(review, current: local, readable: try readRecoveryCache(header, local: local, role: "editor", paused: true)))
         let (_, undo, observation) = try groupReviewFixture("undo"); XCTAssertNotEqual(undo, header)
-        XCTAssertNil(request.recorded(observation, current: local, readable: access))
+        XCTAssertNil(request.terminal(observation, current: local, readable: access))
     }
     func testColdDiscoveryDoesNotProbeUnrelatedOrMalformedQueueHeads() throws {
         let (_, header, _) = try groupReviewFixture("recorded"), local = groupReviewProjection(header), access = try readRecoveryCache(header, local: local)
@@ -1116,7 +1117,64 @@ extension TeamCompletionBatchTests {
             let (_, header, review) = try groupReviewFixture(phase); var local = groupReviewProjection(header)
             let other = Mutation(table: "view_preferences", recordID: "independent", method: "PATCH", fields: ["name": .string("Keep this saved choice")]); local.pending.append(other)
             let access = try readRecoveryCache(header, local: local), before = local, request = try XCTUnwrap(TeamCompletionBatchDiscovery(snapshot: local, access: access))
-            XCTAssertEqual(request.recorded(review, current: local, readable: access), review); XCTAssertEqual(local, before); XCTAssertEqual(local.pending, [header, other])
+            XCTAssertEqual(request.terminal(review, current: local, readable: access), review); XCTAssertEqual(local, before); XCTAssertEqual(local.pending, [header, other])
         }
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testCancelledGroupColdDiscoveryUsesActualWholeTerminalProofWithoutRetiringAnything() throws {
+        let (_, header, review) = try groupReviewFixture("cancelled"), local = groupReviewProjection(header)
+        for mode in ["viewer", "archive", "pause"] {
+            let access = try readRecoveryCache(header, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archive", paused: mode == "pause")
+            let request = try XCTUnwrap(TeamCompletionBatchDiscovery(snapshot: local, access: access))
+            XCTAssertEqual(request.terminal(review, current: local, readable: access), review)
+            XCTAssertEqual(local.pending, [header]); XCTAssertNil(review.acknowledging(local, readable: access))
+            var changed = local; changed.tables["tasks"]![0]["title"] = .string("New local work")
+            XCTAssertNil(request.terminal(review, current: changed, readable: access))
+        }
+    }
+    func testCancelledWholeGroupRetainsCurrentReadRestrictionsAndIndependentWork() throws {
+        let (_, header, review) = try groupReviewFixture("cancelled"); var local = groupReviewProjection(header)
+        let independent = Mutation(table: "view_preferences", recordID: UUID().uuidString.lowercased(), method: "PATCH", fields: ["layout": .string("board")])
+        local.pending.append(independent); local.teamWorkspace = try readRecoveryCache(header, local: local, role: "editor")
+        let before = local
+        for mode in ["viewer", "archive", "pause"] {
+            let access = try readRecoveryCache(header, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archive", paused: mode == "pause")
+            let next = try XCTUnwrap(review.cancelling(local, readable: access))
+            XCTAssertEqual(next.pending, [independent]); XCTAssertEqual(next.teamWorkspace?.boundary, access.boundary)
+            XCTAssertFalse(try XCTUnwrap(next.teamWorkspace).canSend(header, in: next)); XCTAssertEqual(local, before)
+            XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(next)), next)
+        }
+    }
+    func testCancelledGroupParkingWithReadAccessRetainsVerifiedEncryptedAuthoredWork() throws {
+        let (review, original, edit) = try authoredParking(); var local = original
+        local.teamWorkspace = try readRecoveryCache(review.mutation, local: local, role: "editor")
+        let draft = try TeamCompletionBatchDraft(review: review, snapshot: local)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let key = SymmetricKey(size: .bits256), vault = TeamCompletionBatchDraftVault(directory: directory, account: draft.scope.account, origin: draft.scope.origin, key: { key })
+        let verified = try vault.save(draft); XCTAssertEqual(verified.snapshot, local); XCTAssertTrue(verified.parkedChanges.contains(edit)); XCTAssertEqual(try vault.load(draft.id), verified)
+        let before = local
+        for mode in ["viewer", "archive", "pause"] {
+            let access = try readRecoveryCache(review.mutation, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archive", paused: mode == "pause")
+            XCTAssertNil(review.cancelling(local, readable: access))
+            let next = try XCTUnwrap(review.parkingCancellation(local, readable: access))
+            XCTAssertTrue(next.pending.isEmpty); XCTAssertEqual(next.teamWorkspace?.boundary, access.boundary)
+            XCTAssertEqual(try vault.load(draft.id).snapshot, before); XCTAssertEqual(local, before)
+        }
+    }
+    func testCancelledReadProjectionRefusesUnrecordedProofMissingScopeAndLostCustody() throws {
+        let (_, header, review) = try groupReviewFixture("cancelled"), local = groupReviewProjection(header)
+        for access in [try readRecoveryCache(header, local: local, reads: false), try readRecoveryCache(header, local: local, active: false), try readRecoveryCache(header, local: local, missing: [header.teamTaskBatch!.items[0].teamCompletion!.scope.project]), try readRecoveryCache(header, local: local, account: UUID().uuidString.lowercased())] {
+            XCTAssertNil(review.cancelling(local, readable: access)); XCTAssertNil(review.parkingCancellation(local, readable: access))
+        }
+        let (_, unrecordedHeader, unrecorded) = try groupReviewFixture("unrecorded"), unrecordedLocal = groupReviewProjection(unrecordedHeader)
+        XCTAssertNil(unrecorded.cancelling(unrecordedLocal, readable: try readRecoveryCache(unrecordedHeader, local: unrecordedLocal)))
+        XCTAssertNil(unrecorded.parkingCancellation(unrecordedLocal, readable: try readRecoveryCache(unrecordedHeader, local: unrecordedLocal)))
+        var remembered = local, encoded = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(try readRecoveryCache(header, local: local, role: "editor")))
+        encoded["knownTasks"] = .array(encoded["knownTasks"]!.list + [.string(UUID().uuidString.lowercased())])
+        remembered.teamWorkspace = try JSONDecoder().decode(TeamWorkspaceCache.self, from: JSONEncoder().encode(encoded))
+        XCTAssertNil(review.cancelling(remembered, readable: try readRecoveryCache(header, local: local)))
     }
 }

@@ -316,13 +316,13 @@ extension TeamTaskBatch {
 /// Reconstruct a complete optimistic cohort before replacing it with confirmed
 /// rows. Every remaining command and nonce stays frozen; only its local projection
 /// is replayed. Failure leaves the caller's entire snapshot untouched.
-/// Read authority is bound to a fully validated recorded review, never a write
-/// receipt alone. It permits only local acknowledgement of that exact envelope.
+/// Read authority is bound to a fully validated terminal review, never a write
+/// receipt alone. It permits only local recovery of that exact envelope.
 private struct CompletionBatchReadAccess {
     let review: TeamTaskBatch.Review
     let cache: TeamWorkspaceCache
     init?(review: TeamTaskBatch.Review, cache: TeamWorkspaceCache, snapshot: Snapshot) {
-        guard review.isRecorded, let batch = review.mutation.teamTaskBatch,
+        guard review.isRecorded || review.isCancelled, let batch = review.mutation.teamTaskBatch,
               batch.canReviewCompletion(review.mutation, readable: cache) else { return nil }
         if let old = snapshot.teamWorkspace {
             guard old.boundary.belongs(account: batch.account, origin: batch.origin),
@@ -446,8 +446,11 @@ private struct CompletionBatchReconciliation {
         }
         let indices = selected.sorted(), leaves = try indices.flatMap { try checkedMembers(changes[$0]) }
         if let readAccess {
-            guard cancellation == nil, readAccess.review.mutation == header, readAccess.review.recorded == raw,
-                  readAccess.permits(header), indices.allSatisfy({ readAccess.permits(changes[$0]) }) else { throw TeamTaskBatch.conflict }
+            guard readAccess.review.mutation == header, readAccess.permits(header),
+                  indices.allSatisfy({ readAccess.permits(changes[$0]) }) else { throw TeamTaskBatch.conflict }
+            if let cancellation {
+                guard cancellation.isCancelled, readAccess.review == cancellation else { throw TeamTaskBatch.conflict }
+            } else { guard readAccess.review.isRecorded, readAccess.review.recorded == raw else { throw TeamTaskBatch.conflict } }
         } else if cancellation == nil, let access = original.teamWorkspace {
             guard indices.allSatisfy({ access.canSend(changes[$0], in: original) }) else { throw TeamTaskBatch.conflict }
         }
@@ -755,8 +758,8 @@ struct TeamCompletionBatchDiscovery: Equatable, Sendable {
               batch.canReviewCompletion(head, readable: access), access.blocked(snapshot).contains(head.id) else { return nil }
         self.snapshot = snapshot; self.access = access; mutation = head
     }
-    func recorded(_ review: TeamTaskBatch.Review, current: Snapshot, readable: TeamWorkspaceCache) -> TeamTaskBatch.Review? {
-        guard current == snapshot, readable == access, review.mutation == mutation, review.isRecorded else { return nil }
+    func terminal(_ review: TeamTaskBatch.Review, current: Snapshot, readable: TeamWorkspaceCache) -> TeamTaskBatch.Review? {
+        guard current == snapshot, readable == access, review.mutation == mutation, (review.isRecorded || review.isCancelled) else { return nil }
         return review
     }
 }
@@ -773,5 +776,23 @@ extension TeamTaskBatch {
             guard let command = item.teamCompletion else { return false }
             return [command.scope.project, command.seriesProject].allSatisfy { cache.boundary.projects[$0]?.team == team }
         }
+    }
+}
+
+
+extension TeamTaskBatch.Review {
+    func cancelling(_ snapshot: Snapshot, readable cache: TeamWorkspaceCache) -> Snapshot? {
+        guard isCancelled, CompletionBatchReadAccess(review: self, cache: cache, snapshot: snapshot) != nil,
+              let next = cancelling(snapshot) else { return nil }
+        return cache.retainingRecoveryAccess(in: next, from: snapshot)
+    }
+    /// The caller must first retain and verify the encrypted full draft. This
+    /// read-bound projection gives no independent authority to discard intent.
+    func parkingCancellation(_ snapshot: Snapshot, readable cache: TeamWorkspaceCache) -> Snapshot? {
+        guard isCancelled, Set(snapshot.pending.map(\.id)).count == snapshot.pending.count,
+              let batch = mutation.teamTaskBatch, (try? batch.body(for: mutation)) != nil,
+              let access = CompletionBatchReadAccess(review: self, cache: cache, snapshot: snapshot),
+              let next = try? CompletionBatchReconciliation(batch: batch, header: mutation, original: snapshot, raw: [:], receipts: [], cancellation: self, readAccess: access).confirmed() else { return nil }
+        return cache.retainingRecoveryAccess(in: next, from: snapshot)
     }
 }

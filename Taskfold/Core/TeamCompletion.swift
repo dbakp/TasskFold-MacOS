@@ -431,7 +431,7 @@ extension TeamCompletion.Review {
 }
 
 /// A cold observation owns the full queue, task projection and read boundary.
-/// Only an exact recorded response opens review; no state is acknowledged here.
+/// Only an exact terminal response opens review; no state is retired here.
 struct TeamCompletionDiscovery: Equatable, Sendable {
     let snapshot: Snapshot
     let access: TeamWorkspaceCache
@@ -442,8 +442,23 @@ struct TeamCompletionDiscovery: Equatable, Sendable {
               command.canReview(head, readable: access), access.blocked(snapshot).contains(head.id) else { return nil }
         self.snapshot = snapshot; self.access = access; mutation = head
     }
-    func recorded(_ review: TeamCompletion.Review, current: Snapshot, readable: TeamWorkspaceCache) -> TeamCompletion.Review? {
-        guard current == snapshot, readable == access, review.mutation == mutation, review.isRecorded else { return nil }
+    func terminal(_ review: TeamCompletion.Review, current: Snapshot, readable: TeamWorkspaceCache) -> TeamCompletion.Review? {
+        guard current == snapshot, readable == access, review.mutation == mutation, (review.isRecorded || review.isCancelled) else { return nil }
         return review
+    }
+}
+
+
+extension TeamCompletion.Review {
+    func cancelling(_ snapshot: Snapshot, readable cache: TeamWorkspaceCache) -> Snapshot? {
+        guard let command = mutation.teamCompletion, command.canReview(mutation, readable: cache),
+              let next = cancelling(snapshot) else { return nil }
+        return cache.retainingRecoveryAccess(in: next, from: snapshot)
+    }
+    func rebasing(_ snapshot: Snapshot, readable cache: TeamWorkspaceCache) -> Rebase? {
+        guard let command = mutation.teamCompletion, command.canReview(mutation, readable: cache), let plan = rebasing(snapshot),
+              let base = cache.retainingRecoveryAccess(in: plan.base, from: snapshot),
+              let next = cache.retainingRecoveryAccess(in: plan.snapshot, from: snapshot), cache.canSend(plan.action, in: base) else { return nil }
+        return Rebase(action: plan.action, base: base, snapshot: next)
     }
 }

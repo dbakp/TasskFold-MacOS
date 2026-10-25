@@ -995,7 +995,7 @@ extension TeamCompletionTests {
         for mode in ["viewer", "archived", "paused"] {
             let access = try recoveryAccess(header, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archived", paused: mode == "paused")
             let request = try XCTUnwrap(TeamCompletionDiscovery(snapshot: local, access: access))
-            XCTAssertEqual(request.mutation, header); XCTAssertEqual(request.recorded(review, current: local, readable: access), review)
+            XCTAssertEqual(request.mutation, header); XCTAssertEqual(request.terminal(review, current: local, readable: access), review)
             XCTAssertEqual(local.pending, [header]); XCTAssertEqual(request.snapshot, local)
         }
         XCTAssertNil(TeamCompletionDiscovery(snapshot: local, access: try recoveryAccess(header, local: local, role: "editor")))
@@ -1003,21 +1003,22 @@ extension TeamCompletionTests {
             XCTAssertNil(TeamCompletionDiscovery(snapshot: local, access: access)); XCTAssertNil(review.acknowledging(local, readable: access))
         }
     }
-    func testSingleColdDiscoveryRejectsUnrecordedCancelledAndLateContext() throws {
+    func testSingleColdDiscoveryRejectsUnrecordedAndLateContext() throws {
         let (header, _, raw) = try reviewFixture(), review = try TeamCompletion.Review(raw, for: header), local = recoveryProjection(header), access = try recoveryAccess(header, local: local)
         let request = try XCTUnwrap(TeamCompletionDiscovery(snapshot: local, access: access))
         let (_, _, unrecorded) = try reviewFixture(recorded: false)
         for state in ["unrecorded", "cancelled"] {
             var value = unrecorded; value["state"] = .string(state)
-            XCTAssertNil(request.recorded(try TeamCompletion.Review(value, for: header), current: local, readable: access))
+            let observed = try TeamCompletion.Review(value, for: header)
+            XCTAssertEqual(request.terminal(observed, current: local, readable: access), state == "cancelled" ? observed : nil)
         }
         var changed = local; changed.tables["tasks"]![0]["title"] = .string("Newer local work")
-        XCTAssertNil(request.recorded(review, current: changed, readable: access))
+        XCTAssertNil(request.terminal(review, current: changed, readable: access))
         changed = local; changed.pending.append(Mutation(table: "preferences", recordID: header.recordID, method: "PATCH", fields: ["name": .string("newer")]))
-        XCTAssertNil(request.recorded(review, current: changed, readable: access))
-        XCTAssertNil(request.recorded(review, current: local, readable: try recoveryAccess(header, local: local, paused: true)))
+        XCTAssertNil(request.terminal(review, current: changed, readable: access))
+        XCTAssertNil(request.terminal(review, current: local, readable: try recoveryAccess(header, local: local, paused: true)))
         let (undo, _, undoRaw) = try reviewFixture(undo: true)
-        XCTAssertNil(request.recorded(try TeamCompletion.Review(undoRaw, for: undo), current: local, readable: access))
+        XCTAssertNil(request.terminal(try TeamCompletion.Review(undoRaw, for: undo), current: local, readable: access))
     }
     func testSingleColdDiscoveryRefusesMalformedUnrelatedAndDuplicateHeads() throws {
         let (header, _, _) = try reviewFixture(), local = recoveryProjection(header), access = try recoveryAccess(header, local: local)
@@ -1059,7 +1060,7 @@ extension TeamCompletionTests {
             let independent = Mutation(table: "preferences", recordID: UUID().uuidString.lowercased(), method: "PATCH", fields: ["appearance": .string("dark")])
             local.pending.append(independent)
             let access = try recoveryAccess(header, local: local), request = try XCTUnwrap(TeamCompletionDiscovery(snapshot: local, access: access))
-            XCTAssertEqual(request.recorded(review, current: local, readable: access), review)
+            XCTAssertEqual(request.terminal(review, current: local, readable: access), review)
             let next = try XCTUnwrap(review.acknowledging(local, readable: access))
             XCTAssertEqual(next.pending, [independent]); XCTAssertEqual(next.teamWorkspace?.boundary, access.boundary)
         }
@@ -1099,5 +1100,53 @@ extension TeamCompletionTests {
         let before = local; XCTAssertNil(review.acknowledging(local, readable: try recoveryAccess(header, local: local))); XCTAssertEqual(local, before)
         local.tables[ConversationOutbox.table] = []
         XCTAssertNotNil(review.acknowledging(local, readable: try recoveryAccess(header, local: local)))
+    }
+}
+
+extension TeamCompletionTests {
+    func testCancelledColdDiscoveryUsesActualTerminalProofWithoutRetiringAnything() throws {
+        for undo in [false, true] {
+            let (header, _, raw) = try cancellationFixture(undo: undo), review = try TeamCompletion.Review(raw, for: header), local = undo ? rebaseProjection(header) : projected(header)
+            for mode in ["viewer", "archive", "pause"] {
+                let access = try recoveryAccess(header, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archive", paused: mode == "pause")
+                let request = try XCTUnwrap(TeamCompletionDiscovery(snapshot: local, access: access))
+                XCTAssertEqual(request.terminal(review, current: local, readable: access), review); XCTAssertEqual(local.pending, [header])
+                XCTAssertNil(review.acknowledging(local, readable: access))
+                var changed = local; changed.pending.append(Mutation(table: "preferences", recordID: UUID().uuidString.lowercased(), method: "PATCH", fields: [:]))
+                XCTAssertNil(request.terminal(review, current: changed, readable: access))
+            }
+        }
+    }
+    func testCancelledSingleRecoveryRetainsFreshPermissionsAndRefusesAuthoredLoss() throws {
+        let (header, _, raw) = try cancellationFixture(), review = try TeamCompletion.Review(raw, for: header)
+        var local = projected(header)
+        let independent = Mutation(table: "labels", recordID: UUID().uuidString.lowercased(), method: "POST", fields: ["name": .string("Keep independent work")])
+        local.apply(independent); local.pending.append(independent); local.teamWorkspace = try recoveryAccess(header, local: local, role: "editor")
+        for mode in ["viewer", "archive", "pause"] {
+            let access = try recoveryAccess(header, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archive", paused: mode == "pause")
+            let next = try XCTUnwrap(review.cancelling(local, readable: access))
+            XCTAssertEqual(next.pending, [independent]); XCTAssertEqual(next.tables["labels"], local.tables["labels"])
+            XCTAssertEqual(next.tables["tasks"], [review.task!]); XCTAssertEqual(next.teamWorkspace?.boundary, access.boundary)
+            XCTAssertFalse(try XCTUnwrap(next.teamWorkspace).canSend(header, in: next))
+            XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(next)), next)
+            var authored = local; let edit = Mutation(table: "tasks", recordID: header.recordID, method: "PATCH", fields: ["description": .string("Keep authored notes")])
+            authored.apply(edit); authored.pending.append(edit); let before = authored
+            XCTAssertNil(review.cancelling(authored, readable: access)); XCTAssertEqual(authored, before)
+        }
+        for access in [try recoveryAccess(header, local: local, reads: false), try recoveryAccess(header, local: local, account: UUID().uuidString.lowercased()), try recoveryAccess(header, local: local, origin: "https://foreign.example"), try recoveryAccess(header, local: local, missing: [header.teamCompletion!.scope.project])] {
+            XCTAssertNil(review.cancelling(local, readable: access))
+        }
+        var duplicate = local; duplicate.pending.append(header); XCTAssertNil(review.cancelling(duplicate, readable: try recoveryAccess(header, local: duplicate)))
+    }
+    func testCancelledRebaseRequiresCurrentWriteAccessAndPersistsFreshBoundary() throws {
+        let (header, _, raw, _) = try rebaseFixture(), review = try TeamCompletion.Review(raw, for: header), local = rebaseProjection(header)
+        XCTAssertTrue(review.canEditCurrent)
+        for mode in ["viewer", "archive", "pause"] {
+            let access = try recoveryAccess(header, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archive", paused: mode == "pause")
+            XCTAssertNil(review.rebasing(local, readable: access)); XCTAssertEqual(local.pending, [header])
+        }
+        let access = try recoveryAccess(header, local: local, role: "editor"), plan = try XCTUnwrap(review.rebasing(local, readable: access))
+        XCTAssertEqual(plan.snapshot.teamWorkspace?.boundary, access.boundary); XCTAssertEqual(plan.base.teamWorkspace?.boundary, access.boundary)
+        XCTAssertNotEqual(plan.action.id, header.id); XCTAssertEqual(plan.snapshot.pending.first, plan.action)
     }
 }

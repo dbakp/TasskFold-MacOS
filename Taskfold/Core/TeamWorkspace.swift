@@ -436,3 +436,21 @@ enum PersonalConnectionDestination: Equatable {
         return .personal
     }
 }
+
+
+extension TeamWorkspaceCache {
+    /// Bind an already validated recovery projection to current read access.
+    /// This refreshes permissions only; it never authorizes dropping commands.
+    func retainingRecoveryAccess(in next: Snapshot, from before: Snapshot) -> Snapshot? {
+        guard Set(before.pending.map(\.id)).count == before.pending.count,
+              Set(next.pending.map(\.id)).count == next.pending.count,
+              Set((before.tables["tasks"] ?? []).map(\.id)).count == (before.tables["tasks"] ?? []).count,
+              Set((next.tables["tasks"] ?? []).map(\.id)).count == (next.tables["tasks"] ?? []).count else { return nil }
+        if let old = before.teamWorkspace {
+            guard old.boundary.belongs(account: boundary.account, origin: boundary.origin), old.knownTasks.isSubset(of: knownTasks),
+                  old.knownTeams.allSatisfy({ knownTeams[$0.key] == $0.value }) else { return nil }
+        }
+        guard let refreshed = try? TeamWorkspaceCache(boundary: boundary, previous: self, pending: next.pending, tasks: next.tables["tasks"] ?? []) else { return nil }
+        var result = next; result.teamWorkspace = refreshed; return result
+    }
+}

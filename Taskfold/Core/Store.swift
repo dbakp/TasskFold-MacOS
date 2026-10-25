@@ -1854,17 +1854,17 @@ final class Store {
     }
 
     @discardableResult func parkTeamCompletionDraft(_ expected:TeamCompletion.Review) async -> Bool {
-        let generation=accountGeneration,account=userID,before=snapshot
-        guard syncConflict?.completionReview == expected,let candidate=TeamCompletionDraft.Candidate(review:expected,snapshot:before),let vault=teamDraftVault,
+        let generation=accountGeneration,account=userID,before=snapshot,access=nativeConversationTeamCache,revision=workspaceReadRevision
+        guard currentTeamCompletionReview(expected),let access,let candidate=TeamCompletionDraft.Candidate(review:expected,snapshot:before),let vault=teamDraftVault,
               candidate.draft.scope.account == account,candidate.draft.scope.origin == vault.origin else {return false}
         do {
             _=try await makeRecoveryBackup(kind:"Before saving team draft")
-            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,syncConflict?.completionReview == expected else {return false}
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
             _=try await Task.detached(priority:.utility){try vault.save(candidate.draft)}.value
-            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,syncConflict?.completionReview == expected else {return false}
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
             let proof=try await backend.retireTeamProvisional(expected.mutation,expectedAccount:account)
-            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,syncConflict?.completionReview == expected else {return false}
-            guard let next=candidate.parking(snapshot,proof:proof) else {
+            guard generation == accountGeneration,!signingOut,!accountRemovalBlocked,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            guard let projected=candidate.parking(snapshot,proof:proof), let next=access.retainingRecoveryAccess(in:projected,from:before) else {
                 syncConflict=SyncConflict(mutation:expected.mutation,remote:proof.review.task ?? expected.mutation.teamCompletion!.source,completionReview:proof.review)
                 error="Your draft is saved. The shared task changed; check the current review before continuing.";return false
             }
@@ -1885,16 +1885,18 @@ final class Store {
         await resolveTeamCompletionReview(expected,rebase:true)
     }
     private func resolveTeamCompletionReview(_ expected:TeamCompletion.Review,rebase:Bool) async -> Bool {
-        let generation=accountGeneration,account=userID,before=snapshot
-        guard syncConflict?.completionReview == expected,
+        let generation=accountGeneration,account=userID,before=snapshot,access=nativeConversationTeamCache,revision=workspaceReadRevision
+        guard currentTeamCompletionReview(expected), let access,
               (rebase ? expected.canRequestRebase(before):expected.canRequestCancellation(before)),
               let command=expected.mutation.teamCompletion,command.scope.account == account,
-              command.scope.origin == (try? backend.accountRemovalOrigin),!signingOut else {return false}
+              command.scope.origin == (try? backend.accountRemovalOrigin),!signingOut, !rebase || access.canSend(expected.mutation, in: before) else {return false}
         do {
             _=try await makeRecoveryBackup(kind:"Before sync review")
-            guard generation == accountGeneration,snapshot == before,syncConflict?.completionReview == expected else {return false}
-            let review=try await backend.cancelTeamCompletion(expected.mutation,expectedAccount:account)
-            guard generation == accountGeneration,syncConflict?.completionReview == expected,snapshot.pending.first == expected.mutation else {return false}
+            guard generation == accountGeneration,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
+            let review: TeamCompletion.Review
+            if expected.isCancelled { review = expected }
+            else { review = try await backend.cancelTeamCompletion(expected.mutation,expectedAccount:account) }
+            guard generation == accountGeneration,snapshot == before,revision == workspaceReadRevision,nativeConversationTeamCache == access,currentTeamCompletionReview(expected) else {return false}
             syncConflict=SyncConflict(mutation:expected.mutation,remote:review.task ?? command.source,completionReview:review)
             guard review.isCancelled else {
                 notice="This action had already synced. Review its result to continue.";return false
@@ -1902,12 +1904,12 @@ final class Store {
             let next:Snapshot
             let history:EditHistory?
             if rebase {
-                guard review.matchesRebaseObservation(expected),let plan=review.rebasing(snapshot) else {
+                guard review.matchesRebaseObservation(expected),let plan=review.rebasing(snapshot, readable: access) else {
                     notice="Task access or content changed. Review the current task before applying your action.";return false
                 }
                 next=plan.snapshot;history=EditHistory(changes:[plan.action],snapshot:plan.base)
             } else {
-                guard let cancelled=review.cancelling(snapshot) else {
+                guard let cancelled=review.cancelling(snapshot, readable: access) else {
                     notice="Your action was cancelled. Additional changes remain saved for review.";return false
                 }
                 next=cancelled;history=nil
@@ -1947,12 +1949,12 @@ final class Store {
         guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision,
               nativeConversationTeamCache == access, !signingOut, !accountRemovalBlocked,
               syncConflict == nil, focusSyncConflict == nil else { throw CancellationError() }
-        if let request = requests.0, let review = groupReview, let recorded = request.recorded(review, current: snapshot, readable: access) {
-            installTeamCompletionBatchReview(recorded)
-            notice = "This task selection already synced. Review its result to continue."
-        } else if let request = requests.1, let review = singleReview, let recorded = request.recorded(review, current: snapshot, readable: access) {
-            syncConflict = SyncConflict(mutation: recorded.mutation, remote: recorded.task ?? recorded.mutation.teamCompletion!.source, completionReview: recorded)
-            notice = "This task action already synced. Review its result to continue."
+        if let request = requests.0, let review = groupReview, let terminal = request.terminal(review, current: snapshot, readable: access) {
+            installTeamCompletionBatchReview(terminal)
+            notice = terminal.isCancelled ? "This saved task selection was cancelled. Review your work to continue." : "This task selection already synced. Review its result to continue."
+        } else if let request = requests.1, let review = singleReview, let terminal = request.terminal(review, current: snapshot, readable: access) {
+            syncConflict = SyncConflict(mutation: terminal.mutation, remote: terminal.task ?? terminal.mutation.teamCompletion!.source, completionReview: terminal)
+            notice = terminal.isCancelled ? "This saved task action was cancelled. Review your work to continue." : "This task action already synced. Review its result to continue."
         } else { return false }
         return true
     }
@@ -2003,31 +2005,34 @@ final class Store {
     }
     @discardableResult func cancelTeamCompletionBatchReview(_ expected: TeamTaskBatch.Review) async -> Bool {
         let generation = accountGeneration, before = snapshot, account = userID
-        guard currentTeamCompletionBatchReview(expected), !expected.isRecorded else { return false }
+        guard currentTeamCompletionBatchReview(expected), !expected.isRecorded, let access = nativeConversationTeamCache else { return false }
+        let revision = workspaceReadRevision
         do {
             var savedDraft: TeamCompletionBatchDraft?
             let independent = await Task.detached(priority: .userInitiated) { expected.canRequestCancellation(before) }.value
-            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
+            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
             if !independent {
                 guard let vault = teamSelectionDraftVault else { throw TeamCompletionBatchDraft.invalid }
                 savedDraft = try await Task.detached(priority: .userInitiated) {
                     let draft = try TeamCompletionBatchDraft(review: expected, snapshot: before)
                     return try vault.save(draft)
                 }.value
-                guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
+                guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
                 guard savedDraft?.snapshot == before else { throw TeamCompletionBatchDraft.invalid }
             }
             _ = try await makeRecoveryBackup(kind: "Before selection sync review")
-            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
-            let review = try await backend.reviewTeamCompletionBatch(expected.mutation, expectedAccount: account, cancel: true)
-            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
+            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
+            let review: TeamTaskBatch.Review
+            if expected.isCancelled { review = expected }
+            else { review = try await backend.reviewTeamCompletionBatch(expected.mutation, expectedAccount: account, cancel: true) }
+            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(expected) else { return false }
             installTeamCompletionBatchReview(review)
             guard review.isCancelled else { notice = "This selection had already synced. Review its result to continue. Any saved draft is kept."; return false }
             let archived = savedDraft != nil
             let next = await Task.detached(priority: .userInitiated) {
-                archived ? review.parkingCancellation(before) : review.cancelling(before)
+                archived ? review.parkingCancellation(before, readable: access) : review.cancelling(before, readable: access)
             }.value
-            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(review) else { return false }
+            guard generation == accountGeneration, snapshot == before, revision == workspaceReadRevision, nativeConversationTeamCache == access, currentTeamCompletionBatchReview(review) else { return false }
             guard let next else { notice = "The selection was cancelled. Your additional changes remain saved for review."; return false }
             snapshot = next
             do { try persist() } catch { snapshot = before; throw error }
@@ -3695,12 +3700,13 @@ extension Store {
         let file = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("taskfold-group-review-peer.json")
         var retired = (try? JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file))) ?? [:]
         if let old = retired[nonce], old != .object(body) { return nil }
-        let recorded = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-recorded")
+        let alreadyCancelled = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-cancelled")
+        let recorded = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-recorded") && !alreadyCancelled
         if request.url!.path.contains("cancel_"), !recorded {
             retired[nonce] = .object(body)
             do { try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true); try JSONEncoder().encode(retired).write(to: file, options: .atomic) } catch { return nil }
         }
-        let state = recorded ? "recorded" : retired[nonce] != nil ? "cancelled" : "unrecorded"
+        let state = alreadyCancelled ? "cancelled" : recorded ? "recorded" : retired[nonce] != nil ? "cancelled" : "unrecorded"
         var views: [JSON] = [], receipts: [JSON] = []
         for item in items {
             let b = item.object; var task = Record(b["record"]?.object ?? [:])

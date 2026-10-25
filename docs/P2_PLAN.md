@@ -4,17 +4,15 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Native completion-group recovery and permanent encrypted selection drafts are
-implemented in both clients. Recorded selections can now finish review with current
-read access after viewer/archive/write-pause changes, including discovery of an
-already-recorded blocked group or individual completion after cold startup. Later queued work and current
-permission restrictions remain intact. See the dated stages at the end of this
-plan for current verification and remaining limits; older paragraphs below record
-preceding implementation checkpoints rather than the latest totals.
+Native completion recovery and permanent encrypted selection drafts are implemented
+in both clients. After cold startup, readable blocked individual/group actions can
+open matching recorded or cancelled reviews. Explicit acceptance keeps current
+viewer/archive/write-pause restrictions and preserves queued or separately saved
+draft work. See the dated stages at the end of this plan for verification and
+remaining limits; older paragraphs record preceding checkpoints.
 
 The next priorities within rank 6 are:
-1. Extend cold recovery to other terminal statuses;
-   complete native recurring/Undo/Redo, storage/account-race and Mac window/
+1. Complete native recurring/Undo/Redo, storage/account-race and Mac window/
    accessibility acceptance.
 2. Preserve missing-incarnation authored work explicitly and extend supported
    cross-table cohort recovery without granting new editing authority.
@@ -4182,3 +4180,60 @@ mac-completion-recovery/ build, signature and source-isolation evidence.
 No service/schema/configuration, rollout, real account/task or user-deferred
 release/provider/device work changed. All broader rank-6/Px requirements remain
 open as listed above; this checkpoint is test preparation, not feature completion.
+
+## 25 October 2026 — Discover and retire already-cancelled completions safely
+
+Cold discovery now recognizes both durable terminal states: recorded and cancelled.
+Individual/group status reads still own the exact head, complete snapshot and current
+read boundary. An unrecorded response never removes work or opens terminal recovery.
+Discovery returns before any task write, acknowledgement or workspace-table merge.
+
+An already-cancelled review uses its validated durable proof on explicit acceptance;
+it does not issue a second cancellation RPC. The normal safety backup and encrypted
+selection-draft/readback requirements remain. Retiring independent work or parking
+connected work now installs the current read cache, rather than leaving older writer
+permissions on disk. Viewer/archive/write-pause restrictions survive relaunch.
+
+All asynchronous backup, vault and cancellation steps capture the complete snapshot,
+account, read revision and full access cache; late changes discard their result.
+Single provisional-draft parking also retains this access cache. Rebase requires
+current write access and keeps that same boundary in both its base and result.
+Cancelled read access permits only local recovery of the exact reviewed envelope;
+it grants no authority to send connected edits. Missing scope, lost cache custody,
+malformed/duplicate identities or unexplained authored work keep the queue protected.
+
+Each repo passes 742 of 743 selected Core cases, with one live shared-conversation
+integration case skipped because disposable accounts are not configured. The 181
+completion cases include seven new cases for actual SQL cancellation/Undo proofs,
+exact cold discovery, read-only retirement, fresh rebase permissions, independent
+work, encrypted authored group retention and refusal of unsafe/unrecorded contexts.
+Existing per-repo SQL wire fixtures are reused; no service SQL changed or reran.
+The isolated iOS app and current signed Mac test app both build.
+
+Six actual UI cases pass on each iPhone and iPad with no runtime warnings:
+four new cancelled cases (single viewer/archive and group viewer/write pause) plus
+recorded individual/group viewer regressions. All cold traces contain only the
+access/status reads before review, with tasks and queue unchanged. Cancelled
+acceptance traces contain no completion write or repeated cancellation request.
+Current restrictions and full post-acceptance snapshots survive another launch;
+only knownTasks/quarantined Codable Set ordering is canonicalized. Both group
+cases reopen their permanent encrypted draft and read the authored title/notes.
+Core separately verifies exact encrypted snapshot/save/readback identity.
+
+Installed app, debug-library and Info hashes match final signed products. The
+individual cancelled-review and persistent iPad draft previews were visually
+inspected. Actual native data uses ordinary roots and a local synthetic HTTP peer;
+no hosted or native recurring-history acceptance is claimed. Mac source namespaces
+and final app/runner development signatures verify, but its seven prepared UI cases
+remain unrun: the native availability check still reports the Mac locked.
+
+The Mac's seven prepared recorded-recovery UI cases remain unexecuted pending the
+requested unlock. Its current-source signed host/build are retained. Native recurring
+history, Mac window/keyboard/spoken checks, storage/account-race acceptance, authored
+missing-incarnation/cross-table recovery, large-workload and genuine hosted acceptance
+remain open. Single cancellations with unsupported connected authored work remain
+protected for separate review; no action silently drops those drafts.
+
+No SQL, hosted schema/configuration, rollout, real task/account, OAuth/provider or
+user-deferred release/device work changed. See p2-terminal-completion-recovery-evidence.json
+and terminal-completion-recovery/. The broader rank-6/Px goal remains active.

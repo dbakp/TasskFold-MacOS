@@ -1,0 +1,14 @@
+{
+  "Taskfold.app": {
+    "strictDeepVerified": true,
+    "team": "3UZ4C73FM2",
+    "bundle": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+    "binarySHA256": "6dfd774f16e1f2c1e1817e68c098732d339d001a241fdfcbb3699e8ba6fcdbbf"
+  },
+  "TaskfoldUITests-Runner.app": {
+    "strictDeepVerified": true,
+    "team": "3UZ4C73FM2",
+    "bundle": "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner",
+    "binarySHA256": "7d8718ed0bc5b8dee625809872b5ac0bb52ecf17c749f92bf3c9d8ed44760213"
+  }
+}
