@@ -288,3 +288,25 @@ extension TeamTaskBatchTests {
         }
     }
 }
+
+extension TeamTaskBatchTests {
+    func testAssignmentBatchPreservesAllMembersAndUndoRestoresDistinctOriginalRecipients() throws {
+        let (_, _, original) = try planningFixture(), cache = try planningCache(original), workspace = WorkspaceBinding(account: original.account, generation: UUID()), session = UUID()
+        let target = UUID().uuidString.lowercased()
+        let records = original.items.enumerated().map { offset, item -> Record in
+            var row = Record(item.baseline!); if offset == 0 { row.fields.removeValue(forKey: "assigned_to") } else { row["assigned_to"] = .string(target) }; return row
+        }
+        let before = Snapshot(tables: ["tasks": records, "projects": cache.boundary.projects.keys.map { Record(["id": .string($0)]) }])
+        let admission = try TeamTaskPlanningAdmission(drafts: records.map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) })
+        let selection = try admission.selecting(["assigned_to": .string(target)])
+        let header = try selection.mutation(current: Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0) }), workspace: workspace, session: session, cache: cache, enabled: true)
+        let batch = try XCTUnwrap(header.teamTaskBatch); XCTAssertEqual(batch.items.count, records.count)
+        for item in batch.items { XCTAssertEqual(item.baseline, records.first { $0.id == item.recordID }?.fields) }
+        XCTAssertEqual(try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(header)), header)
+        var current = before; XCTAssertTrue(batch.apply(to: &current, header: header))
+        for row in current.tables["tasks"]! { var expected = records.first { $0.id == row.id }!; expected["assigned_to"] = .string(target); XCTAssertEqual(row, expected) }
+        let undo = try batch.inverse(of: header, snapshot: before), inverse = try XCTUnwrap(undo.teamTaskBatch)
+        XCTAssertTrue(inverse.apply(to: &current, header: undo)); XCTAssertEqual(current.tables["tasks"], records.map { source in var row = source; if row.fields["assigned_to"] == nil { row["assigned_to"] = .null }; return row })
+        XCTAssertTrue(Set(batch.items.map(\.id)).isDisjoint(with: inverse.items.map(\.id)))
+    }
+}

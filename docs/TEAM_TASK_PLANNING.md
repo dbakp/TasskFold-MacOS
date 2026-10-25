@@ -186,3 +186,52 @@ live hosted/Auth/Keychain delivery. Mac installed/window, keyboard/spoken, large
 text/contrast/dark, broader hosted acceptance and other shared batch/history work
 remain open. No schema, provider configuration or rollout changed; all user-
 deferred dependencies and the full rank-6/Px backlog retain their scope.
+
+
+### 2026-10-25 — Whole-selection shared assignment
+
+The shared selection menu now offers Assign shared tasks. The picker captures the
+complete existing task/access admission before reading recipients. Each distinct
+selected project is queried once per refresh; only their intersection is offered.
+A teammate tap rechecks every project before creating review. Partial catalogs,
+foreign project/access replies, changed tasks and replaced account/workspace/session
+cannot create a command. Cancel invalidates late directory replies and stops later
+project reads. An already reviewed identity can remain a frozen offline intent;
+non-network errors clear the choices. A confirmed loss in any refreshed project
+stops immediately, so a later network error cannot revive the cached choice.
+Unassigned and You need no directory.
+
+Review lists every task and the explicit destination person or Unassigned. Edit
+choice returns to the picker; Cancel saves nothing. Already-correct tasks remain
+members of the frozen group. One existing edit command/RPC saves the whole cohort;
+linked Undo restores each member’s own original assignment with fresh action IDs.
+The UI does not turn a display name, catalog or task creator into authority.
+Personal/shared mixtures, nested projections and cross-team cohorts are refused
+as a whole by the shared admission rather than silently dropping members.
+
+Each independently owned migration extends the existing private planning batch’s
+strict field allowlist with assigned_to. Recipient values are validated before
+casts; canonical Auth recipient locks precede team/project/task locks, matching
+the guarded single editor. Every new member delegates live recipient role and
+ban checks to that editor inside the same transaction. Late failure rolls back
+all task writes and group/member receipts. A recorded retry only acknowledges its
+original result and does not reassign tasks if a recipient later leaves or is
+banned. Actor access and current project/team state are still rechecked.
+
+Each repository passes 96 isolated database checks on the assignment-enabled
+schema and 67 legacy planning checks, with no new advisor findings. The focused
+Core suite passes 502 tests; the final 23-case batch rerun strengthens sparse
+assignment Undo coverage. Installed phone/tablet cases separately exercise native
+review/cancellation, durable Save/Undo/relaunch, clear and changed access/source.
+Three final installed scenarios pass independently on iPhone and iPad. Six
+standard-light review/clear/refusal screenshots are visually inspected.
+The native fixture uses two tasks in one project; cross-project behavior is
+verified independently by the Core intersection and real SQL transactions.
+
+No new table, public endpoint, configuration, deployment or rollout switch is
+introduced. Source-only migration, isolated SQL/advisor, Core, build and native
+acceptance details and their limits are retained in
+`p2-shared-bulk-assignment-evidence.json`. Reproduce the isolated database checks
+with `TASKFOLD_TEST_ASSIGNMENT_BATCHES=1 node Scripts/Database/test-team-planning-batches.mjs <report.json>`.
+Mac runtime, wider hosted concurrency/account/accessibility and the rest of the
+ranked Px backlog remain open; all existing user deferrals retain their scope.

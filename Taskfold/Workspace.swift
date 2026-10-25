@@ -74,6 +74,7 @@ final class Workspace {
     var teamTaskDeletion: TeamTaskDeletionRequest?
     var teamTaskPlanning: TeamTaskPlanningRequest?
     var bulkPlanning: BulkTaskPlanningRequest?
+    var bulkAssignment: BulkTaskAssignmentRequest?
     let store: Store
     #if DEBUG
     @ObservationIgnored var fixturePrepared = false
@@ -496,6 +497,15 @@ final class Workspace {
         guard withAnimation(layout, { updateTasks(ids, fields: ["project_id": project.isEmpty ? .null : .string(project), "section_id": .null], name: "Move to Project") }) else { return }
         Feedback.drop()
         confirm("Moved to \(project.isEmpty ? "Inbox" : store.record("projects", id: project)?.name ?? "project")")
+    }
+    func assignSharedSelection(_ ids: Set<String>) {
+        do {
+            let captured = try store.captureTeamTaskPlanningAdmission(ids.sorted().map { try store.selectionRecord($0) })
+            bulkAssignment = BulkTaskAssignmentRequest(admission: captured, save: { [weak self] selection in
+                guard let self else { return false }; var saved = false
+                self.run("Assign Shared Tasks") { saved = self.store.saveTeamTaskPlanningSelection(selection) }; return saved
+            }, completed: { [weak self] in self?.bulkAssignment = nil; self?.selection.subtract(ids); self?.confirm("Shared assignments saved") })
+        } catch { store.error = error.localizedDescription }
     }
     func editEstimates(_ ids: Set<String>) { _ = beginBulkPlanning(ids, field: .estimate) }
     @discardableResult private func beginBulkPlanning(_ ids: Set<String>, field: BulkPlanningField) -> Bool {

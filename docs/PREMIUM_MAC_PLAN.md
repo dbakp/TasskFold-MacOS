@@ -5568,3 +5568,18 @@ scoped Core, build and installed iOS evidence; Mac runtime/window, keyboard/spok
 larger text/dark/contrast and genuine hosted acceptance remain open. The wider
 Px plan and all user-deferred release/provider/device dependencies remain active
 or deferred as agreed.
+
+
+### 2026-10-25 — Reviewed shared assignments
+
+Task menu, list selection menu and multi-task inspector now open a frozen shared
+assignment picker. Eligible choices are the intersection across selected projects;
+review shows the complete cohort and named choice or Unassigned before one atomic
+Save/Undo. The Mac owns its model, presentation and menu code independently.
+Normal deadline/estimate and personal selection paths retain their contracts.
+Both repositories pass 96 isolated SQL and 502 focused Core checks; the final
+23-case batch rerun includes sparse assignment Undo. Source/advisor/Core/build
+and installed iOS acceptance scopes are recorded in
+p2-shared-bulk-assignment-evidence.json. Compilation is not Mac installed/runtime,
+spoken or wider account/window acceptance. Rollout, full rank 6/Px and user-deferred
+release/provider/device work remain open or deferred as previously agreed.

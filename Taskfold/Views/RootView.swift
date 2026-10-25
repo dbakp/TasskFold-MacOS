@@ -15,6 +15,7 @@ struct RootView: View {
     @State private var inboxReview: InboxReviewRequest?
     @Environment(\.openSettings) private var openSettings
     @AppStorage("mac.pendingInvitations") private var pendingInvitations = false
+    private var assignmentInput: Binding<BulkTaskAssignmentRequest?> { Binding(get: { workspace.bulkAssignment }, set: { workspace.bulkAssignment = $0 }) }
     private var planningInput: Binding<BulkTaskPlanningRequest?> { Binding(get: { workspace.bulkPlanning }, set: { workspace.bulkPlanning = $0 }) }
     private var planningRequest: Binding<TeamTaskPlanningRequest?> { Binding(get: { workspace.teamTaskPlanning }, set: { workspace.teamTaskPlanning = $0 }) }
     var body: some View {
@@ -75,7 +76,7 @@ struct RootView: View {
         }
         .sheet(item: Binding(get: { workspace.teamTaskMove }, set: { workspace.teamTaskMove = $0 })) { TeamTaskMoveView(request: $0) }
         .sheet(item: Binding(get: { workspace.teamTaskDeletion }, set: { workspace.teamTaskDeletion = $0 })) { TeamTaskDeletionReview(request: $0) }
-        .modifier(TeamTaskPlanningSheet(request: planningRequest, input: planningInput))
+        .modifier(TeamTaskPlanningSheet(request: planningRequest, input: planningInput, assignment: assignmentInput))
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
             BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.records : []) { day in
                 try workspace.setDeadlines(request, day: day)

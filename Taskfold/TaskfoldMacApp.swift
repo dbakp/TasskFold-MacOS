@@ -198,6 +198,7 @@ struct TaskfoldCommands: Commands {
                 Button("Remove Date") { workspace.reschedule(workspace.actionSelection, to: nil, label: "") }
             }.disabled(workspace.actionSelection.isEmpty)
             Button("Edit Deadlines…") { workspace.editDeadlines(workspace.actionSelection) }.keyboardShortcut("d", modifiers: [.command, .option, .shift]).disabled(workspace.actionSelection.isEmpty)
+            Button("Assign Shared Tasks…") { workspace.assignSharedSelection(workspace.actionSelection) }.disabled(!store.hasSharedTaskSelection(workspace.actionSelection))
             Button("Edit Estimates…") { workspace.editEstimates(workspace.actionSelection) }.disabled(workspace.actionSelection.isEmpty)
             Menu("Move to Project") {
                 Button("Inbox") { workspace.move(workspace.actionSelection, toProject: "") }

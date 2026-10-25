@@ -107,6 +107,7 @@ struct TeamTaskPlanningRequest: Identifiable {
     let perform: () -> Bool
     let completed: () -> Void
     var back: (() -> Void)? = nil
+    var assignmentName: String? = nil
     var id: UUID { selection.requestID }
 }
 
@@ -116,6 +117,7 @@ struct TeamTaskPlanningReview: View {
     let request: TeamTaskPlanningRequest
     @State private var message: String?
     @State private var finished = false
+    private var changesAssignment: Bool { request.selection.changes.values.contains { $0["assigned_to"] != nil } }
     private var refusal: String? {
         guard !finished else { return "This selection has already been saved." }
         do { _ = try store.reviewedTeamTaskPlanningSelection(request.selection); return nil }
@@ -126,7 +128,7 @@ struct TeamTaskPlanningReview: View {
         NavigationStack {
             Form {
                 Section {
-                    Label(request.title, systemImage: "calendar.badge.checkmark").font(.title2.weight(.semibold))
+                    Label(request.title, systemImage: changesAssignment ? "person.crop.circle.badge.checkmark" : "calendar.badge.checkmark").font(.title2.weight(.semibold))
                     Text("Review \(request.selection.drafts.count) shared \(request.selection.drafts.count == 1 ? "task" : "tasks"). This change affects everyone with access. The complete selection saves together; a changed or unavailable task pauses the whole action.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
                 if blocked == nil {
@@ -143,7 +145,7 @@ struct TeamTaskPlanningReview: View {
                     }.accessibilityIdentifier("teamPlanningSelection")
                     Section {
                         Label("Undo stays available on this device", systemImage: "arrow.uturn.backward")
-                        Text("Undo requires current access and the same saved task contents. Notes, conversations, assignments and repeat rules are kept.").font(.footnote).foregroundStyle(.secondary)
+                        Text(changesAssignment ? "Undo requires current access and the same saved task contents. Notes, conversations, repeat rules and other planning details are kept." : "Undo requires current access and the same saved task contents. Notes, conversations, assignments and repeat rules are kept.").font(.footnote).foregroundStyle(.secondary)
                     }
                 }
                 if let blocked { Section { Label("Planning paused", systemImage: "lock.shield"); Text(blocked).foregroundStyle(.secondary) }.accessibilityIdentifier("teamPlanningPaused") }
@@ -178,10 +180,10 @@ struct TeamTaskPlanningReview: View {
         }.privacySensitive()
     }
     private func fieldTitle(_ key: String) -> String {
-        switch key { case "priority": "Priority"; case "due_date": "Date"; case "due_time": "Time"; case "time_zone": "Time zone"; case "scheduled_at": "Date and time"; case "deadline_date": "Deadline"; case "duration_minutes": "Estimate"; default: "Planning" }
+        switch key { case "priority": "Priority"; case "due_date": "Date"; case "due_time": "Time"; case "time_zone": "Time zone"; case "scheduled_at": "Date and time"; case "deadline_date": "Deadline"; case "duration_minutes": "Estimate"; case "assigned_to": "Assign to"; default: "Planning" }
     }
     private func displayKeys(_ fields: [String: JSON]) -> [String] {
-        ["priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes"].filter { key in
+        ["priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to"].filter { key in
             guard fields[key] != nil else { return false }
             if key == "scheduled_at", fields["due_date"] != nil || fields["due_time"] != nil { return false }
             if fields["due_date"] == .null, ["due_time", "time_zone"].contains(key), fields[key] == .null { return false }
@@ -190,8 +192,9 @@ struct TeamTaskPlanningReview: View {
     }
     private func valueTitle(_ value: JSON, key: String) -> String {
         switch value {
-        case .null: return "None"
+        case .null: return key == "assigned_to" ? "Unassigned" : "None"
         case .string(let text):
+            if key == "assigned_to" { return request.assignmentName ?? "Team member" }
             if ["due_date", "deadline_date"].contains(key), let date = Dates.parse(text) { return date.formatted(date: .abbreviated, time: .omitted) }
             if key == "scheduled_at", let date = ISO8601DateFormatter().date(from: text) { return date.formatted(date: .abbreviated, time: .shortened) }
             return text
@@ -207,8 +210,9 @@ struct TeamTaskPlanningReview: View {
 struct TeamTaskPlanningSheet: ViewModifier {
     @Binding var request: TeamTaskPlanningRequest?
     @Binding var input: BulkTaskPlanningRequest?
-    init(request: Binding<TeamTaskPlanningRequest?>, input: Binding<BulkTaskPlanningRequest?> = .constant(nil)) { _request = request; _input = input }
+    @Binding var assignment: BulkTaskAssignmentRequest?
+    init(request: Binding<TeamTaskPlanningRequest?>, input: Binding<BulkTaskPlanningRequest?> = .constant(nil), assignment: Binding<BulkTaskAssignmentRequest?> = .constant(nil)) { _request = request; _input = input; _assignment = assignment }
     func body(content: Content) -> some View {
-        content.sheet(item: $request) { TeamTaskPlanningReview(request: $0) }.sheet(item: $input) { BulkTaskPlanningEditor(request: $0) }
+        content.sheet(item: $request) { TeamTaskPlanningReview(request: $0) }.sheet(item: $input) { BulkTaskPlanningEditor(request: $0) }.sheet(item: $assignment) { BulkTaskAssignmentEditor(request: $0) }
     }
 }

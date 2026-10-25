@@ -226,3 +226,16 @@ live hosted/Auth/Keychain delivery. Mac installed/window, keyboard/spoken, large
 text/contrast/dark, broader hosted acceptance and other shared batch/history work
 remain open. No schema, provider configuration or rollout changed; all user-
 deferred dependencies and the full rank-6/Px backlog retain their scope.
+
+
+### 2026-10-25 — Atomic assignment groups
+
+The frozen edit batch now supports assigned_to alongside existing date/priority/
+deadline/estimate fields. Native shared assignment intersects per-project eligible
+recipients, refreshes the complete cohort before review and keeps every selected
+member. Save and linked Undo retain full source rows and stable retry identities.
+The new source migration validates/locks explicit recipients before team locks;
+the existing single-task editor still enforces live eligibility inside the atomic
+transaction. Original receipt replay does not repeat assignment. Refer to
+TEAM_TASK_PLANNING.md and p2-shared-bulk-assignment-evidence.json for exact scopes,
+checks, diagnostics and remaining acceptance gates. Rollout remains disabled.

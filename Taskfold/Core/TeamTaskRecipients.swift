@@ -115,3 +115,94 @@ extension Backend {
         }
     }
 }
+
+/// A directory intersection for a frozen shared selection, not a stored grant.
+/// Every project is checked once; the directory is transient. Only the chosen
+/// recipient identity enters the reviewed batch intent.
+@MainActor @Observable final class TeamTaskBatchRecipientPicker {
+    private enum ChoiceFailure: Error { case recipientUnavailable }
+    private(set) var people: [TeamTaskRecipientCatalog.Person] = []
+    private(set) var loading = false
+    private(set) var applying = false
+    private(set) var message: String?
+    private var attempt = UUID()
+    private var reviewed = false
+    private let admission: TeamTaskPlanningAdmission
+    @ObservationIgnored private let current: () -> Bool
+    @ObservationIgnored private let read: (TeamTaskEditorDraft) async throws -> TeamTaskRecipientCatalog
+    @ObservationIgnored private let apply: (TeamTaskRecipientCatalog.Person?) -> String?
+    init(admission: TeamTaskPlanningAdmission, current: @escaping () -> Bool, read: @escaping (TeamTaskEditorDraft) async throws -> TeamTaskRecipientCatalog, apply: @escaping (TeamTaskRecipientCatalog.Person?) -> String?) {
+        self.admission = admission; self.current = current; self.read = read; self.apply = apply
+    }
+    func invalidate() { attempt = UUID(); people = []; reviewed = false; loading = false; applying = false; message = nil }
+    private func intersection(_ id: UUID, requiring user: String? = nil) async throws -> [TeamTaskRecipientCatalog.Person] {
+        var catalogs: [TeamTaskRecipientCatalog] = [], projects = Set<String>()
+        for draft in admission.drafts where projects.insert(draft.scope.project).inserted {
+            try Task.checkCancellation()
+            guard current(), id == attempt else { throw CancellationError() }
+            let value = try await read(draft)
+            guard current(), id == attempt, value.belongs(to: draft) else { throw TeamTaskRecipientCatalog.invalid }
+            // Do not turn confirmed eligibility loss in one project into an
+            // offline cached choice if a later project cannot be reached.
+            if let user, !value.people.contains(where: { $0.id == user }) { throw ChoiceFailure.recipientUnavailable }
+            catalogs.append(value)
+        }
+        guard let first = catalogs.first else { throw TeamTaskRecipientCatalog.invalid }
+        return first.people.compactMap { person in
+            let matches = catalogs.compactMap { $0.people.first { $0.id == person.id } }
+            guard matches.count == catalogs.count else { return nil }
+            // A conflicting self-authored name is not resolved by guessing.
+            return .init(id: person.id, role: matches.allSatisfy { $0.role == .manager } ? .manager : .editor,
+                         displayName: matches.allSatisfy { $0.displayName == person.displayName } ? person.displayName : nil)
+        }
+    }
+    func refresh() async {
+        invalidate(); guard current() else { return }; let id = attempt; loading = true
+        defer { if id == attempt { loading = false } }
+        do {
+            let choices = try await intersection(id)
+            guard id == attempt else { return }
+            guard current(), !Task.isCancelled else { invalidate(); return }
+            people = choices; reviewed = true
+        } catch {
+            guard id == attempt else { return }; people = []; reviewed = false
+            message = current() ? "Couldn’t refresh choices for every selected project. Try again." : nil
+        }
+    }
+    private func accept(_ person: TeamTaskRecipientCatalog.Person?) -> Bool {
+        if let failure = apply(person) { message = failure; return false }; return true
+    }
+    func choose(_ user: String?) async -> Bool {
+        guard current(), !Task.isCancelled else { invalidate(); return false }
+        guard !applying else { return false }
+        let first = admission.drafts[0]
+        // The captured actor is an editor in every selected project. These two
+        // intents work offline; the server remains responsible for live access.
+        if user == nil || user == first.scope.account {
+            invalidate(); return accept(user.map { .init(id: $0, role: .editor, displayName: nil) })
+        }
+        guard !loading, reviewed, let known = people.first(where: { $0.id == user }) else { return false }
+        let id = attempt; applying = true; message = nil
+        defer { if id == attempt { applying = false } }
+        do {
+            let fresh = try await intersection(id, requiring: user)
+            guard id == attempt else { return false }
+            guard current(), !Task.isCancelled else { invalidate(); return false }
+            people = fresh; reviewed = true
+            guard let person = fresh.first(where: { $0.id == user }) else {
+                message = "That person no longer has editing access to every selected project. Choose someone from the updated list."; return false
+            }
+            return accept(person)
+        } catch {
+            guard id == attempt else { return false }
+            guard current(), !Task.isCancelled else { invalidate(); return false }
+            if let error = error as? URLError, [.notConnectedToInternet, .networkConnectionLost, .timedOut].contains(error.code) { return accept(known) }
+            people = []; reviewed = false
+            if error is ChoiceFailure {
+                message = "That person no longer has editing access to every selected project. Refresh the choices to pick someone else."
+            } else { message = "Couldn’t check this assignment. No changes were applied; refresh the choices to try again." }
+
+            return false
+        }
+    }
+}

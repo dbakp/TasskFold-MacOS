@@ -4,7 +4,17 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Newest source stage adds shared deadline/estimate input with opening-time source
+Newest source stage adds reviewed assignment for a complete shared selection.
+Choices intersect the eligible recipients of every selected project; picking a
+teammate refreshes every project again. Clear and You support captured offline
+intent. Final Save uses the existing atomic shared command and linked Undo,
+with server-side live recipient checks. Both repositories pass 96 isolated SQL
+checks and 502 focused Core cases, plus the final sparse-Undo batch rerun. Three
+final installed scenarios pass independently on iPhone and iPad. See
+`p2-shared-bulk-assignment-evidence.json` for exact current acceptance scope.
+Rollout and the rest of rank 6/Px remain open.
+
+The preceding stage adds shared deadline/estimate input with opening-time source
 admission, explicit Review/Back/Cancel and the existing atomic Save/Undo path.
 Personal selections gain an undoable estimate picker through their personal
 writer. Bounds, current values and preserved plans are explicit. Each Core suite passes

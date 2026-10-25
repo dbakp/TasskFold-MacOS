@@ -143,3 +143,106 @@ struct BulkTaskPlanningEditor: View {
         } catch { message = error.localizedDescription; store.error = nil }
     }
 }
+
+@MainActor struct BulkTaskAssignmentRequest: Identifiable {
+    let id = UUID()
+    let admission: TeamTaskPlanningAdmission
+    let save: (TeamTaskPlanningSelection) -> Bool
+    let completed: () -> Void
+}
+
+struct BulkTaskAssignmentEditor: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let request: BulkTaskAssignmentRequest
+    @State private var picker: TeamTaskBatchRecipientPicker?
+    @State private var search = ""
+    @State private var review: TeamTaskPlanningRequest?
+    private var available: Bool { (try? store.reviewedTeamTaskPlanningAdmission(request.admission)) != nil }
+    private var account: String { request.admission.drafts[0].scope.account }
+    private var people: [TeamTaskRecipientCatalog.Person] {
+        (picker?.people ?? []).filter { $0.id != account && (search.isEmpty || ($0.displayName ?? "Team member").localizedStandardContains(search)) }
+            .sorted { let a = $0.displayName ?? "Team member", b = $1.displayName ?? "Team member"; return a == b ? $0.id < $1.id : a.localizedStandardCompare(b) == .orderedAscending }
+    }
+    var body: some View {
+        Group {
+            if let review { TeamTaskPlanningReview(request: review) }
+            else { input }
+        }.privacySensitive()
+    }
+    private var input: some View {
+        NavigationStack {
+            Group {
+                if available {
+                    List {
+                        Section {
+                            choice(nil, title: "Unassigned")
+                            choice(.init(id: account, role: .editor, displayName: nil), title: "You")
+                            ForEach(people) { person in choice(person, title: person.displayName ?? "Team member") }
+                        } header: { Text("Assign \(request.admission.drafts.count) shared tasks") }
+                        footer: { Text("Only people who can edit every selected project appear here. Review the complete selection before saving.") }
+                        if picker?.loading == true { ProgressView("Finding teammates…").accessibilityIdentifier("bulkAssigneeLoading") }
+                        if picker?.applying == true { ProgressView("Checking assignment…") }
+                        if let message = picker?.message {
+                            Section { Text(message).foregroundStyle(.secondary).accessibilityIdentifier("bulkAssigneeMessage") }
+                        }
+                        Section("Selected tasks") {
+                            ForEach(request.admission.drafts, id: \.source.id) { draft in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(draft.source.title).fixedSize(horizontal: false, vertical: true)
+                                    Text(store.record("projects", id: draft.scope.project)?.name ?? "Shared project").font(.caption).foregroundStyle(.secondary)
+                                }.accessibilityElement(children: .combine)
+                            }
+                        }
+                        #if DEBUG
+                        if TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-planning-input-testing") {
+                            Section("Isolated test controls") {
+                                Button("Remove test recipient") { TeamEditorNativeFixture.removeRecipient() }.accessibilityIdentifier("removeBulkRecipientFixture")
+                                Button("Change saved test task") { store.changeTeamDeletionFixtureSource() }.accessibilityIdentifier("changeBulkAssignmentFixture")
+                            }
+                        }
+                        #endif
+                    }.accessibilityIdentifier("bulkAssigneeList").searchable(text: $search, prompt: "Find a teammate")
+                } else {
+                    ContentUnavailableView("Assignment paused", systemImage: "lock.shield", description: Text("A selected task or its project access changed. Close this review and select the current tasks again.")).accessibilityIdentifier("bulkAssigneePaused")
+                }
+            }.navigationTitle("Assign shared tasks")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelBulkAssignee") }
+                ToolbarItem { Button("Refresh choices", systemImage: "arrow.clockwise") { Task { await picker?.refresh() } }.disabled(!available || picker?.applying == true).accessibilityIdentifier("refreshBulkAssignees") }
+            }
+            #if os(macOS)
+            .frame(minWidth: 500, idealWidth: 580, minHeight: 500)
+            #endif
+        }
+        .task {
+            if picker == nil {
+                picker = TeamTaskBatchRecipientPicker(admission: request.admission, current: { available }, read: { try await store.backend.teamTaskRecipients($0) }, apply: { person in
+                    do {
+                        try store.reviewedTeamTaskPlanningAdmission(request.admission)
+                        let selection = try request.admission.selecting(["assigned_to": person.map { .string($0.id) } ?? .null])
+                        _ = try store.reviewedTeamTaskPlanningSelection(selection)
+                        review = TeamTaskPlanningRequest(selection: selection, title: "Assign shared tasks", perform: { request.save(selection) }, completed: request.completed, back: { review = nil }, assignmentName: person.map { $0.id == account ? "You" : $0.displayName ?? "Team member" })
+                        return nil
+                    } catch { return error.localizedDescription }
+                })
+            }
+            await picker?.refresh()
+        }
+        .onChange(of: available) { _, value in if !value { picker?.invalidate() } }
+        .onDisappear { picker?.invalidate() }
+    }
+    private func choice(_ person: TeamTaskRecipientCatalog.Person?, title: String) -> some View {
+        let value = person.map { JSON.string($0.id) } ?? .null
+        let unchanged = request.admission.drafts.allSatisfy { $0.source["assigned_to"] == value }
+        return Button {
+            Task { _ = await picker?.choose(person?.id) }
+        } label: {
+            HStack { Text(title).fixedSize(horizontal: false, vertical: true); Spacer(); if unchanged { Image(systemName: "checkmark").accessibilityLabel("Already assigned") } }
+        }.disabled(picker == nil || picker?.loading == true && person?.id != account && person != nil || picker?.applying == true || unchanged)
+            .accessibilityIdentifier("bulkAssignee-" + (person?.id ?? "unassigned"))
+    }
+}

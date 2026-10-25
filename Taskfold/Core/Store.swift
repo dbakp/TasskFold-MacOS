@@ -425,6 +425,12 @@ final class Store {
             guard try selectionRecord(source.id) == source else { throw TeamTaskBatch.conflict }
         }
     }
+    func hasSharedTaskSelection(_ ids: Set<String>) -> Bool {
+        ids.contains { id in
+            let root = SubtaskTree.referencePath(id)?.first ?? id
+            return nativeConversationTeamCache?.knownTasks.contains(root) == true || record("tasks", id: root).map { nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true
+        }
+    }
     func captureTeamTaskPlanningAdmission(_ records: [Record]) throws -> TeamTaskPlanningAdmission {
         guard !records.isEmpty, records.count <= 100, Set(records.map(\.id)).count == records.count else { throw TeamTaskBatch.invalid }
         let admission = try TeamTaskPlanningAdmission(drafts: records.map { try captureTeamTaskEditor($0) })
