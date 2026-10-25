@@ -102,3 +102,54 @@ completion feedback renders without clipping; the iPad relaunch capture includes
 a navigation transition and is not stable-layout acceptance. No cloud/Mac runtime
 or installed recurrence/reopen acceptance is implied. The earlier iPad planner
 input failure remains open. Next: atomic reviewed shared multi-task completion.
+
+
+### 2026-10-25 — Atomic shared completion selection service (source only)
+
+Both repos independently own an atomic completion/Undo/Redo endpoint candidate:
+`taskfold_complete_team_tasks(_action, _body)`. One group contains 1–100 distinct
+root tasks, one team, a group nonce and each existing complete-task envelope.
+The body is bounded to 2 MB and each member to 128 KB. History carries
+`related_request` for the original group and the corresponding `undoes`/`redo_of`
+for every original member. Partial, substituted or reused history is refused.
+Replies have `batch_protocol: 1`, the original group identity, operation, relation,
+all sorted per-task receipts and an explicit replay bit; responses are bounded.
+
+The transaction reserves recipients, team/config/project rows, request identities
+and every known source/series/planned/adopted successor in canonical order. It
+rechecks permissions after waiting. A successor discovered only after the lock
+wait produces a retry conflict before any delegated operation. Each existing
+completion routine retains its source, revision, generation, role, recurrence,
+retirement, successor ownership and receipt checks. No loop of client RPCs is
+used. A late failure rolls back every task, successor, history link and receipt.
+
+The existing private batch ledger and member links bind the action identities.
+A private transaction-scoped table admits only the exact group members and
+relations; RLS and revoked grants prevent caller insertion or settings-based
+forgery. Single-task RPCs cannot replay/Undo/Redo bound members individually.
+Access checks run before private history inspection. HMAC fingerprints bind actor,
+operation and the frozen group intent. Lost replies can acknowledge an exact
+recorded group without reapplying; pruned or incomplete receipts stop safely.
+Whole-group Undo/Redo lineage is consumed once, and actor/team deletion uses the
+existing cascading ledger cleanup. Existing single-task SQL differs only by the
+private batch-history guard; its retirement-aware implementation is retained.
+
+Each independent repository passes 243 actual isolated PostgreSQL checks, including
+110 batch-specific checks. Coverage includes cross-project permission/archive
+loss, all-or-nothing completion and inverse failures, exact concurrent retries,
+overlapping different groups in reversed order, convergence, fresh successor
+generations on Redo, expired sessions, request/response identities, payload limits,
+RLS/grants, forged context refusal, source/receipt replacement and cleanup.
+Official read-only advisors run on each owned fixture: only the pre-existing
+auth_rls_initplan warnings are allowed. Owned containers are removed. Initial
+argument-limit, SQL-name ambiguity and lock-observation fixture failures are
+retained with the final verified run; see p2-completion-batch-service-evidence.json.
+
+Not yet connected to native multi-selection. Next: typed durable group commands
+and whole-receipt validation, transactional local apply/confirmation and linked
+history, then native review/Cancel/Save/Undo/Redo/relaunch and recovery acceptance
+in both apps. Preserve original group intent through lost replies and access
+changes; never decompose a saved selection into individual retries. Current
+native single-checkbox acceptance is unchanged. Broader rank 6, child records,
+Watch/Wear OS and all remaining Px stay open. No hosted schema/configuration,
+rollout, real task data or user-deferred release/provider/device work changed.

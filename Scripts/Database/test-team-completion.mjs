@@ -6,6 +6,7 @@ import {
   loadTeamCompletionSchema,
   teamCompletionMigration,
 } from "./team-completion-schema.mjs";
+if (process.env.TASKFOLD_TEAM_COMPLETION_BATCH_REGRESSION === '1') { process.env.TASKFOLD_TEAM_REBASE_REGRESSION = '1'; process.env.TASKFOLD_TEAM_PROVISIONAL_REGRESSION = '1'; }
 const report = {
   checks: {},
   deployed: false,
@@ -47,6 +48,11 @@ try {
     const {loadTeamProvisionalRetirementSchema,teamProvisionalRetirementMigration}=await import('./team-provisional-retirement-schema.mjs');
     await loadTeamProvisionalRetirementSchema(pg.raw,{base:false});
     report.retirementMigrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+teamProvisionalRetirementMigration,import.meta.url))).digest('hex');
+  }
+  if (process.env.TASKFOLD_TEAM_COMPLETION_BATCH_REGRESSION === '1') {
+    const {loadTeamCompletionBatchSchema, teamCompletionBatchMigration}=await import('./team-completion-batch-schema.mjs');
+    await loadTeamCompletionBatchSchema(pg.raw,{base:false});
+    report.batchMigrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+teamCompletionBatchMigration,import.meta.url))).digest('hex');
   }
   report.completionMigrationSHA256 = createHash("sha256").update(
     await readFile(
@@ -797,6 +803,10 @@ try {
       false,
     );
   }
+  if (process.env.TASKFOLD_TEAM_COMPLETION_BATCH_REGRESSION === '1') {
+    const {completionBatchChecks}=await import('./team-completion-batch-checks.mjs');
+    report.batchFixture=await completionBatchChecks({pg,lit,json,check,run,rpc,row,create,body,users,team,project});
+  }
   await pg.raw(`delete from auth.users where id=${lit(users.editor.id)}`);
   check(
     "departed actor completion receipts erased",
@@ -830,6 +840,10 @@ try {
     ),
     0,
   );
+  if (process.env.TASKFOLD_TEAM_COMPLETION_BATCH_REGRESSION === '1') {
+    check('completion batch actor/team cascade removed group receipts',await pg.scalar("select to_jsonb(count(*)) from taskfold_private.team_task_batches where operation in('complete','undo_complete')"),0);
+    check('completion batch private scopes remain empty',await pg.scalar('select to_jsonb(count(*)) from taskfold_private.team_completion_batch_scope'),0);
+  }
   report.advisors = await pg.advisors();
   check(
     "no new advisor warnings",

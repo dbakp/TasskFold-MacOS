@@ -1,0 +1,22 @@
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: completion batch: late stale member aborts entire group
++ actual - expected
+
++ '42702'
+- 'PT409'
+    at check (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-team-completion.mjs:17:10)
+    at verify (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/team-completion-batch-checks.mjs:3:29)
+    at completionBatchChecks (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/team-completion-batch-checks.mjs:27:2)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-team-completion.mjs:808:25 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: '42702',
+  expected: 'PT409',
+  operator: 'deepStrictEqual'
+}
+
+Node.js v20.19.0
