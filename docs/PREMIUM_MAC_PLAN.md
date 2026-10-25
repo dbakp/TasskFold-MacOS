@@ -5308,3 +5308,44 @@ remain open. No hosted schema/configuration or rollout switch changed. Every
 user-deferred release, general older-client, remote-delivery, OAuth/provider and
 physical-location dependency stays deferred. See
 `p2-project-adoption-fences-evidence.json` for exact scope and cleanup.
+
+
+### 2026-10-25 — Reviewed project-adoption service (source only)
+
+Implemented inspect/review/adopt for owned personal project branches. The review
+binds all selected descendants, complete content/row epochs, destination ancestry,
+team/access state and explicit collaborator decisions. It distinguishes retired
+personal grants from access supplied by team visibility/admin status and counts
+exact ineligible root/checklist assignment clears. Inline and nested attachments,
+completed work, archived projects, discussions, mention read history and eligible
+assignment provenance remain accounted for; there is no automatic custody Undo.
+
+The atomic commit keeps original identities/creators, closes personal invitations,
+places the branch under the reviewed team parent/folder/visibility and saves an
+identity-only durable receipt. Exact retries work after expiry, access loss,
+disabled rollout and subsequent task moves without rewinding later work. Source
+changes, forged decisions, request collisions and live-session loss are rejected.
+A disabled-by-default `native_project_adoption_enabled` flag gates new commits.
+
+Personal service authorization rechecks custody after its row lock, and personal
+webhook capture excludes team custody and exact adoption scopes, including global
+subscriptions enrolled later. Old snapshot-isolated personal writers cannot
+bypass the commit ownership check. These are cutover safeguards; broader deferred
+old-client rollout work is still separate. No provider/network/rollout is enabled.
+
+Both independent fixtures pass 148 SQL checks with real email/domain, webhook/
+outbox, hierarchy, assignment-provenance and guarded task-move migrations loaded.
+Checks include mid-transfer rollback, a late old-client task, a waiting personal
+service caller, normal post-adoption moves/workspace refresh, uppercase legacy
+assignees, a full 1,000-collaborator transfer, 32 MiB contents/256 KiB command bounds,
+quotas and exact receipt recovery. Advisors add no new warning categories. No new
+native app build/runtime or hosted acceptance is claimed. Test sessions and owned
+artifacts are cleaned; details are in `p2-project-adoption-service-evidence.json`.
+
+Still required: private native command/recovery, premium Mac/iPhone/iPad review
+screens and draft-preserving refresh; explicit file-custody and personal integration
+pause/retarget adapters. Affected transfers currently fail atomically with a clear
+review requirement. This does not complete rank 6 or the wider Px scope. Remaining
+shared batch/history/keyboard, Mac/spoken/layout/account/window/hosted acceptance,
+independent child records, Watch/Wear OS and all other open plan items remain open.
+Every user-deferred release, provider and physical-device dependency stays deferred.

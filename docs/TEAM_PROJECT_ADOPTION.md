@@ -1,7 +1,9 @@
 # Personal projects into a team
 
-Status: ownership-cutover primitives are implemented and tested locally. The
-reviewed adoption API, client command and native screens are still required.
+Status: ownership-cutover primitives and the source-only inspect/review/adopt
+service are implemented and tested locally. The private client command/recovery
+and native screens are still required. Provider custody and integration pause
+adapters remain open; affected transfers are explicitly rejected atomically.
 Nothing in this milestone enables rollout or changes a hosted database.
 
 ## Intended experience
@@ -40,7 +42,7 @@ existing personal authorization must never become a team-writing shortcut.
 Adoption changes custody to the team. Returning work to personal ownership is a
 separate transfer, not an automatic local Undo. The confirmation must state this.
 
-## Reviewed service protocol still to implement
+## Reviewed service protocol
 
 Use separate inspect, review and adopt operations. Inspect captures a complete,
 bounded source manifest and eligible collaborator options. Review accepts exact
@@ -55,8 +57,10 @@ Mention read acknowledgements are excluded from authored-content comparisons and
 are never reset. Display-name changes must not retarget a decision to another ID.
 
 A practical initial bound is 100 explicit roots, 1,000 total projects, 10,000 tasks,
-1,000 legacy collaborator rows and a bounded total contents size. These are atomic
-review limits, not permission to split a transfer into partial chunks. Cross-
+1,000 legacy collaborator rows, 100,000 total records and 32 MiB of source content. These are atomic
+review limits, not permission to split a transfer into partial chunks. The Auth
+participant cohort is bounded at 2,000 and the access-decision command at 256 KiB;
+it does not inherit the ordinary team command's smaller 16 KiB envelope. Cross-
 project repeat links must remain within the selected transfer or the destination
 team. Additional personal branches require explicit selection and a fresh review;
 no unrelated work is added automatically and no links are silently detached.
@@ -80,10 +84,13 @@ no unrelated work is added automatically and no links are silently detached.
    Added or changed rows invalidate review. Do not take blocking locks on newly
    discovered rows after taking these fences.
 5. Establish exact private adoption scopes for every project and planned parent.
-   Retire personal collaboration rows under those scopes, create immutable team
-   custody/bindings and effective grants, and apply reviewed placement through the
-   existing team hierarchy scopes. Keep eligible assignment history unchanged;
-   scope the necessary ineligible assignment clears through the native task guard.
+   Keep eligible assignment history unchanged. Clear only reviewed ineligible
+   assignments through the task guard while rows are still personal and original
+   memberships still exist. Retire personal invitations under the exact scope so
+   ordinary departure cleanup does not erase retained assignment history. Detach
+   selected roots from external personal parents, admit immutable team custody,
+   install reviewed effective grants and apply destination placement through the
+   existing team hierarchy scopes.
 6. Commit a durable identity-only receipt. Erase temporary authority rows. Deferred
    placement checks still verify the final project/binding state after those rows
    are erased. A failure anywhere rolls the entire transfer back.
@@ -115,9 +122,9 @@ adoption scope through JWT metadata or settings. Team custody remains immutable;
 existing guarded team writes retain their established authorization paths.
 
 The existing invitation cleanup trigger skips destructive assignment clearing
-only for an exact private adoption scope. The future controller must still compute
-and apply every reviewed eligibility change. This exemption is not an exposed
-transfer API and is not a reason to omit collaborator retirement.
+only for an exact private adoption scope. The controller computes and applies
+every reviewed eligibility change before retiring the personal invitations.
+The private scope is never a direct client capability.
 
 Local evidence is recorded in `p2-project-adoption-fences-evidence.json`. Owned
 fixtures include the inspected invitation/assignment-cleanup definitions and the
@@ -128,3 +135,71 @@ The remaining API/native/hosted, storage, integration, keyboard and accessibilit
 acceptance stays open. This cutover-specific guard does not complete rank 6 or
 reopen the user's deferred general older-client, distribution, remote-delivery,
 OAuth/provider or physical-location work.
+
+
+## Implemented service and remaining acceptance
+
+`public.taskfold_team_project_adoption(operation, body)` supports `inspect`,
+`review`, and `adopt` under a current confirmed native Auth session. Inspect takes
+`team_id`, `roots`, `visibility`, `folder_id` and `parent_id`. Review adds the exact
+`inspection_token` and one `{project_id, user_id, role}` decision for each distinct
+accepted collaborator. `role` is editor, viewer or JSON null for retiring the
+personal grant. Duplicate accepted invitations share one decision; pending,
+declined and accountless rows are retired without inventing membership.
+
+The result identifies every selected descendant, including own/source inherited
+archive state, counts all task/section/discussion/history/provenance records and
+root/nested attachments, and reports the resulting effective access and exact
+assignment clears. Display names and invitation addresses are presentation only;
+all decisions bind UUIDs. Task bodies, attachment bytes, provider URLs and webhook
+credentials never appear in review or receipt payloads. Complete record hashes,
+monotonic row epochs, destination ancestors, access epoch and live membership
+eligibility bind the inspection proof. Mention read/revision changes are excluded
+from authored-content comparisons and never rewritten.
+
+Adopt adds `review_token`, `expires_at` and a durable `request_id` to the exact
+review input. A 15-minute HMAC proof is revalidated while holding Auth participants,
+the team/access epoch, nonblocking source row locks and exclusive ownership
+fences. Source changes require a fresh review. It checks the established 1,000
+team-project limit and 2,000 daily administration-operation limit. Exact temporary
+adoption/hierarchy scopes apply placement and custody; deferred placement checks
+remain authoritative after those scopes are erased. Returning to personal custody
+is a separate future operation, not automatic Undo.
+
+Identity-only receipts retain a fingerprint, account/team/request and selected
+project/root/placement IDs and counts. The identical request can confirm after
+expiry, access loss, disabled rollout or subsequent task moves without changing
+later work. Reusing the UUID for another command/account is rejected. Recovery
+still requires a live confirmed session. Receipts are not returned as workspace
+content and must not be used by clients to overwrite queued drafts or later edits.
+
+`native_project_adoption_enabled` defaults false. Normal team read/edit gates must
+also be enabled; no source or hosted rollout was enabled. Inline attachments and
+external references remain byte-exact. Provider-backed/unknown attachment metadata,
+including rich checklist attachment arrays, and non-revoked personal email or
+matching project/global webhook bindings explicitly require the still-unfinished
+custody/pause adapters. Such commits fail with no partial transfer. Do not treat
+this boundary as completion of the requested integration support. In particular,
+pausing a global personal webhook would affect unrelated projects and must never
+be done implicitly.
+
+Personal service access rechecks team custody after acquiring its project lock.
+Personal webhook capture excludes team projects/tasks and exact in-progress
+adoption scopes, including subscriptions created after adoption. Unrelated
+personal capture retains its existing behavior; no dispatcher/network/provider
+is enabled. Read-committed isolation is required for transfer operations and the
+personal-write commit ownership validator: a repeatable snapshot cannot see a
+newer custody row and cannot serve as fresh authority.
+
+The owned service fixture now loads the actual email/domain and webhook/outbox
+migrations, not synthetic replacement provider tables. It also loads the actual
+hierarchy/assignment/guarded task-move routines, plus documented minimal dependency
+snapshots. This proves the tested local SQL paths, not full hosted behavior or
+provider delivery. Evidence is in `p2-project-adoption-service-evidence.json`.
+
+Next: private native command persistence, exact retry/clear after relaunch,
+normal workspace refresh with unsent-draft recovery, premium review screens,
+file custody and explicit personal-integration pause/retarget adapters. Native
+Mac/iPhone/iPad, keyboard/spoken/layout/account/window and hosted acceptance are
+still required. The wider Px plan and every user-deferred external/release item
+remain open.
