@@ -4,8 +4,8 @@
 The rollout switch is enabled only in this disposable copy. Launch with
 --team-editor-testing; add --team-editor-reset to seed synthetic test tasks.
 Add --team-library-testing for the file-backed template catalog/publication peer.
-Keychain-backed request tests need a signing-enabled Simulator build; an unsigned
-build verifies compilation only.
+Keychain-backed recovery tests require a consistently Apple Development-signed
+Mac build from the first launch. Unsigned builds verify compilation only.
 Normal builds retain their existing rollout and network configuration.
 """
 import argparse

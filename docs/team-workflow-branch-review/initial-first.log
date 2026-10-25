@@ -1,0 +1,31 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination platform=macOS,arch=arm64 -derivedDataPath /tmp/taskfold-workflow-mac-native-build -resultBundlePath /tmp/taskfold-workflow-mac-native-first.xcresult -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testReviewAndBackCreateNothing" -test-timeouts-enabled YES -default-test-execution-time-allowance 150 -maximum-test-execution-time-allowance 240 test-without-building
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+Writing result bundle at path:
+	/tmp/taskfold-workflow-mac-native-first.xcresult
+
+2026-10-25 12:03:50.928352+0100 TaskfoldUITests-Runner[72341:19616080] [Default] Running tests...
+2026-10-25 12:03:51.058232+0100 TaskfoldUITests-Runner[72341:19616080] [Default] Failed to initialize for UI testing: Error Domain=com.apple.LocalAuthentication Code=-4 "System authentication is running." UserInfo={NSDebugDescription=System authentication is running., NSLocalizedDescription=Authentication cancelled., BiometryType=1}
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /tmp/taskfold-workflow-mac-native-first.xcresult
+
+2026-10-25 12:03:51.361 xcodebuild[72321:19615776] [MT] IDETestOperationsObserverDebug: 2.078 elapsed -- Testing started completed.
+2026-10-25 12:03:51.361 xcodebuild[72321:19615776] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-25 12:03:51.361 xcodebuild[72321:19615776] [MT] IDETestOperationsObserverDebug: 2.078 sec, +2.078 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-workflow-mac-native-first.xcresult
+
+Testing failed:
+	TaskfoldUITests-Runner (72341) encountered an error (The test runner failed to initialize for UI testing. (Underlying Error: Authentication cancelled. System authentication is running.))
+
+** TEST EXECUTE FAILED **
+
+Testing started

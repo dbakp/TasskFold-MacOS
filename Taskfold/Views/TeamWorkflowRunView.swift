@@ -294,23 +294,30 @@ private struct TeamWorkflowContents: View {
     let plan: TeamWorkflowRunPlan
     private var rows: [WorkflowContentRow] {
         var result: [WorkflowContentRow] = []
-        let projects = Dictionary(uniqueKeysWithValues: plan.projects.map { ($0.id, $0.name) }), sections = Dictionary(uniqueKeysWithValues: plan.sections.map { ($0.id, $0.name) })
-        var destination = "Selected project"; if case .project(let access) = plan.destination { destination = access.name ?? destination }
+        let sections = Dictionary(uniqueKeysWithValues: plan.sections.map { ($0.id, $0.name) })
+        let projects = Dictionary(uniqueKeysWithValues: plan.projects.map { ($0.id, $0) })
         func add(_ row: Record, root: String, depth: Int, project: String, section: String?) {
             result.append(.init(id: root + ":" + row.id, row: row, depth: depth, project: project, section: section))
             for child in row["subtasks"].list { add(Record(child.object), root: root, depth: depth + 1, project: project, section: section) }
         }
-        for row in plan.tasks { add(row, root: row.id, depth: 0, project: projects[row.string("project_id")] ?? destination, section: sections[row.string("section_id")]) }; return result
+        for row in plan.tasks { add(row, root: row.id, depth: 0, project: projectPath(row.string("project_id"), projects: projects), section: sections[row.string("section_id")]) }; return result
     }
     var body: some View {
+        let projects = Dictionary(uniqueKeysWithValues: plan.projects.map { ($0.id, $0) })
         if !plan.projects.isEmpty { Section("New projects") {
             ForEach(plan.projects) { row in VStack(alignment: .leading, spacing: 4) {
                 Label(row.name, systemImage: "folder").font(.headline)
-                if let parent = plan.projects.first(where: { $0.id == row.string("parent_id") }) { Text("Inside " + parent.name).font(.caption).foregroundStyle(.secondary) }
+                if !row.string("parent_id").isEmpty { Text("Inside " + projectPath(row.string("parent_id"), projects: projects)).font(.caption).foregroundStyle(.secondary) }
                 if !row.string("description").isEmpty { Text(row.string("description")).textSelection(.enabled) }
             } }
         } }
-        if !plan.sections.isEmpty { Section("New sections") { ForEach(plan.sections) { Label($0.name, systemImage: "rectangle.split.3x1") } } }
+        if !plan.sections.isEmpty { Section("New sections") { ForEach(plan.sections) { row in
+            VStack(alignment: .leading, spacing: 4) {
+                Label(row.name, systemImage: "rectangle.split.3x1")
+                Text(projectPath(row.string("project_id"), projects: projects)).font(.caption).foregroundStyle(.secondary)
+                    .accessibilityLabel("Project: " + projectPath(row.string("project_id"), projects: projects))
+            }
+        } } }
         Section("New tasks and checklist") {
             ForEach(rows) { item in VStack(alignment: .leading, spacing: 6) {
                 Text(item.row.title).font(item.depth == 0 ? .headline : .body).accessibilityIdentifier("sharedWorkflowTask-" + item.row.id)
@@ -321,6 +328,18 @@ private struct TeamWorkflowContents: View {
                 if item.row["is_recurring"].flag { Text(Recurrence.summary(Record(item.row["recurrence_pattern"].object))).font(.caption).foregroundStyle(.secondary) }
             }.padding(.leading, CGFloat(min(item.depth, 8)) * 10) }
         }
+    }
+    private func projectPath(_ id: String, projects: [String: Record]) -> String {
+        var next = id, names: [String] = [], visited = Set<String>()
+        while let row = projects[next], visited.insert(next).inserted {
+            names.append(row.name); next = row.string("parent_id")
+        }
+        if case .newProject(_, _, let parent) = plan.destination, let parent, parent.id == next {
+            names.append(parent.name ?? "Selected parent")
+        }
+        if !names.isEmpty { return names.reversed().joined(separator: " / ") }
+        if case .project(let access) = plan.destination, access.id == id { return access.name ?? "Selected project" }
+        return "Selected project"
     }
     private func details(_ row: Record) -> String {
         var parts = ["Priority \(row.priority)"]

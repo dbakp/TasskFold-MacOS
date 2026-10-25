@@ -4,12 +4,14 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Shared workflow runs now have the default-off atomic service and a durable typed
-client request/retry layer. Each repo passes 137 focused Core cases and its own
-arm64 Debug build; the preceding 93 isolated service checks stand unchanged.
-Native destination/content/recovery views and runtime acceptance remain open.
-See `TEAM_WORKFLOW_RUNS.md` and `p2-team-workflow-run-client-evidence.json`.
-No hosted deployment or rollout changed; shared runs and wider Px remain open.
+Shared workflow runs now have the default-off atomic service, durable typed
+requests and native destination/content/recovery reviews. Each repo passes 146
+focused Core cases and its own arm64 Debug build; the preceding 93 isolated
+service checks stand unchanged. Four native scenarios pass on each iPhone/iPad,
+with exact recovery repeated after the sync/pending-edit guard. Mac native
+acceptance is the next verification step. See `TEAM_WORKFLOW_RUNS.md` and
+`p2-team-workflow-run-native-evidence.json`. No hosted deployment or rollout
+changed; shared runs, rank 6 and wider Px remain open.
 
 Latest follow-up adds inline copy/export name validation. Native iPhone/iPad
 share-popover cancellation/reopening and final file cleanup now pass; see
@@ -26,7 +28,7 @@ peer; final transfer scenarios pass targeted reruns. See
 `p2-team-template-transfer-evidence.json` for exact per-run limits and retained
 initial failures. The gated service's prior 96 isolated SQL checks still stand.
 
-Next are shared run destinations and remaining Mac runtime/accessibility/window,
+Next are Mac shared-run runtime/accessibility/window,
 external file-handoff and genuine hosted acceptance. These client checks do not
 close team templates, rank 6 or the wider Px goal. No hosted deployment or rollout
 change occurred; all user-deferred release/provider/device work remains deferred.
@@ -3448,3 +3450,29 @@ disk check. Keeping it mounted fixes the workflow entry and the equivalent
 template entry. Test corrections handle nested confirmation-button wrappers and
 iPad lazy Form rows. Earlier failed/aborted attempts remain in the evidence.
 No rollout flag, hosted data/schema/configuration or real task changed.
+
+
+### 2026-10-25 — Branch locations and prepared Mac workflow acceptance
+
+Shared-workflow reviews now show full generated project paths on task rows,
+new-section rows (including empty sections), and parent captions on subprojects.
+An existing selected parent is included for a newly created branch. This makes
+similarly named subprojects/sections distinguishable before Create. Path walking
+is cycle-bounded and reuses one project lookup per rendering pass. The request,
+source, audience and creation/recovery contracts are unchanged.
+
+The Mac repository now owns four native cases using its exact reserved sandbox
+and synthetic HTTP peer: review/Back with no request, changed-source refusal,
+private-template creation, and lost-reply/relaunch/Account-entry exact retry.
+They compile in a consistently Apple Development-signed app. The first runner
+attempt failed before Taskfold launch because macOS reported system authentication
+in progress; computer use independently reported the Mac locked. No scenario
+passed or actual Mac Keychain recovery is claimed by that attempt. The ready
+isolated build is retained for the requested manual unlock; no test app is left
+running. The iOS native results in the preceding stage remain scoped to that
+stage, not this new project-path visual change.
+
+See p2-team-workflow-branch-review-evidence.json for current compile/test scope.
+Mac runtime, spoken/account/window and genuine hosted acceptance remain open;
+rank 6, wider Px and all user-deferred work remain unchanged. No cloud/rollout
+configuration or real task was changed.

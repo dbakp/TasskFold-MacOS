@@ -1,0 +1,38 @@
+Building for debugging...
+[1 / 1]
+Build complete! (0,51 secs)
+Test Suite 'Selected tests' started at 2026-10-25 12:08:10.686.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-25 12:08:10.689.
+Test Suite 'TeamWorkflowRunTests' started at 2026-10-25 12:08:10.689.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testDestinationRefusesWrongKindViewerArchivePausedAndOldService]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testDestinationRefusesWrongKindViewerArchivePausedAndOldService]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testExportGeneratedSQLFixture]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testExportGeneratedSQLFixture]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testForeignPersonalOwnerAndUnsupportedDocumentCannotPrepare]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testForeignPersonalOwnerAndUnsupportedDocumentCannotPrepare]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testFrozenOrderEnvelopeAndParentReview]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testFrozenOrderEnvelopeAndParentReview]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testInlineLabelsKeepCaseAndChildContextWithStableChecklistTokens]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testInlineLabelsKeepCaseAndChildContextWithStableChecklistTokens]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testProjectHierarchySectionsOrderAndCleanHistory]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testProjectHierarchySectionsOrderAndCleanHistory]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testRepeatingChecklistIsRefusedWithoutChangingTemplate]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testRepeatingChecklistIsRefusedWithoutChangingTemplate]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testReviewRejectsChangedSourceDestinationScopeOrSession]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testReviewRejectsChangedSourceDestinationScopeOrSession]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSameSectionTaskOrderAndPrivateProjectAudienceArePreserved]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSameSectionTaskOrderAndPrivateProjectAudienceArePreserved]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSharedBoundsRejectOversizedTaskChecklistAndNonfiniteDates]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSharedBoundsRejectOversizedTaskChecklistAndNonfiniteDates]' passed (0.108 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSharedSourceChecksAccountOriginAndSupportedDefinition]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testSharedSourceChecksAccountOriginAndSupportedDefinition]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testStableIdentityAndContentOnRetryFreshIdentityForNextRun]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testStableIdentityAndContentOnRetryFreshIdentityForNextRun]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testTaskAndSectionUseExistingProjectWithoutCopyingSourceProject]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkflowRunTests testTaskAndSectionUseExistingProjectWithoutCopyingSourceProject]' passed (0.002 seconds).
+Test Suite 'TeamWorkflowRunTests' passed at 2026-10-25 12:08:10.840.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.150 (0.151) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-25 12:08:10.840.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.150 (0.152) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 12:08:10.840.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.150 (0.154) seconds

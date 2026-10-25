@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "status": "Project-path review polish implemented; Mac native suite compiled, runtime pending manual unlock",
+  "sourceSHA256": {
+    "Taskfold/Views/TeamWorkflowRunView.swift": "c110ae61eb57803fd8b35fedebf23e1eb5ebd0f6950cf5a8f60ef10e13fbb17f",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "5950aeeeaf1182d8426beb2e902cab955ccefa303f09ae1f2aa6e533e1880926",
+    "Scripts/prepare_team_editor_native_test.py": "92b66ec03a2fe3b044fe9834e6872e8fd7a6aaeb308a0efe2e6c427a3ea94e29"
+  },
+  "build": "Final arm64 Debug app compiled; isolated signed build-for-testing includes four native cases",
+  "core": {
+    "suite": "TeamWorkflowRunTests",
+    "passed": 13,
+    "failed": 0
+  },
+  "visualAcceptanceOfNewProjectPaths": false,
+  "macNativeAttempt": {
+    "repository": "TasskFold-MacOS",
+    "reservedBundle": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+    "testBundle": "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner",
+    "strictDevelopmentSignatureVerified": true,
+    "signingTeam": "3UZ4C73FM2",
+    "scenarioPassed": 0,
+    "result": "Runner initialization stopped by macOS system authentication before app launch; computer use confirmed locked Mac",
+    "readyBuildRetained": true,
+    "runtimeAndKeychainAcceptance": false
+  },
+  "remaining": [
+    "Run Mac native suite after manual unlock",
+    "Inspect project/subproject/empty-section review in installed apps",
+    "Mac spoken/account/window and genuine hosted acceptance",
+    "Wider ranked Px and existing user deferrals"
+  ],
+  "hostedChanges": false,
+  "rolloutEnabled": false,
+  "realDataChanged": false,
+  "evidenceDirectory": "team-workflow-branch-review"
+}

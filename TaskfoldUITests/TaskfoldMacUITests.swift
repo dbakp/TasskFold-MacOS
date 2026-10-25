@@ -3268,3 +3268,95 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(app.staticTexts["Weekly Mac launch"].exists)
     }
 }
+
+/// Native controls and durable recovery in the exact, network-isolated Mac host.
+final class TeamWorkflowMacUITests: XCTestCase {
+    override func setUp() { super.setUp(); continueAfterFailure = false }
+    private let bundle = "com.dbakp.taskfold.mac.workflowteststeameditbridge"
+    private let definition = "ec240000-0000-4000-8000-000000000061"
+    @MainActor private func support() throws -> URL {
+        try XCTUnwrap(FileManager.default.homeDirectory(forUser: NSUserName()))
+            .appendingPathComponent("Library/Containers/" + bundle + "/Data/Library/Application Support")
+    }
+    @MainActor private func stateFile() throws -> URL { try support().appendingPathComponent("TaskfoldTeamLibraryNativeFixture-workflowteststeameditbridge/state.json") }
+    @MainActor private func state() throws -> [String: Any] { try JSONSerialization.jsonObject(with: Data(contentsOf: stateFile())) as! [String: Any] }
+    @MainActor private func launch(_ app: XCUIApplication, reset: Bool = true, lost: Bool = false) throws {
+        guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Requires the reserved isolated Mac host") }
+        app.launchArguments = ["--team-editor-testing", "--team-library-testing", "-appearance", "light"] + (reset ? ["--team-editor-reset"] : []) + (lost ? ["--workflow-run-lose-reply"] : [])
+        app.launch(); app.activate()
+        XCTAssertTrue(app.buttons["openTeamTemplateLibraryFixture"].waitForExistence(timeout: 15), app.debugDescription)
+    }
+    @MainActor private func shot(_ app: XCUIApplication, _ name: String) {
+        let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); image.name = name; image.lifetime = .keepAlways; add(image)
+    }
+    @MainActor private func reveal(_ element: XCUIElement, app: XCUIApplication) {
+        let form = app.descendants(matching: .scrollView).matching(identifier: "sharedWorkflowForm").firstMatch
+        for _ in 0..<12 {
+            if element.exists, element.isHittable { return }
+            XCTAssertTrue(form.exists, app.debugDescription); form.scroll(byDeltaX: 0, deltaY: -250)
+        }
+        XCTFail("Workflow control could not be reached: " + app.debugDescription)
+    }
+    @MainActor private func choose(_ id: String, title: String, app: XCUIApplication) {
+        let picker = app.popUpButtons[id]; XCTAssertTrue(picker.waitForExistence(timeout: 12), app.debugDescription); picker.click()
+        let item = app.menuItems[title].firstMatch; XCTAssertTrue(item.waitForExistence(timeout: 5), app.debugDescription); item.click()
+    }
+    @MainActor private func review(_ app: XCUIApplication, personal: Bool = false) {
+        if personal {
+            app.buttons["openPrivateWorkflowRunFixture"].click()
+            let run = app.buttons["runPrivateTemplateShared"]; XCTAssertTrue(run.waitForExistence(timeout: 10)); run.click()
+        } else {
+            app.buttons["openTeamTemplateLibraryFixture"].click()
+            let item = app.buttons["teamTemplate-" + definition]; XCTAssertTrue(item.waitForExistence(timeout: 12)); item.click()
+            let run = app.buttons["runTeamTemplate"]; XCTAssertTrue(run.waitForExistence(timeout: 10)); run.click()
+        }
+        choose("sharedWorkflowTeam", title: "Widget Studio", app: app)
+        choose("sharedWorkflowProject", title: "Design board", app: app)
+        let preview = app.buttons["reviewSharedWorkflow"]; reveal(preview, app: app); preview.click()
+        let create = app.buttons["createSharedWorkflow"]; reveal(create, app: app); XCTAssertTrue(create.exists); XCTAssertFalse(create.isEnabled)
+    }
+    @MainActor private func create(_ app: XCUIApplication) {
+        let acknowledge = app.checkBoxes["acknowledgeSharedWorkflow"]; reveal(acknowledge, app: app); acknowledge.click()
+        XCTAssertEqual(acknowledge.value as? String, "1", app.debugDescription)
+        let create = app.buttons["createSharedWorkflow"]; reveal(create, app: app); XCTAssertTrue(create.isEnabled); create.click()
+    }
+    @MainActor func testReviewAndBackCreateNothing() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app); review(app)
+        shot(app, "mac-shared-workflow-review")
+        let back = app.buttons["backSharedWorkflow"]; reveal(back, app: app); back.click()
+        XCTAssertTrue(app.buttons["reviewSharedWorkflow"].waitForExistence(timeout: 5))
+        let value = try state(); XCTAssertEqual(value["workflowCalls"] as? Int, 0); XCTAssertTrue((value["workflowRequests"] as? [String: Any])?.isEmpty == true)
+    }
+    @MainActor func testChangedSourceRefusesBeforeSend() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app); review(app)
+        var value = try state(), items = try XCTUnwrap(value["items"] as? [[String: Any]])
+        let index = try XCTUnwrap(items.firstIndex { $0["id"] as? String == definition })
+        var document = try XCTUnwrap(items[index]["document"] as? [String: Any]), tasks = try XCTUnwrap((items[index]["document"] as? [String: Any])?["tasks"] as? [[String: Any]])
+        tasks[0]["title"] = "Changed shared review"; document["tasks"] = tasks
+        items[index]["document"] = document; items[index]["revision"] = (items[index]["revision"] as? Int ?? 0) + 1
+        value["items"] = items; value["revision"] = (value["revision"] as? Int ?? 0) + 1
+        try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]).write(to: stateFile(), options: .atomic)
+        create(app); XCTAssertTrue(app.staticTexts["sharedWorkflowMessage"].waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertEqual(try state()["workflowCalls"] as? Int, 0); shot(app, "mac-shared-workflow-source-changed")
+    }
+    @MainActor func testPrivateTemplateCreatesInSharedProject() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app); review(app, personal: true); create(app)
+        XCTAssertTrue(app.staticTexts["sharedWorkflowSuccess"].waitForExistence(timeout: 12), app.debugDescription)
+        let requests = try XCTUnwrap(state()["workflowRequests"] as? [String: [String: Any]]); XCTAssertEqual(requests.count, 1)
+        let body = try XCTUnwrap(requests.values.first?["_body"] as? [String: Any]); XCTAssertEqual((body["source"] as? [String: Any])?["kind"] as? String, "personal")
+        shot(app, "mac-private-template-shared-workflow")
+    }
+    @MainActor func testLostReplyRelaunchAndExactRecovery() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app, lost: true); review(app); create(app)
+        XCTAssertTrue(app.staticTexts["sharedWorkflowRecoveryMessage"].waitForExistence(timeout: 12), app.debugDescription)
+        let original = try XCTUnwrap(state()["workflowRequests"] as? NSDictionary); XCTAssertEqual(original.count, 1); shot(app, "mac-shared-workflow-saved")
+        app.terminate(); try launch(app, reset: false)
+        app.buttons["openWorkflowRecoveryFixture"].click()
+        let entry = app.buttons["savedTeamWorkflowRequest"]; XCTAssertTrue(entry.waitForExistence(timeout: 12)); entry.click()
+        let retry = app.buttons["retrySharedWorkflow"]; XCTAssertTrue(retry.waitForExistence(timeout: 10)); retry.click()
+        let confirm = app.buttons.matching(identifier: "confirmSharedWorkflowRetry").firstMatch; XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.click()
+        XCTAssertTrue(app.staticTexts["sharedWorkflowSuccess"].waitForExistence(timeout: 12), app.debugDescription)
+        let result = try state(); XCTAssertEqual(result["workflowRequests"] as? NSDictionary, original); XCTAssertEqual((result["workflowReceipts"] as? [String: Any])?.count, 1); XCTAssertEqual(result["workflowCalls"] as? Int, 2)
+        shot(app, "mac-shared-workflow-original-confirmed")
+    }
+}
