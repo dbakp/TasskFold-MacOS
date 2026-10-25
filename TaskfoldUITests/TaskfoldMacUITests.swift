@@ -3360,3 +3360,93 @@ final class TeamWorkflowMacUITests: XCTestCase {
         shot(app, "mac-shared-workflow-original-confirmed")
     }
 }
+
+/// Recovery acceptance in the reserved, signed Mac host only.
+final class TeamCompletionRecoveryMacUITests: XCTestCase {
+    private let bundle = "com.dbakp.taskfold.mac.workflowteststeameditbridge"
+    override func setUp() { super.setUp(); continueAfterFailure = false }
+    private func support() throws -> URL {
+        try XCTUnwrap(FileManager.default.homeDirectory(forUser: NSUserName())).appendingPathComponent("Library/Containers/" + bundle + "/Data/Library/Application Support")
+    }
+    private func saved() throws -> [String: Any] {
+        try JSONSerialization.jsonObject(with: Data(contentsOf: support().appendingPathComponent("Taskfold/ec240000-0000-4000-8000-000000000001.json"))) as! [String: Any]
+    }
+    private func pending(_ value: [String: Any]) -> [[String: Any]] { value["pending"] as? [[String: Any]] ?? [] }
+    private func canonical(_ value: [String: Any]) -> NSDictionary {
+        var result = value
+        if var cache = result["teamWorkspace"] as? [String: Any] {
+            for key in ["knownTasks", "quarantined"] { if let ids = cache[key] as? [String] { cache[key] = ids.sorted() } }; result["teamWorkspace"] = cache
+        }
+        return result as NSDictionary
+    }
+    @MainActor private func shot(_ app: XCUIApplication, _ name: String) {
+        let capture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); capture.name = name; capture.lifetime = .keepAlways; add(capture)
+    }
+    private func attach(_ value: Any, _ name: String) throws {
+        let proof = XCTAttachment(data: try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]), uniformTypeIdentifier: "public.json"); proof.name = name; proof.lifetime = .keepAlways; add(proof)
+    }
+    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false) throws {
+        guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Reserved isolated Mac host required") }
+        app.launchArguments = ["--team-editor-testing", "--team-editor-reset", "--team-batch-testing", "--team-batch-recovery-testing", "--team-batch-recovery-recorded", "--team-batch-recovery-" + mode, "-appearance", "light"]
+        if single { app.launchArguments.append("--team-single-recovery-testing") }
+        if !refresh { app.launchArguments.append("--team-batch-recovery-dependent") }
+        else { app.launchArguments.append("--team-single-recovery-refresh") }
+        app.launch(); app.activate()
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertEqual(app.windows.count, 1)
+    }
+    @MainActor private func cold(_ mode: String, single: Bool) throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app, mode: mode, single: single)
+        app.buttons["openMacCompletionRecovery"].click()
+        let confirm = app.buttons[single ? "continueTeamCompletionReview" : "continueTeamBatchRecovery"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 12), app.debugDescription)
+        let before = try saved(), tail = Array(pending(before).dropFirst())
+        XCTAssertFalse(tail.isEmpty)
+        app.buttons[single ? "Later" : "laterTeamBatchRecovery"].click()
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 8))
+        app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; app.launchArguments.append("--team-batch-recovery-blocked-sync"); app.launch(); app.activate()
+        XCTAssertTrue(confirm.waitForExistence(timeout: 15), app.debugDescription)
+        let discovered = try saved()
+        XCTAssertEqual(pending(discovered) as NSArray, pending(before) as NSArray)
+        XCTAssertEqual(discovered["tables"] as? NSDictionary, before["tables"] as? NSDictionary)
+        let trace = try JSONSerialization.jsonObject(with: Data(contentsOf: support().appendingPathComponent("taskfold-cold-discovery-trace.json"))) as! [[String: String]]
+        XCTAssertEqual(trace, [["method": "POST", "path": "/rest/v1/rpc/taskfold_workspace_boundary"], ["method": "POST", "path": "/rest/v1/rpc/taskfold_review_team_completion" + (single ? "" : "_batch")]])
+        try attach(trace, "Mac recovery read trace " + (single ? "single " : "group ") + mode)
+        shot(app, "Mac recorded recovery " + (single ? "single " : "group ") + mode)
+        XCTAssertTrue(confirm.isEnabled); confirm.click()
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 12))
+        let after = try saved()
+        XCTAssertEqual(pending(after) as NSArray, tail as NSArray)
+        XCTAssertEqual(after["tables"] as? NSDictionary, before["tables"] as? NSDictionary)
+        let cache = try XCTUnwrap(after["teamWorkspace"] as? [String: Any]), boundary = try XCTUnwrap(cache["boundary"] as? [String: Any]), raw = try XCTUnwrap(boundary["raw"] as? [String: Any])
+        XCTAssertEqual((raw["projects"] as? [[String: Any]])?.first?["can_send_tasks"] as? Bool, false)
+        XCTAssertEqual((raw["projects"] as? [[String: Any]])?.first?["archived"] as? Bool, mode == "archived")
+        XCTAssertEqual(raw["setup_paused"] as? Bool, mode == "paused")
+        XCTAssertEqual(app.windows.count, 1)
+        app.terminate(); app.launchArguments.removeAll { $0 == "--team-batch-recovery-blocked-sync" }; app.launch(); app.activate()
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 12))
+        let restarted = try saved(); XCTAssertEqual(canonical(after), canonical(restarted)); XCTAssertEqual(app.windows.count, 1)
+        try attach(after, "Mac recovery after acceptance " + (single ? "single " : "group ") + mode)
+        try attach(restarted, "Mac recovery after relaunch " + (single ? "single " : "group ") + mode)
+    }
+    @MainActor func testRecordedSingleViewerColdRecovery() throws { try cold("viewer", single: true) }
+    @MainActor func testRecordedSingleArchiveColdRecovery() throws { try cold("archived", single: true) }
+    @MainActor func testRecordedSinglePauseColdRecovery() throws { try cold("paused", single: true) }
+    @MainActor func testRecordedGroupViewerColdRecovery() throws { try cold("viewer", single: false) }
+    @MainActor func testRecordedGroupArchiveColdRecovery() throws { try cold("archived", single: false) }
+    @MainActor func testRecordedGroupPauseColdRecovery() throws { try cold("paused", single: false) }
+    @MainActor func testRecordedSingleRefreshShowsCurrentObservation() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app, mode: "viewer", single: true, refresh: true)
+        app.buttons["openMacCompletionRecovery"].click()
+        let initial = app.staticTexts["Initial synced instructions"]; XCTAssertTrue(initial.waitForExistence(timeout: 12), app.debugDescription)
+        let before = try saved(); app.buttons["refreshTeamCompletionReview"].click()
+        XCTAssertTrue(app.staticTexts["Updated synced instructions"].waitForExistence(timeout: 10)); XCTAssertFalse(initial.exists)
+        XCTAssertEqual(canonical(try saved()), canonical(before))
+        shot(app, "Mac completion refresh current observation")
+        let confirm = app.buttons["continueTeamCompletionReview"]; XCTAssertTrue(confirm.isEnabled); confirm.click()
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 10))
+        let after = try saved(); XCTAssertTrue(pending(after).isEmpty)
+        XCTAssertTrue(((after["tables"] as? [String: Any])?["tasks"] as? [[String: Any]])?.contains { $0["description"] as? String == "Updated synced instructions" } == true)
+        try attach(after, "Mac refreshed recovery saved state"); XCTAssertEqual(app.windows.count, 1)
+    }
+}

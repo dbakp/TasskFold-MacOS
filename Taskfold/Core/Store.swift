@@ -1604,7 +1604,7 @@ final class Store {
     }
     func sync() async {
         #if DEBUG
-        if TeamEditorNativeFixture.enabled || LocationHandoffNativeFixture.enabled { return }
+        if (TeamEditorNativeFixture.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
         #endif
         guard workspaceCacheDecoded else {notice="Your saved workspace needs recovery before sync can continue. Its original file is kept.";return}
         consumeWidgetCompletions()
@@ -3274,6 +3274,10 @@ private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
     override func startLoading() {
         let request = self.request
         Task { @MainActor in
+            if let data = TeamBatchRecoveryNativePeer.response(request), let url = request.url {
+                client?.urlProtocol(self, didReceive: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
+                client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self); return
+            }
             guard TeamEditorNativeFixture.enabled,
                   request.url?.absoluteString == "https://synthetic.example/rest/v1/rpc/taskfold_team_task_recipients",
                   request.httpMethod == "POST" else {
@@ -3306,6 +3310,11 @@ extension Store {
         guard TeamEditorNativeFixture.enabled else { return }
         if ProjectAdoptionNativeFixture.enabled { prepareProjectAdoptionNativeFixture(); return }
         dailyBackupsEnabled = false
+        if ProcessInfo.processInfo.arguments.contains("--team-editor-reset") {
+            teamAccessMask = nil
+            try? FileManager.default.removeItem(at: AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).teamAccessFence)
+        }
+        if TeamBatchRecoveryNativePeer.blockedSync { try? FileManager.default.removeItem(at: TeamBatchRecoveryNativePeer.traceFile) }
         guard ProcessInfo.processInfo.arguments.contains("--team-editor-reset") || record("tasks", id: TeamEditorNativeFixture.taskID) == nil else { return }
         UserDefaults.standard.removeObject(forKey: "teamEditorRecipientUnavailable")
         do {
@@ -3409,8 +3418,9 @@ extension Store {
                 let requests = backupVault.directory.appendingPathComponent("Team template requests", isDirectory: true)
                 if FileManager.default.fileExists(atPath: requests.path) { try FileManager.default.removeItem(at: requests) }
             }
-            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: nil, pending: [], tasks: [row])
+            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: nil, pending: [], tasks: tasks)
             try persist()
+            try seedTeamCompletionRecoveryFixture()
         } catch { self.error = error.localizedDescription }
     }
     func changeTeamLabelCatalogFixture() {
@@ -3637,6 +3647,143 @@ extension Store {
             try JSONEncoder().encode(report).write(to: cacheURL.deletingLastPathComponent().appendingPathComponent("history-binding-proof.json"), options: .atomic)
             self.error = nil
         } catch { self.error = error.localizedDescription }
+    }
+}
+#endif
+
+#if DEBUG
+/// A local, ordinary-root protocol peer only for the reserved acceptance host.
+/// SQL behavior is verified separately; no request can reach a real service.
+@MainActor private enum TeamBatchRecoveryNativePeer {
+    static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-testing") }
+    static var readOnlyMode: String? { ["viewer", "archived", "paused"].first { ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-" + $0) } }
+    private static var singleReviewCount = 0
+    static var blockedSync: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync") }
+    static var traceFile: URL { FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("taskfold-cold-discovery-trace.json") }
+    static func trace(_ request: URLRequest) {
+        guard blockedSync else { return }
+        var entries = (try? JSONDecoder().decode([[String: String]].self, from: Data(contentsOf: traceFile))) ?? []
+        entries.append(["method": request.httpMethod ?? "", "path": request.url?.path ?? ""])
+        try? FileManager.default.createDirectory(at: traceFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? JSONEncoder().encode(Array(entries.suffix(128))).write(to: traceFile, options: .atomic)
+    }
+    static func readBoundary() throws -> TeamWorkspaceBoundary {
+        guard enabled else { throw CancellationError() }
+        let mode = readOnlyMode ?? "viewer"
+        var raw = try TeamEditorNativeFixture.boundary(viewer: mode == "viewer").raw
+        raw["setup_paused"] = .bool(mode == "paused"); raw["token"] = .string(String(repeating: "e", count: 64))
+        raw["projects"] = .array(raw["projects"]!.list.map { value in var project = value.object; project["can_send_tasks"] = .bool(false); project["archived"] = .bool(mode == "archived"); return .object(project) })
+        return try TeamWorkspaceBoundary(raw, account: TeamEditorNativeFixture.account, origin: "https://synthetic.example")
+    }
+    static func response(_ request: URLRequest) -> Data? {
+        guard enabled, request.url?.host == "synthetic.example" else { return nil }
+        trace(request)
+        if blockedSync, request.httpMethod == "POST", request.url?.path == "/rest/v1/rpc/taskfold_workspace_boundary" { return try? JSONEncoder().encode(readBoundary().raw) }
+        guard request.httpMethod == "POST",
+              ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion"].contains(request.url?.path ?? "") else { return nil }
+        var data = request.httpBody
+        if data == nil, let stream = request.httpBodyStream {
+            stream.open(); defer { stream.close() }; var value = Data(), bytes = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable && value.count < 2_000_000 { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; value.append(contentsOf: bytes.prefix(count)) }; data = value
+        }
+        guard let data, let params = try? JSONDecoder().decode([String: JSON].self, from: data), params["_action"] == .string("complete"),
+              let body = params["_body"]?.object, body["team_id"] == .string(TeamEditorNativeFixture.teamID),
+              let nonce = body["request_id"]?.text, TeamProjectValue.id(nonce) else { return nil }
+        let single = request.url?.path == "/rest/v1/rpc/taskfold_review_team_completion"
+        let items = single ? [JSON.object(body)] : body["items"]?.list ?? []
+        guard (1...100).contains(items.count) else { return nil }
+        let file = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("taskfold-group-review-peer.json")
+        var retired = (try? JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file))) ?? [:]
+        if let old = retired[nonce], old != .object(body) { return nil }
+        let recorded = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-recorded")
+        if request.url!.path.contains("cancel_"), !recorded {
+            retired[nonce] = .object(body)
+            do { try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true); try JSONEncoder().encode(retired).write(to: file, options: .atomic) } catch { return nil }
+        }
+        let state = recorded ? "recorded" : retired[nonce] != nil ? "cancelled" : "unrecorded"
+        var views: [JSON] = [], receipts: [JSON] = []
+        for item in items {
+            let b = item.object; var task = Record(b["record"]?.object ?? [:])
+            guard task.string("project_id") == TeamEditorNativeFixture.projectID, task["is_recurring"] != .bool(true), b["planned_next_id"] == .null,
+                  b["series_id"] == .string(task.id), task["completed"] == .bool(false) else { return nil }
+            if recorded { task = TaskCompletionRevision.applying(["completed": .bool(true), "completed_at": b["completed_at"]!], to: task) }
+            var receipt: [String: JSON] = Dictionary(uniqueKeysWithValues: ["team_id", "project_id", "task_id", "task_generation", "request_id", "series_id", "series_generation", "series_project_id", "planned_next_id"].map { ($0, b[$0]!) })
+            receipt.merge(["protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "replayed": .bool(true), "operation": .string("complete"), "related_request": .null,
+                "source_revision": task["completion_version"], "created_successor": .bool(false), "removed_successor": .bool(false), "successor_id": .null, "successor_generation": .null, "task": .object(task.fields), "successor": .null]) { _, new in new }
+            var view: [String: JSON] = Dictionary(uniqueKeysWithValues: ["team_id", "project_id", "task_id", "task_generation", "request_id", "series_id", "series_generation", "series_project_id", "planned_next_id"].map { ($0, b[$0]!) })
+            view.merge(["review_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "operation": .string("complete"), "state": .string(state), "project_role": .string(readOnlyMode == "viewer" ? "viewer" : "editor"),
+                "task": .object(task.fields), "series": .object(task.fields), "successor": .null, "receipt": recorded ? .object(receipt) : .null, "can_edit_current": .bool(readOnlyMode == nil), "can_edit_series": .bool(readOnlyMode == nil)]) { _, new in new }
+            views.append(.object(view)); receipts.append(.object(receipt))
+        }
+        if single {
+            if ProcessInfo.processInfo.arguments.contains("--team-single-recovery-refresh") {
+                singleReviewCount += 1
+                var view = views[0].object, receipt = view["receipt"]!.object, task = view["task"]!.object
+                task["description"] = .string(singleReviewCount > 1 ? "Updated synced instructions" : "Initial synced instructions")
+                view["task"] = .object(task); view["series"] = .object(task); receipt["task"] = .object(task); view["receipt"] = .object(receipt)
+                return try? JSONEncoder().encode(view)
+            }
+            return try? JSONEncoder().encode(views[0])
+        }
+        let receipt: JSON = recorded ? .object(["batch_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string("complete"), "related_request": .null, "items": .array(receipts), "replayed": .bool(true)]) : .null
+        return try? JSONEncoder().encode(["group_review_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string("complete"), "related_request": .null, "state": .string(state), "items": .array(views), "receipt": receipt])
+    }
+}
+extension Store {
+    func prepareTeamBatchRecoveryFixture() async {
+        guard TeamBatchRecoveryNativePeer.enabled, var header = snapshot.pending.first, header.teamTaskBatch?.isCompletion == true || header.teamCompletion != nil else { return }
+        do {
+            if ProcessInfo.processInfo.arguments.contains("--team-single-recovery-testing"), let batch = header.teamTaskBatch, let first = batch.items.first {
+                for other in batch.items.dropFirst() {
+                    if let source = other.teamCompletion?.source, let index = snapshot.tables["tasks"]?.firstIndex(where: { $0.id == source.id }) { snapshot.tables["tasks"]![index] = source }
+                }
+                header = first; snapshot.pending[0] = first; undoStack = []; redoStack = []; try persist()
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-dependent"), snapshot.pending.count == 1,
+               let item = header.teamCompletion != nil ? header : header.teamTaskBatch?.items.first, let command = item.teamCompletion,
+               let row = snapshot.tables["tasks"]?.first(where: { $0.id == item.recordID }) {
+                let fields: [String: JSON] = ["title": .string("Later selection draft proof"), "description": .string("Keep these later workshop instructions")]
+                let edit = try command.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: command.scope), existing: row)
+                snapshot.apply(edit); snapshot.pending.append(edit); try persist()
+            }
+            if let mode = TeamBatchRecoveryNativePeer.readOnlyMode {
+                var raw = try TeamEditorNativeFixture.boundary(viewer: mode == "viewer").raw
+                raw["setup_paused"] = .bool(mode == "paused"); raw["token"] = .string(String(repeating: "e", count: 64))
+                raw["projects"] = .array(raw["projects"]!.list.map { value in var project = value.object; project["can_send_tasks"] = .bool(false); project["archived"] = .bool(mode == "archived"); return .object(project) })
+                let boundary = try TeamWorkspaceBoundary(raw, account: userID, origin: backend.accountRemovalOrigin)
+                // Model a newer access mask while disk still has the old writer
+                // boundary. Successful acknowledgement must persist this mask.
+                teamAccessMask = try TeamWorkspaceCache(boundary: boundary, previous: snapshot.teamWorkspace, pending: snapshot.pending, tasks: snapshot.tables["tasks"] ?? [])
+                if mode == "archived" { for i in snapshot.tables["projects"]!.indices { snapshot.tables["projects"]![i]["is_archived"] = .bool(true) } }
+                try persist()
+            }
+            if header.teamCompletion != nil {
+                let review = try await backend.reviewTeamCompletion(header, expectedAccount: userID)
+                syncConflict = SyncConflict(mutation: header, remote: review.task ?? header.teamCompletion!.source, completionReview: review)
+            } else { installTeamCompletionBatchReview(try await backend.reviewTeamCompletionBatch(header, expectedAccount: userID)) }
+        }
+        catch { self.error = error.localizedDescription }
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    /// Seed only reserved Mac acceptance storage. Review, sync and persistence
+    /// below still use their real Store implementations.
+    private func seedTeamCompletionRecoveryFixture() throws {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-testing"), snapshot.pending.isEmpty else { return }
+        let tasks = snapshot.tables["tasks"] ?? []
+        let scope = TeamTaskEditScope(account: userID, origin: try backend.accountRemovalOrigin, team: TeamEditorNativeFixture.teamID, project: TeamEditorNativeFixture.projectID)
+        let chosen = tasks.filter { $0.id == TeamEditorNativeFixture.taskID || $0.id == "ec240000-0000-4000-8000-000000000031" }
+        guard chosen.count == 2 else { throw TeamTaskBatch.invalid }
+        let actions = try chosen.map { try TeamCompletion.complete($0, tasks: tasks, scope: scope, at: Date(timeIntervalSince1970: 1792944000), zone: "Europe/Copenhagen") }
+        let header: Mutation
+        if ProcessInfo.processInfo.arguments.contains("--team-single-recovery-testing") { header = actions[0] }
+        else { header = TeamTaskBatch.header(TeamTaskBatch(account: userID, origin: scope.origin, team: scope.team, operation: .complete, restores: nil, items: actions)) }
+        var next = snapshot; next.apply(header); next.pending = [header]
+        next.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: snapshot.teamWorkspace, pending: next.pending, tasks: next.tables["tasks"] ?? [])
+        snapshot = next; try persist()
     }
 }
 #endif

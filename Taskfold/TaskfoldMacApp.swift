@@ -16,7 +16,7 @@ struct TaskfoldMacApp: App {
         // Fixture launches are force-quit by the test runner, which leaves window-restoration state that can
         // restore "no windows" on the next launch. Ignore it for fixtures so every test starts with a window.
         let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("--uitesting") || arguments.contains("--preview") || ProcessInfo.processInfo.environment["TASKFOLD_TRACE"] == "1" {
+        if arguments.contains("--uitesting") || arguments.contains("--preview") || TeamEditorNativeFixture.enabled || ProcessInfo.processInfo.environment["TASKFOLD_TRACE"] == "1" {
             UserDefaults.standard.register(defaults: ["ApplePersistenceIgnoreState": true])
         }
         #endif

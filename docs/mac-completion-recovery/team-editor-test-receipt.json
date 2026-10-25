@@ -1,0 +1,16 @@
+{
+  "namespace": "workflowteststeameditbridge",
+  "teamRolloutInCopyOnly": true,
+  "network": "All HTTP requests intercepted locally; scoped synthetic recipients are answered; task moves and template libraries use separate file-backed peers only with --team-move-testing / --team-library-testing in the reserved DEBUG host",
+  "files": {
+    "Taskfold/Core/Store.swift": "fc386ffe4cefd3204d9dec17078fcb4856cdc665d5bb5ca904ec2a7f0328a9b8",
+    "Taskfold/Core/Backups.swift": "5f777122a215c02967c48fb7c4e2b9d6e1f95b4004728976e1ef7f7164faec21",
+    "Taskfold/Core/Backend.swift": "c05284c57b5d54743282b959e1966be07019a3630de5d7f297c8c653986b6997",
+    "Taskfold/TeamTemplateNativeFixture.swift": "96dea0f79ee4eb30621cb7eb64ba4bd61761ad609fa0dbc5ad0bcf8f7c96aa8c",
+    "Taskfold/Views/TeamTemplateLibraryView.swift": "3128955ea69a181e7067632798f1708acaa69a525795b69a8ca3373720c0ee97",
+    "Taskfold/Core/TeamWorkflowRunCommands.swift": "98e7a8737959ca8fc89049bd93833043b9d14d4036f79e758fb16b78de9b0486",
+    "Taskfold/Views/TeamWorkflowRunView.swift": "c110ae61eb57803fd8b35fedebf23e1eb5ebd0f6950cf5a8f60ef10e13fbb17f",
+    "Taskfold/Views/WorkflowViews.swift": "bdabeed4e516b5de18fce15938f71bb731a1db6af0ca92a88613ab58c805dbb0",
+    "Taskfold/Info.plist": "33953091b7e759f83f134886e32f9dad933f78b190fae1317e5a74c676fb5679"
+  }
+}

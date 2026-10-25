@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-25",
+  "stage": "Prepared signed Mac completion recovery acceptance harness",
+  "macBaseCommit": "161e09abb6eee74aea543c571749b4b915272791",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "56419532523dcd35e8ba2572cf544ada2fc0b37a3af003746075781524dd29c7",
+    "Taskfold/TaskfoldMacApp.swift": "0c1b780bbf6c4a94f8d9211e74d75babc071daf82cf3daf8eb73ab362e909bbc",
+    "Taskfold/Views/TaskInspector.swift": "8b1cc616e01d17d82bee94d26d7d48642d3aa28765c777b506eeede75ed1bcc9",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "126621c7c8464ddd5659e32c0d55bea8b0a84b2e4f7353a0c1137ba7a7888e13"
+  },
+  "build": "Own current Mac sources and seven native cases compile in a separately sandboxed, Apple Development-signed host",
+  "signing": "Both app and UI-test runner strict/deep signatures verify; existing team 3UZ4C73FM2",
+  "isolation": "Own Mac source transformations checked; synthetic backend and isolated App Group/service identifiers verified; no URL type registration or embedded production widgets",
+  "compiledTests": 7,
+  "executedTests": 0,
+  "runtimeAcceptance": false,
+  "reason": "Native computer use reports the Mac locked on both inspections; unlock requested and still pending. No app or UI-test runner was launched this stage.",
+  "cases": [
+    "individual recorded recovery: viewer, archive, write pause",
+    "group recorded recovery: viewer, archive, write pause",
+    "refresh current instructions before explicit acknowledgement"
+  ],
+  "assertionsPrepared": [
+    "full tasks and pending queue unchanged by discovery",
+    "exactly two read requests before approval",
+    "exact later commands and current read-only restrictions after acknowledgement and next launch",
+    "one main app window after dismissal and relaunch",
+    "refresh displays updated instructions before saving"
+  ],
+  "preparedArtifacts": {
+    "host": "/tmp/taskfold-mac-recovery-host",
+    "build": "/tmp/taskfold-mac-recovery-build",
+    "xctestrun": "/tmp/taskfold-mac-recovery-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun"
+  },
+  "implementation": "DEBUG-only local peer and seeding; actual existing Store sync/review/persistence methods and premium review views. Restoration state ignored only for the reserved debug fixture.",
+  "initialBuildIssue": "Automatic signing rejected a manually specified certificate hash before compilation. Rebuilt using Apple Development. A namespace check caught an overwritten App Group literal before launch; corrected and rebuilt final products.",
+  "limits": [
+    "These are compiled assertions, not passing runtime tests",
+    "Mac screen/window/keyboard/spoken acceptance remains open",
+    "No current-stage Core suite rerun: production Core contracts unchanged; prior evidence remains scoped to its own source stage",
+    "Native recurring/history, storage/account-race, terminal-state discovery and broader rank-6/Px work remain open",
+    "No hosted schema/configuration, rollout, real task/account or deferred release/provider/device changes"
+  ],
+  "retainedEvidence": "docs/mac-completion-recovery",
+  "platformNote": "Mac-only test support and existing current-source app build"
+}

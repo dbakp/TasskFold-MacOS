@@ -1082,8 +1082,30 @@ struct RepeatStepper: View {
 #if DEBUG
 struct TeamEditorNativeFixtureView: View {
     @Environment(Store.self) private var store
+    @State private var recoveryPresented = false
+    @State private var draftsPresented = false
     var body: some View {
-        if TeamTemplateNativeFixture.enabled {
+        if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-testing") {
+            NavigationStack {
+                Form {
+                    Text("Queued edits: \(store.snapshot.pending.count)").accessibilityIdentifier("macRecoveryPending")
+                    Button("Review saved action") { Task { await store.prepareTeamBatchRecoveryFixture(); recoveryPresented = store.syncConflict != nil } }.accessibilityIdentifier("openMacCompletionRecovery")
+                    Button("Check paused sync") { Task { await store.sync(); recoveryPresented = store.syncConflict != nil } }.accessibilityIdentifier("discoverMacCompletionRecovery")
+                    Button("Saved team drafts") { draftsPresented = true }.accessibilityIdentifier("openMacSavedDrafts")
+                }.formStyle(.grouped).navigationTitle("Completion recovery test")
+            }
+            .sheet(isPresented: $recoveryPresented) { if let conflict = store.syncConflict { ConflictReview(conflict: conflict) } }
+            .sheet(isPresented: $draftsPresented) { SavedTeamDraftsView() }
+            .onChange(of: store.syncConflict?.completionBatchReview) { _, value in
+                if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync"), value != nil { recoveryPresented = true }
+            }
+            .onChange(of: store.syncConflict?.completionReview) { _, value in
+                if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync"), value != nil { recoveryPresented = true }
+            }
+            .task {
+                if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync") { await store.sync() }
+            }
+        } else if TeamTemplateNativeFixture.enabled {
             NavigationStack {
                 Form {
                     NavigationLink("Open team template library") { TeamTemplateLibraryView(teamID: TeamEditorNativeFixture.teamID) }.accessibilityIdentifier("openTeamTemplateLibraryFixture")

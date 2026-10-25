@@ -1,0 +1,71 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /tmp/taskfold-mac-recovery-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination platform=macOS,arch=arm64 -derivedDataPath /tmp/taskfold-mac-recovery-build DEVELOPMENT_TEAM=3UZ4C73FM2 CODE_SIGN_IDENTITY=9421BFBE87503809AB8274B2B84048C65BE9D2FC build-for-testing
+
+Build settings from command line:
+    CODE_SIGN_IDENTITY = 9421BFBE87503809AB8274B2B84048C65BE9D2FC
+    DEVELOPMENT_TEAM = 3UZ4C73FM2
+
+Resolve Package Graph
+
+Fetching from https://github.com/openid/AppAuth-iOS.git (cached)
+
+Creating working copy of package ‘AppAuth-iOS’
+
+Checking out 3.0.0 of package ‘AppAuth-iOS’
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+note: Using codesigning identity override: 9421BFBE87503809AB8274B2B84048C65BE9D2FC
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (5 targets)
+    Target 'TaskfoldUITests' in project 'Taskfold'
+        ➜ Explicit dependency on target 'Taskfold' in project 'Taskfold'
+    Target 'Taskfold' in project 'Taskfold'
+        ➜ Explicit dependency on target 'AppAuthCore-product' in project 'AppAuth'
+    Target 'AppAuthCore-product' in project 'AppAuth'
+        ➜ Explicit dependency on target 'AppAuthCore' in project 'AppAuth'
+        ➜ Explicit dependency on target 'AppAuth_AppAuthCore' in project 'AppAuth'
+    Target 'AppAuthCore' in project 'AppAuth'
+        ➜ Explicit dependency on target 'AppAuth_AppAuthCore' in project 'AppAuth'
+    Target 'AppAuth_AppAuthCore' in project 'AppAuth' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -x objective-c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 5b5fbfbe21a6a101e565a0433e0bc1bd
+Build description path: /tmp/taskfold-mac-recovery-build/Build/Intermediates.noindex/XCBuildData/5b5fbfbe21a6a101e565a0433e0bc1bd.xcbuilddata
+/tmp/taskfold-mac-recovery-build/SourcePackages/checkouts/AppAuth-iOS/Package.swift: error: AppAuth_AppAuthCore has conflicting provisioning settings. AppAuth_AppAuthCore is automatically signed, but code signing identity 9421BFBE87503809AB8274B2B84048C65BE9D2FC has been manually specified. Set the code signing identity value to "Apple Development" in the build settings editor, or switch to manual signing in the Signing & Capabilities editor. (in target 'AppAuth_AppAuthCore' from project 'AppAuth')
+/tmp/taskfold-mac-recovery-host/Taskfold.xcodeproj: error: Taskfold has conflicting provisioning settings. Taskfold is automatically signed, but code signing identity 9421BFBE87503809AB8274B2B84048C65BE9D2FC has been manually specified. Set the code signing identity value to "Apple Development" in the build settings editor, or switch to manual signing in the Signing & Capabilities editor. (in target 'Taskfold' from project 'Taskfold')
+/tmp/taskfold-mac-recovery-host/Taskfold.xcodeproj: error: TaskfoldUITests has conflicting provisioning settings. TaskfoldUITests is automatically signed, but code signing identity 9421BFBE87503809AB8274B2B84048C65BE9D2FC has been manually specified. Set the code signing identity value to "Apple Development" in the build settings editor, or switch to manual signing in the Signing & Capabilities editor. (in target 'TaskfoldUITests' from project 'Taskfold')
+** TEST BUILD FAILED **
+
+
+The following build commands failed:
+	Building project Taskfold for testing with scheme Taskfold
+(1 failure)

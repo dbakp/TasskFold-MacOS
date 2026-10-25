@@ -4147,3 +4147,38 @@ terminal-state discovery, authored missing-incarnation/cross-table recovery,
 large-workload and genuine hosted acceptance remain open. No SQL, hosted schema,
 service configuration, rollout or real account/task changed. All user-deferred
 release/provider/device work remains deferred; the full rank-6/Px goal stays active.
+
+
+## 25 October 2026 — Mac completion recovery harness ready; runtime pending
+
+The Mac repo now owns a reserved DEBUG-only recovery peer, synthetic completion
+seeding and controls that open the real individual/group review screens. The
+fixture can exercise the actual normal sync loop after a saved blocked action is
+reopened. Network access outside the synthetic peer remains denied. Its app ignores
+stale window restoration only in the reserved debug fixture, so a forced test quit
+can be followed by a new main window. Production release behavior is unchanged.
+
+Seven native cases compile in the current, separately sandboxed Mac app: individual
+and group recovery after viewer/archive/write-pause changes, and refreshed current
+instructions before acceptance. The cases assert exact saved tasks/queue before
+review, two read requests, exact later commands/current restrictions after Continue
+and relaunch, plus one main window. They use the existing production Store methods
+and review views; the peer only answers synthetic ordinary-root access/status reads.
+
+The final app and test runner build and pass strict/deep verification with the
+existing Apple Development identity. Own-source namespace transformations,
+synthetic backend, private service/App Group identifiers and seven compiled test
+methods were checked. Initial signing configuration and an overwritten App Group
+literal were corrected before launch, then the final isolated products rebuilt.
+
+No runtime case was executed: native computer use reports the Mac locked on both
+inspections, and the requested unlock is pending. The signed host and test build
+are preserved, with no test app process running, so the same build is ready for
+actual desktop acceptance after unlock. These compiled assertions do not close Mac
+runtime, window, keyboard or spoken acceptance. iOS app code is unchanged this stage.
+See p2-mac-completion-recovery-preparation-evidence.json; the Mac repo also retains
+mac-completion-recovery/ build, signature and source-isolation evidence.
+
+No service/schema/configuration, rollout, real account/task or user-deferred
+release/provider/device work changed. All broader rank-6/Px requirements remain
+open as listed above; this checkpoint is test preparation, not feature completion.
