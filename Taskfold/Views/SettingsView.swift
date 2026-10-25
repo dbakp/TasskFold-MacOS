@@ -209,6 +209,7 @@ struct AccountSettings: View {
                 Section("Task connections") { Button("Task connections…", systemImage: "arrow.triangle.branch") { webhookAccess = true }.accessibilityIdentifier("webhookAccess") }
             }
             SavedProjectTransferLink()
+            SavedTeamTemplateRequestLink()
             if TeamOrganizationAvailability.enabled && store.signedIn && !store.localMode {
                 Section("Teams") { Button("Your teams…", systemImage: "person.3") { teamsPresented = true } }
             }

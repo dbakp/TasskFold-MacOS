@@ -99,24 +99,27 @@ struct TeamTemplateDetail: Equatable, Sendable, CustomStringConvertible, CustomD
     private(set) var items: [TeamTemplateMetadata] = []
     private(set) var scope: TeamTemplateLibraryScope?
     private(set) var detail: TeamTemplateDetail?
+    private(set) var organization: TeamOrganizationDetail?
     private(set) var loading = false
     private(set) var message: String?
     private var attempt = UUID()
-    private let account: String, origin: String, team: String
+    private let account: String, origin: String, teamID: String
     @ObservationIgnored private let current: () -> Bool
     @ObservationIgnored private let fence: () async throws -> String
     @ObservationIgnored private let page: (String?, Double?) async throws -> TeamTemplatePage
+    @ObservationIgnored private let readTeam: (() async throws -> TeamOrganizationDetail)?
     @ObservationIgnored private let readDetail: (String) async throws -> TeamTemplateDetail
-    init(account: String, origin: String, team: String, current: @escaping () -> Bool, fence: @escaping () async throws -> String, page: @escaping (String?, Double?) async throws -> TeamTemplatePage, detail: @escaping (String) async throws -> TeamTemplateDetail) {
-        self.account = account; self.origin = origin; self.team = team; self.current = current; self.fence = fence; self.page = page; readDetail = detail
+    init(account: String, origin: String, team: String, current: @escaping () -> Bool, fence: @escaping () async throws -> String, page: @escaping (String?, Double?) async throws -> TeamTemplatePage, detail: @escaping (String) async throws -> TeamTemplateDetail, readTeam: (() async throws -> TeamOrganizationDetail)? = nil) {
+        self.account = account; self.origin = origin; self.teamID = team; self.readTeam = readTeam; self.current = current; self.fence = fence; self.page = page; readDetail = detail
     }
-    func invalidate() { attempt = UUID(); items = []; scope = nil; detail = nil; loading = false; message = nil }
+    func invalidate() { attempt = UUID(); items = []; scope = nil; detail = nil; organization = nil; loading = false; message = nil }
     func refresh(template: String? = nil) async {
         invalidate(); guard current() else { return }; let id = attempt; loading = true
         func check() throws { guard id == attempt, current() else { throw CancellationError() } }
         do {
             let before = try await fence(); try check()
             guard before.utf8.count == 64, before.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }) else { throw TeamTemplateLibraryValue.invalid }
+            let organization = try await readTeam?(); try check()
             var rows: [TeamTemplateMetadata] = [], selected: TeamTemplateDetail?, scope: TeamTemplateLibraryScope?
             if let template {
                 selected = try await readDetail(template); try check()
@@ -133,9 +136,12 @@ struct TeamTemplateDetail: Equatable, Sendable, CustomStringConvertible, CustomD
                 } while cursor != nil
                 try TeamOrganizationValue.unique(rows, by: \.id)
             }
-            guard let scope, scope.account == account, scope.origin == origin, scope.team == team else { throw TeamTemplateLibraryValue.invalid }
+            guard let scope, scope.account == account, scope.origin == origin, scope.team == teamID else { throw TeamTemplateLibraryValue.invalid }
+            if let organization {
+                guard organization.account == account, organization.origin == origin, organization.team.id == teamID, organization.team.role == scope.role, organization.team.archived == scope.archived else { throw TeamTemplateLibraryValue.invalid }
+            }
             let after = try await fence(); try check(); guard before == after else { throw TeamWorkspaceChanged() }
-            self.scope = scope; items = rows; detail = selected
+            self.scope = scope; items = rows; detail = selected; self.organization = organization
         } catch {
             guard id == attempt else { return }
             if current() { message = error is AccountSessionAuthorizationRequired ? "Sign in again to view team templates." : "Team templates couldn’t be refreshed. Try again when you’re connected." }
@@ -163,4 +169,8 @@ extension Backend {
         guard TeamProjectValue.id(team), TeamProjectValue.id(template) else { throw TeamTemplateLibraryValue.invalid }
         return try .init(await teamTemplateRead("get", body: ["team_id": .string(team), "template_id": .string(template)], account: account, origin: origin), account: account, origin: origin, team: team, template: template)
     }
+    func teamTemplateCommand(_ command: TeamTemplateCommand) async throws -> TeamTemplateReceipt {
+        try command.confirmed(await teamTemplateRead(command.action.rawValue, body: command.body, account: command.account, origin: command.origin))
+    }
+
 }

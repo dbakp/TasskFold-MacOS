@@ -807,7 +807,7 @@ private struct TemplatePreviewRow<Value>: Identifiable {
     let value:Value
 }
 
-private struct TemplateDefinitionPreview: View {
+struct TemplateDefinitionPreview: View {
     let document:JSON
     let scope:String
     var body:some View {

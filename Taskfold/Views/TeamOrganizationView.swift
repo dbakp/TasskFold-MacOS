@@ -154,6 +154,7 @@ struct TeamOrganizationView: View {
             }
             Section { NavigationLink { TeamProjectManagementView(teamID: detail.team.id) } label: { Label("Projects", systemImage: "folder") }.accessibilityIdentifier("teamProjects") }
             if detail.team.role != .guest {
+                Section { NavigationLink { TeamTemplateLibraryView(teamID: detail.team.id) } label: { Label("Team templates", systemImage: "square.stack.3d.up") }.accessibilityIdentifier("teamTemplateLibrary") }
                 Section {
                     if detail.folders.isEmpty { Text("No folders yet").foregroundStyle(.secondary) }
                     ForEach(detail.folders) { folder in
@@ -408,7 +409,7 @@ private struct TeamOrganizationEditSheet: View {
         case .changeRole: return "Update this person’s team role. Invitations they created and ownership offers involving them will be cancelled. Project permissions are managed separately."
         case .removeMember: return "End this person’s team membership. Invitations they created and ownership offers involving them will be cancelled. Team work stays with the team."
         case .leave: return "End your membership and team access. Team work stays with the team. An owner must transfer ownership before leaving."
-        case .delete: return "Delete this team and its membership, folder and invitation settings. Team access ends. This can’t be undone here."
+        case .delete: return "Delete this team and its membership, folder and invitation settings. Its team template library is removed; existing private copies and created work are kept. Team access ends. This can’t be undone here."
         case .transferOffer: return "Offer ownership to this accepted member for one day. You remain owner until they accept."
         case .transferAccept: return "Become the team’s owner. The current owner becomes an admin, and pending invitations are cancelled."
         case .transferCancel: return "Cancel the pending ownership offer. The current owner keeps ownership."

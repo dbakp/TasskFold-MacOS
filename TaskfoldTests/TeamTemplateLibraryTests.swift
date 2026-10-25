@@ -221,4 +221,16 @@ final class TeamTemplateLibraryTests: XCTestCase {
         let result = try detail(detailRaw(document: document)); XCTAssertEqual(result.document, document); XCTAssertNil(result.supported)
     }
 
+    @MainActor func testAudienceIsFencedWithCatalogAndRoleMismatchCannotPublish() async throws {
+        let organization = try TeamOrganizationDetail(["id": .string(libraryTeam), "name": .string("Design team"), "role": .string("owner"), "state": .string("active"), "revision": .number(1), "folders": .array([]), "members": .array([.object(["user_id": .string(libraryAccount), "role": .string("owner")])]), "invitations": .array([])], team: libraryTeam, account: libraryAccount, origin: libraryOrigin)
+        for mismatch in [false, true] {
+            let result = try page(pageRaw(role: mismatch ? "member" : "owner"))
+            let model = TeamTemplateBrowser(account: libraryAccount, origin: libraryOrigin, team: libraryTeam, current: { true }, fence: { String(repeating: "a", count: 64) }, page: { _, _ in result }, detail: { _ in try self.detail() }, readTeam: { organization })
+            await model.refresh()
+            XCTAssertEqual(model.organization?.team.name, mismatch ? nil : "Design team")
+            if mismatch { XCTAssertTrue(model.items.isEmpty); XCTAssertNotNil(model.message) }
+            model.invalidate(); XCTAssertNil(model.organization)
+        }
+    }
+
 }

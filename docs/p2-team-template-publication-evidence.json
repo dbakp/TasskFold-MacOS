@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-25",
+  "platform": "mac",
+  "status": "native publication/replacement/removal/recovery source implemented; Core and app compilation verified; installed acceptance still open",
+  "sourcesSHA256": {
+    "Taskfold/Core/TeamTemplateCommands.swift": "9e3858fe43f8c6e9ac5ab659591e3ec318f14002d27edb0f7fbea395d31dff85",
+    "Taskfold/Core/TeamTemplateLibrary.swift": "88cb865f9eb486d58f703cdccf3ca283d708fd2656bbac23e60e6a33565fdd38",
+    "Taskfold/Core/Store.swift": "931c4fd6f775e7066ebc05542c90b869d13f9f4d18905e0120026a8280cff739",
+    "Taskfold/Views/TeamTemplateLibraryView.swift": "4873559b0bd82b1fd7b152edc1d8d80a9579c55f1f434d0c8bd43b34dd2ee2a8",
+    "Taskfold/Views/TeamOrganizationView.swift": "48db8dc0b649833dab47443e3ca92a011bc3ac5cc67d646ef062a8f9cb9cf012",
+    "Taskfold/Views/WorkflowViews.swift": "e3e0b090558e8ef5c85fce6953983396f7084b50eaea1043bc814884ea9397a6",
+    "TaskfoldTests/TeamTemplateCommandTests.swift": "a39aa7ae79a729bb47fdd8924809ab8271b852d23191f0d423a02a89fff03ec5",
+    "TaskfoldTests/TeamTemplateLibraryTests.swift": "8b9d4f6da42b9b4c032a4f927a9761bd8ea225193a8d7390d1c208070fa0ae42",
+    "Package.swift": "568136cc4342eeaa827bc5263499ad6212e2de7cd43f07f47c679121cb671814",
+    "Taskfold.xcodeproj/project.pbxproj": "ef25bff0fff778b5d531d1151c3d32811de9701a97a513550e7fa9cd8bf03290",
+    "Taskfold/Views/SettingsView.swift": "44d4dee88eadfafa5686a18bfbd28be3329e1184b0c3617b2cbf0ee378c42c14"
+  },
+  "tests": {
+    "TeamTemplateCommandTests": 22,
+    "TeamTemplateLibraryTests": 24,
+    "TeamProjectAdoptionTests": 27,
+    "TeamProjectManagementTests": 22,
+    "AccountRemovalTests": 11,
+    "total": 106,
+    "failed": 0,
+    "skipped": 0
+  },
+  "verifiedCore": [
+    "exact publish/replace/delete bodies, supported full workflow validation and validating Codable round-trip",
+    "receipt original account/origin/team/action/identity/revision/deletion/replay checks, including deletion at max safe revision",
+    "bounded AES-GCM encrypted file journal, origin/account AAD, 0700 directory, 0600 ciphertext file and backup exclusion",
+    "1.1 MB definition survives a new vault instance without full document Keychain storage",
+    "corrupt/unreadable journal blocks fresh authoring; corruption/size/nonregular paths, key failure and symlink handling preserve existing work",
+    "conditional cleanup, two independent vault instances, cancelled lease, removal tombstone and cleanup without decryption key",
+    "lost applied reply plus relaunch retries exact original body/nonce; no automatic rebase or new identity",
+    "failed cleanup/foreign receipt retains request; closed view/changed account refuses late callback and clears presentation",
+    "review admission is checked before and after durable save; another window\u2019s changed request cannot be retried/dropped as the old review",
+    "stopping retry leaves the simulated already-applied service work intact",
+    "actual Backend HTTP publish/replace/delete envelope and receipt validation through intercepted URLSession",
+    "team audience name/role/state is read inside the catalog boundary; mismatch prevents publication of catalog or audience",
+    "replayed acknowledgement says original change confirmed, without claiming the current library was rewound"
+  ],
+  "nativeSource": [
+    "team navigation catalog/detail entry with current audience, full supported definition preview and read-only future definitions",
+    "explicit audience/contents/name review and acknowledgement before publication/replacement",
+    "private source equality, original shared revision, frozen reviewed body, single-submit guard, and preserved in-memory draft during a paused review",
+    "delete review permits removing unsupported future definitions without interpreting their content",
+    "account-level saved-request entry remains reachable after team/rollout loss, and does not display saved definition/name without current access",
+    "explicit retry-original and stop-retrying confirmations, receipt status and refresh, safe account/phase/workspace masking",
+    "team deletion disclosure now includes library removal and preservation of prior copies/work"
+  ],
+  "nativeBuild": {
+    "configuration": "Debug",
+    "architecture": "arm64",
+    "destination": "platform=macOS,arch=arm64",
+    "signingAllowed": false,
+    "successfulFullAndFinalIncrementalBuilds": true,
+    "finalBuildAfterLastSourceEdit": true,
+    "projectFileLint": true
+  },
+  "iterationHistory": [
+    "Initial iOS test compilation missed try on two throwing fixture constructors; corrected before checks passed. Initial failure retained.",
+    "First app build invocations combined -arch with a destination and were rejected by Xcode before compilation. Corrected to supported build settings/destination; argument rejection retained.",
+    "Source review added single-submit/frozen-content admission and accurate replay wording; final tests/builds rerun after these changes."
+  ],
+  "notClaimed": [
+    "installed native buttons/navigation/visual/keyboard/spoken/multiple-window acceptance",
+    "real Keychain prompts/protected-storage acceptance for this new journal",
+    "genuine hosted HTTP/RLS/service acceptance in this stage",
+    "shared-library private-copy/export, shared run destinations and full team-template completion",
+    "Watch/Wear OS and the rest of ranked Px completion"
+  ],
+  "next": [
+    "isolated native fixture and installed Mac/iPhone/iPad review/recovery acceptance, with screenshots and targeted account/source changes",
+    "reviewed private-copy/export flow and shared run destination service",
+    "remaining rank-6/Px checks while preserving all user deferrals"
+  ],
+  "boundaries": {
+    "schemaOrHostedConfigurationChanged": false,
+    "teamRolloutEnabled": false,
+    "realTasksOrAccountsUsed": false,
+    "appInstalledOrLaunched": false,
+    "crossRepositoryBuildDependency": false,
+    "releaseProviderAndPhysicalDeviceDeferralsUnchanged": true
+  },
+  "cleanup": {
+    "ownedTemporaryBuildsAndLogsRemovedAfterRetention": true,
+    "sourceBuildCachesPreserved": true,
+    "baselineSimulatorBootStatesPreserved": true,
+    "noNewTaskfoldSessionsStarted": true
+  }
+}

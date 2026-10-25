@@ -341,3 +341,43 @@ premium native library/detail/publication review and private-copy/export flows.
 Installed layout, spoken, account/window and hosted acceptance, shared run
 destinations and the wider ranked Px scope remain open. All user-deferred release,
 provider and physical-device dependencies remain deferred.
+
+
+### 2026-10-25 — Native team template publication and private recovery (source)
+
+Each app independently owns the library catalog/detail, audience/contents/name
+publication review, replacement/rename and removal review, plus Account recovery
+for an original request after team/rollout loss. Current team audience and catalog
+are read inside the same boundary. Unsupported future definitions remain read-only
+and can be removed using reviewed metadata. Saved request text/definitions are not
+shown from recovery without current access. Team deletion now explains library
+removal and preservation of prior copies/work.
+
+The exact supported definition/name, original CAS revision and stable nonce persist
+before HTTP in one bounded AES-GCM file per account/origin. Only the existing backup
+key is in Keychain; full definitions do not enter the small Keychain command store.
+The private directory/file use 0700/0600 permissions, file protection and backup
+exclusion. Account removal removes the nested files/key and blocks recreation.
+Lease, process/removal and session fences preserve uncertain requests; retries do
+not rebase or mint identities. Stop retrying explicitly does not undo server work.
+Replayed receipts acknowledge the original change without claiming current contents.
+
+Source review adds a single-submit guard and checks the frozen name/document again
+after durable save. Account/phase/access changes mask the native review, and source
+changes refuse the send. Draft state remains in memory while its review is paused.
+These UI interactions still require installed acceptance; compilation is not proof
+of buttons, layout, focus, speech or multiple-window behavior. Private-copy/export
+and shared run destination flows also remain open.
+
+Both repos pass 106 focused Core tests (22 command, 24 catalog, 27 adoption,
+22 project management and 11 account-removal), with no failures/skips. Independent
+arm64 Debug app builds pass with signing disabled, including final incremental
+builds after the last source edit. Actual Backend requests use intercepted synthetic
+URLSession peers; journal tests use real temporary files and synthetic keys. Initial
+test-fixture compilation and build-argument mistakes are retained alongside final
+proof in team-template-publication; see p2-team-template-publication-evidence.json.
+No app was installed/launched, no real data, hosted schema/configuration or rollout
+changed. Owned temporary builds/logs were pruned after retention; source caches and
+baseline Simulators remain. Next is isolated installed review/recovery acceptance
+and private-copy/export, then shared run destinations and the wider ranked Px work.
+Every user-deferred release, provider and physical-device dependency stays deferred.
