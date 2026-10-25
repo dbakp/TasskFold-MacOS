@@ -30,7 +30,7 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
     }
     func body(for header: Mutation) throws -> [String:JSON] {
         guard header.table == "tasks",header.method == "TEAM_BATCH",header.recordID == header.id.uuidString.lowercased(),
-              header.teamTaskBatch == self,header.fields.isEmpty,header.baseline == nil,header.teamTaskScope == nil,header.teamCompletion == nil,header.organizationOrder == nil,
+              header.teamTaskBatch == self,header.fields.isEmpty,header.baseline == nil,header.teamTaskScope == nil,header.teamCompletion == nil,header.organizationOrder == nil,header.orderRecovery == nil,
               [account,team].allSatisfy(TeamProjectValue.id),(1...100).contains(items.count),
               (isCompletion ? (operation != .undoComplete || restores != nil) : (operation == .restore) == (restores != nil)) else { throw Self.invalid }
         let ids=items.map(\.recordID),nonces=items.map(\.id)
@@ -295,6 +295,7 @@ extension TeamTaskBatch {
             if change.table == "tasks", ids.contains(change.recordID) { return true }
             if let batch = change.teamTaskBatch { return batch.items.contains(where: touches) }
             if let command = change.teamCompletion { return ids.contains(command.source.id) || command.proposed.map { ids.contains($0.id) } == true }
+            if change.table == "view_orders" { return TaskOrderRecovery.references(change, tasks: ids) }
             return false
         }
         if later.contains(where: touches) {
@@ -602,17 +603,19 @@ private struct CompletionBatchReconciliation {
                 default: return false
                 }
             }
-            for i in changes.indices where !selected.contains(i) {
-                let value = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(changes[i]))
-                guard !references(value) else { throw TeamTaskBatch.conflict }
-            }
             // Frozen typed rows also prove identity after a queued deletion.
             let archivedRows = parkRecorded ? all.flatMap { item -> [Record] in
                 if let command = item.teamCompletion { return [command.source] + [command.proposed].compactMap { $0 } }
                 return [item.baseline.map(Record.init), item.method == "POST" ? Record(item.fields) : nil].compactMap { $0 }
             } : []
+            let taskRows = (expected.tables["tasks"] ?? []) + Array(current.values) + archivedRows
+            let orders = try TaskOrderRecovery.parking(changes, snapshot: original, affected: affected, taskRows: taskRows, account: batch.account, origin: batch.origin)
             let parkedComments = try CompletionRecoveryConversations.parked(in: original, account: batch.account, affected: affected,
-                tasks: (expected.tables["tasks"] ?? []) + Array(current.values) + archivedRows)
+                tasks: taskRows)
+            for i in changes.indices where !selected.contains(i) && !orders.indices.contains(i) {
+                let value = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(changes[i]))
+                guard !references(value) else { throw TeamTaskBatch.conflict }
+            }
             var result = seed
             if let cancellation {
                 let owned = Set(batch.items.flatMap { [$0.recordID, $0.teamCompletion?.proposed?.id].compactMap { $0 } })
@@ -627,11 +630,14 @@ private struct CompletionBatchReconciliation {
                     guard item.teamCompletion!.acknowledge(Record(["id": .string(item.recordID), "team_completion_reply": replies[i]]), header: item, snapshot: &result) else { throw TeamTaskBatch.conflict }
                 }
             }
-            result.pending = changes.enumerated().filter { !selected.contains($0.offset) }.map(\.element)
+            result.pending = changes.enumerated().filter { !selected.contains($0.offset) && !orders.indices.contains($0.offset) }.map(\.element)
+            let orderKeys = orders.removed.union(orders.restored.keys)
+            result.tables["view_orders"]?.removeAll { orderKeys.contains($0.id) }
+            if !orders.restored.isEmpty { result.tables["view_orders", default: []].append(contentsOf: orders.restored.keys.sorted().compactMap { orders.restored[$0] }) }
             result.tables[ConversationOutbox.table]?.removeAll { parkedComments.contains($0.id) }
             return result
         }
-        if readAccess != nil {
+        do {
             let owned = Set(batch.items.flatMap { [$0.recordID, $0.teamCompletion?.proposed?.id].compactMap { $0 } })
             let displaced = Set(current.values.filter { owned.contains($0.id) && authoritative[$0.id]?["task_generation"] != $0["task_generation"] }.map(\.id))
             func references(_ value: JSON) -> Bool {

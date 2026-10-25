@@ -356,7 +356,7 @@ struct TeamCompletionBatchDraft: Codable, Equatable, Identifiable, Sendable {
     var scope: TeamTaskBatch { original.teamTaskBatch! }
     func validate() throws {
         guard version == 1, createdAt.timeIntervalSince1970.isFinite, let batch = original.teamTaskBatch,
-              snapshot.pending.first == original, snapshot.pending.count <= 1000,
+              snapshot.pending.first == original, Set(snapshot.pending.map(\.id)).count == snapshot.pending.count, snapshot.pending.count <= 1000,
               snapshot.tables.values.reduce(0, { $0 + $1.count }) <= 50000 else { throw Self.invalid }
         _ = try batch.body(for: original)
         let value = try TeamTaskBatch.Review(review, for: original)
@@ -372,7 +372,7 @@ struct TeamCompletionBatchDraft: Codable, Equatable, Identifiable, Sendable {
         let ids = Set((kept.tables[ConversationOutbox.table] ?? []).map(\.id))
         return (snapshot.tables[ConversationOutbox.table] ?? []).filter { !ids.contains($0.id) }
     }
-    private var leaves: [Mutation] { parkedChanges.flatMap { $0.teamTaskBatch?.items ?? [$0] } }
+    private var leaves: [Mutation] { parkedChanges.flatMap { $0.teamTaskBatch?.items ?? [$0] }.filter { $0.table == "tasks" } }
     var records: [Record] {
         var order = [String](), fallback = [String: Record]()
         for item in leaves {
@@ -400,6 +400,7 @@ struct TeamCompletionBatchDraft: Codable, Equatable, Identifiable, Sendable {
             checklist(row["subtasks"].list, depth: 0)
         }
         for item in leaves { for key in ["title", "description"] where !item.fields[key, default: .null].text.isEmpty { lines.append("Earlier saved text: " + item.fields[key]!.text) } }
+        lines.append(contentsOf: TaskOrderRecovery.reviewText(parkedChanges, snapshot: snapshot, records: records))
         lines.append(contentsOf: ConversationRecoveryExport.text(parkedConversations, snapshot: snapshot))
         return lines.joined(separator: "\n\n")
     }
@@ -531,7 +532,7 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
     }
     func validate() throws {
         guard version == 1, createdAt.timeIntervalSince1970.isFinite, snapshot.pending.first == original,
-              snapshot.pending.count <= 1000, snapshot.tables.values.reduce(0, { $0 + $1.count }) <= 50000,
+              Set(snapshot.pending.map(\.id)).count == snapshot.pending.count, snapshot.pending.count <= 1000, snapshot.tables.values.reduce(0, { $0 + $1.count }) <= 50000,
               preview() != nil, parkedChanges.count > 1 || !parkedConversations.isEmpty,
               try JSONEncoder().encode(self).count <= 16_000_000 else { throw Self.invalid }
     }
@@ -549,7 +550,7 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
         let ids = Set((kept.tables[ConversationOutbox.table] ?? []).map(\.id))
         return (snapshot.tables[ConversationOutbox.table] ?? []).filter { !ids.contains($0.id) }
     }
-    private var leaves: [Mutation] { parkedChanges.flatMap { $0.teamTaskBatch?.items ?? [$0] } }
+    private var leaves: [Mutation] { parkedChanges.flatMap { $0.teamTaskBatch?.items ?? [$0] }.filter { $0.table == "tasks" } }
     var records: [Record] {
         var order = [String](), fallback = [String: Record]()
         for item in leaves {
@@ -582,6 +583,7 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
             checklist(row["subtasks"].list, depth: 0)
         }
         for item in leaves { for key in ["title", "description"] where !item.fields[key, default: .null].text.isEmpty { lines.append("Earlier saved text: " + item.fields[key]!.text) } }
+        lines.append(contentsOf: TaskOrderRecovery.reviewText(parkedChanges, snapshot: snapshot, records: records))
         lines.append(contentsOf: ConversationRecoveryExport.text(parkedConversations, snapshot: snapshot))
         return lines.joined(separator: "\n\n")
     }

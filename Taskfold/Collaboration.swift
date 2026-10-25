@@ -361,7 +361,7 @@ private struct TeamCompletionReviewContent: View {
                             performReview(fallback: "Your saved edits remain queued.") { await store.preserveRecordedCompletionDraft(context) }
                         }
                             .buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("preserveRecordedCompletionDraft")
-                        Text("Keep the connected edits and comment drafts on this device, then continue with the synced result.").font(.caption).foregroundStyle(.secondary)
+                        Text("Keep connected task edits, list choices and conversation drafts on this device, then continue with the synced result.").font(.caption).foregroundStyle(.secondary)
                     } else if park != nil {
                         Button("Keep edits as draft") {
                             performReview(fallback: "Your draft remains saved for review.") { await store.parkTeamCompletionDraft(review) }
@@ -785,7 +785,7 @@ private struct TeamCompletionBatchReviewContent: View {
                             perform { await store.preserveRecordedCompletionDraft(context) }
                         }
                             .buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("preserveRecordedCompletionDraft")
-                        Text("Keep the connected edits and comment drafts on this device, then continue with the synced result.").font(.footnote).foregroundStyle(.secondary)
+                        Text("Keep connected task edits, list choices and conversation drafts on this device, then continue with the synced result.").font(.footnote).foregroundStyle(.secondary)
                     }
                     if !review.isCancelled {
                         Button(review.isRecorded ? "Continue sync" : "Retry saved selection") { perform { await store.continueTeamCompletionBatchReview(review) } }
@@ -922,7 +922,7 @@ private struct SavedRecordedEditsView: View {
             if current {
                 Section {
                     Label("Your edits are kept", systemImage: "lock.doc").font(.headline)
-                    Text("The shared task or occurrence changed. These edits and comment drafts stay encrypted on this device until you delete them. They won’t change shared tasks automatically.").foregroundStyle(.secondary)
+                    Text("The shared task or occurrence changed. These edits, list choices and conversation drafts stay encrypted on this device until you delete them. They won’t change shared tasks automatically.").foregroundStyle(.secondary)
                 }
                 Section("Saved edits preview") {
                     if text.isEmpty && message == nil { ProgressView("Opening saved edits…") }

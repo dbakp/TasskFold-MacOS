@@ -42,7 +42,7 @@ struct TeamCompletion: Codable, Equatable, Sendable {
     }
     func body(for header: Mutation) throws -> [String:JSON] {
         guard header.teamCompletion == self,header.table == "tasks",header.method == "TEAM_COMPLETE",header.recordID == source.id,header.fields.isEmpty,header.baseline == source.fields,
-              header.teamTaskScope == nil,header.teamTaskBatch == nil,header.organizationOrder == nil,
+              header.teamTaskScope == nil,header.teamTaskBatch == nil,header.organizationOrder == nil,header.orderRecovery == nil,
               [scope.account,scope.team,scope.project,source.id,source.string("user_id"),source.string("task_generation"),seriesID,seriesGeneration,seriesProject,nextGeneration].allSatisfy(TeamProjectValue.id),
               scope.restoreRequest == nil,scope.checklistRestoreRequest == nil,
               source["project_id"] == .string(scope.project),source["completed"] == .bool(false),
@@ -145,6 +145,7 @@ struct TeamCompletion: Codable, Equatable, Sendable {
         if receipt.task == nil { displaced.insert(source.id) }
         if let proposed, receipt.successor?.id != proposed.id || receipt.successor?["task_generation"] != proposed["task_generation"] { displaced.insert(proposed.id) }
         if !displaced.isEmpty {
+            guard !snapshot.pending.contains(where: { $0.id != header.id && TaskOrderRecovery.references($0, tasks: displaced) }) else { return false }
             guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: scope.account, affected: displaced,
                 tasks: (snapshot.tables["tasks"] ?? []) + [source] + [proposed].compactMap { $0 }), conversations.isEmpty else { return false }
         }

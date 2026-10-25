@@ -1466,3 +1466,152 @@ extension TeamCompletionBatchTests {
         }
     }
 }
+
+extension TeamCompletionBatchTests {
+    private func captureOrder(_ local: inout Snapshot, key: String, ids: [String], account: String, origin: String, deleting: Bool = false) throws -> Mutation {
+        let raw = Mutation(table: "view_orders", recordID: key, method: deleting ? "DELETE" : "POST", fields: deleting ? [:] : ["id": .string(key), "user_id": .string(account), "ids": .array(ids.map(JSON.string))])
+        let command = try TaskOrderRecovery.capturing(raw, snapshot: local, account: account, origin: origin)
+        append(command, to: &local); return command
+    }
+    func testRecordedOrderAndPinRecoveryRetainsExactCommandsAndRestoresPriorRows() throws {
+        for single in [false, true] {
+            let (base, cache, edit, review) = try recoveryFixture(single: single); var local = base.snapshot
+            let target = edit.recordID, other = local.tables["tasks"]!.first { $0.id != target }!.id
+            let before = Record(["id": .string("scope:today"), "user_id": .string(base.account), "ids": .array([.string(other), .string(target)]), "updated_at": .string("2026-10-25T12:00:00Z")])
+            local.tables["view_orders"] = [before]
+            let order = try captureOrder(&local, key: before.id, ids: [target, other], account: base.account, origin: base.origin)
+            let pin = try captureOrder(&local, key: PinnedNotes.key(target), ids: [target], account: base.account, origin: base.origin)
+            let draft = single ? try TeamCompletionRecoveryDraft(single: review.members[0], snapshot: local) : try TeamCompletionRecoveryDraft(group: review, snapshot: local)
+            let next = try XCTUnwrap(draft.preserving(readable: cache))
+            XCTAssertEqual(draft.parkedChanges, [base.original, edit, order, pin]); XCTAssertEqual(next.tables["view_orders"], [before]); XCTAssertTrue(next.pending.isEmpty)
+            XCTAssertEqual(draft.snapshot, local); XCTAssertTrue(draft.text.contains("Saved list order:")); XCTAssertTrue(draft.text.contains("Pinned note choice:"))
+            let export = try JSONDecoder().decode([String: JSON].self, from: draft.data())
+            let restored = try JSONDecoder().decode([Mutation].self, from: JSONEncoder().encode(export["changes"]!)); XCTAssertEqual(restored, draft.parkedChanges)
+            XCTAssertFalse(export["tasks"]!.list.contains { $0.object["id"] == .string(before.id) || $0.object["id"] == .string(pin.recordID) })
+            XCTAssertFalse(next.teamWorkspace!.canSend(base.original, in: next))
+        }
+    }
+    func testSameRowPinUndoRedoAndMultipleOrdersStayInOneWholeDraft() throws {
+        let (base, cache, edit, review) = try recoveryFixture(); var local = base.snapshot
+        let pinKey = PinnedNotes.key(edit.recordID)
+        let first = try captureOrder(&local, key: pinKey, ids: [edit.recordID], account: base.account, origin: base.origin)
+        let undo = try captureOrder(&local, key: pinKey, ids: [], account: base.account, origin: base.origin, deleting: true)
+        let redo = try captureOrder(&local, key: pinKey, ids: [edit.recordID], account: base.account, origin: base.origin)
+        let draft = try TeamCompletionRecoveryDraft(group: review, snapshot: local), next = try XCTUnwrap(draft.preserving(readable: cache))
+        XCTAssertEqual(draft.parkedChanges, [base.original, edit, first, undo, redo]); XCTAssertEqual(next.tables["view_orders"], [])
+        XCTAssertEqual(try JSONDecoder().decode(TeamCompletionRecoveryDraft.self, from: JSONEncoder().encode(draft)), draft)
+        XCTAssertEqual(Set([first.id, undo.id, redo.id]).count, 3)
+    }
+    func testConnectedOrderDoesNotAbsorbOutsideTaskEditsOrOtherListArrangements() throws {
+        let (base, cache, edit, review) = try recoveryFixture(); var local = base.snapshot
+        var outside = local.tables["tasks"]![0]; outside["id"] = .string(UUID().uuidString.lowercased()); outside["task_generation"] = .string(UUID().uuidString.lowercased()); outside["description"] = .string("Unrelated outside notes stay queued")
+        local.tables["tasks"]!.append(outside)
+        let later = try patch(outside, ["title": .string("Outside authored title")], scope: edit.teamTaskScope!); append(later, to: &local)
+        let independent = try captureOrder(&local, key: "scope:inbox", ids: [outside.id], account: base.account, origin: base.origin)
+        let row = local.tables["view_orders"]![0]
+        let joined = try captureOrder(&local, key: "scope:today", ids: [edit.recordID, outside.id], account: base.account, origin: base.origin)
+        let draft = try TeamCompletionRecoveryDraft(group: review, snapshot: local), next = try XCTUnwrap(draft.preserving(readable: cache))
+        XCTAssertEqual(next.pending, [later, independent]); XCTAssertEqual(next.tables["view_orders"], [row]); XCTAssertEqual(draft.parkedChanges, [base.original, edit, joined])
+        let export = String(decoding: try draft.data(), as: UTF8.self); XCTAssertFalse(export.contains("Unrelated outside notes stay queued")); XCTAssertFalse(export.contains("Outside authored title"))
+        XCTAssertEqual(next.tables["tasks"]?.first { $0.id == outside.id }?.title, "Outside authored title")
+    }
+    func testRecordedPreferenceOnlyWorkCannotBeOrphanedByAnOrdinaryReceipt() throws {
+        let (_, group, batch, raw) = try fixture(); var local = snapshot(batch); append(group, to: &local)
+        let target = batch.items[0].recordID
+        let order = try captureOrder(&local, key: PinnedNotes.key(target), ids: [target], account: batch.account, origin: batch.origin)
+        var reply = raw, items = raw["items"]!.list, member = items[0].object; member["task"] = .null; items[0] = .object(member); reply["items"] = .array(items)
+        let review = try recordedReadReview(group, reply: reply), before = local
+        XCTAssertNil(review.acknowledging(local)); XCTAssertEqual(local, before)
+        let draft = try TeamCompletionRecoveryDraft(group: review, snapshot: local)
+        XCTAssertEqual(draft.parkedChanges, [group, order]); XCTAssertTrue(try XCTUnwrap(draft.preserving(readable: readRecoveryCache(group, local: local))).pending.isEmpty)
+    }
+    func testCancelledSelectionPreservesItsCompletePreferenceHistoryWithReadRestrictions() throws {
+        let (review, original, edit) = try authoredParking(); var local = original; let batch = review.mutation.teamTaskBatch!
+        let choice = try captureOrder(&local, key: PinnedNotes.key(edit.recordID), ids: [edit.recordID], account: batch.account, origin: batch.origin)
+        XCTAssertNil(review.cancelling(local)); XCTAssertFalse(review.canRequestCancellation(local))
+        let draft = try TeamCompletionBatchDraft(review: review, snapshot: local); XCTAssertEqual(draft.parkedChanges, [review.mutation, edit, choice]); XCTAssertTrue(draft.text.contains("Pinned note choice:"))
+        for mode in ["viewer", "archive", "pause"] {
+            let cache = try readRecoveryCache(review.mutation, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archive", paused: mode == "pause")
+            let next = try XCTUnwrap(review.parkingCancellation(local, readable: cache)); XCTAssertTrue(next.pending.isEmpty); XCTAssertEqual(next.tables["view_orders"], []); XCTAssertFalse(next.teamWorkspace!.canSend(review.mutation, in: next))
+        }
+    }
+    func testOrderRecoveryRefusesMissingCaptureDriftBrokenChainsForeignScopeAndAliasing() throws {
+        let (base, _, edit, review) = try recoveryFixture(); var current = base.snapshot
+        _ = try captureOrder(&current, key: PinnedNotes.key(edit.recordID), ids: [edit.recordID], account: base.account, origin: base.origin)
+        for mode in ["legacy", "version", "account", "origin", "nonce", "generation", "project", "before", "after", "row-drift", "duplicate-row", "duplicate-command", "unknown-fields", "broken-chain"] {
+            var local = current
+            var json = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(local.pending.last!)), capture = json["orderRecovery"]!.object
+            if mode == "legacy" { json.removeValue(forKey: "orderRecovery") }
+            if mode == "version" { capture["version"] = .number(2) }
+            if mode == "account" { capture["account"] = .string(UUID().uuidString.lowercased()) }
+            if mode == "origin" { capture["origin"] = .string("https://other.example") }
+            if mode == "nonce" { capture["commandID"] = .string(UUID().uuidString) }
+            if mode == "generation" || mode == "project" { var bindings = capture["tasks"]!.list, task = bindings[0].object; task[mode == "generation" ? "generation" : "project"] = .string(UUID().uuidString.lowercased()); bindings[0] = .object(task); capture["tasks"] = .array(bindings) }
+            if mode == "before" { var row = capture["after"]!.object; row["id"] = .string("other-list"); capture["before"] = .object(row) }
+            if mode == "after" { capture["after"] = .null }
+            if mode == "unknown-fields" { var fields = json["fields"]!.object; fields["opaque"] = .string("Do not discard"); json["fields"] = .object(fields) }
+            if mode != "legacy" { json["orderRecovery"] = .object(capture) }
+            local.pending[local.pending.count - 1] = try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(json))
+            if mode == "row-drift" { local.tables["view_orders"]![0]["updated_at"] = .string("2026-10-25T13:00:00Z") }
+            if mode == "duplicate-row" { local.tables["view_orders"]!.append(local.tables["view_orders"]![0]) }
+            if mode == "duplicate-command" { local.pending.append(local.pending.last!) }
+            if mode == "broken-chain" { var second = local.pending.last!; second.id = UUID(); var raw = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(second)), meta = raw["orderRecovery"]!.object; meta["commandID"] = .string(second.id.uuidString); raw["orderRecovery"] = .object(meta); local.pending.append(try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(raw))) }
+            let before = local; XCTAssertThrowsError(try TeamCompletionRecoveryDraft(group: review, snapshot: local), mode); XCTAssertEqual(local, before)
+        }
+    }
+    func testOrderCaptureIsBoundedAndRefusesUnknownRowsAndTaskIncarnations() throws {
+        let (base, _, edit, _) = try recoveryFixture(); let local = base.snapshot, target = edit.recordID
+        let raw = Mutation(table: "view_orders", recordID: "scope:today", method: "POST", fields: ["id": .string("scope:today"), "user_id": .string(base.account), "ids": .array([.string(target)])])
+        let command = try TaskOrderRecovery.capturing(raw, snapshot: local, account: base.account, origin: base.origin)
+        XCTAssertEqual(command.fields, raw.fields); XCTAssertEqual(command.id, raw.id)
+        for mode in ["duplicate-task", "foreign-row", "unknown-row-field", "invalid-ids", "other-table", "bad-origin"] {
+            var snapshot = local, change = raw
+            if mode == "missing-task" { snapshot.tables["tasks"]?.removeAll { $0.id == target } }
+            if mode == "duplicate-task" { snapshot.tables["tasks"]!.append(snapshot.tables["tasks"]!.first { $0.id == target }!) }
+            if mode == "foreign-row" { snapshot.tables["view_orders"] = [Record(["id": .string(raw.recordID), "user_id": .string(UUID().uuidString.lowercased()), "ids": .array([.string(target)])])] }
+            if mode == "unknown-row-field" { change.fields["future"] = .string("Keep") }
+            if mode == "invalid-ids" { change.fields["ids"] = .array([.string(target), .string(target)]) }
+            if mode == "other-table" { change.table = "view_preferences" }
+            XCTAssertThrowsError(try TaskOrderRecovery.capturing(change, snapshot: snapshot, account: base.account, origin: mode == "bad-origin" ? "http://unsafe.example" : base.origin), mode)
+        }
+    }
+    func testOrderDraftVaultRoundTripPreservesChoiceAndFullFrozenWorkspace() throws {
+        let (base, cache, edit, review) = try recoveryFixture(); var local = base.snapshot
+        _ = try captureOrder(&local, key: "scope:today", ids: [edit.recordID], account: base.account, origin: base.origin)
+        let draft = try TeamCompletionRecoveryDraft(group: review, snapshot: local)
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString); defer { try? FileManager.default.removeItem(at: folder) }
+        let key = SymmetricKey(size: .bits256), vault = TeamCompletionRecoveryDraftVault(directory: folder, account: base.account, origin: base.origin, key: { key })
+        let saved = try vault.save(draft), reopened = try vault.load(saved.id)
+        XCTAssertEqual(reopened.snapshot, local); XCTAssertEqual(try reopened.data(), try draft.data()); XCTAssertEqual(reopened.preserving(readable: cache), draft.preserving(readable: cache))
+        XCTAssertEqual(try vault.save(draft).id, saved.id); XCTAssertFalse(String(decoding: try Data(contentsOf: vault.file(saved.id)), as: UTF8.self).contains("scope:today"))
+    }
+    @MainActor func testOrderRecoveryMetadataNeverEntersThePreferenceWriteBody() async throws {
+        let (base, _, edit, _) = try recoveryFixture(); var local = base.snapshot
+        let order = try captureOrder(&local, key: "scope:today", ids: [edit.recordID], account: base.account, origin: base.origin), api = try backend(base.account)
+        var calls = 0
+        CompletionBatchHTTP.handler = { request, peer in
+            calls += 1; XCTAssertEqual(request.url?.path, "/rest/v1/view_orders")
+            XCTAssertEqual(try? JSONDecoder().decode([String: JSON].self, from: request.httpBody ?? Data()), order.fields)
+            XCTAssertFalse(String(decoding: request.httpBody ?? Data(), as: UTF8.self).contains("orderRecovery"))
+            peer.finish(try! JSONEncoder().encode([Record(order.fields)]))
+        }; defer { CompletionBatchHTTP.handler = nil }
+        _ = try await api.send(order, expectedAccount: base.account); XCTAssertEqual(calls, 1)
+    }
+}
+
+
+extension TeamCompletionBatchTests {
+    func testMissingUnrelatedOrderReferencesRemainOpaqueAndCannotAuthorizeRecreatedTasks() throws {
+        let (base, cache, edit, review) = try recoveryFixture(); var local = base.snapshot
+        let stale = UUID().uuidString.lowercased()
+        let old = Record(["id": .string("scope:today"), "user_id": .string(base.account), "ids": .array([.string(stale), .string(edit.recordID)])])
+        local.tables["view_orders"] = [old]
+        let order = try captureOrder(&local, key: old.id, ids: [edit.recordID, stale], account: base.account, origin: base.origin)
+        let opaque = try XCTUnwrap(order.orderRecovery?.tasks.first { $0.id == stale }); XCTAssertNil(opaque.generation); XCTAssertNil(opaque.project)
+        let draft = try TeamCompletionRecoveryDraft(group: review, snapshot: local), next = try XCTUnwrap(draft.preserving(readable: cache))
+        XCTAssertEqual(next.tables["view_orders"], [old]); XCTAssertEqual(draft.parkedChanges.last, order)
+        XCTAssertFalse(next.tables["tasks"]!.contains { $0.id == stale }); XCTAssertTrue(draft.text.contains("Unavailable task"))
+        // A missing identity cannot later stand in for a same-ID task incarnation.
+        XCTAssertThrowsError(try TaskOrderRecovery.parking([order], snapshot: local, affected: [stale], taskRows: [Record(["id": .string(stale), "task_generation": .string(UUID().uuidString.lowercased()), "project_id": .null])], account: base.account, origin: base.origin))
+    }
+}

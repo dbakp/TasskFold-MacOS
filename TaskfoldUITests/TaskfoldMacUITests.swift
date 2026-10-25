@@ -3407,13 +3407,14 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         wait(for: [opened], timeout: 10)
         app.activate()
     }
-    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil, dependent: Bool = true, recordedDraft: Bool = false, mentions: Bool = false) throws {
+    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil, dependent: Bool = true, recordedDraft: Bool = false, mentions: Bool = false, preferences: Bool = false) throws {
         guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Reserved isolated Mac host required") }
         app.launchArguments = ["--team-editor-testing", "--team-editor-reset", "--team-batch-testing", "--team-batch-recovery-testing", "--team-batch-recovery-recorded", "--team-batch-recovery-" + mode, "-appearance", "light"]
         if !recorded { app.launchArguments.removeAll { $0 == "--team-batch-recovery-recorded" } }
         if let storage { app.launchArguments.append("--team-recovery-storage=" + storage) }
         if recordedDraft { app.launchArguments.append("--team-recorded-draft-testing") }
         if mentions { app.launchArguments.append("--team-recorded-mention-testing") }
+        if preferences { app.launchArguments.append("--team-recorded-order-testing") }
         if let race { app.launchArguments.append("--team-recovery-race=" + race) }
         if single { app.launchArguments.append("--team-single-recovery-testing") }
         if refresh { app.launchArguments.append("--team-single-recovery-refresh") }
@@ -3735,10 +3736,10 @@ extension TeamCompletionRecoveryMacUITests {
 
 
 extension TeamCompletionRecoveryMacUITests {
-    @MainActor private func recordedDraftRecovery(_ scenario: String, mentions: Bool = false) throws {
+    @MainActor private func recordedDraftRecovery(_ scenario: String, mentions: Bool = false, preferences: Bool = false) throws {
         let app = XCUIApplication(); defer { app.terminate() }
         let single = scenario == "single", fault = scenario == "vault" ? "draft" : "cache"
-        try launch(app, mode: "viewer", single: single, recorded: true, storage: fault, recordedDraft: true, mentions: mentions)
+        try launch(app, mode: "viewer", single: single, recorded: true, storage: fault, recordedDraft: true, mentions: mentions, preferences: preferences)
         app.buttons["openMacCompletionRecovery"].click()
         let fm = FileManager.default, support = try support()
         let cacheFile = support.appendingPathComponent("Taskfold/ec240000-0000-4000-8000-000000000001.json")
@@ -3759,7 +3760,7 @@ extension TeamCompletionRecoveryMacUITests {
         XCTAssertTrue(app.staticTexts["Saved draft context protected"].waitForExistence(timeout: 12), app.debugDescription)
         app.buttons["openMacCompletionRecovery"].click()
         let before = try saved(), bytes = try Data(contentsOf: cacheFile), queue = pending(before)
-        XCTAssertEqual(queue.count, 2); XCTAssertEqual(queue[0]["teamCompletion"] != nil, single)
+        XCTAssertEqual(queue.count, preferences ? 6 : 2); XCTAssertEqual(queue[0]["teamCompletion"] != nil, single)
         let keep = app.buttons["preserveRecordedCompletionDraft"]
         XCTAssertTrue(keep.waitForExistence(timeout: 15), app.debugDescription)
 
@@ -3809,6 +3810,29 @@ extension TeamCompletionRecoveryMacUITests {
         XCTAssertEqual(canonicalRecordedDraft(try XCTUnwrap(draft["snapshot"] as? [String: Any])), canonicalRecordedDraft(before))
         XCTAssertEqual((draft["id"] as? String)?.lowercased(), files.first!.deletingPathExtension().lastPathComponent)
         let json = try JSONSerialization.jsonObject(with: exported) as! [String: Any]
+        if preferences {
+            let oldTables = before["tables"] as! [String: Any], newTables = after["tables"] as! [String: Any]
+            let oldRows = try XCTUnwrap(oldTables["view_orders"] as? [[String: Any]]), newRows = try XCTUnwrap(newTables["view_orders"] as? [[String: Any]])
+            XCTAssertEqual(newRows.count, 2)
+            let oldIndependent = try XCTUnwrap(oldRows.first { $0["id"] as? String == "scope:inbox" }), newIndependent = try XCTUnwrap(newRows.first { $0["id"] as? String == "scope:inbox" })
+            XCTAssertEqual(oldIndependent as NSDictionary, newIndependent as NSDictionary)
+            let orders = queue.filter { $0["table"] as? String == "view_orders" }; XCTAssertEqual(orders.count, 4)
+            let savedBefore = try XCTUnwrap((orders[0]["orderRecovery"] as? [String: Any])?["before"] as? [String: Any])
+            XCTAssertEqual(newRows.first { $0["id"] as? String == "scope:today" } as NSDictionary?, savedBefore as NSDictionary)
+            XCTAssertTrue(orders.allSatisfy { $0["orderRecovery"] != nil })
+            let bindings = try XCTUnwrap((orders[0]["orderRecovery"] as? [String: Any])?["tasks"] as? [[String: Any]])
+            let opaque = try XCTUnwrap(bindings.first { $0["id"] as? String == "ec240000-0000-4000-8000-000000000099" })
+            XCTAssertNil(opaque["generation"]); XCTAssertNil(opaque["project"])
+            XCTAssertFalse((newTables["tasks"] as! [[String: Any]]).contains { $0["id"] as? String == opaque["id"] as? String })
+
+            XCTAssertEqual(Set(orders.compactMap { $0["id"] as? String }).count, 4)
+            XCTAssertFalse(newRows.contains { ($0["id"] as? String)?.hasPrefix("widget-note:") == true })
+            XCTAssertEqual((json["changes"] as? [[String: Any]])?.filter { $0["table"] as? String == "view_orders" } as NSArray?, orders as NSArray)
+            let choices = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "Pinned note choice:", "Pinned note choice:")).firstMatch
+            XCTAssertTrue(choices.waitForExistence(timeout: 10), app.debugDescription)
+            XCTAssertTrue(String(decoding: exported, as: UTF8.self).contains("orderRecovery"))
+        }
+
         if mentions {
             let beforeRows = before["tables"] as! [String: Any], afterRows = after["tables"] as! [String: Any]
             let originalMarkers = try XCTUnwrap(beforeRows["_conversation_outbox"] as? [[String: Any]])
@@ -3885,4 +3909,8 @@ extension TeamCompletionRecoveryMacUITests {
 
 extension TeamCompletionRecoveryMacUITests {
     @MainActor func testRecordedMissingTaskKeepsConnectedMentionMarkerAfterRelaunch() throws { try recordedDraftRecovery("group", mentions: true) }
+}
+
+extension TeamCompletionRecoveryMacUITests {
+    @MainActor func testRecordedMissingTaskKeepsOrderAndPinHistoryAfterRelaunch() throws { try recordedDraftRecovery("group", mentions: true, preferences: true) }
 }

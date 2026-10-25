@@ -1,0 +1,14 @@
+{
+  "initialCompile": "One wrong helper qualifier was corrected to the existing TeamOrganizationValue.scope before baseline validation.",
+  "baseline": {
+    "passed": 247,
+    "failed": 0
+  },
+  "newCases": 10,
+  "finalCorePerRepo": {
+    "passed": 257,
+    "failed": 0
+  },
+  "performance": "Capture and readable summary avoid repeated full task scans. Broad large-workload responsiveness remains unaccepted.",
+  "lateReview": "Initially passed 256 Core checks and six native cases. Final review added explicit unavailable references so stale IDs in real ordering vectors can be retained without authorizing recreated tasks; extended native fixture and repeated final acceptance."
+}

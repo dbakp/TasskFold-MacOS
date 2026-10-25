@@ -98,6 +98,8 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var reminderPreferenceField: String? = nil
     /// One complete ordering intent, persisted with its retry identity.
     var organizationOrder: OrganizationOrder.Command? = nil
+    /// Account/backend-bound prior state for explicit local list recovery only.
+    var orderRecovery: TaskOrderRecovery? = nil
     var teamTaskScope: TeamTaskEditScope? = nil
     var teamTaskBatch: TeamTaskBatch? = nil
     var teamCompletion: TeamCompletion? = nil

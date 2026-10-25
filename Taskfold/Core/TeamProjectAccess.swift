@@ -178,7 +178,7 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
     }
     func body(for change: Mutation) throws -> [String: JSON] {
         guard [account, team, project, change.recordID].allSatisfy(TeamProjectValue.id),
-              change.table == "tasks", change.method == "PATCH", change.organizationOrder == nil,
+              change.table == "tasks", change.method == "PATCH", change.organizationOrder == nil, change.orderRecovery == nil,
               !change.fields.isEmpty, Set(change.fields.keys).isSubset(of: Self.fields),
               let base = change.baseline, base["project_id"] == .string(project),
               case .string(let generation)? = base["task_generation"], TeamProjectValue.id(generation),
@@ -238,7 +238,7 @@ extension TeamTaskEditScope {
         return change
     }
     func lifecycleAction(for change: Mutation) throws -> String {
-        guard change.table == "tasks", change.organizationOrder == nil else { throw Self.invalid }
+        guard change.table == "tasks", change.organizationOrder == nil, change.orderRecovery == nil else { throw Self.invalid }
         if change.method == "DELETE" { return "delete" }
         if change.method == "POST", change.insertOnly == true { return restoreRequest == nil ? "create" : "restore" }
         throw Self.invalid

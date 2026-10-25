@@ -13,13 +13,12 @@ draft work. See the dated stages at the end of this plan for verification and
 remaining limits; older paragraphs record preceding checkpoints.
 
 The next priorities within rank 6 are:
-1. Add captured preference/order/pin recovery without granting editing authority.
-   Connected version-1 mention read/unread markers now have explicit saved-draft
-   preservation through verified comment/task context. Unknown or missing context
-   and single cancelled/provisional marker flows remain protected and open. Missing-source/occurrence
-   authored task/comment preservation now has a separate encrypted draft path;
-   ordinary native relaunch/failure/export checks pass. Broader hosted/series
-   acceptance remains open.
+1. Finish single cancelled/provisional draft paths and missing conversation
+   context without guessing legacy or unsupported preference history. Captured
+   task list-order/pin histories and connected version-1 mention read/unread
+   markers now have explicit encrypted preservation with native relaunch/export
+   acceptance. Arbitrary view_preferences fields remain protected. Broader
+   hosted/series acceptance remains open.
 2. Finish backup/vault I/O-phase races, provisional-occurrence draft-vault failures,
    native Mac recurring history and remaining keyboard/accessibility behavior.
    Individual ordinary-root failure/retry now passes three native scenarios on
@@ -4515,3 +4514,51 @@ The Mac export test now creates and removes its unique synthetic file in the
 runner’s own temporary directory. Its first self-contained setup attempt was
 refused by the test runner’s sandbox at `/tmp`; no app file export occurred in
 that attempt. The corrected setup has a separate retained one-case result.
+
+
+## 25 October: captured list-order and pinned-note recovery
+
+Both clients now capture optional version-1 recovery evidence when writing a
+supported account-owned task ordering or note pin. It binds the actual command
+identity, account/backend, complete prior and projected preference row, and the
+referenced task generations/projects. Missing unrelated task IDs remain explicit
+unavailable references in the ordering vector; they cannot authorize a recreated
+task or be inferred as a task incarnation. The evidence stays outside row fields and
+ordinary HTTP write bodies. Local mode and older/unsupported captures keep their
+existing behavior; no history is fabricated for an old queue.
+
+An explicit recorded-result or cancelled-selection draft can now preserve complete
+same-row choice histories, including Pin → Undo → Redo. The current row must match
+the captured final projection, each transition must join exactly, and affected task
+incarnations must match the reviewed cohort. The entire ordering vector is kept;
+recovery restores its prior row instead of splitting a user's choice. Other list
+rows and independent task edits stay unchanged. Missing/foreign/unsupported or
+changed evidence keeps the review and queue protected. Plain completion receipts
+and simple cancellation cannot silently strand a connected arrangement.
+
+The existing verified backup/encrypted-archive/read-back transaction precedes local
+acceptance. Draft text explains the saved order/pin choice and prior arrangement;
+JSON retains all original commands, nonces and captured evidence. Preference rows
+are not misrepresented as tasks, and unrelated task descriptions remain outside
+export. Undo/Redo choices receive fresh local identities and capture the then-current
+row. The new capture indexes task identities once; readable summaries index titles.
+Current task-write validators refuse attached preference recovery metadata.
+
+Each repo passes 257 focused Core checks (ten new cases), including real intercepted
+HTTP proof that recovery metadata is absent from the normal preference body.
+Two native cases pass per Mac, iPhone Simulator and iPad Simulator: combined task,
+mention, list-order and pin/Undo/Redo preservation through the production capture/
+history helpers, archive/read-back, cold reopen, preview and export; plus the
+existing single missing-task regression. The actual Mac JSON Save bytes match the
+prepared export; iOS sharing opens and cancels safely. Complete snapshots, preserved
+commands, restored prior order, untouched other list row and relaunch are retained
+and independently checked. See
+[p2-order-recovery-evidence.json](p2-order-recovery-evidence.json).
+
+This adds supported task `view_orders` recovery, not arbitrary `view_preferences`
+fields or guessed legacy ordering history. Single cancelled/provisional recovery
+paths, missing conversation context, backup/vault I/O-phase races, broader native
+recurring/spoken acceptance, large-workload responsiveness and genuine hosted
+acceptance remain open. Collaboration stays default off. No hosted schema/service/
+configuration, rollout, real account/task or user-deferred release/provider/device
+gate changed.

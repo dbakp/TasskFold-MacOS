@@ -1404,6 +1404,7 @@ final class Store {
                     change = try scope.capturing(change, existing: record("tasks", id: change.recordID))
                 } catch { snapshot = old; self.error = error.localizedDescription; return false }
             }
+            if change.table == "view_orders" { change = capturingTaskOrderRecovery(change) }
             committedChanges.append(change)
             let before = change.table == "tasks" ? record("tasks", id: change.recordID) : nil
             snapshot.apply(change)
@@ -1463,6 +1464,15 @@ final class Store {
     }
     func isPinnedNote(_ taskID: String) -> Bool { PinnedNotes.contains(taskID, pins: rows("view_orders"), account: userID) }
     /// Task edits and selection reach disk together before any sync begins.
+    /// Capture optional recovery evidence without changing the user's row write.
+    /// Older/unsupported choices keep their original queue and remain protected.
+    func capturingTaskOrderRecovery(_ change: Mutation) -> Mutation {
+        var result = change; result.orderRecovery = nil
+        guard result.table == "view_orders", !localMode,
+              let origin = try? backend.accountRemovalOrigin,
+              let captured = try? TaskOrderRecovery.capturing(result, snapshot: snapshot, account: userID, origin: origin) else { return result }
+        return captured
+    }
     @discardableResult
     func saveTaskWithNotePin(_ task: Record, pin: Bool?, baseline: Record? = nil) -> Bool {
         guard let pin else { return save("tasks", task, baseline: baseline) }
@@ -1545,7 +1555,8 @@ final class Store {
     func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks, account: userID) }
     private func historyChanges(_ changes: [Mutation]) -> [Mutation] {
         changes.map { original in
-            let change = TeamCompletion.historyAction(original,snapshot:snapshot)
+            var change = TeamCompletion.historyAction(original,snapshot:snapshot)
+            if change.table == "view_orders" { change.id = UUID(); change.orderRecovery = nil }
             if change.table == "tasks", change.method == "POST" {
                 return TaskGeneration.restoring(change, existing: record("tasks", id: change.recordID))
             }
@@ -3977,6 +3988,29 @@ extension Store {
                 guard let mention = SharedMention(marker) else { throw TeamCompletion.invalid }
                 snapshot.tables[SharedComment.table] = [comment]; snapshot.tables[SharedMention.table] = [marker]
                 try ConversationOutbox.enqueue(SharedMentionChange(mention: mention, account: userID, read: true).record, into: &snapshot)
+                try persist()
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-recorded-order-testing"),
+               !snapshot.pending.contains(where: { $0.table == "view_orders" }),
+               let item = header.teamCompletion != nil ? header : header.teamTaskBatch?.items.first,
+               let task = snapshot.tables["tasks"]?.first(where: { $0.id == item.recordID }),
+               let other = snapshot.tables["tasks"]?.first(where: { $0.id != task.id }) {
+                let stale = "ec240000-0000-4000-8000-000000000099"
+                let order = Record(["id": .string("scope:today"), "user_id": .string(userID), "ids": .array([.string(other.id), .string(stale), .string(task.id)]), "updated_at": .string("2026-10-25T12:00:00Z")])
+                let independent = Record(["id": .string("scope:inbox"), "user_id": .string(userID), "ids": .array([.string(other.id)])])
+                snapshot.tables["view_orders"] = [order, independent]
+                func applyChoice(_ raw: Mutation) throws -> Mutation {
+                    let captured = capturingTaskOrderRecovery(raw)
+                    guard captured.orderRecovery != nil else { throw TaskOrderRecovery.invalid }
+                    snapshot.apply(captured); snapshot.pending.append(captured); return captured
+                }
+                _ = try applyChoice(Mutation(table: "view_orders", recordID: order.id, method: "POST", fields: ["id": order["id"], "user_id": .string(userID), "ids": .array([.string(task.id), .string(other.id), .string(stale)])]))
+                let beforePin = snapshot
+                guard let choice = PinnedNotes.change(taskID: task.id, enabled: true, pins: snapshot.tables["view_orders"] ?? [], account: userID) else { throw TaskOrderRecovery.invalid }
+                let pin = try applyChoice(choice)
+                let inverse = EditHistory(changes: [pin], snapshot: beforePin).undo
+                for change in historyChanges(inverse) { _ = try applyChoice(change) }
+                for change in historyChanges([pin]) { _ = try applyChoice(change) }
                 try persist()
             }
             if let mode = TeamBatchRecoveryNativePeer.readOnlyMode {
