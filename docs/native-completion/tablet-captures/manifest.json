@@ -1,0 +1,50 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "76FB664A-B6E6-4829-A7B2-14ADAC3418E7.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Exact original Undo remains usable when its action returns_0_83E2B058-99EE-4C4C-A79C-3EEC3F4003D8.png",
+        "timestamp" : 1792931305.794
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "82E76CDA-549D-4AD5-84D4-45759554A12A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Stale Undo at thirty entries cannot undo the newer edit_0_08CE9B6C-F498-4EDF-A932-E7DF366A20A1.png",
+        "timestamp" : 1792931301.188
+      }
+    ],
+    "testIdentifier" : "TeamTaskBatchDeletionUITests/testCapturedUndoCannotRetargetAtHistoryLimit()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamTaskBatchDeletionUITests/testCapturedUndoCannotRetargetAtHistoryLimit"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "1FFF4725-7F2C-4F09-97BF-932E72F1FCA4.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared checkbox Undo survives normal relaunch_0_CAD24BEC-0DF5-45CF-B39C-1A6C403F0D8C.png",
+        "timestamp" : 1792931333.243
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "198547CD-510C-4E6F-AC1B-F5BFC5AC43F4.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared list checkbox persists captured completion_0_E4F7691D-FF0F-492B-9756-4BD96C8995C5.png",
+        "timestamp" : 1792931323.285
+      }
+    ],
+    "testIdentifier" : "TeamTaskBatchDeletionUITests/testSharedListCheckboxCompletesThroughCapturedCommandAndUndo()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TeamTaskBatchDeletionUITests/testSharedListCheckboxCompletesThroughCapturedCommandAndUndo"
+  }
+]

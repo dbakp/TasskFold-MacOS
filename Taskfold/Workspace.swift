@@ -333,6 +333,15 @@ final class Workspace {
 
     /// Persist completion before returning from the action, including an immediate app exit.
     func complete(_ task: Record) {
+        if Self.subtaskPath(task.id) == nil, store.hasSharedTaskSelection([task.id]) {
+            var saved = false
+            run(task.completed ? "Reopen Task" : "Complete Task") { withAnimation(layout) { saved = store.toggleNativeTask(task) } }
+            guard saved else { return }
+            completing.remove(task.id)
+            if !task.completed { Feedback.complete() }
+            confirm(task.completed ? "Reopened “\(task.title)”" : "Completed “\(task.title)”")
+            return
+        }
         if hierarchyFilter {
             let now = Date()
             guard runSelection([task], name: task.completed ? "Reopen Task" : "Complete Task", action: { _ in .completion(!task.completed, now) }) else { return }

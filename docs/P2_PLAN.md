@@ -4,6 +4,11 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+The latest follow-up connects native shared root checkboxes to the captured
+completion/reopen path. It retains the existing atomic recurrence and linked Undo
+commands; each repo passes 551 selected Core checks and its own app build. See
+`p2-native-completion-evidence.json` for installed acceptance scope and limits.
+
 The latest shared batch stage adds reviewed portable-label Add, exact Remove and
 Clear all. It retains whole-selection source/access checks, one durable command
 and linked Undo. Each repo passes 124 isolated SQL/advisor checks, 500 focused
@@ -3568,3 +3573,43 @@ run was interrupted (exit 75), with log, partial summary and screenshot retained
 the history-limit case was not reached. No app change or repeated run was made
 to disguise those input failures. Earlier v2 label regression passes remain
 separately recorded. Current iPad and Mac runtime acceptance remains open.
+
+
+### 2026-10-25 — Native shared-task checkbox admission
+
+The regular list checkbox previously sent an ordinary personal mutation for a
+known team task. The existing workspace guard refused that write. Both native
+apps now explicitly capture the visible root task, current workspace/session,
+team role/access token and service origin before preparing its completion.
+Calendar/other native callers of Store.toggle use the same admission. Mac shared
+roots use it before the hierarchy-filter path; personal writers stay separate.
+
+Completion prepares the existing single TEAM_COMPLETE command, including a
+recurring successor and its original action identity when appropriate. Reopen
+uses the existing scoped revision-checked edit and preserves later occurrences;
+Undo alone can remove its own unchanged provisional successor. A stale visible
+row, missing incarnation, changed workspace/session/access, viewer role or
+disabled rollout refuses the action. Unknown repeat semantics are preserved
+without forecasting a successor. No scope is inferred for ordinary editor saves.
+
+Both independent Core suites pass 551 selected regressions, including six new
+cases for this native admission, source/context refusal, recurrence/Undo and
+reopen preservation. Final Debug app builds pass. Initial test snapshots omitted
+the required project row and failed; the fixture was corrected and the initial
+logs retained. See p2-native-completion-evidence.json for exact native scope.
+
+This fixes single native root gestures; atomic multi-task completion, other
+remaining shared adapters, native Mac/spoken/window/hosted checks and the full
+ranked Px objective remain open. No hosted schema/configuration, rollout, real
+task data or user-deferred release/provider/device work changed.
+
+Installed verification: two actual scenarios pass per signed iPhone/iPad, with
+zero failures, skips or runtime warnings. The real checkbox writes one captured
+completion; Undo writes its linked inverse and survives normal relaunch with the
+complete cache unchanged. Unselected rows remain equal. The 30-entry history/
+Redo regression now passes on both devices. Actual final caches, history proofs,
+logs, summaries and matched installed binary hashes are retained. Phone/tablet
+completion feedback renders without clipping; the iPad relaunch capture includes
+a navigation transition and is not stable-layout acceptance. No cloud/Mac runtime
+or installed recurrence/reopen acceptance is implied. The earlier iPad planner
+input failure remains open. Next: atomic reviewed shared multi-task completion.

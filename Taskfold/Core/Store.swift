@@ -1476,7 +1476,23 @@ final class Store {
         changes.append(Mutation(table: table, recordID: id, method: "DELETE", fields: [:]))
         commit(changes)
     }
-    func toggle(_ task: Record) { commit(toggleChanges(task)) }
+    func toggle(_ task: Record) { toggleNativeTask(task) }
+    /// Explicit native gesture admission. Shared rows never fall back to the
+    /// personal writer if their captured access, source or workspace is unavailable.
+    @discardableResult func toggleNativeTask(_ task: Record) -> Bool {
+        do {
+            if hasSharedTaskSelection([task.id]) {
+                let draft = try captureTeamTaskEditor(task)
+                guard let cache = nativeConversationTeamCache else { throw TeamTaskEditorDraft.unavailable }
+                let change = try draft.completionMutation(current: record("tasks", id: task.id), tasks: tasks,
+                    workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration),
+                    session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+                return commit([change])
+            }
+            return commit(toggleChanges(task))
+        } catch { self.error = error.localizedDescription; return false }
+    }
+
     /// Completes or reopens several tasks as one undoable change.
     func toggleAll(_ tasks: [Record]) { let changes = tasks.flatMap(toggleChanges); if !changes.isEmpty { commit(changes) } }
     /// Patches the same fields on several tasks as one undoable change.

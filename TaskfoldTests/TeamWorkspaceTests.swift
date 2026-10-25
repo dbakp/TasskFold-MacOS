@@ -832,3 +832,80 @@ extension TeamWorkspaceTests {
         XCTAssertFalse(PersonalConnectionDestination.unavailable.supported)
     }
 }
+
+
+extension TeamWorkspaceTests {
+    func testNativeSharedCheckboxUsesCapturedAtomicCompletionAndUndo() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        let change = try draft.completionMutation(current: row, tasks: [row], workspace: workspace, session: session, cache: cache, enabled: true)
+        XCTAssertEqual(change.method, "TEAM_COMPLETE"); XCTAssertNil(change.teamTaskScope)
+        let command = try XCTUnwrap(change.teamCompletion)
+        XCTAssertEqual(command.source, row); XCTAssertEqual(command.scope, draft.scope)
+        XCTAssertNil(command.proposed)
+        var saved = Snapshot(tables: ["tasks": [row], "projects": [Record(["id": row["project_id"]])]])
+        XCTAssertTrue(command.apply(to: &saved, header: change))
+        XCTAssertTrue(saved.tables["tasks"]![0].completed)
+        XCTAssertEqual(saved.tables["tasks"]![0]["opaque_future"], row["opaque_future"])
+        let undo = try command.inverse(of: change)
+        XCTAssertEqual(undo.teamCompletion?.related, change.id)
+        XCTAssertTrue(undo.teamCompletion!.apply(to: &saved, header: undo))
+        XCTAssertFalse(saved.tables["tasks"]![0].completed)
+    }
+    func testNativeSharedCheckboxRefusesStaleOrMissingVisibleRow() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        for key in ["title", "description", "project_id", "task_generation", "completion_version", "opaque_future"] {
+            var changed = row; changed[key] = .string("changed")
+            XCTAssertThrowsError(try draft.completionMutation(current: changed, tasks: [changed], workspace: workspace, session: session, cache: cache, enabled: true), key)
+        }
+        XCTAssertThrowsError(try draft.completionMutation(current: nil, tasks: [], workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try draft.completionMutation(current: row, tasks: [], workspace: workspace, session: session, cache: cache, enabled: true))
+    }
+    func testNativeSharedCheckboxRefusesWorkspaceSessionRoleAndRolloutChanges() throws {
+        let (draft, cache, row, workspace, session) = try editorContext()
+        let viewer = try TeamWorkspaceCache(boundary: boundary("viewer"), previous: cache, pending: [], tasks: [row])
+        for context in [cache, viewer] {
+            XCTAssertThrowsError(try draft.completionMutation(current: row, tasks: [row], workspace: workspace, session: UUID(), cache: context, enabled: true))
+        }
+        XCTAssertThrowsError(try draft.completionMutation(current: row, tasks: [row], workspace: workspace, session: session, cache: viewer, enabled: true))
+        XCTAssertThrowsError(try draft.completionMutation(current: row, tasks: [row], workspace: .init(account: workspace.account, generation: UUID()), session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try draft.completionMutation(current: row, tasks: [row], workspace: .init(account: "other", generation: workspace.generation), session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try draft.completionMutation(current: row, tasks: [row], workspace: workspace, session: session, cache: cache, enabled: false))
+    }
+    func testNativeSharedRecurringCheckboxKeepsOneCommandAndOwnedSuccessor() throws {
+        let (_, cache, original, workspace, session) = try editorContext()
+        var row = original; row["is_recurring"] = .bool(true); row["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)]); row["due_date"] = .string("2026-10-25")
+        let draft = try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: cache, enabled: true)
+        let change = try draft.completionMutation(current: row, tasks: [row], workspace: workspace, session: session, cache: cache, enabled: true, at: TaskPlanning.instant("2026-10-25T12:00:00Z")!, zone: "UTC")
+        let command = try XCTUnwrap(change.teamCompletion), next = try XCTUnwrap(command.proposed)
+        XCTAssertEqual(next["user_id"], .string(workspace.account)); XCTAssertEqual(next["project_id"], row["project_id"])
+        XCTAssertEqual(next["due_date"], .string("2026-10-26")); XCTAssertEqual(command.source["user_id"], row["user_id"])
+        var saved = Snapshot(tables: ["tasks": [row], "projects": [Record(["id": row["project_id"]])]])
+        XCTAssertTrue(command.apply(to: &saved, header: change)); XCTAssertEqual(saved.tables["tasks"]?.count, 2)
+        let undo = try command.inverse(of: change)
+        XCTAssertTrue(undo.teamCompletion!.apply(to: &saved, header: undo)); XCTAssertEqual(saved.tables["tasks"]?.count, 1)
+    }
+    func testNativeSharedReopenPreservesLaterOccurrenceAndUsesScopedRevision() throws {
+        let (_, cache, original, workspace, session) = try editorContext()
+        var row = original; row["completed"] = .bool(true); row["completed_at"] = .string("2026-10-25T12:00:00Z"); row["completion_version"] = .number(3)
+        var later = original; later["id"] = .string(UUID().uuidString.lowercased()); later["recurrence_parent_id"] = .string(row.id)
+        let draft = try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: cache, enabled: true)
+        let change = try draft.completionMutation(current: row, tasks: [row, later], workspace: workspace, session: session, cache: cache, enabled: true)
+        XCTAssertEqual(change.method, "PATCH"); XCTAssertNil(change.teamCompletion); XCTAssertEqual(change.teamTaskScope, draft.scope)
+        XCTAssertEqual(change.fields, ["completed": .bool(false), "completed_at": .null]); XCTAssertEqual(change.baseline?["completion_version"], .number(3))
+        XCTAssertEqual(try draft.scope.body(for: change)["task_generation"], row["task_generation"])
+        var saved = Snapshot(tables: ["tasks": [row, later]]); saved.apply(change)
+        XCTAssertFalse(saved.tables["tasks"]![0].completed); XCTAssertEqual(saved.tables["tasks"]![1], later)
+    }
+}
+
+
+extension TeamWorkspaceTests {
+    func testNativeSharedCheckboxKeepsUnknownRepeatSemanticsUnchanged() throws {
+        let (_, cache, original, workspace, session) = try editorContext()
+        var row = original; row["is_recurring"] = .bool(true); row["due_date"] = .string("2026-10-25")
+        row["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1), "futurePolicy": .string("keep")])
+        let draft = try TeamTaskEditorDraft(source: row, workspace: workspace, session: session, cache: cache, enabled: true)
+        XCTAssertThrowsError(try draft.completionMutation(current: row, tasks: [row], workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertEqual(draft.source, row)
+    }
+}

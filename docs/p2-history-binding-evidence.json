@@ -66,5 +66,9 @@
     "repoBuildCachesPreserved": true,
     "earlierReadyMacHostAndBuildPreserved": true,
     "noGlobalCleanup": true
+  },
+  "followUp": {
+    "evidence": "p2-native-completion-evidence.json",
+    "tabletHistoryLimit": "Now passes on the final current-source reserved iPad host; prior planner/input failure is retained and not retroactively accepted."
   }
 }

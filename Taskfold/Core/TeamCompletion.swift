@@ -353,3 +353,22 @@ extension TeamCompletion {
         }
     }
 }
+
+
+extension TeamTaskEditorDraft {
+    /// A list gesture owns the exact visible row and opening workspace. Completion
+    /// must use the atomic recurrence command, never an inferred personal PATCH.
+    func completionMutation(current: Record?, tasks: [Record], workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool, at: Date = Date(), zone: String = TimeZone.current.identifier) throws -> Mutation {
+        guard kind == .existing, permits(current: current, workspace: workspace, session: session, cache: cache, enabled: enabled),
+              current == source, tasks.first(where: { $0.id == source.id }) == source else { throw Self.unavailable }
+        if !source.completed {
+            guard source["is_recurring"] != .bool(true) || TeamTaskRecurrence.supported(source) else { throw TeamTaskRecurrence.invalid }
+            return try TeamCompletion.complete(source, tasks: tasks, scope: scope, at: at, zone: zone)
+        }
+        // Reopening an existing occurrence preserves any later occurrence. Only
+        // Undo of our own completion may remove its unchanged provisional successor.
+        let fields: [String: JSON] = ["completed": .bool(false), "completed_at": .null]
+        return try scope.capturing(Mutation(table: "tasks", recordID: source.id, method: "PATCH", fields: fields,
+            baseline: source.fields, teamTaskScope: scope), existing: source)
+    }
+}
