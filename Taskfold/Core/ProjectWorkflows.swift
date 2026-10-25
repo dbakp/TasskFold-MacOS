@@ -621,7 +621,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
         }
     }
     enum Destination: Equatable, Sendable {
-        case newProject(TeamProjectVisibility)
+        case newProject(TeamProjectVisibility, folder: String? = nil, parent: TeamProjectAccess? = nil)
         case project(TeamProjectAccess)
     }
     struct Order: Equatable, Sendable {
@@ -661,8 +661,14 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
         let definition = try WorkflowTemplate(document: source.document)
         let target: String
         switch destination {
-        case .newProject:
-            guard definition.kind == .project, team.role != .guest else { throw Self.invalid }
+        case .newProject(_, let folder, let parent):
+            guard definition.kind == .project, team.role != .guest, folder == nil || TeamProjectValue.id(folder!) else { throw Self.invalid }
+            if let parent {
+                guard parent.belongs(to: account, origin: origin, team: team.id), parent.role == .manager,
+                      parent.state == .active, !parent.setupPaused, parent.teamRevision == team.revision,
+                      let archive = parent.archive, !archive.effective, let hierarchy = parent.hierarchy,
+                      !hierarchy.parentUnavailable else { throw Self.invalid }
+            }
             _ = try TeamOrganizationValue.name(.string(name.trimmingCharacters(in: .whitespacesAndNewlines)))
             target = ""
         case .project(let access):
@@ -675,7 +681,8 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
         let changes = try definition.instantiate(account: account, name: name, targetProject: target, start: start, run: run)
         let stamp = ISO8601DateFormatter().string(from: createdAt)
         var projectRows: [Record] = [], sectionRows: [Record] = [], taskRows: [Record] = [], orderRows: [Order] = []
-        func task(_ row: Record, source: Record) throws -> Record {
+        func task(_ row: Record, source: Record, child: Bool = false) throws -> Record {
+            guard !child || !source["is_recurring"].flag else { throw AppFailure(message: "Repeating checklist items need a newer shared-workflow format. The template is unchanged.") }
             var row = row
             let labels = source["labels"].list.map { $0.object["name"] ?? .null }
             let value = JSON.array(labels)
@@ -686,7 +693,11 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
             row["created_at"] = .string(stamp)
             let children = row["subtasks"].list, original = source["subtasks"].list
             guard children.count == original.count else { throw Self.invalid }
-            row["subtasks"] = .array(try zip(children, original).map { .object(try task(Record($0.0.object), source: Record($0.1.object)).fields) })
+            row["subtasks"] = .array(try zip(children, original).map { .object(try task(Record($0.0.object), source: Record($0.1.object), child: true).fields) })
+            if child {
+                let fields: Set<String> = ["id", "title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "deadline_date", "duration_minutes", "time_zone", "labels", "subtasks"]
+                row = Record(row.fields.filter { fields.contains($0.key) })
+            }
             return row
         }
         var sourceIndex = 0
@@ -695,7 +706,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
             switch change.table {
             case "projects":
                 row["team_id"] = .string(team.id)
-                guard case .newProject(let visibility) = destination else { throw Self.invalid }
+                guard case .newProject(let visibility, _, _) = destination else { throw Self.invalid }
                 row["visibility"] = .string(visibility.rawValue)
                 projectRows.append(row)
             case "sections": sectionRows.append(row)
@@ -730,6 +741,38 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
         self.account = account; self.origin = origin; self.team = team; self.source = source
         self.destination = destination; self.workspace = workspace; self.session = session; self.run = run
         projects = projectRows; sections = sectionRows; tasks = taskRows; orders = orderRows
+    }
+
+    /// Freeze the actor's existing group orders along with the reviewed rows.
+    /// The caller must persist this exact envelope before dispatching it.
+    func requestBody(baseOrders: [String: [String]]) throws -> [String: JSON] {
+        let keys = orders.map { "group:" + $0.project + ":" + ($0.section ?? "none") }
+        guard Set(keys).count == keys.count, Set(baseOrders.keys) == Set(keys),
+              baseOrders.values.allSatisfy({ $0.count <= 10000 && Set($0).count == $0.count && $0.allSatisfy(TeamProjectValue.id) && Set($0).isDisjoint(with: Set(tasks.map(\.id))) }) else { throw Self.invalid }
+        let sourceBody: JSON
+        switch source {
+        case .personal(let row):
+            sourceBody = .object(["kind": .string("personal"), "id": .string(row.id), "team_id": .null, "revision": .null, "document": row["document"]])
+        case .shared(let detail):
+            sourceBody = .object(["kind": .string("shared"), "id": .string(detail.metadata.id), "team_id": .string(detail.scope.team), "revision": .number(detail.metadata.revision), "document": detail.document])
+        }
+        var target: [String: JSON] = ["project_id": .null, "revision": .null, "visibility": .null, "folder_id": .null, "parent_id": .null, "parent_revision": .null]
+        switch destination {
+        case .newProject(let visibility, let folder, let parent):
+            target["mode"] = .string("new"); target["visibility"] = .string(visibility.rawValue)
+            target["folder_id"] = folder.map(JSON.string) ?? .null
+            target["parent_id"] = parent.map { .string($0.id) } ?? .null
+            target["parent_revision"] = parent.map { .number($0.revision) } ?? .null
+        case .project(let access):
+            target["mode"] = .string("project"); target["project_id"] = .string(access.id); target["revision"] = .number(access.revision)
+        }
+        let body: [String: JSON] = ["team_id": .string(team.id), "team_revision": .number(team.revision), "request_id": .string(run.uuidString.lowercased()),
+            "source": sourceBody, "destination": .object(target), "projects": .array(projects.map { .object($0.fields) }),
+            "sections": .array(sections.map { .object($0.fields) }), "tasks": .array(tasks.map { .object($0.fields) }),
+            "orders": .array(zip(orders, keys).map { order, key in .object(["project_id": .string(order.project), "section_id": order.section.map(JSON.string) ?? .null,
+                "base_ids": .array(baseOrders[key]!.map(JSON.string)), "task_ids": .array(order.tasks.map(JSON.string))]) })]
+        guard try JSONEncoder().encode(body).count <= 4_200_000 else { throw Self.invalid }
+        return body
     }
 
     /// Compare the complete fresh review, not just a project ID or a creator UUID.

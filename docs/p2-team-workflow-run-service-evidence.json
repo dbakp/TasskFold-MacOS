@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-25",
+  "platform": "mac",
+  "status": "Atomic workflow-run source service and frozen request envelope implemented; new service default-off and undeployed; full shared-run/Px scope open",
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "bb82791290d69b4bd11f05b8efecc179bacd9691298586807ea495f554ecad0b",
+    "TaskfoldTests/TeamWorkflowRunTests.swift": "4fb494765f34e4a8245fdf50f75c63a090fc18aef2d1da014ea5c7f97b450a18",
+    "supabase/migrations/20261025092534_team_workflow_runs.sql": "c6e8380d755e57ea5fc85c481ece877cdcf8c10e1aaea671d26ca7a59b4bfff1",
+    "Scripts/Database/team-workflow-run-schema.mjs": "3d5825bccec51b922bea6bffa42d93ceda80512bf0c6aa25776fc24d0e2a0503",
+    "Scripts/Database/test-team-workflow-runs.mjs": "da01e0533b2c45bd4272ea7d67170c761dfa5b6922c47cd19e3214a3c1ee4e86"
+  },
+  "isolatedSQL": {
+    "passed": 93,
+    "failed": 0,
+    "advisors": "no new warning/error findings; existing fixture auth_rls_initplan warnings separately retained",
+    "containerRemoved": true,
+    "swiftGeneratedEnvelopeSHA256": "fb9bc853cda7fcf1e0a5a76be8859d077a406a5b6ade08f3808370393fff8653"
+  },
+  "core": {
+    "TeamWorkflowRunTests": 13,
+    "ProjectWorkflowsTests": 47,
+    "TeamTemplateLibraryTests": 31,
+    "TeamChecklistTests": 14,
+    "passed": 105,
+    "failed": 0
+  },
+  "appBuild": "arm64 Debug BUILD SUCCEEDED; signing disabled; compile only",
+  "readOnlyHostedMetadata": {
+    "tables": [
+      "public.projects",
+      "public.view_orders"
+    ],
+    "confirmed": [
+      "projects.description is text",
+      "view_orders.ids is jsonb",
+      "view_orders_pkey is (user_id,id)"
+    ],
+    "userRowsRead": false,
+    "hostedSchemaOrConfigChanged": false
+  },
+  "initialCorrections": [
+    "Ambiguous SQL identifier and source-validator CASE syntax fixed",
+    "Fixture source-owner FK and receipt-column assumptions corrected",
+    "Checklist persisted completed_at null expectation corrected",
+    "Integration required removing whole-task-only fields from checklist children"
+  ],
+  "remaining": [
+    "Durable client command/vault/receipt and transport integration",
+    "Native destination/content/recovery reviews",
+    "Native runtime, account/window and spoken acceptance",
+    "Genuine hosted acceptance and rollout; wider rank-6/Px scope"
+  ],
+  "evidenceDirectory": "team-workflow-run-service"
+}

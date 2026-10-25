@@ -5771,3 +5771,35 @@ must be connected before it creates shared work. Folder/subproject destination
 choices and existing destination order admission also remain part of that work.
 See p2-team-workflow-run-plan-evidence.json and TEAM_WORKFLOW_RUNS.md. Rollout and
 the full rank-6/Px goal remain open; all user deferrals remain unchanged.
+
+### 2026-10-25 — Atomic shared workflow service (source, disabled)
+
+Both repos own the same independently generated workflow-run migration. One
+account/session-checked request creates the complete project branch, sections,
+tasks and actor list order in one transaction. Current readable source contents,
+shared source revision and destination/team/parent revisions are rechecked.
+New team/private branches support folder and parent selection. Existing sections
+append without reordering prior sections. List-order compare-and-append preserves
+later work; stale reviews fail without partial creation. Permanent identity and
+nested-receipt checks prevent existing work from being claimed as a fresh run.
+A private HMAC receipt acknowledges exact retries without restoring deleted work
+or overwriting later edits; source/destination access is checked again on replay.
+
+Independent isolated PostgreSQL suites pass 93 checks per repo with advisors,
+including duplicate/concurrent requests, role/source/archive changes, lost-reply
+retry, late-failure rollback, quota, folders/hierarchy/sections, large order/note
+payloads, no direct private-table reads and soft-team-deletion receipt cleanup.
+Both Core packages pass 105 cases and arm64 Debug app builds succeed (unsigned
+compile evidence only). A workflow emitted by each repo's actual Swift planner
+is accepted by its database fixture, including relative dates and checklist
+metadata. This caught and corrected a checklist wire mismatch: shared children
+exclude whole-task-only fields; repeating children are refused without changing
+the saved template rather than losing their repeat rule.
+
+Only hosted column/primary-key metadata was read to verify inspected base types;
+no user rows or hosted schema/configuration changed. SQL fixtures are synthetic
+and removed. The new service defaults off and has not been deployed. Durable
+client request storage/receipt handling, native destination/content reviews,
+runtime/account-window/spoken and genuine hosted acceptance still remain.
+See p2-team-workflow-run-service-evidence.json. Shared runs, rank 6 and wider Px
+remain open; all release/provider/device deferrals remain unchanged.

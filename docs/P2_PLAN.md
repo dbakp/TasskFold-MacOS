@@ -4,11 +4,13 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Shared workflow runs now have a frozen Core content plan in both apps; 102
-focused cases pass per repository. Atomic service/command and native destination
-reviews remain open. See `TEAM_WORKFLOW_RUNS.md` and
-`p2-team-workflow-run-plan-evidence.json`. This is a foundation, not an enabled
-shared-run feature.
+Shared workflow runs now have a frozen request envelope and a default-off atomic
+source service. Each repo passes 93 isolated PostgreSQL checks, 105 focused Core
+cases and its own arm64 Debug build. Swift-generated workflow envelopes pass the
+SQL fixture. Durable client commands, native destination/recovery reviews and
+hosted acceptance remain open. See `TEAM_WORKFLOW_RUNS.md` and
+`p2-team-workflow-run-service-evidence.json`. No hosted deployment or rollout
+change occurred; shared runs and the wider Px goal remain open.
 
 Latest follow-up adds inline copy/export name validation. Native iPhone/iPad
 share-popover cancellation/reopening and final file cleanup now pass; see

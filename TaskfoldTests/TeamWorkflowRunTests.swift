@@ -103,7 +103,8 @@ final class TeamWorkflowRunTests: XCTestCase {
         XCTAssertEqual(TeamChecklist.token(savedChild[TeamChecklist.key])?.version, 0)
         XCTAssertNotEqual(savedChild.id, child["id"]?.text)
         XCTAssertNoThrow(try TeamChecklist.validate(a.tasks[0]["subtasks"]))
-        XCTAssertEqual(a.tasks[0]["created_at"], savedChild["created_at"])
+        XCTAssertNotNil(a.tasks[0].fields["created_at"])
+        for field in ["user_id", "project_id", "task_generation", "created_at", "is_recurring"] { XCTAssertNil(savedChild.fields[field], field) }
         task["labels"] = .array([.object(["name": .string(String(repeating: "x", count: 1025))])])
         doc["tasks"] = .array([.object(task)]); row["document"] = .object(doc)
         XCTAssertThrowsError(try plan(source: .personal(row), destination: .project(access())))
@@ -151,5 +152,37 @@ final class TeamWorkflowRunTests: XCTestCase {
         XCTAssertThrowsError(try plan(source: .personal(row), destination: .project(access())))
         XCTAssertThrowsError(try plan(start: Date(timeIntervalSince1970: .infinity)))
         XCTAssertThrowsError(try plan(run: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
+    }
+    func testFrozenOrderEnvelopeAndParentReview() throws {
+        let p = try plan(destination: .newProject(.private, parent: access(role: "manager")))
+        let bases = Dictionary(uniqueKeysWithValues: p.orders.map { ("group:" + $0.project + ":" + ($0.section ?? "none"), [String]()) })
+        let body = try p.requestBody(baseOrders: bases)
+        XCTAssertEqual(body["destination"]?.object["parent_id"], .string(projectID))
+        XCTAssertEqual(body["destination"]?.object["parent_revision"], .number(1))
+        XCTAssertEqual(body["request_id"], .string(p.run.uuidString.lowercased()))
+        XCTAssertEqual(body["tasks"]?.list, p.tasks.map { .object($0.fields) })
+        XCTAssertEqual(try p.requestBody(baseOrders: bases), body)
+        XCTAssertThrowsError(try p.requestBody(baseOrders: [:]))
+        XCTAssertThrowsError(try plan(destination: .newProject(.team, parent: access(role: "editor"))))
+        XCTAssertThrowsError(try plan(destination: .newProject(.team, parent: access(archived: true))))
+        XCTAssertThrowsError(try plan(destination: .newProject(.team, folder: "not-a-folder")))
+    }
+    func testExportGeneratedSQLFixture() throws {
+        guard let output = ProcessInfo.processInfo.environment["TASKFOLD_RUN_SQL_FIXTURE"] else { return }
+        guard output.hasPrefix("/tmp/taskfold-workflow-run-") && output.hasSuffix(".json") else { return XCTFail("Use an owned temporary fixture path") }
+        let p = try plan(start: Dates.parse("2026-11-01"))
+        let bases = Dictionary(uniqueKeysWithValues: p.orders.map { ("group:" + $0.project + ":" + ($0.section ?? "none"), [String]()) })
+        let body = try p.requestBody(baseOrders: bases)
+        try JSONEncoder().encode(JSON.object(body)).write(to: URL(fileURLWithPath: output), options: .atomic)
+    }
+    func testRepeatingChecklistIsRefusedWithoutChangingTemplate() throws {
+        guard case .personal(var row) = try source(kind: .task) else { return XCTFail() }
+        var doc = row["document"].object, task = doc["tasks"]!.list[0].object
+        var child = task["subtasks"]!.list[0].object
+        child["is_recurring"] = .bool(true); child["recurrence_pattern"] = .object(["type": .string("daily"), "interval": .number(1)])
+        task["subtasks"] = .array([.object(child)]); doc["tasks"] = .array([.object(task)]); row["document"] = .object(doc)
+        XCTAssertNoThrow(try WorkflowTemplate(document: row["document"]))
+        XCTAssertThrowsError(try plan(source: .personal(row), destination: .project(access())))
+        XCTAssertEqual(row["document"], .object(doc))
     }
 }
