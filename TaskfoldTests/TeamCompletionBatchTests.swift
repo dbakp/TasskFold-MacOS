@@ -122,7 +122,8 @@ final class TeamCompletionBatchTests: XCTestCase {
         local.apply(other); local.pending = [header, other]; let outside = local.tables["tasks"]!.last!
         XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.pending, [other]); XCTAssertEqual(local.tables["tasks"]!.last, outside)
         local = snapshot(batch); local.apply(header); let undo = try batch.inverse(of: header, snapshot: local); local.apply(undo); local.pending = [header, undo]
-        let before = local; XCTAssertFalse(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local, before, "Dependent Undo requires cohort reconciliation; it cannot be dropped")
+        let before = local; XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.pending, [undo])
+        for row in before.tables["tasks"]! { XCTAssertTrue(TeamCompletion.sameLocal(row, local.tables["tasks"]!.first { $0.id == row.id }!)) }
     }
     func testLastMemberProvisionalDraftPreventsPartialAcknowledgement() throws {
         let (_, header, batch, reply) = try fixture("recurring_"); var local = snapshot(batch); local.apply(header); local.pending = [header]
@@ -219,5 +220,240 @@ extension TeamCompletionBatchTests {
         let undo = try batch.inverse(of: header, snapshot: local)
         XCTAssertTrue(undo.teamTaskBatch!.apply(to: &local, header: undo)); XCTAssertEqual(local.tables["tasks"]?.count, 2)
         XCTAssertTrue(local.tables["tasks"]!.allSatisfy { !$0.completed })
+    }
+}
+
+extension TeamCompletionBatchTests {
+    private func append(_ change: Mutation, to value: inout Snapshot) { value.apply(change); value.pending.append(change) }
+    private func patch(_ row: Record, _ fields: [String: JSON], scope: TeamTaskEditScope) throws -> Mutation {
+        try scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: scope), existing: row)
+    }
+    private func sameRows(_ a: Snapshot, _ b: Snapshot, file: StaticString = #filePath, line: UInt = #line) {
+        let left = a.tables["tasks"] ?? [], right = b.tables["tasks"] ?? []
+        XCTAssertEqual(Set(left.map(\.id)), Set(right.map(\.id)), file: file, line: line)
+        for row in left {
+            guard let other = right.first(where: { $0.id == row.id }) else { continue }
+            XCTAssertTrue(TeamCompletion.sameLocal(row, other), row.id, file: file, line: line)
+        }
+    }
+    private func recurringChain() throws -> (Mutation, TeamTaskBatch, [String: JSON], Mutation, Mutation, Snapshot) {
+        let (_, header, batch, reply) = try fixture("recurring_"); var local = snapshot(batch)
+        append(header, to: &local)
+        let firstHistory = EditHistory(changes: [header], snapshot: snapshot(batch))
+        let undo = TeamCompletion.historyAction(firstHistory.undo[0], snapshot: local)
+        let undoHistory = EditHistory(changes: [undo], snapshot: local); append(undo, to: &local)
+        let redo = TeamCompletion.historyAction(undoHistory.undo[0], snapshot: local); append(redo, to: &local)
+        return (header, batch, reply, undo, redo, local)
+    }
+    func testSQLCompleteUndoRedoChainConfirmsSequentiallyWithoutRewritingRemainingRequests() throws {
+        let (_, header, batch, reply) = try fixture(), (_, undo, _, undoReply) = try fixture("undo_"), (_, redo, _, redoReply) = try fixture("redo_")
+        var local = snapshot(batch); append(header, to: &local); append(undo, to: &local); append(redo, to: &local)
+        let before = local, frozen = try JSONEncoder().encode(local.pending)
+        XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.pending, [undo, redo]); sameRows(local, before)
+        XCTAssertEqual(try JSONDecoder().decode([Mutation].self, from: frozen).dropFirst().map { $0 }, local.pending)
+        XCTAssertTrue(local.acknowledge(undo, saved: receipt(undo, undoReply))); XCTAssertEqual(local.pending, [redo]); sameRows(local, before)
+        XCTAssertTrue(local.acknowledge(redo, saved: receipt(redo, redoReply))); XCTAssertTrue(local.pending.isEmpty); sameRows(local, before)
+    }
+    func testRecurringUndoRedoProjectionKeepsLatestSuccessorGenerationsAndExactQueue() throws {
+        let (header, _, reply, undo, redo, current) = try recurringChain(); var local = current
+        XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.pending, [undo, redo]); sameRows(local, current)
+        XCTAssertEqual(Set(local.tables["tasks"]!.filter { !$0.completed }.map { $0.string("task_generation") }), Set(redo.teamTaskBatch!.items.map { $0.teamCompletion!.nextGeneration }))
+    }
+    func testQueuedScopedRootEditReplaysAndRetainsItsOriginalBaselineAndNonce() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let row = local.tables["tasks"]![0], change = try patch(row, ["description": .string("Authored while completion was syncing")], scope: batch.items[0].teamCompletion!.scope)
+        append(change, to: &local); let before = local
+        XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.pending, [change]); sameRows(local, before)
+    }
+    func testQueuedProvisionalEditSurvivesWhenServerConfirmsItsSameGeneration() throws {
+        let (_, header, batch, reply) = try fixture("recurring_"); var local = snapshot(batch); append(header, to: &local)
+        let next = batch.items[0].teamCompletion!.proposed!, change = try patch(next, ["title": .string("Authored future occurrence")], scope: batch.items[0].teamCompletion!.scope)
+        append(change, to: &local); let before = local
+        XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.pending, [change]); sameRows(local, before)
+    }
+    func testAdoptedSuccessorCannotStealQueuedProvisionalEdits() throws {
+        let (_, header, batch, reply) = try fixture("recurring_"); var local = snapshot(batch); append(header, to: &local)
+        let next = batch.items.last!.teamCompletion!.proposed!, change = try patch(next, ["description": .string("Keep my provisional instructions")], scope: batch.items.last!.teamCompletion!.scope)
+        append(change, to: &local)
+        var adopted = reply, rows = reply["items"]!.list, member = rows[1].object, successor = member["successor"]!.object
+        let other = UUID().uuidString.lowercased(); successor["task_generation"] = .string(other); member["successor_generation"] = .string(other); member["successor"] = .object(successor); member["created_successor"] = .bool(false); rows[1] = .object(member); adopted["items"] = .array(rows)
+        let before = local; XCTAssertFalse(local.acknowledge(header, saved: receipt(header, adopted))); XCTAssertEqual(local, before)
+    }
+    func testUntrackedChangedRootCannotBeLostDuringDependentReplay() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let change = try patch(local.tables["tasks"]![0], ["title": .string("Tracked title")], scope: batch.items[0].teamCompletion!.scope)
+        append(change, to: &local); local.tables["tasks"]![1]["description"] = .string("Untracked authored content")
+        let before = local; XCTAssertFalse(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local, before)
+    }
+    func testNewerConfirmedUnrelatedFieldIsPreservedAlongsideLocalEdit() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let change = try patch(local.tables["tasks"]![0], ["title": .string("Tracked title")], scope: batch.items[0].teamCompletion!.scope)
+        append(change, to: &local)
+        var changed = reply, rows = reply["items"]!.list, member = rows[0].object, task = member["task"]!.object
+        task["description"] = .string("Confirmed remote note"); member["task"] = .object(task); rows[0] = .object(member); changed["items"] = .array(rows)
+        local.tables["tasks"]![0]["description"] = .string("Confirmed remote note")
+        let before = local; XCTAssertTrue(local.acknowledge(header, saved: receipt(header, changed))); sameRows(local, before); XCTAssertEqual(local.pending, [change])
+    }
+    func testConflictingConfirmedFieldKeepsEntireOriginalCohort() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let change = try patch(local.tables["tasks"]![0], ["title": .string("Tracked title")], scope: batch.items[0].teamCompletion!.scope)
+        append(change, to: &local)
+        var changed = reply, rows = reply["items"]!.list, member = rows[0].object, task = member["task"]!.object
+        task["title"] = .string("Other person's newer title"); member["task"] = .object(task); rows[0] = .object(member); changed["items"] = .array(rows)
+        let before = local; XCTAssertFalse(local.acknowledge(header, saved: receipt(header, changed))); XCTAssertEqual(local, before)
+    }
+    func testMixedPlanningCohortReconstructsEveryMemberIncludingOutsideTheOriginalBatch() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch)
+        var outside = batch.items[0].teamCompletion!.source; outside["id"] = .string(UUID().uuidString.lowercased()); outside["task_generation"] = .string(UUID().uuidString.lowercased()); outside["title"] = .string("Other selected work")
+        local.tables["tasks"]!.append(outside); append(header, to: &local)
+        let chosen = [local.tables["tasks"]![0], outside]
+        let members = chosen.map { row in Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: ["priority": .number(1)], baseline: row.fields, teamTaskScope: batch.items[0].teamCompletion!.scope) }.sorted { $0.recordID < $1.recordID }
+        let planning = TeamTaskBatch(account: batch.account, origin: batch.origin, team: batch.team, operation: .edit, restores: nil, items: members), action = TeamTaskBatch.header(planning)
+        append(action, to: &local); let before = local
+        XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.pending, [action]); sameRows(local, before)
+    }
+    func testTouchingPersonalWriterCannotAcquireSharedScopeFromAcknowledgement() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let change = Mutation(table: "tasks", recordID: batch.items[0].recordID, method: "PATCH", fields: ["title": .string("Unscoped draft")])
+        append(change, to: &local); let before = local
+        XCTAssertFalse(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local, before)
+    }
+    func testChangedProjectOrDuplicateCohortRowKeepsAllPendingWork() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let change = try patch(local.tables["tasks"]![0], ["title": .string("Tracked title")], scope: batch.items[0].teamCompletion!.scope); append(change, to: &local)
+        var missing = local; missing.tables["projects"] = []; let noProject = missing
+        XCTAssertFalse(missing.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(missing, noProject)
+        local.tables["tasks"]!.append(local.tables["tasks"]![0]); let before = local
+        XCTAssertFalse(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local, before)
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testQueuedScopedDeletionKeepsItsIntentAfterCompletionConfirmation() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let row = local.tables["tasks"]![0], scope = batch.items[0].teamCompletion!.scope
+        let deletion = try scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "DELETE", fields: [:], baseline: row.fields, teamTaskScope: scope), existing: row)
+        append(deletion, to: &local); let before = local
+        XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.pending, [deletion]); sameRows(local, before)
+    }
+    func testAuthoredLatestRedoSuccessorSurvivesWholeCohortReplay() throws {
+        let (header, _, reply, undo, redo, current) = try recurringChain(); var local = current
+        let next = redo.teamTaskBatch!.items.last!.teamCompletion!.proposed!, scope = redo.teamTaskBatch!.items.last!.teamCompletion!.scope
+        let change = try patch(next, ["description": .string("Authored after Redo")], scope: scope); append(change, to: &local); let before = local
+        XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.pending, [undo, redo, change]); sameRows(local, before)
+    }
+    func testAdoptionKeepsEntireUndoRedoCohortWhenLatestSuccessorHasAuthoredWork() throws {
+        let (header, _, reply, _, redo, current) = try recurringChain(); var local = current
+        let next = redo.teamTaskBatch!.items.last!.teamCompletion!.proposed!, scope = redo.teamTaskBatch!.items.last!.teamCompletion!.scope
+        let change = try patch(next, ["description": .string("Authored after Redo")], scope: scope); append(change, to: &local)
+        var adopted = reply, values = reply["items"]!.list, member = values[1].object, successor = member["successor"]!.object
+        let generation = UUID().uuidString.lowercased(); successor["task_generation"] = .string(generation); member["successor_generation"] = .string(generation); member["successor"] = .object(successor); member["created_successor"] = .bool(false); values[1] = .object(member); adopted["items"] = .array(values)
+        let before = local; XCTAssertFalse(local.acknowledge(header, saved: receipt(header, adopted))); XCTAssertEqual(local, before)
+    }
+    func testEarlierOutsideEditJoinsLaterMixedCohortInOriginalQueueOrder() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch)
+        var outside = batch.items[0].teamCompletion!.source; outside["id"] = .string(UUID().uuidString.lowercased()); outside["task_generation"] = .string(UUID().uuidString.lowercased()); outside["title"] = .string("Outside original selection")
+        local.tables["tasks"]!.append(outside); append(header, to: &local)
+        let earlier = try patch(outside, ["title": .string("Earlier outside title edit")], scope: batch.items[0].teamCompletion!.scope); append(earlier, to: &local)
+        let chosen = [local.tables["tasks"]!.first { $0.id == batch.items[0].recordID }!, local.tables["tasks"]!.first { $0.id == outside.id }!]
+        let members = chosen.map { Mutation(table: "tasks", recordID: $0.id, method: "PATCH", fields: ["priority": .number(1)], baseline: $0.fields, teamTaskScope: batch.items[0].teamCompletion!.scope) }.sorted { $0.recordID < $1.recordID }
+        let planning = TeamTaskBatch.header(TeamTaskBatch(account: batch.account, origin: batch.origin, team: batch.team, operation: .edit, restores: nil, items: members)); append(planning, to: &local)
+        let before = local; XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.pending, [earlier, planning]); sameRows(local, before)
+    }
+    func testUndoCohortRetainsAlreadyConfirmedNotesFromBeforeUndo() throws {
+        let (_, original, batch, _) = try fixture(), (_, undo, _, undoReply) = try fixture("undo_")
+        var local = snapshot(batch); local.apply(original)
+        for i in local.tables["tasks"]!.indices { local.tables["tasks"]![i]["description"] = .string("Already confirmed note") }
+        let history = EditHistory(changes: [undo], snapshot: local); append(undo, to: &local)
+        let redo = TeamCompletion.historyAction(history.undo[0], snapshot: local); append(redo, to: &local)
+        var response = undoReply, values = undoReply["items"]!.list
+        for i in values.indices { var item = values[i].object, task = item["task"]!.object; task["description"] = .string("Already confirmed note"); item["task"] = .object(task); values[i] = .object(item) }
+        response["items"] = .array(values)
+        let before = local; XCTAssertTrue(local.acknowledge(undo, saved: receipt(undo, response))); XCTAssertEqual(local.pending, [redo]); sameRows(local, before)
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testObservedRoleLossRefusesLateReceiptForEntireDependentCohort() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let undo = try batch.inverse(of: header, snapshot: local); append(undo, to: &local)
+        let projectIDs = Set(batch.items.map { $0.teamCompletion!.scope.project }).sorted()
+        let raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(batch.account), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false), "token": .string(String(repeating: "b", count: 64)),
+            "teams": .array([.object(["id": .string(batch.team), "state": .string("active"), "revision": .number(1), "access_revision": .number(2)])]),
+            "projects": .array(projectIDs.map { .object(["id": .string($0), "team_id": .string(batch.team), "role": .string("viewer"), "archived": .bool(false), "can_send_tasks": .bool(false)]) })]
+        local.teamWorkspace = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: batch.account, origin: batch.origin), previous: nil, pending: local.pending)
+        let before = local; XCTAssertFalse(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local, before)
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testUneditedRedoProjectionCanAdoptTheConfirmedSuccessorWithoutChangingHistory() throws {
+        let (header, _, reply, undo, redo, current) = try recurringChain(); var local = current
+        var adopted = reply, values = reply["items"]!.list, member = values[0].object, successor = member["successor"]!.object
+        let generation = UUID().uuidString.lowercased(); successor["task_generation"] = .string(generation); member["successor_generation"] = .string(generation); member["successor"] = .object(successor); member["created_successor"] = .bool(false); values[0] = .object(member); adopted["items"] = .array(values)
+        XCTAssertTrue(local.acknowledge(header, saved: receipt(header, adopted))); XCTAssertEqual(local.pending, [undo, redo])
+        let id = redo.teamTaskBatch!.items[0].teamCompletion!.proposed!.id
+        XCTAssertEqual(local.tables["tasks"]!.first { $0.id == id }?["task_generation"], .string(generation))
+        XCTAssertEqual(redo.teamTaskBatch!.items[0].teamCompletion!.nextGeneration, current.pending.last!.teamTaskBatch!.items[0].teamCompletion!.nextGeneration)
+    }
+    func testObservedAccessLossOnNewMixedCohortMemberStopsTheWholeConfirmation() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch)
+        let otherProject = UUID().uuidString.lowercased(), scope = TeamTaskEditScope(account: batch.account, origin: batch.origin, team: batch.team, project: otherProject)
+        var outside = batch.items[0].teamCompletion!.source; outside["id"] = .string(UUID().uuidString.lowercased()); outside["project_id"] = .string(otherProject); outside["task_generation"] = .string(UUID().uuidString.lowercased())
+        local.tables["tasks"]!.append(outside); local.tables["projects"]!.append(Record(["id": .string(otherProject)])); append(header, to: &local)
+        let selected = [local.tables["tasks"]!.first { $0.id == batch.items[0].recordID }!, outside]
+        let members = selected.map { row in Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: ["priority": .number(1)], baseline: row.fields, teamTaskScope: row.id == outside.id ? scope : batch.items[0].teamCompletion!.scope) }.sorted { $0.recordID < $1.recordID }
+        let planning = TeamTaskBatch.header(TeamTaskBatch(account: batch.account, origin: batch.origin, team: batch.team, operation: .edit, restores: nil, items: members)); append(planning, to: &local)
+        let projects = Set(local.tables["projects"]!.map(\.id)).sorted()
+        let raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(batch.account), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false), "token": .string(String(repeating: "c", count: 64)),
+            "teams": .array([.object(["id": .string(batch.team), "state": .string("active"), "revision": .number(1), "access_revision": .number(2)])]),
+            "projects": .array(projects.map { .object(["id": .string($0), "team_id": .string(batch.team), "role": .string($0 == otherProject ? "viewer" : "editor"), "archived": .bool(false), "can_send_tasks": .bool($0 != otherProject)]) })]
+        local.teamWorkspace = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: batch.account, origin: batch.origin), previous: nil, pending: local.pending)
+        XCTAssertTrue(local.teamWorkspace!.canSend(header, in: local)); XCTAssertFalse(local.teamWorkspace!.canSend(planning, in: local))
+        let before = local; XCTAssertFalse(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local, before)
+    }
+}
+
+extension TeamCompletionBatchTests {
+    private func queuedDeletion(_ batch: TeamTaskBatch, in snapshot: Snapshot) throws -> Mutation {
+        let changes = batch.items.map { member in Mutation(table: "tasks", recordID: member.recordID, method: "DELETE", fields: [:], baseline: snapshot.tables["tasks"]!.first { $0.id == member.recordID }!.fields, teamTaskScope: member.teamCompletion!.scope) }
+        return try XCTUnwrap(TeamTaskBatch.preparing(changes, snapshot: snapshot).first)
+    }
+    func testQueuedWholeSelectionDeletionReplaysWithoutDecomposingItsSavedCommand() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let deletion = try queuedDeletion(batch, in: local); append(deletion, to: &local)
+        XCTAssertEqual(local.tables["tasks"], [])
+        XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.tables["tasks"], []); XCTAssertEqual(local.pending, [deletion])
+    }
+    func testChangedDeletionSourcePreventsAnyPartOfTheCohortFromBeingAcknowledged() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let deletion = try queuedDeletion(batch, in: local); append(deletion, to: &local)
+        var changed = reply, values = reply["items"]!.list, member = values[1].object, task = member["task"]!.object
+        task["description"] = .string("New server instructions after completion"); member["task"] = .object(task); values[1] = .object(member); changed["items"] = .array(values)
+        let before = local; XCTAssertFalse(local.acknowledge(header, saved: receipt(header, changed))); XCTAssertEqual(local, before)
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testQueuedDeletionAndRestorationKeepTheNewIncarnationAndBothHistoryRequests() throws {
+        let (_, header, batch, reply) = try fixture(); var local = snapshot(batch); append(header, to: &local)
+        let deletion = try queuedDeletion(batch, in: local)
+        let history = EditHistory(changes: [deletion], snapshot: local); append(deletion, to: &local)
+        let restore = TeamTaskBatch.historyAction(history.undo[0]); append(restore, to: &local)
+        let before = local
+        XCTAssertTrue(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local.pending, [deletion, restore]); sameRows(local, before)
+        for root in batch.items { XCTAssertNotEqual(local.tables["tasks"]!.first { $0.id == root.recordID }?["task_generation"], root.teamCompletion!.source["task_generation"]) }
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testObservedProjectArchiveRefusesLateReceiptWithoutDiscardingHistory() throws {
+        let (_, header, batch, reply) = try fixture()
+        for key in ["is_archived", "ancestor_archived"] {
+            var local = snapshot(batch); append(header, to: &local)
+            let undo = try batch.inverse(of: header, snapshot: local); append(undo, to: &local)
+            local.tables["projects"]![0][key] = .bool(true)
+            let before = local; XCTAssertFalse(local.acknowledge(header, saved: receipt(header, reply))); XCTAssertEqual(local, before, key)
+        }
     }
 }

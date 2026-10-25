@@ -6132,3 +6132,48 @@ review/Cancel/Save/Undo/Redo/relaunch acceptance in both apps. Mac runtime/spoke
 window and hosted acceptance, other rank-6 work, Watch/Wear OS and the full Px
 objective remain open. No UI control, hosted migration/configuration, rollout,
 real task or user-deferred release/provider/device setting changed.
+
+
+### 2026-10-25 — Completion receipt reconciliation across queued cohorts
+
+A front completion batch can now confirm while dependent edits remain queued.
+An identity adjacency index finds the complete connected cohort, including an
+earlier edit to another task that a later mixed selection joins. Saved baselines
+reconstruct the pre-action state; replay of every selected command must explain
+the current optimistic rows before any confirmed state is published. The group
+receipt is then merged on a separate copy and all dependent intent is replayed
+in its original order. Only the confirmed front request leaves the queue.
+
+Completion → Undo → Redo retains the correct current counters and successor
+incarnations. Later scoped root/provisional edits, mixed planning selections,
+scoped deletion and deletion/restoration can survive confirmation without new
+nonces or rewritten bodies. Timestamp/null normalization affects temporary
+projections only. Unrelated tasks, queued actions and non-task snapshot state
+remain intact. Confirmed remote fields can survive beside independent local
+edits; conflicting changed-field baselines, replacement generations and authored
+provisional content that would be displaced refuse the complete acknowledgement.
+An unedited projection may adopt the confirmed occurrence; an authored draft
+never silently changes incarnation. Observed loss of access on the original or
+an added cohort member, project/ancestor archive and missing projects keep the
+original action and complete cohort. Unsupported/inconsistent cohorts also stay
+durable for review. No personal writer gains shared scope during reconstruction.
+
+Both independent repositories pass 587 selected Core regressions, including 36
+completion-batch cases (23 added here plus the preceding 13), and final arm64
+Debug app builds with signing disabled. The complete/Undo/Redo sequential test
+uses each repo's actual independently generated SQL bodies and receipts. Other
+checks cover recurring Undo/Redo, authored latest occurrences, adoption refusal
+and safe adoption, remote-field preservation/conflict, mixed cohort ordering,
+whole-selection deletion, restored incarnations, duplicate-row refusal, role loss
+and archive races. Full pending commands are compared, not just task counts.
+See p2-completion-cohort-evidence.json for current hashes and retained logs.
+Service SQL is unchanged; no new hosted or native runtime acceptance is claimed.
+
+Next: captured native bulk completion review/Cancel/Save/Undo/Redo/relaunch,
+visible whole-cohort conflict recovery, and runtime acceptance in both apps.
+Confirmation work also needs large-selection responsiveness checks and an
+appropriate snapshot/generation fence if moved off the UI thread. No bulk entry
+point is enabled here. Mac installed/spoken/window and genuine hosted acceptance,
+independent child records, remaining Watch/Wear OS and the wider Px goal remain
+open. All user-deferred release/provider/device work stays deferred. No hosted
+schema/configuration, rollout, real data or external account was changed.

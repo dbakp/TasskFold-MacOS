@@ -37,5 +37,9 @@
     "readyMacHostAndBuildPreserved": true,
     "appsInstalledOrLaunched": false,
     "noGlobalCleanup": true
+  },
+  "followUp": {
+    "evidence": "p2-completion-cohort-evidence.json",
+    "status": "Common touching cohorts, including completion/Undo/Redo, scoped edits and mixed selection histories now reconstruct transactionally. Conflicting/unsupported cohorts remain preserved for review; native integration remains open."
   }
 }
