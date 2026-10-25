@@ -34,7 +34,11 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
         let values=try items.map { item -> JSON in
             guard item.teamTaskBatch == nil, let scope=item.teamTaskScope,scope.account == account,scope.origin == origin,scope.team == team else { throw Self.invalid }
             if operation == .edit {
-                let edit = try scope.body(for: item)
+                // Absent nullable planning values mean null in saved task rows.
+                // Normalize only validation; keep the frozen row byte-for-byte.
+                var checked = item
+                for key in item.fields.keys where checked.baseline?[key] == nil { checked.baseline?[key] = .null }
+                let edit = try scope.body(for: checked)
                 guard edit["checklist_restore_from"] == nil, let record = item.baseline, record["id"] == .string(item.recordID),
                       Set(item.fields.keys).isSubset(of: Self.planningFields) else { throw Self.invalid }
                 return .object(edit.filter { $0.key != "base" }.merging(["record": .object(record)]) { _, new in new })
@@ -186,7 +190,9 @@ struct TeamTaskPlanningSelection: Equatable, Sendable {
             guard current[draft.source.id] == draft.source,
                   draft.permits(current: current[draft.source.id], workspace: workspace, session: session, cache: cache, enabled: enabled) else { throw TeamTaskBatch.conflict }
             let item = Mutation(id: memberRequests[draft.source.id]!, table: "tasks", recordID: draft.source.id, method: "PATCH", fields: changes[draft.source.id]!, baseline: draft.source.fields, teamTaskScope: draft.scope)
-            return try draft.scope.capturing(item, existing: draft.source)
+            // The draft admission above attests current identity and access. The
+            // complete planning body validates every field without padding its source.
+            return item
         }
         let first = drafts[0].scope
         let batch = TeamTaskBatch(account: first.account, origin: first.origin, team: first.team, operation: .edit, restores: nil, items: items)

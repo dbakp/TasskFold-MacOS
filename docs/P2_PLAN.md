@@ -4,7 +4,7 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Latest implementation: reviewed shared date/priority selections now have a source-only atomic planning command and native review entry in both apps. Complete source baselines, one durable request, one RPC and linked Undo preserve the whole selection. Installed native acceptance and deadline/estimate bulk entry remain open; see `p2-team-planning-batches-evidence.json`.
+Latest implementation: reviewed shared date/priority selections now have a source-only atomic planning command and native review entry in both apps. Complete source baselines, one durable request, one RPC and linked Undo preserve the whole selection. Scoped installed phone/tablet review, Cancel, Save, Undo/relaunch, changed-source and failed-save retry now pass; see `p2-team-planning-selection-native-evidence.json`. Broader native/live acceptance and deadline/estimate bulk entry remain open.
 
 Earlier, shared-task creation uses the complete native editor and
 an explicit Add. Shared list selections now have a frozen, reviewed atomic deletion

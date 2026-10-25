@@ -1,23 +1,23 @@
 {
   "syntheticOnly": true,
   "containerRemoved": true,
-  "account": "84a43597-2488-4ee0-a1fd-45d0b02174ed",
+  "account": "60ab0171-9ee5-4583-abcf-25c0eb7dcd4e",
   "origin": "https://backend.example",
   "body": {
-    "team_id": "0eb476af-9a85-4f02-886d-c3159abf3adf",
-    "request_id": "11fe3a48-bb1f-46ed-ad28-4af907cf479d",
+    "team_id": "f092224d-6f0f-49a4-9f99-a7d2e790bc15",
+    "request_id": "1f1b66ad-a2a4-41f1-bf84-a5a1cebeefd5",
     "items": [
       {
-        "team_id": "0eb476af-9a85-4f02-886d-c3159abf3adf",
-        "project_id": "9c04f604-a97b-476b-b755-275ac182ae29",
-        "task_id": "42403a28-beda-4bb0-9e28-da4621d6ce11",
-        "request_id": "d03afd70-af39-40ab-8cec-959af885a475",
-        "task_generation": "612df26a-1c73-4621-9149-d9cc96aa394d",
+        "team_id": "f092224d-6f0f-49a4-9f99-a7d2e790bc15",
+        "project_id": "156a086c-0bb0-48ef-a79b-bde83da084ee",
+        "task_id": "218a5916-c536-4bd3-a33f-2b62b1bda454",
+        "request_id": "ab4455b1-e837-4280-b401-d29e44795ee2",
+        "task_generation": "c59a5a6c-4c20-42b3-bea8-780611b03b5d",
         "record": {
-          "id": "42403a28-beda-4bb0-9e28-da4621d6ce11",
+          "id": "218a5916-c536-4bd3-a33f-2b62b1bda454",
           "title": "Planning task 0",
           "labels": [],
-          "user_id": "30a3b4b3-23dd-4c95-a1eb-67d8d039caf4",
+          "user_id": "11a00f68-62a1-44af-a9dd-a3ad87f45315",
           "comments": [],
           "due_date": null,
           "due_time": null,
@@ -26,8 +26,8 @@
           "completed": false,
           "reminders": [],
           "time_zone": null,
-          "created_at": "2026-10-25T04:52:41.442855+00:00",
-          "project_id": "9c04f604-a97b-476b-b755-275ac182ae29",
+          "created_at": "2026-10-25T04:59:38.264043+00:00",
+          "project_id": "156a086c-0bb0-48ef-a79b-bde83da084ee",
           "section_id": null,
           "assigned_to": null,
           "attachments": [],
@@ -38,7 +38,7 @@
           "deadline_date": null,
           "reminder_specs": [],
           "source_metadata": {},
-          "task_generation": "612df26a-1c73-4621-9149-d9cc96aa394d",
+          "task_generation": "c59a5a6c-4c20-42b3-bea8-780611b03b5d",
           "duration_minutes": null,
           "completion_version": 0,
           "recurrence_pattern": null,
@@ -53,16 +53,16 @@
         }
       },
       {
-        "team_id": "0eb476af-9a85-4f02-886d-c3159abf3adf",
-        "project_id": "cb6ea422-25fa-4763-a7c6-39efc4aa66ac",
-        "task_id": "cc06c027-686e-4733-b217-99d64f87c30b",
-        "request_id": "e574efc2-69c4-4ecf-8dfe-2fa714f201ed",
-        "task_generation": "199d2944-53cc-49f5-abc0-3dc3c6ec124a",
+        "team_id": "f092224d-6f0f-49a4-9f99-a7d2e790bc15",
+        "project_id": "16f86717-006b-4075-88be-25e28ee17733",
+        "task_id": "261908c8-dd9b-4532-9f5e-69313d0bccac",
+        "request_id": "cd10f31d-3850-4ca2-9b05-16d4061cfbad",
+        "task_generation": "b57069cd-53ab-4a55-9e7e-4c0e4bf26b73",
         "record": {
-          "id": "cc06c027-686e-4733-b217-99d64f87c30b",
+          "id": "261908c8-dd9b-4532-9f5e-69313d0bccac",
           "title": "Planning task 1",
           "labels": [],
-          "user_id": "30a3b4b3-23dd-4c95-a1eb-67d8d039caf4",
+          "user_id": "11a00f68-62a1-44af-a9dd-a3ad87f45315",
           "comments": [],
           "due_date": null,
           "due_time": null,
@@ -71,8 +71,8 @@
           "completed": false,
           "reminders": [],
           "time_zone": null,
-          "created_at": "2026-10-25T04:52:41.602917+00:00",
-          "project_id": "cb6ea422-25fa-4763-a7c6-39efc4aa66ac",
+          "created_at": "2026-10-25T04:59:38.338671+00:00",
+          "project_id": "16f86717-006b-4075-88be-25e28ee17733",
           "section_id": null,
           "assigned_to": null,
           "attachments": [],
@@ -83,7 +83,7 @@
           "deadline_date": null,
           "reminder_specs": [],
           "source_metadata": {},
-          "task_generation": "199d2944-53cc-49f5-abc0-3dc3c6ec124a",
+          "task_generation": "b57069cd-53ab-4a55-9e7e-4c0e4bf26b73",
           "duration_minutes": null,
           "completion_version": 0,
           "recurrence_pattern": null,
@@ -102,24 +102,24 @@
   "reply": {
     "items": [
       {
-        "task_id": "42403a28-beda-4bb0-9e28-da4621d6ce11",
-        "project_id": "9c04f604-a97b-476b-b755-275ac182ae29",
-        "request_id": "d03afd70-af39-40ab-8cec-959af885a475",
-        "task_generation": "612df26a-1c73-4621-9149-d9cc96aa394d"
+        "task_id": "218a5916-c536-4bd3-a33f-2b62b1bda454",
+        "project_id": "156a086c-0bb0-48ef-a79b-bde83da084ee",
+        "request_id": "ab4455b1-e837-4280-b401-d29e44795ee2",
+        "task_generation": "c59a5a6c-4c20-42b3-bea8-780611b03b5d"
       },
       {
-        "task_id": "cc06c027-686e-4733-b217-99d64f87c30b",
-        "project_id": "cb6ea422-25fa-4763-a7c6-39efc4aa66ac",
-        "request_id": "e574efc2-69c4-4ecf-8dfe-2fa714f201ed",
-        "task_generation": "199d2944-53cc-49f5-abc0-3dc3c6ec124a"
+        "task_id": "261908c8-dd9b-4532-9f5e-69313d0bccac",
+        "project_id": "16f86717-006b-4075-88be-25e28ee17733",
+        "request_id": "cd10f31d-3850-4ca2-9b05-16d4061cfbad",
+        "task_generation": "b57069cd-53ab-4a55-9e7e-4c0e4bf26b73"
       }
     ],
-    "account": "84a43597-2488-4ee0-a1fd-45d0b02174ed",
-    "team_id": "0eb476af-9a85-4f02-886d-c3159abf3adf",
+    "account": "60ab0171-9ee5-4583-abcf-25c0eb7dcd4e",
+    "team_id": "f092224d-6f0f-49a4-9f99-a7d2e790bc15",
     "protocol": 1,
     "replayed": false,
     "restores": null,
     "operation": "edit",
-    "request_id": "11fe3a48-bb1f-46ed-ad28-4af907cf479d"
+    "request_id": "1f1b66ad-a2a4-41f1-bf84-a5a1cebeefd5"
   }
 }

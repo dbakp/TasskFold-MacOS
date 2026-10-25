@@ -107,3 +107,44 @@ Installed iPhone/iPad/Mac review/Cancel/save/retry/Undo, keyboard/spoken/large-t
 and live multi-actor acceptance remain required. Deadline and estimate bulk UI
 entry, other shared bulk commands and the wider rank-6/Px backlog remain open.
 No hosted schema, real task, provider, rollout or deferred release setting changed.
+
+
+### Optional planning-field compatibility — 25 October 2026
+
+A new regression reproduced Remove Date being refused for a saved task row that
+omits unused clock fields. Planning validation now treats those absent optional
+values as null without padding or replacing the frozen source record. The opening
+row/access check, full selection baseline, bounded body and server checks remain
+in force. Immediate projection and Undo retain the original field semantics.
+Both independent SQL suites add sparse-row date removal, all-member date clearing
+and note-preservation checks (67 cases per repo); actual SQL request/reply fixtures
+are regenerated independently. No migration or hosted configuration changed.
+Installed walkthrough results and exact limits are recorded separately in
+`p2-team-planning-selection-native-evidence.json`.
+
+
+### Installed planning review and recovery — 25 October 2026
+
+Four distinct scenarios now pass on both iPhone 18 Pro and iPad Pro 13-inch (M5):
+priority review Cancel, Save, Undo and normal app relaunch with the exact saved
+queue; Tomorrow and explicit date removal; changed-source refusal of the entire
+selection; and injected local-save failure followed by one-group retry. Tests
+read the app’s real private cache and verify selected identities, unchanged notes,
+untouched unselected work and linked edit Undo. Representative default light
+review/error/refusal screenshots were visually inspected.
+
+These installed Debug tests use the reserved synthetic team-editor host, normal
+Store projection/persistence and intercepted HTTP. They prove local UI/queue and
+OS relaunch behavior; they do not prove delivery to a live service or real Auth/
+Keychain recovery. The first phone run passed three scenarios and stopped the
+priority case on a test assertion that incorrectly searched the underlying list
+behind the modal. Scoping that assertion to the review form fixed it; the corrected
+priority case then passed on phone, and the final iPad run passed all four cases.
+Earlier diagnostic failures are retained in evidence, not counted as passing runs.
+
+Both repos pass 422 focused Core checks (19 batch cases), 67 current real PostgreSQL
+planning checks, and independent Debug builds. No new migration or rollout changed.
+See `p2-team-planning-selection-native-evidence.json` for exact runs, source hashes and cleanup.
+Mac installed/window, keyboard/spoken, large-text/dark/contrast and hosted acceptance
+remain open, as do bulk deadline/estimate entry and the rest of rank 6/Px. All user-
+deferred release/provider/device work remains deferred.

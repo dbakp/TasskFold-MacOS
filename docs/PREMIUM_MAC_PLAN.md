@@ -5516,3 +5516,33 @@ large-text/dark/contrast and hosted multi-actor acceptance remain open; deadline
 estimate bulk entry and other shared bulk commands are still separate work.
 All user-deferred release/provider/device dependencies stay deferred, and the
 full rank-6/Px objective remains active.
+
+
+### 2026-10-25 — Shared planning sparse-row compatibility
+
+Remove Date now validates older saved rows whose unused clock fields are absent,
+while keeping every frozen source field and the whole-row/access checks intact.
+The regression was reproduced before the fix; SQL checks verify null semantics,
+all-member removal and unchanged notes. Debug-only review controls are reserved
+for the isolated team-editor host. No ordinary rollout, hosted schema or Mac app
+launch occurs in this stage. See p2-team-planning-selection-native-evidence.json for final
+Core/build and phone/tablet acceptance scope; Mac runtime/spoken and broader Px
+work remain open. All existing user deferrals remain unchanged.
+
+
+### 2026-10-25 — Phone/tablet planning acceptance and Mac contract verification
+
+Four distinct installed iPhone/iPad scenarios now verify reviewed priority Cancel/
+Save/Undo and exact relaunch state, Tomorrow and Remove Date, whole-selection stale
+source refusal and local-save failure/retry. Default-light review/error/refusal
+screenshots are inspected. This uses the isolated synthetic iOS host and normal
+Store/private cache with intercepted HTTP; it is not Mac runtime or hosted/Auth/
+Keychain delivery proof. Both repo-owned contracts pass 422 focused Core checks,
+67 real SQL planning cases and app builds. The nullable-clock compatibility fix
+keeps original frozen source fields intact.
+
+See p2-team-planning-selection-native-evidence.json for the successful case mapping, the
+retained initial phone assertion diagnostic and source/cleanup details. Mac
+window/runtime, keyboard/spoken, large-text/dark/contrast, live acceptance and
+bulk deadline/estimate entry remain open. User-deferred work and the wider Px
+objective retain their scope; rollout remains disabled.

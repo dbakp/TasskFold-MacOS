@@ -154,6 +154,14 @@ struct TeamTaskPlanningReview: View {
                         else { message = store.error ?? "The selection could not be saved. Your tasks are unchanged; try again."; store.error = nil }
                     }.disabled(blocked != nil || finished).accessibilityIdentifier("confirmTeamPlanning")
                 }
+                #if DEBUG
+                if TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-planning-testing") {
+                    Section("Isolated test controls") {
+                        Button("Change saved test task") { store.changeTeamDeletionFixtureSource() }.accessibilityIdentifier("changeTeamPlanningFixture")
+                        Button("Fail next test save") { store.failTeamDeletionFixtureSave() }.accessibilityIdentifier("failTeamPlanningFixture")
+                    }
+                }
+                #endif
             }.formStyle(.grouped).accessibilityIdentifier("teamPlanningForm")
             .navigationTitle("Review shared changes")
             #if os(iOS)

@@ -136,6 +136,29 @@ extension TeamTaskBatchTests {
         XCTAssertEqual(TeamTaskBatch.dateFields(task: task, day: nil), ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null])
         XCTAssertEqual(TeamTaskBatch.dateFields(task: task, day: "invalid"), [:])
     }
+    func testPlanningDateRemovalSupportsSavedRowsWithAbsentOptionalClockFields() throws {
+        let (_, _, batch) = try planningFixture(), cache = try planningCache(batch), workspace = WorkspaceBinding(account: batch.account, generation: UUID()), session = UUID()
+        let records = batch.items.map { item -> Record in
+            var row = Record(item.baseline!)
+            for key in ["due_time", "time_zone", "scheduled_at"] { row.fields.removeValue(forKey: key) }
+            return row
+        }
+        let drafts = try records.map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) }
+        let changes = Dictionary(uniqueKeysWithValues: records.map { ($0.id, TeamTaskBatch.dateFields(task: $0, day: nil)) })
+        let selection = try TeamTaskPlanningSelection(drafts: drafts, changes: changes)
+        let command = try selection.mutation(current: Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0) }), workspace: workspace, session: session, cache: cache, enabled: true)
+        let parsed = try command.teamTaskBatch!.body(for: command)
+        for item in parsed["items"]!.list { XCTAssertNil(item.object["record"]!.object["due_time"]) }
+        var projected = Snapshot(tables: ["tasks": records, "projects": cache.boundary.projects.keys.map { Record(["id": .string($0)]) }])
+        let original = projected
+        XCTAssertTrue(command.teamTaskBatch!.apply(to: &projected, header: command))
+        let inverse = try command.teamTaskBatch!.inverse(of: command, snapshot: original)
+        XCTAssertTrue(inverse.teamTaskBatch!.apply(to: &projected, header: inverse))
+        for row in projected.tables["tasks"]! {
+            let old = records.first { $0.id == row.id }!
+            for key in Set(row.fields.keys).union(old.fields.keys) { XCTAssertEqual(row[key], old[key], key) }
+        }
+    }
     func testPlanningSQLCommandReceiptAndPrivatePersistence() throws {
         let (f, header, batch) = try planningFixture()
         XCTAssertEqual(try batch.body(for: header), f["body"]!.object)
