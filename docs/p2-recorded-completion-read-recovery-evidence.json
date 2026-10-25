@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-25",
+  "stage": "Read-authorized acknowledgement of recorded completion groups",
+  "platform": "mac",
+  "baseCommit": "e281d8b238685c7b5bb81bd1fa7c7423e96f7ee2",
+  "sourceSHA256": {
+    "Taskfold/Collaboration.swift": "cf9272c314d9964be7b41589b1ff3d67bab9382d5803bd7fe69197311a7f3386",
+    "Taskfold/Core/Store.swift": "a26b4bc0a7a14e11d7eb6e04eb98c1782609459c403503e518436588cf72464a",
+    "Taskfold/Core/TeamTaskBatch.swift": "f5c598b13dfb29110cab306b7e52476b8c5c08a6d3332ac88f2de4bb89e44435",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "26d84945f28d8bdc2ca49d733c79f0b135a3046f2ada49a8200e29413e395552"
+  },
+  "core": {
+    "selected": 724,
+    "passed": 723,
+    "skipped": 1,
+    "failures": 0,
+    "completionGroupCases": 78,
+    "newReadRecoveryCases": 10,
+    "skip": "Live shared-conversation integration requires disposable service accounts; no hosted acceptance claimed",
+    "rawLogs": {
+      "core-regressions.log": {
+        "originalSHA256": "796d9c58599d80f4865ff378e63afb5c2b9037e486f3c87cc5eba2bed23e37c2",
+        "trailingWhitespaceNormalized": true
+      },
+      "completion-group-before-series.log": {
+        "originalSHA256": "17c18f1a50d882307ff8104c3fb135758d73cd68d8128f4c48e9b2e177e40120",
+        "trailingWhitespaceNormalized": true
+      },
+      "separate-series.log": {
+        "originalSHA256": "ab2c8fbd287f1dafa4b924fea2364ada286ca575f7c3ef62f06e02b006a38e48",
+        "trailingWhitespaceNormalized": true
+      }
+    }
+  },
+  "native": {
+    "iphone": "Independent iOS repo acceptance only",
+    "ipad": "Independent iOS repo acceptance only",
+    "mac": "Not run this stage; prior Mac automation initialization failure remains open",
+    "scope": "Synthetic ordinary roots, saved later edit, newer read-only mask over older writer disk cache; viewer/archive/write-pause continuation and semantic relaunch preservation",
+    "initialFailure": "Strict raw JSON cache equality incorrectly treated Codable Set encoding order as ordered; final comparisons sort only knownTasks/quarantined IDs, preserve every value/count and compare the rest strictly. Original failed-run logs/summaries retained."
+  },
+  "limits": [
+    "Automatic recorded-review discovery for a completion head already blocked at cold start remains open; this stage covers an explicit existing recorded review.",
+    "Ordinary send acknowledgement still requires editing access; new read path is explicit recorded review only",
+    "Missing-incarnation authored recovery and unsupported cross-table cohorts remain guarded/unavailable",
+    "Native recurring/Undo/Redo, spoken/storage/account-race, Mac runtime, large-workload and hosted acceptance remain open",
+    "No SQL/schema/configuration or real account/task changes; rollout disabled",
+    "Other rank-6/Px/wearable and user-deferred release/provider/device work remain open"
+  ],
+  "retainedEvidence": "docs/recorded-completion-read-recovery",
+  "cleanup": {
+    "removedOwnedScratchBytes": 1507037917,
+    "scope": "Only /tmp/taskfold-read-recovery*; reserved isolated app/runner uninstalled from both simulators",
+    "preserved": "Both repo .build caches, baseline booted devices, older ready Mac workflow artifacts"
+  }
+}

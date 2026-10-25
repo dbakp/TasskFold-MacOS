@@ -706,8 +706,8 @@ private struct TeamCompletionBatchReviewContent: View {
                         }
                     }
                     Section {
-                        Text("The whole selection is reviewed together. If later task edits depend on it, they stay in Saved team drafts on this device. You can review, copy or export them there; they won’t be sent automatically.").font(.footnote).foregroundStyle(.secondary)
-                        if !review.isRecorded { Text("Keep synced tasks saves a recovery copy and sets aside this device’s completion changes. Connected task edits are saved as a separate encrypted draft first. If the selection has already synced, you’ll see its result before continuing.").font(.footnote).foregroundStyle(.secondary) }
+                        Text(review.isRecorded ? "The whole selection is reviewed together. Later edits remain saved and queued on this device. They sync only when your current project access allows them." : "The whole selection is reviewed together. Choosing Keep synced tasks preserves connected later edits in Saved team drafts. You can review, copy or export them there; they won’t be sent automatically.").font(.footnote).foregroundStyle(.secondary)
+                        if !review.isRecorded { Text("Keep synced tasks saves a recovery copy before setting aside this device’s completion changes. If the selection has already synced, you’ll see its result before continuing.").font(.footnote).foregroundStyle(.secondary) }
                     }
                 } else { Section { Label("Review paused", systemImage: "lock.shield"); Text("Your workspace or project access changed. Reopen the current review to continue.").foregroundStyle(.secondary) } }
                 if let message { Section { Text(message).foregroundStyle(.red) }.accessibilityIdentifier("teamBatchRecoveryError") }

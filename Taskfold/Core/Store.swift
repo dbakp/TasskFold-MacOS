@@ -1952,8 +1952,11 @@ final class Store {
         let generation = accountGeneration, before = snapshot
         guard currentTeamCompletionBatchReview(review), !review.isCancelled else { return false }
         if review.isRecorded {
-            let next = await Task.detached(priority: .userInitiated) { review.acknowledging(before) }.value
-            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(review) else { return false }
+            guard let access = nativeConversationTeamCache else { return false }
+            let readRevision = workspaceReadRevision
+            let next = await Task.detached(priority: .userInitiated) { review.acknowledging(before, readable: access) }.value
+            guard generation == accountGeneration, snapshot == before, readRevision == workspaceReadRevision,
+                  nativeConversationTeamCache == access, currentTeamCompletionBatchReview(review) else { return false }
             guard let next else { error = "Later task changes still need review. The entire saved selection and its drafts are kept."; return false }
             snapshot = next
             do { try persist() } catch { snapshot = before; self.error = error.localizedDescription; return false }

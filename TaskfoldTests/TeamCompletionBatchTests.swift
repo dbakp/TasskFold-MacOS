@@ -905,3 +905,159 @@ extension TeamCompletionBatchTests {
         XCTAssertEqual(XCTWaiter.wait(for: [readerDone, holderDone], timeout: 3), .completed)
     }
 }
+
+extension TeamCompletionBatchTests {
+    private func readRecoveryCache(_ header: Mutation, local: Snapshot, role: String = "viewer", archived: Bool = false, paused: Bool = false,
+                                   missing: Set<String> = [], reads: Bool = true, active: Bool = true, account: String? = nil, origin alternateOrigin: String? = nil) throws -> TeamWorkspaceCache {
+        let batch = header.teamTaskBatch!, owner = account ?? batch.account
+        let projects = Set((local.tables["projects"] ?? []).map(\.id)).subtracting(missing).sorted()
+        let raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(owner), "native_team_reads_enabled": .bool(reads), "setup_paused": .bool(paused), "token": .string(String(repeating: "d", count: 64)),
+            "teams": .array(reads ? [.object(["id": .string(batch.team), "state": .string(active ? "active" : "archived"), "revision": .number(1), "access_revision": .number(3)])] : []),
+            "projects": .array(reads ? projects.map { .object(["id": .string($0), "team_id": .string(batch.team), "role": .string(role), "archived": .bool(archived), "can_send_tasks": .bool(role != "viewer" && !archived && !paused && active)]) } : [])]
+        return try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: owner, origin: alternateOrigin ?? batch.origin), previous: local.teamWorkspace, pending: local.pending, tasks: local.tables["tasks"] ?? [])
+    }
+    private func recordedReadReview(_ header: Mutation, reply: [String: JSON], series: [Record] = []) throws -> TeamTaskBatch.Review {
+        let batch = header.teamTaskBatch!, body = try batch.body(for: header)
+        var receipt = reply; receipt["replayed"] = .bool(true)
+        let members = try zip(batch.items, reply["items"]!.list).map { item, raw -> JSON in
+            let command = item.teamCompletion!, request = try command.body(for: item)
+            var memberReceipt = raw.object; memberReceipt["replayed"] = .bool(true)
+            var member: [String: JSON] = ["review_protocol": .number(1), "account": .string(batch.account), "operation": .string(command.operation.rawValue), "state": .string("recorded"), "project_role": .string("viewer"), "can_edit_current": .bool(false), "can_edit_series": .bool(false), "receipt": .object(memberReceipt), "task": memberReceipt["task"]!, "successor": memberReceipt["successor"]!]
+            for key in ["team_id", "project_id", "task_id", "task_generation", "request_id", "series_id", "series_generation", "series_project_id", "planned_next_id"] { member[key] = request[key] }
+            member["series"] = command.seriesID == command.source.id ? memberReceipt["task"] : series.first { $0.id == command.seriesID }.map { .object($0.fields) } ?? .null
+            return .object(member)
+        }
+        receipt["items"] = .array(members.map { $0.object["receipt"]! })
+        return try TeamTaskBatch.Review(["group_review_protocol": .number(1), "account": .string(batch.account), "team_id": .string(batch.team), "request_id": body["request_id"]!, "operation": .string(batch.completionOperation!.rawValue), "related_request": body["related_request"] ?? .null, "state": .string("recorded"), "items": .array(members), "receipt": .object(receipt)], for: header)
+    }
+    func testExplicitRecordedReadReviewAcknowledgesAfterViewerArchiveAndWritePauseWithoutAuthorizingWrites() throws {
+        let (_, header, review) = try groupReviewFixture("recorded")
+        for mode in ["viewer", "archive", "pause"] {
+            var local = groupReviewProjection(header)
+            let access = try readRecoveryCache(header, local: local, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archive", paused: mode == "pause")
+            local.teamWorkspace = access
+            if mode == "archive" { for i in local.tables["projects"]!.indices { local.tables["projects"]![i]["is_archived"] = .bool(true) } }
+            let before = local, saved = receipt(header, review.recorded!)
+            XCTAssertFalse(local.acknowledge(header, saved: saved), "Ordinary send acknowledgement still needs edit access")
+            XCTAssertEqual(local, before)
+            let next = try XCTUnwrap(review.acknowledging(local, readable: access), mode)
+            XCTAssertTrue(next.pending.isEmpty); XCTAssertEqual(next.teamWorkspace?.boundary, access.boundary)
+            XCTAssertFalse(next.teamWorkspace!.canSend(header, in: next), mode)
+            XCTAssertEqual(local, before)
+        }
+    }
+    func testRecordedReadReviewPreservesTypedLaterEditsAndKeepsThemBlockedByteForByte() throws {
+        let (_, header, review) = try groupReviewFixture("recorded"), batch = header.teamTaskBatch!
+        var local = groupReviewProjection(header)
+        let row = local.tables["tasks"]![0], change = try patch(row, ["title": .string("My unsent review title"), "description": .string("Keep offline instructions")], scope: batch.items[0].teamCompletion!.scope)
+        append(change, to: &local)
+        let access = try readRecoveryCache(header, local: local), before = local
+        let next = try XCTUnwrap(review.acknowledging(local, readable: access))
+        XCTAssertEqual(next.pending, [change]); sameRows(next, before)
+        XCTAssertEqual(next.teamWorkspace?.blocked(next), [change.id]); XCTAssertFalse(next.teamWorkspace!.canSend(change, in: next)); XCTAssertEqual(local, before)
+    }
+    func testRecordedReadReviewUsesCapturedMaskInsteadOfPersistingAnOlderWriterBoundary() throws {
+        let (_, header, review) = try groupReviewFixture("recorded"); var local = groupReviewProjection(header)
+        local.teamWorkspace = try readRecoveryCache(header, local: local, role: "editor")
+        XCTAssertTrue(local.teamWorkspace!.canSend(header, in: local))
+        let fresh = try readRecoveryCache(header, local: local, role: "viewer")
+        let next = try XCTUnwrap(review.acknowledging(local, readable: fresh))
+        XCTAssertEqual(next.teamWorkspace!.boundary, fresh.boundary); XCTAssertFalse(next.teamWorkspace!.canSend(header, in: next))
+        XCTAssertTrue(local.teamWorkspace!.canSend(header, in: local))
+    }
+    func testRecordedReadReviewRequiresEveryConnectedMixedProjectToRemainReadable() throws {
+        let (_, header, batch, reply) = try fixture(); let review = try recordedReadReview(header, reply: reply)
+        var local = snapshot(batch), outside = batch.items[0].teamCompletion!.source
+        let project = UUID().uuidString.lowercased(); outside["id"] = .string(UUID().uuidString.lowercased()); outside["project_id"] = .string(project); outside["task_generation"] = .string(UUID().uuidString.lowercased())
+        local.tables["projects"]!.append(Record(["id": .string(project)])); local.tables["tasks"]!.append(outside); append(header, to: &local)
+        let chosen = [local.tables["tasks"]![0], outside]
+        let members = chosen.map { row in Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: ["priority": .number(1)], baseline: row.fields, teamTaskScope: TeamTaskEditScope(account: batch.account, origin: batch.origin, team: batch.team, project: row.string("project_id"))) }.sorted { $0.recordID < $1.recordID }
+        let mixed = TeamTaskBatch.header(TeamTaskBatch(account: batch.account, origin: batch.origin, team: batch.team, operation: .edit, restores: nil, items: members)); append(mixed, to: &local)
+        let before = local, access = try readRecoveryCache(header, local: local)
+        let next = try XCTUnwrap(review.acknowledging(local, readable: access)); XCTAssertEqual(next.pending, [mixed]); sameRows(next, before)
+        XCTAssertEqual(next.teamWorkspace?.blocked(next), [mixed.id])
+        XCTAssertNil(review.acknowledging(local, readable: try readRecoveryCache(header, local: local, missing: [project]))); XCTAssertEqual(local, before)
+    }
+    func testRecordedReadReviewRejectsForeignDisabledInactiveMissingAndForgottenCustodyBoundaries() throws {
+        let (_, header, review) = try groupReviewFixture("recorded"), local = groupReviewProjection(header)
+        for access in [try readRecoveryCache(header, local: local, account: UUID().uuidString.lowercased()), try readRecoveryCache(header, local: local, origin: "https://foreign.example"), try readRecoveryCache(header, local: local, reads: false), try readRecoveryCache(header, local: local, active: false), try readRecoveryCache(header, local: local, missing: [header.teamTaskBatch!.items[0].teamCompletion!.scope.project])] {
+            XCTAssertNil(review.acknowledging(local, readable: access))
+        }
+        var remembered = local
+        let oldProject = UUID().uuidString.lowercased(), oldTask = UUID().uuidString.lowercased()
+        remembered.tables["projects"]!.append(Record(["id": .string(oldProject)])); var row = remembered.tables["tasks"]![0]; row["id"] = .string(oldTask); row["project_id"] = .string(oldProject); remembered.tables["tasks"]!.append(row)
+        remembered.teamWorkspace = try readRecoveryCache(header, local: remembered, role: "editor")
+        remembered.tables["projects"]!.removeAll { $0.id == oldProject }; remembered.tables["tasks"]!.removeAll { $0.id == oldTask }
+        let forgetful = try readRecoveryCache(header, local: local)
+        XCTAssertNil(review.acknowledging(remembered, readable: forgetful))
+        let next = try XCTUnwrap(review.acknowledging(remembered, readable: try readRecoveryCache(header, local: remembered)))
+        XCTAssertTrue(next.teamWorkspace!.knownTasks.contains(oldTask)); XCTAssertNotNil(next.teamWorkspace!.knownTeams[oldProject])
+    }
+    func testReadAccessCannotRetireUnrecordedCancelledStaleOrDuplicateEnvelopes() throws {
+        for phase in ["unrecorded", "cancelled"] {
+            let (_, header, review) = try groupReviewFixture(phase), local = groupReviewProjection(header)
+            XCTAssertNil(review.acknowledging(local, readable: try readRecoveryCache(header, local: local)))
+        }
+        let (_, header, review) = try groupReviewFixture("recorded"); var local = groupReviewProjection(header)
+        let access = try readRecoveryCache(header, local: local)
+        local.pending.insert(Mutation(table: "view_preferences", recordID: "other", method: "PATCH", fields: [:]), at: 0)
+        XCTAssertNil(review.acknowledging(local, readable: access)); local = groupReviewProjection(header); local.pending.append(header)
+        XCTAssertNil(review.acknowledging(local, readable: access))
+    }
+    func testRecordedReadReviewRefusesUntrackedEditsEvenWithoutAQueuedCohort() throws {
+        let (_, header, review) = try groupReviewFixture("recorded"); var local = groupReviewProjection(header)
+        local.tables["tasks"]![1]["description"] = .string("Untracked authored instructions")
+        let before = local; XCTAssertNil(review.acknowledging(local, readable: try readRecoveryCache(header, local: local))); XCTAssertEqual(local, before)
+    }
+    func testRecordedReadReviewReconcilesRecurringUndoRedoWithoutRewritingOrSendingAnyHistory() throws {
+        let (header, _, reply, undo, redo, local) = try recurringChain(), review = try recordedReadReview(header, reply: reply)
+        let next = try XCTUnwrap(review.acknowledging(local, readable: try readRecoveryCache(header, local: local)))
+        XCTAssertEqual(next.pending, [undo, redo]); sameRows(next, local); XCTAssertEqual(next.teamWorkspace?.blocked(next), [undo.id, redo.id])
+        for phase in ["undo", "redo"] {
+            let (_, exact, observation) = try groupReviewFixture(phase), projection = groupReviewProjection(exact)
+            let kept = try XCTUnwrap(observation.acknowledging(projection, readable: try readRecoveryCache(exact, local: projection)))
+            XCTAssertTrue(kept.pending.isEmpty)
+        }
+    }
+    func testRecordedReadReviewPreservesValidCommentsAndRefusesOrphanedSuccessorDrafts() throws {
+        let (_, header, batch, reply) = try fixture("recurring_"); var local = snapshot(batch); append(header, to: &local)
+        let proposed = batch.items[0].teamCompletion!.proposed!
+        let comment = try SharedCommentChange(account: batch.account, taskID: proposed.id, taskGeneration: proposed.string("task_generation"), projectID: proposed.string("project_id"), body: "Keep my future occurrence comment")
+        try ConversationOutbox.enqueue(comment.record, into: &local)
+        let access = try readRecoveryCache(header, local: local), review = try recordedReadReview(header, reply: reply)
+        let next = try XCTUnwrap(review.acknowledging(local, readable: access)); XCTAssertEqual(next.tables[ConversationOutbox.table], local.tables[ConversationOutbox.table])
+        var changed = reply, items = reply["items"]!.list, member = items[0].object, successor = member["successor"]!.object
+        let newGeneration = UUID().uuidString.lowercased(); successor["task_generation"] = .string(newGeneration); member["successor"] = .object(successor); member["successor_generation"] = .string(newGeneration); member["created_successor"] = .bool(false); items[0] = .object(member); changed["items"] = .array(items)
+        let adopted = try recordedReadReview(header, reply: changed), before = local
+        XCTAssertNil(adopted.acknowledging(local, readable: access)); XCTAssertEqual(local, before)
+        local.tables[ConversationOutbox.table] = []
+        local.pending.append(Mutation(table: "view_preferences", recordID: "pinned", method: "PATCH", fields: ["task": .string(proposed.id)]))
+        XCTAssertNil(adopted.acknowledging(local, readable: access))
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testRecordedReadReviewRequiresSeparateSeriesProjectWithoutChangingItsLocalParent() throws {
+        let (_, oldHeader, original, oldReply) = try fixture("recurring_")
+        let previous = original.items[0].teamCompletion!
+        var parent = previous.source; parent["id"] = .string(UUID().uuidString.lowercased()); parent["task_generation"] = .string(UUID().uuidString.lowercased()); parent["project_id"] = .string(UUID().uuidString.lowercased())
+        var source = previous.source; source["recurrence_parent_id"] = .string(parent.id)
+        let member = try TeamCompletion.complete(source, tasks: [source, parent], scope: previous.scope, at: TaskPlanning.instant(previous.completedAt)!, zone: previous.inputZone, id: original.items[0].id)
+        let command = try XCTUnwrap(member.teamCompletion), body = try command.body(for: member)
+        var batch = original; batch.items[0] = member
+        let header = TeamTaskBatch.header(batch, id: oldHeader.id)
+        var reply = oldReply, receipts = oldReply["items"]!.list, result = receipts[0].object
+        for key in ["team_id", "project_id", "task_id", "task_generation", "request_id", "series_id", "series_generation", "series_project_id", "planned_next_id"] { result[key] = body[key] }
+        let completed = TaskCompletionRevision.applying(["completed": .bool(true), "completed_at": .string(command.completedAt)], to: source), successor = try XCTUnwrap(command.proposed)
+        result["task"] = .object(completed.fields); result["source_revision"] = completed["completion_version"]
+        result["successor"] = .object(successor.fields); result["successor_id"] = .string(successor.id); result["successor_generation"] = successor["task_generation"]
+        receipts[0] = .object(result); reply["items"] = .array(receipts)
+        let review = try recordedReadReview(header, reply: reply, series: [parent])
+        var local = snapshot(batch); local.tables["tasks"]!.append(parent); append(header, to: &local)
+        let before = local, access = try readRecoveryCache(header, local: local)
+        let next = try XCTUnwrap(review.acknowledging(local, readable: access))
+        XCTAssertEqual(next.tables["tasks"]?.first { $0.id == parent.id }, parent); XCTAssertTrue(next.pending.isEmpty)
+        XCTAssertNil(review.acknowledging(local, readable: try readRecoveryCache(header, local: local, missing: [parent.string("project_id")])))
+        XCTAssertEqual(local, before)
+    }
+}

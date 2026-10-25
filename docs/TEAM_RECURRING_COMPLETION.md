@@ -434,3 +434,60 @@ per device in the initial four-case runs; their failed fourth case and subsequen
 picker/selector attempts remain visible in evidence. Final export uses in-memory
 Transferable JSON sharing, which avoids the system picker's unreliable Cancel
 proxy; no actual external delivery is claimed. This is not Mac runtime acceptance.
+
+
+### 2026-10-25 — Acknowledge recorded selections with current read access
+
+An explicit recorded group review can now acknowledge its already-synced result
+when the user is a viewer, the project is archived or native editing is paused.
+A private read authority binds the validated full group receipt to the account,
+backend, active team and currently readable source/series projects. Every connected
+later typed task cohort must remain readable too. Missing/foreign/inactive/disabled
+boundaries and forgotten historical custody refuse without changing the snapshot.
+The ordinary send/acknowledgement path keeps its edit-access checks.
+
+The reviewed path reconstructs and validates the entire local projection even
+without a later task cohort. Untracked authored fields refuse; supported later edits
+and Complete/Undo/Redo histories keep their exact typed bodies/nonces. Displaced
+incarnations cannot orphan comment drafts or indirect preference intent. The result
+persists the captured current read boundary and historical team/task custody rather
+than an older writer cache. Later queued changes remain blocked by their real
+permissions; acknowledgement grants no write capability. The Store checks account
+generation, complete snapshot, read revision, full current access cache and visible
+review after detached reconciliation and before publishing/persisting. Failure
+keeps the selection and queued drafts. Native copy distinguishes queued later work
+from a separate draft saved by the Keep synced tasks path.
+
+Each independent repo passes 723 of 724 selected Core cases, with one live shared-
+conversation integration case explicitly skipped for lack of disposable service
+accounts. This includes 78 completion-group cases (10 new read-recovery cases),
+actual previously generated SQL complete/Undo/Redo wire fixtures, recurring
+histories, transitive mixed-project cohorts, separate cross-project series parents,
+read loss, write pause/archive/viewer states, historical custody, untracked content
+and orphaned drafts. Both Debug app builds succeed.
+
+Three actual installed UI cases pass separately on each iPhone and iPad with no
+runtime warnings: viewer with a later edit, archived project without reopening it,
+and paused editing with a later edit. They start with an older writer cache on disk
+and a newer read-only access mask, then prove recorded acknowledgement persists the
+current read boundary, leaves rows and pending values intact, and survives relaunch.
+Before/after snapshots and semantic comparisons retain every value while treating
+only Codable Set identifier lists as unordered. Earlier raw-cache assertions failed
+on process-dependent Set ordering; failed-run summaries/logs are retained, and the
+final tests compare all actual saved values. Runtime fixtures are synthetic ordinary
+roots and a local protocol peer; this is not hosted service or Mac runtime proof.
+
+See p2-recorded-completion-read-recovery-evidence.json and recorded-completion-read-recovery/.
+Missing-incarnation authored recovery, unsupported cross-table cohorts, native
+recurring/Undo/Redo and spoken/storage/account-race acceptance, Mac runtime, large-
+workload responsiveness and genuine hosted team acceptance remain open. No SQL,
+hosted schema/configuration, rollout flag, real task/account or user-deferred
+release/provider/device work changed. The full rank-6/Px goal remains active.
+
+This stage covers an explicit existing recorded review. Automatic discovery of
+that review when the app starts with its head already blocked remains the next
+source integration task; no cold-start discovery acceptance is claimed here. After
+the final text-only queued-edit/draft distinction, the viewer/later-edit/relaunch
+case passed once more per device with no runtime warnings. Final installed hashes
+match that signed build; the earlier three-mode acceptance remains separately
+retained and the other two modes were not repeated for the wording change.

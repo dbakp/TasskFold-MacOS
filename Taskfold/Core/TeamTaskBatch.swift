@@ -316,6 +316,38 @@ extension TeamTaskBatch {
 /// Reconstruct a complete optimistic cohort before replacing it with confirmed
 /// rows. Every remaining command and nonce stays frozen; only its local projection
 /// is replayed. Failure leaves the caller's entire snapshot untouched.
+/// Read authority is bound to a fully validated recorded review, never a write
+/// receipt alone. It permits only local acknowledgement of that exact envelope.
+private struct CompletionBatchReadAccess {
+    let review: TeamTaskBatch.Review
+    let cache: TeamWorkspaceCache
+    init?(review: TeamTaskBatch.Review, cache: TeamWorkspaceCache, snapshot: Snapshot) {
+        guard review.isRecorded, let batch = review.mutation.teamTaskBatch,
+              cache.boundary.belongs(account: batch.account, origin: batch.origin),
+              cache.boundary.raw["native_team_reads_enabled"] == .bool(true),
+              cache.boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(batch.team) && $0.object["state"] == .string("active") }) == true else { return nil }
+        if let old = snapshot.teamWorkspace {
+            guard old.boundary.belongs(account: batch.account, origin: batch.origin),
+                  old.knownTasks.isSubset(of: cache.knownTasks), old.knownTeams.allSatisfy({ cache.knownTeams[$0.key] == $0.value }) else { return nil }
+        }
+        self.review = review; self.cache = cache
+        guard permits(review.mutation) else { return nil }
+    }
+    func permits(_ mutation: Mutation) -> Bool {
+        let batch = review.mutation.teamTaskBatch!
+        func scope(_ value: TeamTaskEditScope, series: String? = nil) -> Bool {
+            guard value.account == batch.account, value.origin == batch.origin, value.team == batch.team else { return false }
+            return [value.project, series].compactMap { $0 }.allSatisfy { cache.boundary.projects[$0]?.team == batch.team }
+        }
+        if let group = mutation.teamTaskBatch {
+            return group.account == batch.account && group.origin == batch.origin && group.team == batch.team && !group.items.isEmpty && group.items.allSatisfy(permits)
+        }
+        if let command = mutation.teamCompletion { return scope(command.scope, series: command.seriesProject) }
+        if mutation.table == "tasks", let value = mutation.teamTaskScope { return scope(value) }
+        return false
+    }
+}
+
 private struct CompletionBatchReconciliation {
     let batch: TeamTaskBatch
     let header: Mutation
@@ -323,6 +355,7 @@ private struct CompletionBatchReconciliation {
     let raw: [String: JSON]
     let receipts: [TeamCompletion.Receipt]
     var cancellation: TeamTaskBatch.Review? = nil
+    var readAccess: CompletionBatchReadAccess? = nil
     private var later: [Mutation] { Array(original.pending.dropFirst()) }
     private func members(_ change: Mutation) -> [Mutation] { change.teamTaskBatch?.items ?? [change] }
     private func taskIDs(_ change: Mutation) -> Set<String> {
@@ -414,7 +447,10 @@ private struct CompletionBatchReconciliation {
             }
         }
         let indices = selected.sorted(), leaves = try indices.flatMap { try checkedMembers(changes[$0]) }
-        if cancellation == nil, let access = original.teamWorkspace {
+        if let readAccess {
+            guard cancellation == nil, readAccess.review.mutation == header, readAccess.review.recorded == raw,
+                  readAccess.permits(header), indices.allSatisfy({ readAccess.permits(changes[$0]) }) else { throw TeamTaskBatch.conflict }
+        } else if cancellation == nil, let access = original.teamWorkspace {
             guard indices.allSatisfy({ access.canSend(changes[$0], in: original) }) else { throw TeamTaskBatch.conflict }
         }
         var projects = Set<String>()
@@ -422,7 +458,7 @@ private struct CompletionBatchReconciliation {
             if let command = item.teamCompletion { projects.formUnion([command.scope.project, command.seriesProject]) }
             else if let scope = item.teamTaskScope { projects.insert(scope.project) }
         }
-        guard projects.allSatisfy({ p in original.tables["projects"]?.contains(where: { $0.id == p && (cancellation != nil || (!$0["is_archived"].flag && !$0["ancestor_archived"].flag)) }) == true }),
+        guard projects.allSatisfy({ p in original.tables["projects"]?.contains(where: { $0.id == p && (cancellation != nil || readAccess != nil || (!$0["is_archived"].flag && !$0["ancestor_archived"].flag)) }) == true }),
               !changes.contains(where: { $0.table == "projects" && projects.contains($0.recordID) }) else { throw TeamTaskBatch.conflict }
         var current: [String: Record] = [:]
         for row in original.tables["tasks"] ?? [] where affected.contains(row.id) {
@@ -519,6 +555,23 @@ private struct CompletionBatchReconciliation {
             result.pending = changes.enumerated().filter { !selected.contains($0.offset) }.map(\.element)
             result.tables[ConversationOutbox.table]?.removeAll { parkedComments.contains($0.id) }
             return result
+        }
+        if readAccess != nil {
+            let owned = Set(batch.items.flatMap { [$0.recordID, $0.teamCompletion?.proposed?.id].compactMap { $0 } })
+            let displaced = Set(current.values.filter { owned.contains($0.id) && authoritative[$0.id]?["task_generation"] != $0["task_generation"] }.map(\.id))
+            func references(_ value: JSON) -> Bool {
+                switch value {
+                case .string(let text): return displaced.contains { text.lowercased().contains($0.lowercased()) }
+                case .object(let fields): return fields.values.contains(where: references)
+                case .array(let values): return values.contains(where: references)
+                default: return false
+                }
+            }
+            guard !(original.tables[ConversationOutbox.table] ?? []).contains(where: { references(.object($0.fields)) }) else { throw TeamTaskBatch.conflict }
+            for i in changes.indices where !selected.contains(i) {
+                let value = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(changes[i]))
+                guard !references(value) else { throw TeamTaskBatch.conflict }
+            }
         }
         var result = initial
         let replies = raw["items"]!.list
@@ -627,6 +680,18 @@ extension TeamTaskBatch {
             var next = snapshot
             let saved = Record(["id": .string(mutation.recordID), "team_completion_batch_reply": .object(recorded)])
             guard batch.acknowledgeCompletion(saved, header: mutation, snapshot: &next) else { return nil }
+            return next
+        }
+        /// An explicit recorded review may acknowledge local state with current
+        /// read access. It does not make any later queued command sendable.
+        func acknowledging(_ snapshot: Snapshot, readable cache: TeamWorkspaceCache) -> Snapshot? {
+            guard snapshot.pending.first == mutation, Set(snapshot.pending.map(\.id)).count == snapshot.pending.count,
+                  let access = CompletionBatchReadAccess(review: self, cache: cache, snapshot: snapshot),
+                  let batch = mutation.teamTaskBatch, let recorded,
+                  let receipts = try? batch.completionReceipts(recorded, for: mutation),
+                  var next = try? CompletionBatchReconciliation(batch: batch, header: mutation, original: snapshot, raw: recorded, receipts: receipts, readAccess: access).confirmed(),
+                  let refreshed = try? TeamWorkspaceCache(boundary: cache.boundary, previous: cache, pending: next.pending, tasks: next.tables["tasks"] ?? []) else { return nil }
+            next.teamWorkspace = refreshed
             return next
         }
         /// Produces a complete rollback only with a separately retained encrypted
