@@ -141,6 +141,13 @@ struct TeamCompletion: Codable, Equatable, Sendable {
     func acknowledge(_ saved:Record?,header:Mutation,snapshot:inout Snapshot) -> Bool {
         guard let saved,case .object(let raw)=saved["team_completion_reply"],let receipt=try? receipt(raw,for:header) else { return false }
         var result=snapshot
+        var displaced = Set<String>()
+        if receipt.task == nil { displaced.insert(source.id) }
+        if let proposed, receipt.successor?.id != proposed.id || receipt.successor?["task_generation"] != proposed["task_generation"] { displaced.insert(proposed.id) }
+        if !displaced.isEmpty {
+            guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: scope.account, affected: displaced,
+                tasks: (snapshot.tables["tasks"] ?? []) + [source] + [proposed].compactMap { $0 }), conversations.isEmpty else { return false }
+        }
         let later=result.pending.filter{$0.id != header.id}
         let changedIDs=Set([source.id,proposed?.id,receipt.successor?.id].compactMap{$0})
         // A later group that mixes these rows with other optimistic tasks needs
@@ -270,7 +277,8 @@ extension TeamCompletion {
                 guard let encoded=try? JSONEncoder().encode(later),let value=try? JSONDecoder().decode(JSON.self,from:encoded),!references(value) else {return nil}
                 if later.table == "projects",later.recordID.lowercased() == command.scope.project.lowercased() {return nil}
             }
-            guard !(snapshot.tables[ConversationOutbox.table] ?? []).contains(where:{references(.object($0.fields))}) else {return nil}
+            guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: command.scope.account, affected: ids,
+                tasks: (snapshot.tables["tasks"] ?? []) + [command.source] + [command.proposed].compactMap { $0 }), conversations.isEmpty else { return nil }
             var rows=snapshot.tables["tasks"] ?? []
             if let local=rows.first(where:{$0.id == command.source.id}) {
                 guard local["task_generation"] == command.source["task_generation"] else {return nil}

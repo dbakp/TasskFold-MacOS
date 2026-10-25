@@ -400,7 +400,7 @@ struct TeamCompletionBatchDraft: Codable, Equatable, Identifiable, Sendable {
             checklist(row["subtasks"].list, depth: 0)
         }
         for item in leaves { for key in ["title", "description"] where !item.fields[key, default: .null].text.isEmpty { lines.append("Earlier saved text: " + item.fields[key]!.text) } }
-        for row in parkedConversations { if let comment = ConversationOutbox.comment(row) { lines.append(comment.deleting ? "Comment marked for deletion: " + comment.body : "Comment draft: " + comment.body) } }
+        lines.append(contentsOf: ConversationRecoveryExport.text(parkedConversations, snapshot: snapshot))
         return lines.joined(separator: "\n\n")
     }
     /// A selection export contains only connected work, never the full private
@@ -408,8 +408,10 @@ struct TeamCompletionBatchDraft: Codable, Equatable, Identifiable, Sendable {
     func data() throws -> Data {
         try validate()
         func json<T: Encodable>(_ value: T) throws -> JSON { try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(value)) }
-        let body: [String: JSON] = ["format": .string("com.taskfold.saved-selection"), "version": .number(1), "created_at": .string(ISO8601DateFormatter().string(from: createdAt)),
+        var body: [String: JSON] = ["format": .string("com.taskfold.saved-selection"), "version": .number(1), "created_at": .string(ISO8601DateFormatter().string(from: createdAt)),
             "original": try json(original), "changes": try json(parkedChanges), "tasks": .array(records.map { .object($0.fields) }), "conversations": .array(parkedConversations.map { .object($0.fields) })]
+        let context = ConversationRecoveryExport.context(parkedConversations, snapshot: snapshot)
+        if !context.isEmpty { body["conversation_context"] = .array(context) }
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]; return try encoder.encode(body)
     }
 }
@@ -580,7 +582,7 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
             checklist(row["subtasks"].list, depth: 0)
         }
         for item in leaves { for key in ["title", "description"] where !item.fields[key, default: .null].text.isEmpty { lines.append("Earlier saved text: " + item.fields[key]!.text) } }
-        for row in parkedConversations { if let comment = ConversationOutbox.comment(row) { lines.append(comment.deleting ? "Comment marked for deletion: " + comment.body : "Comment draft: " + comment.body) } }
+        lines.append(contentsOf: ConversationRecoveryExport.text(parkedConversations, snapshot: snapshot))
         return lines.joined(separator: "\n\n")
     }
     /// No full snapshot, permission cache, unrelated outbox or analysis envelope
@@ -588,7 +590,9 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
     func data() throws -> Data {
         try validate()
         func json<T: Encodable>(_ value: T) throws -> JSON { try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(value)) }
-        let body: [String: JSON] = ["format": .string("com.taskfold.saved-edits"), "version": .number(1), "created_at": .string(ISO8601DateFormatter().string(from: createdAt)), "original": try json(original), "changes": try json(parkedChanges), "tasks": .array(records.map { .object($0.fields) }), "conversations": .array(parkedConversations.map { .object($0.fields) })]
+        var body: [String: JSON] = ["format": .string("com.taskfold.saved-edits"), "version": .number(1), "created_at": .string(ISO8601DateFormatter().string(from: createdAt)), "original": try json(original), "changes": try json(parkedChanges), "tasks": .array(records.map { .object($0.fields) }), "conversations": .array(parkedConversations.map { .object($0.fields) })]
+        let context = ConversationRecoveryExport.context(parkedConversations, snapshot: snapshot)
+        if !context.isEmpty { body["conversation_context"] = .array(context) }
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]; return try encoder.encode(body)
     }
 }

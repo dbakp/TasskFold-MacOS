@@ -1,0 +1,196 @@
+{
+  "date": "2026-10-25",
+  "removedOwnedScratch": [
+    {
+      "path": "/tmp/taskfold-mention-recovery-copy.py",
+      "logicalBytes": 1289
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-edit.py",
+      "logicalBytes": 6771
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-evidence.py",
+      "logicalBytes": 7082
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-export.py",
+      "logicalBytes": 3113
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-host",
+      "logicalBytes": 6915360
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-ios-accepted.log",
+      "logicalBytes": 90038
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-ios-build",
+      "logicalBytes": 736493367
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-ios-build.log",
+      "logicalBytes": 537393
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-ios-final-build.log",
+      "logicalBytes": 87358
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-ios-final-core.log",
+      "logicalBytes": 90067
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-ipad-attachments",
+      "logicalBytes": 2238990
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-ipad-native.log",
+      "logicalBytes": 46205
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-ipad.xcresult",
+      "logicalBytes": 3473024
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-accepted.log",
+      "logicalBytes": 83289
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-attachment-export.log",
+      "logicalBytes": 2913
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-attachments",
+      "logicalBytes": 4140336
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-build.log",
+      "logicalBytes": 101051
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-core.log",
+      "logicalBytes": 83615
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-final-build.log",
+      "logicalBytes": 70146
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-final-core.log",
+      "logicalBytes": 88684
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-native.log",
+      "logicalBytes": 38303
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-sandboxed-attachments",
+      "logicalBytes": 3013941
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-sandboxed-build.log",
+      "logicalBytes": 33404
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-sandboxed-native.log",
+      "logicalBytes": 26190
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-sandboxed.xcresult",
+      "logicalBytes": 2858761
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-selfcontained-build.log",
+      "logicalBytes": 33404
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-selfcontained-native.log",
+      "logicalBytes": 16241
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac-selfcontained.xcresult",
+      "logicalBytes": 161435314
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-mac.xcresult",
+      "logicalBytes": 4072803
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-native.py",
+      "logicalBytes": 4386
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-phone-attachments",
+      "logicalBytes": 2011339
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-phone-native.log",
+      "logicalBytes": 40122
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-phone.xcresult",
+      "logicalBytes": 3127887
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-plan-stage.txt",
+      "logicalBytes": 2409
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-prepare.log",
+      "logicalBytes": 44
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-run-sandboxed.py",
+      "logicalBytes": 1016
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-run-selfcontained.py",
+      "logicalBytes": 1024
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-run.py",
+      "logicalBytes": 1064
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-session-cleanup.json",
+      "logicalBytes": 441
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-signatures.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-signing.log",
+      "logicalBytes": 88
+    },
+    {
+      "path": "/tmp/taskfold-mention-recovery-tests.swift",
+      "logicalBytes": 10129
+    }
+  ],
+  "logicalBytes": 931289106,
+  "sessions": {
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4": {
+      "com.dbakp.taskfold.workflowteststeameditbridge": "removed",
+      "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": "removed",
+      "state": "Booted"
+    },
+    "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378": {
+      "com.dbakp.taskfold.workflowteststeameditbridge": "removed",
+      "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": "removed",
+      "state": "Booted"
+    }
+  },
+  "macTaskfoldProcesses": "none after native teardown",
+  "preserved": [
+    "Both repository .build caches",
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "/tmp/taskfold-workflow-mac-native-host",
+    "/tmp/taskfold-workflow-mac-native-build"
+  ],
+  "testExportCleanup": "Mac test now creates its own sandbox temporary directory and deletes its unique synthetic export in XCTest teardown. Earlier top-level synthetic export scratch was retained as evidence then removed.",
+  "physicalBytesFreed": "Not inferred from logical sizes on APFS."
+}

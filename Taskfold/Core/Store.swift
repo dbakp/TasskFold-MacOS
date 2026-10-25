@@ -3967,6 +3967,18 @@ extension Store {
                 let edit = try command.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: command.scope), existing: row)
                 snapshot.apply(edit); snapshot.pending.append(edit); try persist()
             }
+            if ProcessInfo.processInfo.arguments.contains("--team-recorded-mention-testing"),
+               (snapshot.tables[ConversationOutbox.table] ?? []).isEmpty,
+               let item = header.teamCompletion != nil ? header : header.teamTaskBatch?.items.first,
+               let task = snapshot.tables["tasks"]?.first(where: { $0.id == item.recordID }) {
+                let stamp = "2026-10-25T12:00:00Z", commentID = "ec240000-0000-4000-8000-000000000091", mentionID = "ec240000-0000-4000-8000-000000000092"
+                let comment = Record(["id": .string(commentID), "task_id": .string(task.id), "task_generation": task["task_generation"], "project_id": task["project_id"], "author_id": .string(userID), "body": .string("Native connected mention recovery proof"), "mention_ids": .array([.string(userID)]), "revision": .number(2), "created_at": .string(stamp), "updated_at": .string(stamp), "deleted_at": .null])
+                let marker = Record(["id": .string(mentionID), "comment_id": .string(commentID), "recipient_id": .string(userID), "revision": .number(3), "created_at": .string(stamp), "read_at": .null])
+                guard let mention = SharedMention(marker) else { throw TeamCompletion.invalid }
+                snapshot.tables[SharedComment.table] = [comment]; snapshot.tables[SharedMention.table] = [marker]
+                try ConversationOutbox.enqueue(SharedMentionChange(mention: mention, account: userID, read: true).record, into: &snapshot)
+                try persist()
+            }
             if let mode = TeamBatchRecoveryNativePeer.readOnlyMode {
                 var raw = try TeamEditorNativeFixture.boundary(viewer: mode == "viewer").raw
                 raw["setup_paused"] = .bool(mode == "paused"); raw["token"] = .string(String(repeating: "e", count: 64))

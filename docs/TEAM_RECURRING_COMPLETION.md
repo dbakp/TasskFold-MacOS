@@ -917,3 +917,45 @@ No hosted schema, service/configuration, rollout, real task/account, release or
 provider setup changed. Rank 6 and the broader Px goal remain open: supported
 cross-table recovery, broader recurring/spoken/I/O-race/large-workload acceptance
 and genuine hosted flows still remain, alongside the agreed user deferrals.
+
+
+## 25 October: connected mention read-state recovery
+
+Both clients now connect a saved mention read/unread marker to its comment and
+exact task incarnation when preserving recorded missing-task work or a cancelled
+selection as an encrypted draft. The account, recipient, comment/mention identities,
+project, task generation and expected revision are validated before local removal.
+Missing, foreign, duplicate, malformed or unexplained context keeps the whole
+review and queue protected. An ordinary receipt or simple cancellation cannot
+silently orphan a connected marker, even when it is the only remaining local work.
+The explicit recorded action still requires the existing backup, encrypted archive
+and read-back before persisting the reviewed result. No extra write authority or
+conversation RPC is added; saved markers are never automatically replayed.
+
+Saved draft text explains the read/unread choice and connected discussion. Exports
+with markers add only their related comment/mention rows under
+`conversation_context`; original intent bodies and nonces stay exact. The private
+whole-snapshot archive remains separate from export, and unrelated conversations
+stay in the active workspace and out of the review file. Exports without markers
+are unchanged. Both independent app repositories own their implementation.
+
+Each repo passes 236 focused Core checks, including seven new cases. Two native
+cases are accepted per Mac, iPhone Simulator and iPad Simulator: the new connected
+marker group recovery/relaunch/preview/export and the existing single missing-task
+regression. Mac also saves the actual JSON locally and checks exact bytes; iOS
+opens and cancels native sharing. Full saved snapshot, original marker/context and
+cold-relaunch state are independently checked. These are synthetic signed-host
+checks; cancelled selections and unread=false use Core coverage in this stage.
+See [p2-mention-recovery-evidence.json](p2-mention-recovery-evidence.json).
+
+Next is captured preference/order/pin recovery. Unsupported or absent conversation
+context, single cancelled/provisional marker flows, broader native recurring/spoken
+acceptance, backup/vault I/O-phase races, large workloads and genuine hosted flows
+remain open. Collaboration remains default off. Hosted schema/service/configuration,
+rollout, real account/task data and all user-deferred release/provider/device gates
+remain unchanged.
+
+The Mac export test now creates and removes its unique synthetic file in the
+runner’s own temporary directory. Its first self-contained setup attempt was
+refused by the test runner’s sandbox at `/tmp`; no app file export occurred in
+that attempt. The corrected setup has a separate retained one-case result.

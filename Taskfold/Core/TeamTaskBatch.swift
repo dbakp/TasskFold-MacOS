@@ -346,6 +346,70 @@ private struct CompletionBatchReadAccess {
     }
 }
 
+/// Comment IDs form the missing edge between a task and a saved mention read
+/// marker. Resolve only validated, account-owned intent; never infer permission
+/// from free text or retarget a marker to a newer task incarnation.
+enum CompletionRecoveryConversations {
+    static func parked(in snapshot: Snapshot, account: String, affected: Set<String>, tasks: [Record]) throws -> Set<String> {
+        func references(_ value: JSON, _ ids: Set<String>) -> Bool {
+            switch value {
+            case .string(let text): return ids.contains { text.lowercased().contains($0.lowercased()) }
+            case .object(let fields): return fields.values.contains { references($0, ids) }
+            case .array(let values): return values.contains { references($0, ids) }
+            default: return false
+            }
+        }
+        func matches(_ task: String, _ generation: String, _ project: String) -> Bool {
+            tasks.contains { $0.id == task && $0.string("task_generation") == generation && $0.string("project_id") == project }
+        }
+        var comments: [String: [String]] = [:]
+        func bind(_ id: String, task: String, generation: String, project: String) throws {
+            let identity = [task, generation, project]
+            guard affected.contains(task), matches(task, generation, project), comments[id].map({ $0 == identity }) ?? true else { throw TeamTaskBatch.conflict }
+            comments[id] = identity
+        }
+        let cachedComments = snapshot.tables[SharedComment.table] ?? []
+        var seenComments = Set<String>()
+        for row in cachedComments where references(.object(row.fields), affected) {
+            guard let comment = SharedComment(row), seenComments.insert(comment.id).inserted else { throw TeamTaskBatch.conflict }
+            try bind(comment.id, task: comment.taskID, generation: comment.taskGeneration, project: comment.projectID)
+        }
+        let outbox = snapshot.tables[ConversationOutbox.table] ?? []
+        guard Set(outbox.map(\.id)).count == outbox.count else { throw TeamTaskBatch.conflict }
+        for row in outbox where references(.object(row.fields), affected) {
+            guard ConversationOutbox.valid(row), let comment = ConversationOutbox.comment(row), comment.account == account else { throw TeamTaskBatch.conflict }
+            try bind(comment.commentID, task: comment.taskID, generation: comment.taskGeneration, project: comment.projectID)
+        }
+        let commentIDs = Set(comments.keys)
+        // Duplicated or conflicting cache identities cannot prove a safe edge.
+        for id in commentIDs {
+            let rows = cachedComments.filter { $0.id.lowercased() == id }
+            guard rows.count <= 1 else { throw TeamTaskBatch.conflict }
+            if let row = rows.first {
+                guard let comment = SharedComment(row), comments[id] == [comment.taskID, comment.taskGeneration, comment.projectID] else { throw TeamTaskBatch.conflict }
+            }
+        }
+        var mentions: [String: SharedMention] = [:]
+        for row in snapshot.tables[SharedMention.table] ?? [] where references(.object(row.fields), commentIDs) {
+            guard let mention = SharedMention(row), commentIDs.contains(mention.commentID), mentions.updateValue(mention, forKey: mention.id) == nil else { throw TeamTaskBatch.conflict }
+        }
+        let related = affected.union(commentIDs).union(mentions.keys)
+        var parked = Set<String>()
+        for row in outbox where references(.object(row.fields), related) {
+            guard ConversationOutbox.valid(row), row.string("account") == account else { throw TeamTaskBatch.conflict }
+            if let comment = ConversationOutbox.comment(row) {
+                guard comments[comment.commentID] == [comment.taskID, comment.taskGeneration, comment.projectID] else { throw TeamTaskBatch.conflict }
+            } else if let change = ConversationOutbox.mention(row) {
+                guard change.account == account, let mention = mentions[change.mentionID], mention.recipientID == account,
+                      mention.commentID == change.commentID, commentIDs.contains(change.commentID), mention.revision >= change.expectedRevision,
+                      (snapshot.tables[SharedMention.table] ?? []).filter({ $0.id.lowercased() == change.mentionID }).count == 1 else { throw TeamTaskBatch.conflict }
+            } else { throw TeamTaskBatch.conflict }
+            parked.insert(row.id)
+        }
+        return parked
+    }
+}
+
 private struct CompletionBatchReconciliation {
     let batch: TeamTaskBatch
     let header: Mutation
@@ -542,22 +606,13 @@ private struct CompletionBatchReconciliation {
                 let value = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(changes[i]))
                 guard !references(value) else { throw TeamTaskBatch.conflict }
             }
-            let comments = original.tables[ConversationOutbox.table] ?? []
-            guard Set(comments.map(\.id)).count == comments.count else { throw TeamTaskBatch.conflict }
-            var parkedComments = Set<String>()
-            for row in comments where references(.object(row.fields)) {
-                guard ConversationOutbox.valid(row), let comment = ConversationOutbox.comment(row), comment.account == batch.account,
-                      affected.contains(comment.taskID) else { throw TeamTaskBatch.conflict }
-                // A queued deletion may have removed the row. Its frozen typed
-                // baseline still identifies the archived comment's incarnation.
-                let archivedRows = parkRecorded ? all.flatMap { item -> [Record] in
-                    if let command = item.teamCompletion { return [command.source] + [command.proposed].compactMap { $0 } }
-                    return [item.baseline.map(Record.init), item.method == "POST" ? Record(item.fields) : nil].compactMap { $0 }
-                } : []
-                guard let task = (expected.tables["tasks"] ?? []).first(where: { $0.id == comment.taskID }) ?? current[comment.taskID] ?? archivedRows.first(where: { $0.id == comment.taskID && $0.string("task_generation") == comment.taskGeneration }),
-                      task.string("task_generation") == comment.taskGeneration, task.string("project_id") == comment.projectID else { throw TeamTaskBatch.conflict }
-                parkedComments.insert(row.id)
-            }
+            // Frozen typed rows also prove identity after a queued deletion.
+            let archivedRows = parkRecorded ? all.flatMap { item -> [Record] in
+                if let command = item.teamCompletion { return [command.source] + [command.proposed].compactMap { $0 } }
+                return [item.baseline.map(Record.init), item.method == "POST" ? Record(item.fields) : nil].compactMap { $0 }
+            } : []
+            let parkedComments = try CompletionRecoveryConversations.parked(in: original, account: batch.account, affected: affected,
+                tasks: (expected.tables["tasks"] ?? []) + Array(current.values) + archivedRows)
             var result = seed
             if let cancellation {
                 let owned = Set(batch.items.flatMap { [$0.recordID, $0.teamCompletion?.proposed?.id].compactMap { $0 } })
@@ -565,6 +620,7 @@ private struct CompletionBatchReconciliation {
                 for row in cancellation.members.flatMap({ [$0.task, $0.successor].compactMap { $0 } }) where owned.contains(row.id) { put(row, in: &result) }
             } else {
                 result = initial
+                result.tables[ConversationOutbox.table]?.removeAll { parkedComments.contains($0.id) }
                 let replies = raw["items"]!.list
                 for (i, item) in batch.items.enumerated() {
                     result.pending = [item]
@@ -586,7 +642,8 @@ private struct CompletionBatchReconciliation {
                 default: return false
                 }
             }
-            guard !(original.tables[ConversationOutbox.table] ?? []).contains(where: { references(.object($0.fields)) }) else { throw TeamTaskBatch.conflict }
+            guard try CompletionRecoveryConversations.parked(in: original, account: batch.account, affected: displaced,
+                tasks: (expected.tables["tasks"] ?? []) + Array(current.values)).isEmpty else { throw TeamTaskBatch.conflict }
             for i in changes.indices where !selected.contains(i) {
                 let value = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(changes[i]))
                 guard !references(value) else { throw TeamTaskBatch.conflict }
@@ -742,7 +799,8 @@ extension TeamTaskBatch {
                 guard !["projects", "sections"].contains(later.table),
                       let encoded = try? JSONEncoder().encode(later), let value = try? JSONDecoder().decode(JSON.self, from: encoded), !references(value) else { return nil }
             }
-            guard !(snapshot.tables[ConversationOutbox.table] ?? []).contains(where: { references(.object($0.fields)) }) else { return nil }
+            guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: batch.account, affected: ids,
+                tasks: (snapshot.tables["tasks"] ?? []) + commands.flatMap { [$0.source] + [$0.proposed].compactMap { $0 } }), conversations.isEmpty else { return nil }
             var rows = snapshot.tables["tasks"] ?? []
             for command in commands {
                 guard let local = rows.first(where: { $0.id == command.source.id }) else { return nil }

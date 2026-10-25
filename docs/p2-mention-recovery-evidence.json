@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-25",
+  "scope": "Typed version-1 read/unread markers connected through validated comment and mention cache identities to a recorded missing task or parked cancelled selection. No new RPC or hosted change.",
+  "core": {
+    "passed": 236,
+    "failed": 0,
+    "newCases": 7,
+    "coverage": "Read and unread; single/group; cancelled selection; indirect marker-only receipt refusal; related draft comments and queued deletion; independent conversation exclusion; exact encryption/export round trip; foreign account/recipient, wrong generation/project, missing/duplicate/malformed cache, future revision and unsupported intent refusals."
+  },
+  "native": {
+    "casesPerPlatform": 2,
+    "platforms": [
+      "mac"
+    ],
+    "coverage": "One new connected-marker group recovery through actual Store backup/vault/persist, cold reopen, readable preview and JSON export; existing single missing-task recovery regression. Actual Mac Save delivery bytes verified; native iOS sharing cancellation. Synthetic peer and reserved signed app only.",
+    "limitations": "Cancelled selections and read=false use Core coverage here. Missing context stays queued/refused. No broad hosted, recurring series, physical device, spoken or provider acceptance claimed.",
+    "testSetup": "Two feature/regression cases passed first. A subsequent self-contained export setup attempt failed before exporting because its sandbox cannot create a top-level /tmp folder. The corrected runner-owned temporary directory passed the one-case rerun; summary, complete proof and actual local delivery are retained separately."
+  },
+  "format": "Existing encrypted archives remain whole snapshots with actual original command/response. Exports without read markers are unchanged. Exports with markers add conversation_context containing only their connected comment/mention cache rows; original outbox envelopes remain exact. No automatic replay/import or editing grant.",
+  "remaining": [
+    "Captured preference/order/pin recovery",
+    "Unsupported or absent conversation context and single cancelled/provisional marker flows",
+    "I/O-phase races, broader native recurring/spoken, large workloads and genuine hosted acceptance",
+    "User-deferred release/distribution, remote reminders, older-client rollout safeguards and provider/device setup remain deferred"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/SharedComments.swift": "de494aaff6cc3b30540a8b64f0e40202e6819730d1e5a4d1570af2b4185cad39",
+    "Taskfold/Core/Store.swift": "069167a9362213d88d4e0370ff4ff3b6e77f341738dc57e6bfb4ffbad7d158f5",
+    "Taskfold/Core/TeamCompletion.swift": "91a6eb050b63a4da0d1a73f8e4c9608a70dd3b3061711bc627eafe405578b882",
+    "Taskfold/Core/TeamCompletionDraft.swift": "c5d0896607ca3bb7fb27d50a71fd842aedd93f2a00642b84470607c1383018aa",
+    "Taskfold/Core/TeamTaskBatch.swift": "78f46520ba9fcde4fc4b0f86387efab9e86cf756566124a774c79cc308f8f083",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "39913db33ab82820391c8b3836f27b7cd35e86417f522605a7b660318b4c06f4",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "582814f485947e3db865c8f99da2ee878f5f34d06d30e833b0a70238b56b53b5"
+  },
+  "artifactSHA256": {
+    "app-build.log": "6a37e0b2eaf178be3665497eb9af11a7f0aa18bcf44e04759116f508366a4fa9",
+    "mac-recorded-draft-native-save-picker.png": "c88ac1d63adab5c085464f933a8772ea985b8f1d20a3b0b9473b1ef3ff2c7f6c",
+    "mac-temporary-folder-attempt-summary.json": "04f88cb2fab668592dff0fefdc6d80ed1465e930daf1d52234f8fad81c2c4cc9",
+    "core.log": "65bc3580c1bc20c3f94fc8ad69025c650842500d842bcfe6418d0cbf151c1063",
+    "mac-current-test-setup-native.log": "665916649a38d45e603f8c9a3407cea3e3bad6ad9517583b90af659f94d55dfd",
+    "mac-current-test-setup-summary.json": "81f3cdbc1d0e4c4630af171d28e3bebf361ba25056c678f5221b53e78d270018",
+    "mac-native.log": "9e172cc4c79fb059a53c61aa8051669c358398d3dd978969e36a1256d8cda07e",
+    "mac-current-recorded-draft-export-cancelled-safely.png": "dfb8b1895b483c12154ae72d6706aa8ede13c872a7524fe2ad9d96e5cc6fe58a",
+    "mac-recorded-draft-export-cancelled-safely.png": "f2a7c98fe48f5caa06565ac95ec9123bce42da55e97fa85ab39f99d8d82ce6bb",
+    "mac-complete-native-proof.json": "34f1c86139d59cd74a8327714d7b448ca08b7cd096802233b76adaf5291348b5",
+    "cleanup.json": "ad056154be8750cd99540663f8ab77d8ebc2667c8de1bc1f302abf23e26d4aa3",
+    "final-review.json": "afe0c29b16052085c1fb1102257d9c8576f5588e631940ee815af9823c90bd05",
+    "mac-current-local-export-proof.json": "4a9f37eb9ced87be29c6d6513040a111541cbf7f93bb8112d5723d5b803330a4",
+    "mac-verification.txt": "d794923e2ce473d790fef5ce5fec43ae76a291c6a2f7327bce890447e1f22b21",
+    "mac-current-recorded-draft-native-save-picker.png": "47acf92823a7190f60bc5b13f54eacc0e2fff21584dc927f6d702b559742b9fa",
+    "isolation-receipt.json": "5153ddf22a453f91efcce0dd02b290baf62c2e9fb5af7cd6be5613128d226548",
+    "mac-actual-local-export.json": "bccb66488a5104f868c755b6f95f547df63b9ec35b6478def4b57c016e93950f",
+    "mac-summary.json": "4c1f30653df3c3804d85200e76c1f90431f06f3090d51e350f3ea195994a55e4",
+    "mac-recorded-draft-retained-preview-group.png": "f2a7c98fe48f5caa06565ac95ec9123bce42da55e97fa85ab39f99d8d82ce6bb"
+  },
+  "cleanup": "mention-recovery/cleanup.json"
+}

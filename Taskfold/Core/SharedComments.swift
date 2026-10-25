@@ -397,3 +397,26 @@ extension Backend {
         return try ConversationSummary(SharedWire.reply(data))
     }
 }
+
+/// Explicit review/export only. These cached rows explain a saved read marker;
+/// they never become authenticated rows or newly queued conversation commands.
+enum ConversationRecoveryExport {
+    static func context(_ rows: [Record], snapshot: Snapshot) -> [JSON] {
+        let changes = rows.compactMap(ConversationOutbox.mention)
+        let mentionIDs = Set(changes.map(\.mentionID)), commentIDs = Set(changes.map(\.commentID))
+        return [(SharedComment.table, commentIDs), (SharedMention.table, mentionIDs)].flatMap { table, ids in
+            (snapshot.tables[table] ?? []).filter { ids.contains($0.id.lowercased()) }.map {
+                .object(["table": .string(table), "row": .object($0.fields)])
+            }
+        }
+    }
+    static func text(_ rows: [Record], snapshot: Snapshot) -> [String] {
+        rows.compactMap { row in
+            if let comment = ConversationOutbox.comment(row) { return comment.deleting ? "Comment marked for deletion: " + comment.body : "Comment draft: " + comment.body }
+            guard let mention = ConversationOutbox.mention(row) else { return nil }
+            let comment = (snapshot.tables[SharedComment.table] ?? []).compactMap(SharedComment.init).first { $0.id == mention.commentID }
+            let detail = comment.map { $0.isDeleted ? "Deleted comment" : $0.body } ?? mention.commentID
+            return (mention.read ? "Mention marked read: " : "Mention marked unread: ") + detail + "\nSaved for review only; this read state will not be sent automatically."
+        }
+    }
+}

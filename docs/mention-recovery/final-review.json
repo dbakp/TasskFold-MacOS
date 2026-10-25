@@ -1,0 +1,24 @@
+{
+  "macPreview": "Visually inspected: readable mention marked-read explanation and connected discussion; standard Save dialog actual file bytes verified by native test.",
+  "ios": "Native preview text assertion and sharing cancellation passed on phone and iPad; screenshots retained.",
+  "sourceReceipts": {
+    "Taskfold/Workspace.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/AccountRemovalNativeFixture.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/Core/Backups.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/Core/Backend.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/Core/Store.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/Core/WidgetActions.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/Core/SharedCapture.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/Core/TeamCompletion.swift": "current source and prepared copy match recorded hashes",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/Collaboration.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/Views/TaskInspector.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/Core/TeamCompletionDraft.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/Core/TeamTaskBatch.swift": "current source and prepared copy match recorded hashes",
+    "Taskfold/Core/SharedComments.swift": "current source and prepared copy match recorded hashes"
+  },
+  "signatures": {
+    "Taskfold.app": "deep strict signature and expected team verified",
+    "TaskfoldUITests-Runner.app": "deep strict signature and expected team verified"
+  }
+}

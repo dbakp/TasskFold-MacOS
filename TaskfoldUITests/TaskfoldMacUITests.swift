@@ -3407,12 +3407,13 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         wait(for: [opened], timeout: 10)
         app.activate()
     }
-    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil, dependent: Bool = true, recordedDraft: Bool = false) throws {
+    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil, dependent: Bool = true, recordedDraft: Bool = false, mentions: Bool = false) throws {
         guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Reserved isolated Mac host required") }
         app.launchArguments = ["--team-editor-testing", "--team-editor-reset", "--team-batch-testing", "--team-batch-recovery-testing", "--team-batch-recovery-recorded", "--team-batch-recovery-" + mode, "-appearance", "light"]
         if !recorded { app.launchArguments.removeAll { $0 == "--team-batch-recovery-recorded" } }
         if let storage { app.launchArguments.append("--team-recovery-storage=" + storage) }
         if recordedDraft { app.launchArguments.append("--team-recorded-draft-testing") }
+        if mentions { app.launchArguments.append("--team-recorded-mention-testing") }
         if let race { app.launchArguments.append("--team-recovery-race=" + race) }
         if single { app.launchArguments.append("--team-single-recovery-testing") }
         if refresh { app.launchArguments.append("--team-single-recovery-refresh") }
@@ -3734,10 +3735,10 @@ extension TeamCompletionRecoveryMacUITests {
 
 
 extension TeamCompletionRecoveryMacUITests {
-    @MainActor private func recordedDraftRecovery(_ scenario: String) throws {
+    @MainActor private func recordedDraftRecovery(_ scenario: String, mentions: Bool = false) throws {
         let app = XCUIApplication(); defer { app.terminate() }
         let single = scenario == "single", fault = scenario == "vault" ? "draft" : "cache"
-        try launch(app, mode: "viewer", single: single, recorded: true, storage: fault, recordedDraft: true)
+        try launch(app, mode: "viewer", single: single, recorded: true, storage: fault, recordedDraft: true, mentions: mentions)
         app.buttons["openMacCompletionRecovery"].click()
         let fm = FileManager.default, support = try support()
         let cacheFile = support.appendingPathComponent("Taskfold/ec240000-0000-4000-8000-000000000001.json")
@@ -3808,6 +3809,19 @@ extension TeamCompletionRecoveryMacUITests {
         XCTAssertEqual(canonicalRecordedDraft(try XCTUnwrap(draft["snapshot"] as? [String: Any])), canonicalRecordedDraft(before))
         XCTAssertEqual((draft["id"] as? String)?.lowercased(), files.first!.deletingPathExtension().lastPathComponent)
         let json = try JSONSerialization.jsonObject(with: exported) as! [String: Any]
+        if mentions {
+            let beforeRows = before["tables"] as! [String: Any], afterRows = after["tables"] as! [String: Any]
+            let originalMarkers = try XCTUnwrap(beforeRows["_conversation_outbox"] as? [[String: Any]])
+            XCTAssertEqual(originalMarkers.count, 1)
+            XCTAssertEqual((originalMarkers[0]["intent"] as? [String: Any])?["kind"] as? String, "mention-read")
+            XCTAssertEqual((afterRows["_conversation_outbox"] as? [[String: Any]])?.count, 0)
+            XCTAssertEqual(json["conversations"] as? NSArray, originalMarkers as NSArray)
+            XCTAssertEqual((json["conversation_context"] as? [[String: Any]])?.count, 2)
+            XCTAssertTrue(String(decoding: exported, as: UTF8.self).contains("Native connected mention recovery proof"))
+            let markerText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "Mention marked read:", "Mention marked read:")).firstMatch
+            XCTAssertTrue(markerText.waitForExistence(timeout: 10), app.debugDescription)
+        }
+
         XCTAssertEqual(json["format"] as? String, "com.taskfold.saved-edits")
         XCTAssertEqual(json["changes"] as? NSArray, queue as NSArray)
         XCTAssertNil(json["snapshot"]); XCTAssertNil(json["review"]); XCTAssertNil(json["teamWorkspace"])
@@ -3823,7 +3837,9 @@ extension TeamCompletionRecoveryMacUITests {
             let name = app.sheets.textFields.matching(NSPredicate(format: "value CONTAINS %@", "Taskfold-saved-edits")).firstMatch
             XCTAssertTrue(name.waitForExistence(timeout: 8), app.debugDescription)
             let filename = "Taskfold-recovery-" + UUID().uuidString.lowercased() + ".json"
-            let destination = URL(fileURLWithPath: "/tmp/taskfold-recorded-recovery-native-exports", isDirectory: true).appendingPathComponent(filename)
+            let destination = fm.temporaryDirectory.appendingPathComponent("taskfold-recorded-recovery-native-exports", isDirectory: true).appendingPathComponent(filename)
+            try fm.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+            addTeardownBlock { try? FileManager.default.removeItem(at: destination) }
             name.click(); app.typeKey("a", modifierFlags: .command); name.typeText(filename)
             app.typeKey("g", modifierFlags: [.command, .shift])
             let path = app.sheets.textFields["PathTextField"].firstMatch
@@ -3865,4 +3881,8 @@ extension TeamCompletionRecoveryMacUITests {
     @MainActor func testRecordedMissingSelectionKeepsAuthoredEditsAndExportAfterRelaunch() throws { try recordedDraftRecovery("group") }
     @MainActor func testRecordedDraftCacheFailurePreservesQueueAndReusesArchiveOnRetry() throws { try recordedDraftRecovery("cache") }
     @MainActor func testRecordedDraftVaultFailurePreservesQueueBeforeRetry() throws { try recordedDraftRecovery("vault") }
+}
+
+extension TeamCompletionRecoveryMacUITests {
+    @MainActor func testRecordedMissingTaskKeepsConnectedMentionMarkerAfterRelaunch() throws { try recordedDraftRecovery("group", mentions: true) }
 }
