@@ -5946,3 +5946,43 @@ Light-mode label-set, Clear and paused-state screenshots were inspected. The
 initial lazy-Save test failure is retained with the test correction. Native tests
 intentionally skip cloud sync; the 124 real local
 PostgreSQL transaction checks are separate. Mac runtime still awaits unlock.
+
+
+### 2026-10-25 — Bind feedback Undo to its exact change
+
+Toast, confirmation and planner feedback now capture a logical history entry,
+workspace and session, rather than using the undo-stack count. At the 30-entry
+limit a newer edit no longer makes an old feedback button target that newer edit.
+A supplied stale request is refused before either stack or saved work changes.
+Undo/Redo retain the logical entry identity while transport mutations retain their
+existing fresh request identities. This metadata is local and ephemeral; persisted
+formats and service authorization are unchanged. A confirmed shared move has no
+local inverse and therefore offers no unrelated Undo action.
+
+Each repository passes 545 selected Core regressions, including seven new logical
+entry/direction/workspace/session checks. Mac Debug compilation passes. Native
+iPhone/iPad acceptance and the attempted Mac runner are scoped in
+p2-history-binding-evidence.json. Initial fixture/locator failures are retained.
+Mac native runner initialization was denied by system authentication before the
+app launched; computer use independently reported the Mac locked after the user
+unlock reply. No Mac runtime or spoken acceptance is claimed. Existing native
+UndoManager grouping, failure/retry and window/text routing still need their own
+acceptance; this change does not close all history integration work.
+
+Rank 6, Watch/Wear OS navigation and the remaining ranked Px scope stay open.
+Release, hosted rollout, provider credentials and physical-device deferrals remain
+unchanged. No hosted configuration, service schema or real task data changed.
+
+Final native result: all three selected iPhone cases passed, with zero skips and
+zero runtime warnings. The actual Store proof confirms depth 30, a newer logical
+entry, stale-request refusal and unchanged snapshot/stack identities. It then
+undoes the newer edit, applies the exact original feedback Undo, and Redoes it.
+Shared-label review/Back/Cancel/Save/Undo/relaunch and planner scheduling/Undo/
+relaunch also pass. Both installed hosts match signed build hashes.
+
+The final iPad run is explicitly unaccepted: planner Save reported hit point
+{-1,-1}, then the label test stalled on invalid form-scroll geometry. That exact
+run was interrupted (exit 75), with log, partial summary and screenshot retained;
+the history-limit case was not reached. No app change or repeated run was made
+to disguise those input failures. Earlier v2 label regression passes remain
+separately recorded. Current iPad and Mac runtime acceptance remains open.

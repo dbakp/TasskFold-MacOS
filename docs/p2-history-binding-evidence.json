@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-25",
+  "scope": "Ephemeral feedback history identity, workspace/session admission; no persisted or hosted schema change",
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "beb8c341c9933869afae1506711a977c87a36c358bdc71d677609110ddcf4ab2",
+    "Taskfold/Core/Store.swift": "2190a3b48a5c1f3af23614486eebe13fdab00d1a32366245b8840d6af899e7f1",
+    "Taskfold/Views/HourlyPlanner.swift": "962ad537ffcf4efd0c00d142a8fd1349a1c3e802d0eb5e7905a0c9ec956aa0b8",
+    "Taskfold/Views/CalendarView.swift": "dbe0798aeba635b333354b0bfa7410180e2813d6e013785aa6856f5e07d35231",
+    "TaskfoldTests/EditHistoryRequestTests.swift": "ed43a5350ac913823d6a7f044f8156e5c26eca43dc00c7be793e04c6cc56f574",
+    "Taskfold/Workspace.swift": "a238cf5332e6dbf6b6987e3bd317ffb25753e157e2b81abc108642bbe30a637a",
+    "Taskfold/Views/TaskListView.swift": "28f83a9e5f7d53d4c8721bbfc9ddd7e4283871bada3b66692a3dde8b2482810b",
+    "Taskfold/TaskfoldMacApp.swift": "b581c6d7d2d2a152435085e36b8845dd386f8333a9ab95929961a2bd0da1787c"
+  },
+  "core": {
+    "focusedCases": 133,
+    "regressionCases": 545,
+    "newCases": 7,
+    "failures": 0
+  },
+  "macBuild": "Debug arm64 compilation passed; first missing Environment Store compile failure retained",
+  "native": {
+    "status": "Three actual iPhone cases passed with zero skips/failures/runtime warnings; iPad final attempt not accepted",
+    "initialFailures": [
+      "Menu accessibility identifiers absent; tests use actual visible labels",
+      "Single task checkbox did not yield expected toast; cap test now uses existing reviewed priority batch flow",
+      "Signing-disabled intermediate build was refused by signature helper for absent embedded Simulator entitlements; signed-enabled build and strict re-signing then succeeded before final runtime tests."
+    ],
+    "mac": "Runner initialization denied by system authentication before Taskfold launch; CUA independently reports Mac locked",
+    "phone": {
+      "cases": [
+        "Captured Undo at 30-entry limit, exact prior action restoration and Redo",
+        "Shared labels review/Back/Cancel/Save/Undo/relaunch",
+        "Planner scheduling/Undo/relaunch"
+      ],
+      "storeProof": {
+        "depth": 30,
+        "sameDepth": true,
+        "snapshotAndStacksUnchanged": true,
+        "rejected": true,
+        "newEntry": true
+      },
+      "screenshotInspection": "Inspected stale-button and restored-history screenshots; synthetic task rows and feedback render without clipping. The second capture includes normal dismissal animation."
+    },
+    "tablet": {
+      "planner": "Failed to find Undo after Save tap reported computed hit point {-1,-1}; no valid save interaction established",
+      "labels": "Interrupted after stalled form scrolling with invalid zero-origin geometry; screenshot retained",
+      "historyLimit": "Not reached in final run",
+      "acceptance": false,
+      "cancellation": "Sent SIGINT to verified exact xcodebuild process, exit 75. No restart. Earlier v2 shared-label case passed on both devices; that is separately retained."
+    },
+    "sourceParity": "All changed prepared app files and test file matched authoritative source with only reserved namespace substitutions.",
+    "installedProducts": "Both installed host binaries, debug dylibs and Info match final signed build hashes; strict codesign verification passed.",
+    "network": "Synthetic intercepted transport only; no hosted calls or real task data."
+  },
+  "limitations": [
+    "Mac native UndoManager grouping/failure/retry/window/text routing remains open",
+    "No hosted or spoken acceptance",
+    "Watch navigation and wider ranked Px remain open",
+    "User deferred release/provider/physical device work unchanged"
+  ],
+  "cleanup": {
+    "removedAllocatedGiB": 1.99,
+    "removedPrefix": "/tmp/taskfold-history-binding-",
+    "reservedHostAndRunnerUninstalledFromTwoSimulators": true,
+    "simulatorPowerStatesPreserved": true,
+    "repoBuildCachesPreserved": true,
+    "earlierReadyMacHostAndBuildPreserved": true,
+    "noGlobalCleanup": true
+  }
+}

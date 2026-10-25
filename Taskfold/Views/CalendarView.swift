@@ -201,7 +201,11 @@ struct CalendarView: View {
             var saved = false
             workspace.run("Schedule Task") { saved = store.commit([Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields, baseline: Dictionary(uniqueKeysWithValues: fields.keys.map { ($0, task[$0]) }))]) }
             return saved
-        }, undo: { workspace.undoManager?.undo() }, undoDepth: store.undoStack.count)
+        }, undo: { request in
+            guard store.canApplyHistory(request), let manager = workspace.undoManager, manager.canUndo else { return false }
+            manager.undo()
+            return store.redoStack.last?.id == request.entry
+        })
     }
 
     /// The period title lives in the toolbar subtitle; the header holds only the centred mode switcher.

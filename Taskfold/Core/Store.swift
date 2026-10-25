@@ -1510,15 +1510,33 @@ final class Store {
             return next
         }
     }
-    func undo() {
-        guard let entry = undoStack.popLast() else { return }
-        let changes = historyChanges(entry.undo), applied = EditHistory(changes: changes, snapshot: snapshot)
-        if commit(changes, remember: false) { redoStack.append(applied.reversed) } else { undoStack.append(entry) }
+    func captureHistoryRequest(_ direction: EditHistoryRequest.Direction = .undo) -> EditHistoryRequest? {
+        guard (signedIn || localMode), !signingOut, !accountRemovalBlocked else { return nil }
+        return EditHistoryRequest(direction: direction, history: direction == .undo ? undoStack.last : redoStack.last,
+            workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation)
     }
-    func redo() {
-        guard let entry = redoStack.popLast() else { return }
-        let changes = historyChanges(entry.redo), applied = EditHistory(changes: changes, snapshot: snapshot)
-        if commit(changes, remember: false) { undoStack.append(applied) } else { redoStack.append(entry) }
+    func canApplyHistory(_ request: EditHistoryRequest) -> Bool {
+        (signedIn || localMode) && !signingOut && !accountRemovalBlocked && request.matches(direction: request.direction,
+            history: request.direction == .undo ? undoStack.last : redoStack.last,
+            workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation)
+    }
+    @discardableResult func undo(_ request: EditHistoryRequest? = nil) -> Bool {
+        if let request, request.direction != .undo || !canApplyHistory(request) {
+            error = "This Undo belongs to an earlier change or workspace. Use the current Undo controls."; return false
+        }
+        guard let entry = undoStack.popLast() else { return false }
+        let changes = historyChanges(entry.undo), applied = EditHistory(changes: changes, snapshot: snapshot, id: entry.id)
+        if commit(changes, remember: false) { redoStack.append(applied.reversed); return true }
+        undoStack.append(entry); return false
+    }
+    @discardableResult func redo(_ request: EditHistoryRequest? = nil) -> Bool {
+        if let request, request.direction != .redo || !canApplyHistory(request) {
+            error = "This Redo belongs to an earlier change or workspace. Use the current Redo controls."; return false
+        }
+        guard let entry = redoStack.popLast() else { return false }
+        let changes = historyChanges(entry.redo), applied = EditHistory(changes: changes, snapshot: snapshot, id: entry.id)
+        if commit(changes, remember: false) { undoStack.append(applied); return true }
+        redoStack.append(entry); return false
     }
     /// A denied queued change must not block the refresh that removes revoked shared work.
     /// Keep its complete local snapshot in the encrypted vault before changing the live cache.
@@ -3035,6 +3053,7 @@ extension Store {
     static var enabled: Bool {
         ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--team-editor-testing")
     }
+    static var historyRequest: EditHistoryRequest?
     static let account = "ec240000-0000-4000-8000-000000000001"
     static let taskID = "ec240000-0000-4000-8000-000000000002"
     static let childID = "ec240000-0000-4000-8000-000000000005"
@@ -3412,6 +3431,40 @@ extension Store {
     func changeProjectAdoptionFixtureSource() {
         guard ProjectAdoptionNativeFixture.enabled,var rows=snapshot.tables["tasks"],!rows.isEmpty else{return}
         rows[0]["description"] = .string("Changed after review");snapshot.tables["tasks"]=rows;try? persist()
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    private var historyBindingFixtureEnabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--history-binding-testing") }
+    func seedHistoryBindingFixture() {
+        guard historyBindingFixtureEnabled else { return }
+        do {
+            undoStack = []; redoStack = []; TeamEditorNativeFixture.historyRequest = nil
+            for index in 1...30 {
+                let id = "ec240000-0000-4000-8000-000000000032"
+                guard var row = record("tasks", id: id) else { throw TeamTaskBatch.invalid }
+                let draft = try captureTeamTaskEditor(row)
+                row["title"] = .string("History checkpoint \(index)")
+                guard saveTeamTaskEditor(row, draft: draft) else { throw TeamTaskBatch.invalid }
+            }
+        } catch { self.error = error.localizedDescription }
+    }
+    func advanceHistoryBindingFixture() {
+        guard historyBindingFixtureEnabled, let old = TeamEditorNativeFixture.historyRequest else { return }
+        do {
+            let oldDepth = undoStack.count, oldEntry = undoStack.last?.id
+            guard var row = record("tasks", id: "ec240000-0000-4000-8000-000000000031") else { throw TeamTaskBatch.invalid }
+            let draft = try captureTeamTaskEditor(row); row["description"] = .string("Newer history binding proof")
+            guard saveTeamTaskEditor(row, draft: draft) else { throw TeamTaskBatch.invalid }
+            let before = snapshot, beforeUndo = undoStack.map(\.id), beforeRedo = redoStack.map(\.id)
+            let rejected = !undo(old)
+            let unchanged = snapshot.tables == before.tables && snapshot.pending == before.pending && undoStack.map(\.id) == beforeUndo && redoStack.map(\.id) == beforeRedo
+            let report: [String: JSON] = ["sameDepth": .bool(oldDepth == undoStack.count), "depth": .number(Double(undoStack.count)), "newEntry": .bool(oldEntry != undoStack.last?.id), "rejected": .bool(rejected), "snapshotAndStacksUnchanged": .bool(unchanged)]
+            try JSONEncoder().encode(report).write(to: cacheURL.deletingLastPathComponent().appendingPathComponent("history-binding-proof.json"), options: .atomic)
+            self.error = nil
+        } catch { self.error = error.localizedDescription }
     }
 }
 #endif

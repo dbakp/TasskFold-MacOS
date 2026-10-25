@@ -1002,10 +1002,12 @@ private struct QuickEntryReferences {
 
 
 struct EditHistory {
+    let id: UUID
     var undo: [Mutation]
     var redo: [Mutation]
     var reversed: EditHistory { var result = self; swap(&result.undo, &result.redo); return result }
-    init(changes: [Mutation], snapshot: Snapshot) {
+    init(changes: [Mutation], snapshot: Snapshot, id: UUID = UUID()) {
+        self.id = id
         redo = []
         var current = snapshot
         var inverse: [Mutation] = []
@@ -1050,6 +1052,25 @@ struct EditHistory {
             current.apply(change)
         }
         undo = inverse.reversed()
+    }
+}
+
+/// Ephemeral UI authority for one logical history entry. It is separate from
+/// the fresh mutation/request identities generated for each Undo and Redo.
+struct EditHistoryRequest: Equatable, Sendable {
+    enum Direction: Equatable, Sendable { case undo, redo }
+    let direction: Direction
+    let entry: UUID
+    let workspace: WorkspaceBinding
+    let session: UUID
+    init?(direction: Direction, history: EditHistory?, workspace: WorkspaceBinding, session: UUID) {
+        guard let history, !workspace.account.isEmpty,
+              !(direction == .undo ? history.undo : history.redo).isEmpty else { return nil }
+        self.direction = direction; entry = history.id; self.workspace = workspace; self.session = session
+    }
+    func matches(direction: Direction, history: EditHistory?, workspace: WorkspaceBinding, session: UUID) -> Bool {
+        self.direction == direction && self.workspace == workspace && self.session == session && entry == history?.id
+            && !(direction == .undo ? history?.undo ?? [] : history?.redo ?? []).isEmpty
     }
 }
 

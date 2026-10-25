@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/sign_simulator_test_products.py", line 126, in <module>
+    main()
+  File "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/sign_simulator_test_products.py", line 85, in main
+    entitlements = simulator_entitlements(binary)
+  File "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/sign_simulator_test_products.py", line 49, in simulator_entitlements
+    values.append(thin_simulator_entitlements(thin))
+  File "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/sign_simulator_test_products.py", line 31, in thin_simulator_entitlements
+    assert len(sections) == 1, 'Missing Simulator entitlements; build with Xcode signing enabled'
+AssertionError: Missing Simulator entitlements; build with Xcode signing enabled

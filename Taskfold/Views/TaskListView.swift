@@ -615,6 +615,7 @@ struct TaskCapturePanel: View {
 
 /// A brief confirmation at the foot of the list. It never blocks; it just names what happened and offers Undo.
 struct ConfirmationBar: View {
+    @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     let confirmation: Confirmation
     var body: some View {
@@ -622,8 +623,8 @@ struct ConfirmationBar: View {
             Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.taskfold).id(confirmation.id).transition(.iconSwap)
             Text(confirmation.message).lineLimit(1).id(confirmation.id).transition(.textSwap)
             Spacer()
-            if confirmation.undoable {
-                Button("Undo") { workspace.undoFromConfirmation() }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
+            if confirmation.undoable, let request = confirmation.historyRequest, store.canApplyHistory(request) {
+                Button("Undo") { workspace.undoFromConfirmation(request, confirmationID: confirmation.id) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
                 Text("⌘Z").foregroundStyle(.tertiary)
             }
         }

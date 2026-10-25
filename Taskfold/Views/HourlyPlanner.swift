@@ -32,11 +32,10 @@ struct HourlyPlannerView: View {
     let open: (Record) -> Void
     let complete: (Record) -> Void
     let save: (Record, [String: JSON]) -> Bool
-    let undo: () -> Void
-    let undoDepth: Int
+    let undo: (EditHistoryRequest) -> Bool
     @State private var request: PlannerScheduleRequest?
     @State private var feedback: String?
-    @State private var feedbackDepth: Int?
+    @State private var feedbackRequest: EditHistoryRequest?
     @State private var error: String?
     @State private var allDayRequest = 0
     @State private var timelineRequest: Int?
@@ -93,7 +92,7 @@ struct HourlyPlannerView: View {
                 HStack {
                     Text(feedback).font(.callout).lineLimit(3)
                     Spacer()
-                    if feedbackDepth == undoDepth { Button("Undo") { undo(); self.feedback = nil; feedbackDepth = nil }.accessibilityIdentifier("plannerUndo") }
+                    if let request = feedbackRequest, store.canApplyHistory(request) { Button("Undo") { if undo(request) { self.feedback = nil; feedbackRequest = nil } }.accessibilityIdentifier("plannerUndo") }
                     Button { self.feedback = nil } label: { Image(systemName: "xmark") }.accessibilityLabel("Dismiss scheduling message")
                 }.padding(12).background(.regularMaterial)
             }
@@ -331,6 +330,7 @@ struct HourlyPlannerView: View {
         }
     }
     @discardableResult private func apply(_ task: Record, fields: [String: JSON], message: String) -> Bool {
+        let previousHistory = store.undoStack.last?.id
         guard save(task, fields) else { return false }
         var changed = task; for (key, value) in fields { changed[key] = value }
         if let start = TaskPlanning.start(changed), start >= bounds.start && start < bounds.end {
@@ -339,8 +339,8 @@ struct HourlyPlannerView: View {
         }
         let overlaps = TaskPlanning.start(changed).map { TaskPlanner.conflicts(task: changed, start: $0, minutes: changed.durationMinutes, tasks: tasks, events: events) } ?? []
         feedback = overlaps.isEmpty ? message : message + " · overlaps " + overlaps.prefix(3).joined(separator: ", ")
-        // The parent updates its undo depth on the next render.
-        feedbackDepth = undoDepth + 1
+        // Read the actual committed entry, including at the 30-entry cap.
+        feedbackRequest = store.undoStack.last?.id != previousHistory ? store.captureHistoryRequest() : nil
         return true
     }
     private func shift(_ block: PlannerBlock, minutes: Int) {

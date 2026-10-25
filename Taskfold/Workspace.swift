@@ -65,6 +65,7 @@ struct Confirmation: Equatable {
     var id = UUID()
     var message: String
     var undoable = true
+    var historyRequest: EditHistoryRequest?
 }
 
 /// Window-level state shared by the sidebar, the list, the inspector, and the menu bar commands.
@@ -290,17 +291,18 @@ final class Workspace {
 
     func confirm(_ message: String, undoable: Bool = true) {
         confirmationTimer?.cancel()
-        withAnimation(layout) { confirmation = Confirmation(message: message, undoable: undoable) }
+        withAnimation(layout) { confirmation = Confirmation(message: message, undoable: undoable, historyRequest: undoable ? store.captureHistoryRequest() : nil) }
         confirmationTimer = Task { [weak self] in
             try? await Task.sleep(for: .seconds(4))
             guard !Task.isCancelled, let self else { return }
             withAnimation(self.layout) { self.confirmation = nil }
         }
     }
-    func undoFromConfirmation() {
-        confirmationTimer?.cancel()
-        withAnimation(layout) { confirmation = nil }
-        undoManager?.undo()
+    func undoFromConfirmation(_ request: EditHistoryRequest, confirmationID: UUID) {
+        guard confirmation?.id == confirmationID, store.canApplyHistory(request), let manager = undoManager, manager.canUndo else { return }
+        manager.undo()
+        guard store.redoStack.last?.id == request.entry else { return }
+        confirmationTimer?.cancel(); withAnimation(layout) { confirmation = nil }
     }
 
     // MARK: Task actions
@@ -492,7 +494,7 @@ final class Workspace {
                 guard ids.count == 1, let id = ids.first, Self.subtaskPath(id) == nil, let task = store.record("tasks", id: id) else { throw AppFailure(message: "Move one shared parent task at a time. Your selection is unchanged.") }
                 let captured = try store.captureTeamTaskEditor(task), admission = try TeamTaskMoveAdmission(captured)
                 _ = try store.teamTaskMoveScope(admission, destination: project)
-                teamTaskMove = TeamTaskMoveRequest(draft: captured, destination: project, completed: { [weak self] in self?.selection.remove(id); self?.confirm("Shared task move confirmed") })
+                teamTaskMove = TeamTaskMoveRequest(draft: captured, destination: project, completed: { [weak self] in self?.selection.remove(id); self?.confirm("Shared task move confirmed", undoable: false) })
             } catch { store.error = error.localizedDescription }; return
         }
         guard withAnimation(layout, { updateTasks(ids, fields: ["project_id": project.isEmpty ? .null : .string(project), "section_id": .null], name: "Move to Project") }) else { return }
@@ -648,8 +650,8 @@ final class Workspace {
         }
         var created = false
         run("Add Task") { withAnimation(layout) { created = store.save("tasks", task) } }
-        if created, case .saved = scope, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }) { confirmation = Confirmation(message: "Added · outside this filter", undoable: true) }
-        else if created, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }), let project = store.record("projects", id: task.string("project_id")) { confirmation = Confirmation(message: "Added to " + project.name, undoable: true) }
+        if created, case .saved = scope, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }) { confirmation = Confirmation(message: "Added · outside this filter", undoable: true, historyRequest: store.captureHistoryRequest()) }
+        else if created, !store.matching(TaskQuery(scope: scope)).contains(where: { $0.id == task.id }), let project = store.record("projects", id: task.string("project_id")) { confirmation = Confirmation(message: "Added to " + project.name, undoable: true, historyRequest: store.captureHistoryRequest()) }
         return created ? task.id : nil
     }
 
