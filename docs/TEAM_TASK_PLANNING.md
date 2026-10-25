@@ -235,3 +235,40 @@ acceptance details and their limits are retained in
 with `TASKFOLD_TEST_ASSIGNMENT_BATCHES=1 node Scripts/Database/test-team-planning-batches.mjs <report.json>`.
 Mac runtime, wider hosted concurrency/account/accessibility and the rest of the
 ranked Px backlog remain open; all existing user deferrals retain their scope.
+
+
+### 2026-10-25 — Reviewed shared-source template capture
+
+Saving readable shared work as a template now opens a private-copy contents
+review. The name can be edited; Cancel creates nothing. The preview explains
+that project/task notes, portable labels and schedule rules are included, while
+people, discussions, files and ownership stay with the source. No task is created
+by capture. Personal source capture retains its existing direct save flow.
+
+Shared roots and nested children use portable shared label text, independently
+of personal label names, IDs and colors. Supported legacy names retain their full
+length. Opaque/unsafe/future label structures refuse capture explicitly rather
+than silently losing data. The original source and raw metadata remain unchanged.
+
+The transient capture retains full selected project/section/task rows and related
+manual-order rows, an opening date for relative scheduling and account/workspace/
+backend-session/origin/access context. New/missing descendants, edited or moved
+sources, changed access, reauthentication and account/workspace replacement pause
+saving and hide the old preview. Revalidation does not replace the opening source
+with a new baseline. Unrelated projects/tasks and unrelated personal catalog edits
+do not invalidate a wholly shared capture. Save uses one stable private-template
+identity and the existing durable owner-only template writer; Mac uses its own
+native Undo registration. Existing private template export and fresh-run semantics
+remain responsible for subsequent use.
+
+Read permission is not converted into team write permission. A viewer may review
+a private copy of accessible work, but this feature does not add a team-owned
+template catalog or authorize runs into team projects. Those workflows, broader
+live/multi-actor/Mac/spoken/layout acceptance and the rest of rank 6/Px stay open.
+No schema, hosted data, provider configuration or rollout switch changed. Exact
+Core/build/installed phone/tablet evidence and cleanup are recorded in
+`p2-shared-template-capture-evidence.json`; all user-deferred dependencies remain.
+
+Current capture stage: 87 focused Core checks per repository, independent app
+builds, three installed scenarios per iPhone/iPad and four inspected standard-
+light screenshots pass. See the stage evidence for exact limits.

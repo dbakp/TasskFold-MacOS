@@ -2528,6 +2528,14 @@ extension Store {
         _ = try await LocationHandoffAPI(backend: backend).perform(.discard(id: row.id), account: workspace.account,
             isCurrent: { self.locationHandoffAvailable && self.workflowReady(workspace) })
     }
+    func captureWorkflowTemplate(kind: WorkflowTemplate.Kind, sourceID: String, binding: WorkspaceBinding?) throws -> WorkflowTemplateCapture {
+        guard workflowReady(binding), let binding else { throw WorkflowTemplateCapture.changed }
+        return try WorkflowTemplateCapture(kind: kind, sourceID: sourceID, snapshot: presentationSnapshot, workspace: binding, session: backend.reminderSessionIncarnation, origin: try? backend.accountRemovalOrigin, teamCache: nativeConversationTeamCache)
+    }
+    func reviewWorkflowTemplateCapture(_ capture: WorkflowTemplateCapture) throws {
+        guard workspaceCacheReadable, signedIn || localMode, !signingOut, !accountRemovalBlocked else { throw WorkflowTemplateCapture.changed }
+        try capture.reviewed(snapshot: presentationSnapshot, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, origin: try? backend.accountRemovalOrigin, teamCache: nativeConversationTeamCache)
+    }
     func workflowReady(_ binding: WorkspaceBinding?) -> Bool {
         guard binding?.matches(account: userID, generation: workspaceGeneration) == true, workspaceCacheReadable, signedIn || localMode else {
             error = "Your workspace changed. Reopen this tool before saving."; return false
@@ -3145,6 +3153,11 @@ extension Store {
                         tasks.append(task)
                     }
                 }
+            }
+            if ProcessInfo.processInfo.arguments.contains("--team-template-testing") {
+                tasks[0]["labels"] = .array([.string("Launch shared")])
+                tasks[0]["subtasks"] = SubtaskTree.changing(tasks[0]["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["labels": .array([.string("Outline shared")])])
+                labels = [Record(["id": .string("Launch shared"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Private catalog name"), "color": .string("#112233")])]
             }
             snapshot = Snapshot(tables: ["tasks": tasks, "projects": projects, "labels": labels])
             if TeamTaskMoveNativePeer.enabled {

@@ -4,7 +4,18 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Newest source stage adds reviewed assignment for a complete shared selection.
+Newest source stage adds an explicit contents review before copying readable
+shared project/section/task work into a private reusable template. Shared root
+and subtask label names retain their own context; personal catalog IDs and colors
+cannot rewrite them. Full source rows, selected branch/order and opening
+workspace/session/origin/access are rechecked before saving. Both repositories
+pass 87 focused Core cases and independent app builds. Three installed scenarios
+pass on each of iPhone and iPad, with four preview/refusal images inspected. See
+`p2-shared-template-capture-evidence.json` for exact current acceptance limits.
+This does not add team-owned template catalogs or template runs into team projects;
+those integrations and the full rank-6/Px goal remain open.
+
+The preceding source stage adds reviewed assignment for a complete shared selection.
 Choices intersect the eligible recipients of every selected project; picking a
 teammate refreshes every project again. Clear and You support captured offline
 intent. Final Save uses the existing atomic shared command and linked Undo,

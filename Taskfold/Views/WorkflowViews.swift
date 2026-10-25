@@ -172,6 +172,7 @@ struct TemplateLibraryView: View {
     @State private var importing = false
     @State private var imported: ImportedWorkflowTemplate?
     @State private var exportRequest: ExportedWorkflowTemplate?
+    @State private var captured: WorkflowTemplateCapture?
     @State private var readingFile: UUID?
     private var sources: [Record] {
         switch sourceKind {
@@ -251,6 +252,7 @@ struct TemplateLibraryView: View {
                 if (error as NSError).code != NSUserCancelledError { message = error.localizedDescription }
             }
         }
+        .sheet(item: $captured) { value in TemplateCaptureReview(capture: value, initialName: name, completed: { name = ""; source = ""; message = nil }) }
         .sheet(item: $exportRequest) { request in TemplateFileExportReview(request: request, binding: binding) }
         .sheet(item: $imported) { request in TemplateFileReview(request: request, binding: binding) }
         .sheet(item: $selected) { TemplateRunView(template: $0) }
@@ -276,12 +278,86 @@ struct TemplateLibraryView: View {
         guard store.workflowReady(binding) else { message = store.error; return }
         do {
             guard sources.contains(where: { $0.id == source }), let kind = WorkflowTemplate.Kind(rawValue: sourceKind) else { throw AppFailure(message: "Choose an available source.") }
-            let template = try WorkflowTemplate.capture(kind: kind, id: source, snapshot: store.presentationSnapshot)
+            let opening = try store.captureWorkflowTemplate(kind: kind, sourceID: source, binding: binding)
+            if opening.shared { captured = opening; return }
+            let template = opening.template
             let row = Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": .string(name.trimmingCharacters(in: .whitespacesAndNewlines)), "document": template.document])
             guard row.name.count <= 160 else { throw AppFailure(message: "Use up to 160 characters for the template name.") }
             var saved = false
             workspace.run("Save Template") { saved = store.save(WorkflowTemplate.table, row) }
             if saved { name = ""; source = ""; message = nil } else { message = store.error }
+        } catch { message = error.localizedDescription }
+    }
+}
+
+
+private struct TemplateCaptureReview: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
+    let capture: WorkflowTemplateCapture
+    let initialName: String
+    let completed: () -> Void
+    @State private var name = ""
+    @State private var message: String?
+    @State private var finished = false
+    private var refusal: String? {
+        do { try store.reviewWorkflowTemplateCapture(capture); return nil }
+        catch { return WorkflowTemplateCapture.changed.message }
+    }
+    var body: some View {
+        let blocked = refusal
+        NavigationStack {
+            Form {
+                if blocked == nil {
+                    Section {
+                        TextField("Template name", text: $name).accessibilityIdentifier("capturedTemplateName")
+                        Text("Save a private copy of this shared workflow. Project names, task notes, labels and schedule rules are included. People, conversations and attachments stay with the source.").font(.callout).foregroundStyle(.secondary)
+                        Text("No tasks will be created. Later changes to the source won’t update this copy.").font(.footnote).foregroundStyle(.secondary)
+                    }
+                    Section("Workflow preview") { TemplateDefinitionPreview(document: capture.template.document, scope: "capture") }
+                    #if DEBUG
+                    if TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-template-testing") {
+                        Section("Isolated test controls") {
+                            Button("Change saved test source") { store.changeTeamDeletionFixtureSource() }.accessibilityIdentifier("changeCapturedTemplateSource")
+                            Button("Change test access") { store.revokeTeamEditorNativeFixture() }.accessibilityIdentifier("changeCapturedTemplateAccess")
+                        }
+                    }
+                    #endif
+                } else {
+                    ContentUnavailableView("Source needs review", systemImage: "lock.shield", description: Text(blocked!)).accessibilityIdentifier("capturedTemplatePaused")
+                }
+                if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("capturedTemplateError") }
+            }.formStyle(.grouped).accessibilityIdentifier("capturedTemplateForm")
+            .navigationTitle("Save private template")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelCapturedTemplate") }
+                ToolbarItem(placement: .confirmationAction) { Button("Save") { save() }.disabled(blocked != nil || finished || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || name.count > 160).accessibilityIdentifier("confirmCapturedTemplate") }
+            }
+        }.privacySensitive().onAppear { if name.isEmpty { name = initialName } }
+        #if os(macOS)
+        .frame(minWidth: 580, idealWidth: 640, minHeight: 500, idealHeight: 620)
+        #endif
+    }
+    private func save() {
+        guard !finished else { return }
+        do {
+            try store.reviewWorkflowTemplateCapture(capture)
+            let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard (1...160).contains(name.count) else { throw AppFailure(message: "Use a template name between 1 and 160 characters.") }
+            let row = Record(["id": .string(capture.id.uuidString.lowercased()), "user_id": .string(store.userID), "name": .string(name), "document": capture.template.document])
+            var saved = false
+            #if os(macOS)
+            workspace.run("Save Shared Workflow Template") { saved = store.save(WorkflowTemplate.table, row) }
+            #else
+            saved = store.save(WorkflowTemplate.table, row)
+            #endif
+            if saved { finished = true; completed(); dismiss() } else { message = store.error; store.error = nil }
         } catch { message = error.localizedDescription }
     }
 }

@@ -484,3 +484,85 @@ extension ProjectWorkflowsTests {
         XCTAssertEqual(task.fields["priority"], .number(4))
     }
 }
+
+extension ProjectWorkflowsTests {
+    private func sharedCaptureContext() throws -> (Snapshot, TeamWorkspaceCache, WorkspaceBinding, UUID, String) {
+        let team = "ef260000-0000-4000-8000-000000000001", projectID = "ef260000-0000-4000-8000-000000000002", origin = "https://backend.example"
+        let project = Record(["id": .string(projectID), "user_id": .string("ef260000-0000-4000-8000-000000000099"), "name": .string("Shared workshop")])
+        var task = Record.task(user: project.string("user_id"), project: projectID)
+        task["title"] = .string("Prepare launch"); task["description"] = .string("Authored workflow notes"); task["labels"] = .array([.string("Launch shared")]); task["assigned_to"] = .string(owner)
+        task["opaque_future"] = .object(["retain": .bool(true)])
+        task["comments"] = .array([.object(["text": .string("Private discussion")])]); task["attachments"] = .array([.object(["url": .string("https://example.invalid/private")])])
+        var child = Record.task(user: owner); child["title"] = .string("Prepare outline"); child["labels"] = .array([.string("Outline shared")]); task["subtasks"] = .array([.object(child.fields)])
+        let label = Record(["id": .string("Launch shared"), "name": .string("Private catalog name"), "color": .string("#112233")])
+        let snapshot = Snapshot(tables: ["projects": [project], "tasks": [task], "labels": [label]])
+        let boundary = try TeamWorkspaceBoundary(["workspace_boundary_protocol": .number(1), "account": .string(owner), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false), "token": .string(String(repeating: "a", count: 64)), "teams": .array([.object(["id": .string(team), "state": .string("active"), "revision": .number(1), "access_revision": .number(1)])]), "projects": .array([.object(["id": .string(projectID), "team_id": .string(team), "role": .string("viewer"), "archived": .bool(false), "can_send_tasks": .bool(false)])])], account: owner, origin: origin)
+        return (snapshot, try TeamWorkspaceCache(boundary: boundary, previous: nil, pending: [], tasks: [task]), WorkspaceBinding(account: owner, generation: UUID()), UUID(), origin)
+    }
+    func testSharedTemplateLabelsArePortableAndNeverResolvedThroughPersonalCatalog() throws {
+        let (snapshot, cache, workspace, session, origin) = try sharedCaptureContext()
+        let opening = try WorkflowTemplateCapture(kind: .project, sourceID: snapshot.tables["projects"]![0].id, snapshot: snapshot, workspace: workspace, session: session, origin: origin, teamCache: cache)
+        XCTAssertTrue(opening.shared)
+        let root = opening.template.tasks[0], child = Record(root["subtasks"].list[0].object)
+        XCTAssertEqual(root["labels"], .array([.object(["name": .string("Launch shared"), "color": .string("#e31e4b")])]))
+        XCTAssertEqual(child["labels"].list[0].object["name"], .string("Outline shared"))
+        XCTAssertNil(root.fields["assigned_to"]); XCTAssertNil(root.fields["comments"]); XCTAssertNil(root.fields["attachments"]); XCTAssertNil(root.fields["user_id"])
+        var unrelated = snapshot; unrelated.tables["labels"] = []
+        XCTAssertNoThrow(try opening.reviewed(snapshot: unrelated, workspace: workspace, session: session, origin: origin, teamCache: cache))
+    }
+    func testSharedTemplateReviewRetainsFullSourceNotJustCleanDefinition() throws {
+        let (snapshot, cache, workspace, session, origin) = try sharedCaptureContext(), id = snapshot.tables["projects"]![0].id
+        let opening = try WorkflowTemplateCapture(kind: .project, sourceID: id, snapshot: snapshot, workspace: workspace, session: session, origin: origin, teamCache: cache)
+        for field in ["description", "opaque_future", "comments", "assigned_to"] {
+            var changed = snapshot; changed.tables["tasks"]![0][field] = .string("newer content")
+            XCTAssertThrowsError(try opening.reviewed(snapshot: changed, workspace: workspace, session: session, origin: origin, teamCache: cache), field)
+        }
+        var unrelated = snapshot; unrelated.tables["tasks"]!.append(Record.task(user: owner))
+        XCTAssertNoThrow(try opening.reviewed(snapshot: unrelated, workspace: workspace, session: session, origin: origin, teamCache: cache))
+    }
+    func testSharedTemplateReviewRefusesAddedDescendantsAndMissingSource() throws {
+        let (snapshot, cache, workspace, session, origin) = try sharedCaptureContext(), id = snapshot.tables["projects"]![0].id
+        let opening = try WorkflowTemplateCapture(kind: .project, sourceID: id, snapshot: snapshot, workspace: workspace, session: session, origin: origin, teamCache: cache)
+        var added = snapshot; var child = project(UUID().uuidString.lowercased(), parent: id); child["name"] = .string("New branch"); added.tables["projects"]!.append(child)
+        XCTAssertThrowsError(try opening.reviewed(snapshot: added, workspace: workspace, session: session, origin: origin, teamCache: cache))
+        var missing = snapshot; missing.tables["tasks"] = []
+        XCTAssertThrowsError(try opening.reviewed(snapshot: missing, workspace: workspace, session: session, origin: origin, teamCache: cache))
+    }
+    func testSharedTemplateReviewRefusesAccountSessionOriginAndAccessReplacement() throws {
+        let (snapshot, cache, workspace, session, origin) = try sharedCaptureContext(), id = snapshot.tables["projects"]![0].id
+        let opening = try WorkflowTemplateCapture(kind: .project, sourceID: id, snapshot: snapshot, workspace: workspace, session: session, origin: origin, teamCache: cache)
+        XCTAssertThrowsError(try opening.reviewed(snapshot: snapshot, workspace: WorkspaceBinding(account: owner, generation: UUID()), session: session, origin: origin, teamCache: cache))
+        XCTAssertThrowsError(try opening.reviewed(snapshot: snapshot, workspace: workspace, session: UUID(), origin: origin, teamCache: cache))
+        XCTAssertThrowsError(try opening.reviewed(snapshot: snapshot, workspace: workspace, session: session, origin: "https://another.example", teamCache: cache))
+        XCTAssertThrowsError(try opening.reviewed(snapshot: snapshot, workspace: workspace, session: session, origin: origin, teamCache: nil))
+        var raw = cache.boundary.raw; raw["token"] = .string(String(repeating: "b", count: 64))
+        let changed = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: owner, origin: origin), previous: cache, pending: [], tasks: snapshot.tables["tasks"]!)
+        XCTAssertThrowsError(try opening.reviewed(snapshot: snapshot, workspace: workspace, session: session, origin: origin, teamCache: changed))
+    }
+    func testUnsupportedSharedLabelCannotSilentlyDisappearIntoTemplate() throws {
+        let (snapshot, cache, workspace, session, origin) = try sharedCaptureContext(), id = snapshot.tables["projects"]![0].id
+        for labels in [JSON.array([.string(UUID().uuidString.lowercased())]), .array([.string("Name\nHidden")]), .object(["future": .bool(true)])] {
+            var source = snapshot; source.tables["tasks"]![0]["labels"] = labels
+            XCTAssertThrowsError(try WorkflowTemplateCapture(kind: .project, sourceID: id, snapshot: source, workspace: workspace, session: session, origin: origin, teamCache: cache))
+            XCTAssertEqual(source.tables["tasks"]![0]["labels"], labels)
+        }
+    }
+    func testSharedTemplateReadDoesNotGrantTeamRunOrRetainHistoryAndOwnership() throws {
+        let (snapshot, cache, workspace, session, origin) = try sharedCaptureContext(), id = snapshot.tables["projects"]![0].id
+        let opening = try WorkflowTemplateCapture(kind: .project, sourceID: id, snapshot: snapshot, workspace: workspace, session: session, origin: origin, teamCache: cache)
+        let first = try opening.template.instantiate(account: owner, name: "Private run"), second = try opening.template.instantiate(account: owner, name: "Another private run")
+        XCTAssertTrue(Set(first.map(\.recordID)).isDisjoint(with: second.map(\.recordID)))
+        XCTAssertTrue(first.filter { $0.table == "projects" }.allSatisfy { $0.fields["team_id"] == nil && $0.fields["user_id"] == .string(owner) })
+        for task in first.filter({ $0.table == "tasks" }) { XCTAssertEqual(task.fields["user_id"], .string(owner)); XCTAssertEqual(task.fields["completed"], .bool(false)); XCTAssertTrue(task.fields["comments"]?.list.isEmpty == true); XCTAssertTrue(task.fields["attachments"]?.list.isEmpty == true) }
+    }
+}
+
+extension ProjectWorkflowsTests {
+    func testSharedTemplatePreservesReadableLegacyLabelLengthWithoutApplyingAdderLimit() throws {
+        let (original, cache, workspace, session, origin) = try sharedCaptureContext()
+        var source = original; let name = String(repeating: "Long label ", count: 30)
+        source.tables["tasks"]![0]["labels"] = .array([.string(name)])
+        let capture = try WorkflowTemplateCapture(kind: .project, sourceID: source.tables["projects"]![0].id, snapshot: source, workspace: workspace, session: session, origin: origin, teamCache: cache)
+        XCTAssertEqual(capture.template.tasks[0]["labels"].list[0].object["name"], .string(name))
+    }
+}

@@ -279,8 +279,8 @@ struct WorkflowTemplate: Sendable {
         }
         for task in tasks { try checkTask(task, depth: 0) }
     }
-    static func capture(kind: Kind, id: String, snapshot: Snapshot, now: Date = Date()) throws -> Self {
-        let allProjects = snapshot.tables["projects"] ?? [], allTasks = snapshot.tables["tasks"] ?? [], allSections = snapshot.tables["sections"] ?? [], labels = snapshot.tables["labels"] ?? []
+    fileprivate static func captureSources(kind: Kind, id: String, snapshot: Snapshot) throws -> [String: [Record]] {
+        let allProjects = snapshot.tables["projects"] ?? [], allTasks = snapshot.tables["tasks"] ?? [], allSections = snapshot.tables["sections"] ?? []
         let selectedTasks: [Record], selectedProjects: [Record], selectedSections: [Record]
         switch kind {
         case .project:
@@ -295,17 +295,36 @@ struct WorkflowTemplate: Sendable {
             guard let task = allTasks.first(where: { $0.id == id }) else { throw AppFailure(message: "This task is no longer available.") }
             selectedProjects = allProjects.filter { $0.id == task.string("project_id") }; selectedSections = []; selectedTasks = [task]
         }
+        for rows in [selectedProjects, selectedSections, selectedTasks] {
+            guard Set(rows.map(\.id)).count == rows.count else { throw AppFailure(message: "This workflow has ambiguous references. Review the source before saving a template.") }
+        }
+        let groups = Set(selectedTasks.map { "group:" + $0.string("project_id") + ":" + ($0.string("section_id").isEmpty ? "none" : $0.string("section_id")) })
+        return ["projects": selectedProjects, "sections": selectedSections, "tasks": selectedTasks,
+                "view_orders": (snapshot.tables["view_orders"] ?? []).filter { groups.contains($0.id) }]
+    }
+    static func capture(kind: Kind, id: String, snapshot: Snapshot, now: Date = Date(), teamCache: TeamWorkspaceCache? = nil) throws -> Self {
+        let sources = try captureSources(kind: kind, id: id, snapshot: snapshot)
+        let selectedProjects = sources["projects"]!, selectedSections = sources["sections"]!, selectedTasks = sources["tasks"]!, labels = snapshot.tables["labels"] ?? []
         let calendar = Calendar(identifier: .gregorian)
         let anchor = selectedTasks.compactMap(\.due).min() ?? selectedTasks.compactMap(\.deadline).min() ?? calendar.startOfDay(for: now)
         func offset(_ day: String) -> JSON? { Dates.parse(day).flatMap { calendar.dateComponents([.day], from: anchor, to: $0).day }.map { .number(Double($0)) } }
-        func clean(_ task: Record, depth: Int) throws -> Record {
+        func clean(_ task: Record, depth: Int, shared: Bool) throws -> Record {
             guard depth <= 10 else { throw AppFailure(message: "This task has too many subtask levels for a template.") }
             var fields = task.fields.filter { Self.taskFields.contains($0.key) }
+            if shared {
+                let draft = TeamTaskLabelsDraft(task["labels"])
+                guard draft.supported else { throw AppFailure(message: "These shared labels need a newer version before saving a template. The source is unchanged.") }
+                fields["labels"] = .array(try draft.entries.map { entry in
+                    guard let name = TeamTaskLabelsDraft.displayName(entry.value) else { throw AppFailure(message: "Review unsupported shared labels before saving a template. The source is unchanged.") }
+                    return .object(["name": .string(name), "color": .string("#e31e4b")])
+                })
+            } else {
             fields["labels"] = .array(TaskLabels.normalized(task["labels"].list, labels: labels).compactMap { value in
                 guard let label = labels.first(where: { $0.id == value.text || $0.name == value.text }) else { return nil }
                 return .object(["name": .string(label.name), "color": .string(label.string("color").isEmpty ? "#e31e4b" : label.string("color"))])
             })
-            fields["subtasks"] = .array(try task["subtasks"].list.map { .object(try clean(Record($0.object), depth: depth + 1).fields) })
+            }
+            fields["subtasks"] = .array(try task["subtasks"].list.map { .object(try clean(Record($0.object), depth: depth + 1, shared: shared).fields) })
             fields["planned_offset"] = offset(task.string("due_date")); fields["deadline_offset"] = offset(task.string("deadline_date"))
             var repeatFields = task["recurrence_pattern"].object
             fields["repeat_start_offset"] = offset(repeatFields["startDate"]?.text ?? "")
@@ -325,7 +344,7 @@ struct WorkflowTemplate: Sendable {
             if !projectIDs.contains(row.string("parent_id")) { fields["parent_id"] = .null }
             return .object(fields)
         }
-        return try Self(document: .object(["version": .number(1), "kind": .string(kind.rawValue), "projects": .array(projectRows), "sections": .array(selectedSections.map { .object($0.fields.filter { ["id","name","project_id","order_index"].contains($0.key) }) }), "tasks": .array(try orderedTasks.map { .object(try clean($0, depth: 0).fields) })]))
+        return try Self(document: .object(["version": .number(1), "kind": .string(kind.rawValue), "projects": .array(projectRows), "sections": .array(selectedSections.map { .object($0.fields.filter { ["id","name","project_id","order_index"].contains($0.key) }) }), "tasks": .array(try orderedTasks.map { .object(try clean($0, depth: 0, shared: !TeamTaskLabelsDraft.usesPersonalCatalog($0, cache: teamCache)).fields) })]))
     }
     func instantiate(account: String, name: String, targetProject: String = "", start: Date? = nil, labels: [Record] = [], run: UUID = UUID()) throws -> [Mutation] {
         guard !account.isEmpty, kind != .project || !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, kind != .section || !targetProject.isEmpty else { throw AppFailure(message: "Choose a project name or destination before using this template.") }
@@ -546,5 +565,46 @@ enum TemplateEditing {
         let count=tasks(document).count
         func label(_ count:Int,_ noun:String) -> String { "\(count) "+noun+(count==1 ? "" : "s") }
         return label(definition.projects.count,"project")+" · "+label(definition.sections.count,"section")+" · "+(count==1 ? "1 task" : "\(count) tasks and subtasks")
+    }
+}
+
+/// In-memory admission for copying readable shared work into a private template.
+/// It is never encoded or treated as permission to create tasks in a team project.
+struct WorkflowTemplateCapture: Identifiable {
+    let id = UUID()
+    let workspace: WorkspaceBinding
+    let template: WorkflowTemplate
+    let shared: Bool
+    private let kind: WorkflowTemplate.Kind
+    private let sourceID: String
+    private let opened: Date
+    private let session: UUID
+    private let origin: String?
+    private let sources: [String: [Record]]
+    private let sharedProjects: Set<String>
+    private let sharedTasks: Set<String>
+    private let token: String?
+    static var changed: AppFailure { AppFailure(message: "The source or its access changed. Close this review and capture the current workflow again. No template was saved.") }
+    init(kind: WorkflowTemplate.Kind, sourceID: String, snapshot: Snapshot, workspace: WorkspaceBinding, session: UUID, origin: String?, teamCache: TeamWorkspaceCache?, now: Date = Date()) throws {
+        self.kind = kind; self.sourceID = sourceID; self.workspace = workspace; self.session = session; self.origin = origin; opened = now
+        let raw = try WorkflowTemplate.captureSources(kind: kind, id: sourceID, snapshot: snapshot)
+        sources = raw.mapValues { $0.sorted { $0.id < $1.id } }
+        sharedProjects = Set((raw["projects"] ?? []).map(\.id)).intersection(Set(teamCache?.knownTeams.keys.map { $0 } ?? []))
+        sharedTasks = Set((raw["tasks"] ?? []).map(\.id)).intersection(teamCache?.knownTasks ?? [])
+        shared = !sharedProjects.isEmpty || !sharedTasks.isEmpty
+        if shared {
+            guard let teamCache, let origin, teamCache.boundary.belongs(account: workspace.account, origin: origin),
+                  (raw["tasks"] ?? []).allSatisfy({ task in
+                      TeamTaskLabelsDraft.usesPersonalCatalog(task, cache: teamCache) || teamCache.boundary.projects[task.string("project_id")]?.team != nil
+                  }), sharedProjects.allSatisfy({ teamCache.boundary.projects[$0]?.team != nil }) else { throw Self.changed }
+            token = teamCache.boundary.raw["token"]?.text
+        } else { token = nil }
+        template = try WorkflowTemplate.capture(kind: kind, id: sourceID, snapshot: snapshot, now: now, teamCache: teamCache)
+    }
+    func reviewed(snapshot: Snapshot, workspace: WorkspaceBinding, session: UUID, origin: String?, teamCache: TeamWorkspaceCache?) throws {
+        guard self.workspace == workspace, self.session == session, self.origin == origin else { throw Self.changed }
+        let current = try Self(kind: kind, sourceID: sourceID, snapshot: snapshot, workspace: workspace, session: session, origin: origin, teamCache: teamCache, now: opened)
+        guard sources == current.sources, sharedProjects == current.sharedProjects, sharedTasks == current.sharedTasks,
+              token == current.token, template.document == current.template.document else { throw Self.changed }
     }
 }

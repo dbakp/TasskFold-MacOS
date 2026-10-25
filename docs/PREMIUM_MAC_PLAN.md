@@ -5583,3 +5583,20 @@ and installed iOS acceptance scopes are recorded in
 p2-shared-bulk-assignment-evidence.json. Compilation is not Mac installed/runtime,
 spoken or wider account/window acceptance. Rollout, full rank 6/Px and user-deferred
 release/provider/device work remain open or deferred as previously agreed.
+
+
+### 2026-10-25 — Shared workflow capture into private templates
+
+Shared-source template capture now reviews the full reusable contents and editable
+name before Save. Portable shared labels, including nested labels, no longer pass
+through the personal catalog. Opening source/access admission is rechecked before
+the existing private-template save, with a hidden preview when it becomes stale.
+The Mac owns its Core, view, Store and Undo path independently. See
+p2-shared-template-capture-evidence.json for exact Core/build and installed iOS
+scope; compilation is not Mac runtime/window or spoken acceptance. Team-owned
+templates, shared run destinations and wider rank-6/Px work remain open. Existing
+user-deferred release/provider/device work stays deferred.
+
+Capture verification: 87 focused Core cases in each repository, both independent
+app builds and three installed scenarios on each iPhone/iPad pass. Four standard-
+light preview/refusal screens are inspected; the wider gates above remain open.

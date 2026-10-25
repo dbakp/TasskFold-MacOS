@@ -1,0 +1,191 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "2122cb3baa012e9c0b1624bf5b7c807563cb1690",
+  "status": "Reviewed team-source capture into private templates implemented; scoped Core/build and installed phone/tablet acceptance. Team-owned catalogs/runs and the full ranked Px goal remain open.",
+  "schemaChanged": false,
+  "deployed": false,
+  "rolloutEnabled": false,
+  "hostedDataChanged": false,
+  "implementation": {
+    "namespace": "Advanced team task sources are classified by current/historical team custody. Portable shared root/child labels bypass personal catalog IDs/names/colors; children inherit the root label namespace. Supported legacy label lengths survive; opaque/unsafe/unsupported label data refuses capture explicitly.",
+    "opening": "Transient, non-Codable capture binds full selected project/section/task records, relevant manual-order rows, workspace/account/backend session/origin and team access token. Relative offsets use the opening date; review never reacquires a replacement baseline.",
+    "review": "Explicit private-copy explanation, complete workflow preview, editable name, Cancel and Save. Changed branches/records/access/session/account hide the preview and block Save. Unrelated tasks/projects and unrelated personal labels do not invalidate a wholly shared source.",
+    "save": "Existing private owner-only template writer, one stable new template identity, no task creation or source edit. Independent Mac Undo registration. Existing fresh task/project/generation runs and portable export remain responsible for later use.",
+    "limits": "Personal source capture keeps its direct save. Team source read permission is not team write authority; this stage adds neither team-owned template catalogs nor team run destinations."
+  },
+  "core": {
+    "focusedCases": 87,
+    "failed": 0,
+    "skipped": 0,
+    "newCases": 7,
+    "filter": "ProjectWorkflowsTests|TeamTaskRecipientTests|TeamTaskBatchTests",
+    "log": "shared-template-capture/mac-core-final.log.gz",
+    "coverage": [
+      "shared root/child label namespace and immunity to personal catalogs",
+      "full raw-source conflicts even for excluded opaque/history data",
+      "added/missing descendants and unrelated-source stability",
+      "workspace/session/origin/access replacement refusal",
+      "unsupported shared label refusal without source changes",
+      "fresh private run identities, no team grant/history/ownership transfer",
+      "readable legacy shared label length beyond new-label adder limits"
+    ]
+  },
+  "builds": {
+    "iOS": "Isolated arm64 Debug app and UI runner build-for-testing pass; final UI-test-only revision includes the existing source-change fixture flag.",
+    "macOS": "Independent isolated arm64 Debug app build passes with signing disabled; not installed Mac runtime acceptance.",
+    "release": "User-deferred; not attempted."
+  },
+  "native": {
+    "scope": "Exact reserved isolated synthetic team host, real Store/private cache and owner-template outbox. Network intercepted; no live hosted/Auth/Keychain acceptance. Source is one team project with a root and two embedded children.",
+    "appID": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "runnerID": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+    "testSourceRepository": "TaskFold-iOS",
+    "testSourceSHA256": "d758384c37969bb73991ea7d6291c60273e97ea1516cd553d6721f6998a310d8",
+    "devices": {
+      "phone": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "summary": "shared-template-capture/phone-summary.json"
+      },
+      "ipad": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+          "deviceName": "iPad Pro 13-inch (M5)",
+          "modelName": "iPad Pro 13-inch (M5)",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "summary": "shared-template-capture/ipad-summary.json"
+      }
+    },
+    "cases": [
+      "Label/scope review, Cancel leaves cache exact, Save creates exactly one private template and no tasks, relaunch retains it",
+      "Changed source pauses and hides preview before a command can be created",
+      "Changed access token pauses saving with no queued write"
+    ],
+    "visualScope": "Four standard-light phone/tablet preview/refusal images inspected; scrollable forms retain controls and readable source/portable labels. Not large-text/dark/contrast/spoken/Mac runtime proof.",
+    "screenshots": [
+      {
+        "file": "shared-template-capture/phone-26FEA977-A1EA-47DF-A8D3-85B8C120EDE5.png",
+        "case": "TeamTaskBatchDeletionUITests/testSharedTemplateCapturePausesOnSourceChange()",
+        "description": "Changed shared source hides the template preview and blocks saving_0_A542EC37-83A6-4164-9DF5-92F2A7B29962.png"
+      },
+      {
+        "file": "shared-template-capture/phone-2EFFA955-CCED-44D7-A30C-D36C7B192CB9.png",
+        "case": "TeamTaskBatchDeletionUITests/testSharedTemplateCaptureReviewsLabelsCancelSaveAndRelaunch()",
+        "description": "Shared workflow capture reviews private-copy scope and portable labels_0_935249C6-94F6-41AF-89A0-1B12399BC94A.png"
+      },
+      {
+        "file": "shared-template-capture/ipad-EEEBAA15-ACF5-42BF-8D1B-23AEE17313D7.png",
+        "case": "TeamTaskBatchDeletionUITests/testSharedTemplateCapturePausesOnSourceChange()",
+        "description": "Changed shared source hides the template preview and blocks saving_0_D8FC8AC0-DFA1-4EFB-9D17-CB6060E0A280.png"
+      },
+      {
+        "file": "shared-template-capture/ipad-98A08C31-7674-40FF-8EFE-56020CAACFA9.png",
+        "case": "TeamTaskBatchDeletionUITests/testSharedTemplateCaptureReviewsLabelsCancelSaveAndRelaunch()",
+        "description": "Shared workflow capture reviews private-copy scope and portable labels_0_FB5E517E-9A5D-40E9-80D4-0AD4581F4C22.png"
+      }
+    ]
+  },
+  "diagnostics": [
+    "Initial Core suite passed; a review of label compatibility then replaced the new-label adder limit with existing readable-label validation so longer supported names are preserved. The final 87-case suite covers that behavior.",
+    "The existing source-change fixture requires --team-delete-testing; the UI launch arguments were corrected before native acceptance. No failed native runs occurred."
+  ],
+  "hostSourceDifferences": {
+    "Taskfold/Core/Store.swift": [
+      "-    static let appGroup = \"group.com.dbakp.taskfold\"",
+      "+    static let appGroup = \"group.com.dbakp.taskfold.mac.workflowteststeameditbridge\"",
+      "-            \"com.dbakp.taskfold.mac.p0grammaruitests\", \"com.dbakp.taskfold.mac.p0signeduitests\",",
+      "+            \"com.dbakp.taskfold.mac.p0grammaruitests\", \"com.dbakp.taskfold.mac.workflowteststeameditbridge\","
+    ]
+  },
+  "cleanup": {
+    "status": "Complete",
+    "hosts": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "uninstalled": true,
+        "containerAbsent": true
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "uninstalled": true,
+        "containerAbsent": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "uninstalled": true,
+        "containerAbsent": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "app": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "uninstalled": true,
+        "containerAbsent": true
+      }
+    ],
+    "ownedTemporaryPrefix": "/tmp/taskfold-shared-template-*",
+    "temporaryEntriesRemoved": 24,
+    "removedDiskKiB": 1242960,
+    "baselineSimulatorsStillBooted": [
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378"
+    ],
+    "sourceBuildCachePreserved": true,
+    "MacRuntimeLaunchedThisStage": false,
+    "unrelatedAppsDataServicesAndCachesPreserved": true
+  },
+  "remaining": [
+    "Team-owned template catalogs and guarded template runs into team projects",
+    "Mac installed/window/runtime and spoken acceptance",
+    "Broader source kinds, hosted multi-actor/account/network and large-text/dark/contrast acceptance",
+    "Failed-save UI/retry and wider template-copy variants",
+    "Remaining rank-6/team/file/conversation/independent-child and full ranked Px work",
+    "All user-deferred remote delivery, older-client rollout, signing/distribution, OAuth/provider and physical-device dependencies"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "91730ae1316b77bc5f17f200c1017110bcdbf971a44aa6ba00bc05dc83249744",
+    "Taskfold/Core/Store.swift": "87ceb393aae208a8fd05c341f6427d78a2835ee3638b40380a23fdfe222499d1",
+    "Taskfold/Views/WorkflowViews.swift": "ebad518b0bf71d2130df19b99706232c75ba63804bb955373362a28b53503716",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "6672e17e77e9b83b58b9431933e4d9cc2bdf70c959987ed1d844c7453aa70d65"
+  },
+  "artifactSHA256": {
+    "ios-build-final.log.gz": "2e1554176fe6b4a0ad9faa2112de4aee44ea27e789adb073e7c7c1ecb24f1d46",
+    "ios-build.log.gz": "a6aa7f9110237faf125817960915025c5cc316b499b33804bcf1fb1ef758ae8a",
+    "ios-core-final.log.gz": "12fc54f96d5d74ac86c7add12fafc8cc306dc3edb541589594e8708f27c49945",
+    "ios-core-initial.log.gz": "246dd9fb907f2bf4f64d59f1eba9c2a89818d14964e89e980770967f62663a6b",
+    "ios-core.log.gz": "32c8965b0f9c3c1904a2c5388a560a77b1feb407e4f374ec55fcd7f0ddd1ea18",
+    "ios-prepare.log.gz": "bb947a708f3979e8b680a3ca612dece2fed84697e61a4cb4766d7416c936c605",
+    "ipad-98A08C31-7674-40FF-8EFE-56020CAACFA9.png": "eeb81854093168e803b6daa2cbbd0968d14a107c6d45c6a5de792aa3a7459ead",
+    "ipad-EEEBAA15-ACF5-42BF-8D1B-23AEE17313D7.png": "04bb8a0fec33af84c47565c108a19e827ee6f847e338c514d8fcaae3006dc409",
+    "ipad-summary.json": "d20c48f354bb6658b59512678818d9b2ae2fa85645dee3e0d522c7a944486dc7",
+    "ipad.log.gz": "23d8b8887b0779b74ebb8ce35125a78221840a4d3bcceb47f26c02b2af42e7d0",
+    "mac-build.log.gz": "8ff02dd2171981ae41abc248c91f8c5262191ec8361b0a06aa631cb946149c2a",
+    "mac-core-final.log.gz": "a63d7491aa0958c67157ce91393407eaadad33b9d259624ec47e49a0be7f1473",
+    "mac-core.log.gz": "843c85bd00b8719861719bf9f659d2fe79778483915b3d322af1400ef92a78e4",
+    "mac-prepare.log.gz": "f13a603441a0d4cffaddaaa7a1eba7facc3e63b53ea198376374648e71412f21",
+    "phone-26FEA977-A1EA-47DF-A8D3-85B8C120EDE5.png": "b5bb8b553ed3a4938c71b0694aa1035e403d0204ef142ca450082bff8d7b6c1d",
+    "phone-2EFFA955-CCED-44D7-A30C-D36C7B192CB9.png": "30cf2ad70f745619fdb43eb4eac9c0b592da3ad2538f7840421c7d743e7dcdd0",
+    "phone-summary.json": "b14d54a3f8b13428b76f1f144dbf66be375f8dfaa1443d58073e744a055a535d",
+    "phone.log.gz": "2cc28300e05880f40fb045fa2c503ec24ee1c0b2359393547d3bd7fa18bacad4"
+  }
+}
