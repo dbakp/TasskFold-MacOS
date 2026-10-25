@@ -435,11 +435,36 @@ refresh against a SQL-derived intercepted peer. It is not a live hosted/provider
 chain, Mac runtime or spoken accessibility proof. See
 `p2-project-adoption-connection-policy-evidence.json` for exact scope and diagnostics.
 
-Still open before rollout: filter personal setup destinations and gate Resume/
-verification for adopted projects with clear settings explanations; separate
-supported destination reauthorization/retarget; a persistent preparation/drain flow
+The later personal-settings stage below implements destination filtering and
+Resume/verification explanations. Still open before rollout: supported destination
+reauthorization/retarget; a persistent preparation/drain flow
 for continuously sending connections; file/provider custody; stage scroll/focus,
 Mac/account/window/large-text/dark/keyboard/spoken/load and hosted acceptance. The
 current atomic action refuses a live send without changing connections. Normal
 rollout remains disabled and all user-deferred work stays deferred. This does not
 complete adoption, rank 6 or the wider Px plan.
+
+
+### Personal connection settings after a project transfer — 2026-10-25
+
+Both apps now offer Inbox and supported personal projects when creating email
+addresses or task connections. A project’s current workspace access must certify
+personal custody when an access boundary is present. Historical team identity
+continues to exclude a project after access is lost; a missing row or mismatched
+account/server cannot be treated as personal. Services predating team access keep
+existing personal sharing compatible. Explicit team markers are excluded as well.
+
+Existing affected connections explain the team or unavailable destination. Resume,
+receiver verification and email address replacement are disabled for unsupported
+destinations. Pause, revoke, delivery history and exact saved-action recovery remain
+available. Continuing an unfinished setup is blocked for unsupported destinations;
+finishing a local secret acknowledgement and discarding setup remain available.
+The final create controls also reject selections removed during workspace refresh.
+“All personal tasks” now accurately explains that personal sharing is included and
+team projects are excluded. No credential movement or team retargeting is implied.
+
+Verification and cleanup are recorded in
+`p2-personal-connection-settings-evidence.json`. This stage does not enable rollout
+or complete transfer acceptance: destination reauthorization/retarget, persistent
+busy-send preparation, file/provider custody and remaining native/hosted acceptance
+remain open. All previously deferred release/provider/device work stays deferred.

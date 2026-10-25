@@ -61,7 +61,7 @@ struct WebhookAccessView: View {
         .sheet(item:$reauthentication,onDismiss:{ if model?.current == false { restoredSignIn() } }) { context in
             ConnectionSignInSheet(backend:signInBackend,context:context,email:signInBackend.session?.user.email ?? store.email) { restoredSignIn() }
         }
-        .sheet(isPresented:$composing) { if let model { WebhookComposer(model:model,projects:store.projects) } }
+        .sheet(isPresented:$composing) { if let model { WebhookComposer(model:model,projects:store.personalConnectionProjects) } }
         .sheet(item:$selected,onDismiss:{
             if signInAfterHistory { signInAfterHistory = false; if let model { beginSignIn(account:model.account) } }
         }) { c in if let model { WebhookHistoryView(model:model,connection:c,requestSignIn:{signInAfterHistory = true}) } }
@@ -148,6 +148,9 @@ struct WebhookAccessView: View {
                     LabeledContent("Name",value:p.draft.name)
                     Text(p.draft.endpoint).textSelection(.enabled).font(.callout).fixedSize(horizontal:false,vertical:true)
                     Text(scopeTitle(p.draft.scope)).foregroundStyle(.secondary)
+                    if let explanation = store.personalConnectionDestination(p.draft.project).explanation {
+                        Label(explanation,systemImage:"info.circle").font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                    }
                     if let secret = model.secret, !p.cancelling {
                         Text("Save the receiver secret").font(.headline)
                         Text("Configure this secret at your receiver. It proves ownership and checks signed deliveries. You cannot retrieve it after finishing this review.").foregroundStyle(.secondary)
@@ -172,7 +175,7 @@ struct WebhookAccessView: View {
                         Button("I’ve saved the secret") { revealed = false; copied = false; Task { await model.acknowledgeSaved() } }.accessibilityIdentifier("webhookAcknowledge")
                     } else {
                         Text(p.cancelling ? "Retry discard to finish disabling the receiver." : "Your private setup is saved on this device. Continue with the same settings after an interrupted request.").foregroundStyle(.secondary)
-                        Button(p.cancelling ? "Retry discard" : "Continue setup") { Task { await model.resumeSetup() } }.accessibilityIdentifier("webhookContinue")
+                        Button(p.cancelling ? "Retry discard" : "Continue setup") { Task { await model.resumeSetup() } }.disabled(!p.cancelling && !store.personalConnectionDestination(p.draft.project).supported).accessibilityIdentifier("webhookContinue")
                     }
                     Button("Discard setup",role:.destructive) { discard = true }
                 }.id("webhookPending")
@@ -208,20 +211,23 @@ struct WebhookAccessView: View {
             HStack(alignment:.firstTextBaseline) { Text(c.name).font(.headline); Spacer(); Text(c.state.capitalized).font(.caption).foregroundStyle(c.state == "active" ? Color.accentColor : .secondary) }
             Text(c.origin).font(.callout).foregroundStyle(.secondary).textSelection(.enabled)
             Text(scopeTitle(c.scope) + " · " + c.events.map(\.title).joined(separator:" · ")).font(.caption).fixedSize(horizontal:false,vertical:true)
+            if let explanation = store.personalConnectionDestination(c.project).explanation {
+                Label(explanation,systemImage:"info.circle").font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+            }
             Text("Expires \(c.expires.formatted(date:.abbreviated,time:.omitted))").font(.caption).foregroundStyle(.secondary)
             Text("\(c.delivery.pending) waiting · \(c.delivery.delivered) delivered · \(c.delivery.failed) failed").font(.callout).monospacedDigit()
             if let recovery = c.delivery.recovery { Label(recovery,systemImage:"exclamationmark.circle").font(.callout).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("webhookRecovery") }
             HStack {
                 Button("Delivery history") { selected = c }
                 if c.usable {
-                    if c.state == "pending" { Button("Verify receiver") { Task { await model.control("verify",connection:c) } }.accessibilityIdentifier("webhookVerify") }
-                    else { Button(c.state == "paused" || c.delivery.blocked != nil ? "Resume" : "Pause") { Task { await model.control(c.state == "paused" || c.delivery.blocked != nil ? "resume" : "pause",connection:c) } } }
+                    if c.state == "pending" { Button("Verify receiver") { Task { await model.control("verify",connection:c) } }.disabled(!store.personalConnectionDestination(c.project).supported).accessibilityIdentifier("webhookVerify") }
+                    else { Button(c.state == "paused" || c.delivery.blocked != nil ? "Resume" : "Pause") { Task { await model.control(c.state == "paused" || c.delivery.blocked != nil ? "resume" : "pause",connection:c) } }.disabled((c.state == "paused" || c.delivery.blocked != nil) && !store.personalConnectionDestination(c.project).supported) }
                     Button("Revoke",role:.destructive) { revoking = c }
                 }
             }.buttonStyle(.borderless).disabled(model.uncertainAction != nil)
         }.padding(.vertical,6)
     }
-    private func scopeTitle(_ scope:String) -> String { switch scope { case "all":"All accessible tasks"; case "project":"Selected project"; default:"Inbox only" } }
+    private func scopeTitle(_ scope:String) -> String { switch scope { case "all":"All personal tasks"; case "project":"Selected project"; default:"Inbox only" } }
     private func actionTitle(_ action:String) -> String { switch action { case "retry_delivery":"Delivery retry"; case "verify":"Receiver verification"; default:action.capitalized } }
 }
 private struct WebhookComposer: View {
@@ -252,21 +258,22 @@ private struct WebhookComposer: View {
                     Text("Use a receiver you control. Taskfold checks its public address and requires proof that it holds your receiver secret.").font(.callout).foregroundStyle(.secondary)
                 }
                 Section("Reach") {
-                    Picker("Tasks",selection:$scope) { Text("Inbox only").tag("inbox"); Text("One project").tag("project"); Text("All accessible tasks").tag("all") }
+                    Picker("Tasks",selection:$scope) { Text("Inbox only").tag("inbox"); Text("One project").tag("project"); Text("All personal tasks").tag("all") }
                     if scope == "project" { Picker("Project",selection:$project) { Text("Choose project").tag(""); ForEach(projects) { p in Text(p.name).tag(p.id) } } }
+                    Text("Project connections support available personal projects. Team projects use separate access.").font(.callout).foregroundStyle(.secondary)
                     ForEach(WebhookEvent.allCases,id:\.self) { event in Toggle(event.title,isOn:Binding(get:{events.contains(event)},set:{if $0 { events.insert(event) } else { events.remove(event) }})) }
                     Picker("Expires after",selection:$days) { Text("30 days").tag(30); Text("90 days").tag(90); Text("1 year").tag(365) }
                 }
                 Section {
                     Toggle("I trust this receiver with task content",isOn:$understood).accessibilityIdentifier("webhookTrust")
-                    Text("Selected changes include task titles, full notes and checklists. All accessible tasks also includes shared projects you can read, including projects you join later. Each project scope covers only that project. Deleted or moved-out tasks send only identity information. Pausing stops delivery while retaining a bounded queue for up to 24 hours.").font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                    Text("Selected changes include task titles, full notes and checklists. All personal tasks includes Inbox and personal projects you can access, including personal projects shared with you. Team projects are excluded. Each project scope covers only that project. Deleted or moved-out tasks send only identity information. Pausing stops delivery while retaining a bounded queue for up to 24 hours.").font(.callout).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
                 }
                 if let message = model.message { Section { Text(message).foregroundStyle(.secondary) } }
             }.formStyle(.grouped)
             .navigationTitle("Connection")
             .toolbar {
                 ToolbarItem(placement:.cancellationAction) { Button("Cancel") { dismiss() }.disabled(model.busy) }
-                ToolbarItem(placement:.confirmationAction) { Button("Create") { Task { await model.create(name:name,endpoint:endpoint,scope:scope,project:scope == "project" ? project : nil,events:events,days:days); if model.pending != nil { dismiss() } } }.disabled(model.busy || !understood || !WebhookValue.name(name.trimmingCharacters(in:.whitespacesAndNewlines)) || !WebhookValue.endpoint(endpoint.trimmingCharacters(in:.whitespacesAndNewlines)) || events.isEmpty || scope == "project" && project.isEmpty).accessibilityIdentifier("webhookCreate") }
+                ToolbarItem(placement:.confirmationAction) { Button("Create") { Task { await model.create(name:name,endpoint:endpoint,scope:scope,project:scope == "project" ? project : nil,events:events,days:days); if model.pending != nil { dismiss() } } }.disabled(model.busy || !understood || !WebhookValue.name(name.trimmingCharacters(in:.whitespacesAndNewlines)) || !WebhookValue.endpoint(endpoint.trimmingCharacters(in:.whitespacesAndNewlines)) || events.isEmpty || scope == "project" && !projects.contains(where: { $0.id == project })).accessibilityIdentifier("webhookCreate") }
             }
         }
         #if os(macOS)

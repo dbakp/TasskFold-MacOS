@@ -5481,3 +5481,19 @@ reauthorization/retarget, persistent busy-send preparation, file custody and the
 remaining native/hosted acceptance. Stage scroll/focus and wider Px items remain
 open. All user-deferred release/provider/device dependencies stay deferred; rank 6
 and adoption are still in progress.
+
+
+### 2026-10-25 — Personal connection destinations and recovery controls
+
+Personal email and webhook setup now filters team/unconfirmed destinations and
+retains personal collaborator projects. Historical team custody remains excluded
+after access loss. Existing rows explain why a destination cannot resume; Resume,
+verification and email rotation are disabled while Pause/Revoke/history and exact
+saved-action recovery remain available. “All personal tasks” accurately excludes
+team projects. Stale composer selections cannot create a new connection.
+
+See p2-personal-connection-settings-evidence.json for independently run Core checks
+and the Mac Debug compile. No new installed Mac, spoken or hosted/provider
+acceptance is claimed. Supported retarget/reauthorization, file custody, persistent
+busy-send preparation and the remaining Px/native acceptance stay open. Normal
+rollout and all user-deferred distribution/provider/device items remain deferred.

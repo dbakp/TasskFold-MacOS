@@ -410,3 +410,29 @@ extension TeamTaskEditorDraft {
         return try scope.capturing(change, existing: current)
     }
 }
+
+/// Personal capture never inherits team custody. Historical team identity remains
+/// authoritative even after the account loses access and the project row vanishes.
+enum PersonalConnectionDestination: Equatable {
+    case inbox, personal, team, unavailable
+    var supported: Bool { self == .inbox || self == .personal }
+    var explanation: String? {
+        switch self {
+        case .team: "This project belongs to a team. Personal email addresses and task connections cannot send into team projects. You can keep this connection paused or revoke it."
+        case .unavailable: "This project’s personal access could not be confirmed. Refresh your workspace before resuming or replacing this connection. You can still pause or revoke it."
+        default: nil
+        }
+    }
+    static func resolve(project: String?, projects: [Record], cache: TeamWorkspaceCache?, account: String, origin: String?) -> Self {
+        guard let project else { return .inbox }
+        if let cache {
+            guard let origin, cache.boundary.belongs(account: account, origin: origin) else { return .unavailable }
+            if cache.knownTeams[project] != nil { return .team }
+            guard let access = cache.boundary.projects[project], access.team == nil, access.canSend else { return .unavailable }
+        }
+        guard let record = projects.first(where: { $0.id == project }) else { return .unavailable }
+        // Keep pre-team services compatible while rejecting any explicit team marker.
+        if record["team_id"] != .null { return .team }
+        return .personal
+    }
+}

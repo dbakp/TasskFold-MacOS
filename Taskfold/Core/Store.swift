@@ -697,6 +697,13 @@ final class Store {
     }
     var allProjects: [Record] { OrganizationOrder.sorted(rows("projects")) }
     var projects: [Record] { ProjectOrganization.outline(allProjects).map(\.project) }
+    var personalConnectionProjects: [Record] {
+        let cache = nativeConversationTeamCache, account = userID, origin = try? backend.accountRemovalOrigin
+        return projects.filter { PersonalConnectionDestination.resolve(project: $0.id, projects: [$0], cache: cache, account: account, origin: origin).supported }
+    }
+    func personalConnectionDestination(_ project: String?) -> PersonalConnectionDestination {
+        PersonalConnectionDestination.resolve(project: project, projects: allProjects, cache: nativeConversationTeamCache, account: userID, origin: try? backend.accountRemovalOrigin)
+    }
     var archivedProjects: [ProjectOrganization.Item] { ProjectOrganization.outline(allProjects, archived: true) }
     var activeTasks: [Record] { let archived = ProjectOrganization.archivedIDs(in: allProjects); return tasks.filter { !archived.contains($0.string("project_id")) } }
     var workflowTemplates: [Record] { rows(WorkflowTemplate.table).sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }

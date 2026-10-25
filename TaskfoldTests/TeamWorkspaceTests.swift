@@ -781,3 +781,54 @@ extension TeamWorkspaceTests {
         XCTAssertEqual(row.string("description").count, 128001)
     }
 }
+
+extension TeamWorkspaceTests {
+    private func connectionDestination(_ id: String?, _ rows: [Record], _ cache: TeamWorkspaceCache?, account: String? = nil, server: String? = nil) throws -> PersonalConnectionDestination {
+        PersonalConnectionDestination.resolve(project: id, projects: rows, cache: cache, account: try account ?? boundary().account, origin: server ?? origin)
+    }
+    func testPersonalConnectionsUseCertifiedPersonalProjectsAndInbox() throws {
+        let b = try boundary(), rows = try snapshot().tables["projects"]!, f = try fixture()
+        let c = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [])
+        XCTAssertEqual(try connectionDestination(nil, rows, c), .inbox)
+        XCTAssertEqual(try connectionDestination(f["personal"]!.text, rows, c), .personal)
+        XCTAssertEqual(try connectionDestination(f["project"]!.text, rows, c), .team)
+        XCTAssertEqual(try rows.filter { try connectionDestination($0.id, rows, c).supported }.map(\.id), [f["personal"]!.text, f["legacy"]!.text])
+    }
+    func testPersonalConnectionsRememberTeamCustodyAfterAccessIsLost() throws {
+        let f = try fixture(), b = try boundary(), old = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [])
+        let left = try TeamWorkspaceCache(boundary: boundary("left"), previous: old, pending: [])
+        let id = f["project"]!.text
+        XCTAssertNil(left.boundary.projects[id])
+        XCTAssertEqual(try connectionDestination(id, [], left), .team)
+        XCTAssertFalse(try connectionDestination(id, snapshot().tables["projects"]!, left).supported)
+    }
+    func testPersonalConnectionsRejectForeignAccountAndServerCaches() throws {
+        let rows = try snapshot().tables["projects"]!, f = try fixture(), c = try TeamWorkspaceCache(boundary: boundary(), previous: nil, pending: [])
+        XCTAssertEqual(try connectionDestination(f["personal"]!.text, rows, c, account: UUID().uuidString.lowercased()), .unavailable)
+        XCTAssertEqual(try connectionDestination(f["personal"]!.text, rows, c, server: "https://other.example"), .unavailable)
+        XCTAssertEqual(PersonalConnectionDestination.resolve(project: f["personal"]!.text, projects: rows, cache: c, account: c.boundary.account, origin: nil), .unavailable)
+    }
+    func testPersonalConnectionsRequireBothCurrentAccessAndAVisibleRow() throws {
+        let f = try fixture(), c = try TeamWorkspaceCache(boundary: boundary(), previous: nil, pending: [])
+        XCTAssertEqual(try connectionDestination(f["personal"]!.text, [], c), .unavailable)
+        let unknown = Record(["id": .string(UUID().uuidString.lowercased()), "name": .string("Unconfirmed project")])
+        XCTAssertEqual(try connectionDestination(unknown.id, [unknown], c), .unavailable)
+        XCTAssertFalse(try connectionDestination(unknown.id, [], nil).supported)
+    }
+    func testPersonalConnectionsPreserveLegacyPersonalSharingWithoutInventingTeamAccess() throws {
+        let f = try fixture(), rows = try snapshot().tables["projects"]!
+        XCTAssertEqual(try connectionDestination(f["personal"]!.text, rows, nil), .personal)
+        for marker: JSON in [.string(f["team"]!.text), .string(""), .number(1)] {
+            var row = rows[0]; row["team_id"] = marker
+            XCTAssertFalse(try connectionDestination(row.id, [row], nil).supported)
+        }
+    }
+    func testPersonalConnectionExplanationsRetainSafeControlsWithoutExposingNames() {
+        XCTAssertNil(PersonalConnectionDestination.inbox.explanation)
+        XCTAssertNil(PersonalConnectionDestination.personal.explanation)
+        XCTAssertTrue(PersonalConnectionDestination.team.explanation!.contains("revoke"))
+        XCTAssertTrue(PersonalConnectionDestination.unavailable.explanation!.contains("Refresh"))
+        XCTAssertFalse(PersonalConnectionDestination.team.supported)
+        XCTAssertFalse(PersonalConnectionDestination.unavailable.supported)
+    }
+}

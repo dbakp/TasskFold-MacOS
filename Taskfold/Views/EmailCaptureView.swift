@@ -49,7 +49,7 @@ struct EmailCaptureView: View {
         }
         .onChange(of: phase) { _, value in revealed = nil; copied = nil; if value == .active { Task { await model?.load() } } }
         .onDisappear { model?.close(); model = nil; revealed = nil; copied = nil }
-        .sheet(isPresented: $composing) { if let model { EmailCaptureComposer(model: model, projects: store.projects, sender: composerSender) } }
+        .sheet(isPresented: $composing) { if let model { EmailCaptureComposer(model: model, projects: store.personalConnectionProjects, sender: composerSender) } }
         .sheet(item: $reauthentication) { context in
             ConnectionSignInSheet(backend: store.backend, context: context, email: store.backend.session?.user.email ?? store.email) {
                 guard store.backend.session?.user.id == context.account else { leave(); return }
@@ -63,7 +63,7 @@ struct EmailCaptureView: View {
             if let route = destructive { Button("Revoke address", role: .destructive) { destructive = nil; revealed = nil; Task { await model?.control("revoke", route: route) } } }
         } message: { Text("Future email to this address will be refused. Tasks already captured stay saved.") }
         .confirmationDialog("Replace this address?", isPresented: Binding(get: { replacing != nil }, set: { if !$0 { replacing = nil } }), titleVisibility: .visible) {
-            if let route = replacing { Button("Replace address", role: .destructive) { replacing = nil; revealed = nil; Task { await model?.control("rotate", route: route) } } }
+            if let route = replacing { Button("Replace address", role: .destructive) { replacing = nil; revealed = nil; Task { await model?.control("rotate", route: route) } }.disabled(!store.personalConnectionDestination(route.project).supported) }
         } message: { Text("A new private address will replace this one. The old address will stop accepting email. Update any forwarding rules after reviewing the new address.") }
         .confirmationDialog("Discard this setup?", isPresented: $discarding, titleVisibility: .visible) {
             Button("Discard setup", role: .destructive) { Task { await model?.discardSetup() } }
@@ -163,6 +163,9 @@ struct EmailCaptureView: View {
             HStack { Text(route.name).font(.headline); Spacer(); Text(route.state == "paused" ? "Paused" : "Active").font(.caption).foregroundStyle(.secondary) }
             Text(route.project.flatMap { id in store.projects.first { $0.id == id }?.name } ?? (route.project == nil ? "Inbox" : "Project unavailable")).font(.subheadline).foregroundStyle(.secondary)
             Text("From \(route.sender)").font(.caption).foregroundStyle(.secondary)
+            if let explanation = store.personalConnectionDestination(route.project).explanation {
+                Label(explanation, systemImage: "info.circle").font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
             if let address = model.address(for: route) {
                 if revealed == route.id {
                     Text(address).font(.system(.footnote, design: .monospaced)).textSelection(.disabled).fixedSize(horizontal: false, vertical: true).accessibilityLabel("Private email address revealed").accessibilityValue("Address concealed from speech")
@@ -170,7 +173,7 @@ struct EmailCaptureView: View {
                     if copyFailed { Text("Couldn’t copy the address. Try again.").font(.caption).foregroundStyle(.secondary) }
                     Button("Hide address") { revealed = nil; copied = nil }
                 } else { Button("Show private address") { revealed = route.id; copied = nil } }
-            } else if model.pending == nil { Text("Private address unavailable here. Replace it to create one on this device.").font(.caption).foregroundStyle(.secondary) }
+            } else if model.pending == nil { Text(store.personalConnectionDestination(route.project).supported ? "Private address unavailable here. Replace it to create one on this device." : "Private address unavailable on this device.").font(.caption).foregroundStyle(.secondary) }
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 24) { routeControls(route, model) }.fixedSize(horizontal: true, vertical: false)
                 VStack(alignment: .leading, spacing: 12) { routeControls(route, model) }
@@ -179,8 +182,8 @@ struct EmailCaptureView: View {
     }
     @ViewBuilder private func routeControls(_ route: EmailRoute, _ model: EmailCaptureModel) -> some View {
                 if route.state == "active" { Button("Pause") { revealed = nil; Task { await model.control("pause", route: route) } } }
-                else { Button("Resume") { Task { await model.control("resume", route: route) } }.disabled(model.address(for: route) == nil) }
-                Menu("Manage") { Button("Replace address…") { replacing = route }.disabled(!model.available); Button("Revoke address…", role: .destructive) { destructive = route } }
+                else { Button("Resume") { Task { await model.control("resume", route: route) } }.disabled(model.address(for: route) == nil || !store.personalConnectionDestination(route.project).supported) }
+                Menu("Manage") { Button("Replace address…") { replacing = route }.disabled(!model.available || !store.personalConnectionDestination(route.project).supported); Button("Revoke address…", role: .destructive) { destructive = route } }
     }
     private func copy(_ address: String) -> Bool {
         #if os(iOS)
@@ -206,6 +209,7 @@ private struct EmailCaptureComposer: View {
             Form {
                 Section("Address") { TextField("Name", text: $name).accessibilityIdentifier("emailAddressName")
                     Picker("Destination", selection: $project) { Text("Inbox").tag(""); ForEach(projects) { Text($0.name).tag($0.id) } }
+                    Text("Choose Inbox or an available personal project. Team projects use separate access and are not supported by personal email addresses.").font(.callout).foregroundStyle(.secondary)
                 }
                 Section("Review") {
                     LabeledContent("Allowed sender", value: sender).accessibilityElement(children: .ignore).accessibilityLabel("Allowed sender").accessibilityValue(sender).accessibilityIdentifier("emailAllowedSender")
@@ -217,7 +221,7 @@ private struct EmailCaptureComposer: View {
             .navigationTitle("New email address")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(model.busy) }
-                ToolbarItem(placement: .confirmationAction) { Button("Create address") { Task { await model.create(name: name.trimmingCharacters(in: .whitespacesAndNewlines), project: project.isEmpty ? nil : project); if model.pending != nil || model.message == nil { dismiss() } } }.disabled(!WebhookValue.name(name.trimmingCharacters(in: .whitespacesAndNewlines)) || model.busy || !model.current || !model.available) }
+                ToolbarItem(placement: .confirmationAction) { Button("Create address") { Task { await model.create(name: name.trimmingCharacters(in: .whitespacesAndNewlines), project: project.isEmpty ? nil : project); if model.pending != nil || model.message == nil { dismiss() } } }.disabled(!WebhookValue.name(name.trimmingCharacters(in: .whitespacesAndNewlines)) || model.busy || !model.current || !model.available || !project.isEmpty && !projects.contains(where: { $0.id == project })) }
             }
             .disabled(model.busy)
             #if os(macOS)
