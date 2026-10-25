@@ -5803,3 +5803,31 @@ client request storage/receipt handling, native destination/content reviews,
 runtime/account-window/spoken and genuine hosted acceptance still remain.
 See p2-team-workflow-run-service-evidence.json. Shared runs, rank 6 and wider Px
 remain open; all release/provider/device deferrals remain unchanged.
+
+### 2026-10-25 — Durable shared workflow client requests (source)
+
+Both apps now own a typed workflow command, exact identity/generation receipt
+validator, encrypted per-account/origin recovery file and reviewed retry model.
+The original request is durable before dispatch. Relaunch and lost-reply retry
+keep its original identity, content, dates, destination and list-order baseline.
+Another window's request cannot be overwritten or cleared; stopping retry does
+not undo cloud work. A late account/window reply leaves recovery on disk and
+clears presentation. Invalid receipts and failed cleanup retain the request.
+
+The file uses the existing backup device key and account-removal/process locks.
+Its plaintext is not stored in Keychain or written to disk. The shared file engine
+retains the existing template filename, prefix and AAD: an independently sealed
+legacy ciphertext compatibility test passes. Store factories and account-removal
+cleanup are connected. The dedicated HTTP endpoint uses no-store, no cookies,
+redirect refusal and a streamed 1 MB reply cap, exact account/origin/session
+checks and sanitized errors. Tests exercise actual URLSession interception and
+reject a reply after Backend sign-out; no genuine hosted call is made.
+
+Each Core suite passes 137 focused cases (13 command/recovery, 13 run planner,
+22 existing template-command, 31 library, 47 workflows, 11 account removal).
+Both arm64 Debug app builds pass with signing disabled. This is compile and
+synthetic transport/model/file acceptance, not native save/Keychain/spoken/window
+acceptance. Native destination/content/recovery views and actual Store runtime
+flows remain to be connected and verified. The prior isolated service proof
+still stands; SQL, hosted schema/configuration and rollout are unchanged.
+See p2-team-workflow-run-client-evidence.json. Rank 6 and wider Px remain open.

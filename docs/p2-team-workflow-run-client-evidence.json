@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-25",
+  "platform": "mac",
+  "status": "Durable reviewed client command/receipt/storage/model/HTTP source implemented; native UI and runtime acceptance still open",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamWorkflowRunCommands.swift": "e2859174db6ee7cebc0249d4370c08294e0f2f2060c86b91880ad671b8e9dfe5",
+    "Taskfold/Core/TeamTemplateCommands.swift": "d6900e9218282596401cff2cd5db89b9f234f3b3e342927872b42a0206fe8b23",
+    "Taskfold/Core/Backend.swift": "d89ff8b10f7229e043f59e9b8b2fa9f8ff01e048ac6b4343c39db72235da2bab",
+    "Taskfold/Core/Store.swift": "7a1b8180583b206e619c7b7550eb6650eaf2f07374b118deb754f0d4a1064f5d",
+    "TaskfoldTests/TeamWorkflowRunCommandTests.swift": "b2e7a4efa12387b1d45d6316607454a0d5d9095e6bfaccf7d6b814d54702e4e8",
+    "Package.swift": "5477db7bb42e0f5072fbecaccddde693cafdd9d470ba8588b3bf1675e25b6346",
+    "Taskfold.xcodeproj/project.pbxproj": "306a76446953faaf47a3c4a4ceb8a31386a5e26866f6489af4dbe7c666ab5f64"
+  },
+  "coreTests": {
+    "TeamWorkflowRunCommandTests": 13,
+    "TeamWorkflowRunTests": 13,
+    "TeamTemplateCommandTests": 22,
+    "TeamTemplateLibraryTests": 31,
+    "ProjectWorkflowsTests": 47,
+    "AccountRemovalTests": 11,
+    "passed": 137,
+    "failed": 0
+  },
+  "build": "arm64 Debug BUILD SUCCEEDED, signing disabled; compile only",
+  "verified": [
+    "Frozen encrypted request retained across lost reply/relaunch",
+    "Exact account/team/request/project/section/task-generation receipt match",
+    "Conditional clear and second-window request preservation",
+    "Unknown outcome and cleanup failure recovery",
+    "Account/window invalidation retains disk and clears presentation",
+    "Removal fence prevents writes; cleanup needs no decryption key",
+    "Separate AAD namespace; legacy template ciphertext compatibility",
+    "Private intercepted URLSession contract and streamed reply bound",
+    "Backend sign-out rejects its late HTTP reply; server errors sanitized"
+  ],
+  "initialCorrections": [
+    "Swift Set(JSON) replaced with validated identifier uniqueness",
+    "Async XCTest result awaited outside assertion autoclosure",
+    "Task project_id admitted as required creation metadata in strict root validator"
+  ],
+  "remaining": [
+    "Native destination/content/recovery views and Store runtime wiring",
+    "Actual app Keychain/process/account-window/spoken acceptance",
+    "Genuine hosted acceptance and rollout; wider Px scope"
+  ],
+  "hostedSchemaOrConfigChanged": false,
+  "evidenceDirectory": "team-workflow-run-client"
+}

@@ -68,49 +68,59 @@ typealias TeamTemplateCommandVault = ReviewedTeamCommandVault<TeamTemplateComman
 /// One bounded ciphertext per account/origin, outside portable backup contents.
 /// The process/removal locks are supplied by ReviewedTeamCommandVault. Only the
 /// key is in Keychain; no document or plaintext file is written there or on disk.
-struct TeamTemplateCommandFileIO: CalendarSecureItemIO {
+protocol ReviewedTeamFileCommand: ReviewedTeamCommand {
+    static var fileName: String { get }
+    static var encryptionContext: String { get }
+}
+extension TeamTemplateCommand: ReviewedTeamFileCommand {
+    static let fileName = "request.taskfoldteamtemplate"
+    static let encryptionContext = "com.taskfold.team-template-request.v1"
+}
+typealias TeamTemplateCommandFileIO = ReviewedTeamCommandFileIO<TeamTemplateCommand>
+
+struct ReviewedTeamCommandFileIO<Command: ReviewedTeamFileCommand>: CalendarSecureItemIO {
     let directory: URL
     let account: String, origin: String
     let encryptionKey: @Sendable () throws -> SymmetricKey
-    private var expectedKey: String { TeamTemplateCommand.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin) }
-    private var context: Data { Data(("com.taskfold.team-template-request.v1|" + expectedKey).utf8) }
-    var file: URL { directory.appendingPathComponent("request.taskfoldteamtemplate") }
-    private func validate(_ key: String) throws { try TeamOrganizationValue.scope(account: account, origin: origin); guard key == expectedKey else { throw TeamTemplateCommand.invalid } }
+    private var expectedKey: String { Command.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin) }
+    private var context: Data { Data((Command.encryptionContext + "|" + expectedKey).utf8) }
+    var file: URL { directory.appendingPathComponent(Command.fileName) }
+    private func validate(_ key: String) throws { try TeamOrganizationValue.scope(account: account, origin: origin); guard key == expectedKey else { throw Command.invalid } }
     private func directoryExists(create: Bool = false) throws -> Bool {
         var info = stat()
         if lstat(directory.path, &info) != 0 {
-            guard errno == ENOENT else { throw TeamTemplateCommand.invalid }
+            guard errno == ENOENT else { throw Command.invalid }
             if !create { return false }
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-            guard lstat(directory.path, &info) == 0 else { throw TeamTemplateCommand.invalid }
+            guard lstat(directory.path, &info) == 0 else { throw Command.invalid }
         }
-        guard info.st_mode & S_IFMT == S_IFDIR else { throw TeamTemplateCommand.invalid }
+        guard info.st_mode & S_IFMT == S_IFDIR else { throw Command.invalid }
         return true
     }
     func read(key: String) throws -> Data? {
         try validate(key); guard try directoryExists() else { return nil }
         let fd = Darwin.open(file.path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
-        if fd < 0 { if errno == ENOENT { return nil }; throw TeamTemplateCommand.invalid }
+        if fd < 0 { if errno == ENOENT { return nil }; throw Command.invalid }
         let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true); defer { try? handle.close() }
-        var info = stat(); let limit = TeamTemplateCommand.maximumStoredBytes + 1_024
-        guard fstat(fd, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_size > 0, info.st_size <= limit else { throw TeamTemplateCommand.invalid }
+        var info = stat(); let limit = Command.maximumStoredBytes + 1_024
+        guard fstat(fd, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_size > 0, info.st_size <= limit else { throw Command.invalid }
         var bytes = Data()
         while bytes.count <= limit {
             let chunk = try handle.read(upToCount: min(262_144, limit + 1 - bytes.count)) ?? Data()
             if chunk.isEmpty { break }; bytes.append(chunk)
         }
-        guard bytes.count == info.st_size, bytes.count <= limit else { throw TeamTemplateCommand.invalid }
+        guard bytes.count == info.st_size, bytes.count <= limit else { throw Command.invalid }
         let plain = try AES.GCM.open(AES.GCM.SealedBox(combined: bytes), using: encryptionKey(), authenticating: context)
-        guard plain.count <= TeamTemplateCommand.maximumStoredBytes else { throw TeamTemplateCommand.invalid }; return plain
+        guard plain.count <= Command.maximumStoredBytes else { throw Command.invalid }; return plain
     }
     func write(_ data: Data, key: String) throws {
-        try validate(key); guard data.count <= TeamTemplateCommand.maximumStoredBytes else { throw TeamTemplateCommand.invalid }
+        try validate(key); guard data.count <= Command.maximumStoredBytes else { throw Command.invalid }
         _ = try directoryExists(create: true)
         var info = stat()
-        if lstat(file.path, &info) == 0 { guard info.st_mode & S_IFMT == S_IFREG else { throw TeamTemplateCommand.invalid } }
-        else { guard errno == ENOENT else { throw TeamTemplateCommand.invalid } }
+        if lstat(file.path, &info) == 0 { guard info.st_mode & S_IFMT == S_IFREG else { throw Command.invalid } }
+        else { guard errno == ENOENT else { throw Command.invalid } }
         let sealed = try AES.GCM.seal(data, using: encryptionKey(), authenticating: context)
-        guard let bytes = sealed.combined else { throw TeamTemplateCommand.invalid }
+        guard let bytes = sealed.combined else { throw Command.invalid }
         try bytes.write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
         var privateDirectory = directory; var values = URLResourceValues(); values.isExcludedFromBackup = true; try privateDirectory.setResourceValues(values)
@@ -119,8 +129,8 @@ struct TeamTemplateCommandFileIO: CalendarSecureItemIO {
     func remove(key: String) throws {
         try validate(key); guard try directoryExists() else { return }
         var info = stat()
-        if lstat(file.path, &info) != 0 { guard errno == ENOENT else { throw TeamTemplateCommand.invalid }; return }
-        guard [S_IFREG, S_IFLNK].contains(info.st_mode & S_IFMT), Darwin.unlink(file.path) == 0 else { throw TeamTemplateCommand.invalid }
+        if lstat(file.path, &info) != 0 { guard errno == ENOENT else { throw Command.invalid }; return }
+        guard [S_IFREG, S_IFLNK].contains(info.st_mode & S_IFMT), Darwin.unlink(file.path) == 0 else { throw Command.invalid }
     }
 }
 

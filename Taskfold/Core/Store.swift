@@ -1097,6 +1097,16 @@ final class Store {
         let io = TeamTemplateCommandFileIO(directory: directory, account: account, origin: origin, encryptionKey: { try BackupVault.deviceKey(account: account) })
         return TeamTemplateCommandVault(io: io, coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: root)
     }
+    func teamWorkflowRunVault(account: String, origin: String) throws -> TeamWorkflowRunVault {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Shared workflow requests", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("origin", origin), isDirectory: true)
+        let io = TeamWorkflowRunFileIO(directory: directory, account: account, origin: origin, encryptionKey: { try BackupVault.deviceKey(account: account) })
+        return TeamWorkflowRunVault(io: io, coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: root)
+    }
     @ObservationIgnored lazy var teamProjectCommandVault = TeamProjectCommandVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-project-commands"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
     @ObservationIgnored lazy var teamTaskMoveVault = TeamTaskMoveVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-task-moves"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
     @ObservationIgnored lazy var projectAdoptionVault = TeamProjectAdoptionVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-project-adoption"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
@@ -1215,6 +1225,7 @@ final class Store {
         try await teamOrganizationCommandVault.removeAccount(account, origin: command.origin)
         try await teamProjectCommandVault.removeAccount(account, origin: command.origin)
         try await teamTemplateCommandVault(account: account, origin: command.origin).removeAccount(account, origin: command.origin)
+        try await teamWorkflowRunVault(account: account, origin: command.origin).removeAccount(account, origin: command.origin)
         try await teamTaskMoveVault.removeAccount(account, origin: command.origin)
         try await projectAdoptionVault.removeAccount(account, origin: command.origin)
         try await accountRemovalVault.finish(command)

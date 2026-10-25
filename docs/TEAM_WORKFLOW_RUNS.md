@@ -58,19 +58,42 @@ Swift-generated workflow envelope. Both Core suites pass 105 cases; both app
 Debug builds compile. These are local synthetic tests, not hosted HTTP or native
 save acceptance. No hosted migration/configuration or rollout changed.
 
+## Implemented durable client layer (source)
+
+`TeamWorkflowRunCommand` validates and freezes the complete plan/order envelope.
+Its decoder rejects unsupported or partial recovery; receipts must match the
+exact account, team, request, complete project/section identities and every task's
+identity, generation and project. The bounded HTTP method checks backend origin
+and account/session before publishing a reply, refuses redirects, disables
+cookies/cache storage and caps the streamed reply at 1 MB. Server messages are
+sanitized; authorization failures request sign-in instead of exposing raw text.
+
+`TeamWorkflowRunModel` saves before sending, retains unknown outcomes, and retries
+only the identical saved command. Disk clear is conditional on the original
+request. Account/window invalidation cancels the lease and drops presentation
+without dropping recovery. Stop retrying clears local retry intent, not cloud
+work. The new encrypted file lives under the account's backup directory, is
+excluded from backup, uses the existing backup key and removal/process locks,
+and has a separate filename/prefix/AAD from template-curation requests. The
+common file engine preserves the legacy template format byte-for-byte; tests
+open ciphertext sealed with the previous literal AAD. Store factory and account
+removal hooks compile in both apps.
+
+137 focused Core cases pass independently in each repo, including lost reply,
+relaunch, another window's request, invalid receipts, failed cleanup, access
+checks before/after save, removal fences, unreadable recovery, legacy ciphertext,
+actual intercepted HTTP and a real Backend sign-out during its reply. Both app
+builds compile. No native recovery/save UI or physical Keychain acceptance is
+claimed yet; no hosted request, schema/configuration or rollout changed.
+
 ## Required next implementation
 
-1. Use one durable account/origin-bound request and receipt for the entire run.
-   Freeze rows, dates, identifiers and destination ordering before sending;
-   lost replies/relaunch retry the same request. Match receipt identities and
-   source/destination context exactly. Recheck current access for receipt replay.
-   Conflicts require a fresh explicit review; no partial retry or silent rebase.
-2. Build native destination/content reviews in each app. Support audience and
+1. Build native destination/content reviews in each app. Support audience and
    folder/subproject choices, explicit start date, complete counts/content,
    changed-source recovery and account/window masking. Keep new team work out
    of the private writer. Existing project order needs an exact reviewed append
    policy that preserves work added by others.
-3. Finish native and genuine hosted acceptance; retain the isolated SQL regression suite:
+2. Finish native and genuine hosted acceptance; retain the isolated SQL regression suite:
 
    cancellation, complete creation, archived/revoked/changed source/destination,
    hierarchy/order/dates/labels/checklists, transport loss, relaunch/retry,
