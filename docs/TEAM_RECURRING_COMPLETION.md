@@ -289,3 +289,46 @@ large-selection responsiveness and genuine hosted acceptance remain open. This
 is not full rank-6 or Px completion. Teams rollout remains off; no hosted schema,
 configuration, real tasks/accounts, release signing or deferred provider/device
 work changed. Existing personal selection behavior stays on its original path.
+
+
+### 2026-10-25 — Whole-selection completion recovery service
+
+Added source-only review/cancellation RPCs for the exact saved completion or
+Undo/Redo batch. A group has one terminal status: unrecorded, recorded or
+cancelled. Every selected project/series must still be readable before any
+private receipt is inspected. Group and member identities, actor, action,
+history links and the complete original body are checked together. Nonce and
+task locks follow the existing writer's canonical order; current task rows are
+locked before gathering member observations.
+
+Review does not create ledger entries. Recorded groups return a complete replay
+receipt assembled from the existing strict member receipts. Cancellation of a
+recorded group returns that proof and does not Undo it. Cancellation of an
+unrecorded group atomically reserves its header/member nonces, links and private
+cancellation marker; task content is untouched. A completion that wins a race is
+returned as recorded; a cancellation that wins prevents all later exact or
+isolated-member execution. Retrying after a lost response recovers the same
+proof. Partial/pruned receipts refuse rather than inventing success. Viewers and
+archived projects can retire their own unrecorded intent with current read access;
+this confers no editing capability. Cancelling an unrecorded Undo does not consume
+the original completion's history link.
+
+Both independent repositories pass 348 actual isolated PostgreSQL checks: the
+prior 243 plus 105 recovery/cleanup checks. These cover exact read/retry proof,
+changed remote content, actor/role/session boundaries, malformed/partial requests,
+recorded completion/Undo/Redo, retired Undo and fresh Undo, late cancellation fault
+rollback, real completion-versus-cancellation contention, concurrent identical
+cancellations, private second-project refusal without partial content, read-access
+loss while waiting, archive/write-pause recovery, aggregate/request byte bounds,
+RLS/grants, pruned ledger refusal and actor/team deletion cleanup. Official
+Supabase advisors report no new warnings (existing auth_rls_initplan warnings
+remain). Both owned containers were removed. Actual own generated request/review
+examples are retained for the forthcoming native client parser.
+
+See p2-completion-batch-recovery-evidence.json and completion-batch-recovery/.
+This stage changes candidate SQL and its independent harnesses, not native app
+behavior. Whole-cohort local draft preservation, native review/refresh/retry/
+recorded-acknowledgement/cancellation UI, native Redo and Mac runtime acceptance,
+large-selection responsiveness and genuine hosted acceptance remain open. No
+schema was deployed, no rollout flag enabled, no real task/account changed and no
+user-deferred release/provider/device work resumed. The full Px goal stays open.

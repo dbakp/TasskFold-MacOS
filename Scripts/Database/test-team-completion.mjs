@@ -6,6 +6,7 @@ import {
   loadTeamCompletionSchema,
   teamCompletionMigration,
 } from "./team-completion-schema.mjs";
+if (process.env.TASKFOLD_TEAM_BATCH_RECOVERY_REGRESSION === '1') process.env.TASKFOLD_TEAM_COMPLETION_BATCH_REGRESSION = '1';
 if (process.env.TASKFOLD_TEAM_COMPLETION_BATCH_REGRESSION === '1') { process.env.TASKFOLD_TEAM_REBASE_REGRESSION = '1'; process.env.TASKFOLD_TEAM_PROVISIONAL_REGRESSION = '1'; }
 const report = {
   checks: {},
@@ -53,6 +54,11 @@ try {
     const {loadTeamCompletionBatchSchema, teamCompletionBatchMigration}=await import('./team-completion-batch-schema.mjs');
     await loadTeamCompletionBatchSchema(pg.raw,{base:false});
     report.batchMigrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+teamCompletionBatchMigration,import.meta.url))).digest('hex');
+  }
+  if (process.env.TASKFOLD_TEAM_BATCH_RECOVERY_REGRESSION === '1') {
+    const {loadTeamCompletionBatchRecoverySchema,teamCompletionBatchRecoveryMigration}=await import('./team-completion-batch-recovery-schema.mjs');
+    await loadTeamCompletionBatchRecoverySchema(pg.raw,{base:false});
+    report.batchRecoveryMigrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+teamCompletionBatchRecoveryMigration,import.meta.url))).digest('hex');
   }
   report.completionMigrationSHA256 = createHash("sha256").update(
     await readFile(
@@ -807,6 +813,10 @@ try {
     const {completionBatchChecks}=await import('./team-completion-batch-checks.mjs');
     report.batchFixture=await completionBatchChecks({pg,lit,json,check,run,rpc,row,create,body,users,team,project});
   }
+  if (process.env.TASKFOLD_TEAM_BATCH_RECOVERY_REGRESSION === '1') {
+    const {completionBatchRecoveryChecks}=await import('./team-completion-batch-recovery-checks.mjs');
+    report.batchRecoveryFixture=await completionBatchRecoveryChecks({pg,lit,json,check,run,rpc,row,create,body,users,team,project});
+  }
   await pg.raw(`delete from auth.users where id=${lit(users.editor.id)}`);
   check(
     "departed actor completion receipts erased",
@@ -844,6 +854,7 @@ try {
     check('completion batch actor/team cascade removed group receipts',await pg.scalar("select to_jsonb(count(*)) from taskfold_private.team_task_batches where operation in('complete','undo_complete')"),0);
     check('completion batch private scopes remain empty',await pg.scalar('select to_jsonb(count(*)) from taskfold_private.team_completion_batch_scope'),0);
   }
+  if (process.env.TASKFOLD_TEAM_BATCH_RECOVERY_REGRESSION === '1') check('completion group cancellations removed after actor/team deletion',await pg.scalar('select to_jsonb(count(*)) from taskfold_private.team_completion_batch_cancellations'),0);
   report.advisors = await pg.advisors();
   check(
     "no new advisor warnings",
