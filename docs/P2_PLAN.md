@@ -4,13 +4,13 @@ Updated 25 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Latest implementation: single shared-task deletion now has a captured native
-review from details and list actions, scoped durable save, existing Undo and
-conversation recovery. Unsaved editor work must be saved/discarded first, and a
-changed task or access boundary stops the confirmation. See
-`p2-team-deletion-evidence.json` for exact checks and remaining gates. Shared
-Repeat/reminder/label/assignment/checklist evidence remains in its stage files.
-Team rollout and broader live/Mac acceptance stay open.
+Latest implementation: shared-task creation uses the complete native editor and
+an explicit Add. Shared list selections now have a frozen, reviewed atomic deletion
+and linked Undo path in both apps. Missing or changed members stop the whole action;
+no personal/shared mixture is partially deleted. See `p2-team-creation-evidence.json`
+and `p2-team-selection-deletion-evidence.json` for verification scopes. Shared
+Repeat/reminder/label/assignment/checklist and single-deletion evidence remains in
+its stage files. Team rollout and broader live/Mac acceptance stay open.
 
 Rank 6 is active: source-custody and opening-time editor admission are in place.
 A gated native team overview now shows organization roles, folders and permitted
@@ -2944,3 +2944,53 @@ navigation was not accepted: the native-control tool again reported the Mac lock
 after the unlock reply; no repeated manual unlock was requested. Disposable apps,
 runners and owned temporary builds/results are removed after evidence capture;
 Core caches, baseline Simulator states and unrelated files remain intact.
+
+
+## Reviewed atomic shared-task deletion — 25 October 2026, rank 6 in progress
+
+Both apps now route shared root-task selections through an explicit review of
+every selected title and project. One immutable command deletes 2–100 tasks from
+one team, including linked repeat occurrences, through the existing atomic batch
+service. Projects and retained creators may differ. Single-task deletion keeps its
+separate review. No ordinary personal writer infers shared permission.
+
+Opening-time rows, member nonces, group nonce and access context remain frozen.
+Changed/missing/recreated tasks, role/token/session/workspace changes, duplicate or
+mixed selections, selected cycles and oversized requests stop the entire action.
+The review never drops a missing member, adopts a newer baseline, chunks a large
+selection or falls back to single-task writes. Both list entry points detect a
+previously known shared ID even after its row disappears, before any personal or
+nested recursive writer can run. A failed durable save keeps every task and the
+review intact. Failure messages are consumed inside the review, preserving retry.
+
+The existing atomic local projection, persisted queue, one RPC and receipt-scoped
+Undo/Redo own delivery. The actual native list check deletes a selected parent and
+occurrence while retaining an unselected occurrence, then restores the selected
+links with fresh generations through Undo. Queue identities and restored contents
+remain exact after relaunch. Task/project text is hidden when review is paused.
+
+Both independently owned repos pass 319 focused team Core cases with no failures
+or skips, including ten new selection/custody/bounds/linked-Undo cases. Each owned
+PostgreSQL fixture passes all 72 existing batch checks against the current complete
+workspace loader, including rollback, permissions, replay and discussion recovery;
+the fixtures remove their containers. No hosted schema/configuration or migration
+changed. Both Debug arm64 apps build; the Mac test helper omits widgets.
+
+Five new production-list scenarios plus the existing single-task failed-save
+regression pass on each iPhone/iPad Simulator: linked deletion/Undo/relaunch,
+Cancel, changed member, role loss, and failed save/retry. Eight screenshots are
+visually reviewed and retained with both complete six-test summaries by iOS. The
+initial native diagnostic used an identifier stripped by the system Menu; it now
+selects the real “Select tasks” label. Its failed collectors were terminated only
+after all cases ended and process samples confirmed diagnostic collection. An
+initial unit fixture also needed canonical sorting of randomly generated project
+IDs; no app validation was weakened. Final runs pass normally. Full non-team
+suites were not repeated after the immediately preceding creation milestone.
+
+Mac runtime/keyboard and spoken acceptance, wider native mixed/account/large-text/
+fault/concurrent cases and hosted lifecycle acceptance remain open. Task moves/
+adoption, templates/conversations/files, independent child records, remaining
+Watch/Wear OS and the full ranked Px objective stay in scope. Team rollout remains
+disabled; every user-deferred release/provider/remote-delivery dependency stays
+deferred. Owned test apps/runners and temporary builds/results are removed after
+evidence preservation; baseline Simulator states and Core caches remain intact.

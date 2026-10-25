@@ -104,3 +104,40 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
         snapshot=result;return true
     }
 }
+
+
+/// Opening-time authority for one reviewed selection. It is deliberately not
+/// Codable: durable retries carry the resulting command, never editor authority.
+struct TeamTaskDeletionSelection: Equatable, Sendable {
+    let drafts: [TeamTaskEditorDraft]
+    let requestID: UUID
+    private let memberRequests: [String: UUID]
+    init(drafts: [TeamTaskEditorDraft], requestID: UUID = UUID()) throws {
+        guard (2...100).contains(drafts.count), Set(drafts.map { $0.source.id }).count == drafts.count,
+              let first = drafts.first,
+              drafts.allSatisfy({ $0.kind == .existing && $0.workspace == first.workspace && $0.session == first.session &&
+                  $0.scope.account == first.scope.account && $0.scope.origin == first.scope.origin && $0.scope.team == first.scope.team && $0.accessToken == first.accessToken }) else {
+            throw AppFailure(message: "Choose between 2 and 100 tasks from one shared team. Nothing has been removed.")
+        }
+        let parents = Dictionary(uniqueKeysWithValues: drafts.map { ($0.source.id, $0.source.string("recurrence_parent_id")) })
+        for id in parents.keys {
+            var seen: Set<String> = [], cursor = id
+            while let parent = parents[cursor] {
+                guard seen.insert(cursor).inserted else { throw TeamTaskBatch.invalid }
+                cursor = parent
+            }
+        }
+        self.drafts = drafts.sorted { $0.source.id < $1.source.id }; self.requestID = requestID
+        memberRequests = Dictionary(uniqueKeysWithValues: drafts.map { ($0.source.id, UUID()) })
+    }
+    func mutation(current: [String: Record], workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) throws -> Mutation {
+        let items = try drafts.map { draft in
+            try draft.deletion(current: current[draft.source.id], workspace: workspace, session: session, cache: cache, enabled: enabled, requestID: memberRequests[draft.source.id]!)
+        }
+        let first = drafts[0].scope
+        let batch = TeamTaskBatch(account: first.account, origin: first.origin, team: first.team, operation: .delete, restores: nil, items: items)
+        let header = TeamTaskBatch.header(batch, id: requestID)
+        _ = try batch.body(for: header)
+        return header
+    }
+}

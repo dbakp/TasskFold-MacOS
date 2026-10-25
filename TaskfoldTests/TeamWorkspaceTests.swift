@@ -348,6 +348,132 @@ extension TeamWorkspaceTests {
         let revoked=try TeamWorkspaceCache(boundary:boundary("left"),previous:cache,pending:[])
         XCTAssertFalse(revoked.nativeConversationWritable(project:f["project"]!.text))
     }
+
+    private func deletionSelectionContext(count: Int = 3, notes: Int = 0) throws -> (TeamTaskDeletionSelection, TeamWorkspaceCache, [Record], WorkspaceBinding, UUID) {
+        let (_, cache, source, workspace, session) = try editorContext()
+        var rows: [Record] = []
+        for index in 0..<count {
+            var row = source; row["id"] = .string(String(format: "ea350000-0000-4000-8000-%012d", index + 100))
+            row["title"] = .string("Shared selection \(index + 1)")
+            if notes > 0 { row["description"] = .string(String(repeating: "n", count: notes)) }
+            if index > 0 { row["recurrence_parent_id"] = rows[0]["id"] }
+            rows.append(row)
+        }
+        let drafts = try rows.prefix(2).map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) }
+        return (try TeamTaskDeletionSelection(drafts: drafts), cache, rows, workspace, session)
+    }
+    func testDeletionSelectionFreezesWholeRowsAndAllRequestIdentitiesAcrossRetry() throws {
+        let (selection, cache, rows, workspace, session) = try deletionSelectionContext()
+        let current = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0) })
+        let first = try selection.mutation(current: current, workspace: workspace, session: session, cache: cache, enabled: true)
+        XCTAssertEqual(first, try selection.mutation(current: current, workspace: workspace, session: session, cache: cache, enabled: true))
+        let batch = try XCTUnwrap(first.teamTaskBatch)
+        XCTAssertEqual(first.id, selection.requestID); XCTAssertEqual(first.method, "TEAM_BATCH")
+        XCTAssertEqual(batch.items.count, 2); XCTAssertEqual(batch.items.map(\.recordID), Array(rows.prefix(2)).map(\.id).sorted())
+        XCTAssertEqual(Set(batch.items.map(\.id)).count, 2); XCTAssertFalse(batch.items.map(\.id).contains(first.id))
+        for item in batch.items { XCTAssertEqual(item.baseline, current[item.recordID]?.fields); XCTAssertEqual(item.teamTaskScope?.account, workspace.account) }
+        XCTAssertFalse(batch.items.contains { $0.recordID == rows[2].id }, "Review never expands to an unselected occurrence")
+        XCTAssertEqual(try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(first)), first)
+    }
+    func testDeletionSelectionAppliesTogetherAndUndoKeepsSelectedLinksAndUnselectedWork() throws {
+        let (selection, cache, rows, workspace, session) = try deletionSelectionContext()
+        let change = try selection.mutation(current: Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0) }), workspace: workspace, session: session, cache: cache, enabled: true)
+        var snapshot = Snapshot(tables: ["tasks": rows, "projects": [Record(["id": rows[0]["project_id"]])]])
+        let history = EditHistory(changes: [change], snapshot: snapshot)
+        snapshot.apply(change)
+        XCTAssertEqual(snapshot.tables["tasks"]?.map(\.id), [rows[2].id]); XCTAssertEqual(snapshot.tables["tasks"]?.first?["recurrence_parent_id"], .null)
+        XCTAssertEqual(snapshot.tables["tasks"]?.first?["task_generation"], rows[2]["task_generation"])
+        let undo = try XCTUnwrap(history.undo.first); XCTAssertEqual(undo.teamTaskBatch?.restores, change.id)
+        snapshot.apply(undo)
+        XCTAssertEqual(Set(snapshot.tables["tasks"]!.map(\.id)), Set(rows.map(\.id)))
+        let restored = snapshot.tables["tasks"]!.first { $0.id == rows[1].id }!
+        XCTAssertEqual(restored["recurrence_parent_id"], rows[0]["id"]); XCTAssertNotEqual(restored["task_generation"], rows[1]["task_generation"])
+    }
+    func testDeletionSelectionRefusesAnyMissingChangedOrRecreatedMemberAsAWhole() throws {
+        let (selection, cache, rows, workspace, session) = try deletionSelectionContext()
+        let current = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0) })
+        for key in ["title", "description", "user_id", "project_id", "task_generation", "opaque_future"] {
+            var changed = current; changed[rows[1].id]![key] = .string("Changed elsewhere")
+            XCTAssertThrowsError(try selection.mutation(current: changed, workspace: workspace, session: session, cache: cache, enabled: true), key)
+            XCTAssertEqual(current[rows[0].id], rows[0])
+        }
+        var missing = current; missing.removeValue(forKey: rows[1].id)
+        XCTAssertThrowsError(try selection.mutation(current: missing, workspace: workspace, session: session, cache: cache, enabled: true))
+    }
+    func testDeletionSelectionRefusesWorkspaceSessionRoleAndRolloutChanges() throws {
+        let (selection, cache, rows, workspace, session) = try deletionSelectionContext()
+        let current = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0) })
+        let viewer = try TeamWorkspaceCache(boundary: boundary("viewer"), previous: cache, pending: [], tasks: rows)
+        XCTAssertThrowsError(try selection.mutation(current: current, workspace: workspace, session: session, cache: viewer, enabled: true))
+        XCTAssertThrowsError(try selection.mutation(current: current, workspace: .init(account: workspace.account, generation: UUID()), session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try selection.mutation(current: current, workspace: workspace, session: UUID(), cache: cache, enabled: true))
+        XCTAssertThrowsError(try selection.mutation(current: current, workspace: workspace, session: session, cache: cache, enabled: false))
+    }
+    func testDeletionSelectionRefusesDuplicateEmptySingleAndCreationAdmissions() throws {
+        let (selection, _, _, _, _) = try deletionSelectionContext()
+        XCTAssertThrowsError(try TeamTaskDeletionSelection(drafts: []))
+        XCTAssertThrowsError(try TeamTaskDeletionSelection(drafts: [selection.drafts[0]]))
+        XCTAssertThrowsError(try TeamTaskDeletionSelection(drafts: [selection.drafts[0], selection.drafts[0]]))
+        let (creation, _, _, _, _) = try creationContext()
+        XCTAssertThrowsError(try TeamTaskDeletionSelection(drafts: [selection.drafts[0], creation]))
+        XCTAssertThrowsError(try TeamTaskDeletionSelection(drafts: Array(repeating: selection.drafts[0], count: 101)))
+    }
+    func testDeletionSelectionRefusesMixedOpeningSessionAndWorkspace() throws {
+        let (selection, cache, rows, workspace, session) = try deletionSelectionContext()
+        let foreign = try TeamTaskEditorDraft(source: rows[1], workspace: workspace, session: UUID(), cache: cache, enabled: true)
+        XCTAssertThrowsError(try TeamTaskDeletionSelection(drafts: [selection.drafts[0], foreign]))
+        let other = try TeamTaskEditorDraft(source: rows[1], workspace: .init(account: workspace.account, generation: UUID()), session: session, cache: cache, enabled: true)
+        XCTAssertThrowsError(try TeamTaskDeletionSelection(drafts: [selection.drafts[0], other]))
+    }
+    func testDeletionSelectionRejectsCyclesAndOverlargeWholePayloadWithoutTruncation() throws {
+        let (_, cache, rows, workspace, session) = try deletionSelectionContext()
+        var cyclic = rows; cyclic[0]["recurrence_parent_id"] = cyclic[1]["id"]
+        let drafts = try cyclic.prefix(2).map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) }
+        XCTAssertThrowsError(try TeamTaskDeletionSelection(drafts: drafts))
+        let (_, largeCache, largeRows, binding, incarnation) = try deletionSelectionContext(count: 17, notes: 96000)
+        let largeDrafts = try largeRows.map { try TeamTaskEditorDraft(source: $0, workspace: binding, session: incarnation, cache: largeCache, enabled: true) }
+        let large = try TeamTaskDeletionSelection(drafts: largeDrafts)
+        XCTAssertThrowsError(try large.mutation(current: Dictionary(uniqueKeysWithValues: largeRows.map { ($0.id, $0) }), workspace: binding, session: incarnation, cache: largeCache, enabled: true))
+        XCTAssertEqual(large.drafts.count, 17); XCTAssertEqual(large.drafts[0].source.string("description").count, 96000)
+    }
+    func testDeletionSelectionAllowsDifferentProjectsOnlyInsideSameCurrentTeam() throws {
+        let (_, cache, rows, workspace, session) = try deletionSelectionContext()
+        let otherProject = UUID().uuidString.lowercased()
+        var raw = cache.boundary.raw, projects = raw["projects"]!.list
+        var permission = projects.first { $0.object["id"] == rows[0]["project_id"] }!.object
+        permission["id"] = .string(otherProject); projects.append(.object(permission)); raw["projects"] = .array(projects.sorted { $0.object["id"]!.text < $1.object["id"]!.text })
+        let boundary = try TeamWorkspaceBoundary(raw, account: workspace.account, origin: cache.boundary.origin)
+        var across = rows; across[1]["project_id"] = .string(otherProject)
+        let newCache = try TeamWorkspaceCache(boundary: boundary, previous: cache, pending: [], tasks: across)
+        let drafts = try across.prefix(2).map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: newCache, enabled: true) }
+        let selection = try TeamTaskDeletionSelection(drafts: drafts)
+        let change = try selection.mutation(current: Dictionary(uniqueKeysWithValues: across.map { ($0.id, $0) }), workspace: workspace, session: session, cache: newCache, enabled: true)
+        XCTAssertEqual(Set(change.teamTaskBatch!.items.map { $0.teamTaskScope!.project }).count, 2)
+        permission["role"] = .string("viewer"); permission["can_send_tasks"] = .bool(false); projects[projects.count - 1] = .object(permission); raw["projects"] = .array(projects.sorted { $0.object["id"]!.text < $1.object["id"]!.text })
+        let reduced = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: workspace.account, origin: cache.boundary.origin), previous: newCache, pending: [], tasks: across)
+        XCTAssertThrowsError(try selection.mutation(current: Dictionary(uniqueKeysWithValues: across.map { ($0.id, $0) }), workspace: workspace, session: session, cache: reduced, enabled: true))
+    }
+    func testDeletionSelectionAcceptsHundredUniqueTasksAndRefusesTheHundredAndFirst() throws {
+        let (_, cache, rows, workspace, session) = try deletionSelectionContext(count: 101)
+        let drafts = try rows.map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) }
+        XCTAssertThrowsError(try TeamTaskDeletionSelection(drafts: drafts))
+        let selection = try TeamTaskDeletionSelection(drafts: Array(drafts.prefix(100)))
+        let change = try selection.mutation(current: Dictionary(uniqueKeysWithValues: rows.map { ($0.id, $0) }), workspace: workspace, session: session, cache: cache, enabled: true)
+        XCTAssertEqual(change.teamTaskBatch?.items.count, 100)
+    }
+    func testDeletionSelectionRefusesAnotherTeamEvenWithCurrentEditorRights() throws {
+        let (selection, cache, rows, workspace, session) = try deletionSelectionContext()
+        let otherTeam = UUID().uuidString.lowercased(), otherProject = UUID().uuidString.lowercased()
+        var raw = cache.boundary.raw, teams = raw["teams"]!.list, projects = raw["projects"]!.list
+        var team = teams[0].object; team["id"] = .string(otherTeam); teams.append(.object(team)); raw["teams"] = .array(teams.sorted { $0.object["id"]!.text < $1.object["id"]!.text })
+        var permission = projects.first { $0.object["id"] == rows[0]["project_id"] }!.object
+        permission["id"] = .string(otherProject); permission["team_id"] = .string(otherTeam); projects.append(.object(permission)); raw["projects"] = .array(projects.sorted { $0.object["id"]!.text < $1.object["id"]!.text })
+        let boundary = try TeamWorkspaceBoundary(raw, account: workspace.account, origin: cache.boundary.origin)
+        let changedCache = try TeamWorkspaceCache(boundary: boundary, previous: cache, pending: [], tasks: rows)
+        var other = rows[1]; other["project_id"] = .string(otherProject)
+        let foreign = try TeamTaskEditorDraft(source: other, workspace: workspace, session: session, cache: changedCache, enabled: true)
+        XCTAssertThrowsError(try TeamTaskDeletionSelection(drafts: [selection.drafts[0], foreign]))
+    }
     private func creationContext() throws -> (TeamTaskEditorDraft, TeamWorkspaceCache, Record, WorkspaceBinding, UUID) {
         let (_, cache, existing, workspace, session) = try editorContext()
         var row = Record.task(user: workspace.account, project: existing.string("project_id"))

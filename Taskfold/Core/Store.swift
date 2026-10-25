@@ -379,6 +379,26 @@ final class Store {
             return commit([change])
         } catch { self.error = error.localizedDescription; return false }
     }
+    func captureTeamTaskDeletionSelection(_ records: [Record]) throws -> TeamTaskDeletionSelection {
+        guard (2...100).contains(records.count), Set(records.map(\.id)).count == records.count,
+              records.allSatisfy({ nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil }) else {
+            throw AppFailure(message: "Choose between 2 and 100 tasks from one shared team. Nothing has been removed.")
+        }
+        let selection = try TeamTaskDeletionSelection(drafts: records.map { try captureTeamTaskEditor($0) })
+        _ = try reviewedTeamTaskDeletionSelection(selection)
+        return selection
+    }
+    func reviewedTeamTaskDeletionSelection(_ selection: TeamTaskDeletionSelection) throws -> Mutation {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache,
+              selection.drafts.allSatisfy({ $0.scope.origin == (try? backend.accountRemovalOrigin) }) else { throw TeamTaskEditorDraft.unavailable }
+        let current = Dictionary(uniqueKeysWithValues: selection.drafts.compactMap { draft in record("tasks", id: draft.source.id).map { (draft.source.id, $0) } })
+        return try selection.mutation(current: current, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+    }
+    @discardableResult func deleteTeamTaskSelection(_ selection: TeamTaskDeletionSelection) -> Bool {
+        do { return commit([try reviewedTeamTaskDeletionSelection(selection)]) }
+        catch { self.error = error.localizedDescription; return false }
+    }
     /// Both review and commit use the original admission; no fresh authority or
     /// source baseline is acquired by a confirmation sheet.
     func reviewedTeamTaskDeletion(_ draft: TeamTaskEditorDraft, requestID: UUID) throws -> Mutation {
@@ -2992,6 +3012,17 @@ extension Store {
                 if ProcessInfo.processInfo.arguments.contains("--team-repeat-future") { row["recurrence_pattern"] = .object(["type": .string("hourly"), "future": .bool(true)]) }
             }
             tasks[0] = row
+            if ProcessInfo.processInfo.arguments.contains("--team-batch-testing") {
+                var next = Record.task(user: row.string("user_id"), project: TeamEditorNativeFixture.projectID)
+                next["id"] = .string("ec240000-0000-4000-8000-000000000031")
+                next["title"] = .string("Next workshop review"); next["description"] = .string("Keep the selected occurrence notes")
+                next["recurrence_parent_id"] = row["id"]
+                var later = Record.task(user: row.string("user_id"), project: TeamEditorNativeFixture.projectID)
+                later["id"] = .string("ec240000-0000-4000-8000-000000000032")
+                later["title"] = .string("Later workshop review"); later["description"] = .string("Keep this unselected occurrence")
+                later["recurrence_parent_id"] = row["id"]
+                tasks += [next, later]
+            }
             snapshot = Snapshot(tables: ["tasks": tasks, "projects": projects, "labels": labels])
             snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: nil, pending: [], tasks: [row])
             try persist()

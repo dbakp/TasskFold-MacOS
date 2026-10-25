@@ -26,13 +26,18 @@ const team = randomUUID(), project = randomUUID(), other = randomUUID();
 let pg;
 try {
   pg = await createPostgresFixture({ advisors: true });
-  await loadTeamBatchSchema(pg.raw);
+  const currentWorkspace = process.env.TASKFOLD_TEAM_CURRENT_BATCH_REGRESSION === "1";
+  if (currentWorkspace) {
+    const { loadTeamWorkspaceSchema } = await import("./team-workspace-schema.mjs");
+    await loadTeamWorkspaceSchema(pg.raw);
+    report.currentWorkspaceSchema = true;
+  } else { await loadTeamBatchSchema(pg.raw); }
   report.migrationSHA256 = createHash("sha256").update(
     await readFile(
       new URL("../../supabase/migrations/" + migration, import.meta.url),
     ),
   ).digest("hex");
-  if (process.env.TASKFOLD_TEAM_PLANNING_REGRESSION === "1") {
+  if (!currentWorkspace && process.env.TASKFOLD_TEAM_PLANNING_REGRESSION === "1") {
     const { loadTeamPlanningSchema, teamPlanningMigration } = await import(
       "./team-planning-schema.mjs"
     );
@@ -46,7 +51,7 @@ try {
       ),
     ).digest("hex");
   }
-  if (process.env.TASKFOLD_TEAM_CHECKLIST_REGRESSION === "1") {
+  if (!currentWorkspace && process.env.TASKFOLD_TEAM_CHECKLIST_REGRESSION === "1") {
     if (process.env.TASKFOLD_TEAM_PLANNING_REGRESSION !== "1") {
       throw new Error("Checklist regression requires planning");
     }
@@ -63,7 +68,7 @@ try {
       ),
     ).digest("hex");
   }
-  if (process.env.TASKFOLD_TEAM_COMPLETION_REGRESSION === "1") {
+  if (!currentWorkspace && process.env.TASKFOLD_TEAM_COMPLETION_REGRESSION === "1") {
     if (process.env.TASKFOLD_TEAM_CHECKLIST_REGRESSION !== "1") {
       throw new Error("Completion regression requires checklist schema");
     }

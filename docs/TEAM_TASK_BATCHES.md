@@ -56,8 +56,8 @@ widget/reminder/callback protections.
 
 A selection too large for the bounded request is held before local application.
 Conflict, access-change, expiry and transport failures retain the complete saved
-selection. The remaining team workspace and review interface must be integrated
-before enabling the feature. The catalog still reports task editing unavailable.
+selection. The native selection review is now connected, as described below.
+Team rollout remains disabled pending the remaining native/live and rollout gates.
 
 ## Evidence and remaining work
 
@@ -83,3 +83,31 @@ real task write, app launch or enabled team UI is claimed. Remaining task/commen
 mention/file/API/email adapters, current-role workspace refresh, premium team
 organization/review UI and full privacy/recovery acceptance remain required.
 Watch/Wear OS, wider Px and all user deferrals retain scope.
+
+
+## Reviewed native selections — 25 October 2026
+
+Both apps capture a non-serializable opening admission for 2–100 distinct root
+tasks from one shared team; projects and retained task creators may differ. The
+review lists every selected task and project. It explains shared deletion,
+linked-occurrence preservation and the device's existing Undo. Personal/shared,
+nested/root, cross-team, duplicate and oversized selections are refused as a whole.
+A selected task that disappears cannot be silently dropped from the action.
+
+All source rows and member/group nonces are frozen before presentation. Preview,
+confirmation and local retry require the same account/server/workspace/session,
+access token and current editor permissions. Every selected row must still match
+its opening contents, and selected parent cycles are refused. The complete bounded
+command is checked before local application; it is never chunked or truncated.
+The existing single RPC, atomic projection, durable queue and receipt-scoped
+Undo/Redo remain responsible for delivery. Later access/transport conflicts retain
+the complete queued group. A failed local save keeps the review and tasks intact.
+
+The native list actions enter this review before the personal/hierarchy writers.
+The single-task review remains separate, and its failed-save handling now consumes
+the error inside the review instead of leaving a competing workspace alert. No
+stored/wire contract or migration was added. `test-team-task-batches.mjs` can now
+run its existing real PostgreSQL checks against the current workspace loader via
+`TASKFOLD_TEAM_CURRENT_BATCH_REGRESSION=1`; its original fixture mode is preserved.
+Exact current verification and remaining gates are in
+`p2-team-selection-deletion-evidence.json`.

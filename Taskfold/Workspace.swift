@@ -375,6 +375,30 @@ final class Workspace {
         confirm(open.isEmpty ? "Reopened \(items.count) tasks" : "Completed \(items.count) tasks")
     }
     func delete(_ ids: Set<String>) {
+        let requested = ids.compactMap { taskRecord($0) }
+        let shared = ids.contains { id in
+            let rootID = Self.subtaskPath(id)?.first ?? id
+            let root = store.record("tasks", id: rootID)
+            return store.nativeConversationTeamCache?.knownTasks.contains(rootID) == true || root.map { store.nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true
+        }
+        if shared, requested.count != ids.count { store.error = TeamTaskBatch.conflict.localizedDescription; return }
+        if shared, ids.count > 1 || ids.contains(where: { Self.subtaskPath($0) != nil }) {
+            do {
+                guard requested.count == ids.count, !ids.contains(where: { Self.subtaskPath($0) != nil }) else { throw TeamTaskBatch.invalid }
+                let captured = try store.captureTeamTaskDeletionSelection(requested)
+                teamTaskDeletion = TeamTaskDeletionRequest(selection: captured, current: { [weak self] in self.map { captured.drafts[0].workspace.matches(account: $0.store.userID, generation: $0.store.workspaceGeneration) } ?? false }, perform: { [weak self] in
+                    guard let self else { return false }; var saved = false
+                    self.run("Delete Shared Tasks") { saved = self.store.deleteTeamTaskSelection(captured) }
+                    return saved
+                }, completed: { [weak self] in
+                    guard let self else { return }
+                    self.teamTaskDeletion = nil; self.selection.subtract(ids)
+                    if let id = self.finderTaskID, ids.contains(id) { self.finderTaskID = nil }
+                    self.confirm("Deleted \(captured.drafts.count) tasks")
+                })
+            } catch { store.error = error.localizedDescription }
+            return
+        }
         if ids.count == 1, let id = ids.first, Self.subtaskPath(id) == nil, let task = store.record("tasks", id: id),
            (store.nativeConversationTeamCache?.knownTasks.contains(id) == true || store.nativeConversationTeamCache?.knownTeams[task.string("project_id")] != nil) {
             do {
