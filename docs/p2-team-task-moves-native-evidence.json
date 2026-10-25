@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-25",
+  "repository": "TasskFold-MacOS",
+  "status": "native single shared-task move implementation; acceptance scoped; rank 6 and Px incomplete",
+  "rolloutEnabled": false,
+  "hostedChanges": false,
+  "realUserDataChanged": false,
+  "sourceSHA256": {
+    "Taskfold/Core/TeamTaskMove.swift": "f6347d42f048d7fc07281e9dbf83ed3d8e8356880dcafb6c515a825cfb4e22b7",
+    "Taskfold/Core/Store.swift": "dd9f23e06c878dda5315c97c7d63061db129647f3e507400a7a1726b909c6090",
+    "Taskfold/Views/TeamTaskMoveView.swift": "0265622f6274d692289b8a809731c28f291b81bb0202eef2d62001f995bc52d1"
+  },
+  "core": {
+    "filter": "Team",
+    "tests": 340,
+    "moveTests": 21,
+    "failures": 0,
+    "skips": 0
+  },
+  "nativeBuild": {
+    "result": "succeeded",
+    "configuration": "isolated Debug arm64",
+    "macWidgetExtensionIncluded": false
+  },
+  "simulator": {
+    "appRepository": "TaskFold-iOS",
+    "phonePassed": 6,
+    "tabletPassed": 6,
+    "nativeControls": true,
+    "service": "File-backed synthetic peer; HTTP intercepted; independent server/cache assertions",
+    "screenshotsOwner": "TaskFold-iOS",
+    "evidencePath": "docs/evidence/team-task-moves-ui",
+    "genuineHostedAcceptance": false,
+    "companionCommit": "cd085346f452cdfb248c8bf195253c64bf292a9f"
+  },
+  "diagnostic": "Initial fixture omitted section_id; SQL rows contain explicit null. Corrected fixture; exact whole-record Undo assertion retained. Final six-case runs pass.",
+  "remaining": [
+    "Personal-project adoption and broader ranked Px",
+    "Shared batches/cross-team and provider-bound file transfer",
+    "General keyboard Undo/Redo integration",
+    "Mac runtime, spoken and wider native fault/layout/account/window acceptance",
+    "Genuine hosted lifecycle acceptance"
+  ],
+  "visualReview": {
+    "screenshots": 6,
+    "defaultLightLayoutInspected": true,
+    "phoneAndTabletLabelsReadable": true,
+    "tabletConfirmationUsesNormalFormScrolling": true,
+    "macRuntimeInferred": false
+  },
+  "testCopyReceipt": {
+    "namespace": "workflowteststeameditbridge",
+    "teamRolloutInCopyOnly": true,
+    "network": "All HTTP intercepted; task moves use the reserved DEBUG file-backed peer with --team-move-testing",
+    "files": {
+      "Taskfold/Core/Store.swift": "2eba0e88f3d1d4833fd0ea5711dff22cd442916bae5cb573a22efa4da403b74b",
+      "Taskfold/Core/Backups.swift": "5f777122a215c02967c48fb7c4e2b9d6e1f95b4004728976e1ef7f7164faec21",
+      "Taskfold/Core/Backend.swift": "d085f9638f1f8fa2aedfdb08ff302bbb02ba7a160a9a42a0e542305ee8a45f3b",
+      "Taskfold/Info.plist": "33953091b7e759f83f134886e32f9dad933f78b190fae1317e5a74c676fb5679",
+      "Taskfold/Views/TeamTaskMoveView.swift": "0265622f6274d692289b8a809731c28f291b81bb0202eef2d62001f995bc52d1",
+      "Taskfold/Core/TeamTaskMove.swift": "f6347d42f048d7fc07281e9dbf83ed3d8e8356880dcafb6c515a825cfb4e22b7"
+    }
+  },
+  "cleanup": {
+    "ownedRootsRemoved": 31,
+    "allocatedBytesRemoved": 1461501952,
+    "remainingOwnedRoots": 0,
+    "testAppsAndRunnersUninstalledOnBothSimulators": true,
+    "isolatedTaskfoldProcessesRemaining": 0,
+    "baselineBootedSimulatorsPreserved": [
+      "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378"
+    ],
+    "coreCachesAndUnrelatedFilesPreserved": true
+  }
+}

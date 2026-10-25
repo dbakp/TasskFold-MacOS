@@ -107,7 +107,102 @@ struct TeamTaskMoveReceipt: Equatable, Sendable {
         return try TeamTaskMoveScope(account: s.account, origin: s.origin, team: s.team, task: s.task, generation: s.generation, source: s.destination, destination: s.source, undoes: command.id)
     }
 }
-typealias TeamTaskMoveVault = ReviewedTeamCommandVault<TeamTaskMoveCommand>
+/// Recent accepted moves and the pending request share one atomic private
+/// envelope. Confirmation cannot clear retry data without also preserving Undo.
+struct TeamTaskMoveHistoryEntry: Codable, Equatable, Sendable, Identifiable {
+    let id: String
+    var latest: TeamTaskMoveCommand
+    var acknowledged: [String]
+    var isUndone: Bool
+    func inverseScope() throws -> TeamTaskMoveScope {
+        let s = latest.scope
+        return try TeamTaskMoveScope(account: s.account, origin: s.origin, team: s.team, task: s.task, generation: s.generation, source: s.destination, destination: s.source, undoes: latest.id)
+    }
+}
+actor TeamTaskMoveVault {
+    struct State: Codable, Equatable, Sendable {
+        var version = 1
+        var pending: TeamTaskMoveCommand?
+        var history: [TeamTaskMoveHistoryEntry] = []
+    }
+    private struct Legacy: Codable { let version: Int; let command: TeamTaskMoveCommand }
+    private let io: any CalendarSecureItemIO
+    private let lock: AutomationEnrollmentProcessLock
+    private let removalDirectory: URL?
+    init(io: any CalendarSecureItemIO, coordinationDirectory: URL? = nil, removalDirectory: URL? = nil) {
+        precondition(!(io is CalendarKeychainIO) || (coordinationDirectory != nil && removalDirectory != nil))
+        self.io = io; lock = AutomationEnrollmentProcessLock(directory: coordinationDirectory); self.removalDirectory = removalDirectory
+    }
+    private func key(_ account: String, _ origin: String) throws -> String {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        return TeamTaskMoveCommand.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin)
+    }
+    private func guarded<T>(_ account: String, _ action: () throws -> T) throws -> T {
+        if let removalDirectory { return try AccountRemovalDisk(directory: removalDirectory, account: account).writable(action) }; return try action()
+    }
+    private func read(_ account: String, _ origin: String) throws -> State {
+        guard let data = try io.read(key: key(account, origin)) else { return State() }
+        guard data.count <= 512_000 else { throw TeamTaskMoveCommand.invalid }
+        let value: State
+        if let state = try? JSONDecoder().decode(State.self, from: data) { value = state }
+        else if let old = try? JSONDecoder().decode(Legacy.self, from: data), old.version == 1, data.count <= 20_000 { value = State(pending: old.command) }
+        else { throw TeamTaskMoveCommand.invalid }
+        let commands = value.history.map(\.latest) + (value.pending.map { [$0] } ?? [])
+        guard value.version == 1, value.history.count <= 20, Set(value.history.map(\.id)).count == value.history.count,
+              commands.allSatisfy({ $0.account == account && $0.origin == origin }),
+              value.history.allSatisfy({ TeamProjectValue.id($0.id) && !$0.acknowledged.isEmpty && $0.acknowledged.count <= 100 && Set($0.acknowledged).count == $0.acknowledged.count && $0.acknowledged.allSatisfy(TeamProjectValue.id) && $0.acknowledged.contains($0.latest.id) }) else { throw TeamTaskMoveCommand.invalid }
+        return value
+    }
+    private func save(_ state: State, _ account: String, _ origin: String, _ lease: CalendarReadLease) throws {
+        try lease.check()
+        if state.pending == nil && state.history.isEmpty { try io.remove(key: key(account, origin)); return }
+        let data = try JSONEncoder().encode(state); guard data.count <= 512_000 else { throw TeamTaskMoveCommand.invalid }
+        try lease.check(); try io.write(data, key: key(account, origin))
+    }
+    func state(account: String, origin: String) throws -> State {
+        try lock.withExclusive(account: account) { try guarded(account) { try read(account, origin) } }
+    }
+    func pending(account: String, origin: String) throws -> TeamTaskMoveCommand? { try state(account: account, origin: origin).pending }
+    func begin(_ command: TeamTaskMoveCommand, lease: CalendarReadLease) throws {
+        try lock.withExclusive(account: command.account, check: { try lease.check() }) { try guarded(command.account) {
+            var state = try read(command.account, command.origin)
+            if let old = state.pending { guard old == command else { throw TeamTaskMoveCommand.invalid }; return }
+            guard !state.history.contains(where: { $0.acknowledged.contains(command.id) || $0.id == command.id }) else { throw TeamTaskMoveCommand.invalid }
+            state.pending = command; try save(state, command.account, command.origin, lease)
+        } }
+    }
+    func confirm(_ command: TeamTaskMoveCommand, lease: CalendarReadLease) throws {
+        try lock.withExclusive(account: command.account, check: { try lease.check() }) { try guarded(command.account) {
+            var state = try read(command.account, command.origin)
+            let known = state.history.contains { $0.id == command.id || $0.acknowledged.contains(command.id) }
+            if state.pending == nil && known { return }
+            guard state.pending == command else { throw CancellationError() }
+            if !known {
+                if let related = command.scope.undoes, let index = state.history.firstIndex(where: { $0.latest.id == related }) {
+                    var entry = state.history.remove(at: index); entry.latest = command; entry.isUndone.toggle()
+                    entry.acknowledged = Array((entry.acknowledged + [command.id]).suffix(100)); state.history.append(entry)
+                } else {
+                    guard command.scope.undoes == nil || !state.history.contains(where: { $0.id == command.scope.undoes || $0.acknowledged.contains(command.scope.undoes ?? "") }) else { throw TeamTaskMoveCommand.invalid }
+                    state.history.append(TeamTaskMoveHistoryEntry(id: command.id, latest: command, acknowledged: [command.id], isUndone: command.scope.undoes != nil))
+                }
+            }
+            state.history = Array(state.history.suffix(20)); state.pending = nil
+            try save(state, command.account, command.origin, lease)
+        } }
+    }
+    /// Clearing a reviewed retry never erases accepted history or undoes a move.
+    func clear(_ command: TeamTaskMoveCommand, lease: CalendarReadLease) throws {
+        try lock.withExclusive(account: command.account, check: { try lease.check() }) { try guarded(command.account) {
+            var state = try read(command.account, command.origin)
+            guard let old = state.pending else { return }; guard old == command else { throw CancellationError() }
+            state.pending = nil; try save(state, command.account, command.origin, lease)
+        } }
+    }
+    func removeAccount(_ account: String, origin: String) throws {
+        try lock.withExclusive(account: account) { try io.remove(key: key(account, origin)) }
+    }
+}
+
 @MainActor protocol TeamTaskMoveService: AnyObject {
     func teamTaskMoveReview(_ scope: TeamTaskMoveScope) async throws -> TeamTaskMoveReview
     func teamTaskMove(_ command: TeamTaskMoveCommand) async throws -> TeamTaskMoveReceipt
@@ -119,6 +214,7 @@ extension Backend: TeamTaskMoveService {}
 /// already accepted request, but refuses a first application of an expired one.
 @MainActor @Observable final class TeamTaskMoveModel {
     private(set) var pending: TeamTaskMoveCommand?
+    private(set) var history: [TeamTaskMoveHistoryEntry] = []
     private(set) var receipt: TeamTaskMoveReceipt?
     private(set) var busy = false
     private(set) var message: String?
@@ -132,8 +228,8 @@ extension Backend: TeamTaskMoveService {}
         self.account = account; self.origin = origin; self.vault = vault; self.service = service; self.isCurrent = isCurrent
     }
     private func check() throws { try lease.check(); guard !closed, isCurrent() else { throw CancellationError() } }
-    func close() { closed = true; lease.cancel(); pending = nil; receipt = nil; message = nil }
-    private func recover() async throws { let saved = try await vault.pending(account: account, origin: origin); try check(); pending = saved }
+    func close() { closed = true; lease.cancel(); pending = nil; history = []; receipt = nil; message = nil }
+    private func recover() async throws { let saved = try await vault.state(account: account, origin: origin); try check(); pending = saved.pending; history = saved.history }
     func load() async { await perform { try await self.recover() } }
     func send(_ command: TeamTaskMoveCommand, now: Date = Date()) async {
         await perform {
@@ -155,12 +251,30 @@ extension Backend: TeamTaskMoveService {}
         // Revalidate the peer's typed result too; a substitute service cannot
         // return a different command or task projection to this model.
         guard try command.confirmed(result.raw) == result else { throw TeamTaskMoveCommand.invalid }
-        try await vault.clear(command, lease: lease); try check(); pending = nil; receipt = result; try await recover()
+        try await vault.confirm(command, lease: lease); try check(); pending = nil; receipt = result; try await recover()
     }
     private func perform(_ action: () async throws -> Void) async {
         guard !closed, isCurrent(), !busy else { return }
         busy = true; message = nil; receipt = nil; defer { busy = false }
         do { try check(); try await action(); try check() }
         catch { guard !closed, isCurrent() else { return }; message = pending == nil ? "The task move couldn’t be prepared. Review it again." : "The result couldn’t be confirmed. Your saved move is kept. Retry it or review the latest project before clearing the request. Clearing does not undo a move." }
+    }
+}
+
+/// Freeze the authored source and access boundary before destination selection.
+/// Online moves never carry optimistic unsent edits into a different project.
+struct TeamTaskMoveAdmission: Equatable, Sendable {
+    let draft: TeamTaskEditorDraft
+    init(_ draft: TeamTaskEditorDraft) throws {
+        guard draft.kind == .existing else { throw TeamTaskMoveCommand.invalid }; self.draft = draft
+    }
+    func destinations(current: Record?, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, pending: [Mutation], enabled: Bool) throws -> Set<String> {
+        guard pending.isEmpty, current == draft.source,
+              draft.permits(current: current, workspace: workspace, session: session, cache: cache, enabled: enabled) else { throw TeamTaskEditorDraft.unavailable }
+        return Set(cache.boundary.projects.values.filter { $0.id != draft.scope.project && $0.team == draft.scope.team && $0.canSend && !$0.archived && ["manager", "editor"].contains($0.role) }.map(\.id))
+    }
+    func scope(destination: String, current: Record?, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, pending: [Mutation], enabled: Bool) throws -> TeamTaskMoveScope {
+        guard try destinations(current: current, workspace: workspace, session: session, cache: cache, pending: pending, enabled: enabled).contains(destination) else { throw TeamTaskMoveCommand.invalid }
+        return try TeamTaskMoveScope(account: draft.scope.account, origin: draft.scope.origin, team: draft.scope.team, task: draft.source.id, generation: draft.source.string("task_generation"), source: draft.scope.project, destination: destination)
     }
 }

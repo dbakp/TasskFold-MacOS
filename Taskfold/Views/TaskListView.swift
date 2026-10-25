@@ -475,6 +475,7 @@ struct TaskListView: View {
     private var viewOptions: some View {
             Menu {
                 Button("Print or Save PDF…", systemImage: "printer") { preparePrint() }.disabled(store.filterError(scope) != nil).keyboardShortcut("p", modifiers: .command).accessibilityIdentifier("openPrintReview")
+                if store.teamTaskMovesAvailable { Button("Recent Shared Task Moves", systemImage: "arrow.left.arrow.right") { workspace.teamTaskMove = TeamTaskMoveRequest() }.accessibilityIdentifier("openRecentTeamTaskMoves") }
                 Divider()
                 Button(store.isFavorite(scope) ? "Remove Favorite" : "Add Favorite", systemImage: "star") { store.toggleFavorite(scope) }.accessibilityIdentifier("toggleFavorite")
                 if case .saved(let id) = scope { Button("Edit Filter…") { filterEditor = store.record("saved_views", id: id) } }

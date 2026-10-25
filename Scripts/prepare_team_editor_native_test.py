@@ -36,6 +36,6 @@ receipt = root / "team-editor-test-receipt.json"
 files = ["Taskfold/Core/Store.swift", "Taskfold/Core/Backups.swift", "Taskfold/Core/Backend.swift", "Taskfold/Info.plist"]
 receipt.write_text(json.dumps({
     "namespace": "workflowteststeameditbridge", "teamRolloutInCopyOnly": True,
-    "network": "All requests intercepted locally; only the scoped synthetic recipient RPC is answered in the exact DEBUG fixture",
+    "network": "All HTTP requests intercepted locally; scoped synthetic recipients are answered; task moves use a separate file-backed peer only with --team-move-testing in the reserved DEBUG host",
     "files": {name: hashlib.sha256((root / name).read_bytes()).hexdigest() for name in files}
 }, indent=2) + "\n")

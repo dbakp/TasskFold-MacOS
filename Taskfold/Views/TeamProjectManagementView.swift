@@ -9,6 +9,7 @@ struct TeamProjectManagementView: View {
     @State private var commands: TeamProjectCommandModel?
     @State private var loadedScope: String?
     @State private var editing: TeamProjectEditRequest?
+    @State private var recentTaskMoves = false
     @State private var moving: TeamProjectMoveRequest?
     @State private var preparing = false
     @State private var reviewError: String?
@@ -27,6 +28,7 @@ struct TeamProjectManagementView: View {
                 else {
                     List {
                         commandStatus
+                        if store.teamTaskMovesAvailable { Section { Button("Recent task moves", systemImage: "arrow.left.arrow.right") { recentTaskMoves = true }.accessibilityIdentifier("openRecentTeamTaskMoves") } }
                         if preparing { Section { ProgressView("Reviewing project branch…") } }
                         if let reviewError { Section { Label(reviewError, systemImage: "exclamationmark.circle").foregroundStyle(.secondary) } }
                         if let message = browser.message { Section { Label(message, systemImage: "exclamationmark.circle").foregroundStyle(.secondary) } }
@@ -50,6 +52,7 @@ struct TeamProjectManagementView: View {
                 }
             } else { ContentUnavailableView("Projects unavailable", systemImage: "folder", description: Text("Return to the original synced workspace to view this team.")) }
         }
+        .sheet(isPresented: $recentTaskMoves) { TeamTaskMoveView() }
         .navigationTitle(projectID == nil ? "Projects" : browser?.detail?.access.name ?? "Project")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

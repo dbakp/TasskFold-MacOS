@@ -357,6 +357,41 @@ final class Store {
     /// This explicit path never infers team scope for an ordinary personal save.
     /// Organization rollout and the service's task capability both stay required.
     private var nativeTeamEditorEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldTeamsEnabled") as? Bool == true }
+    var teamTaskMovesAvailable: Bool { nativeTeamEditorEnabled && workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked }
+    func teamTaskMoveContextCurrent(account: String, origin: String, workspace: WorkspaceBinding, session: UUID) -> Bool {
+        teamTaskMovesAvailable && workspace.matches(account: userID, generation: workspaceGeneration) && account == userID && origin == (try? backend.accountRemovalOrigin) && session == backend.reminderSessionIncarnation
+    }
+    func teamTaskMoveDestinations(_ admission: TeamTaskMoveAdmission) throws -> [Record] {
+        guard teamTaskMovesAvailable, online, !syncing, let cache = nativeConversationTeamCache else { throw AppFailure(message: "Wait for sync to finish before moving a shared task.") }
+        let ids = try admission.destinations(current: record("tasks", id: admission.draft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, pending: snapshot.pending, enabled: nativeTeamEditorEnabled)
+        return projects.filter { ids.contains($0.id) }
+    }
+    func teamTaskMoveScope(_ admission: TeamTaskMoveAdmission, destination: String) throws -> TeamTaskMoveScope {
+        guard try teamTaskMoveDestinations(admission).contains(where: { $0.id == destination }), let cache = nativeConversationTeamCache else { throw TeamTaskMoveCommand.invalid }
+        return try admission.scope(destination: destination, current: record("tasks", id: admission.draft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, pending: snapshot.pending, enabled: nativeTeamEditorEnabled)
+    }
+    func teamTaskMoveReviewCurrent(_ scope: TeamTaskMoveScope, token: String) -> Bool {
+        guard teamTaskMovesAvailable, online, !syncing, snapshot.pending.isEmpty, let cache = nativeConversationTeamCache,
+              cache.boundary.belongs(account: scope.account, origin: scope.origin), cache.boundary.raw["token"] == .string(token) else { return false }
+        return [scope.source, scope.destination].allSatisfy { id in
+            guard let permission = cache.boundary.projects[id] else { return false }
+            return permission.team == scope.team && permission.canSend && !permission.archived && ["manager", "editor"].contains(permission.role)
+        }
+    }
+    var teamTaskMoveService: any TeamTaskMoveService {
+        #if DEBUG
+        if TeamTaskMoveNativePeer.enabled { return TeamTaskMoveNativePeer(store: self) }
+        #endif
+        return backend
+    }
+    func refreshAfterTeamTaskMove(_ receipt: TeamTaskMoveReceipt) async -> Bool {
+        #if DEBUG
+        if TeamTaskMoveNativePeer.enabled { return applyTeamTaskMoveNativeReceipt(receipt) }
+        #endif
+        let generation = workspaceGeneration, account = userID, session = backend.reminderSessionIncarnation, started = Date()
+        await sync()
+        return generation == workspaceGeneration && account == userID && session == backend.reminderSessionIncarnation && (lastSync ?? .distantPast) >= started
+    }
     func captureTeamTaskEditor(_ source: Record) throws -> TeamTaskEditorDraft {
         guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
               let cache = nativeConversationTeamCache, cache.boundary.origin == (try backend.accountRemovalOrigin),
@@ -2925,11 +2960,16 @@ extension Store {
         return Backend(configuration: ["URL": "https://synthetic.example", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: session, persistSession: { _ in })
     }
     static func boundary(viewer: Bool = false) throws -> TeamWorkspaceBoundary {
-        try TeamWorkspaceBoundary([
+        var rows: [JSON] = [.object(["id": .string(projectID), "team_id": .string(teamID), "role": .string(viewer ? "viewer" : "editor"), "archived": .bool(false), "can_send_tasks": .bool(!viewer)])]
+        if ProcessInfo.processInfo.arguments.contains("--team-move-testing") {
+            rows.append(.object(["id": .string(TeamTaskMoveNativePeer.destination), "team_id": .string(teamID), "role": .string(viewer ? "viewer" : "editor"), "archived": .bool(false), "can_send_tasks": .bool(!viewer)]))
+            rows.append(.object(["id": .string(TeamTaskMoveNativePeer.viewerProject), "team_id": .string(teamID), "role": .string("viewer"), "archived": .bool(false), "can_send_tasks": .bool(false)]))
+        }
+        return try TeamWorkspaceBoundary([
             "workspace_boundary_protocol": .number(1), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false),
             "account": .string(account), "token": .string(String(repeating: viewer ? "b" : "a", count: 64)),
             "teams": .array([.object(["id": .string(teamID), "state": .string("active"), "revision": .number(1), "access_revision": .number(viewer ? 2 : 1)])]),
-            "projects": .array([.object(["id": .string(projectID), "team_id": .string(teamID), "role": .string(viewer ? "viewer" : "editor"), "archived": .bool(false), "can_send_tasks": .bool(!viewer)])])
+            "projects": .array(rows)
         ], account: account, origin: "https://synthetic.example")
     }
 }
@@ -3026,6 +3066,16 @@ extension Store {
                 tasks += [next, later]
             }
             snapshot = Snapshot(tables: ["tasks": tasks, "projects": projects, "labels": labels])
+            if TeamTaskMoveNativePeer.enabled {
+                row["section_id"] = .null
+                row["assigned_to"] = .string(TeamEditorNativeFixture.recipientID)
+                row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["assigned_to": .string(TeamEditorNativeFixture.recipientID)])
+                tasks = [row]
+                projects += [Record(["id": .string(TeamTaskMoveNativePeer.destination), "user_id": row["user_id"], "name": .string("Launch studio")]), Record(["id": .string(TeamTaskMoveNativePeer.viewerProject), "user_id": row["user_id"], "name": .string("Read-only studio")])]
+                try TeamTaskMoveNativePeer.write(TeamTaskMoveNativePeer.State(tasks: tasks))
+                UserDefaults.standard.removeObject(forKey: "teamMoveLoseReply")
+                snapshot.tables["tasks"] = tasks; snapshot.tables["projects"] = projects
+            }
             snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: nil, pending: [], tasks: [row])
             try persist()
         } catch { self.error = error.localizedDescription }
@@ -3063,6 +3113,103 @@ extension Store {
             snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(viewer: true), previous: snapshot.teamWorkspace, pending: snapshot.pending, tasks: snapshot.tables["tasks"] ?? [])
             try persist()
         } catch { self.error = error.localizedDescription }
+    }
+}
+#endif
+
+#if DEBUG
+/// File-backed synthetic peer in the reserved native host. It never sends HTTP
+/// or touches a real account. Actual PostgreSQL contracts have separate tests.
+@MainActor final class TeamTaskMoveNativePeer: TeamTaskMoveService {
+    static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--team-move-testing") }
+    static let destination = "ec240000-0000-4000-8000-000000000040"
+    static let viewerProject = "ec240000-0000-4000-8000-000000000041"
+    static let foreignProject = "ec240000-0000-4000-8000-000000000042"
+    static var journalPrepared = false
+    struct State: Codable { var tasks: [Record]; var before: [String: Record] = [:]; var commands: [String: TeamTaskMoveCommand] = [:]; var replies: [String: [String: JSON]] = [:] }
+    private weak var store: Store?
+    init(store: Store) { self.store = store }
+    static var file: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldTeamMoveNative/server.json") }
+    static func write(_ state: State) throws {
+        guard enabled else { throw CancellationError() }
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try JSONEncoder().encode(state).write(to: file, options: .atomic)
+    }
+    static func read() throws -> State { guard enabled else { throw CancellationError() }; return try JSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
+    static func proof(_ scope: TeamTaskMoveScope, _ task: Record, _ expires: String) throws -> String {
+        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        return CalendarOAuthConfiguration.digest(String(decoding: try encoder.encode(["scope": JSON.object(scope.body), "task": .object(task.fields), "expires": .string(expires)]), as: UTF8.self))
+    }
+    private func task(_ scope: TeamTaskMoveScope, state: State) throws -> Record {
+        guard Self.enabled, let store, scope.account == TeamEditorNativeFixture.account, scope.origin == "https://synthetic.example", scope.team == TeamEditorNativeFixture.teamID,
+              let token = store.nativeConversationTeamCache?.boundary.raw["token"]?.text, store.teamTaskMoveReviewCurrent(scope, token: token),
+              let task = state.tasks.first(where: { $0.id == scope.task }), task.string("project_id") == scope.source, task.string("task_generation") == scope.generation else { throw TeamTaskMoveCommand.invalid }
+        if let related = scope.undoes {
+            guard let command = state.commands[related], command.scope.source == scope.destination, command.scope.destination == scope.source,
+                  state.replies[related]?["task"] == .object(task.fields) else { throw TeamTaskMoveCommand.invalid }
+        }
+        return task
+    }
+    func teamTaskMoveReview(_ scope: TeamTaskMoveScope) async throws -> TeamTaskMoveReview {
+        let state = try Self.read(), row = try task(scope, state: state)
+        let date = ISO8601DateFormatter().string(from: Date().addingTimeInterval(1800))
+        let original = scope.undoes.flatMap { state.before[$0] }
+        let currentCount = (row.string("assigned_to").isEmpty ? 0 : 1) + (try TeamChecklist.indexed(row["subtasks"])).values.filter { !($0["assigned_to"]?.text ?? "").isEmpty }.count
+        let restoredCount = try original.map { value in (value.string("assigned_to").isEmpty ? 0 : 1) + (try TeamChecklist.indexed(value["subtasks"])).values.filter { !($0["assigned_to"]?.text ?? "").isEmpty }.count } ?? 0
+        var raw = scope.body; raw.removeValue(forKey: "undoes")
+        raw.merge(["move_review_protocol": .number(1), "account": .string(scope.account), "related_request": scope.undoes.map(JSON.string) ?? .null,
+                   "review_token": .string(try Self.proof(scope, row, date)), "expires_at": .string(date), "task": .object(row.fields),
+                   "source_name": .string(store?.record("projects", id: scope.source)?.name ?? "Shared project"), "destination_name": .string(store?.record("projects", id: scope.destination)?.name ?? "Shared project"), "destination_visibility": .string("team"),
+                   "cleared_assignments": .number(scope.undoes == nil ? Double(currentCount) : 0), "restored_assignments": .number(Double(restoredCount)), "discussion_count": .number(1)]) { _, new in new }
+        return try TeamTaskMoveReview(raw, scope: scope)
+    }
+    func teamTaskMove(_ command: TeamTaskMoveCommand) async throws -> TeamTaskMoveReceipt {
+        guard Self.enabled else { throw CancellationError() }
+        var state = try Self.read()
+        if let saved = state.commands[command.id] {
+            guard saved == command else { throw TeamTaskMoveCommand.invalid }
+            var raw = state.replies[command.id]!; raw["replayed"] = .bool(true)
+            raw["task"] = state.tasks.first(where: { $0.id == command.scope.task && $0.string("project_id") == command.scope.destination && $0.string("task_generation") == command.scope.generation }).map { .object($0.fields) } ?? .null
+            return try command.confirmed(raw)
+        }
+        let before = try task(command.scope, state: state), expiry = try TeamOrganizationValue.date(command.body["expires_at"])
+        guard expiry > Date(), command.body["review_token"] == .string(try Self.proof(command.scope, before, command.body["expires_at"]!.text)) else { throw TeamTaskMoveCommand.invalid }
+        var after = before; after["project_id"] = .string(command.scope.destination)
+        if let related = command.scope.undoes, let original = state.before[related] {
+            for key in ["section_id", "assigned_to", "subtasks"] { after[key] = original[key] }
+        } else {
+            func clear(_ value: JSON) -> JSON {
+                .array(value.list.map { child in var row = child.object; row.removeValue(forKey: "assigned_to"); if let nested = row["subtasks"] { row["subtasks"] = clear(nested) }; return .object(row) })
+            }
+            after["assigned_to"] = .null; after["section_id"] = .null; after["subtasks"] = clear(after["subtasks"])
+        }
+        var raw = command.scope.body; raw.removeValue(forKey: "undoes")
+        raw.merge(["protocol": .number(1), "account": .string(command.account), "request_id": .string(command.id), "operation": .string(command.operation), "related_request": command.scope.undoes.map(JSON.string) ?? .null, "replayed": .bool(false), "task": .object(after.fields)]) { _, new in new }
+        state.tasks[state.tasks.firstIndex(where: { $0.id == before.id })!] = after
+        state.before[command.id] = before; state.commands[command.id] = command; state.replies[command.id] = raw; try Self.write(state)
+        if UserDefaults.standard.bool(forKey: "teamMoveLoseReply") { UserDefaults.standard.removeObject(forKey: "teamMoveLoseReply"); throw URLError(.networkConnectionLost) }
+        return try command.confirmed(raw)
+    }
+}
+extension Store {
+    func prepareTeamTaskMoveNativeJournal() async {
+        guard TeamTaskMoveNativePeer.enabled, !TeamTaskMoveNativePeer.journalPrepared else { return }
+        TeamTaskMoveNativePeer.journalPrepared = true
+        if ProcessInfo.processInfo.arguments.contains("--team-editor-reset") {
+            do { try await teamTaskMoveVault.removeAccount(TeamEditorNativeFixture.account, origin: "https://synthetic.example") } catch { self.error = error.localizedDescription }
+        }
+    }
+    func applyTeamTaskMoveNativeReceipt(_ receipt: TeamTaskMoveReceipt) -> Bool {
+        guard TeamTaskMoveNativePeer.enabled, receipt.command.account == userID, receipt.command.scope.task == TeamEditorNativeFixture.taskID,
+              snapshot.pending.isEmpty, let state = try? TeamTaskMoveNativePeer.read() else { return false }
+        let old = snapshot
+        snapshot.tables["tasks"] = state.tasks
+        do { try persist(); return true } catch { snapshot = old; self.error = error.localizedDescription; return false }
+    }
+    func changeTeamTaskMoveNativeSource() {
+        guard TeamTaskMoveNativePeer.enabled, var state = try? TeamTaskMoveNativePeer.read(), let index = state.tasks.firstIndex(where: { $0.id == TeamEditorNativeFixture.taskID }) else { return }
+        state.tasks[index]["description"] = .string("A newer shared note")
+        do { try TeamTaskMoveNativePeer.write(state); snapshot.tables["tasks"] = state.tasks; try persist() } catch { self.error = error.localizedDescription }
     }
 }
 #endif

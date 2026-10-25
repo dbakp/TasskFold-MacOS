@@ -14,6 +14,7 @@ private final class MoveMemoryIO: CalendarSecureItemIO, @unchecked Sendable {
     var calls: [TeamTaskMoveCommand] = []
     var loseReply = false, hold = false, foreign = false
     var continuation: CheckedContinuation<Void, Never>?
+    var onReply: (() -> Void)?
     init(_ reply: [String: JSON]) { self.reply = reply }
     func teamTaskMoveReview(_ scope: TeamTaskMoveScope) async throws -> TeamTaskMoveReview { throw TeamTaskMoveCommand.invalid }
     func teamTaskMove(_ command: TeamTaskMoveCommand) async throws -> TeamTaskMoveReceipt {
@@ -22,7 +23,7 @@ private final class MoveMemoryIO: CalendarSecureItemIO, @unchecked Sendable {
         if loseReply { loseReply = false; throw URLError(.networkConnectionLost) }
         var raw = reply
         if foreign { raw["account"] = .string(UUID().uuidString.lowercased()) }
-        return try command.confirmed(raw)
+        onReply?(); return try command.confirmed(raw)
     }
 }
 final class TeamTaskMoveTests: XCTestCase {
@@ -123,9 +124,9 @@ final class TeamTaskMoveTests: XCTestCase {
         let (command, review, raw) = try fixture(), io = MoveMemoryIO(), peer = MovePeer(raw), vault = TeamTaskMoveVault(io: io)
         let model = TeamTaskMoveModel(account: command.account, origin: command.origin, vault: vault, service: peer, isCurrent: { true })
         io.failWrite = true; await model.send(command, now: review.expires.addingTimeInterval(-60)); XCTAssertTrue(peer.calls.isEmpty)
-        io.failWrite = false; io.failRemove = true; await model.send(command, now: review.expires.addingTimeInterval(-60))
+        io.failWrite = false; peer.onReply = { io.failWrite = true }; await model.send(command, now: review.expires.addingTimeInterval(-60))
         XCTAssertEqual(model.pending, command); XCTAssertNil(model.receipt)
-        io.failRemove = false; await model.retry(); XCTAssertNil(model.pending); XCTAssertNotNil(model.receipt)
+        io.failWrite = false; peer.onReply = nil; await model.retry(); XCTAssertNil(model.pending); XCTAssertNotNil(model.receipt)
     }
     @MainActor func testForeignReplyKeepsIntentAndAccountSwitchSuppressesCallback() async throws {
         let (command, review, raw) = try fixture(), io = MoveMemoryIO(), peer = MovePeer(raw), vault = TeamTaskMoveVault(io: io)
@@ -206,5 +207,88 @@ extension TeamTaskMoveTests {
         let task = Task { try await api.teamTaskMove(command) }; await fulfillment(of: [started], timeout: 3)
         var other = session; other.user.id = UUID().uuidString.lowercased(); try await api.accept(other); gate.release(raw)
         do { _ = try await task.value; XCTFail("old move crossed accounts") } catch { XCTAssertTrue(error is CancellationError) }
+    }
+}
+extension TeamTaskMoveTests {
+    func testConfirmedMoveUndoRedoRemainOneHistoryChainAcrossVaults() async throws {
+        let io = MoveMemoryIO(), vault = TeamTaskMoveVault(io: io), lease = CalendarReadLease()
+        let (move, _, _) = try fixture()
+        for index in 0..<3 {
+            let (command, _, _) = try fixture(index); try await vault.begin(command, lease: lease); try await vault.confirm(command, lease: lease)
+            let state = try await TeamTaskMoveVault(io: io).state(account: command.account, origin: command.origin)
+            XCTAssertNil(state.pending); XCTAssertEqual(state.history.count, 1); XCTAssertEqual(state.history[0].id, move.id)
+            XCTAssertEqual(state.history[0].latest, command); XCTAssertEqual(state.history[0].isUndone, index == 1)
+            XCTAssertEqual(state.history[0].acknowledged.count, index + 1)
+            XCTAssertEqual(try state.history[0].inverseScope().undoes, command.id)
+        }
+        // A delayed first-window acknowledgement cannot rewind a later Redo.
+        try await vault.confirm(move, lease: lease)
+        let state = try await vault.state(account: move.account, origin: move.origin)
+        XCTAssertEqual(state.history[0].latest.id, try fixture(2).0.id)
+        XCTAssertFalse(String(decoding: try XCTUnwrap(io.values.values.first), as: UTF8.self).contains("Keep all authored notes"))
+    }
+    func testJournalMigratesOldPendingCommandWithoutLosingIdentity() async throws {
+        let (command, _, _) = try fixture(), io = MoveMemoryIO()
+        let envelope: [String: JSON] = ["version": .number(1), "command": try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(command))]
+        let key = TeamTaskMoveCommand.storagePrefix + command.account + "." + CalendarOAuthConfiguration.digest(command.origin)
+        try io.write(JSONEncoder().encode(envelope), key: key)
+        let vault = TeamTaskMoveVault(io: io), initial = try await vault.state(account: command.account, origin: command.origin)
+        XCTAssertEqual(initial.pending, command); XCTAssertTrue(initial.history.isEmpty)
+        try await vault.confirm(command, lease: CalendarReadLease())
+        let state = try await vault.state(account: command.account, origin: command.origin)
+        XCTAssertNil(state.pending); XCTAssertEqual(state.history.first?.latest.id, command.id)
+    }
+    func testJournalFailureIsAtomicAndAccountRemovalErasesUndoHistory() async throws {
+        let (command, _, _) = try fixture(), io = MoveMemoryIO(), vault = TeamTaskMoveVault(io: io), lease = CalendarReadLease()
+        try await vault.begin(command, lease: lease); let bytes = io.values
+        io.failWrite = true
+        do { try await vault.confirm(command, lease: lease); XCTFail("confirmation must be durable") } catch {}
+        XCTAssertEqual(io.values, bytes)
+        io.failWrite = false; try await vault.confirm(command, lease: lease)
+        try await vault.removeAccount(command.account, origin: command.origin)
+        let state = try await vault.state(account: command.account, origin: command.origin)
+        XCTAssertNil(state.pending); XCTAssertTrue(state.history.isEmpty)
+    }
+    func testJournalClearDoesNotEraseEarlierAcceptedMove() async throws {
+        let (move, _, _) = try fixture(), (undo, _, _) = try fixture(1), io = MoveMemoryIO(), vault = TeamTaskMoveVault(io: io), lease = CalendarReadLease()
+        try await vault.begin(move, lease: lease); try await vault.confirm(move, lease: lease)
+        try await vault.begin(undo, lease: lease); try await vault.clear(undo, lease: lease)
+        let state = try await vault.state(account: move.account, origin: move.origin)
+        XCTAssertNil(state.pending); XCTAssertEqual(state.history.first?.latest, move)
+    }
+    func testJournalRefusesCorruptAndForeignHistoryWithoutReplacingBytes() async throws {
+        let (command, _, _) = try fixture(), io = MoveMemoryIO(), vault = TeamTaskMoveVault(io: io)
+        try await vault.begin(command, lease: CalendarReadLease()); try await vault.confirm(command, lease: CalendarReadLease())
+        let key = try XCTUnwrap(io.values.keys.first), data = try XCTUnwrap(io.values[key])
+        var raw = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        var history = raw["history"] as! [[String: Any]], row = history[0], latest = row["latest"] as! [String: Any]
+        latest["account"] = UUID().uuidString.lowercased(); row["latest"] = latest; history[0] = row; raw["history"] = history
+        let corrupt = try JSONSerialization.data(withJSONObject: raw); try io.write(corrupt, key: key)
+        do { _ = try await vault.state(account: command.account, origin: command.origin); XCTFail("foreign history must not open") } catch {}
+        XCTAssertEqual(io.values[key], corrupt)
+    }
+    private func moveAdmissionFixture() throws -> (TeamTaskMoveAdmission, TeamWorkspaceCache, UUID) {
+        let (command, review, _) = try fixture(), s = command.scope, session = UUID()
+        let viewer = "ec440000-0000-4000-8000-000000000001", archived = "ec440000-0000-4000-8000-000000000002", personal = "ec440000-0000-4000-8000-000000000003"
+        let rows: [JSON] = [(s.source,"editor",false,true,JSON.string(s.team)),(s.destination,"editor",false,true,.string(s.team)),(viewer,"viewer",false,false,.string(s.team)),(archived,"editor",true,false,.string(s.team)),(personal,"owner",false,true,.null)].sorted { $0.0 < $1.0 }.map { id, role, archived, send, team in .object(["id": .string(id), "role": .string(role), "archived": .bool(archived), "can_send_tasks": .bool(send), "team_id": team]) }
+        let raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(s.account), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false), "token": .string(String(repeating: "a", count: 64)), "teams": .array([.object(["id": .string(s.team), "state": .string("active"), "revision": .number(1), "access_revision": .number(1)])]), "projects": .array(rows)]
+        let cache = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: s.account, origin: s.origin), previous: nil, pending: [], tasks: [review.task])
+        let draft = try TeamTaskEditorDraft(source: review.task, workspace: WorkspaceBinding(account: s.account, generation: UUID()), session: session, cache: cache, enabled: true)
+        return (try TeamTaskMoveAdmission(draft), cache, session)
+    }
+    func testAdmissionFiltersDestinationsAndFreezesWholeSourceAndAccess() throws {
+        let (admission, cache, session) = try moveAdmissionFixture(), draft = admission.draft
+        XCTAssertEqual(try admission.destinations(current: draft.source, workspace: draft.workspace, session: session, cache: cache, pending: [], enabled: true), [try fixture().0.scope.destination])
+        let destination = try fixture().0.scope.destination
+        XCTAssertEqual(try admission.scope(destination: destination, current: draft.source, workspace: draft.workspace, session: session, cache: cache, pending: [], enabled: true), try fixture().0.scope)
+        var changed = draft.source; changed["description"] = .string("New shared notes")
+        XCTAssertThrowsError(try admission.destinations(current: changed, workspace: draft.workspace, session: session, cache: cache, pending: [], enabled: true))
+        let pending = Mutation(table: "tasks", recordID: UUID().uuidString.lowercased(), method: "PATCH", fields: ["title": .string("Unsent work")])
+        XCTAssertThrowsError(try admission.destinations(current: draft.source, workspace: draft.workspace, session: session, cache: cache, pending: [pending], enabled: true))
+        XCTAssertThrowsError(try admission.destinations(current: draft.source, workspace: draft.workspace, session: UUID(), cache: cache, pending: [], enabled: true))
+        XCTAssertThrowsError(try admission.destinations(current: draft.source, workspace: draft.workspace, session: session, cache: cache, pending: [], enabled: false))
+        var boundary = cache.boundary.raw; boundary["token"] = .string(String(repeating: "b", count: 64))
+        let updated = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(boundary, account: draft.scope.account, origin: draft.scope.origin), previous: cache, pending: [], tasks: [draft.source])
+        XCTAssertThrowsError(try admission.destinations(current: draft.source, workspace: draft.workspace, session: session, cache: updated, pending: [], enabled: true))
     }
 }

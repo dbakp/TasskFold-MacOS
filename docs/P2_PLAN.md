@@ -3038,3 +3038,58 @@ independent child records, remaining Watch/Wear OS and wider Px work stay open.
 No hosted migration/configuration or rollout switch changed. All user-deferred
 release, older-client rollout, remote-delivery, OAuth/provider and real location
 dependencies remain deferred. See `p2-team-task-move-foundation-evidence.json`.
+
+
+## Reviewed native shared-task moves — 25 October 2026, rank 6 in progress
+
+Both apps independently own the native same-team Move flow from existing task
+inspectors and single-task list moves. The destination picker admits only active,
+writable projects in the same team. Confirmation identifies the literal task,
+source/destination, destination visibility/audience, discussion count and assignment
+changes. Opening-time task contents, workspace/session and access token are frozen;
+changed source/access or queued local writes stop preparation. Existing personal
+writers remain separate. Mixed/shared batches, cross-team moves and personal-project
+adoption are not silently treated as a sequence of single-task actions.
+
+Recent moves are reachable from task-list options and team-project management.
+One private atomic envelope owns pending delivery and the 20 most recent move
+chains. Accepted delivery cannot erase its retry request before durable history is
+saved. Reviewed Undo/Redo stay in one chain across relaunch; a delayed earlier
+acknowledgement cannot rewind later history. This is explicit move history, separate
+from the app's general local Undo/Redo stack. It contains IDs/proofs rather than
+notes or discussion text, preserves the previous one-command journal's exact nonce,
+and participates in account-removal fencing and cleanup. Clearing a retry keeps
+accepted history and does not cancel or undo an accepted server move.
+
+A confirmed receipt triggers a fresh normal workspace sync rather than projecting
+an old task reply over local changes. Refresh failure keeps accepted history and
+offers explicit refresh. Closing an uncertain result keeps the saved retry;
+closing a confirmed screen completes its inspector/list presentation once.
+
+Both repositories pass 340 focused team Core cases, including 21 move cases.
+The new cases cover atomic journal failure, old-envelope migration, linked durable
+history, stale acknowledgements, scoped removal, corrupt/foreign history and full
+source/access/queue admission. Both isolated Debug arm64 apps build; the Mac helper
+omits widgets. There are no schema or hosted-configuration changes in this stage;
+prior owned move/batch PostgreSQL evidence remains in the foundation evidence.
+
+Six scenarios pass on each iPhone/iPad Simulator through real native controls:
+actual-list selection and Move, Cancel, changed source, role loss with hidden review
+contents, lost reply/relaunch/exact-nonce retry, and move/Undo/Redo/relaunch with
+normal Done cleanup. The native peer is a separate file-backed synthetic server,
+with its accepted request identities checked independently from the actual saved
+Store cache. All HTTP stays intercepted. An initial exact-Undo assertion exposed an
+omitted section field in the fixture; seeding SQL's explicit null fixed the fixture
+without weakening the whole-record comparison. Final runs pass all six cases.
+Screenshots and complete summaries are retained by iOS. No Mac runtime, genuine
+hosted or spoken acceptance is inferred from these Simulator checks.
+
+Next: personal-project adoption with a separate ownership/audience/contents review;
+shared batches and broader task-move history/keyboard integration; Mac runtime and
+keyboard, spoken/large-text/dark/account-switch/private-save and simultaneous-window
+acceptance; provider-bound per-task file transfer, templates/conversations/files,
+independent child records, remaining Watch/Wear OS and the rest of ranked Px.
+Rollout remains disabled. All user-deferred release, older-client, remote delivery,
+OAuth/provider and physical-location dependencies remain deferred. Owned apps,
+runners and temporary builds/results are removed after evidence capture; baseline
+Simulator states and Core caches stay intact. See `p2-team-task-moves-native-evidence.json`.

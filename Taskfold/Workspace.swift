@@ -70,6 +70,7 @@ struct Confirmation: Equatable {
 /// Window-level state shared by the sidebar, the list, the inspector, and the menu bar commands.
 @MainActor @Observable
 final class Workspace {
+    var teamTaskMove: TeamTaskMoveRequest?
     var teamTaskDeletion: TeamTaskDeletionRequest?
     let store: Store
     #if DEBUG
@@ -460,6 +461,15 @@ final class Workspace {
         confirm(day == nil ? "Removed dates" : ids.count == 1 ? "Moved to \(label)" : "Moved \(ids.count) tasks to \(label)")
     }
     func move(_ ids: Set<String>, toProject project: String) {
+        let shared = ids.contains { id in store.nativeConversationTeamCache?.knownTasks.contains(id) == true || store.record("tasks", id: id).map { store.nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true }
+        if shared {
+            do {
+                guard ids.count == 1, let id = ids.first, Self.subtaskPath(id) == nil, let task = store.record("tasks", id: id) else { throw AppFailure(message: "Move one shared parent task at a time. Your selection is unchanged.") }
+                let captured = try store.captureTeamTaskEditor(task), admission = try TeamTaskMoveAdmission(captured)
+                _ = try store.teamTaskMoveScope(admission, destination: project)
+                teamTaskMove = TeamTaskMoveRequest(draft: captured, destination: project, completed: { [weak self] in self?.selection.remove(id); self?.confirm("Shared task move confirmed") })
+            } catch { store.error = error.localizedDescription }; return
+        }
         guard withAnimation(layout, { updateTasks(ids, fields: ["project_id": project.isEmpty ? .null : .string(project), "section_id": .null], name: "Move to Project") }) else { return }
         Feedback.drop()
         confirm("Moved to \(project.isEmpty ? "Inbox" : store.record("projects", id: project)?.name ?? "project")")
