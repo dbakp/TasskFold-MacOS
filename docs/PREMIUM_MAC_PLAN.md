@@ -5391,3 +5391,32 @@ complete rank 6 or the wider Px scope. Shared batch/history/keyboard, remaining
 Mac/layout/account/window/accessibility/hosted checks, independent child records,
 Watch/Wear OS and other open plan items remain open. All user-deferred release,
 provider and physical-device dependencies stay deferred. Rollout remains disabled.
+
+
+### 2026-10-25 — Installed project-transfer recovery proof and Account entry fix
+
+The iOS isolated host now passes five distinct installed cases on both iPhone and
+iPad across corrected runs: archived branch review/commit with normal sync, Cancel,
+local-source invalidation, lost applied reply with relaunch/Close/reopen/exact retry,
+and the same expired request after simulated destination-access loss. Saved-state
+assertions verify task text/completion preservation, assignment clearing, an empty
+queue and removal of inaccessible cached work. The peer is SQL-contract-derived
+and intercepts all HTTP; it is not live hosted adoption. Real Simulator Keychain
+works with Xcode local Simulator signing; release signing remains deferred.
+
+Relaunch exposed an actual empty SwiftUI Group preventing the recovery-loading task
+from running. Each app now has a stable Account Project transfers entry whose label
+changes when a saved transfer needs attention. It remains reachable without normal
+team navigation. Both independently exported archived/member-owned contracts pass
+361 Team Core checks per repo, and both isolated Debug app builds pass. The Mac app
+was not launched in this batch; no Mac OS Keychain/native/spoken acceptance is
+claimed. Diagnostic test failures and corrected runs are retained explicitly in
+p2-project-adoption-installed-evidence.json rather than called green suites.
+
+Owned apps/runners and temporary roots are cleaned after evidence capture; baseline
+Simulators and Core caches are preserved. No real tasks, system settings, hosted
+configuration or normal rollout switches changed. Next: remaining Mac/native
+acceptance and file-custody/personal integration pause/retarget adapters, then hosted
+acceptance. Rank 6, remaining shared batch/history/keyboard, independent child
+records, Watch/Wear OS and the wider Px work remain open. Every user-deferred
+release/provider/device dependency remains deferred.

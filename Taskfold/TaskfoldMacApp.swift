@@ -29,7 +29,8 @@ struct TaskfoldMacApp: App {
 
     @ViewBuilder private var mainContent: some View {
         #if DEBUG
-        if TeamEditorNativeFixture.enabled { TeamEditorNativeFixtureView() }
+        if ProjectAdoptionNativeFixture.enabled { ProjectAdoptionNativeFixtureView() }
+        else if TeamEditorNativeFixture.enabled { TeamEditorNativeFixtureView() }
         else if TeamOrganizationFixture.enabled { NavigationStack { TeamOrganizationView() } }
         else if WebhookManagementFixture.enabled { NavigationStack { WebhookAccessView(fixture: true) } }
         else if AutomationManagementFixture.enabled { NavigationStack { AutomationAccessView(fixture: true) } }

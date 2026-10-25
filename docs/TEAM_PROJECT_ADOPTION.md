@@ -2,8 +2,10 @@
 
 Status: the ownership boundary, reviewed service, private native command/recovery
 and native Mac/iPhone/iPad flow are implemented in source. Core checks and isolated
-Debug app builds pass. Installed-flow, layout, keyboard, VoiceOver, account/window
-and hosted acceptance remain open. Provider custody and integration pause adapters
+Debug app builds pass. Initial iPhone/iPad installed acceptance now covers transfer,
+cancellation, stale local review and exact private recovery after relaunch, expiry
+and simulated destination loss. Mac installed acceptance, broader layout, keyboard,
+VoiceOver, account/window and hosted acceptance remain open. Provider custody and integration pause adapters
 remain open; affected transfers are explicitly rejected atomically. No rollout or
 hosted configuration was enabled.
 
@@ -298,3 +300,42 @@ Prefer automated Simulator/native controls and authoritative saved-state checks.
 Only request a human observation for a system/spoken behavior that automation
 cannot inspect, after preparing a short concrete test. Broader hosted/provider
 acceptance and the wider Px plan remain open.
+
+
+## 2026-10-25 installed acceptance follow-up
+
+The reserved DEBUG host now bundles the actual independently exported SQL contract,
+including an archived owned root, an explicitly archived descendant, completed work,
+an outside assignment and a transferring owner who is an ordinary destination team
+member. Its ephemeral HTTP session intercepts every request; no real endpoint,
+account, provider or task is used. Normal Store sync and real OS private storage
+are exercised; receipt task projection is not used. The peer honors activity
+sequence ordering and ordinary row pagination, and records only synthetic state.
+
+The initial iPhone and iPad checks cover contents/access review and commit; preserved task
+text/completion, assignment clearing and an empty queue after ordinary refresh;
+cancel without custody/cache changes; source-edit invalidation before sending; and
+an already-applied lost reply followed by quit/relaunch, Close/reopen and exact
+request replay. A further check lets the real review expiry pass and simulates
+removed destination access before relaunch/retry. The same request confirms once,
+while ordinary refresh removes inaccessible cached projects/tasks. This is a
+SQL-contract-derived simulated peer, not live hosted adoption or an Auth membership
+change. Local SQL protocol checks remain separate evidence.
+
+The relaunch check found that an empty SwiftUI Group could prevent the recovery
+entry's loading task from running. Both apps now keep a stable Account entry named
+Project transfers, changing to Saved project transfer when private recovery exists.
+It remains reachable when normal team navigation is unavailable. Empty recovery
+still has a safe explanatory screen; closing an unresolved request keeps it saved.
+
+Simulator Keychain access requires Xcode's local Simulator signing and generated
+simulated entitlements. Unsigned and manually invented-entitlement diagnostic
+launches were not accepted as OS storage evidence. This does not configure or
+verify release signing. The isolated Mac Debug build passes, but no new installed
+Mac, physical-Keychain-capacity, multi-window/account, keyboard/spoken, large-text,
+dark/contrast or provider/hosted acceptance is claimed in this follow-up.
+
+See `p2-project-adoption-installed-evidence.json` for exact runs and limitations.
+The normal rollout switches remain disabled. File custody and personal integration
+pause/retarget adapters, the remaining adoption acceptance and wider Px work stay
+open; all user-deferred release/provider/device dependencies remain deferred.

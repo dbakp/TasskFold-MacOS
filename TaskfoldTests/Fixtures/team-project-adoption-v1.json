@@ -1,5 +1,483 @@
 {
   "protocol": 1,
+  "source_snapshot": {
+    "tasks": [
+      {
+        "id": "fdad0000-0000-4000-8000-000000000010",
+        "title": "Synthetic transfer task",
+        "labels": [],
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "comments": [],
+        "due_date": null,
+        "due_time": null,
+        "priority": 4,
+        "subtasks": [],
+        "completed": true,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-25T02:31:05.617138+00:00",
+        "project_id": "fdad0000-0000-4000-8000-000000000005",
+        "section_id": null,
+        "assigned_to": "fdad0000-0000-4000-8000-000000000003",
+        "attachments": [
+          {
+            "id": "synthetic-file",
+            "url": "data:text/plain;base64,QQ=="
+          }
+        ],
+        "description": "Never put task text in a retry",
+        "completed_at": "2026-10-25T02:31:05.697986+00:00",
+        "is_recurring": false,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [],
+        "source_metadata": {},
+        "task_generation": "a6e42cc4-b1a0-482e-9393-c4f06f8aa69a",
+        "duration_minutes": null,
+        "completion_version": 1,
+        "recurrence_pattern": null,
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      }
+    ],
+    "profiles": [
+      {
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "avatar_url": null,
+        "display_name": null
+      },
+      {
+        "user_id": "fdad0000-0000-4000-8000-000000000002",
+        "avatar_url": null,
+        "display_name": null
+      },
+      {
+        "user_id": "fdad0000-0000-4000-8000-000000000003",
+        "avatar_url": null,
+        "display_name": null
+      }
+    ],
+    "projects": [
+      {
+        "id": "fdad0000-0000-4000-8000-000000000005",
+        "name": "Studio plan",
+        "color": null,
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "parent_id": null,
+        "is_archived": true,
+        "order_index": null,
+        "ancestor_archived": false
+      },
+      {
+        "id": "fdad0000-0000-4000-8000-000000000006",
+        "name": "Research archive",
+        "color": null,
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "parent_id": "fdad0000-0000-4000-8000-000000000005",
+        "is_archived": true,
+        "order_index": null,
+        "ancestor_archived": true
+      }
+    ],
+    "sections": [],
+    "task_activity": [
+      {
+        "id": "31a80e27-94eb-43af-b206-0f531b268212",
+        "kinds": [
+          "completed"
+        ],
+        "task_id": "fdad0000-0000-4000-8000-000000000010",
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "actor_id": "fdad0000-0000-4000-8000-000000000001",
+        "sequence": 2,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "fdad0000-0000-4000-8000-000000000005",
+          "section_id": null,
+          "completed_at": "2026-10-25T02:31:05.697986+00:00",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "recorded_at": "2026-10-25T02:31:05.697986+00:00",
+        "before_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "fdad0000-0000-4000-8000-000000000005",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "effective_at": "2026-10-25T02:31:05.697986+00:00",
+        "completion_version": 1
+      },
+      {
+        "id": "47fe48b4-ed9f-44fd-aba8-f78c273592bc",
+        "kinds": [
+          "created"
+        ],
+        "task_id": "fdad0000-0000-4000-8000-000000000010",
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "actor_id": "fdad0000-0000-4000-8000-000000000001",
+        "sequence": 1,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "fdad0000-0000-4000-8000-000000000005",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "recorded_at": "2026-10-25T02:31:05.617138+00:00",
+        "before_state": {},
+        "effective_at": "2026-10-25T02:31:05.617138+00:00",
+        "completion_version": 0
+      }
+    ],
+    "task_comments": [],
+    "task_mentions": [],
+    "project_collaborators": [
+      {
+        "id": "fdad0000-0000-4000-8000-000000000008",
+        "role": "collaborator",
+        "status": "accepted",
+        "user_id": "fdad0000-0000-4000-8000-000000000002",
+        "invited_by": "fdad0000-0000-4000-8000-000000000001",
+        "project_id": "fdad0000-0000-4000-8000-000000000005",
+        "accepted_at": "2026-10-25T02:31:05.617138+00:00",
+        "invited_email": "fdad0000-0000-4000-8000-000000000002@example.invalid"
+      },
+      {
+        "id": "fdad0000-0000-4000-8000-000000000009",
+        "role": "collaborator",
+        "status": "accepted",
+        "user_id": "fdad0000-0000-4000-8000-000000000003",
+        "invited_by": "fdad0000-0000-4000-8000-000000000001",
+        "project_id": "fdad0000-0000-4000-8000-000000000005",
+        "accepted_at": "2026-10-25T02:31:05.617138+00:00",
+        "invited_email": "fdad0000-0000-4000-8000-000000000003@example.invalid"
+      }
+    ],
+    "task_assignment_provenance": [
+      {
+        "id": "960f3ab0-6ed2-4cb6-be17-cc5804aec3b7",
+        "active": true,
+        "origin": "recorded",
+        "task_id": "fdad0000-0000-4000-8000-000000000010",
+        "actor_id": "fdad0000-0000-4000-8000-000000000001",
+        "event_id": "e668339c-6b69-4d9a-b59f-27246997d3bc",
+        "node_key": "",
+        "node_path": [],
+        "assigned_at": "2026-10-25T02:31:05.629997+00:00",
+        "assignee_id": "fdad0000-0000-4000-8000-000000000003",
+        "task_generation": "a6e42cc4-b1a0-482e-9393-c4f06f8aa69a"
+      }
+    ]
+  },
+  "source_boundary": {
+    "teams": [
+      {
+        "id": "fdad0000-0000-4000-8000-000000000004",
+        "state": "active",
+        "revision": 1,
+        "access_revision": 3
+      }
+    ],
+    "token": "616784a7b0fa165b34fb4fd81cdd2bfd99bbc24258a26dac09dc3a3b141e6513",
+    "account": "fdad0000-0000-4000-8000-000000000001",
+    "projects": [
+      {
+        "id": "fdad0000-0000-4000-8000-000000000005",
+        "role": "owner",
+        "team_id": null,
+        "archived": true,
+        "can_send_tasks": true
+      },
+      {
+        "id": "fdad0000-0000-4000-8000-000000000006",
+        "role": "owner",
+        "team_id": null,
+        "archived": true,
+        "can_send_tasks": true
+      }
+    ],
+    "setup_paused": false,
+    "native_team_reads_enabled": true,
+    "workspace_boundary_protocol": 1
+  },
+  "team_detail": {
+    "id": "fdad0000-0000-4000-8000-000000000004",
+    "name": "Design Studio",
+    "role": "member",
+    "state": "active",
+    "folders": [],
+    "revision": 1
+  },
+  "source_page": {
+    "account": "fdad0000-0000-4000-8000-000000000001",
+    "team_id": "fdad0000-0000-4000-8000-000000000004",
+    "projects": [],
+    "protocol": 1,
+    "team_state": "active",
+    "next_cursor": null,
+    "setup_paused": false,
+    "team_revision": 1,
+    "task_writes_enabled": false
+  },
+  "destination_snapshot": {
+    "tasks": [
+      {
+        "id": "fdad0000-0000-4000-8000-000000000010",
+        "title": "Synthetic transfer task",
+        "labels": [],
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "comments": [],
+        "due_date": null,
+        "due_time": null,
+        "priority": 4,
+        "subtasks": [],
+        "completed": true,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-25T02:31:05.617138+00:00",
+        "project_id": "fdad0000-0000-4000-8000-000000000005",
+        "section_id": null,
+        "assigned_to": null,
+        "attachments": [
+          {
+            "id": "synthetic-file",
+            "url": "data:text/plain;base64,QQ=="
+          }
+        ],
+        "description": "Never put task text in a retry",
+        "completed_at": "2026-10-25T02:31:05.697986+00:00",
+        "is_recurring": false,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [],
+        "source_metadata": {},
+        "task_generation": "a6e42cc4-b1a0-482e-9393-c4f06f8aa69a",
+        "duration_minutes": null,
+        "completion_version": 1,
+        "recurrence_pattern": null,
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      }
+    ],
+    "profiles": [
+      {
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "avatar_url": null,
+        "display_name": null
+      },
+      {
+        "user_id": "fdad0000-0000-4000-8000-000000000002",
+        "avatar_url": null,
+        "display_name": null
+      },
+      {
+        "user_id": "fdad0000-0000-4000-8000-000000000003",
+        "avatar_url": null,
+        "display_name": null
+      }
+    ],
+    "projects": [
+      {
+        "id": "fdad0000-0000-4000-8000-000000000005",
+        "name": "Studio plan",
+        "color": null,
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "parent_id": null,
+        "is_archived": true,
+        "order_index": null,
+        "ancestor_archived": false
+      },
+      {
+        "id": "fdad0000-0000-4000-8000-000000000006",
+        "name": "Research archive",
+        "color": null,
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "parent_id": "fdad0000-0000-4000-8000-000000000005",
+        "is_archived": true,
+        "order_index": null,
+        "ancestor_archived": true
+      }
+    ],
+    "sections": [],
+    "task_activity": [
+      {
+        "id": "31a80e27-94eb-43af-b206-0f531b268212",
+        "kinds": [
+          "completed"
+        ],
+        "task_id": "fdad0000-0000-4000-8000-000000000010",
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "actor_id": "fdad0000-0000-4000-8000-000000000001",
+        "sequence": 2,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": true,
+          "time_zone": null,
+          "project_id": "fdad0000-0000-4000-8000-000000000005",
+          "section_id": null,
+          "completed_at": "2026-10-25T02:31:05.697986+00:00",
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "recorded_at": "2026-10-25T02:31:05.697986+00:00",
+        "before_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "fdad0000-0000-4000-8000-000000000005",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "effective_at": "2026-10-25T02:31:05.697986+00:00",
+        "completion_version": 1
+      },
+      {
+        "id": "47fe48b4-ed9f-44fd-aba8-f78c273592bc",
+        "kinds": [
+          "created"
+        ],
+        "task_id": "fdad0000-0000-4000-8000-000000000010",
+        "user_id": "fdad0000-0000-4000-8000-000000000001",
+        "actor_id": "fdad0000-0000-4000-8000-000000000001",
+        "sequence": 1,
+        "after_state": {
+          "due_date": null,
+          "due_time": null,
+          "completed": false,
+          "time_zone": null,
+          "project_id": "fdad0000-0000-4000-8000-000000000005",
+          "section_id": null,
+          "completed_at": null,
+          "scheduled_at": null,
+          "deadline_date": null,
+          "recurrence_parent_id": null
+        },
+        "recorded_at": "2026-10-25T02:31:05.617138+00:00",
+        "before_state": {},
+        "effective_at": "2026-10-25T02:31:05.617138+00:00",
+        "completion_version": 0
+      }
+    ],
+    "task_comments": [],
+    "task_mentions": [],
+    "project_collaborators": [],
+    "task_assignment_provenance": [
+      {
+        "id": "960f3ab0-6ed2-4cb6-be17-cc5804aec3b7",
+        "active": false,
+        "origin": "unassigned",
+        "task_id": "fdad0000-0000-4000-8000-000000000010",
+        "actor_id": null,
+        "event_id": "15db4a3b-c0bc-4912-9547-f0e906aa3a52",
+        "node_key": "",
+        "node_path": [],
+        "assigned_at": null,
+        "assignee_id": null,
+        "task_generation": "a6e42cc4-b1a0-482e-9393-c4f06f8aa69a"
+      }
+    ]
+  },
+  "destination_boundary": {
+    "teams": [
+      {
+        "id": "fdad0000-0000-4000-8000-000000000004",
+        "state": "active",
+        "revision": 1,
+        "access_revision": 9
+      }
+    ],
+    "token": "990810d94e42d54665c9be486cf83736048d35698d60aa6cc21122e6e89c9c39",
+    "account": "fdad0000-0000-4000-8000-000000000001",
+    "projects": [
+      {
+        "id": "fdad0000-0000-4000-8000-000000000005",
+        "role": "manager",
+        "team_id": "fdad0000-0000-4000-8000-000000000004",
+        "archived": true,
+        "can_send_tasks": false
+      },
+      {
+        "id": "fdad0000-0000-4000-8000-000000000006",
+        "role": "manager",
+        "team_id": "fdad0000-0000-4000-8000-000000000004",
+        "archived": true,
+        "can_send_tasks": false
+      }
+    ],
+    "setup_paused": false,
+    "native_team_reads_enabled": true,
+    "workspace_boundary_protocol": 1
+  },
+  "destination_page": {
+    "account": "fdad0000-0000-4000-8000-000000000001",
+    "team_id": "fdad0000-0000-4000-8000-000000000004",
+    "projects": [
+      {
+        "id": "fdad0000-0000-4000-8000-000000000005",
+        "name": "Studio plan",
+        "role": "manager",
+        "team_id": "fdad0000-0000-4000-8000-000000000004",
+        "revision": 1,
+        "folder_id": null,
+        "parent_id": null,
+        "visibility": "private",
+        "is_archived": true,
+        "can_edit_tasks": false,
+        "ancestor_archived": false,
+        "can_manage_access": true,
+        "parent_unavailable": false,
+        "project_state_protocol": 1,
+        "project_hierarchy_protocol": 1
+      },
+      {
+        "id": "fdad0000-0000-4000-8000-000000000006",
+        "name": "Research archive",
+        "role": "manager",
+        "team_id": "fdad0000-0000-4000-8000-000000000004",
+        "revision": 1,
+        "folder_id": null,
+        "parent_id": "fdad0000-0000-4000-8000-000000000005",
+        "visibility": "private",
+        "is_archived": true,
+        "can_edit_tasks": false,
+        "ancestor_archived": true,
+        "can_manage_access": true,
+        "parent_unavailable": false,
+        "project_state_protocol": 1,
+        "project_hierarchy_protocol": 1
+      }
+    ],
+    "protocol": 1,
+    "team_state": "active",
+    "next_cursor": null,
+    "setup_paused": false,
+    "team_revision": 1,
+    "task_writes_enabled": false
+  },
   "account": "fdad0000-0000-4000-8000-000000000001",
   "origin": "https://synthetic.example",
   "body": {
@@ -22,7 +500,7 @@
         "tasks": 1,
         "projects": 2,
         "sections": 0,
-        "task_activity": 1,
+        "task_activity": 2,
         "task_comments": 0,
         "task_mentions": 0,
         "project_collaborators": 2,
@@ -32,7 +510,7 @@
       "attachments": 1,
       "email_routes": 0,
       "inline_files": 1,
-      "content_bytes": 3280,
+      "content_bytes": 4230,
       "external_files": 0,
       "provider_files": 0
     },
@@ -43,7 +521,7 @@
         "depth": 1,
         "root_id": "fdad0000-0000-4000-8000-000000000005",
         "parent_id": null,
-        "is_archived": false,
+        "is_archived": true,
         "source_ancestor_archived": false
       },
       {
@@ -53,7 +531,7 @@
         "root_id": "fdad0000-0000-4000-8000-000000000005",
         "parent_id": "fdad0000-0000-4000-8000-000000000005",
         "is_archived": true,
-        "source_ancestor_archived": false
+        "source_ancestor_archived": true
       }
     ],
     "folder_id": null,
@@ -80,7 +558,7 @@
     ],
     "automatic_undo": false,
     "commit_supported": true,
-    "inspection_token": "c4d15608e099c004d6316690b60afff064f5ce1dc9976c4123fa5d5b22cc707d",
+    "inspection_token": "ff82effce79e7f03b5bd2d0eeb7b4dfb301512efb583a19db8391595a3f48d89",
     "sends_invitations": false,
     "team_member_count": 2,
     "creates_memberships": false,
@@ -110,7 +588,7 @@
         "tasks": 1,
         "projects": 2,
         "sections": 0,
-        "task_activity": 1,
+        "task_activity": 2,
         "task_comments": 0,
         "task_mentions": 0,
         "project_collaborators": 2,
@@ -120,7 +598,7 @@
       "attachments": 1,
       "email_routes": 0,
       "inline_files": 1,
-      "content_bytes": 3280,
+      "content_bytes": 4230,
       "external_files": 0,
       "provider_files": 0
     },
@@ -131,7 +609,7 @@
         "depth": 1,
         "root_id": "fdad0000-0000-4000-8000-000000000005",
         "parent_id": null,
-        "is_archived": false,
+        "is_archived": true,
         "source_ancestor_archived": false
       },
       {
@@ -141,7 +619,7 @@
         "root_id": "fdad0000-0000-4000-8000-000000000005",
         "parent_id": "fdad0000-0000-4000-8000-000000000005",
         "is_archived": true,
-        "source_ancestor_archived": false
+        "source_ancestor_archived": true
       }
     ],
     "decisions": [
@@ -149,7 +627,7 @@
         "role": "editor",
         "user_id": "fdad0000-0000-4000-8000-000000000002",
         "project_id": "fdad0000-0000-4000-8000-000000000005",
-        "effective_role": "editor"
+        "effective_role": "manager"
       },
       {
         "role": null,
@@ -161,9 +639,9 @@
     "folder_id": null,
     "parent_id": null,
     "team_name": "Design Studio",
-    "expires_at": "2026-10-25T02:22:05.507335Z",
+    "expires_at": "2026-10-25T02:46:06.202188Z",
     "visibility": "private",
-    "review_token": "17ea239d019f6fad8c7b60fc038760c247f0735a77b63c5a0aca7fee9748f6d7",
+    "review_token": "44a8d92b80e3e8b5a0f7224b4ccfd8b117148f74295f6f0ec909c89d6d544b40",
     "collaborators": [
       {
         "id": "fdad0000-0000-4000-8000-000000000008",
@@ -184,7 +662,7 @@
     ],
     "automatic_undo": false,
     "commit_supported": true,
-    "inspection_token": "c4d15608e099c004d6316690b60afff064f5ce1dc9976c4123fa5d5b22cc707d",
+    "inspection_token": "ff82effce79e7f03b5bd2d0eeb7b4dfb301512efb583a19db8391595a3f48d89",
     "sends_invitations": false,
     "team_member_count": 2,
     "invitations_closed": 2,
@@ -203,7 +681,7 @@
     "visibility": "private",
     "folder_id": null,
     "parent_id": null,
-    "inspection_token": "c4d15608e099c004d6316690b60afff064f5ce1dc9976c4123fa5d5b22cc707d",
+    "inspection_token": "ff82effce79e7f03b5bd2d0eeb7b4dfb301512efb583a19db8391595a3f48d89",
     "decisions": [
       {
         "project_id": "fdad0000-0000-4000-8000-000000000005",
@@ -216,9 +694,9 @@
         "role": null
       }
     ],
-    "review_token": "17ea239d019f6fad8c7b60fc038760c247f0735a77b63c5a0aca7fee9748f6d7",
-    "expires_at": "2026-10-25T02:22:05.507335Z",
-    "request_id": "0449cb18-ced1-4c64-b251-37dc40d27354"
+    "review_token": "44a8d92b80e3e8b5a0f7224b4ccfd8b117148f74295f6f0ec909c89d6d544b40",
+    "expires_at": "2026-10-25T02:46:06.202188Z",
+    "request_id": "008ea9ec-7218-41d8-943f-0a887fe5e603"
   },
   "receipt": {
     "roots": [
@@ -230,7 +708,7 @@
     "replayed": false,
     "folder_id": null,
     "parent_id": null,
-    "request_id": "0449cb18-ced1-4c64-b251-37dc40d27354",
+    "request_id": "008ea9ec-7218-41d8-943f-0a887fe5e603",
     "visibility": "private",
     "project_ids": [
       "fdad0000-0000-4000-8000-000000000005",

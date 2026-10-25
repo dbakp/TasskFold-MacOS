@@ -2956,6 +2956,7 @@ extension Store {
     static let projectID = "ec240000-0000-4000-8000-000000000003"
     static let teamID = "ec240000-0000-4000-8000-000000000004"
     static func backend() -> Backend {
+        if ProjectAdoptionNativeFixture.enabled { return ProjectAdoptionNativeFixture.backend() }
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [TeamEditorNoNetwork.self]
         let session = try! JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(account)\"}}".utf8))
@@ -3011,6 +3012,7 @@ private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
 extension Store {
     private func prepareTeamEditorNativeFixture() {
         guard TeamEditorNativeFixture.enabled else { return }
+        if ProjectAdoptionNativeFixture.enabled { prepareProjectAdoptionNativeFixture(); return }
         dailyBackupsEnabled = false
         guard ProcessInfo.processInfo.arguments.contains("--team-editor-reset") || record("tasks", id: TeamEditorNativeFixture.taskID) == nil else { return }
         UserDefaults.standard.removeObject(forKey: "teamEditorRecipientUnavailable")
@@ -3254,3 +3256,24 @@ extension Store {
         return c.projects.allSatisfy { cache.boundary.projects[$0] == nil || cache.boundary.projects[$0]?.team == c.scope.team }
     }
 }
+
+#if DEBUG
+extension Store {
+    private func prepareProjectAdoptionNativeFixture() {
+        dailyBackupsEnabled = false
+        do {
+            let resetting = ProcessInfo.processInfo.arguments.contains("--team-editor-reset")
+            if resetting || !FileManager.default.fileExists(atPath: ProjectAdoptionNativeFixture.stateURL.path) { try ProjectAdoptionNativeFixture.reset() }
+            if !resetting, snapshot.tables["projects"]?.contains(where: { $0.id == ProjectAdoptionNativeFixture.root }) == true { return }
+            let state = try ProjectAdoptionNativeFixture.read(), rows = ProjectAdoptionNativeFixture.rows(state)
+            let boundary = try TeamWorkspaceBoundary(ProjectAdoptionNativeFixture.boundary(state),account:ProjectAdoptionNativeFixture.account,origin:ProjectAdoptionNativeFixture.origin)
+            snapshot = Snapshot(tables: rows); snapshot.teamWorkspace = try TeamWorkspaceCache(boundary:boundary,previous:nil,pending:[],tasks:rows["tasks"] ?? [])
+            try persist()
+        } catch { self.error = "Synthetic project-transfer workspace could not be prepared." }
+    }
+    func changeProjectAdoptionFixtureSource() {
+        guard ProjectAdoptionNativeFixture.enabled,var rows=snapshot.tables["tasks"],!rows.isEmpty else{return}
+        rows[0]["description"] = .string("Changed after review");snapshot.tables["tasks"]=rows;try? persist()
+    }
+}
+#endif

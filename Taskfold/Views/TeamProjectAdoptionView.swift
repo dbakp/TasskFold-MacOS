@@ -9,9 +9,11 @@ struct SavedProjectTransferLink: View {
     @State private var reload = UUID()
     private var lifecycle: String { "\(store.userID)|\(store.workspaceGeneration)|\(store.backend.reminderSessionIncarnation)|\(phase == .active)|\(reload)" }
     var body: some View {
+        // Keep the entry mounted so its private-recovery task can run after
+        // launch, including when ordinary team navigation is unavailable.
         Group {
-            if visible && store.projectTransferRecoveryAvailable {
-                Section { Button("Saved project transfer", systemImage: "tray.and.arrow.up") { showing = true }.accessibilityIdentifier("savedProjectTransfer") }
+            if store.projectTransferRecoveryAvailable {
+                Section { Button(visible ? "Saved project transfer" : "Project transfers", systemImage: "tray.and.arrow.up") { showing = true }.accessibilityIdentifier("savedProjectTransfer") }
             }
         }
         .task(id: lifecycle) {
@@ -99,8 +101,12 @@ struct TeamProjectAdoptionView: View {
                     if let message = model.message { Section { Text(message).foregroundStyle(.secondary) } }
                 } else { Section { ContentUnavailableView("Transfer unavailable", systemImage: "person.crop.circle", description: Text("Return to the original synced account to continue.")) } }
                 if let message, current { Section { Label(message, systemImage: "exclamationmark.circle").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) } }
+                #if DEBUG
+                if ProjectAdoptionNativeFixture.enabled { Section("Isolated test control") { Button("Change saved source") { store.changeProjectAdoptionFixtureSource() }.accessibilityIdentifier("changeProjectTransferSource") } }
+                #endif
                 if preparing || model?.busy == true { Section { ProgressView(model?.busy == true ? "Confirming transfer…" : "Reviewing projects…") } }
             }
+            .accessibilityIdentifier("projectTransferForm")
             .navigationTitle("Bring projects to a team")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
